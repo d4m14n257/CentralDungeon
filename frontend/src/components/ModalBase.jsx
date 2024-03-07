@@ -23,6 +23,10 @@ export default function ModalBase(props) {
             <Fade in={isOpen}>
                 <Box
                     sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -32,7 +36,7 @@ export default function ModalBase(props) {
                 >
                     <Box
                       sx={{
-                        minWidth: 600,
+                        minWidth: 250,
                         maxWidth: 850,
                         position: "relative",
                         backgroundColor: "white",

@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import List from '@mui/material/List';
@@ -15,7 +17,7 @@ import { global } from '@/styles/global';
 
 const TitleComponent = ({title}) => {
     return (
-        <Typography variant="h5" color="initial">
+        <Typography variant="h5">
             {title}
         </Typography>
     );
@@ -23,6 +25,7 @@ const TitleComponent = ({title}) => {
 
 const ViewMoreComponent = (props) => {
     const { handleTableSelect, value } = props;
+
 
     return (
         <Typography 
@@ -36,9 +39,15 @@ const ViewMoreComponent = (props) => {
 }
 
 export default function ListComponent (props) {
-    const { md, xs, tables, title, handleTableSelect } = props;
+    const { md, xs, tables, info, isSelect, handleTableSelect } = props;
+    const router = useRouter();
 
-    console.log(tables)
+    const handleTableRoute = (id) => {
+        if(info.id === 'joined-table')
+        router.push(`/tables/${id}/joined`)
+        else
+            router.push(`/tables/${id}/opened`)
+    }
 
     return (
         <Grid
@@ -50,27 +59,29 @@ export default function ListComponent (props) {
                 <List>
                     <ListItem>
                         <ListItemText
-                            primary={<TitleComponent title={title.name} />}
+                            primary={<TitleComponent title={info.name} />}
                         />
                     </ListItem>
                     {tables.map((table) => (
                         <Box key={table.name}>
                             <Divider variant="middle" component="li" />
                             <ListItem>
-                                <ListItemButton>
+                                <ListItemButton onClick={() => handleTableRoute(table.id)}>
                                     <ListItemText
-                                        primary={<Typography variant="body1" color="initial">{table.name}</Typography>}
-                                        secondary={<Typography variant="subtitle2" color="initial">{table.description}</Typography>}
+                                        primary={<Typography variant="body1">{table.name}</Typography>}
+                                        secondary={<Typography variant="subtitle2">{table.description}</Typography>}
                                     />
                                 </ListItemButton>
                             </ListItem>
                         </Box>
                     ))}
-                    <Divider variant="middle" component="li" />
-                    {handleTableSelect &&
-                        <ListItem>
-                            <ListItemText primary={<ViewMoreComponent handleTableSelect={handleTableSelect} value={title}/>}/>
-                        </ListItem>
+                    {isSelect &&
+                        <>
+                            <Divider variant="middle" component="li" />
+                            <ListItem>
+                                <ListItemText primary={<ViewMoreComponent handleTableSelect={handleTableSelect} value={info}/>}/>
+                            </ListItem>
+                        </>
                     }
                 </List>
             </Paper>

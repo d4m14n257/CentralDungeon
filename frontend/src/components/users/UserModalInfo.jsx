@@ -8,8 +8,6 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
 import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
 
 import CommentIcon from '@mui/icons-material/Comment';
 import InfoIcon from '@mui/icons-material/Info';
@@ -20,19 +18,16 @@ import EditIcon from '@mui/icons-material/Edit';
 
 import ModalBase from "../ModalBase";
 import NestedCommentModal from './NestedCommentModal';
+import MenuItemComponent from '../MenuItemComponent';
 import { styles } from '@/styles/users/modal';
 import { getFlagCountry } from '@/api/getFlagCountry';
 
-const MenuDataIcon = ({name, Icon}) => {
-    return (
-        <MenuItem onClick={() => {}}>
-            <ListItemIcon>
-                <Icon fontSize="small" />
-            </ListItemIcon>
-                {name}
-        </MenuItem>
-    );
-}
+/*
+    El modal del usuario tendras algunas restricciones dependiendo a quien lo vea
+    Usuario a usuario - Vista general
+    Master a usuario - Vista general, Comentarios
+    Admin a usuario - Toda wey xd
+*/
 
 const menu = [
     {
@@ -175,7 +170,7 @@ export default function UserModalInfo (props) {
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
                 {menu.map((item) => (
-                    <MenuDataIcon 
+                    <MenuItemComponent 
                         name={item.name}
                         Icon={item.Icon}
                     />

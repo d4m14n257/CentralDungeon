@@ -3,6 +3,12 @@ import { useState, useRef } from "react";
 import TableComponent from "@/components/TableComponent";
 import UserModalInfo from "@/components/users/UserModalInfo";
 
+/*
+    Por facilidad al admin, se mantendran los accesos rapidos a las estadisticas unicas, a pesar de que tenga un ciclo.
+    Modificar como se ve la vista de informacion en usuarios para admin, tanto botones, aplicara tambien para las mesas.
+    Los usuarios almaceran el ID del discord no el automatico por orm/sql/loqueseaxd.
+*/
+
 const users = 
 {
     columns: [
@@ -76,6 +82,7 @@ export default function Users () {
     return (
         <>
             <TableComponent
+                title='Usuarios'
                 columns={users.columns}
                 rows={users.rows}
                 minWidth={users.minWidth}

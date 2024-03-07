@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import ListComponent from '@/components/ListComponent';
-import Grid from '@mui/material/Grid'
-import TableSelect from '@/components/dashboard/TableSelect';
+import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
+
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
+/*
+    En vez de cambioos de estados para ver las mesas, sean ahora diferente.
+*/
 
 const tables = {
     public_tables: [
@@ -106,21 +112,30 @@ const tables = {
 
 export default function Dashboard () {
     const [tableSelect, setTableSelect] = useState({
-        state: false,
         name: '',
-        title: ''
+        id: ''
     })
 
-    const handleTableSelect = ({name, title}) => {
-        if(name) {
+    const [select, setSelect] = useState(null);
+
+    const handleTableSelect = ({id, name}) => {
+        if(id) {
+            if(id === 'public-table')
+                setSelect(tables.public_tables);
+            else if (id === 'first-class-table')
+                setSelect(tables.first_class_tables);
+            else if (id === 'joined-table')
+                setSelect(joined_tables);
+
             setTableSelect({
-                state: true,
                 name: name,
-                title: title
-            })
+                id: id
+            });
         }
-        else
-            setTableSelect({ state: false, name: '', title: ''});
+        else{
+            setSelect(null);
+            setTableSelect({ name: '', id: ''});
+        }
     }
 
     return (
@@ -128,32 +143,42 @@ export default function Dashboard () {
             container
             spacing={2}
         >
-            {!tableSelect.state ? 
+            {!select ? 
                 <>
                     <ListComponent 
                         xs={12}
                         md={8}
-                        title={{name: 'Mesas publicas', id: 'public-table'}}
+                        info={{name: 'Mesas publicas', id: 'public-table'}}
                         tables={tables.public_tables}
                         handleTableSelect={handleTableSelect}
+                        isSelect={true}
                     />
                     <ListComponent 
                         xs={12}
                         md={4}
-                        title={{name: 'Mesas de primera clase', id: 'first-class-table'}}
+                        info={{name: 'Mesas de primera clase', id: 'first-class-table'}}
                         tables={tables.first_class_tables}
                         handleTableSelect={handleTableSelect}
+                        isSelect={true}
                     />
                     <ListComponent 
-                        title={{name: 'Mis mesas', id: 'private-tables'}}
+                        info={{name: 'Mis mesas', id: 'joined-table'}}
                         tables={tables.joined_tables}
                         handleTableSelect={handleTableSelect}
+                        isSelect={true}
                     />
                 </> : 
                 <>
-                    <TableSelect 
-                        handleTableSelect={handleTableSelect}
-                        tableSelect={tableSelect}
+                    <IconButton
+                        size='large'
+                        onClick={() => handleTableSelect({name: '', id: ''})}
+                    >
+                        <ArrowBackIcon fontSize='inherit'/>
+                    </IconButton>
+                    <ListComponent 
+                        info={tableSelect}
+                        tables={select}
+                        isSelect={false}
                     />
                 </>}
         </Grid>
