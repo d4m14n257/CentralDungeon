@@ -1,8 +1,9 @@
-import { useState, useMemo, useContext } from 'react';
-
 import Head from 'next/head';
 
-import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles';
+import { useState, useMemo, useEffect } from 'react';
+
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Toolbar from '@mui/material/Toolbar';
@@ -12,16 +13,33 @@ import Box from '@mui/material/Box';
 import CardSettings from '@/components/CardSettings';
 import Header from '@/components/Header';
 
+import { ColorModeContext } from '@/context/ColorModeContext';
+
 export default function App({ Component, pageProps }) {
+    const darkModeMediaQuery = useMediaQuery('(prefers-color-scheme: dark)');
+
     const [openUser, setOpenUser] = useState(false);
-    const [mode, setMode] = useState('dark');
+    const [mode, setMode] = useState();
+
+    useEffect(() => {
+        const currentTheme = localStorage.getItem('theme');
+        
+        if(currentTheme) 
+            setMode(currentTheme)
+        else
+            setMode(darkModeMediaQuery ? 'dark' : 'light');
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem('theme', mode);
+    }, [mode])
+
     const colorMode = useMemo(
         () => ({
             toggleColorMode: () => {
-                setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+                setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
             },
-        }),
-        [],
+        }), []
     );
 
     const theme = useMemo(
@@ -31,7 +49,7 @@ export default function App({ Component, pageProps }) {
                     mode,
                 },
             }),
-        [mode],
+        [mode]
     );
 
     const handleOpenUser = () => {
@@ -39,28 +57,32 @@ export default function App({ Component, pageProps }) {
     }
 
     return (
-        <ThemeProvider theme={darkTheme}>
-            <CssBaseline />
-            <Head>
-                <title>Central Dungeon</title>
-            </Head>
-            <Header 
-                handleOpenUser={handleOpenUser}
-            />
-            <Toolbar />
-            <Box
-                sx={{margin: 2.5}}
-            >
-                <Container 
-                    maxWidth='xl'
+        <ColorModeContext.Provider value={{ colorMode, mode }}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <Head>
+                    <title>Central Dungeon</title>
+                </Head>
+                <Header
+                    handleOpenUser={handleOpenUser}
+                />
+                <Toolbar />
+                <Box
+                    sx={{ margin: 2.5 }}
                 >
-                    <Component {...pageProps} />
-                    {openUser && <CardSettings 
-                        handleOpenUser={handleOpenUser}
-                        openUser={openUser}
-                    />}
-                </Container>
-            </Box>
-        </ThemeProvider>
+                    <Container
+                        maxWidth='xl'
+                    >
+                        <Component {...pageProps} />
+                        {openUser &&
+                            <CardSettings
+                                handleOpenUser={handleOpenUser}
+                                openUser={openUser}
+                            />
+                        }
+                    </Container>
+                </Box>
+            </ThemeProvider>
+        </ColorModeContext.Provider>
     );
 }

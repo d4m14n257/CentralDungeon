@@ -14,6 +14,7 @@
     "@mui/icons-material": "^5.14.18",
     "@mui/material": "^5.14.18",
     "@mui/styled-engine-sc": "^6.0.0-alpha.6",
+    "@tinymce/tinymce-react": "^4.3.2",
     "next": "14.0.3",
     "next-auth": "^4.24.5",
     "react": "^18",

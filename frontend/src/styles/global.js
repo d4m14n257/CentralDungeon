@@ -20,7 +20,7 @@ export const global = {
     },
     cardProfile: {
         position: 'fixed',
-        width: 360,
+        width: 400,
         right: 0,
         top: 0,
         marginTop: 8,
@@ -36,6 +36,12 @@ export const global = {
         padding: '6px 6px 0',
         borderTopLeftRadius: '20px',
         borderTopRightRadius: '20px'
+    },
+    profileRoles: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
     profileData: {
         display: 'flex',
@@ -73,5 +79,9 @@ export const global = {
     buttonLogout: {
         width: "100%",
         borderRadius: "0 0 80px 80px",
+    },
+    listBody: {
+        display: 'flex',
+        flexDirection: 'column',
     }
 }

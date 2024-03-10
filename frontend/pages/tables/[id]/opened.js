@@ -1,9 +1,5 @@
 import Typography from '@mui/material/Typography';
 
-import PreviewIcon from '@mui/icons-material/Preview';
-import BlockIcon from '@mui/icons-material/Block';
-import NotStartedIcon from '@mui/icons-material/NotStarted';
-
 import CardComponent from "@/components/CardComponent";
 import TableComponent from '@/components/TableComponent';
 
@@ -36,7 +32,8 @@ const table = {
     descripction: 'Esta es una descripcion de una mesa que no existe solo para poner texto en esta cosa para y se vea jsjsjs',
     startdate: '2023-12-21T19:30:00',
     timezone: 'UTC-02:00',
-    requeriments: "Algo",
+    requeriments: "un texto con los requisitos para leer si no existe este no deberia existir el texto el boton",
+    files: ["/test/CV-Jorge-Damian-Dominguez-Jimenez-English.pdf"], //Este arreglo servira para identificar si tiene archivos o no, para habilitar el boton de descarga.
     tag: ['Gore', 'safeword', 'D&D'],
     schedule: ['Lunes - 18:30 UTC-06:00', 'Jueves - 19:30 UTC-06:00', 'Viernes - 14:30 UTC-06:00'],
     status: 'Abierto',
@@ -51,19 +48,19 @@ const table = {
             id: 2,
             name: 'Teshynil',
             discord: 'Teshynil#001', 
-            status: 'Candidato'
+            status: 'Jugador'
         },
         {
             id: 3,
             name: 'd4m14n257',
             discord: 'd4m14n257#001', 
-            status: 'Rechazado'
+            status: 'Jugador'
         },
         {
             id: 4,
             name: 'Daniel526',
             discord: 'Daniel526#001', 
-            status: 'Baneado'
+            status: 'Jugador'
         },
     ],
     columns: [
@@ -78,10 +75,6 @@ const table = {
         {
             id: 'status',
             'label': 'Estado'
-        },
-        {
-            id: 'actions',
-            label: 'Acciones',
         }
     ],
 }

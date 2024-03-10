@@ -13,6 +13,8 @@ import Button from '@mui/material/Button';
 
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
+import Span from "./Span";
+
 import { global } from '@/styles/global';
 
 const TitleComponent = ({title}) => {
@@ -39,12 +41,14 @@ const ViewMoreComponent = (props) => {
 }
 
 export default function ListComponent (props) {
-    const { md, xs, tables, info, isSelect, handleTableSelect } = props;
+    const { lg, xs, tables, info, isSelect, handleTableSelect } = props;
     const router = useRouter();
+
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
 
     const handleTableRoute = (id) => {
         if(info.id === 'joined-table')
-        router.push(`/tables/${id}/joined`)
+            router.push(`/tables/${id}/joined`)
         else
             router.push(`/tables/${id}/opened`)
     }
@@ -52,7 +56,7 @@ export default function ListComponent (props) {
     return (
         <Grid
             item
-            md={md != undefined ? md : 12}
+            lg={lg != undefined ? lg : 12}
             xs={xs != undefined ? xs : 12}
         >
             <Paper sx={global.border}>
@@ -62,19 +66,30 @@ export default function ListComponent (props) {
                             primary={<TitleComponent title={info.name} />}
                         />
                     </ListItem>
-                    {tables.map((table) => (
-                        <Box key={table.name}>
-                            <Divider variant="middle" component="li" />
-                            <ListItem>
-                                <ListItemButton onClick={() => handleTableRoute(table.id)}>
-                                    <ListItemText
-                                        primary={<Typography variant="body1">{table.name}</Typography>}
-                                        secondary={<Typography variant="subtitle2">{table.description}</Typography>}
-                                    />
-                                </ListItemButton>
-                            </ListItem>
-                        </Box>
-                    ))}
+                    {tables.map((table) => {
+                        const startDate = new Date(table.startdate);
+                        const date = startDate.toLocaleDateString('es-ES', options);
+
+                        return (
+                            <Box key={table.name}>
+                                <Divider variant="middle" component="li" />
+                                <ListItem>
+                                    <ListItemButton onClick={() => handleTableRoute(table.id)}>
+                                        <Box sx={global.listBody}>
+                                            <ListItemText
+                                                primary={<Typography variant="body1">{table.name}</Typography>}
+                                                secondary={<Typography variant="subtitle2">{table.description}</Typography>}
+                                            />
+                                            <ListItemText
+                                                primary={<Typography variant="body1"><Span title={'Fecha de inicio: '}/>{date}</Typography>}
+                                                secondary={<Typography variant="subtitle2"><Span title={'Zona horaria de la mesa: '}/>{table.timezone}</Typography>}
+                                            />
+                                        </Box>
+                                    </ListItemButton>
+                                </ListItem>
+                            </Box>
+                        );
+                    })}
                     {isSelect &&
                         <>
                             <Divider variant="middle" component="li" />

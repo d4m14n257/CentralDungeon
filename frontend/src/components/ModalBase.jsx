@@ -39,7 +39,7 @@ export default function ModalBase(props) {
                         minWidth: 250,
                         maxWidth: 850,
                         position: "relative",
-                        backgroundColor: "white",
+                        bgcolor: 'background.paper',
                         boxShadow: "2em",
                         padding: "2em",
                         borderRadius: "1em",

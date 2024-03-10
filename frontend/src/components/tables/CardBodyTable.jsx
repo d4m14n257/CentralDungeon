@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 
-import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import CardActions from '@mui/material/CardActions';
@@ -9,24 +8,30 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 
 import RequerimentsModalTable from './RequerimentsModalTable'; 
 
-import { card } from '@/styles/tables/card';
 import RequestModalTable from './RequestModalTable';
+import Span from '../Span';
 
-const Span = ({title}) => {
-    return (
-        <span style={{fontWeight: 'bold'}}>
-            {title}
-        </span>
-    );
-}
+import { card } from '@/styles/tables/card';
 
 export default function CardBodyTable (props) {
     const { details } = props;
 
+    const startDate = new Date(details.startdate);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+
+    const date = useRef(startDate.toLocaleDateString('es-ES', options));
+
     const [openRequerimentsModal, setOpenRequerimentsModal] = useState(false);
     const [openRequestModal, setOpenRequestModal] = useState(false);
 
-    const date = useRef(null);
+    const handleDownloadFiles = () => {
+        details.files.map((file) => {
+            const link = document.createElement('a');
+            link.href = file;
+            link.download = "CV-Jorge-Damian-Dominguez-Jimenez-English.pdf"; 
+            link.click();
+        })
+    }
 
     const handleOpenRequerimentsModal = () => {
         setOpenRequerimentsModal(true);
@@ -43,14 +48,6 @@ export default function CardBodyTable (props) {
     const handleCloseRequestModal = () => {
         setOpenRequestModal(false);
     }
-
-    useEffect(() => {
-        if(details) {
-            const startDate = new Date(details.startdate);
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
-            date.current = startDate.toLocaleDateString('es-ES', options);
-        }
-    }, [details])
 
     return (
         <>
@@ -91,6 +88,7 @@ export default function CardBodyTable (props) {
                 <ButtonGroup>
                     <Button onClick={handleOpenRequerimentsModal}>Requisitos</Button>
                     <Button onClick={handleOpenRequestModal}>Solicitar</Button>
+                    <Button onClick={handleDownloadFiles}>Descargar</Button>
                 </ButtonGroup>
             </CardActions>
             <RequerimentsModalTable 
@@ -99,10 +97,12 @@ export default function CardBodyTable (props) {
                 handleOpenRequestModal={handleOpenRequestModal}
                 requeriments={details.requeriments}
             />
-            <RequestModalTable 
-                isOpen={openRequestModal}
-                handleCloseModal={handleCloseRequestModal}
-            />
+            {openRequestModal && 
+                <RequestModalTable 
+                    isOpen={openRequestModal}
+                    handleCloseModal={handleCloseRequestModal}
+                />
+            }
         </>
     );
 }
