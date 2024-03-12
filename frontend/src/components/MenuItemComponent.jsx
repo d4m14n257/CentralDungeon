@@ -5,8 +5,12 @@ export default function MenuItemComponent (props) {
     const { name, Icon, handleOnClick } = props;
 
     return (
-        <MenuItem onClick={() => {}}>
-            <ListItemIcon>
+        <MenuItem
+            onClick={() => {}}
+        >
+            <ListItemIcon
+                key={name}
+            >
                 <Icon fontSize="small" />
             </ListItemIcon>
                 {name}

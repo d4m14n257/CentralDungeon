@@ -1,4 +1,4 @@
-import { useRef, useEffect, useContext } from 'react';
+import { useRef, useContext, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -17,13 +17,15 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { useTheme } from '@mui/material/styles';
 
 import { ColorModeContext } from '@/context/ColorModeContext';
+import { UserContext } from '@/context/UserContext';
 
 import { global } from '@/styles/global';
 
 export default function CardSettings (props) {
     const { openUser, handleOpenUser } = props;
     const theme = useTheme();
-
+    
+    const { username, rol } = useContext(UserContext);
     const { colorMode } = useContext(ColorModeContext);
     const userSettingsRef = useRef(null);
 
@@ -50,8 +52,8 @@ export default function CardSettings (props) {
                             T
                         </Avatar>
                         <Box>
-                            <Typography variant="h4">Teshynil</Typography>
-                            <Typography variant="h6">Admin</Typography>
+                            <Typography variant="h4">{username}</Typography>
+                            <Typography variant="h6">{rol}</Typography>
                         </Box>
                     </Box>
                     <IconButton sx={{ ml: 1 }} onClick={colorMode.toggleColorMode}>

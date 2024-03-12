@@ -48,9 +48,9 @@ export default function ListComponent (props) {
 
     const handleTableRoute = (id) => {
         if(info.id === 'joined-table')
-            router.push(`/tables/${id}/joined`)
+            router.push(`/tables/joined/${id}`)
         else
-            router.push(`/tables/${id}/opened`)
+            router.push(`/tables/available/${id}`)
     }
 
     return (

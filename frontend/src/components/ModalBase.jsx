@@ -24,29 +24,21 @@ export default function ModalBase(props) {
                 <Box
                     sx={{
                         position: 'absolute',
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        minWidth: 250,
+                        maxWidth: 850,
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: "100%",
-                        flexGrow: 1,
-                    }}
-                >
-                    <Box
-                      sx={{
-                        minWidth: 250,
-                        maxWidth: 850,
-                        position: "relative",
                         bgcolor: 'background.paper',
                         boxShadow: "2em",
                         padding: "2em",
                         borderRadius: "1em",
-                      }}
-                    >
-                        {children}
-                    </Box>
+                    }}
+                >
+                    {children}
                 </Box>
             </Fade>
         </Modal>

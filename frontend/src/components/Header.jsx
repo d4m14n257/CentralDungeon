@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { useRouter } from "next/router";
 
 import AppBar from "@mui/material/AppBar";
@@ -8,7 +9,9 @@ import IconButton from '@mui/material/IconButton';
 import Avatar from '@mui/material/Avatar';
 
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
+
 import { global } from "@/styles/global";
+import { UserContext } from "@/context/UserContext";
 
 /*
     Se integra un search con etiquetado, podria ser algo similar al de discord en los chats.
@@ -20,20 +23,11 @@ import { global } from "@/styles/global";
     Dependiendo de donde se haga la busqueda, dependera como sera y quien. (mas chanva :c)
 */
 
-// const menu = [
-//     {
-//         name: 'Ajustes',
-//         Icon: 
-//     },
-//     {
-//         name: 'Cerra sesión',
-//         Icon: 
-//     },
-// ]
-
 export default function Header(props) {
+    const { username } = useContext(UserContext);
     const { handleOpenUser } = props
     const router = useRouter();
+
 
     const handleReturnHome = () => {
         router.push(`/`)
@@ -47,7 +41,7 @@ export default function Header(props) {
                 </Button>
                 <IconButton onClick={handleOpenUser}>
                     <Avatar>
-                        T
+                        {username.charAt(0)}
                     </Avatar>
                 </IconButton>
             </Toolbar>

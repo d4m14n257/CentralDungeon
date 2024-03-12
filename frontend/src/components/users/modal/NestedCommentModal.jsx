@@ -1,4 +1,4 @@
-import ModalBase from "../ModalBase";
+import ModalBase from "../../ModalBase";
 
 export default function NestedCommentModal (props) {
     const { isOpen, handleCloseModal } = props;

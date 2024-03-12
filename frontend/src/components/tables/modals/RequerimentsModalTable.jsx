@@ -3,12 +3,12 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 
-import ModalBase from "../ModalBase";
+import ModalBase from "../../ModalBase";
 
 import { modal } from '@/styles/tables/modal';
 
 export default function RequerimentsModalTable (props) {
-    const {isOpen, handleCloseModal, handleOpenRequestModal, requeriments} = props
+    const {isOpen, handleCloseModal, handleOpenRequestModal, handleDownloadFiles, requeriments} = props
 
     return (
         <ModalBase
@@ -47,9 +47,7 @@ export default function RequerimentsModalTable (props) {
                             Solicitar
                         </Button>
                         <Button
-                            onClick={() => {
-
-                            }}
+                            onClick={handleDownloadFiles}
                         >  
                             Descargar
                         </Button>

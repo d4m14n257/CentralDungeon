@@ -10,7 +10,7 @@ export const modal = {
     },
     content: {
         ...global.colFlex,
-        gap: 1
+        gap: 2
     },
     footer: {
         ...global.rowFlex,

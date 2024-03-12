@@ -16,7 +16,7 @@
     "@mui/styled-engine-sc": "^6.0.0-alpha.6",
     "@tinymce/tinymce-react": "^4.3.2",
     "next": "14.0.3",
-    "next-auth": "^4.24.5",
+    "next-auth": "^4.24.7",
     "react": "^18",
     "react-dom": "^18",
     "styled-components": "^6.1.1"

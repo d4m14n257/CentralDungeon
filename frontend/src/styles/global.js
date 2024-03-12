@@ -27,7 +27,8 @@ export const global = {
         borderRadius: 10,
         marginRight: '27px',
         padding: '10px 10px 0',
-        gap: '4px'
+        gap: '4px',
+        zIndex: '999'
     },
     cardHeaderSelect: {
         display: 'flex',
@@ -83,5 +84,13 @@ export const global = {
     listBody: {
         display: 'flex',
         flexDirection: 'column',
+    },
+    buttonFloat: {
+        position: 'fixed', 
+        right: {xl: 'calc((100% - 1536px) / 2)', xs: 0},
+        bottom: 40,
+        width: 80, 
+        height: 80,
+        marginRight: 3
     }
 }

@@ -14,20 +14,29 @@ import CardSettings from '@/components/CardSettings';
 import Header from '@/components/Header';
 
 import { ColorModeContext } from '@/context/ColorModeContext';
+import { UserContext } from '@/context/UserContext';
 
 export default function App({ Component, pageProps }) {
     const darkModeMediaQuery = useMediaQuery('(prefers-color-scheme: dark)');
 
     const [openUser, setOpenUser] = useState(false);
     const [mode, setMode] = useState();
+    const [rol, setRol] = useState();
 
     useEffect(() => {
         const currentTheme = localStorage.getItem('theme');
+        const currentRol = sessionStorage.getItem('rol');
         
         if(currentTheme) 
             setMode(currentTheme)
         else
             setMode(darkModeMediaQuery ? 'dark' : 'light');
+
+        if(currentRol)
+            setRol(currentRol)
+        else
+            setRol('Jugador')
+
     }, [])
 
     useEffect(() => {
@@ -57,32 +66,34 @@ export default function App({ Component, pageProps }) {
     }
 
     return (
-        <ColorModeContext.Provider value={{ colorMode, mode }}>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <Head>
-                    <title>Central Dungeon</title>
-                </Head>
-                <Header
-                    handleOpenUser={handleOpenUser}
-                />
-                <Toolbar />
-                <Box
-                    sx={{ margin: 2.5 }}
-                >
-                    <Container
-                        maxWidth='xl'
+        <UserContext.Provider value={{username: 'Teshynil', rol: rol, roles: ['Jugador', 'Master', 'Admin']}}>
+            <ColorModeContext.Provider value={{ colorMode, mode }}>
+                <ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <Head>
+                        <title>Central Dungeon</title>
+                    </Head>
+                    <Header
+                        handleOpenUser={handleOpenUser}
+                    />
+                    <Toolbar />
+                    <Box
+                        sx={{ margin: 2.5 }}
                     >
-                        <Component {...pageProps} />
-                        {openUser &&
-                            <CardSettings
-                                handleOpenUser={handleOpenUser}
-                                openUser={openUser}
-                            />
-                        }
-                    </Container>
-                </Box>
-            </ThemeProvider>
-        </ColorModeContext.Provider>
+                        <Container
+                            maxWidth='xl'
+                        >
+                            <Component {...pageProps} />
+                            {openUser &&
+                                <CardSettings
+                                    handleOpenUser={handleOpenUser}
+                                    openUser={openUser}
+                                />
+                            }
+                        </Container>
+                    </Box>
+                </ThemeProvider>
+            </ColorModeContext.Provider>
+        </UserContext.Provider>
     );
 }

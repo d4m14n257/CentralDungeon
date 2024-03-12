@@ -16,9 +16,9 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import EditIcon from '@mui/icons-material/Edit';
 
-import ModalBase from "../ModalBase";
+import ModalBase from "../../ModalBase";
 import NestedCommentModal from './NestedCommentModal';
-import MenuItemComponent from '../MenuItemComponent';
+import MenuItemComponent from '../../MenuItemComponent';
 import { styles } from '@/styles/users/modal';
 import { getFlagCountry } from '@/api/getFlagCountry';
 

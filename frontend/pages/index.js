@@ -180,7 +180,7 @@ export default function Dashboard () {
                 isSelect={true}
             />
             <ListComponent 
-                info={{name: 'Mis mesas', id: 'joined-table'}}
+                info={{name: 'Mesas jugando', id: 'joined-table'}}
                 tables={tables.joined_tables}
                 handleTableSelect={handleTableSelect}
                 isSelect={true}

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, Children } from 'react';
 
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -13,9 +13,10 @@ import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
 
-import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
 import { global } from '@/styles/global';
 
@@ -72,10 +73,11 @@ const EnhancedTableToolbar = (props) => {
   }
 
 export default function TableComponent (props) {
-    const { mt, title, columns, rows, minWidth, handleOpenModal } = props;
+    const { title, columns, rows, checkbox, minWidth, handleDetails } = props;
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [haveCheckbox, setHaveCheckbox] = useState(checkbox ? true : false);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -87,15 +89,28 @@ export default function TableComponent (props) {
     };
 
     return (
-        <Paper sx={{...global.border, width: '100%', overflow: 'hidden', marginTop: mt}}>
+        <Paper sx={{...global.border, width: '100%', overflow: 'hidden'}}>
             <Box sx={{margin: 2}}>
                 <EnhancedTableToolbar 
                     title={title}
                 />
-                <TableContainer sx={{ maxHeight: 440 }}>
+                <TableContainer sx={{ maxHeight: 500 }}>
                     <Table stickyHeader aria-label="sticky table" >
                         <TableHead>
                             <TableRow>
+                                {haveCheckbox &&
+                                    <TableCell padding="checkbox">
+                                        <Checkbox
+                                            color="primary"
+                                            // indeterminate={numSelected > 0 && numSelected < rowCount}
+                                            // checked={rowCount > 0 && numSelected === rowCount}
+                                            // onChange={onSelectAllClick}
+                                            // inputProps={{
+                                            //     'aria-label': 'select all desserts',
+                                            // }}
+                                        /> 
+                                    </TableCell>
+                                }
                                 {columns.map((column) => (
                                     <TableCell
                                         key={column.id}
@@ -114,33 +129,62 @@ export default function TableComponent (props) {
                         <TableBody>
                             {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((row) => {
+                                const isItemSelected = false
+
                                 return (
-                                    <TableRow hover role="checkbox" tabIndex={-1} key={row.id}>
+                                    <TableRow 
+                                        hover 
+                                        role="checkbox" 
+                                        tabIndex={-1} 
+                                        key={row.id}
+                                        aria-checked={isItemSelected}
+                                        selected={isItemSelected}
+                                    >   
+                                        {haveCheckbox &&
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    color="primary"
+                                                    checked={isItemSelected}
+                                                    // inputProps={{
+                                                    //     'aria-labelledby': labelId,
+                                                    // }}
+                                                />
+                                            </TableCell>
+                                        }
                                         {columns.map((column) => {
                                             const key = column.id;
                                             if(key !== 'actions') {
                                                 const value = row[column.id];
 
-                                                return (
-                                                    <TableCell key={key}>
-                                                        {typeof value === 'object' ? 
+                                                if (Array.isArray(value)) {
+                                                    return (
+                                                        <TableCell key={key}>
+                                                            {value.join(' - ')}
+                                                        </TableCell>
+                                                    );
+                                                } else if (typeof value == 'object') {
+                                                    return (
+                                                        <TableCell key={key}>
                                                             <TableCellUsers 
                                                                 index={key}
                                                                 row={value}
                                                             />
-                                                        : value }
-                                                    </TableCell>
-                                                );
+                                                        </TableCell>
+                                                    );
+                                                } else {
+                                                    return (
+                                                        <TableCell key={key}>
+                                                            {value}
+                                                        </TableCell>
+                                                    );
+                                                }
                                             }
                                             else {
                                                 return (
                                                     <TableCell key={key}>
-                                                        <IconButton aria-label="details" onClick={() => handleOpenModal(row)}>
-                                                            <VisibilityIcon />
-                                                        </IconButton>
-                                                        <IconButton aria-label="delete">
-                                                            <DeleteIcon />
-                                                        </IconButton>
+                                                        {handleDetails && <IconButton onClick={() => handleDetails(row.id)}><VisibilityIcon /></IconButton>}
+                                                        {/* <IconButton><DeleteForeverIcon /></IconButton> */}
+                                                        <IconButton></IconButton>
                                                     </TableCell>
                                                 );
                                             }                                        

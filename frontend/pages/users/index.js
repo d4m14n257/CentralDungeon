@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 
 import TableComponent from "@/components/TableComponent";
-import UserModalInfo from "@/components/users/UserModalInfo";
+import UserModalInfo from "@/components/users/modal/UserModalInfo";
 
 /*
     Por facilidad al admin, se mantendran los accesos rapidos a las estadisticas unicas, a pesar de que tenga un ciclo.

@@ -1,4 +1,5 @@
 import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
 
 import CardComponent from "@/components/CardComponent";
 import TableComponent from '@/components/TableComponent';
@@ -28,15 +29,18 @@ import CardBodyTable from '@/components/tables/CardBodyTable';
 const table = {
     master: 'Teshinyl mal escrito',
     name: 'Nombre de la mesa',
-    allowsmaster: 'Aqui seria una lista de cosas que el master hara durante la mesa, pero sera un texto explicativo.',
     descripction: 'Esta es una descripcion de una mesa que no existe solo para poner texto en esta cosa para y se vea jsjsjs',
+    allowsmaster: 'Aqui seria una lista de cosas que el master hara durante la mesa, pero sera un texto explicativo.',
     startdate: '2023-12-21T19:30:00',
     timezone: 'UTC-02:00',
     requeriments: "un texto con los requisitos para leer si no existe este no deberia existir el texto el boton",
     files: ["/test/CV-Jorge-Damian-Dominguez-Jimenez-English.pdf"], //Este arreglo servira para identificar si tiene archivos o no, para habilitar el boton de descarga.
     tag: ['Gore', 'safeword', 'D&D'],
+    system: "Nombre del sistema",
     schedule: ['Lunes - 18:30 UTC-06:00', 'Jueves - 19:30 UTC-06:00', 'Viernes - 14:30 UTC-06:00'],
     status: 'Abierto',
+    platform: 'Roll20',
+    duration: 'One Shot',
     players: [
         {
             id: 1,
@@ -79,28 +83,42 @@ const table = {
     ],
 }
 
-export default function Opened () {
+export default function Available () {
     return (
-        <>
-            <CardComponent 
-                title={table.name}
-                subtitle={table.master}
+        <Grid
+            container
+            spacing={2}
+        >   
+            <Grid
+                item
+                xs={12}
             >
-                <CardBodyTable 
-                    details={table}
-                />
-            </CardComponent>
-            {table.players.length ?
-                <TableComponent 
-                    title='Jugadores en mesa'
-                    columns={table.columns}
-                    rows={table.players}
-                    mt={5}
-                /> :
-                <Typography sx={{mt: 20, textAlign: 'center', opacity: '0.3', userSelect: 'none'}} variant='h3'>
-                    La lista de jugadores es privada.
-                </Typography>
-            }
-        </>
+                <CardComponent 
+                    title={table.name}
+                    subtitle={table.master}
+                    additional={table.system}
+                >
+                    <CardBodyTable 
+                        table={table}
+                    />
+                </CardComponent>
+            </Grid>
+            <Grid
+                item
+                xs={12}
+            >
+                {table.players.length ?
+                    <TableComponent 
+                        title='Jugadores en mesa'
+                        columns={table.columns}
+                        rows={table.players}
+                        mt={5}
+                    /> :
+                    <Typography sx={{mt: 20, textAlign: 'center', opacity: '0.3', userSelect: 'none'}} variant='h3'>
+                        La lista de jugadores es privada.
+                    </Typography>
+                }
+            </Grid>
+        </Grid>
     );
 }
