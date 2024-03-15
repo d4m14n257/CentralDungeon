@@ -1,4 +1,4 @@
-import { useState, useRef, Children } from 'react';
+import { useState } from 'react';
 
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -9,14 +9,10 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import TableCellUsers from './users/TableCellUsers';
-import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
-
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
 import { global } from '@/styles/global';
 
@@ -73,7 +69,7 @@ const EnhancedTableToolbar = (props) => {
   }
 
 export default function TableComponent (props) {
-    const { title, columns, rows, checkbox, minWidth, handleDetails } = props;
+    const { title, columns, rows, checkbox, minWidth, Actions } = props;
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -182,9 +178,11 @@ export default function TableComponent (props) {
                                             else {
                                                 return (
                                                     <TableCell key={key}>
-                                                        {handleDetails && <IconButton onClick={() => handleDetails(row.id)}><VisibilityIcon /></IconButton>}
-                                                        {/* <IconButton><DeleteForeverIcon /></IconButton> */}
-                                                        <IconButton></IconButton>
+                                                        <Actions
+                                                            id={row.id}
+                                                            value={row}
+                                                            status={row.status}
+                                                        />
                                                     </TableCell>
                                                 );
                                             }                                        

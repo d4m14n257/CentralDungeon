@@ -1,5 +1,7 @@
 import { Modal, Fade, Box, Backdrop, IconButton } from "@mui/material";
 
+/* Modal de confirmacion con shift */
+
 export default function ModalBase(props) {
     const { isOpen, handleCloseModal, children } = props
 

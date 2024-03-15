@@ -48,8 +48,7 @@ export default function CardComponent (props) {
                 {children}
             </Card>
             {menu &&
-                <Menu
-                    
+                <Menu 
                     anchorEl={openMenu}
                     id="account-menu"
                     open={open}
@@ -59,9 +58,11 @@ export default function CardComponent (props) {
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 >
                     {menu.map((item) => (
-                        <MenuItemComponent 
+                        <MenuItemComponent
+                            id={item.name}
                             name={item.name}
                             Icon={item.Icon}
+                            handleClickMenu={item.handleClickMenu}
                         />
                     ))}
                 </Menu>

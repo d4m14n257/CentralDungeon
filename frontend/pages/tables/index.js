@@ -1,5 +1,4 @@
 import { useContext, useState } from "react";
-import { useRouter } from "next/router";
 
 import IconButton from '@mui/material/IconButton';
 
@@ -10,7 +9,13 @@ import TableComponent from "@/components/TableComponent";
 import { global } from "@/styles/global";
 
 import { ColorModeContext } from "@/context/ColorModeContext";
+
 import CreateModalTable from "@/components/tables/modals/CreateModalTable";
+import ActionButtonTable from "@/components/tables/ActionButtonTable";
+
+/* Zona horaria no mostrar 
+    Doble click con tabla
+*/
 
 const tables = [
     {
@@ -97,14 +102,8 @@ const columns = [
 ]
 
 export default function Tables () {
-    const router = useRouter();
     const { mode } = useContext(ColorModeContext);  
     const [ create, setCreate ] = useState(false);
-
-    
-    const handleTableRoute = (id) => {
-        router.push(`/tables/${id}`)
-    }
 
     const handleOpenCreateTable = () => {
         setCreate(true);
@@ -113,14 +112,14 @@ export default function Tables () {
     const handleCloseCreateTable = () => {
         setCreate(false);
     }
-
+    
     return (
         <>
             <TableComponent 
-                title="Mesas"
+                title="Mis mesas"
                 columns={columns}
                 rows={tables}
-                handleDetails={handleTableRoute}
+                Actions={ActionButtonTable}
             />
             <IconButton 
                 sx={{

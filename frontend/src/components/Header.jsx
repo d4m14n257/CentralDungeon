@@ -7,8 +7,16 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from '@mui/material/IconButton';
 import Avatar from '@mui/material/Avatar';
+import InputBase from '@mui/material/InputBase';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 
+import { styled, alpha } from '@mui/material/styles';
+
+import CommentIcon from '@mui/icons-material/Comment';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
+import SearchIcon from '@mui/icons-material/Search';
 
 import { global } from "@/styles/global";
 import { UserContext } from "@/context/UserContext";
@@ -22,6 +30,47 @@ import { UserContext } from "@/context/UserContext";
     Los criterios seran catalogaran para las chips y facilitar Querys.
     Dependiendo de donde se haga la busqueda, dependera como sera y quien. (mas chanva :c)
 */
+
+const Search = styled('div')(({ theme }) => ({
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: alpha(theme.palette.common.white, 0.15),
+    '&:hover': {
+        backgroundColor: alpha(theme.palette.common.white, 0.25),
+    },
+    marginLeft: 0,
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+        marginLeft: theme.spacing(1),
+        width: 'auto',
+    },
+}));
+
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+}));
+  
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    width: '100%',
+    '& .MuiInputBase-input': {
+        padding: theme.spacing(1, 1, 1, 0),
+        paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+        transition: theme.transitions.create('width'),
+        [theme.breakpoints.up('sm')]: {
+            width: '12ch',
+            '&:focus': {
+                width: '20ch',
+            },
+        },
+    },
+}));
 
 export default function Header(props) {
     const { username } = useContext(UserContext);
@@ -39,11 +88,26 @@ export default function Header(props) {
                 <Button sx={{color: "white"}} startIcon={<VideogameAssetIcon size="large"/>} onClick={handleReturnHome}>
                     <Typography variant="h6">Central Dungeon</Typography>
                 </Button>
-                <IconButton onClick={handleOpenUser}>
-                    <Avatar>
-                        {username.charAt(0)}
-                    </Avatar>
-                </IconButton>
+                <Box sx={global.iconHeader}>
+                    <Search>
+                        <SearchIconWrapper>
+                            <SearchIcon />
+                        </SearchIconWrapper>
+                        <StyledInputBase
+                            placeholder="Buscador..."
+                            inputProps={{ 'aria-label': 'search' }}
+                        />
+                    </Search>
+                    <Stack direction='row'>
+                        <IconButton><CommentIcon /></IconButton>
+                        <IconButton><NotificationsIcon /></IconButton>
+                    </Stack>
+                    <IconButton onClick={handleOpenUser}>
+                        <Avatar>
+                            {username.charAt(0)}
+                        </Avatar>
+                    </IconButton>
+                </Box>
             </Toolbar>
         </AppBar>
     );

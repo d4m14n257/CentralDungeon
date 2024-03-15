@@ -1,6 +1,7 @@
 import Grid from '@mui/material/Grid';
 
 import ListComponent from '@/components/ListComponent';
+import ListBodyPlayer from '@/components/player/ListBodyPlayer';
 
 const joined_tables = [
     {
@@ -55,8 +56,12 @@ export default function JoinedTable () {
         >
             <ListComponent 
                 info={{name: 'Mis mesas', id: 'joined-table'}}
-                tables={joined_tables}
-            />
+            >
+                <ListBodyPlayer 
+                    info={{name: 'Mis mesas', id: 'joined-table'}}
+                    tables={joined_tables}
+                />
+            </ListComponent>
         </Grid> 
     );
 }

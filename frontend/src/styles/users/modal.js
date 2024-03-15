@@ -1,8 +1,9 @@
 import { global } from "../global"
 
-export const styles = {
+export const modal = {
     body: {
         ...global.colFlex,
+        minWidth: 450
     },
     header: {
         ...global.rowFlex,
@@ -23,7 +24,6 @@ export const styles = {
     info: {
         ...global.colFlex,
         gap: 1,
-
     },
     avatarContent: {
         ...global.rowFlex,

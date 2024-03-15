@@ -24,6 +24,8 @@ import CardBodyTable from '@/components/tables/CardBodyTable';
                       admin tenga mano en esto.) 
         Las mesas pueden reabrir la misma mesa, en terminos de front no cambia nada, en back se gaurda el historico de la misma.
         La relacion es uno a muchos para estos casos, pero normalemnte sera 1 a 1.
+
+        Descargar por archivos
 */
 
 const table = {

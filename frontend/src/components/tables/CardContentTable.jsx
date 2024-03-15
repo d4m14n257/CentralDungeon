@@ -52,7 +52,7 @@ export default function CardContentTable (props) {
                     {table.platform}
                 </Typography>
                 <Typography>
-                    <Span title={'Duracion: '} />
+                    <Span title={'Duracion por sesión: '} />
                     {table.duration}
                 </Typography>
                 <Typography>

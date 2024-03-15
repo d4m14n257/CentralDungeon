@@ -3,7 +3,7 @@ import { global } from "../global"
 export const modal = {
     body: {
         ...global.colFlex,
-        gap: 2
+        gap: 2,
     },
     header: {
         ...global.rowFlex,

@@ -1,6 +1,7 @@
 import Grid from '@mui/material/Grid';
 
 import ListComponent from '@/components/ListComponent';
+import ListBodyPlayer from '@/components/player/ListBodyPlayer';
 
 const first_class_tables = [
     {
@@ -55,8 +56,12 @@ export default function FirstClaseTable () {
         >
             <ListComponent 
                 info={{name: 'Mis de primer clase', id: 'first-class-table'}}
-                tables={first_class_tables}
-            />
+            >
+                <ListBodyPlayer 
+                    info={{name: 'Mis de primer clase', id: 'first-class-table'}}
+                    tables={first_class_tables}
+                />
+            </ListComponent>
         </Grid> 
     );
 }

@@ -1,6 +1,7 @@
 import Grid from '@mui/material/Grid';
 
 import ListComponent from '@/components/ListComponent';
+import ListBodyPlayer from '@/components/player/ListBodyPlayer';
 
 const public_tables = [
     {
@@ -56,8 +57,12 @@ export default function PublicTable () {
         >
             <ListComponent 
                 info={{name: 'Mesas publicas', id: 'public-table'}}
-                tables={public_tables}
-            />
+            >
+                <ListBodyPlayer 
+                    info={{name: 'Mesas publicas', id: 'public-table'}}
+                    tables={public_tables}
+                />
+            </ListComponent>
         </Grid> 
     );
 }

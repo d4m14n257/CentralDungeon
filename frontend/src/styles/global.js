@@ -18,6 +18,12 @@ export const global = {
         flexDirection: "row",
         justifyContent: 'space-between'
     },
+    iconHeader: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems:'center',
+        gap: 2
+    },
     cardProfile: {
         position: 'fixed',
         width: 400,
@@ -92,5 +98,5 @@ export const global = {
         width: 80, 
         height: 80,
         marginRight: 3
-    }
+    },
 }

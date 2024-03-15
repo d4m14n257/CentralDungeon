@@ -43,6 +43,14 @@ export default function App({ Component, pageProps }) {
         localStorage.setItem('theme', mode);
     }, [mode])
 
+    useEffect(() => {
+        sessionStorage.setItem('rol', rol);
+    }, [rol])
+
+    const handleUpdateRol = (currentRol) => {
+        setRol(currentRol);
+    }
+
     const colorMode = useMemo(
         () => ({
             toggleColorMode: () => {
@@ -66,7 +74,7 @@ export default function App({ Component, pageProps }) {
     }
 
     return (
-        <UserContext.Provider value={{username: 'Teshynil', rol: rol, roles: ['Jugador', 'Master', 'Admin']}}>
+        <UserContext.Provider value={{username: 'Teshynil', rol: rol, roles: ['Jugador', 'Master', 'Admin'], handleUpdateRol: handleUpdateRol}}>
             <ColorModeContext.Provider value={{ colorMode, mode }}>
                 <ThemeProvider theme={theme}>
                     <CssBaseline />

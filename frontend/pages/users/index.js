@@ -1,7 +1,5 @@
-import { useState, useRef } from "react";
-
+import ActionButtonUser from "@/components/users/ActionButtonUser";
 import TableComponent from "@/components/TableComponent";
-import UserModalInfo from "@/components/users/modal/UserModalInfo";
 
 /*
     Por facilidad al admin, se mantendran los accesos rapidos a las estadisticas unicas, a pesar de que tenga un ciclo.
@@ -67,18 +65,6 @@ const users =
 }
 
 export default function Users () {
-    const [openModal, setOpenModal] = useState(false);
-    const user = useRef({});
-
-    const handleOpenModal = (value) => {
-        user.current = value;
-        setOpenModal(true);
-    }
-
-    const handleCloseModal = () => {
-        setOpenModal(false);
-    }
-
     return (
         <>
             <TableComponent
@@ -86,14 +72,8 @@ export default function Users () {
                 columns={users.columns}
                 rows={users.rows}
                 minWidth={users.minWidth}
-                handleOpenModal={handleOpenModal}
-                handleCloseModal={handleCloseModal}
+                Actions={ActionButtonUser}
             />
-            {openModal && <UserModalInfo 
-                isOpen={openModal}
-                handleCloseModal={handleCloseModal}
-                user={user.current}
-            />}
         </>
     );
 }

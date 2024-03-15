@@ -3,9 +3,6 @@ import { useRef, useContext } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import { styled } from '@mui/material/styles';
-
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 import { Editor } from "@tinymce/tinymce-react";
 
@@ -14,18 +11,7 @@ import ModalBase from "../../ModalBase";
 import { modal } from '@/styles/tables/modal';
 
 import { ColorModeContext } from '@/context/ColorModeContext';
-
-const VisuallyHiddenInput = styled('input')({
-    clip: 'rect(0 0 0 0)',
-    clipPath: 'inset(50%)',
-    height: 1,
-    overflow: 'hidden',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    whiteSpace: 'nowrap',
-    width: 1,
-});
+import UploadButton from '@/forms/UploadButton';
 
 export default function RequestModalTable (props) {
     const {isOpen, handleCloseModal} = props;
@@ -62,16 +48,7 @@ export default function RequestModalTable (props) {
                                         "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
                                     }}
                             />
-                            <Button
-                                component="label"
-                                role={undefined}
-                                variant="contained"
-                                tabIndex={-1}
-                                startIcon={<CloudUploadIcon />}
-                            >
-                                Upload file
-                                <VisuallyHiddenInput type="file" />
-                            </Button>
+                            <UploadButton />
                         </Box>
                         <Box sx={modal.footer}>
                             <Button variant='outlined' onClick={handleCloseModal}>Subir</Button>
