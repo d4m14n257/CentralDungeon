@@ -77,7 +77,6 @@ export default function Header(props) {
     const { handleOpenUser } = props
     const router = useRouter();
 
-
     const handleReturnHome = () => {
         router.push(`/`)
     }
