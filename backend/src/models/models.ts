@@ -41,14 +41,20 @@ export interface Table {
     requeriments: string | null
     status?: StatusTable
     duration: string
-    systems?: [Systems] | []
-    platforms?: [Platforms] | []
-    tags?: [Tags] | []
-    players?: [Users] | []
+    systems?: Systems[] | []
+    platforms?: Platforms[] | []
+    tags?: Tags[] | []
+    players?: Users[] | []
 }
 
 export interface ResponseModel {
     status: number
     response: string
+}
+
+export interface TablesIndex {
+    public_tables: {} | null,
+    first_class_tables: {} | null,
+    joined_tables: {} | null  
 }
 

@@ -6,149 +6,35 @@ import Grid from '@mui/material/Grid';
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
-import ListComponent from '@/components/ListComponent';
-
 import { UserContext } from '@/context/UserContext';
 
+import ListComponent from '@/components/ListComponent';
 import ListBodyPlayer from '@/components/player/ListBodyPlayer';
 import ListTableMasterBody from '@/components/master/ListTableMasterBody';
 import ListRequestMasterBody from '@/components/master/ListRequestMasterBody';
 import CreateModalTable from '@/components/tables/modals/CreateModalTable';
+import { Error } from '@/components/Error';
 
-const tables_player = {
-    public_tables: [
-        {
-            id: 1,
-            name: 'Nombre de mesa 1',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 2,
-            name: 'Nombre de mesa 2',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 3,
-            name: 'Nombre de mesa 3',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 4,
-            name: 'Nombre de mesa 4',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 5,
-            name: 'Nombre de mesa 5',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 6,
-            name: 'Nombre de mesa 6',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
+import { getTablesIndex } from '@/api/getTablesIndex';
 
-    ],
-    first_class_tables: [
-        {
-            id: 1,
-            name: 'Nombre de mesa primera clase 1',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 2,
-            name: 'Nombre de mesa primera clase 2',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 3,
-            name: 'Nombre de mesa primera clase 3',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 4,
-            name: 'Nombre de mesa primera clase 4',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 5,
-            name: 'Nombre de mesa primera clase 5',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 6,
-            name: 'Nombre de mesa primera clase 6',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-    ],
-    joined_tables: [
-        {
-            id: 1,
-            name: 'Nombre de mesa unida 1',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 2,
-            name: 'Nombre de mesa unida 2',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 3,
-            name: 'Nombre de mesa unida 3',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 4,
-            name: 'Nombre de mesa unida 4',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 5,
-            name: 'Nombre de mesa unida 5',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-        {
-            id: 6,
-            name: 'Nombre de mesa unida 6',
-            description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-            startdate: '2023-12-21T19:30:00',
-            timezone: 'UTC-02:00'
-        },
-    ]
+export const getServerSideProps = async () => {
+    const result = await getTablesIndex("1");
+
+    if(!result.status) {
+        return {
+            props: {
+                public_tables: result.public_tables,
+                first_class_tables: result.first_class_tables,
+                joined_tables: result.joined_tables
+            }
+        }
+    }
+    else
+        return {
+            props: {
+                err: result
+            }
+        }
 }
 
 const table_master = {
@@ -223,9 +109,11 @@ const table_master = {
     ]
 }
 
-export default function Dashboard () {
+export default function Dashboard (props) {
+    const { public_tables, first_class_tables, joined_tables, err } = props;
     const router = useRouter();
     const { rol } = useContext(UserContext);
+
 
     const [create, setCreate] = useState(false);
 
@@ -248,102 +136,106 @@ export default function Dashboard () {
         setCreate(false)
     }
 
-    if(rol == 'Jugador') {
-        return (
-            <Grid 
-                container
-                spacing={2}
-            >
-                <ListComponent 
-                    xs={12}
-                    lg={8}
-                    title='Mesas publicas'
-                    description='Mesas que se encunetran disponibles para todo publico.'
-                >
+    return (
+        <Grid
+            container
+            spacing={2}
+        >
+            <Error>
+                <Error.When>
+                    dasdsa
+                    {/* <ListComponent
+                        xs={12}
+                        lg={8}
+                        title='Mesas publicas'
+                        description='Mesas que se encunetran disponibles para todo publico.'
+                    >   
+                        <ListBodyPlayer
+                            info={{name: 'Mesas publicas', id: 'public-table'}}
+                            tables={public_tables}
+                            handleTableSelect={handleTableSelect}
+                            err={err}
+                        />
+                    </ListComponent> */}
+                    {/* <ListComponent
+                        xs={12}
+                        lg={4}
+                        title='Mesas de primera clase'
+                        description='Mesas disponibles por temporada.'
+                    >
                     <ListBodyPlayer
-                        info={{name: 'Mesas publicas', id: 'public-table'}}
-                        tables={tables_player.public_tables}
-                        handleTableSelect={handleTableSelect}
+                            info={{name: 'Mesas de primera clase', id: 'first-class-table'}}
+                            tables={first_class_tables}
+                            handleTableSelect={handleTableSelect}
                     />
-                </ListComponent>
-                <ListComponent 
-                    xs={12}
-                    lg={4}
-                    title='Mesas de primera clase'
-                    description='Mesas disponibles por temporada.'
-                >
-                   <ListBodyPlayer
-                        info={{name: 'Mesas de primera clase', id: 'first-class-table'}}
-                        tables={tables_player.first_class_tables}
-                        handleTableSelect={handleTableSelect}
-                   /> 
-                </ListComponent>
-                <ListComponent 
-                    title= 'Mesas jugando'
-                    description='Mesas donde estas jugando.'
-                >
-                    <ListBodyPlayer 
-                        info={{name: 'Mesas jugando', id: 'joined-table'}}
-                        tables={tables_player.joined_tables}
-                        handleTableSelect={handleTableSelect}
-                    />
-                </ListComponent>
-            </Grid>
-        );
-    }
-    else if(rol == 'Master') {
-        return (
-            <Grid 
-                container
-                spacing={2}
-            >
-                <Grid
-                    item
-                    md={8}
-                    xs={12}
-                >   
-                    <ListComponent
-                        title="Mis mesas"
-                        description="Ultimas mesas creadas y activas."
-                        action={{Icon: AddCircleIcon, handleClickButton: handleOpenCreateTable}}  
+                    </ListComponent> */}
+                    {/* <ListComponent
+                        title= 'Mesas jugando'
+                        description='Mesas donde estas jugando.'
                     >
-                        <ListTableMasterBody 
-                            tables={table_master.table}
+                        <ListBodyPlayer
+                            info={{name: 'Mesas jugando', id: 'joined-table'}}
+                            tables={joined_tables}
+                            handleTableSelect={handleTableSelect}
                         />
-                    </ListComponent>
-                </Grid>
-                <Grid
-                    item
-                    md={4}
-                    xs={12}
-                >
-                     <ListComponent
-                        title="Solicitudes"
-                        description="Ultimas solicitudes recibidas."
-                    >
-                        <ListRequestMasterBody 
-                            requests={table_master.requests}
-                        />
-                    </ListComponent>
-                </Grid>
-                {create && 
-                    <CreateModalTable 
-                        isOpen={create}
-                        handleCloseModal={handleCloseCreateTable}
-                    />
-                }
-            </Grid>
-        );
-    }
-    else {
-        return (
-            <Grid 
-                container
-                spacing={2}
-            >
-                Admin
-            </Grid>
-        );
-    }
-
+                    </ListComponent> */}
+                </Error.When>
+                <Error.Else err={err} />
+            </Error>
+        </Grid>
+    );
 }
+    // else if(rol == 'Master') {
+    //     return (
+    //         <Grid
+    //             container
+    //             spacing={2}
+    //         >
+    //             <Grid
+    //                 item
+    //                 md={8}
+    //                 xs={12}
+    //             >
+    //                 <ListComponent
+    //                     title="Mis mesas"
+    //                     description="Ultimas mesas creadas y activas."
+    //                     action={{Icon: AddCircleIcon, handleClickButton: handleOpenCreateTable}}
+    //                 >
+    //                     <ListTableMasterBody
+    //                         tables={table_master.table}
+    //                     />
+    //                 </ListComponent>
+    //             </Grid>
+    //             <Grid
+    //                 item
+    //                 md={4}
+    //                 xs={12}
+    //             >
+    //                  <ListComponent
+    //                     title="Solicitudes"
+    //                     description="Ultimas solicitudes recibidas."
+    //                 >
+    //                     <ListRequestMasterBody
+    //                         requests={table_master.requests}
+    //                     />
+    //                 </ListComponent>
+    //             </Grid>
+    //             {create &&
+    //                 <CreateModalTable
+    //                     isOpen={create}
+    //                     handleCloseModal={handleCloseCreateTable}
+    //                 />
+    //             }
+    //         </Grid>
+    //     );
+    // }
+    // else {
+    //     return (
+    //         <Grid
+    //             container
+    //             spacing={2}
+    //         >
+    //             Admin
+    //         </Grid>
+    //     );
+    // }

@@ -22,7 +22,7 @@ export function createCatalogues<T extends Tags | Systems | Platforms>(conn : Co
         }
         catch(err : any) {
             await conn.rollback;
-            res.status(err.http_status ? err.http_status : 409).send(err)
+            res.status(err.http_status ? err.http_status : 409).send({...err, http_status: undefined})
         }
     }
 }
@@ -41,7 +41,7 @@ export function getCatalogues(conn : Connection, table_name : string) {
             
         }
         catch(err : any) {
-            res.status(err.http_status ? err.http_status : 500).send(err)
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})
         }
     }
 }
@@ -59,7 +59,7 @@ export function getCatalogueIndex(conn : Connection, table_name : string) {
             });
         }
         catch (err: any){
-            res.status(err.http_status ? err.http_status : 500).send(err)
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})
         }
     }
 }
@@ -96,7 +96,7 @@ export function setCatalogueIndex<T extends Tags | Systems | Platforms>(conn : C
         }
         catch (err: any) {
             await conn.rollback
-            res.status(err.http_status ? err.http_status : 500).send(err)
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})
         }
     }
 }

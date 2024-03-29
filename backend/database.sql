@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS Users_Roles (
 CREATE TABLE IF NOT EXISTS Comments (
     id VARCHAR(64),
     description VARCHAR(1024),
-    type ENUM ('JJ', 'JM', 'MJ', 'General'),
+    comment_type ENUM ('JJ', 'JM', 'MJ', 'General'),
     karma_impact ENUM ('Commented', 'Neutral', 'Reported'), 
     status ENUM ('Under review', 'Reviewed', 'Rejected', 'Deleted') DEFAULT 'Under review',
     user_created_id VARCHAR(64),
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS Requests (
     id VARCHAR(64),
     justification VARCHAR(1024),
     status ENUM ('Under review', 'Reviewed', 'Rejected', 'Deleted') DEFAULT 'Under review',
-    type ENUM ('Rol', 'Table', 'Master'),
+    request_type ENUM ('Rol', 'Table', 'Master'),
     user_created_id VARCHAR(64),
     user_reviewed_id VARCHAR(64) NULL,
     CONSTRAINT PK_Requests PRIMARY KEY (id),
@@ -71,8 +71,9 @@ CREATE TABLE IF NOT EXISTS Tables (
     timezone VARCHAR(64) NULL,
     requeriments VARCHAR(1024) NULL,
     status ENUM ('Preparation', 'Opened', 'In process', 'Pause', 'Canceled', 'Finished', 'Deleted') DEFAULT 'Preparation',
-    type ENUM('Public', 'First class') DEFAULT 'Public',
+    table_type ENUM('Public', 'First class') DEFAULT 'Public',
     duration TIME,
+    created_at DATETIME,
     CONSTRAINT PK_Table PRIMARY KEY (id)
 )ENGINE=InnoDB;
 
@@ -98,7 +99,7 @@ CREATE TABLE IF NOT EXISTS Registration_Files (
 CREATE TABLE IF NOT EXISTS Table_Files (
     table_id VARCHAR(64),
     file_id VARCHAR(64),
-    type ENUM ('Preparation', 'Sesion', 'Deleted'),
+    table_file_type ENUM ('Preparation', 'Sesion', 'Deleted'),
     CONSTRAINT PK_files_table PRIMARY KEY (table_id, file_id),
     FOREIGN KEY (table_id) REFERENCES Tables(id),
     FOREIGN KEY (file_id) REFERENCES Files(id)
@@ -171,7 +172,7 @@ CREATE TABLE IF NOT EXISTS Table_Systems (
 CREATE TABLE IF NOT EXISTS Masters (
     table_id VARCHAR(64),
     user_master_id VARCHAR(64),
-    type ENUM ('Owner', 'Master') DEFAULT 'Master',
+    master_type ENUM ('Owner', 'Master') DEFAULT 'Master',
     status ENUM ('Created', 'Deleted') DEFAULT 'Created',
     CONSTRAINT PK_Master PRIMARY KEY (table_id, user_master_id),
     FOREIGN KEY (table_id) REFERENCES Tables(id),

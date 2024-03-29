@@ -13,7 +13,7 @@ import ViewMoreComponent from "../ViewMoreComponent";
 import { global } from '@/styles/global';
 
 export default function ListBodyPlayer (props) {
-    const { tables, info, handleTableSelect } = props;
+    const { tables, info, handleTableSelect, err } = props;
 
     const router = useRouter();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
@@ -43,7 +43,7 @@ export default function ListBodyPlayer (props) {
                                     />
                                     <ListItemText
                                         primary={<Typography variant="body1"><Span title={'Fecha de inicio: '}/>{date}</Typography>}
-                                        secondary={<Typography variant="subtitle2"><Span title={'Zona horaria de la mesa: '}/>{table.timezone}</Typography>}
+                                        secondary={<Typography variant="subtitle2"><Span title={'Master: '}/>{table.master}</Typography>}
                                     />
                                 </Box>
                             </ListItemButton>

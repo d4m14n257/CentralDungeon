@@ -6,6 +6,7 @@ import { platform } from "os";
 import { tables } from "./router/tables";
 
 //TODO: Change every status 418 because it isnt a teatpot
+//TODO: Keep only the number and simbol en utc.
 
 dotenv.config();
 
