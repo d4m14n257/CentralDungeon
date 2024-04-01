@@ -54,7 +54,6 @@ export interface ResponseModel {
 
 export interface TablesIndex {
     public_tables: {} | null,
-    first_class_tables: {} | null,
     joined_tables: {} | null  
 }
 

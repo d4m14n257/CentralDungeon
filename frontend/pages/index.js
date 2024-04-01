@@ -13,7 +13,7 @@ import ListBodyPlayer from '@/components/player/ListBodyPlayer';
 import ListTableMasterBody from '@/components/master/ListTableMasterBody';
 import ListRequestMasterBody from '@/components/master/ListRequestMasterBody';
 import CreateModalTable from '@/components/tables/modals/CreateModalTable';
-import { Error } from '@/components/Error';
+import { Error, ErrorMessage } from '@/components/info/HandlerError';
 
 import { getTablesIndex } from '@/api/getTablesIndex';
 
@@ -21,11 +21,13 @@ export const getServerSideProps = async () => {
     const result = await getTablesIndex("1");
 
     if(!result.status) {
+        console.log(result.joined_tables)
+
         return {
             props: {
                 public_tables: result.public_tables,
-                first_class_tables: result.first_class_tables,
-                joined_tables: result.joined_tables
+                joined_tables: result.joined_tables,
+                err: false
             }
         }
     }
@@ -114,9 +116,8 @@ export default function Dashboard (props) {
     const router = useRouter();
     const { rol } = useContext(UserContext);
 
-
     const [create, setCreate] = useState(false);
-
+    
     const handleTableSelect = ({id}) => {
         if(id) {
             if(id === 'public-table')
@@ -142,45 +143,33 @@ export default function Dashboard (props) {
             spacing={2}
         >
             <Error>
-                <Error.When>
-                    dasdsa
-                    {/* <ListComponent
+                <Error.When isError={err ? true : false}>
+                    <ListComponent
                         xs={12}
                         lg={8}
                         title='Mesas publicas'
-                        description='Mesas que se encunetran disponibles para todo publico.'
+                        description='Ultimas mesas disponibles para todo el publico.'
                     >   
                         <ListBodyPlayer
                             info={{name: 'Mesas publicas', id: 'public-table'}}
                             tables={public_tables}
                             handleTableSelect={handleTableSelect}
-                            err={err}
                         />
-                    </ListComponent> */}
-                    {/* <ListComponent
-                        xs={12}
-                        lg={4}
-                        title='Mesas de primera clase'
-                        description='Mesas disponibles por temporada.'
-                    >
-                    <ListBodyPlayer
-                            info={{name: 'Mesas de primera clase', id: 'first-class-table'}}
-                            tables={first_class_tables}
-                            handleTableSelect={handleTableSelect}
-                    />
-                    </ListComponent> */}
-                    {/* <ListComponent
+                    </ListComponent>
+                    <ListComponent
                         title= 'Mesas jugando'
-                        description='Mesas donde estas jugando.'
+                        description='Mesas en las que te encuentras jugando actualmente y se encuentran activas.'
                     >
                         <ListBodyPlayer
                             info={{name: 'Mesas jugando', id: 'joined-table'}}
                             tables={joined_tables}
                             handleTableSelect={handleTableSelect}
                         />
-                    </ListComponent> */}
+                    </ListComponent>
                 </Error.When>
-                <Error.Else err={err} />
+                <Error.Else>
+                    <ErrorMessage err={err}/>
+                </Error.Else>
             </Error>
         </Grid>
     );

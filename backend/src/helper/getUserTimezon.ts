@@ -1,4 +1,4 @@
-import { Connection, FieldPacket } from "mysql2/promise";
+import { Connection } from "mysql2/promise";
 
 export const getUserTimezone = async (conn : Connection, user_id : string) : Promise<any> => {
     const sql = `

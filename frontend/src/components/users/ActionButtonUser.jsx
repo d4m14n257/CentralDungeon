@@ -10,7 +10,7 @@ import UserModalInfo from "@/components/users/modal/UserModalInfo";
 
 export default function ActionButtonUser (props) {
     const { value } = props;
-    const [userInfo, setUserInfo] = useState(false);
+    const [ userInfo, setUserInfo ] = useState(false);
     const user = useRef();
 
     const handleOpenUserInfo = (value) => {

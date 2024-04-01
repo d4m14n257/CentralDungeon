@@ -1,3 +1,12 @@
+const warn = {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: '0.3',
+    userSelect: 'none',
+}
+
 export const global = {
     rowFlex: {
         display: "flex",
@@ -99,4 +108,13 @@ export const global = {
         height: 80,
         marginRight: 3
     },
+    warnError: {
+        ...warn,
+        height: 'calc(100vh - 88px)',
+        width: '100vw'
+    },
+    warn: {
+        ...warn,
+        margin: 2
+    }
 }
