@@ -1,6 +1,6 @@
-import { Connection } from "mysql2/promise";
+import getQuery from "../helper/getQuery";
 
-export const getJoinedTable = async (conn : Connection, utc : Promise<string>, user_id : string) : Promise<any> => {
+export const getJoinedTable = async (utc : Promise<string>, user_id : string) : Promise<any> => {
     const sql = `
     SELECT t.id, t.name, t.description, CONVERT_TZ(t.startdate, t.timezone, ?) as startdate, GROUP_CONCAT(um.name) as master
     FROM Users_registration ur 
@@ -13,18 +13,6 @@ export const getJoinedTable = async (conn : Connection, utc : Promise<string>, u
         AND ur.status = 'Player'
     GROUP BY t.id`;
 
-    let data;
-
-    try {
-        await conn.execute(sql, [utc, user_id]).then(([rows, field]) => {
-            data = rows;
-        }).catch((err : any) => {
-            throw {...err, http_status: 500};
-        })  
-
-        return data;
-    }
-    catch (err : any){
-        return err;
-    }
+    const params = [utc, user_id];
+    return await getQuery(sql, params);
 }

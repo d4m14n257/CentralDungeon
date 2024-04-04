@@ -1,32 +1,23 @@
 import { useRouter } from 'next/router';
 
-import { useContext, useState } from 'react';
-
 import Grid from '@mui/material/Grid';
 
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-
-import { UserContext } from '@/context/UserContext';
-
-import ListComponent from '@/components/ListComponent';
-import ListBodyPlayer from '@/components/player/ListBodyPlayer';
-import ListTableMasterBody from '@/components/master/ListTableMasterBody';
-import ListRequestMasterBody from '@/components/master/ListRequestMasterBody';
-import CreateModalTable from '@/components/tables/modals/CreateModalTable';
+import ListComponent from '@/components/general/ListComponent';
+import ListBodyPlayer from '@/components/general/ListBodyPlayer';
+import ListRequestBody from '@/components/general/ListRequestBody';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
 
-import { getTablesIndex } from '@/api/getTablesIndex';
+import { getGeneralView } from '@/api/getGeneralView';
 
 export const getServerSideProps = async () => {
-    const result = await getTablesIndex("1");
+    const result = await getGeneralView("1");
 
     if(!result.status) {
-        console.log(result.joined_tables)
-
         return {
             props: {
                 public_tables: result.public_tables,
                 joined_tables: result.joined_tables,
+                request_tables: result.request_tables,
                 err: false
             }
         }
@@ -39,102 +30,18 @@ export const getServerSideProps = async () => {
         }
 }
 
-const table_master = {
-    table: [
-        {
-            id: 1,
-            name: 'Nombre de una mesa',
-            description: 'Esta es una descripcion que tu pudiste y no se me ocurrio que texto ponerle para hacer un relleno xd',
-            players: 4,
-            tag: ['D&D', 'Gore', 'safeword']
-        },
-        {
-            id: 2,
-            name: 'Nombre de una mesa',
-            description: 'Esta es una descripcion que tu pudiste y no se me ocurrio que texto ponerle para hacer un relleno xd',
-            players: 4,
-            tag: ['D&D', 'Gore', 'safeword']
-        },
-        {
-            id: 3,
-            name: 'Nombre de una mesa',
-            description: 'Esta es una descripcion que tu pudiste y no se me ocurrio que texto ponerle para hacer un relleno xd',
-            players: 4,
-            tag: ['D&D', 'Gore', 'safeword']
-        },
-        {
-            id: 4,
-            name: 'Nombre de una mesa',
-            description: 'Esta es una descripcion que tu pudiste y no se me ocurrio que texto ponerle para hacer un relleno xd',
-            players: 4,
-            tag: ['D&D', 'Gore', 'safeword']
-        },
-        {
-            id: 5,
-            name: 'Nombre de una mesa',
-            description: 'Esta es una descripcion que tu pudiste y no se me ocurrio que texto ponerle para hacer un relleno xd',
-            players: 4,
-            tag: ['D&D', 'Gore', 'safeword']
-        }
-    ],
-    requests: [
-        {
-            id: 1,
-            name_table: 'Nombre de la mesa solicitada',
-            player_name: 'Teshinyl',
-            date: '2023-12-21T19:34:47'
-        },
-        {
-            id: 2,
-            name_table: 'Nombre de la mesa solicitada',
-            player_name: 'Teshinyl',
-            date: '2023-12-21T19:34:47'
-        },
-        {
-            id: 3,
-            name_table: 'Nombre de la mesa solicitada',
-            player_name: 'Teshinyl',
-            date: '2023-12-21T19:34:47'
-        },
-        {
-            id: 4,
-            name_table: 'Nombre de la mesa solicitada',
-            player_name: 'Teshinyl',
-            date: '2023-12-21T19:34:47'
-        },
-        {
-            id: 5,
-            name_table: 'Nombre de la mesa solicitada',
-            player_name: 'Teshinyl',
-            date: '2023-12-21T19:34:47'
-        }
-    ]
-}
 
 export default function Dashboard (props) {
-    const { public_tables, first_class_tables, joined_tables, err } = props;
+    const { public_tables, joined_tables, request_tables, err } = props;
     const router = useRouter();
-    const { rol } = useContext(UserContext);
 
-    const [create, setCreate] = useState(false);
-    
     const handleTableSelect = ({id}) => {
         if(id) {
-            if(id === 'public-table')
-                router.push(`/public-table`)
-            else if (id === 'first-class-table')
-                router.push(`/first-class-table`)
+            if(id === 'public-tables')
+                router.push(`/public-tables`)
             else if (id === 'joined-table')
                 router.push(`/joined-table`)
         }
-    }
-
-    const handleOpenCreateTable = () => {
-        setCreate(true)
-    }
-
-    const handleCloseCreateTable = () => {
-        setCreate(false)
     }
 
     return (
@@ -151,17 +58,27 @@ export default function Dashboard (props) {
                         description='Ultimas mesas disponibles para todo el publico.'
                     >   
                         <ListBodyPlayer
-                            info={{name: 'Mesas publicas', id: 'public-table'}}
+                            id='public-tables'
                             tables={public_tables}
                             handleTableSelect={handleTableSelect}
                         />
+                    </ListComponent>
+                    <ListComponent
+                        xs={12}
+                        lg={4}
+                        title="Peticiones"
+                        description="Ultimas petiiciones realizadas y su estado actual."
+                    >
+                        <ListRequestBody
+                            requests={request_tables}
+                         />
                     </ListComponent>
                     <ListComponent
                         title= 'Mesas jugando'
                         description='Mesas en las que te encuentras jugando actualmente y se encuentran activas.'
                     >
                         <ListBodyPlayer
-                            info={{name: 'Mesas jugando', id: 'joined-table'}}
+                            id='joined-tables'
                             tables={joined_tables}
                             handleTableSelect={handleTableSelect}
                         />
@@ -174,57 +91,3 @@ export default function Dashboard (props) {
         </Grid>
     );
 }
-    // else if(rol == 'Master') {
-    //     return (
-    //         <Grid
-    //             container
-    //             spacing={2}
-    //         >
-    //             <Grid
-    //                 item
-    //                 md={8}
-    //                 xs={12}
-    //             >
-    //                 <ListComponent
-    //                     title="Mis mesas"
-    //                     description="Ultimas mesas creadas y activas."
-    //                     action={{Icon: AddCircleIcon, handleClickButton: handleOpenCreateTable}}
-    //                 >
-    //                     <ListTableMasterBody
-    //                         tables={table_master.table}
-    //                     />
-    //                 </ListComponent>
-    //             </Grid>
-    //             <Grid
-    //                 item
-    //                 md={4}
-    //                 xs={12}
-    //             >
-    //                  <ListComponent
-    //                     title="Solicitudes"
-    //                     description="Ultimas solicitudes recibidas."
-    //                 >
-    //                     <ListRequestMasterBody
-    //                         requests={table_master.requests}
-    //                     />
-    //                 </ListComponent>
-    //             </Grid>
-    //             {create &&
-    //                 <CreateModalTable
-    //                     isOpen={create}
-    //                     handleCloseModal={handleCloseCreateTable}
-    //                 />
-    //             }
-    //         </Grid>
-    //     );
-    // }
-    // else {
-    //     return (
-    //         <Grid
-    //             container
-    //             spacing={2}
-    //         >
-    //             Admin
-    //         </Grid>
-    //     );
-    // }

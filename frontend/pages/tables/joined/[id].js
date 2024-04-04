@@ -1,4 +1,4 @@
-import CardComponent from "@/components/CardComponent";
+import CardComponent from "@/components/general/CardComponent";
 
 const table = {
     name: 'Nombre de una mesa xd',

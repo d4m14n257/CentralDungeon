@@ -16,12 +16,12 @@ import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 
-import MenuItemComponent from './MenuItemComponent';
+import MenuItemComponent from '../MenuItemComponent';
 
 import { useTheme } from '@mui/material/styles';
 
-import { ColorModeContext } from '@/context/ColorModeContext';
-import { UserContext } from '@/context/UserContext';
+import { ColorModeContext } from '@/contexts/ColorModeContext';
+import { UserContext } from '@/contexts/UserContext';
 
 import { global } from '@/styles/global';
 

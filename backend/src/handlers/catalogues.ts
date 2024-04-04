@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-import { Connection, ResultSetHeader } from "mysql2/promise";
+import { ResultSetHeader } from "mysql2/promise";
 import { v4 as uuidv4 } from 'uuid';
 import { Platforms, Systems, Tags } from "../models/models";
+import { conn } from "../config/database";
 
-export function createCatalogues<T extends Tags | Systems | Platforms>(conn : Connection, table_name : string) {
+export function createCatalogues<T extends Tags | Systems | Platforms>(table_name : string) {
     const sql = `INSERT INTO ${table_name} (id, name) VALUES (?, ?)`;
 
     return async (req : Request, res : Response) => {
@@ -27,7 +28,7 @@ export function createCatalogues<T extends Tags | Systems | Platforms>(conn : Co
     }
 }
 
-export function getCatalogues(conn : Connection, table_name : string) {
+export function getCatalogues(table_name : string) {
     const sql = `SELECT id, name FROM ${table_name} WHERE name LIKE ? AND status = 'Allowed'`;
 
     return async (req: Request, res : Response) => {
@@ -46,7 +47,7 @@ export function getCatalogues(conn : Connection, table_name : string) {
     }
 }
 
-export function getCatalogueIndex(conn : Connection, table_name : string) {
+export function getCatalogueIndex(table_name : string) {
     const sql = `SELECT id, name FROM ${table_name} WHERE id = ?`;
 
     return async(req: Request, res: Response) => {
@@ -78,7 +79,7 @@ export function getCatalogueIndex(conn : Connection, table_name : string) {
 
 */
 
-export function setCatalogueIndex<T extends Tags | Systems | Platforms>(conn : Connection, table_name : string, column_name : string) {
+export function setCatalogueIndex<T extends Tags | Systems | Platforms>(table_name : string, column_name : string) {
     const sql = `UPDATE ${table_name} SET ${column_name} = ? WHERE id = ?`;
 
     return async(req: Request, res: Response) => {

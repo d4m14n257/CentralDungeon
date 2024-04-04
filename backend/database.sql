@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS Users_registration (
     description VARCHAR(1024) NULL,
     table_id VARCHAR(64),
     user_id VARCHAR(64),
+    created DATETIME,
     CONSTRAINT PK_Registration PRIMARY KEY (id),
     FOREIGN KEY (table_id) REFERENCES Tables(id),
     FOREIGN KEY (user_id) REFERENCES Users(id)
@@ -187,4 +188,13 @@ CREATE TABLE IF NOT EXISTS Logs (
     updated_by VARCHAR(64),
     before_data JSON NULL,
     after_data JSON
+)ENGINE=InnoDB;
+
+
+
+CREATE TABLE IF NOT EXISTS Players_Table (
+    table_id VARCHAR(64),
+    players INT,
+    CONSTRAINT PK_Players PRIMARY KEY (table_id),
+    FOREIGN KEY (table_id) REFERENCES Tables(id)
 )ENGINE=InnoDB;

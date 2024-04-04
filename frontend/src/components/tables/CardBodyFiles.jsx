@@ -15,7 +15,7 @@ import Span from '../Span';
 
 import { card } from '@/styles/tables/card';
 import UploadButton from '@/forms/UploadButton';
-import { TableStateContext } from '@/context/TableStateContext';
+import { TableStateContext } from '@/contexts/TableStateContext';
 
 export default function CardBodyFiles(props) {
     const { files, useFiles } = props;

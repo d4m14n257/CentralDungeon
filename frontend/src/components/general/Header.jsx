@@ -17,12 +17,16 @@ import CommentIcon from '@mui/icons-material/Comment';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset';
 import SearchIcon from '@mui/icons-material/Search';
+import CasinoIcon from '@mui/icons-material/Casino';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
+import GradeIcon from '@mui/icons-material/Grade';
 
 import { global } from "@/styles/global";
-import { UserContext } from "@/context/UserContext";
+import { UserContext } from "@/contexts/UserContext";
 
 /*
-    Se integra un search con etiquetado, podria ser algo similar al de discord en los chats.
+    TODO: Se integra un search con etiquetado, podria ser algo similar al de discord en los chats.
     Criterios publico: Tag (de mesa) / AND y OR, Por master (si esta disponible en la mesa/Nombre de discord on el sistema)
     Criterios privado: ID de usuario que es jugador dentro de mesa (si es admin siempre si, si la lista es privada mamo), regresar solo que esta en mesas privadas, mas no cual o indicios de cuales,
                        ID de usuario que es master de la mesa (Siempre y cuando sea publico) Solo regresar las publicas y hacer mencion de cuantas a sido privada.
@@ -74,12 +78,24 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 export default function Header(props) {
     const { username } = useContext(UserContext);
-    const { handleOpenUser } = props
+    const { handleOpenUser } = props;
     const router = useRouter();
 
     const handleReturnHome = () => {
-        router.push(`/`)
-    }
+        router.push(`/`);
+    };
+
+    const handlePushMaster = () => {
+        router.push('/master');
+    };
+
+    const handleFirstClass = () => {
+        router.push('/first-class-tables');
+    };
+
+    const handlePublicClass = () => {
+        router.push('/public-tables');
+    };
 
     return (
         <AppBar position="fixed" color="primary">
@@ -87,6 +103,24 @@ export default function Header(props) {
                 <Button sx={{color: "white"}} startIcon={<VideogameAssetIcon size="large"/>} onClick={handleReturnHome}>
                     <Typography variant="h6">Central Dungeon</Typography>
                 </Button>
+                <Stack direction='row' spacing={5}>
+                    <Stack direction='column' alignItems='center'>
+                        <IconButton sx={{width: 40, height: 40}}><ManageAccountsIcon /></IconButton>
+                        <Typography variant="caption">Admin</Typography>
+                    </Stack>
+                    <Stack direction='column' alignItems='center'>
+                        <IconButton onClick={handlePushMaster} sx={{width: 40, height: 40}}><CasinoIcon /></IconButton>
+                        <Typography variant="caption">Master</Typography>
+                    </Stack>
+                    <Stack direction='column' alignItems='center'>
+                        <IconButton onClick={handleFirstClass} sx={{width: 40, height: 40}}><TableRestaurantIcon /></IconButton>
+                        <Typography variant="caption">Primera clase</Typography>
+                    </Stack>
+                    <Stack direction='column' alignItems='center'>
+                        <IconButton onClick={handlePublicClass} sx={{width: 40, height: 40}}><GradeIcon /></IconButton>
+                        <Typography variant="caption">Publico</Typography>
+                    </Stack>
+                </Stack>
                 <Box sx={global.iconHeader}>
                     <Search>
                         <SearchIconWrapper>

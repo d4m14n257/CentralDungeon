@@ -8,7 +8,7 @@ import TableComponent from "@/components/TableComponent";
 
 import { global } from "@/styles/global";
 
-import { ColorModeContext } from "@/context/ColorModeContext";
+import { ColorModeContext } from "@/contexts/ColorModeContext";
 
 import CreateModalTable from "@/components/tables/modals/CreateModalTable";
 import ActionButtonTable from "@/components/tables/ActionButtonTable";

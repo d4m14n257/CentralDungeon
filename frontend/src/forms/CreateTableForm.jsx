@@ -1,4 +1,7 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+
+import { z } from "zod";
 
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -9,7 +12,7 @@ import UploadButton from "./UploadButton";
 import Checkbox from '@mui/material/Checkbox';
 import { Textarea } from "./TextArea";
 
-/* Cambiar la forma del horario como en la imagen del discord 
+/* TODO: Cambiar la forma del horario como en la imagen del discord 
     Indexar catalogos que sea referente entre si.
     Poder eliminar la tag principal por una nueva, en caso de ser
     nesesario - O en caso de cambiar el principal por otro principal
@@ -18,7 +21,11 @@ import { Textarea } from "./TextArea";
 export default function CreateTableForm () {
     const [requerimets, setRequeriments] = useState(false);
     const [files, setFiles] = useState(false);
-    const table = useRef();
+
+    const schema = z.object ({
+        name: z.string(),
+        master: z.string().array()
+    })
 
     const handleChangeRequeriments = () => {
         setRequeriments(!requerimets)
@@ -118,7 +125,6 @@ export default function CreateTableForm () {
                 <FormControlLabel control={<Checkbox />} label="Sabado" />
                 <FormControlLabel control={<Checkbox />} label="Domingo" />
             </FormGroup>
-            
         </>
     );
 }

@@ -52,8 +52,15 @@ export interface ResponseModel {
     response: string
 }
 
-export interface TablesIndex {
-    public_tables: {} | null,
-    joined_tables: {} | null  
+export interface Generalview {
+    public_tables: {} | null
+    joined_tables: {} | null
+    request_tables: {} | null
+}
+
+export interface GeneralMasterView {
+    owner_tables: {} | null,
+    master_tables: {} | null,
+    request_tables: {} | null,
 }
 

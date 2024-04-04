@@ -1,10 +1,10 @@
-import { Connection } from "mysql2/promise";
+import { conn } from "../config/database";
 
-export const getUserTimezone = async (conn : Connection, user_id : string) : Promise<any> => {
+export const getUserTimezone = async (user_id : string) : Promise<any> => {
     const sql = `
     SELECT timezone
         FROM Users
-    WHERE id = ?`;
+        WHERE id = ?`;
 
     try {
         const data = { timezone: {}}

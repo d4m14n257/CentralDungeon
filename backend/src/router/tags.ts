@@ -6,5 +6,5 @@ import { Tags } from "../models/models";
 export const tags : Router = express.Router();
 const table_name = 'Tags';
 
-tags.post('/', createCatalogues<Tags>(conn, 'Tags'));
-tags.get('/:name', getCatalogues(conn, table_name))
+tags.post('/', createCatalogues<Tags>('Tags'));
+tags.get('/:name', getCatalogues(table_name))

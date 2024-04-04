@@ -6,11 +6,11 @@ import Button from '@mui/material/Button';
 
 import { Editor } from "@tinymce/tinymce-react";
 
-import ModalBase from "../../ModalBase";
+import ModalBase from "../../general/ModalBase";
 
 import { modal } from '@/styles/tables/modal';
 
-import { ColorModeContext } from '@/context/ColorModeContext';
+import { ColorModeContext } from '@/contexts/ColorModeContext';
 import UploadButton from '@/forms/UploadButton';
 
 export default function RequestModalTable (props) {

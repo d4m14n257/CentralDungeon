@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 
-import CardComponent from "@/components/CardComponent";
+import CardComponent from "@/components/general/CardComponent";
 import TableComponent from '@/components/TableComponent';
 import CardContent from '@mui/material/CardContent';
 
@@ -16,7 +16,7 @@ import CreateModalTable from '@/components/tables/modals/CreateModalTable';
 import CardContentTable from '@/components/tables//CardContentTable';
 import ActionButtonMasterTable from '@/components/tables/ActionButtonMasterTable';
 
-import { TableStateContext } from '@/context/TableStateContext';
+import { TableStateContext } from '@/contexts/TableStateContext';
 
 /*
     TODO: Mesas que seas colapsables para jugadores pendientes y separar aceptadps de pendientes. 

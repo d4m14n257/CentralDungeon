@@ -1,8 +1,4 @@
 const warn = {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
     opacity: '0.3',
     userSelect: 'none',
 }
@@ -111,10 +107,18 @@ export const global = {
     warnError: {
         ...warn,
         height: 'calc(100vh - 88px)',
-        width: '100vw'
+        width: '100vw',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     warn: {
         ...warn,
-        margin: 2
+        margin: 2,
+        textAlign: 'center',
+        width: '100%'
+    },
+    spanText: {
+        fontWeight: 'bold'
     }
 }

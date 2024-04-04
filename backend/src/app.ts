@@ -4,14 +4,17 @@ import { systems } from "./router/systems";
 import { tags } from "./router/tags";
 import { platform } from "os";
 import { tables } from "./router/tables";
+import { checkConnection } from "./middleware/checkConnection";
 
 //TODO: Change every status 418 because it isnt a teatpot
-//TODO: Keep only the number and simbol en utc.
+//TODO: Keep only the number and simbol in utc.
 
 dotenv.config();
 
 const app : Express = express();
 const port = process.env.PORT;
+
+app.use(checkConnection);
 
 app.use(express.json());
 app.use('/systems', systems);

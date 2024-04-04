@@ -3,7 +3,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 
-import ModalBase from "@/components/ModalBase";
+import ModalBase from "@/components/general/ModalBase";
 
 import { modal } from '@/styles/tables/modal';
 

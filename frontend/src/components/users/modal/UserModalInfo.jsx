@@ -16,12 +16,12 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import EditIcon from '@mui/icons-material/Edit';
 
-import ModalBase from "../../ModalBase";
+import ModalBase from "../../general/ModalBase";
 import NestedCommentModal from './NestedCommentModal';
 import MenuItemComponent from '../../MenuItemComponent';
 import { modal } from '@/styles/users/modal';
 import { getFlagCountry } from '@/api/getFlagCountry';
-import { UserContext } from '@/context/UserContext';
+import { UserContext } from '@/contexts/UserContext';
 
 /*
     El modal del usuario tendras algunas restricciones dependiendo a quien lo vea

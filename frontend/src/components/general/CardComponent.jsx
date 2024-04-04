@@ -8,7 +8,7 @@ import Menu from '@mui/material/Menu';
 
 import InfoIcon from '@mui/icons-material/Info';
 
-import MenuItemComponent from './MenuItemComponent';
+import MenuItemComponent from '../MenuItemComponent';
 import { global } from '@/styles/global';
 import Typography from '@mui/material/Typography'
 

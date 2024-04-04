@@ -10,11 +10,11 @@ import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 
-import CardSettings from '@/components/CardSettings';
-import Header from '@/components/Header';
+import CardSettings from '@/components/general/CardSettings';
+import Header from '@/components/general/Header';
 
-import { ColorModeContext } from '@/context/ColorModeContext';
-import { UserContext } from '@/context/UserContext';
+import { ColorModeContext } from '@/contexts/ColorModeContext';
+import { UserContext } from '@/contexts/UserContext';
 
 export default function App({ Component, pageProps }) {
     const darkModeMediaQuery = useMediaQuery('(prefers-color-scheme: dark)');

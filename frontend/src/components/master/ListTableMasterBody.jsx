@@ -10,39 +10,57 @@ import Box from '@mui/material/Box';
 import Span from '../Span';
 import ViewMoreComponent from '../ViewMoreComponent';
 
+import { Message, HandlerMessage } from '../info/HandlerMessage';
+
 export default function ListTableMasterBody (props) {
     const { tables } = props;
+
     const router = useRouter();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
 
     const handleTableSelect = () => {
         router.push('/tables');
     }
 
     return (
-        <>
-            {tables.map((item) => (
-                <>
-                    <Divider variant="middle" component="li"/>
-                    <ListItem>
-                        <ListItemButton>
-                            <Box>
-                                <ListItemText 
-                                    primary={<Typography variant="body1">{item.name}</Typography>}
-                                    secondary={<Typography variant="subtitle2">{item.description}</Typography>}
-                                />
-                                <ListItemText 
-                                    primary={<Typography variant="body2"><Span title='Número de jugadores: '/>{item.players}</Typography>}
-                                    secondary={<Typography variant="body2"><Span title='Tags: '/>{item.tag.join(', ')}</Typography>}
-                                />
-                            </Box>
-                        </ListItemButton>
-                    </ListItem>
-                </>
-            ))}
-            <Divider variant="middle" component="li" />
-            <ListItem>
-                <ListItemText primary={<ViewMoreComponent handleTableSelect={handleTableSelect}/>}/>
-            </ListItem>
-        </>
+        <Message>
+            <Message.When hasData={tables.length > 0}>
+                {tables.map((table) => {
+                    const startDate = new Date(table.startdate);
+                    const date = startDate.toLocaleDateString('es-ES', options);
+
+                    return (
+                        <Box key={table.id}>
+                            <Divider variant="middle" component="li"/>
+                            <ListItem>
+                                <ListItemButton>
+                                    <Box>
+                                        <ListItemText 
+                                            primary={<Typography variant="body1">{table.name}</Typography>}
+                                            secondary={<Typography variant="subtitle2">{table.description}</Typography>}
+                                        />
+                                        <ListItemText 
+                                            primary={<Typography variant="body2"><Span title='Número de jugadores: '/>{table.players}</Typography>}
+                                            secondary={<Typography variant="subtitle2"><Span title='Tags: '/>{table.tags ? table.tags : 'No hay tags asignados.'}</Typography>}
+                                        />
+                                        <ListItemText 
+                                            primary={<Typography variant="body2"><Span title={'Fecha de inicio: '}/>{date}</Typography>}
+                                            secondary={<Typography variant="subtitle2"><Span title={'Estado: '}/>{table.status}</Typography>}
+                                        />
+                                    </Box>
+                                </ListItemButton>
+                            </ListItem>
+                        </Box>
+                    );
+                })}
+                <Divider variant="middle" component="li" />
+                <ListItem>
+                    <ListItemText primary={<ViewMoreComponent handleTableSelect={handleTableSelect}/>}/>
+                </ListItem>
+            </Message.When>
+            <Message.Else>
+                <HandlerMessage message='No hay mesas creadas o en progreso por el momento.' />
+            </Message.Else>
+        </Message>
     );
 }

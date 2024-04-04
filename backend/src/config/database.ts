@@ -1,4 +1,4 @@
-import mysql, { Connection, ConnectionOptions } from 'mysql2/promise';
+import mysql, { Connection, ConnectionOptions, Pool } from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,4 +12,4 @@ const access: ConnectionOptions  = {
     connectionLimit: 20
 }
 
-export const conn: Connection = mysql.createPool(access);
+export const conn: Pool = mysql.createPool(access);
