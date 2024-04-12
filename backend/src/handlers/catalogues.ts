@@ -3,6 +3,7 @@ import { ResultSetHeader } from "mysql2/promise";
 import { v4 as uuidv4 } from 'uuid';
 import { Platforms, Systems, Tags } from "../models/models";
 import { conn } from "../config/database";
+import { getCataloguesName } from "../server/catalogues/getCataloguesName";
 
 export function createCatalogues<T extends Tags | Systems | Platforms>(table_name : string) {
     const sql = `INSERT INTO ${table_name} (id, name) VALUES (?, ?)`;
@@ -29,17 +30,21 @@ export function createCatalogues<T extends Tags | Systems | Platforms>(table_nam
 }
 
 export function getCatalogues(table_name : string) {
-    const sql = `SELECT id, name FROM ${table_name} WHERE name LIKE ? AND status = 'Allowed'`;
-
     return async (req: Request, res : Response) => {
         try {
             const name : string = req.params.name;
-            await conn.execute(sql, [`${name}%`]).then(([rows, fields]) => {
-                res.status(200).send(rows);
+            await getCataloguesName(table_name, name).then((data) => {
+                if(data.http_status) {
+                    throw data;
+                }
+
+                res.status(200).send(data);
             }).catch((err) => {
-                throw {http_status: 503, ...err}
-            })
-            
+                if(err.http_status)
+                    throw err;
+                else
+                    throw {...err, http_status: 503}
+            })    
         }
         catch(err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})

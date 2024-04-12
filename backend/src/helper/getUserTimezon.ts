@@ -7,14 +7,19 @@ export const getUserTimezone = async (user_id : string) : Promise<any> => {
         WHERE id = ?`;
 
     try {
+        const query = await conn.getConnection().catch((err) => {
+            throw {...err, http_status: 503}
+        })
+
         const data = { timezone: {}}
 
-        await conn.execute(sql, [user_id]).then(([rows, field]) => {
+        await query.execute(sql, [user_id]).then(([rows, field]) => {
             data.timezone = rows;
         }).catch((err : any) => {
             throw {...err, http_status: 500};
         })  
 
+        query.release();
         return data.timezone;
     }
     catch (err : any){

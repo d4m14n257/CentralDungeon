@@ -29,6 +29,15 @@ export const global = {
         alignItems:'center',
         gap: 2
     },
+    navHeader: {
+        icon: {
+            width: 40,
+            height: 40
+        },
+        textIcon: {
+            width: 40
+        }
+    }, 
     cardProfile: {
         position: 'fixed',
         width: 400,

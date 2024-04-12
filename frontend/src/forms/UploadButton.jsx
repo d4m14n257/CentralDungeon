@@ -15,7 +15,9 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-export default function UploadButton () {
+export default function UploadButton (props) {
+    const {onChange} = props;
+
     return (
         <Button
             component="label"
@@ -23,9 +25,10 @@ export default function UploadButton () {
             variant="contained"
             tabIndex={-1}
             startIcon={<CloudUploadIcon />}
+            onChange={onChange}
         >
             Upload file
-            <VisuallyHiddenInput type="file" />
+            <VisuallyHiddenInput type="file" multiple />
         </Button>
     );
 }

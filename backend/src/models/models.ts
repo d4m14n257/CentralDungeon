@@ -64,3 +64,6 @@ export interface GeneralMasterView {
     request_tables: {} | null,
 }
 
+export interface Masters {
+    users_master: {} | null
+}

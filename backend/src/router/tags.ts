@@ -1,5 +1,4 @@
 import express, { Router } from "express";
-import { conn } from "../config/database";
 import { createCatalogues, getCatalogues } from "../handlers/catalogues";
 import { Tags } from "../models/models";
 

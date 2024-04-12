@@ -2,10 +2,10 @@ import Grid from '@mui/material/Grid';
 
 import ListComponent from '@/components/general/ListComponent';
 import ListBodyPlayer from '@/components/general/ListBodyPlayer';
-import { getFirstClassTables } from '@/api/getFirstClassTables';
+import { getter } from '@/api/getter';
 
 export const getServerSideProps = async () => {
-    const result = await getFirstClassTables("3");
+    const result = await getter('3', 'tables/first-class-tables');
 
     if(!result.status) {
         return {

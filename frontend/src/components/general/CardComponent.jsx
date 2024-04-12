@@ -5,12 +5,12 @@ import CardHeader from '@mui/material/CardHeader';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
+import Typography from '@mui/material/Typography';
 
 import InfoIcon from '@mui/icons-material/Info';
 
 import MenuItemComponent from '../MenuItemComponent';
 import { global } from '@/styles/global';
-import Typography from '@mui/material/Typography'
 
 export default function CardComponent (props) {
     const { title, subtitle, additional, menu, children } = props;

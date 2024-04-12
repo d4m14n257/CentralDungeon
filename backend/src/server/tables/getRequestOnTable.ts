@@ -1,4 +1,4 @@
-import getQuery from "../helper/getQuery";
+import getQuery from "../../helper/getQuery";
 
 export const getRequestOnTables = async (utc: Promise<string>, user_id : string) => {
     const sql = `

@@ -1,6 +1,7 @@
-export const getMasterView = async (user_id) => {
+export const getter = async (user_id, url) => {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/tables/master/${user_id}`).catch((err) => {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/${url}/${user_id}`).catch((err) => {
+            console.log(err)
             throw {...err.cause, status: 500}
         });
 

@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import { useRouter } from 'next/router';
 
 import Grid from '@mui/material/Grid';
@@ -7,10 +8,10 @@ import ListBodyPlayer from '@/components/general/ListBodyPlayer';
 import ListRequestBody from '@/components/general/ListRequestBody';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
 
-import { getGeneralView } from '@/api/getGeneralView';
+import { getter } from '@/api/getter';
 
 export const getServerSideProps = async () => {
-    const result = await getGeneralView("1");
+    const result = await getter("2", 'tables/player');
 
     if(!result.status) {
         return {

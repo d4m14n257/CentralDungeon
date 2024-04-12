@@ -33,14 +33,16 @@ export default function ModalBase(props) {
                         maxWidth: 850,
                         top: '50%',
                         left: '50%',
-                        transform: 'translate(-50%, -50%)',
+                        transform: 'translate(-50%, max(-50vh, -50%))',
                         bgcolor: 'background.paper',
                         boxShadow: "2em",
                         padding: "2em",
                         borderRadius: "1em",
                     }}
                 >
-                    {children}
+                    <Box>
+                        {children}
+                    </Box>
                 </Box>
             </Fade>
         </Modal>

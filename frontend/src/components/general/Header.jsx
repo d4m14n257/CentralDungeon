@@ -23,7 +23,7 @@ import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
 import GradeIcon from '@mui/icons-material/Grade';
 
 import { global } from "@/styles/global";
-import { UserContext } from "@/contexts/UserContext";
+import { User } from "@/contexts/UserContext";
 
 /*
     TODO: Se integra un search con etiquetado, podria ser algo similar al de discord en los chats.
@@ -77,7 +77,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function Header(props) {
-    const { username } = useContext(UserContext);
+    const { username } = useContext(User);
     const { handleOpenUser } = props;
     const router = useRouter();
 
@@ -105,20 +105,20 @@ export default function Header(props) {
                 </Button>
                 <Stack direction='row' spacing={5}>
                     <Stack direction='column' alignItems='center'>
-                        <IconButton sx={{width: 40, height: 40}}><ManageAccountsIcon /></IconButton>
-                        <Typography variant="caption">Admin</Typography>
+                        <IconButton sx={global.navHeader.icon}><ManageAccountsIcon /></IconButton>
+                        <Typography sx={global.navHeader.textIcon} variant="caption">Admin</Typography>
                     </Stack>
                     <Stack direction='column' alignItems='center'>
-                        <IconButton onClick={handlePushMaster} sx={{width: 40, height: 40}}><CasinoIcon /></IconButton>
-                        <Typography variant="caption">Master</Typography>
+                        <IconButton onClick={handlePushMaster} sx={global.navHeader.icon}><CasinoIcon /></IconButton>
+                        <Typography sx={global.navHeader.textIcon} variant="caption">Master</Typography>
                     </Stack>
                     <Stack direction='column' alignItems='center'>
-                        <IconButton onClick={handleFirstClass} sx={{width: 40, height: 40}}><TableRestaurantIcon /></IconButton>
-                        <Typography variant="caption">Primera clase</Typography>
+                        <IconButton onClick={handleFirstClass} sx={global.navHeader.icon}><TableRestaurantIcon /></IconButton>
+                        <Typography sx={global.navHeader.textIcon} variant="caption">Primera clase</Typography>
                     </Stack>
                     <Stack direction='column' alignItems='center'>
-                        <IconButton onClick={handlePublicClass} sx={{width: 40, height: 40}}><GradeIcon /></IconButton>
-                        <Typography variant="caption">Publico</Typography>
+                        <IconButton onClick={handlePublicClass} sx={global.navHeader.icon}><GradeIcon /></IconButton>
+                        <Typography sx={global.navHeader.textIcon} variant="caption">Publico</Typography>
                     </Stack>
                 </Stack>
                 <Box sx={global.iconHeader}>

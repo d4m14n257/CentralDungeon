@@ -9,11 +9,11 @@ import ListTableMasterBody from '@/components/master/ListTableMasterBody';
 import CreateModalTable from '@/components/tables/modals/CreateModalTable';
 
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
-import { getMasterView } from '@/api/getMasterView';
+import { getter } from '@/api/getter';
 import { useModal } from '@/hooks/useModal';
 
 export const getServerSideProps = async () => {
-    const result = await getMasterView("1");
+    const result = await getter("1", 'tables/master');
 
     if(!result.status) {
         return {

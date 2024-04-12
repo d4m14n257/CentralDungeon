@@ -1,14 +1,13 @@
 import { Request, Response } from "express";
-import { Connection } from "mysql2/promise";
-import { getUserTimezone } from "../server/getUserTimezon";
+import { getUserTimezone } from "../helper/getUserTimezon";
 import { GeneralMasterView, Generalview } from "../models/models";
-import { getPublicTable } from "../server/getPublicTables";
-import { getJoinedTable } from "../server/getJoinedTables";
-import { getRequestToTables } from "../server/getRequestToTables";
-import { getOwnerTables } from "../server/getOwnerTables";
-import { getMasterTables } from "../server/getMasterTables";
-import { getRequestOnTables } from "../server/getRequestOnTable";
-import { getFirstClassTable } from "../server/getFirstClassTables";
+import { getPublicTable } from "../server/tables/getPublicTables";
+import { getJoinedTable } from "../server/tables/getJoinedTables";
+import { getRequestToTables } from "../server/tables/getRequestToTables";
+import { getOwnerTables } from "../server/tables/getOwnerTables";
+import { getMasterTables } from "../server/tables/getMasterTables";
+import { getRequestOnTables } from "../server/tables/getRequestOnTable";
+import { getFirstClassTable } from "../server/tables/getFirstClassTables";
 
 //TODO: Check the query which it doesnt work in change the hour.
 //TODO: Make the trigger!!!

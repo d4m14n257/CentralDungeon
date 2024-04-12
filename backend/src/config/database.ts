@@ -1,4 +1,4 @@
-import mysql, { Connection, ConnectionOptions, Pool } from 'mysql2/promise';
+import mysql, { ConnectionOptions, Pool } from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -9,7 +9,11 @@ const access: ConnectionOptions  = {
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     port: Number(process.env.DB_PORT),
-    connectionLimit: 20
+    waitForConnections: true,
+    connectionLimit: 10,
+    maxIdle: 10,
+    idleTimeout: 60000,
+    queueLimit: 0,
 }
 
 export const conn: Pool = mysql.createPool(access);

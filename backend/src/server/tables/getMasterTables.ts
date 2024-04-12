@@ -1,6 +1,6 @@
-import getQuery from "../helper/getQuery";
+import getQuery from "../../helper/getQuery";
 
-export const getOwnerTables = async (utc : Promise<string>, user_id : string) => {
+export const getMasterTables = async (utc : Promise<string>, user_id : string) => {
     const sql = `
     WITH RECURSIVE find_first AS (
         SELECT t.id as table_id, tg.id, tg.name, tg.tag_id 
@@ -9,7 +9,7 @@ export const getOwnerTables = async (utc : Promise<string>, user_id : string) =>
                 LEFT JOIN Table_Tags tt ON tt.table_id = t.id
                 LEFT JOIN Tags tg ON tg.id = tt.tag_id
             WHERE m.user_master_id = ?
-                AND m.master_type = 'Owner'
+                AND m.master_type = 'Master'
                 AND (tt.status = 'Used' OR tt.status IS NULL)
         UNION ALL
         SELECT tt.table_id, s.id, s.name, s.tag_id

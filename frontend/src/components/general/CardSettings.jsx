@@ -20,8 +20,8 @@ import MenuItemComponent from '../MenuItemComponent';
 
 import { useTheme } from '@mui/material/styles';
 
-import { ColorModeContext } from '@/contexts/ColorModeContext';
-import { UserContext } from '@/contexts/UserContext';
+import { ColorMode } from '@/contexts/ColorModeContext';
+import { User } from '@/contexts/UserContext';
 
 import { global } from '@/styles/global';
 
@@ -30,8 +30,8 @@ export default function CardSettings (props) {
     const [ openMenu, setOpenMenu ] = useState(false);
     const theme = useTheme();
     
-    const { username, rol, roles, handleUpdateRol } = useContext(UserContext);
-    const { colorMode } = useContext(ColorModeContext);
+    const { username, rol, roles, handleUpdateRol } = useContext(User);
+    const { colorMode } = useContext(ColorMode);
     const userSettingsRef = useRef(null);
     const open = Boolean(openMenu);
 

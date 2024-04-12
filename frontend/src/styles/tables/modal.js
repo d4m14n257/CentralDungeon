@@ -10,10 +10,18 @@ export const modal = {
     },
     content: {
         ...global.colFlex,
-        gap: 2
+        gap: "16px"
     },
     footer: {
         ...global.rowFlex,
         justifyContent: 'flex-end'
+    },
+    formArea: {
+        minWidth: 500,
+        maxWidth: 786,
+    },
+    icon: {
+        width: 60,
+        height: 60
     }
 }
