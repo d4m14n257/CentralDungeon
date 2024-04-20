@@ -10,6 +10,8 @@ import Box from '@mui/material/Box';
 import Span from '../Span';
 import ViewMoreComponent from '../ViewMoreComponent';
 
+import { global } from '@/styles/global';
+
 import { Message, HandlerMessage } from '../info/HandlerMessage';
 
 export default function ListTableMasterBody (props) {
@@ -20,6 +22,10 @@ export default function ListTableMasterBody (props) {
 
     const handleTableSelect = () => {
         router.push('/tables');
+    }
+
+    const handlePushTable = (id) => {
+        router.push(`/tables/${id}`)
     }
 
     return (
@@ -33,11 +39,13 @@ export default function ListTableMasterBody (props) {
                         <Box key={table.id}>
                             <Divider variant="middle" component="li"/>
                             <ListItem>
-                                <ListItemButton>
+                                <ListItemButton
+                                    onClick={() => handlePushTable(table.id)}
+                                >
                                     <Box>
                                         <ListItemText 
                                             primary={<Typography variant="body1">{table.name}</Typography>}
-                                            secondary={<Typography variant="subtitle2">{table.description}</Typography>}
+                                            secondary={<Typography variant="subtitle2" sx={global.overText}>{table.description}</Typography>}
                                         />
                                         <ListItemText 
                                             primary={<Typography variant="body2"><Span title='Número de jugadores: '/>{table.players}</Typography>}

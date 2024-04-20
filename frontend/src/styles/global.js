@@ -33,9 +33,6 @@ export const global = {
         icon: {
             width: 40,
             height: 40
-        },
-        textIcon: {
-            width: 40
         }
     }, 
     cardProfile: {
@@ -107,7 +104,7 @@ export const global = {
     },
     buttonFloat: {
         position: 'fixed', 
-        right: {xl: 'calc((100% - 1536px) / 2)', xs: 0},
+        right: 0,
         bottom: 40,
         width: 80, 
         height: 80,
@@ -129,5 +126,8 @@ export const global = {
     },
     spanText: {
         fontWeight: 'bold'
+    },
+    overText: {
+        overflowWrap: 'anywhere'
     }
 }

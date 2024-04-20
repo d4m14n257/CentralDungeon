@@ -12,8 +12,12 @@ import Header from '@/components/general/Header';
 
 import { ColorModeContext } from '@/contexts/ColorModeContext';
 import { UserContext } from '@/contexts/UserContext';
+import { ConfirmContext } from '@/contexts/ConfirmContext';
+import { MessageContext } from '@/contexts/MessageContext';
 
 //TODO: Add loading effects on pages.
+//TODO: Normalize data.
+//TODO: Check if it is possible update list after create a new object.
 
 export default function App({ Component, pageProps }) {
     const [openUser, setOpenUser] = useState(false);
@@ -25,29 +29,33 @@ export default function App({ Component, pageProps }) {
     return (
         <UserContext>
             <ColorModeContext>
-                <CssBaseline />
-                <Head>
-                    <title>Central Dungeon</title>
-                </Head>
-                <Header
-                    handleOpenUser={handleOpenUser}
-                />
-                <Toolbar />
-                <Box
-                    sx={{ margin: 2.5 }}
-                >
-                    <Container
-                        maxWidth='xl'
-                    >
-                        <Component {...pageProps} />
-                        {openUser &&
-                            <CardSettings
-                                handleOpenUser={handleOpenUser}
-                                openUser={openUser}
-                            />
-                        }
-                    </Container>
-                </Box>
+                <ConfirmContext>
+                    <MessageContext>
+                        <CssBaseline />
+                        <Head>
+                            <title>Central Dungeon</title>
+                        </Head>
+                        <Header
+                            handleOpenUser={handleOpenUser}
+                        />
+                        <Toolbar />
+                        <Box
+                            sx={{ margin: 2.5 }}
+                        >
+                            <Container
+                                maxWidth='xl'
+                            >   
+                                <Component {...pageProps} />
+                                {openUser &&
+                                    <CardSettings
+                                        handleOpenUser={handleOpenUser}
+                                        openUser={openUser}
+                                    />
+                                }
+                            </Container>
+                        </Box>
+                    </MessageContext>
+                </ConfirmContext>
             </ColorModeContext>
         </UserContext>
     );

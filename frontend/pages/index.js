@@ -1,4 +1,3 @@
-import { useContext } from 'react';
 import { useRouter } from 'next/router';
 
 import Grid from '@mui/material/Grid';
@@ -9,16 +8,21 @@ import ListRequestBody from '@/components/general/ListRequestBody';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
 
 import { getter } from '@/api/getter';
+import { Request, Tables } from '@/normalize/models';
 
 export const getServerSideProps = async () => {
     const result = await getter("2", 'tables/player');
 
     if(!result.status) {
+        const data = {
+            public_tables: Tables(result.public_tables),
+            joined_tables: Tables(result.joined_tables),
+            request_tables: Request(result.request_tables),
+        }
+
         return {
             props: {
-                public_tables: result.public_tables,
-                joined_tables: result.joined_tables,
-                request_tables: result.request_tables,
+                ...data,
                 err: false
             }
         }
@@ -36,12 +40,14 @@ export default function Dashboard (props) {
     const { public_tables, joined_tables, request_tables, err } = props;
     const router = useRouter();
 
-    const handleTableSelect = ({id}) => {
+    const handleTableSelect = (id) => {
+        console.log(id)
+
         if(id) {
             if(id === 'public-tables')
                 router.push(`/public-tables`)
-            else if (id === 'joined-table')
-                router.push(`/joined-table`)
+            else if (id === 'joined-tables')
+                router.push(`/joined-tables`)
         }
     }
 
@@ -51,7 +57,7 @@ export default function Dashboard (props) {
             spacing={2}
         >
             <Error>
-                <Error.When isError={err ? true : false}>
+                <Error.When isError={err}>
                     <ListComponent
                         xs={12}
                         lg={8}

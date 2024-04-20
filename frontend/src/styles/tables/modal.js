@@ -19,6 +19,7 @@ export const modal = {
     formArea: {
         minWidth: 500,
         maxWidth: 786,
+        width: '100%'
     },
     icon: {
         width: 60,

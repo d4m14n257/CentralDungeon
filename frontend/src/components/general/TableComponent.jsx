@@ -1,34 +1,56 @@
-import { useState } from 'react';
+import { useState, useReducer } from 'react';
 
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import TableCellUsers from './users/TableCellUsers';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
+import { 
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TablePagination,
+    TableRow,
+    TableCellUsers,
+    Toolbar,
+    Typography,
+    Box,
+    Checkbox,
+    Tooltip,
+    IconButton
+} from '@mui/material';
+
+import DeleteIcon from '@mui/icons-material/Delete';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 import { global } from '@/styles/global';
 
+function reducer (state, action) {
+    const { type, value } = action;
+
+    switch (type) {
+        case 'change-row-per-page': {
+            console.log(value)
+            const newValue = state.rowsPerPage + value;
+
+            return {
+                ...state,
+                rowsPerPage: newValue,
+            }
+        }
+    }
+}
+
 const EnhancedTableToolbar = (props) => {
-    const { title } = props;
-    const numSelected = 0;
+    const { title, numSelected, handleCheckbox, checkbox } = props;
   
     return (
         <Toolbar
             sx={{
                 pl: { sm: 2 },
                 pr: { xs: 1, sm: 1 },
-                // ...(numSelected > 0 && {
-                //     bgcolor: (theme) =>
-                //     alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
-                // }),
+                ...(numSelected > 0 && {
+                    bgcolor: (theme) =>
+                    alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
+                }),
             }}
         >
             {numSelected > 0 ? (
@@ -51,19 +73,19 @@ const EnhancedTableToolbar = (props) => {
                 </Typography>
             )}
 
-            {/* {numSelected > 0 ? (
+            {checkbox ? (
                 <Tooltip title="Delete">
                     <IconButton>
                         <DeleteIcon />
                     </IconButton>
                 </Tooltip>
                 ) : (
-                <Tooltip title="Filter list">
-                    <IconButton>
+                <Tooltip title="Multiselección">
+                    <IconButton onClick={() => handleCheckbox()}>
                         <FilterListIcon />
                     </IconButton>
                 </Tooltip>
-            )} */}
+            )}
         </Toolbar>
     );
   }
@@ -72,38 +94,56 @@ export default function TableComponent (props) {
     const { title, columns, rows, checkbox, minWidth, Actions } = props;
 
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [haveCheckbox, setHaveCheckbox] = useState(checkbox ? true : false);
+    const [checkboxAction, setCheckboxAction] = useState(checkbox ? true : false);
+    const [data, dispatch] = useReducer(reducer, {
+        selected: [],
+        order: 'asc',
+        orderBy: columns[0].id,
+        rowsPerPage: 10,
+        rowCount: rows.length,
+        numSelected: 0
+    })
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
 
     const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
+        dispatch({type: 'change-row-per-page', value: event.target.value})
         setPage(0);
     };
+
+    const handleCheckbox = () => {
+        setCheckboxAction(true)
+    }
+
+    const handleSelectAll = (event) => {
+        console.log(event)
+    }
 
     return (
         <Paper sx={{...global.border, width: '100%', overflow: 'hidden'}}>
             <Box sx={{margin: 2}}>
                 <EnhancedTableToolbar 
                     title={title}
+                    handleCheckbox={handleCheckbox}
+                    numSelected={data.selected.length}
                 />
                 <TableContainer sx={{ maxHeight: 500 }}>
                     <Table stickyHeader aria-label="sticky table" >
                         <TableHead>
                             <TableRow>
-                                {haveCheckbox &&
-                                    <TableCell padding="checkbox">
+                                {checkboxAction &&
+                                    <TableCell 
+                                        padding="checkbox">
                                         <Checkbox
                                             color="primary"
-                                            // indeterminate={numSelected > 0 && numSelected < rowCount}
-                                            // checked={rowCount > 0 && numSelected === rowCount}
-                                            // onChange={onSelectAllClick}
-                                            // inputProps={{
-                                            //     'aria-label': 'select all desserts',
-                                            // }}
+                                            indeterminate={data.numSelected > 0 && data.selected.length < data.rowCount}
+                                            checked={data.rowCount > 0 && data.numSelected === data.rowCount}
+                                            onChange={handleSelectAll}
+                                            inputProps={{
+                                                'aria-label': 'select all desserts',
+                                            }}
                                         /> 
                                     </TableCell>
                                 }
@@ -111,6 +151,7 @@ export default function TableComponent (props) {
                                     <TableCell
                                         key={column.id}
                                         style={{ minWidth: minWidth }}
+                                        sx={{textAlign: column.id == 'actions' ? 'center' : 'left' }}
                                     >
                                         <Typography variant='subtitle1' sx={{fontWeight: '700'}}>
                                             {column.label}
@@ -123,7 +164,7 @@ export default function TableComponent (props) {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            {rows.slice(page * data.rowsPerPage, page * data.rowsPerPage + data.rowsPerPage)
                             .map((row) => {
                                 const isItemSelected = false
 
@@ -136,8 +177,10 @@ export default function TableComponent (props) {
                                         aria-checked={isItemSelected}
                                         selected={isItemSelected}
                                     >   
-                                        {haveCheckbox &&
-                                            <TableCell padding="checkbox">
+                                        {checkboxAction &&
+                                            <TableCell 
+                                                padding="checkbox"
+                                            >
                                                 <Checkbox
                                                     color="primary"
                                                     checked={isItemSelected}
@@ -149,6 +192,7 @@ export default function TableComponent (props) {
                                         }
                                         {columns.map((column) => {
                                             const key = column.id;
+
                                             if(key !== 'actions') {
                                                 const value = row[column.id];
 
@@ -177,7 +221,10 @@ export default function TableComponent (props) {
                                             }
                                             else {
                                                 return (
-                                                    <TableCell key={key}>
+                                                    <TableCell 
+                                                        key={key}
+                                                        sx={{textAlign: 'center'}}
+                                                    >
                                                         <Actions
                                                             id={row.id}
                                                             value={row}
@@ -197,10 +244,11 @@ export default function TableComponent (props) {
                     rowsPerPageOptions={[10, 25, 100]}
                     component="div"
                     count={rows.length}
-                    rowsPerPage={rowsPerPage}
+                    rowsPerPage={data.rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
+                    labelRowsPerPage='Filas por pagina'
                 />
             </Box>
         </Paper>

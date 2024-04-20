@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { Masters } from "../models/models";
 import { getUsersMaster } from "../server/users/getUserMasters";
+import { MastersList } from "../models/models";
 
 export function getUsersMasters() {
     return async (req: Request, res: Response) => {
         try {
-            const data : Masters = {
+            const data : MastersList = {
                 users_master: null
             }
 

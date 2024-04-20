@@ -1,3 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <language>
-
-<language>
+    <login>
+    </login>
+    <header>
+        <icon>
+            <admin>Admin</admin>
+            <master>Master</master>
+            <firts>Primera clase</firts>
+            <public>Publico</public>
+        </icon>
+        <search>Buscador...</search>
+    </header>
+    <home>
+        <public>
+            <name>Mesas publicas</name>
+            <description>Ultimas mesas disponibles para todo el publico.</description>
+            <date>Fecha de inicio: </date>
+            <master>Masters: </master>
+        </public>
+        <joined>
+            <name>Mesas jugando</name>
+            <description>Mesas en las que te encuentras jugando actualmente y se encuentran activas.</description>
+            <date>Fecha de inicio</date>
+            <master>Masters</master>
+        </joined>
+        <requests>
+            <name>Peticiones</name>
+            <description>Ultimas petiiciones realizadas y su estado actual.</description>
+            <username>Nombre de jugador: </username>
+            <status>Estado de la solicitud: </status>
+        </requests>
+        <button>
+            Ver mas...
+        </button>
+    </home>
+</language>

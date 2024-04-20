@@ -11,16 +11,21 @@ import CreateModalTable from '@/components/tables/modals/CreateModalTable';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
 import { getter } from '@/api/getter';
 import { useModal } from '@/hooks/useModal';
+import { Request, Tables } from '@/normalize/models';
 
 export const getServerSideProps = async () => {
     const result = await getter("1", 'tables/master');
 
     if(!result.status) {
+        const data = {
+            owner_tables: Tables(result.owner_tables),
+            master_tables: Tables(result.master_tables),
+            request_tables: Request(result.request_tables)
+        }
+
         return {
             props: {
-                owner_tables: result.owner_tables,
-                master_tables: result.master_tables,
-                request_tables: result.request_tables,
+                ...data,
                 err: false
             }
         }
@@ -50,6 +55,7 @@ export default function Masters (props) {
                         title="Mis mesas"
                         description="Ultimas mesas que haz creadas y se encuentran activas."
                         action={{Icon: AddCircleIcon, handleClickButton: handleOpenModal}}
+                        tip='Crear mesa'
                     >
                         <ListTableMasterBody
                             tables={owner_tables}

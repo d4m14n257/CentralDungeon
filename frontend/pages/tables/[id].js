@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 
 import CardComponent from "@/components/general/CardComponent";
-import TableComponent from '@/components/TableComponent';
+import TableComponent from '@/components/general/TableComponent';
 import CardContent from '@mui/material/CardContent';
 
 import EditIcon from '@mui/icons-material/Edit';

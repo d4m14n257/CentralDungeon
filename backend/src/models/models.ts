@@ -1,28 +1,28 @@
 type StatusTable = 'Preparation' | 'Opened' | 'In process' | 'Pause' | 'Canceled' | 'Finished' | 'Deleted';
 type StatusCatalogues = 'Created' | 'Allowed' | 'Rejected' | 'Deleted';
 
-export interface Systems {
+export type Systems = {
     id: string
     name: string
     status?: StatusCatalogues
     system_id?: string
 };
 
-export interface Tags {
+export type Tags = {
     id: string
     name: string
     status?: StatusCatalogues
     tag_id?: string
 };
 
-export interface Platforms {
+export type Platforms = {
     id: string
     name: string
     status?: StatusCatalogues
     platform_id?: string
 };
 
-export interface Users {
+export type Users = {
     id?: string
     discord_name: string
     name: string
@@ -31,7 +31,7 @@ export interface Users {
     country: string
 }
 
-export interface Table {
+export type Table = {
     id?: string
     name: string
     description: string | null
@@ -40,30 +40,52 @@ export interface Table {
     timezone: string | null
     requeriments: string | null
     status?: StatusTable
-    duration: string
-    systems?: Systems[] | []
-    platforms?: Platforms[] | []
-    tags?: Tags[] | []
-    players?: Users[] | []
+    duration: string | null
+    systems?: Systems[] | null
+    platforms?: Platforms[] | null
+    tags?: Tags[] | null
+    players?: Users[] | null
+    schedule?: Schedules[] | null
+    masters?:  Masters[]
 }
 
-export interface ResponseModel {
+export type Schedules = {
+    day : string,
+    hour : string[]
+}
+
+export type ResponseModel = {
     status: number
     response: string
 }
 
-export interface Generalview {
+export type Generalview = {
     public_tables: {} | null
     joined_tables: {} | null
     request_tables: {} | null
 }
 
-export interface GeneralMasterView {
+export type GeneralMasterView = {
     owner_tables: {} | null,
     master_tables: {} | null,
     request_tables: {} | null,
 }
 
-export interface Masters {
-    users_master: {} | null
+export type Masters = {
+    id: string,
+    username: string,
+    master_type?: string
+}
+
+export type Schedule = {
+    day: string,
+    hour: string
+}
+
+export type MastersList = {
+    users_master: Masters[] | null
+}
+
+export type TableMasterList = {
+    table_list: {} | null
 }

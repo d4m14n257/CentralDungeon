@@ -1,26 +1,35 @@
 import { Request, Response } from "express";
-import { ResultSetHeader } from "mysql2/promise";
-import { v4 as uuidv4 } from 'uuid';
+import { PoolConnection, ResultSetHeader } from "mysql2/promise";
 import { Platforms, Systems, Tags } from "../models/models";
 import { conn } from "../config/database";
 import { getCataloguesName } from "../server/catalogues/getCataloguesName";
+import { setCatalogue } from "../server/catalogues/setCatalogues";
 
 export function createCatalogues<T extends Tags | Systems | Platforms>(table_name : string) {
-    const sql = `INSERT INTO ${table_name} (id, name) VALUES (?, ?)`;
-
     return async (req : Request, res : Response) => {
         try {
-            await conn.beginTransaction
-            const id = uuidv4();
+            const query : PoolConnection = await conn.getConnection()
+            .catch((err) => {
+                throw {...err, http_status: 503}
+            })
 
-            const body : T = { id: id, ...req.body };
-            await conn.execute<ResultSetHeader>(sql, Object.values(body)).then(
-                await conn.commit
-            ).catch((err) => {                
-                throw {http_status: 418, ...err}
+            await query.beginTransaction()
+            const body : T = req.body;
+
+            await setCatalogue(body, table_name, query).then((response) => {
+                if(response.http_status != 200)
+                    throw {...response.err, ...response.http_status}
+            }).catch((err) => {
+                query.rollback();
+                query.release();
+
+                throw err;
             })
             
-            res.status(200).send('Successfully')
+            query.commit();
+            query.release();
+
+            res.status(200).send('Successfully');
         }
         catch(err : any) {
             await conn.rollback;

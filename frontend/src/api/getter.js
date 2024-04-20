@@ -1,7 +1,6 @@
 export const getter = async (user_id, url) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/${url}/${user_id}`).catch((err) => {
-            console.log(err)
             throw {...err.cause, status: 500}
         });
 

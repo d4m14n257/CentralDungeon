@@ -1,10 +1,10 @@
 import getQuery from "../../helper/getQuery";
 
-export const getRequestToTables = async (utc : Promise<string>, user_id : string) => {
+export const getRequestToTables = async (utc : Promise<string>, user_id : string) : Promise<any> => {
     const sql = `
-        SELECT ut.*, ur.status, CONVERT_TZ(ur.created, u.timezone, ?) as created
+        SELECT ut.*, ur.status, CONVERT_TZ(ur.created_at, u.timezone, ?) as created_at
             FROM (
-                SELECT t.id, t.name, GROUP_CONCAT(u.name) as master 
+                SELECT t.id, t.name, GROUP_CONCAT(u.name) as masters 
                     FROM Tables t 
                         LEFT JOIN Masters m ON m.table_id = t.id 
                         LEFT JOIN Users u ON m.user_master_id = u.id

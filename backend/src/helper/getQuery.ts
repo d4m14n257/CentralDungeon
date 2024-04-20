@@ -1,6 +1,7 @@
+import { RowDataPacket } from "mysql2";
 import { conn } from "../config/database";
 
-export default async function getQuery (sql : string, params : any[]) {
+export default async function getQuery (sql : string, params : any[] = []) {
     let data;
 
     try {
@@ -8,12 +9,13 @@ export default async function getQuery (sql : string, params : any[]) {
             throw {...err, http_status: 503}
         })
 
-        await query.execute(sql, params).then(([rows, field]) => {
+        await query.execute<RowDataPacket[]>(sql, params).then(([rows, field]) => {
             data = rows
         }).catch((err : any) => {
+            query.release()
             throw {...err, http_status: 500};
         })  
-
+        
         query.release()
     }
     catch (err : any){

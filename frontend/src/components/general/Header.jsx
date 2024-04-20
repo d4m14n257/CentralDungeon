@@ -103,7 +103,7 @@ export default function Header(props) {
                 <Button sx={{color: "white"}} startIcon={<VideogameAssetIcon size="large"/>} onClick={handleReturnHome}>
                     <Typography variant="h6">Central Dungeon</Typography>
                 </Button>
-                <Stack direction='row' spacing={5}>
+                <Stack direction='row' spacing={5} display='contents'>
                     <Stack direction='column' alignItems='center'>
                         <IconButton sx={global.navHeader.icon}><ManageAccountsIcon /></IconButton>
                         <Typography sx={global.navHeader.textIcon} variant="caption">Admin</Typography>

@@ -1,10 +1,15 @@
+
 import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
+import { 
+    Tooltip,
+    Paper,
+    List,
+    ListItem,
+    ListItemText,
+    Typography,
+    IconButton, } 
+from '@mui/material';
+
 
 import { global } from '@/styles/global';
 
@@ -17,7 +22,7 @@ const TitleComponent = ({title}) => {
 }
 
 export default function ListComponent (props) {
-    const { lg, xs, title, description, action, children } = props;
+    const { lg, xs, title, description, action, tip, children } = props;
 
     return (
         <Grid
@@ -30,9 +35,13 @@ export default function ListComponent (props) {
                     <ListItem
                         sx={{paddingX: 3}}
                         secondaryAction={action && 
-                            <IconButton size="large" edge="end" aria-label="delete" onClick={action.handleClickButton}>
-                                <action.Icon fontSize="inherit"/>
-                            </IconButton>
+                            <Tooltip
+                                title={tip}
+                            >
+                                <IconButton size="large" edge="end" aria-label="delete" onClick={action.handleClickButton}>
+                                    <action.Icon fontSize="inherit"/>
+                                </IconButton>
+                            </Tooltip>
                         }
                     >
                         <ListItemText

@@ -9,7 +9,7 @@ export const ErrorMessage = (props) => {
 
     return (
         <Typography variant='h3' sx={global.warnError}>
-            Hubo un error en la peticion: { err.status }.
+            Hubo un error en la peticion: { err }.
         </Typography>
     );
 }

@@ -1,4 +1,4 @@
-import TableComponent from "@/components/TableComponent";
+import TableComponent from "@/components/general/TableComponent";
 
 export const getServerSideProps = ({params}) => {
     const { id } = params;

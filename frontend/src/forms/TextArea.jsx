@@ -24,7 +24,7 @@ const grey = {
 };
 
 export const Textarea = styled(BaseTextareaAutosize)(
-  ({ theme }) => `
+  ({ theme, error }) => `
     box-sizing: border-box;
     width: 320px;
     font-family: 'IBM Plex Sans', sans-serif;
@@ -35,19 +35,19 @@ export const Textarea = styled(BaseTextareaAutosize)(
     border-radius: 8px;
     color: ${theme.palette.mode === "dark" ? grey[300] : grey[900]};
     background: ${theme.palette.mode === "dark" ? grey[900] : "#fff"};
-    border: 1px solid ${theme.palette.mode === "dark" ? grey[700] : grey[200]};
+    border: 1px solid ${error ? '#d3302f' : theme.palette.mode === "dark" ? grey[700] : grey[200]};
     box-shadow: 0px 2px 2px ${
       theme.palette.mode === "dark" ? grey[900] : grey[50]
     };
 
     &:hover {
-      border-color: ${blue[400]};
+      border-color: ${error ? '#f44336' : blue[400]};
     }
 
     &:focus {
-      border-color: ${blue[400]};
-      box-shadow: 0 0 0 3px ${
-        theme.palette.mode === "dark" ? blue[600] : blue[200]
+      border-color: ${error ? '#f44336' : blue[400]};
+      box-shadow: 0 0 0 2px ${
+        error ? '#f44336' : theme.palette.mode === "dark" ? blue[600] : blue[200]
       };
     }
 

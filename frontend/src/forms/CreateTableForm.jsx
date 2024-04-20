@@ -1,43 +1,49 @@
-import { useState, useReducer } from "react";
+import { useState, useReducer, useContext, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ErrorMessage } from "@hookform/error-message"
 
 import { createFilterOptions } from '@mui/material/Autocomplete';
-import { IconButton, List, ListItem, ListItemText, Stack, Button, FormControlLabel, Switch, Autocomplete, TextField, Typography, Divider } from "@mui/material";
+import { IconButton, List, ListItem, ListItemText, Stack, Autocomplete, TextField, Typography, Divider, FormControl, FormHelperText, Chip } from "@mui/material";
 import { TimeField } from "@mui/x-date-pickers";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Textarea } from "./TextArea";
-import UploadButton from "./UploadButton";
+import LoadingButton from '@mui/lab/LoadingButton';
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SendIcon from '@mui/icons-material/Send';
 
 import { z } from "zod";
 import { modal } from "@/styles/tables/modal";
 import { timezone, days } from "@/helper/constants";
 import { getter } from "@/api/getter";
+import { User } from "@/contexts/UserContext";
+import { setter } from "@/api/setter";
+import { Confirm } from "@/contexts/ConfirmContext";
 import dayjs from "dayjs";
+import { Message } from "@/contexts/MessageContext";
 
-/* TODO: Cambiar la forma del horario como en la imagen del discord 
-    Indexar catalogos que sea referente entre si.
-    Poder eliminar la tag principal por una nueva, en caso de ser
-    nesesario - O en caso de cambiar el principal por otro principal
+/* 
+    TODO: Fixed all error on the refs, might be in autocomplete and controller
+    TODO: When you closed a form, in general save always in localstorage in order avoid issues with the final user
 */
 
 const filter = createFilterOptions();
 
 const schema = z.object ({
-    name: z.string(),
+    name: z.string().min(1, { message: 'Es obligatorio ponerle un nombre a la mesa.' }),
     masters: z.object({
         id: z.string(),
-        username: z.string()
+        username: z.string(),
+        master_type: z.string()
     }).array(),
-    description: z.string().max(1024),
-    permitted: z.string().max(1024),
-    startdate: z.object({}),
-    timezone: z.string(),
+    description: z.string().max(1024, { message: 'No puedes superar la cantidad de 1024 caracteres.' }),
+    permitted: z.string().max(1024, { message: 'No puedes superar la cantidad de 1024 caracteres.' }),
+    startdate: z.string().nullable(),
+    timezone: z.string().nullable(),
     tags: z.object({
         id: z.string(),
         name: z.string()
@@ -50,14 +56,9 @@ const schema = z.object ({
         id: z.string(),
         name: z.string()
     }).array(),
-    duration: z.object({}),
-    requeriments: z.string().max(1024),
-    files: z.object({
-        name: z.string(),
-        file: z.string()
-    }).array(),
+    duration: z.string().nullable(),
     schedule: z.object({
-        name: z.string(),
+        day: z.string(),
         hour: z.string().array()
     }).array()
 })  
@@ -97,10 +98,12 @@ function reducer (state, action) {
     }
 }
 
-export default function CreateTableForm () {
-    const [requerimets, setRequeriments] = useState(false);
-    const [files, setFiles] = useState(false);
-    const [scheduleInfo, setScheduleInfo] = useState({
+export default function CreateTableForm (props) {
+    const { handleCloseModal } = props;
+    const { confirm, setMessage } = useContext(Confirm);
+    const { username, id } = useContext(User);
+    const { handleOpen, setMessage : setStatusMessage, setStatus } = useContext(Message);
+    const [ scheduleInfo, setScheduleInfo ] = useState({
         days: [],
         time: '0000-00-00 02:00:00',
         list: []
@@ -122,46 +125,47 @@ export default function CreateTableForm () {
             Friday: [],
             Saturday: [],
             Sunday: []
-        }
+        },
     });
 
-    const { control, register, handleSubmit, setError, setValue, formState: { errors, isSubmitting }} = useForm({
+    useEffect(() => {
+        setMessage('¿Esta seguro de crear esta mesa?');
+    }, [])
+
+    const { control, register, handleSubmit, setValue, formState: { errors, isSubmitting }} = useForm({
         defaultValues: {
-            name: "Prueba de un default",
+            name: '',
             masters: [{
-                id: "1",
-                username: "Teshynil"
+                id: id,
+                username: username,
+                master_type: 'Owner'
             }],
             tags: [],
             systems: [],
             platforms: [],
             schedule: [],
-            startdate: null
+            startdate: null,
+            duration: null,
+            timezone: null
         },
         resolver: zodResolver(schema)
     })
 
-    const handleChangeRequeriments = () => {
-        setRequeriments(!requerimets)
-    }
+    const handleMasterList = async (event, value) => {
+        if(event.nativeEvent.inputType == 'insertText') {
+            let masters = [] ;
 
-    const handleChangeFiles = () => {
-        setFiles(!files)
-    }
+            if(value.length > 3) {
+                masters = await getter(value, 'users/masters');
 
-    const handleMasterList = async (value) => {
-        let masters = [] ;
+                if(!masters.status)
+                    masters = masters.users_master
+                else
+                    masters = []
+            }
 
-        if(value.length > 3) {
-            masters = await getter(value, 'users/masters');
-
-            if(!masters.status)
-                masters = masters.users_master
-            else
-                masters = []
+            dispatch({type: 'search-masters', value: value, dataArray: masters})
         }
-
-        dispatch({type: 'search-masters', value: value, dataArray: masters})
     }
     
     const handleCataloguesList = async (event, value, url, type) => {
@@ -194,7 +198,7 @@ export default function CreateTableForm () {
             for(const day in data.scheduleHash) {
                 if(data.scheduleHash[day].length > 0 )
                     schedule.push({
-                        name: day,
+                        day: day,
                         hour: data.scheduleHash[day]
                     })
             }
@@ -228,284 +232,379 @@ export default function CreateTableForm () {
         })
     }
 
-    const handleFilesAdd = (event, field) => {
-
-        console.log(event.target.value)
-    }
-
-    const onSubmit = async (data) => {
-        console.log(data)
+    const onSubmit = async (data, event) => {
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            console.log(data);
-        } catch (error) {
-            console.log(error)
-            setError("root", {
-                message: "This email is already taken",
-            });
+            if(!event.shiftKey) {
+                await confirm()
+                    .catch(() => {throw {err: 'Canceled'}});
+            }
+            
+            const response = await setter({
+                ...data,
+                description: data.description.length > 0 ? data.description : null,
+                permitted: data.permitted.length > 0 ? data.permitted : null,
+                tags: data.tags.length > 0 ? data.tags : null,
+                systems: data.systems.length > 0 ? data.systems : null,
+                platforms: data.platforms.length > 0 ? data.platforms : null,
+                schedule: data.schedule.length > 0 ? data.schedule : null,
+                timezone: data.timezone ? data.timezone.substring(3) : data.timezone
+            }, 'tables/master');
+
+            if(response.status >= 200 && response.status <= 299) {
+                setStatus(response.status);
+                setStatusMessage('Mesa creada con exito.');
+                handleOpen();
+                handleCloseModal();
+            }
+            else {
+                setStatus(response.status);
+                setStatusMessage('Ha habido un error al crear la mesa.');
+                handleOpen();
+            }
+        }
+        catch (err) {
+            console.log(err)
         }
     }
-    
+
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <form style={modal.content} onSubmit={handleSubmit(onSubmit)}>
-                <Typography>General</Typography>
-                <Divider />
-                <TextField
-                    label='Nombre de la mesa'
-                    {...register("name")}
-                />
-                <Controller 
+            <form style={modal.content}>
+                <Stack spacing={0.3} flexDirection='column'>
+                    <Typography>Datos importantes</Typography>
+                    <Typography variant='caption'>Son datos obligatoios.</Typography>
+                    <Divider />
+                </Stack>
+                <FormControl fullWidth>
+                    <TextField
+                        disabled={isSubmitting}
+                        error={Boolean(errors.name)}
+                        required
+                        label='Nombre de la mesa'
+                        {...register("name")}
+                    />
+                    <FormHelperText>
+                        {errors.name ? 
+                            <ErrorMessage errors={errors} name="name"/> :
+                            "Ingresa el nombre de la mesa."}
+                    </FormHelperText>
+                </FormControl>
+                <Controller
                     control={control}
                     render={({ field }) => 
-                        <Autocomplete
-                            multiple
-                            limitTags={3}
-                            options={data.masters}
-                            filterSelectedOptions
-                            isOptionEqualToValue={(option, value) => option.id == value.id}
-                            getOptionLabel={(option) => typeof option === 'string' ? option : option.username}
-                            onInputChange={(event, newValue) => {handleMasterList(newValue)}}
-                            renderInput={(params) => (<TextField {...params} label="Masters en la mesa"/>)}
-                            sx={{ width: '500px' }}
-                            value={field.value}
-                            onChange={(e, value) => field.onChange(value)}
-                        />
+                        <FormControl>
+                            <Autocomplete
+                                fullWidth
+                                multiple
+                                disabled={isSubmitting}
+                                limitTags={3}
+                                options={data.masters}
+                                filterSelectedOptions
+                                isOptionEqualToValue={(option, value) => option.id == value.id}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : option.username}
+                                onInputChange={(event, newValue) => {handleMasterList(event, newValue)}}
+                                renderInput={(params) => (<TextField {...params} label="Masters en la mesa" required/>)}
+                                renderTags={(tagValue, getTagProps) =>
+                                    tagValue.map((option, index) => (
+                                    <Chip
+                                        label={option.username}
+                                        {...getTagProps({ index })}
+                                        disabled={option.username === username}
+                                    />
+                                    ))
+                                }
+                                value={field.value}
+                                onChange={(e, value) => field.onChange(value)}
+                            />
+                            <FormHelperText>Ingresa los masters que estaran en la mesa.</FormHelperText>
+                        </FormControl>
                     }
-                    {...register("masters")}
+                    name='masters'
                 />
-                <Textarea minRows={4} sx={modal.formArea} placeholder="Descripción de la mesa" {...register("description")}/>
-                <Textarea minRows={4} sx={modal.formArea} placeholder="Reglas y/o cossas permitidas" {...register("permitted")}/>
+                <Stack spacing={0.3} flexDirection='column'>
+                    <Typography>Datos generales</Typography>
+                    <Typography variant='caption'>Lo siguiente es opcional, en caso de ser necesario puedes continuar.</Typography>
+                    <Divider />
+                </Stack>
+                <FormControl>
+                    <Textarea 
+                        disabled={isSubmitting}
+                        error={errors.description}
+                        minRows={4} sx={modal.formArea}
+                        placeholder="Descripción de la mesa"
+                        {...register("description")}
+                    />
+                    <FormHelperText>
+                        {errors.description ?
+                            <ErrorMessage errors={errors} name="description"/> :
+                            "Ingresa la descripcion de tu mesa."}
+                        </FormHelperText>
+                </FormControl>
+                <FormControl>
+                    <Textarea 
+                        disabled={isSubmitting}
+                        error={errors.permitted}
+                        minRows={4}
+                        sx={modal.formArea}
+                        placeholder="Reglas y/o cossas permitidas"
+                        {...register("permitted")}/>
+                    <FormHelperText>
+                        {errors.permitted ? 
+                            <ErrorMessage errors={errors} name='permitted'/>: 
+                            'Ingresa las reglas que tendra tu mesa.'}
+                    </FormHelperText>
+                </FormControl>
                 <Controller 
                     control={control}
                     render={({ field }) => 
-                        <DateTimePicker 
-                            ampm={false}
-                            label="Fecha de incio"
-                            value={field.value ? dayjs(field.value) : dayjs('')}
-                            inputRef={field.ref}
-                            onChange={(value) => {
-                                field.onChange(value)
-                            }}
-                        />
+                        <FormControl>
+                            <DatePicker
+                                disabled={isSubmitting}
+                                value={field.value ? dayjs(field.value) : null}
+                                minDate={dayjs(new Date())} 
+                                label="Fecha de incio"
+                                inputRef={field.ref}
+                                onChange={(value) => {
+                                    field.onChange(dayjs(value).format('YYYY-MM-DD'))
+                                }}
+                            />
+                            <FormHelperText>Ingresa la fecha de inicio de la sesión.</FormHelperText>
+                        </FormControl>
                     }
                     {...register("startdate")}
                 />
-                <Autocomplete
-                    options={timezone}
-                    renderInput={(params) => (
-                        <TextField {...params} label="Zona horaria de la mesa" />
-                    )}
-                    sx={{ width: '500px' }}
+                <Controller 
+                    control={control}
+                    render={({ field }) => 
+                        <FormControl>
+                            <Autocomplete
+                                fullWidth
+                                value={field.value}
+                                options={timezone}
+                                disabled={isSubmitting}
+                                isOptionEqualToValue={(option, value) => option === value}
+                                onChange={(e, value) => field.onChange(value)}
+                                renderInput={(params) => (
+                                    <TextField {...params} label="Zona horaria de la mesa" />
+                                )}
+                            />
+                            <FormHelperText>Seleccione su zona horaria.</FormHelperText>
+                        </FormControl>}
                     {...register("timezone")}
                 />
                 <Controller 
                     control={control}
                     render={({ field }) => 
-                        <Autocomplete
-                            multiple
-                            limitTags={8}
-                            options={data.tags}
-                            filterSelectedOptions
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                            onInputChange={(event, newValue) => {handleCataloguesList(event, newValue, 'tags', 'search-tags')}}
-                            renderInput={(params) => (<TextField {...params} label="Tags de la mesa" />)}
-                            sx={{ width: '500px' }}
-                            value={field.value}
-                            onChange={(e, value) => field.onChange(value)}
-                            filterOptions={(options, params) => {
-                                const filtered = filter(options, params)
-                                const { inputValue } = params;
-                            
-                                const isExisting = options.some((option) => inputValue === option.name);
-                                if (inputValue !== '' && !isExisting) {
+                        <FormControl>
+                            <Autocomplete
+                                fullWidth
+                                multiple
+                                limitTags={8}
+                                disabled={isSubmitting}
+                                options={data.tags}
+                                filterSelectedOptions
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+                                onInputChange={(event, newValue) => {handleCataloguesList(event, newValue, 'tags', 'search-tags')}}
+                                renderInput={(params) => (<TextField {...params} label="Tags de la mesa" />)}
+                                value={field.value}
+                                onChange={(e, value) => field.onChange(value)}
+                                filterOptions={(options, params) => {
+                                    const filtered = filter(options, params)
+                                    const { inputValue } = params;
+                                
+                                    const isExisting = options.some((option) => inputValue === option.name);
+                                    if (inputValue !== '' && !isExisting) {
 
-                                    filtered.push({
-                                        inputValue,
-                                        name: `Agregar "${inputValue}"`,
-                                        id: `${inputValue}`
-                                    });
-                                }
+                                        filtered.push({
+                                            inputValue,
+                                            name: `Agregar "${inputValue}"`,
+                                            id: `${inputValue}`
+                                        });
+                                    }
 
-                                return filtered;
-                            }}
-                        />
+                                    return filtered;
+                                }}
+                            />
+                            <FormHelperText>Seleccione generos que represente de que tratara la mesa. En caso de que no exista puedes agregarlo.</FormHelperText>
+                        </FormControl>
                     }
                     {...register("tags")}
                 />
                 <Controller 
                     control={control}
                     render={({ field }) => 
-                        <Autocomplete
-                            multiple
-                            limitTags={3}
-                            options={data.systems}
-                            filterSelectedOptions
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                            onInputChange={(event, newValue) => {handleCataloguesList(event, newValue, 'systems', 'search-systems')}}
-                            renderInput={(params) => (<TextField {...params} label="Sistemas de juego." />)}
-                            sx={{ width: '500px' }}
-                            value={field.value}
-                            onChange={(e, value) => field.onChange(value)}
-                            filterOptions={(options, params) => {
-                                const filtered = filter(options, params)
-                                const { inputValue } = params;
-                            
-                                const isExisting = options.some((option) => inputValue === option.name);
-                                if (inputValue !== '' && !isExisting) {
+                        <FormControl>
+                            <Autocomplete
+                                fullWidth
+                                multiple
+                                limitTags={3}
+                                options={data.systems}
+                                disabled={isSubmitting}
+                                filterSelectedOptions
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+                                onInputChange={(event, newValue) => {handleCataloguesList(event, newValue, 'systems', 'search-systems')}}
+                                renderInput={(params) => (<TextField {...params} label="Sistemas de juego." />)}
+                                value={field.value}
+                                onChange={(e, value) => field.onChange(value)}
+                                filterOptions={(options, params) => {
+                                    const filtered = filter(options, params)
+                                    const { inputValue } = params;
+                                
+                                    const isExisting = options.some((option) => inputValue === option.name);
+                                    if (inputValue !== '' && !isExisting) {
 
-                                    filtered.push({
-                                        inputValue,
-                                        name: `Agregar "${inputValue}"`,
-                                        id: `${inputValue}`
-                                    });
-                                }
+                                        filtered.push({
+                                            inputValue,
+                                            name: `Agregar "${inputValue}"`,
+                                            id: `${inputValue}`
+                                        });
+                                    }
 
-                                return filtered;
-                            }}
-                        />
+                                    return filtered;
+                                }}
+                            />
+                            <FormHelperText>Seleccion los sistemas de juego que va a utilizar. En caso de no estar, puede agregarlo.</FormHelperText>
+                        </FormControl>
                     }
                     {...register("systems")}
                 />
                 <Controller 
                     control={control}
                     render={({ field }) => 
-                        <Autocomplete
-                            multiple
-                            limitTags={3}
-                            options={data.platforms}
-                            filterSelectedOptions
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                            onInputChange={(event, newValue) => {handleCataloguesList(event, newValue, 'platforms', 'search-platforms')}}
-                            renderInput={(params) => (<TextField {...params} label="Plataformas de la mesa." />)}
-                            sx={{ width: '500px' }}
-                            value={field.value}
-                            onChange={(e, value) => field.onChange(value)}
-                            filterOptions={(options, params) => {
-                                const filtered = filter(options, params)
-                                const { inputValue } = params;
-                            
-                                const isExisting = options.some((option) => inputValue === option.name);
-                                if (inputValue !== '' && !isExisting) {
+                        <FormControl>
+                            <Autocomplete
+                                fullWidth
+                                multiple
+                                disabled={isSubmitting}
+                                limitTags={3}
+                                options={data.platforms}
+                                filterSelectedOptions
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+                                onInputChange={(event, newValue) => {handleCataloguesList(event, newValue, 'platforms', 'search-platforms')}}
+                                renderInput={(params) => (<TextField {...params} label="Plataformas de la mesa." />)}
+                                value={field.value}
+                                onChange={(e, value) => field.onChange(value)}
+                                filterOptions={(options, params) => {
+                                    const filtered = filter(options, params)
+                                    const { inputValue } = params;
+                                
+                                    const isExisting = options.some((option) => inputValue === option.name);
+                                    if (inputValue !== '' && !isExisting) {
 
-                                    filtered.push({
-                                        inputValue,
-                                        name: `Agregar "${inputValue}"`,
-                                        id: `${inputValue}`
-                                    });
-                                }
+                                        filtered.push({
+                                            inputValue,
+                                            name: `Agregar "${inputValue}"`,
+                                            id: `${inputValue}`
+                                        });
+                                    }
 
-                                return filtered;
-                            }}
-                        />
+                                    return filtered;
+                                }}
+                            />
+                            <FormHelperText>Seleccion en que plataformas va estar disponible la mesa. En caso de no estar puede agregarlo.</FormHelperText>
+                        </FormControl>
                     }
                     {...register("platforms")}
                 />
                 <Controller 
                     control={control}
                     render={({ field }) =>
-                        <TimeField
-                            label="Duracion de sesión"
-                            format="HH:mm"
-                            InputLabelProps={{
-                                shrink: true,
-                            }}
-                            value={dayjs(field.value)}
-                            onChange={(value) => {
-                                field.onChange(value);
-                            }}
-                        />
+                        <FormControl>
+                            <TimeField
+                                disabled={isSubmitting}
+                                value={field.value ? dayjs(field.value) : null}
+                                label="Duracion de sesión"
+                                format="HH:mm"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                onChange={(value) => {
+                                    field.onChange(dayjs(value).format('YYYY-MM-DDTHH:mm'));
+                                }}
+                            />
+                            <FormHelperText>Defina el tiempo que tardara en promedio cada sesión.</FormHelperText>
+                        </FormControl>
                     }
                     {...register("duration")}
                 />
-                {requerimets && <Textarea minRows={3} sx={modal.formArea} placeholder="Requerimientos de la mesa" {...register('requeriments')}/>}
-                {files && 
-                <Stack>
-                    <Controller 
-                        control={control}
-                        render={({ field }) => {
-                            return (
-                                <UploadButton onChange={(event) => handleFilesAdd(event, field)}/>
-                            );
-                        }}
-                        {...register('files')}
-                    />
-                    <List></List>
-                </Stack>}
+                <Stack spacing={0.3} flexDirection='column'>
+                    <Typography> Horario </Typography>
+                    <Typography variant='caption'>Aqui puede definir los dias y la hora a la que sera las sesiones.</Typography>
+                    <Divider />
+                </Stack>
                 <Controller 
                     control={control}
-                    render={({ field }) => {
-                        return (
-                            <>
-                                <Typography> Horario </Typography>
-                                <Divider />
-                                <Stack direction='row' spacing={3}>
-                                    <Autocomplete 
-                                        freeSolo
-                                        multiple
-                                        filterSelectedOptions
-                                        options={days}
-                                        renderInput={(params) => (
-                                            <TextField {...params} label="Dias de la semana" />
-                                        )}
-                                        sx={{ width: '500px' }}
-                                        value={scheduleInfo.days}
-                                        onChange={(e, value) => {
-                                            setScheduleInfo({...scheduleInfo, days: value})
-                                        }}
-                                    />
-                                    <TimeField
-                                        label="Hora de inicio"
-                                        format="HH:mm"
-                                        value={dayjs(scheduleInfo.time)}
-                                        onChange={(value) => {
-                                            setScheduleInfo({...scheduleInfo, time: value})
-                                        }}
-                                    />
-                                    <IconButton sx={modal.icon} onClick={() => {
-                                        handleCreateShedule(field);
-                                    }}>
-                                        <AddCircleIcon fontSize="inherit"/>
-                                    </IconButton>
-                                </Stack>
-                            </>
-                        );
-                    }}
+                    render={({ field }) => (
+                            <Stack direction='row' spacing={3}>
+                                <Autocomplete 
+                                    freeSolo
+                                    disabled={isSubmitting}
+                                    multiple
+                                    filterSelectedOptions
+                                    options={days}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Dias de la semana" />
+                                    )}
+                                    sx={{ width: '500px' }}
+                                    value={scheduleInfo.days}
+                                    onChange={(e, value) => {
+                                        setScheduleInfo({...scheduleInfo, days: value})
+                                    }}
+                                />
+                                <TimeField
+                                    disabled={isSubmitting}
+                                    label="Hora de inicio"
+                                    format="HH:mm"
+                                    value={dayjs(scheduleInfo.time)}
+                                    onChange={(value) => {
+                                        setScheduleInfo({...scheduleInfo, time: value})
+                                    }}
+                                />
+                                <IconButton sx={modal.icon} onClick={() => {
+                                    handleCreateShedule(field);
+                                }}>
+                                    <AddCircleIcon fontSize="inherit"/>
+                                </IconButton>
+                            </Stack>
+                        )}
                     {...register("schedule")}
                 />
                 <List>
-                    {scheduleInfo.list.map((day) => (
+                    {scheduleInfo.list.map((weekday) => (
                         <ListItem
+                            key={weekday.day}
                             sx={{paddingX: 3}}
                             secondaryAction={
-                                <IconButton size="large" edge="end" onClick={() => handleDeleteSchedule(day)}>
+                                <IconButton 
+                                    color="error"
+                                    size="large" 
+                                    edge="end" 
+                                    onClick={() => handleDeleteSchedule(weekday)}>
                                     <DeleteIcon />
                                 </IconButton>
                             }
                         >
                         <ListItemText
-                            primary={day.name}
-                            secondary={day.hour.join(', ')}
+                            primary={weekday.day}
+                            secondary={weekday.hour.join(', ')}
                         />
                     </ListItem>
                     ))}
                 </List>
-                <Button onClick={() => {console.log()}}>
-                    dasdsa
-                </Button>
-                <Stack direction='row' justifyContent='space-between'>
-                    <Stack direction="row" justifyContent='space-around' spacing={7}>
-                        <FormControlLabel control={<Switch onChange={handleChangeRequeriments}/>} label="Requerimientos" />
-                        <FormControlLabel control={<Switch onChange={handleChangeFiles} />} label="Archivos" />
-                    </Stack>
-                    <Button disabled={isSubmitting} variant='outlined' type='submit'>
-                        {isSubmitting ? "Loading..." : "Submit"}
-                    </Button>
+                <Stack direction='row' justifyContent='end'>
+                    <LoadingButton 
+                        loading={isSubmitting}
+                        variant='outlined' 
+                        type='submit' 
+                        onClick={(event) => handleSubmit(onSubmit)(event)}
+                        endIcon={<SendIcon />}
+                    >
+                        Subir
+                    </LoadingButton>
                 </Stack>
-                {errors.root && <div className="text-red-500">{errors.root.message}</div>}
             </form>
         </LocalizationProvider>
     );

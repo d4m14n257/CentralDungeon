@@ -27,7 +27,7 @@ export default function ListRequestBody (props) {
                                     <Box>
                                         <ListItemText 
                                             primary={<Typography variant="body1">{item.name}</Typography>}
-                                            secondary={item.master ? <Typography variant="subtitle2"><Span title='Master: '/>{item.master}</Typography> :
+                                            secondary={item.masters ? <Typography variant="subtitle2"><Span title='Masters: '/>{item.masters}</Typography> :
                                                       <Typography variant="subtitle2"><Span title='Nombre de jugador: '/>{item.username}</Typography>}
                                         />
                                         <ListItemText 
@@ -44,7 +44,7 @@ export default function ListRequestBody (props) {
             </Message.When>
             <Message.Else>
                 <ListItem>
-                    <HandlerMessage message={isMaster ? 'No hay peticiones pendientes' : 'No se han realizado peticiones' }/>
+                    <HandlerMessage message={isMaster ? 'No hay peticiones pendientes' : 'No se han creado solicitudes' }/>
                 </ListItem>
             </Message.Else>
         </Message>

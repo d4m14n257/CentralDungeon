@@ -1,5 +1,5 @@
 import ActionButtonUser from "@/components/users/ActionButtonUser";
-import TableComponent from "@/components/TableComponent";
+import TableComponent from "@/components/general/TableComponent";
 
 /*
     Por facilidad al admin, se mantendran los accesos rapidos a las estadisticas unicas, a pesar de que tenga un ciclo.

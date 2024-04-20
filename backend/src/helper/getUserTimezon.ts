@@ -1,3 +1,4 @@
+import { RowDataPacket } from "mysql2";
 import { conn } from "../config/database";
 
 export const getUserTimezone = async (user_id : string) : Promise<any> => {
@@ -13,9 +14,10 @@ export const getUserTimezone = async (user_id : string) : Promise<any> => {
 
         const data = { timezone: {}}
 
-        await query.execute(sql, [user_id]).then(([rows, field]) => {
+        await query.execute<RowDataPacket[]>(sql, [user_id]).then(([rows, field]) => {
             data.timezone = rows;
         }).catch((err : any) => {
+            query.release();
             throw {...err, http_status: 500};
         })  
 

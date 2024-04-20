@@ -1,5 +1,3 @@
-import { useRouter } from 'next/router';
-
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
@@ -10,7 +8,6 @@ import { modal } from "@/styles/tables/modal";
 
 export default function CreateModalTable (props) {
     const { isOpen, handleCloseModal } = props;
-    const router = useRouter();
 
     return (
         <ModalBase
@@ -23,7 +20,9 @@ export default function CreateModalTable (props) {
                         Crear mesa
                     </Typography>
                 </Box>
-                <CreateTableForm />
+                <CreateTableForm
+                    handleCloseModal={handleCloseModal}
+                />
             </Box>
         </ModalBase>
     );
