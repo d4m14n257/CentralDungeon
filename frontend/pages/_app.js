@@ -18,13 +18,23 @@ import { MessageContext } from '@/contexts/MessageContext';
 //TODO: Add loading effects on pages.
 //TODO: Normalize data.
 //TODO: Check if it is possible update list after create a new object.
+//TODO: implement infinity scroll when I gonna push tables.
 
-export default function App({ Component, pageProps }) {
+const useOpenSettings = () => {
     const [openUser, setOpenUser] = useState(false);
 
     const handleOpenUser = () => {
         setOpenUser(!openUser);
     }
+
+    return {
+        openUser,
+        handleOpenUser
+    }
+}
+
+export default function App({ Component, pageProps }) {
+    const { openUser, handleOpenUser } = useOpenSettings();
 
     return (
         <UserContext>

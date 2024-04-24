@@ -15,6 +15,7 @@ export const Tables = (tables) => {
 export const Request = (requests) => {
     return requests.map((request) => ({
         id: request.id !== undefined ? request.id : null,
+        table_id: request.table_id !== undefined ? request.table_id : null,
         name: request.name !== undefined ? request.name : null,
         username: request.username !== undefined ? request.username : null,
         masters: request.masters !== undefined ? request.masters : null,

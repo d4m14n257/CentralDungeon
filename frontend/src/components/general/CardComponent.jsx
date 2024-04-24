@@ -1,29 +1,14 @@
-import { useState } from 'react';
-
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import IconButton from '@mui/material/IconButton';
-import Box from '@mui/material/Box';
-import Menu from '@mui/material/Menu';
-import Typography from '@mui/material/Typography';
+import { Card, CardHeader, IconButton, Box, Menu, Typography } from '@mui/material';
 
 import InfoIcon from '@mui/icons-material/Info';
 
 import MenuItemComponent from '../MenuItemComponent';
 import { global } from '@/styles/global';
+import { useMenu } from '@/hooks/useMenu';
 
 export default function CardComponent (props) {
     const { title, subtitle, additional, menu, children } = props;
-    const [openMenu, setOpenMenu] = useState(null);
-    const open = Boolean(openMenu);
-
-    const handleOpenMenu = (event) => {
-        setOpenMenu(event.currentTarget)
-    }
-
-    const handleCloseMenu = () => {
-        setOpenMenu(null);
-    };
+    const { handleOpenMenu, handleCloseMenu, open, openStatus } = useMenu()
 
     return (
         <>
@@ -49,9 +34,8 @@ export default function CardComponent (props) {
             </Card>
             {menu &&
                 <Menu 
-                    anchorEl={openMenu}
-                    id="account-menu"
-                    open={open}
+                    anchorEl={open}
+                    open={openStatus}
                     onClose={handleCloseMenu}
                     onClick={handleCloseMenu}
                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}

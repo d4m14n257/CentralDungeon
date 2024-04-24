@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export const useMenu = () => {
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(null)
+    const openStatus = useMemo(() => {
+        return Boolean(open)
+    }, [open])
     
-    const handleOpenMenu = () => setOpen(true);
-    const handleCloseMenu = () => setOpen(false);
+    const handleOpenMenu = (event) => {
+        setOpen(event.currentTarget)
+    };
+    const handleCloseMenu = () => setOpen(null);
 
     return {
         open,
-        setOpen,
+        openStatus,
         handleOpenMenu,
         handleCloseMenu
     }

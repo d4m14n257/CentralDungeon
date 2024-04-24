@@ -89,3 +89,8 @@ export type MastersList = {
 export type TableMasterList = {
     table_list: {} | null
 }
+
+export type RequestPlayer = {
+    request_tables_candidate: {} | null,
+    request_tables_rejected: {} | null
+}

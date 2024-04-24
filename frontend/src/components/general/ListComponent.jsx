@@ -7,11 +7,19 @@ import {
     ListItem,
     ListItemText,
     Typography,
-    IconButton, } 
+    IconButton,
+    Collapse,
+    Stack,
+    Divider, } 
 from '@mui/material';
 
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 
 import { global } from '@/styles/global';
+import { useState } from 'react';
+
+import ViewMoreComponent from "../ViewMoreComponent";
 
 const TitleComponent = ({title}) => {
     return (
@@ -21,8 +29,22 @@ const TitleComponent = ({title}) => {
     );
 }
 
+const useListComponent = () => {
+    const [open, setOpen] = useState(true);
+
+    const handleChange = () => {
+        setOpen(!open)
+    }
+
+    return {
+        open,
+        handleChange
+    }
+}
+
 export default function ListComponent (props) {
-    const { lg, xs, title, description, action, tip, children } = props;
+    const { id, lg, xs, title, description, action, tip, children, hasCollapse, handleExpand } = props;
+    const { open, handleChange } = useListComponent();
 
     return (
         <Grid
@@ -34,14 +56,27 @@ export default function ListComponent (props) {
                 <List>
                     <ListItem
                         sx={{paddingX: 3}}
-                        secondaryAction={action && 
-                            <Tooltip
-                                title={tip}
-                            >
-                                <IconButton size="large" edge="end" aria-label="delete" onClick={action.handleClickButton}>
-                                    <action.Icon fontSize="inherit"/>
-                                </IconButton>
-                            </Tooltip>
+                        secondaryAction={
+                            <Stack direction='row' spacing={0.5}>
+                                {action &&
+                                    <Tooltip
+                                        title={tip}
+                                    >
+                                        <IconButton size="large" edge="end" aria-label="delete" onClick={action.handleClickButton}>
+                                            <action.Icon />
+                                        </IconButton>
+                                    </Tooltip>
+                                }
+                                {hasCollapse &&
+                                    <Tooltip
+                                        title={open ? 'Cerrar' : 'Abrir'}
+                                    >
+                                        <IconButton size="large" edge="end" aria-label="delete" onClick={handleChange}>
+                                            {open ? <ExpandLess /> : <ExpandMore />}
+                                        </IconButton>
+                                    </Tooltip>
+                                }
+                            </Stack>
                         }
                     >
                         <ListItemText
@@ -49,7 +84,21 @@ export default function ListComponent (props) {
                             secondary={<Typography variant='subtitule1'>{description}</Typography>}
                         />
                     </ListItem>
-                    {children}
+                    <Collapse
+                        in={open}
+                        timeout="auto"
+                        unmountOnExit
+                    >
+                        {children}
+                    </Collapse>
+                        {handleExpand && 
+                        <>
+                            <Divider variant="middle" component="li" />
+                            <ListItem>
+                                <ListItemText primary={<ViewMoreComponent handleExpand={handleExpand} value={id}/>}/>
+                            </ListItem>
+                        </>
+                    }
                 </List>
             </Paper>
         </Grid>

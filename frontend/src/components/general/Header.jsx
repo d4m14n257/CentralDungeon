@@ -1,15 +1,7 @@
 import { useContext } from "react";
 import { useRouter } from "next/router";
 
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import IconButton from '@mui/material/IconButton';
-import Avatar from '@mui/material/Avatar';
-import InputBase from '@mui/material/InputBase';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
+import { AppBar, Toolbar, Typography, Button, IconButton, Avatar, InputBase, Box, Stack } from "@mui/material";
 
 import { styled, alpha } from '@mui/material/styles';
 
@@ -24,6 +16,7 @@ import GradeIcon from '@mui/icons-material/Grade';
 
 import { global } from "@/styles/global";
 import { User } from "@/contexts/UserContext";
+import { FIRST_CLASS_TABLES, HOME, MASTER, PUBLIC_TABLES } from "@/constants/constants";
 
 /*
     TODO: Se integra un search con etiquetado, podria ser algo similar al de discord en los chats.
@@ -82,19 +75,19 @@ export default function Header(props) {
     const router = useRouter();
 
     const handleReturnHome = () => {
-        router.push(`/`);
+        router.push(HOME);
     };
 
     const handlePushMaster = () => {
-        router.push('/master');
+        router.push(MASTER);
     };
 
     const handleFirstClass = () => {
-        router.push('/first-class-tables');
+        router.push(FIRST_CLASS_TABLES);
     };
 
     const handlePublicClass = () => {
-        router.push('/public-tables');
+        router.push(PUBLIC_TABLES);
     };
 
     return (

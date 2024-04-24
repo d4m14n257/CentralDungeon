@@ -1,0 +1,10 @@
+export const HOME = '/';
+export const MASTER = '/master';
+export const FIRST_CLASS_TABLES = '/first-class-tables';
+export const PUBLIC_TABLES = '/public-tables';
+export const JOINED_TABLES = '/joined-tables';
+export const TABLES_JOINED = '/tables/joined'
+export const TABLES_AVAILABLE = '/tables/available';
+export const TABLES = '/tables';
+export const PLAYER_REQUEST = '/player-requests';
+export const MASTER_REQUEST = '/master/requests';

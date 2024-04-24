@@ -2,7 +2,7 @@ import getQuery from "../../helper/getQuery";
 
 export const getRequestOnTables = async (utc: Promise<string>, user_id : string) : Promise<any> => {
     const sql = `
-        SELECT t.name, u.name as username, CONVERT_TZ(ur.created_at, u.timezone , ?) as created_at, u.karma
+        SELECT ur.id, t.id as table_id, t.name, u.name as username, CONVERT_TZ(ur.created_at, u.timezone , ?) as created_at, u.karma
             FROM Tables t
                 JOIN Masters m ON m.table_id = t.id 
                 JOIN Users_registration ur ON ur.table_id = t.id 

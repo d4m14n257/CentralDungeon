@@ -1,66 +1,49 @@
 import { useRouter } from "next/router";
 
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Divider from '@mui/material/Divider';
-import ListItemButton from '@mui/material/ListItemButton';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import { ListItemText, Divider, ListItemButton, Box, Typography, ListItem } from '@mui/material';
 
 import Span from "../Span";
-import ViewMoreComponent from "../ViewMoreComponent";
 
 import { global } from '@/styles/global';
+import { useDate } from "@/hooks/useDate";
 import { Message, HandlerMessage } from "../info/HandlerMessage";
+import { TABLES_AVAILABLE, TABLES_JOINED } from "@/constants/constants";
 
 export default function ListBodyPlayer (props) {
-    const { id, tables, handleTableSelect } = props;
+    const { id, tables } = props;
+    const { handleDate } = useDate();
 
     const router = useRouter();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
 
-    const handleTableRoute = (id) => {
-        if(id === 'joined-table')
-            router.push(`/tables/joined/${id}`)
+    const handleTableRoute = (id, table_id) => {
+        if(id === 'joined-tables')
+            router.push(`${TABLES_JOINED}/${table_id}`)
         else
-            router.push(`/tables/available/${id}`)
+            router.push(`${TABLES_AVAILABLE}/${table_id}`)
     }
 
     return (
         <Message>
             <Message.When hasData={tables.length > 0}>
-                {tables.map((table) => {
-                    const startDate = new Date(table.startdate);
-                    const date = startDate.toLocaleDateString('es-ES', options);
-
-                    return (
-                        <Box key={table.name}>
-                            <Divider variant="middle" component="li" />
-                            <ListItem>
-                                <ListItemButton onClick={() => handleTableRoute(table.id)}>
-                                    <Box sx={global.listBody}>
-                                        <ListItemText
-                                            primary={<Typography variant="body1">{table.name}</Typography>}
-                                            secondary={<Typography variant="subtitle2">{table.description}</Typography>}
-                                        />
-                                        <ListItemText
-                                            primary={<Typography variant="body1"><Span title={'Fecha de inicio: '}/>{date}</Typography>}
-                                            secondary={<Typography variant="subtitle2"><Span title={'Master: '}/>{table.master ? table.master : 'No hay master asignado aun.'}</Typography>}
-                                        />
-                                    </Box>
-                                </ListItemButton>
-                            </ListItem>
-                        </Box>
-                    );
-                })}
-                {handleTableSelect && 
-                    <>
+                {tables.map((table) => (
+                    <Box key={table.name}>
                         <Divider variant="middle" component="li" />
                         <ListItem>
-                            <ListItemText primary={<ViewMoreComponent handleTableSelect={handleTableSelect} value={id}/>}/>
+                            <ListItemButton onClick={() => handleTableRoute(id, table.id)}>
+                                <Box sx={global.listBody}>
+                                    <ListItemText
+                                        primary={<Typography variant="body1">{table.name}</Typography>}
+                                        secondary={<Typography variant="subtitle2">{table.description}</Typography>}
+                                    />
+                                    <ListItemText
+                                        primary={<Typography variant="body1"><Span title={'Fecha de inicio: '}/>{handleDate(table.startdate)}</Typography>}
+                                        secondary={<Typography variant="subtitle2"><Span title={'Master: '}/>{table.master ? table.master : 'No hay master asignado aun.'}</Typography>}
+                                    />
+                                </Box>
+                            </ListItemButton>
                         </ListItem>
-                    </>
-                }
+                    </Box>
+                ))}
             </Message.When>
             <Message.Else>
                 <ListItem>

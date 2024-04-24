@@ -2,63 +2,47 @@ import Grid from '@mui/material/Grid';
 
 import ListComponent from '@/components/general/ListComponent';
 import ListBodyPlayer from '@/components/general/ListBodyPlayer';
+import { Tables } from '@/normalize/models';
+import { getter } from '@/api/getter';
 
-const joined_tables = [
-    {
-        id: 1,
-        name: 'Nombre de mesa unida 1',
-        description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-        startdate: '2023-12-21T19:30:00',
-        timezone: 'UTC-02:00'
-    },
-    {
-        id: 2,
-        name: 'Nombre de mesa unida 2',
-        description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-        startdate: '2023-12-21T19:30:00',
-        timezone: 'UTC-02:00'
-    },
-    {
-        id: 3,
-        name: 'Nombre de mesa unida 3',
-        description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-        startdate: '2023-12-21T19:30:00',
-        timezone: 'UTC-02:00'
-    },
-    {
-        id: 4,
-        name: 'Nombre de mesa unida 4',
-        description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-        startdate: '2023-12-21T19:30:00',
-        timezone: 'UTC-02:00'
-    },
-    {
-        id: 5,
-        name: 'Nombre de mesa unida 5',
-        description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-        startdate: '2023-12-21T19:30:00',
-        timezone: 'UTC-02:00'
-    },
-    {
-        id: 6,
-        name: 'Nombre de mesa unida 6',
-        description: 'Esta es una descipcion para ver como se veria como un subtitulo y no se si limitarla por si llegan a ser demaciado larga xd',
-        startdate: '2023-12-21T19:30:00',
-        timezone: 'UTC-02:00'
-    },
-]
+export const getServerSideProps = async () => {
+    const result = await getter('2', 'tables/joined-tables');
 
-export default function JoinedTable () {
+    if(!result.status) {
+        const data = {
+            joined_tables: Tables(result.joined_tables)
+        }
+
+        return {
+            props: {
+                ...data,
+                err: false
+            }
+        }
+    }
+    else {
+        return {
+            props: {
+                err: result
+            }
+        }
+    }
+}
+
+export default function JoinedTable (props) {
+    const { joined_tables } = props;
+
     return (
         <Grid
             container
             spacing={2}
         >
             <ListComponent 
-                info={{name: 'Mis mesas', id: 'joined-table'}}
+                title='Mesas jugando'
+                description='Mesas en las que te encuentras jugando actualmente y se encuentran activas.'
             >
                 <ListBodyPlayer 
-                    info={{name: 'Mis mesas', id: 'joined-table'}}
+                    id='joined-tables'
                     tables={joined_tables}
                 />
             </ListComponent>

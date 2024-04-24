@@ -192,7 +192,7 @@ export function getFirstClassTables () {
                 first_class_tables: null
             }
 
-            const user_id = req.params.user_id
+            const user_id = req.params.user_id;
             const utc : Promise<string> = await getUserTimezone(user_id).then((utc) => {
                 if(utc.http_status) {
                     throw utc;
@@ -214,6 +214,46 @@ export function getFirstClassTables () {
             })
 
             res.status(200).send(data);
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})
+        }
+    }
+}
+
+export function getJoinedTables () {
+    return async (req: Request, res: Response) => {
+        try {
+            const data = {
+                joined_tables: null
+            }
+
+            const user_id = req.params.user_id;
+            const utc : Promise<string> = await getUserTimezone(user_id).then((utc) => {
+                if(utc.http_status) {
+                    throw utc;
+                }
+
+                return utc[0].timezone;
+            }).catch((err) => {
+                throw err;
+            })
+
+            data.joined_tables = await getJoinedTable(utc, user_id).then((data) => {
+                if(data.http_status) {
+                    throw data;
+                }
+
+                return data;
+            }).catch((err) => {
+                if(err.http_status)
+                    throw err;
+                else
+                    throw {...err, http_status: 503}
+            })
+
+            res.status(200).send(data);
+
         }
         catch (err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})

@@ -3,14 +3,19 @@ import Grid from '@mui/material/Grid';
 import ListComponent from '@/components/general/ListComponent';
 import ListBodyPlayer from '@/components/general/ListBodyPlayer';
 import { getter } from '@/api/getter';
+import { Tables } from '@/normalize/models';
 
 export const getServerSideProps = async () => {
     const result = await getter("3", 'tables/public-tables');
 
     if(!result.status) {
+        const data = {
+            public_tables: Tables(result.public_tables),
+        }
+
         return {
             props: {
-                public_tables: result.public_tables,
+                ...data,
                 err: false
             }
         }
@@ -22,8 +27,6 @@ export const getServerSideProps = async () => {
             }
         }
 }
-
-//TODO: implement infinity scroll when I gonna push tables.
 
 export default function PublicTable (props) {
     const { public_tables } = props;
