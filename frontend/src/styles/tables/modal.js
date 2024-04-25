@@ -6,15 +6,17 @@ export const modal = {
         gap: 2,
     },
     header: {
-        ...global.rowFlex,
+        ...global.colFlex,
+        gap: 1
     },
     content: {
         ...global.colFlex,
-        gap: "16px"
+        gap: "12px"
     },
     footer: {
         ...global.rowFlex,
-        justifyContent: 'flex-end'
+        justifyContent: 'flex-end',
+        gap: 1
     },
     formArea: {
         minWidth: 500,

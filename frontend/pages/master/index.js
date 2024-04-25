@@ -16,7 +16,7 @@ import { useRouter } from 'next/router';
 import { MASTER_REQUEST, TABLES } from '@/constants/constants';
 
 export const getServerSideProps = async () => {
-    const result = await getter("1", 'tables/master');
+    const result = await getter({user_id: "1", url: 'tables/master'});
 
     if(!result.status) {
         const data = {

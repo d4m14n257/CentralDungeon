@@ -6,7 +6,7 @@ import { Tables } from '@/normalize/models';
 import { getter } from '@/api/getter';
 
 export const getServerSideProps = async () => {
-    const result = await getter('2', 'tables/joined-tables');
+    const result = await getter({user_id: '2', url: 'tables/joined-tables'});
 
     if(!result.status) {
         const data = {

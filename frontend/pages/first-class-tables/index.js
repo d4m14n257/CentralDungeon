@@ -5,7 +5,7 @@ import ListBodyPlayer from '@/components/general/ListBodyPlayer';
 import { getter } from '@/api/getter';
 
 export const getServerSideProps = async () => {
-    const result = await getter('3', 'tables/first-class-tables');
+    const result = await getter({user_id: '3', url: 'tables/first-class-tables'});
 
     if(!result.status) {
         return {

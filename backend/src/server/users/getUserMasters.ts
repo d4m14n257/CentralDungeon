@@ -7,7 +7,7 @@ export const getUsersMaster = async (username : string) => {
                 JOIN Users_Roles ur ON u.id = ur.user_id 
                     AND ur.rol_id = '2'
                 JOIN Roles r ON r.id = ur.rol_id
-                WHERE u.name LIKE ?`;
+            WHERE u.name LIKE ?`;
     
     const params = [`${username}%`];
     return await getQuery(sql, params);

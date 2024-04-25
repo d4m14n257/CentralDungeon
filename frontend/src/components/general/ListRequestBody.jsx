@@ -6,20 +6,16 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
 import { useDate } from '@/hooks/useDate';
+import { useModal } from '@/hooks/useModal';
 import { HandlerMessage, Message } from '../info/HandlerMessage';
 
 import Span from '../Span';
-import ViewMoreComponent from '../ViewMoreComponent';
-import { useRouter } from 'next/router';
+import RequestModal from '../player/RequestModal';
 
 export default function ListRequestBody (props) {
-    const { requests, isMaster } = props;
+    const { requests, isMaster, handleTableRoute } = props;
     const { handleDate } = useDate();
-    const router = useRouter();
-
-    const handleTableRoute = (id) => {
-        router.push();
-    }
+    const { open, handleOpenModalWithData, handleCloseModal, dataModal } = useModal()
 
     return  (
         <Message>
@@ -28,7 +24,12 @@ export default function ListRequestBody (props) {
                     <Box key={item.id}>
                         <Divider variant="middle" component="li"/>
                         <ListItem>
-                            <ListItemButton onClick={() => {handleTableRoute(item.id)}}>
+                            <ListItemButton onClick={() => {
+                                { item.status != 'Rejected' ? 
+                                    handleTableRoute(item.table_id) :
+                                    handleOpenModalWithData(item)
+                                }
+                            }}>
                                 <Box>
                                     <ListItemText 
                                         primary={<Typography variant="body1">{item.name}</Typography>}
@@ -45,6 +46,13 @@ export default function ListRequestBody (props) {
                         </ListItem>
                     </Box>
                 ))}
+                {open && 
+                    <RequestModal 
+                        isOpen={open}
+                        handleCloseModal={handleCloseModal}
+                        request={dataModal}
+                    />
+                }
             </Message.When>
             <Message.Else>
                 <ListItem>

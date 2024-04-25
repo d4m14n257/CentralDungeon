@@ -16,14 +16,13 @@ import { getter } from "@/api/getter";
 import { useModal } from "@/hooks/useModal";
 import { Error, ErrorMessage } from "@/components/info/HandlerError";
 import { Tables as TablesNormalize} from "@/normalize/models";
-import { Message } from "@/contexts/MessageContext";
-
-/* Zona horaria no mostrar 
-    Doble click con tabla
-*/
+import { Message, MessageContext } from "@/contexts/MessageContext";
+import { ConfirmContext } from "@/contexts/ConfirmContext";
+import { useRouter } from "next/router";
+import { TABLES } from "@/constants/constants";
 
 export const getServerSideProps = async () => {
-    const result = await getter('1', 'tables/master/list');
+    const result = await getter({user_id: '1', url: 'tables/master/list'});
 
     if(!result.status) {
         const data = {
@@ -74,64 +73,42 @@ const columns = [
 
 export default function Tables (props) {
     const { table_list, err } = props;
-    const shifhKey = useRef(false);
     const { mode } = useContext(ColorMode); 
-    const { handleOpen, setMessage, setInfo } = useContext(Message) 
     const { open, handleCloseModal, handleOpenModal } = useModal();
+    const router = useRouter();
 
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDownDetected);
-        document.addEventListener('keyup', handleKeyUpDetected)
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDownDetected);
-            document.removeEventListener('keyup', handleKeyUpDetected);
-          };
-    }, [])
-    
-    const handleKeyDownDetected = (event) => {
-        if(event.key == 'Shift') {
-            if(!shifhKey.current) {
-                setMessage('Cuidado, no se solicitara confirmacion para ninguna acción, mientras mantega pulsada la tecla.')
-                handleOpen();
-                setInfo(true);
-                shifhKey.current = true;
-            }
-        }
-    }
-
-    const handleKeyUpDetected = (event) => {
-        if(event.key == 'Shift') {
-            if(shifhKey) {
-                console.log("up :", event.key)
-                shifhKey.current = false;
-            }
-        }
+    const handleTableRoute = (id) => {
+        router.push(`${TABLES}/${id}`)
     }
 
     return (
         <Error>
             <Error.When isError={err}>
-                <TableComponent 
-                    title="Mis mesas"
-                    columns={columns}
-                    rows={table_list}
-                    Actions={ActionButtonTable}
-                    checkbox={false}
-                />
-                <Tooltip
-                    title='Crear mesa'
-                >
-                    <IconButton 
-                        sx={{
-                            ...global.buttonFloat,
-                            backgroundColor: mode == 'dark' ? '#4b4b4b' : '#e8e8e8'
-                            }}
-                        onClick={handleOpenModal}
+                <ConfirmContext>
+                    <MessageContext>
+                        <TableComponent 
+                            title="Mis mesas"
+                            columns={columns}
+                            rows={table_list}
+                            Actions={ActionButtonTable}
+                            useCheckbox
+                            doubleClick={handleTableRoute}
+                        />
+                        <Tooltip
+                            title='Crear mesa'
                         >
-                        <AddIcon fontSize="large"/>
-                    </IconButton>
-                </Tooltip>
+                            <IconButton 
+                                sx={{
+                                    ...global.buttonFloat,
+                                    backgroundColor: mode == 'dark' ? '#4b4b4b' : '#e8e8e8'
+                                    }}
+                                onClick={handleOpenModal}
+                                >
+                                <AddIcon fontSize="large"/>
+                            </IconButton>
+                        </Tooltip>
+                    </MessageContext>
+                </ConfirmContext>
                 {open && 
                     <CreateModalTable 
                         isOpen={open}

@@ -1,6 +1,18 @@
-export const getter = async (user_id, url) => {
+export const getter = async ({
+    user_id = null,
+    other_id = null, 
+    url
+}) => {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/${url}/${user_id}`).catch((err) => {
+        let complete_url = `${process.env.NEXT_PUBLIC_SERVER}/${url}`;
+        
+        if(user_id)
+            complete_url += `/${user_id}`;
+
+        if(other_id)
+            complete_url += `/${other_id}`;
+
+        const response = await fetch(complete_url).catch((err) => {
             throw {...err.cause, status: 500}
         });
 

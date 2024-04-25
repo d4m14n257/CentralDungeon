@@ -91,6 +91,13 @@ CREATE TABLE IF NOT EXISTS Users_registration (
     FOREIGN KEY (user_id) REFERENCES Users(id)
 )ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS Users_Rejected (
+    user_registration_id VARCHAR(64),
+    description VARCHAR(1024),
+    rejected_date DATETIME,
+    FOREIGN KEY (user_registration_id) REFERENCES Users_registration(id)
+)ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS Registration_Files (
     joined_id VARCHAR(64),
     file_id VARCHAR(64),

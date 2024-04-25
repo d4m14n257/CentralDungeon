@@ -25,3 +25,10 @@ export const Request = (requests) => {
         created: request.created_at !== undefined ? request.created_at : null,
     }))
 }
+
+export const Rejected = (rejected) => {
+    return {
+        description_rejected: rejected.description,
+        rejected_date: rejected.rejected_date 
+    }
+}

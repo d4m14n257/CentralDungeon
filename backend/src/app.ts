@@ -11,6 +11,7 @@ import cors from "cors"
 //TODO: Keep only the number and simbol in utc.
 //TODO: Configure CORS before finish the back
 //TODO: Check injection sql is possible and then fixed it
+//TODO: Limit rows in generals views.
 
 dotenv.config();
 

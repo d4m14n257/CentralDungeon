@@ -12,8 +12,6 @@ import Header from '@/components/general/Header';
 
 import { ColorModeContext } from '@/contexts/ColorModeContext';
 import { UserContext } from '@/contexts/UserContext';
-import { ConfirmContext } from '@/contexts/ConfirmContext';
-import { MessageContext } from '@/contexts/MessageContext';
 
 //TODO: Add loading effects on pages.
 //TODO: Normalize data.
@@ -39,33 +37,29 @@ export default function App({ Component, pageProps }) {
     return (
         <UserContext>
             <ColorModeContext>
-                <ConfirmContext>
-                    <MessageContext>
-                        <CssBaseline />
-                        <Head>
-                            <title>Central Dungeon</title>
-                        </Head>
-                        <Header
-                            handleOpenUser={handleOpenUser}
-                        />
-                        <Toolbar />
-                        <Box
-                            sx={{ margin: 2.5 }}
-                        >
-                            <Container
-                                maxWidth='xl'
-                            >   
-                                <Component {...pageProps} />
-                                {openUser &&
-                                    <CardSettings
-                                        handleOpenUser={handleOpenUser}
-                                        openUser={openUser}
-                                    />
-                                }
-                            </Container>
-                        </Box>
-                    </MessageContext>
-                </ConfirmContext>
+                <CssBaseline />
+                <Head>
+                    <title>Central Dungeon</title>
+                </Head>
+                <Header
+                    handleOpenUser={handleOpenUser}
+                />
+                <Toolbar />
+                <Box
+                    sx={{ margin: 2.5 }}
+                >
+                    <Container
+                        maxWidth='xl'
+                    >   
+                        <Component {...pageProps} />
+                        {openUser &&
+                            <CardSettings
+                                handleOpenUser={handleOpenUser}
+                                openUser={openUser}
+                            />
+                        }
+                    </Container>
+                </Box>
             </ColorModeContext>
         </UserContext>
     );

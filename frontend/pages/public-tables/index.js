@@ -6,7 +6,7 @@ import { getter } from '@/api/getter';
 import { Tables } from '@/normalize/models';
 
 export const getServerSideProps = async () => {
-    const result = await getter("3", 'tables/public-tables');
+    const result = await getter({user_id: "3", url: 'tables/public-tables'});
 
     if(!result.status) {
         const data = {

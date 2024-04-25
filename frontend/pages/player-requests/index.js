@@ -8,7 +8,7 @@ import { getter } from "@/api/getter";
 import { Error, ErrorMessage } from "@/components/info/HandlerError";
 
 export const getServerSideProps = async () => {
-    const result = await getter("2", 'users/requests/player');
+    const result = await getter({user_id: "2", url: 'users/requests/player'});
 
     if(!result.status) {
         const data = {

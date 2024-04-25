@@ -3,6 +3,7 @@ import { getUsersMaster } from "../server/users/getUserMasters";
 import { MastersList, RequestPlayer } from "../models/models";
 import { getUserTimezone } from "../helper/getUserTimezon";
 import { getRequestToTables } from "../server/tables/getRequestToTables";
+import { getRequestRejected } from "../server/users/getRequestRejected";
 
 export function getUsersMasters() {
     return async (req: Request, res: Response) => {
@@ -84,6 +85,49 @@ export function getRequestPlayer () {
             })
 
             res.status(200).send(data);
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})
+        }
+    }
+}
+
+export function getRejectedRequest () {
+    return async (req: Request, res : Response) => {
+        try {
+            const data = {
+                request: null
+            }
+
+            const request_id = req.params.request_id;
+            const user_id = req.params.user_id;
+
+            const utc : Promise<string> = await getUserTimezone(user_id).then((utc) => {
+                if(utc.http_status) {
+                    throw utc;
+                }
+
+                return utc[0].timezone;
+            }).catch((err) => {
+                if(err.http_status)
+                    throw err;
+                else
+                    throw {...err, http_status: 503}
+            })
+
+            data.request = await getRequestRejected(utc, request_id).then((data) => {
+                if(data.http_status)
+                    throw data;
+                
+                return data[0];
+            }).catch((err) => {
+                if(err.http_status)
+                    throw err;
+                else
+                    throw {...err, http_status: 503}
+            })
+
+            res.status(200).send(data.request)
         }
         catch (err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})

@@ -9,10 +9,10 @@ import { Error, ErrorMessage } from '@/components/info/HandlerError';
 
 import { getter } from '@/api/getter';
 import { Request, Tables } from '@/normalize/models';
-import { JOINED_TABLES, PLAYER_REQUEST, PUBLIC_TABLES } from '@/constants/constants';
+import { JOINED_TABLES, PLAYER_REQUEST, PUBLIC_TABLES, TABLES_AVAILABLE } from '@/constants/constants';
 
 export const getServerSideProps = async () => {
-    const result = await getter("2", 'tables/player');
+    const result = await getter({user_id: "2", url: 'tables/player'});
 
     if(!result.status) {
         const data = {
@@ -54,6 +54,10 @@ export default function Dashboard (props) {
         router.push(PLAYER_REQUEST);
     }
 
+    const handleTableRoute = (id) => {
+        router.push(`${TABLES_AVAILABLE}/${id}`);
+    }
+
     return (
         <Grid
             container
@@ -84,6 +88,7 @@ export default function Dashboard (props) {
                     >
                         <ListRequestBody
                             requests={request_tables}
+                            handleTableRoute={handleTableRoute}
                          />
                     </ListComponent>
                     <ListComponent
