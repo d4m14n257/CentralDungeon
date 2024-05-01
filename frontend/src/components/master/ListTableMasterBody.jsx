@@ -19,7 +19,7 @@ import { useDate } from '@/hooks/useDate';
 export default function ListTableMasterBody (props) {
     const { tables } = props;
     const router = useRouter();
-    const { handleDate } = useDate();
+    const { handleDatetime } = useDate();
 
     const handlePushTable = (id) => {
         router.push(`${TABLES}/${id}`)
@@ -45,7 +45,9 @@ export default function ListTableMasterBody (props) {
                                         secondary={<Typography variant="subtitle2"><Span title='Tags: '/>{table.tags ? table.tags : 'No hay tags asignados.'}</Typography>}
                                     />
                                     <ListItemText 
-                                        primary={<Typography variant="body2"><Span title={'Fecha de inicio: '}/>{handleDate(table.startdate)}</Typography>}
+                                        primary={<Typography variant="body2">
+                                                    <Span title={'Fecha de inicio: '}/>{table.startdate ? handleDatetime(table.startdate) : 'No se ha asignado la fecha de inicio'}
+                                                </Typography>}
                                         secondary={<Typography variant="subtitle2"><Span title={'Estado: '}/>{table.status}</Typography>}
                                     />
                                 </Box>

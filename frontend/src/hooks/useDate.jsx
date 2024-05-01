@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react"
 
 export const useDate = () => {
-    const options = useMemo(() => ({
+    const optionsWithTime = useMemo(() => ({
         weekday: 'long', 
         year: 'numeric', 
         month: 'long', 
@@ -10,12 +10,25 @@ export const useDate = () => {
         minute: 'numeric'
     }))
 
+    const optionsWithoutTime = useMemo(() => ({
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+    }))
+
+    const handleDatetime = useCallback((created) => {
+        const createdDate = new Date(created);
+        return createdDate.toLocaleDateString('es-ES', optionsWithTime);
+    }, [optionsWithTime])
+
     const handleDate = useCallback((created) => {
         const createdDate = new Date(created);
-        return createdDate.toLocaleDateString('es-ES', options);
-    }, [options])
+        return createdDate.toLocaleDateString('es-ES', optionsWithoutTime);
+    }, [optionsWithTime])
 
     return {
+        handleDatetime,
         handleDate
     }
 }

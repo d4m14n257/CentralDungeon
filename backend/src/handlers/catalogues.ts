@@ -5,7 +5,7 @@ import { conn } from "../config/database";
 import { getCataloguesName } from "../server/catalogues/getCataloguesName";
 import { setCatalogue } from "../server/catalogues/setCatalogues";
 
-export function createCatalogues<T extends Tags | Systems | Platforms>(table_name : string) {
+export function handleCreateCatalogues<T extends Tags | Systems | Platforms>(table_name : string) {
     return async (req : Request, res : Response) => {
         try {
             const query : PoolConnection = await conn.getConnection()
@@ -38,7 +38,7 @@ export function createCatalogues<T extends Tags | Systems | Platforms>(table_nam
     }
 }
 
-export function getCatalogues(table_name : string) {
+export function handleGetCatalogues(table_name : string) {
     return async (req: Request, res : Response) => {
         try {
             const name : string = req.params.name;
@@ -61,7 +61,7 @@ export function getCatalogues(table_name : string) {
     }
 }
 
-export function getCatalogueIndex(table_name : string) {
+export function handleGetCatalogueIndex(table_name : string) {
     const sql = `SELECT id, name FROM ${table_name} WHERE id = ?`;
 
     return async(req: Request, res: Response) => {
@@ -93,7 +93,7 @@ export function getCatalogueIndex(table_name : string) {
 
 */
 
-export function setCatalogueIndex<T extends Tags | Systems | Platforms>(table_name : string, column_name : string) {
+export function handleSetCatalogueIndex<T extends Tags | Systems | Platforms>(table_name : string, column_name : string) {
     const sql = `UPDATE ${table_name} SET ${column_name} = ? WHERE id = ?`;
 
     return async(req: Request, res: Response) => {

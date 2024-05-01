@@ -11,10 +11,10 @@ import { useDate } from "@/hooks/useDate";
 
 const useModalRequest = ({ request, isOpen }) => {
     const [ data, setData ] = useState(null);
-    const { handleDate } = useDate();
+    const { handleDatetime } = useDate();
    
     const handleRequest = useCallback(async (request) => {
-        const result = await getter({user_id: '2', other_id: request.id, url: 'users/request/rejected'})
+        const result = await getter({user_id: '2', others: request.id, url: 'users/request/rejected'})
 
         return result;
     }, [isOpen])
@@ -24,9 +24,9 @@ const useModalRequest = ({ request, isOpen }) => {
             if(!response.status) {
                 const rejected = Rejected(response)
                 
-                rejected.rejected_date = handleDate(rejected.rejected_date)
+                rejected.rejected_date = handleDatetime(rejected.rejected_date)
                 
-                setData({...rejected, ...request, created: handleDate(request.created), err: false});
+                setData({...rejected, ...request, created: handleDatetime(request.created), err: false});
             }
             else {
                 setData({err: response});

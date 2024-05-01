@@ -15,6 +15,10 @@ import { Request, Tables } from '@/normalize/models';
 import { useRouter } from 'next/router';
 import { MASTER_REQUEST, TABLES } from '@/constants/constants';
 
+import { MessageContext } from '@/contexts/MessageContext';
+import { ConfirmContext } from '@/contexts/ConfirmContext';
+import { ShiftContext } from '@/contexts/ShiftContext';
+
 export const getServerSideProps = async () => {
     const result = await getter({user_id: "1", url: 'tables/master'});
 
@@ -35,13 +39,14 @@ export const getServerSideProps = async () => {
     else
         return {
             props: {
-                err: result
+                err_result: result,
+                err: true
             }
         }
 }
 
 export default function Masters (props) {
-    const { owner_tables, master_tables, request_tables, err } = props;
+    const { owner_tables, master_tables, request_tables, err, err_result } = props;
     const { open, handleOpenModal, handleCloseModal} = useModal();
     const router = useRouter();
 
@@ -87,15 +92,19 @@ export default function Masters (props) {
                             isMaster={true}
                          />
                     </ListComponent>
-                    {open &&
-                        <CreateModalTable
-                            isOpen={open}
-                            handleCloseModal={handleCloseModal}
-                        />
-                    }
+                    <MessageContext>
+                        {open &&
+                            <ShiftContext>
+                                <CreateModalTable
+                                    isOpen={open}
+                                    handleCloseModal={handleCloseModal}
+                                />
+                            </ShiftContext>
+                        }
+                    </MessageContext>
                 </Error.When>
                 <Error.Else>
-                    <ErrorMessage err={err}/>
+                    <ErrorMessage {...err_result}/>
                 </Error.Else>
             </Error>    
         </Grid>

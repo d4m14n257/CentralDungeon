@@ -18,7 +18,7 @@ export const getUserTimezone = async (user_id : string) : Promise<any> => {
             data.timezone = rows;
         }).catch((err : any) => {
             query.release();
-            throw {...err, http_status: 500};
+            throw {...err, message: 'Missing data.', http_status: 500};
         })  
 
         query.release();

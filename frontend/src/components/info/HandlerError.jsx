@@ -5,11 +5,9 @@ import Typography from '@mui/material/Typography';
 import { global } from "@/styles/global";
 
 export const ErrorMessage = (props) => {
-    const { err } = props;
-
     return (
         <Typography variant='h3' sx={global.warnError}>
-            Hubo un error en la peticion: { err }.
+            Hubo un error en la peticion: { props.status }.
         </Typography>
     );
 }

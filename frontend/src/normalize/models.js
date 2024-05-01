@@ -12,6 +12,28 @@ export const Tables = (tables) => {
     }))
 }
 
+export const TablesInfo = (tables) => {
+    return {
+        id: tables.id !== undefined ? tables.id : null,
+        table_type: tables.table_type !== undefined ? tables.table_type : null,
+        name: tables.name !== undefined ? tables.name : null,
+        requeriments: tables.requeriments !== undefined ? tables.requeriments : null,
+        description: tables.description !== undefined ? tables.description : null,
+        permitted: tables.permitted !== undefined ? tables.permitted : null,
+        startdate: tables.startdate !== undefined ? tables.startdate : null,
+        timezone: tables.timezone !== undefined ? tables.timezone : null,
+        status: tables.table_status !== undefined ? tables.table_status : null,
+        duration: tables.duration !== undefined ? tables.duration : null,
+        tags: tables.tags !== undefined ? tables.tags : null,
+        systems: tables.systems !== undefined ? tables.systems : null,
+        platforms: tables.platforms !== undefined ? tables.platforms : null,
+        masters: tables.masters !== undefined ? tables.masters : null,
+        schedule: tables.schedule !== undefined ? tables.schedule : null,
+        files: tables.files !== undefined ? tables.files : null,
+        players: tables.players !== undefined ? tables.players : null,
+    }
+}
+
 export const Request = (requests) => {
     return requests.map((request) => ({
         id: request.id !== undefined ? request.id : null,

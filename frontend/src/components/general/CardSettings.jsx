@@ -28,7 +28,7 @@ const useCardSettings = ({ openUser, handleOpenUser }) => {
         }
         else
             firstState.current = true;
-    })
+    }, [])
 
     useEffect(() => {
         window.addEventListener('click', handleClickOutside);

@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import { getUsersMaster } from "../server/users/getUserMasters";
 import { MastersList, RequestPlayer } from "../models/models";
 import { getUserTimezone } from "../helper/getUserTimezon";
-import { getRequestToTables } from "../server/tables/getRequestToTables";
+import { getRequestToTables } from "../server/tables/getRequestToTable";
 import { getRequestRejected } from "../server/users/getRequestRejected";
 
-export function getUsersMasters() {
+export function handleGetUsersMasters() {
     return async (req: Request, res: Response) => {
         try {
             const data : MastersList = {
@@ -35,7 +35,7 @@ export function getUsersMasters() {
     }
 }
 
-export function getRequestPlayer () {
+export function handleGetRequestPlayer () {
     return async (req: Request, res: Response) => {
         try {
             const data : RequestPlayer = {
@@ -92,7 +92,7 @@ export function getRequestPlayer () {
     }
 }
 
-export function getRejectedRequest () {
+export function handleGetRejectedRequest () {
     return async (req: Request, res : Response) => {
         try {
             const data = {

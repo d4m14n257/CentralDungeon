@@ -1,5 +1,6 @@
-import { useState, useReducer, useContext, useEffect } from "react";
+import { useState, useReducer, useContext, useEffect, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useDebouncedCallback } from "use-debounce";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorMessage } from "@hookform/error-message"
 
@@ -23,8 +24,8 @@ import { getter } from "@/api/getter";
 import { User } from "@/contexts/UserContext";
 import { setter } from "@/api/setter";
 import { Confirm } from "@/contexts/ConfirmContext";
-import dayjs from "dayjs";
 import { Message } from "@/contexts/MessageContext";
+import dayjs from "dayjs";
 
 /* 
     TODO: Fixed all error on the refs, might be in autocomplete and controller
@@ -100,7 +101,7 @@ function reducer (state, action) {
 }
 
 export default function CreateTableForm (props) {
-    const { handleCloseModal } = props;
+    const { handleCloseModal, reloadAction } = props;
     const { confirm, setMessage } = useContext(Confirm);
     const { username, id } = useContext(User);
     const { handleOpen, setMessage : setStatusMessage, setStatus } = useContext(Message);
@@ -152,37 +153,34 @@ export default function CreateTableForm (props) {
         resolver: zodResolver(schema)
     })
 
-    const handleMasterList = async (event, value) => {
-        if(event.nativeEvent.inputType == 'insertText') {
-            let masters = [] ;
+    const handleMasterList = useDebouncedCallback(async (event, value) => {
+        let masters = [] ;
 
-            if(value.length > 3) {
-                masters = await getter(value, 'users/masters');
+        if(value.length > 3) {
+            masters = await getter({others: value, url: 'users/masters'});
 
-                if(!masters.status)
-                    masters = masters.users_master
-                else
-                    masters = []
-            }
-
-            dispatch({type: 'search-masters', value: value, dataArray: masters})
+            if(!masters.status)
+                masters = masters.users_master
+            else
+                masters = []
         }
-    }
+
+        dispatch({type: 'search-masters', value: value, dataArray: masters})
+    }, 300)
     
-    const handleCataloguesList = async (event, value, url, type) => {
-        if(event.nativeEvent.inputType == 'insertText') {
-            let data = [];
+    const handleCataloguesList = useDebouncedCallback(async (event, value, url, type) => {
+        let data = [];
 
-            if(value.length > 0) {
-                data = await getter(value, url);
+        if(value.length > 0) {
+            data = await getter({others: value, url: url});
 
-                if(data.status)
-                    data = [];
-            }
-
-            dispatch({type: type, value: value, dataArray: data});
+            if(data.status)
+                data = [];
         }
-    }
+
+        dispatch({type: type, value: value, dataArray: data});
+
+    }, 300)
 
     const handleCreateShedule = (field) => {
         const time = typeof scheduleInfo.time == 'string' ? '02:00' : scheduleInfo.time.format('HH:mm')
@@ -233,7 +231,7 @@ export default function CreateTableForm (props) {
         })
     }
 
-    const onSubmit = async (data, event) => {
+    const onSubmit = useCallback(async (data, event) => {
         try {
             if(!event.shiftKey) {
                 await confirm()
@@ -251,11 +249,16 @@ export default function CreateTableForm (props) {
                 timezone: data.timezone ? data.timezone.substring(3) : data.timezone
             }, 'tables/master');
 
+            handleOpen();
+
             if(response.status >= 200 && response.status <= 299) {
                 setStatus(response.status);
                 setStatusMessage('Mesa creada con exito.');
-                handleOpen();
                 handleCloseModal();
+                handleOpen();
+                
+                if(reloadAction)
+                    await reloadAction();
             }
             else {
                 setStatus(response.status);
@@ -266,7 +269,7 @@ export default function CreateTableForm (props) {
         catch (err) {
             console.log(err)
         }
-    }
+    }, [])
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>

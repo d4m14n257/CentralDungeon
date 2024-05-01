@@ -1,7 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import { conn } from "../config/database";
 
-export default async function getQuery (sql : string, params : any[] = []) {
+export default async function getQuery (sql : string, params : (string | Promise<string>)[] = []) : Promise<any> {
     let data;
 
     try {
@@ -17,10 +17,10 @@ export default async function getQuery (sql : string, params : any[] = []) {
         })  
         
         query.release()
+
+        return data;
     }
     catch (err : any){
         return err;
     }
-    
-    return data;
 }

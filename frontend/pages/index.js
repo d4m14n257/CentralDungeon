@@ -31,15 +31,17 @@ export const getServerSideProps = async () => {
     else
         return {
             props: {
-                err: result
+                err_result: result,
+                err: true
             }
         }
 }
 
-
 export default function Dashboard (props) {
-    const { public_tables, joined_tables, request_tables, err } = props;
+    const { public_tables, joined_tables, request_tables, err, err_result } = props;
     const router = useRouter();
+
+    console.log(props)
 
     const handleTableSelect = (id) => {
         if(id) {
@@ -104,7 +106,7 @@ export default function Dashboard (props) {
                     </ListComponent>
                 </Error.When>
                 <Error.Else>
-                    <ErrorMessage err={err}/>
+                    <ErrorMessage {...err_result}/>
                 </Error.Else>
             </Error>
         </Grid>

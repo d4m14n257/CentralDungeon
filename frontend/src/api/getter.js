@@ -1,6 +1,6 @@
 export const getter = async ({
     user_id = null,
-    other_id = null, 
+    others = null, 
     url
 }) => {
     try {
@@ -9,8 +9,8 @@ export const getter = async ({
         if(user_id)
             complete_url += `/${user_id}`;
 
-        if(other_id)
-            complete_url += `/${other_id}`;
+        if(others)
+            complete_url += `/${others}`;
 
         const response = await fetch(complete_url).catch((err) => {
             throw {...err.cause, status: 500}

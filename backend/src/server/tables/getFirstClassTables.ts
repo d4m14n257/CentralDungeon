@@ -1,6 +1,6 @@
 import getQuery from "../../helper/getQuery";
 
-export const getFirstClassTable = async (utc : Promise<string>, user_id : string) : Promise<any> => {
+export const getFirstClassTables = async (utc : Promise<string>, user_id : string) : Promise<any> => {
     const sql = `
         SELECT pt.*
             FROM (

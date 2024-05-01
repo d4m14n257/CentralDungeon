@@ -1,4 +1,4 @@
-import { createContext, useState, useReducer, useEffect, useRef } from "react";
+import { createContext, useState, useReducer } from "react";
 
 import SnackMessage from "@/components/general/SnackMessage";
 
@@ -19,13 +19,6 @@ function reducer (state, action) {
                 status: value
             }
         }
-
-        case 'set-info': {
-            return {
-                ...state,
-                info: value
-            }
-        }
     }
 }
 
@@ -33,43 +26,12 @@ export const Message = createContext({ handleOpen: () => {}, setMessage: {}, set
 
 export const MessageContext = (props) => {
     const { children } = props;
-    const shifhKey = useRef(false);
     const [open, setOpen] = useState(false);
     const [data, dispatch] = useReducer(reducer, {
         message: '',
         status: '',
         info: ''
     });
-
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDownDetected);
-        document.addEventListener('keyup', handleKeyUpDetected)
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDownDetected);
-            document.removeEventListener('keyup', handleKeyUpDetected);
-          };
-    }, [])
-    
-    const handleKeyDownDetected = (event) => {
-        if(event.key == 'Shift') {
-            if(!shifhKey.current) {
-                handleSetMessage('Cuidado, no se solicitara confirmacion para ninguna acción, mientras mantega pulsada la tecla.')
-                shifhKey.current = true;
-                handleSetInfo(shifhKey.current);
-                handleSetStatus('')
-                handleOpen();
-            }
-        }
-    }
-
-    const handleKeyUpDetected = (event) => {
-        if(event.key == 'Shift') {
-            if(shifhKey) {
-                shifhKey.current = false;
-            }
-        }
-    }
 
     const handleSetMessage = (message) => {
         dispatch({ type: 'set-message', value: message });
@@ -79,22 +41,17 @@ export const MessageContext = (props) => {
         dispatch({ type: 'set-status', value: status });
     }
 
-    const handleSetInfo = (info) => {
-        dispatch({ type: 'set-info', value: info });
-    }
-
     const handleOpen = () => {
         setOpen(true);
     }
 
     const handleClose = () => {
         setOpen(false)
-        handleSetStatus('')
     }
 
     return (
         <>
-            <Message.Provider value={{ handleOpen, setMessage: handleSetMessage, setStatus: handleSetStatus, setInfo: handleSetInfo }}>
+            <Message.Provider value={{ handleOpen, setMessage: handleSetMessage, setStatus: handleSetStatus }}>
                 {children}
             </Message.Provider>
             <SnackMessage 

@@ -26,14 +26,15 @@ export const getServerSideProps = async () => {
     else {
         return {
             props: {
-                err: result
+                err_result: result,
+                err: true
             }
         }
     }
 }
 
 export default function PlayerRequest (props) {
-    const { request_tables_candidate, request_tables_rejected, err } = props;
+    const { request_tables_candidate, request_tables_rejected, err, err_result } = props;
 
     return (
         <Grid
@@ -64,7 +65,7 @@ export default function PlayerRequest (props) {
                     </ListComponent>
                 </Error.When>
                 <Error.Else>
-                    <ErrorMessage err={err} />
+                    <ErrorMessage {...err_result} />
                 </Error.Else>
             </Error>
         </Grid>

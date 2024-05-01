@@ -1,14 +1,32 @@
 import express, { Router } from "express";
-import { createTable, getFirstClassTables, getGeneralView, getJoinedTables, getMasterView, getPublicTables, getTablesMasterList } from "../handlers/tables";
+import { 
+        handleCreateTable, 
+        handleDeleteTable, 
+        handleGetAllTable, 
+        handleGetFirstClassTables, 
+        handleGetGeneralView, 
+        handleGetJoinedTables, 
+        handleGetMasterView, 
+        handleGetPublicTables, 
+        handleGetTablesMasterList, 
+        handleUpdateTable, 
+        handleUploadFiles
+} from "../handlers/tables";
+import { upload } from "../middleware/uploadFiles";
 
 export const tables : Router = express.Router();
 
-tables.get('/player/:user_id', getGeneralView());
-tables.get('/master/:user_id', getMasterView());
-tables.get('/public-tables/:user_id', getPublicTables());
-tables.get('/first-class-tables/:user_id', getFirstClassTables());
-tables.get('/joined-tables/:user_id', getJoinedTables());
-tables.get('/master/list/:user_id', getTablesMasterList());
+tables.get('/:table_id', handleGetAllTable());
+tables.get('/player/:user_id', handleGetGeneralView());
+tables.get('/master/:user_id', handleGetMasterView());
+tables.get('/public-tables/:user_id', handleGetPublicTables());
+tables.get('/first-class-tables/:user_id', handleGetFirstClassTables());
+tables.get('/joined-tables/:user_id', handleGetJoinedTables());
+tables.get('/master/list/:user_id', handleGetTablesMasterList());
 
-tables.post('/master', createTable());
+tables.post('/master', handleCreateTable());
+tables.post('/files', upload.array('files'), handleUploadFiles());
 
+tables.put('/master', handleUpdateTable());
+
+tables.delete('/:table_id',handleDeleteTable());

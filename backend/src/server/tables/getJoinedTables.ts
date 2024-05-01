@@ -1,6 +1,6 @@
 import getQuery from "../../helper/getQuery";
 
-export const getJoinedTable = async (utc : Promise<string>, user_id : string) : Promise<any> => {
+export const getJoinedTables = async (utc : Promise<string>, user_id : string) : Promise<any> => {
     const sql = `
         SELECT t.id, t.name, t.description, CONVERT_TZ(t.startdate, t.timezone, ?) as startdate, GROUP_CONCAT(um.name) as masters
         FROM Users_registration ur 

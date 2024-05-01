@@ -24,6 +24,7 @@ export const getOwnerTables = async (utc : Promise<string>, user_id : string) : 
                     JOIN Players_Table pt ON pt.table_id = t.id
                     JOIN Masters m ON m.table_id = t.id 
                 WHERE tag_id is NULL
+                    AND t.status != 'Deleted'
                 GROUP BY m.table_id`;
 
         const params = [user_id, utc];

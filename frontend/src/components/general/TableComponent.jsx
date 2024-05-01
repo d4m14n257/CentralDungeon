@@ -1,6 +1,6 @@
 import { useState, useReducer, useMemo, useCallback } from 'react';
 
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableCellUsers, Toolbar, Typography,
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableCellUsers, TableSortLabel, Toolbar, Typography,
          Box, Checkbox, Tooltip, IconButton } from '@mui/material';
 
 import { alpha } from '@mui/material/styles';
@@ -121,8 +121,8 @@ const useTableComponent = ({ rows, columns }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10)
     const [checkboxAction, setCheckboxAction] = useState(false);
-    const [order, setOrder] = useState([]);
-    const [orderBy, setOrderBy] = useState([]);
+    const [order, setOrder] = useState('asc');
+    const [orderBy, setOrderBy] = useState(columns[0].id);
     const [selected, setSelected] = useState([]);
     const [data, dispatch] = useReducer(reducer, {
         rowCount: rows.length,
@@ -157,6 +157,16 @@ const useTableComponent = ({ rows, columns }) => {
         setSelected([]);
     }
 
+    const createSortHandler = (property) => (event) => {
+        handleRequestSort(event, property);
+    };
+
+    const handleRequestSort = (event, property) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    }
+
     const handleClick = (event, id) => {
         const selectedIndex = selected.indexOf(id);
         let newSelected = [];
@@ -177,7 +187,7 @@ const useTableComponent = ({ rows, columns }) => {
         setSelected(newSelected);
     }
 
-    const isSelected = useCallback((id) => selected.indexOf(id) !== -1);
+    const isSelected = useCallback((id) => selected.indexOf(id) !== -1, []);
 
     const visibleRows = useMemo(
         () =>
@@ -185,7 +195,7 @@ const useTableComponent = ({ rows, columns }) => {
             page * rowsPerPage,
             page * rowsPerPage + rowsPerPage,
           ),
-        [order, orderBy, page, rowsPerPage],
+        [order, orderBy, page, rowsPerPage, rows],
     );
 
     return {
@@ -202,17 +212,18 @@ const useTableComponent = ({ rows, columns }) => {
         handleChangeRowsPerPage,
         handleChangePage,
         handleClick,
+        createSortHandler,
         visibleRows,
         isSelected
     };
 }
 
 export default function TableComponent (props) {
-    const { title, columns, rows, useCheckbox, minWidth, Actions, doubleClick } = props;
-    const { page, rowsPerPage, checkboxAction, data, selected,
+    const { title, columns, rows, useCheckbox, minWidth, Actions, doubleClick, reloadTable } = props;
+    const { page, rowsPerPage, checkboxAction, orderBy, data, selected,
             handleCheckboxShowUp, handleSelectAll, handleChangeRowsPerPage, 
             handleChangePage, handleCheckboxGoAway, handleClick, visibleRows, 
-            isSelected
+            isSelected, order, createSortHandler
         } = useTableComponent({ rows, columns });
 
     return (
@@ -249,12 +260,21 @@ export default function TableComponent (props) {
                                         key={column.id}
                                         style={{ minWidth: minWidth }}
                                         sx={{textAlign: column.id == 'actions' ? 'center' : 'left' }}
-                                    >
-                                        <Typography variant='subtitle1' sx={{fontWeight: '700'}}>
-                                            {column.label}
-                                        </Typography>
-                                        {column.additional &&
-                                            <><br/>{column.additional}</>
+                                        sortDirection={column.id !== 'actions' && (orderBy === column.id ? order : false)}
+                                    >   
+                                        {column.id !== 'actions' ? 
+                                            <TableSortLabel
+                                                active={orderBy === column.id}
+                                                direction={orderBy === column.id ? order : 'asc'}
+                                                onClick={createSortHandler(column.id)}
+                                            >
+                                                <Typography variant='subtitle1' sx={{fontWeight: '700'}}>
+                                                    {column.label}
+                                                </Typography>
+                                            </TableSortLabel> :
+                                            <Typography variant='subtitle1' sx={{fontWeight: '700'}}>
+                                                {column.label}
+                                            </Typography>
                                         }
                                     </TableCell>
                                 ))}
@@ -332,8 +352,7 @@ export default function TableComponent (props) {
                                                     >
                                                         <Actions
                                                             id={row.id}
-                                                            value={row}
-                                                            status={row.status}
+                                                            reloadAction={reloadTable}
                                                         />
                                                     </TableCell>
                                                 );

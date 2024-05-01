@@ -1,27 +1,163 @@
-import { Request, response, Response } from "express";
-import { getUserTimezone } from "../helper/getUserTimezon";
+import { conn } from "../config/database";
+import { Request, Response } from "express";
+import { PoolConnection } from "mysql2/promise";
 import { GeneralMasterView, Generalview, Table, TableMasterList } from "../models/models";
-import { getPublicTable } from "../server/tables/getPublicTables";
-import { getJoinedTable } from "../server/tables/getJoinedTables";
-import { getRequestToTables } from "../server/tables/getRequestToTables";
+import { getUserTimezone } from "../helper/getUserTimezon";
+import { getPublicTables } from "../server/tables/getPublicTables";
+import { getJoinedTables } from "../server/tables/getJoinedTables";
+import { getRequestToTables } from "../server/tables/getRequestToTable";
 import { getOwnerTables } from "../server/tables/getOwnerTables";
 import { getMasterTables } from "../server/tables/getMasterTables";
 import { getRequestOnTables } from "../server/tables/getRequestOnTable";
-import { getFirstClassTable } from "../server/tables/getFirstClassTables";
-import { conn } from "../config/database";
+import { getFirstClassTables } from "../server/tables/getFirstClassTables";
 import { setTable } from "../server/tables/setTable";
-import { PoolConnection } from "mysql2/promise";
 import { setCatalogue } from "../server/catalogues/setCatalogues";
 import { setCatalogueTables } from "../server/catalogues/setCataloguesTable";
 import { setScheduleTables } from "../server/schedule/setScheduleTable";
 import { setTableMasters } from "../server/users/setTableMasters";
-import { getTablesList } from "../server/tables/getTablesList";
+import { getTablesLists } from "../server/tables/getTableLists";
+import { deleteTables } from "../server/tables/deleteTables";
+import { deleteDaysByTables } from "../server/schedule/deleteDaysByTables";
+import { deleteCataloguesByTables } from "../server/catalogues/deleteCataloguesByTables";
+import { deleteUsersMastersByTables } from "../server/tables/deleteUsersMastersByTables";
+import { deleteUserByTables } from "../server/users/deleteUsersByTables";
+import { getTable } from "../server/tables/getTable";
+import { getCataloguesInTables } from "../server/catalogues/getCataloguesInTables";
+import { deleteFilesByTables } from "../server/files/deleteFilesByTables";
+import { deleteMastersByTables } from "../server/users/deleteMastersByTables";
+import { getMastersInTables } from "../server/users/getMastersInTables";
+import { getScheduleInTables } from "../server/schedule/getScheduleInTables";
+import { getPlayersInTables } from "../server/users/getPlayersInTables";
+import { updateTable } from "../server/tables/updateTable";
 
 //TODO: Check the query which it doesnt work in change the hour.
 //TODO: Make the trigger!!!
 //TODO: When ill save a new candidate while its uploading, save the date in the web client, no serve o another.
 
-export function getGeneralView () {
+export function handleGetAllTable () {
+    return async (req: Request, res : Response) => {
+        try {
+            const data : { 
+                table: Table | null
+            } = {
+                table: null
+            }
+
+            const table_id = req.params.table_id;
+
+            data.table = await getTable(table_id).then((data) => {
+                if(data.http_status)
+                    throw data;
+
+                return data[0];
+            })
+            .catch((err) => {
+                if(err.http_status)
+                    throw err;
+                else
+                    throw {...err, http_status: 503}
+            });
+
+            if(data.table) {
+                const tags = await getCataloguesInTables('Tags', table_id).then((data) => {
+                    if(data.http_status)
+                        throw data;
+                    
+                    return data
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                });
+
+                const systems = await getCataloguesInTables('Systems', table_id).then((data) => {
+                    if(data.http_status)
+                        throw data;
+                    
+                    return data
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                });
+
+                const platforms = await getCataloguesInTables('Platforms', table_id).then((data) => {
+                    if(data.http_status)
+                        throw data;
+                    
+                    return data
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                });
+
+                const masters = await getMastersInTables(table_id).then((data) => {
+                    if(data.http_status)
+                        throw data;
+                    
+                    return data
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                })
+
+                const schedule = await getScheduleInTables(table_id).then((data) => {
+                    if(data.http_status)
+                        throw data;
+
+                    return data;
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                })
+
+                const players = await getPlayersInTables(table_id).then((data) => {
+                    if(data.http_status)
+                        throw data;
+
+                    return data;
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                })
+
+                data.table = {
+                    ...data.table, 
+                    tags: tags, 
+                    systems: systems, 
+                    platforms: platforms, 
+                    masters: masters, 
+                    schedule: schedule,
+                    players: players,
+                    files: []
+                }
+            }
+
+            res.status(200).send(data.table);
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})
+        }
+    }
+}
+
+export function handleGetGeneralView () {
     return async (req : Request, res : Response) => {
         try {
             const data : Generalview = {
@@ -44,7 +180,7 @@ export function getGeneralView () {
                     throw {...err, http_status: 503}
             })
 
-            data.public_tables = await getPublicTable(utc, user_id).then((data) => {
+            data.public_tables = await getPublicTables(utc, user_id).then((data) => {
                 if(data.http_status) {
                     throw data;
                 }
@@ -57,7 +193,7 @@ export function getGeneralView () {
                     throw {...err, http_status: 503}
             })
 
-            data.joined_tables = await getJoinedTable(utc, user_id).then((data) => {
+            data.joined_tables = await getJoinedTables(utc, user_id).then((data) => {
                 if(data.http_status) {
                     throw data;
                 }
@@ -91,7 +227,7 @@ export function getGeneralView () {
     }
 }
 
-export function getMasterView () {
+export function handleGetMasterView () {
     return async (req : Request, res : Response) => {
         try {
             const data : GeneralMasterView = {
@@ -149,8 +285,8 @@ export function getMasterView () {
     }
 }
 
-export function getPublicTables () {
-    return async (req: Request, res: Response) => {
+export function handleGetPublicTables () {
+    return async (req : Request, res : Response) => {
         try {
             const data = {
                 public_tables: null
@@ -167,7 +303,7 @@ export function getPublicTables () {
                 throw err;
             })
 
-            data.public_tables = await getPublicTable(utc, user_id).then((data) => {
+            data.public_tables = await getPublicTables(utc, user_id).then((data) => {
                 if(data.http_status) {
                     throw data;
                 }
@@ -185,8 +321,8 @@ export function getPublicTables () {
     }
 }
 
-export function getFirstClassTables () {
-    return async (req: Request, res: Response) => {
+export function handleGetFirstClassTables () {
+    return async (req : Request, res : Response) => {
         try {
             const data = {
                 first_class_tables: null
@@ -203,7 +339,7 @@ export function getFirstClassTables () {
                 throw err;
             })
 
-            data.first_class_tables = await getFirstClassTable(utc, user_id).then((data) => {
+            data.first_class_tables = await getFirstClassTables(utc, user_id).then((data) => {
                 if(data.http_status) {
                     throw data;
                 }
@@ -221,8 +357,8 @@ export function getFirstClassTables () {
     }
 }
 
-export function getJoinedTables () {
-    return async (req: Request, res: Response) => {
+export function handleGetJoinedTables () {
+    return async (req : Request, res : Response) => {
         try {
             const data = {
                 joined_tables: null
@@ -239,7 +375,7 @@ export function getJoinedTables () {
                 throw err;
             })
 
-            data.joined_tables = await getJoinedTable(utc, user_id).then((data) => {
+            data.joined_tables = await getJoinedTables(utc, user_id).then((data) => {
                 if(data.http_status) {
                     throw data;
                 }
@@ -261,7 +397,7 @@ export function getJoinedTables () {
     }
 }
 
-export function getTablesMasterList () {
+export function handleGetTablesMasterList () {
     return async (req : Request, res: Response) => {
         try {
             const data : TableMasterList = {
@@ -269,7 +405,7 @@ export function getTablesMasterList () {
             }
 
             const user_id = req.params.user_id;
-            data.table_list = await getTablesList(user_id).then((data) => {
+            data.table_list = await getTablesLists(user_id).then((data) => {
                 if(data.http_status)
                     throw data;
 
@@ -287,8 +423,8 @@ export function getTablesMasterList () {
     }
 }
 
-export function createTable () {
-    return async (req: Request, res: Response) => {
+export function handleCreateTable () {
+    return async (req : Request, res : Response) => {
         try {
             const query : PoolConnection = await conn.getConnection()
             .catch((err) => {
@@ -434,7 +570,7 @@ export function createTable () {
             if(body.schedule) {
                 for(const schedule of body.schedule) {
                     for(const hour of schedule.hour) {
-                        await setScheduleTables(table_id, {day: schedule.day, hour: hour}, query).then((response) => {
+                        await setScheduleTables(table_id, {weekday: schedule.day, hourtime: hour}, query).then((response) => {
                             if(response.http_status != 200)
                                 throw response;
                         })
@@ -454,7 +590,168 @@ export function createTable () {
             res.status(200).send({ message: 'Succefully created table'})
         }
         catch (err : any) {
-            console.log(err)
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
+        }
+    }
+}
+
+export function handleUpdateTable () {
+    return async (req : Request, res : Response) => {
+        try {
+            const query : PoolConnection = await conn.getConnection()
+            .catch((err) => {
+                throw {...err, http_status: 503}
+            })
+
+            await query.beginTransaction();
+            const body : Table = req.body;
+
+            await updateTable(body, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+
+            }).catch((err) => {
+                query.rollback();
+                query.release();
+
+                throw err;
+            })
+
+            await query.commit();
+            await query.release();
+
+            res.status(200).send({ message: 'Succefully updated table'});
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
+        }
+    }
+}
+
+export function handleUploadFiles () {
+    return async (req : Request, res : Response) => {
+
+    }
+}
+
+export function handleDeleteTable () {
+    return async (req : Request, res : Response, ) => {
+        try {
+            const query : PoolConnection = await conn.getConnection()
+            .catch((err) => {
+                throw {...err, http_status: 503}
+            })
+
+            const table_id = req.params.table_id;
+            query.beginTransaction();
+
+            await deleteTables(table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+                
+                query.rollback();
+                query.release();
+                
+                throw err
+            });
+
+            await deleteDaysByTables(table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+
+            }).catch((err) => {
+                
+                query.rollback();
+                query.release();
+                
+                throw err
+            });
+
+
+            await deleteCataloguesByTables('Table_Platforms', table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+                
+                query.rollback();
+                query.release();
+                
+                throw err
+            });
+
+            await deleteCataloguesByTables('Table_Systems', table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+                
+                query.rollback();
+                query.release();
+                
+                throw err
+            });
+
+            await deleteCataloguesByTables('Table_Tags', table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+                
+                query.rollback();
+                query.release();
+                
+                throw err
+            });
+
+            await deleteUsersMastersByTables(table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+                
+                query.rollback();
+                query.release();
+                
+                throw err
+            });
+
+            await deleteUserByTables(table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+                
+                query.rollback();
+                query.release();
+                
+                throw err
+            });
+
+            await deleteFilesByTables(table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+                
+                query.rollback();
+                query.release();
+                
+                throw err
+            })
+
+            await deleteMastersByTables(table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+
+                query.rollback();
+                query.release();
+                
+                throw err
+            })
+
+            await query.commit();
+            await query.release();
+
+            res.status(200).send({ message: 'Succefully deleted table'})
+        }
+        catch (err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
         }
     }

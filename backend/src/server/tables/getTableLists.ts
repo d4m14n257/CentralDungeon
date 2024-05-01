@@ -1,6 +1,6 @@
 import getQuery from "../../helper/getQuery";
 
-export const getTablesList = async (user_id : string) : Promise<any> => {
+export const getTablesLists = async (user_id : string) : Promise<any> => {
     const sql = `
         SELECT t.id, t.name, GROUP_CONCAT(u.name) as masters, pt.players, t.status, t.table_type 
             FROM Tables t

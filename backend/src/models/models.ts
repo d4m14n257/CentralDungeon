@@ -1,5 +1,5 @@
-type StatusTable = 'Preparation' | 'Opened' | 'In process' | 'Pause' | 'Canceled' | 'Finished' | 'Deleted';
-type StatusCatalogues = 'Created' | 'Allowed' | 'Rejected' | 'Deleted';
+export type StatusTable = 'Preparation' | 'Opened' | 'In process' | 'Pause' | 'Canceled' | 'Finished' | 'Deleted';
+export type StatusCatalogues = 'Created' | 'Allowed' | 'Rejected' | 'Deleted';
 
 export type Systems = {
     id: string
@@ -33,12 +33,12 @@ export type Users = {
 
 export type Table = {
     id?: string
-    name: string
-    description: string | null
-    permitted: string | null
-    startdate: any | null
-    timezone: string | null
-    requeriments: string | null
+    name?: string
+    description?: string | null
+    permitted?: string | null
+    startdate?: string | null
+    timezone?: string | null
+    requeriments?: string | null
     status?: StatusTable
     duration: string | null
     systems?: Systems[] | null
@@ -47,6 +47,7 @@ export type Table = {
     players?: Users[] | null
     schedule?: Schedules[] | null
     masters?:  Masters[]
+    files?: any[]
 }
 
 export type Schedules = {
@@ -78,8 +79,8 @@ export type Masters = {
 }
 
 export type Schedule = {
-    day: string,
-    hour: string
+    weekday: string,
+    hourtime: string
 }
 
 export type MastersList = {
@@ -94,3 +95,13 @@ export type RequestPlayer = {
     request_tables_candidate: {} | null,
     request_tables_rejected: {} | null
 }
+
+interface HttpStatus {
+    http_status?: number
+}
+
+/* Promise */ 
+
+export interface TablePromise extends HttpStatus, Table { 
+
+};

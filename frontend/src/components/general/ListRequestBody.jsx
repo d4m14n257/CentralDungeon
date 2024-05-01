@@ -14,7 +14,7 @@ import RequestModal from '../player/RequestModal';
 
 export default function ListRequestBody (props) {
     const { requests, isMaster, handleTableRoute } = props;
-    const { handleDate } = useDate();
+    const { handleDatetime } = useDate();
     const { open, handleOpenModalWithData, handleCloseModal, dataModal } = useModal()
 
     return  (
@@ -37,7 +37,7 @@ export default function ListRequestBody (props) {
                                                 <Typography variant="subtitle2"><Span title='Nombre de jugador: '/>{item.username}</Typography>}
                                     />
                                     <ListItemText 
-                                        primary={<Typography variant="body2"><Span title='Fecha de solicitud: '/>{handleDate(item.created)}</Typography>}
+                                        primary={<Typography variant="body2"><Span title='Fecha de solicitud: '/>{handleDatetime(item.created)}</Typography>}
                                         secondary={item.status ? <Typography variant="subtitle2"><Span title='Estado de solicitud: '/>{item.status}</Typography> : 
                                                 <Typography variant="subtitle2"><Span title='Karma: '/>{item.karma}</Typography>}
                                     />

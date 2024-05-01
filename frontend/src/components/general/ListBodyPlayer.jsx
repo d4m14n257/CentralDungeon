@@ -11,7 +11,7 @@ import { TABLES_AVAILABLE, TABLES_JOINED } from "@/constants/constants";
 
 export default function ListBodyPlayer (props) {
     const { id, tables } = props;
-    const { handleDate } = useDate();
+    const { handleDatetime } = useDate();
 
     const router = useRouter();
 
@@ -36,7 +36,9 @@ export default function ListBodyPlayer (props) {
                                         secondary={<Typography variant="subtitle2">{table.description}</Typography>}
                                     />
                                     <ListItemText
-                                        primary={<Typography variant="body1"><Span title={'Fecha de inicio: '}/>{handleDate(table.startdate)}</Typography>}
+                                        primary={<Typography variant="body1">
+                                                    <Span title={'Fecha de inicio: '}/>{table.startdate ? handleDatetime(table.startdate) : 'No se asignado la fecha de incio' }
+                                                </Typography>}
                                         secondary={<Typography variant="subtitle2"><Span title={'Master: '}/>{table.master ? table.master : 'No hay master asignado aun.'}</Typography>}
                                     />
                                 </Box>
