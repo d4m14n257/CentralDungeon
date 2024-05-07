@@ -17,6 +17,7 @@ import { UserContext } from '@/contexts/UserContext';
 //TODO: Normalize data.
 //TODO: Check if it is possible update list after create a new object.
 //TODO: implement infinity scroll when I gonna push tables.
+//TODO: Edit all text in English so that avoid to mix text.
 
 const useOpenSettings = () => {
     const [openUser, setOpenUser] = useState(false);

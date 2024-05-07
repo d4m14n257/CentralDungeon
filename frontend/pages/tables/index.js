@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 
 import { IconButton, Tooltip } from '@mui/material';
 
@@ -11,7 +11,7 @@ import { global } from "@/styles/global";
 import { ColorMode } from "@/contexts/ColorModeContext";
 
 import CreateModalTable from "@/components/tables/modals/CreateModalTable";
-import ActionButtonTable from "@/components/tables/ActionButtonTable";
+import ActionButtonTable from "@/components/tables/actions/ActionButtonTable";
 import { getter } from "@/api/getter";
 import { useModal } from "@/hooks/useModal";
 import { Error, ErrorMessage } from "@/components/info/HandlerError";
@@ -109,9 +109,9 @@ export default function Tables (props) {
                                 columns={columns}
                                 rows={tableList}
                                 Actions={ActionButtonTable}
-                                useCheckbox
                                 doubleClick={handleTableRoute}
                                 reloadTable={handleTableListReload}
+                                useCheckbox
                             />
                             <Tooltip
                                 title='Crear mesa'
@@ -128,13 +128,15 @@ export default function Tables (props) {
                             </Tooltip>
                         </MessageContext>
                     </ConfirmContext>
-                    {open && 
-                        <CreateModalTable 
-                            isOpen={open}
-                            handleCloseModal={handleCloseModal}
-                            reloadAction={handleTableListReload}
-                        />
-                    }
+                    <MessageContext>
+                        {open && 
+                            <CreateModalTable 
+                                isOpen={open}
+                                handleCloseModal={handleCloseModal}
+                                reloadAction={handleTableListReload}
+                            />
+                        }
+                    </MessageContext>
                 </ShiftContext>
             </Error.When>
             <Error.Else>

@@ -43,7 +43,7 @@ const useListComponent = () => {
 }
 
 export default function ListComponent (props) {
-    const { id, lg, xs, title, description, action, tip, children, hasCollapse, handleExpand } = props;
+    const { id, lg, xs, title, description, children, hasCollapse, handleExpand, handleAction, Action, dataAction, titleAction, IconAction } = props;
     const { open, handleChange } = useListComponent();
 
     return (
@@ -58,14 +58,13 @@ export default function ListComponent (props) {
                         sx={{paddingX: 3}}
                         secondaryAction={
                             <Stack direction='row' spacing={0.5}>
-                                {action &&
-                                    <Tooltip
-                                        title={tip}
-                                    >
-                                        <IconButton size="large" edge="end" aria-label="delete" onClick={action.handleClickButton}>
-                                            <action.Icon />
-                                        </IconButton>
-                                    </Tooltip>
+                                {Action &&
+                                    <Action 
+                                        handleAction={handleAction}
+                                        data={dataAction}
+                                        title={titleAction}
+                                        IconAction={IconAction}
+                                    />
                                 }
                                 {hasCollapse &&
                                     <Tooltip

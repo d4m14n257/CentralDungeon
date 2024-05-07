@@ -1,9 +1,8 @@
-import { Request } from "express";
+import { NextFunction, Request, Response } from "express";
 import multer, { FileFilterCallback } from "multer";
+import fs from 'node:fs';
 
 function fileFilter (req :Request, file : Express.Multer.File, callback : FileFilterCallback) {
-    console.log(req)
-
     if (
         file.mimetype === 'image/png' ||
         file.mimetype === 'image/jpg' ||
@@ -14,14 +13,18 @@ function fileFilter (req :Request, file : Express.Multer.File, callback : FileFi
     ) {
         callback(null, true)
     } else {
-        callback(null, false)
+        callback(new Error ('Invalid mime type'))
     }
 }
 
-function destination (req :Request, file : Express.Multer.File, callback : any) {
-    console.log(req)
+async function destination (req :Request, file : Express.Multer.File, callback : any) {
+    const user_id = req.params.user_id;
+    const folder = `${process.env.UPLOAD_FILES}/${user_id}`
 
-    callback(null, 'uploads/');
+    if(!fs.existsSync(folder))
+        await fs.mkdirSync(folder);
+
+    callback(null, folder);
 }
 
 function filename (req :Request, file : Express.Multer.File, callback : any) {
@@ -30,7 +33,20 @@ function filename (req :Request, file : Express.Multer.File, callback : any) {
 
 const storage : multer.StorageEngine  = multer.diskStorage({ destination: destination, filename: filename })
 
-export const upload = multer({
+const upload = multer({
     storage: storage,
     fileFilter: fileFilter
 })
+
+export const uploadFiles = (req : Request, res : Response, next : NextFunction) => {
+    upload.array('files')(req, res, (err) => {
+        if(err) {
+            if(err.message == 'Invalid mime type')
+                return res.status(415).send({ error: err.message });
+
+            return res.status(400).send({ error: err.message });
+        }
+
+        next();
+    })
+}

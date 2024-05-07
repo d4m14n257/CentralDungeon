@@ -41,7 +41,9 @@ export const updateTable = async (table : Table, query : PoolConnection) => {
 
     sql = sql.slice(0, -1);
 
-    const response = await setQuery(sql, params, query);
+    sql += ` WHERE id = ?`;
+    params.push(table.id);
 
+    const response = await setQuery(sql, params, query);
     return {...response};
 }

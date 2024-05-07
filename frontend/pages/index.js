@@ -41,8 +41,6 @@ export default function Dashboard (props) {
     const { public_tables, joined_tables, request_tables, err, err_result } = props;
     const router = useRouter();
 
-    console.log(props)
-
     const handleTableSelect = (id) => {
         if(id) {
             if(id === 'public-tables')
@@ -77,6 +75,7 @@ export default function Dashboard (props) {
                         hasCollapse
                     >   
                         <ListBodyPlayer
+                            id='public-tables'
                             tables={public_tables}
                         />
                     </ListComponent>
@@ -101,6 +100,7 @@ export default function Dashboard (props) {
                         hasCollapse
                     >
                         <ListBodyPlayer
+                            id='joined-tables'
                             tables={joined_tables}
                         />
                     </ListComponent>

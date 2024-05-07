@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorMessage } from "@hookform/error-message"
 
-import { Stack, Autocomplete, TextField, Typography, Divider, FormControl, FormHelperText } from "@mui/material";
+import { Stack, Autocomplete, TextField, Divider, FormControl, FormHelperText } from "@mui/material";
 import { TimeField } from "@mui/x-date-pickers";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -15,11 +15,11 @@ import SendIcon from '@mui/icons-material/Send';
 
 import { z } from "zod";
 import { modal } from "@/styles/tables/modal";
-import { timezone } from "@/helper/constants";
+import { timezone } from "@/constants/constants";
 import { Confirm } from "@/contexts/ConfirmContext";
 import { Message } from "@/contexts/MessageContext";
-import dayjs from "dayjs";
 import { putter } from "@/api/putter";
+import dayjs from "dayjs";
 
 const schema = z.object ({
     name: z.string().min(1, { message: 'Es obligatorio ponerle un nombre a la mesa.' }),
@@ -35,14 +35,16 @@ export default function EditTableForm (props) {
     const { confirm, setMessage } = useContext(Confirm);
     const { handleOpen, setMessage : setStatusMessage, setStatus } = useContext(Message);
 
-    const { control, register, handleSubmit, setValue, formState: { errors, isSubmitting }} = useForm({
+    console.log(table)
+
+    const { control, register, handleSubmit, formState: { errors, isSubmitting }} = useForm({
         defaultValues: {
             name: table.name,
             description: table.description,
             permitted: table.permitted,
             startdate: table.startdate,
             timezone: table.timezone,
-            duration: table.duration
+            duration: table.duration && `0000-00-00 ${table.duration}`
         },
         resolver: zodResolver(schema)
     })
@@ -53,24 +55,41 @@ export default function EditTableForm (props) {
 
     const onSubmit = useCallback(async (data, event) => {
         try {
+            let first = false;
+            let count = 0;
+
+            const value = {
+                id: table.id,
+                name: data.name !== table.name ? data.name : null,
+                description: data.description !== table.description ? data.description : null,
+                permitted: data.permitted !== table.permitted ? data.permitted : null,
+                startdate: data.startdate !== table.startdate ? data.startdate : null,
+                timezone: data.timezone !== table.timezone ? data.timezone.substring(3) : null,
+                duration: data.duration !== table.duration ? data.duration.substring(11) : null,
+            }
+
+            Object.values(value).forEach((element) => {
+                if(first) {
+                    if(!element) 
+                        count++;
+                }
+                else 
+                    first = true;
+            })
+
+            if(count == 6) 
+                throw {message: 'No hay cambios'}
+
             if(!event.shiftKey) {
                 await confirm()
                     .catch(() => {throw {err: 'Canceled'}});
             }
             
-            const response = await putter({
-                id: table.id,
-                name: data.name != table.name ? data.name : null,
-                description: data.description != table.description ? data.description : null,
-                permitted: data.permitted != table.permitted ? data.permitted : null,
-                startdate: data.startdate != table.startdate ? data.startdate : null,
-                timezone: data.timezone != table.timezone ? data.timezone.substring(3) : null,
-                duration: data.duration != table.duration ? data.duration : null,
-            }, 'tables/master');
+            const response = await putter({data: value, url: 'tables/master'});
 
             if(response.status >= 200 && response.status <= 299) {
                 setStatus(response.status);
-                setStatusMessage('Datos editados con exito.');
+                setStatusMessage('Datos de la mesa editados con exito.');
                 handleOpen();
                 handleCloseModal();
                 
@@ -80,7 +99,7 @@ export default function EditTableForm (props) {
             }
             else {
                 setStatus(response.status);
-                setStatusMessage('Ha habido un error al editar la mesa.');
+                setStatusMessage('Ha habido un error al momento de editar la mesa.');
                 handleOpen();
             }
         }
@@ -92,6 +111,7 @@ export default function EditTableForm (props) {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <form style={modal.content}>
+                <Divider />
                 <FormControl fullWidth>
                     <TextField
                         required

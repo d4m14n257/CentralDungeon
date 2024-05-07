@@ -27,8 +27,9 @@ export const useDate = () => {
         return createdDate.toLocaleDateString('es-ES', optionsWithoutTime);
     }, [optionsWithTime])
 
+
     return {
         handleDatetime,
-        handleDate
+        handleDate,
     }
 }

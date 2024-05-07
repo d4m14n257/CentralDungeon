@@ -3,7 +3,7 @@ import generateBase64 from "../../helper/generateBase64";
 import { Platforms, Systems, Tags } from "../../models/models";
 import setQuery from "../../helper/setQuery";
 
-export async function setCatalogue<T extends Tags | Systems | Platforms> (data : T, table_name: string, query : PoolConnection) : Promise<any> {
+export async function setCatalogue (data : Tags | Systems | Platforms, table_name: string, query : PoolConnection) : Promise<any> {
     const id : string = await generateBase64()
     .then((data) => data[0][0].generated_id);
 
@@ -12,6 +12,6 @@ export async function setCatalogue<T extends Tags | Systems | Platforms> (data :
 
     const params = [id, data.name];
     const response = await setQuery(sql, params, query);
-    
+
     return await {...response, id: id};
 }

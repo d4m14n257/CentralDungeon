@@ -28,7 +28,7 @@ export default function CardContentTable (props) {
             </Typography>
             <Typography  sx={global.overText}>
                 <Span title={'Duracion por sesión: '} />
-                {table.duration ? table.duration : 'No se ha definido un tiempo de duración.'}
+                {table.duration ? `${table.duration} horas` : 'No se ha definido un tiempo de duración.'}
             </Typography>
             <Typography  sx={global.overText}>
                 <Span title={'Estado: '} />

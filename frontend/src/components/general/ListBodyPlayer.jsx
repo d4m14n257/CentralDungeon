@@ -15,7 +15,9 @@ export default function ListBodyPlayer (props) {
 
     const router = useRouter();
 
-    const handleTableRoute = (id, table_id) => {
+    const handleTableRoute = (table_id) => {
+        console.log(id, table_id)
+
         if(id === 'joined-tables')
             router.push(`${TABLES_JOINED}/${table_id}`)
         else
@@ -26,10 +28,10 @@ export default function ListBodyPlayer (props) {
         <Message>
             <Message.When hasData={tables.length > 0}>
                 {tables.map((table) => (
-                    <Box key={table.name}>
+                    <Box key={table.id}>
                         <Divider variant="middle" component="li" />
                         <ListItem>
-                            <ListItemButton onClick={() => handleTableRoute(id, table.id)}>
+                            <ListItemButton onClick={() => handleTableRoute(table.id)}>
                                 <Box sx={global.listBody}>
                                     <ListItemText
                                         primary={<Typography variant="body1">{table.name}</Typography>}

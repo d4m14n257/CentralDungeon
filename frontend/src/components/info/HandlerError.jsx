@@ -7,7 +7,11 @@ import { global } from "@/styles/global";
 export const ErrorMessage = (props) => {
     return (
         <Typography variant='h3' sx={global.warnError}>
-            Hubo un error en la peticion: { props.status }.
+            { props.status ? 
+                `Hubo un error en la peticion: ${props.status}` : 
+                `Error desconocido...`
+            }
+            .
         </Typography>
     );
 }

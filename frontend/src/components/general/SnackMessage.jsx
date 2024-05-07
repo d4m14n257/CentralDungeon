@@ -6,6 +6,7 @@ export default function SnackMessage(props) {
 
     return (
         <Snackbar 
+            anchorOrigin={{ vertical: info ? 'top' : 'bottom', horizontal: info ? 'right' : 'left'}}
             open={open} 
             autoHideDuration={5000} 
             onClose={onClose}
@@ -48,8 +49,11 @@ export default function SnackMessage(props) {
                             severity="error"
                             variant="filled"
                             sx={{ width: '100%' }}  
-                        >
-                            {message} : {status}
+                        >   
+                            {status ? 
+                                `${message} : ${status}` :
+                                'Hubo un error inesperado'
+                            }
                         </Alert>
                     </Error.Else>
                 </Error>

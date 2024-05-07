@@ -2,8 +2,6 @@ import Grid from '@mui/material/Grid';
 
 import ListComponent from '@/components/general/ListComponent';
 
-import AddCircleIcon from '@mui/icons-material/AddCircle'
-
 import ListRequestBody from '@/components/general/ListRequestBody';
 import ListTableMasterBody from '@/components/master/ListTableMasterBody';
 import CreateModalTable from '@/components/tables/modals/CreateModalTable';
@@ -16,8 +14,8 @@ import { useRouter } from 'next/router';
 import { MASTER_REQUEST, TABLES } from '@/constants/constants';
 
 import { MessageContext } from '@/contexts/MessageContext';
-import { ConfirmContext } from '@/contexts/ConfirmContext';
 import { ShiftContext } from '@/contexts/ShiftContext';
+import ActionMasterList from '@/components/master/ActionMasterList';
 
 export const getServerSideProps = async () => {
     const result = await getter({user_id: "1", url: 'tables/master'});
@@ -70,8 +68,8 @@ export default function Masters (props) {
                         lg={8}
                         title="Mis mesas"
                         description="Ultimas mesas que haz creadas y se encuentran activas."
-                        action={{Icon: AddCircleIcon, handleClickButton: handleOpenModal}}
-                        tip='Crear mesa'
+                        Action={ActionMasterList}
+                        handleAction={handleOpenModal}
                         handleExpand={handleTableSelect}
                         hasCollapse
                     >

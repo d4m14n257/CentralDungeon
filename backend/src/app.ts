@@ -7,9 +7,9 @@ import { tables } from "./router/tables";
 import { users } from "./router/users";
 import cors from "cors"
 import generateBase64 from "./helper/generateBase64";
+import { files } from "./router/files";
 
 //TODO: Change every status 418 because it isnt a teatpot
-//TODO: Keep only the number and simbol in utc.
 //TODO: Configure CORS before finish the back
 //TODO: Check injection sql is possible and then fixed it
 //TODO: Limit rows in generals views.
@@ -26,7 +26,8 @@ app.use('/systems', systems);
 app.use('/tags', tags);
 app.use('/platforms', platforms);
 app.use('/tables', tables);
-app.use('/users', users)
+app.use('/users', users);
+app.use('/files', files);
 
 app.get('/test', async (req: Request, res : Response) => {
     const data = await generateBase64();
@@ -37,3 +38,17 @@ app.get('/test', async (req: Request, res : Response) => {
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 });
+
+/*
+    WITH RECURSIVE find_first AS (
+    SELECT id, name, system_id
+    FROM Systems
+    WHERE id = '3123213123123dasdasgsdfhghjhfjgf4556'
+    UNION ALL
+    SELECT s.id, s.name, s.system_id
+    FROM Systems s
+    JOIN find_first f ON s.id = f.system_id
+    )
+    SELECT * FROM find_first WHERE system_id is NULL ;
+
+*/

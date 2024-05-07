@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-import { handleCreateCatalogues, handleGetCatalogueIndex, handleGetCatalogues, handleSetCatalogueIndex } from "../handlers/catalogues";
+import { handleCreateCatalogues, handleGetCatalogueIndex, handleGetCatalogues, handleSetCatalogue, handleSetCatalogueIndex } from "../handlers/catalogues";
 import { Systems } from "../models/models";
 
 export const systems : Router = express.Router();
@@ -12,3 +12,4 @@ systems.get('/index/:index', handleGetCatalogueIndex(table_name));
 systems.post('/', handleCreateCatalogues<Systems>(table_name));
 
 systems.put('/index', handleSetCatalogueIndex<Systems>(table_name, column_name));
+systems.put('/tables/:table_id', handleSetCatalogue<Systems>(table_name));

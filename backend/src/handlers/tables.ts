@@ -29,6 +29,7 @@ import { getMastersInTables } from "../server/users/getMastersInTables";
 import { getScheduleInTables } from "../server/schedule/getScheduleInTables";
 import { getPlayersInTables } from "../server/users/getPlayersInTables";
 import { updateTable } from "../server/tables/updateTable";
+import { deleteDayScheduleByTables } from "../server/schedule/deleteDayScheduleByTables";
 
 //TODO: Check the query which it doesnt work in change the hour.
 //TODO: Make the trigger!!!
@@ -484,7 +485,7 @@ export function handleCreateTable () {
                     if(!tag_id)
                         tag_id = tag.id;
 
-                    await setCatalogueTables(table_id, tag_id, 'Table_Tags', query).then((response) => {
+                    await setCatalogueTables(table_id, tag_id, 'Tags', query).then((response) => {
                         if(response.http_status != 200)
                             throw response;
                     })
@@ -519,7 +520,7 @@ export function handleCreateTable () {
                     if(!system_id)
                         system_id = system.id;
 
-                    await setCatalogueTables(table_id, system_id, 'Table_Systems', query).then((response) => {
+                    await setCatalogueTables(table_id, system_id, 'Systems', query).then((response) => {
                         if(response.http_status != 200)
                             throw response;
                     })
@@ -554,7 +555,7 @@ export function handleCreateTable () {
                     if(!platform_id)
                         platform_id = platform.id;
 
-                    await setCatalogueTables(table_id, platform_id, 'Table_Platforms', query).then((response) => {
+                    await setCatalogueTables(table_id, platform_id, 'Platforms', query).then((response) => {
                         if(response.http_status != 200)
                             throw response;
                     })
@@ -625,12 +626,6 @@ export function handleUpdateTable () {
         catch (err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
         }
-    }
-}
-
-export function handleUploadFiles () {
-    return async (req : Request, res : Response) => {
-
     }
 }
 
@@ -750,6 +745,38 @@ export function handleDeleteTable () {
             await query.release();
 
             res.status(200).send({ message: 'Succefully deleted table'})
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
+        }
+    }
+}
+
+export function handleDeleteSchedule () {
+    return async (req : Request, res: Response) => {
+        try {
+            const query : PoolConnection = await conn.getConnection()
+            .catch((err) => {
+                throw {...err, http_status: 503}
+            })
+
+            const body = req.body;
+            const table_id = req.params.table_id;
+
+            await deleteDayScheduleByTables(table_id, body, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            }).catch((err) => {
+                query.rollback();
+                query.release();
+                
+                throw err
+            })
+
+            await query.commit();
+            await query.release();
+
+            res.status(200).send({ message: 'Succefully deleted schedule'})
         }
         catch (err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })

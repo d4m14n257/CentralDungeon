@@ -1,6 +1,7 @@
 import express, { Router } from "express";
 import { 
         handleCreateTable, 
+        handleDeleteSchedule, 
         handleDeleteTable, 
         handleGetAllTable, 
         handleGetFirstClassTables, 
@@ -9,10 +10,8 @@ import {
         handleGetMasterView, 
         handleGetPublicTables, 
         handleGetTablesMasterList, 
-        handleUpdateTable, 
-        handleUploadFiles
+        handleUpdateTable
 } from "../handlers/tables";
-import { upload } from "../middleware/uploadFiles";
 
 export const tables : Router = express.Router();
 
@@ -25,8 +24,8 @@ tables.get('/joined-tables/:user_id', handleGetJoinedTables());
 tables.get('/master/list/:user_id', handleGetTablesMasterList());
 
 tables.post('/master', handleCreateTable());
-tables.post('/files', upload.array('files'), handleUploadFiles());
 
 tables.put('/master', handleUpdateTable());
 
 tables.delete('/:table_id',handleDeleteTable());
+tables.delete('/schedule/:table_id', handleDeleteSchedule());

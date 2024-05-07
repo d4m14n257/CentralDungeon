@@ -118,9 +118,9 @@ CREATE TABLE IF NOT EXISTS Table_Files (
 CREATE TABLE IF NOT EXISTS Days (
     table_id VARCHAR(64),
     status ENUM ('Created', 'Deleted'),
-    hour TIME,
-    day ENUM ('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'),
-    CONSTRAINT PK_Days PRIMARY KEY (table_id),
+    hourtime TIME,
+    weekday ENUM ('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'),
+    CONSTRAINT PK_Days PRIMARY KEY (table_id, hourtime, weekday),
     FOREIGN KEY (table_id) REFERENCES Tables(id)
 )ENGINE=InnoDB;
 

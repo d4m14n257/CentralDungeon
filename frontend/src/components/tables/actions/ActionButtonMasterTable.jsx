@@ -5,8 +5,8 @@ import IconButton from '@mui/material/IconButton';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import InfoIcon from '@mui/icons-material/Info';
 
-import RequestUserModalTable from './modals/RequestUserModalTable';
-import UserModalInfo from '../users/modal/UserModalInfo';
+import RequestUserModalTable from '../modals/RequestUserModalTable';
+import UserModalInfo from '../../users/modal/UserModalInfo';
 
 const user = {
     id: 1,

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorMessage } from "@hookform/error-message"
 
 import { createFilterOptions } from '@mui/material/Autocomplete';
-import { IconButton, List, ListItem, ListItemText, Stack, Autocomplete, TextField, Typography, Divider, FormControl, FormHelperText, Chip } from "@mui/material";
+import { IconButton, List, ListItem, ListItemText, Stack, Autocomplete, TextField, Typography, Divider, FormControl, FormHelperText, Chip, Tooltip } from "@mui/material";
 import { TimeField } from "@mui/x-date-pickers";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -19,7 +19,7 @@ import SendIcon from '@mui/icons-material/Send';
 
 import { z } from "zod";
 import { modal } from "@/styles/tables/modal";
-import { timezone, days } from "@/helper/constants";
+import { timezone, days } from "@/constants/constants";
 import { getter } from "@/api/getter";
 import { User } from "@/contexts/UserContext";
 import { setter } from "@/api/setter";
@@ -248,8 +248,6 @@ export default function CreateTableForm (props) {
                 schedule: data.schedule.length > 0 ? data.schedule : null,
                 timezone: data.timezone ? data.timezone.substring(3) : data.timezone
             }, 'tables/master');
-
-            handleOpen();
 
             if(response.status >= 200 && response.status <= 299) {
                 setStatus(response.status);
@@ -542,36 +540,70 @@ export default function CreateTableForm (props) {
                 <Controller 
                     control={control}
                     render={({ field }) => (
-                            <Stack direction='row' spacing={3}>
-                                <Autocomplete 
-                                    freeSolo
-                                    disabled={isSubmitting}
-                                    multiple
-                                    filterSelectedOptions
-                                    options={days}
-                                    renderInput={(params) => (
-                                        <TextField {...params} label="Dias de la semana" />
-                                    )}
-                                    sx={{ width: '500px' }}
-                                    value={scheduleInfo.days}
-                                    onChange={(e, value) => {
-                                        setScheduleInfo({...scheduleInfo, days: value})
-                                    }}
-                                />
-                                <TimeField
-                                    disabled={isSubmitting}
-                                    label="Hora de inicio"
-                                    format="HH:mm"
-                                    value={dayjs(scheduleInfo.time)}
-                                    onChange={(value) => {
-                                        setScheduleInfo({...scheduleInfo, time: value})
-                                    }}
-                                />
-                                <IconButton sx={modal.icon} onClick={() => {
-                                    handleCreateShedule(field);
-                                }}>
-                                    <AddCircleIcon fontSize="inherit"/>
-                                </IconButton>
+                            <Stack direction='row' spacing={3} alignItems='center'>
+                                <Stack direction={{lg : 'row', xs: 'column'}} spacing={2} sx={{width: '100%'}}>
+                                    <FormControl
+                                        sx={{width: {lg: '400px'}}}
+                                    >
+                                        <Autocomplete
+                                            freeSolo
+                                            disabled={isSubmitting}
+                                            multiple
+                                            filterSelectedOptions
+                                            options={days}
+                                            renderInput={(params) => (
+                                                <TextField {...params} label="Dias de la semana" />
+                                            )}
+                                            value={scheduleInfo.days}
+                                            onChange={(e, value) => {
+                                                setScheduleInfo({...scheduleInfo, days: value})
+                                            }}
+                                        />
+                                        <FormHelperText>Seleccione el dia de la semana.</FormHelperText>
+                                    </FormControl>
+                                    <FormControl
+                                            sx={{width: {lg: '200px'}}}
+                                    >
+                                        <TimeField
+                                            disabled={isSubmitting}
+                                            label="Hora de inicio"
+                                            format="HH:mm"
+                                            value={dayjs(scheduleInfo.time)}
+                                            onChange={(value) => {
+                                                setScheduleInfo({...scheduleInfo, time: value})
+                                            }}
+                                        />
+                                        <FormHelperText>Ponga la hora de incio. Sistema de 24 horas</FormHelperText>
+                                    </FormControl>
+                                    <Tooltip
+                                        title='Agregar al horario'
+                                    >
+                                        <IconButton 
+                                            sx={{...modal.icon, 
+                                                    display: {lg: 'inline-flex', xs: 'none'}
+                                                }} 
+                                            onClick={() => {
+                                                handleCreateShedule(field);
+                                            }}
+                                        >
+                                            <AddCircleIcon fontSize="inherit"/>
+                                        </IconButton>
+                                    </Tooltip>
+                                </Stack>
+                                <Tooltip
+                                        title='Agregar al horario'
+                                    >
+                                        <IconButton 
+                                            sx={{...modal.icon, 
+                                                    display: {lg: 'none', xs: 'inline-flex'}
+                                                }} 
+                                            onClick={() => {
+                                                handleCreateShedule(field);
+                                            }}
+                                        >
+                                            <AddCircleIcon fontSize="inherit"/>
+                                        </IconButton>
+                                    </Tooltip>
                             </Stack>
                         )}
                     {...register("schedule")}
