@@ -2,7 +2,7 @@ export const deleter = async ({
         id, 
         others = null,
         url,
-        body = null,
+        body = null
     }) => {
     try {
         let complete_url = `${process.env.NEXT_PUBLIC_SERVER}/${url}`;

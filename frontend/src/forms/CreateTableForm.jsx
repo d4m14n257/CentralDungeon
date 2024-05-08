@@ -30,7 +30,6 @@ import dayjs from "dayjs";
 /* 
     TODO: Fixed all error on the refs, might be in autocomplete and controller
     TODO: When you closed a form, in general save always in localstorage in order avoid issues with the final user
-    TODO: Created a debounce
 */
 
 const filter = createFilterOptions();

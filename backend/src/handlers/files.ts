@@ -4,12 +4,13 @@ import { conn } from "../config/database";
 import { setFilesByMaster } from "../server/files/setFilesByMaster";
 import { setFilesToTables } from "../server/files/setFilesToTables";
 import deleteFile from "../helper/deleteFile";
+import { deleteFileByTables } from "../server/files/deleteFileByTables";
 
 function isObjectWithFieldnames(files: { [fieldname: string]: Express.Multer.File[]; } | Express.Multer.File[]): files is { [fieldname: string]: Express.Multer.File[]; } {
     return typeof files === 'object' && files !== null && !Array.isArray(files);
 }
 
-export function handleUploadFiles () {
+export function handleUploadFilesByMasters () {
     return async (req : Request, res : Response) => {
         try {
             const query : PoolConnection = await conn.getConnection()
@@ -26,7 +27,7 @@ export function handleUploadFiles () {
             if(files) {
                 if(!isObjectWithFieldnames(files)) {
                     for(const file of files) {
-                        const file_id = await setFilesByMaster(user_id, file, query).then((response) => {
+                        const file_id = await setFilesByMaster(user_id, file, 'Private', query).then((response) => {
                             if(response.http_status != 200)
                                 throw response
 
@@ -76,6 +77,42 @@ export function handleUploadFiles () {
                 }
             }
             
+            return res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
+        }
+    }
+}
+
+export function handleDeleteFilesByTable () {
+    return async (req : Request, res: Response) => {
+        try {
+            const query : PoolConnection = await conn.getConnection()
+            .catch((err) => {
+                throw {...err, http_status: 503}
+            })
+
+            await query.beginTransaction();
+
+            const file_id = req.params.file_id;
+            const table_id = req.params.table_id;
+
+            await deleteFileByTables(file_id, table_id, query).then((response) => {
+                if(response.http_status != 200)
+                    throw response
+            })
+            .catch((err) => {
+                query.rollback();
+                query.release();
+                
+                throw err;
+            })
+
+            await query.commit();
+            await query.release();
+
+            res.status(200).send({ message: 'Succefully deleted file'})
+
+        }
+        catch (err : any) {
             return res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
         }
     }

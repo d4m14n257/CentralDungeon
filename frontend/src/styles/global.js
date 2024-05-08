@@ -31,6 +31,7 @@ export const global = {
     },
     navHeader: {
         icon: {
+            color: 'white',
             width: 40,
             height: 40
         }
@@ -129,5 +130,9 @@ export const global = {
     },
     overText: {
         overflowWrap: 'anywhere'
+    },
+    iconsButton: {
+        width: 48,
+        height: 48
     }
 }

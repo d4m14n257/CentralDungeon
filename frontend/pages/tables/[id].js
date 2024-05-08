@@ -5,19 +5,21 @@ import Grid from '@mui/material/Grid';
 import CardComponent from "@/components/general/CardComponent";
 import TableComponent from '@/components/general/TableComponent';
 
-import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import EditIcon from '@mui/icons-material/Edit';
+import UploadIcon from '@mui/icons-material/Upload';
 
-import CardBodyFiles from '@/components/tables/CardBodyFiles';
 import CardContentTable from '@/components/tables//CardContentTable';
-
 import ListComponent from '@/components/general/ListComponent';
 import ListCataloguesTable from '@/components/tables/ListCataloguesTable';
 import EditModalCatalogues from '@/components/tables/modals/EditAModalCatalogues';
 import ListScheduleTable from '@/components/tables/ListScheduleTable';
 import EditModalTable from '@/components/tables/modals/EditModalTable';
+import ActionButtonDefault from '@/components/general/ActionButtonDefault';
+import EditModalScheduleTable from '@/components/tables/modals/EditModalScheduleTable';
+import ListFileTable from '@/components/tables/ListFilesTable';
+
 import { getter } from '@/api/getter';
 import { TablesInfo } from '@/normalize/models';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
@@ -25,9 +27,7 @@ import { useModal } from '@/hooks/useModal';
 import { MessageContext } from '@/contexts/MessageContext';
 import { ConfirmContext } from '@/contexts/ConfirmContext';
 import { ShiftContext } from '@/contexts/ShiftContext';
-import ActionButtonDefault from '@/components/general/ActionButtonDefault';
-import EditModalScheduleTable from '@/components/tables/modals/EditModalSchedule';
-import EditModalSchedule from '@/components/tables/modals/EditModalSchedule';
+import EditModalFilesTable from '@/components/tables/modals/EditModalFilesTable';
 
 
 /*
@@ -89,8 +89,8 @@ export default function Table (props) {
     const { open: openSystems, dataModal: dataSystems, handleOpenModalWithData: handleOpenSystemEdit, handleCloseModal: handleCloseSystemEdit } = useModal();
     const { open: openPlatforms, dataModal: dataPlatfomrs, handleOpenModalWithData: handleOpenPlatformEdit, handleCloseModal: handleClosePlatformEdit } = useModal();
     const { open: openSchedule, dataModal: dataSchedule, handleOpenModalWithData: handleOpenScheduleEdit, handleCloseModal: handleCloseScheduleEdit } = useModal();
+    const { open: openFiles, dataModal: dataFiles, handleOpenModalWithData : handleOpenFilesEdit, handleCloseModal: handleCloseFileEdit} = useModal();
     const [ table, setTable ] = useState(tableServer);
-    const [useFiles, setUseFiles] = useState(true);
 
     const handleTableReload = useCallback(async () => {
         const result = await getter({ others: id, url: 'tables' })
@@ -105,10 +105,6 @@ export default function Table (props) {
         else
             location.reload();
     }, [])
-
-    const handleChangeUseFiles = () => {
-        setUseFiles(!useFiles);
-    }
 
     return (
         <Grid
@@ -147,21 +143,20 @@ export default function Table (props) {
                                             lg={4}
                                             xs={12}
                                             title='Archivos'
-                                            description='Los archivos que seran requeridos para unirse, en caso de ser necesario.'
+                                            description='Los archivos que seran requeridos para unirse a la mesa, en caso de ser necesario.'
+                                            Action={ActionButtonDefault}
+                                            handleAction={handleOpenFilesEdit}
+                                            dataAction={table.files}
+                                            titleAction='Agregar archivos.'
+                                            IconAction={UploadIcon}
                                             hasCollapse
-                                        >
-                                            
+                                        >    
+                                            <ListFileTable
+                                                table_id={id}
+                                                files={table.files}
+                                                reloadAction={handleTableReload}
+                                            />
                                         </ListComponent>
-                                            {/* <CardComponent
-                                                title="Archivos"
-                                                subtitle="Los archivos que seran requeridos para unirse, en caso de ser necesario."
-                                                menu={table.status == 'Preparacion' ? menu_files : null}
-                                            >
-                                                <CardBodyFiles 
-                                                    files={table.files}
-                                                    useFiles={useFiles}
-                                                />
-                                            </CardComponent> */}
                                         <ListComponent
                                             xs={12}
                                             lg={6}
@@ -223,7 +218,7 @@ export default function Table (props) {
                                             xs={12}
                                             lg={6}
                                             title='Horario de la mesa'
-                                            description='Hhorario de la mesa en base a la zona horaria de la mesa.'
+                                            description='Horario de la mesa en base a la zona horaria de la mesa.'
                                             Action={ActionButtonDefault}
                                             handleAction={handleOpenScheduleEdit}
                                             dataAction={table.schedule}
@@ -276,11 +271,20 @@ export default function Table (props) {
                                             />
                                         }
                                         {
-                                            <EditModalSchedule
+                                            <EditModalScheduleTable
                                                 isOpen={openSchedule}
                                                 handleCloseModal={handleCloseScheduleEdit}
                                                 reloadAction={handleTableReload}
                                                 schedule={dataSchedule.current}
+                                            />
+                                        }
+                                        {
+                                            <EditModalFilesTable 
+                                                table_id={id}
+                                                isOpen={openFiles}
+                                                handleCloseModal={handleCloseFileEdit}
+                                                reloadAction={handleTableReload}
+                                                files={dataFiles.current}
                                             />
                                         }
                                     </>
@@ -298,22 +302,22 @@ export default function Table (props) {
 }
 
 
-                                {/* <Grid item xs={12}>
-                                {statusTable != 'Preparacion' ? 
-                                    table.players.length ? 
-                                        <TableComponent 
-                                            title='Jugadores en mesa'
-                                            columns={columns}
-                                            rows={table.players}
-                                            handleFeedback={handleFeedback}
-                                            mt={5}
-                                            Actions={ActionButtonMasterTable}
-                                        /> :
-                                        <Typography sx={{mt: 20, textAlign: 'center', opacity: '0.3', userSelect: 'none'}} variant='h3'>
-                                            No hay jugadores registrados.
-                                        </Typography> :
-                                    <Typography sx={{mt: 20, textAlign: 'center', opacity: '0.3', userSelect: 'none'}} variant='h3'>
-                                        No se pueden registrar jugadores aun.
-                                    </Typography>
-                                }
-                                </Grid> */}
+{/* <Grid item xs={12}>
+{statusTable != 'Preparacion' ? 
+    table.players.length ? 
+        <TableComponent 
+            title='Jugadores en mesa'
+            columns={columns}
+            rows={table.players}
+            handleFeedback={handleFeedback}
+            mt={5}
+            Actions={ActionButtonMasterTable}
+        /> :
+        <Typography sx={{mt: 20, textAlign: 'center', opacity: '0.3', userSelect: 'none'}} variant='h3'>
+            No hay jugadores registrados.
+        </Typography> :
+    <Typography sx={{mt: 20, textAlign: 'center', opacity: '0.3', userSelect: 'none'}} variant='h3'>
+        No se pueden registrar jugadores aun.
+    </Typography>
+}
+</Grid> */}

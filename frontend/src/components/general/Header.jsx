@@ -125,8 +125,12 @@ export default function Header(props) {
                         />
                     </Search>
                     <Stack direction='row'>
-                        <IconButton><CommentIcon /></IconButton>
-                        <IconButton><NotificationsIcon /></IconButton>
+                        <IconButton
+                            sx={{ color: 'white' }}
+                        ><CommentIcon /></IconButton>
+                        <IconButton
+                            sx={{ color: 'white' }}
+                        ><NotificationsIcon /></IconButton>
                     </Stack>
                     <IconButton onClick={handleOpenUser}>
                         <Avatar>

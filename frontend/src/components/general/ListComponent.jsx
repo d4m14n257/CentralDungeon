@@ -55,33 +55,36 @@ export default function ListComponent (props) {
             <Paper sx={global.border}>
                 <List>
                     <ListItem
-                        sx={{paddingX: 3}}
-                        secondaryAction={
+                        sx={{
+                            paddingX: 3
+                        }}
+                    >   
+                        <Stack direction='row' sx={{width: '100%', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <ListItemText
+                                primary={<TitleComponent title={title} />}
+                                secondary={<Typography variant='subtitule1'>{description}</Typography>}
+                            />
                             <Stack direction='row' spacing={0.5}>
-                                {Action &&
-                                    <Action 
-                                        handleAction={handleAction}
-                                        data={dataAction}
-                                        title={titleAction}
-                                        IconAction={IconAction}
-                                    />
-                                }
-                                {hasCollapse &&
-                                    <Tooltip
-                                        title={open ? 'Cerrar' : 'Abrir'}
-                                    >
-                                        <IconButton size="large" edge="end" aria-label="delete" onClick={handleChange}>
-                                            {open ? <ExpandLess /> : <ExpandMore />}
-                                        </IconButton>
-                                    </Tooltip>
-                                }
+                                    {Action &&
+                                        <Action 
+                                            handleAction={handleAction}
+                                            data={dataAction}
+                                            title={titleAction}
+                                            IconAction={IconAction}
+                                            sx={global.iconsButton}
+                                        />
+                                    }
+                                    {hasCollapse &&
+                                        <Tooltip
+                                            title={open ? 'Cerrar' : 'Abrir'}
+                                        >
+                                            <IconButton sx={global.iconsButton} size="large" edge="end" aria-label="delete" onClick={handleChange}>
+                                                {open ? <ExpandLess /> : <ExpandMore />}
+                                            </IconButton>
+                                        </Tooltip>
+                                    }
                             </Stack>
-                        }
-                    >
-                        <ListItemText
-                            primary={<TitleComponent title={title} />}
-                            secondary={<Typography variant='subtitule1'>{description}</Typography>}
-                        />
+                        </Stack>
                     </ListItem>
                     <Collapse
                         in={open}
@@ -89,7 +92,6 @@ export default function ListComponent (props) {
                         unmountOnExit
                     >
                         {children}
-                    </Collapse>
                         {handleExpand && 
                         <>
                             <Divider variant="middle" component="li" />
@@ -98,6 +100,7 @@ export default function ListComponent (props) {
                             </ListItem>
                         </>
                     }
+                    </Collapse>
                 </List>
             </Paper>
         </Grid>

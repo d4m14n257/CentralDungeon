@@ -30,6 +30,7 @@ import { getScheduleInTables } from "../server/schedule/getScheduleInTables";
 import { getPlayersInTables } from "../server/users/getPlayersInTables";
 import { updateTable } from "../server/tables/updateTable";
 import { deleteDayScheduleByTables } from "../server/schedule/deleteDayScheduleByTables";
+import { getFilesByTables } from "../server/files/getFilesByTables";
 
 //TODO: Check the query which it doesnt work in change the hour.
 //TODO: Make the trigger!!!
@@ -138,6 +139,19 @@ export function handleGetAllTable () {
                         throw {...err, http_status: 503}
                 })
 
+                const files = await getFilesByTables(table_id).then((data) => {
+                    if(data.http_status)
+                        throw data;
+
+                    return data;
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                })
+
                 data.table = {
                     ...data.table, 
                     tags: tags, 
@@ -146,7 +160,7 @@ export function handleGetAllTable () {
                     masters: masters, 
                     schedule: schedule,
                     players: players,
-                    files: []
+                    files: files
                 }
             }
 

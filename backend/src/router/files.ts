@@ -1,7 +1,9 @@
 import express, { Router } from "express";
 import { uploadFiles } from "../middleware/uploadFiles";
-import { handleUploadFiles } from "../handlers/files";
+import { handleDeleteFilesByTable, handleUploadFilesByMasters } from "../handlers/files";
 
 export const files : Router = express.Router();
 
-files.post('/tables/master/:table_id/:user_id', uploadFiles, handleUploadFiles());
+files.post('/tables/preparation/:table_id/:user_id', uploadFiles, handleUploadFilesByMasters());
+
+files.delete('/tables/preparation/:table_id/:file_id', handleDeleteFilesByTable())

@@ -35,8 +35,6 @@ export default function EditTableForm (props) {
     const { confirm, setMessage } = useContext(Confirm);
     const { handleOpen, setMessage : setStatusMessage, setStatus } = useContext(Message);
 
-    console.log(table)
-
     const { control, register, handleSubmit, formState: { errors, isSubmitting }} = useForm({
         defaultValues: {
             name: table.name,

@@ -15,7 +15,6 @@ import { UserContext } from '@/contexts/UserContext';
 
 //TODO: Add loading effects on pages.
 //TODO: Normalize data.
-//TODO: Check if it is possible update list after create a new object.
 //TODO: implement infinity scroll when I gonna push tables.
 //TODO: Edit all text in English so that avoid to mix text.
 

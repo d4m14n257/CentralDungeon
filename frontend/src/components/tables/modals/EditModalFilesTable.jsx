@@ -1,10 +1,12 @@
-import ModalBase from "@/components/general/ModalBase";
-import EditScheduleForm from "@/forms/EditScheduleForm";
-import { modal } from "@/styles/tables/modal";
 import { Box, Typography } from "@mui/material";
 
-export default function EditModalSchedule (props) {
-    const { isOpen, handleCloseModal, reloadAction, schedule, table_id } = props;
+import ModalBase from "@/components/general/ModalBase";
+
+import { modal } from "@/styles/tables/modal";
+import EditFilesForm from "@/forms/EditFilesForm";
+
+export default function EditModalFilesTable (props) {
+    const { isOpen, handleCloseModal, reloadAction, files, table_id  } = props;
 
     return (
         <ModalBase
@@ -14,13 +16,13 @@ export default function EditModalSchedule (props) {
             <Box sx={modal.body}>
                 <Box sx={modal.header}>
                     <Typography variant='h5'>
-                        Editar horario de la mesa
+                        Editar los archivos de la mesa.
                     </Typography>
                 </Box>
-                <EditScheduleForm 
+                <EditFilesForm 
                     handleCloseModal={handleCloseModal}
                     reloadAction={reloadAction}
-                    schedule={schedule}
+                    files={files}
                     table_id={table_id}
                 />
             </Box>

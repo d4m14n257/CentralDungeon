@@ -8,7 +8,6 @@ import { Confirm } from "@/contexts/ConfirmContext";
 import { Message as MessageContext } from "@/contexts/MessageContext";
 import { deleter } from "@/api/deleter";
 import Span from "../Span";
-import { useDate } from "@/hooks/useDate";
 
 export default function ListScheduleTable (props) {
     const { table_id, schedule, reloadAction, utc } = props;
@@ -21,7 +20,6 @@ export default function ListScheduleTable (props) {
 
     const handleDeleteItem = useCallback(async (event, weekday, hourtime) => {
         try {
-
             if(!event.shiftKey) {
                 await confirm()
                     .catch(() => {throw {err: 'Canceled'}});
