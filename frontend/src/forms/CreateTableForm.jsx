@@ -211,9 +211,9 @@ export default function CreateTableForm (props) {
         }
     }
 
-    const handleDeleteSchedule = (day) => {
+    const handleDeleteSchedule = (weekday) => {
         let schedule = [];
-        data.scheduleHash[day.name] = [];
+        data.scheduleHash[weekday.day] = [];
 
         for(const day in data.scheduleHash) {
             if(data.scheduleHash[day].length > 0 )
@@ -238,15 +238,18 @@ export default function CreateTableForm (props) {
             }
             
             const response = await setter({
-                ...data,
-                description: data.description.length > 0 ? data.description : null,
-                permitted: data.permitted.length > 0 ? data.permitted : null,
-                tags: data.tags.length > 0 ? data.tags : null,
-                systems: data.systems.length > 0 ? data.systems : null,
-                platforms: data.platforms.length > 0 ? data.platforms : null,
-                schedule: data.schedule.length > 0 ? data.schedule : null,
-                timezone: data.timezone ? data.timezone.substring(3) : data.timezone
-            }, 'tables/master');
+                data: {
+                    ...data,
+                    description: data.description.length > 0 ? data.description : null,
+                    permitted: data.permitted.length > 0 ? data.permitted : null,
+                    tags: data.tags.length > 0 ? data.tags : null,
+                    systems: data.systems.length > 0 ? data.systems : null,
+                    platforms: data.platforms.length > 0 ? data.platforms : null,
+                    schedule: data.schedule.length > 0 ? data.schedule : null,
+                    timezone: data.timezone ? data.timezone.substring(3) : data.timezone
+                }, 
+                url: 'tables/master'
+            });
 
             if(response.status >= 200 && response.status <= 299) {
                 setStatus(response.status);
@@ -609,24 +612,27 @@ export default function CreateTableForm (props) {
                 />
                 <List>
                     {scheduleInfo.list.map((weekday) => (
-                        <ListItem
-                            key={weekday.day}
-                            sx={{paddingX: 3}}
-                            secondaryAction={
-                                <IconButton 
-                                    color="error"
-                                    size="large" 
-                                    edge="end" 
-                                    onClick={() => handleDeleteSchedule(weekday)}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            }
-                        >
-                        <ListItemText
-                            primary={weekday.day}
-                            secondary={weekday.hour.join(', ')}
-                        />
-                    </ListItem>
+                        <>
+                            <Divider variant='middle'/>
+                            <ListItem
+                                key={weekday.day}
+                                sx={{paddingX: 3}}
+                                secondaryAction={
+                                    <IconButton 
+                                        color="error"
+                                        size="large" 
+                                        edge="end" 
+                                        onClick={() => handleDeleteSchedule(weekday)}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                }
+                            >
+                                <ListItemText
+                                    primary={weekday.day}
+                                    secondary={weekday.hour.join(', ')}
+                                />
+                            </ListItem>
+                        </>
                     ))}
                 </List>
                 <Stack direction='row' justifyContent='end'>

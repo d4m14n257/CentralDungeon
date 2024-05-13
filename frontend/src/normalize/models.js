@@ -29,7 +29,7 @@ export const TablesInfo = (tables) => {
         platforms: tables.platforms !== undefined ? tables.platforms : null,
         masters: tables.masters !== undefined ? tables.masters : null,
         schedule: tables.schedule !== undefined ? tables.schedule : null,
-        files: tables.files !== undefined ? tables.files : null,
+        files: tables.files !== undefined ? Files(tables.files) : null,
         players: tables.players !== undefined ? tables.players : null,
     }
 }
@@ -53,4 +53,13 @@ export const Rejected = (rejected) => {
         description_rejected: rejected.description,
         rejected_date: rejected.rejected_date 
     }
+}
+
+export const Files = (files) => {
+    return files.map((file) => ({
+        id: file.id,
+        name: file.name,
+        type: file.mine,
+        size: file.size
+    }))
 }

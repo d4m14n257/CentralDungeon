@@ -1,13 +1,13 @@
 export const getter = async ({
-    user_id = null,
+    id = null,
     others = null, 
     url
 }) => {
     try {
         let complete_url = `${process.env.NEXT_PUBLIC_SERVER}/${url}`;
         
-        if(user_id)
-            complete_url += `/${user_id}`;
+        if(id)
+            complete_url += `/${id}`;
 
         if(others)
             complete_url += `/${others}`;
@@ -19,10 +19,7 @@ export const getter = async ({
         const status = response.status;
         const data = await response.json();
 
-        if(status == 200)
-            return data;
-        else
-            throw {...data, status: status};
+        return {...data, status: status};
 
     } catch (err) {  
         return err;

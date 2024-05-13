@@ -12,9 +12,9 @@ import { Request, Tables } from '@/normalize/models';
 import { JOINED_TABLES, PLAYER_REQUEST, PUBLIC_TABLES, TABLES_AVAILABLE } from '@/constants/constants';
 
 export const getServerSideProps = async () => {
-    const result = await getter({user_id: "2", url: 'tables/player'});
+    const result = await getter({id: "2", url: 'tables/player'});
 
-    if(!result.status) {
+    if(result.status == 200) {
         const data = {
             public_tables: Tables(result.public_tables),
             joined_tables: Tables(result.joined_tables),

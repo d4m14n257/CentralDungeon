@@ -16,7 +16,7 @@ export default function CardContentTable (props) {
             </Typography>
             <Typography  sx={global.overText}>
                 <Span title={'Reglas: '} />
-                {table.permitted ? table.permitted : 'No se han agregado reglas u cosas permitidas.'}
+                {table.permitted ? table.permitted : 'No se han agregado reglas en la mesa.'}
             </Typography>
             <Typography  sx={global.overText}>
                 <Span title={'Fecha de inicio: '} />

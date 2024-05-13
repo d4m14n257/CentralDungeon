@@ -8,9 +8,9 @@ import { getter } from "@/api/getter";
 import { Error, ErrorMessage } from "@/components/info/HandlerError";
 
 export const getServerSideProps = async () => {
-    const result = await getter({user_id: "2", url: 'users/requests/player'});
+    const result = await getter({id: "2", url: 'users/requests/player'});
 
-    if(!result.status) {
+    if(result.status == 200) {
         const data = {
             request_tables_candidate: Request(result.request_tables_candidate),
             request_tables_rejected: Request(result.request_tables_rejected)

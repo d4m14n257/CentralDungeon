@@ -10,7 +10,8 @@ import {
         handleGetMasterView, 
         handleGetPublicTables, 
         handleGetTablesMasterList, 
-        handleUpdateTable
+        handleUpdateTable,
+        handleDeleteMultipleTables
 } from "../handlers/tables";
 
 export const tables : Router = express.Router();
@@ -27,5 +28,6 @@ tables.post('/master', handleCreateTable());
 
 tables.put('/master', handleUpdateTable());
 
+tables.delete('/', handleDeleteMultipleTables());
 tables.delete('/:table_id',handleDeleteTable());
 tables.delete('/schedule/:table_id', handleDeleteSchedule());

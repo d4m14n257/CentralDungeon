@@ -14,7 +14,7 @@ const useModalRequest = ({ request, isOpen }) => {
     const { handleDatetime } = useDate();
    
     const handleRequest = useCallback(async (request) => {
-        const result = await getter({user_id: '2', others: request.id, url: 'users/request/rejected'})
+        const result = await getter({id: '2', others: request.id, url: 'users/request/rejected'})
 
         return result;
     }, [isOpen])

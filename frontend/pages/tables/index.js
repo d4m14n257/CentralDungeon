@@ -23,9 +23,9 @@ import { TABLES } from "@/constants/constants";
 import { ShiftContext } from "@/contexts/ShiftContext";
 
 export const getServerSideProps = async () => {
-    const result = await getter({user_id: '1', url: 'tables/master/list'});
+    const result = await getter({id: '1', url: 'tables/master/list'});
 
-    if(!result.status) {
+    if(result.status == 200) {
         const data = {
             table_list: TablesNormalize(result.table_list),
         }
@@ -85,7 +85,7 @@ export default function Tables (props) {
     }
 
     const handleTableListReload = useCallback(async () => {
-        const result = await getter({user_id: '1', url: 'tables/master/list'});
+        const result = await getter({id: '1', url: 'tables/master/list'});
 
         if(!result.status) {
             const data = {
@@ -112,6 +112,7 @@ export default function Tables (props) {
                                 doubleClick={handleTableRoute}
                                 reloadTable={handleTableListReload}
                                 useCheckbox
+                                url='tables'
                             />
                             <Tooltip
                                 title='Crear mesa'

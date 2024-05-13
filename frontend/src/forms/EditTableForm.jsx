@@ -23,8 +23,8 @@ import dayjs from "dayjs";
 
 const schema = z.object ({
     name: z.string().min(1, { message: 'Es obligatorio ponerle un nombre a la mesa.' }),
-    description: z.string().max(1024, { message: 'No puedes superar la cantidad de 1024 caracteres.' }),
-    permitted: z.string().max(1024, { message: 'No puedes superar la cantidad de 1024 caracteres.' }),
+    description: z.string().max(1024, { message: 'No puedes superar la cantidad de 1024 caracteres.' }).nullable(),
+    permitted: z.string().max(1024, { message: 'No puedes superar la cantidad de 1024 caracteres.' }).nullable(),
     startdate: z.string().nullable(),
     timezone: z.string().nullable(),
     duration: z.string().nullable(),
@@ -33,7 +33,7 @@ const schema = z.object ({
 export default function EditTableForm (props) {
     const { handleCloseModal, reloadAction, table } = props;
     const { confirm, setMessage } = useContext(Confirm);
-    const { handleOpen, setMessage : setStatusMessage, setStatus } = useContext(Message);
+    const { handleOpen, setMessage : setStatusMessage, setStatus, setInfo } = useContext(Message);
 
     const { control, register, handleSubmit, formState: { errors, isSubmitting }} = useForm({
         defaultValues: {
@@ -75,8 +75,13 @@ export default function EditTableForm (props) {
                     first = true;
             })
 
-            if(count == 6) 
+            if(count == 6) {
+                setInfo(true);
+                setStatusMessage('No ha habido cambios en los datos.');
+                handleOpen();
+
                 throw {message: 'No hay cambios'}
+            }
 
             if(!event.shiftKey) {
                 await confirm()

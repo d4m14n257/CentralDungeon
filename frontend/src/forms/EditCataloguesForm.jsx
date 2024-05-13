@@ -30,13 +30,13 @@ export default function EditCataloguesForm (props) {
     const { handleCloseModal, reloadAction, data, type, table_id } = props;
     const [listCatalogue, setListCatalogue] = useState([]);
     const { confirm, setMessage } = useContext(Confirm);
-    const { handleOpen, setMessage : setStatusMessage, setStatus } = useContext(Message);
+    const { handleOpen, setMessage : setStatusMessage, setStatus, setInfo } = useContext(Message);
 
     useEffect(() => {
         setMessage('¿Esta seguro de crear esta mesa?');
     }, [])
 
-    const { control, register, handleSubmit, formState: { isSubmitting, errors }} = useForm({
+    const { control, register, handleSubmit, formState: { isSubmitting }} = useForm({
         defaultValues: {
             catalogues: data
         },
@@ -90,8 +90,13 @@ export default function EditCataloguesForm (props) {
                 });
 
 
-                if(data.length == count)
+                if(data.length == count) {
+                    setInfo(true);
+                    setStatusMessage('No ha habido cambios en los datos.');
+                    handleOpen();
+
                     throw {message: 'No hay cambios'}
+                }
             }
 
             if(!event.shiftKey) {

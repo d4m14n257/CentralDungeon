@@ -2,11 +2,11 @@ import { Snackbar, Alert, Box } from '@mui/material';
 import { Error } from '../info/HandlerError';
 
 export default function SnackMessage(props) {
-    const { message, status, open, onClose, info } = props;
+    const { message, status, open, onClose, info, position } = props;
 
     return (
         <Snackbar 
-            anchorOrigin={{ vertical: info ? 'top' : 'bottom', horizontal: info ? 'right' : 'left'}}
+            anchorOrigin={{ vertical: position ? 'top' : 'bottom', horizontal: position ? 'right' : 'left'}}
             open={open} 
             autoHideDuration={5000} 
             onClose={onClose}

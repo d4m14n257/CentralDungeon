@@ -6,9 +6,9 @@ import { getter } from '@/api/getter';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
 
 export const getServerSideProps = async () => {
-    const result = await getter({user_id: '3', url: 'tables/first-class-tables'});
+    const result = await getter({id: '3', url: 'tables/first-class-tables'});
 
-    if(!result.status) {
+    if(result.status == 200) {
         return {
             props: {
                 first_class_tables: result.first_class_tables,

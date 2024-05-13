@@ -55,6 +55,7 @@ export const ShiftContext = (props) => {
                 info={info}
                 open={open}
                 onClose={handleClose}
+                position
             />
         </>
     );

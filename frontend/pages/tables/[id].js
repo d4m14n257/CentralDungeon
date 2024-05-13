@@ -29,7 +29,6 @@ import { ConfirmContext } from '@/contexts/ConfirmContext';
 import { ShiftContext } from '@/contexts/ShiftContext';
 import EditModalFilesTable from '@/components/tables/modals/EditModalFilesTable';
 
-
 /*
     TODO: Mesas que seas colapsables para jugadores pendientes y separar aceptadps de pendientes. 
 */
@@ -40,7 +39,7 @@ export const getServerSideProps = async (context) => {
 
     const result = await getter({ others: id, url: 'tables' });
 
-    if(!result.status) {
+    if(result.status == 200) {
         const data = {
             table: TablesInfo(result)
         }
@@ -51,6 +50,14 @@ export const getServerSideProps = async (context) => {
                 ...data,
                 err: false
             }
+        }
+    }
+    else if(result.status == 203) {
+        return {
+            redirect: {
+                destination: '/',
+                permanent: false,
+            },
         }
     }
     else {
@@ -95,7 +102,7 @@ export default function Table (props) {
     const handleTableReload = useCallback(async () => {
         const result = await getter({ others: id, url: 'tables' })
 
-        if(!result.status) {
+        if(result.status == 200) {
             const data = {
                 table: TablesInfo(result)
             }
@@ -104,6 +111,7 @@ export default function Table (props) {
         }
         else
             location.reload();
+
     }, [])
 
     return (

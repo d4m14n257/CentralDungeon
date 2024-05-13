@@ -33,7 +33,6 @@ import { deleteDayScheduleByTables } from "../server/schedule/deleteDayScheduleB
 import { getFilesByTables } from "../server/files/getFilesByTables";
 
 //TODO: Check the query which it doesnt work in change the hour.
-//TODO: Make the trigger!!!
 //TODO: When ill save a new candidate while its uploading, save the date in the web client, no serve o another.
 
 export function handleGetAllTable () {
@@ -163,8 +162,11 @@ export function handleGetAllTable () {
                     files: files
                 }
             }
-
-            res.status(200).send(data.table);
+            else {
+                return res.status(203).send({ message: 'Data does not exists' })
+            }
+            
+            return res.status(200).send(data.table);
         }
         catch (err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})
@@ -651,8 +653,8 @@ export function handleDeleteTable () {
                 throw {...err, http_status: 503}
             })
 
+            await query.beginTransaction();
             const table_id = req.params.table_id;
-            query.beginTransaction();
 
             await deleteTables(table_id, query).then((response) => {
                 if(response.http_status != 200)
@@ -767,7 +769,7 @@ export function handleDeleteTable () {
 }
 
 export function handleDeleteSchedule () {
-    return async (req : Request, res: Response) => {
+    return async (req : Request, res : Response) => {
         try {
             const query : PoolConnection = await conn.getConnection()
             .catch((err) => {
@@ -791,6 +793,131 @@ export function handleDeleteSchedule () {
             await query.release();
 
             res.status(200).send({ message: 'Succefully deleted schedule'})
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
+        }
+    }
+}
+
+export function handleDeleteMultipleTables () {
+    return async (req : Request, res : Response) => {
+        try {
+            const query : PoolConnection = await conn.getConnection()
+            .catch((err) => {
+                throw {...err, http_status: 503}
+            })
+
+            await query.beginTransaction();
+            const body = req.body;
+
+            for(const table_id of body) {
+                await deleteTables(table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+                }).catch((err) => {
+                    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                });
+    
+                await deleteDaysByTables(table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+    
+                }).catch((err) => {
+                    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                });
+    
+    
+                await deleteCataloguesByTables('Table_Platforms', table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+                }).catch((err) => {
+                    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                });
+    
+                await deleteCataloguesByTables('Table_Systems', table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+                }).catch((err) => {
+                    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                });
+    
+                await deleteCataloguesByTables('Table_Tags', table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+                }).catch((err) => {
+                    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                });
+    
+                await deleteUsersMastersByTables(table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+                }).catch((err) => {
+                    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                });
+    
+                await deleteUserByTables(table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+                }).catch((err) => {
+                    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                });
+    
+                await deleteFilesByTables(table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+                }).catch((err) => {
+                    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                })
+    
+                await deleteMastersByTables(table_id, query).then((response) => {
+                    if(response.http_status != 200)
+                        throw response
+                }).catch((err) => {
+    
+                    query.rollback();
+                    query.release();
+                    
+                    throw err
+                })
+            }
+
+            await query.commit();
+            await query.release();
+
+            res.status(200).send({ message: 'Succefully deleted table'})
         }
         catch (err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })

@@ -5,9 +5,50 @@ import { setFilesByMaster } from "../server/files/setFilesByMaster";
 import { setFilesToTables } from "../server/files/setFilesToTables";
 import deleteFile from "../helper/deleteFile";
 import { deleteFileByTables } from "../server/files/deleteFileByTables";
+import { getPublicFileFromTable } from "../server/files/getPublicFilesFromTable";
+import { getAllFilesByMaster } from "../server/files/getAllFilesByMaster";
 
 function isObjectWithFieldnames(files: { [fieldname: string]: Express.Multer.File[]; } | Express.Multer.File[]): files is { [fieldname: string]: Express.Multer.File[]; } {
     return typeof files === 'object' && files !== null && !Array.isArray(files);
+}
+
+export function handleFilesFromTables () {
+    return async (req : Request, res: Response) => {
+        try {
+            const data = {
+                public_files: null,
+                private_files: null
+            }
+
+            const table_id = req.params.table_id;
+            const user_id = req.params.user_id;
+
+            data.public_files = await getPublicFileFromTable().then((response) => {
+                if(response.http_status)
+                    throw response;
+
+                return response
+            })
+            .catch((err) => {
+                throw err;
+            });
+
+            data.private_files = await getAllFilesByMaster(user_id, table_id).then((response) => {
+                if(response.http_status)
+                    throw response;
+
+                return response;
+            })
+            .catch((err) => {
+                throw err;
+            })
+
+            res.status(200).send(data)
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
+        }
+    }
 }
 
 export function handleUploadFilesByMasters () {
@@ -23,6 +64,7 @@ export function handleUploadFilesByMasters () {
             const user_id = req.params.user_id;
             const table_id = req.params.table_id;
             const files = req.files
+            const files_id = [];
 
             if(files) {
                 if(!isObjectWithFieldnames(files)) {
@@ -50,6 +92,8 @@ export function handleUploadFilesByMasters () {
                             
                             throw {...err, files: files}
                         })
+
+                        files_id.push(file_id)
                     }
                 }
             }
@@ -57,7 +101,7 @@ export function handleUploadFilesByMasters () {
             await query.commit();
             await query.release();
             
-            res.status(200).send('Uploaded successfully');
+            res.status(201).send(files_id);
         }
         catch (err : any) {
             if(err.files) {

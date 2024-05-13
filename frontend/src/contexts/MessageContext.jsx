@@ -19,6 +19,13 @@ function reducer (state, action) {
                 status: value
             }
         }
+
+        case 'set-info': {
+            return {
+                ...state,
+                info: value
+            }
+        }
     }
 }
 
@@ -41,6 +48,10 @@ export const MessageContext = (props) => {
         dispatch({ type: 'set-status', value: status });
     }
 
+    const handleSetInfo = (info) => {
+        dispatch({ type: 'set-info', value: info });
+    }
+
     const handleOpen = () => {
         setOpen(true);
     }
@@ -51,7 +62,7 @@ export const MessageContext = (props) => {
 
     return (
         <>
-            <Message.Provider value={{ handleOpen, setMessage: handleSetMessage, setStatus: handleSetStatus }}>
+            <Message.Provider value={{ handleOpen, setMessage: handleSetMessage, setStatus: handleSetStatus, setInfo: handleSetInfo }}>
                 {children}
             </Message.Provider>
             <SnackMessage 

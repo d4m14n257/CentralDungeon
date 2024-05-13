@@ -18,9 +18,9 @@ import { ShiftContext } from '@/contexts/ShiftContext';
 import ActionMasterList from '@/components/master/ActionMasterList';
 
 export const getServerSideProps = async () => {
-    const result = await getter({user_id: "1", url: 'tables/master'});
+    const result = await getter({id: "1", url: 'tables/master'});
 
-    if(!result.status) {
+    if(result.status == 200) {
         const data = {
             owner_tables: Tables(result.owner_tables),
             master_tables: Tables(result.master_tables),

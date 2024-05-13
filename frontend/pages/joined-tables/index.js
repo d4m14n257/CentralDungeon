@@ -7,9 +7,9 @@ import { getter } from '@/api/getter';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
 
 export const getServerSideProps = async () => {
-    const result = await getter({user_id: '2', url: 'tables/joined-tables'});
+    const result = await getter({id: '2', url: 'tables/joined-tables'});
 
-    if(!result.status) {
+    if(result.status == 200) {
         const data = {
             joined_tables: Tables(result.joined_tables)
         }

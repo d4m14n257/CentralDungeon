@@ -4,7 +4,7 @@ import { HandlerMessage, Message } from "../info/HandlerMessage";
 
 import ImageIcon from '@mui/icons-material/Image';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import FileOpenIcon from '@mui/icons-material/FileOpen';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 import { Message as MessageContext } from "@/contexts/MessageContext";
@@ -65,13 +65,13 @@ export default function ListFileTable (props) {
                         >
                             <ListItemIcon>
                                 <Avatar>
-                                    {file.mine == 'application/pdf' ? 
+                                    {file.type == 'application/pdf' ? 
                                         <PictureAsPdfIcon /> :
-                                    file.mine == 'image/png' ||
-                                    file.mine == 'image/jpg' ||
-                                    file.mine == 'image/jpeg' ? 
+                                    file.type == 'image/png' ||
+                                    file.type == 'image/jpg' ||
+                                    file.type == 'image/jpeg' ? 
                                         <ImageIcon /> :
-                                        <FileOpenIcon />
+                                        <InsertDriveFileIcon />
                                     }
                                 </Avatar>
                             </ListItemIcon>

@@ -7,9 +7,9 @@ import { Tables } from '@/normalize/models';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
 
 export const getServerSideProps = async () => {
-    const result = await getter({user_id: "3", url: 'tables/public-tables'});
+    const result = await getter({id: "3", url: 'tables/public-tables'});
 
-    if(!result.status) {
+    if(result.status == 200) {
         const data = {
             public_tables: Tables(result.public_tables),
         }

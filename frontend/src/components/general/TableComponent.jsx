@@ -1,4 +1,4 @@
-import { useState, useReducer, useMemo, useCallback } from 'react';
+import { useState, useReducer, useMemo, useContext, useEffect } from 'react';
 
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableCellUsers, TableSortLabel, Toolbar, Typography,
          Box, Checkbox, Tooltip, IconButton } from '@mui/material';
@@ -10,21 +10,9 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 import { global } from '@/styles/global';
-
-function reducer (state, action) {
-    const { type, value } = action;
-
-    switch (type) {
-        case 'change-row-per-page': {
-            const newValue = state.rowsPerPage + value;
-
-            return {
-                ...state,
-                rowsPerPage: newValue,
-            }
-        }
-    }
-}
+import { Confirm } from '@/contexts/ConfirmContext';
+import { Message } from '@/contexts/MessageContext';
+import { deleter } from '@/api/deleter';
 
 function stableSort(array, comparator) {
     const stabilizedThis = array.map((el, index) => [el, index]);
@@ -57,8 +45,8 @@ function getComparator(order, orderBy) {
 }
 
 const EnhancedTableToolbar = (props) => {
-    const { title, numSelected, handleCheckboxShowUp, handleCheckboxGoAway, useCheckbox, checkbox } = props;
-  
+    const { title, numSelected, handleCheckboxShowUp, handleCheckboxGoAway, handleDeleteSelect, useCheckbox, checkbox } = props;
+
     return (
         <Toolbar
             sx={{
@@ -94,12 +82,12 @@ const EnhancedTableToolbar = (props) => {
                 <>
                     {numSelected > 0 &&
                         <Tooltip title="Delete">
-                            <IconButton>
+                            <IconButton onClick={(event) => handleDeleteSelect(event)}>
                                 <DeleteIcon />
                             </IconButton>
                         </Tooltip>
                     }
-                    {checkbox ? 
+                    {checkbox ?
                         <Tooltip title="Cancelar">
                         <IconButton onClick={() => handleCheckboxGoAway()}>
                             <CancelIcon />
@@ -117,17 +105,45 @@ const EnhancedTableToolbar = (props) => {
     );
 }
 
-const useTableComponent = ({ rows, columns }) => {
+const useTableComponent = ({ rows, columns, url, reloadTable }) => {
+    const { confirm, setMessage } = useContext(Confirm);
+    const { handleOpen, setMessage: setStatusMessage, setStatus } = useContext(Message);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10)
     const [checkboxAction, setCheckboxAction] = useState(false);
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState(columns[0].id);
     const [selected, setSelected] = useState([]);
-    const [data, dispatch] = useReducer(reducer, {
-        rowCount: rows.length,
-        numSelected: 0
-    })
+
+    useEffect(() => {
+        setMessage('¿Seguro quieres eliminar todos estos datos?');
+    }, [])
+
+    const handleDeleteSelect = async (event) => {
+        if(!event.shiftKey) {
+            await confirm()
+                .catch(() => {throw {err: 'Canceled'}});
+        }
+
+        const response = await deleter({body: selected, url: url})
+
+        if(response.status >= 200 && response.status <= 299) {
+            setStatus(response.status);
+            setStatusMessage('Datos eliminados con exito.');
+            handleOpen();
+            
+            if(reloadTable)
+                await reloadTable();
+
+            setSelected([]);
+            setCheckboxAction(false);
+        }
+        else {
+            setStatus(response.status);
+            setStatusMessage('Ha habido un error al momento de eliminar.');
+            handleOpen();
+        }
+    }
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -187,7 +203,7 @@ const useTableComponent = ({ rows, columns }) => {
         setSelected(newSelected);
     }
 
-    const isSelected = useCallback((id) => selected.indexOf(id) !== -1, []);
+    const isSelected = (id) => selected.indexOf(id) !== -1
 
     const visibleRows = useMemo(
         () =>
@@ -205,7 +221,7 @@ const useTableComponent = ({ rows, columns }) => {
         selected,
         order,
         orderBy,
-        data,
+        handleDeleteSelect,
         handleCheckboxShowUp,
         handleCheckboxGoAway,
         handleSelectAll,
@@ -219,20 +235,21 @@ const useTableComponent = ({ rows, columns }) => {
 }
 
 export default function TableComponent (props) {
-    const { title, columns, rows, useCheckbox, minWidth, Actions, doubleClick, reloadTable } = props;
-    const { page, rowsPerPage, checkboxAction, orderBy, data, selected,
-            handleCheckboxShowUp, handleSelectAll, handleChangeRowsPerPage, 
-            handleChangePage, handleCheckboxGoAway, handleClick, visibleRows, 
-            isSelected, order, createSortHandler
-        } = useTableComponent({ rows, columns });
+    const { title, columns, rows, useCheckbox, minWidth, Actions, doubleClick, reloadTable, url } = props;
+    const { page, rowsPerPage, checkboxAction, orderBy, selected,
+            handleCheckboxShowUp, handleSelectAll, handleChangeRowsPerPage,
+            handleChangePage, handleCheckboxGoAway, handleClick, visibleRows,
+            isSelected, order, createSortHandler, handleDeleteSelect
+        } = useTableComponent({ rows, columns, url, reloadTable });
 
     return (
         <Paper sx={{...global.border, width: '100%', overflow: 'hidden'}}>
             <Box sx={{margin: 2}}>
-                <EnhancedTableToolbar 
+                <EnhancedTableToolbar
                     title={title}
                     handleCheckboxShowUp={handleCheckboxShowUp}
                     handleCheckboxGoAway={handleCheckboxGoAway}
+                    handleDeleteSelect={handleDeleteSelect}
                     numSelected={selected.length}
                     useCheckbox={useCheckbox}
                     checkbox={checkboxAction}
@@ -240,43 +257,54 @@ export default function TableComponent (props) {
                 <TableContainer sx={{ maxHeight: 1000 }}>
                     <Table stickyHeader aria-label="sticky table" >
                         <TableHead>
-                            <TableRow>
+                            <TableRow
+                                key='headerTable'
+                            >
                                 {checkboxAction &&
-                                    <TableCell 
+                                    <TableCell
                                         padding="checkbox">
                                         <Checkbox
                                             color="primary"
-                                            indeterminate={data.numSelected > 0 && data.selected.length < data.rowCount}
-                                            checked={data.rowCount > 0 && data.numSelected === data.rowCount}
+                                            indeterminate={selected.length > 0 && selected.length < rows.length}
+                                            checked={rows.length > 0 && selected.length === rows.length}
                                             onChange={handleSelectAll}
                                             inputProps={{
                                                 'aria-label': 'select all desserts',
                                             }}
-                                        /> 
+                                        />
                                     </TableCell>
                                 }
                                 {columns.map((column) => (
-                                    <TableCell
-                                        key={column.id}
-                                        style={{ minWidth: minWidth }}
-                                        sx={{textAlign: column.id == 'actions' ? 'center' : 'left' }}
-                                        sortDirection={column.id !== 'actions' && (orderBy === column.id ? order : false)}
-                                    >   
-                                        {column.id !== 'actions' ? 
-                                            <TableSortLabel
-                                                active={orderBy === column.id}
-                                                direction={orderBy === column.id ? order : 'asc'}
-                                                onClick={createSortHandler(column.id)}
+                                    <>
+                                        {column.id !== 'actions' ?
+                                            <TableCell
+                                                key={column.id}
+                                                style={{ minWidth: minWidth }}
+                                                sx={{textAlign: 'left' }}
+                                                sortDirection={(orderBy === column.id ? order : false)}
                                             >
-                                                <Typography variant='subtitle1' sx={{fontWeight: '700'}}>
-                                                    {column.label}
-                                                </Typography>
-                                            </TableSortLabel> :
-                                            <Typography variant='subtitle1' sx={{fontWeight: '700'}}>
-                                                {column.label}
-                                            </Typography>
+                                                <TableSortLabel
+                                                    active={orderBy === column.id}
+                                                    direction={orderBy === column.id ? order : 'asc'}
+                                                    onClick={createSortHandler(column.id)}
+                                                >
+                                                    <Typography variant='subtitle1' sx={{fontWeight: '700'}}>
+                                                        {column.label}
+                                                    </Typography>
+                                                </TableSortLabel>
+                                            </TableCell> :
+                                            !checkboxAction &&
+                                                <TableCell
+                                                    key={column.id}
+                                                    style={{ minWidth: minWidth }}
+                                                    sx={{textAlign: 'center' }}
+                                                >
+                                                    <Typography variant='subtitle1' sx={{fontWeight: '700'}}>
+                                                        {column.label}
+                                                    </Typography>
+                                                </TableCell>
                                         }
-                                    </TableCell>
+                                    </> 
                                 ))}
                             </TableRow>
                         </TableHead>
@@ -286,7 +314,7 @@ export default function TableComponent (props) {
                                 const labelId = `enhanced-table-checkbox-${index}`;
 
                                 return (
-                                    <TableRow 
+                                    <TableRow
                                         key={row.id}
                                         hover
                                         onClick={(event) => {
@@ -297,13 +325,13 @@ export default function TableComponent (props) {
                                             if(!checkboxAction)
                                                 doubleClick(row.id)
                                         }}
-                                        role="checkbox" 
-                                        tabIndex={-1} 
+                                        role="checkbox"
+                                        tabIndex={-1}
                                         aria-checked={isItemSelected}
                                         selected={isItemSelected}
-                                    >   
+                                    >
                                         {checkboxAction &&
-                                            <TableCell 
+                                            <TableCell
                                                 padding="checkbox"
                                             >
                                                 <Checkbox
@@ -330,7 +358,7 @@ export default function TableComponent (props) {
                                                 } else if (typeof value == 'object') {
                                                     return (
                                                         <TableCell key={key}>
-                                                            <TableCellUsers 
+                                                            <TableCellUsers
                                                                 index={key}
                                                                 row={value}
                                                             />
@@ -345,18 +373,19 @@ export default function TableComponent (props) {
                                                 }
                                             }
                                             else {
-                                                return (
-                                                    <TableCell 
-                                                        key={key}
-                                                        sx={{textAlign: 'center'}}
-                                                    >
-                                                        <Actions
-                                                            id={row.id}
-                                                            reloadAction={reloadTable}
-                                                        />
-                                                    </TableCell>
-                                                );
-                                            }                                        
+                                                if(!checkboxAction)
+                                                    return (
+                                                        <TableCell
+                                                            key={key}
+                                                            sx={{textAlign: 'center'}}
+                                                        >
+                                                            <Actions
+                                                                id={row.id}
+                                                                reloadAction={reloadTable}
+                                                            />
+                                                        </TableCell>
+                                                    );
+                                            }
                                         })}
                                     </TableRow>
                                 );
