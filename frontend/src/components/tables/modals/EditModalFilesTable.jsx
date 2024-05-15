@@ -6,12 +6,13 @@ import { modal } from "@/styles/tables/modal";
 import EditFilesForm from "@/forms/EditFilesForm";
 
 export default function EditModalFilesTable (props) {
-    const { isOpen, handleCloseModal, reloadAction, files, table_id  } = props;
+    const { isOpen, handleCloseModal, reloadAction, files, table_id, closeConfirm } = props;
 
     return (
         <ModalBase
             isOpen={isOpen}
             handleCloseModal={handleCloseModal}
+            closeConfirm
         >
             <Box sx={modal.body}>
                 <Box sx={modal.header}>

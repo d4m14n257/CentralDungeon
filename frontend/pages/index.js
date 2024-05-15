@@ -37,6 +37,8 @@ export const getServerSideProps = async () => {
         }
 }
 
+//TODO: Change tags with chips so that click and search tables with that tag also redo the query without the 'with'
+
 export default function Dashboard (props) {
     const { public_tables, joined_tables, request_tables, err, err_result } = props;
     const router = useRouter();

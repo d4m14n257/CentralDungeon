@@ -135,6 +135,7 @@ export default function Tables (props) {
                                 isOpen={open}
                                 handleCloseModal={handleCloseModal}
                                 reloadAction={handleTableListReload}
+                                closeConfirm
                             />
                         }
                     </MessageContext>

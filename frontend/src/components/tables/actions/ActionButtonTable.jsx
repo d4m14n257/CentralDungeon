@@ -28,7 +28,7 @@ export default function ActionButtonTable (props) {
         try {
             if(!event.shiftKey) {
                 await confirm()
-                    .catch(() => {throw {err: 'Canceled'}})
+                    .catch(() => {throw {canceled: true}})
             }
 
             const response = await deleter({id: id, url: 'tables'});
@@ -40,15 +40,15 @@ export default function ActionButtonTable (props) {
 
                 await reloadAction();
             }
-            else {
-                setStatus(response.status);
-                setMessage('Ha habido un error al momento de eliminar la mesa.');
-                handleOpen();
-            }
-
+            else
+                throw {message: 'Ha habido un error al momento de eliminar la mesa.', status: response.status}
         }
         catch (err) {
-            console.log(err)
+            if(!err.canceled) {
+                setStatus(err.status);
+                setMessage(err.message);
+                handleOpen();
+            }
         }
     }, []);
 

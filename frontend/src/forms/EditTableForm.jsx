@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorMessage } from "@hookform/error-message"
@@ -47,10 +47,6 @@ export default function EditTableForm (props) {
         resolver: zodResolver(schema)
     })
 
-    useEffect(() => {
-        setMessage('¿Esta seguro de realizar estos cambios?');
-    }, [])
-
     const onSubmit = useCallback(async (data, event) => {
         try {
             let first = false;
@@ -83,9 +79,11 @@ export default function EditTableForm (props) {
                 throw {message: 'No hay cambios'}
             }
 
+            setMessage('¿Esta seguro de realizar estos cambios?');
+
             if(!event.shiftKey) {
                 await confirm()
-                    .catch(() => {throw {err: 'Canceled'}});
+                    .catch(() => {throw {canceled: true}});
             }
             
             const response = await putter({data: value, url: 'tables/master'});
@@ -100,14 +98,15 @@ export default function EditTableForm (props) {
                     await reloadAction();
                 }
             }
-            else {
-                setStatus(response.status);
-                setStatusMessage('Ha habido un error al momento de editar la mesa.');
-                handleOpen();
-            }
+            else
+                throw {message: 'Ha habido un error al momento de editar la mesa.', status: response.status}
         }
         catch (err) {
-            console.log(err)
+            if(!err.canceled) {
+                setStatus(err.status);
+                setMessage(err.message);
+                handleOpen();
+            }
         }
     }, [])
 

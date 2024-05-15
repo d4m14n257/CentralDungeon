@@ -16,12 +16,14 @@ const useModalRequest = ({ request, isOpen }) => {
     const handleRequest = useCallback(async (request) => {
         const result = await getter({id: '2', others: request.id, url: 'users/request/rejected'})
 
+        console.log(result)
+
         return result;
     }, [isOpen])
 
     useEffect(() => {
         handleRequest(request).then((response) => {
-            if(!response.status) {
+            if(response.status == 200) {
                 const rejected = Rejected(response)
                 
                 rejected.rejected_date = handleDatetime(rejected.rejected_date)

@@ -1,4 +1,4 @@
-export const setter = async ({
+export const setterFiles = async ({
     id = null, 
     others = null,
     data, 
@@ -15,10 +15,7 @@ export const setter = async ({
 
         const option = {
             method: 'POST',
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data)
+            body: data
         }
         const response = await fetch(complete_url, option)
         .catch((err) => {

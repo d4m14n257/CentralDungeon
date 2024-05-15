@@ -24,7 +24,7 @@ export default function ListFileTable (props) {
         try {
             if(!event.shiftKey) {
                 await confirm()
-                    .catch(() => {throw {err: 'Canceled'}});
+                    .catch(() => {throw {canceled: true}});
             }
 
             const response = await deleter({id: table_id, others: file_id, url: 'files/tables/preparation'});
@@ -36,14 +36,15 @@ export default function ListFileTable (props) {
 
                 await reloadAction();
             }
-            else {
-                setStatus(response.status);
-                setMessage('Ha habido un error al momento de eliminar el archivo de la mesa.');
-                handleOpen();
-            }
+            else
+                throw {message: 'Ha habido un error al momento de eliminar el archivo de la mesa.', status: response.status}
         }
         catch (err) {
-            console.log(err)
+            if(!err.canceled) {
+                setStatus(err.status);
+                setMessage(err.message);
+                handleOpen();
+            }
         }
     }, []);
 

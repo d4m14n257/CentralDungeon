@@ -9,11 +9,6 @@ export default function DialogConfirmed (props) {
             onClose={onClose}
         >
             <DialogTitle>{message}</DialogTitle>
-            <DialogContent>
-                <DialogContentText>
-                    Una vez realizado, este cambio no podra ser revertido de ninguna forma.
-                </DialogContentText>
-            </DialogContent>
             <DialogActions>
                 <Button size="small" variant='outlined' onClick={onConfirm}>Aceptar</Button>
                 <Button color="error" size="small" variant='outlined' onClick={onCancel}>Cancelar</Button>

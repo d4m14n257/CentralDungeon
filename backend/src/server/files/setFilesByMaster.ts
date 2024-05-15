@@ -7,10 +7,10 @@ export const setFilesByMaster = async (user_id : string, file : Express.Multer.F
     .then((data) => data[0][0].generated_id);
 
     const sql = `
-        INSERT INTO Files (id, name, source, mine, user_created_id, type_file)
-            VALUE (?, ?, ?, ?, ?, ?)`;
+        INSERT INTO Files (id, name, source, size, mine, user_created_id, type_file)
+            VALUE (?, ?, ?, ?, ?, ?, ?)`;
 
-    const params = [id, file.originalname, file.path, file.mimetype, user_id, type];
+    const params = [id, file.originalname, file.path, file.size, file.mimetype, user_id, type];
     const response = await setQuery(sql, params, query);
 
     return {...response, id: id};

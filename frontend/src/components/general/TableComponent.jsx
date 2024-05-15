@@ -1,4 +1,4 @@
-import { useState, useReducer, useMemo, useContext, useEffect } from 'react';
+import { useState, useMemo, useContext, useEffect } from 'react';
 
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableCellUsers, TableSortLabel, Toolbar, Typography,
          Box, Checkbox, Tooltip, IconButton } from '@mui/material';
@@ -13,6 +13,8 @@ import { global } from '@/styles/global';
 import { Confirm } from '@/contexts/ConfirmContext';
 import { Message } from '@/contexts/MessageContext';
 import { deleter } from '@/api/deleter';
+
+//TODO: Add search in tables.
 
 function stableSort(array, comparator) {
     const stabilizedThis = array.map((el, index) => [el, index]);
@@ -120,28 +122,34 @@ const useTableComponent = ({ rows, columns, url, reloadTable }) => {
     }, [])
 
     const handleDeleteSelect = async (event) => {
-        if(!event.shiftKey) {
-            await confirm()
-                .catch(() => {throw {err: 'Canceled'}});
+        try {
+            if(!event.shiftKey) {
+                await confirm()
+                    .catch(() => {throw {canceled: true}});
+            }
+    
+            const response = await deleter({body: selected, url: url})
+    
+            if(response.status >= 200 && response.status <= 299) {
+                setStatus(response.status);
+                setStatusMessage('Datos eliminados con exito.');
+                handleOpen();
+                
+                if(reloadTable)
+                    await reloadTable();
+    
+                setSelected([]);
+                setCheckboxAction(false);
+            }
+            else 
+                throw {message: 'Ha habido un error al momento de eliminar.', status: response.status}
         }
-
-        const response = await deleter({body: selected, url: url})
-
-        if(response.status >= 200 && response.status <= 299) {
-            setStatus(response.status);
-            setStatusMessage('Datos eliminados con exito.');
-            handleOpen();
-            
-            if(reloadTable)
-                await reloadTable();
-
-            setSelected([]);
-            setCheckboxAction(false);
-        }
-        else {
-            setStatus(response.status);
-            setStatusMessage('Ha habido un error al momento de eliminar.');
-            handleOpen();
+        catch (err) {
+            if(!err.canceled) {
+                setStatus(err.status);
+                setStatusMessage(err.message);
+                handleOpen();
+            }
         }
     }
 

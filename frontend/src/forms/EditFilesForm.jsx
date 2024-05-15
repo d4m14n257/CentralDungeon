@@ -19,8 +19,7 @@ import { getter } from "@/api/getter";
 import { User } from "@/contexts/UserContext";
 import { Files } from "@/normalize/models";
 import { global } from "@/styles/global";
-import { putter } from "@/api/putter";
-import { setter } from "@/api/setter";
+import { setterFiles } from "@/api/setterFiles";
 
 const schema = z.object ({
     files: z.object({
@@ -69,7 +68,6 @@ export default function EditFilesForm (props) {
         }
         
         getFiles();
-        setMessage('¿Estas seguro de subir estos archivos.?');
     }, []);
 
     const handleAddFile = (file, field) => {
@@ -153,7 +151,7 @@ export default function EditFilesForm (props) {
         setValue('files', newListFile);
     }
 
-    const onSubmit = useCallback(async (data, event) => {
+    const onSubmit = async (data, event) => {
         try {
             let original = [...files];
             let toUpload = [...listFiles];
@@ -190,39 +188,50 @@ export default function EditFilesForm (props) {
                 }
             }
 
+            setMessage('¿Estas seguro de subir estos archivos.?');
+
             if(!event.shiftKey) {
                 await confirm()
-                    .catch(() => {throw {err: 'Canceled'}});
+                    .catch(() => {throw {canceled: true}});
             }
-
+            
             const data = {
                 update_files: reuseFiles.current, 
                 original_files: files
             }
 
-            const formData = new FormData();
+            if(uploadFiles.current) {
+                const formData = new FormData();
 
-            uploadFiles.current.forEach((file) => {
-                formData.append('files', file);
-            });
-
-            const response = setter({
-                id: table_id, 
-                others: id, 
-                data: formData,
-                url: 'files/tables/preparation',
-                file: true
-            })
-
-            if(response.status == 201) {
-                console.log('guarde xd')
+                await uploadFiles.current.forEach((file) => {
+                    if(file instanceof File) {
+                        formData.append('files', file);
+                    }
+                });
+                
+                const response = await setterFiles({
+                    id: table_id, 
+                    others: id, 
+                    data: formData,
+                    url: 'files/tables/preparation'
+                })
+    
+                if(response.status == 201) {
+                    
+                }
+                else
+                    throw {message: 'Hubo un error en la petición', status: response.status}
             }
             
         }
         catch(err) {
-            console.log(err)
+            if(!err.canceled) {
+                setStatus(err.status);
+                setMessage(err.message);
+                handleOpen();
+            }
         }
-    }, [listFiles]);
+    }
 
     return (
         <form style={modal.content}>

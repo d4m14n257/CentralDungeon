@@ -43,7 +43,7 @@ export default function ListCataloguesTable (props) {
 
             if(!event.shiftKey) {
                 await confirm()
-                    .catch(() => {throw {err: 'Canceled'}});
+                    .catch(() => {throw {canceled: true}});
             }
 
             switch (name) {
@@ -79,13 +79,15 @@ export default function ListCataloguesTable (props) {
                 await reloadAction();
             }
             else {
-                setStatus(response.status);
-                setMessage(error);
-                handleOpen();
+                throw {message: error, status: response.status}
             }
         }
         catch (err) {
-            console.log(err)
+            if(!err.canceled) {
+                setStatus(err.status);
+                setMessage(err.message);
+                handleOpen();
+            }
         }
     }, [])
 

@@ -44,6 +44,8 @@ export const uploadFiles = (req : Request, res : Response, next : NextFunction) 
             if(err.message == 'Invalid mime type')
                 return res.status(415).send({ error: err.message });
 
+            console.log(err)
+
             return res.status(400).send({ error: err.message });
         }
 

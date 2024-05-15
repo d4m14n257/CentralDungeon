@@ -22,7 +22,7 @@ export default function ListScheduleTable (props) {
         try {
             if(!event.shiftKey) {
                 await confirm()
-                    .catch(() => {throw {err: 'Canceled'}});
+                    .catch(() => {throw {canceled: true}});
             }
 
             const body = {
@@ -39,14 +39,15 @@ export default function ListScheduleTable (props) {
 
                 await reloadAction();
             }
-            else {
-                setStatus(response.status);
-                setMessage('Ha habido un error al momento de cambiar el horario de la mesa.');
-                handleOpen();
-            }
+            else
+                throw {message: 'Ha habido un error al momento de cambiar el horario de la mesa.', status: response.status}
         }
         catch (err) {
-            console.log(err)
+            if(!err.canceled) {
+                setStatus(err.status);
+                setMessage(err.message);
+                handleOpen();
+            }
         }
     }, [])
 

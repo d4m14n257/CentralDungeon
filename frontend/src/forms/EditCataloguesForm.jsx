@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,10 +31,6 @@ export default function EditCataloguesForm (props) {
     const [listCatalogue, setListCatalogue] = useState([]);
     const { confirm, setMessage } = useContext(Confirm);
     const { handleOpen, setMessage : setStatusMessage, setStatus, setInfo } = useContext(Message);
-
-    useEffect(() => {
-        setMessage('¿Esta seguro de crear esta mesa?');
-    }, [])
 
     const { control, register, handleSubmit, formState: { isSubmitting }} = useForm({
         defaultValues: {
@@ -99,9 +95,11 @@ export default function EditCataloguesForm (props) {
                 }
             }
 
+            setMessage('¿Esta seguro de crear esta mesa?');
+
             if(!event.shiftKey) {
                 await confirm()
-                    .catch(() => {throw {err: 'Canceled'}});
+                    .catch(() => {throw {canceled: true}});
             }
 
             switch (type) {
@@ -147,14 +145,15 @@ export default function EditCataloguesForm (props) {
                     await reloadAction();
                 }
             }
-            else {
-                setStatus(response.status);
-                setStatusMessage('Ha habido un error al editar la mesa.');
-                handleOpen();
-            }
+            else
+                throw {message: 'Ha habido un error al editar la mesa.', status: response.status}
         }
         catch (err) {
-            console.log(err)
+            if(!err.canceled) {
+                setStatus(err.status);
+                setMessage(err.message);
+                handleOpen();
+            }
         }
     }, [])
 

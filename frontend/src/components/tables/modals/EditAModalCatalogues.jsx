@@ -4,12 +4,13 @@ import { modal } from "@/styles/tables/modal";
 import { Box, Typography } from "@mui/material";
 
 export default function EditModalCatalogues (props) {
-    const { isOpen, handleCloseModal, reloadAction, catalogue, type, table_id } = props;
+    const { isOpen, handleCloseModal, reloadAction, catalogue, type, table_id, closeConfirm } = props;
 
     return (
         <ModalBase
             isOpen={isOpen}
             handleCloseModal={handleCloseModal}
+            closeConfirm
         > 
             <Box sx={modal.body}>
                 <Box sx={modal.header}>

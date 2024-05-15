@@ -8,13 +8,14 @@ import { modal } from "@/styles/tables/modal";
 import { ConfirmContext } from '@/contexts/ConfirmContext';
 
 export default function CreateModalTable (props) {
-    const { isOpen, handleCloseModal, reloadAction } = props;
+    const { isOpen, handleCloseModal, reloadAction, closeConfirm } = props;
 
     return (
         <ConfirmContext>
             <ModalBase
                 isOpen={isOpen}
                 handleCloseModal={handleCloseModal}
+                closeConfirm={closeConfirm}
             >
                 <Box sx={modal.body}>
                     <Box sx={modal.header}>

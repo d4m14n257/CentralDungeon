@@ -7,12 +7,13 @@ import { modal } from "@/styles/tables/modal";
 import EditTableForm from '@/forms/EditTableForm';
 
 export default function EditModalTable (props) {
-    const { isOpen, handleCloseModal, reloadAction, table } = props;
+    const { isOpen, handleCloseModal, reloadAction, table, closeConfirm } = props;
 
     return (
         <ModalBase
             isOpen={isOpen}
             handleCloseModal={handleCloseModal}
+            closeConfirm
         >
             <Box sx={modal.body}>
                 <Box sx={modal.header}>

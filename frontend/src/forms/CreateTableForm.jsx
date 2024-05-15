@@ -1,4 +1,4 @@
-import { useState, useReducer, useContext, useEffect, useCallback } from "react";
+import { useState, useReducer, useContext, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -129,10 +129,6 @@ export default function CreateTableForm (props) {
         },
     });
 
-    useEffect(() => {
-        setMessage('¿Esta seguro de crear esta mesa?');
-    }, [])
-
     const { control, register, handleSubmit, setValue, formState: { errors, isSubmitting }} = useForm({
         defaultValues: {
             name: '',
@@ -232,9 +228,11 @@ export default function CreateTableForm (props) {
 
     const onSubmit = useCallback(async (data, event) => {
         try {
+            setMessage('¿Esta seguro de crear esta mesa?');
+
             if(!event.shiftKey) {
                 await confirm()
-                    .catch(() => {throw {err: 'Canceled'}});
+                    .catch(() => {throw {canceled: true}});
             }
             
             const response = await setter({
@@ -261,13 +259,16 @@ export default function CreateTableForm (props) {
                     await reloadAction();
             }
             else {
-                setStatus(response.status);
-                setStatusMessage('Ha habido un error al crear la mesa.');
-                handleOpen();
+                throw {message: 'Ha habido un error al crear la mesa.', status: response.status}
+                
             }
         }
         catch (err) {
-            console.log(err)
+            if(!err.canceled) {
+                setStatus(err.status);
+                setStatusMessage(err.message);
+                handleOpen();
+            }
         }
     }, [])
 

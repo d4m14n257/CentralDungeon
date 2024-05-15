@@ -113,8 +113,8 @@ export const global = {
     },
     warnError: {
         ...warn,
-        height: 'calc(100vh - 88px)',
-        width: '100vw',
+        height: 'max-content',
+        width: 'max-content',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center'
