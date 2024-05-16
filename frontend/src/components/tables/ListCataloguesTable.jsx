@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext } from "react";
 import { Box, Divider, IconButton, ListItem, ListItemText } from "@mui/material";
 
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -14,7 +14,7 @@ export default function ListCataloguesTable (props) {
     const { confirm, setMessage : deleteMessage } = useContext(Confirm);
     const { setStatus, setMessage, handleOpen } = useContext(MessageContext);
 
-    useEffect(() => {
+    const setMessageInCatalogue = (name) => {
         let message;
 
         switch (name) {
@@ -33,13 +33,15 @@ export default function ListCataloguesTable (props) {
         }
 
         deleteMessage(message);
-    }, [])
+    }
 
     const handleDeleteItem = useCallback(async (event, id) => {
         try {
             let url;
             let successfully;
             let error;
+
+            setMessageInCatalogue(name)
 
             if(!event.shiftKey) {
                 await confirm()

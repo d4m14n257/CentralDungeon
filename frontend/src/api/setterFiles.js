@@ -23,9 +23,9 @@ export const setterFiles = async ({
         })
 
         const status = response.status
-        const message = await response.json()
+        const files = await response.json()
 
-        return { status, message }
+        return { status, files }
 
     } catch (err) {
         return err

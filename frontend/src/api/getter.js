@@ -25,3 +25,5 @@ export const getter = async ({
         return err;
     }
 }
+
+//TODO: Check the response data.

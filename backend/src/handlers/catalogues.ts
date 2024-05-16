@@ -117,9 +117,8 @@ export function handleSetCatalogue<T extends Tags | Systems | Platforms>(table_n
 
             const toFilter = body.change.filter((item) => {
                 let back = true;
-                let i = 0;
 
-                for(i; i < body.original.length; i++) {
+                for(let i = 0; i < body.original.length; i++) {
                     if(body.original[i].id == item.id) {
                         back = false;
                         body.original.splice(i, 1);

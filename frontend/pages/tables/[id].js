@@ -7,7 +7,6 @@ import { TablesInfo } from '@/normalize/models';
 import { Error, ErrorMessage } from '@/components/info/HandlerError';
 import { PreparationStatus } from '@/components/tables/status/PreparationStatus';
 
-
 /*
     TODO: Mesas que seas colapsables para jugadores pendientes y separar aceptadps de pendientes. 
 */
@@ -16,7 +15,7 @@ export const getServerSideProps = async (context) => {
     const { params } = context;
     const { id } = params;
 
-    const result = await getter({ others: id, url: 'tables' });
+    const result = await getter({ id: id, url: 'tables' });
 
     if(result.status == 200) {
         const data = {

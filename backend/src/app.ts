@@ -14,6 +14,7 @@ import generateBase64 from "./helper/generateBase64";
 //TODO: Check injection sql is possible and then fixed it
 //TODO: Limit rows in generals views.
 //TODO: Check status in put and deleter so that response correctly 
+//TODO: Check all response status which it is 200.
 
 dotenv.config();
 

@@ -18,6 +18,10 @@ function fileFilter (req :Request, file : Express.Multer.File, callback : FileFi
 }
 
 async function destination (req :Request, file : Express.Multer.File, callback : any) {
+    if(!fs.existsSync(`${process.env.UPLOAD_FILES}`)) {
+        await fs.mkdirSync(`${process.env.UPLOAD_FILES}`);
+    }
+
     const user_id = req.params.user_id;
     const folder = `${process.env.UPLOAD_FILES}/${user_id}`
 
@@ -43,8 +47,6 @@ export const uploadFiles = (req : Request, res : Response, next : NextFunction) 
         if(err) {
             if(err.message == 'Invalid mime type')
                 return res.status(415).send({ error: err.message });
-
-            console.log(err)
 
             return res.status(400).send({ error: err.message });
         }

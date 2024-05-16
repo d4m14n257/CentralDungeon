@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext } from "react";
 import { Avatar, Box, Divider, IconButton, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 import { HandlerMessage, Message } from "../info/HandlerMessage";
 
@@ -16,12 +16,10 @@ export default function ListFileTable (props) {
     const { confirm, setMessage : deleteMessage } = useContext(Confirm);
     const { setStatus, setMessage, handleOpen } = useContext(MessageContext);
 
-    useEffect(() => {
-        deleteMessage('¿Desea eliminar este archivo de la mesa?');
-    }, [])
-
     const handleDeleteFile = useCallback(async (event, file_id) => {
         try {
+            deleteMessage('¿Desea eliminar este archivo de la mesa?');
+
             if(!event.shiftKey) {
                 await confirm()
                     .catch(() => {throw {canceled: true}});

@@ -604,7 +604,7 @@ export function handleCreateTable () {
             await query.commit();
             await query.release();
 
-            res.status(200).send({ message: 'Succefully created table'})
+            res.status(201).send({ message: 'Succefully created table'})
         }
         catch (err : any) {
             res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })

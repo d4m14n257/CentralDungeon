@@ -96,6 +96,13 @@ export type RequestPlayer = {
     request_tables_rejected: {} | null
 }
 
+export type FileList = {
+    id: string,
+    name: string, 
+    size: number,
+    type: string
+}
+
 interface HttpStatus {
     http_status?: number
 }

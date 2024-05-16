@@ -223,6 +223,7 @@ export function PreparationStatus (props) {
                                     handleCloseModal={handleCloseScheduleEdit}
                                     reloadAction={handleTableReload}
                                     schedule={dataSchedule.current}
+                                    closeConfirm
                                 />
                             }
                             {

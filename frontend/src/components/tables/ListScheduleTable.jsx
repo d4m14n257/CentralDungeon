@@ -14,12 +14,10 @@ export default function ListScheduleTable (props) {
     const { confirm, setMessage : deleteMessage } = useContext(Confirm);
     const { setStatus, setMessage, handleOpen } = useContext(MessageContext);
 
-    useEffect(() => {
-        deleteMessage('¿Desea eliminar este dia y hora?')
-    }, [])
-
     const handleDeleteItem = useCallback(async (event, weekday, hourtime) => {
         try {
+            deleteMessage('¿Desea eliminar este dia y hora?')
+
             if(!event.shiftKey) {
                 await confirm()
                     .catch(() => {throw {canceled: true}});

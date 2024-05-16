@@ -15,11 +15,13 @@ import { z } from "zod";
 import { modal } from "@/styles/tables/modal";
 import { Confirm } from "@/contexts/ConfirmContext";
 import { Message } from "@/contexts/MessageContext";
-import { getter } from "@/api/getter";
 import { User } from "@/contexts/UserContext";
 import { Files } from "@/normalize/models";
 import { global } from "@/styles/global";
 import { setterFiles } from "@/api/setterFiles";
+import { putter } from "@/api/putter";
+import { patcher } from "@/api/patcher";
+import { getter } from "@/api/getter";
 
 const schema = z.object ({
     files: z.object({
@@ -54,7 +56,11 @@ export default function EditFilesForm (props) {
     
     useEffect(() => {
         const getFiles = async () => {
-            const result = await getter({id: table_id, others: id, url: 'files/tables/preparation' });
+            const result = await getter({
+                id: table_id,
+                others: id,
+                url: 'files/tables/preparation'
+            });
 
             if(result.status == 200) {
                 const data = {
@@ -180,11 +186,7 @@ export default function EditFilesForm (props) {
                 }
 
                 if(!original.length && !toUpload.length) {
-                    setInfo(true);
-                    setStatusMessage('No ha habido cambios en los datos.')
-                    handleOpen();
-
-                    throw {message: 'No hay cambios'};
+                    throw {message: 'No ha habido cambios en los datos.', info: true};
                 }
             }
 
@@ -195,9 +197,11 @@ export default function EditFilesForm (props) {
                     .catch(() => {throw {canceled: true}});
             }
             
-            const data = {
+            const body = {
                 update_files: reuseFiles.current, 
-                original_files: files
+                original_files: files,
+                files_list: data.files,
+                files: []
             }
 
             if(uploadFiles.current) {
@@ -217,19 +221,69 @@ export default function EditFilesForm (props) {
                 })
     
                 if(response.status == 201) {
-                    
+                    body.files = response.files
                 }
                 else
-                    throw {message: 'Hubo un error en la petición', status: response.status}
+                    throw {message: 'Hubo un error al momento de subir los archivos.', status: response.status}
             }
-            
+
+            const response = await putter({
+                id: table_id,
+                data: body,
+                url: 'files/tables/preparation'
+            })
+
+            if(response.status == 201) {
+                if(reloadAction) {
+                    await reloadAction();
+                }
+
+                if(body.files.length > 0) {
+                    setMessage('¿Quieres hacer que los nuevos archivos puedan usarse en futuras mesas?');
+                    await confirm().then(async () => {
+                        const response = await patcher({
+                            data: body.files,
+                            url: 'files/private/status'
+                        })
+
+                        if(response.status != 200) {
+                            handleCloseModal();
+                            throw {message: 'Hubo un error al guardar los archivos.', status: response.status};
+                        }
+                        else {
+                            handleCloseModal();  
+                            throw {message: 'Archivos subidos con exito.', status: response.status}  
+                        }
+                    })
+                    .catch((err) => {
+                        if(err)
+                            throw {...err}
+                        else {
+                            handleCloseModal();  
+                            throw {message: 'Archivos subidos con exito.', status: response.status}
+                        }
+                    })
+                }
+                else {
+                    handleCloseModal();
+                    throw {message: 'Archivos subidos con exito.', status: response.status};
+                }
+            }
+            else
+                throw {message: 'Hubo un error al momento de subir los archivos.', status: response.status};
         }
         catch(err) {
-            if(!err.canceled) {
-                setStatus(err.status);
-                setMessage(err.message);
+            if (err.info) {
+                setInfo(err.info);
+                setStatusMessage(err.message)
                 handleOpen();
             }
+            else if(!err.canceled) {
+                setStatus(err.status);
+                setStatusMessage(err.message);
+                handleOpen();
+            }
+            
         }
     }
 
@@ -306,7 +360,7 @@ export default function EditFilesForm (props) {
                             </Collapse>
                         </List>
                         <FormHelperText>
-                            Estos son archivos privados, que tu guardaste como acceso rapido.
+                            Estos son archivos publicos que puedes utilizar en caso de que los requieras.
                         </FormHelperText>
                     </FormControl>
                     <Divider />
@@ -361,7 +415,7 @@ export default function EditFilesForm (props) {
                             </Collapse>
                         </List>
                         <FormHelperText>
-                            Estos son archivos publicos que puedes utilizar en caso de que los requieras.
+                            Estos son archivos privados, que tu guardaste como acceso rapido.
                         </FormHelperText>
                     </FormControl>
                     <Divider />
