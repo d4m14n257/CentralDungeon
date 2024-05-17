@@ -57,13 +57,15 @@ export default function EditCataloguesForm (props) {
             }
         }
 
-        if(value.length > 0) {
-            const data = await getter({others: value, url: url});
+        url += `/${table_id}`;
 
-            if(data.status) {
-                setListCatalogue([]);
-                return;
-            }
+        if(value.length > 0) {
+            const data = await getter({others: value, url: url}).then((response) => {
+                if(response.status == 200)
+                    return response.catalogues;
+                else
+                    return [];
+            });
 
             setListCatalogue(data);
         }

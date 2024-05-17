@@ -167,14 +167,15 @@ export default function CreateTableForm (props) {
         let data = [];
 
         if(value.length > 0) {
-            data = await getter({others: value, url: url});
-
-            if(data.status)
-                data = [];
+            data = await getter({others: value, url: url}).then((response) => {
+                if(response.status = 200)
+                    return response.catalogues;
+                else
+                    data = [];
+            });
         }
 
         dispatch({type: type, value: value, dataArray: data});
-
     }, 300)
 
     const handleCreateShedule = (field) => {

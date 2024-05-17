@@ -6,6 +6,7 @@ export const platforms : Router = express.Router();
 const table_name = 'Platforms';
 
 platforms.get('/:name', handleGetCatalogues(table_name))
+platforms.get('/:table_id/:name', handleGetCatalogues(table_name))
 
 platforms.post('/', handleCreateCatalogues<Platforms>(table_name));
 

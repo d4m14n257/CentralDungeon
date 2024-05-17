@@ -44,12 +44,14 @@ export function handleGetCatalogues(table_name : string) {
     return async (req: Request, res : Response) => {
         try {
             const name : string = req.params.name;
-            await getCataloguesName(table_name, name).then((data) => {
+            const table_id : string = req.params.table_id;
+
+            await getCataloguesName(table_name, name, table_id).then((data) => {
                 if(data.http_status) {
                     throw data;
                 }
 
-                res.status(200).send(data);
+                res.status(200).send({catalogues: data});
             }).catch((err) => {
                 if(err.http_status)
                     throw err;

@@ -6,6 +6,7 @@ export const tags : Router = express.Router();
 const table_name = 'Tags';
 
 tags.get('/:name', handleGetCatalogues(table_name));
+tags.get('/:table_id/:name', handleGetCatalogues(table_name));
 
 tags.post('/', handleCreateCatalogues<Tags>(table_name));
 

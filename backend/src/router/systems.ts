@@ -7,6 +7,7 @@ const table_name = 'Systems';
 const column_name = 'system_id'
 
 systems.get('/:name', handleGetCatalogues(table_name));
+systems.get('/:table_id/:name', handleGetCatalogues(table_name));
 systems.get('/index/:index', handleGetCatalogueIndex(table_name));
 
 systems.post('/', handleCreateCatalogues<Systems>(table_name));
