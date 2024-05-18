@@ -106,7 +106,7 @@ export default function CreateTableForm (props) {
     const { handleOpen, setMessage : setStatusMessage, setStatus } = useContext(Message);
     const [ scheduleInfo, setScheduleInfo ] = useState({
         days: [],
-        time: '0000-00-00 02:00:00',
+        time: '0000-00-00 14:00:00',
         list: []
     });
     const [data, dispatch] = useReducer(reducer, {
@@ -179,7 +179,7 @@ export default function CreateTableForm (props) {
     }, 300)
 
     const handleCreateShedule = (field) => {
-        const time = typeof scheduleInfo.time == 'string' ? '02:00' : scheduleInfo.time.format('HH:mm')
+        const time = typeof scheduleInfo.time == 'string' ? '14:00' : scheduleInfo.time.format('HH:mm')
 
         if(scheduleInfo.days.length > 0) {
             let schedule = [];
@@ -202,7 +202,7 @@ export default function CreateTableForm (props) {
 
             setScheduleInfo({
                 days: [],
-                time: '0000-00-00 02:00:00',
+                time: '0000-00-00 14:00:00',
                 list: schedule
             }) 
         }
@@ -215,12 +215,13 @@ export default function CreateTableForm (props) {
         for(const day in data.scheduleHash) {
             if(data.scheduleHash[day].length > 0 )
                 schedule.push({
-                    name: day,
+                    day: day,
                     hour: data.scheduleHash[day]
                 })
         }
-        
+
         setValue('schedule', schedule);
+
         setScheduleInfo({
             ...scheduleInfo,
             list: schedule
@@ -250,14 +251,12 @@ export default function CreateTableForm (props) {
                 url: 'tables/master'
             });
 
-            if(response.status >= 200 && response.status <= 299) {
-                setStatus(response.status);
-                setStatusMessage('Mesa creada con exito.');
-                handleCloseModal();
-                handleOpen();
-                
+            if(response.status >= 200 && response.status <= 299) {                
                 if(reloadAction)
                     await reloadAction();
+
+                handleCloseModal();
+                throw {message: 'Mesa creada con exito.', status: response.status}
             }
             else {
                 throw {message: 'Ha habido un error al crear la mesa.', status: response.status}
@@ -631,7 +630,7 @@ export default function CreateTableForm (props) {
                             >
                                 <ListItemText
                                     primary={weekday.day}
-                                    secondary={weekday.hour.join(', ')}
+                                    secondary={weekday.hour.join(' - ')}
                                 />
                             </ListItem>
                         </>

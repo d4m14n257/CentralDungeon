@@ -219,6 +219,7 @@ export function PreparationStatus (props) {
                             }
                             {
                                 <EditModalScheduleTable
+                                    table_id={id}
                                     isOpen={openSchedule}
                                     handleCloseModal={handleCloseScheduleEdit}
                                     reloadAction={handleTableReload}

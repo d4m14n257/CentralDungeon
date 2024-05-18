@@ -645,6 +645,21 @@ export function handleUpdateTable () {
     }
 }
 
+export function handleUpdateScheduleTable () {
+    return async (req : Request, res : Response) => {
+        try {
+            const table_id = req.params.table_id;
+
+            console.log(req.body)
+
+            res.status(200).send({message: 'Successfully update schedule'})
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined })
+        }
+    }
+}
+
 export function handleDeleteTable () {
     return async (req : Request, res : Response, ) => {
         try {

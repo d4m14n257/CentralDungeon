@@ -31,11 +31,10 @@ export default function ListScheduleTable (props) {
             const response = await deleter({id: table_id, body: body, url: 'tables/schedule'});
 
             if(response.status >= 200 && response.status <= 299) {
-                setStatus(response.status);
-                setMessage('Horario de la mesa corregido.');
-                handleOpen();
+                if(reloadAction)
+                    await reloadAction();
 
-                await reloadAction();
+                throw {message: 'Horario de la mesa corregido.', status: response.status};
             }
             else
                 throw {message: 'Ha habido un error al momento de cambiar el horario de la mesa.', status: response.status}
@@ -52,25 +51,23 @@ export default function ListScheduleTable (props) {
     return (
         <Message>
             <Message.When hasData={schedule.length > 0}>
-                {schedule.map((day) => 
+                {schedule.map((weekday) => 
                     <Box
                         sx={{ paddingX: 1 }}
-                        key={day.weekday + day.hourtime}
+                        key={weekday.day + weekday.hour}
                     >
                         <Divider variant="middle" component="li"/>
                         <ListItem
                             secondaryAction={
-                                <IconButton onClick={(event) => {handleDeleteItem(event, day.weekday, day.hourtime)}}>
+                                <IconButton onClick={(event) => {handleDeleteItem(event, weekday.day, weekday.hour)}}>
                                     <DeleteIcon color='error'/>
                                 </IconButton>
                             }
                         >
                             <ListItemText 
-                                primary={day.weekday}
+                                primary={weekday.day}
                                 secondary={
-                                    <>
-                                        <Span title='Hora: ' />{day.hourtime} {utc && `UTC${utc}`}
-                                    </>
+                                    <><Span title='Hora: ' />{weekday.hour} {utc && `UTC${utc}`}</>
                                 }
                             />
                         </ListItem>

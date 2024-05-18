@@ -89,11 +89,7 @@ export default function EditCataloguesForm (props) {
 
 
                 if(data.length == count) {
-                    setInfo(true);
-                    setStatusMessage('No ha habido cambios en los datos.');
-                    handleOpen();
-
-                    throw {message: 'No hay cambios'}
+                    throw {message: 'No ha habido cambios en los datos.', info: true}
                 }
             }
 
@@ -138,20 +134,23 @@ export default function EditCataloguesForm (props) {
             });
 
             if(response.status >= 200 && response.status <= 299) {
-                setStatus(response.status);
-                setStatusMessage('Datos editados con exito.');
-                handleOpen();
-                handleCloseModal();
-                
                 if(reloadAction) {
                     await reloadAction();
                 }
+                
+                handleCloseModal();
+                throw {message: 'Datos editaos con exito.', status: response.status}
             }
             else
                 throw {message: 'Ha habido un error al editar la mesa.', status: response.status}
         }
         catch (err) {
-            if(!err.canceled) {
+            if (err.info) {
+                setInfo(err.info);
+                setStatusMessage(err.message)
+                handleOpen();
+            }
+            else if(!err.canceled) {
                 setStatus(err.status);
                 setMessage(err.message);
                 handleOpen();

@@ -28,7 +28,7 @@ export const TablesInfo = (tables) => {
         systems: tables.systems !== undefined ? tables.systems : null,
         platforms: tables.platforms !== undefined ? tables.platforms : null,
         masters: tables.masters !== undefined ? tables.masters : null,
-        schedule: tables.schedule !== undefined ? tables.schedule : null,
+        schedule: tables.schedule !== undefined ? Schedule(tables.schedule) : null,
         files: tables.files !== undefined ? Files(tables.files) : null,
         players: tables.players !== undefined ? tables.players : null,
     }
@@ -61,5 +61,12 @@ export const Files = (files) => {
         name: file.name,
         type: file.mine,
         size: file.size
+    }))
+}
+
+export const Schedule = (schedules) => {
+    return schedules.map((schedule) => ({
+        day: schedule.weekday,
+        hour: schedule.hourtime.substring(0, 5)
     }))
 }

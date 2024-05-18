@@ -75,6 +75,7 @@ export default function ListFileTable (props) {
                                 </Avatar>
                             </ListItemIcon>
                             <ListItemText
+                                sx={{overflowWrap: 'break-word'}}
                                 primary={file.name}
                             />
                         </ListItem>

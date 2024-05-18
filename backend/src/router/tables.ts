@@ -11,7 +11,8 @@ import {
         handleGetPublicTables, 
         handleGetTablesMasterList, 
         handleUpdateTable,
-        handleDeleteMultipleTables
+        handleDeleteMultipleTables,
+        handleUpdateScheduleTable
 } from "../handlers/tables";
 
 export const tables : Router = express.Router();
@@ -27,6 +28,7 @@ tables.get('/master/list/:user_id', handleGetTablesMasterList());
 tables.post('/master', handleCreateTable());
 
 tables.put('/master', handleUpdateTable());
+tables.put('/schedule/:table_id', handleUpdateScheduleTable())
 
 tables.delete('/', handleDeleteMultipleTables());
 tables.delete('/:table_id',handleDeleteTable());

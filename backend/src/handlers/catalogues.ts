@@ -197,7 +197,7 @@ export function handleSetCatalogue<T extends Tags | Systems | Platforms>(table_n
     }
 }
 
-export function handlerDeleteCatalogueByTable<T extends Tags | Systems | Platforms>(table_name : string) {
+export function handleDeleteCatalogueByTable<T extends Tags | Systems | Platforms>(table_name : string) {
     return async (req : Request, res: Response) => {
         try {
             const query : PoolConnection = await conn.getConnection()
