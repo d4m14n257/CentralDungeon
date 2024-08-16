@@ -137,22 +137,23 @@ export default function EditCataloguesForm (props) {
                 if(reloadAction) {
                     await reloadAction();
                 }
-                
+
                 handleCloseModal();
-                throw {message: 'Datos editaos con exito.', status: response.status}
+                throw {message: successfully, status: response.status}
             }
             else
-                throw {message: 'Ha habido un error al editar la mesa.', status: response.status}
+                throw {message: error, status: response.status}
         }
         catch (err) {
             if (err.info) {
+                setStatus(null);
                 setInfo(err.info);
                 setStatusMessage(err.message)
                 handleOpen();
             }
             else if(!err.canceled) {
                 setStatus(err.status);
-                setMessage(err.message);
+                setStatusMessage(err.message);
                 handleOpen();
             }
         }
@@ -175,7 +176,7 @@ export default function EditCataloguesForm (props) {
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                             getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
                             onInputChange={(event, newValue) => {handleCataloguesList(event, newValue)}}
-                            renderInput={(params) => (<TextField {...params} label="Edicion de lista" />)}
+                            renderInput={(params) => (<TextField {...params} label="Edición de la lista" />)}
                             value={field.value}
                             onChange={(e, value, reason) => field.onChange(value)}
                             filterOptions={(options, params) => {

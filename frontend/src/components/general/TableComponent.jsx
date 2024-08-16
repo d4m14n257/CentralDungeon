@@ -389,6 +389,7 @@ export default function TableComponent (props) {
                                                         >
                                                             <Actions
                                                                 id={row.id}
+                                                                data={rows}
                                                                 reloadAction={reloadTable}
                                                             />
                                                         </TableCell>

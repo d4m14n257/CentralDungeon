@@ -45,6 +45,8 @@ export type Table = {
     platforms?: Platforms[] | null
     tags?: Tags[] | null
     players?: Users[] | null
+    users_request?: Users[] | null
+    users_blocked?: Users[] | null
     schedule?: Schedules[] | null
     masters?:  Masters[]
     files?: any[]

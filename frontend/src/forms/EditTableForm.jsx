@@ -72,6 +72,7 @@ export default function EditTableForm (props) {
             })
 
             if(count == 6) {
+                setStatus(null);
                 setInfo(true);
                 setStatusMessage('No ha habido cambios en los datos.');
                 handleOpen();

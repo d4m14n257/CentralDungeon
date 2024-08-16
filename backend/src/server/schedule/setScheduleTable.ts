@@ -9,5 +9,17 @@ export const setScheduleTables = async (table_id : string, schedule : Schedule, 
     const params = [table_id, schedule.weekday, schedule.hourtime];
     const response = await setQuery(sql, params, query);
 
-    return await response;
+    if(response.errno == 1062) {
+        const sql_update = `
+            UPDATE Days
+                SET status = 'Created'
+            WHERE table_id = ?
+                AND weekday = ?
+                AND hourtime = ?`;
+
+        const updated = await setQuery(sql_update, params, query);
+        return updated;
+    }
+    else
+        return await response;
 }

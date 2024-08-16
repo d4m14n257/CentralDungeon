@@ -1,13 +1,12 @@
 import { conn } from "../config/database";
 import { Request, Response } from "express";
 import { PoolConnection } from "mysql2/promise";
-import { GeneralMasterView, Generalview, Table, TableMasterList } from "../models/models";
+import { GeneralMasterView, Generalview, Schedule, Schedules, Table, TableMasterList } from "../models/models";
 import { getUserTimezone } from "../helper/getUserTimezon";
 import { getPublicTables } from "../server/tables/getPublicTables";
 import { getJoinedTables } from "../server/tables/getJoinedTables";
 import { getRequestToTables } from "../server/tables/getRequestToTable";
-import { getOwnerTables } from "../server/tables/getOwnerTables";
-import { getMasterTables } from "../server/tables/getMasterTables";
+import { getMasterTypeTables } from "../server/tables/getMasterTypeTables";
 import { getRequestOnTables } from "../server/tables/getRequestOnTable";
 import { getFirstClassTables } from "../server/tables/getFirstClassTables";
 import { setTable } from "../server/tables/setTable";
@@ -31,6 +30,8 @@ import { getPlayersInTables } from "../server/users/getPlayersInTables";
 import { updateTable } from "../server/tables/updateTable";
 import { deleteDayScheduleByTables } from "../server/schedule/deleteDayScheduleByTables";
 import { getFilesByTables } from "../server/files/getFilesByTables";
+import { getBlockedInTables } from "../server/users/getBlockedInTables";
+import { getCandidatesInTables } from "../server/users/getCandidatesInTables";
 
 //TODO: Check the query which it doesnt work in change the hour.
 //TODO: When ill save a new candidate while its uploading, save the date in the web client, no serve o another.
@@ -45,6 +46,20 @@ export function handleGetAllTable () {
             }
 
             const table_id = req.params.table_id;
+            const user_id = req.params.user_id;
+
+            const utc : Promise<string> = await getUserTimezone(user_id).then((utc) => {
+                if(utc.http_status) {
+                    throw utc;
+                }
+
+                return utc[0].timezone;
+            }).catch((err) => {
+                if(err.http_status)
+                    throw err;
+                else
+                    throw {...err, http_status: 503}
+            })
 
             data.table = await getTable(table_id).then((data) => {
                 if(data.http_status)
@@ -138,6 +153,32 @@ export function handleGetAllTable () {
                         throw {...err, http_status: 503}
                 })
 
+                const users_blocked = await getBlockedInTables(table_id).then((data) => {
+                    if(data.http_status)
+                        throw data;
+
+                    return data;
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                })
+
+                const users_request = await getCandidatesInTables(table_id, utc).then((data) => {
+                    if(data.http_status)
+                        throw data;
+
+                    return data;
+                })
+                .catch((err) => {
+                    if(err.http_status)
+                        throw err;
+                    else
+                        throw {...err, http_status: 503}
+                })
+
                 const files = await getFilesByTables(table_id).then((data) => {
                     if(data.http_status)
                         throw data;
@@ -159,13 +200,15 @@ export function handleGetAllTable () {
                     masters: masters, 
                     schedule: schedule,
                     players: players,
+                    users_blocked: users_blocked,
+                    users_request: users_request,
                     files: files
                 }
             }
             else {
                 return res.status(203).send({ message: 'Data does not exists' })
             }
-            
+
             return res.status(200).send(data.table);
         }
         catch (err : any) {
@@ -253,6 +296,8 @@ export function handleGetMasterView () {
                 request_tables: null
             }
 
+            let tags;
+
             const user_id = req.params.user_id
             const utc : Promise<string> = await getUserTimezone(user_id).then((utc) => {
                 if(utc.http_status) {
@@ -264,23 +309,24 @@ export function handleGetMasterView () {
                 throw err;
             })
 
-            data.owner_tables = await getOwnerTables(utc, user_id).then((data) => {
+            data.owner_tables = await getMasterTypeTables(utc, user_id, 'Owner').then((data : any) => {
                 if(data.http_status) {
                     throw data;
                 }
-
+                
                 return data;
-            }).catch((err) => {
+                
+            }).catch((err: any) => {
                 throw err;
             })
 
-            data.master_tables = await getMasterTables(utc, user_id).then((data) => {
+            data.master_tables = await getMasterTypeTables(utc, user_id, 'Master').then((data : any) => {
                 if(data.http_status) {
                     throw data;
                 }
 
-                return data;
-            }).catch((err) => {
+                return data
+            }).catch((err: any) => {
                 throw err;
             })
 
@@ -648,9 +694,88 @@ export function handleUpdateTable () {
 export function handleUpdateScheduleTable () {
     return async (req : Request, res : Response) => {
         try {
-            const table_id = req.params.table_id;
+            const query : PoolConnection = await conn.getConnection()
+            .catch((err) => {
+                throw {...err, http_status: 503}
+            })
 
-            console.log(req.body)
+            query.beginTransaction();
+
+            const table_id = req.params.table_id;
+            const body : {original: Schedules[], update_schedule: Schedules[]} = req.body;
+
+            const originalMap : Map<string, string[]> = new Map();
+            const updatedMap : Map<string, string[]> = new Map();
+
+            body.original.forEach(item => originalMap.set(item.day, item.hour));
+            body.update_schedule.forEach(item => updatedMap.set(item.day, item.hour));
+
+            const toAdd : Schedules[] = [];
+            const toDelete : Schedules[] = [];
+            
+            updatedMap.forEach((updatedHours, day) => {
+                if (!originalMap.has(day)) {
+                    toAdd.push({ day, hour: updatedHours });
+                } 
+                else {
+                    const originalHours = originalMap.get(day) || [];
+                    const hoursToAdd = updatedHours.filter(hour => !originalHours.includes(hour));
+                    const hoursToDelete = originalHours.filter(hour => !updatedHours.includes(hour));
+            
+                    if (hoursToAdd.length > 0 || hoursToDelete.length > 0) {                
+                        if (hoursToAdd.length > 0) {
+                            toAdd.push({ day, hour: hoursToAdd });
+                        }
+                
+                        if (hoursToDelete.length > 0) {
+                            toDelete.push({ day, hour: hoursToDelete });
+                        }
+                      }
+                }
+            });
+
+            originalMap.forEach((hours, day) => {
+                if (!updatedMap.has(day)) {
+                    toDelete.push({ day, hour: hours });
+                }
+            });
+
+            if(toAdd.length > 0) {
+                for(const schedule of toAdd) {
+                    for(const hour of schedule.hour) {
+                        await setScheduleTables(table_id, {weekday: schedule.day, hourtime: hour}, query).then((response) => {
+                            if(response.http_status != 200)
+                                throw response;
+                        })
+                        .catch((err) => {
+                            query.rollback();
+                            query.release();
+
+                            throw err;
+                        })
+                    }
+                }
+            }
+
+            if(toDelete.length > 0) {
+                for(const schedule of toDelete) {
+                    for(const hour of schedule.hour) {
+                        await deleteDayScheduleByTables(table_id, {weekday: schedule.day, hourtime: hour}, query).then((response) => {
+                            if(response.http_status != 200)
+                                throw response
+                        }).catch((err) => {
+                            query.rollback();
+                            query.release();
+                            
+                            throw err
+                        })
+                    }
+                }
+                
+            }
+
+            await query.commit();
+            await query.release();
 
             res.status(200).send({message: 'Successfully update schedule'})
         }
@@ -791,7 +916,7 @@ export function handleDeleteSchedule () {
                 throw {...err, http_status: 503}
             })
 
-            const body = req.body;
+            const body : Schedule = req.body;
             const table_id = req.params.table_id;
 
             await deleteDayScheduleByTables(table_id, body, query).then((response) => {

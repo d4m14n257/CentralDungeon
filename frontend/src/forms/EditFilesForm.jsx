@@ -274,6 +274,7 @@ export default function EditFilesForm (props) {
         }
         catch(err) {
             if (err.info) {
+                setStatus(null);
                 setInfo(err.info);
                 setStatusMessage(err.message)
                 handleOpen();

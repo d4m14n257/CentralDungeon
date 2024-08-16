@@ -8,7 +8,7 @@ export default function ModalBase(props) {
 
     const handleCloseConfirmModal = useCallback(async () => {
         try {
-            setMessage('¿Estas seguro que desae cerrar el modal sin finalizar?')
+            setMessage('¿Estas seguro que desea cerrar el modal sin finalizar?')
 
             await confirm()
                 .catch(() => {throw {canceled: true}});

@@ -30,7 +30,9 @@ export const TablesInfo = (tables) => {
         masters: tables.masters !== undefined ? tables.masters : null,
         schedule: tables.schedule !== undefined ? Schedule(tables.schedule) : null,
         files: tables.files !== undefined ? Files(tables.files) : null,
-        players: tables.players !== undefined ? tables.players : null,
+        players: tables.players !== undefined ? Players(tables.players) : null,
+        users_blocked: tables.users_blocked !== undefined ? Players(tables.users_blocked) : null,
+        users_request: tables.users_request !== undefined ? Candidate(tables.users_request) : null,
     }
 }
 
@@ -68,5 +70,36 @@ export const Schedule = (schedules) => {
     return schedules.map((schedule) => ({
         day: schedule.weekday,
         hour: schedule.hourtime.substring(0, 5)
+    }))
+}
+
+export const Candidate = (players) => {
+    const options = {
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: 'numeric',
+        second: 'numeric'
+    };
+
+    return players.map((player) => {
+        const date = new Date(player.request_date).toLocaleString('es-ES', options);
+
+        return {
+            id: player.id !== undefined ? player.id : null,
+            name: player.name !== undefined ? player.name : null,
+            discord: player.discord !== undefined ? player.discord : null,
+            request_date: date !== undefined ? date : null
+        }
+    })
+}
+
+export const Players = (players) => {
+    return players.map((player) => ({
+        id: player.id !== undefined ? player.id : null,
+        name: player.name !== undefined ? player.name : null,
+        discord: player.discord !== undefined ? player.discord : null,
     }))
 }

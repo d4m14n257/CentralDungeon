@@ -134,3 +134,14 @@ export function handleGetRejectedRequest () {
         }
     }
 }
+
+export function handleGetMasterToMaster () {
+    return async (req: Request, res: Response) => {
+        try {
+
+        }
+        catch (err : any) {
+            res.status(err.http_status ? err.http_status : 500).send({...err, http_status: undefined})
+        }
+    }
+}

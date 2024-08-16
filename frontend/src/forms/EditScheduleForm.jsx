@@ -163,20 +163,18 @@ export default function EditScheduleForm (props) {
 
             const response = await putter({
                 data: {
-                    update_schedule: data.schedulen,
+                    update_schedule: data.schedule,
                     original: initial
                 },
                 id: table_id,
                 url: 'tables/schedule'
             })
 
-            console.log(response)
-
-            if(response.status >= 200 && Response.status <= 299) {
-
+            if(response.status >= 200 && response.status <= 299) {
                 if(reloadAction)
                     await reloadAction();
 
+                handleCloseModal();
                 throw {message: 'Horario editado con exito.', status: response.status};
             }
             else {
@@ -184,7 +182,9 @@ export default function EditScheduleForm (props) {
             }
         }
         catch(err) {
+            console.log(err)
             if(err.info) {
+                setStatus(null);
                 setInfo(err.info);
                 setStatusMessage(err.message);
                 handleOpen();
@@ -200,6 +200,7 @@ export default function EditScheduleForm (props) {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <form style={modal.content}>
+                <Divider />
                 <Controller 
                     control={control}
                     render={({ field }) => (

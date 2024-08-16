@@ -16,8 +16,6 @@ export default function ListBodyPlayer (props) {
     const router = useRouter();
 
     const handleTableRoute = (table_id) => {
-        console.log(id, table_id)
-
         if(id === 'joined-tables')
             router.push(`${TABLES_JOINED}/${table_id}`)
         else

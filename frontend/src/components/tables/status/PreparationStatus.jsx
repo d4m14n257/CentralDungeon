@@ -20,14 +20,29 @@ import ActionButtonDefault from '@/components/general/ActionButtonDefault';
 import EditModalScheduleTable from '@/components/tables/modals/EditModalScheduleTable';
 import ListFileTable from '@/components/tables/ListFilesTable';
 
-
 import { useModal } from '@/hooks/useModal';
 import { MessageContext } from '@/contexts/MessageContext';
 import { ConfirmContext } from '@/contexts/ConfirmContext';
 import { ShiftContext } from '@/contexts/ShiftContext';
 import EditModalFilesTable from '@/components/tables/modals/EditModalFilesTable';
+import ActionButtonMaster from "../actions/ActionButtonMaster";
 
 const columns = [
+    {
+        id: 'username',
+        label: 'Nombre',
+    },
+    {
+        id: 'master_type',
+        label: 'Tipo',
+    },
+    {
+        id: 'actions',
+        label: 'Acciones',
+    }
+]
+
+const columns_request = [
     {
         id: 'name',
         label: 'Nombre',
@@ -37,13 +52,13 @@ const columns = [
         label: 'Discord',
     },
     {
-        id: 'status',
-        'label': 'Estado'
+        id: 'request_date',
+        label: 'Fecha de solicitud'
     },
-    {
-        id: 'actions',
-        label: 'Acciones',
-    }
+    // {
+    //     id: 'actions',
+    //     label: 'Acciones',
+    // }
 ]
 
 export function PreparationStatus (props) {
@@ -175,6 +190,50 @@ export function PreparationStatus (props) {
                                     utc={table.timezone}
                                 />
                             </ListComponent>
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <TableComponent 
+                                    title="Masters"
+                                    columns={columns}
+                                    rows={table.masters}
+                                    Actions={ActionButtonMaster}
+                                    reloadTable={handleTableReload}
+                                />
+                            </Grid>
+                            {/* <Grid
+                                item
+                                lg={8}
+                                xs={12}
+                            >
+                                <TableComponent 
+                                    title="Solicitudes"
+                                    columns={columns_request}
+                                    rows={table.users_request}
+                                />
+                            </Grid>
+                            <Grid
+                                item
+                                lg={4}
+                                xs={12}
+                            >
+                                <TableComponent 
+                                    title="Bloqueados"
+                                    columns={columns_users}
+                                    rows={table.users_blocked}
+                                />
+                            </Grid>
+                            <Grid
+                                item
+                                xs={12}
+                            >
+                                <TableComponent 
+                                    title="Jugadores"
+                                    columns={columns_users}
+                                    rows={table.players}
+                                />
+                            </Grid> */}
                             {openGeneral &&
                                 <EditModalTable 
                                     isOpen={openGeneral}
@@ -218,6 +277,7 @@ export function PreparationStatus (props) {
                                 />
                             }
                             {
+                            openSchedule &&
                                 <EditModalScheduleTable
                                     table_id={id}
                                     isOpen={openSchedule}
@@ -227,7 +287,7 @@ export function PreparationStatus (props) {
                                     closeConfirm
                                 />
                             }
-                            {
+                            {openFiles &&
                                 <EditModalFilesTable 
                                     table_id={id}
                                     isOpen={openFiles}

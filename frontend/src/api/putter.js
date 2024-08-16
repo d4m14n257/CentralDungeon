@@ -20,7 +20,6 @@ export const putter = async ({
             },
             body: JSON.stringify(data)
         }
-        console.log(id)
 
         const response = await fetch(complete_url, option)
         .catch((err) => {

@@ -8,7 +8,6 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
 import Span from '../Span';
-import ViewMoreComponent from '../ViewMoreComponent';
 
 import { global } from '@/styles/global';
 
@@ -38,11 +37,10 @@ export default function ListTableMasterBody (props) {
                                 <Box>
                                     <ListItemText 
                                         primary={<Typography variant="body1">{table.name}</Typography>}
-                                        secondary={<Typography variant="subtitle2" sx={global.overText}>{table.description}</Typography>}
+                                        secondary={<Typography variant="subtitle2" sx={global.overText}>{table.description ? table.description : "No se ha asignado una descripción"}</Typography>}
                                     />
                                     <ListItemText 
                                         primary={<Typography variant="body2"><Span title='Número de jugadores: '/>{table.players}</Typography>}
-                                        secondary={<Typography variant="subtitle2"><Span title='Tags: '/>{table.tags ? table.tags : 'No hay tags asignados.'}</Typography>}
                                     />
                                     <ListItemText 
                                         primary={<Typography variant="body2">

@@ -50,11 +50,10 @@ const menu = [
 ];
 
 export default function UserModalInfo (props) {
-    const {isOpen, handleCloseModal, user} = props;
+    const { isOpen, handleCloseModal, user } = props;
     const [flag, setFlag] = useState();
     const [openMenu, setOpenMenu] = useState(null);
     const [openNestedModal, setOpenNestModal] = useState(false);
-    const { rol } = useContext(UserContext);
     const userId = useRef(0);
 
     const open = Boolean(openMenu);
@@ -117,7 +116,7 @@ export default function UserModalInfo (props) {
                                     <IconButton aria-label="comments" onClick={() => handleOpenNestedModal(user.id)}>
                                         <CommentIcon />
                                     </IconButton>
-                                    { rol == 'Admin' && 
+                                    {/* { rol == 'Admin' && 
                                         <IconButton
                                             onClick={handleOpenMenu}
                                             sx={{ ml: 2 }}
@@ -127,7 +126,7 @@ export default function UserModalInfo (props) {
                                         >
                                             <InfoIcon />
                                         </IconButton>
-                                    }
+                                    } */}
                                 </Box>
                         </Box>
                     </Box>
@@ -145,10 +144,10 @@ export default function UserModalInfo (props) {
                             <Grid item xs={4}>
                                 <Stack spacing={1}>
                                     <Typography variant='h6'>Jugando</Typography>
-                                    <Chip label={user.joined_table.active_table} variant="outlined" onClick={() => {console.log("xd")}}/>
+                                    {/* <Chip label={user.joined_table.active_table} variant="outlined" onClick={() => {console.log("xd")}}/> */}
                                 </Stack>
                             </Grid>
-                            {rol == 'Admin' &&
+                            {/* {rol == 'Admin' &&
                                 <>
                                     <Grid item xs={4}>
                                         <Stack spacing={1}>
@@ -163,7 +162,7 @@ export default function UserModalInfo (props) {
                                         </Stack>
                                     </Grid>
                                 </>
-                            }
+                            } */}
                         </Grid>
                     </Box>
                 </Box>

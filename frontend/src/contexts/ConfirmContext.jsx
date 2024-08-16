@@ -2,7 +2,7 @@ import { createContext, useState, useCallback } from "react";
 
 import DialogConfirmed from "@/components/general/DialogConfirmed";
 
-export const Confirm = createContext({confirm: () => {}, setMessage: {}});
+export const Confirm = createContext({confirm: () => {}, setMessage: () => {}});
 
 export const ConfirmContext = (props) => {
     const { children } = props;

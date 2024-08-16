@@ -20,7 +20,7 @@ const useCardComponent = () => {
 }
 
 export default function CardComponent (props) {
-    const { title, subtitle, Actions, children, handleAction, data, hasCollapse, actionTitle, IconAction } = props;
+    const { title, subtitle, Actions, children, handleAction, data, hasCollapse, titleAction, IconAction } = props;
     const { open, handleChange } = useCardComponent();
 
     return (
@@ -34,7 +34,7 @@ export default function CardComponent (props) {
                             <Actions 
                                 handleAction={handleAction}
                                 data={data}
-                                title={actionTitle}
+                                title={titleAction}
                                 IconAction={IconAction}
                             />
                         }
