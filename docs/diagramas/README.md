@@ -31,15 +31,6 @@ Reflejan el schema de `../modelo-datos.md`, resultado de las decisiones #1–#95
 | [`06-ciclo-solicitud.mmd`](06-ciclo-solicitud.mmd) | Ciclo de una postulación: N por mesa, una activa, veto acotado. |
 | [`07-ciclo-comentario.mmd`](07-ciclo-comentario.mmd) | Borrador → confirmado al cerrar la mesa → moderación → karma. |
 
-## Material de decisión (histórico)
-
-Sirvieron para cerrar M19 y ya no describen nada vigente. Se pueden borrar cuando quieras.
-
-| Diagrama | Qué cubre |
-|---|---|
-| [`08-catalogos-sinonimos.mmd`](08-catalogos-sinonimos.mmd) | Árbol de profundidad libre vs grupo canónico plano. |
-| [`09-catalogos-operaciones.mmd`](09-catalogos-operaciones.mmd) | Las cinco operaciones del admin y su costo en cada modelo. |
-
 ## Regenerar
 
 ```bash
