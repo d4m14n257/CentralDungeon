@@ -122,11 +122,13 @@ En `.claude/skills/`. Son propias, para que sigan exactamente las convenciones d
 
 ## Git
 
-Mientras el proyecto no sea productivo, estas tres valen sin excepción:
+Mientras el proyecto no sea productivo, estas cinco valen sin excepción:
 
 1. **Ningún commit lleva co-autor.** Nada de `Co-Authored-By`, ni de cualquier otra forma de atribución o firma al pie. Bajo ningún esquema.
-2. **Sin convención de commits.** Nada de Conventional Commits, prefijos, scopes ni emojis. Mensaje descriptivo y ya.
+2. **Sin convención de commits.** Nada de Conventional Commits, prefijos, scopes ni emojis.
 3. **Todo va a `master` directo.** Un solo desarrollador: no se crean ramas ni pull requests.
+4. **El push va junto con el commit.** Al terminar de commitear se hace `git push` a `origin/master` sin volver a preguntar — la autorización está dada. Un commit sin publicar se considera trabajo a medias.
+5. **El mensaje describe todo lo que se hizo**, no solo el titular: qué cambió, por qué, y lo que se decidió o descartó en el camino. Es el registro que queda cuando la conversación ya no está.
 
 Se revisan cuando el proyecto pase a productivo, no antes.
 
