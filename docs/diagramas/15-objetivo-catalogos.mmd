@@ -1,0 +1,71 @@
+---
+title: "15. Modelo objetivo — catalogos con grupos de sinonimos"
+---
+erDiagram
+
+    game_tables {
+        varchar id PK
+        varchar name
+    }
+
+    systems {
+        varchar id PK
+        varchar name UK
+        varchar canonical_id FK "NULL = es el canonico. Profundidad 1 SIEMPRE"
+        varchar status "Created | Allowed | Rejected | Deleted"
+        datetime deleted_at
+    }
+
+    tags {
+        varchar id PK
+        varchar name UK
+        varchar canonical_id FK "NULL = es el canonico. Profundidad 1 SIEMPRE"
+        varchar status "Created | Allowed | Rejected | Deleted"
+        datetime deleted_at
+    }
+
+    platforms {
+        varchar id PK
+        varchar name UK
+        varchar canonical_id FK "NULL = es el canonico. Profundidad 1 SIEMPRE"
+        varchar status "Created | Allowed | Rejected | Deleted"
+        datetime deleted_at
+    }
+
+    table_systems {
+        varchar game_table_id PK,FK
+        varchar system_id PK,FK "guarda el alias que eligio el master"
+        varchar status
+        datetime deleted_at
+    }
+
+    table_tags {
+        varchar game_table_id PK,FK
+        varchar tag_id PK,FK "guarda el alias que eligio el master"
+        varchar status
+        datetime deleted_at
+    }
+
+    table_platforms {
+        varchar game_table_id PK,FK
+        varchar platform_id PK,FK "guarda el alias que eligio el master"
+        varchar status
+        datetime deleted_at
+    }
+
+    table_types {
+        varchar id PK
+        varchar name UK "catalogo SIN sinonimos, a proposito"
+        varchar status
+    }
+
+    game_tables ||--o{ table_systems   : "usa"
+    systems     ||--o{ table_systems   : ""
+    systems     ||--o{ systems         : "canonico de"
+    game_tables ||--o{ table_tags      : "etiquetada"
+    tags        ||--o{ table_tags      : ""
+    tags        ||--o{ tags            : "canonico de"
+    game_tables ||--o{ table_platforms : "se juega en"
+    platforms   ||--o{ table_platforms : ""
+    platforms   ||--o{ platforms       : "canonico de"
+    table_types ||--o{ game_tables     : "clasifica"

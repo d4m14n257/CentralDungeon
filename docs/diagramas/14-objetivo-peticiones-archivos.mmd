@@ -1,0 +1,86 @@
+---
+title: "14. Modelo objetivo — peticiones de la mesa y archivos"
+---
+erDiagram
+
+    game_tables {
+        varchar id PK
+        varchar name
+    }
+
+    table_sessions {
+        varchar id PK
+        datetime scheduled_at
+    }
+
+    users {
+        varchar id PK
+        varchar name
+    }
+
+    table_tasks {
+        varchar id PK
+        varchar game_table_id FK
+        varchar table_session_id FK "NULL = en cualquier momento"
+        varchar audience "Candidates | Players | Single"
+        varchar target_user_id FK "solo si audience = Single"
+        varchar title
+        longtext description "texto enriquecido"
+        boolean accepts_text
+        boolean accepts_files
+        boolean is_mandatory "informativo, NO bloquea"
+        datetime due_at
+        varchar status
+        datetime deleted_at
+    }
+
+    task_submissions {
+        varchar id PK
+        varchar task_id FK
+        varchar user_id FK
+        longtext content "texto enriquecido"
+        varchar status "Pending | Submitted"
+        datetime submitted_at
+        datetime deleted_at
+    }
+
+    submission_files {
+        varchar submission_id PK,FK
+        varchar file_id PK,FK
+        varchar status
+    }
+
+    files {
+        varchar id PK
+        varchar name "nombre original, solo metadato"
+        varchar storage_key UK "nombre en disco = id"
+        varchar content_hash "SHA-256, para deduplicar"
+        varchar mime_type
+        bigint size_bytes
+        varchar file_type "Public | Private | Single-use"
+        varchar public_audience "Masters | Players | Announcements"
+        varchar user_created_id FK
+        datetime last_used_at "purga por desuso"
+        varchar status
+        datetime deleted_at
+    }
+
+    table_files {
+        varchar game_table_id PK,FK
+        varchar file_id PK,FK
+        varchar table_file_type "Preparation | Session"
+        boolean is_private
+        varchar status
+        datetime deleted_at
+    }
+
+    game_tables    ||--o{ table_tasks      : "pide"
+    table_sessions ||--o{ table_tasks      : "atada a (opcional)"
+    users          ||--o{ table_tasks      : "destinatario si es Single"
+    table_tasks    ||--o{ task_submissions : "recibe entregas, se acumulan"
+    users          ||--o{ task_submissions : "entrega"
+    task_submissions ||--o{ submission_files : "adjunta"
+    files          ||--o{ submission_files : ""
+    files          ||--o{ table_files      : ""
+    game_tables    ||--o{ table_files      : "adjunta"
+    users          ||--o{ files            : "subio y puede reutilizar"

@@ -1,0 +1,56 @@
+---
+title: "7. Ciclo de vida de un comentario (decisiones #40, #43, #46, #48)"
+---
+stateDiagram-v2
+    direction TB
+
+    [*] --> Borrador : el autor lo escribe<br/>en cualquier momento de la mesa
+
+    note right of Borrador
+        Vive en comment_drafts, CON author_id.
+        Editable, privado, visible solo
+        para su autor. Todavia no es un
+        comentario y no mueve karma.
+    end note
+
+    Borrador --> Confirmado : la mesa llega a Finished<br/>y el autor lo revisa o corrige
+
+    note right of Confirmado
+        Se crea la fila ANONIMA en comments,
+        se escribe la cuota antispam y se
+        BORRA el borrador (borrado fisico).
+        Desde aca ya no se sabe quien lo escribio.
+    end note
+
+    Borrador --> Expirado : la mesa se cancela<br/>(nunca se valida)
+    Borrador --> Expirado : vencen las 2 semanas sin confirmar<br/>(con 2 avisos previos)
+
+    note left of Expirado
+        deleted_at + PURGA del autor y del
+        texto. Si quedara completo seria un
+        registro permanente de quien iba a
+        decir que sobre quien -- ver M18.
+    end note
+
+    state "EnRevision (Under review)" as EnRevision
+    Confirmado --> EnRevision : entra a la bandeja de moderacion
+
+    note right of EnRevision
+        El admin lee contenido y destinatario.
+        NUNCA ve al autor.
+        Todos los comentarios pasan por aca.
+    end note
+
+    EnRevision --> Aprobado : pasa
+    EnRevision --> Rechazado : no pasa o fue innecesario
+
+    Aprobado --> KarmaAplicado : recien aca se mueve el karma
+
+    note left of Rechazado
+        No llega al destinatario
+        y no afecta su karma.
+    end note
+
+    KarmaAplicado --> [*]
+    Rechazado --> [*]
+    Expirado --> [*]

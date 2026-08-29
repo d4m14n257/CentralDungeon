@@ -1,0 +1,31 @@
+---
+title: "9. Catalogos — las 5 operaciones del admin, arbol vs plano"
+---
+flowchart LR
+
+    subgraph ARBOL["CON ARBOL (parent_id, profundidad libre)"]
+        direction TB
+        T1["1. Fusionar dos grupos<br/>reparentar el subarbol entero:<br/>recorrer descendientes, reasignar,<br/>verificar que no se forme ciclo"]
+        T2["2. Sacar un alias del grupo<br/>y sus hijos? suben al abuelo?<br/>se van con el? decision caso por caso"]
+        T3["3. Cambiar el canonico<br/>invertir la cadena padre-hijo<br/>desde la raiz hasta ese nodo"]
+        T4["4. Dar de baja el canonico<br/>promover primer hijo, reasignar<br/>hermanos, y reacomodar los hijos<br/>que el promovido YA tenia"]
+        T5["5. Buscar mesas por un tag<br/>CTE RECURSIVO en cada busqueda<br/>para subir hasta la raiz"]
+        T1 ~~~ T2 ~~~ T3 ~~~ T4 ~~~ T5
+    end
+
+    subgraph PLANO["CON canonical_id (siempre profundidad 1)"]
+        direction TB
+        P1["1. Fusionar dos grupos -- 1 UPDATE<br/>SET canonical_id = 'D&D'<br/>WHERE COALESCE(canonical_id, id) = 'DnD'"]
+        P2["2. Sacar un alias -- 1 UPDATE<br/>SET canonical_id = NULL<br/>WHERE id = 'DANDD'"]
+        P3["3. Cambiar el canonico -- 2 UPDATE<br/>los miembros apuntan al nuevo,<br/>el nuevo pasa a canonical_id = NULL"]
+        P4["4. Dar de baja el canonico<br/>identico a la operacion 3:<br/>promover y reapuntar"]
+        P5["5. Buscar mesas por un tag<br/>sin recursion:<br/>WHERE COALESCE(canonical_id, id) = :grupo"]
+        P1 ~~~ P2 ~~~ P3 ~~~ P4 ~~~ P5
+    end
+
+    ARBOL ~~~ PLANO
+
+    classDef dolor fill:#fee2e2,stroke:#b91c1c,color:#0f172a
+    classDef facil fill:#dcfce7,stroke:#15803d,color:#0f172a
+    class T1,T2,T3,T4,T5 dolor
+    class P1,P2,P3,P4,P5 facil

@@ -1,0 +1,60 @@
+---
+title: "8. Catalogos — arbol libre (hoy) vs grupo canonico plano (propuesta)"
+---
+flowchart TB
+
+    subgraph HOY["HOY: parent_id como arbol de profundidad libre"]
+        direction TB
+        A1["D&D<br/>parent = NULL"]
+        A2["Dungeon&Dragons<br/>parent = D&D"]
+        A3["DANDD<br/>parent = D&D"]
+        A4["DnD<br/>parent = DANDD"]
+        A5["D and D<br/>parent = DnD"]
+        A1 --> A2
+        A1 --> A3
+        A3 --> A4
+        A4 --> A5
+    end
+
+    subgraph BORRAR["Borrar 'D&D' hoy"]
+        direction TB
+        B1["1. promover al primer hijo"]
+        B2["2. reasignar los hermanos<br/>al nuevo padre"]
+        B3["3. el promovido ya tenia hijos:<br/>reordenar ese subarbol"]
+        B4["4. toda busqueda necesita<br/>CTE recursivo para subir a la raiz"]
+        B1 --> B2 --> B3 --> B4
+    end
+
+    subgraph PROP["PROPUESTA: canonical_id, siempre profundidad 1"]
+        direction TB
+        C1["D&D<br/>canonical = NULL (es el canonico)"]
+        C2["Dungeon&Dragons"]
+        C3["DANDD"]
+        C4["DnD"]
+        C5["D and D"]
+        C2 --> C1
+        C3 --> C1
+        C4 --> C1
+        C5 --> C1
+    end
+
+    subgraph BORRAR2["Borrar 'D&D' con la propuesta"]
+        direction TB
+        D1["1. UPDATE: el primer alias<br/>pasa a canonical = NULL"]
+        D2["2. UPDATE: los demas apuntan a el"]
+        D3["Busqueda sin recursion:<br/>COALESCE(canonical_id, id)"]
+        D1 --> D2 --> D3
+    end
+
+    HOY -.-> BORRAR
+    PROP -.-> BORRAR2
+
+    classDef canon fill:#dbeafe,stroke:#1e40af,stroke-width:2px,color:#0f172a
+    classDef alias fill:#ede9fe,stroke:#6d28d9,color:#0f172a
+    classDef dolor fill:#fee2e2,stroke:#b91c1c,color:#0f172a
+    classDef facil fill:#dcfce7,stroke:#15803d,color:#0f172a
+
+    class A1,C1 canon
+    class A2,A3,A4,A5,C2,C3,C4,C5 alias
+    class B1,B2,B3,B4 dolor
+    class D1,D2,D3 facil

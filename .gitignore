@@ -1,1 +1,32 @@
+# Uploads del backend viejo — nunca fueron parte del repo
 /uploads
+
+# Configuración personal de Claude Code. Las skills de .claude/skills/ SÍ se versionan:
+# codifican las convenciones de docs/arquitectura.md y valen para quien clone el repo.
+.claude/settings.local.json
+
+# .mcp.json se versiona a propósito y va en la raíz: es donde Claude Code lo busca.
+# Movido a .claude/ deja de encontrarse — probado. No lleva secretos, solo ${VAR}.
+
+# Artefactos regenerables. La fuente se versiona, la salida no — misma regla en los dos:
+#   design/out/     ← python3 design/build.py
+#   docs/diagramas/ ← mermaid-cli (ver su README)
+design/out/
+docs/diagramas/*.png
+docs/diagramas/*.svg
+
+# Dependencias y builds
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Entorno
+.env
+.env.local
+.env.*.local
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.idea/
+*.swp

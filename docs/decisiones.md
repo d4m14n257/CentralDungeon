@@ -1,0 +1,998 @@
+# Decisiones
+
+> Registro de qué se decidió y **por qué**. Es el documento al que se vuelve cuando alguien (incluido el autor dentro de seis meses) se pregunte por qué algo está hecho así.
+>
+> El *qué* concreto vive en `arquitectura.md` (código) y `modelo-datos.md` (schema). Acá está el razonamiento.
+
+## Contexto
+
+CentralDungeon estuvo detenido ~2 años (último commit del código viejo: 2024-08-15). Al retomarse se decidió reescribirlo: **backend Express/TypeScript → Java/Spring Boot**, **frontend Next.js/MUI → React puro (Vite + shadcn/ui + Tailwind)**.
+
+Existió un intento previo de migración a Java en un repo aparte, `CentralDungeonBackend`. No se usa como base: no compilaba, tenía un bean sin registrar y sus repositorios usaban `JdbcTemplate` de forma incorrecta (no podían mapear POJOs multi-columna, pasaban identificadores SQL como bind params). Con 2 commits y ~3 endpoints reales, repararlo costaba lo mismo que reescribir. Se deprecará cuando esta migración esté completa.
+
+## Decisiones cerradas
+
+| # | Decisión | Resolución | Por qué |
+|---|---|---|---|
+| 1 | Un repo o dos | **Un solo repo: `CentralDungeon`** | El backend Java y el frontend React nuevos viven acá, reemplazando el código viejo. Un solo `CLAUDE.md`, un solo set de MCP y skills. |
+| 2 | Acceso a datos en Java | **Spring Data JPA**, no `JdbcTemplate` | El `JdbcTemplate` a mano fue la causa directa de la mayoría de los bugs del intento previo. Con entidades reales y `JpaRepository` esos errores no existen, y las entidades nuevas no necesitan un `RowMapper` escrito a mano cada una. |
+| 3 | Lógica que vivía en triggers de MySQL | **Se mueve al service layer** | Los tres triggers heredados (`create_new_user`, `create_player_in_table`, `players_in_table`) eran invisibles desde Java, no los cubría ningún test y no se versionaban junto al dominio. Detalle del reemplazo en `modelo-datos.md` §5. |
+| 4 | Personajes de jugador | **Siguen siendo archivo adjunto genérico** | Decisión explícita para no ampliar el alcance de v1. Estructurarlos (nombre, clase, nivel, stats) queda anotado como candidato futuro. |
+| 5 | UI library del frontend | **shadcn/ui + Tailwind**, se abandona MUI | La mayoría de los componentes se reconstruyen igual (varios quedaron a medias en el Next.js viejo), así que no hay costo de migración. Más liviano que la combinación duplicada MUI+Emotion+styled-components que arrastraba el proyecto, y hay un MCP que da acceso al código fuente real de cada componente. |
+| 6 | MCP servers | **mysql, context7, playwright, shadcn-ui.** ~~figma~~ — **removido en #130**. GitHub MCP no se agrega | No fue solicitado. Detalle en `mcp-y-skills.md`. |
+| 7 | Campañas y Temporadas | **Fuera de la v1, a propósito.** El **diseño** quedó cerrado en #129; lo que espera a fase 2 es la migración | El schema original nunca las tuvo y construirlas bloquearía el arranque del backend. v1 consolida el schema heredado y se pone en pie. ~~El impacto previsible es una FK nueva en `game_tables`~~ — **corregido en #129**: para campañas no es una FK sino una entidad intermedia, porque el reclutamiento es único. Sigue siendo aditivo y no destructivo. |
+| 8 | `Tables.table_type` (`Public` / `First class`) | **Deja de ser enum, pasa a ser la tabla catálogo `table_types`** | Era la forma en que los admins separaban mesas por tema, y dos valores fijos se quedan cortos. Como catálogo se agregan tipos desde la aplicación sin `ALTER TABLE`. Es FK simple, no tabla puente: una mesa tiene un tipo (a diferencia de tags/sistemas/plataformas, que sí son multivaluados). |
+| 9 | Generación de IDs | **UUID v7 generado en la aplicación**, tipo `String` | El schema viejo dependía del stored procedure `generate_base64_id`, que no estaba versionado en ningún repo: la app no arrancaba sin un objeto de BD que no existía en el `database.sql`. Se conserva `VARCHAR(64)` para no romper los IDs existentes. Coherente con la decisión #3: nada de lógica en la base de datos. |
+| 10 | Tipo `ENUM` de MySQL | **Se reemplaza por `VARCHAR(32)` + enum de Java** | Agregar un valor a un `ENUM` de MySQL es un `ALTER TABLE` con bloqueo; agregarlo a un enum de Java es una línea. La validación ya vive en el service. |
+| 11 | Contador de jugadores por mesa | **Se deriva con `COUNT`**, se elimina la tabla `Players_Table` | Era una denormalización mantenida por trigger. Derivarla elimina de raíz la clase de inconsistencia que el trigger existía para prevenir. |
+| 12 | Migraciones de schema | **Flyway**, con `ddl-auto: validate` | El proyecto viejo tenía dos `database.sql` en dos repos, ambos desactualizados y uno con errores de sintaxis que impedían ejecutarlo. Con Flyway el schema tiene una única historia versionada y el arranque falla si la entidad no coincide con la tabla. |
+| 13 | Organización del código | **Paquete/carpeta por feature, capas adentro**, en backend y frontend | Un `controller/` con nueve controllers de dominios distintos obliga a saltar entre carpetas para tocar una sola funcionalidad. Por feature, agregar o quitar una funcionalidad es agregar o quitar una carpeta. Ver `arquitectura.md` §2.1 y §3.1. |
+| 14 | Notificaciones | **Solo in-app en v1** | La fila en `notifications` *es* la notificación. Email y Discord DM quedan fuera; si se agregan, es una tabla de canal aparte sin tocar la existente. Tampoco hay preferencias ni suscripciones: todo destinatario de un evento recibe su fila. |
+| 15 | Almacenamiento de archivos | **Disco local, detrás de `StorageService`** | Se conserva el comportamiento actual, pero aislado tras una interfaz para poder pasar a S3 después sin tocar el resto del backend. |
+| 16 | Roles y permisos | **Dos capas: rol global + rol por mesa** | Replica la distinción que el schema ya tenía (`users_roles` → Player/Master/Admin; `masters.master_type` → Owner/Master). El rol global se resuelve con `@PreAuthorize`; el rol por mesa en el service, porque depende del recurso concreto. No se diseña un sistema de permisos más granular por ahora. |
+| 17 | Karma y comentarios | **Se retoma el diseño que ya estaba en el schema** | `comments.comment_type`, `comments.karma_impact` y `users.karma` son el diseño de datos más elaborado que existe para una feature que nunca se construyó. No hay una alternativa evidentemente mejor, y rediseñarlo desde cero sería trabajo sin beneficio claro. |
+| 18 | Código viejo | **Movido a `legacy/`, se elimina al alcanzar paridad** | `legacy/backend-node/` y `legacy/frontend-next/` quedan como referencia consultable de cómo se comportaba el sistema real. Solo lectura. |
+| 19 | Versiones del stack | **Se fijan explícitamente en `arquitectura.md` §1**: Java 25 LTS + Spring Boot 4.1.1; React 19.2 + Vite 8 + TypeScript 5.9 + Tailwind 4 + React Router 8 | El proyecto estuvo detenido dos años; arrancar sobre lo que estaba vigente en 2024 sería empezar con deuda. Spring Boot 3.5 llegó a EOL open source el 30/06/2026 y Java 21 pierde licencia permisiva de Oracle en septiembre de 2026, así que 3.x/21 no eran opción para código nuevo. Como no hay código escrito todavía, el costo de arrancar en la versión actual es cero, mientras que migrar después Jackson 2→3, JUnit 4/5→6 y Testcontainers 1→2 sí tiene costo. |
+| 20 | TypeScript en el frontend nuevo | **Se adopta** (corregido: ver nota), con `strict` y un tipo base por entidad del que se derivan las variantes con utility types (`Pick`, `Omit`, `Partial`…) | **Corrección de agosto 2026**: la justificación original decía que el cambio Next.js→React era "de framework, no de lenguaje". Es falso — `legacy/frontend-next/` es **JavaScript**, con `jsconfig.json` y archivos `.js`/`.jsx`. En el frontend TypeScript no se conserva, **se introduce**; lo que se conservaba era el TypeScript del backend Node. La decisión no cambia, sí su motivo: el valor de TS está en que un cambio de contrato del backend se detecte compilando. Declarar a mano un tipo por cada variante (crear, actualizar, listar, detalle) es tener N copias del mismo modelo que se desincronizan en silencio — el compilador no avisa porque las copias siguen siendo válidas por separado. Derivando, el tipo base es el único punto de verdad. Detalle en `arquitectura.md` §3.2. |
+| 21 | Compartir código entre features (backend) | **Interfaz solo con más de una implementación real; clase abstracta genérica solo cuando la forma se repite idéntica en 3+ features y ya se vio repetida** | Los dos extremos duelen: duplicar CRUD idéntico entre `systems`/`tags`/`platforms` multiplica el mismo bug, y abstraer services que solo se parecían acopla dominios que divergen en el primer requerimiento. El criterio operativo es abstraer lo que es igual *por definición*, no lo que hoy es parecido por casualidad. La excepción absoluta es la seguridad: `@PreAuthorize` nunca se hereda, para que el permiso sea visible en el archivo que declara el endpoint. Detalle en `arquitectura.md` §2.4. |
+| 22 | Zona horaria | **Se elimina la columna `timezone` de `users` y de `game_tables`. Todo se persiste en UTC (offset 0); la conversión a hora local la hace el frontend con la zona del navegador** | La columna existía porque en su momento no se manejaban bien los timestamps y se resolvió pidiéndole al usuario que declarara su zona — la comunidad está repartida por toda Latinoamérica y algo de Europa. Guardar en UTC y convertir en el cliente elimina el problema de raíz, no obliga al usuario a configurar nada y sigue siendo correcto si viaja o se muda. Ya era la convención del contrato de la API (`arquitectura.md` §2.5: ISO-8601 UTC, conversión en el frontend); ahora también lo es del modelo. Aplica a **todo** timestamp: creación, borrado, agenda y horarios de sesión. |
+| 23 | Postulaciones repetidas a la misma mesa | **Un usuario puede enviar N solicitudes a la misma mesa. Se quita el `UNIQUE (game_table_id, user_id)`** que la propuesta v1 había agregado | Es el flujo real: el jugador se postula (`Candidate`), el master rechaza con justificación (`Rejected` + fila en `registration_rejections`) y el jugador puede volver a intentarlo más adelante. El `UNIQUE` impedía el reintento y además destruía el historial de rechazos, que es justamente lo que `registration_rejections` existe para guardar. Resuelve **M1** en la dirección "historial de intentos", no "fila única mutable". |
+| 24 | Cupo máximo de jugadores | **Se agrega `max_players` a `game_tables`** | Estaba abierto por falta de confirmación; confirmado que faltaba. El schema heredado nunca lo tuvo: `Players_Table.players` era el conteo actual mantenido por trigger, no el límite. El conteo se deriva con `COUNT` (#11) y se compara contra `max_players` en el service al aceptar una solicitud. |
+| 25 | Borrado lógico | **Columna `deleted_at DATETIME NULL` explícita además del `status = 'Deleted'`, y cascada de borrado lógico resuelta en el service** | El `status` dice *que* está borrado pero no *cuándo*, y sin fecha no se puede purgar, auditar ni deshacer. La cascada se vuelve explícita: borrar una mesa marca como borradas sus solicitudes, su agenda, sus adjuntos y sus vínculos de catálogo, todas con la **misma** marca de tiempo y en una sola transacción. Sigue sin haber `ON DELETE CASCADE`: es lógica de negocio y vive en el service (regla dura 7). |
+| 26 | Duración de la mesa | **Se agrega a `game_tables` el número de sesiones previstas** | Faltaba. Con `start_date` + agenda semanal (`table_schedules`) + `duration` se sabe cuándo empieza y cuánto dura cada sesión, pero no cuántas hay ni cuándo termina la mesa. Es además lo que hace calculable el "quedan N sesiones pendientes" que exige el estado `Pause`. Cubre parcialmente **M4**. |
+| 27 | Ciclo de vida de la mesa | **Se formaliza la máquina de estados, se agrega un estado entre `Preparation` y `Opened`, y toda transición sensible lleva justificación** | El schema heredado tenía los siete estados pero ninguna regla escrita sobre quién puede pasar de cuál a cuál ni dónde se guarda el motivo. Detalle y pendientes en la sección *Ciclo de vida de la mesa*. |
+| 28 | Solicitud vigente y orden de atención | **Como máximo una solicitud activa (`Candidate` o `Player`) por par mesa/usuario; la vigente es siempre la última. La lista de candidatos se atiende en orden de llegada (FIFO) por fecha de solicitud** | Cierra **M7**. Con el `UNIQUE` fuera (#23) hacía falta una regla para saber cuál de N filas manda: se resuelve acotando a una sola fila activa, así "la última" y "la activa" son la misma y no hace falta desempatar por fecha. El reintento solo se habilita cuando la anterior quedó en `Rejected`. El orden FIFO es una regla de equidad explícita del negocio: todos tienen la misma oportunidad de entrar, y el orden no se reordena por karma, antigüedad ni criterio del master. |
+| 29 | Alcance del veto (`Blocked`) | **Acotado a una sola mesa.** No existe veto a nivel master ni a nivel plataforma por decisión de un master | Cierra **M8**. Un jugador vetado no ve esa mesa ni sabe que existe, pero **si el mismo master abre una mesa nueva, puede postularse a ella**. CentralDungeon no discrimina: lo que regula la actitud de una persona es el karma (#30), no una lista negra que siga al usuario por toda la plataforma. Como el veto siempre reacciona a una solicitud existente, `Blocked` se queda como estado de `table_registrations` y **no necesita tabla propia**. No confundir con `users.status = 'Blocked'`, que es el bloqueo global de la plataforma y lo aplica un admin. |
+| 30 | Karma | **Escala 0–10000, valor por defecto 8000.** Sube y baja según los comentarios recibidos | Cierra la parte de rango de **M2**. Es el mecanismo con el que la comunidad regula actitudes, en vez de vetos que persigan al usuario (#29). Los valores concretos que suma o resta cada tipo de comentario siguen sin definirse. |
+| 31 | Comentarios | **Atados a la sesión en que ocurrieron, tipificados como positivo / negativo / neutro, y uno solo por autor sobre la misma persona** | Cierra la parte de contexto de **M2**. Un comentario es una opinión sobre alguien con quien se jugó ("me gustó jugar con él porque…", "me desagradó la sesión por él"), así que solo tiene sentido dentro de una sesión concreta — eso da además la verificación natural de que ambos estuvieron ahí. Las tres direcciones del enum heredado (`JJ` jugador→jugador, `JM` jugador→master, `MJ` master→jugador) se conservan. **El límite de uno por autor es antispam**: sin él, se puede hundir o inflar el karma de alguien repitiendo comentarios. |
+| 32 | Justificaciones de moderación | **Van en su propia tabla, separadas de `comments`. La pausa pedida por un master no es efectiva hasta que un admin la aprueba** | Cierra **M9**. `comments` es opinión entre personas y alimenta el karma (#30, #31); las justificaciones de moderación son otra cosa: mesa rechazada por un admin y por qué, pedido de correcciones, motivo de pausa, motivo de cancelación. Mezclarlas contaminaría el karma con actos administrativos. Como la pausa requiere aprobación, la máquina de estados gana `PauseRequested`: la mesa sigue corriendo hasta que el admin resuelve. La pausa iniciada por un admin es inmediata, pero también se justifica, para que el resto de los admins vea el motivo. |
+| 33 | Sesiones | **Se materializan como filas (`table_sessions`), no se derivan por cálculo** | Cierra **M10**. Derivar el calendario a partir de `start_date` + agenda semanal + número de sesiones solo funcionaría si nada pudiera alterarlo. Con `Pause` sí puede: al retomar hay que reagendar lo que quedó pendiente, y eso exige saber qué se jugó realmente y qué no. Materializar habilita además corregir una fecha puntual, cancelar una sesión suelta y anclar los comentarios a la sesión (#31). |
+| 34 | Qué pasa al llenarse el cupo | **Al aceptar al jugador que completa `max_players`, todas las solicitudes `Candidate` restantes se rechazan automáticamente**, con justificación por defecto (`Mesa llena`) y su notificación al jugador | Resuelve el hueco que dejaba #28: como un `Candidate` no reserva cupo, sin esta regla quedarían solicitudes colgadas para siempre esperando una respuesta que nunca llega. Rechazarlas en la misma transacción en que se llena la mesa es explícito y deja al jugador enterado en el momento, en vez de que lo descubra solo. La justificación por defecto evita que el master tenga que escribir N veces el mismo motivo, y evita malentendidos: el rechazo es por cupo, no por la persona. |
+| 35 | Frecuencia de los comentarios | **Uno por autor sobre la misma persona por mesa** — no por sesión | Cierra **M11**. "Uno por sesión" permitiría acumular diez comentarios sobre alguien en una campaña larga, que es exactamente el efecto que la regla antispam existe para evitar. Por mesa se puede opinar de la misma persona en mesas distintas, que es legítimo, pero no repetir dentro de la misma. |
+| 36 | Asistencia | **`table_sessions` registra la asistencia de los jugadores** | Habilita dos cosas: validar que quien comenta sobre alguien efectivamente jugó con esa persona (#31), y usar la asistencia como una métrica más del karma — faltar sin aviso dice algo de la actitud de un jugador, y hoy no queda registrado en ningún lado. |
+| 37 | Modelo de roles | **Los roles son funciones acumulables, no niveles. No hay jerarquía ni herencia de permisos** | Un usuario puede ser `Master` y `Player` a la vez (crea y administra sus mesas, y juega en las de otros), y puede ser `Master` sin ser `Player`. **Ampliado por #67: los roles son cuatro, no tres — falta `Owner`.** `Admin` **no** hereda los permisos de `Master`, ni `Master` los de `Player`: cada rol habilita su propio conjunto de funciones. En consecuencia **no se configura un `RoleHierarchy` en Spring Security** y cada endpoint enumera explícitamente los roles que lo alcanzan (`hasAnyRole('MASTER','ADMIN')`), nunca el "mínimo" de una escala que no existe. |
+| 38 | Login | **Requiere cuenta de Discord y membresía al servidor de CentralDungeon.** Si el usuario no es miembro, primero se le ofrece unirse; si no acepta, no hay login | Es la puerta de entrada de la comunidad: la aplicación no tiene registro propio y no debería tener usuarios que no estén en el servidor. El flujo importa: no se rechaza con un error seco, se ofrece la invitación y recién si el usuario la declina se corta. Todo usuario nuevo se crea con rol `Player` (reemplaza al trigger `create_new_user`, ver `modelo-datos.md` §5). |
+| 39 | Quién puede vetar, y si se deshace | **El `Owner` es el único que veta oficialmente. Un co-master puede pedir el veto, pero necesita la aprobación del `Owner` y una justificación. El veto es reversible, y tanto el veto como su levantamiento quedan registrados** | Cierra **M12**. Le da contenido real a la distinción `Owner`/`Master`, que si no quedaba decorativa, y sostiene la jerarquía dentro de la mesa: el dueño de la mesa responde por quién está y quién no. La reversibilidad es realismo: en una partida de D&D la gente se altera y un veto en caliente es un escenario esperable, así que tiene que poder deshacerse — pero queda en el historial, para que un patrón de vetos impulsivos sea visible. |
+| 40 | Cuándo se comenta | **Un solo comentario por mesa (#35), sin segundo comentario al cierre. En su lugar, el frontend advierte antes de enviar** que es el único que podrá dejar sobre esa persona en esa mesa y que el mejor momento para evaluar es al final | Se evaluó habilitar un segundo comentario al terminar la mesa y se descartó: duplicaba el peso que una sola persona puede mover en el karma de otra. El problema real que resolvía —que a mitad de camino la opinión todavía no está formada— se resuelve mejor avisando, no dando otro comentario. Es una confirmación explícita en el frontend, no una restricción de fecha: si alguien quiere comentar antes del final, puede, pero sabiendo que gasta su única oportunidad. |
+| 41 | Visibilidad de perfiles y karma | **Asimétrica: el perfil de un master (karma + comentarios) es visible para cualquier usuario que mire su mesa; el perfil de un jugador solo se abre para el master a partir del momento en que recibe su solicitud** | El karma existe para evaluar comportamiento, y evaluar requiere ver. Pero exponer el perfil de todos a todos convierte la plataforma en un ranking público de personas. La asimetría refleja quién necesita decidir qué: el jugador decide **si vale la pena entrar** a una mesa y para eso mira al master antes de postularse; el master decide **a quién acepta** y para eso mira al candidato, pero solo cuando ese candidato se le presentó por su cuenta. Enviar la solicitud es lo que habilita la evaluación. Es una regla de privacidad, no solo de UI: el backend la aplica y el frontend la refleja. |
+| 42 | Pedidos con aprobación | **Es un patrón deliberado y se modela una sola vez**: master pide pausa → admin aprueba; co-master pide veto → `Owner` aprueba; usuario pide rol o ser master → admin aprueba | Cierra **M13**. No es burocracia accidental: es el control que evita que los masters abran mesas sin freno o que decisiones fuertes se tomen solas. Como la forma se repite tres veces y va a repetirse más, se abstrae (`arquitectura.md` §2.4): un solo mecanismo de solicitud/aprobación con justificación obligatoria, una sola bandeja para quien aprueba. |
+| 43 | Anonimato de los comentarios | **El autor de un comentario es anónimo siempre y sin excepción — tampoco lo ven los admins ni quien desarrolla el sistema. Lo único que puede saberse es la dirección del comentario (`JJ` / `JM` / `MJ`)** | Requisito duro del cliente, no negociable y no sujeto a "salvo para moderación". Es lo que hace que la gente comente con honestidad: si el autor puede ser identificado, un jugador no deja una reseña negativa sobre un master del que depende para entrar a futuras mesas, y el karma deja de medir comportamiento y pasa a medir prudencia política. **Consecuencia inmediata: `comments.user_created_id` como FK a `users` — tal como está en el schema heredado y en la propuesta v1 — incumple el requisito y no puede quedarse.** Detalle del rediseño en **M15**. |
+| 44 | Caducidad de la visibilidad de perfiles | **Dos semanas contadas desde que la mesa entra en `Finished` o en `Canceled`.** Mientras la mesa esté en `Pause` el reloj no corre: la visibilidad sigue abierta indefinidamente. Pasado el plazo se deja de ver el perfil de masters y jugadores con los que se coincidió, aunque el registro de con quién se jugó se conserva | Cierra **M14.1**. Acota la ventana en que el karma sirve para decidir (postularse, aceptar a un candidato) sin convertir la plataforma en un directorio permanente de personas. El ancla es el cierre de la mesa porque es cuando la relación entre esas personas termina de verdad; una mesa pausada no terminó, solo está detenida, y sus integrantes siguen siendo compañeros de mesa. El historial se guarda —hace falta para el karma y la moderación— pero deja de ser visible. |
+| 45 | Alcance del admin | **El admin no tiene restricciones de visibilidad, con una única excepción: la autoría de los comentarios, que tampoco puede ver** | Cierra **M14.4**. Necesita ver todo para moderar, y la caducidad de #44 no le aplica. La excepción del anonimato es absoluta (#43) y está por encima de este permiso: un admin puede moderar el **contenido** de un comentario sin saber quién lo escribió. |
+| 46 | Comentarios en mesas canceladas | **Una mesa que termina en `Canceled` no genera comentarios ni movimiento de karma.** Solo las que llegan a `Finished` habilitan comentar | Una cancelación suele ser por causa de fuerza mayor —el master se enfermó, se cayó el grupo, algo pasó fuera del juego— y no dice nada del comportamiento de nadie. Permitir comentarios ahí convertiría la mala suerte en karma negativo para gente que no hizo nada malo. La visibilidad de perfiles sí corre sus dos semanas (#44): que no se comente no significa que la mesa no haya existido. |
+| 47 | Visibilidad entre jugadores | **Un jugador puede ver el perfil de los demás jugadores de su mesa**, con las mismas reglas de caducidad (#44) | Cierra **M14.2**. Van a jugar juntos y van a comentarse entre ellos (`JJ`), así que necesitan poder evaluarse igual que evalúan al master. Sin esto, el tipo de comentario `JJ` existiría sin que el autor pueda ver a quién está evaluando. |
+| 48 | Cuándo se confirma un comentario | **El comentario se escribe en cualquier momento de la mesa pero queda en borrador. Al llegar la mesa a `Finished`, el autor lo revisa —lo deja como está o lo corrige— y recién ahí queda confirmado y cuenta para el karma. Si la mesa se cancela, el borrador nunca se valida: no entra al karma ni se evalúa** | Cierra **M16** sin sacrificar nada. Resuelve las tres tensiones a la vez: se puede dejar la impresión en caliente sin perderla, se respeta que el mejor momento para evaluar es al final (#40) porque la versión que cuenta es la revisada al cierre, y una mesa cancelada no juzga a nadie (#46) sin necesidad de anular nada ni de revertir karma — el borrador simplemente nunca llegó a ser un comentario. También elimina la asimetría entre quien comentó temprano y quien esperó. |
+| 49 | Dónde vive el autor de un borrador | **En `comment_drafts` y solo ahí.** Tabla privada, visible únicamente para su autor. Al confirmar se crea la fila anónima en `comments` y el borrador desaparece | Cierra **M17.1**. Es lo que hace compatible el borrador de #48 con el anonimato de #43: la autoría existe mientras el comentario todavía no cuenta para nada, y deja de existir exactamente cuando empieza a contar. Ninguna otra tabla —ni `comments`, ni `audit_logs`, ni `notifications`— guarda jamás quién escribió qué. |
+| 50 | Borrador nunca confirmado | **Expira.** Se marca con `deleted_at` y no avanza. Antes de expirar se notifica al autor: al terminar la mesa y otra vez antes de que cierre la ventana | Cierra **M17.2**. Confirmar es un acto deliberado y no se suple con silencio: publicar solo lo que nadie releyó era justo lo que #48 quería evitar. Las notificaciones reducen la pérdida a quien realmente no quiso confirmar. **Ver M18**: un borrador expirado que conserva autor y contenido es un registro de quién iba a decir qué sobre quién, así que el `deleted_at` necesita ir acompañado de purga del contenido. |
+| 51 | Moderación de comentarios | **Todos los comentarios confirmados pasan por un admin**, que lee el contenido y el destinatario —nunca el autor— y decide si pasa o no. **El karma se mueve solo con los aprobados**; un `Rejected` no llega a la persona ni la afecta | Cierra **M17.3**. Se evaluó moderar solo los reportados y se optó por moderar todo: el karma es una métrica de comportamiento con efecto real sobre quién entra a una mesa, y un comentario injusto o innecesario que ya movió puntos es difícil de deshacer. Los estados del schema heredado (`Under review` / `Reviewed` / `Rejected` / `Deleted`) sirven tal cual. **Implicación operativa**: el karma se mueve al ritmo en que los admins moderan, así que la bandeja de moderación es parte del producto, no un extra. |
+| 52 | Borrado de borradores | **`deleted_at` acompañado de purga: se vacían `author_id` y el texto.** Aplica tanto al borrador que expira sin confirmarse como al de una mesa cancelada | Cierra **M18**. Es la única excepción a la convención de borrado lógico (#25), y está justificada: una fila marcada como borrada sigue siendo una fila legible, y un borrador expirado completo es exactamente el registro de "quién iba a decir qué sobre quién" que #43 prohíbe. Vaciarlo conserva el dato agregado que sí sirve —cuánta gente escribe y no confirma— sin guardar nada identificable. Nota: la fila sobrevive en backups y binlog el tiempo que estén configurados para retener; lo que se garantiza es que la base viva no lo tenga. |
+| 53 | Qué es cada catálogo, y qué significa `parent_id` | **`systems`** = qué sistema de juego usa la mesa (D&D, 20roll…). **`tags`** = etiquetas para filtrar en la pantalla de inicio (campaña corta, pública…). **`platforms`** = dónde se juega (Roll20…). **`parent_id` no es una taxonomía: es un grupo de sinónimos.** El padre es el término canónico y los hijos son formas alternativas de escribir lo mismo | `modelo-datos.md` §7 lo describía como "jerarquía de catálogos" con "navegación de árbol", y eso llevaba a implementar lo que no es. El propósito real es que "D&D", "Dungeon&Dragons" y "DANDD" sean **el mismo** tag: quien busca escribe el que conoce y encuentra las mesas etiquetadas con cualquiera de los otros. El CTE recursivo que quedó comentado en `legacy/backend-node/src/app.ts` confirma la intención — sube desde un tag hasta su raíz (`WHERE tag_id IS NULL`) para resolver el canónico. Nunca se conectó a un endpoint. |
+| 54 | Semántica de la equivalencia | **Es equivalencia pura y simétrica: buscar cualquier miembro del grupo trae todas las mesas etiquetadas con cualquier otro miembro.** No hay especialización — no existe el caso "el padre trae todo y el hijo solo lo suyo" | Cierra la pregunta que bloqueaba **M19**. Un hijo tiene que traer a sus equivalentes igual que el padre; el padre existe para poder resolver el grupo, no para representar un concepto más amplio. Esto descarta la opción (c) de M19: **no hace falta un árbol**, porque en una relación simétrica la profundidad no significa nada. |
+| 55 | Alta y clasificación de catálogos | **Masters y admins pueden proponer un valor nuevo; solo un admin lo acepta y lo clasifica** — decide si es canónico nuevo o alias de un grupo existente | Cierra **M20.1** en su parte principal. Es otra instancia del patrón #42. La clasificación tiene que ser del admin: si cada master pudiera decidir a qué grupo pertenece su tag, los grupos se fragmentan y el propósito de la equivalencia se pierde. Explica también por qué la baja se siente difícil — es el admin el que administra las uniones, así que las operaciones de fusionar y separar grupos son parte del producto, no un caso borde. |
+| 56 | Qué se guarda al etiquetar | **Se guarda el alias tal como lo eligió el master.** La búsqueda resuelve el grupo: buscar por un término encuentra las mesas etiquetadas con ese término, con su canónico y con sus equivalentes | Cierra **M20.2** y **M20.3**. Conserva la forma en que el master escribió el tag, que es información real. Y como la búsqueda resuelve por grupo y no por el valor literal, **fusionar sinónimos después no obliga a reescribir `table_tags`**: la mesa etiquetada con "DANDD" se vuelve encontrable por "D&D" en el momento en que un admin une los dos, sin migrar una sola fila. |
+| 57 | Tag propuesto y todavía sin aprobar | **La mesa se publica igual y conserva el tag, pero el tag no es visible para los jugadores ni se puede filtrar por él mientras esté en `Created`.** Al aceptarse pasa a mostrarse y a filtrar; si se rechaza, ni aparece ni filtra nunca | Cierra **M20.1**. Desacopla el ritmo del master del ritmo del admin: proponer un tag nuevo no bloquea publicar la mesa, y un tag sin revisar tampoco ensucia la búsqueda de los jugadores con valores que quizá no sobrevivan. El costo es que el master ve su mesa con un tag que los demás no ven, así que la interfaz tiene que dejar claro que está pendiente de aprobación. |
+| 58 | Qué nombre se muestra | **La mesa siempre muestra el alias que le puso su master**, aunque no sea el canónico del grupo. La equivalencia opera en la búsqueda, no en la presentación | Cierra **M20.3**. Es coherente con #56: si se guarda el alias elegido es porque esa elección dice algo, y reescribirla al canónico en pantalla la borraría. El jugador encuentra la mesa buscando cualquier término del grupo, pero ve el tag tal como lo escribió quien la creó. |
+| 59 | Modelo de los sinónimos de catálogo | **`canonical_id` plano: cada alias apunta directo al canónico, nunca a otro alias. Profundidad 1 siempre.** Se abandona el `parent_id` como árbol de profundidad libre | Cierra **M19**. Bajo equivalencia pura y simétrica (#54) el camino del árbol nunca se usa: el CTE heredado sube nodo por nodo y descarta todo salvo la raíz, así que la profundidad se calcula y se tira en cada búsqueda. Con `canonical_id` ese resultado ya está guardado. Las cinco operaciones del admin pasan a ser uno o dos `UPDATE`, la búsqueda deja de necesitar recursión, y **"dar de baja el canónico" y "cambiar el canónico" se vuelven la misma operación** — que es lo que hacía difícil la baja. El nuevo canónico lo elige el admin (#55), no un "primer hijo" arbitrario. Los ciclos (`A → B → A`), hoy posibles y capaces de colgar el CTE, se vuelven imposibles con un `CHECK` de un nivel. Migrar es aplanar: cada descendiente pasa a apuntar a su raíz. Si algún día hace falta taxonomía real (`D&D 5e` dentro de `D&D`), es una relación distinta y va en **otra** columna. |
+| 60 | Los cuatro usos de los archivos | **`files` es el gestor de archivos de todo el sistema, con cuatro usos: (1) requisitos de la mesa, que sube el master al abrirla; (2) respuesta del jugador al postularse, incluida su hoja de personaje; (3) archivos públicos que publican los admins (hojas por defecto, reglas, comunicados); (4) biblioteca privada del usuario** | Queda registrado el alcance real, que el schema heredado no dejaba ver: `files` + `table_files` + `registration_files` solo cubrían (1) y (2) a medias. Los usos (3) y (4) existían en el **código** —`type_file` con valores `Public`, `Private` y `Single-use`— pero esa columna **nunca estuvo en `database.sql`**, igual que `files.size`. El DDL heredado estaba desactualizado y lo admitía en su primera línea (`TODO: Change file source with new generated by dbeaver`). |
+| 61 | ~~Cuota de la biblioteca privada~~ **DEROGADA por #75** | ~~Máximo 5 archivos de 2 MB cada uno por usuario~~. Se conserva solo el tope de tamaño **por archivo** | Guardar archivos sin límite convierte la plataforma en almacenamiento gratuito y el costo crece sin techo. El legacy no tenía **ningún** límite: `multer` se configuró sin `limits`, así que no había tope ni de tamaño ni de cantidad. La cuota es por biblioteca privada (uso 4); los archivos atados a una mesa o a una solicitud tienen su propio ciclo de vida y se acotan por otro lado. |
+| 62 | Texto enriquecido | **`LONGTEXT` en las tablas que ya existen: en la solicitud (`table_registrations`) va el texto con que el jugador se postula, y en la mesa van sus requisitos. El archivo pasa a ser opcional** — nunca es una fila de `files` | Corrige la versión anterior de esta decisión, que dejaba el destino sin nombrar. El texto enriquecido no es un archivo: no ocupa disco, no se descarga y no participa de la cuota (#61). Y no reemplaza al adjunto, lo vuelve **opcional**: según el master, una postulación puede pedir archivos, solo texto explicando por qué debería entrar, o ambas cosas. Por eso las dos vías conviven en la misma solicitud. Como el texto se renderiza en el navegador, **se sanitiza al guardar y al servir**: es la superficie de XSS más directa del sistema. |
+| 63 | Peticiones de la mesa | **Una mesa puede pedirle cosas a sus jugadores en cualquier momento —antes de entrar, al entrar y durante las sesiones— y cada petición se responde con texto enriquecido, con archivos, o con ambos** | Unifica lo que venían siendo tres cosas separadas: los requisitos que el master publica al abrir la mesa (#60 uso 1), lo que el jugador manda al postularse (#60 uso 2) y lo que el master pide después de aceptarlo (**M23**). Las tres tienen la misma forma —alguien pide algo, alguien responde con texto y/o archivos— así que se modelan una sola vez. La analogía es un salón de clases: entrás a la mesa y te piden cosas, a veces atadas a una sesión y a veces sueltas. Es **funcionalidad nueva**, no algo que el schema heredado insinuara. Diseño en la sección *Peticiones de la mesa*. |
+| 64 | Clasificación de los archivos públicos | **Los archivos públicos llevan un enum de audiencia** — a quién van dirigidos: masters, jugadores, publicaciones generales | Cierra **M24.1**. `getPublicFilesFromTable` los traía todos sin distinción, así que un archivo pensado para masters aparecía igual ante un jugador. Con la audiencia declarada, cada pantalla pide lo suyo y no hace falta filtrar a mano en cada consulta. Los valores exactos se cierran al implementar; los tres mencionados son el punto de partida. |
+| 65 | Reutilización de archivos | **El usuario accede a todo lo que subió en cualquier momento de su historia y puede volver a usarlo.** No hay una "biblioteca" separada del resto de sus archivos | Cierra **M25.1** y es la principal palanca de optimización de costo: la hoja de personaje que un jugador ya subió se adjunta de nuevo en vez de volver a almacenarse. Un archivo es de quien lo subió y puede vincularse a cuantos contextos haga falta: lo que cambia es el vínculo, no el archivo. **Acotado por #68**: la reutilización aplica a los `Private` —lo que el usuario eligió guardar—, mientras que los `Single-use` siguen siendo transitorios. |
+| 66 | Borrado físico de archivos | **Lo hace el owner de la plataforma desde un menú de administración**, y contempla borrar también del almacenamiento en la nube | Cierra **M26.1**. El borrado lógico de la aplicación (#25) nunca toca los bytes; liberar espacio real es una operación de mantenimiento, deliberada y con nombre y apellido, no un efecto secundario de que un usuario apriete "eliminar". **Cuidado con el nombre**: acá *owner* es el dueño de la plataforma (que además es quien la desarrolla), y no tiene nada que ver con `masters.master_type = 'Owner'`, que es el dueño de una mesa. Conviene que en el código no se llamen igual. |
+| 67 | Roles de la plataforma | **Son cuatro: `Player`, `Master`, `Admin` y `Owner`.** `Owner` es el rol máximo —el cliente, puede todo— y **no** tiene relación con `masters.master_type = 'Owner'`, que es un sub-rol dentro de una mesa | Amplía #37, que solo listaba tres. El cuarto faltaba en el schema heredado y en el seed (`modelo-datos.md` §6), así que había operaciones —como el borrado físico de archivos (#66)— sin ningún rol que las pudiera ejecutar. Sigue valiendo que los roles son **acumulables y sin jerarquía** (#37): `Owner` puede todo por definición, no porque herede de `Admin`. **En el código los dos "owner" no pueden llamarse igual**: conviene `PlatformRole.OWNER` para el global y `MasterType.OWNER` para el de la mesa, o directamente renombrar el segundo. |
+| 68 | Clasificación de archivos | **Se conservan los tres tipos: `Public` (los publica un admin, con su audiencia #64), `Private` (del usuario, reutilizable, cuenta contra la cuota) y `Single-use` (temporal, atado a un contexto y se purga cuando ese contexto termina)** | Corrige el alcance de #65, que había eliminado la distinción. Los tres tipos responden a ciclos de vida distintos y por eso conviene conservarlos: lo que el usuario **eligió guardar** vive mientras él quiera y ocupa su cuota; lo que subió para una mesa concreta es transitorio y se purga; lo que publica un admin no pertenece a nadie en particular. La reutilización de #65 sigue valiendo sobre los `Private`, y promover un `Single-use` a `Private` es la acción de "guardar esto para después" — que es exactamente lo que hacía `handlePrivateStatus` en el legacy. **Resuelve además M27**: la cuota aplica solo a los `Private`, así que guardar para reutilizar y limitar el costo dejan de estar en conflicto. |
+| 69 | Contenido de la postulación | **Texto enriquecido y archivos, ambos opcionales por separado; el master define qué exige su mesa.** La postulación **no** se modela como una petición más: conserva su tabla | Responde la pregunta 1 del diseño de #63. Un master puede pedir solo archivos, solo una explicación de por qué debería entrar, o las dos cosas — así que ninguna de las dos vías puede ser obligatoria en el modelo. Y mantener `table_registrations` como está evita mezclar el flujo de admisión (#28) con el de peticiones, que tienen reglas distintas. |
+| 70 | Incumplimiento de una petición | **No bloquea ni expulsa. Se le avisa al jugador de su incumplimiento y queda visible para el master; cualquier acción posterior —intervención del master o de un admin, expulsión, veto— es siempre manual** | Responde la pregunta 2 del diseño de #63. Evita agregar un estado nuevo a #28 y deja la decisión donde corresponde: una entrega faltante puede tener mil motivos, y automatizar una sanción sobre eso genera más problemas de los que resuelve. El sistema informa; las personas deciden. |
+| 71 | Nombre del rol de mesa | **`masters.master_type` pasa a `Primary` / `Secondary`.** Se abandona `Owner` para la mesa | Cierra **M29**. Elimina la colisión con el rol de plataforma `Owner` (#67). Se descartó `Creator` porque sería falso justo en el caso de #72: si un admin crea la mesa y le asigna un master, ese master no la creó. `Primary` describe la jerarquía real —uno manda, los otros acompañan— y vale igual haya creado la mesa o se la hayan asignado. |
+| 72 | Mesas creadas por un admin | **Un admin puede crear una mesa sin ser su master. Nace en estado `Unassigned` y, al asignarle sus masters, pasa directo a `Opened` sin pasar por revisión** | Cierra **M28**. Saltear la revisión es lo correcto: por #27 quien aprueba una mesa es un admin, así que pedirle que apruebe la que él mismo creó no agrega control. `Unassigned` hace visible que a la mesa le falta dueño, en vez de dejarla en un `Preparation` que no describe su situación. Al asignar, el admin decide quién es `Primary` y quiénes `Secondary` (#71). |
+| 73 | Primario único y postulación de un master | **Exactamente un `Primary` por mesa.** Un master puede postularse como jugador **solo si además tiene el rol `Player`** | Cierra **M5**. El primario único deja de ser teórico con #72: si el admin asignara dos primarios o ninguno, el circuito de aprobación de vetos (#39) queda sin quién lo cierre. Y la postulación aplica la regla de #37/#67 sin excepciones: los roles son permisos acumulables, no una escala — ser master **no** implica poder jugar; para eso hace falta tener también el rol `Player`. |
+| 74 | Extremos del karma | **Llegar a 0 o a 10000 no dispara ninguna acción automática.** El karma es una señal para los admins; llegar al piso pone a esa persona en su radar, y un baneo del servidor y de la página es siempre una decisión manual | Cierra la parte de extremos de **M11**. Automatizar una sanción sobre un número agregado castigaría casos que ningún algoritmo puede juzgar bien. Coherente con #70: el sistema informa, las personas deciden. |
+| 75 | Estrategia de costo de almacenamiento | **No hay cuota por usuario.** En su lugar: reutilizar lo ya subido mostrando el historial al momento de adjuntar, comprimir los archivos al guardarlos, y purgar periódicamente los que llevan ~3 meses sin usarse | **Deroga #61.** Una cuota de 20 MB por usuario son 20 GB con mil jugadores, que es exactamente el costo que se quería evitar: la cuota limita al usuario sin reducir el total. Las tres palancas de acá atacan el volumen real — la reutilización evita duplicados, la compresión reduce cada archivo, y la purga por desuso libera lo que ya no le sirve a nadie. Se conserva un tope de tamaño por archivo. **Requiere registrar el último uso de cada archivo**, que hoy no existe. |
+| 76 | Alcance del sistema frente a las entregas | **El sistema facilita los entregables, no juzga si se cumplieron.** Las entregas se acumulan, nunca se reemplazan entre sí, y no hay flujo de aprobación: revisarlas es responsabilidad del master. Además, el master puede **dirigir archivos a un jugador concreto** | Cierra las preguntas 3 y 4 del diseño de #63. Saber si un personaje entregado es "el definitivo" o si cumple lo pedido exige un criterio humano que el sistema no tiene y no debería fingir tener. Acumular en vez de reemplazar preserva el historial sin pedirle al sistema que decida cuál vale. El envío dirigido a una persona es el `audience = 'Single'` del diseño, y cubre el caso de asignarle a cada jugador su material. |
+| 77 | Notificación de peticiones | **Publicar una petición notifica a sus destinatarios** | Cierra la pregunta 5 del diseño de #63, vía `notifications` (#14). Una petición que nadie ve no se cumple. |
+| 78 | Referencia de la tabla de aprobaciones | **Polimórfica: `entity_type` + `entity_id`, sin FK real** | Cierra **M13**. Agregar un flujo nuevo es agregar un valor al enum, sin `ALTER TABLE`. A cambio, la integridad **no** la puede garantizar la base: el service tiene que validar que la entidad referenciada exista antes de crear la fila, y hace falta una verificación periódica de referencias huérfanas — es la clase de problema que el proyecto ya sufrió (`table_files` apuntando a archivos borrados). En JPA no se mapea como `@ManyToOne`: es un id suelto que el service resuelve según el tipo. |
+| 79 | Archivos públicos como requisito de una mesa | **Sí: un master puede usar un archivo público en su mesa sin copiarlo** | Cierra **M24**. Es la razón de ser de los públicos (#64): la hoja de personaje por defecto existe justamente para que cada master no tenga que subir la suya. Como se vincula y no se duplica (#65), quitarla de la mesa **no** borra el archivo global, y actualizar el archivo global actualiza lo que ven todas las mesas que lo usan. |
+| 80 | Nombre del archivo en disco | **Se nombra por el id del archivo, nunca por el nombre original. El nombre original vive en una columna aparte, como metadato para la descarga** | Cierra **M26.3**. El legacy concatenaba el nombre original sin sanitizar (`<timestamp>-<originalname>`), que es una vía directa de path traversal. Con el id como nombre físico, el nombre que sube el usuario deja de tocar el sistema de archivos y pasa a ser un dato más. |
+| 81 | Borrado de valores de catálogo | **Borrado lógico, sin restricciones: se puede dar de baja un valor aunque esté en uso. Las lecturas simplemente saltan los que están dados de baja, según su estado** | Cierra **M20** y reemplaza la propuesta de prohibir el borrado. Es mejor: no se rompe ningún vínculo, `table_tags` conserva su fila, y **restaurar el valor devuelve todo a como estaba** sin ninguna migración. Un valor dado de baja deja de mostrarse y de filtrar, exactamente igual que un tag rechazado (#57). Coherente con el borrado lógico general (#25). |
+| 82 | `created_at` en los comentarios | **Los comentarios llevan `created_at`. Para que eso no delate al autor, la cuota antispam se guarda como token opaco, no como la tupla en claro** | Cierra **M15**. Guardar `(autor, comentado, mesa)` en claro en una tabla de cuota —como se había planteado— **incumplía #43 por sí solo**, con o sin timestamps: esa tabla *es* el registro de quién comentó sobre quién. Con `HMAC(secreto, autor+comentado+mesa)` y un `UNIQUE` sobre el token, la restricción antispam se sigue verificando y la tabla deja de contener nada legible. **El secreto vive fuera de la base** (variable de entorno o gestor de secretos): un volcado de la base, por sí solo, no permite reconstruir nada. Con el token opaco los timestamps dejan de importar, así que `comments.created_at` puede ser normal. |
+| 83 | Pérdida de la cuenta de Discord | **No hay recuperación automática ni self-service. Lo único posible es que el owner migre los datos del usuario viejo a una cuenta nueva**, como operación de administración del sistema | Cierra **M6**. Perder la cuenta de Discord, o el acceso a ella, está fuera del alcance de CentralDungeon: no hay contraseña propia, email ni ningún otro dato con el que reconocer a alguien. La migración manual cubre el caso real —una persona conocida de la comunidad que vuelve con otra cuenta— sin construir un sistema de identidad paralelo. Queda auditada como cualquier acción del owner (#66, #67). |
+| 84 | Salir del servidor de Discord | **Salirse no borra nada: los datos se conservan por si la persona vuelve. Ser baneado del servidor sí implica quedar baneado del sistema, sin retorno** | Distingue dos situaciones que el login trata igual (#38): quien se fue por su cuenta y quiere volver conserva karma, historial y mesas; quien fue expulsado de la comunidad no vuelve a entrar. Sin esto, salirse un mes del servidor equivaldría a perder dos años de historial. **Ver M30**: hoy el sistema no puede distinguir un caso del otro por sí solo. |
+| 85 | Cambios en el OAuth de Discord | **Riesgo operativo asumido, con respuesta reactiva** | Si Discord cambia su OAuth o corta el acceso, nadie entra a CentralDungeon: no hay vía alternativa de login y no se va a construir una por si acaso. Se asume y se responde como emergencia. Queda escrito para que sea una decisión y no una sorpresa. |
+| 86 | Detección de baneos de Discord | **En v1 lo marca un admin a mano**: cuando alguien es expulsado del servidor, un admin le pone `status = 'Blocked'` en la aplicación. Automatizarlo queda para cuando llegue el bot | Cierra **M30**. No es realmente una elección: con solo OAuth2 la aplicación puede preguntar si alguien **es miembro** del servidor y nada más — el que se fue y el que fue baneado devuelven lo mismo. Consultar los baneos exige un bot con permisos, que está explícitamente fuera de v1. La alternativa de no marcar nada dejaría el `status = 'Blocked'` de #84 sin nadie que lo aplique, y con él la distinción entre irse y ser expulsado. La casilla vive en el panel de moderación que los admins ya tienen por #51. |
+| 87 | Nombre de las tablas de peticiones | **`table_tasks` + `task_submissions`**, en lugar de `table_requirements` + `requirement_submissions` | La razón es una colisión concreta: `game_tables.requirements` ya existe como el texto enriquecido con los requisitos generales de la mesa (#62). Con `table_requirements` como tabla, quien lee el código se encuentra `gameTable.getRequirements()` devolviendo un texto y `TableRequirement` siendo una entidad — dos cosas distintas con el mismo nombre. Además *requirement* describe bien los requisitos de ingreso pero mal los pedidos que surgen durante el juego, que también entran acá. `task` cubre los dos casos y es más cercano a la analogía del salón de clases con la que se diseñó la feature (#63). |
+| 88 | Qué de Discord necesita un bot | **Con solo OAuth2 (v1) se puede: identificar al usuario y verificar si es miembro del servidor. Necesitan bot: detectar baneos, crear y borrar canales por mesa, y leer la lista de miembros.** Enlazar a un canal que ya existe **no** necesita bot: es un link | Aclara #86 y acota la integración futura. La detección automática de baneos, los canales de voz por mesa y el abrir/cerrar canales según el estado de la mesa son **la misma pieza de trabajo**: un bot con permisos sobre el servidor. Conviene hacerlas juntas y no de a una. Lo único que se puede adelantar sin bot es el enlace directo a un canal existente. |
+| 89 | `Owner` incluye a `Admin` | **`Owner` es un admin con privilegios adicionales: todo lo que puede un `Admin`, lo puede un `Owner`. Ninguna otra relación de este tipo existe** — `Owner` no implica `Player` ni `Master`, y para jugar o dirigir hace falta tener ese rol | Precisa #37 y #67, que decían "ninguna jerarquía" sin excepciones. La excepción es una sola y va en una dirección. **No se implementa con un `RoleHierarchy` de Spring Security**: cada endpoint de administración escribe `hasAnyRole('ADMIN','OWNER')` explícitamente. Un bean de jerarquía haría que el permiso de un endpoint dependa de una configuración lejana, que es justo lo que #37 quiere evitar. |
+| 90 | Alcance de las solicitudes | **`approval_requests` cubre todo pedido dirigido a los admins**: pedir que se abra una mesa sin ser master, pedir el rol de master de forma permanente, y peticiones generales al equipo. Se revisan para actuar o rechazar | Precisa el alcance de #42 y #78. Aparece un tipo que no estaba: **pedir que se abra una mesa**, que engancha directamente con #72 — un jugador lo solicita, un admin crea la mesa en `Unassigned` y le asigna un master. Los dos flujos son el mismo circuito visto desde sus dos puntas. |
+| 91 | Comentarios `General` | **Un comentario `General` es opinión sobre el sistema, no sobre una persona: no tiene destinatario, no mueve karma, no se ata a una mesa ni a una sesión, y no consume la cuota antispam** | Sale de revisar el diagrama 04. Sirve para que la comunidad proponga mejoras desde la v1. **Rompe casi todas las reglas de los otros tres tipos** (`JJ`, `JM`, `MJ`), que existen para evaluar personas — ver **M31** sobre si conviene que comparta tabla con ellos. |
+| 92 | Trazabilidad | **`audit_logs` registra qué entidad se modificó, su id, quién, cuándo, y el antes/después **solo de las columnas que cambiaron**, no la fila completa. Hay una vista exclusiva del `Owner` para consultarlo** | Precisa el alcance de la auditoría: no es analítica de uso —nadie registra clics— sino trazabilidad de **cambios de datos**, para poder reconstruir qué hizo cada persona en el sistema. Guardar solo el diff mantiene la tabla manejable y hace legible cada fila. **La excepción sigue en pie: `comments` y `comment_drafts` no se auditan** (#43); auditarlos guardaría autor y contenido juntos y anularía el anonimato. Es un hueco deliberado, no un olvido. |
+| 93 | Feedback del sistema | **También es anónimo, sin excepción.** No tiene destinatario, no mueve karma y no consume cuota. Va en su propia tabla, `system_feedback`, **sin columna de autor** | Cierra **M31**. El anonimato acá protege algo distinto que en #43 pero igual de real: que alguien opine mal del sistema sin quedar mal parado ante los admins o el owner, que son justamente quienes leen ese feedback. Sin anonimato, la única opinión que llega es la cómoda. **No necesita el circuito de borrador de #48**: como no hay una mesa que cerrar, la fila nace anónima y no hay ningún momento en que el autor haya estado guardado. Es más simple que los comentarios sobre personas, no más complejo. |
+| 94 | Límite de feedback del sistema | **Uno cada 24 horas reales**, con token opaco rotativo: `HMAC(secreto, user_id + hora_UTC)`. Al escribir se guarda el token de la hora actual; para verificar, el service calcula los tokens de las **últimas 24 franjas horarias** y comprueba si alguno existe. Las filas se purgan pasadas 24 h | Resuelve el residuo de **M31** sin abrir un agujero nuevo. Se descartaron dos alternativas peores: el **día calendario** dejaba escribir a las 23:59 y otra vez a las 00:01; y el **token fijo por usuario** con una marca de último envío —lo más directo para una ventana móvil— crea un **seudónimo permanente**: una fila por persona que dura para siempre y permite agrupar todos sus feedbacks a lo largo del tiempo aunque no se sepa quién es. Con el contenido a la vista, eso vuelve mucho más fácil deducir la identidad. El token por franja horaria rota, no persiste y no permite enlazar dos envíos separados por más de un día. La ventana efectiva queda entre 23 h y 24 h, siempre del lado seguro. |
+| 95 | Destino del feedback del sistema | **Va directo a una bandeja de lectura para admins y owner. No pasa por moderación** | Cierra el otro residuo de **M31**. Moderar feedback sobre el producto no tiene el mismo sentido que moderar una evaluación que mueve el karma de alguien: acá no hay una persona afectada a la que proteger. El `status` de `system_feedback` sirve para que los admins marquen lo que ya revisaron, no para aprobar o rechazar. |
+| 96 | Parámetros del karma | **`W = 20`** (peso del prior, en comentarios equivalentes) y **`H = 12 meses`** (semivida del decaimiento), sobre un prior `m = 0.8` | Cierra la parte de parámetros de **M11**. Con `W = 20` un negativo aislado cuesta ~380 puntos y hacen falta tres para bajar de 7000: castiga un patrón, no un mal día. Con `H = 12 meses`, un negativo de hace un año pesa la mitad, lo que permite recuperarse sin borrar el historial. Ambos son números de configuración, no constantes de código: ajustarlos no requiere migración. |
+| 97 | Cuándo se recalcula el karma | **Dos disparadores: al aprobar un comentario se recalcula el karma de esa persona, y un job semanal nocturno recalcula a todos** | El karma es un valor derivado que **cambia sin que ocurra ningún evento**, porque los pesos decaen con el tiempo. El recálculo puntual da respuesta inmediata donde importa —el afectado ve el efecto al momento— y el job semanal aplica el decaimiento sin recorrer toda la base cada noche. La disparidad entre ambos es despreciable: con `H = 12 meses` el peso de una valoración cambia **1,3% por semana**, unos pocos puntos sobre 8000. |
+| 98 | Asistencia y karma | **La asistencia no entra en el cálculo del karma. Se muestra como métrica aparte, junto al perfil** | Mezclar dos señales distintas en un solo número lo vuelve imposible de explicar, y explicable era uno de los criterios de #74 y M11. Separadas, un master ve "karma 7800" y "faltó a 3 de 10 sesiones" y saca su propia conclusión, que es más información que un número que ya las combinó por él. Si más adelante se quiere fusionar, la asistencia ya está registrada (#36) y no hay que rehacer nada. |
+| 99 | Qué se muestra del karma | **El puntaje y los comentarios recibidos. Sin desglose agregado.** Lo mismo que ve el dueño de un perfil es lo que ve un master al evaluarlo, sujeto a las reglas de visibilidad de #41, #44 y #47 | Se descartó mostrar un resumen tipo "X positivos, Y neutros, Z negativos": **los comentarios mismos son la explicación**, y leerlos dice más que contarlos. Además evita construir una segunda representación del karma que puede desincronizarse de la primera. Que ambos vean lo mismo elimina la pregunta de qué información privilegiada tiene cada uno. |
+| 100 | Bandeja compartida de admins | **No se duplica el trabajo pendiente como notificaciones: la bandeja es una vista sobre las tablas donde ese trabajo ya vive.** Se agregan `claimed_by`/`claimed_at` a `approval_requests`, `comments`, `system_feedback` y `game_tables`; el ítem reservado desaparece para el resto y una reserva sin resolver se libera sola a los 15 minutos | Que "si la toma uno baja para todos" sale gratis si la bandeja lee el estado real en vez de una copia: cambia la fila, no un duplicado que después hay que mantener sincronizado. Se descartó una tabla `admin_queue` que agrupara los ítems porque sería una denormalización mantenida a mano — exactamente lo que #11 eliminó al matar `Players_Table`. El precio es un `UNION ALL` de cuatro consultas pequeñas, normalizadas a un DTO común en el service. La liberación por timeout evita que un ítem reservado y abandonado quede invisible para siempre. |
+| 101 | Transporte de tiempo real | **WebSocket + STOMP** (`/ws`), con el JWT en el frame `CONNECT` y no en la query string. Destinos: `/user/queue/notifications` para lo personal y `/topic/admin-queue` para la bandeja. **El mensaje es una señal de invalidación, no el contenido** | Se eligió WebSocket sobre SSE por dejar abierta la puerta a funciones bidireccionales (chat, presencia) sin cambiar de transporte, asumiendo a cambio más piezas: handshake, heartbeat y reconexión. El token va en el frame STOMP porque el navegador no puede mandar headers en el handshake y la query string queda registrada en los logs de acceso. Mandar solo la señal y dejar que TanStack Query refetchee mantiene la caché del cliente como única fuente (regla dura 11) y hace que un mensaje perdido no deje la UI inventando datos. **Límite conocido**: el broker en memoria de Spring sirve para una sola instancia; con más de una hace falta un broker externo. |
+| 102 | Idioma del código | **Todo el código en inglés, incluidos los comentarios**: identificadores, tablas, columnas, endpoints, Javadoc, logs, comentarios SQL de las migraciones y mensajes de commit. Documentación y conversación siguen en español | Antes la convención dejaba los comentarios en español, lo que producía archivos bilingües donde la firma de un método estaba en un idioma y su explicación en otro. Un solo idioma dentro del código lo hace legible para cualquiera que llegue, y deja el español para donde aporta: la documentación y las decisiones. |
+| 103 | Navegación del frontend | **Cambio de contexto explícito por rol**: un selector muestra los contextos que el usuario tiene habilitados (Jugador, Master, Admin, Owner) y cada uno tiene su propia navegación. Quien tiene un solo rol no ve el selector | Con roles acumulables y sin jerarquía (#37, #67, #89), un menú único que crece según los roles se vuelve largo y mezcla actividades que no tienen nada que ver: explorar mesas para jugar y moderar comentarios no se parecen en nada. Separar por contexto mantiene cada espacio enfocado. **El contexto es organización de UI, no seguridad**: el backend sigue autorizando endpoint por endpoint, y estar "en contexto Admin" no habilita absolutamente nada. |
+| 104 | Cliente HTTP | **Un solo módulo genérico y tipado con las operaciones como métodos** (`get`, `post`, `put`, `patch`, `delete`, `upload`, `getPage`), parametrizados por el tipo de respuesta y el de cuerpo. Cada feature arma su `<dominio>Api.ts` encima | Rescata lo que funcionaba del frontend viejo —tener las operaciones nombradas y reutilizables— y corrige lo que no: eran **siete archivos sueltos** (`getter`, `setter`, `patcher`, `putter`, `deleter`, `setterFiles`, `getFlagCountry`) sin tipos, cada uno repitiendo el manejo de errores. Al ser genérico sobre los modelos, el tipo derivado de #20 viaja hasta la llamada: `api.post<GameTableResponse, CreateGameTableInput>(...)` no compila si el payload no coincide. El manejo del `401`, el `ProblemDetail` y el JWT viven en un solo lugar. |
+| 105 | Contexto, store o librería | **Tres criterios en vez de uno**: librería cuando ya existe (toast → `sonner`, tema → `next-themes`), **Context** cuando el estado pertenece a un subárbol o necesita montar UI (confirmación imperativa, selección múltiple de una tabla), y **Zustand** cuando es global y plano (contexto de rol activo, preferencias) | El frontend viejo tenía cinco contexts y la idea era buena: mensajes, tema, confirmación y selección con Shift son estado de UI, no datos de servidor, así que la regla dura 11 no los prohíbe. Lo que fallaba era usar el mismo mecanismo para todo, incluidos los datos de servidor. La selección con Shift es el caso más claro: es de **una tabla concreta**, no de la aplicación, así que va como Context alrededor de esa tabla y no como estado global. |
+| 106 | Formularios | **El formulario es un componente puro, desacoplado de su contenedor.** Recibe valores iniciales y un `onSubmit`, y no sabe si vive en un modal, un panel lateral o una página. El modal es un envoltorio aparte | Es la separación que ya tenía el proyecto viejo entre `forms/` y los modales que los alojaban, y es correcta: el mismo formulario de mesa sirve para crear en un modal y para editar en una página sin tocarlo. La diferencia es dónde vive: en vez de una carpeta global `forms/` que mezcla dominios, cada formulario va en `features/<dominio>/components/` junto a lo que usa. |
+| 107 | Formato de los textos de idioma | **JSON, no XML**, con `i18next` en vez de un cargador propio | El frontend viejo declaraba el espacio de nombres y sacaba el valor de un XML con un helper propio, que quedó a medias. JSON es nativo del ecosistema: no necesita parser, se tipa con TypeScript, y `i18next` ya resuelve interpolación, plurales, fallbacks y carga por espacio de nombres — todo lo que habría que escribir a mano. El XML no aporta nada a cambio. **Cuándo entra: desde la primera etapa (#117).** |
+| 108 | Capa de normalización | **Se elimina.** No hay `normalize/models`: el tipo base de cada entidad (#20, `arquitectura.md` §3.2) es el contrato | La normalización existía para que un cambio de nombre en el backend no rompiera el frontend. Con TypeScript estricto eso es exactamente lo que **no** se quiere: si el backend renombra un campo, la compilación tiene que fallar. Una capa que traduce nombres **esconde** la ruptura y la convierte en un bug de runtime, que es el problema que el tipado vino a resolver. Si alguna vez la forma de la API y la de la UI difieren de verdad (una fecha ISO que se quiere como objeto), eso es un **mapeo** y vive en el `api/` de su feature, no en un normalizador global. |
+| 109 | Estilos | **Clases de Tailwind en el JSX, variantes con `class-variance-authority` y composición con `cn()`.** Sin CSS-in-JS, sin archivos CSS por componente, sin objetos de estilo en JS | El frontend viejo tenía los estilos como objetos JavaScript en `styles/*.js`, además de cuatro motores conviviendo. Con Tailwind el estilo se lee en el mismo lugar donde está el marcado, los tokens salen del `@theme` (#59 del sistema de diseño) y `cva` cubre lo que el objeto JS resolvía —variantes por props— sin salir de CSS. Es el patrón que shadcn/ui ya usa internamente, así que no hay dos formas de hacer lo mismo. |
+
+| 110 | Envoltorio de los formularios en modal | **Un `FormDialog` en `components/`** con título, descripción y confirmación al cerrar con cambios sin guardar. El diálogo de cada feature compone `FormDialog` + el formulario y **es el dueño de la mutación**: el formulario solo valida y llama `onSubmit` | Es la mitad que le faltaba a #106. El legacy tenía `ModalBase` y la idea era correcta —incluso preguntaba antes de cerrar un modal a medio llenar, que es lo único que se rescata—, pero el reparto estaba invertido: `EditTableForm` recibía `handleCloseModal` y `reloadAction`, hacía él mismo el `PUT` y decidía cuándo cerrarse. Por eso no se podía reutilizar fuera de un modal, que es exactamente lo que #106 quiere. Con la mutación en el diálogo, el mismo `GameTableForm` sirve en un modal y en una página. Y `FormDialog` no recibe entidades del dominio: si las recibiera no tendría por qué ser transversal. |
+| 111 | Fechas y horas | **`Intl.DateTimeFormat` nativo**, en `lib/date.ts`, con locale y zona horaria como parámetros. **Sin librería de fechas** | No hay aritmética de calendario en la aplicación: los horarios son día de semana más hora, y lo que llega del backend es ISO-8601 UTC que solo hay que mostrar. El `useDate` del legacy ya lo resolvía con `toLocaleDateString` y funcionaba; su único defecto era tener `'es-ES'` incrustado, que se corrige parametrizando. Agregar `date-fns` + `date-fns-tz` serían dos dependencias del stack fijado (§1.2) para cubrir un caso que no existe. ~~La zona sale del perfil del usuario y solo si falta, del navegador~~ — **corregido en #133**: contradecía a #22, que eliminó `users.timezone`, y describía un comportamiento que el schema no puede sostener. **La zona sale del navegador**, y `lib/date.ts` la recibe como parámetro para que sea testeable, no para que venga de la base. |
+| 112 | Organización de carpetas del frontend | **Se agrupa por dominio, nunca por tipo de archivo.** `features/<dominio>/components/` es **plano y con sufijos** (`Form`, `Dialog`, `Card`, `Badge`, `Page`…). Una feature no importa de otra: una pieza sube a la raíz **cuando una segunda feature ya la necesita**, y al subir pierde el dominio. Sin barrels; los tests van junto al archivo que prueban | El frontend viejo agrupaba por tipo en la raíz: `forms/`, `contexts/`, `api/`, `constants/`, `normalize/`, `styles/`, `helper/`. El costo es que tocar una mesa significaba abrir siete carpetas, y que `forms/` mezclaba cinco dominios sin relación. El umbral de dos features para subir a la raíz es más bajo que las tres repeticiones que pide §2.4 en el backend, y la razón es concreta: acá la alternativa a subir no es duplicar un poco, es un import entre features que está prohibido. El plano con sufijos se eligió sobre subcarpetas por tipo (`modals/`, `actions/`) porque el legacy ya mostró el resultado: carpetas de un solo archivo, como `components/tables/status/`. Detalle completo en `arquitectura.md` §3.1.1–§3.1.4. |
+
+| 113 | Pantallas que necesitan varios dominios | **Una feature es un dominio, no una pantalla.** La única excepción a "una feature no importa de otra" es `routes/`: una página compone componentes de otras features. Cada bloque es un componente `…Section` que vive en su feature, lanza su propia query y monta sus propios diálogos, y **recibe un identificador, no una entidad** | La pantalla de detalle de mesa necesita seis dominios a la vez. En el legacy eso era `PreparationStatus`: ~300 líneas importando de todos lados, con seis `useModal` en paralelo, que además era un *componente* haciendo de página. Sin esta excepción la regla de #112 no tendría salida legítima para esa pantalla. Se acota a `routes/` porque las páginas son hojas —nada las importa salvo el router—, así que no pueden generar ciclos entre features; `components/`, `api/`, `hooks/` y `types.ts` siguen sin poder cruzarse. Que el contrato sea el `id` y no la entidad es lo que evita que `features/files` termine dependiendo del tipo `GameTable`: toda la dependencia entre dos features cabe en una prop. |
+
+| 114 | Superficie pública de una feature | **Un `index.ts` en la raíz de cada feature** declara qué exporta; desde afuera se importa `@/features/tables` y nunca una ruta interna. Es el **único** barrel del proyecto | Con las páginas fuera de las features (#113), `routes/TableDetailPage.tsx` importa de cuatro dominios a la vez, y sin una puerta declarada nada distingue lo público de lo interno: cualquiera puede alcanzar un archivo que la feature considera privado, y refactorizarlo rompe consumidores que no se sabía que existían. El barrel convierte "una feature no importa de otra" en algo verificable, y más adelante lo puede vigilar una regla de lint. Se limita a la raíz de la feature a propósito: un `index.ts` por carpeta reintroduce ciclos de importación y no aporta ninguna frontera. |
+| 115 | `loader` de React Router | **No se usan.** Cada pantalla pide sus datos con TanStack Query desde el componente | La recomendación habitual es combinarlos —el loader adelanta el fetch, Query cachea— y es buena con SSR. Acá no hay SSR, la aplicación entera está detrás de login y cada pantalla ya define su estado de carga con skeleton. Adoptarlos obliga a inyectar el `queryClient` en el router y a declarar la misma query en dos lugares, a cambio de ganar milisegundos en navegaciones frías. **Es reversible por pantalla**: si alguna vez se mide un waterfall real, se agrega el loader ahí sin tocar el resto. |
+| 116 | Que el tiempo real no dispare una tormenta de peticiones | **Tres reglas**: el mensaje trae tipo e id y se invalida solo esa rama de `queryKeys`; se confía en que `invalidateQueries` refetchea únicamente las queries **activas**; y **al reconectar se invalida todo lo activo**. Se agrega un tercer destino, `/topic/tables`. Y **`staleTime` explícito en toda query**, según la tabla de `arquitectura.md` §3.3 | Completa #101, que fijó lo difícil —el mensaje es señal, no contenido— pero no dijo qué pasa cuando hay cincuenta personas conectadas. Sin la regla 1, cada publicación invalidaría media caché de cada cliente; con ella, una mesa nueva mueve una sola lista. La regla 3 tapa el agujero real del transporte: mientras el socket estuvo caído se perdieron mensajes y la caché quedó mintiendo sin que nadie lo sepa. El `staleTime` explícito es la otra mitad: el default de TanStack Query es `0`, así que sin decidirlo cada montaje de pantalla vuelve a pedir todo. Faltaba `/topic/tables` porque #101 solo cubría lo personal y la bandeja de admins; una mesa recién publicada no le llegaba a nadie navegando el explorador. |
+| 117 | Internacionalización — **cierra M32** | **Entra desde la primera etapa.** Ningún string visible se escribe en el JSX: todo pasa por `t('espacio.clave')` con JSON en `locales/<idioma>/<espacio>.json`, un espacio por feature. En v1 solo existe `es` | Cierra M32 por la opción (a). La comunidad es de LatAm y algo de Europa (#22), así que la intención de tener inglés algún día es real, y con eso la cuenta se decide sola: hecho desde el principio cuesta una indirección por string; retrofitearlo significa recorrer cada componente ya escrito. Lo que queda explícitamente prohibido es el término medio que ya se intentó una vez: el legacy tenía `english.xml` y `spanish.xml` vacíos, un helper a medio escribir y ningún texto realmente traducido. O todo texto nace en el archivo de idioma, o no se instala nada. |
+| 118 | Fuente de verdad de los tokens de diseño — **la herramienta cambia en #130** | ~~**Manda Figma.**~~ **Manda el diseño, no el JSX** — qué herramienta lo aloja lo fija #130. Los colores, espaciados, radios y tipografías se deciden en el diseño y se transcriben al bloque `@theme` de `globals.css`. Si un valor no está en el tema, primero se agrega al diseño | El principio se mantiene entero: lo único que cambió en #130 es dónde vive el diseño. El diseño es donde las decisiones visuales se toman de verdad. Sin una dirección declarada, cada valor suelto escrito en el JSX crea una divergencia que nadie sabe cuál de las dos partes tiene que corregir. La consecuencia práctica es la regla de #109 llevada hasta el final: en el JSX se usan clases de Tailwind que refieren tokens del tema, nunca valores arbitrarios — un `bg-[#7c3aed]` es la señal de que falta un token. |
+
+| 119 | Interfaz por controller para declarar el contrato | **No se usa. El controller es una clase concreta**, y el contrato publicado es el OpenAPI que springdoc genera desde ella, más los `record` con nombre propio de la regla dura 3 | El patrón venía del intento en Java (`TablesIController`, `FilesIController`, …) y el objetivo era bueno: tener en un archivo legible qué recibe y qué devuelve cada endpoint, para que el frontend sepa el contrato. Pero ese objetivo ya tiene dos guardianes que **no pueden desincronizarse** —el esquema OpenAPI, generado del código real, y los DTOs tipados—, mientras que la interfaz agrega un tercer archivo que sí puede divergir y duplica el trabajo en cada cambio de firma. Además choca con la regla dura 4 (interfaz solo con más de una implementación real) y arrastra un riesgo concreto: poner `@PreAuthorize` en una interfaz o superclase genérica es un bypass de autorización documentado (CVE-2025-41248). Se conserva la intención, no el mecanismo. |
+| 120 | Forma de la respuesta exitosa | **El DTO desnudo, sin envoltura.** Los errores, `ProblemDetail` (RFC 9457). La paginación, `PageResponse<T>` | El intento en Java envolvía todo en `ResponseData<T>(message, response, status)`. Un formato uniforme suena bien hasta que el status existe en dos lugares y se contradicen: `TablesController` devolvía `206 Partial Content` en HTTP con un `204` escrito en el cuerpo. Además obliga al frontend a desenvolver en cada llamada y a que el tipo derivado de §3.2 cargue una capa que no aporta información. HTTP ya tiene un canal para el estado y Spring ya genera `ProblemDetail` para los errores. |
+| 121 | Escalado horizontal — rol ≠ pertenencia | **Toda lectura o mutación de un recurso concreto filtra por el actor**: o el actor entra en el `WHERE`, o el service verifica pertenencia antes de tocar nada. Nunca `findById(id)` + `save()` sin comprobar | Es el agujero que tenía el Node y que ninguna capa de autenticación habría tapado: `UPDATE Tables SET … WHERE id = ?` y `UPDATE Tables SET status='Deleted' WHERE id = ?`, sin un solo predicado de pertenencia. Con login y todo, cualquiera que conociera el id de una mesa podía editarla o borrarla. `hasRole('MASTER')` afirma "es master de algo", no "de *esta* mesa": son dos comprobaciones distintas y la segunda no se puede delegar en Spring Security. Que los ids sean impredecibles (#9) es defensa en profundidad, no autorización — un id filtrado en un link no puede ser lo único que proteja un recurso. |
+| 122 | Qué afirma el JWT | **Identidad, no autorización.** El token lleva el `sub` y poco más; roles y `status` se leen de la base en cada request, con caché de TTL corto | Un JWT con roles como claims es una foto del momento en que se emitió, y con filter chain stateless no hay revocación: un admin degradado sigue siendo admin, y alguien marcado `Blocked` (#84, #86) sigue entrando, hasta que el token expire. Leer de la base hace que un baneo o una degradación tengan efecto inmediato, y con la escala de esta comunidad es una lectura por PK cacheada. **Es el patrón que sí se rescata del intento en Java**, que ya lo hacía bien: `JwtGenerator` ponía solo `id` como claim y `JwtAuthorizationFilter` hacía `loadUserById` en cada petición. |
+| 123 | Dónde se declara la autorización | **En el método concreto del controller**, con `@PreAuthorize`. En `SecurityConfig` solo queda lo transversal: stateless, CORS y qué es público. **Nunca una lista de rutas por rol** | El intento en Java tenía un `Routes.java` con listas de endpoints por rol, y falló del peor modo posible: cinco de sus seis rutas estaban escritas **sin barra inicial** (`"tables/master/list"`), así que no matcheaban ninguna petición, caían en `anyRequest().authenticated()` y cualquier usuario autenticado alcanzaba los endpoints de master y de admin. La causa de fondo no es el typo, es la distancia: la regla vivía en otro archivo y nada obligaba a que coincidiera con el mapping. Pegada al método, el permiso se lee junto al endpoint y no puede quedar huérfana. Refuerza la regla dura 4 y el riesgo del CVE-2025-41248. |
+| 124 | Acceso a datos y consultas | **Spring Data JPA** (ya fijado en #2). Todo `@Query` con **parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales ni concatenación de strings | Precisa el motivo, que estaba mal atribuido: `JdbcTemplate` con `?` **sí** parametriza, así que la inyección SQL no fue el modo de falla real ni en Node ni en Java. Lo que falló fue otra cosa, y peor porque era silenciosa: en `TableRepository.tableList` la consulta tenía seis placeholders y se pasaban cinco argumentos —faltaba `utc`—, así que todos quedaban corridos una posición sin que nada lo detectara; `queryForList(sql, TableAvailable.class, …)` mapea una sola columna, no una fila a un POJO, así que reventaba en runtime; y `joinedTables` ni siquiera parseaba, le faltaba una coma. Los parámetros nombrados eliminan la clase entera de bug del desalineamiento, y JPA elimina el mapeo a mano. La inyección solo vuelve a ser un riesgo si alguien concatena input en un `@Query`, y por eso queda prohibido explícitamente. |
+| 125 | Los tres tokens | **El de Discord se descarta al terminar el callback.** Access propio corto (~15 min) en memoria del cliente, refresh propio largo y rotativo en cookie `httpOnly` + `SameSite=Strict`. **El refresh es el punto donde se re-afirman `status` y roles** | El token OAuth de Discord sirve para dos preguntas durante el login —quién sos y si sos miembro del guild (#38)— y después no se usa más, porque la sesión pasa a ser propia. Guardarlo obligaría a mantener un segundo ciclo de refresh, con su caducidad y sus fallos, para una capacidad que v1 no tiene; y lo que necesita la integración futura (#88) es un **bot token**, que es de la aplicación, no del usuario, así que conservarlo tampoco acerca ese trabajo. El par access/refresh resuelve la tensión de #122: el access corto acota la ventana y el refresh es el momento natural de volver a preguntar si la persona sigue habilitada. Como el refresh viaja en cookie, **ese endpoint concreto necesita protección CSRF** aunque el resto de la API sea stateless con Bearer. |
+
+| 126 | Cómo referencia `approval_requests` a la entidad afectada — **cierra M13** | **Polimórfica: `entity_type` + `entity_id`, sin FK real.** Un solo service, una sola bandeja, y agregar un cuarto flujo es una fila más | Cierra el residual de M13 por la opción (a). Los tres flujos existentes —pausar mesa (#32), vetar jugador (#39), pedir rol o mesa (#90)— tienen forma idéntica: alguien pide, alguien con más autoridad aprueba o rechaza, siempre con justificación. Con FK nullable por flujo, cada uno nuevo agrega una columna a una tabla que ya nadie entiende, y la bandeja de #100 tendría que saber cuál de las cinco columnas mirar. El precio de la polimórfica es real y se asume explícitamente: **la base no puede garantizar la integridad referencial**, así que la validación de que `entity_id` existe es del service y llega con test (regla dura 7), y un borrado de la entidad apuntada no arrastra sus solicitudes. Se acepta porque `approval_requests` es un registro histórico: una solicitud sobre una mesa borrada sigue siendo un hecho que pasó y conviene conservar. |
+| 127 | CSRF en el endpoint de refresh | **CSRF activo únicamente en `/auth/refresh`**, con el repositorio de tokens de Spring Security; el resto de la API sigue con `csrf.disable()`. Es la **segunda** capa: la primera es el `SameSite=Strict` de #125 | Toda la API se autentica con `Authorization: Bearer`, y el navegador **nunca** adjunta ese header por su cuenta, así que no hay credencial automática que un sitio ajeno pueda aprovechar: desactivar CSRF ahí es correcto, no una omisión. El refresh es el único endpoint que se autentica con **cookie**, y las cookies sí viajan solas. Qué se gana protegiéndolo: un sitio ajeno no puede leer la respuesta (lo impide CORS), así que no hay robo de sesión, pero **sí puede forzar la rotación** del refresh y dejar al cliente legítimo con un token viejo — es decir, cerrarle la sesión al usuario y disparar falsas alarmas de reuso. `SameSite=Strict` ya bloquea eso, pero es una defensa que **aplica el navegador**: si falla o el agente la ignora, nada del lado del servidor se entera. El token CSRF es la comprobación que sí ocurre en el servidor. |
+
+| 128 | Caché del usuario que resuelve la autorización | **Caffeine en proceso**, vía Spring Cache. `expireAfterWrite = 60 s`, `maximumSize = 10 000`, más **`@CacheEvict` explícito** al bloquear a alguien o cambiarle los roles | #122 hace que cada request lea roles y `status` de la base, lo que sin caché convierte cien peticiones de un usuario en cien consultas. Caffeine es una caché en el heap del proceso: sin servidor aparte, sin red, con desalojo por tiempo y tamaño (política W-TinyLFU). **El TTL es la ventana de revocación**, y por eso son 60 s y no cinco minutos: es el equilibrio entre no golpear la base y no dejar suelto a un admin degradado o a alguien recién baneado — con el rol `Owner` dando acceso a la auditoría (#92) y al borrado físico (#66), cinco minutos es demasiado. La evicción explícita hace que en la práctica el efecto sea inmediato, y el TTL queda como red de seguridad para cualquier camino que se olvide de evictar. **Limitación conocida y aceptada**: la caché es **por JVM**, así que con más de una instancia dos cachés pueden discrepar y `@CacheEvict` solo limpia la local — la misma restricción que el broker STOMP en memoria (#101). Con una instancia no molesta; con dos hace falta caché compartida o el TTL pasa a ser la única garantía. |
+
+| 129 | Diseño de Campañas y Temporadas — **precisa y corrige #7** | **Son dos problemas distintos y se resuelven distinto.** *Campaña*: **una** mesa de N sesiones dividida en bloques — entidad nueva `table_arcs` entre `game_tables` y `table_sessions`, porque **el reclutamiento es único** (el jugador se postula una vez y juega los cuatro juegos). *Temporada*: **no es una entidad** — es una columna `publish_at` en `game_tables` más un job que pasa `Preparation → Opened` cuando llega la fecha. **Construcción en fase 2**; el diseño se cierra ahora para que la v1 no tome decisiones que lo bloqueen | Corrige el supuesto de #7 y de `modelo-datos.md` §7, que daban por hecho que campaña = agrupador de varias mesas y por lo tanto una FK. No lo es: si el grupo de jugadores es el mismo durante los cuatro juegos, no hay cuatro mesas que agrupar, hay **una** mesa larga con estructura interna. La diferencia se ve en una pregunta: cuántas veces se postula un jugador. Una. Para temporadas el razonamiento va al revés: lo que la comunidad hace —abrir veinte mesas a la vez cada cierto tiempo— **ya es posible** con la bandeja de admins (#100) y la selección múltiple; lo único que falta es que la salida no dependa de que alguien esté despierto a medianoche. Eso es una columna y un job, no un concepto nuevo. Inventar una entidad `seasons` para eso sería modelar el calendario de la comunidad dentro del schema sin que nada lo pida. |
+| 130 | Herramienta de diseño — **reemplaza la parte de #118 que nombraba a Figma** | **Claude Design (`claude.ai/design`), no Figma.** El sistema de diseño se construye como previews HTML + Tailwind, se publica en un proyecto de design system con la herramienta `DesignSync` y se revisa en el navegador. **Figma sale de `.mcp.json`** (corrige #6). El principio de #118 no se toca: manda el diseño, y el `@theme` de `globals.css` se transcribe desde ahí | #118 daba por disponible una herramienta que no lo está: el MCP de Figma exige asiento **Dev o Full en plan pago**, tanto el remoto (`mcp.figma.com`) como el servidor local de Figma Desktop, y este proyecto no lo tiene. Se verificó en la práctica — Figma Desktop instalada y corriendo, pero la opción *Enable local MCP server* no disponible sin plan. Sin MCP, Figma quedaba como un dibujo del que había que copiar valores a mano, que es **exactamente la divergencia que #118 existía para evitar**. Lo que decide a favor de Claude Design no es el costo (cero adicional, se autoriza con `/design-login`) sino que el artefacto de diseño **ya está hecho del material del que sale el código**: HTML y clases de Tailwind. Con Figma, diseño y código eran dos representaciones a mantener alineadas a mano; acá la transcripción al `@theme` es mecánica y la divergencia no tiene dónde aparecer. **Lo que se pierde, explícitamente**: no hay lienzo vectorial, así que no se exploran ideas moviendo cajas con el mouse. Se acepta porque las cinco pantallas ya están resueltas como wireframes en `frontend-diseno.md` §4 y lo que queda por decidir —color, tipografía, espaciado— se juzga mejor sobre el componente real que sobre un rectángulo gris. Se evaluaron y descartaron: **Penpot** (vectorial y gratis, pero sin integración verificada, así que reintroduce la copia manual de valores), **Figma Starter sin MCP** (mismo problema, agravado) y **diseñar directo en el código** (invierte #118 y disuelve E0.5 dentro de E1). |
+| 131 | Dirección visual | **Fantasía sobria**, tema **oscuro por defecto**, densidad **media**. Serif solo en títulos, sans en el cuerpo. ~~Base neutra fría con un acento cálido metálico~~ — **corregido en #132 contra la marca real** | Se eligió sobre dos alternativas concretas. *Utilitario neutro* (shadcn casi por defecto) no daba ninguna identidad a una comunidad que sí la tiene. *Temático marcado* (pergamino, tinta, texturas) pelea de frente con la restricción más dura de esta interfaz: hay **catorce colores de estado** —nueve de mesa, cinco de postulación (`frontend-diseno.md` §3)— que tienen que ser distinguibles y accesibles en toda pantalla, y un fondo con personalidad los ahoga. Oscuro por defecto porque la comunidad juega de noche. La parte del acento cálido era una **inferencia sin evidencia** y resultó falsa: ver #132. |
+| 132 | Paleta de marca — **corrige #131** | **La marca es fría: azul profundo (~218°) y violeta índigo (~250°) sobre negro-azulado.** El acento de interfaz es el **violeta**, `#3e308b` y su escala. El canvas oscuro es `#070c12`, el negro de la propia comunidad, no slate neutro | No es una elección estética sino una **medición** sobre los assets que la comunidad ya usa —`links.centraldungeon.org`, su único espacio propio hasta que exista este sistema—, y dos fuentes independientes coinciden. El CSS del sitio: `linear-gradient(-45deg, #214b90, #070c12, #211949, #3e308b)`. Los píxeles del logo y el favicon, decodificados y agrupados por tono: dos familias, ~218° con el 27% de lo cromático y ~250° con el 17%, y **ningún píxel cálido**. Eso invalida el acento cálido de #131 y, de paso, disuelve el choque con `state-pending` y `state-warning` que ese acento arrastraba. **Aparece uno nuevo**: los dos hues de la marca ya están ocupados —`state-active` (InProgress) es azul y `state-paused` (Pause) es violeta—, y no hay acento de marca que lo evite. Se eligió el violeta sobre el azul con un criterio de costo, no de gusto: **el azul choca con `InProgress`, el estado más frecuente de la plataforma; el violeta choca con `Pause`, que es excepcional**. El choque residual se contiene con separación de roles —el acento solo aparece como relleno sólido (botones, foco, karma), los estados solo como relleno suave con punto y etiqueta— y está **verificado con contraste medido: 30 pares, 30 en AA**. Descartado usar el azul pese a ser el hue dominante (27% contra 17%): la frecuencia en el logo no compensa colisionar con el estado por defecto de media aplicación, y el violeta además es el más distintivo de los dos. **Las tipografías del sitio (Dosis, Abel, Handlee) no se adoptan**: Dosis en peso 200 con `letter-spacing: 3px` sirve para seis links, no para tablas de candidatos ni formularios. |
+
+| 133 | Faltantes del contexto Jugador — **corrige #111** | **Tres cosas.** (a) `/my/tables` muestra **solo mesas vivas** y las terminadas y canceladas van a **`/my/history`**, con ruta propia. (b) El **feedback del sistema es una acción global del layout**, no una ruta: no tiene contenido que mostrar. (c) **La zona horaria sale del navegador**, no del perfil — #111 decía lo contrario y contradecía a #22 | Salió de revisar el contexto Jugador contra lo que la aplicación necesita de verdad. (a) Se eligió ruta propia sobre un filtro dentro de `/my/tables` asumiendo el riesgo explícitamente: es el patrón de listados casi iguales que el sitemap acaba de eliminar del legacy (§6). Se acepta porque el historial no muestra las mismas columnas —lleva asistencia final y si dejaste comentario— y porque separa lo accionable de lo que solo se consulta. Si termina siendo la misma tabla con otro `WHERE`, se fusiona. (b) El límite de una cada 24 h (#94) lo impone el servidor, así que **la interfaz no lo predice**: ofrece el botón siempre y traduce el `429` a un mensaje. Predecirlo obligaría a exponer el estado de la cuota, que es justo lo que el token opaco de #94 evita. (c) #111 describía un comportamiento que el schema no puede sostener: #22 había eliminado `users.timezone` y no hay dónde guardar una zona de perfil. Gana #22 por ser la que el modelo respalda; el parámetro de zona en `lib/date.ts` se conserva por testeabilidad, no porque venga de la base. |
+| 134 | Datos propios del usuario — **onboarding en vez de pantalla de configuración** | **No hay pantalla de edición de perfil en v1.** `name` y `country` se piden **una sola vez**, en un paso bloqueante después del login inicial (`/onboarding`), inmediatamente después de la invitación al servidor de #38. `name` viene precargado con el `discord_username` y se puede cambiar. `country` pasa de `VARCHAR(64)` a **`CHAR(2)` ISO 3166-1 alpha-2**. `discord_username` se conserva siempre | El disparador fue encontrar que **ninguna de las dos columnas tenía quién la llenara**: Discord no expone país en el OAuth, y el legacy —cuatro `GET` y ni un endpoint de escritura en su router de usuarios— nunca pudo escribir ninguna de las dos. Eran columnas muertas heredadas. Se descartó una pantalla de configuración porque el contenido real editable son **dos campos**, y una ruta entera para eso no se paga. Se descartó eliminarlas porque el objetivo es legítimo y concreto: **que cada quien se llame como quiera dentro del sistema, sin perder el rastro de cuál es su Discord** — por eso `name` es display y `discord_username` se conserva como identidad verificable para admins. El paso bloquea a propósito: si se pudiera saltar, las columnas volverían a quedar nulas y el problema seguiría existiendo. `CHAR(2)` en vez de texto libre evita el desorden de *México* / *Mexico* / *MX* y habilita la bandera como emoji derivado del ISO, sin llamar a ningún servicio externo — que es lo que `getFlagCountry.js` hacía mal en el legacy (`frontend-diseno.md` §6). **Editar después queda fuera de v1, no descartado**: cuando se agregue, es una pantalla que reusa el mismo formulario, sin tocar el schema. |
+
+| 135 | Master de una sola mesa, sin el rol de plataforma | **El rol `Master` y dirigir una mesa son dos permisos distintos y se autorizan distinto.** El rol de plataforma `Master` significa **"puedo crear mesas propias"**. Dirigir una mesa concreta se autoriza **solo por la fila en `masters`**, sin exigir el rol. Un `Player` al que un admin asigna como master de una mesa (#72) tiene ahí **todas** las atribuciones de master —candidatos, agenda, sesiones, peticiones, vetos, pausa— y ninguna fuera de ella. **Sin cambio de schema**: `masters` ya es `(game_table_id, user_id, master_type)` | Es un caso real que faltaba: los admins abren mesas y reclutan a un jugador para dirigir **esa** mesa, y al terminar no queda como master de nada. El modelo ya lo soportaba y nadie lo había notado — la señal estaba en #90, que dice "pedir el rol de master **de forma permanente**" sin que existiera jamás la variante no permanente. Lo que no lo soportaba era la autorización: con `hasRole('MASTER')` en los endpoints de mesa, ese jugador queda afuera pese a tener su fila en `masters`. Se descartó **conceder y revocar el rol de plataforma** al asignarlo y al cerrar la mesa: obliga a preguntar "¿le queda alguna otra mesa viva?" antes de revocar, mete escritura de roles en un flujo que no es de roles, y convierte un permiso de mesa en uno global durante toda la partida — si dirige una mesa, podría crear otras. La regla dura 17 ya decía lo correcto: **el rol no es la pertenencia**. Acá se aplica al revés de como se suele leer — no es que además del rol haga falta pertenencia, es que **la pertenencia sola alcanza** y el rol sobra. La caducidad sale gratis: al pasar a `Finished` la mesa deja de admitir mutaciones por su propia máquina de estados (#27), así que "hasta ahí llegó" no necesita ningún job ni columna. La fila en `masters` **no se borra**: es el registro histórico de quién dirigió esa mesa. **Dos consecuencias en la interfaz**: el `ContextSwitcher` muestra el contexto Master si hay rol **o** al menos una fila viva en `masters`; y `/master/tables/new` se ofrece **solo con el rol**, porque un master de una sola mesa no crea mesas. |
+
+| 136 | Dashboard del master | **`/master` es una bandeja de trabajo, no un resumen con números.** Lista lo que espera acción —candidatos sin responder, entregas sin revisar, sesiones por registrar, transiciones pendientes— agrupado por mesa y ordenado por urgencia. `/master/tables` sigue siendo el listado completo | Un master con tres mesas abiertas no necesita que le digan cuántos candidatos tiene, necesita saber **a quién le debe una respuesta**. Es el principio 4 de §1 aplicado al otro lado del sistema: la lista es la explicación, y un contador de "12 candidatos" obliga a entrar a las tres mesas para descubrir cuál mueve. Se descartó un dashboard con tarjetas de métricas —mesas activas, jugadores totales, asistencia promedio— porque ninguna de esas cifras cambia lo que el master hace a continuación. Reusa la forma de la bandeja de admins (#100) sin su mecanismo: acá **no hay reserva**, porque el trabajo de una mesa tiene un solo dueño y no se lo disputa nadie. |
+
+| 137 | Asistencia histórica: qué es y cómo se calcula | **Se deriva con `COUNT`, no se cachea.** El denominador son las sesiones **con asistencia registrada** — `Unknown` queda fuera. **No se muestra como razón**: se muestran los tres números (`Present`, `Excused`, `Absent`), porque una razón esconde justo la distinción que importa. Índice cubridor `(user_id, attendance)` para que el agregado sea index-only | Faltaba definirla: apareció en las pantallas como "34 de 36" sin que nadie hubiera dicho qué contaba. Excluir `Unknown` no es un detalle: una mesa de 12 sesiones que arrancó ayer tiene 11 sin registrar, y contarlas haría que **todos** se vean como ausentes crónicos justo cuando un master los está evaluando. No colapsar `Excused` con `Absent` es #98 aplicado un nivel más abajo: si mezclar asistencia con karma vuelve el número inexplicable, mezclar una falta avisada con un plantón vuelve inexplicable la asistencia — el master saca su conclusión mejor con los tres números que con un porcentaje que ya decidió por él. **No se cachea** por el precedente de #11, que eliminó `Players_Table` —un contador mantenido por trigger— y lo reemplazó por un `COUNT` para matar de raíz la clase de inconsistencia; cachear la asistencia repetiría ese error. La PK es `(table_session_id, user_id)` y no sirve para buscar por usuario, pero el FK a `users` ya obliga a un índice sobre `user_id`; el índice cubridor agrega `attendance` para que el conteo no toque las filas. **El riesgo real no es el volumen sino el N+1**: un `COUNT` por perfil es trivial, diez candidatos con asistencia en una lista son diez consultas si se resuelven fila por fila — se agrupan en una sola con `GROUP BY`. Si algún día hiciera falta cachearla, el precedente es el karma (#97): columna de proyección con disparadores de recálculo. Hoy no hace falta y adelantarlo sería optimización sin medición. |
+
+| 138 | Alcance del responsive | **Responsive completo: las 27 rutas funcionan en teléfono, tablet y escritorio.** Puntos de corte de Tailwind sin inventar ninguno (`md` 768, `lg` 1024, `xl` 1280) y diseño **de menor a mayor**: las clases sin prefijo son las del teléfono. **Las tablas anchas dejan de ser tablas en móvil**: cada fila se vuelve una ficha con identidad y estado arriba, el resto como texto y la acción al pie. **Nunca scroll horizontal**. Los modales pasan a *sheet* desde abajo | Faltaba por completo: no había una sola mención a responsive ni en `frontend-diseno.md` ni en `arquitectura.md`, y las 20 pantallas dibujadas eran de escritorio. Es una comunidad que vive en Discord, donde la mayoría entra desde el teléfono, así que dejar el móvil afuera dejaba afuera el caso de uso más probable. Se evaluó acotarlo —móvil solo en el contexto Jugador, escritorio en Admin y Owner— y se descartó: parece más barato pero convierte "¿esta pantalla es responsive?" en una pregunta que hay que responder caso por caso, y la respuesta envejece mal cuando un admin quiere resolver la bandeja desde el celular un domingo. **El costo real está identificado y acotado**: `/admin/catalogs`, `/admin/users` y `/owner/audit` tienen cinco o más columnas, y por eso la regla de la tabla-a-ficha es una sola y explícita en vez de resolverse pantalla por pantalla. Decidirlo ahora y no después es lo que evita rehacer las 20 ya dibujadas. |
+| 139 | Cómo se especifican los cuatro estados obligatorios | **Catálogo por arquetipo, no por pantalla.** Cuatro arquetipos —listado, detalle, formulario, dashboard— por cuatro estados, y **toda pantalla hereda los de su arquetipo**. Lo único que cada pantalla define por su cuenta es el **texto del vacío y qué acción ofrece**, en una tabla propia | `frontend-diseno.md` §5 exige los cuatro estados en toda pantalla que lea datos, y `plan-desarrollo.md` §5 los pone como condición de cierre de etapa — pero las 20 pantallas dibujadas estaban **todas en su estado feliz**, sin un solo skeleton ni estado vacío. Dibujar 20 × 4 = 80 variantes se descartó porque el skeleton, el error y el 403 son **idénticos** en los ocho listados: serían setenta y pico de renders repetidos que además envejecen en paralelo y terminan divergiendo. El arquetipo captura lo que se repite y la tabla de textos captura lo único que no. También se descartó hacerlo solo para las pantallas de E1: alineado con la definición de terminado, pero deja el patrón a medio definir y cada etapa lo reinventa distinto. **Un hallazgo del catálogo**: dos estados vacíos —`/master` y `/admin/queue`— son **buenas noticias** ("nada espera tu respuesta"), y tienen que leerse como tales y no como una pantalla rota, que es como se ven si se reusa el vacío genérico sin pensarlo. |
+
+| 140 | "Ver como" — suplantación asistida | **Un admin puede entrar viendo lo que ve otra persona y actuar por ella, con cuatro límites duros.** (a) **Nunca sobre `Admin` ni `Owner`** — sería escalada de privilegios. (b) **Todo lo irreversible queda bloqueado**: vetar (#39), cancelar mesa (#27) y confirmar comentario (#40). (c) **Todo lo que toque comentarios queda fuera por completo** — borradores, diálogo de comentar, comentarios pendientes. (d) **Motivo obligatorio** al iniciar. Se registra en `impersonation_sessions`, con **caducidad automática a los 30 minutos**, y `audit_logs` gana `impersonation_id`. **La persona es notificada al inicio de la sesión**, con el motivo y sin el nombre del admin | El límite (c) no es una precaución, es lo que hace que la función sea admisible. `comment_drafts` **guarda el autor** a propósito: el borrador tiene autor y solo se vuelve anónimo al confirmarse. Un "ver como" sin ese recorte le mostraría a un admin quién escribió qué antes de anonimizarse, y eso anula #43 —marcada **requisito duro del cliente, no negociable**—, contradice #45, que dice que la autoría es la **única** excepción a la visibilidad total del admin, y burla #92, que excluye `comments` y `comment_drafts` de la auditoría justamente para no guardar autor y contenido juntos. Sobre el registro: se pidió que no constara **qué** admin. Se separó **qué se guarda** de **qué se muestra** — `impersonation_sessions.admin_id` se guarda siempre y el `Owner` lo ve en su panel; al afectado y a cualquier otro se les muestra "modificado por un administrador", sin nombre. Sin eso, la función más poderosa del sistema quedaría sin responsable: si un admin hace algo grave con la cara de otro, no habría a quién preguntarle. Se descartó **solo lectura** porque no cubre el caso que originó el pedido —asistir, no mirar— y **actuar sin restricciones** porque permitiría vetar o cancelar una mesa con la identidad de otro, y el afectado solo vería "un administrador". `audit_logs.updated_by` sigue siendo la identidad bajo la que ocurrió el cambio, así que "qué cambió Ana" se sigue respondiendo igual; el rastro del admin cuelga de `impersonation_id`, que es aditivo. |
+| 141 | Configuración del sistema | **Tabla `system_settings` clave-valor con tres categorías** —parámetros de negocio, límites y cuotas, y textos—, editable por admins en `/admin/settings` y **auditada como cualquier otra entidad** (#92). **Ningún secreto vive acá**: el HMAC de #94 y las credenciales siguen en el entorno | No existía ni la ruta ni la tabla, y hay una lista concreta de valores hoy incrustados en el código que la comunidad va a querer mover sin un despliegue: karma inicial, ventana de decaimiento, caducidad de visibilidad (#44), timeout de reserva de la bandeja (#100), tope por archivo, cupo máximo, ventana del feedback (#94) y la justificación por defecto del rechazo automático (#34). Clave-valor y no una columna por ajuste porque agregar un ajuste no debe ser un `ALTER TABLE`, que es el mismo razonamiento de #10 con los `ENUM`. **La regla dura 3 no se rompe**: el almacenamiento es genérico pero el `SettingsService` expone accesores tipados y el endpoint devuelve su `record` con nombre propio — lo dinámico nunca cruza la frontera HTTP. **Dos avisos que van con la función**: cambiar la ventana de decaimiento del karma altera el cálculo **retroactivamente** en el siguiente recálculo (#97), y cambiar la caducidad de visibilidad cambia **quién puede ver a quién** de inmediato (#44). Ninguno de los dos es un ajuste cosmético y la pantalla tiene que decirlo. |
+
+## Qué se rescata de `CentralDungeonBackend`
+
+Revisado a fondo en agosto de 2026, con el repo en `/Users/d4m14n257/Personal/CentralDungeonBackend`. Como referencia de forma, nunca copiando código literal:
+
+- **La forma del `JwtAuthorizationFilter`**: token con el `id` como único claim y `loadUserById` resolviendo autoridades en cada request (#122). Es lo mejor que tiene el repo. Se corrigen tres cosas: el `chain.doFilter()` está **dentro del `try`**, así que cualquier excepción de un controller río abajo se reporta como `401`; `validateToken` lanza en vez de devolver `false`, lo que vuelve engañoso el `&&` que lo acompaña; y no hay refresh token (#125).
+- **La forma de los `@ConfigurationProperties` como records** (`DiscordConfig`, `JwtConfig`, `HostOriginConfig`).
+- **Tomar la identidad de `@AuthenticationPrincipal`** y no de la URL: ese error central del Node ya estaba corregido ahí.
+- El patrón `@RestControllerAdvice` para manejo centralizado de errores.
+
+**Se descarta**, con motivo:
+
+| Qué | Por qué |
+|---|---|
+| `Routes.java` + seguridad por lista de URLs | Cinco de seis rutas sin barra inicial: no protegían nada (#123) |
+| Interfaces `*IController` | El contrato lo publica OpenAPI y lo tipan los records (#119) |
+| `ResponseData<T>` | Duplica el status y ya se contradecía (#120) |
+| Repositorios sobre `JdbcTemplate` | Parámetros corridos, mapeo imposible, SQL que no parsea (#124) |
+| `CustomIdGenerator` | Correcto en sí mismo (`SecureRandom` + Base64, 72 bits), pero **#9 ya fijó UUID v7**, que tiene 74 bits aleatorios y además da localidad de índice en InnoDB |
+| Paquete por capa (`controllers/`, `services/`, `repositories/`) | El proyecto nuevo es paquete por feature (`arquitectura.md` §2.1) |
+| Los controllers stub | `TablesController.getJoinedTables` tiene un `List<>` suelto: el repo no compila |
+
+## Abierto
+
+Lo que sigue sin resolverse. **Dos entradas se retiraron de acá por estar respondidas**: el *diseño de Campañas y Temporadas*, que cerró #129 y solo espera la migración de fase 2, y la *secuenciación de entrega*, que `plan-desarrollo.md` fijó en E1–E6 con comentarios y karma en E5.
+
+| Tema | Estado |
+|---|---|
+| Jerarquía de catálogos | Las columnas `parent_id` se conservan, pero la navegación de árbol nunca se terminó en Node y no es requisito de v1. |
+| **Integración profunda con Discord** | **Planeada, no aprobada por el cliente. Fuera de v1.** Se anota ahora para que las decisiones de hoy no la bloqueen. Alcance previsto: desde la página, redirigir al canal de Discord de tu mesa y unirte directamente; y manejo de canales desde el sistema — abrir el canal cuando la mesa pasa a `Opened` o `InProgress` y cerrarlo cuando pasa a `Finished` o `Canceled`. Implica un bot con permisos sobre el servidor (no solo OAuth2 de login, que es lo único que hay en v1) y una columna de referencia al canal en `game_tables`. **No se agrega nada al modelo por ahora**; cuando se apruebe, es una migración aditiva. |
+| Generar los tipos del frontend desde OpenAPI | Candidato, no adoptado. springdoc ya publica el schema, así que los tipos base de `features/<dominio>/types.ts` podrían generarse en vez de escribirse a mano y quedarían imposibilitados de divergir del backend. Cuesta un paso de build y ata el frontend a que el backend esté levantado o a un artefacto versionado. Se evalúa cuando el contrato de la API esté estable, no antes. Hasta entonces rige `arquitectura.md` §3.2 con tipos escritos a mano. |
+
+## Ciclo de vida de la mesa
+
+Reconstruido en la revisión de agosto de 2026 (decisión #27). Diagramas: [`diagramas/05-ciclo-mesa.mmd`](diagramas/05-ciclo-mesa.mmd) y [`diagramas/06-ciclo-solicitud.mmd`](diagramas/06-ciclo-solicitud.mmd). Cuando esto se cierre, las reglas pasan a `modelo-datos.md` §5 y cada una llega con su test unitario (regla dura 6).
+
+### Estados de `game_tables`
+
+| Estado | Significado | Quién la mueve |
+|---|---|---|
+| `Preparation` | La mesa fue creada por el master y **está a la espera de que un Admin la evalúe**. No es pública. | master (crea) |
+| `ChangesRequested` *(nuevo)* | El Admin no la aprobó pero **pidió correcciones**: no es un rechazo definitivo. El master corrige y la reenvía a `Preparation`. | admin |
+| `Opened` | Pública. Los jugadores envían solicitudes y el master acepta o rechaza. | admin (al aprobar) |
+| `InProgress` | La mesa arrancó y sigue su ciclo natural de sesiones. | master |
+| `PauseRequested` *(nuevo, #32)* | El master pidió pausar y **espera la aprobación de un admin**. La mesa sigue corriendo mientras tanto. | master |
+| `Pause` | Por causa de fuerza mayor se detienen las sesiones. **Congela la agenda**: las sesiones pendientes dejan de aparecer en horario hasta que se retome. | admin (al aprobar), o admin directo |
+| `Finished` | Terminó con éxito, completó sus sesiones. | master |
+| `Canceled` | Se cortó antes de terminar. Alcanzable desde cualquier estado activo. | master o admin, con justificación |
+| `Deleted` | Borrado lógico, transversal. Sella `deleted_at` y arrastra en cascada (#25). | admin |
+
+### Reglas que salen de esto
+
+1. **`Preparation` es una cola de moderación.** Una mesa recién creada no es visible para los jugadores; solo existe para su master y para los admins.
+2. **Aprobar o rechazar notifica al master**, y el rechazo con correcciones lleva el detalle de qué corregir. Sin eso `ChangesRequested` es un estado mudo y el master no sabe qué hacer.
+3. **`Pause` congela la agenda.** No es solo un cambio de `status`: las sesiones pendientes dejan de aparecer en el horario. Al retomar hay que **reagendar**, porque las fechas originales ya pasaron.
+4. **Toda transición a `Pause` y a `Canceled` exige justificación escrita**, guardada en la tabla de moderación, no en `comments` (#32). El master **pide** la pausa (`PauseRequested`) y la mesa no se detiene hasta que un admin la aprueba; si la rechaza, vuelve a `InProgress`. El admin puede pausar directo, pero igual justifica.
+5. **`Canceled` es alcanzable desde `Preparation`, `ChangesRequested`, `Opened`, `InProgress` y `Pause`**, por el master o por un admin.
+6. Las transiciones que **no** están en el diagrama son inválidas y el service las rechaza con `409`. En particular no se vuelve de `Finished` ni de `Canceled` a ningún estado activo.
+
+### Estados de `table_registrations`
+
+| Estado | Significado |
+|---|---|
+| `Candidate` | La solicitud se envió correctamente y espera respuesta del master. **No cuenta contra `max_players`.** |
+| `Player` | Aceptada: el usuario pertenece a la mesa y **sí** cuenta contra `max_players`. |
+| `Rejected` | El master la rechazó. **Siempre** con justificación, en `registration_rejections`. El jugador puede volver a postularse: eso crea una **fila nueva** (#23). |
+| `Blocked` | Veto del master sobre ese usuario en esa mesa. **La mesa deja de existir para él**: no la ve en listados ni en detalle, y no puede saber que existe. |
+| `Deleted` | Borrado lógico, o cascada desde la mesa (#25). |
+
+Reglas asociadas:
+
+1. **Una sola solicitud activa por par mesa/usuario** (#28). Mientras exista una fila en `Candidate` o `Player`, el usuario no puede enviar otra a esa mesa. El reintento se habilita solo tras un `Rejected`.
+2. **La cola es FIFO** (#28): el master ve y atiende a los candidatos en orden de fecha de solicitud, y ese orden no se reordena por ningún otro criterio. Es una regla de equidad, no un detalle de presentación.
+3. **Solo `Player` cuenta contra `max_players`.** Un candidato pendiente no reserva cupo.
+4. **Al llenarse el cupo se rechaza el resto automáticamente** (#34). Aceptar al jugador que completa `max_players` pasa, en la misma transacción, todas las solicitudes `Candidate` restantes a `Rejected`, con la justificación por defecto `Mesa llena` y su notificación a cada jugador. Nadie queda esperando una respuesta que no va a llegar.
+5. **Todo `Rejected` lleva justificación** del master, en `registration_rejections`. Los rechazos automáticos por cupo llevan la justificación por defecto.
+6. **El veto es por mesa** (#29): si el mismo master abre otra mesa, el usuario puede postularse ahí.
+
+**Consecuencia técnica de `Blocked`**: no es solo un estado, es un **filtro de visibilidad**. Toda consulta que liste o devuelva mesas tiene que excluir aquellas donde el usuario autenticado tenga una solicitud `Blocked`, incluida la búsqueda, el detalle por id y cualquier endpoint público. Un `404` (no un `403`), porque un `403` ya delataría que la mesa existe. Es la regla más fácil de olvidar en un endpoint nuevo y por eso va escrita acá.
+
+## Peticiones de la mesa
+
+Diseño de #63. Es funcionalidad nueva; cuando se cierre pasa a `modelo-datos.md`. (El diagrama `10-peticiones-mesa` nunca llegó a existir: el subsistema está cubierto por `diagramas/14-objetivo-peticiones-archivos.mmd`.)
+
+### La idea
+
+Una mesa funciona como un salón de clases: te piden cosas antes de entrar, al entrar y mientras cursás. Cada pedido se responde con **texto enriquecido, archivos, o los dos**. Los tres casos que veníamos tratando por separado son el mismo objeto con distinto momento:
+
+| Caso | Cuándo | Quién responde |
+|---|---|---|
+| Requisitos para postularse | la mesa está `Opened` | el candidato, junto con su solicitud |
+| Requisitos para entrar | al ser aceptado como `Player` | el jugador aceptado |
+| Pedidos durante el juego | mesa `InProgress`, atados a una sesión o sueltos | los jugadores de la mesa |
+
+### Forma
+
+**`table_tasks`** — lo que la mesa pide:
+
+- `game_table_id` — a qué mesa pertenece.
+- `table_session_id` **nullable** — si el pedido está atado a una sesión concreta; `NULL` significa "en cualquier momento".
+- `audience` — `Candidates` (parte de la postulación) | `Players` (ya aceptados) | `Single` (a una persona puntual).
+- `target_user_id` **nullable** — solo cuando `audience = 'Single'`.
+- `title` y `description` (`LONGTEXT`, texto enriquecido, #62).
+- `accepts_text` / `accepts_files` — qué se espera como respuesta. Al menos uno en `true`.
+- `is_mandatory` — si bloquea o no (ver la pregunta 2 más abajo).
+- `due_at` **nullable**.
+- `status`, `created_at`, `deleted_at`.
+
+**`task_submissions`** — lo que cada jugador entrega:
+
+- `task_id`, `user_id`.
+- `content` (`LONGTEXT`, nullable) — la respuesta en texto.
+- `status` — `Pending` | `Submitted` | `Accepted` | `Rejected`.
+- `submitted_at`, `reviewed_at`, `reviewed_by`.
+- Los archivos se vinculan aparte, con el mismo patrón que el resto de los adjuntos (#65: el archivo ya existe y se vincula, no se re-sube).
+
+### Lo que hay que decidir antes de implementar
+
+1. ~~¿La postulación es una petición más?~~ **Resuelto (#69)**: no. Conserva su tabla, con texto enriquecido y archivos, ambos opcionales, y el master define qué exige.
+2. ~~¿Una petición obligatoria bloquea?~~ **Resuelto (#70)**: no bloquea ni expulsa. Se avisa el incumplimiento y queda visible para el master; toda acción posterior es manual.
+3. ~~¿Se reemplaza o se acumula?~~ **Resuelto (#76)**: se acumula. El sistema no decide cuál entrega vale.
+4. ~~¿El master revisa cada entrega?~~ **Resuelto (#76)**: no hay flujo de aprobación en el sistema; revisar es responsabilidad del master. El `status` de `task_submissions` se reduce a `Pending` / `Submitted`.
+5. ~~¿Se notifica?~~ **Resuelto (#77)**: sí, al publicar la petición.
+6. ~~Nombres.~~ **Resuelto (#87)**: `table_tasks` / `task_submissions`.
+
+## Karma — propuesta de cálculo
+
+Cierra **M11**. Fórmula y parámetros decididos (#96–#99). Lo que sigue es implementarlo.
+
+### Qué se revisó
+
+| Familia | Qué es | Veredicto |
+|---|---|---|
+| **Beta Reputation System** (Jøsang & Ismail, 2002) | Cuenta evidencia positiva y negativa como parámetros de una distribución beta: `α = p+1`, `β = n+1`, reputación `E = α/(α+β)`. Incluye un *forgetting factor* para envejecer la evidencia vieja | **Es la base.** Está pensado exactamente para esto: reputación a partir de valoraciones de pares, con pocos datos y comportamiento que cambia en el tiempo |
+| **Promedio bayesiano con prior** | `(C·m + Σ rᵢwᵢ) / (C + Σ wᵢ)` — el prior `m` con peso `C` actúa como valoraciones fantasma hacia las que el puntaje se encoge cuando hay poca evidencia | **Es la forma práctica del anterior**, y permite anclar el prior en 8000 de forma natural |
+| **Wilson score (cota inferior)** | Cota inferior del intervalo de confianza de una proporción binaria. Lo usa Reddit para ordenar comentarios | **Descartado.** Sirve para *ordenar* penalizando lo poco votado, no para dar un puntaje absoluto, y no admite un prior en 0.8 — empuja todo hacia abajo, que no es lo que queremos con un usuario nuevo |
+| **Elo / Glicko** | Puntaje por enfrentamientos entre pares | **Descartado.** Necesita partidas con ganador y perdedor. Acá nadie compite contra nadie |
+
+### La fórmula propuesta
+
+Cada comentario aprobado aporta un valor `v` y un peso `w`:
+
+| `karma_impact` | Significado | Valor `v` |
+|---|---|---|
+| positivo | "me gustó jugar con esta persona" | `1.0` |
+| neutro | "jugamos, sin nada que destacar" | `0.8` — **igual al prior** |
+| negativo (`Reported`) | "me desagradó por su actitud" | `0.0` |
+
+El peso decae con la antigüedad: `w = 2^(−antigüedad / H)`, con `H` = semivida.
+
+```
+karma = 10000 × ( W·m + Σ wᵢ·vᵢ ) / ( W + Σ wᵢ )
+
+  m = 0.8    prior, el 8000 de arranque
+  W = 20     peso del prior, en "comentarios equivalentes"
+  H = 12 meses
+```
+
+**Por qué el neutro vale 0.8 y no 0.** Si el neutro no contara como evidencia, alguien con 20 neutros y 1 negativo quedaría igual que alguien con 1 solo negativo y nada más — y no es lo mismo. Valiendo exactamente el prior, el neutro **no mueve el promedio pero sí acumula confianza**, y por eso amortigua un negativo aislado. Es la diferencia entre 7805 y 7619 en la tabla de abajo.
+
+### Cómo se comporta (con W=20, H=12 meses)
+
+| Situación | Karma |
+|---|---|
+| Usuario nuevo, sin comentarios | **8000** |
+| 1 positivo | 8095 |
+| 3 positivos | 8261 |
+| 10 positivos | 8667 |
+| 30 positivos | 9200 |
+| 1 negativo | 7619 |
+| 3 negativos | 6957 |
+| 10 negativos | 5333 |
+| 50 negativos | 2286 |
+| 20 neutros y nada más | **8000** (no mueve) |
+| 20 neutros + 1 negativo | 7805 |
+| 10 positivos + 3 negativos | 7879 |
+| 3 negativos de hace 12 meses | 7442 (vs 6957 si fueran de hoy) |
+| 3 negativos de hace 24 meses | 7711 |
+
+Cumple los cinco criterios que se habían fijado: **rendimientos decrecientes** (es un promedio, el positivo 30 mueve menos que el 3º), **peso por antigüedad** (la semivida), **proporción y no total**, **resistencia a pocos datos** (con 0 comentarios queda exactamente en 8000), y **explicable** en una frase: *"partís de 8000 y cada comentario tira del promedio; los viejos pesan menos"*.
+
+### Consecuencias operativas
+
+1. **El karma es un valor derivado, no un contador.** Como los pesos decaen con el tiempo, cambia **sin que ocurra ningún evento**. No se puede incrementar al aprobar un comentario: hay que **recalcularlo periódicamente** (un job nocturno). `users.karma` pasa a ser una proyección cacheada, no la fuente de verdad — la fuente son las filas de `comments`.
+2. **Se calcula sin saber quién comentó.** Solo necesita destinatario, `karma_impact` y `created_at`, que es justo lo que `comments` guarda (#43). El anonimato no estorba.
+3. **Solo cuentan los aprobados** (#51).
+4. **Los extremos son asintóticos.** Llegar a 0 exige decenas de negativos sostenidos; 10000 exige lo mismo en positivo. Es deseable —una mala noche no arruina a nadie, un patrón sí— pero significa que el rango real es más angosto que 0–10000. Coherente con #74: el número es una señal para los admins, no un disparador.
+
+### Cerrado
+
+1. **`W = 20`**, **`H = 12 meses`** (#96).
+2. **Recálculo**: al aprobar un comentario, para esa persona; y un job semanal nocturno para todos (#97).
+3. **La asistencia queda fuera del cálculo** y se muestra aparte (#98).
+4. **Se muestra el puntaje y los comentarios**, sin desglose agregado (#99).
+
+## Pendientes del modelo de datos
+
+Salieron de revisar el schema heredado contra los diagramas de `diagramas/` (agosto 2026). **Ninguno está decidido.** Son huecos o ambigüedades que ya existían en el modelo de 2024, no cosas que se hayan roto en la migración. Están ordenados por impacto estructural: M1 cambia la forma del modelo, M6 casi no.
+
+Lo que está en `modelo-datos.md` hoy asume la opción conservadora de cada uno (conservar el comportamiento heredado). Cada decisión que se cierre acá se refleja allá.
+
+### M1 — `table_registrations` hace dos trabajos a la vez — **resuelto en parte (#23)**
+
+> **Cerrado**: se eligió el historial de intentos. Un usuario puede postularse N veces a la misma mesa, sin `UNIQUE`. Queda abierto el residual, que pasó a ser **M7**.
+
+Se conserva el análisis original por contexto:
+
+
+La misma fila es **el proceso de postulación** y **la membresía actual**, en un solo `status` mutable (`Candidate | Player | Rejected | Blocked | Deleted`).
+
+Consecuencias observadas:
+- Expulsar a un jugador y rechazar una postulación escriben el mismo campo. `Rejected` vs `Blocked` no tienen criterio documentado de cuál corresponde a cuál.
+- **No hay historial.** Si alguien se postula, lo rechazan y se vuelve a postular, o se pisa la fila anterior o el `UNIQUE (game_table_id, user_id)` lo impide.
+- `registration_rejections` intenta guardar el historial del rechazo, pero cuelga de una postulación con un único estado, así que no se puede reconstruir la secuencia.
+
+Opciones:
+- **(a) Conservar como está** — una fila por par mesa/usuario, `status` mutable. Es lo más barato y lo que hace `modelo-datos.md` hoy. Se pierde historial para siempre.
+- **(b) Separar postulación de membresía** — `table_registrations` como historial inmutable (una fila por intento, sin `UNIQUE`) y `table_players` como membresía actual. Es lo correcto en modelo y hace explícito quién juega hoy; cuesta una tabla más y reescribir el flujo de aceptación.
+- **(c) Conservar una fila, agregar tabla de transiciones** — `registration_status_changes` con quién, cuándo y de qué estado a cuál. Da auditoría sin partir el modelo.
+
+Depende de si la comunidad **abre mesas por temporadas** (mismo jugador postulándose repetidamente a lo largo del tiempo). Si sí, (a) no alcanza. Ligado a Campañas y Temporadas (#7).
+
+### M2 — Comentarios sin mesa y karma sin valor numérico — **resuelto en parte (#30, #31)**
+
+> **Cerrado**: el karma va de 0 a 10000 con 8000 por defecto; los comentarios se atan a la **sesión** en que ocurrieron, se tipifican como positivo / negativo / neutro y hay un límite de uno por autor para evitar spam. Sigue abierto **cuánto** suma o resta cada tipo, y el alcance exacto del "solo una vez" → **M11**.
+
+Se conserva el análisis original por contexto:
+
+
+`comments.comment_type` codifica la dirección de la relación (`JJ` jugador→jugador, `JM` jugador→master, `MJ` master→jugador, `General`), pero **no dice en qué mesa ocurrió**: no hay FK a `game_tables`. Además `karma_impact` es un enum (`Commented | Neutral | Reported`), no un número: cuánto suma o resta cada valor no existe en ningún lado, y `users.karma` arranca en 8000 sin techo ni piso definidos. En el schema heredado los comentarios tampoco tenían `created_at` ni `reviewed_at` (eso sí ya está corregido en `modelo-datos.md`).
+
+A decidir:
+1. ¿El comentario se ata a una mesa (`game_table_id` nullable, obligatorio salvo en `General`)? Sin eso no se puede validar que quien comenta haya convivido realmente con el comentado, ni mostrar el contexto.
+2. ¿Cuánto vale cada `karma_impact`? Si los valores son fijos, van como constantes del service; si el admin los ajusta, es una tabla de configuración.
+3. ¿`karma` tiene piso/techo? ¿Qué pasa al llegar al piso — bloqueo automático o solo señal para los masters?
+
+Sin (2) la feature de karma no se puede implementar, solo el CRUD de comentarios.
+
+### M3 — Los adjuntos no tienen estado propio — **ampliado por #60 y M21–M26**
+
+> El alcance real de archivos resultó bastante mayor que lo que se veía en el schema. Ver #60, #61 y los pendientes **M21** a **M26**. Lo de abajo sigue vigente pero es solo una parte del problema.
+
+
+`table_files` no tiene columna `status`: el borrado lógico está metido dentro de `table_file_type ENUM('Preparation','Sesion','Deleted')`, así que **borrar un archivo de una mesa pierde el dato de si era de preparación o de sesión**. `registration_files` no tiene ni `status` ni fecha: no se sabe cuándo un jugador subió su ficha, y retirarla exige borrado físico.
+
+`modelo-datos.md` ya asume la corrección (columna `status` separada del tipo, `is_private` en `table_files`). Lo que falta decidir es el comportamiento, no la columna:
+- ¿Un jugador puede reemplazar su ficha de personaje una vez aceptado, y se conservan las versiones anteriores?
+- ¿Los archivos de sesión los ve todo jugador de la mesa, o `is_private` es por archivo y lo decide el master?
+
+### M4 — Horarios sin fin ni excepciones — **resuelto en parte (#26)**
+
+> **Cerrado**: la mesa lleva su número de sesiones previstas, así que sí tiene final. Lo que sigue abierto es si las sesiones se **materializan** como filas o se **derivan** del calendario — y el estado `Pause` empuja fuerte hacia materializarlas. Pasó a **M10**.
+
+Se conserva el análisis original por contexto:
+
+
+`table_schedules` es recurrencia semanal pura (`weekday` + `hourtime`). Con `game_tables.start_date` y `duration` alcanza para "los martes 20:00, tres horas", pero no hay fecha de término, ni forma de decir "esta semana se cancela" o "esta sesión se corrió al jueves".
+
+Opciones:
+- **(a) Conservar** la recurrencia pura. Las cancelaciones se comunican por Discord, fuera del sistema.
+- **(b) Agregar `end_date`** a `game_tables`. Barato, cubre "la mesa dura N semanas".
+- **(c) Agregar `table_sessions`** — sesiones materializadas con fecha concreta y estado (`Scheduled | Held | Cancelled`). Habilita asistencia, notas de sesión y "próxima sesión" real, pero es una feature nueva completa, no un ajuste.
+
+Ligado a Temporadas (#7): si las mesas son por temporada, (b) es casi obligatorio.
+
+### M5 — Un master puede postularse a su propia mesa — **resuelto (#73)**
+
+> **Cerrado**: un `Primary` por mesa, exactamente uno. Y un master puede postularse solo si además tiene el rol `Player` — ser master no implica poder jugar, porque los roles son permisos acumulables y no una escala (#37, #67).
+
+
+Nada en el schema lo impide: `masters` y `table_registrations` son independientes. Puede ser deseable (un master que además juega en la mesa de otro co-master) o un bug. Si debe impedirse, es una validación de `RegistrationService`, no una constraint. Si debe permitirse, conviene anotarlo para que no aparezca como "bug" más adelante.
+
+Relacionado: nada impide tampoco que una mesa quede **sin ningún `Owner`**, o con dos. ¿`master_type = 'Owner'` es único por mesa? Hoy no lo es.
+
+### M6 — La identidad depende por completo de Discord — **resuelto (#83, #84, #85)**
+
+> **Cerrado**: sin recuperación automática; el owner puede migrar datos a una cuenta nueva (#83). Salirse del servidor conserva los datos, ser baneado no (#84). Un cambio en el OAuth de Discord es riesgo asumido con respuesta reactiva (#85).
+
+
+`users` no tiene email ni contacto alterno. Es coherente con el login exclusivo por Discord (`decisiones.md` #16 y el flujo de `arquitectura.md` §2.6), pero implica que perder la cuenta de Discord es perder la cuenta de CentralDungeon, sin ruta de recuperación. Es aceptable para una comunidad que vive en Discord; se anota para que sea una decisión y no un descubrimiento.
+
+### M7 — Con N solicitudes por mesa, ¿cuál es la vigente? — **resuelto (#28)**
+
+> **Cerrado con la opción (b)**: una sola fila activa (`Candidate` o `Player`) por par mesa/usuario, y no se puede enviar otra solicitud mientras exista. Así "la última" y "la activa" son siempre la misma fila y no hace falta desempatar nada. Se sumó la regla FIFO de atención, que no estaba en ninguna de las opciones planteadas.
+
+Se conserva el análisis original por contexto:
+
+Consecuencia directa de #23. Si un usuario tiene tres filas para la misma mesa (`Rejected`, `Rejected`, `Player`), hace falta una regla para responder "¿este usuario juega en esta mesa?". Sin ella, cada endpoint la va a inventar por su cuenta.
+
+Opciones:
+- **(a) La más reciente por `created_at`** manda. Simple, pero necesita un desempate y se vuelve frágil si dos escrituras caen en el mismo instante.
+- **(b) Constraint parcial**: como máximo una fila activa (`Candidate` o `Player`) por par mesa/usuario; el historial son las `Rejected`/`Deleted`. MySQL no tiene índices únicos parciales, así que se implementa como columna generada o se valida en el service.
+- **(c) Separar de una vez** membresía (`table_players`) de historial (`table_registrations`) — la opción M1(b) original.
+
+**(b) es la que menos mueve el modelo** y mantiene la invariante donde se puede verificar. También hay que decidir si un `Blocked` bloquea la creación de solicitudes nuevas (debería) y si un `Player` puede postularse otra vez a la mesa en la que ya juega (no debería).
+
+### M8 — Alcance del veto (`Blocked`) — **resuelto (#29)**
+
+> **Cerrado**: el veto es **por mesa y nada más**. No sigue al usuario a otras mesas del mismo master ni a la plataforma. Como siempre reacciona a una solicitud existente, `Blocked` se queda dentro de `table_registrations` y no hace falta la tabla `table_bans` que se había planteado. Quedan dos residuales menores en **M12**.
+
+Se conserva el análisis original por contexto:
+
+`Blocked` hace desaparecer la mesa para ese usuario. Falta definir:
+
+1. **¿Se puede vetar preventivamente?** Hoy `Blocked` es un estado de una solicitud, así que **requiere que el usuario se haya postulado antes**. Si un master quiere vetar a alguien que nunca se postuló, no hay fila donde ponerlo. Si eso hace falta, `Blocked` no puede vivir en `table_registrations`: necesita su propia tabla (`table_bans`) con el par mesa/usuario.
+2. **¿Quién puede vetar?** ¿Cualquier master de la mesa o solo el `Owner`?
+3. **¿Es reversible?** ¿Un master puede levantar el veto, o queda para siempre?
+4. **¿El veto oculta la mesa también a un admin bloqueado?** Presumiblemente el rol Admin ve todo; conviene dejarlo escrito porque es una excepción al filtro.
+
+Relacionado con `users.status = 'Blocked'`, que es el bloqueo **global** de la plataforma. Son dos cosas distintas y conviene que los nombres no se confundan.
+
+### M9 — Dónde se guardan las justificaciones de transición — **resuelto (#32)**
+
+> **Cerrado**: tabla propia, separada de `comments`, porque `comments` es opinión entre personas y alimenta el karma. Y la pausa pedida por un master **no** es efectiva hasta que un admin la aprueba, así que la máquina de estados gana `PauseRequested`.
+
+Se conserva el análisis original por contexto:
+
+Las decisiones #27 y las reglas del ciclo de vida exigen guardar el motivo de: correcciones pedidas por un admin, pausa (con aprobación del admin), y cancelación. Hoy no hay dónde.
+
+- **La tabla `comments` no sirve** para esto: es usuario→usuario y está atada al karma. Mezclar moderación de mesas ahí contamina las dos features.
+- Lo natural es **`table_status_changes`**: `game_table_id`, `from_status`, `to_status`, `changed_by`, `justification`, `created_at`, y para el caso de la pausa solicitada por el master, `approved_by` / `approved_at`. Da además historial completo de la mesa gratis, que es lo que `audit_logs` nunca llegó a dar de forma consultable.
+- El aviso al master es una fila en `notifications`, no un comentario.
+
+Falta decidir además: **¿la pausa pedida por el master es efectiva de inmediato o solo cuando el admin la aprueba?** Cambia el modelo — si es diferida, hace falta un estado intermedio (`PauseRequested`) o un campo de pendiente en la tabla de transiciones.
+
+### M10 — Sesiones: ¿materializadas o derivadas? — **resuelto (#33)**
+
+> **Cerrado con la opción (b)**: se materializan en `table_sessions`. Derivar el calendario solo funcionaría si nada pudiera alterarlo, y `Pause` lo altera: al retomar hay que reagendar lo pendiente, y para eso hay que saber qué se jugó de verdad.
+
+Se conserva el análisis original por contexto:
+
+Residual de M4 tras #26. Con `start_date` + `table_schedules` + `duration` + número de sesiones, el calendario **se puede derivar** por cálculo. Pero el estado `Pause` pide saber "quedaban 5 sesiones pendientes", y eso exige saber cuántas se jugaron realmente — que no es derivable, porque una sesión puede caer en su horario y no haberse jugado.
+
+- **(a) Derivar + contador** `sessions_held` en `game_tables`. Barato, resuelve el `Pause`, no permite cancelar una sesión puntual ni mover una sola fecha.
+- **(b) Materializar `table_sessions`** con fecha concreta y estado (`Scheduled | Held | Cancelled`). Resuelve `Pause`, reagendado al retomar, excepciones puntuales, asistencia y notas de sesión. Es una feature nueva completa.
+
+`Pause` como está descrito (congelar y **reagendar** al retomar) apunta a **(b)**: para reagendar hay que saber qué quedó pendiente. Conviene decidirlo antes de escribir el service de mesas, porque cambia la forma de la agenda.
+
+### M11 — Alcance del "solo una vez" de los comentarios, y cuánto vale cada uno — **resuelto (#35, #36, #96–#99)**
+
+> **Cerrado**: uno por autor sobre la misma persona **por mesa**, no por sesión. Y las sesiones **sí** llevan asistencia (#36), lo que permite validar que quien comenta jugó realmente con el comentado y usar la asistencia como métrica adicional de karma.
+>
+> **Candidato, sin decidir**: habilitar un **segundo comentario al cerrar la mesa** — uno durante el transcurso y otro al finalizar, dirigido a master y jugadores. Tiene sentido (la opinión al terminar una campaña no es la misma que a mitad de camino), pero duplica el peso que una sola persona puede mover en el karma de otra, así que conviene decidirlo junto con los valores de karma.
+>
+> **Cerrado también el cálculo** (#96–#99): promedio bayesiano con prior, `W=20`, `H=12 meses`, la asistencia fuera y el desglose no se muestra.
+
+Se conserva el análisis original por contexto:
+
+Residual de #31 y #30. Dos cosas distintas:
+
+**1. ¿Uno por qué exactamente?** "Solo aplican durante sesiones, y solo una vez" admite tres lecturas, y cada una es un `UNIQUE` distinto:
+
+- **(a) Uno por autor → persona → sesión.** Un jugador que comparte diez sesiones con otro puede dejarle diez comentarios, uno por sesión. Es la lectura más literal de "durante sesiones", pero deja la puerta abierta a hundir el karma de alguien a lo largo de una campaña larga.
+- **(b) Uno por autor → persona → mesa.** Se comenta en el contexto de una sesión, pero solo una vez por mesa. Corta el efecto acumulativo sin impedir opinar en mesas distintas con la misma persona.
+- **(c) Uno por autor → persona, para siempre.** El más restrictivo; también el que hace que el karma deje de reflejar comportamiento reciente.
+
+**(b) es la que mejor calza con la intención antispam**, pero es decisión tuya porque cambia cuánto puede moverse el karma de alguien.
+
+**2. ¿Cuánto suma o resta cada tipo?** — *los extremos quedaron resueltos en #74; falta el cálculo.*
+
+> **CERRADO (#96–#99)**: promedio bayesiano con prior en 8000, peso 20 y semivida de 12 meses. Fórmula, comportamiento y consecuencias en la sección *Karma — propuesta de cálculo*.
+
+Se conserva el análisis original por contexto:
+
+**Dirección elegida**: no alcanza con sumar o restar una constante (`+5`, `−7`). Hay que evaluar un modelo que refleje comportamiento, no volumen de comentarios. Criterios que conviene que cumpla, para acotar la búsqueda:
+
+- **Rendimientos decrecientes**: el décimo comentario positivo debería mover menos que el primero, o el karma se vuelve un concurso de popularidad.
+- **Peso por antigüedad**: lo reciente debería pesar más que lo de hace dos años, para que alguien pueda recuperarse de una mala racha.
+- **Sensible a la proporción, no al total**: 3 negativos sobre 4 comentarios es peor que 3 sobre 60.
+- **Resistente a números chicos**: alguien con dos comentarios no debería quedar en un extremo. Un promedio ponderado hacia el valor inicial (8000) mientras hay poca evidencia resuelve esto.
+- **Explicable**: si un jugador pregunta por qué bajó su karma, tiene que haber una respuesta comprensible. Un modelo que nadie puede explicar genera más conflicto del que evita.
+
+Familias que valdría revisar: promedio bayesiano con prior en 8000, sistemas tipo Elo/Glicko adaptados a valoración, o media móvil ponderada por antigüedad. **Sin decidir** — es investigación pendiente, no una elección entre opciones ya conocidas.
+
+Además: Y hace falta definir qué pasa en los extremos de la escala 0–10000: ¿el karma simplemente se topa, o llegar a 0 dispara algo (aviso a admins, bloqueo global)? Sin esto la feature de karma no es implementable, solo el CRUD de comentarios.
+
+Además, atar el comentario a la sesión (#31) implica que **solo puede comentar quien estuvo en esa sesión**: si `table_sessions` no registra asistencia, no hay forma de validarlo y cualquier `Player` de la mesa podría comentar sobre cualquier otro. Decidir si las sesiones llevan asistencia es parte de esto.
+
+### M12 — Residuales del veto — **resuelto (#39)**
+
+> **Cerrado**: veta el `Owner`. Un co-master puede pedirlo, con justificación, y el `Owner` aprueba. Es reversible, y veto y levantamiento quedan en el historial.
+
+Se conserva el análisis original por contexto:
+
+Vetar (`Blocked`) es la acción más fuerte que un master puede tomar sobre un jugador: la mesa deja de existir para él. Por eso conviene tener escrito quién puede hacerlo y si se puede deshacer. Dos preguntas concretas:
+
+**1. ¿Cualquier master de la mesa puede vetar, o solo el `Owner`?**
+
+Una mesa puede tener varios masters: uno es `Owner` (el que la creó) y los demás son `Master` (co-narradores que el Owner sumó). Hoy nada distingue lo que puede hacer cada uno más allá del nombre del rol.
+
+El escenario que hay que resolver: **Ana crea la mesa (`Owner`) y suma a Beto como co-master. ¿Puede Beto vetar a un jugador que Ana aceptó, sin consultarle?**
+
+- **(a) Solo el `Owner` veta.** Los co-masters aceptan y rechazan solicitudes, pero la expulsión definitiva la firma el dueño de la mesa. Más seguro, y le da sentido real a la distinción `Owner`/`Master`, que si no queda casi decorativa.
+- **(b) Cualquier master veta.** Más ágil — si el Owner no está disponible, la mesa no queda bloqueada. Pero un co-master puede echar a alguien que el Owner quería en la mesa.
+- **(c) Cualquiera veta, pero el `Owner` puede revertirlo.** Combina las dos, a cambio de depender de que (2) sea reversible.
+
+**Recomendación: (a)**, porque es la única que le da contenido a la distinción `Owner`/`Master` que el modelo ya arrastra desde el schema heredado. Si al final cualquier master puede hacer todo, conviene entonces preguntarse si `master_type` debería existir.
+
+**2. ¿El veto se puede levantar?**
+
+El escenario: **un master veta a un jugador en caliente, después de una discusión. Al día siguiente se arregla la cosa. ¿Puede deshacerlo?**
+
+- **(a) Sí, reversible.** La fila `Blocked` se marca como borrada y el par mesa/usuario queda libre: el jugador puede volver a postularse. Hace falta definir quién puede levantarlo (¿el mismo master, el Owner, un admin?).
+- **(b) No, es definitivo.** Más simple de implementar y más contundente, pero un veto por enojo queda para siempre y el único recurso del jugador es que un admin toque la base a mano.
+
+**Recomendación: (a) reversible**, dejando el registro del veto y de su levantamiento en la tabla de justificaciones de moderación (#32), para que quede el historial aunque el efecto se deshaga.
+
+Nota: nada de esto aplica a `users.status = 'Blocked'`, que es el bloqueo global de la plataforma y lo aplica un admin, no un master.
+
+### M15 — El anonimato duro choca con tres decisiones previas — **resuelto (#82)**
+
+> **Cerrado**, con una corrección al análisis original: la opción (a) de abajo —tabla de cuota con `(autor, comentado, mesa)` en claro— **no cumplía #43**. Esa tabla, por sí sola y sin necesidad de correlacionar timestamps, es el registro de quién comentó sobre quién. La opción correcta es la (b): **token `HMAC` con el secreto fuera de la base**. Con el token opaco los timestamps dejan de ser un problema, y por eso `comments` puede llevar `created_at` normal.
+>
+> Sigue valiendo el resto: `comments` sin `table_id` (#82 no lo cambia), `comments` excluida de `audit_logs`, y el autor viviendo solo en `comment_drafts` (#49).
+
+
+El requisito de #43 es más fuerte de lo que parece: **si el dato está en la base, alguien con acceso a la base lo sabe.** Anonimato real significa que la información no se guarda, no que no se muestre. Eso rompe tres cosas que ya se habían dado por cerradas, y hay que resolverlas antes de escribir la feature.
+
+**1. El `UNIQUE` antispam necesita saber quién escribió (#35).**
+
+"Un comentario por autor sobre la misma persona por mesa" es, literalmente, un `UNIQUE (autor, comentado, mesa)`. Guardar esa tupla es guardar la autoría.
+
+- **(a) Tabla de cuota separada.** `comment_quota (author_id, target_id, table_id)` con el `UNIQUE`, **sin ninguna referencia al comentario**. El comentario se guarda en `comments` sin autor. La cuota prueba "esta persona ya comentó sobre aquella en esa mesa" sin que exista forma de decir *cuál* de los comentarios es. Es la opción recomendada.
+- **(b) Token derivado.** Guardar `HMAC(secreto, autor+comentado+mesa)` en el comentario y poner el `UNIQUE` ahí. Con la comunidad siendo chica, alguien con la base *y* el secreto puede probar todas las combinaciones y desanonimizar. Anonimato aparente, no real.
+- **(c) Renunciar al antispam.** Cae #35.
+
+Con **(a)** queda un residuo: si `comment_quota` y `comments` se escriben en la misma transacción, **los timestamps se correlacionan** y la autoría se reconstruye ordenando por fecha. Para que (a) sea real, `comments` no puede guardar un `created_at` de precisión fina — solo el mes, o nada.
+
+**2. Guardar la mesa en el comentario delata al master (#31, #35).**
+
+Lo notaste vos mismo: en un comentario `MJ` (master→jugador), si la mesa tiene un solo master, el `table_id` **es** el autor. Lo mismo con `JM` si la mesa tuvo pocos jugadores.
+
+La salida es separar **validar** de **persistir**: el service verifica al escribir que autor y comentado coincidieron en esa mesa y que la cuota está libre, y después guarda el comentario **sin `table_id`**. La evidencia se usa y se descarta. El comentado ve la opinión, no de dónde vino.
+
+**3. `audit_logs` destruiría el anonimato en silencio.**
+
+`modelo-datos.md` §5 dice que *toda escritura relevante* genera su fila en `audit_logs`, con `updated_by` y `after_data` en JSON. Aplicado a `comments`, eso guarda autor y contenido juntos: el anonimato se pierde por la puerta de atrás, sin que nadie lo haya decidido.
+
+**`comments` tiene que quedar explícitamente excluida de la auditoría**, o auditarse sin actor y sin cuerpo. Vale la pena revisar lo mismo en `notifications`: el aviso "recibiste un comentario" no puede nombrar a quien lo escribió.
+
+**4. Lo que sí se guarda, necesariamente.** — *confirmado por #51*
+
+Las dos puntas no podían ser anónimas: el karma tiene que caer sobre alguien y esa persona tiene que poder leer sus comentarios. #51 lo zanjó al describir la moderación ("el admin lee el comentario que se le hace a N persona"): **anónimo el autor, conocido el destinatario**. `user_commented_id` se guarda; `user_created_id` desaparece de `comments` y vive solo en `comment_drafts` (#49).
+
+Y con `comment_type` guardado (`JJ`/`JM`/`MJ`), un comentario `MJ` ya dice que el autor era un master de alguna mesa del comentado. Con el `table_id` fuera y la ventana de dos semanas (#44), el conjunto de sospechosos deja de ser uno solo — pero conviene saber que la dirección del comentario nunca es información nula.
+
+### M16 — Comentarios escritos antes de que la mesa se cancele — **resuelto (#48)**
+
+> **Cerrado con una cuarta opción, mejor que las tres planteadas**: el comentario queda en **borrador** hasta que la mesa llega a `Finished`; ahí el autor lo revisa o lo corrige y recién entonces se confirma. Si la mesa se cancela, el borrador nunca se valida. No hace falta anular nada ni revertir karma, porque el borrador nunca fue un comentario.
+>
+> Consecuencias que hay que resolver: **M17**.
+
+Se conserva el análisis original por contexto:
+
+Choque entre #40 y #46. Por #40 se puede comentar **durante** la mesa (el frontend solo advierte que conviene esperar al final). Por #46 una mesa `Canceled` **no genera** comentarios ni karma. ¿Qué pasa con los que ya se escribieron cuando la mesa todavía estaba en `InProgress` y después se canceló?
+
+- **(a) Se anulan y se revierte su karma.** Coherente con el motivo de #46: si la cancelación fue por fuerza mayor, nadie debería quedar juzgado por esa mesa. Requiere poder revertir el efecto en el karma, es decir guardar cuánto sumó o restó cada comentario, no solo recalcular.
+- **(b) Se conservan.** Se escribieron cuando la mesa estaba viva y reflejan interacción real que sí ocurrió. Pero deja una asimetría rara: quien comentó temprano cuenta, quien esperó al final —lo que #40 recomienda— se queda sin comentar.
+- **(c) Se cierra la puerta antes: solo se puede comentar cuando la mesa está `Finished`.** Elimina el problema de raíz y hace de #40 una advertencia innecesaria, porque ya no habría forma de comentar antes de tiempo. A cambio, se pierde la posibilidad de dejar la impresión en caliente.
+
+**(c) es la más simple y la más consistente** con el resto de lo decidido: si el mejor momento para evaluar es al final (#40), y una mesa cancelada no se evalúa (#46), entonces la ventana de comentarios es exactamente la de #44 — las dos semanas posteriores a `Finished`. Pero implica revisar #40, así que es tu decisión.
+
+### M17 — Consecuencias del comentario en borrador — **resuelto (#49, #50, #51)**
+
+> **Cerrado**: el autor vive solo en `comment_drafts` (#49); el borrador no confirmado expira con aviso previo (#50); **todos** los comentarios confirmados pasan por moderación de un admin y el karma se mueve solo con los aprobados (#51).
+>
+> Queda un residuo del punto 2, en **M18**.
+
+Se conserva el análisis original por contexto:
+
+De #48. Tres cosas que hay que definir antes de escribir la feature:
+
+**1. El borrador obliga a guardar al autor, y eso choca con el anonimato (#43, M15).**
+
+Para que el autor pueda volver, revisar y corregir su borrador, el sistema tiene que saber que ese borrador es suyo. O sea: **mientras está en borrador, la autoría existe en la base**.
+
+La salida limpia es separarlos en dos tablas:
+
+- **`comment_drafts`** — con `author_id`, editable, visible solo para su autor. Es un espacio privado, no un comentario.
+- **`comments`** — la fila anónima definitiva, que se crea al confirmar. En ese momento se escribe también la fila de cuota (M15) y **se borra el borrador**.
+
+Así la autoría existe solo mientras el comentario todavía no cuenta, y desaparece exactamente cuando empieza a contar. Hay que tener presente que **los borradores de mesas canceladas deben purgarse**: si quedan, son un registro permanente de quién iba a decir qué sobre quién — justo lo que #43 prohíbe. Y que la fila borrada sigue existiendo en backups y binlogs, así que "borrar" tiene que ser borrado físico, no lógico.
+
+**2. ¿Qué pasa si el autor nunca confirma?**
+
+La mesa termina, se abre la ventana de dos semanas (#44) y el autor no vuelve a entrar.
+
+- **(a) El borrador expira** y no cuenta. Es lo más consistente con "confirmar es un acto deliberado", pero se pierde una opinión que alguien se tomó el trabajo de escribir.
+- **(b) Se confirma solo** al cerrarse la ventana: silencio = conformidad. No se pierde nada, pero publica sin que nadie lo relea, que era justamente lo que #48 quería evitar.
+- **(c) Expira, con recordatorio** por `notifications` al terminar la mesa y otro antes de que cierre la ventana.
+
+**(c)** conserva la intención de #48 y reduce la pérdida a quien de verdad no quiso confirmar.
+
+**3. ¿Cómo convive con la moderación de admins?**
+
+El schema heredado tiene `comments.status` = `Under review | Reviewed | Rejected | Deleted` con un `user_reviewed_id`, es decir un circuito de moderación por admin, y `modelo-datos.md` §5 dice que el karma se aplica cuando el comentario está **aprobado**. Sumando #48, un comentario pasaría por tres compuertas: borrador → confirmado por el autor → aprobado por un admin → recién ahí mueve karma.
+
+Falta decidir si esa tercera compuerta existe para **todos** los comentarios o solo para los **reportados**. Moderar uno por uno todos los comentarios de la comunidad es un volumen de trabajo que conviene medir antes de comprometerse; moderar solo los reportados es lo habitual, y deja el karma aplicándose al confirmar.
+
+### M18 — Un borrador con `deleted_at` sigue siendo un registro de autoría — **resuelto (#52)**
+
+> **Cerrado con la opción (a)**: `deleted_at` + purga de `author_id` y del texto. Se conserva la fila y el dato agregado; se pierde lo identificable.
+
+Se conserva el análisis original por contexto:
+
+Residuo de #50, y el único punto donde la convención general de borrado lógico (#25) no alcanza.
+
+`deleted_at` marca la fila como borrada, pero **la fila sigue ahí, con `author_id`, el destinatario y el texto**. Un borrador expirado en ese estado es exactamente el dato que #43 prohíbe: quién iba a decir qué sobre quién, guardado para siempre y legible por cualquiera con acceso a la base — incluidos los admins y quien desarrolla, que son justamente los que no deben poder saberlo.
+
+Y no es un caso raro: pasa **cada vez que alguien escribe un borrador y no vuelve a confirmarlo**, que va a ser frecuente.
+
+Opciones:
+
+- **(a) `deleted_at` + purga del contenido.** Se conserva la fila y se le vacían `author_id` y el texto. Queda registro de que hubo un borrador que expiró —sirve para métricas, para saber cuánta gente escribe y no confirma— sin guardar nada identificable. Mantiene la convención de #25.
+- **(b) Borrado físico.** El `DELETE` real. Más contundente, pero rompe la convención de borrado lógico del proyecto y no deja ni la métrica.
+- **(c) Dejarlo como está.** Simple, y deja el anonimato sostenido solo por que nadie mire la tabla — que no es anonimato.
+
+**Recomiendo (a)**: cumple #43 sin pelearse con #25.
+
+Independiente de cuál se elija, vale saber que **la fila borrada sobrevive en backups y en el binlog de MySQL** por el tiempo que estén configurados para retener. Anonimato perfecto contra alguien con acceso a la infraestructura no existe; lo que sí se puede garantizar es que la base viva no lo tenga.
+
+Mismo razonamiento aplica a los borradores de **mesas canceladas**: se descartan por #48, y ese descarte también tiene que purgar contenido, no solo marcar la fila.
+
+### M19 — Cómo modelar los sinónimos de catálogo — **resuelto (#54, #59)**
+
+> **Cerrado con la opción (a)**: `canonical_id` plano, profundidad 1 siempre (#59). La relación es equivalencia pura y simétrica (#54), así que el árbol de profundidad libre no aportaba nada y era el origen de la dificultad al dar de baja.
+
+Diagrama: [`diagramas/08-catalogos-sinonimos.mmd`](diagramas/08-catalogos-sinonimos.mmd).
+
+**El diagnóstico.** Lo difícil de borrar un padre no es un problema de implementación: es un síntoma. `parent_id` modela un **árbol de profundidad libre**, pero el dominio (#53) es una **clase de equivalencia**: un conjunto de nombres que significan lo mismo, con uno elegido como canónico. En un conjunto de equivalencia la profundidad no aporta información —un sinónimo de un sinónimo es simplemente un sinónimo— y por eso todo el trabajo de reordenar el subárbol al borrar el padre es trabajo que no compra nada.
+
+**Consecuencias del modelo actual**, todas evitables:
+
+- Cada búsqueda por catálogo necesita un CTE recursivo para subir hasta la raíz.
+- Borrar el canónico obliga a: promover al primer hijo, reasignarle los hermanos, y reacomodar los hijos que el promovido ya tenía.
+- Nada impide un **ciclo** (`A → B → A`), que cuelga el CTE recursivo.
+- Nada impide que dos ramas del mismo concepto queden con canónicos distintos.
+
+**Opciones:**
+
+- **(a) `canonical_id` plano, profundidad 1 siempre.** Cada alias apunta **directo** al canónico, nunca a otro alias. Búsqueda sin recursión (`COALESCE(canonical_id, id)`), borrar el canónico son **dos `UPDATE`**, y los ciclos se vuelven imposibles con un `CHECK` de un nivel. Migrar desde el árbol actual es aplanar: todo descendiente pasa a apuntar a su raíz.
+- **(b) Tabla de grupo aparte.** `tag_groups(id, canonical_tag_id)` y `tags.group_id`. Conceptualmente lo más limpio —el canónico es un atributo del grupo, no de un miembro— y borrar el canónico es un solo `UPDATE`. Cuesta una tabla más por catálogo, tres en total.
+- **(c) Conservar el árbol.** Solo tiene sentido si hace falta jerarquía real, ver la pregunta de abajo.
+
+**Recomiendo (a)**: resuelve el problema completo, no agrega tablas y la migración es trivial.
+
+**Objeción registrada**: *"`canonical_id` no tiene sentido si lo pensamos con la jerarquía que manejamos"*, y la dificultad de reestructurar los tags al dar de baja uno en uso.
+
+**Respuesta.** La jerarquía se conserva en su totalidad — lo que se pierde es el **camino**, y el camino no se usa nunca. La prueba está en el propio código heredado: el CTE de `legacy/backend-node/src/app.ts` sube nodo por nodo y al final descarta todo salvo la raíz (`WHERE tag_id IS NULL`). Los nodos intermedios se recorren y se tiran. Un dato que se calcula y se descarta en cada uso no es información: es trabajo.
+
+Bajo equivalencia pura y simétrica (#54), "el hijo más cercano" no significa nada, porque no hay cercanía — los cinco nombres son el mismo concepto. Por eso "promover al primer hijo" ya era arbitrario en el árbol; el modelo plano no pierde un criterio que existiera, solo hace evidente que no existía.
+
+**Y la reestructuración —que es lo que hoy no tiene solución— es justamente lo que el modelo plano vuelve trivial.** Diagrama: [`diagramas/09-catalogos-operaciones.mmd`](diagramas/09-catalogos-operaciones.mmd).
+
+| Operación del admin | Con árbol | Con `canonical_id` |
+|---|---|---|
+| Fusionar dos grupos | reparentar el subárbol, verificar ciclos | 1 `UPDATE` |
+| Sacar un alias del grupo | ¿y sus hijos? decisión caso por caso | 1 `UPDATE` |
+| Cambiar el canónico | invertir la cadena padre-hijo | 2 `UPDATE` |
+| Dar de baja el canónico | promover, reasignar hermanos, reacomodar nietos | idéntico a cambiar el canónico |
+| Buscar mesas por un tag | CTE recursivo en **cada** búsqueda | sin recursión |
+
+Con el árbol, "dar de baja el canónico" y "cambiar el canónico" son dos algoritmos distintos. Con el modelo plano son **la misma operación**, y por eso el problema de la baja deja de existir en vez de resolverse.
+
+**Quién es el nuevo canónico**: como los admins administran las uniones (#55), lo elige el admin en el momento de dar de baja, en lugar de un "primer hijo" arbitrario. Es una decisión que ya está tomando de todos modos.
+
+**Cuándo sí haría falta un árbol**: si en el futuro se quiere taxonomía real (`D&D 5e` **dentro de** `D&D`, con búsqueda asimétrica), esa es una relación distinta y va en una columna distinta, conviviendo con `canonical_id`. Mezclar equivalencia y especialización en una sola columna es lo que hizo la baja tan difícil.
+
+**La pregunta que decide todo**: ¿`parent_id` es **solo** sinónimos, o también **especializaciones**?
+
+- Si "D&D" tiene hijos "D&D 5e" y "D&D 3.5", eso **no** son sinónimos: son subtipos. Buscar "D&D" debería traer las mesas de 5e, pero buscar "5e" **no** debería traer todas las de D&D. Esa asimetría es jerarquía real y necesita un árbol.
+- Si los hijos son solo "Dungeon&Dragons", "DANDD", "DnD", la relación es simétrica —todos son el mismo tag— y (a) alcanza.
+
+Por cómo lo describiste ("5 tags equivalen al mismo") parece ser solo sinónimos, pero mencionaste que un hijo puede tener hijos, que es lo que hace pensar en jerarquía. **Si son las dos cosas a la vez, conviene separarlas**: `canonical_id` para sinónimos y `parent_id` para especialización, cada una con su regla. Mezcladas en una sola columna es lo que hizo el borrado tan difícil.
+
+### M20 — Otros pendientes de catálogos — **resuelto (#55, #56, #57, #58, #81)**
+
+> **Cerrado**: proponen masters y admins, acepta y clasifica solo el admin (#55); al etiquetar se guarda el alias y la búsqueda resuelve por grupo (#56); un tag propuesto no bloquea publicar la mesa pero no filtra ni se muestra hasta ser aprobado (#57); la mesa muestra siempre el alias que le puso su master (#58).
+
+~~Borrar un tag que está en uso.~~ **Resuelto (#81)**: no hace falta ni prohibirlo ni repuntar nada. Es borrado lógico y las lecturas saltan los valores dados de baja por su estado, así que el vínculo se conserva y restaurar el valor devuelve todo a como estaba. Mejor que la propuesta de impedir el borrado, que habría bloqueado al admin sin necesidad.
+
+Consecuencia menor: si el valor dado de baja era el **canónico** del grupo, los alias siguen agrupando bien —`COALESCE(canonical_id, id)` no cambia— pero hay que decidir qué nombre mostrar para el grupo. Lo natural es el primer alias vivo.
+
+Dos residuos menores de #57, para resolver al implementar:
+
+- El master ve su mesa con un tag que los demás no ven. La interfaz tiene que marcarlo como *pendiente de aprobación*, o va a parecer un bug.
+- Si el tag se **rechaza**, la fila de `table_tags` que lo vincula a la mesa queda sin uso. Lo natural es borrarla lógicamente en el mismo acto del rechazo, en lugar de dejarla apuntando a un valor que nunca va a mostrarse.
+
+Y una nota, para que no se "complete" por simetría: **`table_types` no tiene ni debe tener sinónimos.** Es catálogo (#8) pero sin equivalencias — los tipos de mesa los define el admin y no hay razón para tener alias.
+
+### M21 — Qué encontré en el código de archivos que no estaba en el modelo
+
+Revisión de `legacy/backend-node/src/{handlers,server,middleware}/files*` y de `CentralDungeonBackend`. Todo esto **existía en el código y no en `database.sql`**, o existía a medias:
+
+1. **`files.type_file` tiene tres valores, no dos**: `Public`, `Private` y **`Single-use`**. Los tres aparecen en ambos repos (`FileType` en el intento Java lo confirma). `Single-use` es el archivo subido para **una** mesa concreta; `Private` es el que el usuario guardó en su biblioteca para reutilizar. La columna no está en el DDL heredado.
+2. **La biblioteca reutilizable ya existía, pero para el MASTER, no para el jugador.** `getAllFilesByMaster` trae los archivos `Private` del master que **todavía no están** en esa mesa —o sea, "tus archivos guardados que podés reusar acá"— y `handlePrivateStatus` promueve un `Single-use` a `Private`, que es literalmente "guardar en mi biblioteca". **`getAllFilesByPlayer.ts` existe y está vacío**: el lado del jugador nunca se construyó.
+3. **No había ningún límite.** `multer` se instanció sin `limits`: ni tamaño de archivo, ni cantidad, ni cuota por usuario.
+4. **Whitelist de MIME**: `png`, `jpg`, `jpeg`, `pdf`, `msword`, `docx`. Sirve como punto de partida.
+5. **Ruta de almacenamiento**: `UPLOAD_FILES/<user_id>/<timestamp>-<nombre original>`. Dos problemas: el nombre original se concatena **sin sanitizar** (riesgo de path traversal) y el `user_id` sale de la URL, que es el agujero de autenticación conocido.
+6. **Los archivos huérfanos eran un problema conocido y sin resolver.** Hay TODOs propios: *"Create a queue when the connection fall must delete all new files"*. El borrado en BD es lógico, pero el archivo físico queda en disco para siempre.
+7. **El cliente decidía qué borrar**: `handleUpdateFilesByMasters` recibe `files_list`, `original_files` y `update_files` en el body y hace el diff con lo que el cliente le mandó. El servidor no verifica nada.
+8. **Solo existían endpoints de `preparation`.** Archivos de sesión, de solicitud y biblioteca del jugador no tenían endpoint, aunque el modelo los contemplaba.
+9. `TableFileType` en el intento Java es `Preparation | Session`, sin el valor `Deleted` que el legacy mezclaba ahí — coincide con lo detectado en **M3**.
+
+### M22 — Texto enriquecido: no está en el modelo — **resuelto (#62, #63)**
+
+> **Cerrado**: `LONGTEXT` en la entidad que lo necesita, no una fila de `files`. Y el caso de uso quedó absorbido por las peticiones de la mesa (#63), que se responden con texto, archivos o ambos.
+
+
+El uso 1 y el 2 de #60 pueden ser **un archivo o un texto enriquecido**, según lo que decida el master. Hoy no hay dónde guardar lo segundo: `files` asume un binario en disco.
+
+Opciones:
+- **(a) Columna de texto en la entidad que lo necesita** — `game_tables.requirements_html` y `table_registrations.answer_html`. Simple y directo. `game_tables.requeriments` ya existe como `VARCHAR(1024)`, así que sería ampliarla y definir su formato.
+- **(b) `files` acepta contenido inline** — un `file_kind` (`Binary` | `RichText`) y una columna de contenido. Unifica el listado ("los requisitos de la mesa" es una sola lista mezclada) a costa de una tabla que hace dos cosas.
+- **(c) Entidad aparte** `rich_texts`, referenciada donde haga falta.
+
+**(a) es lo más simple** si el texto siempre pertenece a una entidad concreta. **(b) conviene si la UI muestra requisitos y respuestas como una sola lista** donde da igual si cada ítem es archivo o texto. Hay que decidir cuál es la experiencia antes de elegir.
+
+También falta definir el formato: HTML sanitizado, Markdown, o JSON de un editor. Cualquiera que sea, **entra por HTTP y se renderiza en el navegador**, así que la sanitización es obligatoria — es la superficie de XSS más directa del sistema.
+
+### M23 — Requisitos al jugador ya aceptado — **resuelto (#63)**
+
+> **Cerrado**: es un caso más de las peticiones de la mesa. Ver la sección *Peticiones de la mesa*, donde quedaron las preguntas de diseño que faltan responder.
+
+
+Hueco que detectaste al explicar el flujo: hoy el personaje se manda al **postularse**, pero el master puede necesitar pedir cosas **después** de aceptar — la hoja de personaje definitiva, confirmaciones, material previo — y eso ocurre fuera de las sesiones.
+
+Falta definir:
+
+1. **¿Es una lista de requisitos de la mesa, o un pedido individual a un jugador?** Lo primero es una checklist igual para todos; lo segundo permite pedirle algo puntual a una persona.
+2. **¿Bloquea algo?** ¿Un jugador aceptado que no entregó su personaje puede seguir siendo `Player`, o queda en un estado intermedio hasta cumplir? Esto toca la máquina de estados de #28.
+3. **¿Se notifica y se recuerda?** Presumiblemente sí, vía `notifications`.
+4. **¿Es lo mismo que los archivos de la solicitud?** Si el jugador ya mandó un personaje como candidato y después el master le pide "el definitivo", ¿se reemplaza el anterior o conviven ambos?
+
+Lo natural es que sea una lista de requisitos de la mesa con estado de cumplimiento por jugador, pero es diseño nuevo, no algo que el schema heredado insinúe.
+
+### M24 — Archivos públicos: quién, dónde y con qué alcance — **resuelto (#64, #79)**
+
+> **Cerrado**: llevan un enum de audiencia (masters / jugadores / publicaciones). Sigue abierto si el master puede usar un archivo público como requisito de su mesa sin copiarlo — con #65 esto se vuelve natural, porque vincular no es duplicar.
+
+
+De #60 uso 3. `type_file = 'Public'` existía y `getPublicFilesFromTable` los traía **todos**, sin filtro de contexto — es decir, no había noción de *dónde* aparece cada archivo público.
+
+Falta definir:
+
+1. **¿Dónde aparece cada uno?** Mencionaste solicitudes, mesas y comunicados. Si un archivo público puede aparecer en un lugar y no en otro, hace falta una categoría o un ámbito, no solo el flag `Public`.
+2. **¿Quién puede publicarlos?** Presumiblemente solo admins, coherente con #55.
+3. **¿El master puede usar uno público como requisito de su mesa** en vez de subir el suyo? Es el caso que motivaba la hoja de personaje por defecto. Si sí, `table_files` referencia un archivo que el master no subió, y borrarlo de la mesa **no** debe borrar el archivo global.
+
+Anotaste que este punto falta definirlo con el cliente, así que queda abierto a propósito.
+
+### M27 — La cuota de #61 choca con la reutilización de #65 — **resuelto (#68, #75)**
+
+> **Cierre definitivo con #75**: se elimina la cuota por usuario. No resolvía el problema —20 MB por usuario son 20 GB con mil jugadores— y limitaba al usuario sin bajar el costo total. Se ataca el volumen real: reutilización, compresión y purga por desuso.
+
+
+> **Cerrado**: la cuota aplica solo a los archivos `Private`, los que el usuario eligió guardar. Los `Single-use` son transitorios y se purgan con su contexto, así que no compiten por el mismo límite. Guardar para reutilizar y acotar el costo dejan de estar en conflicto.
+>
+> Sigue valiendo la recomendación de fondo: **cuota por espacio total** ("usaste 8 de 20 MB") en vez de por cantidad de archivos, más el tope de 2 MB por archivo de #61. Y la **retención** —purgar los `Single-use` al cerrarse la mesa— sigue siendo la palanca de costo más grande.
+
+Se conserva el análisis original por contexto:
+
+
+#61 fijó **5 archivos de 2 MB** y #65 dice que el usuario **conserva todo lo que subió** para poder reutilizarlo. Las dos cosas juntas no cierran: si todo se guarda, a los seis archivos el usuario queda bloqueado y la reutilización deja de tener sentido.
+
+Y hay un caso peor: los archivos que ya están **vinculados a mesas o a entregas** no se pueden borrar sin romper esas mesas. Un usuario con 5 archivos comprometidos en mesas viejas no puede subir nada nuevo, y tampoco puede liberar espacio.
+
+Opciones:
+
+- **(a) Cuota por espacio total, no por cantidad.** Un solo número —por ejemplo 20 MB por usuario— en vez de "5 archivos". Más simple de explicar, se adapta a archivos chicos y grandes, y con la deduplicación por hash el costo real es menor que el contabilizado.
+- **(b) Cuota solo sobre lo no comprometido.** Los archivos vinculados a una mesa activa no cuentan; sí cuenta lo que el usuario guarda "suelto". Justo pero difícil de explicar en la interfaz.
+- **(c) Subir el límite de cantidad** y mantener el tope por archivo. Lo más parecido a lo decidido, solo con otro número.
+
+**Recomiendo (a)** más el tope de 2 MB por archivo que ya fijaste: dos números, fáciles de mostrar en pantalla ("usaste 8 de 20 MB") y de ajustar sin migrar nada.
+
+Aparte, y sin depender de esto: **la retención sigue siendo la palanca más grande de costo**. Un archivo vinculado a una mesa que terminó hace un año probablemente ya no se necesita, y purgarlo libera más espacio que cualquier cuota.
+
+### M25 — Biblioteca privada: alcance, cuota y costo — **resuelto en parte (#65)**
+
+> **Cerrado**: el punto 1 — no hay biblioteca separada, el usuario accede a todo lo que subió (#65), y eso aplica por igual a jugadores y masters. Desaparece la distinción `Private` / `Single-use` del legacy.
+>
+> **Movido a M27**: los puntos 2 y 3, sobre qué cuenta la cuota y qué pasa al llegar al límite.
+>
+> **Sigue abierto**: los puntos 4 y 5 — política de retención al cerrar una mesa, y deduplicación por hash como optimización principal.
+
+
+De #60 uso 4 y #61.
+
+1. **¿La biblioteca es solo del jugador, o también del master?** Lo describiste como del jugador, pero **el legacy la implementó para el master** (M21.2) y ese caso de uso es real: un master que corre varias mesas no quiere resubir el mismo formulario cada vez. Si vale para los dos, la cuota de 5×2 MB tiene que revisarse: un master activo la agota rápido.
+2. **¿La cuota cuenta solo la biblioteca, o todo lo que el usuario subió?** Un archivo `Single-use` atado a una mesa también ocupa disco. Si solo se cuenta la biblioteca, el límite se esquiva subiendo a mesas.
+3. **¿Qué pasa al llegar al límite?** ¿Se rechaza la subida, o se ofrece reemplazar?
+4. **¿Cuándo se libera el espacio de un `Single-use`?** Si la mesa terminó hace un año, ese archivo probablemente ya no hace falta. Una política de retención atada al cierre de la mesa es la palanca de costo más grande que hay, más que la cuota.
+5. **Optimización.** Lo más efectivo, en orden: (i) **deduplicar por hash** — el mismo PDF de hoja de personaje subido por 50 jugadores se guarda una vez; (ii) **límites de MIME y tamaño** ya en la validación, antes de escribir a disco; (iii) **retención por cierre de mesa**; (iv) mover a almacenamiento barato, que es exactamente lo que `StorageService` (#15) permite sin tocar el resto del backend.
+
+### M26 — Ciclo de vida del archivo físico — **resuelto en parte (#66, #80)**
+
+> **Cerrado**: el borrado físico lo hace el owner de la plataforma desde un menú de administración, e incluye el almacenamiento en la nube. Siguen abiertos los puntos 2 y 3: qué pasa si la transacción falla después de escribir el archivo, y nombrar en disco por id en vez de por nombre original.
+
+
+De M21.6. El borrado lógico (#25) no borra bytes: hoy, borrar un archivo lo marca en la base y lo deja en disco para siempre. Con cuota (#61) eso importa doble, porque el espacio ocupado y el espacio contabilizado se separan.
+
+Falta definir:
+
+1. **¿Quién borra el archivo físico y cuándo?** Un proceso de purga que corre sobre lo marcado como borrado hace más de X días es lo habitual, y da margen para deshacer.
+2. **Subida fallida a mitad de transacción.** El legacy tenía el TODO sin resolver. Con transacción de base + escritura a disco hay dos recursos que no comparten commit: si la base falla después de escribir el archivo, queda un huérfano. Escribir primero a un área temporal y confirmar al cerrar la transacción es lo más simple.
+3. **Nombre de archivo en disco.** No puede derivarse del nombre original sin sanitizar (M21.5). Lo sano es nombrar por el id del archivo y guardar el nombre original solo como metadato para la descarga.
+
+### M28 — Mesas creadas por un admin, sin que él sea master — **resuelto (#72, #73)**
+
+> **Cerrado**: estado `Unassigned` mientras no tiene masters; al asignarlos pasa directo a `Opened`, sin revisión. El `Primary` es exactamente uno.
+
+
+Caso nuevo: un admin crea la mesa **como admin**, no como master, para después asignarle un master que será el primario. La asignación en sí se resuelve como decís —al asignar, el admin decide quién es primario y quiénes co-masters— pero abre cuatro cosas:
+
+1. **La mesa existe sin ningún master durante un rato.** Hoy nada lo contempla. Lo mínimo es la regla "no puede pasar a `Opened` sin un master primario"; lo más explícito sería un estado previo (`Unassigned`) para que se vea en la interfaz que le falta dueño.
+2. **¿Sigue necesitando aprobación de admin?** Por #27 una mesa nace en `Preparation` y un admin la aprueba. Si la creó un admin, pedirle que se apruebe a sí misma no aporta. Pero si después el master asignado la edita, esa edición sí debería revisarse. Lo simple: la creada por admin nace ya aprobada, y editarla la devuelve a revisión.
+3. **¿Quién responde por la mesa mientras no tiene master?** El admin que la creó, hasta asignar. Importa porque #39 le da al primario poder real —aprobar vetos— y sin primario ese circuito queda sin quién lo cierre.
+4. **Refuerza M5**: el primario tiene que ser **exactamente uno**. Con este caso deja de ser una pregunta teórica: si el admin asigna dos primarios o ninguno, el modelo queda inconsistente.
+
+### M29 — Cómo renombrar el `Owner` de la mesa — **resuelto (#71)**
+
+> **Cerrado**: `Primary` / `Secondary`.
+
+
+Por #67 los dos `Owner` no pueden llamarse igual, y se decidió renombrar el de la mesa (`masters.master_type`).
+
+**`Creator` tiene un problema justo por M28**: si un admin crea la mesa y le asigna un master, ese master **no la creó**. El nombre diría algo falso exactamente en el caso nuevo.
+
+Opciones:
+
+- **`Primary` / `Secondary`** — es la palabra que ya usás para describirlo ("el master que será el primary"). Funciona igual si el master creó la mesa o si se la asignaron, y describe la jerarquía real: uno manda, los otros acompañan.
+- **`Lead` / `Support`** — mismo sentido, vocabulario más de equipo.
+- **`Creator` / `Master`** — solo sirve si el que crea es siempre el que dirige, que ya no es cierto.
+
+**Recomiendo `Primary`**, por ser tu propio vocabulario y por resistir el caso de M28.
+
+### M30 — El sistema no puede distinguir "se fue" de "lo banearon" — **resuelto (#86)**
+
+> **Cerrado con la opción (a)**: lo marca un admin a mano en v1. La (b) exige el bot, que está fuera de alcance, y la (c) dejaba #84 sin quien lo aplique.
+
+
+Residuo de #84, que le da consecuencias opuestas a dos situaciones que el login ve exactamente igual.
+
+Con solo OAuth2 —lo único que hay en v1— la aplicación puede preguntar **si un usuario es miembro del servidor**, y nada más. Un usuario que se salió y uno que fue baneado devuelven lo mismo: *no es miembro*. Consultar la lista de baneos del servidor exige un **bot con permisos**, que es parte de la integración con Discord que quedó explícitamente fuera de v1.
+
+Opciones:
+
+- **(a) Un admin marca el baneo a mano.** Cuando alguien es expulsado del servidor, un admin le pone `status = 'Blocked'` en la aplicación. Cero infraestructura nueva; depende de que alguien se acuerde de hacerlo.
+- **(b) Adelantar el bot de Discord** solo para consultar baneos. Resuelve el caso de forma automática, pero mete parte de una integración que se decidió postergar.
+- **(c) Tratar a todo no-miembro igual** y confiar en que quien fue baneado del servidor tampoco va a poder volver a entrar por otras vías. Es lo más simple, pero deja el `status = 'Blocked'` de #84 sin nadie que lo aplique.
+
+**Recomiendo (a)** para v1: es una casilla en el panel de moderación que los admins ya van a tener por #51, y (b) queda como mejora natural cuando llegue el bot.
+
+### M31 — ¿`General` comparte tabla con los comentarios sobre personas? — **resuelto (#91, #93)**
+
+> **Cerrado**: tabla propia `system_feedback`, sin autor, y **sí es anónimo**. `comments` queda estrictamente para evaluación de personas, con todas sus reglas sin excepciones.
+>
+> Los dos residuos quedaron cerrados: **(1)** el límite es uno por día, con token opaco (#94); **(2)** va directo a lectura, sin moderación (#95).
+
+
+De #91. Un comentario `General` es feedback sobre el sistema; los `JJ`, `JM` y `MJ` son evaluaciones de una persona. Comparten poco:
+
+| | `JJ` / `JM` / `MJ` | `General` |
+|---|---|---|
+| Destinatario | una persona | nadie |
+| Karma | lo mueve | no |
+| Contexto | una mesa `Finished` | ninguno |
+| Borrador y confirmación | sí (#48) | no tiene sentido |
+| Cuota antispam | una por mesa (#35) | no aplica |
+| Anonimato | obligatorio (#43) | discutible |
+
+Opciones:
+
+- **(a) Tabla propia, `system_feedback`.** Cada tabla representa una cosa. `comments` se queda estrictamente para evaluación de personas y todas sus reglas valen sin excepciones. Es lo que recomiendo.
+- **(b) Compartir `comments`.** Obliga a que `user_commented_id`, el contexto y el flujo de borrador sean nullables u opcionales, y a que cada regla del service arranque preguntando "¿es `General`?". El tipo de comentario pasa a decidir qué mitad de la tabla aplica.
+
+**Pregunta aparte, para cualquiera de las dos**: ¿el feedback del sistema también es anónimo? El anonimato de #43 existe para que nadie tema evaluar a otra persona. En feedback sobre el producto el razonamiento no aplica igual, y saber quién lo escribió permite repreguntar. Puede tener sentido que este caso **no** sea anónimo.
+
+### M32 — ¿La internacionalización entra en v1? — **resuelto (#117)**
+
+> **Cerrado**: entra desde la primera etapa, opción (a). Todo texto visible nace en `locales/es/<espacio>.json` y se lee con `t()`.
+
+El formato ya está decidido (JSON + `i18next`, #107). Falta el **cuándo**, y es una decisión con dos caminos que no admiten término medio.
+
+El proyecto viejo mostró cómo se ve el término medio: `english.xml` y `spanish.xml` vacíos, un helper a medio escribir y ningún texto realmente traducido. Costó trabajo y no dio nada.
+
+- **(a) Desde E1.** Todo texto de interfaz nace en el archivo de idioma. Hecho desde el principio es barato: es una llamada `t('tables.empty')` en vez de un string. Retrofitearlo después significa recorrer cada componente ya escrito.
+- **(b) Nunca, y se dice.** La aplicación es monolingüe en español, no se instala `i18next` y no se deja infraestructura a medias. Si algún día hace falta, se paga el retrofit completo, consciente.
+
+**La pregunta que decide**: ¿hay intención real de que la interfaz esté en inglés en algún momento? La comunidad es de Latinoamérica y algo de Europa (#22), lo que sugiere que sí. Si la respuesta es "probablemente sí", **(a)** es más barato hoy que mañana. Si es "no", **(b)** y sin culpa.
+
+Lo que no vale es empezar (a) y dejarlo a medias, que es lo que ya pasó una vez.
+
+### M13 — Los "pedidos con aprobación" ya son un patrón, y conviene modelarlos una sola vez — **resuelto (#42, #78, #126)**
+
+> **Cerrado del todo**: es un patrón deliberado de control y se modela una sola vez, con **referencia polimórfica** (`entity_type` + `entity_id`, sin FK real) — opción (a), decidida en #126.
+
+
+Van tres flujos con la misma forma — alguien pide, otro con más autoridad aprueba o rechaza, siempre con justificación:
+
+| Pide | Aprueba | Qué |
+|---|---|---|
+| master | admin | pausar la mesa (#32) |
+| co-master | `Owner` | vetar a un jugador (#39) |
+| usuario | admin | `requests` de rol / de ser master (schema heredado) |
+
+Hoy cada uno está modelado distinto: la pausa como estado propio (`PauseRequested`), el veto sin representación definida, y las solicitudes de rol como tabla aparte. Falta decidir si se unifican:
+
+- **(a) Una tabla genérica de aprobaciones** — tipo de pedido, entidad afectada, solicitante, aprobador, justificación, resolución. Un solo service, una sola pantalla de bandeja para admins y owners, y agregar un cuarto flujo es una fila más. El costo es que la entidad afectada queda referenciada de forma polimórfica (`entity_type` + `entity_id`), sin FK real.
+- **(b) Cada flujo con su modelo.** FKs reales y consultas simples, a cambio de repetir tres veces el mismo ciclo pedido/aprobación/rechazo — que es exactamente lo que `arquitectura.md` §2.4 pide abstraer cuando la forma se repite tres veces.
+
+Conviene decidirlo **antes** de escribir el service de mesas, porque después migrar de (b) a (a) es tocar tres features.
+
+### M14 — Residuales de la visibilidad de perfiles — **resuelto casi todo (#43, #44, #45)**
+
+> **Cerrado**: los comentarios son anónimos siempre (#43, punto 3); la visibilidad de perfiles caduca a las dos semanas (#44, punto 1); el admin ve todo salvo la autoría (#45, punto 4).
+>
+> **Cerrado — punto 2** (#47): sí, un jugador ve el perfil de los demás jugadores de su mesa, con las mismas reglas de caducidad.
+>
+> **Cerrado — ancla de las dos semanas** (#44): desde `Finished` o `Canceled`. En `Pause` el reloj no corre.
+>
+> **Abierto — ver M16**: qué pasa con los comentarios ya escritos si la mesa se cancela después.
+
+---
+
+> **Estado de `modelo-datos.md`**: **al día.** Reescrito el 2026-08-27 con las decisiones #1–#99. Incluye las 32 tablas del schema objetivo, el algoritmo de karma, el DDL baseline completo, las reglas de negocio del service layer (§5) y el seed con los cuatro roles.
+>
+> **No queda nada sin decidir.** Lo único diferido a una fase posterior, y por decisión explícita, es la integración con el bot de Discord (#88) y las Campañas/Temporadas (#7).

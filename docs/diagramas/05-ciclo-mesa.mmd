@@ -1,0 +1,66 @@
+---
+title: 5. Ciclo de vida de la mesa (game_tables.status)
+---
+stateDiagram-v2
+    direction TB
+
+    [*] --> Preparation : el master crea la mesa
+
+    Preparation --> ChangesRequested : el admin pide correcciones<br/>(justificacion + aviso al master)
+    ChangesRequested --> Preparation : el master corrige y reenvia
+    Preparation --> Opened : el admin aprueba
+
+    Opened --> InProgress : arranca la mesa
+    note right of Opened
+        Publica. Los jugadores envian
+        solicitudes en fila (FIFO) y el
+        master acepta o rechaza en ese orden.
+    end note
+
+    InProgress --> PauseRequested : el master solicita pausa<br/>+ justificacion
+    PauseRequested --> Pause : el admin la aprueba
+    PauseRequested --> InProgress : el admin la rechaza
+    InProgress --> Pause : el admin pausa directo,<br/>siempre justificando
+
+    Pause --> InProgress : se retoma y se reagenda
+    note left of Pause
+        Congela la agenda: las sesiones
+        pendientes dejan de aparecer en
+        horario hasta que se retome.
+
+        El reloj de visibilidad NO corre:
+        sigue abierta indefinidamente.
+    end note
+
+    InProgress --> Finished : se completaron las sesiones
+
+    note right of Finished
+        Unico estado que habilita comentar.
+        Arranca el reloj: 2 semanas de
+        visibilidad de perfiles.
+    end note
+
+    Preparation --> Canceled
+    ChangesRequested --> Canceled
+    Opened --> Canceled
+    InProgress --> Canceled
+    Pause --> Canceled : master o admin,<br/>siempre con justificacion
+
+    note left of Canceled
+        NO habilita comentarios ni mueve
+        karma: la cancelacion suele ser por
+        fuerza mayor y no evalua a nadie.
+        La visibilidad si corre sus 2 semanas.
+    end note
+
+    Finished --> [*]
+    Canceled --> [*]
+
+    state "Deleted (borrado logico)" as Deleted
+    Deleted --> [*]
+
+    note right of Deleted
+        Transversal: desde cualquier estado.
+        Sella deleted_at y arrastra en cascada
+        a solicitudes, agenda, sesiones y adjuntos.
+    end note

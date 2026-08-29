@@ -1,0 +1,46 @@
+---
+title: 6. Ciclo de vida de una solicitud (table_registrations.status)
+---
+stateDiagram-v2
+    direction TB
+
+    [*] --> Candidate : el jugador envia una solicitud
+
+    note right of Candidate
+        NO cuenta contra max_players.
+        Mientras exista una fila activa
+        (Candidate o Player) el usuario
+        NO puede enviar otra solicitud
+        a esta mesa.
+    end note
+
+    Candidate --> Player : el master la acepta<br/>(en orden de llegada)
+    Candidate --> Rejected : el master la rechaza<br/>+ justificacion obligatoria
+
+    note left of Player
+        Pertenece a la mesa.
+        SI cuenta contra max_players.
+    end note
+
+    Rejected --> [*] : se libera el par mesa/usuario:<br/>puede postularse de nuevo = FILA NUEVA
+
+    Candidate --> Blocked : veto
+    Player --> Blocked : expulsion + veto
+    Rejected --> Blocked : veto
+    Blocked --> Rejected : el Owner levanta el veto<br/>(queda en el historial)
+
+    note left of Blocked
+        Veta el Owner. Un co-master puede
+        PEDIRLO, con justificacion, y el
+        Owner aprueba o rechaza.
+
+        Acotado a ESTA mesa: deja de existir
+        para el usuario y no puede volver a
+        postularse. Si el mismo master abre
+        otra mesa, ahi si puede.
+    end note
+
+    state "Deleted (borrado logico)" as Deleted
+    Candidate --> Deleted : retira la solicitud
+    Player --> Deleted : abandona la mesa<br/>o cascada desde la mesa
+    Deleted --> [*]

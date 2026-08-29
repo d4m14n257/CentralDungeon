@@ -1,0 +1,63 @@
+---
+title: "16. Modelo objetivo — comentarios anonimos, karma y feedback"
+---
+erDiagram
+
+    users {
+        varchar id PK
+        varchar name
+        int karma "0..10000"
+    }
+
+    game_tables {
+        varchar id PK
+        varchar name
+    }
+
+    comment_drafts {
+        varchar id PK
+        varchar author_id FK "UNICA tabla que conoce al autor. Se purga"
+        varchar target_user_id FK
+        varchar game_table_id FK
+        longtext content "se purga al expirar"
+        varchar comment_type "JJ | JM | MJ"
+        varchar karma_impact
+        varchar status "Draft | Confirmed | Expired"
+        datetime created_at
+        datetime deleted_at
+    }
+
+    comments {
+        varchar id PK
+        varchar user_commented_id FK "destinatario, conocido"
+        longtext description
+        varchar comment_type "JJ | JM | MJ"
+        varchar karma_impact "Commented | Neutral | Reported"
+        varchar status "Under review | Reviewed | Rejected"
+        varchar user_reviewed_id FK "el admin que modero"
+        datetime created_at
+        datetime reviewed_at
+    }
+
+    comment_quotas {
+        char quota_token PK "HMAC(secreto, autor+comentado+mesa). SIN FK"
+        datetime created_at
+    }
+
+    system_feedback {
+        varchar id PK
+        longtext content
+        varchar status "New | Reviewed | Discarded -- estado de LECTURA"
+        datetime created_at
+    }
+
+    feedback_quotas {
+        char quota_token PK "HMAC(secreto, user_id + hora UTC). Rota, se purga a las 24h"
+        datetime created_at
+    }
+
+    users       ||--o{ comment_drafts : "escribe (solo mientras es borrador)"
+    users       ||--o{ comment_drafts : "sera comentado"
+    game_tables ||--o{ comment_drafts : "contexto, NO se persiste al confirmar"
+    users       ||--o{ comments       : "es comentado"
+    users       ||--o{ comments       : "modera"

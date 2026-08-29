@@ -1,0 +1,99 @@
+---
+title: "11. Modelo objetivo — identidad, aprobaciones y trazabilidad"
+---
+erDiagram
+
+    users {
+        varchar id PK
+        varchar discord_id UK "snowflake, inmutable"
+        varchar discord_username
+        varchar name "display name, set at onboarding"
+        int karma "0..10000, default 8000"
+        char country "ISO 3166-1 alpha-2, set at onboarding"
+        varchar status "Allowed | Blocked"
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+    }
+
+    roles {
+        varchar id PK
+        varchar name UK "Player | Master | Admin | Owner"
+        varchar description
+    }
+
+    users_roles {
+        varchar user_id PK,FK
+        varchar role_id PK,FK
+        varchar status "Allowed | Deleted"
+        datetime created_at
+        datetime deleted_at
+    }
+
+    approval_requests {
+        varchar id PK
+        varchar request_type "TablePause | PlayerBan | MasterGrant | TableOpen | General"
+        varchar entity_type "polimorfico, SIN FK"
+        varchar entity_id "lo valida el service"
+        varchar requested_by FK
+        longtext justification
+        varchar status "Pending | Approved | Rejected"
+        varchar resolved_by FK
+        longtext resolution_note
+        datetime resolved_at
+        datetime created_at
+    }
+
+    notifications {
+        varchar id PK
+        varchar user_id FK
+        varchar notification_type
+        varchar title
+        varchar message
+        varchar related_entity_type
+        varchar related_entity_id
+        varchar read_status "Unread | Read"
+        datetime created_at
+        datetime read_at
+    }
+
+    impersonation_sessions {
+        varchar id PK
+        varchar admin_id FK "solo lo ve el Owner"
+        varchar target_user_id FK
+        varchar reason "obligatorio, si lo ve el afectado"
+        datetime started_at
+        datetime ended_at "cierre automatico a los 30 min"
+    }
+
+    system_settings {
+        varchar setting_key PK
+        varchar value
+        varchar value_type "Integer | Decimal | Duration | Text | Boolean"
+        varchar category "Business | Limits | Texts"
+        varchar updated_by FK
+        datetime updated_at
+    }
+
+    audit_logs {
+        varchar id PK
+        varchar entity_type
+        varchar entity_id
+        varchar action "Create | Update | Delete"
+        varchar updated_by FK "identidad bajo la que ocurrio"
+        varchar impersonation_id FK "si fue dentro de un ver como"
+        json before_data "SOLO columnas que cambiaron"
+        json after_data "SOLO columnas que cambiaron"
+        timestamp updated_at
+    }
+
+    users ||--o{ users_roles       : "tiene rol"
+    roles ||--o{ users_roles       : "asignado a"
+    users ||--o{ approval_requests : "solicita"
+    users ||--o{ approval_requests : "resuelve"
+    users ||--o{ notifications     : "recibe"
+    users ||--o{ audit_logs        : "genera"
+    users ||--o{ impersonation_sessions : "actua como admin"
+    users ||--o{ impersonation_sessions : "es suplantado"
+    impersonation_sessions ||--o{ audit_logs : "origina"
+    users ||--o{ system_settings : "modifica"

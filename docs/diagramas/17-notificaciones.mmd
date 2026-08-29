@@ -1,0 +1,61 @@
+---
+title: "17. Motor de notificaciones y bandeja compartida (decisiones 100, 101)"
+---
+flowchart TB
+
+    subgraph ORIGEN["ORIGEN DEL EVENTO"]
+        direction TB
+        SVC["Un service hace algo:<br/>acepta una postulacion,<br/>pide una pausa,<br/>confirma un comentario"]
+    end
+
+    subgraph PERSONAL["NOTIFICACION PERSONAL"]
+        direction TB
+        NROW["fila en notifications<br/>una por destinatario<br/>read_status Unread"]
+        NDEST["/user/queue/notifications<br/>solo a esa persona"]
+        NROW --> NDEST
+    end
+
+    subgraph BANDEJA["BANDEJA COMPARTIDA DE ADMINS"]
+        direction TB
+        WORK["NO se crea ninguna fila nueva.<br/>El trabajo ya vive en:<br/>approval_requests Pending<br/>comments Under review<br/>system_feedback New<br/>game_tables Preparation"]
+        VIEW["Vista = UNION ALL de las 4<br/>WHERE claimed_by IS NULL<br/>   OR claimed_by = :actual"]
+        BDEST["/topic/admin-queue<br/>solo suscriptores Admin u Owner"]
+        WORK --> VIEW --> BDEST
+    end
+
+    subgraph CLIENTE["CLIENTE"]
+        direction TB
+        MSG["Mensaje = SEÑAL, no contenido<br/>{ type: 'admin-queue.changed' }"]
+        INV["queryClient.invalidateQueries()"]
+        REFETCH["TanStack Query refetchea<br/>por HTTP normal"]
+        MSG --> INV --> REFETCH
+    end
+
+    SVC --> NROW
+    SVC --> WORK
+    NDEST --> MSG
+    BDEST --> MSG
+
+    subgraph RESERVA["CICLO DE RESERVA"]
+        direction TB
+        R1["POST .../claim<br/>marca claimed_by + claimed_at"]
+        R2["Desaparece para el resto,<br/>sigue visible para quien reservo"]
+        R3["Resolver exige tener la reserva"]
+        R4["Job libera lo reservado<br/>hace mas de 15 min"]
+        R1 --> R2 --> R3
+        R2 --> R4
+        R4 -.->|"reaparece para todos"| R1
+    end
+
+    VIEW -.-> R1
+
+    classDef evento fill:#dbeafe,stroke:#1e40af,stroke-width:2px,color:#0f172a
+    classDef dato fill:#ede9fe,stroke:#6d28d9,color:#0f172a
+    classDef canal fill:#dcfce7,stroke:#15803d,color:#0f172a
+    classDef ojo fill:#fef9c3,stroke:#a16207,stroke-width:2px,color:#0f172a
+
+    class SVC evento
+    class NROW,WORK,VIEW dato
+    class NDEST,BDEST canal
+    class MSG,INV,REFETCH ojo
+    class R1,R2,R3,R4 dato

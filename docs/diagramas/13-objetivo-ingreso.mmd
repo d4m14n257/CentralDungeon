@@ -1,0 +1,56 @@
+---
+title: "13. Modelo objetivo — ingreso de jugadores"
+---
+erDiagram
+
+    game_tables {
+        varchar id PK
+        varchar name
+        int max_players
+        varchar status
+    }
+
+    users {
+        varchar id PK
+        varchar name
+        int karma
+    }
+
+    table_registrations {
+        varchar id PK
+        varchar game_table_id FK "SIN UNIQUE con user_id"
+        varchar user_id FK
+        varchar status "Candidate | Player | Rejected | Blocked | Deleted"
+        longtext description "texto enriquecido, opcional"
+        datetime created_at "orden FIFO de atencion"
+        datetime updated_at
+        datetime deleted_at
+    }
+
+    registration_rejections {
+        varchar id PK
+        varchar registration_id FK
+        longtext description "obligatoria"
+        datetime rejected_at
+        varchar rejected_by FK "NULL = rechazo automatico por cupo"
+    }
+
+    registration_files {
+        varchar registration_id PK,FK
+        varchar file_id PK,FK
+        varchar status
+        datetime deleted_at
+    }
+
+    files {
+        varchar id PK
+        varchar name "nombre original"
+        varchar storage_key "nombre en disco = id"
+    }
+
+    game_tables         ||--o{ table_registrations     : "recibe postulaciones"
+    users               ||--o{ table_registrations     : "se postula N veces"
+    table_registrations ||--o{ registration_rejections : "cada rechazo con motivo"
+    users               ||--o{ registration_rejections : "rechaza"
+    table_registrations ||--o{ registration_files      : "adjunta"
+    files               ||--o{ registration_files      : "vinculado, no duplicado"

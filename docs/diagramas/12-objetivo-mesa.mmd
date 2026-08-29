@@ -1,0 +1,87 @@
+---
+title: "12. Modelo objetivo — la mesa, su agenda y sus sesiones"
+---
+erDiagram
+
+    table_types {
+        varchar id PK
+        varchar name UK
+        varchar description
+        varchar status
+    }
+
+    game_tables {
+        varchar id PK
+        varchar table_type_id FK
+        varchar name
+        longtext description
+        longtext requirements "texto enriquecido"
+        datetime start_date "UTC, sin columna timezone"
+        time duration "duracion de UNA sesion"
+        int total_sessions
+        int max_players
+        varchar status "Unassigned | Preparation | ChangesRequested | Opened | InProgress | PauseRequested | Pause | Finished | Canceled"
+        varchar created_by FK "master o admin"
+        datetime closed_at "arranca la ventana de 2 semanas"
+        datetime created_at
+        datetime deleted_at
+    }
+
+    masters {
+        varchar game_table_id PK,FK
+        varchar user_id PK,FK
+        varchar master_type "Primary | Secondary"
+        varchar status
+        datetime deleted_at
+    }
+
+    table_schedules {
+        varchar game_table_id PK,FK
+        varchar weekday PK
+        time hourtime PK "UTC"
+        varchar status
+        datetime deleted_at
+    }
+
+    table_sessions {
+        varchar id PK
+        varchar game_table_id FK
+        int sequence_number
+        datetime scheduled_at "UTC"
+        varchar status "Scheduled | Held | Cancelled"
+        longtext notes
+        datetime deleted_at
+    }
+
+    session_attendance {
+        varchar table_session_id PK,FK
+        varchar user_id PK,FK
+        varchar attendance "Present | Absent | Excused | Unknown"
+        datetime created_at
+    }
+
+    table_status_changes {
+        varchar id PK
+        varchar game_table_id FK
+        varchar from_status
+        varchar to_status
+        varchar changed_by FK
+        longtext justification "obligatoria en Pause y Canceled"
+        datetime created_at
+    }
+
+    users {
+        varchar id PK
+        varchar name
+    }
+
+    table_types    ||--o{ game_tables          : "clasifica"
+    game_tables    ||--o{ masters              : "dirigida por"
+    users          ||--o{ masters              : "dirige"
+    game_tables    ||--o{ table_schedules      : "agenda semanal"
+    game_tables    ||--o{ table_sessions       : "sesiones materializadas"
+    table_sessions ||--o{ session_attendance   : "asistencia"
+    users          ||--o{ session_attendance   : "asiste"
+    game_tables    ||--o{ table_status_changes : "historial"
+    users          ||--o{ table_status_changes : "cambia"
+    users          ||--o{ game_tables          : "crea"
