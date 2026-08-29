@@ -1,0 +1,156 @@
+/* CentralDungeon — Tailwind 4 theme.
+ *
+ * TRANSCRIBED, NOT AUTHORED. The source of truth is design/build.py (#118, #130).
+ * To change a value: edit design/build.py, run it, and re-copy:
+ *
+ *   python3 design/build.py
+ *   { printf '@import "tailwindcss";\n\n'; cat design/out/theme.css; } > frontend/src/styles/globals.css
+ *
+ * Every contrast pair is measured on each build; it exits non-zero below WCAG AA.
+ */
+
+@import "tailwindcss";
+
+/* CentralDungeon design tokens — Tailwind 4 @theme block.
+   Source of truth: the design system (decision #130).
+   Transcribed into frontend/src/styles/globals.css. */
+
+@theme {
+  /* -- typography -- */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Spectral", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 36px;
+  --text-4xl: 36px;
+  --text-4xl--line-height: 40px;
+
+  /* -- radii -- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+
+  /* -- neutrals -- */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+  --color-neutral-950: #020617;
+
+  /* -- brand accent (candidate B: violet, from the logo) -- */
+  --color-brand-300: #b3a6ee;
+  --color-brand-400: #8e7ce0;
+  --color-brand-500: #6f59cf;
+  --color-brand-600: #5442ab;
+  --color-brand-700: #3e308b;
+  --color-brand-800: #322672;
+
+  /* -- semantic surfaces, dark (default theme) -- */
+  --color-canvas: #070c12;
+  --color-surface: #0f1626;
+  --color-raised: #1b2438;
+  --color-border: #1b2438;
+  --color-border-strong: #2b3854;
+  --color-fg: #eef2f9;
+  --color-fg-muted: #9aa9c4;
+  --color-fg-subtle: #6c7c99;
+
+  /* -- state tokens: 9 table states + 5 registration states -- */
+  /* Unassigned / Deleted */
+  --color-state-draft-dot: #94a3b8;
+  --color-state-draft-bg: #1e293b;
+  --color-state-draft-fg: #cbd5e1;
+  /* Preparation / PauseRequested / Candidate */
+  --color-state-pending-dot: #fbbf24;
+  --color-state-pending-bg: #422006;
+  --color-state-pending-fg: #fcd34d;
+  /* ChangesRequested */
+  --color-state-warning-dot: #fb923c;
+  --color-state-warning-bg: #431407;
+  --color-state-warning-fg: #fdba74;
+  /* Opened / Player */
+  --color-state-open-dot: #4ade80;
+  --color-state-open-bg: #052e16;
+  --color-state-open-fg: #86efac;
+  /* InProgress */
+  --color-state-active-dot: #60a5fa;
+  --color-state-active-bg: #172554;
+  --color-state-active-fg: #93c5fd;
+  /* Pause */
+  --color-state-paused-dot: #a78bfa;
+  --color-state-paused-bg: #2e1065;
+  --color-state-paused-fg: #c4b5fd;
+  /* Finished */
+  --color-state-done-dot: #7f9cc0;
+  --color-state-done-bg: #1a2536;
+  --color-state-done-fg: #b0c2d9;
+  /* Canceled / Rejected */
+  --color-state-canceled-dot: #e57373;
+  --color-state-canceled-bg: #3f1212;
+  --color-state-canceled-fg: #fca5a5;
+  /* Blocked */
+  --color-state-blocked-dot: #e879a6;
+  --color-state-blocked-bg: #3f1229;
+  --color-state-blocked-fg: #f9a8d4;
+}
+
+/* Light theme overrides the semantic layer only; primitives never change. */
+:root[data-theme="light"] {
+  --color-canvas: #f8fafc;
+  --color-surface: #ffffff;
+  --color-raised: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-fg: #0f172a;
+  --color-fg-muted: #475569;
+  --color-fg-subtle: #64748b;
+  --color-brand-500: #5442ab;  /* darker on light for AA */
+  --color-state-draft-dot: #64748b;
+  --color-state-draft-bg: #f1f5f9;
+  --color-state-draft-fg: #475569;
+  --color-state-pending-dot: #d97706;
+  --color-state-pending-bg: #fef3c7;
+  --color-state-pending-fg: #92400e;
+  --color-state-warning-dot: #ea580c;
+  --color-state-warning-bg: #ffedd5;
+  --color-state-warning-fg: #9a3412;
+  --color-state-open-dot: #16a34a;
+  --color-state-open-bg: #dcfce7;
+  --color-state-open-fg: #15803d;
+  --color-state-active-dot: #2563eb;
+  --color-state-active-bg: #dbeafe;
+  --color-state-active-fg: #1d4ed8;
+  --color-state-paused-dot: #7c3aed;
+  --color-state-paused-bg: #ede9fe;
+  --color-state-paused-fg: #6d28d9;
+  --color-state-done-dot: #52708f;
+  --color-state-done-bg: #e6edf5;
+  --color-state-done-fg: #3d5670;
+  --color-state-canceled-dot: #dc2626;
+  --color-state-canceled-bg: #fee2e2;
+  --color-state-canceled-fg: #b91c1c;
+  --color-state-blocked-dot: #db2777;
+  --color-state-blocked-bg: #fce7f3;
+  --color-state-blocked-fg: #be185d;
+}
