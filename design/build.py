@@ -434,6 +434,41 @@ for key, meaning, _ in STATES:
     lines.append(f"  /* {meaning} */")
     for part in ["dot", "bg", "fg"]:
         lines.append(f"  --color-state-{key}-{part}: {s[part]};")
+
+# shadcn/ui's generated components (button, card, dialog...) style themselves with a fixed set
+# of token names (--background, --primary, --card...) that this design system never had a reason
+# to use on its own. This bridge aliases them to the tokens already decided above - no new
+# colour, just the name shadcn's Tailwind classes expect. Aliases written as var() auto-track
+# the light override below; only the two solid-fill foregrounds are computed per theme, because
+# "which text reads best on this fill" can flip between the dark and light accent shade.
+def on_solid(hex_color):
+    return max((NEUTRAL["950"], "#ffffff"), key=lambda c: ratio(c, hex_color))
+
+dark_primary = ACCENTS["violet"]["500"]
+light_primary = ACCENTS["violet"]["600"]
+dark_destructive = DARK["state"]["canceled"]["dot"]
+light_destructive = LIGHT["state"]["canceled"]["dot"]
+
+lines += ["", "  /* -- shadcn/ui bridge: aliases of the tokens above, not new colours -- */",
+          "  --color-background: var(--color-canvas);",
+          "  --color-foreground: var(--color-fg);",
+          "  --color-card: var(--color-surface);",
+          "  --color-card-foreground: var(--color-fg);",
+          "  --color-popover: var(--color-raised);",
+          "  --color-popover-foreground: var(--color-fg);",
+          "  --color-primary: var(--color-brand-500);",
+          f"  --color-primary-foreground: {on_solid(dark_primary)};",
+          "  --color-secondary: var(--color-raised);",
+          "  --color-secondary-foreground: var(--color-fg);",
+          "  --color-muted: var(--color-raised);",
+          "  --color-muted-foreground: var(--color-fg-muted);",
+          "  --color-accent: var(--color-raised);",
+          "  --color-accent-foreground: var(--color-fg);",
+          "  --color-destructive: var(--color-state-canceled-dot);",
+          f"  --color-destructive-foreground: {on_solid(dark_destructive)};",
+          "  --color-input: var(--color-border);",
+          "  --color-ring: var(--color-brand-500);"]
+
 lines += ["}", "", "/* Light theme overrides the semantic layer only; primitives never change. */",
           ':root[data-theme="light"] {']
 for k in ["canvas", "surface", "raised", "border", "border-strong", "fg", "fg-muted", "fg-subtle"]:
@@ -443,6 +478,8 @@ for key, _, _ in STATES:
     s = LIGHT["state"][key]
     for part in ["dot", "bg", "fg"]:
         lines.append(f"  --color-state-{key}-{part}: {s[part]};")
+lines.append(f"  --color-primary-foreground: {on_solid(light_primary)};")
+lines.append(f"  --color-destructive-foreground: {on_solid(light_destructive)};")
 lines.append("}")
 open(f"{OUT}/theme.css", "w").write("\n".join(lines) + "\n")
 

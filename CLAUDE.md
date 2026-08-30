@@ -71,14 +71,16 @@ Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<f
 ## Comandos
 
 ```bash
-# Backend (una vez scaffoldeado)
-cd backend && ./mvnw spring-boot:run     # Flyway aplica migraciones al arrancar
-cd backend && ./mvnw test                # unitarios + integración (Testcontainers necesita Docker)
+# Backend
+cd backend && docker compose up -d       # MySQL 8 en localhost:3306
+cd backend && ./mvnw spring-boot:run     # perfil dev; Flyway aplica migraciones al arrancar
+cd backend && ./mvnw test                # solo unitarios (*Test) — no necesitan Docker
+cd backend && ./mvnw verify              # unitarios + integración (*IT, Testcontainers) — necesita colima arriba, ver backend/README.md
 
 # Frontend
 cd frontend && npm run dev
 cd frontend && npm run test          # Vitest
-cd frontend && npm run test:e2e      # Playwright
+cd frontend && npm run test:e2e      # Playwright, contra el backend real — arrancarlo con -Dspring-boot.run.profiles=dev,test (backend/README.md)
 cd frontend && npx tsc -b            # typecheck (strict)
 
 # Transcribir el tema al frontend tras cambiar design/build.py (#118, #130)
@@ -94,7 +96,7 @@ cd legacy/backend-node && npm run dev
 cd legacy/frontend-next && npm run dev
 ```
 
-Requisitos locales: JDK 25, Node 24 LTS, Docker, MySQL 8.
+Requisitos locales: JDK 25 vía **SDKMAN**, Node 24 LTS vía **nvm**, contenedores vía **colima** (no Docker Desktop), MySQL 8 como contenedor. Detalle de instalación y las variables que Testcontainers necesita bajo colima, en `backend/README.md`.
 
 ## MCP servers
 

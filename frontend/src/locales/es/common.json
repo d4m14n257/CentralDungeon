@@ -1,0 +1,26 @@
+{
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "retry": "Reintentar",
+    "back": "Volver",
+    "logout": "Cerrar sesión"
+  },
+  "states": {
+    "loading": "Cargando...",
+    "emptyTitle": "No hay nada por acá",
+    "errorTitle": "Algo salió mal",
+    "errorDescription": "No pudimos cargar esto. Probá de nuevo.",
+    "forbiddenTitle": "No tenés permiso",
+    "forbiddenDescription": "Tu cuenta no puede ver esta sección."
+  },
+  "nav": {
+    "brand": "CentralDungeon",
+    "player": "Jugador",
+    "master": "Master",
+    "notifications": "Notificaciones"
+  }
+}

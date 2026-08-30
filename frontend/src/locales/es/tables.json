@@ -1,0 +1,37 @@
+{
+  "status": {
+    "Preparation": "En preparación",
+    "Opened": "Abierta",
+    "InProgress": "En curso"
+  },
+  "explorer": {
+    "title": "Explorar mesas",
+    "emptyTitle": "No hay mesas abiertas todavía",
+    "emptyDescription": "Volvé más tarde, los masters siguen publicando mesas nuevas.",
+    "players": "{{current}} / {{max}} jugadores",
+    "playersUnlimited": "{{current}} jugadores",
+    "master": "Master: {{name}}"
+  },
+  "detail": {
+    "requirements": "Requisitos",
+    "description": "Descripción",
+    "masters": "Masters",
+    "apply": "Postularme",
+    "applySubmitting": "Enviando...",
+    "alreadyApplied": "Ya tenés una postulación en curso",
+    "tableFull": "La mesa está llena",
+    "notOpen": "No está abierta a postulaciones",
+    "needsPlayerRole": "Necesitás el rol Jugador",
+    "applySuccess": "¡Postulación enviada!",
+    "applyDialogTitle": "Postularme a {{name}}",
+    "applyDialogDescription": "Contale al master por qué querés sumarte (opcional).",
+    "applyDescriptionLabel": "Mensaje para el master",
+    "notFoundTitle": "Esta mesa no existe",
+    "notFoundDescription": "Puede que ya no esté disponible."
+  },
+  "myTables": {
+    "title": "Mis mesas",
+    "emptyTitle": "Todavía no jugás en ninguna mesa",
+    "emptyDescription": "Postulate a una mesa abierta desde el explorador."
+  }
+}

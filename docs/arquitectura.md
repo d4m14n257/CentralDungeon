@@ -867,14 +867,15 @@ Lista corta, tomada del inventario del código legacy. Es el contrapunto concret
 
 ```bash
 # Backend
+cd backend && docker compose up -d            # MySQL 8 en localhost:3306
 cd backend && ./mvnw spring-boot:run          # perfil dev, Flyway aplica migraciones al arrancar
-cd backend && ./mvnw test                     # unitarios + integración (Testcontainers necesita Docker)
-cd backend && ./mvnw verify
+cd backend && ./mvnw test                     # solo unitarios (*Test) — no necesitan Docker
+cd backend && ./mvnw verify                   # unitarios + integración (*IT, Testcontainers) — necesita colima arriba
 
 # Frontend
 cd frontend && npm run dev
 cd frontend && npm run test
-cd frontend && npx playwright test
+cd frontend && npx playwright test            # contra el backend real, arrancado con -Dspring-boot.run.profiles=dev,test
 ```
 
-Requisitos locales (versiones exactas en §1): JDK **25**, Node **24 LTS**, Docker (para Testcontainers), MySQL 8 local o en contenedor.
+Requisitos locales (versiones exactas en §1): JDK **25** vía **SDKMAN**, Node **24 LTS** vía **nvm**, contenedores vía **colima** (no Docker Desktop — su runtime no expone `/var/run/docker.sock`; ver `DOCKER_HOST` en `backend/README.md`), MySQL 8 siempre como contenedor.

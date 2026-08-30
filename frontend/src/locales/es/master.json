@@ -1,0 +1,16 @@
+{
+  "myTables": {
+    "title": "Mis mesas como master",
+    "emptyTitle": "Todavía no creaste ninguna mesa",
+    "emptyDescription": "Cuando crees una mesa, la vas a ver acá."
+  },
+  "detail": {
+    "open": "Abrir mesa",
+    "openConfirmTitle": "Abrir esta mesa",
+    "openConfirmDescription": "La mesa va a quedar visible para que los jugadores se postulen.",
+    "openSuccess": "Mesa abierta",
+    "tabs": {
+      "candidates": "Candidatos"
+    }
+  }
+}

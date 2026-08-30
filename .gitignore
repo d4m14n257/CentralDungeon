@@ -19,6 +19,10 @@ docs/diagramas/*.svg
 node_modules/
 dist/
 *.tsbuildinfo
+target/
+test-results/
+playwright-report/
+blob-report/
 
 # Entorno
 .env
@@ -29,4 +33,5 @@ dist/
 .DS_Store
 Thumbs.db
 .idea/
+.vscode/
 *.swp

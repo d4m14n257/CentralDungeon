@@ -1,0 +1,10 @@
+{
+  "title": "Notificaciones",
+  "emptyTitle": "Nada nuevo por acá",
+  "emptyDescription": "Cuando algo pase con tus mesas o postulaciones, vas a verlo acá.",
+  "markAsRead": "Marcar como leída",
+  "type": {
+    "RegistrationAccepted": "Postulación aceptada",
+    "RegistrationRejected": "Postulación rechazada"
+  }
+}

@@ -620,6 +620,23 @@ CREATE TABLE notifications (
 
 CREATE INDEX ix_notifications_inbox ON notifications (user_id, read_status, created_at);
 
+-- "View as" (#140). The admin is stored here and shown ONLY to the Owner: the affected
+-- person sees "modificado por un administrador", never a name. Never over Admin or Owner.
+-- Declared before audit_logs because audit_logs references it (FK order).
+CREATE TABLE impersonation_sessions (
+    id             VARCHAR(64)  NOT NULL,
+    admin_id       VARCHAR(64)  NOT NULL,
+    target_user_id VARCHAR(64)  NOT NULL,
+    reason         VARCHAR(255) NOT NULL,  -- mandatory; shown to the target, unlike admin_id
+    started_at     DATETIME     NOT NULL,
+    ended_at       DATETIME     NULL,      -- auto-closed 30 min after started_at
+    CONSTRAINT pk_impersonation_sessions PRIMARY KEY (id),
+    CONSTRAINT fk_is_admin  FOREIGN KEY (admin_id)       REFERENCES users (id),
+    CONSTRAINT fk_is_target FOREIGN KEY (target_user_id) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX ix_impersonation_target ON impersonation_sessions (target_user_id, started_at);
+
 -- NEVER audits `comments` or `comment_drafts`: it would store author and
 -- content together and break anonymity (#43).
 CREATE TABLE audit_logs (
@@ -637,22 +654,6 @@ CREATE TABLE audit_logs (
     CONSTRAINT fk_audit_logs_impersonation FOREIGN KEY (impersonation_id)
         REFERENCES impersonation_sessions (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- "View as" (#140). The admin is stored here and shown ONLY to the Owner: the affected
--- person sees "modificado por un administrador", never a name. Never over Admin or Owner.
-CREATE TABLE impersonation_sessions (
-    id             VARCHAR(64)  NOT NULL,
-    admin_id       VARCHAR(64)  NOT NULL,
-    target_user_id VARCHAR(64)  NOT NULL,
-    reason         VARCHAR(255) NOT NULL,  -- mandatory; shown to the target, unlike admin_id
-    started_at     DATETIME     NOT NULL,
-    ended_at       DATETIME     NULL,      -- auto-closed 30 min after started_at
-    CONSTRAINT pk_impersonation_sessions PRIMARY KEY (id),
-    CONSTRAINT fk_is_admin  FOREIGN KEY (admin_id)       REFERENCES users (id),
-    CONSTRAINT fk_is_target FOREIGN KEY (target_user_id) REFERENCES users (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX ix_impersonation_target ON impersonation_sessions (target_user_id, started_at);
 
 -- Editable configuration (#141). Key-value so adding a setting is not an ALTER TABLE,
 -- same reasoning as #10 with ENUMs. Audited like any other entity. NO SECRETS HERE:

@@ -1,0 +1,29 @@
+{
+  "status": {
+    "Candidate": "Postulado",
+    "Player": "Aceptado",
+    "Rejected": "Rechazado"
+  },
+  "myApplications": {
+    "title": "Mis postulaciones",
+    "emptyTitle": "No te postulaste a ninguna mesa",
+    "emptyDescription": "Explorá las mesas abiertas y postulate a la que te interese.",
+    "appliedOn": "Postulado el {{date}}"
+  },
+  "candidates": {
+    "title": "Candidatos",
+    "emptyTitle": "No hay candidatos esperando",
+    "emptyDescription": "Nadie se postuló todavía a esta mesa.",
+    "order": "El orden es por fecha de postulación y no se reordena",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "rejectDialogTitle": "Rechazar a {{name}}",
+    "rejectDialogDescription": "Esta acción no se puede deshacer. Explicá el motivo del rechazo.",
+    "rejectReasonLabel": "Motivo",
+    "acceptConfirmTitle": "Aceptar a {{name}}",
+    "acceptConfirmDefault": "¿Confirmás que aceptás a este candidato en la mesa?",
+    "acceptConfirmFillsTable": "Esta aceptación completa el cupo: el resto de los candidatos se va a rechazar automáticamente.",
+    "acceptSuccess": "Candidato aceptado",
+    "rejectSuccess": "Candidato rechazado"
+  }
+}
