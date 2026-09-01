@@ -3,6 +3,8 @@ package com.centraldungeon.tables;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
+import com.centraldungeon.tables.dto.TableStatusChangeResponse;
+import com.centraldungeon.users.User;
 import java.util.List;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mapper;
@@ -24,5 +26,13 @@ public interface GameTableMapper {
         String displayName = master.getUser().getName() != null ? master.getUser().getName() : master.getUser().getDiscordUsername();
         return new MasterSummaryResponse(
                 master.getUser().getId(), displayName, master.getUser().getKarma(), master.getMasterType().name());
+    }
+
+    default TableStatusChangeResponse toStatusChangeResponse(TableStatusChange change) {
+        User changedBy = change.getChangedBy();
+        String displayName = changedBy.getName() != null ? changedBy.getName() : changedBy.getDiscordUsername();
+        return new TableStatusChangeResponse(
+                change.getId(), change.getFromStatus().name(), change.getToStatus().name(), displayName, change.getJustification(),
+                change.getCreatedAt());
     }
 }

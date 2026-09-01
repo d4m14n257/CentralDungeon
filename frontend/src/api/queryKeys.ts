@@ -6,6 +6,8 @@ export const queryKeys = {
     managedDetail: (id: string) => ['tables', 'managed-detail', id] as const,
     mine: () => ['tables', 'mine'] as const,
     managed: () => ['tables', 'managed'] as const,
+    admin: (statuses?: string[]) => ['tables', 'admin', statuses] as const,
+    statusHistory: (id: string) => ['tables', 'status-history', id] as const,
   },
   registrations: {
     candidates: (tableId: string) => ['registrations', 'candidates', tableId] as const,

@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 
-import { masterTablesPath } from '@/config/paths'
+import { adminTablesPath, masterTablesPath } from '@/config/paths'
 import { NotificationBell } from '@/features/notifications'
 import { useMe } from '@/features/users'
 import { useContextStore, type AppContext } from '@/stores/contextStore'
@@ -22,6 +22,7 @@ export function AppHeader() {
   const availableContexts: AppContext[] = []
   if (me?.roles.includes('Player')) availableContexts.push('player')
   if (me?.roles.includes('Master') || me?.hasManagedTables) availableContexts.push('master')
+  if (me?.roles.includes('Admin') || me?.roles.includes('Owner')) availableContexts.push('admin')
 
   // El logo vuelve al "home" del contexto activo, igual que ContextSwitcher al cambiar de
   // contexto - #master todavía no existe (dashboard de Master, E2 #136), así que el destino en
@@ -32,7 +33,7 @@ export function AppHeader() {
   // sesión anterior (decisiones.md #156, hallazgo sin explotación real: solo desvía el link del
   // logo, ningún endpoint de /master confía en este valor).
   const effectiveContext: AppContext = availableContexts.includes(activeContext) ? activeContext : 'player'
-  const homePath = effectiveContext === 'master' ? masterTablesPath() : '/'
+  const homePath = effectiveContext === 'master' ? masterTablesPath() : effectiveContext === 'admin' ? adminTablesPath() : '/'
 
   return (
     <header className="border-border bg-surface sticky top-0 z-10 border-b">

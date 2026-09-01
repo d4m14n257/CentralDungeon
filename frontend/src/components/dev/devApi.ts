@@ -7,13 +7,11 @@ interface TestLoginResponse {
 
 /**
  * Envuelve /api/v1/auth/test-login (backend/auth/TestLoginController, @Profile("test")): 404 si
- * el backend no corre con ese perfil, señal de que el panel no puede hacer nada por ahora. Cuando
- * haga falta Admin/Owner, test-login necesita un parámetro de roles en vez de solo `asMaster` -
- * no se anticipa acá.
+ * el backend no corre con ese perfil, señal de que el panel no puede hacer nada por ahora.
  */
-export async function testLoginAndReload(discordId: string, asMaster: boolean): Promise<void> {
+export async function testLoginAndReload(discordId: string, asMaster: boolean, asAdmin = false): Promise<void> {
   const response = await api.post<TestLoginResponse>(
-    `/api/v1/auth/test-login?discordId=${encodeURIComponent(discordId)}&asMaster=${asMaster}`,
+    `/api/v1/auth/test-login?discordId=${encodeURIComponent(discordId)}&asMaster=${asMaster}&asAdmin=${asAdmin}`,
   )
   setAccessToken(response.accessToken)
   // location.href, no reload(): si venís de /auth/callback?error=... un reload repite esa URL con

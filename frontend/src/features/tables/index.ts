@@ -1,10 +1,34 @@
+export { AssignMastersDialog } from './components/AssignMastersDialog'
+export { CreateUnassignedTableDialog } from './components/CreateUnassignedTableDialog'
 export { GameTableCard } from './components/GameTableCard'
+export { JustifiedTableActionDialog } from './components/JustifiedTableActionDialog'
 export { TableStatusBadge } from './components/TableStatusBadge'
+export { useAdminTables } from './api/useAdminTables'
+export { useApproveTable } from './api/useApproveTable'
+export { useAssignMasters } from './api/useAssignMasters'
+export { useCancelTable } from './api/useCancelTable'
 export { useCreateTable } from './api/useCreateTable'
+export { useCreateUnassignedTable } from './api/useCreateUnassignedTable'
+export { useFinishTable } from './api/useFinishTable'
 export { useGameTable } from './api/useGameTable'
 export { useGameTables } from './api/useGameTables'
 export { useManagedTable } from './api/useManagedTable'
 export { useManagedTables } from './api/useManagedTables'
 export { useMyTables } from './api/useMyTables'
-export { useOpenTable } from './api/useOpenTable'
-export type { CreateGameTableRequest, GameTableDetail, GameTableStatus, GameTableSummary, MasterSummary } from './types'
+export { useRequestChanges } from './api/useRequestChanges'
+export { useResubmitTable } from './api/useResubmitTable'
+export { useStartTable } from './api/useStartTable'
+export { useTableStatusHistory } from './api/useTableStatusHistory'
+export { assignMastersSchema, changeTableStatusSchema, createGameTableSchema } from './schemas'
+export type { AssignMastersForm, ChangeTableStatusForm, CreateGameTableForm } from './schemas'
+export type {
+  AdminTableSummary,
+  AssignMastersRequest,
+  ChangeTableStatusRequest,
+  CreateGameTableRequest,
+  GameTableDetail,
+  GameTableStatus,
+  GameTableSummary,
+  MasterSummary,
+  TableStatusChange,
+} from './types'

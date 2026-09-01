@@ -51,10 +51,16 @@ public class TestLoginController {
     @PostMapping("/test-login")
     @Transactional
     public TokenResponse testLogin(
-            @RequestParam String discordId, @RequestParam(defaultValue = "false") boolean asMaster, HttpServletResponse response) {
+            @RequestParam String discordId,
+            @RequestParam(defaultValue = "false") boolean asMaster,
+            @RequestParam(defaultValue = "false") boolean asAdmin,
+            HttpServletResponse response) {
         User user = userService.findOrCreateByDiscordId(discordId, discordId);
         if (asMaster) {
-            grantMasterRoleIfMissing(user);
+            grantRoleIfMissing(user, PlatformRole.MASTER);
+        }
+        if (asAdmin) {
+            grantRoleIfMissing(user, PlatformRole.ADMIN);
         }
 
         String accessToken = jwtService.issueAccessToken(user.getId());
@@ -63,12 +69,12 @@ public class TestLoginController {
         return new TokenResponse(accessToken, jwtService.accessTokenTtl().toSeconds());
     }
 
-    private void grantMasterRoleIfMissing(User user) {
-        if (userRoleRepository.findActiveRoleNames(user.getId()).contains(PlatformRole.MASTER.roleName())) {
+    private void grantRoleIfMissing(User user, PlatformRole role) {
+        if (userRoleRepository.findActiveRoleNames(user.getId()).contains(role.roleName())) {
             return;
         }
-        Role masterRole = roleRepository.findByName(PlatformRole.MASTER.roleName())
-                .orElseThrow(() -> new IllegalStateException("Master role is missing - check V2__seed.sql"));
-        userRoleRepository.save(new UserRole(user, masterRole));
+        Role platformRole = roleRepository.findByName(role.roleName())
+                .orElseThrow(() -> new IllegalStateException(role.roleName() + " role is missing - check V2__seed.sql"));
+        userRoleRepository.save(new UserRole(user, platformRole));
     }
 }

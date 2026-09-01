@@ -1,0 +1,28 @@
+{
+  "tables": {
+    "title": "Mesas por revisar",
+    "emptyTitle": "No hay mesas esperando revisión",
+    "emptyDescription": "Las mesas nuevas y las que necesitan una decisión van a aparecer acá.",
+    "noPrimaryMaster": "Sin asignar",
+    "approve": "Aprobar",
+    "approveConfirmTitle": "Aprobar esta mesa",
+    "approveConfirmDescription": "La mesa va a quedar abierta para que los jugadores se postulen.",
+    "approveSuccess": "Mesa aprobada",
+    "requestChanges": "Pedir cambios",
+    "requestChangesDialogTitle": "Pedir cambios en {{name}}",
+    "requestChangesDialogDescription": "Contale al master qué tiene que corregir antes de aprobarla.",
+    "requestChangesSuccess": "Se pidieron cambios",
+    "assignMasters": "Asignar masters",
+    "assignMastersDialogTitle": "Asignar masters a {{name}}",
+    "assignMastersDialogDescription": "La mesa queda abierta apenas se le asigna un Primary.",
+    "assignMastersSuccess": "Masters asignados, mesa abierta",
+    "primaryUserIdLabel": "ID de usuario del Primary",
+    "secondaryUserIdsLabel": "IDs de Secondary (opcional)",
+    "secondaryUserIdsDescription": "Separados por coma. Todavía no hay buscador de usuarios.",
+    "createUnassigned": "Crear mesa sin master",
+    "createUnassignedDialogTitle": "Crear una mesa sin master",
+    "createUnassignedDialogDescription": "Queda sin asignar hasta que le asignes un Primary.",
+    "createUnassignedSuccess": "Mesa creada, sin asignar",
+    "nameLabel": "Nombre"
+  }
+}

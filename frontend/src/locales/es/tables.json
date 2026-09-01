@@ -1,8 +1,14 @@
 {
   "status": {
+    "Unassigned": "Sin asignar",
     "Preparation": "En preparación",
+    "ChangesRequested": "Con cambios pedidos",
     "Opened": "Abierta",
-    "InProgress": "En curso"
+    "InProgress": "En curso",
+    "PauseRequested": "Pausa solicitada",
+    "Pause": "Pausada",
+    "Finished": "Finalizada",
+    "Canceled": "Cancelada"
   },
   "explorer": {
     "title": "Explorar mesas",

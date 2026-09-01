@@ -1,0 +1,64 @@
+%% Flujo de navegación real entre pantallas, no el sitemap ideal de frontend-diseno.md.
+%% Cada flecha sale de un router.tsx/Link/navigate real - se actualiza a mano cuando
+%% una etapa nueva conecta o desconecta pantallas (nació en el cierre de E1, decisiones.md
+%% #143-#161; el contexto Admin y el wizard de creación son de E2 sub-rebanada 1, #163;
+%% ver esos registros para el porqué de cada arista, no acá).
+flowchart LR
+    subgraph publico["Público"]
+        login["/login"]
+        discord(("Discord<br/>externo"))
+        callback["/auth/callback"]
+        onboarding["/onboarding"]
+    end
+
+    subgraph jugador["Jugador"]
+        explore["/<br/>Explorar mesas"]
+        tableDetail["/tables/:id"]
+        notifications["/notifications"]
+        myApplications["/my/applications<br/>sin link en la UI"]
+        myTables["/my/tables<br/>sin link en la UI"]
+    end
+
+    subgraph master["Master"]
+        masterList["/master/tables"]
+        masterCreate["/master/tables/new<br/>solo con el rol Master (#135)"]
+        masterDetail["/master/tables/:id<br/>pestaña candidatos"]
+        masterStatus["/master/tables/:id/status<br/>pestaña estado"]
+    end
+
+    subgraph admin["Admin"]
+        adminTables["/admin/tables"]
+    end
+
+    subgraph futuro["Diseñado, no construido todavía"]
+        myTableDetail["/my/tables/:id<br/>E3 - agenda y sesiones"]
+        masterDashboard["/master<br/>E2 - dashboard, sub-rebanada 5"]
+        adminQueue["/admin/queue<br/>E2 - sub-rebanada 2"]
+        adminCatalogs["/admin/catalogs<br/>E2 - sub-rebanada 3"]
+        adminSettings["/admin/settings<br/>E2 - sub-rebanada 4"]
+        adminUsers["/admin/users<br/>E2 - sub-rebanada 5"]
+        owner["Owner<br/>E2+"]
+    end
+
+    login -->|Entrar con Discord| discord
+    discord -->|vuelve con el code| callback
+    callback -.->|no es miembro / bloqueado: reintentar| discord
+    callback -->|falta onboarding| onboarding
+    callback -->|ya completó onboarding| explore
+    onboarding -->|nombre + país| explore
+    explore -->|click en una card| tableDetail
+    explore -->|abrir campana| notifications
+    explore <-->|cambiar de contexto: rol o mesa asignada| masterList
+    explore <-->|cambiar de contexto: rol Admin u Owner| adminTables
+    masterList -->|Crear mesa| masterCreate
+    masterCreate -->|crear: queda en Preparation| masterDetail
+    masterList -->|click en una card| masterDetail
+    masterDetail <-->|tabs| masterStatus
+    notifications -->|aceptado / rechazado| tableDetail
+    notifications -->|nueva postulación| masterDetail
+    explore -->|cerrar sesión| login
+
+    classDef orphan stroke-dasharray: 5 4
+    classDef future stroke-dasharray: 3 3
+    class myApplications,myTables orphan
+    class myTableDetail,masterDashboard,adminQueue,adminCatalogs,adminSettings,adminUsers,owner future

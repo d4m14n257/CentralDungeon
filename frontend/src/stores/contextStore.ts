@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type AppContext = 'player' | 'master'
+export type AppContext = 'player' | 'master' | 'admin'
 
 interface ContextState {
   activeContext: AppContext

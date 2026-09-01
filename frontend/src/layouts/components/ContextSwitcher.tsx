@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { masterTablesPath, paths } from '@/config/paths'
+import { adminTablesPath, masterTablesPath, paths } from '@/config/paths'
 import type { AppContext } from '@/stores/contextStore'
 import { useContextStore } from '@/stores/contextStore'
 
@@ -37,7 +37,13 @@ export function ContextSwitcher({ availableContexts }: { availableContexts: AppC
 
   function switchTo(context: AppContext) {
     setActiveContext(context)
-    navigate(context === 'master' ? masterTablesPath() : paths.home)
+    if (context === 'master') {
+      navigate(masterTablesPath())
+    } else if (context === 'admin') {
+      navigate(adminTablesPath())
+    } else {
+      navigate(paths.home)
+    }
   }
 
   return (

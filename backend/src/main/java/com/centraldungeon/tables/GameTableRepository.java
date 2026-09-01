@@ -26,6 +26,9 @@ public interface GameTableRepository extends JpaRepository<GameTable, String> {
     @Query("select m.gameTable from Master m where m.user.id = :userId")
     Page<GameTable> findByMasterUserId(@Param("userId") String userId, Pageable pageable);
 
+    /** /admin/tables: management listing, unfiltered by pertenencia - the caller is already an admin. */
+    Page<GameTable> findByStatusIn(Collection<GameTableStatus> statuses, Pageable pageable);
+
     /**
      * Locks the table aggregate root for the invariants MySQL cannot express as a constraint:
      * one active registration per pair (#28) and the max_players cap / auto-reject on fill (#34).

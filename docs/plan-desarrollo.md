@@ -86,6 +86,14 @@ También entra **`system_settings`** (#141): la tabla clave-valor, el `SettingsS
 
 **Entrega**: mesas con su ciclo de vida real y catálogos administrables.
 
+**En progreso**, en sub-rebanadas verticales — no se construye de un tirón, siguiendo el mismo criterio del §1:
+
+1. **✅ Máquina de estados de mesa** (sin `approval_requests` todavía). Los 9 estados, `table_status_changes` con su historial, `Unassigned`→`Opened` al asignar masters (#72), aprobar/pedir cambios/reenviar, iniciar/finalizar, cancelar (Primary o admin) y pausa/reanudación directa de un admin. Frontend: wizard `/master/tables/new`, pestaña Estado en `/master/tables/:id`, `/admin/tables` con Aprobar/Pedir cambios/Asignar masters, contexto Admin nuevo en el `ContextSwitcher`. Detalle y límites conocidos en `docs/decisiones.md` #163.
+2. `approval_requests` + bandeja de admins + veto — siguiente.
+3. Catálogos (`systems`/`tags`/`platforms`) — pendiente.
+4. `system_settings` — pendiente.
+5. Cierre: `/admin/users`, `/master` (dashboard), `/my/history`, `/admin/requests` completo — pendiente.
+
 ### E3 — Sesiones y peticiones
 
 **Backend** — `table_sessions` materializadas al pasar a `Opened` a partir de `start_date` + agenda + `total_sessions` (#26, #33). Asistencia por sesión (#36). `table_tasks` + `task_submissions` + `submission_files`, con entregas que se acumulan y no bloquean (#63, #70, #76). Notificación al publicar una petición (#77).

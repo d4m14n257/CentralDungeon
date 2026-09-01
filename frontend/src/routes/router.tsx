@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router'
 
+import { AdminLayout } from '@/layouts/AdminLayout'
 import { MasterLayout } from '@/layouts/MasterLayout'
 import { PlayerLayout } from '@/layouts/PlayerLayout'
 import { PublicLayout } from '@/layouts/PublicLayout'
@@ -38,12 +39,21 @@ export const router = createBrowserRouter([
         Component: MasterLayout,
         children: [
           { path: 'tables', lazy: () => import('./master/MasterTablesPage') },
+          { path: 'tables/new', lazy: () => import('./master/MasterTableCreatePage') },
           {
             path: 'tables/:id',
             lazy: () => import('./master/MasterTableDetailPage'),
-            children: [{ index: true, lazy: () => import('./master/MasterTableCandidatesTab') }],
+            children: [
+              { index: true, lazy: () => import('./master/MasterTableCandidatesTab') },
+              { path: 'status', lazy: () => import('./master/MasterTableStatusTab') },
+            ],
           },
         ],
+      },
+      {
+        path: 'admin',
+        Component: AdminLayout,
+        children: [{ path: 'tables', lazy: () => import('./admin/AdminTablesPage') }],
       },
       { path: '*', lazy: () => import('./NotFoundPage') },
     ],

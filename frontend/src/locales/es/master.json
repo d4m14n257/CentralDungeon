@@ -1,16 +1,51 @@
 {
   "myTables": {
     "title": "Mis mesas como master",
+    "createNew": "Crear mesa",
     "emptyTitle": "Todavía no creaste ninguna mesa",
     "emptyDescription": "Cuando crees una mesa, la vas a ver acá."
   },
+  "create": {
+    "title": "Crear una mesa",
+    "description": "La mesa queda en preparación hasta que un admin la revise.",
+    "nameLabel": "Nombre",
+    "descriptionLabel": "Descripción",
+    "requirementsLabel": "Requisitos",
+    "maxPlayersLabel": "Cupo máximo",
+    "totalSessionsLabel": "Sesiones planeadas",
+    "reviewNotice": "Un admin va a revisar la mesa antes de que quede abierta a postulaciones.",
+    "submit": "Crear mesa",
+    "submitting": "Creando...",
+    "success": "Mesa creada, queda en preparación"
+  },
   "detail": {
-    "open": "Abrir mesa",
-    "openConfirmTitle": "Abrir esta mesa",
-    "openConfirmDescription": "La mesa va a quedar visible para que los jugadores se postulen.",
-    "openSuccess": "Mesa abierta",
     "tabs": {
-      "candidates": "Candidatos"
+      "candidates": "Candidatos",
+      "status": "Estado"
     }
+  },
+  "status": {
+    "justificationLabel": "Justificación",
+    "historyTitle": "Historial de estados",
+    "historyEmptyTitle": "Todavía no hubo cambios de estado",
+    "changedBy": "Por {{name}}",
+    "waitingForAdmin": "Esperando la revisión de un admin.",
+    "pausedByAdmin": "La mesa está pausada por un admin.",
+    "resubmit": "Reenviar a revisión",
+    "resubmitConfirmTitle": "Reenviar esta mesa",
+    "resubmitConfirmDescription": "Vuelve a quedar en preparación, esperando la revisión de un admin.",
+    "resubmitSuccess": "Mesa reenviada a revisión",
+    "start": "Iniciar mesa",
+    "startConfirmTitle": "Iniciar esta mesa",
+    "startConfirmDescription": "La mesa pasa a estar en curso.",
+    "startSuccess": "Mesa iniciada",
+    "finish": "Finalizar mesa",
+    "finishConfirmTitle": "Finalizar esta mesa",
+    "finishConfirmDescription": "La mesa queda cerrada como finalizada.",
+    "finishSuccess": "Mesa finalizada",
+    "cancel": "Cancelar mesa",
+    "cancelDialogTitle": "Cancelar esta mesa",
+    "cancelDialogDescription": "Contá por qué se cancela - queda registrado en el historial.",
+    "cancelSuccess": "Mesa cancelada"
   }
 }

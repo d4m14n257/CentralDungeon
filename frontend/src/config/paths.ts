@@ -13,7 +13,10 @@ export const paths = {
   myTables: 'my/tables',
   notifications: 'notifications',
   masterTables: 'master/tables',
+  masterTableNew: 'master/tables/new',
   masterTableDetail: 'master/tables/:id',
+  masterTableStatus: 'master/tables/:id/status',
+  adminTables: 'admin/tables',
 } as const
 
 export function tableDetailPath(id: string): string {
@@ -24,6 +27,18 @@ export function masterTablesPath(): string {
   return '/master/tables'
 }
 
+export function masterTableNewPath(): string {
+  return '/master/tables/new'
+}
+
 export function masterTableDetailPath(id: string): string {
   return `/master/tables/${id}`
+}
+
+export function masterTableStatusPath(id: string): string {
+  return `/master/tables/${id}/status`
+}
+
+export function adminTablesPath(): string {
+  return '/admin/tables'
 }

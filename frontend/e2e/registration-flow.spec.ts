@@ -15,14 +15,18 @@ import { test, expect, type APIRequestContext, type Browser } from '@playwright/
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
 
-async function testLogin(request: APIRequestContext, discordId: string, asMaster = false) {
+async function testLogin(request: APIRequestContext, discordId: string, asMaster = false, asAdmin = false) {
   const response = await request.post(`${BACKEND_URL}/api/v1/auth/test-login`, {
-    params: { discordId, asMaster },
+    params: { discordId, asMaster, asAdmin },
   })
   expect(response.ok()).toBeTruthy()
   return (await response.json()) as { accessToken: string }
 }
 
+/**
+ * Preparation -> Opened ya no es self-service del master (E2 sub-rebanada 1, decisiones.md #163):
+ * un admin tiene que aprobarla. Se loguea un admin efímero solo para eso.
+ */
 async function createOpenTable(request: APIRequestContext, accessToken: string, name: string) {
   const created = await request.post(`${BACKEND_URL}/api/v1/game-tables`, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -31,10 +35,11 @@ async function createOpenTable(request: APIRequestContext, accessToken: string, 
   expect(created.ok()).toBeTruthy()
   const table = (await created.json()) as { id: string }
 
-  const opened = await request.post(`${BACKEND_URL}/api/v1/game-tables/${table.id}/open`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+  const admin = await testLogin(request, `e2e-admin-${Math.random().toString(36).slice(2, 10)}`, false, true)
+  const approved = await request.post(`${BACKEND_URL}/api/v1/game-tables/${table.id}/approve`, {
+    headers: { Authorization: `Bearer ${admin.accessToken}` },
   })
-  expect(opened.ok()).toBeTruthy()
+  expect(approved.ok()).toBeTruthy()
   return table.id
 }
 

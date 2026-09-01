@@ -3,13 +3,18 @@ package com.centraldungeon.tables;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.tables.dto.AddMasterRequest;
+import com.centraldungeon.tables.dto.AdminTableSummaryResponse;
+import com.centraldungeon.tables.dto.AssignMastersRequest;
+import com.centraldungeon.tables.dto.ChangeTableStatusRequest;
 import com.centraldungeon.tables.dto.CreateGameTableRequest;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
+import com.centraldungeon.tables.dto.TableStatusChangeResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,9 +24,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Covers the game table aggregate: the table itself and its masters (arquitectura.md 2.2). */
+/** Covers the game table aggregate: the table itself, its masters and its status history (arquitectura.md 2.2). */
 @RestController
 @RequestMapping("/api/v1/game-tables")
 public class GameTableController {
@@ -38,6 +44,14 @@ public class GameTableController {
         return gameTableService.list(pageable, currentUser.userId());
     }
 
+    /** /admin/tables - unfiltered by pertenencia, defaults to the statuses waiting on an admin. */
+    @GetMapping("/admin")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public PageResponse<AdminTableSummaryResponse> listForAdmin(
+            @RequestParam(required = false) @Nullable List<GameTableStatus> status, Pageable pageable) {
+        return gameTableService.listForAdmin(status, pageable);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public GameTableDetailResponse getDetail(@PathVariable String id) {
@@ -49,6 +63,12 @@ public class GameTableController {
     @PreAuthorize("isAuthenticated()")
     public GameTableDetailResponse getManagedDetail(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.getManagedDetail(id, currentUser.userId());
+    }
+
+    @GetMapping("/{id}/status-history")
+    @PreAuthorize("isAuthenticated()")
+    public List<TableStatusChangeResponse> getStatusHistory(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.getStatusHistory(id, currentUser.userId());
     }
 
     /** /my/tables - only the tables where the actor holds an active Player registration. */
@@ -74,11 +94,73 @@ public class GameTableController {
         return ResponseEntity.created(URI.create("/api/v1/game-tables/" + created.id())).body(created);
     }
 
+    /** A mesa an admin creates without being its master (#72) - nace Unassigned, sin Primary. */
+    @PostMapping("/unassigned")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public ResponseEntity<GameTableDetailResponse> createUnassigned(
+            @Valid @RequestBody CreateGameTableRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        GameTableDetailResponse created = gameTableService.createUnassigned(request, currentUser.userId());
+        return ResponseEntity.created(URI.create("/api/v1/game-tables/" + created.id())).body(created);
+    }
+
+    @PostMapping("/{id}/assign-masters")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public GameTableDetailResponse assignMasters(
+            @PathVariable String id, @Valid @RequestBody AssignMastersRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.assignInitialMasters(id, request, currentUser.userId());
+    }
+
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public GameTableDetailResponse approve(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.approve(id, currentUser.userId());
+    }
+
+    @PostMapping("/{id}/request-changes")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public GameTableDetailResponse requestChanges(
+            @PathVariable String id, @Valid @RequestBody ChangeTableStatusRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.requestChanges(id, currentUser.userId(), request);
+    }
+
     /** Pertenencia, not role, decides who may act on THIS table (decisiones.md #17, #121) - checked inside the service. */
-    @PostMapping("/{id}/open")
+    @PostMapping("/{id}/resubmit")
     @PreAuthorize("isAuthenticated()")
-    public GameTableDetailResponse open(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
-        return gameTableService.open(id, currentUser.userId());
+    public GameTableDetailResponse resubmit(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.resubmit(id, currentUser.userId());
+    }
+
+    @PostMapping("/{id}/start")
+    @PreAuthorize("isAuthenticated()")
+    public GameTableDetailResponse start(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.start(id, currentUser.userId());
+    }
+
+    @PostMapping("/{id}/finish")
+    @PreAuthorize("isAuthenticated()")
+    public GameTableDetailResponse finish(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.finish(id, currentUser.userId());
+    }
+
+    /** Either the Primary or an admin may cancel - resolved inside the service, not here (decisiones.md #17, #121). */
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("isAuthenticated()")
+    public GameTableDetailResponse cancel(
+            @PathVariable String id, @Valid @RequestBody ChangeTableStatusRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.cancel(id, currentUser.userId(), request);
+    }
+
+    @PostMapping("/{id}/pause")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public GameTableDetailResponse pause(
+            @PathVariable String id, @Valid @RequestBody ChangeTableStatusRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.pauseDirect(id, currentUser.userId(), request);
+    }
+
+    @PostMapping("/{id}/resume")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public GameTableDetailResponse resume(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.resume(id, currentUser.userId());
     }
 
     @PostMapping("/{id}/masters")

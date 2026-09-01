@@ -22,6 +22,7 @@ Reflejan el schema de `../modelo-datos.md`, resultado de las decisiones #1–#95
 | Diagrama | Qué cubre |
 |---|---|
 | [`17-notificaciones.mmd`](17-notificaciones.mmd) | Motor de notificaciones: la personal como fila en `notifications`, la bandeja de admins como **vista** sobre el trabajo pendiente, el ciclo de reserva y el mensaje como señal de invalidación. |
+| [`18-navegacion.mmd`](18-navegacion.mmd) | Navegación real entre pantallas — de qué router.tsx/Link/navigate sale cada flecha, no el sitemap ideal. **Vivo, no un cierre de etapa**: se actualiza cuando una etapa nueva conecta o desconecta pantallas, para ver crecer las conexiones entre vista y vista de una etapa a la otra. Nació del artifact de revisión de E1 (`pruebas-e1.md`), rescatado acá al cerrar esa etapa. |
 
 ## Ciclos de vida
 

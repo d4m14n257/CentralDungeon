@@ -70,6 +70,27 @@ public class MasterService {
         }
     }
 
+    /**
+     * Bootstraps the very first masters of a table an admin created Unassigned (modelo-datos.md #72).
+     * Cannot reuse addOrPromote: that method assumes a Primary already exists to authorize the
+     * caller, which is exactly what is missing on an Unassigned table.
+     */
+    @Transactional
+    public void assignInitialMasters(GameTable gameTable, String primaryUserId, List<String> secondaryUserIds) {
+        List<Master> existing = masterRepository.findByGameTableIdForUpdate(gameTable.getId());
+        if (!existing.isEmpty()) {
+            throw new ConflictException("Table already has masters assigned");
+        }
+        if (secondaryUserIds.contains(primaryUserId)) {
+            throw new ConflictException("Primary and Secondary cannot be the same user");
+        }
+
+        masterRepository.save(new Master(gameTable, userService.getById(primaryUserId), MasterType.Primary));
+        for (String secondaryId : secondaryUserIds) {
+            masterRepository.save(new Master(gameTable, userService.getById(secondaryId), MasterType.Secondary));
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<Master> findByGameTable(String gameTableId) {
         return masterRepository.findByGameTable_Id(gameTableId);

@@ -10,14 +10,19 @@ import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.tables.dto.AssignMastersRequest;
+import com.centraldungeon.tables.dto.ChangeTableStatusRequest;
 import com.centraldungeon.tables.dto.CreateGameTableRequest;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
 import com.centraldungeon.users.User;
+import com.centraldungeon.users.UserAuthSnapshot;
 import com.centraldungeon.users.UserService;
+import com.centraldungeon.users.UserStatus;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +46,9 @@ class GameTableServiceTest {
     private TableRegistrationRepository tableRegistrationRepository;
 
     @Mock
+    private TableStatusChangeRepository tableStatusChangeRepository;
+
+    @Mock
     private MasterService masterService;
 
     @Mock
@@ -54,7 +62,8 @@ class GameTableServiceTest {
     @BeforeEach
     void setUp() {
         gameTableService = new GameTableService(
-                gameTableRepository, tableTypeRepository, tableRegistrationRepository, masterService, gameTableMapper, userService);
+                gameTableRepository, tableTypeRepository, tableRegistrationRepository, tableStatusChangeRepository, masterService,
+                gameTableMapper, userService);
     }
 
     @Test
@@ -89,36 +98,113 @@ class GameTableServiceTest {
     }
 
     @Test
-    void onlyThePrimaryMasterCanOpenATable() {
-        GameTable table = persistedTable("table-2", GameTableStatus.Preparation);
-        when(gameTableRepository.findById("table-2")).thenReturn(Optional.of(table));
-        when(masterService.isPrimaryOf("table-2", "secondary-1")).thenReturn(false);
-
-        assertThatThrownBy(() -> gameTableService.open("table-2", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
-    }
-
-    @Test
-    void cannotOpenATableThatIsNotInPreparation() {
+    void cannotApproveATableThatIsNotInPreparation() {
         GameTable table = persistedTable("table-3", GameTableStatus.Opened);
-        when(gameTableRepository.findById("table-3")).thenReturn(Optional.of(table));
-        when(masterService.isPrimaryOf("table-3", "primary-1")).thenReturn(true);
+        when(gameTableRepository.findByIdForUpdate("table-3")).thenReturn(Optional.of(table));
 
-        assertThatThrownBy(() -> gameTableService.open("table-3", "primary-1")).isInstanceOf(ConflictException.class);
+        assertThatThrownBy(() -> gameTableService.approve("table-3", "admin-1")).isInstanceOf(ConflictException.class);
     }
 
     @Test
-    void openTransitionsPreparationToOpened() {
+    void approveTransitionsPreparationToOpenedAndRecordsHistory() {
         GameTable table = persistedTable("table-4", GameTableStatus.Preparation);
-        when(gameTableRepository.findById("table-4")).thenReturn(Optional.of(table));
-        when(masterService.isPrimaryOf("table-4", "primary-1")).thenReturn(true);
+        User admin = persistedUser("admin-1");
+        when(gameTableRepository.findByIdForUpdate("table-4")).thenReturn(Optional.of(table));
+        when(userService.getById("admin-1")).thenReturn(admin);
         when(masterService.findByGameTable("table-4")).thenReturn(List.of());
         when(gameTableMapper.toDetail(any(GameTable.class), eqInt(0), eqList()))
                 .thenReturn(new GameTableDetailResponse(
                         "table-4", "Test", null, null, null, "Opened", null, 0, null, null, null, List.of(), null));
 
-        gameTableService.open("table-4", "primary-1");
+        gameTableService.approve("table-4", "admin-1");
 
         assertThat(table.getStatus()).isEqualTo(GameTableStatus.Opened);
+        org.mockito.Mockito.verify(tableStatusChangeRepository).save(any(TableStatusChange.class));
+    }
+
+    @Test
+    void onlyThePrimaryMasterCanStartATable() {
+        GameTable table = persistedTable("table-2", GameTableStatus.Opened);
+        when(gameTableRepository.findByIdForUpdate("table-2")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-2", "secondary-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> gameTableService.start("table-2", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
+    }
+
+    @Test
+    void onlyThePrimaryMasterCanFinishATable() {
+        GameTable table = persistedTable("table-2b", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-2b")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-2b", "secondary-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> gameTableService.finish("table-2b", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
+    }
+
+    @Test
+    void assignInitialMastersOpensAnUnassignedTable() {
+        GameTable table = persistedTable("table-unassigned", GameTableStatus.Unassigned);
+        User admin = persistedUser("admin-1");
+        when(gameTableRepository.findByIdForUpdate("table-unassigned")).thenReturn(Optional.of(table));
+        when(userService.getById("admin-1")).thenReturn(admin);
+        when(masterService.findByGameTable("table-unassigned")).thenReturn(List.of());
+        when(gameTableMapper.toDetail(any(GameTable.class), eqInt(0), eqList()))
+                .thenReturn(new GameTableDetailResponse(
+                        "table-unassigned", "Test", null, null, null, "Opened", null, 0, null, null, null, List.of(), null));
+
+        gameTableService.assignInitialMasters(
+                "table-unassigned", new AssignMastersRequest("primary-1", List.of()), "admin-1");
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Opened);
+        org.mockito.Mockito.verify(masterService).assignInitialMasters(table, "primary-1", List.of());
+    }
+
+    @Test
+    void cannotAssignMastersToATableThatIsNotUnassigned() {
+        GameTable table = persistedTable("table-5b", GameTableStatus.Preparation);
+        when(gameTableRepository.findByIdForUpdate("table-5b")).thenReturn(Optional.of(table));
+
+        assertThatThrownBy(() -> gameTableService.assignInitialMasters(
+                        "table-5b", new AssignMastersRequest("primary-1", List.of()), "admin-1"))
+                .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void adminCanCancelATableEvenWithoutBeingItsMaster() {
+        GameTable table = persistedTable("table-6b", GameTableStatus.Opened);
+        User admin = persistedUser("admin-1");
+        when(gameTableRepository.findByIdForUpdate("table-6b")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-6b", "admin-1")).thenReturn(false);
+        when(userService.loadAuthSnapshot("admin-1")).thenReturn(new UserAuthSnapshot("admin-1", UserStatus.Allowed, Set.of("Admin")));
+        when(userService.getById("admin-1")).thenReturn(admin);
+        when(masterService.findByGameTable("table-6b")).thenReturn(List.of());
+        when(gameTableMapper.toDetail(any(GameTable.class), eqInt(0), eqList()))
+                .thenReturn(new GameTableDetailResponse(
+                        "table-6b", "Test", null, null, null, "Canceled", null, 0, null, null, null, List.of(), null));
+
+        gameTableService.cancel("table-6b", "admin-1", new ChangeTableStatusRequest("No hay suficientes jugadores"));
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Canceled);
+    }
+
+    @Test
+    void someoneWhoIsNeitherPrimaryNorAdminCannotCancel() {
+        GameTable table = persistedTable("table-6c", GameTableStatus.Opened);
+        when(gameTableRepository.findByIdForUpdate("table-6c")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-6c", "secondary-1")).thenReturn(false);
+        when(userService.loadAuthSnapshot("secondary-1")).thenReturn(new UserAuthSnapshot("secondary-1", UserStatus.Allowed, Set.of("Master")));
+
+        assertThatThrownBy(() -> gameTableService.cancel("table-6c", "secondary-1", new ChangeTableStatusRequest("motivo")))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    @Test
+    void cannotCancelATableThatIsAlreadyFinished() {
+        GameTable table = persistedTable("table-6d", GameTableStatus.Finished);
+        when(gameTableRepository.findByIdForUpdate("table-6d")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-6d", "primary-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.cancel("table-6d", "primary-1", new ChangeTableStatusRequest("motivo")))
+                .isInstanceOf(ConflictException.class);
     }
 
     @Test

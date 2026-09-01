@@ -1,14 +1,19 @@
 import { useTranslation } from 'react-i18next'
-import { Outlet, useParams } from 'react-router'
-import { toast } from 'sonner'
+import { NavLink, Outlet, useParams } from 'react-router'
 
-import { useConfirm } from '@/components/ConfirmDialog'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TableStatusBadge, useManagedTable, useOpenTable } from '@/features/tables'
+import { cn } from '@/lib/utils'
+import { TableStatusBadge, useManagedTable } from '@/features/tables'
+import { useMe } from '@/features/users'
 import { ApiError } from '@/types/api'
+
+const TAB_LINK_CLASSES = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    '-mb-px border-b-2 px-1 pb-2 text-sm font-medium',
+    isActive ? 'border-brand-fg text-fg' : 'border-transparent text-fg-muted hover:text-fg',
+  )
 
 export function MasterTableDetailPage() {
   const { t } = useTranslation('master')
@@ -18,8 +23,7 @@ export function MasterTableDetailPage() {
   // devuelve 403 sin cuerpo si el actor no es master de esta mesa - useGameTable es el detalle
   // público que cualquier jugador consulta en /tables/:id (decisiones.md #152).
   const { data: table, isPending, error, isLoadingError } = useManagedTable(tableId)
-  const openTable = useOpenTable(tableId)
-  const confirm = useConfirm()
+  const { data: me } = useMe()
 
   if (isPending) {
     return <Skeleton className="h-32 w-full" />
@@ -33,29 +37,25 @@ export function MasterTableDetailPage() {
     return <ErrorState />
   }
 
-  async function handleOpen() {
-    const confirmed = await confirm({
-      title: t('detail.openConfirmTitle'),
-      description: t('detail.openConfirmDescription'),
-    })
-    if (!confirmed) return
-    openTable.mutate(undefined, { onSuccess: () => toast.success(t('detail.openSuccess')) })
-  }
+  const isPrimary = table.masters.some((master) => master.userId === me?.id && master.masterType === 'Primary')
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <h1 className="font-serif text-2xl font-semibold">{table.name}</h1>
-        <div className="flex items-center gap-2">
-          <TableStatusBadge status={table.status} />
-          {table.status === 'Preparation' && (
-            <Button size="sm" onClick={() => void handleOpen()} disabled={openTable.isPending}>
-              {t('detail.open')}
-            </Button>
-          )}
-        </div>
+        <TableStatusBadge status={table.status} />
       </div>
-      <Outlet context={{ tableId, maxPlayers: table.maxPlayers, playerCount: table.playerCount }} />
+      <nav className="border-border-strong flex gap-4 border-b">
+        <NavLink to="." end className={TAB_LINK_CLASSES}>
+          {t('detail.tabs.candidates')}
+        </NavLink>
+        <NavLink to="status" className={TAB_LINK_CLASSES}>
+          {t('detail.tabs.status')}
+        </NavLink>
+      </nav>
+      <Outlet
+        context={{ tableId, status: table.status, maxPlayers: table.maxPlayers, playerCount: table.playerCount, isPrimary }}
+      />
     </div>
   )
 }

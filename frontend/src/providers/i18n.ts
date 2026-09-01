@@ -1,6 +1,7 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
+import admin from '@/locales/es/admin.json'
 import auth from '@/locales/es/auth.json'
 import common from '@/locales/es/common.json'
 import dev from '@/locales/es/dev.json'
@@ -15,7 +16,7 @@ void i18n.use(initReactI18next).init({
   fallbackLng: 'es',
   defaultNS: 'common',
   resources: {
-    es: { common, auth, onboarding, tables, registrations, notifications, master, dev },
+    es: { common, auth, onboarding, tables, registrations, notifications, master, admin, dev },
   },
   interpolation: { escapeValue: false },
 })

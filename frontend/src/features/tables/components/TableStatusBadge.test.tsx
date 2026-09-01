@@ -6,9 +6,15 @@ import { TableStatusBadge } from './TableStatusBadge'
 
 describe('TableStatusBadge', () => {
   it.each([
+    ['Unassigned', 'Sin asignar', 'bg-state-draft-dot'],
     ['Preparation', 'En preparación', 'bg-state-pending-dot'],
+    ['ChangesRequested', 'Con cambios pedidos', 'bg-state-warning-dot'],
     ['Opened', 'Abierta', 'bg-state-open-dot'],
     ['InProgress', 'En curso', 'bg-state-active-dot'],
+    ['PauseRequested', 'Pausa solicitada', 'bg-state-pending-dot'],
+    ['Pause', 'Pausada', 'bg-state-paused-dot'],
+    ['Finished', 'Finalizada', 'bg-state-done-dot'],
+    ['Canceled', 'Cancelada', 'bg-state-canceled-dot'],
   ] as const)('renders the %s label and dot colour', (status, label, dotClass) => {
     const { container } = render(<TableStatusBadge status={status} />)
 

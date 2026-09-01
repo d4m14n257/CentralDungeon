@@ -23,6 +23,7 @@
     "brandSecond": "Dungeon",
     "player": "Jugador",
     "master": "Master",
+    "admin": "Admin",
     "notifications": "Notificaciones",
     "switchContext": "Cambiar de contexto",
     "accountFallback": "Mi cuenta"

@@ -18,6 +18,7 @@ import { testLoginAndReload } from './devApi'
 // conectado a los datos con los que ya se viene probando, en vez de arrancar una cuenta vacía.
 const DEFAULT_PLAYER_ID = 'jugador-1'
 const DEFAULT_MASTER_ID = 'master-1'
+const DEFAULT_ADMIN_ID = 'admin-1'
 
 /**
  * Solo en `npm run dev` (import.meta.env.DEV, reemplazado en build y eliminado del bundle de
@@ -42,14 +43,25 @@ function DevPanelContent() {
   const { data: me } = useMe(isAuthenticated)
   const [playerDiscordId, setPlayerDiscordId] = useState(DEFAULT_PLAYER_ID)
   const [masterDiscordId, setMasterDiscordId] = useState(DEFAULT_MASTER_ID)
+  const [adminDiscordId, setAdminDiscordId] = useState(DEFAULT_ADMIN_ID)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const createTable = useCreateTable()
 
-  async function loginAs(asMaster: boolean) {
+  async function loginAsPlayerOrMaster(asMaster: boolean) {
     const discordId = asMaster ? masterDiscordId : playerDiscordId
     setIsLoggingIn(true)
     try {
       await testLoginAndReload(discordId.trim() || (asMaster ? DEFAULT_MASTER_ID : DEFAULT_PLAYER_ID), asMaster)
+    } catch {
+      toast.error(t('loginFailed'))
+      setIsLoggingIn(false)
+    }
+  }
+
+  async function loginAsAdmin() {
+    setIsLoggingIn(true)
+    try {
+      await testLoginAndReload(adminDiscordId.trim() || DEFAULT_ADMIN_ID, false, true)
     } catch {
       toast.error(t('loginFailed'))
       setIsLoggingIn(false)
@@ -98,7 +110,7 @@ function DevPanelContent() {
                 onChange={(event) => setPlayerDiscordId(event.target.value)}
                 className="flex-1"
               />
-              <Button size="sm" variant="secondary" disabled={isLoggingIn} onClick={() => void loginAs(false)}>
+              <Button size="sm" variant="secondary" disabled={isLoggingIn} onClick={() => void loginAsPlayerOrMaster(false)}>
                 {t('loginAsPlayer')}
               </Button>
             </div>
@@ -113,8 +125,23 @@ function DevPanelContent() {
                 onChange={(event) => setMasterDiscordId(event.target.value)}
                 className="flex-1"
               />
-              <Button size="sm" variant="secondary" disabled={isLoggingIn} onClick={() => void loginAs(true)}>
+              <Button size="sm" variant="secondary" disabled={isLoggingIn} onClick={() => void loginAsPlayerOrMaster(true)}>
                 {t('loginAsMaster')}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="dev-panel-admin-id">{t('adminDiscordIdLabel')}</Label>
+            <div className="flex gap-2">
+              <Input
+                id="dev-panel-admin-id"
+                value={adminDiscordId}
+                onChange={(event) => setAdminDiscordId(event.target.value)}
+                className="flex-1"
+              />
+              <Button size="sm" variant="secondary" disabled={isLoggingIn} onClick={() => void loginAsAdmin()}>
+                {t('loginAsAdmin')}
               </Button>
             </div>
           </div>
