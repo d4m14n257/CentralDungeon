@@ -1,6 +1,31 @@
+# Activated alongside dev for the Playwright runs (backend/README.md). Two things live here:
+# the login shortcut of TestLoginController, and Discord itself pointed at the stub that
+# TestDiscordController serves, so the real OAuth2 handshake can run without a Discord app.
 spring:
   jpa:
     show-sql: false
+  security:
+    oauth2:
+      client:
+        registration:
+          discord:
+            client-id: test-discord-client
+            client-secret: test-discord-secret
+        provider:
+          discord:
+            authorization-uri: http://localhost:8080/test-discord/oauth2/authorize
+            token-uri: http://localhost:8080/test-discord/oauth2/token
+            user-info-uri: http://localhost:8080/test-discord/users/@me
+
+# Ojo con estos dos: si backend/.env define DISCORD_GUILD_ID o DISCORD_INVITE_URL, esos ganan.
+# Son variables de entorno y el binding relajado de Spring las mapea directo sobre discord.*,
+# por encima de cualquier archivo de configuración, perfil incluido. Los valores de acá solo
+# aplican en un clon sin .env — y alcanzan, porque el stub devuelve el guild-id que esté
+# configurado, sea cual sea. guilds-uri no tiene variable de entorno, así que nunca se pisa.
+discord:
+  guild-id: test-guild
+  invite-url: https://discord.gg/test-invite
+  guilds-uri: http://localhost:8080/test-discord/users/@me/guilds
 
 logging:
   level:

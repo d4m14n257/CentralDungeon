@@ -18,6 +18,18 @@ export interface GameTableSummary {
   primaryMaster: MasterSummary
 }
 
+/** Espejo de CreateGameTableRequest - forma de entrada, no se deriva de GameTableDetail (tableTypeId vs tableTypeName). */
+export interface CreateGameTableRequest {
+  name: string
+  description?: string | null
+  requirements?: string | null
+  tableTypeId?: string | null
+  startDate?: string | null
+  duration?: string | null
+  totalSessions?: number | null
+  maxPlayers?: number | null
+}
+
 /** Espejo de GameTableDetailResponse. */
 export interface GameTableDetail {
   id: string

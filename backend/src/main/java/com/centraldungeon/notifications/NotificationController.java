@@ -36,4 +36,11 @@ public class NotificationController {
     public void markAsRead(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
         notificationService.markAsRead(id, currentUser.userId());
     }
+
+    @PatchMapping("/read-all")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void markAllAsRead(@AuthenticationPrincipal CurrentUser currentUser) {
+        notificationService.markAllAsRead(currentUser.userId());
+    }
 }

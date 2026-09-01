@@ -5,7 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
+import com.centraldungeon.registrations.TableRegistrationRepository;
+import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
 import java.util.List;
@@ -23,13 +26,16 @@ class MasterServiceTest {
     private MasterRepository masterRepository;
 
     @Mock
+    private TableRegistrationRepository registrationRepository;
+
+    @Mock
     private UserService userService;
 
     private MasterService masterService;
 
     @BeforeEach
     void setUp() {
-        masterService = new MasterService(masterRepository, userService);
+        masterService = new MasterService(masterRepository, registrationRepository, userService);
     }
 
     @Test
@@ -80,6 +86,20 @@ class MasterServiceTest {
         masterService.addOrPromote(table, "primary-1", "new-target", MasterType.Secondary);
 
         assertThat(primary.getMasterType()).isEqualTo(MasterType.Primary);
+    }
+
+    @Test
+    void rejectsAddingAPlayerOfTheTableAsItsMaster() {
+        GameTable table = persistedTable("table-6");
+        User primaryUser = persistedUser("primary-1");
+        Master primary = new Master(table, primaryUser, MasterType.Primary);
+        when(masterRepository.findByGameTableIdForUpdate("table-6")).thenReturn(List.of(primary));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-6", "player-1", List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player)))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> masterService.addOrPromote(table, "primary-1", "player-1", MasterType.Secondary))
+                .isInstanceOf(ConflictException.class);
     }
 
     @Test

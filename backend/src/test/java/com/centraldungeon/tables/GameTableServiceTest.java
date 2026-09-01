@@ -122,6 +122,29 @@ class GameTableServiceTest {
     }
 
     @Test
+    void listExcludesTablesTheActorMasters() {
+        GameTable table = persistedTable("table-4b", GameTableStatus.Opened);
+        User primaryUser = persistedUser("someone-else");
+        Master primary = new Master(table, primaryUser, MasterType.Primary);
+        Pageable pageable = PageRequest.of(0, 20);
+        when(gameTableRepository.findByStatusInAndNotMasteredByActor(
+                        List.of(GameTableStatus.Opened, GameTableStatus.InProgress), "player-1", pageable))
+                .thenReturn(new PageImpl<>(List.of(table)));
+        when(masterService.findByGameTable("table-4b")).thenReturn(List.of(primary));
+        MasterSummaryResponse primarySummary = new MasterSummaryResponse("someone-else", "Someone Else", 8000, "Primary");
+        when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
+        GameTableSummaryResponse summary =
+                new GameTableSummaryResponse("table-4b", "Test", "Opened", null, null, 0, primarySummary);
+        when(gameTableMapper.toSummary(table, 0, primarySummary)).thenReturn(summary);
+
+        var result = gameTableService.list(pageable, "player-1");
+
+        assertThat(result.content()).containsExactly(summary);
+        org.mockito.Mockito.verify(gameTableRepository)
+                .findByStatusInAndNotMasteredByActor(List.of(GameTableStatus.Opened, GameTableStatus.InProgress), "player-1", pageable);
+    }
+
+    @Test
     void listManagedMapsEveryTableTheRepositoryReturnsForThatMaster() {
         GameTable table = persistedTable("table-5", GameTableStatus.Preparation);
         User primaryUser = persistedUser("primary-1");
@@ -138,6 +161,33 @@ class GameTableServiceTest {
         var result = gameTableService.listManaged("master-1", pageable);
 
         assertThat(result.content()).containsExactly(summary);
+    }
+
+    @Test
+    void getManagedDetailRejectsSomeoneWhoIsNotAMasterOfThatTable() {
+        GameTable table = persistedTable("table-6", GameTableStatus.Opened);
+        when(gameTableRepository.findById("table-6")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-6", "outsider-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> gameTableService.getManagedDetail("table-6", "outsider-1")).isInstanceOf(ForbiddenActionException.class);
+
+        org.mockito.Mockito.verify(gameTableMapper, org.mockito.Mockito.never())
+                .toDetail(any(), org.mockito.ArgumentMatchers.anyInt(), any());
+    }
+
+    @Test
+    void getManagedDetailReturnsTheTableForItsOwnMaster() {
+        GameTable table = persistedTable("table-7", GameTableStatus.Opened);
+        when(gameTableRepository.findById("table-7")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-7", "master-1")).thenReturn(true);
+        when(masterService.findByGameTable("table-7")).thenReturn(List.of());
+        when(gameTableMapper.toDetail(any(GameTable.class), eqInt(0), eqList()))
+                .thenReturn(new GameTableDetailResponse(
+                        "table-7", "Test", null, null, null, "Opened", null, 0, null, null, null, List.of(), null));
+
+        GameTableDetailResponse response = gameTableService.getManagedDetail("table-7", "master-1");
+
+        assertThat(response.id()).isEqualTo("table-7");
     }
 
     @Test

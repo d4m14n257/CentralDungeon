@@ -78,6 +78,18 @@ class RegistrationServiceTest {
     }
 
     @Test
+    void rejectsApplicationsFromAMasterOfThatSameTable() {
+        GameTable table = persistedTable("table-1b", GameTableStatus.Opened, null);
+        when(gameTableRepository.findByIdForUpdate("table-1b")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("master-player-1"))
+                .thenReturn(new UserAuthSnapshot("master-player-1", UserStatus.Allowed, Set.of("Player", "Master")));
+        when(masterService.isMasterOf("table-1b", "master-player-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> registrationService.apply("table-1b", "master-player-1", new CreateRegistrationRequest(null)))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    @Test
     void rejectsApplicationsToATableThatIsNotOpen() {
         GameTable table = persistedTable("table-2", GameTableStatus.Preparation, null);
         when(gameTableRepository.findByIdForUpdate("table-2")).thenReturn(Optional.of(table));
@@ -109,11 +121,33 @@ class RegistrationServiceTest {
         when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(registrationMapper.toResponse(any(TableRegistration.class)))
-                .thenReturn(new RegistrationResponse("reg-1", "table-4", "player-1", "P1", 8000, "Candidate", null, null));
+                .thenReturn(new RegistrationResponse("reg-1", "table-4", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null));
 
         RegistrationResponse response = registrationService.apply("table-4", "player-1", new CreateRegistrationRequest("please"));
 
         assertThat(response.status()).isEqualTo("Candidate");
+    }
+
+    @Test
+    void applyNotifiesEveryMasterOfTheTable() {
+        GameTable table = persistedTable("table-4b", GameTableStatus.Opened, null);
+        when(gameTableRepository.findByIdForUpdate("table-4b")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
+        when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
+        when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(registrationMapper.toResponse(any(TableRegistration.class)))
+                .thenReturn(new RegistrationResponse("reg-1b", "table-4b", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null));
+        com.centraldungeon.tables.Master primary =
+                new com.centraldungeon.tables.Master(table, persistedUser("master-1"), com.centraldungeon.tables.MasterType.Primary);
+        com.centraldungeon.tables.Master secondary =
+                new com.centraldungeon.tables.Master(table, persistedUser("master-2"), com.centraldungeon.tables.MasterType.Secondary);
+        when(masterService.findByGameTable("table-4b")).thenReturn(List.of(primary, secondary));
+
+        registrationService.apply("table-4b", "player-1", new CreateRegistrationRequest("please"));
+
+        verify(notificationService).notifyNewCandidate("master-1", table, "name-player-1");
+        verify(notificationService).notifyNewCandidate("master-2", table, "name-player-1");
     }
 
     @Test
@@ -144,7 +178,7 @@ class RegistrationServiceTest {
         when(masterService.isMasterOf("table-7", "master-1")).thenReturn(true);
         when(registrationRepository.countByGameTable_IdAndStatus("table-7", TableRegistrationStatus.Player)).thenReturn(1L);
         when(registrationMapper.toResponse(registration))
-                .thenReturn(new RegistrationResponse("reg-3", "table-7", "player-1", "P1", 8000, "Player", null, null));
+                .thenReturn(new RegistrationResponse("reg-3", "table-7", "Test table", "player-1", "P1", 8000, "Player", null, null, null));
 
         registrationService.accept("reg-3", "master-1");
 
@@ -166,7 +200,7 @@ class RegistrationServiceTest {
         when(registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc("table-8", TableRegistrationStatus.Candidate))
                 .thenReturn(List.of(otherCandidate));
         when(registrationMapper.toResponse(accepted))
-                .thenReturn(new RegistrationResponse("reg-4", "table-8", "player-1", "P1", 8000, "Player", null, null));
+                .thenReturn(new RegistrationResponse("reg-4", "table-8", "Test table", "player-1", "P1", 8000, "Player", null, null, null));
 
         registrationService.accept("reg-4", "master-1");
 
@@ -193,13 +227,30 @@ class RegistrationServiceTest {
         when(masterService.isMasterOf("table-10", "master-1")).thenReturn(true);
         when(userService.getById("master-1")).thenReturn(persistedUser("master-1"));
         when(registrationMapper.toResponse(registration))
-                .thenReturn(new RegistrationResponse("reg-7", "table-10", "player-1", "P1", 8000, "Rejected", null, null));
+                .thenReturn(new RegistrationResponse("reg-7", "table-10", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null));
 
         registrationService.reject("reg-7", "master-1", new RejectRegistrationRequest("Not a fit"));
 
         assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Rejected);
         verify(rejectionRepository).save(any(RegistrationRejection.class));
         verify(notificationService).notifyRegistrationRejected(registration.getUser().getId(), registration.getGameTable(), "Not a fit");
+    }
+
+    @Test
+    void listMineIncludesTheRejectionJustificationForRejectedApplications() {
+        TableRegistration registration = persistedRegistration("reg-8", "table-12", TableRegistrationStatus.Rejected, null);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 20);
+        when(registrationRepository.findByUser_Id("player-1", pageable))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
+        when(registrationMapper.toResponse(registration))
+                .thenReturn(new RegistrationResponse("reg-8", "table-12", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null));
+        RegistrationRejection rejection = new RegistrationRejection(registration, "Mesa llena", null);
+        when(rejectionRepository.findByRegistration_IdIn(List.of("reg-8"))).thenReturn(List.of(rejection));
+
+        var result = registrationService.listMine("player-1", pageable);
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).rejectionJustification()).isEqualTo("Mesa llena");
     }
 
     @Test

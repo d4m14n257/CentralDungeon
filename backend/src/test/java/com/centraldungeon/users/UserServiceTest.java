@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.tables.MasterRepository;
 import com.centraldungeon.users.dto.UpdateUserRequest;
 import com.centraldungeon.users.dto.UserDetailResponse;
 import java.util.Optional;
@@ -32,13 +33,16 @@ class UserServiceTest {
     private UserRoleRepository userRoleRepository;
 
     @Mock
+    private MasterRepository masterRepository;
+
+    @Mock
     private UserMapper userMapper;
 
     private UserService userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository, roleRepository, userRoleRepository, userMapper);
+        userService = new UserService(userRepository, roleRepository, userRoleRepository, masterRepository, userMapper);
     }
 
     @Test
@@ -88,14 +92,29 @@ class UserServiceTest {
         User user = persistedUser("user-4", "discord-4", "X");
         when(userRepository.findById("user-4")).thenReturn(Optional.of(user));
         when(userRoleRepository.findActiveRoleNames("user-4")).thenReturn(Set.of("Player"));
-        when(userMapper.toDetailResponse(user, Set.of("Player")))
-                .thenReturn(new UserDetailResponse("user-4", "Onboarded Name", "AR", 8000, false, Set.of("Player")));
+        when(masterRepository.existsByUser_Id("user-4")).thenReturn(false);
+        when(userMapper.toDetailResponse(user, Set.of("Player"), false))
+                .thenReturn(new UserDetailResponse("user-4", "Onboarded Name", "AR", 8000, false, Set.of("Player"), false));
 
         UserDetailResponse response = userService.completeOnboarding("user-4", new UpdateUserRequest("Onboarded Name", "AR"));
 
         assertThat(user.getName()).isEqualTo("Onboarded Name");
         assertThat(user.getCountry()).isEqualTo("AR");
         assertThat(response.needsOnboarding()).isFalse();
+    }
+
+    @Test
+    void detailResponseFlagsAMasterOfAtLeastOneTableEvenWithoutThePlatformRole() {
+        User user = persistedUser("user-5", "discord-5", "X");
+        when(userRepository.findById("user-5")).thenReturn(Optional.of(user));
+        when(userRoleRepository.findActiveRoleNames("user-5")).thenReturn(Set.of("Player"));
+        when(masterRepository.existsByUser_Id("user-5")).thenReturn(true);
+        when(userMapper.toDetailResponse(user, Set.of("Player"), true))
+                .thenReturn(new UserDetailResponse("user-5", "X", null, 8000, true, Set.of("Player"), true));
+
+        UserDetailResponse response = userService.getDetailResponse("user-5");
+
+        assertThat(response.hasManagedTables()).isTrue();
     }
 
     private User persistedUser(String id, String discordId, String discordUsername) {

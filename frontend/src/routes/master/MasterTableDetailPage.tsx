@@ -4,15 +4,20 @@ import { toast } from 'sonner'
 
 import { useConfirm } from '@/components/ConfirmDialog'
 import { ErrorState } from '@/components/ErrorState'
+import { ForbiddenState } from '@/components/ForbiddenState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TableStatusBadge, useGameTable, useOpenTable } from '@/features/tables'
+import { TableStatusBadge, useManagedTable, useOpenTable } from '@/features/tables'
+import { ApiError } from '@/types/api'
 
 export function MasterTableDetailPage() {
   const { t } = useTranslation('master')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
-  const { data: table, isPending, isError } = useGameTable(tableId)
+  // useManagedTable, no useGameTable: el backend verifica pertenencia antes de leer nada y
+  // devuelve 403 sin cuerpo si el actor no es master de esta mesa - useGameTable es el detalle
+  // público que cualquier jugador consulta en /tables/:id (decisiones.md #152).
+  const { data: table, isPending, error, isLoadingError } = useManagedTable(tableId)
   const openTable = useOpenTable(tableId)
   const confirm = useConfirm()
 
@@ -20,7 +25,11 @@ export function MasterTableDetailPage() {
     return <Skeleton className="h-32 w-full" />
   }
 
-  if (isError || !table) {
+  if (error instanceof ApiError && error.status === 403) {
+    return <ForbiddenState />
+  }
+
+  if (isLoadingError || !table) {
     return <ErrorState />
   }
 

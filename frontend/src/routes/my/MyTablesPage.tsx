@@ -7,7 +7,9 @@ import { GameTableCard, useMyTables } from '@/features/tables'
 
 export function MyTablesPage() {
   const { t } = useTranslation('tables')
-  const { data, isPending, isError, refetch } = useMyTables()
+  // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya
+  // cargada (docs/decisiones.md #150).
+  const { data, isPending, isLoadingError, refetch } = useMyTables()
 
   return (
     <div className="space-y-4">
@@ -19,7 +21,7 @@ export function MyTablesPage() {
           ))}
         </div>
       )}
-      {isError && <ErrorState onRetry={() => void refetch()} />}
+      {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && (
         <EmptyState title={t('myTables.emptyTitle')} description={t('myTables.emptyDescription')} />
       )}

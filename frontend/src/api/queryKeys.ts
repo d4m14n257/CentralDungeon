@@ -3,6 +3,7 @@ export const queryKeys = {
   tables: {
     list: (filters?: Record<string, unknown>) => ['tables', 'list', filters] as const,
     detail: (id: string) => ['tables', 'detail', id] as const,
+    managedDetail: (id: string) => ['tables', 'managed-detail', id] as const,
     mine: () => ['tables', 'mine'] as const,
     managed: () => ['tables', 'managed'] as const,
   },
@@ -15,5 +16,8 @@ export const queryKeys = {
   },
   users: {
     me: () => ['users', 'me'] as const,
+  },
+  system: {
+    health: () => ['system', 'health'] as const,
   },
 } as const

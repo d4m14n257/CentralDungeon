@@ -92,15 +92,32 @@ public class GameTableService {
         return masterService.findByGameTable(gameTableId).stream().map(gameTableMapper::toMasterSummary).toList();
     }
 
+    /** Excludes tables the actor masters (#154): a master cannot browse their own table to apply as a Player at it. */
     @Transactional(readOnly = true)
-    public PageResponse<GameTableSummaryResponse> list(Pageable pageable) {
-        Page<GameTable> page = gameTableRepository.findByStatusIn(VISIBLE_STATUSES, pageable);
+    public PageResponse<GameTableSummaryResponse> list(Pageable pageable, String actorId) {
+        Page<GameTable> page = gameTableRepository.findByStatusInAndNotMasteredByActor(VISIBLE_STATUSES, actorId, pageable);
         return PageResponse.from(page.map(this::toSummary));
     }
 
     @Transactional(readOnly = true)
     public GameTableDetailResponse getDetail(String gameTableId) {
         return toDetail(getEntityById(gameTableId));
+    }
+
+    /**
+     * /master/tables/:id - a different endpoint from getDetail on purpose (decisiones.md #152):
+     * getDetail is deliberately public (any player reads it to decide whether to apply), so
+     * reusing it here would mean the full table body travels over the network before the
+     * frontend ever gets to decide whether to render it. This one checks pertenencia first and
+     * never touches the mapper if the actor isn't a master of this table.
+     */
+    @Transactional(readOnly = true)
+    public GameTableDetailResponse getManagedDetail(String gameTableId, String actorId) {
+        GameTable gameTable = getEntityById(gameTableId);
+        if (!masterService.isMasterOf(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table can view its management detail");
+        }
+        return toDetail(gameTable);
     }
 
     /** /my/tables: only the tables where the actor currently holds an active Player registration. */

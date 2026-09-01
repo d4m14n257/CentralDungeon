@@ -122,10 +122,21 @@
   --color-destructive-foreground: #020617;
   --color-input: var(--color-border);
   --color-ring: var(--color-brand-500);
+
+  /* -- brand gradient: measured from links.centraldungeon.org (#132) -- */
+  --gradient-brand: linear-gradient(-45deg, #214b90, #070c12, #211949, #3e308b);
+
+  /* -- accent used as text (karma, links, the wordmark's second half) -- */
+  --color-brand-fg: #8e7ce0;
 }
+
+/* Native UI - scrollbars, form controls, the overscroll gutter - follows the theme too.
+   Without it the browser paints them light while the app is dark. */
+:root { color-scheme: dark; }
 
 /* Light theme overrides the semantic layer only; primitives never change. */
 :root[data-theme="light"] {
+  color-scheme: light;
   --color-canvas: #f8fafc;
   --color-surface: #ffffff;
   --color-raised: #f1f5f9;
@@ -135,6 +146,7 @@
   --color-fg-muted: #475569;
   --color-fg-subtle: #64748b;
   --color-brand-500: #5442ab;  /* darker on light for AA */
+  --color-brand-fg: #3e308b;  /* 400 only reaches 3.29:1 here */
   --color-state-draft-dot: #64748b;
   --color-state-draft-bg: #f1f5f9;
   --color-state-draft-fg: #475569;

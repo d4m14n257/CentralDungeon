@@ -61,6 +61,20 @@ class NotificationServiceTest {
     }
 
     @Test
+    void notifiesAMasterOfANewCandidateWithTheApplicantNameInTheTitle() {
+        User recipient = persistedUser("master-1");
+        when(userRepository.getReferenceById("master-1")).thenReturn(recipient);
+        GameTable table = persistedTable("table-3", "Tumbas de Sal");
+
+        notificationService.notifyNewCandidate("master-1", table, "Beto");
+
+        verify(notificationRepository)
+                .save(org.mockito.ArgumentMatchers.argThat(notification -> notification.getNotificationType() == NotificationType.NewCandidate
+                        && notification.getTitle().equals("Beto se postuló a Tumbas de Sal")
+                        && notification.getMessage() == null));
+    }
+
+    @Test
     void markAsReadThrowsWhenTheNotificationDoesNotExist() {
         when(notificationRepository.findById("missing")).thenReturn(Optional.empty());
 
@@ -85,6 +99,18 @@ class NotificationServiceTest {
         notificationService.markAsRead("notif-2", "owner");
 
         assertThat(notification.getReadStatus()).isEqualTo(ReadStatus.Read);
+    }
+
+    @Test
+    void markAllAsReadFlipsEveryUnreadNotificationForThatUser() {
+        Notification first = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, "Title 1", null, null, null);
+        Notification second = new Notification(persistedUser("owner"), NotificationType.NewCandidate, "Title 2", null, null, null);
+        when(notificationRepository.findByUser_IdAndReadStatus("owner", ReadStatus.Unread)).thenReturn(java.util.List.of(first, second));
+
+        notificationService.markAllAsRead("owner");
+
+        assertThat(first.getReadStatus()).isEqualTo(ReadStatus.Read);
+        assertThat(second.getReadStatus()).isEqualTo(ReadStatus.Read);
     }
 
     private Notification argThatMatchesType(NotificationType type) {

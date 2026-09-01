@@ -8,7 +8,9 @@ import { GameTableCard, useManagedTables } from '@/features/tables'
 
 export function MasterTablesPage() {
   const { t } = useTranslation('master')
-  const { data, isPending, isError, refetch } = useManagedTables()
+  // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya
+  // cargada (docs/decisiones.md #150).
+  const { data, isPending, isLoadingError, refetch } = useManagedTables()
 
   return (
     <div className="space-y-4">
@@ -20,7 +22,7 @@ export function MasterTablesPage() {
           ))}
         </div>
       )}
-      {isError && <ErrorState onRetry={() => void refetch()} />}
+      {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && (
         <EmptyState title={t('myTables.emptyTitle')} description={t('myTables.emptyDescription')} />
       )}

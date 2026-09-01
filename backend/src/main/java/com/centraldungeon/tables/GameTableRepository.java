@@ -12,7 +12,15 @@ import org.springframework.data.repository.query.Param;
 
 public interface GameTableRepository extends JpaRepository<GameTable, String> {
 
-    Page<GameTable> findByStatusIn(Collection<GameTableStatus> statuses, Pageable pageable);
+    /**
+     * /game-tables (the public explorer): a master never sees a table they themselves run in the
+     * list meant for applying as a Player - a table has exactly one set of people who play at it
+     * and a disjoint set who run it (decisiones.md #154).
+     */
+    @Query("select t from GameTable t where t.status in :statuses and not exists "
+            + "(select 1 from Master m where m.gameTable = t and m.user.id = :actorId)")
+    Page<GameTable> findByStatusInAndNotMasteredByActor(
+            @Param("statuses") Collection<GameTableStatus> statuses, @Param("actorId") String actorId, Pageable pageable);
 
     /** /master/tables: every status, including Preparation - a master needs to see and open their own drafts. */
     @Query("select m.gameTable from Master m where m.user.id = :userId")

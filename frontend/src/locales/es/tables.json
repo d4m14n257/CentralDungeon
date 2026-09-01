@@ -10,12 +10,14 @@
     "emptyDescription": "Volvé más tarde, los masters siguen publicando mesas nuevas.",
     "players": "{{current}} / {{max}} jugadores",
     "playersUnlimited": "{{current}} jugadores",
-    "master": "Master: {{name}}"
+    "alreadyApplied": "Ya te postulaste"
   },
   "detail": {
     "requirements": "Requisitos",
     "description": "Descripción",
-    "masters": "Masters",
+    "capacity": "Cupo",
+    "masterLabel": "Master",
+    "coMasterLabel": "Co-master",
     "apply": "Postularme",
     "applySubmitting": "Enviando...",
     "alreadyApplied": "Ya tenés una postulación en curso",

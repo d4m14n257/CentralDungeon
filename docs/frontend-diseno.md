@@ -32,7 +32,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
                        └── Owner      ← solo los que tenga
 ```
 
-- **Quien tiene un solo rol no ve el selector.** No hay nada que elegir.
+- **Quien tiene un solo rol ve el chip igual, pero sin caret ni menú** (#145): no hay nada que elegir, pero sí algo que mostrar — sin esto el header no da ninguna señal de en qué contexto está.
 - **El contexto Master aparece con el rol `Master` o con al menos una fila viva en `masters`** (#135). Un jugador al que un admin asignó como master de una mesa entra por ahí, ve solo esa mesa, y **no ve `/master/tables/new`**: dirigir no es crear.
 - El contexto activo se recuerda en Zustand + `localStorage`. Por defecto `Jugador` si lo tiene; si no, el primero disponible.
 - **El contexto es organización de UI, no seguridad.** Estar "en contexto Admin" no habilita nada: el backend autoriza endpoint por endpoint (#103). Si alguien fuerza la ruta `/admin/queue` sin el rol, el backend responde `403` y la pantalla muestra el error — no se confía en el selector para nada.
@@ -122,6 +122,10 @@ Qué produce en `design/out/`:
 Ambos, con `next-themes` o equivalente. El frontend viejo ya tenía `ColorModeContext`; es una función que se conserva.
 
 **Oscuro por defecto** (#131) — la comunidad juega de noche. El claro se deriva del oscuro, no al revés, y los dos tienen que estar igual de terminados: E0.5 no se cierra con uno solo.
+
+**Se cambia desde el `UserMenu`**, no desde una pantalla de configuración, y **sin opción "seguir al sistema"** (#144): que el default sea oscuro es una decisión de diseño, no la preferencia del sistema operativo de cada uno. El ítem nombra la acción, no el estado — estando en oscuro dice "Tema claro". La elección queda guardada. Como el menú solo existe con sesión, `/login` se ve siempre en oscuro; el gradiente de marca que lo cubre no depende del tema.
+
+**El acento como texto es un token propio**, `--color-brand-fg`, distinto del acento como relleno: ningún tono único pasa AA en los dos temas (`brand-400` da 3.29:1 sobre el canvas claro). Cualquier texto en color de marca —el wordmark, el karma— usa ese token y nunca una escala elegida a mano.
 
 ### Colores de estado — lo que más se repite
 

@@ -34,14 +34,21 @@ public class GameTableController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public PageResponse<GameTableSummaryResponse> list(Pageable pageable) {
-        return gameTableService.list(pageable);
+    public PageResponse<GameTableSummaryResponse> list(Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.list(pageable, currentUser.userId());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public GameTableDetailResponse getDetail(@PathVariable String id) {
         return gameTableService.getDetail(id);
+    }
+
+    /** /master/tables/:id - pertenencia checked in the service before any data is read (decisiones.md #152). */
+    @GetMapping("/{id}/managed")
+    @PreAuthorize("isAuthenticated()")
+    public GameTableDetailResponse getManagedDetail(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.getManagedDetail(id, currentUser.userId());
     }
 
     /** /my/tables - only the tables where the actor holds an active Player registration. */

@@ -1,10 +1,26 @@
 {
   "title": "Notificaciones",
+  "unreadCount": "{{count}} sin leer",
+  "viewAll": "Ver todas",
+  "markAllAsRead": "Marcar todo como leído",
   "emptyTitle": "Nada nuevo por acá",
   "emptyDescription": "Cuando algo pase con tus mesas o postulaciones, vas a verlo acá.",
-  "markAsRead": "Marcar como leída",
+  "timeAgo": "hace {{value}}",
+  "time": {
+    "now": "ahora",
+    "minutes": "{{count}} min",
+    "hours": "{{count}} h",
+    "days": "{{count}} d",
+    "months_one": "{{count}} mes",
+    "months_other": "{{count}} meses"
+  },
   "type": {
     "RegistrationAccepted": "Postulación aceptada",
-    "RegistrationRejected": "Postulación rechazada"
+    "RegistrationRejected": "Postulación rechazada",
+    "NewCandidate": "Nueva postulación"
+  },
+  "badge": {
+    "accepted": "Aceptada",
+    "rejected": "Rechazada"
   }
 }

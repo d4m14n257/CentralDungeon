@@ -6,6 +6,7 @@ export interface User {
   karma: number
   needsOnboarding: boolean
   roles: string[]
+  hasManagedTables: boolean
 }
 
 export interface CompleteOnboardingInput {

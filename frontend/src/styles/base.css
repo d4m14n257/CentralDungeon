@@ -1,0 +1,27 @@
+/* Estilos base de la app, no tokens.
+   Van acá y no en globals.css porque ese archivo se sobrescribe entero cada vez que se
+   transcribe el tema desde el design system (#118, #130) — lo que se escriba ahí se pierde.
+   Ningún valor suelto: todo sale del @theme. */
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+
+  /* El serif es solo de títulos (dirección visual "fantasía sobria", #131). */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+  }
+}
+
+@layer components {
+  /* El gradiente propio de la comunidad (#132). Único lugar donde aparece entero: adentro de la
+     app los catorce colores de estado necesitan un fondo que no les compita. */
+  .bg-brand-gradient {
+    background-image: var(--gradient-brand);
+  }
+}

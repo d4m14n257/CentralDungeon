@@ -62,9 +62,12 @@ public class SecurityConfig {
                                 "/login/**",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/logout",
-                                // Only mapped to a handler under the "test" profile (TestLoginController) -
-                                // 404s in dev/prod regardless of being permitAll here.
+                                // Only mapped to a handler under the "test" profile (TestLoginController
+                                // and TestDiscordController) - 404s in dev/prod regardless of being
+                                // permitAll here.
                                 "/api/v1/auth/test-login",
+                                "/test-discord/**",
+                                "/api/v1/health",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**")

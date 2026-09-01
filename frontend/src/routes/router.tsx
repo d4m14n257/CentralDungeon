@@ -13,10 +13,12 @@ export const router = createBrowserRouter([
   {
     Component: RootLayout,
     children: [
+      // /login arma su propio encuadre: es la única pantalla a sangre, sobre el gradiente de
+      // marca (#132). Las otras dos públicas comparten la tarjeta centrada de PublicLayout.
+      { path: '/login', lazy: () => import('./LoginPage') },
       {
         Component: PublicLayout,
         children: [
-          { path: '/login', lazy: () => import('./LoginPage') },
           { path: '/auth/callback', lazy: () => import('./OAuthCallbackPage') },
           { path: '/onboarding', lazy: () => import('./OnboardingPage') },
         ],

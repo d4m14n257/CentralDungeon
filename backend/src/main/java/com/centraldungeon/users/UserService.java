@@ -1,6 +1,7 @@
 package com.centraldungeon.users;
 
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.tables.MasterRepository;
 import com.centraldungeon.users.dto.UpdateUserRequest;
 import com.centraldungeon.users.dto.UserDetailResponse;
 import org.springframework.cache.annotation.CacheEvict;
@@ -14,13 +15,19 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
+    private final MasterRepository masterRepository;
     private final UserMapper userMapper;
 
     public UserService(
-            UserRepository userRepository, RoleRepository roleRepository, UserRoleRepository userRoleRepository, UserMapper userMapper) {
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            UserRoleRepository userRoleRepository,
+            MasterRepository masterRepository,
+            UserMapper userMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
+        this.masterRepository = masterRepository;
         this.userMapper = userMapper;
     }
 
@@ -60,10 +67,15 @@ public class UserService {
     public void evictAuthCache(String userId) {
     }
 
+    /**
+     * hasManagedTables cubre al master de una sola mesa que no tiene el rol de plataforma
+     * (decisiones.md #135): el ContextSwitcher necesita esta señal para ofrecer el contexto
+     * Master aunque `roles` no lo incluya.
+     */
     @Transactional(readOnly = true)
     public UserDetailResponse getDetailResponse(String userId) {
         User user = getById(userId);
-        return userMapper.toDetailResponse(user, userRoleRepository.findActiveRoleNames(userId));
+        return userMapper.toDetailResponse(user, userRoleRepository.findActiveRoleNames(userId), masterRepository.existsByUser_Id(userId));
     }
 
     @Transactional
@@ -71,6 +83,6 @@ public class UserService {
         User user = getById(userId);
         user.setName(request.name());
         user.setCountry(request.country());
-        return userMapper.toDetailResponse(user, userRoleRepository.findActiveRoleNames(userId));
+        return userMapper.toDetailResponse(user, userRoleRepository.findActiveRoleNames(userId), masterRepository.existsByUser_Id(userId));
     }
 }

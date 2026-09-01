@@ -19,7 +19,8 @@ interface OutletContext {
 
 function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
   const { t } = useTranslation('registrations')
-  const { data, isPending, isError, refetch } = useCandidates(tableId)
+  // isLoadingError, no isError: ver docs/decisiones.md #150.
+  const { data, isPending, isLoadingError, refetch } = useCandidates(tableId)
   const acceptRegistration = useAcceptRegistration(tableId)
   const confirm = useConfirm()
   const rejectDialog = useDisclosure<Registration>()
@@ -28,7 +29,7 @@ function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
     return <Skeleton className="h-32 w-full" />
   }
 
-  if (isError) {
+  if (isLoadingError) {
     return <ErrorState onRetry={() => void refetch()} />
   }
 

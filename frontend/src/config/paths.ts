@@ -20,6 +20,10 @@ export function tableDetailPath(id: string): string {
   return `/tables/${id}`
 }
 
+export function masterTablesPath(): string {
+  return '/master/tables'
+}
+
 export function masterTableDetailPath(id: string): string {
   return `/master/tables/${id}`
 }

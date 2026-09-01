@@ -11,5 +11,6 @@ public interface UserMapper {
 
     @Mapping(target = "needsOnboarding", expression = "java(!user.hasCompletedOnboarding())")
     @Mapping(target = "roles", source = "roles")
-    UserDetailResponse toDetailResponse(User user, Set<String> roles);
+    @Mapping(target = "hasManagedTables", source = "hasManagedTables")
+    UserDetailResponse toDetailResponse(User user, Set<String> roles, boolean hasManagedTables);
 }

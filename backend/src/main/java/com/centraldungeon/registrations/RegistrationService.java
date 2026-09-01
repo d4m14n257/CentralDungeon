@@ -11,12 +11,15 @@ import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
+import com.centraldungeon.tables.Master;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserAuthSnapshot;
 import com.centraldungeon.users.UserService;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -70,6 +73,9 @@ public class RegistrationService {
         if (!actorSnapshot.roles().contains(PlatformRole.PLAYER.roleName())) {
             throw new ForbiddenActionException("The Player role is required to apply");
         }
+        if (masterService.isMasterOf(gameTableId, actorId)) {
+            throw new ForbiddenActionException("A master of this table cannot apply to it as a candidate");
+        }
         if (table.getStatus() != GameTableStatus.Opened) {
             throw new ConflictException("Table is not open for applications");
         }
@@ -79,6 +85,12 @@ public class RegistrationService {
 
         User actor = userService.getById(actorId);
         TableRegistration registration = registrationRepository.save(new TableRegistration(table, actor, request.description()));
+
+        String applicantName = actor.getName() != null ? actor.getName() : actor.getDiscordUsername();
+        for (Master master : masterService.findByGameTable(gameTableId)) {
+            notificationService.notifyNewCandidate(master.getUser().getId(), table, applicantName);
+        }
+
         return registrationMapper.toResponse(registration);
     }
 
@@ -136,10 +148,33 @@ public class RegistrationService {
         return PageResponse.from(page.map(registrationMapper::toResponse));
     }
 
+    /** La justificación del rechazo importa acá - es la única pantalla donde el propio postulante la lee (#34). */
     @Transactional(readOnly = true)
     public PageResponse<RegistrationResponse> listMine(String actorId, Pageable pageable) {
         Page<TableRegistration> page = registrationRepository.findByUser_Id(actorId, pageable);
-        return PageResponse.from(page.map(registrationMapper::toResponse));
+        Map<String, String> justificationByRegistrationId = loadRejectionJustifications(page.getContent());
+        return PageResponse.from(page.map(registration -> {
+            RegistrationResponse response = registrationMapper.toResponse(registration);
+            String justification = justificationByRegistrationId.get(registration.getId());
+            return justification == null
+                    ? response
+                    : new RegistrationResponse(
+                            response.id(), response.gameTableId(), response.gameTableName(), response.userId(), response.userName(),
+                            response.userKarma(), response.status(), response.description(), response.createdAt(), justification);
+        }));
+    }
+
+    private Map<String, String> loadRejectionJustifications(List<TableRegistration> registrations) {
+        List<String> rejectedIds = registrations.stream()
+                .filter(registration -> registration.getStatus() == TableRegistrationStatus.Rejected)
+                .map(TableRegistration::getId)
+                .toList();
+        if (rejectedIds.isEmpty()) {
+            return Map.of();
+        }
+        return rejectionRepository.findByRegistration_IdIn(rejectedIds).stream()
+                .collect(Collectors.toMap(
+                        rejection -> rejection.getRegistration().getId(), RegistrationRejection::getDescription));
     }
 
     private void autoRejectRemainingCandidates(GameTable table) {

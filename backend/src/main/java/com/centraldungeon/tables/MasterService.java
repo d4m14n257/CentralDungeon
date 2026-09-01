@@ -1,6 +1,9 @@
 package com.centraldungeon.tables;
 
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
+import com.centraldungeon.registrations.TableRegistrationRepository;
+import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
 import java.util.List;
@@ -10,11 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MasterService {
 
+    private static final List<TableRegistrationStatus> ACTIVE_APPLICATION_STATUSES =
+            List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
+
     private final MasterRepository masterRepository;
+    private final TableRegistrationRepository registrationRepository;
     private final UserService userService;
 
-    public MasterService(MasterRepository masterRepository, UserService userService) {
+    public MasterService(MasterRepository masterRepository, TableRegistrationRepository registrationRepository, UserService userService) {
         this.masterRepository = masterRepository;
+        this.registrationRepository = registrationRepository;
         this.userService = userService;
     }
 
@@ -44,7 +52,13 @@ public class MasterService {
         Master target = masters.stream()
                 .filter(m -> m.getUser().getId().equals(targetUserId))
                 .findFirst()
-                .orElseGet(() -> masterRepository.save(new Master(gameTable, userService.getById(targetUserId), MasterType.Secondary)));
+                .orElseGet(() -> {
+                    if (registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                            gameTable.getId(), targetUserId, ACTIVE_APPLICATION_STATUSES)) {
+                        throw new ConflictException("A player of this table cannot be made its master");
+                    }
+                    return masterRepository.save(new Master(gameTable, userService.getById(targetUserId), MasterType.Secondary));
+                });
 
         if (requestedType == MasterType.Primary) {
             if (!target.getUser().getId().equals(actorId)) {

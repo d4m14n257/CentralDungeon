@@ -14,6 +14,8 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
 
     Optional<Master> findByGameTable_IdAndUser_Id(String gameTableId, String userId);
 
+    boolean existsByUser_Id(String userId);
+
     /**
      * Row-locked read used by MasterService before flipping who is Primary (modelo-datos.md #73):
      * concurrent requests on the same table serialize here instead of racing past each other.

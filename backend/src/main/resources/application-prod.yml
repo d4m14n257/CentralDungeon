@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    # Full JDBC URL, not just host/port: keeps this profile agnostic of whether MySQL
+    # runs colocated (docker-compose.prod.yml) or elsewhere entirely (arquitectura.md
+    # §6.2). No default - fails fast at startup instead of silently reaching for a
+    # dev-shaped default that would never be correct in production.
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    show-sql: false

@@ -19,8 +19,24 @@
   },
   "nav": {
     "brand": "CentralDungeon",
+    "brandFirst": "Central",
+    "brandSecond": "Dungeon",
     "player": "Jugador",
     "master": "Master",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "switchContext": "Cambiar de contexto",
+    "accountFallback": "Mi cuenta"
+  },
+  "theme": {
+    "switchToLight": "Tema claro",
+    "switchToDark": "Tema oscuro"
+  },
+  "connection": {
+    "online": "En línea",
+    "offline": "Sin conexión"
+  },
+  "errors": {
+    "offline": "No hay conexión con el servidor. Probá de nuevo en un momento.",
+    "mutationFailed": "No pudimos completar la acción. Probá de nuevo."
   }
 }

@@ -16,10 +16,10 @@ const baseTable: GameTableSummary = {
   primaryMaster: { userId: 'master-1', name: 'BrowserTester', karma: 8000, masterType: 'Primary' },
 }
 
-function renderCard(table: GameTableSummary, linkTo?: string) {
+function renderCard(table: GameTableSummary, options: { linkTo?: string; alreadyApplied?: boolean } = {}) {
   return render(
     <MemoryRouter>
-      {linkTo !== undefined ? <GameTableCard table={table} linkTo={linkTo} /> : <GameTableCard table={table} />}
+      <GameTableCard table={table} {...options} />
     </MemoryRouter>,
   )
 }
@@ -32,7 +32,7 @@ describe('GameTableCard', () => {
   })
 
   it('links to the given route when linkTo is passed (master detail route)', () => {
-    renderCard(baseTable, '/master/tables/table-1')
+    renderCard(baseTable, { linkTo: '/master/tables/table-1' })
 
     expect(screen.getByRole('link')).toHaveAttribute('href', '/master/tables/table-1')
   })
@@ -53,5 +53,17 @@ describe('GameTableCard', () => {
     renderCard({ ...baseTable, tableTypeName: null })
 
     expect(screen.queryByText('Public')).not.toBeInTheDocument()
+  })
+
+  it('shows the already-applied chip when alreadyApplied is true', () => {
+    renderCard(baseTable, { alreadyApplied: true })
+
+    expect(screen.getByText('Ya te postulaste')).toBeInTheDocument()
+  })
+
+  it('omits the already-applied chip by default', () => {
+    renderCard(baseTable)
+
+    expect(screen.queryByText('Ya te postulaste')).not.toBeInTheDocument()
   })
 })

@@ -1,0 +1,13 @@
+{
+  "title": "Panel de desarrollo",
+  "loggedInAs": "Sesión activa: {{name}}",
+  "notLoggedIn": "Sin sesión",
+  "playerDiscordIdLabel": "Discord ID (Jugador)",
+  "masterDiscordIdLabel": "Discord ID (Master)",
+  "loginAsPlayer": "Entrar como Jugador",
+  "loginAsMaster": "Entrar como Master",
+  "loginFailed": "No se pudo iniciar sesión de prueba - ¿el backend corre con el perfil test?",
+  "createTestTable": "Crear mesa de prueba",
+  "testTableName": "Mesa de prueba",
+  "testTableCreated": "Se creó \"{{name}}\""
+}

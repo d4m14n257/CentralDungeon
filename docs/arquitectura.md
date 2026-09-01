@@ -879,3 +879,38 @@ cd frontend && npx playwright test            # contra el backend real, arrancad
 ```
 
 Requisitos locales (versiones exactas en §1): JDK **25** vía **SDKMAN**, Node **24 LTS** vía **nvm**, contenedores vía **colima** (no Docker Desktop — su runtime no expone `/var/run/docker.sock`; ver `DOCKER_HOST` en `backend/README.md`), MySQL 8 siempre como contenedor.
+
+Solo la base de datos vive en Docker. El backend corre nativo (`./mvnw spring-boot:run`), sin contenedor propio ni `Dockerfile` — dockerizarlo alenta el ciclo de guardar-y-ver-el-cambio, que es exactamente lo que el hot reload de abajo optimiza.
+
+### 6.1 Configuración: `.env`, nunca variables de shell
+
+Cada servicio (`backend/`, `frontend/`) tiene su propio `.env.example`, versionado, con **todas** las variables que ese servicio lee — nombre y para qué sirve, nunca el secreto real. Se copia a `.env` (backend) o `.env.local` (frontend) para tener valores propios; ambos patrones ya estaban en el `.gitignore` de la raíz.
+
+Por qué no alcanza con `export` en el perfil de shell (como sí se usa para las variables de los MCP servers, `docs/mcp-y-skills.md`): esas viven en la máquina de quien las exportó y no se documentan en ningún lado del repo. Cada persona que clona el proyecto — o un cliente probando localmente sus propias credenciales de Discord — tendría que llegar a pedir la lista completa en vez de encontrarla en un archivo. `.env.example` es esa lista, versionada y siempre al día porque vive al lado del código que la usa.
+
+Spring Boot, a diferencia de Vite, no lee `.env` de forma nativa: `backend/pom.xml` agrega `springboot4-dotenv` (scope `runtime`, `optional`) para que los mismos placeholders `${VAR:default}` que ya existían en `application*.yml` resuelvan también desde un `.env` local, sin cambiar una línea de código. En un servidor real las variables se inyectan por el mecanismo del hosting (systemd, la plataforma, lo que sea) — ahí no hace falta ningún `.env`, y la librería simplemente no encuentra el archivo y no hace nada.
+
+### 6.2 Despliegue en producción
+
+**Una VM Linux genérica, sin atarse a un proveedor** (`decisiones.md` #142). En esta etapa se prueba en una instancia EC2 propia, pero el cliente muy probablemente corre el sistema final en una instancia de Oracle Cloud — así que nada de esto puede depender de un servicio propietario de ninguno de los dos. Para el backend, EC2 y Oracle Compute son la misma cosa: una máquina Linux con Docker, donde corre el jar y, al lado, MySQL.
+
+**Perfil `prod`** (`application-prod.yml`): la misma variable `${DB_URL}` que ya usa `dev` (con su default a `localhost:3306` para no pedir nada en local), pero en `prod` **sin default** — si falta, el arranque falla en vez de conectarse silenciosamente a algo que no es. Mantiene agnóstico si MySQL termina corriendo en la misma instancia o en otro lado, y ambos perfiles comparten el mismo nombre de variable en vez de inventar uno distinto por entorno.
+
+**MySQL en producción**: `docker-compose.prod.yml`, mismo servicio que el de `dev` pero con contraseñas reales por variable de entorno (nunca `centraldungeon`/`centraldungeon`), `restart: always`, y el puerto 3306 pegado a `127.0.0.1` — la app le llega por localhost, nada de afuera lo necesita.
+
+**Los secretos reales nunca son un archivo `.env` en el repo.** Un solo `backend/.env.example` documenta **las mismas variables** para los dos casos — `DB_URL` incluida, con default local en `application-dev.yml` y sin default en `application-prod.yml` — así que no hay dos listas que puedan desalinearse. El archivo real de producción vive **en el servidor**, fuera de este directorio de trabajo — por ejemplo `/etc/centraldungeon/prod.env` — y lo entrega el sistema operativo, no `spring-dotenv` (que solo mira `.env` en el directorio del proceso; por eso el archivo real ni se llama igual). Un ejemplo con `systemd`:
+
+```ini
+# /etc/systemd/system/centraldungeon.service
+[Service]
+EnvironmentFile=/etc/centraldungeon/prod.env
+ExecStart=/usr/bin/java -jar /opt/centraldungeon/backend.jar --spring.profiles.active=prod
+Restart=always
+User=centraldungeon
+```
+
+El mismo `/etc/centraldungeon/prod.env` sirve dos veces: `systemd` lo convierte en variables de entorno reales antes de arrancar el jar, y `docker compose --env-file /etc/centraldungeon/prod.env -f docker-compose.prod.yml up -d` lo usa para las credenciales de MySQL — una sola fuente de verdad por secreto, no dos copias que puedan divergir.
+
+Delante de todo esto falta un reverse proxy (TLS, dominio) — no decidido todavía, y fuera del alcance de este repo: es configuración del servidor, no de la aplicación.
+
+`springboot4-dotenv` queda en el jar empaquetado (el plugin de Spring Boot no lo excluye como sí hace con `devtools`), pero es inofensivo: sin un archivo llamado `.env` en el directorio desde donde arranca el proceso, no hace nada. La regla simple que lo mantiene así: **jamás copiar `backend/.env` a un servidor.**

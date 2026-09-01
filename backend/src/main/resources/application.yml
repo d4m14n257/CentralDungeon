@@ -1,6 +1,12 @@
 spring:
   application:
     name: centraldungeon-backend
+  # Only a fallback for when nothing else activates a profile - `-Dspring-boot.run.profiles=...`,
+  # SPRING_PROFILES_ACTIVE, or --spring.profiles.active (systemd's ExecStart in prod, arquitectura.md
+  # §6.2) all take precedence over this. Without it, `./mvnw spring-boot:run` alone starts with zero
+  # profiles active, and dev/prod/test never even load - there's no spring.datasource anywhere else.
+  profiles:
+    default: dev
   jpa:
     hibernate:
       ddl-auto: validate
@@ -47,6 +53,8 @@ springdoc:
 discord:
   guild-id: ${DISCORD_GUILD_ID:}
   invite-url: ${DISCORD_INVITE_URL:}
+  # Overridden by the "test" profile to point at the stubbed Discord (TestDiscordController).
+  guilds-uri: https://discord.com/api/users/@me/guilds
 
 app:
   cors:

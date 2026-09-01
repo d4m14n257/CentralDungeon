@@ -8,7 +8,8 @@
     "title": "Mis postulaciones",
     "emptyTitle": "No te postulaste a ninguna mesa",
     "emptyDescription": "Explorá las mesas abiertas y postulate a la que te interese.",
-    "appliedOn": "Postulado el {{date}}"
+    "appliedOn": "Postulado el {{date}}",
+    "viewTable": "Ver mesa"
   },
   "candidates": {
     "title": "Candidatos",

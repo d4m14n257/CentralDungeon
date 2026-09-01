@@ -1,4 +1,6 @@
 export { NotificationBell } from './components/NotificationBell'
+export { useMarkAllAsRead } from './api/useMarkAllAsRead'
 export { useMarkAsRead } from './api/useMarkAsRead'
 export { useNotifications } from './api/useNotifications'
+export { useNotificationClick } from './hooks/useNotificationClick'
 export type { Notification } from './types'

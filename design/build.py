@@ -469,11 +469,32 @@ lines += ["", "  /* -- shadcn/ui bridge: aliases of the tokens above, not new co
           "  --color-input: var(--color-border);",
           "  --color-ring: var(--color-brand-500);"]
 
-lines += ["}", "", "/* Light theme overrides the semantic layer only; primitives never change. */",
-          ':root[data-theme="light"] {']
+# The community's own gradient (#132), as a token so the login screen does not hand-copy four
+# hex values. It is the one place it appears whole: inside the app the fourteen state colours
+# need a background that does not compete.
+lines += ["", "  /* -- brand gradient: measured from links.centraldungeon.org (#132) -- */",
+          f'  --gradient-brand: linear-gradient(-45deg, {", ".join(BRAND_SOURCE["gradient"])});']
+
+# The accent as *text* is a different shade than the accent as *fill*, and it flips between
+# themes: 400 reads on the dark canvas but drops to 3.29:1 on the light one, and 500/600 is the
+# other way round. Both are measured below, so this token cannot silently break either theme.
+lines += ["", "  /* -- accent used as text (karma, links, the wordmark's second half) -- */",
+          f'  --color-brand-fg: {ACCENTS["violet"]["400"]};']
+for surface_name, surface_hex in [("canvas", DARK["canvas"]), ("surface", DARK["surface"])]:
+    report.append((f"brand-fg / dark text on {surface_name}", r2(ACCENTS["violet"]["400"], surface_hex)))
+for surface_name, surface_hex in [("canvas", LIGHT["canvas"]), ("surface", LIGHT["surface"])]:
+    report.append((f"brand-fg / light text on {surface_name}", r2(ACCENTS["violet"]["700"], surface_hex)))
+
+lines += ["}", "",
+          "/* Native UI - scrollbars, form controls, the overscroll gutter - follows the theme too.",
+          "   Without it the browser paints them light while the app is dark. */",
+          ":root { color-scheme: dark; }", "",
+          "/* Light theme overrides the semantic layer only; primitives never change. */",
+          ':root[data-theme="light"] {', "  color-scheme: light;"]
 for k in ["canvas", "surface", "raised", "border", "border-strong", "fg", "fg-muted", "fg-subtle"]:
     lines.append(f"  --color-{k}: {LIGHT[k]};")
 lines.append("  --color-brand-500: " + ACCENTS["violet"]["600"] + ";  /* darker on light for AA */")
+lines.append("  --color-brand-fg: " + ACCENTS["violet"]["700"] + ";  /* 400 only reaches 3.29:1 here */")
 for key, _, _ in STATES:
     s = LIGHT["state"][key]
     for part in ["dot", "bg", "fg"]:
@@ -1988,7 +2009,10 @@ def sc_callback(t):
                     f'color:{s["fg"]};font-size:12px;margin-bottom:14px">{title}</div>')
             title = ""
         return f"""<div style="width:370px;background:{t['surface']};border:1px solid {t['border-strong']};
-             border-radius:12px;padding:22px">{head}
+             border-radius:12px;padding:22px">
+          <div style="font-family:Spectral,serif;font-size:15px;font-weight:700;margin-bottom:14px">
+            Central<span style="color:{acc_text(t)}">Dungeon</span></div>
+          {head}
           {f'<div style="font-family:Spectral,serif;font-size:17px;font-weight:600">{title}</div>' if title else ''}
           <div style="font-size:13px;color:{t['fg-muted']};margin-top:8px;line-height:20px">{body}</div>
           <div style="display:flex;gap:9px;margin-top:18px">{actions}</div></div>"""
@@ -1998,19 +2022,25 @@ def sc_callback(t):
     b = step("No estas en el servidor",
              "CentralDungeon es la aplicacion de una comunidad de Discord, asi que primero hay que "
              "entrar al servidor. Cuando aceptes, volves aca y seguimos.",
-             btn(t, "Unirme al servidor") + btn(t, "Ahora no", "ghost"), tone="pending")
+             btn(t, "Unirme al servidor") + btn(t, "Ya me uni, reintentar", "secondary")
+             + btn(t, "Volver al login", "ghost"), tone="pending")
     c = step("Listo, ya sos miembro",
              "Te reconocimos. Falta un paso corto para terminar de crear tu cuenta.",
              btn(t, "Continuar"), tone="open")
     d = step("No se pudo entrar",
              "Declinaste la invitacion al servidor. Sin membresia no hay cuenta: podes volver a "
              "intentarlo cuando quieras.",
-             btn(t, "Volver a intentar", "secondary"), tone="canceled")
-    return (f'<div style="display:flex;gap:16px;flex-wrap:wrap">{a}{b}{c}{d}</div>'
+             btn(t, "Volver a intentar", "secondary") + btn(t, "Volver al login", "ghost"), tone="canceled")
+    e = step("Tu cuenta esta bloqueada",
+             "No podes iniciar sesion. Contacta a un admin si crees que es un error.",
+             btn(t, "Volver al login", "secondary"), tone="canceled")
+    return (f'<div style="display:flex;gap:16px;flex-wrap:wrap">{a}{b}{c}{d}{e}</div>'
             f'<div style="font-size:12px;color:{t["fg-subtle"]};margin-top:14px;line-height:19px">'
-            f'Los cuatro estados del retorno de OAuth. <strong>No se rechaza con un error seco</strong>: '
+            f'Los cinco estados del retorno de OAuth. <strong>No se rechaza con un error seco</strong>: '
             f'se ofrece la invitacion y recien si la persona la declina se corta (#38). '
-            f'El tercero encadena con <code>/onboarding</code> (#134).</div>')
+            f'El tercero encadena con <code>/onboarding</code> (#134). '
+            f'El quinto no tiene nada que ver con Discord ni con el guild: es <code>status = Blocked</code> '
+            f'del lado nuestro, y por eso no ofrece reintentar - reintentar no cambia nada.</div>')
 
 def sc_admin_tables(t):
     def tb(name, master, state, lb, when, why=None):

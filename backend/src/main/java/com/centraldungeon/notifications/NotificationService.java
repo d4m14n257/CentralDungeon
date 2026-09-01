@@ -50,6 +50,18 @@ public class NotificationService {
                 recipient, NotificationType.RegistrationRejected, title, justification, "game_table", table.getId()));
     }
 
+    /**
+     * Every master of the table is notified, Primary and Secondary alike - both can act on candidates.
+     * The applicant's name goes in the title, not message - readable at a glance from the bell, which
+     * only ever shows the title (frontend-diseno.md, decisiones.md #156).
+     */
+    @Transactional
+    public void notifyNewCandidate(String masterUserId, GameTable table, String applicantName) {
+        User recipient = userRepository.getReferenceById(masterUserId);
+        String title = applicantName + " se postuló a " + table.getName();
+        notificationRepository.save(new Notification(recipient, NotificationType.NewCandidate, title, null, "game_table", table.getId()));
+    }
+
     @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> listMine(String userId, Pageable pageable) {
         Page<Notification> page = notificationRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
@@ -64,5 +76,12 @@ public class NotificationService {
             throw new ForbiddenActionException("Cannot mark another user's notification as read");
         }
         notification.markRead();
+    }
+
+    @Transactional
+    public void markAllAsRead(String actorId) {
+        for (Notification notification : notificationRepository.findByUser_IdAndReadStatus(actorId, ReadStatus.Unread)) {
+            notification.markRead();
+        }
     }
 }
