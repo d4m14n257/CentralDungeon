@@ -89,6 +89,7 @@ También entra **`system_settings`** (#141): la tabla clave-valor, el `SettingsS
 **En progreso**, en sub-rebanadas verticales — no se construye de un tirón, siguiendo el mismo criterio del §1:
 
 1. **✅ Máquina de estados de mesa** (sin `approval_requests` todavía). Los 9 estados, `table_status_changes` con su historial, `Unassigned`→`Opened` al asignar masters (#72), aprobar/pedir cambios/reenviar, iniciar/finalizar, cancelar (Primary o admin) y pausa/reanudación directa de un admin. Frontend: wizard `/master/tables/new`, pestaña Estado en `/master/tables/:id`, `/admin/tables` con Aprobar/Pedir cambios/Asignar masters, contexto Admin nuevo en el `ContextSwitcher`. Detalle y límites conocidos en `docs/decisiones.md` #163.
+   **Cerrado después, fuera del orden previsto**: el `AssignMastersDialog` pedía ids de usuario a mano —el límite conocido que #163 documentó y que esperaba a la sub-rebanada 5— y se resolvió acá, porque probar la asignación a mano no era viable. Trajo con él el **lenguaje de búsqueda de toda la app** (#164), que nunca había sido decidido: `GET /api/v1/users/search` con `?q=`, `common/search/` en el backend, `lib/searchQuery.ts` + `SearchQueryInput` en el frontend, y el diálogo de asignación mudado a `routes/admin/` con chips donde el orden es el rol (#165). Lo que sigue esperando a la sub-rebanada 5 es la pantalla `/admin/users` completa.
 2. `approval_requests` + bandeja de admins + veto — siguiente.
 3. Catálogos (`systems`/`tags`/`platforms`) — pendiente.
 4. `system_settings` — pendiente.

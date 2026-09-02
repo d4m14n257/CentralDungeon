@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import {
-  AssignMastersDialog,
   CreateUnassignedTableDialog,
   JustifiedTableActionDialog,
   TableStatusBadge,
@@ -19,6 +18,8 @@ import {
   type AdminTableSummary,
 } from '@/features/tables'
 import { ApiError } from '@/types/api'
+
+import { AssignMastersDialog } from './AssignMastersDialog'
 
 function AdminTableRow({ table }: { table: AdminTableSummary }) {
   const { t } = useTranslation('admin')

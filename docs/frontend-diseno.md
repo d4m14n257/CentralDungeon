@@ -298,7 +298,7 @@ Todo lo demás se usa tal como viene: los tokens del `@theme` ya lo tiñen solo.
 
 En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estaría mal ubicado (`arquitectura.md` §3.1.2).
 
-> Los 20 compuestos de esta sección están dibujados en `design/out/`: `components-dialogs.html` (ConfirmDialog, FormDialog), `components-data.html` (DataTable, CollapsibleSection, IconAction), `components-inputs.html` (FilePicker, RichText, ScheduleEditor), `components-shell.html` (NotificationBell, ContextSwitcher, UserMenu), `ui-states.html` (EmptyState, ErrorState, ForbiddenState) y `components.html` (badges, karma, GameTableCard).
+> Los 20 compuestos de esta sección están dibujados en `design/out/`: `components-dialogs.html` (ConfirmDialog, FormDialog), `components-data.html` (DataTable, CollapsibleSection, IconAction), `components-inputs.html` (FilePicker, RichText, ScheduleEditor), `components-shell.html` (NotificationBell, ContextSwitcher, UserMenu), `ui-states.html` (EmptyState, ErrorState, ForbiddenState) y `components.html` (badges, karma, GameTableCard). `SearchQueryInput` y `UserPicker` (#164, #165) todavía no tienen preview: se construyeron directo en la pantalla que los pedía.
 
 | Componente | Para qué |
 |---|---|
@@ -312,6 +312,7 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `ForbiddenState` | El `403` explicado (el `404` por veto se ve como "no existe", que es intencional) |
 | `RichTextEditor` | Texto enriquecido (#62), sanitizado al enviar y al mostrar |
 | `RichTextView` | Render sanitizado de lo guardado |
+| `SearchQueryInput` | **Todo buscador de la app** (#164). Texto suelto busca por el criterio básico; `/campo valor` acota a un campo y se convierte en un chip; el conector entre dos chips se toca para pasarlo de "y" a "o". Recibe los campos que acepta, no los conoce |
 
 ### Compuestos con dominio
 
@@ -325,6 +326,7 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `RegistrationStatusBadge` — los cinco de postulación | `features/registrations/` |
 | `FilePicker` — subir **o** reutilizar del historial (#65), con el tope por archivo | `features/files/` |
 | `KarmaBadge` — número + indicador cualitativo | `features/users/` |
+| `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (#164) | `features/users/` |
 | `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |
 | `ContextSwitcher` — el selector de rol de §2 | `app/components/` (es shell, no dominio) |
 | `UserMenu` — avatar, tema y cerrar sesión | `app/components/` |

@@ -1,0 +1,11 @@
+{
+  "search": {
+    "label": "Buscar personas",
+    "placeholder": "Nombre de Discord o del sistema",
+    "discordName": "Discord",
+    "userName": "Nombre",
+    "startTyping": "Escribí para buscar.",
+    "empty": "Nadie coincide con esa búsqueda.",
+    "noName": "Sin nombre en el sistema"
+  }
+}

@@ -10,13 +10,14 @@ import notifications from '@/locales/es/notifications.json'
 import onboarding from '@/locales/es/onboarding.json'
 import registrations from '@/locales/es/registrations.json'
 import tables from '@/locales/es/tables.json'
+import users from '@/locales/es/users.json'
 
 void i18n.use(initReactI18next).init({
   lng: 'es',
   fallbackLng: 'es',
   defaultNS: 'common',
   resources: {
-    es: { common, auth, onboarding, tables, registrations, notifications, master, admin, dev },
+    es: { common, auth, onboarding, tables, registrations, notifications, master, admin, users, dev },
   },
   interpolation: { escapeValue: false },
 })

@@ -1,4 +1,4 @@
-/** Espejo de UserDetailResponse. Único tipo de esta feature escrito a mano. */
+/** Espejo de UserDetailResponse. */
 export interface User {
   id: string
   name: string | null
@@ -7,6 +7,17 @@ export interface User {
   needsOnboarding: boolean
   roles: string[]
   hasManagedTables: boolean
+}
+
+/**
+ * Espejo de UserSummaryResponse: cómo se ve una persona en un listado o en un selector. No se
+ * deriva de `User` con un utility type porque no es una vista reducida de lo mismo — trae
+ * `discordUsername`, que `/users/me` no devuelve (arquitectura.md 2.3, 3.2).
+ */
+export interface UserSummary {
+  id: string
+  discordUsername: string
+  name: string | null
 }
 
 export interface CompleteOnboardingInput {

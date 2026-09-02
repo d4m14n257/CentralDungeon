@@ -1,4 +1,3 @@
-export { AssignMastersDialog } from './components/AssignMastersDialog'
 export { CreateUnassignedTableDialog } from './components/CreateUnassignedTableDialog'
 export { GameTableCard } from './components/GameTableCard'
 export { JustifiedTableActionDialog } from './components/JustifiedTableActionDialog'
@@ -19,8 +18,8 @@ export { useRequestChanges } from './api/useRequestChanges'
 export { useResubmitTable } from './api/useResubmitTable'
 export { useStartTable } from './api/useStartTable'
 export { useTableStatusHistory } from './api/useTableStatusHistory'
-export { assignMastersSchema, changeTableStatusSchema, createGameTableSchema } from './schemas'
-export type { AssignMastersForm, ChangeTableStatusForm, CreateGameTableForm } from './schemas'
+export { changeTableStatusSchema, createGameTableSchema } from './schemas'
+export type { ChangeTableStatusForm, CreateGameTableForm } from './schemas'
 export type {
   AdminTableSummary,
   AssignMastersRequest,

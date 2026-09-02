@@ -27,6 +27,64 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
   return { context, page }
 }
 
+/**
+ * Asignar masters con el buscador de personas (decisiones.md #164, #165): un admin crea una mesa
+ * sin master, busca a dos personas —una por texto suelto, la otra acotando con /discord_name—,
+ * asciende a la segunda y asigna. La mesa nace Unassigned y sale de la bandeja al quedar Opened.
+ */
+test('an admin searches for people and assigns the masters of an unassigned table', async ({ browser }) => {
+  const adminDiscordId = `e2e-assign-admin-${runId}`
+  const firstCandidate = `e2e-cand-a-${runId}`
+  const secondCandidate = `e2e-cand-b-${runId}`
+  const tableName = `Mesa Sin Master E2E ${runId}`
+
+  // Las dos personas tienen que existir para poder encontrarlas: el login de prueba las crea.
+  const candidates = await browser.newContext()
+  await testLogin(candidates.request, firstCandidate)
+  await testLogin(candidates.request, secondCandidate)
+  await candidates.close()
+
+  const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
+  try {
+    await admin.page.goto('/admin/tables')
+    await admin.page.getByRole('button', { name: 'Crear mesa sin master' }).click()
+    const createDialog = admin.page.getByRole('dialog')
+    await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
+    await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
+
+    const row = admin.page.getByRole('listitem').filter({ hasText: tableName })
+    await expect(row).toBeVisible()
+    await row.getByRole('button', { name: 'Asignar masters' }).click()
+
+    const dialog = admin.page.getByRole('dialog')
+    const search = dialog.getByRole('textbox', { name: 'Buscar personas' })
+    // Anclado al principio: el nombre suelto también aparece en la X del chip y en la del master.
+    const result = (discordId: string) => dialog.getByRole('button', { name: new RegExp(`^${discordId}\\b`) })
+
+    // Con prefijo: Enter cierra el criterio en un chip, que acota la búsqueda a un solo campo.
+    // El input queda vacío al cerrarse el chip, y se vuelve a llenar sin borrarlo a mano: `fill`
+    // sobre un input controlado que ya tiene texto pierde el valor a mitad de camino.
+    await search.fill(`/discord_name ${firstCandidate}`)
+    await search.press('Enter')
+    await expect(dialog.getByText('Discord:')).toBeVisible()
+    await result(firstCandidate).click()
+
+    // Quitar el chip devuelve la búsqueda al criterio básico: nombre de Discord o del sistema.
+    await dialog.getByRole('button', { name: `Quitar criterio: ${firstCandidate}` }).click()
+    await search.fill(secondCandidate)
+    await result(secondCandidate).click()
+
+    // El primero entró de Primary; ascender al segundo degrada al primero.
+    await dialog.getByRole('button', { name: `Hacer Primary a ${secondCandidate}` }).click()
+    await expect(dialog.getByRole('button', { name: `Hacer Primary a ${firstCandidate}` })).toBeVisible()
+
+    await dialog.getByRole('button', { name: 'Asignar masters' }).click()
+    await expect(row).toBeHidden()
+  } finally {
+    await admin.context.close()
+  }
+})
+
 test('a master creates a table, an admin approves it, and the master runs it end to end', async ({ browser }) => {
   const masterDiscordId = `e2e-master-${runId}`
   const adminDiscordId = `e2e-admin-${runId}`

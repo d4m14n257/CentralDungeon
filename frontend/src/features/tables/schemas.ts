@@ -20,11 +20,3 @@ export const changeTableStatusSchema = z.object({
 })
 
 export type ChangeTableStatusForm = z.infer<typeof changeTableStatusSchema>
-
-/** secondaryUserIds llega como texto separado por comas: todavía no hay un buscador de usuarios (E2 sub-rebanada 5). */
-export const assignMastersSchema = z.object({
-  primaryUserId: z.string().min(1),
-  secondaryUserIds: z.string().max(500).optional(),
-})
-
-export type AssignMastersForm = z.infer<typeof assignMastersSchema>

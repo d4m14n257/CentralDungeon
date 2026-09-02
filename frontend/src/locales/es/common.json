@@ -32,6 +32,12 @@
     "switchToLight": "Tema claro",
     "switchToDark": "Tema oscuro"
   },
+  "search": {
+    "connectorAnd": "y",
+    "connectorOr": "o",
+    "removeTerm": "Quitar criterio",
+    "hint": "Escribí /campo para buscar por otro criterio, y \"o\" entre dos para que valga cualquiera de los dos."
+  },
   "connection": {
     "online": "En línea",
     "offline": "Sin conexión"

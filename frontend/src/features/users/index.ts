@@ -1,4 +1,6 @@
+export { UserPicker } from './components/UserPicker'
 export { useCompleteOnboarding } from './api/useCompleteOnboarding'
 export { useMe } from './api/useMe'
+export { useUserSearch } from './api/useUserSearch'
 export { completeOnboardingSchema, type CompleteOnboardingForm } from './schemas'
-export type { CompleteOnboardingInput, User } from './types'
+export type { CompleteOnboardingInput, User, UserSummary } from './types'

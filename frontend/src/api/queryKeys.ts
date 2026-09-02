@@ -18,6 +18,7 @@ export const queryKeys = {
   },
   users: {
     me: () => ['users', 'me'] as const,
+    search: (query: string) => ['users', 'search', query] as const,
   },
   system: {
     health: () => ['system', 'health'] as const,

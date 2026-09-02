@@ -130,6 +130,13 @@ backend/src/main/java/com/centraldungeon/
 │   ├── storage/
 │   │   ├── StorageService.java          interfaz
 │   │   └── LocalDiskStorageService.java implementación por defecto
+│   ├── search/                          el lenguaje de los buscadores (#164), sin dominio
+│   │   ├── SearchQuery.java             la consulta parseada: lista de SearchTerm
+│   │   ├── SearchTerm.java              campo + valor + conector con el término anterior
+│   │   ├── SearchConnector.java         AND / OR — izquierda a derecha, sin precedencia
+│   │   └── SearchQueryParser.java       `/campo valor or /campo valor` → SearchQuery
+│   │                                    ⚠ su espejo del frontend es lib/searchQuery.ts:
+│   │                                      los dos cubren los mismos casos con tests
 │   └── model/
 │       ├── BaseEntity.java              @MappedSuperclass: id String, created_at, updated_at
 │       ├── IdGenerator.java             UUID v7 como String
@@ -308,6 +315,7 @@ Condiciones para que esto sea legítimo:
 - **Éxito: el DTO desnudo, sin envoltura** (#120). Nada de un `ResponseData<T>` con `message`/`status` adentro del cuerpo: el status vive en HTTP y en un solo lugar. El intento en Java tenía esa envoltura y ya se contradecía sola — devolvía `206 Partial Content` en la respuesta HTTP con un `204` escrito en el cuerpo.
 - Errores: siempre `ProblemDetail` (RFC 9457, que obsoleta al 7807) producido por `GlobalExceptionHandler`. Nunca un string suelto, nunca un `418` genérico (el backend Node lo usaba como error comodín).
 - Toda colección va paginada (`?page=&size=&sort=`) y devuelve `PageResponse`. El backend viejo no tenía paginación en ningún endpoint y era un TODO explícito suyo.
+- **Toda búsqueda entra por un solo parámetro, `?q=`**, escrito en el lenguaje de `common/search/` (#164): texto suelto es el criterio básico del endpoint, `/campo valor` acota a un campo, y `and`/`or` combinan. Cada endpoint declara los campos que acepta en un enum propio (`UserSearchField`) — un `/campo` que no esté ahí se busca como texto literal, nunca es un `400`.
 - Fechas en ISO-8601 UTC. La conversión a la zona del usuario es responsabilidad del frontend.
 
 ### 2.6 Seguridad
@@ -434,11 +442,13 @@ frontend/
     │
     ├── components/                  sin dominio, para toda la app
     │   ├── ui/                      primitivas shadcn/ui generadas (button.tsx, dialog.tsx…)
-    │   └── …                        compuestos propios: FormDialog, DataTable, EmptyState, ErrorState…
+    │   └── …                        compuestos propios: FormDialog, DataTable, EmptyState,
+    │                                ErrorState, SearchQueryInput…
     ├── hooks/                       useDisclosure, useConfirm, useDebounce, useTableSelection
     ├── lib/
     │   ├── utils.ts                 cn() — la ruta que shadcn/ui espera por defecto
-    │   └── date.ts                  formateo de fechas y horas con Intl (§3.3)
+    │   ├── date.ts                  formateo de fechas y horas con Intl (§3.3)
+    │   └── searchQuery.ts           el lenguaje de los buscadores (#164) — espejo de common/search/
     ├── api/
     │   ├── client.ts                fetch tipado: base URL, JWT, parseo de ProblemDetail
     │   └── queryKeys.ts             fábrica central de query keys

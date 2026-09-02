@@ -1,11 +1,17 @@
 package com.centraldungeon.users;
 
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.common.search.SearchQuery;
+import com.centraldungeon.common.search.SearchQueryParser;
 import com.centraldungeon.tables.MasterRepository;
 import com.centraldungeon.users.dto.UpdateUserRequest;
 import com.centraldungeon.users.dto.UserDetailResponse;
+import com.centraldungeon.users.dto.UserSummaryResponse;
+import org.jspecify.annotations.Nullable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,6 +82,17 @@ public class UserService {
     public UserDetailResponse getDetailResponse(String userId) {
         User user = getById(userId);
         return userMapper.toDetailResponse(user, userRoleRepository.findActiveRoleNames(userId), masterRepository.existsByUser_Id(userId));
+    }
+
+    /**
+     * The search box behind every user picker (decisiones.md #164). An empty query is not an error:
+     * it lists Allowed users page by page, which is what /admin/users will want to open with.
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<UserSummaryResponse> search(@Nullable String rawQuery, Pageable pageable) {
+        SearchQuery query = SearchQueryParser.parse(rawQuery, UserSearchField.wireNames());
+        return PageResponse.from(
+                userRepository.findAll(UserSearchSpecification.matching(query), pageable).map(userMapper::toSummaryResponse));
     }
 
     @Transactional
