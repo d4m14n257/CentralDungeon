@@ -53,7 +53,7 @@ describe('AssignMastersDialog', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Elegir juanma' }))
     await userEvent.click(screen.getByRole('button', { name: 'Elegir pablosan' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Hacer Primary a pablosan' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Hacer master a pablosan' }))
     await userEvent.click(screen.getByRole('button', { name: 'Asignar masters' }))
 
     expect(mutate).toHaveBeenLastCalledWith(
@@ -67,7 +67,7 @@ describe('AssignMastersDialog', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Elegir juanma' }))
 
-    expect(screen.queryByRole('button', { name: 'Hacer Primary a juanma' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Hacer master a juanma' })).not.toBeInTheDocument()
   })
 
   it('quitar el Primary asciende al que seguía', async () => {

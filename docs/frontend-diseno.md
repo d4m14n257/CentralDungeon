@@ -312,7 +312,7 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `ForbiddenState` | El `403` explicado (el `404` por veto se ve como "no existe", que es intencional) |
 | `RichTextEditor` | Texto enriquecido (#62), sanitizado al enviar y al mostrar |
 | `RichTextView` | Render sanitizado de lo guardado |
-| `SearchQueryInput` | **Todo buscador de la app** (#164). Texto suelto busca por el criterio básico; `/campo valor` acota a un campo y se convierte en un chip; el conector entre dos chips se toca para pasarlo de "y" a "o". Recibe los campos que acepta, no los conoce |
+| `SearchQueryInput` | **Todo buscador de la app** (#164). Texto suelto busca por el criterio básico; `/` abre la lista de campos —flechas para elegir— y el campo elegido queda como chip fijo, con todo lo que se escriba después como su valor hasta el próximo `/`; el conector entre dos chips se toca para pasarlo de "y" a "o". Recibe los campos que acepta, no los conoce |
 
 ### Compuestos con dominio
 

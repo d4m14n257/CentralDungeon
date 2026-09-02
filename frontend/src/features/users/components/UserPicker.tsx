@@ -33,10 +33,13 @@ export function UserPicker({ onSelect, excludedIds = [] }: UserPickerProps) {
     [t],
   )
 
+  // 400 ms: la búsqueda sale cuando se deja de escribir, no una por tecla (decisiones.md #164).
   const rawQuery = buildSearchQuery(query)
-  const debouncedQuery = useDebounce(rawQuery)
+  const debouncedQuery = useDebounce(rawQuery, 400)
   const hasQuery = debouncedQuery.trim().length > 0
   const { data, isFetching, isLoadingError, refetch } = useUserSearch(debouncedQuery, hasQuery)
+  /** Mientras corre el debounce lo que se ve es la búsqueda anterior: se atenúa para no mentir. */
+  const isStale = isFetching || rawQuery.trim() !== debouncedQuery.trim()
 
   const results = (data?.content ?? []).filter((user) => !excludedIds.includes(user.id))
 
@@ -54,7 +57,7 @@ export function UserPicker({ onSelect, excludedIds = [] }: UserPickerProps) {
       {!isLoadingError && hasQuery && !data && <Skeleton className="h-24 w-full" />}
       {!isLoadingError && hasQuery && data && results.length === 0 && <p className="text-fg-muted text-sm">{t('search.empty')}</p>}
       {!isLoadingError && results.length > 0 && (
-        <ul className={cn('border-border divide-border max-h-56 divide-y overflow-y-auto rounded-md border', isFetching && 'opacity-60')}>
+        <ul className={cn('border-border divide-border max-h-56 divide-y overflow-y-auto rounded-md border', isStale && 'opacity-60')}>
           {results.map((user) => (
             <li key={user.id}>
               <button

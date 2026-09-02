@@ -36,7 +36,8 @@
     "connectorAnd": "y",
     "connectorOr": "o",
     "removeTerm": "Quitar criterio",
-    "hint": "Escribí /campo para buscar por otro criterio, y \"o\" entre dos para que valga cualquiera de los dos."
+    "removeField": "Buscar sin el campo",
+    "hint": "Escribí / para elegir por qué campo buscar: todo lo que sigue es ese criterio, hasta el próximo /. Con \"o\" entre dos criterios alcanza con que se cumpla cualquiera."
   },
   "connection": {
     "online": "En línea",

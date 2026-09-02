@@ -57,7 +57,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     await row.getByRole('button', { name: 'Asignar masters' }).click()
 
     const dialog = admin.page.getByRole('dialog')
-    const search = dialog.getByRole('textbox', { name: 'Buscar personas' })
+    const search = dialog.getByRole('combobox', { name: 'Buscar personas' })
     // Anclado al principio: el nombre suelto también aparece en la X del chip y en la del master.
     const result = (discordId: string) => dialog.getByRole('button', { name: new RegExp(`^${discordId}\\b`) })
 
@@ -77,8 +77,8 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     await result(secondCandidate).click()
 
     // El primero entró de Primary; ascender al segundo degrada al primero.
-    await dialog.getByRole('button', { name: `Hacer Primary a ${secondCandidate}` }).click()
-    await expect(dialog.getByRole('button', { name: `Hacer Primary a ${firstCandidate}` })).toBeVisible()
+    await dialog.getByRole('button', { name: `Hacer master a ${secondCandidate}` }).click()
+    await expect(dialog.getByRole('button', { name: `Hacer master a ${firstCandidate}` })).toBeVisible()
 
     await dialog.getByRole('button', { name: 'Asignar masters' }).click()
     await expect(row).toBeHidden()

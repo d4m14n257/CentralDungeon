@@ -87,22 +87,29 @@ export function serializeSearchQuery(terms: readonly SearchTerm[]): string {
 }
 
 /**
- * El estado de un buscador: los términos ya convertidos en chip, lo que se está escribiendo, y el
- * conector con el que va a entrar el próximo chip.
+ * El estado de un buscador: los criterios ya cerrados, el campo abierto —el chip que se queda
+ * fijo mientras se escribe su valor—, lo que se está escribiendo, y el conector con el que va a
+ * entrar el próximo criterio.
  */
 export interface SearchQueryValue {
   terms: SearchTerm[]
+  /** El `/campo` elegido: todo lo que se escriba es su valor hasta escribir `/` de nuevo. */
+  activeField: string | null
   draft: string
   pendingConnector: SearchConnector
 }
 
-export const emptySearchQuery: SearchQueryValue = { terms: [], draft: '', pendingConnector: 'and' }
+export const emptySearchQuery: SearchQueryValue = { terms: [], activeField: null, draft: '', pendingConnector: 'and' }
 
-/** Lo que se escribió y todavía no se convirtió en chip se manda tal cual, detrás de su conector. */
-export function buildSearchQuery({ terms, draft, pendingConnector }: SearchQueryValue): string {
-  const committed = serializeSearchQuery(terms)
-  const trimmedDraft = draft.trim()
-  if (!trimmedDraft) return committed
-  if (!committed) return trimmedDraft
-  return `${committed} ${pendingConnector} ${trimmedDraft}`
+/**
+ * El `/algo` a medio escribir al final del texto: mientras exista, se está eligiendo un campo y
+ * todavía no hay nada que buscar con eso.
+ */
+export const OPEN_FIELD_PREFIX = /(^|\s)\/([\w-]*)$/
+
+/** El criterio abierto también se busca: se manda como un término más, detrás de su conector. */
+export function buildSearchQuery({ terms, activeField, draft, pendingConnector }: SearchQueryValue): string {
+  const trimmedDraft = draft.replace(OPEN_FIELD_PREFIX, '').trim()
+  const openTerm: SearchTerm[] = trimmedDraft ? [{ field: activeField, value: trimmedDraft, connector: pendingConnector }] : []
+  return serializeSearchQuery([...terms, ...openTerm])
 }

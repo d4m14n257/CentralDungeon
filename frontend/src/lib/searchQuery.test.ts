@@ -76,16 +76,24 @@ describe('buildSearchQuery', () => {
   it('agrega lo que se está escribiendo detrás de su conector', () => {
     const terms: SearchTerm[] = [{ field: 'user_name', value: 'juan', connector: 'and' }]
 
-    expect(buildSearchQuery({ terms, draft: 'pab', pendingConnector: 'or' })).toBe('/user_name juan or pab')
+    expect(buildSearchQuery({ terms, activeField: null, draft: 'pab', pendingConnector: 'or' })).toBe('/user_name juan or pab')
+  })
+
+  it('el criterio abierto se busca por su campo, no como texto suelto', () => {
+    expect(buildSearchQuery({ ...emptySearchQuery, activeField: 'discord_name', draft: 'pab' })).toBe('/discord_name pab')
   })
 
   it('sin chips, la consulta es lo que se está escribiendo', () => {
     expect(buildSearchQuery({ ...emptySearchQuery, draft: 'pab' })).toBe('pab')
   })
 
+  it('un campo abierto sin valor no busca nada', () => {
+    expect(buildSearchQuery({ ...emptySearchQuery, activeField: 'discord_name', draft: '  ' })).toBe('')
+  })
+
   it('sin borrador, la consulta son solo los chips', () => {
     const terms: SearchTerm[] = [{ field: 'tag', value: 'terror', connector: 'and' }]
 
-    expect(buildSearchQuery({ terms, draft: '  ', pendingConnector: 'and' })).toBe('/tag terror')
+    expect(buildSearchQuery({ terms, activeField: null, draft: '  ', pendingConnector: 'and' })).toBe('/tag terror')
   })
 })
