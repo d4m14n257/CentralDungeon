@@ -62,8 +62,10 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     const result = (discordId: string) => dialog.getByRole('button', { name: new RegExp(`^${discordId}\\b`) })
 
     // Con prefijo: Enter cierra el criterio en un chip, que acota la búsqueda a un solo campo.
-    // El input queda vacío al cerrarse el chip, y se vuelve a llenar sin borrarlo a mano: `fill`
-    // sobre un input controlado que ya tiene texto pierde el valor a mitad de camino.
+    // El input siempre se llena estando vacío -Enter y la X del chip lo vacían solos-. Escribir
+    // encima de texto existente quedó fuera del caso a propósito: en una corrida previa de esta
+    // suite el `fill` sobre el input ya cargado terminó con el input en blanco, y el manejo de
+    // teclas ya está cubierto por SearchQueryInput.test.tsx, que no depende del navegador.
     await search.fill(`/discord_name ${firstCandidate}`)
     await search.press('Enter')
     await expect(dialog.getByText('Discord:')).toBeVisible()
