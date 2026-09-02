@@ -1,11 +1,14 @@
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { Fragment, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { X } from 'lucide-react'
 
+import { helpPath } from '@/config/paths'
 import { cn } from '@/lib/utils'
 import {
   OPEN_FIELD_PREFIX,
   parseSearchQuery,
+  splitValues,
   type SearchConnector,
   type SearchField,
   type SearchQueryValue,
@@ -22,8 +25,9 @@ interface SearchQueryInputProps {
   autoFocus?: boolean
 }
 
-/** "juan or " / "juan and " — escribir el conector y un espacio cierra el criterio anterior. */
-const TRAILING_CONNECTOR = /^(.*\S)\s+(and|or)\s+$/i
+type Suggestion =
+  | { kind: 'field'; name: string; label: string }
+  | { kind: 'connector'; name: string; label: string; connector: SearchConnector }
 
 /**
  * El buscador de toda la app (decisiones.md #164): se escribe en una línea, y cada criterio se
@@ -31,15 +35,17 @@ const TRAILING_CONNECTOR = /^(.*\S)\s+(and|or)\s+$/i
  *
  * Sin dominio a propósito — recibe los campos que acepta, no los conoce (arquitectura.md 3.1.1).
  *
- * **El `/` es el separador.** Al elegir un campo, su chip queda fijo a la izquierda del cursor y
- * **todo lo que se escriba después es el valor de ese criterio**, espacios incluidos; escribir `/`
- * otra vez cierra el criterio y abre el siguiente. Sin eso no había forma de buscar un valor con
- * espacios sin que la segunda palabra pareciera otra cosa. Enter también cierra el criterio, y las
- * flechas eligen entre los campos sugeridos sin soltar el teclado (`role="combobox"` + `option`,
- * para que la lista exista también para un lector de pantalla). Backspace con el texto vacío
- * deshace hacia atrás: primero suelta el campo abierto, después devuelve el último chip al input.
- * Y el conector entre dos chips se toca para cambiarlo de "y" a "o", que es la operación que no se
- * descubre escribiendo.
+ * **La barra es el único separador.** Al elegir un campo, su chip queda fijo a la izquierda del
+ * cursor y **todo lo que se escriba después es el valor de ese criterio**, espacios incluidos;
+ * `/and` y `/or` cierran el criterio y dejan su propio chip entre los dos, que se toca para
+ * cambiarlo. Las comas separan alternativas dentro del mismo criterio. Nada de esto usa palabras
+ * reservadas sueltas: un "or" escrito sin barra es parte del valor, que es lo que hace posible
+ * buscar a alguien que se llame así.
+ *
+ * Teclado: las flechas eligen entre las sugerencias y Enter o Tab confirman; Enter sin lista
+ * abierta cierra el criterio; Escape cierra la lista sin llevarse por delante el diálogo que la
+ * aloja; Backspace con el texto vacío deshace hacia atrás, primero soltando el campo abierto y
+ * después devolviendo el último chip al input.
  */
 export function SearchQueryInput({ fields, value, onChange, placeholder, label, autoFocus }: SearchQueryInputProps) {
   const { t } = useTranslation('common')
@@ -49,12 +55,31 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
   const fieldNames = useMemo(() => fields.map((field) => field.name), [fields])
 
   const labelOf = (name: string | null) => fields.find((field) => field.name === name)?.label ?? name
+  const connectorLabel = (connector: SearchConnector) => t(connector === 'or' ? 'search.connectorOr' : 'search.connectorAnd')
 
   const openPrefix = OPEN_FIELD_PREFIX.exec(value.draft)?.[2] ?? null
-  const suggestions = openPrefix === null ? [] : fields.filter((field) => field.name.startsWith(openPrefix.toLowerCase()))
-  const isChoosingField = suggestions.length > 0
+  const hasOpenCriterion = value.activeField !== null || splitValues(value.draft.replace(OPEN_FIELD_PREFIX, '')).length > 0
+  /**
+   * Los conectores solo se ofrecen cuando hay algo que unir: unir nada no significa nada. Alcanza
+   * con un criterio, cerrado o abierto — elegir el conector cierra el que está abierto.
+   */
+  const canJoin = value.terms.length > 0 || hasOpenCriterion
+
+  const suggestions: Suggestion[] = openPrefix === null ? [] : buildSuggestions(openPrefix)
+  const isChoosing = suggestions.length > 0
   /** Se deriva en el render en vez de guardarse: la lista cambia de largo mientras se escribe. */
-  const highlighted = isChoosingField ? ((highlightStep % suggestions.length) + suggestions.length) % suggestions.length : 0
+  const highlighted = isChoosing ? ((highlightStep % suggestions.length) + suggestions.length) % suggestions.length : 0
+
+  function buildSuggestions(prefix: string): Suggestion[] {
+    const options: Suggestion[] = fields.map((field) => ({ kind: 'field', name: field.name, label: field.label }))
+    if (canJoin) {
+      options.push(
+        { kind: 'connector', name: 'and', label: connectorLabel('and'), connector: 'and' },
+        { kind: 'connector', name: 'or', label: connectorLabel('or'), connector: 'or' },
+      )
+    }
+    return options.filter((option) => option.name.startsWith(prefix.toLowerCase()))
+  }
 
   /**
    * Cierra el criterio abierto y lo agrega como chip, si tiene valor. Con un campo abierto el
@@ -62,14 +87,14 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
    * `/campo valor` de una sola vez llegue al mismo chip que elegirlo de la lista.
    */
   function closeTerm(rawValue: string, nextField: string | null, nextConnector: SearchConnector): SearchQueryValue {
-    const trimmed = rawValue.trim()
-    const closed: SearchTerm[] = !trimmed
-      ? []
-      : value.activeField
-        ? [{ field: value.activeField, value: trimmed, connector: value.pendingConnector }]
-        : parseSearchQuery(trimmed, fieldNames).map((term, index) =>
-            index === 0 ? { ...term, connector: value.pendingConnector } : term,
-          )
+    const closed: SearchTerm[] =
+      splitValues(rawValue).length === 0
+        ? []
+        : value.activeField
+          ? [{ field: value.activeField, values: splitValues(rawValue), connector: value.pendingConnector }]
+          : parseSearchQuery(rawValue, fieldNames).map((term, index) =>
+              index === 0 ? { ...term, connector: value.pendingConnector } : term,
+            )
     if (closed.length === 0) {
       return { ...value, activeField: nextField, draft: '' }
     }
@@ -78,18 +103,17 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
 
   function handleDraftChange(draft: string) {
     setHighlightStep(0)
-    const trailing = TRAILING_CONNECTOR.exec(draft)
-    if (trailing) {
-      const [, head, connector] = trailing
-      onChange(closeTerm(head ?? '', null, (connector ?? 'and').toLowerCase() as SearchConnector))
-      return
-    }
     onChange({ ...value, draft })
   }
 
-  /** Elegir un campo cierra lo que se venía escribiendo y deja su chip abierto para el valor. */
-  function selectField(field: SearchField) {
-    onChange(closeTerm(value.draft.replace(OPEN_FIELD_PREFIX, ''), field.name, 'and'))
+  function chooseSuggestion(suggestion: Suggestion) {
+    const rest = value.draft.replace(OPEN_FIELD_PREFIX, '')
+    if (suggestion.kind === 'field') {
+      onChange(closeTerm(rest, suggestion.name, 'and'))
+    } else {
+      // Aunque no haya nada que cerrar, el conector elegido se guarda: es lo que se acaba de pedir.
+      onChange({ ...closeTerm(rest, null, suggestion.connector), pendingConnector: suggestion.connector })
+    }
     inputRef.current?.focus()
   }
 
@@ -102,7 +126,6 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
     onChange({ ...value, terms: value.terms.filter((_, position) => position !== index) })
   }
 
-  /** El conector del primer chip no se muestra: no une nada. */
   function toggleConnector(index: number) {
     onChange({
       ...value,
@@ -118,23 +141,22 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
     onChange({
       terms: value.terms.slice(0, -1),
       activeField: last.field,
-      draft: last.value,
+      draft: last.values.join(','),
       pendingConnector: last.connector,
     })
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (isChoosingField) {
+    if (isChoosing) {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault()
-        const step = event.key === 'ArrowDown' ? 1 : -1
-        setHighlightStep((current) => current + step)
+        setHighlightStep((current) => current + (event.key === 'ArrowDown' ? 1 : -1))
         return
       }
       if (event.key === 'Enter' || event.key === 'Tab') {
         event.preventDefault()
         const chosen = suggestions[highlighted] ?? suggestions[0]
-        if (chosen) selectField(chosen)
+        if (chosen) chooseSuggestion(chosen)
         return
       }
       if (event.key === 'Escape') {
@@ -160,6 +182,8 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
     }
   }
 
+  const showPendingConnector = value.terms.length > 0 && (hasOpenCriterion || value.pendingConnector === 'or')
+
   return (
     <div className="space-y-1">
       <div
@@ -169,25 +193,32 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
         )}
       >
         {value.terms.map((term, index) => (
-          <TermChip
-            key={`${term.field ?? ''}-${term.value}-${index}`}
-            label={labelOf(term.field)}
-            text={term.value}
-            showConnector={index > 0}
-            connectorLabel={t(term.connector === 'or' ? 'search.connectorOr' : 'search.connectorAnd')}
-            onToggleConnector={() => toggleConnector(index)}
-            onRemove={() => removeTerm(index)}
-            removeLabel={`${t('search.removeTerm')}: ${term.value}`}
-          />
+          <Fragment key={`${term.field ?? ''}-${term.values.join(',')}-${index}`}>
+            {index > 0 && (
+              <ConnectorChip
+                label={connectorLabel(term.connector)}
+                title={t('search.toggleConnector')}
+                onToggle={() => toggleConnector(index)}
+              />
+            )}
+            <Chip
+              label={labelOf(term.field)}
+              text={term.values.join(', ')}
+              onRemove={() => removeTerm(index)}
+              removeLabel={`${t('search.removeTerm')}: ${term.values.join(', ')}`}
+            />
+          </Fragment>
         ))}
+        {showPendingConnector && (
+          <ConnectorChip
+            label={connectorLabel(value.pendingConnector)}
+            title={t('search.toggleConnector')}
+            onToggle={() => onChange({ ...value, pendingConnector: value.pendingConnector === 'and' ? 'or' : 'and' })}
+          />
+        )}
         {value.activeField && (
-          <TermChip
+          <Chip
             label={labelOf(value.activeField)}
-            showConnector={value.terms.length > 0}
-            connectorLabel={t(value.pendingConnector === 'or' ? 'search.connectorOr' : 'search.connectorAnd')}
-            onToggleConnector={() =>
-              onChange({ ...value, pendingConnector: value.pendingConnector === 'and' ? 'or' : 'and' })
-            }
             onRemove={clearActiveField}
             removeLabel={`${t('search.removeField')}: ${labelOf(value.activeField) ?? ''}`}
           />
@@ -197,10 +228,10 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
           type="text"
           role="combobox"
           aria-label={label}
-          aria-expanded={isChoosingField}
+          aria-expanded={isChoosing}
           aria-controls={listboxId}
           aria-autocomplete="list"
-          aria-activedescendant={isChoosingField ? `${listboxId}-${highlighted}` : undefined}
+          aria-activedescendant={isChoosing ? `${listboxId}-${highlighted}` : undefined}
           autoFocus={autoFocus}
           value={value.draft}
           placeholder={value.terms.length > 0 || value.activeField ? undefined : placeholder}
@@ -209,11 +240,16 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
           className="placeholder:text-fg-subtle min-w-32 flex-1 bg-transparent px-1 py-0.5 text-sm outline-none"
         />
       </div>
-      {isChoosingField && (
-        <ul id={listboxId} role="listbox" aria-label={label} className="border-border bg-raised divide-border divide-y rounded-md border text-sm">
-          {suggestions.map((field, index) => (
+      {isChoosing && (
+        <ul
+          id={listboxId}
+          role="listbox"
+          aria-label={label}
+          className="border-border bg-raised divide-border divide-y rounded-md border text-sm"
+        >
+          {suggestions.map((suggestion, index) => (
             <li
-              key={field.name}
+              key={suggestion.name}
               id={`${listboxId}-${index}`}
               role="option"
               aria-selected={index === highlighted}
@@ -222,53 +258,54 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
               // lista desaparece con él antes de que el evento llegue.
               onMouseDown={(event) => {
                 event.preventDefault()
-                selectField(field)
+                chooseSuggestion(suggestion)
               }}
-              className={cn(
-                'flex cursor-pointer items-center justify-between gap-2 px-3 py-1.5',
-                index === highlighted && 'bg-surface',
-              )}
+              className={cn('flex cursor-pointer items-center justify-between gap-2 px-3 py-1.5', index === highlighted && 'bg-surface')}
             >
-              <span>{field.label}</span>
-              <code className="text-fg-subtle text-xs">/{field.name}</code>
+              <span>{suggestion.kind === 'connector' ? t('search.joinWith', { connector: suggestion.label }) : suggestion.label}</span>
+              <code className="text-fg-subtle text-xs">/{suggestion.name}</code>
             </li>
           ))}
         </ul>
       )}
-      <p className="text-fg-subtle text-xs">{t('search.hint')}</p>
+      <p className="text-fg-subtle text-xs">
+        {t('search.hint')}{' '}
+        <Link to={helpPath()} className="underline underline-offset-2">
+          {t('search.helpLink')}
+        </Link>
+      </p>
     </div>
   )
 }
 
-interface TermChipProps {
+function ConnectorChip({ label, title, onToggle }: { label: string; title: string; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title={title}
+      className="border-border text-fg-muted hover:text-fg hover:bg-raised rounded-full border border-dashed px-2 py-0.5 text-xs uppercase"
+    >
+      {label}
+    </button>
+  )
+}
+
+interface ChipProps {
   label: string | null
   text?: string
-  showConnector: boolean
-  connectorLabel: string
-  onToggleConnector: () => void
   onRemove: () => void
   removeLabel: string
 }
 
-function TermChip({ label, text, showConnector, connectorLabel, onToggleConnector, onRemove, removeLabel }: TermChipProps) {
+function Chip({ label, text, onRemove, removeLabel }: ChipProps) {
   return (
-    <span className="flex items-center gap-1.5">
-      {showConnector && (
-        <button
-          type="button"
-          onClick={onToggleConnector}
-          className="text-fg-muted hover:text-fg hover:bg-raised rounded px-1 text-xs uppercase"
-        >
-          {connectorLabel}
-        </button>
-      )}
-      <span className={cn('flex items-center gap-1 rounded-full py-0.5 pr-1 pl-2 text-xs', text ? 'bg-raised text-fg' : 'bg-primary/15 text-fg')}>
-        {label && <span className="text-fg-muted">{label}:</span>}
-        {text && <span className="max-w-40 truncate">{text}</span>}
-        <button type="button" onClick={onRemove} aria-label={removeLabel} className="hover:text-fg-muted rounded-full">
-          <X className="size-3" />
-        </button>
-      </span>
+    <span className={cn('flex items-center gap-1 rounded-full py-0.5 pr-1 pl-2 text-xs', text ? 'bg-raised text-fg' : 'bg-primary/15 text-fg')}>
+      {label && <span className="text-fg-muted">{label}:</span>}
+      {text && <span className="max-w-40 truncate">{text}</span>}
+      <button type="button" onClick={onRemove} aria-label={removeLabel} className="hover:text-fg-muted rounded-full">
+        <X className="size-3" />
+      </button>
     </span>
   )
 }

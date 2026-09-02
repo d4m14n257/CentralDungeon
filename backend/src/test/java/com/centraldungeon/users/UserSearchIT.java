@@ -72,10 +72,17 @@ class UserSearchIT {
 
     @Test
     void orWidensAndAndNarrows() {
-        assertThat(discordNamesOf(userService.search("/discord_name juan or /discord_name pablo", FIRST_PAGE)))
+        assertThat(discordNamesOf(userService.search("/discord_name juan /or /discord_name pablo", FIRST_PAGE)))
                 .containsExactlyInAnyOrder("juanma", "pablosan", "elpablo");
-        assertThat(discordNamesOf(userService.search("/discord_name pablo and /user_name juan", FIRST_PAGE)))
+        assertThat(discordNamesOf(userService.search("/discord_name pablo /and /user_name juan", FIRST_PAGE)))
                 .containsExactly("elpablo");
+    }
+
+    /** Las alternativas de un mismo criterio: cualquiera de ellas alcanza (decisiones.md #164). */
+    @Test
+    void commasSeparateAlternativesOfTheSameCriterion() {
+        assertThat(discordNamesOf(userService.search("/discord_name juanma,pablosan", FIRST_PAGE)))
+                .containsExactlyInAnyOrder("juanma", "pablosan");
     }
 
     @Test

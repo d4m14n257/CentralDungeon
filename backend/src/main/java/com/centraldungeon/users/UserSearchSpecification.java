@@ -47,15 +47,25 @@ final class UserSearchSpecification {
         return connector == SearchConnector.OR ? builder.or(left, right) : builder.and(left, right);
     }
 
-    /** A term with no field - or with one the parser did not recognize - falls back to both names. */
+    /** The values of one criterion are alternatives: any of them satisfies it (decisiones.md #164). */
     private static Predicate termPredicate(Root<User> root, CriteriaBuilder builder, SearchTerm term) {
-        Optional<UserSearchField> field = Optional.ofNullable(term.field()).flatMap(UserSearchField::fromWireName);
+        Predicate matched = null;
+        for (String value : term.values()) {
+            Predicate current = valuePredicate(root, builder, term.field(), value);
+            matched = matched == null ? current : builder.or(matched, current);
+        }
+        return matched;
+    }
+
+    /** A criterion with no field - or with one the parser did not recognize - falls back to both names. */
+    private static Predicate valuePredicate(Root<User> root, CriteriaBuilder builder, @Nullable String fieldName, String value) {
+        Optional<UserSearchField> field = Optional.ofNullable(fieldName).flatMap(UserSearchField::fromWireName);
         if (field.isPresent()) {
-            return contains(root, builder, field.get(), term.value());
+            return contains(root, builder, field.get(), value);
         }
         return builder.or(
-                contains(root, builder, UserSearchField.DISCORD_NAME, term.value()),
-                contains(root, builder, UserSearchField.USER_NAME, term.value()));
+                contains(root, builder, UserSearchField.DISCORD_NAME, value),
+                contains(root, builder, UserSearchField.USER_NAME, value));
     }
 
     private static Predicate contains(Root<User> root, CriteriaBuilder builder, UserSearchField field, String value) {

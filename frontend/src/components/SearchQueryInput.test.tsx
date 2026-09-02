@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { MemoryRouter } from 'react-router'
 
 import '@/providers/i18n'
 import { SearchQueryInput } from './SearchQueryInput'
@@ -16,10 +17,10 @@ const FIELDS = [
 function Harness() {
   const [value, setValue] = useState<SearchQueryValue>(emptySearchQuery)
   return (
-    <>
+    <MemoryRouter>
       <SearchQueryInput fields={FIELDS} value={value} onChange={setValue} label="Buscar personas" />
       <output>{buildSearchQuery(value)}</output>
-    </>
+    </MemoryRouter>
   )
 }
 
@@ -58,7 +59,15 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('/user_name juan pablo')
   })
 
-  it('las flechas eligen entre los campos sugeridos, y Enter confirma', async () => {
+  it('las comas separan alternativas del mismo criterio', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), '/us{Enter}damian,carlos,daniel')
+
+    expect(query()).toHaveTextContent('/user_name damian,carlos,daniel')
+  })
+
+  it('las flechas eligen entre las sugerencias, y Enter confirma', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/')
@@ -81,7 +90,44 @@ describe('SearchQueryInput', () => {
 
     await userEvent.type(searchBox(), '/us{Enter}juan /dis{Enter}pablo')
 
-    expect(query()).toHaveTextContent('/user_name juan and /discord_name pablo')
+    expect(query()).toHaveTextContent('/user_name juan /and /discord_name pablo')
+  })
+
+  it('/or aparece entre las sugerencias cuando ya hay algo que unir, y deja su chip', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), 'juan{Enter}pablo /o')
+    await userEvent.click(screen.getByRole('option', { name: /Unir/ }))
+    await userEvent.type(searchBox(), 'pedro')
+
+    expect(query()).toHaveTextContent('juan /and pablo /or pedro')
+  })
+
+  it('ofrece el conector aunque el criterio anterior todavía no esté cerrado', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), 'juan /o')
+    await userEvent.click(screen.getByRole('option', { name: /Unir/ }))
+    await userEvent.type(searchBox(), 'pablo')
+
+    expect(query()).toHaveTextContent('juan /or pablo')
+  })
+
+  it('no ofrece conectores cuando todavía no hay nada que unir', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), '/o')
+
+    expect(screen.queryByRole('option', { name: /Unir/ })).not.toBeInTheDocument()
+  })
+
+  /** Sin esto nadie podría buscar un valor que contenga la palabra: el separador es la barra. */
+  it('un or suelto es parte del valor, no un conector', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), '/us{Enter}juan or pablo')
+
+    expect(query()).toHaveTextContent('/user_name juan or pablo')
   })
 
   it('Enter cierra el criterio abierto en un chip', async () => {
@@ -94,21 +140,13 @@ describe('SearchQueryInput', () => {
     expect(searchBox()).toHaveValue('')
   })
 
-  it('escribir un conector cierra el criterio anterior', async () => {
-    render(<Harness />)
-
-    await userEvent.type(searchBox(), 'juan or pablo')
-
-    expect(query()).toHaveTextContent('juan or pablo')
-  })
-
   it('cambia el conector entre dos chips al tocarlo', async () => {
     render(<Harness />)
 
-    await userEvent.type(searchBox(), 'juan or pablo{Enter}')
-    await userEvent.click(screen.getByRole('button', { name: 'o' }))
+    await userEvent.type(searchBox(), 'juan{Enter}pablo{Enter}')
+    await userEvent.click(screen.getByRole('button', { name: 'y' }))
 
-    expect(query()).toHaveTextContent('juan and pablo')
+    expect(query()).toHaveTextContent('juan /or pablo')
   })
 
   it('quita un criterio con la X del chip', async () => {

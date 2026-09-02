@@ -26,7 +26,8 @@
     "admin": "Admin",
     "notifications": "Notificaciones",
     "switchContext": "Cambiar de contexto",
-    "accountFallback": "Mi cuenta"
+    "accountFallback": "Mi cuenta",
+    "help": "Ayuda"
   },
   "theme": {
     "switchToLight": "Tema claro",
@@ -35,9 +36,12 @@
   "search": {
     "connectorAnd": "y",
     "connectorOr": "o",
+    "joinWith": "Unir con «{{connector}}»",
+    "toggleConnector": "Cambiar y / o",
     "removeTerm": "Quitar criterio",
     "removeField": "Buscar sin el campo",
-    "hint": "Escribí / para elegir por qué campo buscar: todo lo que sigue es ese criterio, hasta el próximo /. Con \"o\" entre dos criterios alcanza con que se cumpla cualquiera."
+    "hint": "Escribí / para elegir un campo o unir criterios; las comas separan alternativas.",
+    "helpLink": "Cómo buscar"
   },
   "connection": {
     "online": "En línea",

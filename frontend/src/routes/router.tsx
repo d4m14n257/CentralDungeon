@@ -32,6 +32,9 @@ export const router = createBrowserRouter([
           { path: 'my/applications', lazy: () => import('./my/MyApplicationsPage') },
           { path: 'my/tables', lazy: () => import('./my/MyTablesPage') },
           { path: 'notifications', lazy: () => import('./NotificationsPage') },
+          // Global, no del contexto Jugador: los tres layouts son el mismo shell y la cabecera
+          // ya se adapta sola. Va acá por la misma razón que /notifications.
+          { path: 'help', lazy: () => import('./HelpPage') },
         ],
       },
       {

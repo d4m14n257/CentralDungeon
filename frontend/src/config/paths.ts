@@ -12,12 +12,17 @@ export const paths = {
   myApplications: 'my/applications',
   myTables: 'my/tables',
   notifications: 'notifications',
+  help: 'help',
   masterTables: 'master/tables',
   masterTableNew: 'master/tables/new',
   masterTableDetail: 'master/tables/:id',
   masterTableStatus: 'master/tables/:id/status',
   adminTables: 'admin/tables',
 } as const
+
+export function helpPath(): string {
+  return '/help'
+}
 
 export function tableDetailPath(id: string): string {
   return `/tables/${id}`

@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react'
+import { CircleQuestionMark, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { paths } from '@/config/paths'
+import { helpPath, paths } from '@/config/paths'
 import { useLogout } from '@/features/auth'
 import { useAuth } from '@/providers/AuthProvider'
 
@@ -56,6 +56,12 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel className="truncate">{label}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {/* La ayuda vive acá y no en la barra: se consulta una vez y no compite con la navegación. */}
+        <DropdownMenuItem onSelect={() => void navigate(helpPath())}>
+          <CircleQuestionMark className="size-4" />
+          {t('nav.help')}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/* El ítem nombra la acción, no el estado actual: en oscuro dice "Tema claro". */}
         <DropdownMenuItem onSelect={() => setTheme(isDark ? 'light' : 'dark')}>
