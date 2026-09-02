@@ -7,6 +7,8 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
+  // Cada corrida borra sus propias filas al terminar (decisiones.md #172).
+  globalTeardown: './e2e/globalTeardown.ts',
   fullyParallel: false,
   retries: 0,
   reporter: 'list',

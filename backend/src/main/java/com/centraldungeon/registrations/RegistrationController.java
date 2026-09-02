@@ -8,6 +8,8 @@ import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
 import jakarta.validation.Valid;
 import java.net.URI;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,7 +43,9 @@ public class RegistrationController {
     @GetMapping("/api/v1/game-tables/{tableId}/registrations")
     @PreAuthorize("isAuthenticated()")
     public PageResponse<RegistrationResponse> listCandidates(
-            @PathVariable String tableId, Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+            @PathVariable String tableId,
+            @PageableDefault(sort = {"createdAt", "id"}) Pageable pageable,
+            @AuthenticationPrincipal CurrentUser currentUser) {
         return registrationService.listCandidatesForTable(tableId, currentUser.userId(), pageable);
     }
 
@@ -62,7 +66,9 @@ public class RegistrationController {
 
     @GetMapping("/api/v1/registrations/mine")
     @PreAuthorize("isAuthenticated()")
-    public PageResponse<RegistrationResponse> listMine(Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+    public PageResponse<RegistrationResponse> listMine(
+            @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CurrentUser currentUser) {
         return registrationService.listMine(currentUser.userId(), pageable);
     }
 }

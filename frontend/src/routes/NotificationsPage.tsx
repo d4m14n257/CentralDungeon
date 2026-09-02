@@ -68,7 +68,9 @@ export function NotificationsPage() {
                   )}
                 >
                   <span className={cn('size-2 shrink-0 rounded-full', unread ? 'bg-brand-fg' : 'bg-transparent')} aria-hidden />
-                  <span className={cn('flex-1 truncate text-sm', unread ? 'text-fg font-medium' : 'text-fg-muted')}>{notification.title}</span>
+                  <span className={cn('flex-1 truncate text-sm', unread ? 'text-fg font-medium' : 'text-fg-muted')}>
+                    {notification.title}
+                  </span>
                   {tone && (
                     <span className={cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium', tone.badge)}>
                       <span className={cn('size-1.5 rounded-full', tone.dot)} />

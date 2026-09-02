@@ -50,5 +50,15 @@
   "errors": {
     "offline": "No hay conexión con el servidor. Probá de nuevo en un momento.",
     "mutationFailed": "No pudimos completar la acción. Probá de nuevo."
+  },
+  "pagination": {
+    "label": "Paginación",
+    "showing": "Mostrando {{shown}} de {{total}}",
+    "loadMore": "Ver más",
+    "loading": "Cargando...",
+    "page": "Página {{page}} de {{pages}}",
+    "total": "{{total}} en total",
+    "previous": "Anterior",
+    "next": "Siguiente"
   }
 }

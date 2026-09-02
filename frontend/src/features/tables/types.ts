@@ -1,13 +1,5 @@
 export type GameTableStatus =
-  | 'Unassigned'
-  | 'Preparation'
-  | 'ChangesRequested'
-  | 'Opened'
-  | 'InProgress'
-  | 'PauseRequested'
-  | 'Pause'
-  | 'Finished'
-  | 'Canceled'
+  'Unassigned' | 'Preparation' | 'ChangesRequested' | 'Opened' | 'InProgress' | 'PauseRequested' | 'Pause' | 'Finished' | 'Canceled'
 
 export interface MasterSummary {
   userId: string

@@ -4,6 +4,8 @@ import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.notifications.dto.NotificationResponse;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +28,9 @@ public class NotificationController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public PageResponse<NotificationResponse> listMine(Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+    public PageResponse<NotificationResponse> listMine(
+            @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CurrentUser currentUser) {
         return notificationService.listMine(currentUser.userId(), pageable);
     }
 

@@ -15,12 +15,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test'
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
 
-async function nextDiscordLogin(
-  request: APIRequestContext,
-  discordId: string,
-  username: string,
-  inGuild: boolean,
-) {
+async function nextDiscordLogin(request: APIRequestContext, discordId: string, username: string, inGuild: boolean) {
   const response = await request.post(`${BACKEND_URL}/test-discord/next-login`, {
     params: { discordId, username, inGuild },
   })
@@ -57,8 +52,5 @@ test('quien no está en el servidor no entra y recibe la invitación', async ({ 
   await expect(page.getByText('Todavía no sos parte del servidor')).toBeVisible()
   // Que sea una invitación de Discord, no cuál: si backend/.env define DISCORD_INVITE_URL, esa
   // variable de entorno le gana a application-test.yml y el valor concreto depende de la máquina.
-  await expect(page.getByRole('link', { name: 'Unirme al servidor' })).toHaveAttribute(
-    'href',
-    /^https:\/\/discord\.gg\//,
-  )
+  await expect(page.getByRole('link', { name: 'Unirme al servidor' })).toHaveAttribute('href', /^https:\/\/discord\.gg\//)
 })

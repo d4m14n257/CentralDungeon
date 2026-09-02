@@ -18,15 +18,7 @@ import { TableStatusBadge } from './TableStatusBadge'
  * postulaste" es verdad tanto si sigue pendiente como si ya te aceptaron - no hace falta más.
  * Quien cruza esa data es la ruta que compone (`TableListPage`), no esta card.
  */
-export function GameTableCard({
-  table,
-  linkTo,
-  alreadyApplied,
-}: {
-  table: GameTableSummary
-  linkTo?: string
-  alreadyApplied?: boolean
-}) {
+export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTableSummary; linkTo?: string; alreadyApplied?: boolean }) {
   const { t, i18n } = useTranslation('tables')
 
   return (

@@ -49,7 +49,7 @@ public class GameTableController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public PageResponse<GameTableSummaryResponse> list(
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.list(pageable, currentUser.userId());
     }
@@ -58,7 +58,8 @@ public class GameTableController {
     @GetMapping("/admin")
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public PageResponse<AdminTableSummaryResponse> listForAdmin(
-            @RequestParam(required = false) @Nullable List<GameTableStatus> status, Pageable pageable) {
+            @RequestParam(required = false) @Nullable List<GameTableStatus> status,
+            @PageableDefault(sort = {"createdAt", "id"}) Pageable pageable) {
         return gameTableService.listForAdmin(status, pageable);
     }
 
@@ -84,14 +85,18 @@ public class GameTableController {
     /** /my/tables - only the tables where the actor holds an active Player registration. */
     @GetMapping("/mine")
     @PreAuthorize("isAuthenticated()")
-    public PageResponse<GameTableSummaryResponse> listMine(Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+    public PageResponse<GameTableSummaryResponse> listMine(
+            @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.listMine(currentUser.userId(), pageable);
     }
 
     /** /master/tables - every table where the actor is a master of any type, any status (pertenencia, not the platform role - #17). */
     @GetMapping("/managed")
     @PreAuthorize("isAuthenticated()")
-    public PageResponse<GameTableSummaryResponse> listManaged(Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+    public PageResponse<GameTableSummaryResponse> listManaged(
+            @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.listManaged(currentUser.userId(), pageable);
     }
 

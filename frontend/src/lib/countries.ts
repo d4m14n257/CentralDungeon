@@ -21,5 +21,6 @@ const ISO_3166_1_ALPHA_2 = (
 
 const displayNames = new Intl.DisplayNames(['es'], { type: 'region' })
 
-export const countries: Country[] = ISO_3166_1_ALPHA_2.map((code) => ({ code, name: displayNames.of(code) ?? code }))
-  .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+export const countries: Country[] = ISO_3166_1_ALPHA_2.map((code) => ({ code, name: displayNames.of(code) ?? code })).sort((a, b) =>
+  a.name.localeCompare(b.name, 'es'),
+)

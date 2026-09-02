@@ -46,7 +46,7 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public PageResponse<UserSummaryResponse> search(
             @RequestParam(name = "q", required = false) @Nullable String query,
-            @PageableDefault(size = 10, sort = "discordUsername") Pageable pageable) {
+            @PageableDefault(size = 10, sort = {"discordUsername", "id"}) Pageable pageable) {
         return userService.search(query, pageable);
     }
 

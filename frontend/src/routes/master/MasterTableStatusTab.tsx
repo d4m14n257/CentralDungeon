@@ -123,7 +123,12 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
         onConfirm={(justification) => {
           cancel.mutate(
             { justification },
-            { onSuccess: () => { toast.success(t('status.cancelSuccess')); cancelDialog.close() } },
+            {
+              onSuccess: () => {
+                toast.success(t('status.cancelSuccess'))
+                cancelDialog.close()
+              },
+            },
           )
         }}
       />

@@ -16,14 +16,16 @@ async function testLogin(request: APIRequestContext, discordId: string, roles: {
   expect(response.ok()).toBeTruthy()
 }
 
-async function openAssignMastersDialog(page: Page) {
+/** El nombre lleva `label` porque un mismo test abre el diálogo dos veces: dos mesas, dos nombres. */
+async function openAssignMastersDialog(page: Page, label: string) {
+  const tableName = `Mesa Ayuda E2E ${runId} ${label}`
   await page.goto('/admin/tables')
   await page.getByRole('button', { name: 'Crear mesa sin master' }).click()
   const createDialog = page.getByRole('dialog')
-  await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(`Mesa Ayuda E2E ${runId}`)
+  await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
   await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
 
-  const row = page.getByRole('listitem').filter({ hasText: `Mesa Ayuda E2E ${runId}` })
+  const row = page.getByRole('listitem').filter({ hasText: tableName })
   await row.getByRole('button', { name: 'Asignar masters' }).click()
   return page.getByRole('dialog')
 }
@@ -34,7 +36,7 @@ test('el buscador y el diálogo enlazan a la sección de ayuda que corresponde, 
     await testLogin(context.request, `e2e-help-${runId}`, { asAdmin: true })
     const page = await context.newPage()
 
-    const dialog = await openAssignMastersDialog(page)
+    const dialog = await openAssignMastersDialog(page, 'ref')
     await dialog.getByRole('link', { name: 'Cómo funciona' }).click()
 
     // Un #ref de otra audiencia: la ayuda de asignar masters vive en la de admins.
@@ -44,7 +46,7 @@ test('el buscador y el diálogo enlazan a la sección de ayuda que corresponde, 
     await expect(page.locator('section#assign-masters')).toHaveAttribute('aria-current', 'location')
     await expect(page.locator('section#reviewing')).not.toHaveAttribute('aria-current', 'location')
 
-    const searchDialog = await openAssignMastersDialog(page)
+    const searchDialog = await openAssignMastersDialog(page, 'buscador')
     await searchDialog.getByRole('link', { name: 'Cómo buscar' }).click()
 
     await expect(page).toHaveURL(/\/help#search$/)

@@ -95,9 +95,7 @@ function DevPanelContent() {
       <PopoverContent align="end" side="top" className="w-80 space-y-4">
         <div>
           <p className="font-serif text-sm font-semibold">{t('title')}</p>
-          <p className="text-fg-subtle text-xs">
-            {me ? t('loggedInAs', { name: me.name ?? me.id }) : t('notLoggedIn')}
-          </p>
+          <p className="text-fg-subtle text-xs">{me ? t('loggedInAs', { name: me.name ?? me.id }) : t('notLoggedIn')}</p>
         </div>
 
         <div className="space-y-2">

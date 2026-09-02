@@ -66,6 +66,8 @@ public class SecurityConfig {
                                 // and TestDiscordController) - 404s in dev/prod regardless of being
                                 // permitAll here.
                                 "/api/v1/auth/test-login",
+                                // Only exist under the "test" profile; without a bean the paths 404 anyway.
+                                "/api/v1/test-data/**",
                                 "/test-discord/**",
                                 "/api/v1/health",
                                 "/swagger-ui/**",

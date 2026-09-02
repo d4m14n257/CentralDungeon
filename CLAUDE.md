@@ -29,7 +29,7 @@ Sin redundancia entre ellos. Leer antes de trabajar en algo nuevo:
 |---|---|
 | `docs/arquitectura.md` | Estructura de carpetas, patrón por feature, reglas de cada capa, contrato de API, seguridad, testing, convenciones de nombres. **La referencia para escribir código.** |
 | `docs/modelo-datos.md` | Fuente de verdad del schema: convenciones, diagrama ER (Mermaid), DDL baseline, reglas de negocio que reemplazaron a los triggers, qué queda fuera de v1. |
-| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 171 decisiones cerradas y el rastro de los 31 pendientes que se abrieron y resolvieron (M1–M31). |
+| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 174 decisiones cerradas y el rastro de los 31 pendientes que se abrieron y resolvieron (M1–M31). |
 | `docs/diagramas/` | Fuentes Mermaid (`.mmd`), sin PNG versionados — se regeneran con el comando del README. ER del **modelo objetivo** por subsistema (11–16) y los ciclos de vida de mesa, postulación y comentario (05–07). |
 | `docs/frontend-diseno.md` | Sitemap por contexto, navegación, sistema de diseño, wireframes e inventario de componentes. **Se lee antes de crear cualquier pantalla.** |
 | `docs/plan-desarrollo.md` | Etapas de construcción, qué se rescata del legacy y definición de terminado. |
@@ -82,6 +82,7 @@ cd frontend && npm run dev
 cd frontend && npm run test          # Vitest
 cd frontend && npm run test:e2e      # Playwright, contra el backend real — arrancarlo con -Dspring-boot.run.profiles=dev,test (backend/README.md)
 cd frontend && npx tsc -b            # typecheck (strict)
+cd frontend && npm run format        # prettier con la config del repo (#174)
 
 # Transcribir el tema al frontend tras cambiar design/build.py (#118, #130)
 python3 design/build.py

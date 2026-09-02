@@ -1,4 +1,5 @@
 import { api } from '@/api/client'
+import { pageSize } from '@/config/pagination'
 
 import type {
   AdminTableSummary,
@@ -12,11 +13,11 @@ import type {
 } from '../types'
 
 export const gameTablesApi = {
-  list: (page = 0) => api.getPage<GameTableSummary>('/api/v1/game-tables', { page }),
-  mine: (page = 0) => api.getPage<GameTableSummary>('/api/v1/game-tables/mine', { page }),
-  managed: (page = 0) => api.getPage<GameTableSummary>('/api/v1/game-tables/managed', { page }),
-  admin: (statuses?: GameTableStatus[], page = 0) =>
-    api.getPage<AdminTableSummary>('/api/v1/game-tables/admin', { status: statuses?.join(','), page }),
+  list: (page = 0, size = pageSize.explorer) => api.getPage<GameTableSummary>('/api/v1/game-tables', { page, size }),
+  mine: (page = 0, size = pageSize.list) => api.getPage<GameTableSummary>('/api/v1/game-tables/mine', { page, size }),
+  managed: (page = 0, size = pageSize.list) => api.getPage<GameTableSummary>('/api/v1/game-tables/managed', { page, size }),
+  admin: (statuses?: GameTableStatus[], page = 0, size = pageSize.adminQueue) =>
+    api.getPage<AdminTableSummary>('/api/v1/game-tables/admin', { status: statuses?.join(','), page, size }),
   byId: (id: string) => api.get<GameTableDetail>(`/api/v1/game-tables/${id}`),
   managedById: (id: string) => api.get<GameTableDetail>(`/api/v1/game-tables/${id}/managed`),
   statusHistory: (id: string) => api.get<TableStatusChange[]>(`/api/v1/game-tables/${id}/status-history`),

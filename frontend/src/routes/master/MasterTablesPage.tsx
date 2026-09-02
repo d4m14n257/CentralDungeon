@@ -37,9 +37,7 @@ export function MasterTablesPage() {
         </div>
       )}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && (
-        <EmptyState title={t('myTables.emptyTitle')} description={t('myTables.emptyDescription')} />
-      )}
+      {data && data.content.length === 0 && <EmptyState title={t('myTables.emptyTitle')} description={t('myTables.emptyDescription')} />}
       {data && data.content.length > 0 && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.content.map((table) => (

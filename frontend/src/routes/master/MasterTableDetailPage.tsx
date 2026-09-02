@@ -53,9 +53,7 @@ export function MasterTableDetailPage() {
           {t('detail.tabs.status')}
         </NavLink>
       </nav>
-      <Outlet
-        context={{ tableId, status: table.status, maxPlayers: table.maxPlayers, playerCount: table.playerCount, isPrimary }}
-      />
+      <Outlet context={{ tableId, status: table.status, maxPlayers: table.maxPlayers, playerCount: table.playerCount, isPrimary }} />
     </div>
   )
 }

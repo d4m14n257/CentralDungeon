@@ -26,8 +26,7 @@ interface SearchQueryInputProps {
 }
 
 type Suggestion =
-  | { kind: 'field'; name: string; label: string }
-  | { kind: 'connector'; name: string; label: string; connector: SearchConnector }
+  { kind: 'field'; name: string; label: string } | { kind: 'connector'; name: string; label: string; connector: SearchConnector }
 
 /**
  * El buscador de toda la app (decisiones.md #164): se escribe en una línea, y cada criterio se
@@ -300,7 +299,9 @@ interface ChipProps {
 
 function Chip({ label, text, onRemove, removeLabel }: ChipProps) {
   return (
-    <span className={cn('flex items-center gap-1 rounded-full py-0.5 pr-1 pl-2 text-xs', text ? 'bg-raised text-fg' : 'bg-primary/15 text-fg')}>
+    <span
+      className={cn('flex items-center gap-1 rounded-full py-0.5 pr-1 pl-2 text-xs', text ? 'bg-raised text-fg' : 'bg-primary/15 text-fg')}
+    >
       {label && <span className="text-fg-muted">{label}:</span>}
       {text && <span className="max-w-40 truncate">{text}</span>}
       <button type="button" onClick={onRemove} aria-label={removeLabel} className="hover:text-fg-muted rounded-full">

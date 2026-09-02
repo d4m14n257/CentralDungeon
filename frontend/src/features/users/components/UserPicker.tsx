@@ -45,13 +45,7 @@ export function UserPicker({ onSelect, excludedIds = [] }: UserPickerProps) {
 
   return (
     <div className="space-y-2">
-      <SearchQueryInput
-        fields={fields}
-        value={query}
-        onChange={setQuery}
-        label={t('search.label')}
-        placeholder={t('search.placeholder')}
-      />
+      <SearchQueryInput fields={fields} value={query} onChange={setQuery} label={t('search.label')} placeholder={t('search.placeholder')} />
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {!isLoadingError && !hasQuery && <p className="text-fg-subtle text-sm">{t('search.startTyping')}</p>}
       {!isLoadingError && hasQuery && !data && <Skeleton className="h-24 w-full" />}

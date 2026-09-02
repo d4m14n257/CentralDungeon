@@ -99,8 +99,7 @@ export function AssignMastersDialog({ tableId, tableName, open, onOpenChange }: 
             </ul>
           )}
           <p className="text-fg-subtle text-xs">
-            {t('tables.mastersOrderHint')}{' '}
-            {/* Al #ref exacto, no a la ayuda entera: es lo que hace que valga la pena abrirla (#168). */}
+            {t('tables.mastersOrderHint')} {/* Al #ref exacto, no a la ayuda entera: es lo que hace que valga la pena abrirla (#168). */}
             <Link to={helpPath('admins', 'assign-masters')} className="underline underline-offset-2">
               {t('tables.mastersHelpLink')}
             </Link>

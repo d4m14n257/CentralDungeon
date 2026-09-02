@@ -57,9 +57,7 @@ export function TableDetailPage() {
   }
 
   const hasActiveApplication =
-    myApplications?.content.some(
-      (registration) => registration.gameTableId === table.id && registration.status !== 'Rejected',
-    ) ?? false
+    myApplications?.content.some((registration) => registration.gameTableId === table.id && registration.status !== 'Rejected') ?? false
 
   const state = applyState(t, table, me?.roles ?? [], hasActiveApplication)
   const primaryMaster = primaryMasterOf(table.masters)
@@ -90,9 +88,7 @@ export function TableDetailPage() {
       </div>
 
       <div className="border-border mt-4 flex flex-col gap-4 border-t pt-4">
-        {table.description && (
-          <p className="text-fg-muted max-w-prose text-sm leading-6 whitespace-pre-wrap">{table.description}</p>
-        )}
+        {table.description && <p className="text-fg-muted max-w-prose text-sm leading-6 whitespace-pre-wrap">{table.description}</p>}
 
         {table.requirements && (
           <section>

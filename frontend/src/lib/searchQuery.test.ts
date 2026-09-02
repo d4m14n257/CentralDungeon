@@ -104,9 +104,7 @@ describe('buildSearchQuery', () => {
   })
 
   it('las comas de lo que se está escribiendo ya son alternativas', () => {
-    expect(buildSearchQuery({ ...emptySearchQuery, activeField: 'user_name', draft: 'damian,carlos' })).toBe(
-      '/user_name damian,carlos',
-    )
+    expect(buildSearchQuery({ ...emptySearchQuery, activeField: 'user_name', draft: 'damian,carlos' })).toBe('/user_name damian,carlos')
   })
 
   it('un campo a medio escribir no busca nada', () => {
