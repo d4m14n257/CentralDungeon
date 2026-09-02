@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { GameTableStatus } from '@/features/tables'
 
-import { HelpList, HelpSection, HelpTerms } from './HelpSection'
+import { HelpList, HelpSection, HelpSteps, HelpTerms } from './HelpSection'
 
 const TABLE_STATUSES: GameTableStatus[] = [
   'Unassigned',
@@ -36,6 +36,7 @@ export function HelpBasicsTab() {
       <HelpSection id="search" title={t('help:basics.search.title')}>
         <p className="text-fg-muted text-sm">{t('help:basics.search.intro')}</p>
         <HelpList items={SEARCH_RULES.map((key) => t(`help:basics.search.${key}`))} />
+        <HelpSteps title={t('help:stepsTitle')} items={[1, 2, 3, 4, 5].map((n) => t(`help:basics.search.steps.step${n}`))} />
         <div className="space-y-2">
           <h3 className="text-sm font-medium">{t('help:basics.search.examplesTitle')}</h3>
           <div className="overflow-x-auto">
@@ -74,6 +75,7 @@ export function HelpBasicsTab() {
             description: t(`help:basics.contexts.${role}`),
           }))}
         />
+        <HelpSteps title={t('help:stepsTitle')} items={[1, 2, 3].map((n) => t(`help:basics.contexts.steps.step${n}`))} />
       </HelpSection>
 
       <HelpSection id="table-status" title={t('help:basics.tableStatus.title')}>

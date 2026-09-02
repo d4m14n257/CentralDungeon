@@ -1,6 +1,6 @@
 {
   "title": "Ayuda",
-  "intro": "Cómo funciona CentralDungeon. Crece con la aplicación: acá está lo que ya se puede hacer hoy.",
+  "intro": "Cómo funciona CentralDungeon y cómo se usa cada cosa. Crece con la aplicación: acá está lo que ya se puede hacer hoy.",
   "nav": {
     "basics": "Para todos",
     "players": "Jugadores",
@@ -26,11 +26,18 @@
       "example2": "Lo mismo, pero solo por el nombre del sistema.",
       "example3": "Cualquiera de los tres, por nombre del sistema.",
       "example4": "Personas que cumplan uno u otro criterio.",
-      "example5": "Solo las que cumplan los dos a la vez."
+      "example5": "Solo las que cumplan los dos a la vez.",
+      "steps": {
+        "step1": "Escribí lo que buscás y esperá un segundo: la lista se actualiza sola, sin apretar nada.",
+        "step2": "Si hay demasiados resultados, escribí / y elegí el campo con las flechas. El chip queda fijo y todo lo que sigas escribiendo es su valor.",
+        "step3": "Si te sirve cualquiera de varias opciones del mismo campo, separalas con comas: damian,carlos,daniel.",
+        "step4": "Si querés sumar otro criterio, escribí /or o /and, elegilo de la lista, y seguí con el siguiente.",
+        "step5": "Para corregir: tocá la × de un chip, tocá el chip del conector para cambiar «y» por «o», o borrá con Backspace el texto vacío."
+      }
     },
     "contexts": {
       "title": "Los contextos",
-      "intro": "Los roles se acumulan y no hay jerarquía: podés ser jugador y master a la vez. Arriba a la izquierda hay un selector que cambia el contexto y con él las pantallas. Es organización de la interfaz, no un permiso: lo que podés hacer lo decide el servidor en cada acción.",
+      "intro": "Los roles se acumulan: podés ser jugador y master a la vez. Admin y owner son la excepción, porque son el mismo rol con distinto alcance: se tiene uno de los dos. Arriba a la izquierda hay un selector que cambia el contexto y con él las pantallas. Es organización de la interfaz, no un permiso: lo que podés hacer lo decide el servidor en cada acción.",
       "playerTitle": "Jugador",
       "player": "Explorás las mesas abiertas, te postulás, y seguís tus postulaciones y tus mesas.",
       "masterTitle": "Master",
@@ -38,7 +45,12 @@
       "adminTitle": "Admin",
       "admin": "Revisás las mesas que esperan aprobación, pedís cambios, y creás mesas sin master para asignarles uno después.",
       "ownerTitle": "Owner",
-      "owner": "Todo lo de Admin, más lo que todavía se está construyendo: auditoría, archivos y migración de cuentas."
+      "owner": "Un admin con más alcance: todo lo de admin, más auditoría, archivos y migración de cuentas cuando se construyan. No se acumula con admin, lo reemplaza.",
+      "steps": {
+        "step1": "Tocá el selector de contexto, arriba a la izquierda, al lado del nombre del sitio.",
+        "step2": "Elegí el contexto en el que querés trabajar. Solo aparecen los que te corresponden.",
+        "step3": "Las pantallas cambian con el contexto; las notificaciones y tu cuenta no, están siempre."
+      }
     },
     "account": {
       "title": "Tu cuenta",
@@ -71,7 +83,13 @@
       "title": "Postularte a una mesa",
       "where": "Desde el explorador entrás al detalle de una mesa abierta y te postulás ahí, con un mensaje opcional para el master.",
       "oneAtATime": "No podés tener dos postulaciones activas a la misma mesa, y tampoco postularte a una mesa que dirigís.",
-      "blocked": "Si la mesa está llena o no está abierta, en vez de un botón gris vas a ver el motivo escrito."
+      "blocked": "Si la mesa está llena o no está abierta, en vez de un botón gris vas a ver el motivo escrito.",
+      "steps": {
+        "step1": "Desde el explorador, abrí la mesa que te interese y leé la descripción y los requisitos.",
+        "step2": "Tocá «Postularme». Si el botón no está, en su lugar vas a leer el motivo.",
+        "step3": "Escribí un mensaje para el master si querés contarle algo. Es opcional.",
+        "step4": "Enviá y seguí la postulación desde «Mis postulaciones»: ahí vas a ver cuando el master decida."
+      }
     },
     "applicationStatus": {
       "title": "En qué estado está tu postulación",
@@ -92,7 +110,14 @@
       "title": "Crear una mesa",
       "role": "Crear mesas propias necesita el rol Master. Dirigir una mesa que te asignaron, no: son cosas distintas.",
       "wizard": "La mesa nace en preparación, con nombre y descripción. Ahí la armás sin apuro: nadie la ve todavía.",
-      "submit": "Cuando está lista se manda a revisión de un admin."
+      "submit": "Cuando está lista se manda a revisión de un admin.",
+      "steps": {
+        "step1": "Cambiá al contexto Master con el selector de arriba.",
+        "step2": "Entrá a «Mis mesas» y tocá «Crear mesa».",
+        "step3": "Poné el nombre y la descripción. La mesa nace en preparación y todavía no la ve nadie.",
+        "step4": "Cuando esté lista, mandala a revisión desde la pestaña Estado.",
+        "step5": "Esperá la decisión de un admin: te avisa la campana. Si pide cambios, llega con el motivo escrito."
+      }
     },
     "review": {
       "title": "Revisión y cambios",
@@ -104,13 +129,25 @@
       "title": "Candidatos",
       "order": "Se ordenan por fecha de postulación y ese orden no se reordena.",
       "accept": "Aceptar suma a la persona a la mesa. Si con eso se llena, el resto de las postulaciones se rechazan solas.",
-      "reject": "Rechazar pide un motivo y no se puede deshacer, pero la persona puede volver a postularse."
+      "reject": "Rechazar pide un motivo y no se puede deshacer, pero la persona puede volver a postularse.",
+      "steps": {
+        "step1": "Entrá a tu mesa y abrí la pestaña Candidatos.",
+        "step2": "Leé el mensaje de cada persona. El orden es por fecha de postulación.",
+        "step3": "Tocá «Aceptar» para sumarla a la mesa, o «Rechazar» y escribí el motivo.",
+        "step4": "Si al aceptar la mesa se llena, el resto de las postulaciones se rechazan solas."
+      }
     },
     "running": {
       "title": "Llevar la mesa",
       "start": "Iniciar la pasa a «En curso». Finalizar la cierra como terminada.",
       "cancel": "Cancelar corta la mesa antes de tiempo y pide un motivo escrito. También puede hacerlo un admin.",
-      "who": "Iniciar, finalizar y cancelar son del master de la mesa; un co-master no las ve."
+      "who": "Iniciar, finalizar y cancelar son del master de la mesa; un co-master no las ve.",
+      "steps": {
+        "step1": "Abrí tu mesa y andá a la pestaña Estado.",
+        "step2": "Tocá «Iniciar mesa» cuando empiecen a jugar: pasa a «En curso».",
+        "step3": "Al terminar, «Finalizar mesa». Si hay que cortarla antes, «Cancelar mesa» y escribí el motivo.",
+        "step4": "Cada cambio queda en el historial de esa pestaña, con quién lo hizo y por qué."
+      }
     },
     "coMasters": {
       "title": "Master y co-masters",
@@ -124,19 +161,35 @@
       "title": "Revisar mesas",
       "queue": "«Mesas por revisar» junta las que esperan una decisión: las que están en preparación y las que todavía no tienen master.",
       "approve": "Aprobar publica la mesa. Pedir cambios la devuelve al master con el motivo escrito.",
-      "gone": "Una vez aprobada, la mesa sale de la bandeja: la bandeja es lo pendiente, no un listado de todo."
+      "gone": "Una vez aprobada, la mesa sale de la bandeja: la bandeja es lo pendiente, no un listado de todo.",
+      "steps": {
+        "step1": "Cambiá al contexto Admin y entrá a «Mesas por revisar».",
+        "step2": "Abrí la mesa que quieras revisar y leé lo que preparó el master.",
+        "step3": "Tocá «Aprobar» para publicarla, o «Pedir cambios» y escribí qué hay que corregir.",
+        "step4": "La mesa sale de la bandeja: la bandeja es lo pendiente, no un listado de todo."
+      }
     },
     "assignMasters": {
       "title": "Mesas sin master",
       "create": "Un admin puede crear una mesa sin ser su master. Nace sin asignar y no se publica hasta que tenga uno.",
       "search": "Para asignarla se buscan personas por nombre de Discord o del sistema, con el mismo lenguaje de búsqueda de siempre.",
       "order": "El primero que agregás es el master y el resto quedan de co-masters. Tocá un nombre para hacerlo master: el que estaba pasa a co-master.",
-      "opens": "Al asignar, la mesa queda abierta directamente, sin pasar por revisión."
+      "opens": "Al asignar, la mesa queda abierta directamente, sin pasar por revisión.",
+      "steps": {
+        "step1": "En «Mesas por revisar», tocá «Crear mesa sin master» y poné el nombre.",
+        "step2": "En la fila de esa mesa, tocá «Asignar masters».",
+        "step3": "Buscá a la persona por su nombre de Discord o del sistema y tocá su nombre en la lista.",
+        "step4": "Sumá a los demás igual. El primero es el master; el resto quedan de co-masters.",
+        "step5": "Si querés otro master, tocá su nombre en los chips: el que estaba pasa a co-master.",
+        "step6": "Tocá «Asignar masters». La mesa queda abierta al instante, sin pasar por revisión."
+      }
     },
     "owner": {
       "title": "Owner",
-      "same": "Un owner puede todo lo de un admin.",
-      "soon": "Lo suyo propio —auditoría, borrado de archivos y migración de cuentas— todavía se está construyendo, y esta ayuda lo va a explicar cuando exista."
+      "same": "Un owner puede todo lo de un admin: es el mismo rol con más alcance.",
+      "soon": "Lo suyo propio —auditoría, borrado de archivos y migración de cuentas— todavía se está construyendo, y esta ayuda lo va a explicar cuando exista.",
+      "exclusive": "Por eso nadie es admin y owner a la vez: se tiene uno de los dos, y owner está por encima."
     }
-  }
+  },
+  "stepsTitle": "Cómo se hace"
 }

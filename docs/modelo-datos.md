@@ -684,6 +684,8 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Todo usuario nuevo se crea con rol `Player` | `UserRegistrationService` | #38 |
 | Los cuatro roles son acumulables. Única excepción: `Owner` puede todo lo que puede `Admin`. Se escribe `hasAnyRole('ADMIN','OWNER')` en cada endpoint, sin `RoleHierarchy` | `SecurityConfig` | #37, #67, #89 |
 | `Owner` y `Admin` **no** implican `Player` ni `Master`: para jugar o dirigir hay que tener ese rol | `SecurityConfig` | #89 |
+| **`Admin` y `Owner` son excluyentes**: nadie tiene los dos. Otorgar uno quita el otro — son el mismo rol con distinto alcance, y `Owner` está por encima | `UserRoleService` (llega con `/admin/users`) | #169 |
+| **`Admin` y `Owner` son excluyentes**: nadie tiene los dos. Otorgar uno quita el otro — son el mismo rol con distinto alcance, y `Owner` está por encima | `UserRoleService` (llega con `/admin/users`) | #169 |
 | Salirse del servidor conserva los datos; el baneo lo marca un admin a mano | `UserService` | #84, M30 |
 | El owner puede migrar los datos de un usuario a una cuenta nueva | `UserService` | #83 |
 

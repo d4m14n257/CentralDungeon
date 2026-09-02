@@ -16,6 +16,8 @@ import java.net.URI;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,9 +40,17 @@ public class GameTableController {
         this.gameTableService = gameTableService;
     }
 
+    /**
+     * The public explorer. Newest first by default, which closes the gap decisiones.md #163 left
+     * annotated: with no sort the rows came back in physical order - oldest first, since the ids are
+     * time-ordered UUIDv7 - so a table published today could fall off the first page as the table
+     * grew. The default lives here and not in the JPQL so an explicit ?sort= still wins.
+     */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public PageResponse<GameTableSummaryResponse> list(Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+    public PageResponse<GameTableSummaryResponse> list(
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.list(pageable, currentUser.userId());
     }
 
