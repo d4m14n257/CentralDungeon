@@ -89,7 +89,7 @@ También entra **`system_settings`** (#141): la tabla clave-valor, el `SettingsS
 **En progreso**, en sub-rebanadas verticales — no se construye de un tirón, siguiendo el mismo criterio del §1:
 
 1. **✅ Máquina de estados de mesa** (sin `approval_requests` todavía). Los 9 estados, `table_status_changes` con su historial, `Unassigned`→`Opened` al asignar masters (#72), aprobar/pedir cambios/reenviar, iniciar/finalizar, cancelar (Primary o admin) y pausa/reanudación directa de un admin. Frontend: wizard `/master/tables/new`, pestaña Estado en `/master/tables/:id`, `/admin/tables` con Aprobar/Pedir cambios/Asignar masters, contexto Admin nuevo en el `ContextSwitcher`. Detalle y límites conocidos en `docs/decisiones.md` #163.
-   **Cerrado después, fuera del orden previsto**: el `AssignMastersDialog` pedía ids de usuario a mano —el límite conocido que #163 documentó y que esperaba a la sub-rebanada 5— y se resolvió acá, porque probar la asignación a mano no era viable. Trajo con él el **lenguaje de búsqueda de toda la app** (#164), que nunca había sido decidido: `GET /api/v1/users/search` con `?q=`, `common/search/` en el backend, `lib/searchQuery.ts` + `SearchQueryInput` en el frontend, y el diálogo de asignación mudado a `routes/admin/` con chips donde el orden es el rol (#165). De paso, `Primary`/`Secondary` dejaron de aparecer en pantalla: en la interfaz son **master** y **co-master** (#166). Y con el lenguaje ya crecido —`/and`/`/or` con chip propio, comas para alternativas— entró **`/help`** (#167), la pantalla que lo explica junto con los contextos, los estados de la mesa y las postulaciones. Lo que sigue esperando a la sub-rebanada 5 es la pantalla `/admin/users` completa.
+   **Cerrado después, fuera del orden previsto**: el `AssignMastersDialog` pedía ids de usuario a mano —el límite conocido que #163 documentó y que esperaba a la sub-rebanada 5— y se resolvió acá, porque probar la asignación a mano no era viable. Trajo con él el **lenguaje de búsqueda de toda la app** (#164), que nunca había sido decidido: `GET /api/v1/users/search` con `?q=`, `common/search/` en el backend, `lib/searchQuery.ts` + `SearchQueryInput` en el frontend, y el diálogo de asignación mudado a `routes/admin/` con chips donde el orden es el rol (#165). De paso, `Primary`/`Secondary` dejaron de aparecer en pantalla: en la interfaz son **master** y **co-master** (#166). Y con el lenguaje ya crecido —`/and`/`/or` con chip propio, comas para alternativas— entró **`/help`** (#167), partida por audiencia y enlazada por `#ref` (#168): el índice con lo de todos, y una página por rol. Cubre lo de **E1 y E2** —cuenta, notificaciones, buscar, contextos, estados de mesa, postulaciones, crear y llevar una mesa, revisar y asignar masters—, y desde acá **toda etapa cierra con su ayuda escrita** (§5, punto 8). Lo que sigue esperando a la sub-rebanada 5 es la pantalla `/admin/users` completa.
 2. `approval_requests` + bandeja de admins + veto — siguiente.
 3. Catálogos (`systems`/`tags`/`platforms`) — pendiente.
 4. `system_settings` — pendiente.
@@ -159,7 +159,7 @@ Idempotente para el mismo admin, `409` si ya lo tiene otro. Un job libera las re
 
 ## 5. Definición de terminado
 
-Una etapa se cierra cuando cumple las siete:
+Una etapa se cierra cuando cumple las ocho:
 
 1. Las reglas de `modelo-datos.md` §5 que caen en su alcance están implementadas.
 2. Cada una tiene su test unitario, con los caminos de error y no solo el feliz.
@@ -168,6 +168,7 @@ Una etapa se cierra cuando cumple las siete:
 5. Ninguna pantalla del sitemap de esa etapa quedó sin sus cuatro estados (cargando, vacío, error, sin permiso).
 6. **Se entrega el inventario de archivos nuevos de la etapa**, con su ruta, para revisión antes de pasar a la siguiente.
 7. **Los tests de la etapa corren y pasan**, y se reporta la salida real. Una etapa con tests en rojo no está terminada; si algo queda fuera, se dice cuál y por qué en vez de darla por cerrada.
+8. **La ayuda de la etapa está escrita** (#167, #168): lo que la etapa agregó se explica en `/help`, en la audiencia que corresponde y con su `#ref` enlazado desde la pantalla que lo necesita. La documentación que se escribe "después" no se escribe.
 
 Los puntos 6 y 7 son el corte entre etapas: **no se arranca la siguiente sin ellos.**
 

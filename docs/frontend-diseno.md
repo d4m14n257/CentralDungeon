@@ -56,7 +56,8 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/profile` | Mi karma y los comentarios que recibí |
 | | `/users/:id` | Perfil de otra persona, sujeto a #41, #44 y #47 |
 | | `/notifications` | Historial de notificaciones |
-| | `/help` | **Global, no del contexto Jugador**: cómo buscar, los contextos, los estados de una mesa y las postulaciones. Se entra desde el menú de la cuenta y pide sesión (#167) |
+| | `/help` | **Global, no del contexto Jugador**: lo que sirve a todos —buscar, contextos, estados de mesa, cuenta, notificaciones—. Se entra desde el menú de la cuenta y pide sesión (#167) |
+| | `/help/players` · `/help/masters` · `/help/admins` | La ayuda de cada rol, como rutas hijas. Cada bloque tiene su `#ref` estable y se enlaza desde la pantalla que lo necesita: `/help#search`, `/help/admins#assign-masters` (#168) |
 | **Master** | `/master` | Dashboard: qué necesita tu atención hoy, en todas tus mesas (#136) |
 | | `/master/tables` | Mis mesas como master |
 | | `/master/tables/new` | Wizard de creación — **solo con el rol `Master`** (#135) |

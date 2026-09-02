@@ -26,6 +26,7 @@
     "createUnassignedDialogTitle": "Crear una mesa sin master",
     "createUnassignedDialogDescription": "Queda sin asignar hasta que le asignes un master.",
     "createUnassignedSuccess": "Mesa creada, sin asignar",
-    "nameLabel": "Nombre"
+    "nameLabel": "Nombre",
+    "mastersHelpLink": "Cómo funciona"
   }
 }

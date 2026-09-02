@@ -1,62 +1,142 @@
 {
-  "title": "Cómo funciona CentralDungeon",
-  "intro": "Lo que hace falta saber para moverse por el sitio. Crece con la aplicación: acá está lo que ya se puede hacer hoy.",
-  "search": {
-    "title": "Cómo buscar",
-    "intro": "Los buscadores del sitio entienden un lenguaje corto, el mismo en todos lados. Podés escribir un nombre y listo; lo demás es para cuando querés precisar.",
-    "plain": "Escribir texto busca por el criterio básico de ese buscador. En el buscador de personas, el nombre de Discord o el del sistema.",
-    "field": "La barra abre la lista de campos. Elegís con las flechas y confirmás con Enter o Tab. El campo queda como un chip fijo, y todo lo que escribas después es su valor, espacios incluidos.",
-    "commas": "Las comas separan alternativas del mismo criterio: cualquiera de ellas alcanza.",
-    "connectors": "«/or» y «/and» cierran el criterio y unen el siguiente, dejando su propio chip en el medio. Tocá ese chip para cambiar de uno a otro.",
-    "onlySlash": "La barra es el único separador. Un «and» o un «or» escritos sin barra son parte de lo que estás buscando, no una instrucción.",
-    "order": "Los criterios se aplican en el orden en que están, de izquierda a derecha, sin reglas escondidas de precedencia.",
-    "chips": "Cada chip se quita con su ×. Con el texto vacío, Backspace deshace el último paso: primero suelta el campo abierto, después devuelve el último chip al cursor para editarlo.",
-    "debounce": "No hace falta apretar nada: la búsqueda sale sola cuando dejás de escribir.",
-    "examplesTitle": "Ejemplos",
-    "exampleQuery": "Si escribís",
-    "exampleMeaning": "Encontrás",
-    "example1": "Personas cuyo nombre de Discord o del sistema contenga «damian».",
-    "example2": "Lo mismo, pero solo por el nombre del sistema.",
-    "example3": "Cualquiera de los tres, por nombre del sistema.",
-    "example4": "Personas que cumplan uno u otro criterio.",
-    "example5": "Solo las que cumplan los dos a la vez."
+  "title": "Ayuda",
+  "intro": "Cómo funciona CentralDungeon. Crece con la aplicación: acá está lo que ya se puede hacer hoy.",
+  "nav": {
+    "basics": "Para todos",
+    "players": "Jugadores",
+    "masters": "Masters",
+    "admins": "Admins"
   },
-  "contexts": {
-    "title": "Los contextos",
-    "intro": "Los roles se acumulan y no hay jerarquía: podés ser jugador y master a la vez. Arriba a la izquierda hay un selector que cambia el contexto y con él las pantallas. Es organización de la interfaz, no un permiso: lo que podés hacer lo decide el servidor en cada acción.",
-    "playerTitle": "Jugador",
-    "player": "Explorás las mesas abiertas, te postulás, y seguís tus postulaciones y tus mesas.",
-    "masterTitle": "Master",
-    "master": "Dirigís mesas. Aparece si tenés el rol o si sos master de al menos una mesa, aunque no lo tengas: dirigir una mesa y poder crear mesas propias son cosas distintas.",
-    "adminTitle": "Admin",
-    "admin": "Revisás las mesas que esperan aprobación, pedís cambios, y creás mesas sin master para asignarles uno después.",
-    "ownerTitle": "Owner",
-    "owner": "Todo lo de Admin, más lo que todavía se está construyendo: auditoría, archivos y migración de cuentas."
+  "basics": {
+    "search": {
+      "title": "Cómo buscar",
+      "intro": "Los buscadores del sitio entienden un lenguaje corto, el mismo en todos lados. Podés escribir un nombre y listo; lo demás es para cuando querés precisar.",
+      "plain": "Escribir texto busca por el criterio básico de ese buscador. En el buscador de personas, el nombre de Discord o el del sistema.",
+      "field": "La barra abre la lista de campos. Elegís con las flechas y confirmás con Enter o Tab. El campo queda como un chip fijo, y todo lo que escribas después es su valor, espacios incluidos.",
+      "commas": "Las comas separan alternativas del mismo criterio: cualquiera de ellas alcanza.",
+      "connectors": "«/or» y «/and» cierran el criterio y unen el siguiente, dejando su propio chip en el medio. Tocá ese chip para cambiar de uno a otro.",
+      "onlySlash": "La barra es el único separador. Un «and» o un «or» escritos sin barra son parte de lo que estás buscando, no una instrucción.",
+      "order": "Los criterios se aplican en el orden en que están, de izquierda a derecha, sin reglas escondidas de precedencia.",
+      "chips": "Cada chip se quita con su ×. Con el texto vacío, Backspace deshace el último paso: primero suelta el campo abierto, después devuelve el último chip al cursor para editarlo.",
+      "debounce": "No hace falta apretar nada: la búsqueda sale sola cuando dejás de escribir.",
+      "examplesTitle": "Ejemplos",
+      "exampleQuery": "Si escribís",
+      "exampleMeaning": "Encontrás",
+      "example1": "Personas cuyo nombre de Discord o del sistema contenga «damian».",
+      "example2": "Lo mismo, pero solo por el nombre del sistema.",
+      "example3": "Cualquiera de los tres, por nombre del sistema.",
+      "example4": "Personas que cumplan uno u otro criterio.",
+      "example5": "Solo las que cumplan los dos a la vez."
+    },
+    "contexts": {
+      "title": "Los contextos",
+      "intro": "Los roles se acumulan y no hay jerarquía: podés ser jugador y master a la vez. Arriba a la izquierda hay un selector que cambia el contexto y con él las pantallas. Es organización de la interfaz, no un permiso: lo que podés hacer lo decide el servidor en cada acción.",
+      "playerTitle": "Jugador",
+      "player": "Explorás las mesas abiertas, te postulás, y seguís tus postulaciones y tus mesas.",
+      "masterTitle": "Master",
+      "master": "Dirigís mesas. Aparece si tenés el rol o si sos master de al menos una mesa, aunque no lo tengas: dirigir una mesa y poder crear mesas propias son cosas distintas.",
+      "adminTitle": "Admin",
+      "admin": "Revisás las mesas que esperan aprobación, pedís cambios, y creás mesas sin master para asignarles uno después.",
+      "ownerTitle": "Owner",
+      "owner": "Todo lo de Admin, más lo que todavía se está construyendo: auditoría, archivos y migración de cuentas."
+    },
+    "account": {
+      "title": "Tu cuenta",
+      "login": "Se entra con Discord y hay que ser miembro del servidor de la comunidad. No hay registro propio ni contraseña.",
+      "onboarding": "La primera vez se piden dos datos: el nombre que se va a mostrar y el país. Hasta completarlos no se puede seguir.",
+      "theme": "Desde el menú del avatar se cambia entre tema claro y oscuro, y se cierra sesión."
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "what": "La campana de arriba junta lo que te pasó: una postulación nueva en tu mesa, una decisión sobre la tuya.",
+      "click": "Al tocar una notificación vas a donde ocurrió, y si hace falta se cambia solo el contexto.",
+      "history": "El historial completo está en la pantalla de notificaciones, y ahí se marcan como leídas."
+    },
+    "tableStatus": {
+      "title": "Los estados de una mesa",
+      "intro": "Casi todo lo que se puede hacer con una mesa depende del estado en el que está, y por eso siempre se muestra.",
+      "Unassigned": "La creó un admin y todavía no tiene master. Se abre sola apenas se le asigna uno.",
+      "Preparation": "El master la está armando o ya la mandó a revisión.",
+      "ChangesRequested": "Un admin pidió correcciones antes de aprobarla.",
+      "Opened": "Está publicada: se puede ver y postularse.",
+      "InProgress": "Ya empezó a jugarse.",
+      "PauseRequested": "El master pidió pausarla y espera respuesta.",
+      "Pause": "Está congelada; se puede retomar.",
+      "Finished": "Terminó como estaba previsto.",
+      "Canceled": "Se cortó antes de terminar, con un motivo escrito."
+    }
   },
-  "tableStatus": {
-    "title": "Los estados de una mesa",
-    "intro": "Casi todo lo que se puede hacer con una mesa depende del estado en el que está, y por eso siempre se muestra.",
-    "Unassigned": "La creó un admin y todavía no tiene master. Se abre sola apenas se le asigna uno.",
-    "Preparation": "El master la está armando o ya la mandó a revisión.",
-    "ChangesRequested": "Un admin pidió correcciones antes de aprobarla.",
-    "Opened": "Está publicada: se puede ver y postularse.",
-    "InProgress": "Ya empezó a jugarse.",
-    "PauseRequested": "El master pidió pausarla y espera respuesta.",
-    "Pause": "Está congelada; se puede retomar.",
-    "Finished": "Terminó como estaba previsto.",
-    "Canceled": "Se cortó antes de terminar, con un motivo escrito."
-  },
-  "registrations": {
-    "title": "Postulaciones",
-    "apply": "Te postulás desde el detalle de una mesa abierta, con un mensaje opcional para el master.",
-    "queue": "Los candidatos se ordenan por fecha de postulación y ese orden no se reordena.",
-    "decision": "El master acepta o rechaza. El rechazo lleva un motivo escrito y no se puede deshacer, pero podés volver a postularte más adelante.",
-    "full": "Si la mesa se llena, las postulaciones que quedaron sin lugar se rechazan solas."
+  "players": {
+    "applying": {
+      "title": "Postularte a una mesa",
+      "where": "Desde el explorador entrás al detalle de una mesa abierta y te postulás ahí, con un mensaje opcional para el master.",
+      "oneAtATime": "No podés tener dos postulaciones activas a la misma mesa, y tampoco postularte a una mesa que dirigís.",
+      "blocked": "Si la mesa está llena o no está abierta, en vez de un botón gris vas a ver el motivo escrito."
+    },
+    "applicationStatus": {
+      "title": "En qué estado está tu postulación",
+      "intro": "Las seguís todas desde «Mis postulaciones».",
+      "Candidate": "El master todavía no decidió.",
+      "Player": "Te aceptaron: la mesa ya aparece en «Mis mesas».",
+      "Rejected": "El master la rechazó con un motivo escrito. Podés volver a postularte más adelante.",
+      "auto": "Si la mesa se llena, las postulaciones que quedaron sin lugar se rechazan solas."
+    },
+    "myTables": {
+      "title": "Tus mesas",
+      "list": "«Mis mesas» muestra aquellas en las que te aceptaron y siguen vivas.",
+      "status": "Cada una lleva su estado a la vista: mientras esté pausada o en preparación no hay nada que hacer, y se avisa."
+    }
   },
   "masters": {
-    "title": "Master y co-masters",
-    "one": "Cada mesa tiene un master y puede tener co-masters.",
-    "primary": "El master es quien inicia, finaliza y cancela la mesa; los co-masters ayudan a dirigirla.",
-    "assign": "Cuando un admin asigna masters, el primero que agrega es el master y el resto quedan de co-masters."
+    "creating": {
+      "title": "Crear una mesa",
+      "role": "Crear mesas propias necesita el rol Master. Dirigir una mesa que te asignaron, no: son cosas distintas.",
+      "wizard": "La mesa nace en preparación, con nombre y descripción. Ahí la armás sin apuro: nadie la ve todavía.",
+      "submit": "Cuando está lista se manda a revisión de un admin."
+    },
+    "review": {
+      "title": "Revisión y cambios",
+      "approve": "Si un admin la aprueba, la mesa queda abierta y empiezan a llegar postulaciones.",
+      "changes": "Si pide cambios, llega con el motivo escrito: corregís y la volvés a mandar.",
+      "history": "Toda transición queda registrada en la pestaña Estado, con quién la hizo y por qué."
+    },
+    "candidates": {
+      "title": "Candidatos",
+      "order": "Se ordenan por fecha de postulación y ese orden no se reordena.",
+      "accept": "Aceptar suma a la persona a la mesa. Si con eso se llena, el resto de las postulaciones se rechazan solas.",
+      "reject": "Rechazar pide un motivo y no se puede deshacer, pero la persona puede volver a postularse."
+    },
+    "running": {
+      "title": "Llevar la mesa",
+      "start": "Iniciar la pasa a «En curso». Finalizar la cierra como terminada.",
+      "cancel": "Cancelar corta la mesa antes de tiempo y pide un motivo escrito. También puede hacerlo un admin.",
+      "who": "Iniciar, finalizar y cancelar son del master de la mesa; un co-master no las ve."
+    },
+    "coMasters": {
+      "title": "Master y co-masters",
+      "one": "Cada mesa tiene un master y puede tener co-masters.",
+      "primary": "El master es quien decide sobre la mesa; los co-masters ayudan a dirigirla.",
+      "assign": "Cuando un admin asigna masters, el primero que agrega es el master y el resto quedan de co-masters."
+    }
+  },
+  "admins": {
+    "reviewing": {
+      "title": "Revisar mesas",
+      "queue": "«Mesas por revisar» junta las que esperan una decisión: las que están en preparación y las que todavía no tienen master.",
+      "approve": "Aprobar publica la mesa. Pedir cambios la devuelve al master con el motivo escrito.",
+      "gone": "Una vez aprobada, la mesa sale de la bandeja: la bandeja es lo pendiente, no un listado de todo."
+    },
+    "assignMasters": {
+      "title": "Mesas sin master",
+      "create": "Un admin puede crear una mesa sin ser su master. Nace sin asignar y no se publica hasta que tenga uno.",
+      "search": "Para asignarla se buscan personas por nombre de Discord o del sistema, con el mismo lenguaje de búsqueda de siempre.",
+      "order": "El primero que agregás es el master y el resto quedan de co-masters. Tocá un nombre para hacerlo master: el que estaba pasa a co-master.",
+      "opens": "Al asignar, la mesa queda abierta directamente, sin pasar por revisión."
+    },
+    "owner": {
+      "title": "Owner",
+      "same": "Un owner puede todo lo de un admin.",
+      "soon": "Lo suyo propio —auditoría, borrado de archivos y migración de cuentas— todavía se está construyendo, y esta ayuda lo va a explicar cuando exista."
+    }
   }
 }

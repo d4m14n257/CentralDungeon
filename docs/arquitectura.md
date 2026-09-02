@@ -444,7 +444,8 @@ frontend/
     │   ├── ui/                      primitivas shadcn/ui generadas (button.tsx, dialog.tsx…)
     │   └── …                        compuestos propios: FormDialog, DataTable, EmptyState,
     │                                ErrorState, SearchQueryInput…
-    ├── hooks/                       useDisclosure, useConfirm, useDebounce, useTableSelection
+    ├── hooks/                       useDisclosure, useConfirm, useDebounce, useTableSelection,
+    │                                useScrollOnHash (#168)
     ├── lib/
     │   ├── utils.ts                 cn() — la ruta que shadcn/ui espera por defecto
     │   ├── date.ts                  formateo de fechas y horas con Intl (§3.3)

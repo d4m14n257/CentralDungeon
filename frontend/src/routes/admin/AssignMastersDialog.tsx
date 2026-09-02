@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Crown, X } from 'lucide-react'
 
 import { FormDialog } from '@/components/FormDialog'
 import { Button } from '@/components/ui/button'
+import { helpPath } from '@/config/paths'
 import { cn } from '@/lib/utils'
 import { useAssignMasters } from '@/features/tables'
 import { UserPicker, type UserSummary } from '@/features/users'
@@ -96,7 +98,13 @@ export function AssignMastersDialog({ tableId, tableName, open, onOpenChange }: 
               ))}
             </ul>
           )}
-          <p className="text-fg-subtle text-xs">{t('tables.mastersOrderHint')}</p>
+          <p className="text-fg-subtle text-xs">
+            {t('tables.mastersOrderHint')}{' '}
+            {/* Al #ref exacto, no a la ayuda entera: es lo que hace que valga la pena abrirla (#168). */}
+            <Link to={helpPath('admins', 'assign-masters')} className="underline underline-offset-2">
+              {t('tables.mastersHelpLink')}
+            </Link>
+          </p>
         </div>
 
         <UserPicker onSelect={add} excludedIds={selected.map((user) => user.id)} />

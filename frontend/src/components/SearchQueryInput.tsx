@@ -270,7 +270,7 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
       )}
       <p className="text-fg-subtle text-xs">
         {t('search.hint')}{' '}
-        <Link to={helpPath()} className="underline underline-offset-2">
+        <Link to={helpPath(undefined, 'search')} className="underline underline-offset-2">
           {t('search.helpLink')}
         </Link>
       </p>

@@ -33,8 +33,18 @@ export const router = createBrowserRouter([
           { path: 'my/tables', lazy: () => import('./my/MyTablesPage') },
           { path: 'notifications', lazy: () => import('./NotificationsPage') },
           // Global, no del contexto Jugador: los tres layouts son el mismo shell y la cabecera
-          // ya se adapta sola. Va acá por la misma razón que /notifications.
-          { path: 'help', lazy: () => import('./HelpPage') },
+          // ya se adapta sola. Va acá por la misma razón que /notifications. Las audiencias son
+          // rutas hijas (#168): cada una con URL propia, enlazable con su #ref.
+          {
+            path: 'help',
+            lazy: () => import('./help/HelpPage'),
+            children: [
+              { index: true, lazy: () => import('./help/HelpBasicsTab') },
+              { path: 'players', lazy: () => import('./help/HelpPlayersTab') },
+              { path: 'masters', lazy: () => import('./help/HelpMastersTab') },
+              { path: 'admins', lazy: () => import('./help/HelpAdminsTab') },
+            ],
+          },
         ],
       },
       {

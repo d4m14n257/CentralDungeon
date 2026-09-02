@@ -13,6 +13,9 @@ export const paths = {
   myTables: 'my/tables',
   notifications: 'notifications',
   help: 'help',
+  helpPlayers: 'players',
+  helpMasters: 'masters',
+  helpAdmins: 'admins',
   masterTables: 'master/tables',
   masterTableNew: 'master/tables/new',
   masterTableDetail: 'master/tables/:id',
@@ -20,8 +23,16 @@ export const paths = {
   adminTables: 'admin/tables',
 } as const
 
-export function helpPath(): string {
-  return '/help'
+/** Las audiencias de la ayuda (#168). El índice, `/help`, es la que sirve a todos. */
+export type HelpAudience = 'players' | 'masters' | 'admins'
+
+/**
+ * `helpPath()` -> /help, `helpPath('admins', 'assign-masters')` -> /help/admins#assign-masters.
+ * Siempre absoluto: los patrones de arriba son relativos porque los consume el router, y un
+ * `<Link to={paths.help}>` desde /admin/tables resolvía a /admin/tables/help.
+ */
+export function helpPath(audience?: HelpAudience, ref?: string): string {
+  return `/help${audience ? `/${audience}` : ''}${ref ? `#${ref}` : ''}`
 }
 
 export function tableDetailPath(id: string): string {

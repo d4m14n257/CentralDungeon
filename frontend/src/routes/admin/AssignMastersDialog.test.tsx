@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router'
 
 import '@/providers/i18n'
 import type { UserSummary } from '@/features/users'
@@ -31,7 +32,11 @@ vi.mock('@/features/tables', () => ({
 }))
 
 function renderDialog() {
-  return render(<AssignMastersDialog tableId="table-1" tableName="Curse of Strahd" open onOpenChange={vi.fn()} />)
+  return render(
+    <MemoryRouter>
+      <AssignMastersDialog tableId="table-1" tableName="Curse of Strahd" open onOpenChange={vi.fn()} />
+    </MemoryRouter>,
+  )
 }
 
 describe('AssignMastersDialog', () => {
