@@ -48,6 +48,35 @@ test('a browser in a language the app does not speak falls back to Spanish', asy
   }
 })
 
+/**
+ * The case the switch on the login card exists for: somebody lands in a language they cannot read
+ * and has no session yet, so there is no `UserMenu` to reach for. Without a control in the card
+ * they would conclude it cannot be done (#198).
+ */
+test('the language can be changed from the login card, before signing in', async ({ browser }) => {
+  // A French browser falls back to Spanish, so this is somebody who may well read neither.
+  const context = await browser.newContext({ locale: 'fr-FR' })
+  const page = await context.newPage()
+  try {
+    await page.goto('/login')
+    await expect(page.getByRole('link', { name: 'Entrar con Discord' })).toBeVisible()
+
+    // Both options are on screen, with nothing to open first.
+    const languages = page.getByRole('group', { name: 'Idioma' })
+    await expect(languages.getByRole('button', { name: 'English' })).toBeVisible()
+    await languages.getByRole('button', { name: 'English' }).click()
+
+    await expect(page.getByRole('link', { name: 'Sign in with Discord' })).toBeVisible()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+    // And it holds past the login screen, which is the point of choosing it there.
+    await page.reload()
+    await expect(page.getByRole('link', { name: 'Sign in with Discord' })).toBeVisible()
+  } finally {
+    await context.close()
+  }
+})
+
 test('choosing a language sticks, and outlasts a reload', async ({ browser }) => {
   const { context, page } = await contextSpeaking(browser, 'es-AR', `e2e-lang-switch-${runId}`)
   try {

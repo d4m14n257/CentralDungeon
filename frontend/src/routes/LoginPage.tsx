@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { LanguageSwitch } from '@/components/LanguageSwitch'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { env } from '@/config/env'
@@ -10,6 +11,10 @@ import { BrandMark } from '@/layouts/components/BrandMark'
  * La puerta de entrada (frontend-diseno.md 4). Sobre el gradiente propio de la comunidad, el
  * único lugar donde aparece entero (#132). La letra chica no es decorativa: explica por qué no
  * hay registro ni contraseña, que es la primera pregunta de cualquiera que llega (#38).
+ *
+ * El cambio de idioma vive dentro de la tarjeta (#198). Es la única pantalla sin `UserMenu`, así que
+ * sin esto alguien que cae en un idioma que no lee no tiene forma de saber que se puede cambiar —
+ * y la detección del navegador, que resuelve el caso común, no lo resuelve para todos.
  */
 export function LoginPage() {
   const { t } = useTranslation('auth')
@@ -33,6 +38,7 @@ export function LoginPage() {
           </Button>
         )}
         <p className="text-fg-subtle mt-4 text-xs">{isOnline ? t('login.disclaimer') : t('login.serverUnavailable')}</p>
+        <LanguageSwitch className="border-border mt-6 border-t pt-4" />
       </Card>
     </div>
   )

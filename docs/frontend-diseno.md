@@ -142,8 +142,14 @@ habla.
 está activo: quien busca el suyo no necesariamente lee el que está viendo. `<html lang>` sigue al
 idioma elegido, para que un lector de pantalla cambie de voz con la página.
 
-Como el menú solo existe con sesión, `/login` se ve en el idioma que se detectó y no se puede
-cambiar desde ahí. Es el mismo límite que el tema; la detección cubre el caso común.
+**`/login` lleva su propio selector, dentro de la tarjeta**, y ahí no es un menú: los dos idiomas
+están a la vista. Es la única pantalla sin `UserMenu`, y quien cae en un idioma que no lee no tiene
+dónde buscar — un control plegado escondería justo lo que esa persona necesita encontrar. La
+detección resuelve el caso común, pero no el de alguien cuyo navegador está en un tercer idioma, y
+para ese la única salida es que se vea sin abrir nada.
+
+El tema **no** se puede cambiar desde `/login` y sigue igual: el gradiente de marca que cubre esa
+pantalla no depende del tema, así que no hay nada que arreglar ahí.
 
 **El acento como texto es un token propio**, `--color-brand-fg`, distinto del acento como relleno: ningún tono único pasa AA en los dos temas (`brand-400` da 3.29:1 sobre el canvas claro). Cualquier texto en color de marca —el wordmark, el karma— usa ese token y nunca una escala elegida a mano.
 
