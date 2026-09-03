@@ -94,7 +94,8 @@ También entra **`system_settings`** (#141): la tabla clave-valor, el `SettingsS
 2. `approval_requests` + bandeja de admins + veto — siguiente.
 3. Catálogos (`systems`/`tags`/`platforms`) — pendiente.
 4. `system_settings` — pendiente.
-5. Cierre: `/admin/users`, `/master` (dashboard), `/my/history`, `/admin/requests` completo — pendiente.
+5. Cierre: `/admin/users`, `/master` (dashboard), `/my/history`, `/admin/requests` completo y **`/admin/tables` como listado completo** — pendiente.
+   Sobre lo último: hoy `/admin/tables` es **la bandeja de revisión** —`Unassigned`, `Preparation`, `ChangesRequested`— y eso es lo que dice el sitemap. Falta que un admin vea **todas** las mesas, en cualquier estado, y las encuentre por nombre. El backend ya está a mitad de camino: `GET /game-tables/admin` no filtra por pertenencia y acepta cualquier `?status=` (menos `Deleted`, #175); falta que acepte `?q=` con el lenguaje de búsqueda (#164) y falta la interfaz —filtros de estado más buscador—. Cierra de paso el gap que #163 dejó anotado: `pause`/`resume` de un admin tienen endpoint y autorización pero ningún botón, porque no hay dónde listar una mesa `InProgress`.
 
 ### E3 — Sesiones y peticiones
 

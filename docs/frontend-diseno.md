@@ -63,7 +63,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/master/tables/new` | Wizard de creación — **solo con el rol `Master`** (#135) |
 | | `/master/tables/:id` | Gestión, con pestañas: candidatos · jugadores · agenda · sesiones · peticiones · archivos · estado |
 | **Admin** | `/admin/queue` | Bandeja compartida con reserva (#100) |
-| | `/admin/tables` | Mesas esperando revisión |
+| | `/admin/tables` | **Hoy**: mesas esperando revisión (la bandeja). **Al cerrar E2**: todas las mesas, en cualquier estado, con filtros y buscador (`plan-desarrollo.md` E2 sub-rebanada 5) |
 | | `/admin/catalogs` | Sistemas, tags y plataformas; fusionar y separar grupos |
 | | `/admin/moderation` | Comentarios por moderar |
 | | `/admin/requests` | Solicitudes de rol, de mesa y generales |
