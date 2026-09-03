@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Stands in for the Discord OAuth2 dance in e2e runs, where there is no real Discord app yet
- * (plan-desarrollo.md E1 Bloque 8). Only registered under the "test" profile - absent from the
+ * (plan-desarrollo.md, E1). Only registered under the "test" profile - absent from the
  * bean graph in dev/prod, so the route 404s there regardless of the permitAll matcher in
  * SecurityConfig covering it.
  */

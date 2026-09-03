@@ -3,7 +3,7 @@ import { test, expect, type APIRequestContext, type Browser } from '@playwright/
 /**
  * E1's vertical slice, end to end: a player finds an open table, applies, and the master
  * accepts them. Login goes through TestLoginController (backend "test" profile) instead of
- * a real Discord round trip - there is no Discord app registered yet (plan-desarrollo.md E1
+ * a real Discord round trip - there is no Discord app registered yet (plan-desarrollo.md, E1
  * Bloque 8). Table creation has no UI in E1's scope (frontend-diseno.md's sitemap subset for
  * this stage has no "create table" screen), so it is seeded directly against the API, the same
  * way a fixture would be in any e2e suite.

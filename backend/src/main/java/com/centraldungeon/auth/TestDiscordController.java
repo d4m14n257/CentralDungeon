@@ -23,7 +23,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * A stand-in for Discord itself, so the OAuth2 login can be driven end to end from a browser while
- * there is no real Discord application registered (plan-desarrollo.md E1 Bloque 8). TestLoginController
+ * there is no real Discord application registered (plan-desarrollo.md, E1). TestLoginController
  * skips the handshake entirely to get a session cheaply; this one runs the real handshake -
  * DiscordOAuth2UserService, the guild check, the success and failure handlers - against a fake provider.
  *

@@ -1,18 +1,24 @@
 # Plan de desarrollo
 
-> En qué orden se construye, qué se rescata del legacy y cuándo una etapa está terminada.
+> En qué orden se construye, qué se rescata del legacy y cuándo una fase está terminada.
 >
 > El *qué* del schema está en `modelo-datos.md`, el *cómo* del código en `arquitectura.md`, las pantallas en `frontend-diseno.md` y el *por qué* de todo en `decisiones.md`.
 
 ## 1. Criterio
 
-**Rebanada vertical primero.** La etapa 1 entrega un flujo completo y usable de punta a punta con lo mínimo de cada capa, en vez de cerrar subsistemas enteros de a uno. Se ve algo funcionando antes, a costa de volver sobre módulos ya tocados.
+**Una fase, un actor** (#177). Cada fase entrega la experiencia **completa** de quien usa el sistema —el master, el jugador, el admin— en vez de cerrar un subsistema de punta a punta. El orden es **quien produce antes que quien consume, y quien administra al final**: sin mesas no hay nada que jugar, y sin mesas ni jugadores no hay nada que moderar.
 
-Dos cosas no se negocian entre etapas:
+Tres reglas que salen de ahí:
 
-- **Nada se da por terminado sin sus tests** (regla dura 7). Cada regla de `modelo-datos.md` §5 que entre en una etapa llega con su test unitario.
+1. **La fase arrastra los subsistemas que su actor necesita**, no al revés. Los catálogos y los archivos entran con el master porque su mesa los pide, no como fases propias: un subsistema construido sin nadie que lo use se diseña a ciegas y se corrige después.
+2. **Cada capacidad llega con el mínimo del otro lado para poder probarla** de punta a punta. Si el master publica una agenda, el jugador tiene que poder verla en la misma fase. Es la trampa que E1 documentó cuando `/my/tables` faltaba y a un jugador aceptado no le quedaba dónde ver su mesa.
+3. **Lo que una fase no construye se dice explícitamente**, con la fase donde vive. Un hueco anotado es una decisión; un hueco implícito es una sorpresa.
+
+Y tres cosas que no se negocian entre fases:
+
+- **Nada se da por terminado sin sus tests** (regla dura 7). Cada regla de `modelo-datos.md` §5 que entre en una fase llega con su test unitario.
 - **Las invariantes que MySQL no puede garantizar necesitan test de integración**, no unitario: un solo `Primary` vivo por mesa (#73) y una sola postulación activa por par (#28). Son las dos que se rompen con concurrencia.
-- **La etapa que estrena una entidad decide y construye su borrado** (#175). No se deja "para más adelante": una entidad que se puede crear y no se puede sacar de encima obliga a inventarle un final falso —cancelarla, vaciarla, renombrarla— y ese parche después es más caro que la decisión. Decidir el borrado incluye decidir **si lo hay**: para las mesas, borrar solo aplica a lo que nunca fue público, y lo demás se cancela a propósito.
+- **La fase que estrena una entidad decide y construye su borrado** (#175). No se deja "para más adelante": una entidad que se puede crear y no se puede sacar de encima obliga a inventarle un final falso —cancelarla, vaciarla, renombrarla— y ese parche después es más caro que la decisión. Decidir el borrado incluye decidir **si lo hay**: para las mesas, borrar solo aplica a lo que nunca fue público, y lo demás se cancela a propósito.
 
 ## 2. Qué se rescata del legacy
 
@@ -34,7 +40,9 @@ Express + TypeScript, 6 routers, ~35 endpoints, 1735 líneas de handlers (`table
 
 **No se rescata código.** Dos cosas ya presentes sí son continuidad y no novedad: `react-hook-form` + `zod` (siguen) y `@tinymce/tinymce-react`, que confirma que el texto enriquecido de #62 ya estaba en camino aunque se cambie de editor.
 
-## 3. Etapas
+## 3. Lo ya construido
+
+> **La numeración `E` es historia y no continúa** (#177). Estas cuatro etapas se construyeron con el plan anterior, que ordenaba por subsistema; se conservan porque son el registro de qué se entregó y cómo se cerró. Lo que sigue se planifica por fases (§4), y la tabla de equivalencia dice dónde fue a parar lo que las etapas `E3`–`E6` prometían.
 
 ### E0 — Diseño del frontend
 
@@ -69,69 +77,102 @@ Toda la seguridad entra acá, porque es la etapa que la estrena:
 
 Pantallas: `/login`, `/auth/callback`, **`/onboarding`** (nombre y país, paso bloqueante — #134), `/`, `/tables/:id`, `/my/applications`, **`/my/tables`**, **`/notifications`**, `/master/tables`, `/master/tables/:id` con la pestaña de candidatos — las pestañas como rutas hijas, no como `useState` (§3.1.6).
 
-Las dos en negrita cierran un **callejón sin salida** que la etapa tenía: sin `/my/tables`, a un jugador lo aceptan y no tiene dónde ver la mesa a la que entró; y sin `/notifications`, la etapa **emite** filas en `notifications` que nadie puede leer hasta E6. Es lectura por HTTP; el push llega en E6.
+Las dos en negrita cierran un **callejón sin salida** que la etapa tenía: sin `/my/tables`, a un jugador lo aceptan y no tiene dónde ver la mesa a la que entró; y sin `/notifications`, la etapa **emite** filas en `notifications` que nadie puede leer. Es lectura por HTTP; el push llega en F5.
 
 **Entrega**: un jugador entra con Discord, ve las mesas, se postula; el master lo acepta o lo rechaza.
 
 **✅ Terminada.** El flujo completo se probó de punta a punta contra el backend y frontend reales, no solo contra los tests: login por Discord (real y con el doble simulado de `TestDiscordController`/`TestLoginController`, #143), onboarding, explorador, postulación, aceptar/rechazar con notificación, `/my/tables`, `/my/applications` y `/notifications`. La ronda de pruebas manuales que cerró la etapa encontró y corrigió una serie de vacíos reales entre lo diseñado y lo construido — el rastro completo, con la evidencia de cada verificación, está en `decisiones.md` #143 a #160. Los más importantes: la pertenencia de mesa se verifica en el backend antes de leer cualquier dato, nunca solo en el cliente (#151, #152); un actor no puede ser jugador y master de la misma mesa, en ninguna de las dos direcciones (#155); el master se entera de una postulación nueva (#153), y las notificaciones son clickeables y cambian de contexto solas si hace falta (#156); y el `ContextSwitcher` por fin cumple lo que #135 ya exigía desde antes de esta etapa. De regalo, un panel de desarrollo (#158) reemplaza los `fetch()` de consola para las pruebas de ahora en más.
 
-**Los siete puntos de la definición de terminado (§5), verificados al cerrar, no asumidos**: `./mvnw test` (61 unitarios) y `./mvnw verify` (+ `MasterServiceIT`/`RegistrationServiceIT`, Testcontainers vía colima) en verde; `npx playwright test` (`registration-flow.spec.ts` + `discord-login.spec.ts`, los dos casos) en verde — y correr esta última suite al cerrar encontró un bug real más, ya corregido: el panel de desarrollo rompía `/login` con un bucle de reload por un `useMe()` sin gatear (#161), invisible en las pruebas manuales porque ahí siempre había sesión de por medio. `npx vitest run` (27) en verde. Los cuatro estados obligatorios están cubiertos pantalla por pantalla desde #150. Sin regla de `modelo-datos.md` §5 pendiente dentro del alcance de E1.
+**Los siete puntos de la definición de terminado, verificados al cerrar, no asumidos**: `./mvnw test` (61 unitarios) y `./mvnw verify` (+ `MasterServiceIT`/`RegistrationServiceIT`, Testcontainers vía colima) en verde; `npx playwright test` (`registration-flow.spec.ts` + `discord-login.spec.ts`, los dos casos) en verde — y correr esta última suite al cerrar encontró un bug real más, ya corregido: el panel de desarrollo rompía `/login` con un bucle de reload por un `useMe()` sin gatear (#161), invisible en las pruebas manuales porque ahí siempre había sesión de por medio. `npx vitest run` (27) en verde. Los cuatro estados obligatorios están cubiertos pantalla por pantalla desde #150. Sin regla de `modelo-datos.md` §5 pendiente dentro del alcance de E1.
 
-### E2 — Ciclo completo y catálogos
+### E2 — Ciclo de vida de la mesa (parcial)
 
-**Backend** — Estados restantes de la mesa (`Unassigned`, `ChangesRequested`, `PauseRequested`, `Pause`, `Finished`, `Canceled`) + `table_status_changes` con justificación obligatoria (#27, #32, #72). `approval_requests` como mecanismo único, con reserva (#42, #78, #100). Veto acotado a la mesa, aplicado por el `Primary`, pedible por un `Secondary` (#39, #71). Catálogos con `canonical_id`, propuesta y aprobación, búsqueda resuelta por grupo (#55, #56, #57, #59).
+La etapa completa prometía además `approval_requests`, catálogos y `system_settings`. **Se construyó su primera sub-rebanada y lo que se le fue sumando encima**; el resto se redistribuyó en las fases de §4 y ya no se planifica como E2.
 
-También entra **`system_settings`** (#141): la tabla clave-valor, el `SettingsService` con accesores tipados y la auditoría de cada cambio. Llega acá porque es la etapa donde nace el resto del ciclo de admin. Los valores que **E1 consume como constantes** —karma inicial y la justificación por defecto del rechazo automático (#34)— pasan a leerse por el service desde acá; los ajustes de etapas posteriores se agregan como **filas**, nunca como columnas.
+**✅ Máquina de estados de mesa.** Los 9 estados, `table_status_changes` con su historial, `Unassigned`→`Opened` al asignar masters (#72), aprobar/pedir cambios/reenviar, iniciar/finalizar, cancelar (Primary o admin) y pausa/reanudación directa de un admin. Frontend: wizard `/master/tables/new`, pestaña Estado en `/master/tables/:id`, `/admin/tables` con Aprobar/Pedir cambios/Asignar masters, contexto Admin nuevo en el `ContextSwitcher`. Detalle y límites conocidos en `docs/decisiones.md` #163.
 
-**Frontend** — Wizard de creación (`/master/tables/new`), transiciones con justificación, `/admin/queue` y `/admin/catalogs` (por HTTP, sin tiempo real), filtros del explorador resolviendo sinónimos. Entra el resto del contexto Admin —**`/admin/tables`**, **`/admin/requests`**, **`/admin/users`** y **`/admin/settings`**—, el dashboard **`/master`** (#136), que recién acá tiene más de un tipo de ítem que agrupar, y **`/my/history`** (#133), que necesita los estados `Finished` y `Canceled` que esta etapa estrena.
+**Lo que se sumó después, fuera del orden previsto**: el `AssignMastersDialog` pedía ids de usuario a mano —el límite que #163 documentó— y resolverlo trajo el **lenguaje de búsqueda de toda la app** (#164), con `GET /api/v1/users/search`, `common/search/` en el backend y `lib/searchQuery.ts` + `SearchQueryInput` en el frontend; el diálogo se mudó a `routes/admin/` con chips donde el orden es el rol (#165). `Primary`/`Secondary` dejaron de aparecer en pantalla: en la interfaz son **master** y **co-master** (#166). Entró **`/help`** (#167), partida por audiencia y enlazada por `#ref` (#168), que enseña con pasos, se ata al rol de quien lee y resalta la sección nombrada (#170) — y desde ahí **toda fase cierra con su ayuda escrita** (§6, punto 8). Entró el **borrado de una mesa que nunca fue pública** (#175) con su línea contra la cancelación, la **paginación** decidida y aplicada (#173), **prettier** con la configuración del repo (#174) y la **limpieza automática de los datos de e2e** (#172).
 
-**Entrega**: mesas con su ciclo de vida real y catálogos administrables.
+## 4. Fases
 
-**En progreso**, en sub-rebanadas verticales — no se construye de un tirón, siguiendo el mismo criterio del §1:
+### F1 — Master
 
-1. **✅ Máquina de estados de mesa** (sin `approval_requests` todavía). Los 9 estados, `table_status_changes` con su historial, `Unassigned`→`Opened` al asignar masters (#72), aprobar/pedir cambios/reenviar, iniciar/finalizar, cancelar (Primary o admin) y pausa/reanudación directa de un admin. Frontend: wizard `/master/tables/new`, pestaña Estado en `/master/tables/:id`, `/admin/tables` con Aprobar/Pedir cambios/Asignar masters, contexto Admin nuevo en el `ContextSwitcher`. Detalle y límites conocidos en `docs/decisiones.md` #163.
-   **Cerrado después, fuera del orden previsto**: el `AssignMastersDialog` pedía ids de usuario a mano —el límite conocido que #163 documentó y que esperaba a la sub-rebanada 5— y se resolvió acá, porque probar la asignación a mano no era viable. Trajo con él el **lenguaje de búsqueda de toda la app** (#164), que nunca había sido decidido: `GET /api/v1/users/search` con `?q=`, `common/search/` en el backend, `lib/searchQuery.ts` + `SearchQueryInput` en el frontend, y el diálogo de asignación mudado a `routes/admin/` con chips donde el orden es el rol (#165). De paso, `Primary`/`Secondary` dejaron de aparecer en pantalla: en la interfaz son **master** y **co-master** (#166). Y con el lenguaje ya crecido —`/and`/`/or` con chip propio, comas para alternativas— entró **`/help`** (#167), partida por audiencia y enlazada por `#ref` (#168): el índice con lo de todos, y una página por rol. Entró también el **borrado de una mesa que nunca fue pública** (#175), con su línea contra la cancelación. El explorador pasó a paginar con "Ver más" y `/admin/tables` con página numerada (#173), y las corridas de e2e ahora borran sus propias filas (#172). Enseña con pasos y no solo describe, se ata al rol de quien lee y resalta la sección que el `#ref` nombra (#170). Cubre lo de **E1 y E2** —cuenta, notificaciones, buscar, contextos, estados de mesa, postulaciones, crear y llevar una mesa, revisar y asignar masters—, y desde acá **toda etapa cierra con su ayuda escrita** (§5, punto 8). Lo que sigue esperando a la sub-rebanada 5 es la pantalla `/admin/users` completa.
-2. `approval_requests` + bandeja de admins + veto — siguiente.
-3. Catálogos (`systems`/`tags`/`platforms`) — pendiente.
-4. `system_settings` — pendiente.
-5. Cierre: `/admin/users`, `/master` (dashboard), `/my/history`, `/admin/requests` completo y **`/admin/tables` como listado completo** — pendiente.
-   Sobre lo último (#176): hoy `/admin/tables` es **la bandeja de revisión** —`Unassigned`, `Preparation`, `ChangesRequested`— y eso es lo que dice el sitemap. Falta que un admin vea **todas** las mesas, en cualquier estado, y las encuentre por nombre. El backend ya está a mitad de camino: `GET /game-tables/admin` no filtra por pertenencia y acepta cualquier `?status=` (menos `Deleted`, #175); falta que acepte `?q=` con el lenguaje de búsqueda (#164) y falta la interfaz —filtros de estado más buscador—. Y en la sub-rebanada 2, al nacer `/admin/queue`, Aprobar y Pedir cambios **se mudan a la bandeja** y el default de `listForAdmin` deja de ser "esperando revisión" (#176). Cierra de paso el gap que #163 dejó anotado: `pause`/`resume` de un admin tienen endpoint y autorización pero ningún botón, porque no hay dónde listar una mesa `InProgress`.
+**La mesa completa, de la creación al cierre.** Es la fase que produce lo que todo lo demás consume.
 
-### E3 — Sesiones y peticiones
+**Backend** — Catálogos que la mesa usa: `systems`/`tags`/`platforms` con `canonical_id` y grupos de sinónimos de profundidad 1 (#59), lectura y **propuesta** al crear (#55). Un valor en `Created` no filtra ni se muestra a los jugadores (#57), y la mesa muestra siempre el alias que le puso su master (#58). `TableTypeController`, que falta: `V2__seed.sql` siembra los tipos y hoy no hay forma de listarlos. `table_schedules` con la agenda semanal, y `table_sessions` materializadas al pasar a `Opened` a partir de `start_date` + agenda + `total_sessions` (#26, #33), con asistencia por sesión (#36). `table_tasks` publicadas por el master, que notifican a sus destinatarios (#77), con entregas que se acumulan y no bloquean (#63, #70, #76). **Archivos**: `files` con nombre físico por id (#80), `content_hash` para deduplicar, `file_type`, `public_audience` (#64) y `last_used_at`; `StorageService` detrás de interfaz (#15), compresión al guardar y job de retención por desuso (#75); `table_files` sin duplicar el archivo (#79).
 
-**Backend** — `table_sessions` materializadas al pasar a `Opened` a partir de `start_date` + agenda + `total_sessions` (#26, #33). Asistencia por sesión (#36). `table_tasks` + `task_submissions` + `submission_files`, con entregas que se acumulan y no bloquean (#63, #70, #76). Notificación al publicar una petición (#77).
+**Frontend** — Wizard de creación completo: tipo, sistema, tags, plataformas, fecha de inicio, duración, sesiones, cupo y agenda. `ScheduleEditor` en hora local. Sesiones y asistencia en `/master/tables/:id`. Publicar peticiones y ver entregas. `FilePicker` con subida o reutilización del historial (#65). Co-masters desde la pantalla del master — `POST /{id}/masters` existe desde E2 y nunca tuvo interfaz. El dashboard **`/master`** (#136).
 
-**Frontend** — Agenda en hora local, registro de asistencia, publicar peticiones y entregar respuestas, `/my/tables/:id`.
+**El mínimo del jugador para poder probar**: en `/tables/:id` y `/my/tables/:id`, lectura de la agenda, las sesiones, las peticiones publicadas y los archivos públicos. Solo lectura.
 
-**Entrega**: la mesa se juega dentro del sistema.
+**No entra**: pedir pausa ni veto (F3, necesitan `approval_requests`), entregar respuestas a las peticiones (F2), karma (F4).
 
-### E4 — Archivos
+**Entrega**: un master arma su mesa entera y la lleva hasta el final, y un jugador ve todo lo que publicó.
 
-**Backend** — `files` rediseñada: nombre físico por id (#80), `content_hash` para deduplicar, `file_type`, `public_audience` (#64), `last_used_at`. `StorageService` detrás de interfaz (#15), compresión al guardar y job de retención por desuso (#75). Vinculación a mesa, postulación y entrega sin duplicar el archivo (#65, #79).
+### F2 — Jugador
 
-**Frontend** — `FilePicker` con subida o reutilización del historial, `/my/files`.
+**Todo lo que el jugador hace con lo que el master publicó.**
 
-**Entrega**: archivos con costo acotado y reutilizables.
+**Backend** — `task_submissions` + `submission_files` (#63, #76). `registration_files` para el archivo de personaje en la postulación. Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56). Retirar una postulación, que es el borrado que #175 dejó anotado para esta fase.
 
-### E5 — Comentarios y karma
+**Frontend** — `/my/tables/:id` completo: agenda en hora local, sesiones, su asistencia y sus peticiones. Entregar respuestas con adjuntos. Archivo de personaje al postularse, sobre el `FilePicker` de F1. **`/my/files`** (#65) y **`/my/history`** (#133). Filtros del explorador por sistema, tag y plataforma — es donde el buscador estrena `/tag`, el caso que motivó el diseño de #164. **`/profile`** y **`/users/:id`** con lo que exista; el karma llega en F4.
+
+**Entrega**: el jugador vive la mesa dentro del sistema, no solo se postula.
+
+### F3 — Admin y Owner
+
+**Revisión, moderación de flujo y administración.**
+
+**Backend** — `approval_requests` como mecanismo único para todo pedido con aprobación, con reserva (#42, #78, #90, #100). Pausa pedida por un master (#32) y veto acotado a la mesa, aplicado por el `Primary` y pedible por un `Secondary` (#39, #71). Administración de catálogos: aceptar, clasificar, fusionar y dar de baja sin romper vínculos (#55, #57, #59, #81). `system_settings` (#141): la tabla clave-valor, el `SettingsService` con accesores tipados y la auditoría de cada cambio; los valores que hoy son constantes —karma inicial, justificación del rechazo automático (#34)— pasan a leerse por el service. El service que otorga roles, con la exclusión `Admin`/`Owner` que #169 dejó pendiente, y el bloqueo de cuentas (#84).
+
+**Frontend** — **`/admin/queue`**, la bandeja compartida con reserva; al nacer, Aprobar y Pedir cambios **se mudan ahí** desde `/admin/tables` (#176). **`/admin/tables`** completo: todas las mesas, cualquier estado, filtros y `?q=` (#176), con los botones de pausa y reanudación que hoy tienen endpoint y ninguna pantalla (#163). **`/admin/catalogs`**, **`/admin/users`**, **`/admin/settings`** y **`/admin/requests`**.
+
+La bandeja funciona **por HTTP** en esta fase; el vivo es F5.
+
+**Entrega**: la comunidad se administra desde la aplicación.
+
+### F4 — Comunidad
+
+**Comentarios y karma**, que es lo que convierte al sistema en una comunidad y no en un calendario.
 
 **Backend** — `comment_drafts` con autor → `comments` anónima al confirmar (#48, #49), `comment_quotas` con token HMAC (#82), purga de borradores expirados (#50, #52), moderación de todos los comentarios (#51). `KarmaService` con la fórmula de #96 y sus dos disparadores (#97). `system_feedback` + `feedback_quotas` con el token rotativo por hora (#93, #94, #95).
 
-**Frontend** — Escribir borrador durante la mesa, confirmarlo al cerrarse, `/profile` y `/users/:id` con karma y comentarios, `/admin/moderation`, `/admin/feedback`.
+**Frontend** — Escribir el borrador durante la mesa y confirmarlo al cerrarse. Karma y comentarios en `/profile` y `/users/:id`, con la ventana de visibilidad de #44 y las restricciones de #41, #45 y #47. **`/admin/moderation`** y **`/admin/feedback`**.
 
 **Entrega**: karma funcionando, con anonimato real.
 
-### E6 — Tiempo real, auditoría y owner
+### F5 — Operación
 
-**Backend** — WebSocket + STOMP con el JWT en el frame `CONNECT` y autorización por destino (#101). `audit_logs` con diff de columnas cambiadas (#92). Panel exclusivo del owner: consulta de auditoría, borrado físico de archivos (#66) y migración de cuenta (#83).
+**Lo que hace la plataforma operable, y el panel exclusivo del owner.**
 
-**"Ver como" (#140) entra acá, y no antes.** No es una preferencia de orden: `audit_logs.impersonation_id` es FK a `impersonation_sessions`, y sobre todo, **sin la auditoría la función es exactamente la versión sin responsable que #140 descartó** — un admin actuando con la identidad de otro y nadie capaz de reconstruir qué pasó. Se construye completa o no se construye: sesión con motivo obligatorio, caducidad a los 30 minutos, bloqueo sobre `Admin` y `Owner`, bloqueo de todo lo irreversible, **exclusión total de lo que toque comentarios** (#43, #45), y notificación inmediata a la persona.
+**Backend** — WebSocket + STOMP con el JWT en el frame `CONNECT` y autorización por destino (#101). `audit_logs` con diff de columnas cambiadas (#92). Borrado físico de archivos (#66) y migración de cuenta (#83).
 
-**Frontend** — Notificaciones push, bandeja de admin en vivo, el flujo de **"ver como"** desde `/admin/users` con su banda permanente de sesión activa, y las tres del owner: `/owner/audit`, `/owner/storage` y `/owner/users/:id/migrate`.
+**Frontend** — Notificaciones push, bandeja de admin en vivo, y las tres del owner: `/owner/audit`, `/owner/storage` y `/owner/users/:id/migrate`.
+
+**"Ver como" (#140) va acá, y no en F3.** No es preferencia de orden: `audit_logs.impersonation_id` es FK a `impersonation_sessions`, y sobre todo, **sin la auditoría la función es exactamente la versión sin responsable que #140 descartó** — un admin actuando con la identidad de otro y nadie capaz de reconstruir qué pasó. Se construye completa o no se construye: sesión con motivo obligatorio, caducidad a los 30 minutos, bloqueo sobre `Admin` y `Owner`, bloqueo de todo lo irreversible, **exclusión total de lo que toque comentarios** (#43, #45), y notificación inmediata a la persona. Por lo mismo esperan acá el borrado físico y la migración de cuenta: son de la misma clase.
+
+**Un owner usa toda la superficie de admin desde que existe** (#169); lo que espera a F5 es lo exclusivo suyo.
+
+**Repaso final**: los tipos de notificación que falten y las rutas del sitemap que hayan quedado sin construir.
 
 **Entrega**: plataforma operable.
 
-## 4. Motor de notificaciones
+### Dónde fue a parar lo que prometían las etapas viejas
+
+Para leer las decisiones ya escritas, que citan la numeración anterior:
+
+| Etapa vieja | Dónde vive ahora |
+|---|---|
+| E2 sub-rebanada 2 — `approval_requests`, bandeja, veto | **F3** |
+| E2 sub-rebanada 3 — catálogos | Consumo y propuesta en **F1**; administración en **F3** |
+| E2 sub-rebanada 4 — `system_settings` | **F3** |
+| E2 sub-rebanada 5 — `/admin/users`, `/master`, `/my/history`, `/admin/requests`, `/admin/tables` completo | `/master` en **F1**, `/my/history` en **F2**, el resto en **F3** |
+| E3 — sesiones y peticiones | Lo que publica el master en **F1**; lo que entrega el jugador en **F2** |
+| E4 — archivos | **F1** (subsistema y preparación) y **F2** (personaje, `/my/files`) |
+| E5 — comentarios y karma | **F4** |
+| E6 — tiempo real, auditoría y owner | **F5** |
+
+## 5. Motor de notificaciones
 
 Dos cosas distintas que conviene no confundir:
 
@@ -159,26 +200,26 @@ DELETE /api/v1/admin-queue/{type}/{id}/claim     libera
 
 Idempotente para el mismo admin, `409` si ya lo tiene otro. Un job libera las reservas de más de 15 minutos. Cada cambio emite `admin-queue.changed`.
 
-## 5. Definición de terminado
+## 6. Definición de terminado
 
-Una etapa se cierra cuando cumple las ocho:
+Una fase se cierra cuando cumple las ocho:
 
 1. Las reglas de `modelo-datos.md` §5 que caen en su alcance están implementadas.
 2. Cada una tiene su test unitario, con los caminos de error y no solo el feliz.
 3. Las invariantes de concurrencia de su alcance tienen test de integración con Testcontainers.
 4. El flujo principal está cubierto en Playwright.
-5. Ninguna pantalla del sitemap de esa etapa quedó sin sus cuatro estados (cargando, vacío, error, sin permiso).
-6. **Se entrega el inventario de archivos nuevos de la etapa**, con su ruta, para revisión antes de pasar a la siguiente.
-7. **Los tests de la etapa corren y pasan**, y se reporta la salida real. Una etapa con tests en rojo no está terminada; si algo queda fuera, se dice cuál y por qué en vez de darla por cerrada.
-8. **La ayuda de la etapa está escrita** (#167, #168): lo que la etapa agregó se explica en `/help`, en la audiencia que corresponde y con su `#ref` enlazado desde la pantalla que lo necesita. La documentación que se escribe "después" no se escribe.
+5. Ninguna pantalla del sitemap de esa fase quedó sin sus cuatro estados (cargando, vacío, error, sin permiso).
+6. **Se entrega el inventario de archivos nuevos de la fase**, con su ruta, para revisión antes de pasar a la siguiente.
+7. **Los tests de la fase corren y pasan**, y se reporta la salida real. Una fase con tests en rojo no está terminada; si algo queda fuera, se dice cuál y por qué en vez de darla por cerrada.
+8. **La ayuda de la fase está escrita** (#167, #168): lo que la fase agregó se explica en `/help`, en la audiencia que corresponde y con su `#ref` enlazado desde la pantalla que lo necesita. La documentación que se escribe "después" no se escribe.
 
-Los puntos 6 y 7 son el corte entre etapas: **no se arranca la siguiente sin ellos.**
+Los puntos 6 y 7 son el corte entre fases: **no se arranca la siguiente sin ellos.**
 
-Al terminar E6 no puede quedar ninguna regla de §5 sin implementar ni ninguna ruta del sitemap sin construir.
+Al terminar F5 no puede quedar ninguna regla de §5 sin implementar ni ninguna ruta del sitemap sin construir.
 
-## 6. Fuera de estas etapas
+## 7. Fuera de estas fases
 
-Nada de esto entra en E0–E6, y ninguna etapa debe derivar hacia ellos sin decisión explícita:
+Nada de esto entra en F1–F5, y ninguna fase debe derivar hacia ellos sin decisión explícita:
 
 | Tema | Estado |
 |---|---|

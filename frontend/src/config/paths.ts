@@ -1,7 +1,7 @@
 /**
  * Route path patterns for router.tsx registration, plus small builders for links. This is the
  * only place path strings are written (arquitectura.md 3.1.6 regla 2) - E1's subset of the full
- * 28-route sitemap (frontend-diseno.md 2). Future etapas add the rest here, not somewhere else.
+ * 28-route sitemap (frontend-diseno.md 2). Future fases add the rest here, not somewhere else.
  */
 export const paths = {
   login: '/login',

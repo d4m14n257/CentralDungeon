@@ -33,7 +33,7 @@ public class GameTableService {
 
     private static final List<GameTableStatus> VISIBLE_STATUSES = List.of(GameTableStatus.Opened, GameTableStatus.InProgress);
 
-    /** /admin/tables default view: mesas esperando alguna acción del admin (plan-desarrollo.md E2). */
+    /** /admin/tables default view mientras no exista la bandeja: mesas esperando una acción del admin (#176, F3). */
     private static final List<GameTableStatus> DEFAULT_ADMIN_REVIEW_STATUSES =
             List.of(GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
 
@@ -186,7 +186,7 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
-    /** Immediate pause by an admin (#32) - a master asking for one goes through approval_requests instead (E2 sub-rebanada 2). */
+    /** Immediate pause by an admin (#32) - a master asking for one goes through approval_requests instead (F3). */
     /**
      * Soft delete of a table that never went public (#25, #175). Same actors as cancel - the Primary
      * or an admin - and the same lock, but a different meaning: cancel closes a table that existed

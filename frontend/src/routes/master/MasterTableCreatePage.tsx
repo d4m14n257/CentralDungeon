@@ -16,7 +16,7 @@ import { useMe } from '@/features/users'
 /**
  * Wizard de creación (frontend-diseno.md sitemap, /master/tables/new) - un formulario en un paso,
  * no un stepper multi-pantalla: el sitemap no detalla pasos y no hay otro wizard en el código para
- * seguirle la forma (arquitectura.md 2.4). Fecha/agenda quedan fuera: table_schedules es de E3.
+ * seguirle la forma (arquitectura.md 2.4). Fecha/agenda quedan fuera: table_schedules llega con el wizard completo de F1.
  */
 export function MasterTableCreatePage() {
   const { t } = useTranslation('master')

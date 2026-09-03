@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import org.jspecify.annotations.Nullable;
 
-/** No BaseEntity: notifications has no updated_at column. Read, not push, in E1 - the socket arrives in E6. */
+/** No BaseEntity: notifications has no updated_at column. Read, not push - the socket arrives in F5. */
 @Entity
 @Table(name = "notifications")
 public class Notification {

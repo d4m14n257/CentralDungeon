@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Emits rows only in E1 - no WebSocket push yet (that lands in E6). "Personal" notifications only;
+ * Emits rows only - no WebSocket push yet (that lands in F5, plan-desarrollo.md). "Personal" notifications only;
  * the shared admin queue signal (#101) is a different mechanism, out of E1's scope.
  */
 @Service

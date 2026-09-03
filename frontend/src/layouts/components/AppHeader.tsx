@@ -25,7 +25,7 @@ export function AppHeader() {
   if (me?.roles.includes('Admin') || me?.roles.includes('Owner')) availableContexts.push('admin')
 
   // El logo vuelve al "home" del contexto activo, igual que ContextSwitcher al cambiar de
-  // contexto - #master todavía no existe (dashboard de Master, E2 #136), así que el destino en
+  // contexto - #master todavía no existe (dashboard de Master, F1 #136), así que el destino en
   // ese contexto es /master/tables, el punto de entrada real de E1 (decisiones.md #151). Se
   // recalcula contra availableContexts de la cuenta actual, no se confía crudo en el valor
   // persistido: activeContext es un store con `persist` en localStorage, ajeno a qué cuenta está
