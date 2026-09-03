@@ -717,6 +717,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | `Pause` y `Canceled` exigen justificación, que se registra en `table_status_changes` | `GameTableService` | #32 |
 | La pausa pedida por un master no aplica hasta que un admin la aprueba (`approval_requests`) | `GameTableService` | #32 |
 | `Pause` congela la agenda: las sesiones pendientes dejan de aparecer. Al retomar hay que reagendar | `TableSessionService` | #32, #33 |
+| **Reanudar vuelve a verificar el choque del `Primary`**: si la franja ya no está libre, responde `409` con el nombre de la otra mesa y no reanuda | `GameTableService.resume` | #178, #193 |
 | Al entrar en `Finished` o `Canceled` se sella `closed_at`, que arranca la ventana de visibilidad. **Se sella una sola vez**: si ya tiene fecha, ninguna transición posterior la mueve | `GameTableService` | #44, #180 |
 | El texto enriquecido (`description`, `permitted`, `requirements`) se sanitiza **al guardar y al servir**, con lista blanca | `RichTextSanitizer` | #62, #186 |
 | Un master edita su propia mesa solo en `Preparation` y `ChangesRequested`; el `PUT` **reemplaza la mesa entera**, un campo ausente vacía | `GameTableService.update` | #189 |
@@ -754,8 +755,19 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| Las sesiones se materializan al pasar a `Opened`, a partir de `start_date` + `table_schedules` + `total_sessions` | `TableSessionService` | #26, #33 |
-| La asistencia se registra por sesión y alimenta la evaluación de karma | `TableSessionService` | #36 |
+| Las sesiones se materializan al pasar a `Opened`, a partir de `start_date` + `table_schedules` + `total_sessions` | `TableSessionService.materialize` | #26, #33 |
+| Si falta `start_date`, la agenda o `total_sessions`, la mesa **abre igual, con cero sesiones**. Materializar es consecuencia de abrir, no requisito | `TableSessionService.materialize` | #196 |
+| Materializar es **idempotente**: una mesa que ya tiene calendario conserva el que tiene | `TableSessionService.materialize` | #33 |
+| Se puede corregir la fecha de una sesión suelta. Es una corrección de esa noche y **no** pasa por el choque de #178, que compara semanas y no instantes | `TableSessionService.update` | #33 |
+| **Marcar una sesión como jugada es una acción propia**, separada de registrar la asistencia. Ninguna de las dos implica la otra | `TableSessionService.hold` | #195 |
+| Una sesión ya `Held` o `Cancelled` no se corrige: es el registro de algo que pasó o que no pasó | `TableSessionService` | #33 |
+| **Cancelar una sesión repone otra al final**: la cancelada conserva su `sequence_number` y se agrega una nueva en la primera franja de la agenda posterior a la última en pie. Sin agenda viva no hay reposición | `TableSessionService.cancel` | #194 |
+| `Pause` **oculta** las sesiones pendientes en toda lectura, también para el master. No se marcan filas: la pausa es reversible | `TableSessionService` | #32, #33 |
+| Al reanudar, las pendientes se vuelven a tender desde la fecha de reanudación con la agenda actual, conservando su numeración. Lo jugado y lo cancelado no se toca | `TableSessionService.rescheduleAfterPause` | #32, #33 |
+| Mover una fecha o cancelar una sesión **avisa** a candidatos y jugadores. Nadie es removido | `TableSessionService` | #70, #77 |
+| La asistencia se registra por sesión y alimenta la evaluación de karma | `TableSessionService.recordAttendance` | #36 |
+| El padrón de una sesión son los `Player` activos de la mesa, resuelto en el servidor: un `userId` que no juega ahí es `400` | `TableSessionService.recordAttendance` | #121 |
+| La asistencia histórica se **deriva con `GROUP BY` y no se cachea**, con `Unknown` fuera del denominador y los tres números sin colapsar | `TableSessionService.summarize` | #11, #137 |
 | Publicar una petición notifica a sus destinatarios | `TaskService` | #77 |
 | Las entregas se acumulan, nunca se reemplazan; el sistema no juzga si cumplen | `TaskService` | #76 |
 | El incumplimiento se avisa y queda visible para el master, pero no bloquea ni expulsa | `TaskService` | #70 |

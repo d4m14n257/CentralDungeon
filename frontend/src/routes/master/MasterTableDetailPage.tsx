@@ -55,6 +55,9 @@ export function MasterTableDetailPage() {
         <NavLink to="." end className={TAB_LINK_CLASSES}>
           {t('detail.tabs.candidates')}
         </NavLink>
+        <NavLink to="sessions" className={TAB_LINK_CLASSES}>
+          {t('detail.tabs.sessions')}
+        </NavLink>
         <NavLink to="status" className={TAB_LINK_CLASSES}>
           {t('detail.tabs.status')}
         </NavLink>

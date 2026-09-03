@@ -145,7 +145,7 @@ export function formatSlot(slot: WeeklySlot, locale: string, duration?: string |
  * @returns the formatted date and time
  */
 export function formatDateTime(iso: string, locale: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(new Date(iso))
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(utcInstant(iso))
 }
 
 /**
@@ -157,7 +157,20 @@ export function formatDateTime(iso: string, locale: string, timeZone: string): s
  * @returns the formatted date
  */
 export function formatDate(iso: string, locale: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone }).format(new Date(iso))
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone }).format(utcInstant(iso))
+}
+
+/**
+ * Reads an instant the API sent, which is **always UTC** even when it does not say so (#22).
+ *
+ * The backend serializes `LocalDateTime` as `2026-09-09T01:00:00`, with no offset, and JavaScript
+ * reads a bare date-time like that as **local** time — so a session at 01:00 UTC rendered as 01:00
+ * to a reader three hours behind, which is the exact bug the conversion exists to prevent. Appending
+ * the `Z` is what makes the string mean what the server meant by it.
+ */
+function utcInstant(iso: string): Date {
+  // An instant that already carries an offset (`Z`, `+03:00`) is left alone: it said its zone.
+  return /(?:Z|[+-]\d{2}:?\d{2})$/.test(iso) ? new Date(iso) : new Date(`${iso}Z`)
 }
 
 /**

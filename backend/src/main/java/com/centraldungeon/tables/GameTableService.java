@@ -89,6 +89,7 @@ public class GameTableService {
     private final TableScheduleService tableScheduleService;
     private final ScheduleConflictService scheduleConflictService;
     private final TableCatalogService tableCatalogService;
+    private final TableSessionService tableSessionService;
     private final RichTextSanitizer richTextSanitizer;
 
     /**
@@ -102,6 +103,8 @@ public class GameTableService {
      * @param tableScheduleService       owns the weekly agenda and the clash check that guards it (#178)
      * @param scheduleConflictService    computes the warning the explorer's cards show (#178)
      * @param tableCatalogService        links the table to its systems, tags and platforms (#56)
+     * @param tableSessionService        materializes the calendar when the table opens, and re-lays it
+     *                                   when it comes back from a pause (#26, #33)
      * @param richTextSanitizer          cleans the rich text on the way in and on the way out (#62)
      */
     public GameTableService(
@@ -115,6 +118,7 @@ public class GameTableService {
             TableScheduleService tableScheduleService,
             ScheduleConflictService scheduleConflictService,
             TableCatalogService tableCatalogService,
+            TableSessionService tableSessionService,
             RichTextSanitizer richTextSanitizer) {
         this.gameTableRepository = gameTableRepository;
         this.tableTypeRepository = tableTypeRepository;
@@ -126,6 +130,7 @@ public class GameTableService {
         this.tableScheduleService = tableScheduleService;
         this.scheduleConflictService = scheduleConflictService;
         this.tableCatalogService = tableCatalogService;
+        this.tableSessionService = tableSessionService;
         this.richTextSanitizer = richTextSanitizer;
     }
 
@@ -237,10 +242,23 @@ public class GameTableService {
 
         masterService.assignInitialMasters(gameTable, request.primaryUserId(), secondaries);
         recordStatusChange(gameTable, GameTableStatus.Unassigned, GameTableStatus.Opened, actorId, null);
+        tableSessionService.materialize(gameTable);
         return toDetail(gameTable);
     }
 
-    /** An admin approving a master's draft (#27) - the only way Preparation reaches Opened now. */
+    /**
+     * An admin approving a master's draft (#27) - the only way Preparation reaches Opened now.
+     *
+     * <p>Opening is what materializes the calendar (#26, #33): from here on the table has dates and
+     * not only a weekly shape. A table missing a start date, an agenda or a session count opens with
+     * no sessions rather than being refused (#196) - materializing is a consequence of opening, not a
+     * precondition for it.
+     *
+     * @param gameTableId the table to approve
+     * @param actorId     the admin, from the token; recorded in the status history
+     * @return the table, now Opened, with its sessions materialized
+     * @throws ConflictException if the table was not awaiting review
+     */
     @Transactional
     public GameTableDetailResponse approve(String gameTableId, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
@@ -248,6 +266,7 @@ public class GameTableService {
             throw new ConflictException("Cannot approve a table in status " + gameTable.getStatus());
         }
         recordStatusChange(gameTable, GameTableStatus.Preparation, GameTableStatus.Opened, actorId, null);
+        tableSessionService.materialize(gameTable);
         return toDetail(gameTable);
     }
 
@@ -414,13 +433,23 @@ public class GameTableService {
     /**
      * Bringing a paused table back. Pause to InProgress.
      *
-     * <p>Rescheduling the pending sessions from the resume date, and re-checking the schedule clash
-     * that may have appeared in the meantime, is F1.3 (#33, #178).
+     * <p>Two things happen here that do not happen anywhere else in the lifecycle.
+     *
+     * <p><b>The clash is checked again</b> (#178, #193). A paused table does not reserve its slot, so
+     * its master was free to take on something else while it was down; coming back is the moment
+     * those slots are claimed again. If they are no longer free the resume is refused with a
+     * {@code 409} that names the other table - the same answer R1 gives everywhere else, because a
+     * table its own master cannot attend is not a table that has resumed. The way out is to move one
+     * of the two agendas.
+     *
+     * <p><b>The pending sessions are re-laid</b> from this instant (#33). What was played and what
+     * was called off keep their dates; the run's numbering does not move.
      *
      * @param gameTableId the table
      * @param actorId     the admin, from the token
-     * @return the table after the change
-     * @throws ConflictException if the table was not paused
+     * @return the table, back in play, with its calendar re-laid
+     * @throws ConflictException if the table was not paused, or if its agenda now clashes with
+     *                           something its master is committed to (#193)
      */
     @Transactional
     public GameTableDetailResponse resume(String gameTableId, String actorId) {
@@ -428,7 +457,21 @@ public class GameTableService {
         if (gameTable.getStatus() != GameTableStatus.Pause) {
             throw new ConflictException("Cannot resume a table in status " + gameTable.getStatus());
         }
+
+        MasterSummaryResponse primary = findPrimaryMasterOrNull(gameTableId);
+        if (primary != null) {
+            CommittedTable clash = scheduleConflictService.findClashWith(primary.userId(), gameTable);
+            if (clash != null) {
+                // In Spanish because it is shown verbatim, same precedent as R1's refusal (#178).
+                throw new ConflictException(
+                        "No se puede reanudar: la agenda de esta mesa se pisa con «" + clash.name()
+                                + "», donde su master ya está comprometido.",
+                        ConflictException.SCHEDULE_CONFLICT);
+            }
+        }
+
         recordStatusChange(gameTable, GameTableStatus.Pause, GameTableStatus.InProgress, actorId, null);
+        tableSessionService.rescheduleAfterPause(gameTable, LocalDateTime.now());
         return toDetail(gameTable);
     }
 
@@ -682,6 +725,10 @@ public class GameTableService {
                 playerCount,
                 masters,
                 tableScheduleService.findByTable(gameTable.getId()),
+                // The calendar rides along with the detail rather than on an endpoint of its own:
+                // this read already decides who may see the table at all, and the sessions inherit
+                // that single answer instead of repeating the veto check somewhere it could drift.
+                tableSessionService.findPublicSessions(gameTable),
                 catalogs.get(CatalogType.SYSTEMS),
                 catalogs.get(CatalogType.TAGS),
                 catalogs.get(CatalogType.PLATFORMS),

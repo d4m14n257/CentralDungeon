@@ -96,6 +96,12 @@ export interface GameTableDetail {
   totalSessions: number | null
   /** The weekly agenda, in UTC (#22). Ordered as a week reads. */
   schedule: TableScheduleEntry[]
+  /**
+   * El calendario materializado (#26, #33): fechas, no la forma semanal. Viaja con el detalle y no
+   * en un endpoint propio porque esta lectura ya decide quién puede ver la mesa. Vacío hasta que la
+   * mesa abre, y en pausa trae solo lo que ya pasó (#32).
+   */
+  sessions: PublicSession[]
   /** Each value under the alias its master chose, never rewritten to the group's canonical one (#58). */
   systems: CatalogValue[]
   tags: CatalogValue[]
@@ -109,6 +115,98 @@ export interface GameTableDetail {
    * by the server for the actor of the token (#121) - it is what lets the apply button say why.
    */
   scheduleConflict: boolean
+}
+
+/**
+ * Lo que le pasó a una sesión materializada (#33). Unión de literales y no un `enum` de TS, por el
+ * mismo motivo que `GameTableStatus`: es lo que obliga a un `Record<TableSessionStatus, …>` a cubrir
+ * los tres casos al mapear a etiquetas o a variantes de badge.
+ */
+export type TableSessionStatus = 'Scheduled' | 'Held' | 'Cancelled'
+
+/**
+ * Si alguien estuvo en una sesión (#36). **Los cuatro valores no se colapsan en dos** (#137): una
+ * falta avisada y un plantón son hechos distintos, y `Unknown` significa que nadie registró nada —
+ * queda fuera del denominador de todo conteo.
+ */
+export type AttendanceStatus = 'Present' | 'Absent' | 'Excused' | 'Unknown'
+
+/** Una línea del padrón de una sesión: quién, y qué se registró de esa persona. */
+export interface SessionAttendanceEntry {
+  userId: string
+  userName: string
+  attendance: AttendanceStatus
+}
+
+/**
+ * Espejo de TableSessionResponse — una sesión como la ve quien dirige la mesa, con sus notas y el
+ * padrón completo. **Es el tipo base de las sesiones**: la vista del jugador se deriva de él (#3.2).
+ */
+export interface TableSession {
+  id: string
+  /** Qué sesión de la tanda es, desde 1. Una cancelada conserva su número y la reposición toma el siguiente (#194). */
+  sequenceNumber: number
+  /** Cuándo ocurre, **en UTC** (#22). La conversión a hora local pasa una sola vez, por `lib/date.ts`. */
+  scheduledAt: string
+  status: TableSessionStatus
+  /** Lo que el master escribió sobre la sesión. Nunca llega a un jugador. */
+  notes: string | null
+  attendance: SessionAttendanceEntry[]
+}
+
+/**
+ * Espejo de PublicSessionResponse — la sesión como la ve cualquiera que mire la mesa: cuándo es y
+ * cómo salió. Derivada del tipo base con `Pick` (regla dura 6); ni las notas ni el padrón viajan acá.
+ */
+export type PublicSession = Pick<TableSession, 'id' | 'sequenceNumber' | 'scheduledAt' | 'status'>
+
+/**
+ * Espejo de PlayerSessionResponse — la misma sesión, vista por quien juega. Derivada del tipo base
+ * con `Omit` (regla dura 6): lo que cambia es que no lleva notas ni el padrón ajeno, solo *mi*
+ * asistencia (#121).
+ */
+export type PlayerSession = Omit<TableSession, 'notes' | 'attendance'> & { myAttendance: AttendanceStatus }
+
+/**
+ * Espejo de AttendanceSummaryResponse — la asistencia histórica de alguien en una mesa (#137).
+ *
+ * **Tres números y nunca un porcentaje**: una razón escondería justo la distinción que importa.
+ * `registered` es el denominador y cuenta solo las sesiones **con algo registrado**.
+ */
+export interface AttendanceSummary {
+  present: number
+  excused: number
+  absent: number
+  registered: number
+}
+
+/** Espejo de MySessionsResponse — lo que lee `/my/tables/:id`: mi calendario y mi asistencia. */
+export interface MySessions {
+  sessions: PlayerSession[]
+  summary: AttendanceSummary
+}
+
+/**
+ * Espejo de UpdateSessionRequest — el master corrigiendo una sesión.
+ *
+ * Reemplaza los dos campos, no parchea (#189): unas notas ausentes las vacían. La fecha es la única
+ * excepción — ausente significa «no la muevas», porque una sesión siempre ocurre en algún instante.
+ */
+export interface UpdateSessionRequest {
+  /** El instante nuevo, **en UTC** (#22), o null para dejar la fecha donde está. */
+  scheduledAt?: string | null
+  notes?: string | null
+}
+
+/** Espejo de AttendanceEntryRequest — una línea del padrón de entrada. */
+export type AttendanceEntryRequest = Pick<SessionAttendanceEntry, 'userId' | 'attendance'>
+
+/**
+ * Espejo de RecordAttendanceRequest. El padrón viaja entero porque así se completa en pantalla; a
+ * quien se deja afuera de la lista no se le toca la fila.
+ */
+export interface RecordAttendanceRequest {
+  attendance: AttendanceEntryRequest[]
 }
 
 /**

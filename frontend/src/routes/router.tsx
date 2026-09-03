@@ -31,6 +31,7 @@ export const router = createBrowserRouter([
           { path: 'tables/:id', lazy: () => import('./TableDetailPage') },
           { path: 'my/applications', lazy: () => import('./my/MyApplicationsPage') },
           { path: 'my/tables', lazy: () => import('./my/MyTablesPage') },
+          { path: 'my/tables/:id', lazy: () => import('./my/MyTableDetailPage') },
           { path: 'notifications', lazy: () => import('./NotificationsPage') },
           // Global, no del contexto Jugador: los tres layouts son el mismo shell y la cabecera
           // ya se adapta sola. Va acá por la misma razón que /notifications. Las audiencias son
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
             lazy: () => import('./master/MasterTableDetailPage'),
             children: [
               { index: true, lazy: () => import('./master/MasterTableCandidatesTab') },
+              { path: 'sessions', lazy: () => import('./master/MasterTableSessionsTab') },
               { path: 'status', lazy: () => import('./master/MasterTableStatusTab') },
             ],
           },

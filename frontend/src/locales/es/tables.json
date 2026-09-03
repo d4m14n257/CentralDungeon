@@ -51,5 +51,32 @@
     "title": "Mis mesas",
     "emptyTitle": "Todavía no jugás en ninguna mesa",
     "emptyDescription": "Postulate a una mesa abierta desde el explorador."
+  },
+  "sessions": {
+    "number": "Sesión {{number}}",
+    "timeZone": "Se muestra en tu hora local ({{timeZone}})",
+    "calendarTitle": "Calendario",
+    "myCalendarTitle": "Mis sesiones",
+    "myCalendarEmptyTitle": "Todavía no hay sesiones",
+    "myCalendarEmptyDescription": "Aparecen en cuanto la mesa abre con su agenda cargada. Si la mesa está en pausa, las pendientes se ocultan hasta que se retome.",
+    "myAttendanceTitle": "Mi asistencia",
+    "myAttendanceHelp": "Cómo se cuenta la asistencia",
+    "seePublicDetail": "Ver la ficha pública de la mesa",
+    "status": {
+      "Scheduled": "Programada",
+      "Held": "Jugada",
+      "Cancelled": "Cancelada"
+    },
+    "attendance": {
+      "Present": "Presente",
+      "Absent": "Ausente",
+      "Excused": "Con aviso",
+      "Unknown": "Sin registrar",
+      "registered": "Sesiones registradas",
+      "nothingRecorded": "Todavía no hay asistencia registrada.",
+      "noPlayers": "La mesa todavía no tiene jugadores aceptados.",
+      "forPlayer": "Asistencia de {{name}}",
+      "save": "Guardar asistencia"
+    }
   }
 }

@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
 import { ApplyToTableDialog, useMyApplications } from '@/features/registrations'
-import { TableStatusBadge, useGameTable } from '@/features/tables'
+import { SessionList, TableStatusBadge, useGameTable } from '@/features/tables'
 import { useMe } from '@/features/users'
 import type { GameTableDetail, MasterSummary } from '@/features/tables'
 import { browserTimeZone, formatDateTime, formatSlot, utcSlotToLocal } from '@/lib/date'
@@ -156,6 +156,17 @@ export function TableDetailPage() {
             </ul>
             {/* La agenda se guarda en UTC (#22); acá se dice en qué zona se está mostrando. */}
             <p className="text-fg-subtle mt-1 text-xs">{t('detail.scheduleTimeZone', { timeZone: browserTimeZone() })}</p>
+          </section>
+        )}
+
+        {/* El calendario real, no la forma semanal: una vez que la mesa se pausó y volvió, las dos
+            dejan de coincidir, y las fechas son lo que sirve para decidir si postularse (#26, #33). */}
+        {table.sessions.length > 0 && (
+          <section>
+            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('sessions.calendarTitle')}</h2>
+            <div className="mt-1.5">
+              <SessionList sessions={table.sessions} />
+            </div>
           </section>
         )}
 

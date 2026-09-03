@@ -244,6 +244,57 @@ npx playwright test → 15 tests, todos verdes, contra el backend y el frontend 
 
 **Se prueba:** el master abre la mesa y aparecen las 12 sesiones; registra la asistencia de la primera; el jugador ve su calendario en `/my/tables/:id`, en su hora local.
 
+#### ✅ Terminada
+
+Cuatro decisiones nuevas salieron de construirla: **#193** (reanudar con choque responde `409`), **#194** (cancelar una sesión repone otra al final), **#195** (`Held` es una acción explícita, separada de la asistencia) y **#196** (una mesa sin fecha, agenda o cantidad abre con cero sesiones y no se bloquea la aprobación).
+
+**Un bug encontrado por el test, no por la pantalla**: `formatDateTime` y `formatDate` leían mal todo instante que venía del backend. Jackson serializa `LocalDateTime` sin offset —`2026-09-09T01:00:00`— y JavaScript interpreta una fecha así como hora **local**, así que una sesión de la 01:00 UTC se mostraba como 01:00 a alguien tres horas atrás: exactamente el error que la conversión existe para evitar (#22). `utcIsoToLocalInput` ya lo resolvía agregando la `Z`; las otras dos no. Corregido en `lib/date.ts` con su test de regresión, y arregla de paso cómo se venían mostrando `startDate` y `createdAt`.
+
+**Una decisión de forma que el contrato no tenía**: el calendario de solo lectura de `/tables/:id` **viaja dentro del detalle de la mesa** (`GameTableDetailResponse.sessions`) y no en un endpoint propio. Esa lectura ya decide quién puede ver la mesa —un vetado recibe `404` (#29)—, así que las sesiones heredan esa única respuesta en vez de repetir la verificación en un segundo lugar donde podría desincronizarse.
+
+Queda fuera a propósito, con su motivo: **agregar una sesión suelta**. F1.3 entrega las cuatro operaciones que §4 nombra —corregir fecha, notas, marcar jugada, cancelar— más la reposición de #194; un «agregar sesión» a mano no lo pide ningún documento y sin él la cantidad de la mesa sigue siendo la que prometió. Y **la asistencia no aparece todavía en un perfil**: el agregado de #137 está construido y expuesto por mesa para el propio jugador, pero `/profile` y `/users/:id` son F2.
+
+**Backend** (`backend/src/main/java/com/centraldungeon/`):
+
+| Ruta | Qué es |
+|---|---|
+| `tables/TableSession.java` · `TableSessionStatus` · `TableSessionRepository` | El calendario materializado, con su lock pesimista y el `max(sequence_number)` que #194 necesita |
+| `tables/SessionAttendance.java` · `SessionAttendanceId` · `AttendanceStatus` · `SessionAttendanceRepository` | La asistencia, con clave compuesta y el `GROUP BY` de #137 sobre el índice cubridor del baseline |
+| `tables/AttendanceCount.java` | La proyección interna del conteo agrupado — no cruza HTTP |
+| `tables/TableSessionService.java` | Materializar, congelar, reagendar, corregir, cerrar, cancelar con reposición y registrar asistencia |
+| `tables/TableSessionController.java` | Seis endpoints, clase concreta, `@PreAuthorize` en cada método |
+| `tables/dto/` | 8 records: `TableSessionResponse`, `PlayerSessionResponse`, `PublicSessionResponse`, `SessionAttendanceEntry`, `AttendanceSummaryResponse`, `MySessionsResponse`, `UpdateSessionRequest`, `RecordAttendanceRequest` (+ `AttendanceEntryRequest`) |
+| `test/…/tables/TableSessionServiceTest.java` · `TableSessionIT.java` | 29 unitarios + 6 de integración sobre MySQL real |
+
+Modificados: `GameTableService` (materializa en `approve()` y `assignInitialMasters()`, verifica el choque y reagenda en `resume()`, y el calendario en `toDetail()`), `GameTableMapper` (+4 métodos), `GameTableDetailResponse` (+`sessions`), `NotificationType` (+`SessionScheduled`, +`SessionCanceled`), `NotificationService` (+2 avisos) y `TestDataService` — sin borrar `SessionAttendance` y `TableSession` antes de la mesa, la limpieza del e2e rompía la foreign key, que es el mismo bug que F1.2 tuvo que arreglar (#171, #172).
+
+**Sin migración Flyway**: `table_sessions` y `session_attendance` ya estaban en `V1__baseline.sql`, con su índice cubridor `(user_id, attendance)`. F1.3 mapea, no agrega.
+
+**Frontend** (`frontend/src/`):
+
+| Ruta | Qué es |
+|---|---|
+| `components/CollapsibleSection.tsx` · `IconAction.tsx` | Los dos compuestos del inventario de §5 que F1.3 estrena. `useConfirm` ya existía desde E2 |
+| `features/tables/api/sessionsApi.ts` + 6 hooks | Dos queries y cuatro mutations |
+| `features/tables/components/SessionList.tsx` (+ test) · `SessionStatusBadge` · `AttendanceEditor` · `AttendanceSummaryView` (+ test) | El calendario de solo lectura, el badge, el padrón y los tres números de #137 |
+| `routes/master/MasterTableSessionsTab.tsx` | La pestaña Sesiones, con una `CollapsibleSection` por sesión |
+| `routes/my/MyTableDetailPage.tsx` | La ruta nueva `/my/tables/:id` — agenda, sesiones y mi asistencia, solo lectura |
+| `e2e/table-sessions.spec.ts` | Materialización al aprobar, la reposición de #194 avisada antes de confirmar, y la asistencia vista desde el lado del jugador |
+
+Tocados: `lib/date.ts` (+ `date.test.ts`, la corrección del instante sin offset), `features/tables/types.ts` e `index.ts`, `api/queryKeys.ts` (+rama `sessions`), `config/paths.ts`, `routes/router.tsx`, `routes/TableDetailPage.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), `routes/my/MyTablesPage.tsx` (las fichas ahora llevan a `/my/tables/:id`), `routes/help/HelpMastersTab.tsx` y `HelpPlayersTab.tsx`, y los locales `tables`, `master` y `help`.
+
+**Ayuda:** `/help/masters#sessions` (cuándo aparece el calendario, corregir una fecha, marcar jugada, la reposición de #194, qué congela la pausa y por qué puede fallar reanudar) y `/help/players#my-sessions` (dónde está mi calendario y cómo se leen los tres números de #137), enlazadas desde la pestaña Sesiones y desde `/my/tables/:id`.
+
+**Salida real de las suites:**
+
+```
+./mvnw test    → 188 tests, 0 fallos
+./mvnw verify  → 188 unitarios + 37 integración, 0 fallos
+npx tsc -b     → limpio
+npm run test   → 15 archivos, 124 tests
+npx playwright test → 18 tests, todos verdes, contra el backend y el frontend reales
+```
+
 ---
 
 ### F1.4 — Archivos

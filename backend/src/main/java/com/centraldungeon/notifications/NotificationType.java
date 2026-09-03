@@ -21,5 +21,22 @@ public enum NotificationType {
      * moves an agenda under people who were already signed up. In both cases the system says what
      * happened and the person decides - the same principle as #70.
      */
-    ScheduleConflict
+    ScheduleConflict,
+
+    /**
+     * To the people signed up to a table: one of its sessions moved, or the whole pending calendar
+     * was re-laid after a pause (#33).
+     *
+     * <p>A calendar that changes without saying so is a calendar nobody can plan around, which is why
+     * this exists at all - the same reasoning as #77 for tasks.
+     */
+    SessionScheduled,
+
+    /**
+     * To the people signed up to a table: one of its sessions was called off.
+     *
+     * <p>The table gets the session back at the end (#194), so this is news about one evening and not
+     * about the run being shorter.
+     */
+    SessionCanceled
 }

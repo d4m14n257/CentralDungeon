@@ -26,6 +26,11 @@ import org.jspecify.annotations.Nullable;
  * @param duration      how long one session lasts
  * @param totalSessions how many sessions are planned (#26)
  * @param schedule      the weekly agenda, in UTC (#22), ordered as a week reads
+ * @param sessions      the materialized calendar, first to last (#26, #33). Dates rather than the
+ *                      weekly shape: once a table has been paused and resumed the two diverge, and
+ *                      the dates are what somebody deciding whether to apply actually needs. Empty
+ *                      until the table opens, and while it is paused it carries only what already
+ *                      happened (#32)
  * @param systems       the game systems the table uses, each under the alias its master picked and
  *                      never rewritten to the group's canonical entry (#58)
  * @param tags          the tags the table is labelled with, same rule
@@ -55,6 +60,7 @@ public record GameTableDetailResponse(
         @Nullable LocalTime duration,
         @Nullable Integer totalSessions,
         List<TableScheduleEntry> schedule,
+        List<PublicSessionResponse> sessions,
         List<CatalogValueResponse> systems,
         List<CatalogValueResponse> tags,
         List<CatalogValueResponse> platforms,

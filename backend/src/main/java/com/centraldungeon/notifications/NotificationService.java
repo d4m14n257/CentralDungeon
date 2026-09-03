@@ -114,6 +114,44 @@ public class NotificationService {
     }
 
     /**
+     * Tells the people signed up to a table that its calendar moved (#33).
+     *
+     * <p>It names no date. One notification covers a single correction and a whole re-laying after a
+     * pause alike, and spelling out an instant here would mean writing UTC into a message that the
+     * reader would then have to convert in their head - the conversion belongs on the screen it links
+     * to, where {@code lib/date.ts} does it (#22).
+     *
+     * @param userId the person signed up to the table
+     * @param table  the table whose calendar moved; the notification links to it
+     */
+    @Transactional
+    public void notifySessionScheduled(String userId, GameTable table) {
+        User recipient = userRepository.getReferenceById(userId);
+        String title = "Cambió el calendario de " + table.getName();
+        String message = "Revisá las fechas de las sesiones en tu hora local.";
+        notificationRepository.save(
+                new Notification(recipient, NotificationType.SessionScheduled, title, message, "game_table", table.getId()));
+    }
+
+    /**
+     * Tells the people signed up to a table that one of its sessions was called off.
+     *
+     * <p>The message says the run is not shorter, because that is the first thing a player wonders:
+     * the table gets the session back at the end (#194).
+     *
+     * @param userId the person signed up to the table
+     * @param table  the table the session belonged to
+     */
+    @Transactional
+    public void notifySessionCanceled(String userId, GameTable table) {
+        User recipient = userRepository.getReferenceById(userId);
+        String title = "Se canceló una sesión de " + table.getName();
+        String message = "La mesa suma otra sesión al final, así que sigue siendo la misma cantidad.";
+        notificationRepository.save(
+                new Notification(recipient, NotificationType.SessionCanceled, title, message, "game_table", table.getId()));
+    }
+
+    /**
      * Somebody's inbox, newest first.
      *
      * @param userId   the recipient, always the actor from the token (#121)

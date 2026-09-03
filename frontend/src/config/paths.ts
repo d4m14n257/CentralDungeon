@@ -11,6 +11,7 @@ export const paths = {
   tableDetail: 'tables/:id',
   myApplications: 'my/applications',
   myTables: 'my/tables',
+  myTableDetail: 'my/tables/:id',
   notifications: 'notifications',
   help: 'help',
   helpPlayers: 'players',
@@ -19,6 +20,7 @@ export const paths = {
   masterTables: 'master/tables',
   masterTableNew: 'master/tables/new',
   masterTableDetail: 'master/tables/:id',
+  masterTableSessions: 'master/tables/:id/sessions',
   masterTableStatus: 'master/tables/:id/status',
   adminTables: 'admin/tables',
   adminCatalogs: 'admin/catalogs',
@@ -64,10 +66,26 @@ export function masterTableDetailPath(id: string): string {
 
 /**
  * @param id the table
+ * @returns the absolute path to its sessions tab
+ */
+export function masterTableSessionsPath(id: string): string {
+  return `/master/tables/${id}/sessions`
+}
+
+/**
+ * @param id the table
  * @returns the absolute path to its status tab
  */
 export function masterTableStatusPath(id: string): string {
   return `/master/tables/${id}/status`
+}
+
+/**
+ * @param id the table
+ * @returns the absolute path to the player's own view of it - agenda, sessions and their attendance
+ */
+export function myTableDetailPath(id: string): string {
+  return `/my/tables/${id}`
 }
 
 /** @returns the absolute path to the admin's table list */

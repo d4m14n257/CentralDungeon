@@ -3,9 +3,15 @@ import { useTranslation } from 'react-i18next'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
+import { myTableDetailPath } from '@/config/paths'
 import { GameTableCard, useMyTables } from '@/features/tables'
 
-/** /my/tables - the tables the signed-in person plays at, as an accepted player. */
+/**
+ * /my/tables - the tables the signed-in person plays at, as an accepted player.
+ *
+ * The cards link to `/my/tables/:id` and not to the public detail: from here the question is "how is
+ * my table going?" - the calendar and my attendance - and not "should I apply?".
+ */
 export function MyTablesPage() {
   const { t } = useTranslation('tables')
   // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya
@@ -27,7 +33,7 @@ export function MyTablesPage() {
       {data && data.content.length > 0 && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.content.map((table) => (
-            <GameTableCard key={table.id} table={table} />
+            <GameTableCard key={table.id} table={table} linkTo={myTableDetailPath(table.id)} />
           ))}
         </div>
       )}

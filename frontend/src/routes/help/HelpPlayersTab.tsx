@@ -41,6 +41,15 @@ export function HelpPlayersTab() {
         <HelpSection id="my-tables" title={t('help:players.myTables.title')}>
           <HelpList items={['list', 'status'].map((key) => t(`help:players.myTables.${key}`))} />
         </HelpSection>
+
+        <HelpSection id="my-sessions" title={t('help:players.mySessions.title')}>
+          <HelpList
+            items={['where', 'local', 'paused', 'cancelled', 'threeNumbers', 'denominator', 'notKarma'].map((key) =>
+              t(`help:players.mySessions.${key}`),
+            )}
+          />
+          <HelpSteps title={t('help:stepsTitle')} items={[1, 2, 3].map((n) => t(`help:players.mySessions.steps.step${n}`))} />
+        </HelpSection>
       </div>
     </HelpAudienceGate>
   )

@@ -4,7 +4,11 @@ import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
+import com.centraldungeon.tables.dto.PlayerSessionResponse;
+import com.centraldungeon.tables.dto.PublicSessionResponse;
+import com.centraldungeon.tables.dto.SessionAttendanceEntry;
 import com.centraldungeon.tables.dto.TableScheduleEntry;
+import com.centraldungeon.tables.dto.TableSessionResponse;
 import com.centraldungeon.tables.dto.TableStatusChangeResponse;
 import com.centraldungeon.users.User;
 import java.util.List;
@@ -41,6 +45,7 @@ public interface GameTableMapper {
             int playerCount,
             List<MasterSummaryResponse> masters,
             List<TableScheduleEntry> schedule,
+            List<PublicSessionResponse> sessions,
             List<CatalogValueResponse> systems,
             List<CatalogValueResponse> tags,
             List<CatalogValueResponse> platforms,
@@ -48,6 +53,63 @@ public interface GameTableMapper {
             @Nullable String permitted,
             @Nullable String requirements,
             boolean scheduleConflict);
+
+    /**
+     * One session as its master sees it, with the roster the service assembled.
+     *
+     * <p>The roster arrives as a parameter and is not read off the entity: it is the table's active
+     * players joined with whatever was recorded, which is a question about two tables and not about
+     * this row (#36).
+     *
+     * @param session    the session
+     * @param attendance the roster, one line per active player of the table
+     * @return the session's response
+     */
+    default TableSessionResponse toSessionResponse(TableSession session, List<SessionAttendanceEntry> attendance) {
+        return new TableSessionResponse(
+                session.getId(),
+                session.getSequenceNumber(),
+                session.getScheduledAt(),
+                session.getStatus(),
+                session.getNotes(),
+                attendance);
+    }
+
+    /**
+     * One session as the player sitting at the table sees it: no notes, and only their own attendance
+     * (#121).
+     *
+     * @param session      the session
+     * @param myAttendance what was recorded for the actor of the token, or {@code Unknown}
+     * @return the player's view of the session
+     */
+    default PlayerSessionResponse toPlayerSessionResponse(TableSession session, AttendanceStatus myAttendance) {
+        return new PlayerSessionResponse(
+                session.getId(), session.getSequenceNumber(), session.getScheduledAt(), session.getStatus(), myAttendance);
+    }
+
+    /**
+     * One session as anybody looking at the table sees it: when, and how it went.
+     *
+     * @param session the session
+     * @return the public view of it, with neither the notes nor anybody's attendance
+     */
+    default PublicSessionResponse toPublicSessionResponse(TableSession session) {
+        return new PublicSessionResponse(
+                session.getId(), session.getSequenceNumber(), session.getScheduledAt(), session.getStatus());
+    }
+
+    /**
+     * One line of a session's roster.
+     *
+     * @param player     the player the line is about
+     * @param attendance what was recorded for them, or {@code Unknown} when nothing was (#137)
+     * @return the roster line
+     */
+    default SessionAttendanceEntry toAttendanceEntry(User player, AttendanceStatus attendance) {
+        String displayName = player.getName() != null ? player.getName() : player.getDiscordUsername();
+        return new SessionAttendanceEntry(player.getId(), displayName, attendance);
+    }
 
     default MasterSummaryResponse toMasterSummary(Master master) {
         String displayName = master.getUser().getName() != null ? master.getUser().getName() : master.getUser().getDiscordUsername();

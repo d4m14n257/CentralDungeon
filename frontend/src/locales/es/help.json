@@ -116,6 +116,21 @@
         "step2": "Buscá la postulación pendiente que querés soltar.",
         "step3": "Tocá «Retirar» y confirmá. Si después cambiás de idea, tenés que postularte de nuevo."
       }
+    },
+    "mySessions": {
+      "title": "Mis sesiones y mi asistencia",
+      "where": "Entrá a «Mis mesas» y tocá la mesa: ahí están su agenda, el calendario completo y tu asistencia.",
+      "local": "Todas las fechas se muestran en tu hora local, aunque el sistema las guarde en UTC. Al pie dice en qué zona las estás viendo.",
+      "paused": "Si la mesa está en pausa, las sesiones pendientes no se muestran: no hay fecha que prometer hasta que se retome.",
+      "cancelled": "Una sesión cancelada queda a la vista con su número, y la mesa agrega otra al final: seguís jugando la misma cantidad.",
+      "threeNumbers": "Tu asistencia son tres números y no un porcentaje: presente, con aviso y ausente. Faltar avisando y no aparecer son cosas distintas, y un promedio las escondería.",
+      "denominator": "El denominador son las sesiones con algo registrado. Las que todavía nadie marcó no cuentan: si contaran, una mesa recién empezada te haría ver como ausente crónico.",
+      "notKarma": "La asistencia no entra en tu karma. Se muestra aparte, porque son dos señales distintas y mezclarlas volvería el número imposible de explicar.",
+      "steps": {
+        "step1": "Abrí «Mis mesas» desde el menú.",
+        "step2": "Tocá la mesa que te interesa.",
+        "step3": "Mirá «Mis sesiones» para el calendario y «Mi asistencia» para los tres números."
+      }
     }
   },
   "masters": {
@@ -146,6 +161,28 @@
         "step2": "Agregá una franja por cada día que juega la mesa, con el día y la hora en tu zona.",
         "step3": "Mirá la línea «En UTC» de cada franja: eso es lo que se guarda.",
         "step4": "Si al guardar aparece un choque, cambiá la hora o liberá la otra mesa."
+      }
+    },
+    "sessions": {
+      "title": "Las sesiones de tu mesa",
+      "materialize": "El calendario se arma solo cuando un admin aprueba la mesa: toma la fecha de inicio, la agenda semanal y la cantidad de sesiones, y crea una fila por sesión con su número.",
+      "missing": "Si te falta alguno de los tres, la mesa abre igual pero sin calendario. Completá lo que falte y las sesiones aparecen; nadie te bloquea la aprobación por eso.",
+      "local": "Las fechas se guardan en UTC y se muestran en tu hora local. Debajo del campo dice en qué zona estás escribiendo.",
+      "correct": "Podés corregir la fecha de una sesión suelta. Es una corrección de esa noche y no cambia la agenda semanal de la mesa.",
+      "notes": "Las notas de cada sesión son tuyas: ningún jugador las ve.",
+      "hold": "Marcar una sesión como jugada es una acción aparte de registrar la asistencia. El sistema no deduce una de la otra: podés registrar quién vino sin cerrarla, y cerrarla sin registrar a nadie.",
+      "cancel": "Al cancelar una sesión, la mesa suma otra al final del calendario en la próxima franja libre de tu agenda. Así seguís jugando la cantidad que prometiste; lo que se corre es la fecha de cierre.",
+      "cancelRecord": "La sesión cancelada no desaparece: queda con su número como registro de que estaba planificada. A los jugadores les llega el aviso.",
+      "locked": "Una sesión ya jugada o cancelada no se edita: es el registro de algo que pasó o que no pasó.",
+      "paused": "Mientras la mesa está en pausa no se prometen fechas: las sesiones pendientes se ocultan, también para vos. Al retomarla se vuelven a agendar desde ese día, conservando su numeración.",
+      "resumeConflict": "Si mientras estuvo pausada tomaste otra mesa que se pisa con esta, no se puede retomar hasta que arregles una de las dos agendas. Una mesa en pausa no reserva su horario, y al volver lo reclama.",
+      "attendance": "La asistencia se registra por sesión, con cuatro valores: presente, con aviso, ausente y sin registrar. El padrón son los jugadores aceptados de la mesa.",
+      "steps": {
+        "step1": "Entrá a tu mesa desde «Mis mesas» como master y abrí la pestaña «Sesiones».",
+        "step2": "Tocá una sesión para desplegarla: ahí están su fecha, sus notas y su padrón.",
+        "step3": "Corregí la fecha o escribí las notas y tocá «Guardar cambios».",
+        "step4": "Elegí la asistencia de cada jugador y tocá «Guardar asistencia».",
+        "step5": "Cuando la sesión ya pasó, marcala como jugada con el ✓ de la cabecera. Si no se jugó, cancelala con la ✗ — te avisa antes de confirmar que se agrega otra al final."
       }
     },
     "review": {

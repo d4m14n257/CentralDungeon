@@ -45,7 +45,8 @@
   "detail": {
     "tabs": {
       "candidates": "Candidatos",
-      "status": "Estado"
+      "status": "Estado",
+      "sessions": "Sesiones"
     }
   },
   "status": {
@@ -83,5 +84,36 @@
     "remove": "Quitar {{slot}}",
     "utcEquivalent": "En UTC: {{slot}}",
     "timeZoneHint": "Las horas se escriben en tu zona ({{timeZone}}) y se guardan en UTC."
+  },
+  "sessions": {
+    "title_one": "Calendario · {{count}} sesión",
+    "title_other": "Calendario · {{count}} sesiones",
+    "help": "Cómo funcionan las sesiones",
+    "emptyTitle": "Todavía no hay sesiones",
+    "emptyDescription": "Se crean solas cuando un admin aprueba la mesa, a partir de la fecha de inicio, la agenda semanal y la cantidad de sesiones. Si falta alguno de los tres, la mesa abre sin calendario y aparece en cuanto lo completes.",
+    "pausedTitle": "La mesa está en pausa",
+    "pausedDescription": "Mientras esté en pausa no se prometen fechas: las sesiones pendientes se ocultan y se vuelven a agendar desde el día en que se retome.",
+    "dateLabel": "Fecha y hora",
+    "notesLabel": "Notas",
+    "notesPlaceholder": "Qué pasó, qué quedó pendiente…",
+    "notesArePrivate": "Las notas son tuyas: ningún jugador las ve.",
+    "saveDetails": "Guardar cambios",
+    "updateSuccess": "Sesión actualizada",
+    "hold": "Marcar como jugada",
+    "holdConfirmTitle": "¿Marcar la sesión como jugada?",
+    "holdConfirmDescription": "Queda registrada como jugada y ya no se le puede corregir la fecha. Registrar la asistencia es una acción aparte.",
+    "holdSuccess": "Sesión marcada como jugada",
+    "cancel": "Cancelar sesión",
+    "cancelConfirmTitle": "¿Cancelar la sesión {{number}}?",
+    "cancelConfirmDescription": "La sesión queda registrada como cancelada y la mesa suma otra al final del calendario, así que sigue jugando la misma cantidad. A los jugadores les llega el aviso.",
+    "cancelSuccess": "Sesión cancelada; se agregó una al final",
+    "locked": {
+      "Held": "Ya se jugó: la fecha y las notas quedan como registro y no se editan.",
+      "Cancelled": "Está cancelada: quedó como registro y no se edita.",
+      "Scheduled": ""
+    },
+    "attendanceTitle": "Asistencia",
+    "attendanceNotForCancelled": "Una sesión cancelada no tiene asistencia: no ocurrió.",
+    "attendanceSuccess": "Asistencia registrada"
   }
 }

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  formatDate,
+  formatDateTime,
   formatMinutes,
   formatSlot,
   localInputToUtcIso,
@@ -103,5 +105,29 @@ describe('the datetime-local round trip', () => {
   it('treats an empty field as no instant at all rather than as the epoch', () => {
     expect(localInputToUtcIso('', BUENOS_AIRES)).toBeNull()
     expect(utcIsoToLocalInput(null, BUENOS_AIRES)).toBe('')
+  })
+})
+
+describe('formatDateTime and formatDate', () => {
+  /**
+   * El backend serializa `LocalDateTime` sin offset — `2026-09-09T01:00:00` — y JavaScript lee una
+   * fecha así como hora **local**. Sin normalizarla, una sesión de las 01:00 UTC se mostraba como
+   * 01:00 a alguien tres horas atrás: justo el error que la conversión existe para evitar (#22).
+   */
+  it('reads a bare instant from the API as UTC and not as the reader wall clock', () => {
+    expect(formatDateTime('2026-09-09T01:00:00', 'es', BUENOS_AIRES)).toMatch(/8 sept/)
+    expect(formatDateTime('2026-09-09T01:00:00', 'es', BUENOS_AIRES)).toMatch(/22:00/)
+  })
+
+  it('shows the same instant as the next day in Madrid, which is where it falls', () => {
+    expect(formatDateTime('2026-09-09T01:00:00', 'es', MADRID)).toMatch(/9 sept/)
+  })
+
+  it('leaves an instant that already declares its offset alone', () => {
+    expect(formatDateTime('2026-09-09T01:00:00Z', 'es', BUENOS_AIRES)).toMatch(/8 sept/)
+  })
+
+  it('applies the same reading to a plain date', () => {
+    expect(formatDate('2026-09-09T01:00:00', 'es', BUENOS_AIRES)).toMatch(/8 sept/)
   })
 })

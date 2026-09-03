@@ -11,6 +11,15 @@ export const queryKeys = {
     /** The platform's table types. One list for the whole app - admins change it rarely (#72). */
     types: () => ['tables', 'types'] as const,
   },
+  sessions: {
+    /** El calendario de una mesa, como lo ve quien la dirige. Lista entera, no paginada. */
+    list: (tableId: string) => ['sessions', 'list', tableId] as const,
+    /**
+     * El calendario del jugador y su asistencia. Rama aparte de `list` y no un filtro suyo: son dos
+     * respuestas distintas del servidor y quien lee una casi nunca puede leer la otra.
+     */
+    mine: (tableId: string) => ['sessions', 'mine', tableId] as const,
+  },
   catalogs: {
     /** The whole branch. What every catalog mutation invalidates: one admin action can move rows
      *  that are not on screen - a merge repoints a group, a disable hands it to a successor - so

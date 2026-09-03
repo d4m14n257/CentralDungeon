@@ -64,6 +64,11 @@ public class TestDataService {
         // F1.2 y F1.1: la agenda y los vínculos de catálogo cuelgan de la mesa por clave compuesta.
         // Sin estos cuatro, borrar las mesas rompe la foreign key y la limpieza responde 500 - que
         // es lo que hace que la corrida siguiente encuentre la base llena y falle por paginación (#171, #172).
+        // F1.3: la asistencia cuelga de la sesión y la sesión de la mesa, así que van en ese orden y
+        // antes que la mesa. Es el mismo motivo que los cuatro de abajo (#171, #172).
+        delete("delete from SessionAttendance a where a.session.gameTable.id in (" + E2E_TABLES + ") or a.id.userId in ("
+                + E2E_USERS + ")");
+        delete("delete from TableSession ses where ses.gameTable.id in (" + E2E_TABLES + ")");
         delete("delete from TableSchedule s where s.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TableSystem ts where ts.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TableTag tt where tt.id.gameTableId in (" + E2E_TABLES + ")");
