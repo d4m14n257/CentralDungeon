@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -10,14 +11,16 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { paths } from '@/config/paths'
 import { completeOnboardingSchema, useCompleteOnboarding, type CompleteOnboardingForm } from '@/features/users'
-import { countries } from '@/lib/countries'
+import { countriesIn } from '@/lib/countries'
 
 /**
  * The blocking first step: display name and country (#134). Nothing else in the app is reachable
  * until it is done, which is why the redirect lives in the session guard and not in each screen.
  */
 export function OnboardingPage() {
-  const { t } = useTranslation('onboarding')
+  const { t, i18n } = useTranslation('onboarding')
+  // Named and sorted in the reader's language: the alphabet changes with it (#198).
+  const countries = useMemo(() => countriesIn(i18n.language), [i18n.language])
   const navigate = useNavigate()
   const completeOnboarding = useCompleteOnboarding()
   const form = useForm<CompleteOnboardingForm>({

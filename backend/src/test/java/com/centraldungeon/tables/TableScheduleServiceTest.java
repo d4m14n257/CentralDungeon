@@ -81,6 +81,23 @@ class TableScheduleServiceTest {
         verify(scheduleRepository, never()).save(any());
     }
 
+    /**
+     * #197: the refusal travels as a code plus the name, not as a finished sentence. The message is
+     * for a log; what the master reads is rendered by the frontend in their language.
+     */
+    @Test
+    void carriesTheClashingTableNameAsAParameterAndNotOnlyInsideTheMessage() {
+        GameTable table = table("table-3b", LocalTime.of(3, 0));
+        when(scheduleConflictService.findClash(eq("master-1"), eq("table-3b"), any()))
+                .thenReturn(new CommittedTable("other", "La cripta"));
+
+        assertThatThrownBy(() -> tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1"))
+                .isInstanceOfSatisfying(ConflictException.class, exception -> {
+                    assertThat(exception.getErrorCode()).isEqualTo(ConflictException.SCHEDULE_CONFLICT);
+                    assertThat(exception.getErrorParams()).containsEntry(ConflictException.PARAM_OTHER_TABLE_NAME, "La cripta");
+                });
+    }
+
     /** An Unassigned table has no master yet, so R1 has nobody to compare against (#72, #178). */
     @Test
     void skipsTheOwnerCheckWhenTheTableHasNoMasterYet() {

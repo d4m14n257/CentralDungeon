@@ -1,0 +1,52 @@
+{
+  "title": "Notifications",
+  "unreadCount": "{{count}} unread",
+  "viewAll": "View all",
+  "markAllAsRead": "Mark all as read",
+  "emptyTitle": "Nothing new here",
+  "emptyDescription": "When something happens with your tables or applications, you will see it here.",
+  "timeAgo": "{{value}} ago",
+  "time": {
+    "now": "just now",
+    "minutes": "{{count}}m",
+    "hours": "{{count}}h",
+    "days": "{{count}}d",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months"
+  },
+  "type": {
+    "RegistrationAccepted": "Application accepted",
+    "RegistrationRejected": "Application rejected",
+    "NewCandidate": "New application",
+    "ScheduleConflict": "Schedule clash",
+    "SessionScheduled": "Calendar updated",
+    "SessionCanceled": "Session cancelled"
+  },
+  "badge": {
+    "accepted": "Accepted",
+    "rejected": "Rejected"
+  },
+  "sentence": {
+    "RegistrationAccepted": {
+      "title": "You were accepted into {{tableName}}"
+    },
+    "RegistrationRejected": {
+      "title": "Your application to {{tableName}} was turned down"
+    },
+    "NewCandidate": {
+      "title": "{{actorName}} applied to {{tableName}}"
+    },
+    "ScheduleConflict": {
+      "title": "Your time at {{tableName}} clashes with another table",
+      "message": "It overlaps with {{otherTableName}}. You can withdraw an application or talk it over with the master."
+    },
+    "SessionScheduled": {
+      "title": "The calendar for {{tableName}} changed",
+      "message": "Check the session dates in your own time."
+    },
+    "SessionCanceled": {
+      "title": "A session of {{tableName}} was cancelled",
+      "message": "The table adds another one at the end, so it still plays the same number."
+    }
+  }
+}

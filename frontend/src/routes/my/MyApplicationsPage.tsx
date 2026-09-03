@@ -70,9 +70,16 @@ export function MyApplicationsPage() {
                     date: formatDate(registration.createdAt, i18n.language, browserTimeZone()),
                   })}
                 </p>
-                {/* La justificación de un rechazo es obligatoria en el modelo (#34) - se muestra siempre que exista. */}
+                {/* A rejection always has a reason (#34). A master's own words are shown exactly as
+                    typed; the one the application writes itself is a code, so it can be read in the
+                    reader's language (#197). */}
                 {registration.rejectionJustification && (
                   <p className="text-state-canceled-fg text-xs">{registration.rejectionJustification}</p>
+                )}
+                {registration.rejectionReasonCode && (
+                  <p className="text-state-canceled-fg text-xs">
+                    {t(`rejectionReason.${registration.rejectionReasonCode}`, { defaultValue: registration.rejectionReasonCode })}
+                  </p>
                 )}
               </div>
               <div className="flex items-center gap-3">

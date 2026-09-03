@@ -8,5 +8,7 @@ export { useMarkAllAsRead } from './api/useMarkAllAsRead'
 export { useMarkAsRead } from './api/useMarkAsRead'
 export { useNotifications } from './api/useNotifications'
 export { useNotificationClick } from './hooks/useNotificationClick'
+export { notificationText } from './lib/notificationText'
 /** The feature's domain types. Each is written once in `types.ts` and derived from there (#3.2). */
-export type { Notification } from './types'
+export type { Notification, NotificationParams } from './types'
+export type { NotificationText } from './lib/notificationText'

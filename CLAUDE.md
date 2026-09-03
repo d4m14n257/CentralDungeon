@@ -29,7 +29,7 @@ Sin redundancia entre ellos. Leer antes de trabajar en algo nuevo:
 |---|---|
 | `docs/arquitectura.md` | Estructura de carpetas, patrón por feature, reglas de cada capa, contrato de API, seguridad, testing, convenciones de nombres. **La referencia para escribir código.** |
 | `docs/modelo-datos.md` | Fuente de verdad del schema: convenciones, diagrama ER (Mermaid), DDL baseline, reglas de negocio que reemplazaron a los triggers, qué queda fuera de v1. |
-| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 196 decisiones cerradas y el rastro de los 31 pendientes que se abrieron y resolvieron (M1–M31). |
+| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 198 decisiones cerradas y el rastro de los 31 pendientes que se abrieron y resolvieron (M1–M31). |
 | `docs/diagramas/` | Fuentes Mermaid (`.mmd`), sin PNG versionados — se regeneran con el comando del README. ER del **modelo objetivo** por subsistema (11–16) y los ciclos de vida de mesa, postulación y comentario (05–07). |
 | `docs/frontend-diseno.md` | Sitemap por contexto, navegación, sistema de diseño, wireframes e inventario de componentes. **Se lee antes de crear cualquier pantalla.** |
 | `docs/plan-desarrollo.md` | Fases de construcción, qué se rescata del legacy, definición de terminado y el reparto en subagentes de cada rebanada. |
@@ -44,7 +44,7 @@ Versiones **fijadas** en `docs/arquitectura.md` §1 (agosto 2026). Subir una maj
 
 Ojo con Boot 4 al leer material escrito para Boot 3: **Jackson 3** (`tools.jackson.*`), **JSpecify** en vez de `org.springframework.lang.@Nullable`, **JUnit 6** (nada de JUnit 4 ni Vintage), **Testcontainers 2.x** (clases reubicadas por módulo), `RestTemplate` ya no se autoconfigura.
 
-**Frontend** — TypeScript 5.9 (`strict`), Vite 8, React 19.2, React Router 8 (paquete `react-router`), shadcn/ui + Tailwind 4 (config en CSS, **no** hay `tailwind.config.ts`), TanStack Query 5 (estado de servidor), Zustand 5 (estado de UI global), react-hook-form 7 + zod 4, i18next (todo texto visible pasa por `t()` desde el día uno). Tests: Vitest + React Testing Library, Playwright para e2e. Node 24 LTS.
+**Frontend** — TypeScript 5.9 (`strict`), Vite 8, React 19.2, React Router 8 (paquete `react-router`), shadcn/ui + Tailwind 4 (config en CSS, **no** hay `tailwind.config.ts`), TanStack Query 5 (estado de servidor), Zustand 5 (estado de UI global), react-hook-form 7 + zod 4, i18next (todo texto visible pasa por `t()` desde el día uno; **español e inglés**, #198). Tests: Vitest + React Testing Library, Playwright para e2e. Node 24 LTS.
 
 Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<feature>/` y `src/features/<dominio>/`). En el backend, las capas van adentro de la feature más un `common/` transversal; en el frontend, las **pantallas viven fuera** de las features en `src/routes/`, y lo sin dominio en capas de la raíz (`components/`, `hooks/`, `lib/`, `api/`, `types/`, `config/`). Detalle en `docs/arquitectura.md` §2.1 y §3.1.
 
@@ -67,7 +67,8 @@ Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<f
 15. Subir una major del stack es una decisión: se registra en `docs/decisiones.md` y se actualiza `docs/arquitectura.md` §1 en el mismo commit.
 16. En el frontend, **una feature nunca importa de otra**. Las pantallas van en `src/routes/` y son el único lugar que compone dominios; cada bloque de una pantalla compuesta recibe un **id**, no una entidad (§3.1.5). Cada feature expone su superficie en `features/<dominio>/index.ts`.
 17. **El rol no es la pertenencia**, y en las mesas la pertenencia manda: dirigir una mesa concreta se autoriza **solo por la fila en `masters`**, sin exigir el rol `Master` — que significa "puedo crear mesas propias" y nada más (#135). Toda lectura o mutación de un recurso concreto filtra por el actor —el actor en el `WHERE`, o verificación explícita en el service antes de tocar nada— y el actor sale siempre del token, nunca de la URL (#121). El JWT afirma **identidad, no autorización**: roles y `status` se leen de la base en cada request (#122).
-18. Ningún string visible se escribe en el JSX: todo pasa por `t('espacio.clave')` con el JSON en `src/locales/es/` (#117). Y ningún valor de estilo suelto: los tokens salen del `@theme`, que se transcribe desde el design system en Claude Design (#118, #130).
+18. Ningún string visible se escribe en el JSX: todo pasa por `t('espacio.clave')` con el JSON en `src/locales/<idioma>/` (#117). **Toda clave nueva se agrega en `es` y en `en`, en el mismo commit** (#198): un idioma a medias muestra la clave cruda. Y ningún valor de estilo suelto: los tokens salen del `@theme`, que se transcribe desde el design system en Claude Design (#118, #130).
+    **Tampoco el backend escribe frases que lea una persona** (#197): manda un código y sus parámetros, y el frontend las arma. Lo único verbatim es lo que escribió otra persona.
 19. **Todo lleva su bloque de documentación, sin excepciones**: Javadoc en el backend, JSDoc en el frontend, siempre en inglés. Ver *Documentación del código*, abajo. Código nuevo sin documentar no está terminado; una modificación que deja el bloque desactualizado es un bug.
 
 ## Documentación del código

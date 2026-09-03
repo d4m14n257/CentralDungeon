@@ -49,7 +49,15 @@ public class RegistrationService {
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
     /** decisiones.md #34 fixes this literal in Spanish - it is content a player reads, not code (#102 does not apply to it). */
-    private static final String AUTO_REJECT_JUSTIFICATION = "Mesa llena";
+    /**
+     * The reason the application itself writes when a table fills up (#34).
+     *
+     * <p>A <b>code</b> and not a sentence (#197): every other justification on this table is a
+     * master writing to a person and is shown verbatim, but this one is the system speaking, so it
+     * has to come out in the reader's language. {@code rejected_by IS NULL} is what already tells
+     * the two apart, so no column was needed - only the value.
+     */
+    private static final String AUTO_REJECT_REASON_CODE = "TABLE_FULL";
 
     /** The {@code table_registrations} table. */
     private final TableRegistrationRepository registrationRepository;
@@ -131,8 +139,9 @@ public class RegistrationService {
         CommittedTable clash = scheduleConflictService.findClashWith(actorId, table);
         if (clash != null) {
             throw new ConflictException(
-                    "El horario de esta mesa se pisa con «" + clash.name() + "», donde ya jugás.",
-                    ConflictException.SCHEDULE_CONFLICT);
+                    "Table schedule overlaps " + clash.name() + ", where the applicant already plays",
+                    ConflictException.SCHEDULE_CONFLICT,
+                    Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
         }
 
         User actor = userService.getById(actorId);
@@ -147,7 +156,7 @@ public class RegistrationService {
     }
 
     /**
-     * Accepting the candidate that completes max_players auto-rejects the rest with "Mesa llena"
+     * Accepting the candidate that completes max_players auto-rejects the rest with TABLE_FULL
      * (#34). The table lock also protects this: two concurrent accepts cannot both think there is
      * room left.
      */
@@ -211,7 +220,7 @@ public class RegistrationService {
         User rejectedBy = userService.getById(actorId);
         registration.setStatus(TableRegistrationStatus.Rejected);
         rejectionRepository.save(new RegistrationRejection(registration, request.justification(), rejectedBy));
-        notificationService.notifyRegistrationRejected(registration.getUser().getId(), registration.getGameTable(), request.justification());
+        notificationService.notifyRegistrationRejected(registration.getUser().getId(), registration.getGameTable());
 
         return registrationMapper.toResponse(registration);
     }
@@ -270,19 +279,26 @@ public class RegistrationService {
     public PageResponse<RegistrationResponse> listMine(String actorId, Pageable pageable) {
         Page<TableRegistration> page =
                 registrationRepository.findByUser_IdAndStatusNot(actorId, TableRegistrationStatus.Deleted, pageable);
-        Map<String, String> justificationByRegistrationId = loadRejectionJustifications(page.getContent());
+        Map<String, RegistrationRejection> rejectionByRegistrationId = loadRejections(page.getContent());
         return PageResponse.from(page.map(registration -> {
             RegistrationResponse response = registrationMapper.toResponse(registration);
-            String justification = justificationByRegistrationId.get(registration.getId());
-            return justification == null
-                    ? response
-                    : new RegistrationResponse(
-                            response.id(), response.gameTableId(), response.gameTableName(), response.userId(), response.userName(),
-                            response.userKarma(), response.status(), response.description(), response.createdAt(), justification);
+            RegistrationRejection rejection = rejectionByRegistrationId.get(registration.getId());
+            if (rejection == null) {
+                return response;
+            }
+            // A rejection the application wrote itself is a code to translate; one a master wrote is
+            // their own words and is shown exactly as typed. `rejected_by IS NULL` is what tells the
+            // two apart, and it always has (#34, #197).
+            boolean automatic = rejection.getRejectedBy() == null;
+            return new RegistrationResponse(
+                    response.id(), response.gameTableId(), response.gameTableName(), response.userId(), response.userName(),
+                    response.userKarma(), response.status(), response.description(), response.createdAt(),
+                    automatic ? null : rejection.getDescription(),
+                    automatic ? rejection.getDescription() : null);
         }));
     }
 
-    private Map<String, String> loadRejectionJustifications(List<TableRegistration> registrations) {
+    private Map<String, RegistrationRejection> loadRejections(List<TableRegistration> registrations) {
         List<String> rejectedIds = registrations.stream()
                 .filter(registration -> registration.getStatus() == TableRegistrationStatus.Rejected)
                 .map(TableRegistration::getId)
@@ -291,8 +307,7 @@ public class RegistrationService {
             return Map.of();
         }
         return rejectionRepository.findByRegistration_IdIn(rejectedIds).stream()
-                .collect(Collectors.toMap(
-                        rejection -> rejection.getRegistration().getId(), RegistrationRejection::getDescription));
+                .collect(Collectors.toMap(rejection -> rejection.getRegistration().getId(), rejection -> rejection));
     }
 
     /**
@@ -321,8 +336,8 @@ public class RegistrationService {
                 registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc(table.getId(), TableRegistrationStatus.Candidate);
         for (TableRegistration candidate : remaining) {
             candidate.setStatus(TableRegistrationStatus.Rejected);
-            rejectionRepository.save(new RegistrationRejection(candidate, AUTO_REJECT_JUSTIFICATION, null));
-            notificationService.notifyRegistrationRejected(candidate.getUser().getId(), table, AUTO_REJECT_JUSTIFICATION);
+            rejectionRepository.save(new RegistrationRejection(candidate, AUTO_REJECT_REASON_CODE, null));
+            notificationService.notifyRegistrationRejected(candidate.getUser().getId(), table);
         }
     }
 

@@ -1,0 +1,15 @@
+{
+  "title": "Development panel",
+  "loggedInAs": "Signed in as {{name}}",
+  "notLoggedIn": "Not signed in",
+  "playerDiscordIdLabel": "Discord ID (Player)",
+  "masterDiscordIdLabel": "Discord ID (Master)",
+  "adminDiscordIdLabel": "Discord ID (Admin)",
+  "loginAsPlayer": "Sign in as Player",
+  "loginAsMaster": "Sign in as Master",
+  "loginAsAdmin": "Sign in as Admin",
+  "loginFailed": "Could not start a test session - is the backend running with the test profile?",
+  "createTestTable": "Create test table",
+  "testTableName": "Test table",
+  "testTableCreated": "Created \"{{name}}\""
+}

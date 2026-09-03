@@ -14,8 +14,17 @@ export interface PageResponse<T> {
 export interface ProblemDetail {
   title: string
   status: number
+  /**
+   * The backend's own words, in English and for a log (#197). **Never shown to a person**: what they
+   * read is rendered here from `errorCode` and `errorParams`, in the language they chose.
+   */
   detail: string
   errorCode: string
+  /**
+   * The values the translated message needs, keyed by placeholder name. Absent for the errors whose
+   * message has none, which is most of them.
+   */
+  errorParams?: Record<string, string>
 }
 
 /**

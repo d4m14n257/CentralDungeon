@@ -50,18 +50,36 @@ class NotificationServiceTest {
     }
 
     @Test
-    void notifiesARejectedRegistrationWithTheJustificationAsTheMessage() {
+    void notifiesARejectedRegistration() {
         User recipient = persistedUser("player-2");
         when(userRepository.getReferenceById("player-2")).thenReturn(recipient);
         GameTable table = persistedTable("table-2", "Hijos del Vacio");
 
-        notificationService.notifyRegistrationRejected("player-2", table, "Mesa llena");
+        notificationService.notifyRegistrationRejected("player-2", table);
 
         verify(notificationRepository).save(argThatMatchesType(NotificationType.RegistrationRejected));
     }
 
+    /**
+     * #197: the row stores what happened and the names involved, never the sentence. A notification
+     * that arrived with a rendered title would still be in the language of the day it was written.
+     */
     @Test
-    void notifiesAMasterOfANewCandidateWithTheApplicantNameInTheTitle() {
+    void storesTheNamesAndNoSentenceAtAll() {
+        when(userRepository.getReferenceById("player-3")).thenReturn(persistedUser("player-3"));
+        GameTable table = persistedTable("table-9", "La Cripta");
+
+        notificationService.notifyRegistrationAccepted("player-3", table);
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification -> notification.getTitle() == null
+                && notification.getMessage() == null
+                && notification.getParams() != null
+                && "La Cripta".equals(notification.getParams().tableName())));
+    }
+
+    /** The applicant's name is a parameter, so the rendered title can name them in any language. */
+    @Test
+    void notifiesAMasterOfANewCandidateCarryingTheApplicantName() {
         User recipient = persistedUser("master-1");
         when(userRepository.getReferenceById("master-1")).thenReturn(recipient);
         GameTable table = persistedTable("table-3", "Tumbas de Sal");
@@ -70,8 +88,22 @@ class NotificationServiceTest {
 
         verify(notificationRepository)
                 .save(org.mockito.ArgumentMatchers.argThat(notification -> notification.getNotificationType() == NotificationType.NewCandidate
-                        && notification.getTitle().equals("Beto se postuló a Tumbas de Sal")
-                        && notification.getMessage() == null));
+                        && notification.getParams() != null
+                        && "Beto".equals(notification.getParams().actorName())
+                        && "Tumbas de Sal".equals(notification.getParams().tableName())));
+    }
+
+    /** A clash has to name both tables: the one it links to and the one it collides with (#178). */
+    @Test
+    void notifiesAScheduleClashCarryingBothTableNames() {
+        when(userRepository.getReferenceById("player-4")).thenReturn(persistedUser("player-4"));
+        GameTable table = persistedTable("table-10", "El Faro");
+
+        notificationService.notifyScheduleConflict("player-4", table, "La Cripta");
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification -> notification.getParams() != null
+                && "El Faro".equals(notification.getParams().tableName())
+                && "La Cripta".equals(notification.getParams().otherTableName())));
     }
 
     @Test
@@ -83,7 +115,7 @@ class NotificationServiceTest {
 
     @Test
     void markAsReadRejectsSomeoneElsesNotification() {
-        Notification notification = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, "Title", null, null, null);
+        Notification notification = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, NotificationParams.ofTable("La Cripta"), null, null);
         ReflectionTestUtils.setField(notification, "id", "notif-1");
         when(notificationRepository.findById("notif-1")).thenReturn(Optional.of(notification));
 
@@ -92,7 +124,7 @@ class NotificationServiceTest {
 
     @Test
     void markAsReadFlipsReadStatusForTheOwner() {
-        Notification notification = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, "Title", null, null, null);
+        Notification notification = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, NotificationParams.ofTable("La Cripta"), null, null);
         ReflectionTestUtils.setField(notification, "id", "notif-2");
         when(notificationRepository.findById("notif-2")).thenReturn(Optional.of(notification));
 
@@ -103,8 +135,8 @@ class NotificationServiceTest {
 
     @Test
     void markAllAsReadFlipsEveryUnreadNotificationForThatUser() {
-        Notification first = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, "Title 1", null, null, null);
-        Notification second = new Notification(persistedUser("owner"), NotificationType.NewCandidate, "Title 2", null, null, null);
+        Notification first = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, NotificationParams.ofTable("La Cripta"), null, null);
+        Notification second = new Notification(persistedUser("owner"), NotificationType.NewCandidate, NotificationParams.ofTable("El Faro"), null, null);
         when(notificationRepository.findByUser_IdAndReadStatus("owner", ReadStatus.Unread)).thenReturn(java.util.List.of(first, second));
 
         notificationService.markAllAsRead("owner");

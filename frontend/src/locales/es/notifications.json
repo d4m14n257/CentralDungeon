@@ -17,10 +17,36 @@
   "type": {
     "RegistrationAccepted": "Postulación aceptada",
     "RegistrationRejected": "Postulación rechazada",
-    "NewCandidate": "Nueva postulación"
+    "NewCandidate": "Nueva postulación",
+    "ScheduleConflict": "Choque de horarios",
+    "SessionScheduled": "Calendario actualizado",
+    "SessionCanceled": "Sesión cancelada"
   },
   "badge": {
     "accepted": "Aceptada",
     "rejected": "Rechazada"
+  },
+  "sentence": {
+    "RegistrationAccepted": {
+      "title": "Te aceptaron en {{tableName}}"
+    },
+    "RegistrationRejected": {
+      "title": "Tu postulación a {{tableName}} fue rechazada"
+    },
+    "NewCandidate": {
+      "title": "{{actorName}} se postuló a {{tableName}}"
+    },
+    "ScheduleConflict": {
+      "title": "Tu horario en {{tableName}} choca con otra mesa",
+      "message": "Se superpone con {{otherTableName}}. Podés retirar una postulación o hablarlo con el master."
+    },
+    "SessionScheduled": {
+      "title": "Cambió el calendario de {{tableName}}",
+      "message": "Revisá las fechas de las sesiones en tu hora local."
+    },
+    "SessionCanceled": {
+      "title": "Se canceló una sesión de {{tableName}}",
+      "message": "La mesa suma otra sesión al final, así que sigue siendo la misma cantidad."
+    }
   }
 }

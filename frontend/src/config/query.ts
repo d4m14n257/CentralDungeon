@@ -14,13 +14,16 @@ export const staleTime = {
 } as const
 
 /**
- * Los códigos de error cuyo `detail` se muestra tal cual, porque el backend lo escribió para que
- * alguien lo lea y no para un log.
+ * The error codes that have a message of their own to show, rendered here from the code and the
+ * parameters the backend sent with it (#197).
  *
- * Es una lista corta a propósito: el mensaje del servidor solo llega al usuario cuando el servidor
- * se comprometió a redactarlo. `SCHEDULE_CONFLICT` (#178) es el primero — un choque de horarios se
- * rechaza nombrando la mesa con la que choca, y decir «no se pudo guardar» ahí sería esconder
- * justamente lo único que la persona puede resolver (principio 2 de frontend-diseno.md 1).
+ * A short list on purpose: a person only reads a specific message when the backend committed to a
+ * code for it. `SCHEDULE_CONFLICT` (#178) is the first — a clash is refused naming the table it
+ * collides with, and answering "could not save" there would hide the one thing the person can
+ * actually resolve (principio 2 de frontend-diseno.md §1).
+ *
+ * Before #197 the backend's own `detail` was shown verbatim, which meant a Spanish sentence no
+ * matter what language the reader had picked.
  */
 const EXPLAINED_ERROR_CODES = new Set(['SCHEDULE_CONFLICT'])
 
@@ -39,7 +42,13 @@ function reportMutationError(error: unknown) {
     toast.error(i18n.t('errors.offline'))
     return
   }
-  toast.error(EXPLAINED_ERROR_CODES.has(error.problem.errorCode) ? error.problem.detail : i18n.t('errors.mutationFailed'))
+  if (!EXPLAINED_ERROR_CODES.has(error.problem.errorCode)) {
+    toast.error(i18n.t('errors.mutationFailed'))
+    return
+  }
+  toast.error(
+    i18n.t(`errors.codes.${error.problem.errorCode}`, { ...error.problem.errorParams, defaultValue: i18n.t('errors.mutationFailed') }),
+  )
 }
 
 /**

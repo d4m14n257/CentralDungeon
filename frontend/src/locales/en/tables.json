@@ -1,0 +1,82 @@
+{
+  "status": {
+    "Unassigned": "Unassigned",
+    "Preparation": "In preparation",
+    "ChangesRequested": "Changes requested",
+    "Opened": "Open",
+    "InProgress": "In progress",
+    "PauseRequested": "Pause requested",
+    "Pause": "Paused",
+    "Finished": "Finished",
+    "Canceled": "Cancelled"
+  },
+  "explorer": {
+    "title": "Browse tables",
+    "emptyTitle": "No open tables yet",
+    "emptyDescription": "Come back later — masters keep publishing new tables.",
+    "players": "{{current}} / {{max}} players",
+    "playersUnlimited": "{{current}} players",
+    "alreadyApplied": "You already applied",
+    "scheduleConflict": "Clashes with a table of yours"
+  },
+  "detail": {
+    "requirements": "Requirements",
+    "description": "Description",
+    "capacity": "Seats",
+    "masterLabel": "Master",
+    "coMasterLabel": "Co-master",
+    "apply": "Apply",
+    "applySubmitting": "Sending...",
+    "alreadyApplied": "You already have an application in progress",
+    "tableFull": "The table is full",
+    "notOpen": "It is not open to applications",
+    "needsPlayerRole": "You need the Player role",
+    "applySuccess": "Application sent!",
+    "applyDialogTitle": "Apply to {{name}}",
+    "applyDialogDescription": "Tell the master why you want to join (optional).",
+    "applyDescriptionLabel": "Message for the master",
+    "notFoundTitle": "This table does not exist",
+    "notFoundDescription": "It may no longer be available.",
+    "permitted": "What is allowed",
+    "schedule": "Agenda",
+    "scheduleTimeZone": "Times in your zone ({{timeZone}}).",
+    "scheduleConflict": "Clashes with a table of yours",
+    "scheduleConflictExplained": "You already play at another table at that time. Withdraw that application or leave that table to be able to apply here.",
+    "scheduleConflictHelp": "How clashes work",
+    "startDate": "First session",
+    "totalSessions_one": "{{count}} session planned",
+    "totalSessions_other": "{{count}} sessions planned"
+  },
+  "myTables": {
+    "title": "My tables",
+    "emptyTitle": "You are not playing at any table yet",
+    "emptyDescription": "Apply to an open table from the explorer."
+  },
+  "sessions": {
+    "number": "Session {{number}}",
+    "timeZone": "Shown in your own time ({{timeZone}})",
+    "calendarTitle": "Calendar",
+    "myCalendarTitle": "My sessions",
+    "myCalendarEmptyTitle": "No sessions yet",
+    "myCalendarEmptyDescription": "They appear as soon as the table opens with its agenda filled in. While the table is paused, the pending ones are hidden until it resumes.",
+    "myAttendanceTitle": "My attendance",
+    "myAttendanceHelp": "How attendance is counted",
+    "seePublicDetail": "See the table's public page",
+    "status": {
+      "Scheduled": "Scheduled",
+      "Held": "Played",
+      "Cancelled": "Cancelled"
+    },
+    "attendance": {
+      "Present": "Present",
+      "Absent": "Absent",
+      "Excused": "Excused",
+      "Unknown": "Not recorded",
+      "registered": "Sessions recorded",
+      "nothingRecorded": "No attendance recorded yet.",
+      "noPlayers": "The table has no accepted players yet.",
+      "forPlayer": "Attendance for {{name}}",
+      "save": "Save attendance"
+    }
+  }
+}

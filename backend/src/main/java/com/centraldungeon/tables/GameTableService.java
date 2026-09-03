@@ -236,8 +236,9 @@ public class GameTableService {
                 request.primaryUserId(), gameTableId, scheduleConflictService.intervalsOf(gameTable));
         if (clash != null) {
             throw new ConflictException(
-                    "La agenda de esta mesa se pisa con «" + clash.name() + "», donde ese master ya está comprometido.",
-                    ConflictException.SCHEDULE_CONFLICT);
+                    "Agenda overlaps table " + clash.name() + ", which the assigned master is already committed to",
+                    ConflictException.SCHEDULE_CONFLICT,
+                    Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
         }
 
         masterService.assignInitialMasters(gameTable, request.primaryUserId(), secondaries);
@@ -462,11 +463,11 @@ public class GameTableService {
         if (primary != null) {
             CommittedTable clash = scheduleConflictService.findClashWith(primary.userId(), gameTable);
             if (clash != null) {
-                // In Spanish because it is shown verbatim, same precedent as R1's refusal (#178).
                 throw new ConflictException(
-                        "No se puede reanudar: la agenda de esta mesa se pisa con «" + clash.name()
-                                + "», donde su master ya está comprometido.",
-                        ConflictException.SCHEDULE_CONFLICT);
+                        "Cannot resume: agenda overlaps table " + clash.name()
+                                + ", which this table's master is already committed to",
+                        ConflictException.SCHEDULE_CONFLICT,
+                        Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
             }
         }
 

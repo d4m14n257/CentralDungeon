@@ -49,7 +49,10 @@
   },
   "errors": {
     "offline": "No hay conexión con el servidor. Probá de nuevo en un momento.",
-    "mutationFailed": "No pudimos completar la acción. Probá de nuevo."
+    "mutationFailed": "No pudimos completar la acción. Probá de nuevo.",
+    "codes": {
+      "SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde ya estás comprometido."
+    }
   },
   "pagination": {
     "label": "Paginación",
@@ -69,5 +72,10 @@
     "orderedList": "Lista numerada",
     "quote": "Cita",
     "code": "Código"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English"
   }
 }

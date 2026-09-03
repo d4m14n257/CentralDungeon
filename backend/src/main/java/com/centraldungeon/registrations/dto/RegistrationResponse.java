@@ -18,7 +18,13 @@ import org.jspecify.annotations.Nullable;
  * @param description            the applicant's note, or null when they wrote none
  * @param createdAt              when they applied, in UTC. FIFO order is not decoration: it is the
  *                               rule the auto-reject on fill depends on (#28, #34)
- * @param rejectionJustification why it was turned down, or null for anything not rejected
+ * @param rejectionJustification the master's own words for turning it down, shown verbatim. Null
+ *                               for anything not rejected, and null when the rejection was the
+ *                               system's rather than a person's - that one is
+ *                               {@code rejectionReasonCode}
+ * @param rejectionReasonCode    the code of a rejection the application wrote itself, today only
+ *                               {@code TABLE_FULL} (#34). The frontend renders it in the reader's
+ *                               language (#197). Null whenever a person did the rejecting
  */
 public record RegistrationResponse(
         String id,
@@ -30,5 +36,6 @@ public record RegistrationResponse(
         String status,
         @Nullable String description,
         LocalDateTime createdAt,
-        @Nullable String rejectionJustification) {
+        @Nullable String rejectionJustification,
+        @Nullable String rejectionReasonCode) {
 }

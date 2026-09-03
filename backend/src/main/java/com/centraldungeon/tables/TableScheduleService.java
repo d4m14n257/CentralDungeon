@@ -149,11 +149,12 @@ public class TableScheduleService {
         if (actorId != null) {
             CommittedTable clash = scheduleConflictService.findClash(actorId, table.getId(), intervals);
             if (clash != null) {
-                // Written in Spanish because it is shown verbatim to the master: same precedent as
-                // the "Mesa llena" of #34, and the reason R1 is a refusal that explains itself.
+                // English, and for a log: the sentence the master reads is rendered by the
+                // frontend from the code and the table name below, in their language (#197).
                 throw new ConflictException(
-                        "Esta agenda se pisa con «" + clash.name() + "», donde ya estás comprometido.",
-                        ConflictException.SCHEDULE_CONFLICT);
+                        "Agenda overlaps table " + clash.name() + ", which the actor is already committed to",
+                        ConflictException.SCHEDULE_CONFLICT,
+                        Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
             }
         }
 

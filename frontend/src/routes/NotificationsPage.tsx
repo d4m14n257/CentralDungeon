@@ -4,7 +4,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useMarkAllAsRead, useNotificationClick, useNotifications } from '@/features/notifications'
+import { notificationText, useMarkAllAsRead, useNotificationClick, useNotifications } from '@/features/notifications'
 import { relativeTimeFrom } from '@/lib/relativeTime'
 import { cn } from '@/lib/utils'
 
@@ -73,7 +73,7 @@ export function NotificationsPage() {
                 >
                   <span className={cn('size-2 shrink-0 rounded-full', unread ? 'bg-brand-fg' : 'bg-transparent')} aria-hidden />
                   <span className={cn('flex-1 truncate text-sm', unread ? 'text-fg font-medium' : 'text-fg-muted')}>
-                    {notification.title}
+                    {notificationText(notification, t).title}
                   </span>
                   {tone && (
                     <span className={cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium', tone.badge)}>

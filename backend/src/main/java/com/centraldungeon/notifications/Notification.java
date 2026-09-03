@@ -3,6 +3,7 @@ package com.centraldungeon.notifications;
 import com.centraldungeon.common.model.IdGenerator;
 import com.centraldungeon.users.User;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -22,8 +23,10 @@ import org.jspecify.annotations.Nullable;
  * and when the socket does land it carries an invalidation signal rather than the data - the row
  * here stays the single source of truth (arquitectura.md 3.3).
  *
- * <p>Titles and messages are written in Spanish, because they are content a player reads rather
- * than code (#34, #102). It is the one deliberate exception to "every file in English".
+ * <p><b>A row stores what happened, not the sentence describing it</b> (#197). It is written once
+ * and read for months, and the reader can change the application's language in between, so the type
+ * plus {@link #getParams()} is what travels and the frontend renders the sentence. {@code title} and
+ * {@code message} survive only for the rows written before that change.
  *
  * <p>No BaseEntity: this table has no {@code updated_at}. A notification is written once and only
  * ever flips to read.
@@ -47,13 +50,24 @@ public class Notification {
     @Column(name = "notification_type", nullable = false, length = 32)
     private NotificationType notificationType;
 
-    /** The headline. The bell shows only this, so it has to be readable on its own (#156). */
-    @Column(nullable = false, length = 128)
-    private String title;
+    /**
+     * The frozen headline of a row written before #197, in the language of the day. Null on every
+     * row written since: the bell renders the title from the type and the parameters instead.
+     */
+    @Column(length = 128)
+    private @Nullable String title;
 
-    /** The detail, for the notifications screen. Null when the title already says everything. */
+    /** The frozen detail of a row written before #197. Null on every row written since. */
     @Column(length = 1024)
     private @Nullable String message;
+
+    /**
+     * The names the rendered sentence needs (#197). Null only on rows written before that change,
+     * which is exactly when the frozen {@link #title} and {@link #message} are used instead.
+     */
+    @Convert(converter = NotificationParamsConverter.class)
+    @Column(length = 1024)
+    private @Nullable NotificationParams params;
 
     /** What this is about ("game_table"), so a click knows where to go. Null for a dead end. */
     @Column(name = "related_entity_type", length = 32)
@@ -83,24 +97,24 @@ public class Notification {
     /**
      * Emits a notification, unread.
      *
+     * <p>No text: the sentence is rendered by whoever reads it, from the type and these parameters,
+     * in the language they chose (#197).
+     *
      * @param user              the recipient
-     * @param notificationType  which event this is
-     * @param title             the headline, readable on its own from the bell (#156)
-     * @param message           the detail, or null when the title says everything
+     * @param notificationType  which event this is. It decides which sentence gets rendered
+     * @param params            the names that sentence needs filled in
      * @param relatedEntityType what this is about ("game_table"), or null for a dead end
      * @param relatedEntityId   the id of that thing. Passed together with the type or not at all
      */
     public Notification(
             User user,
             NotificationType notificationType,
-            String title,
-            @Nullable String message,
+            NotificationParams params,
             @Nullable String relatedEntityType,
             @Nullable String relatedEntityId) {
         this.user = user;
         this.notificationType = notificationType;
-        this.title = title;
-        this.message = message;
+        this.params = params;
         this.relatedEntityType = relatedEntityType;
         this.relatedEntityId = relatedEntityId;
     }
@@ -152,21 +166,32 @@ public class Notification {
     }
 
     /**
-     * Returns the headline.
+     * Returns the frozen headline of a row written before #197.
      *
-     * @return the title, never null
+     * @return the stored title, or null on any row written since - those render their sentence from
+     *         the type and the parameters instead
      */
-    public String getTitle() {
+    public @Nullable String getTitle() {
         return title;
     }
 
     /**
-     * Returns the detail.
+     * Returns the frozen detail of a row written before #197.
      *
-     * @return the message, or null when the title says everything
+     * @return the stored message, or null
      */
     public @Nullable String getMessage() {
         return message;
+    }
+
+    /**
+     * Returns the names the rendered sentence needs (#197).
+     *
+     * @return the parameters, or null on a row written before the change - which is when the frozen
+     *         {@link #getTitle()} and {@link #getMessage()} are what gets shown
+     */
+    public @Nullable NotificationParams getParams() {
+        return params;
     }
 
     /**

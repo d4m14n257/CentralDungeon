@@ -15,7 +15,13 @@ export interface Registration {
   status: RegistrationStatus
   description: string | null
   createdAt: string
+  /** The master's own words, shown exactly as typed. Null when the system did the rejecting. */
   rejectionJustification: string | null
+  /**
+   * The code of a rejection the application wrote itself, today only `TABLE_FULL` (#34). Rendered in
+   * the reader's language (#197). Null whenever a person did the rejecting.
+   */
+  rejectionReasonCode: string | null
 }
 
 /**

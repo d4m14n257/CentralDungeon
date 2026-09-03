@@ -18,5 +18,6 @@ public interface RegistrationMapper {
     @Mapping(target = "userKarma", source = "registration.user.karma")
     @Mapping(target = "status", expression = "java(registration.getStatus().name())")
     @Mapping(target = "rejectionJustification", ignore = true)
+    @Mapping(target = "rejectionReasonCode", ignore = true)
     RegistrationResponse toResponse(TableRegistration registration);
 }

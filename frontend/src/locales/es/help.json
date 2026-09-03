@@ -56,7 +56,7 @@
       "title": "Tu cuenta",
       "login": "Se entra con Discord y hay que ser miembro del servidor de la comunidad. No hay registro propio ni contraseña.",
       "onboarding": "La primera vez se piden dos datos: el nombre que se va a mostrar y el país. Hasta completarlos no se puede seguir.",
-      "theme": "Desde el menú del avatar se cambia entre tema claro y oscuro, y se cierra sesión."
+      "theme": "Desde el menú del avatar se cambia entre tema claro y oscuro, se elige el idioma y se cierra sesión. La primera vez el idioma se toma del navegador; si no se puede saber, queda en español. Lo que elijas se recuerda."
     },
     "notifications": {
       "title": "Notificaciones",

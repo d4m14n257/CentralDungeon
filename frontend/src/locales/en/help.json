@@ -1,0 +1,304 @@
+{
+  "title": "Help",
+  "intro": "How CentralDungeon works and how each part is used. It grows with the application: what is here is what you can already do today.",
+  "nav": {
+    "basics": "For everyone",
+    "players": "Players",
+    "masters": "Masters",
+    "admins": "Admins"
+  },
+  "basics": {
+    "search": {
+      "title": "How to search",
+      "intro": "The site's search boxes understand a short language, the same one everywhere. You can type a name and be done; the rest is for when you want to narrow things down.",
+      "plain": "Typing text searches by that box's basic criterion. In the people search, the Discord name or the display name.",
+      "field": "The slash opens the list of fields. You pick with the arrows and confirm with Enter or Tab. The field stays as a fixed chip, and everything you type after it is its value, spaces included.",
+      "commas": "Commas separate alternatives of the same criterion: any one of them is enough.",
+      "connectors": "“/or” and “/and” close the criterion and join the next one, leaving their own chip in between. Tap that chip to switch from one to the other.",
+      "onlySlash": "The slash is the only separator. An “and” or an “or” typed without one is part of what you are searching for, not an instruction.",
+      "order": "Criteria apply in the order they appear, left to right, with no hidden precedence rules.",
+      "chips": "Each chip is removed with its ×. With the text empty, Backspace undoes the last step: first it releases the open field, then it hands the last chip back to the cursor so you can edit it.",
+      "debounce": "There is nothing to press: the search runs on its own when you stop typing.",
+      "examplesTitle": "Examples",
+      "exampleQuery": "If you type",
+      "exampleMeaning": "You find",
+      "example1": "People whose Discord name or display name contains “damian”.",
+      "example2": "The same, but only by display name.",
+      "example3": "Any of the three, by display name.",
+      "example4": "People matching one criterion or the other.",
+      "example5": "Only the ones matching both at once.",
+      "steps": {
+        "step1": "Type what you are looking for and wait a second: the list updates on its own, with nothing to press.",
+        "step2": "If there are too many results, type / and pick the field with the arrows. The chip stays fixed and everything you keep typing is its value.",
+        "step3": "If any of several options of the same field will do, separate them with commas: damian,carlos,daniel.",
+        "step4": "To add another criterion, type /or or /and, pick it from the list, and carry on with the next one.",
+        "step5": "To fix things: tap a chip's ×, tap the connector chip to swap “and” for “or”, or press Backspace on the empty text."
+      }
+    },
+    "contexts": {
+      "title": "The contexts",
+      "intro": "Roles stack: you can be a player and a master at once. Admin and owner are the exception, because they are the same role with a different reach: you hold one of the two. Top left there is a selector that switches context and the screens with it. It is how the interface is organized, not a permission: what you may do is decided by the server on every action.",
+      "playerTitle": "Player",
+      "player": "You browse the open tables, apply to them, and follow your applications and your tables.",
+      "masterTitle": "Master",
+      "master": "You run tables. It appears if you hold the role or if you are a master of at least one table even without it: running a table and being able to create your own are different things.",
+      "adminTitle": "Admin",
+      "admin": "You review the tables waiting for approval, request changes, and create tables without a master to assign one later.",
+      "ownerTitle": "Owner",
+      "owner": "An admin with more reach: everything an admin does, plus auditing, files and account migration once those are built. It does not stack with admin, it replaces it.",
+      "steps": {
+        "step1": "Tap the context selector, top left, next to the site name.",
+        "step2": "Pick the context you want to work in. Only the ones that apply to you are listed.",
+        "step3": "The screens change with the context; your notifications and your account do not, they are always there."
+      }
+    },
+    "account": {
+      "title": "Your account",
+      "login": "You sign in with Discord and you have to be a member of the community server. There is no separate sign-up and no password.",
+      "onboarding": "The first time, two things are asked: the name to show and your country. You cannot go on until they are filled in.",
+      "theme": "From the avatar menu you switch between light and dark theme, pick the language, and sign out. The first time, the language comes from your browser; when that cannot be worked out it stays in Spanish. Whatever you pick is remembered."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "what": "The bell at the top collects what happened to you: a new application on your table, a decision about yours.",
+      "click": "Tapping a notification takes you where it happened, switching context on its own if it has to.",
+      "history": "The full history is on the notifications screen, and that is where they get marked as read."
+    },
+    "tableStatus": {
+      "title": "A table's statuses",
+      "intro": "Almost everything you can do with a table depends on the status it is in, which is why it is always shown.",
+      "Unassigned": "An admin created it and it has no master yet. It opens on its own as soon as it gets one.",
+      "Preparation": "The master is putting it together, or has already sent it for review.",
+      "ChangesRequested": "An admin asked for corrections before approving it.",
+      "Opened": "It is published: it can be seen and applied to.",
+      "InProgress": "It has started playing.",
+      "PauseRequested": "The master asked to pause it and is waiting for an answer.",
+      "Pause": "It is frozen; it can be resumed.",
+      "Finished": "It ended the way it was meant to.",
+      "Canceled": "It was cut short, with a reason on the record."
+    }
+  },
+  "players": {
+    "applying": {
+      "title": "Applying to a table",
+      "where": "From the explorer you open an open table's detail and apply there, with an optional message for the master.",
+      "oneAtATime": "You cannot have two active applications to the same table, and you cannot apply to a table you run.",
+      "blocked": "If the table is full or not open, instead of a greyed-out button you get the reason in writing.",
+      "steps": {
+        "step1": "From the explorer, open the table you are interested in and read its description and requirements.",
+        "step2": "Tap “Apply”. If the button is not there, you will read the reason in its place.",
+        "step3": "Write a message for the master if you want to tell them something. It is optional.",
+        "step4": "Send it and follow the application from “My applications”: that is where you see the master's decision."
+      }
+    },
+    "applicationStatus": {
+      "title": "Where your application stands",
+      "intro": "You follow all of them from “My applications”.",
+      "Candidate": "The master has not decided yet.",
+      "Player": "You were accepted: the table now shows up under “My tables”.",
+      "Rejected": "The master turned it down with a written reason. You can apply again later.",
+      "auto": "If the table fills up, the applications left without a seat are rejected on their own."
+    },
+    "myTables": {
+      "title": "Your tables",
+      "list": "“My tables” shows the ones you were accepted into and that are still alive.",
+      "status": "Each one carries its status in plain sight: while it is paused or in preparation there is nothing to do, and it says so."
+    },
+    "scheduleConflict": {
+      "title": "Schedule clashes",
+      "local": "Tables show their agenda in your own time, even though it is stored in UTC underneath.",
+      "blocked": "You cannot apply to a table that clashes with another one you already play at. The table tells you, and names which one.",
+      "candidate": "Having several pending applications that clash is fine: until you are accepted into one there is no commitment.",
+      "notified": "When you are accepted into one, if any of your other applications now clashes with it, you get a notice. Nobody rejects them for you.",
+      "withdraw": "You can withdraw a pending application from “My applications”. Once accepted you cannot: that is a conversation with the master.",
+      "steps": {
+        "step1": "Go to “My applications”.",
+        "step2": "Find the pending application you want to let go of.",
+        "step3": "Tap “Withdraw” and confirm. If you change your mind later, you have to apply again."
+      }
+    },
+    "mySessions": {
+      "title": "My sessions and my attendance",
+      "where": "Go to “My tables” and tap the table: its agenda, the full calendar and your attendance are all there.",
+      "local": "Every date is shown in your own time, even though the system stores them in UTC. The footer says which zone you are seeing them in.",
+      "paused": "If the table is paused, the pending sessions are not shown: there is no date to promise until it resumes.",
+      "cancelled": "A cancelled session stays in sight with its number, and the table adds another one at the end: you still play the same number.",
+      "threeNumbers": "Your attendance is three numbers and not a percentage: present, excused and absent. Missing after warning and simply not turning up are different things, and an average would hide that.",
+      "denominator": "The denominator is the sessions with something recorded. The ones nobody has marked yet do not count: if they did, a table that just started would make you look like a chronic absentee.",
+      "notKarma": "Attendance does not go into your karma. It is shown separately, because they are two different signals and mixing them would make the number impossible to explain.",
+      "steps": {
+        "step1": "Open “My tables” from the menu.",
+        "step2": "Tap the table you care about.",
+        "step3": "Look at “My sessions” for the calendar and “My attendance” for the three numbers."
+      }
+    }
+  },
+  "masters": {
+    "creating": {
+      "title": "Creating a table",
+      "role": "Creating your own tables needs the Master role. Running a table you were assigned does not: they are different things.",
+      "wizard": "The wizard runs in four steps: identity, catalogs, agenda and seats. The last one shows you the summary before sending.",
+      "submit": "When it is ready it goes to an admin for review.",
+      "steps": {
+        "step1": "Switch to the Master context with the selector at the top.",
+        "step2": "Go to “My tables” and tap “Create table”.",
+        "step3": "Follow the four steps. The table is born in preparation and nobody can see it yet.",
+        "step4": "When it is ready, send it for review from the Status tab.",
+        "step5": "Wait for an admin's decision: the bell tells you. If they ask for changes, it arrives with the reason in writing."
+      }
+    },
+    "schedule": {
+      "title": "Agenda and schedules",
+      "local": "Times are typed in your own zone and stored in UTC. The editor shows you both: if the day shifts, that is expected.",
+      "duration": "The length is of one session, not of the campaign. It is what decides how late each slot runs.",
+      "interval": "Two tables clash if they overlap, not only if they start at the same time: a three-hour one at 20:00 overlaps another at 22:00.",
+      "chained": "Chaining two tables is fine: one that starts exactly when the other ends does not clash.",
+      "conflict": "You cannot run two live tables that overlap. If you try to save an agenda like that, the system tells you which one it clashes with.",
+      "paused": "A paused table does not reserve its slot: its agenda is frozen. It is checked again when you resume it.",
+      "players": "If you move the agenda of a table that already has people, anybody it now clashes for gets a notice. Nobody is dropped over it: the system informs, people decide.",
+      "steps": {
+        "step1": "On the wizard's “Agenda” step, set the date of the first session and how long one session lasts.",
+        "step2": "Add one slot per day the table plays, with the day and the time in your own zone.",
+        "step3": "Look at the “In UTC” line of each slot: that is what gets stored.",
+        "step4": "If a clash comes up when you save, change the time or free up the other table."
+      }
+    },
+    "sessions": {
+      "title": "Your table's sessions",
+      "materialize": "The calendar builds itself when an admin approves the table: it takes the start date, the weekly agenda and the number of sessions, and creates one row per session with its number.",
+      "missing": "If any of the three is missing, the table opens anyway but with no calendar. Fill in what is missing and the sessions appear; nobody blocks the approval over it.",
+      "local": "Dates are stored in UTC and shown in your own time. Below the field it says which zone you are typing in.",
+      "correct": "You can correct the date of a single session. It is a correction to that evening and does not change the table's weekly agenda.",
+      "notes": "Each session's notes are yours: no player sees them.",
+      "hold": "Marking a session as played is a separate action from recording attendance. The system does not infer one from the other: you can record who came without closing it, and close it without recording anybody.",
+      "cancel": "When you cancel a session, the table adds another one at the end of the calendar, on the next free slot of your agenda. That way you still play the number you promised; what moves is the closing date.",
+      "cancelRecord": "The cancelled session does not disappear: it keeps its number as the record that it was planned. The players are notified.",
+      "locked": "A session already played or cancelled is not edited: it is the record of something that happened, or that did not.",
+      "paused": "While the table is paused no dates are promised: the pending sessions are hidden, from you as well. When you resume it they are scheduled again from that day, keeping their numbering.",
+      "resumeConflict": "If while it was paused you took on another table that overlaps this one, it cannot be resumed until you fix one of the two agendas. A paused table does not reserve its slot, and on the way back it claims it.",
+      "attendance": "Attendance is recorded per session, with four values: present, excused, absent and not recorded. The roster is the table's accepted players.",
+      "steps": {
+        "step1": "Open your table from “My tables” as a master and go to the “Sessions” tab.",
+        "step2": "Tap a session to expand it: its date, its notes and its roster are all there.",
+        "step3": "Correct the date or write the notes and tap “Save changes”.",
+        "step4": "Pick each player's attendance and tap “Save attendance”.",
+        "step5": "Once the session has happened, mark it as played with the ✓ in the header. If it did not happen, cancel it with the ✗ — it warns you before confirming that another one is added at the end."
+      }
+    },
+    "review": {
+      "title": "Review and changes",
+      "approve": "If an admin approves it, the table opens and applications start coming in.",
+      "changes": "If they ask for changes, it arrives with the reason in writing: you fix it and send it back.",
+      "history": "Every transition is recorded on the Status tab, with who made it and why."
+    },
+    "candidates": {
+      "title": "Candidates",
+      "order": "They are ordered by application date and that order is never re-sorted.",
+      "accept": "Accepting adds the person to the table. If that fills it, the remaining applications are rejected on their own.",
+      "reject": "Rejecting asks for a reason and cannot be undone, but the person can apply again.",
+      "steps": {
+        "step1": "Open your table and go to the Candidates tab.",
+        "step2": "Read each person's message. The order is by application date.",
+        "step3": "Tap “Accept” to add them to the table, or “Reject” and write the reason.",
+        "step4": "If accepting fills the table, the remaining applications are rejected on their own."
+      }
+    },
+    "running": {
+      "title": "Running the table",
+      "start": "Starting it moves it to “In progress”. Finishing closes it as ended.",
+      "cancel": "Cancelling cuts the table short and asks for a written reason. An admin can do it too.",
+      "who": "Starting, finishing and cancelling belong to the table's master; a co-master does not see them.",
+      "steps": {
+        "step1": "Open your table and go to the Status tab.",
+        "step2": "Tap “Start table” when they begin playing: it moves to “In progress”.",
+        "step3": "When it ends, “Finish table”. If it has to be cut short, “Cancel table” and write the reason.",
+        "step4": "Every change stays in that tab's history, with who made it and why."
+      }
+    },
+    "coMasters": {
+      "title": "Master and co-masters",
+      "one": "Every table has one master and can have co-masters.",
+      "primary": "The master is the one who decides about the table; co-masters help run it.",
+      "assign": "When an admin assigns masters, the first one they add is the master and the rest become co-masters."
+    },
+    "deleting": {
+      "title": "When a table is not going to happen",
+      "draft": "If it was never published — in preparation or with changes requested — and nobody applied, it is deleted: nobody saw it, so there is nothing to tell.",
+      "public": "If it was already open, in progress or paused, it is not deleted: it is cancelled with a written reason. Other people saw it or played at it, and that is history.",
+      "gone": "Deleting is final and leaves no public trace: the table disappears from your tables and from everywhere. Cancelling leaves it visible as cancelled.",
+      "steps": {
+        "step1": "Open the table and go to the Status tab.",
+        "step2": "If it has not been published yet you will see “Delete table” next to “Cancel table”.",
+        "step3": "Confirm. If the table had already opened, the button is not there: cancelling is the right thing then."
+      }
+    },
+    "proposeCatalog": {
+      "title": "Proposing a system, tag or platform",
+      "what": "When you put a table together you pick its systems, tags and platforms from a list. If the one you want is not there, you can propose it from the same field.",
+      "pending": "You can use it on your table right away, but it stays pending approval: until an admin accepts it, nobody else sees it and nobody can filter by it.",
+      "marked": "While it is pending it shows up marked as such on your table, so you know why nobody else can see it.",
+      "existing": "If what you were about to propose already exists spelled differently, pick the one that is there: the search finds the table under either name once an admin joins them.",
+      "steps": {
+        "step1": "In the system, tag or platform field, type what you are looking for.",
+        "step2": "If it shows up in the list, pick it.",
+        "step3": "If it does not, tap “Propose” with the name you typed.",
+        "step4": "Carry on building the table: you do not have to wait for approval to publish it."
+      }
+    }
+  },
+  "admins": {
+    "reviewing": {
+      "title": "Reviewing tables",
+      "queue": "“Tables to review” collects the ones waiting on a decision: those in preparation and those without a master yet.",
+      "approve": "Approving publishes the table. Requesting changes sends it back to the master with the reason in writing.",
+      "gone": "Once approved, the table leaves the queue: the queue is what is pending, not a listing of everything.",
+      "steps": {
+        "step1": "Switch to the Admin context and go to “Tables to review”.",
+        "step2": "Open the table you want to review and read what the master prepared.",
+        "step3": "Tap “Approve” to publish it, or “Request changes” and write what has to be fixed.",
+        "step4": "The table leaves the queue: the queue is what is pending, not a listing of everything."
+      }
+    },
+    "assignMasters": {
+      "title": "Tables without a master",
+      "create": "An admin can create a table without being its master. It is born unassigned and is not published until it has one.",
+      "search": "To assign it you search for people by Discord name or display name, with the same search language as everywhere else.",
+      "order": "The first one you add is the master and the rest become co-masters. Tap a name to make them the master: the previous one becomes a co-master.",
+      "opens": "On assigning, the table opens directly, without going through review.",
+      "steps": {
+        "step1": "In “Tables to review”, tap “Create table without a master” and give it a name.",
+        "step2": "On that table's row, tap “Assign masters”.",
+        "step3": "Search for the person by Discord name or display name and tap their name in the list.",
+        "step4": "Add the others the same way. The first is the master; the rest become co-masters.",
+        "step5": "If you want a different master, tap their name in the chips: the previous one becomes a co-master.",
+        "step6": "Tap “Assign masters”. The table opens immediately, without going through review."
+      },
+      "delete": "If the unassigned table is not going to happen after all, it is deleted from that same row: it was never published, so no trace is left."
+    },
+    "owner": {
+      "title": "Owner",
+      "same": "An owner can do everything an admin can: it is the same role with more reach.",
+      "soon": "What is theirs alone — auditing, deleting files and migrating accounts — is still being built, and this help will explain it once it exists.",
+      "exclusive": "That is why nobody is an admin and an owner at once: you hold one of the two, and owner is the one above."
+    },
+    "catalogs": {
+      "title": "Catalogs: systems, tags and platforms",
+      "what": "A catalog is the list of values masters can pick from when putting a table together. Masters can also propose a new one, and that is where you come in.",
+      "pending": "A proposed value stays pending: the master can already use it on their table, but players neither see it nor can filter by it until you accept it.",
+      "groups": "When you accept it you decide whether it is a new value or another way of writing one that already exists. The second builds a group: “DANDD” and “D&D 5e” become the same value as far as searching goes.",
+      "alias": "Each table still shows the name its own master picked. The equivalence works in the search, not on the screen.",
+      "merge": "Merging joins two groups; splitting takes a value out of its group. Neither touches the tables: whatever was already tagged is still found the same way.",
+      "disable": "Disabling takes a value out of circulation without breaking anything. The tables using it keep it, and restoring it brings everything back as it was.",
+      "successor": "If you disable the main value of a group, you pick which of its equivalents becomes the main one. The system does not decide it on its own.",
+      "steps": {
+        "step1": "Switch to the Admin context and go to “Catalogs”.",
+        "step2": "Pick the tab of the catalog you want to review: systems, tags or platforms.",
+        "step3": "Search by name if the list is long.",
+        "step4": "On a pending value, tap “Accept” and decide whether it is new or belongs to an existing group.",
+        "step5": "To join two groups, tap “Merge” on the one you want to stop existing and pick the one that stays.",
+        "step6": "To take a value out of circulation, tap “Disable”. If it is a group's main one, pick who replaces it."
+      }
+    }
+  },
+  "stepsTitle": "How to do it"
+}

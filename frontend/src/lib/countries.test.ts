@@ -1,25 +1,33 @@
 import { describe, expect, it } from 'vitest'
 
-import { countries } from './countries'
+import { countriesIn } from './countries'
 
-describe('countries', () => {
+describe('countriesIn', () => {
   it('builds the list without throwing (regression: Intl.supportedValuesOf has no "region" key)', () => {
-    expect(countries.length).toBeGreaterThan(190)
+    expect(countriesIn('es').length).toBeGreaterThan(190)
   })
 
   it('has no duplicate codes', () => {
-    const codes = countries.map((country) => country.code)
+    const codes = countriesIn('es').map((country) => country.code)
     expect(new Set(codes).size).toBe(codes.length)
   })
 
-  it('resolves real Spanish names instead of falling back to the raw code', () => {
-    const argentina = countries.find((country) => country.code === 'AR')
-    expect(argentina?.name).toBe('Argentina')
+  it('resolves real names instead of falling back to the raw code', () => {
+    expect(countriesIn('es').find((country) => country.code === 'DE')?.name).toBe('Alemania')
   })
 
-  it('is sorted alphabetically by name in Spanish', () => {
-    const names = countries.map((country) => country.name)
-    const sorted = [...names].sort((a, b) => a.localeCompare(b, 'es'))
-    expect(names).toEqual(sorted)
+  /** #198: the same country has a different name per language, which is the point of the parameter. */
+  it('names each country in the language it is asked for', () => {
+    expect(countriesIn('en').find((country) => country.code === 'DE')?.name).toBe('Germany')
+  })
+
+  it('is sorted alphabetically in the language it was asked for', () => {
+    const names = countriesIn('en').map((country) => country.name)
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en')))
+  })
+
+  /** Sorting once and reusing it would leave one of the two languages with an alphabet that is not its own. */
+  it('orders differently per language, because the names themselves differ', () => {
+    expect(countriesIn('es').map((country) => country.code)).not.toEqual(countriesIn('en').map((country) => country.code))
   })
 })

@@ -106,6 +106,14 @@ erDiagram
 
 Contenido de `backend/src/main/resources/db/migration/V1__baseline.sql` cuando se scaffoldee el backend.
 
+**Es el baseline literal y no se edita** (regla dura 9): lo que cambió el schema después vive en su
+propia migración, y se anota acá para que este documento no mienta por omisión.
+
+| Migración | Qué cambió |
+|---|---|
+| `V2__seed.sql` · `V3__catalog_seed.sql` | Solo datos: roles, tipos de mesa y el catálogo de la comunidad |
+| `V4__notification_params.sql` | `notifications` gana `params VARCHAR(1024) NULL` y su `title` pasa a nulable; el motivo automático de #34 pasa de «Mesa llena» al código `TABLE_FULL` (#197) |
+
 ```sql
 SET NAMES utf8mb4;
 
@@ -738,7 +746,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Como máximo una postulación activa (`Candidate` o `Player`) por par mesa/usuario | `RegistrationService` | #28 |
 | Los candidatos se atienden en orden de llegada (FIFO por `created_at`), sin reordenar por otro criterio | `RegistrationService` | #28 |
 | Solo `Player` cuenta contra `max_players`; un candidato no reserva cupo | `RegistrationService` | #28 |
-| Al aceptar al jugador que completa `max_players`, el resto de los `Candidate` pasa a `Rejected` con la justificación `Mesa llena`, y se notifica | `RegistrationService` | #34 |
+| Al aceptar al jugador que completa `max_players`, el resto de los `Candidate` pasa a `Rejected` con el código `TABLE_FULL`, y se notifica. **El motivo que escribe un master se muestra verbatim; el que escribe el sistema es un código y se traduce** — `rejected_by IS NULL` distingue los dos | `RegistrationService` | #34, #197 |
 | Todo `Rejected` genera su fila en `registration_rejections` | `RegistrationService` | #28 |
 | Un master solo puede postularse si además tiene el rol `Player` | `RegistrationService` | #73 |
 | El veto lo aplica el `Primary`; un `Secondary` lo pide vía `approval_requests` | `RegistrationService` | #39 |
@@ -848,6 +856,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 | Regla | Dónde | Ref. |
 |---|---|---|
 | Las notificaciones personales son una fila por destinatario en `notifications`, con estado leído/no leído | `NotificationService` | #14 |
+| Una notificación guarda **tipo + parámetros**, nunca la frase. El texto lo arma quien la lee, en su idioma. Las filas anteriores a #197 conservan su texto congelado y se muestran así | `NotificationService` · `notificationText.ts` | #197, #198 |
 | Se entregan en tiempo real por WebSocket+STOMP a `/user/queue/notifications`; la bandeja de admins va a `/topic/admin-queue` | `NotificationService` | #101 |
 | El mensaje que viaja es una **señal de invalidación**, no el contenido: el cliente refetchea con TanStack Query | `NotificationService` | #101 |
 | La suscripción a `/topic/admin-queue` se rechaza si el usuario no tiene `Admin` u `Owner` | `WebSocketConfig` | #101 |
@@ -877,7 +886,7 @@ Va en `V2__seed.sql`. Sin esto la aplicación no funciona.
 | **Integración profunda con Discord** | Planeada, no aprobada. Un solo lote de trabajo, todo dependiente de un **bot con permisos** sobre el servidor (#88): canal de voz por mesa, abrir y cerrar canales según el estado de la mesa, y detección automática de baneos (#86). Lo único que no necesita bot es enlazar a un canal que ya existe. Migración aditiva cuando se apruebe. |
 | **Personajes estructurados** | Siguen siendo archivo adjunto genérico, no entidad con nombre/clase/nivel/stats (#4). |
 | **Detección automática de baneos de Discord** | En v1 un admin marca el baneo a mano (#86). Automatizarlo requiere el bot, y va en el mismo lote que el resto de la integración (#88). |
-| **i18n** | Sin soporte de idioma en el modelo. |
+| **i18n** | **La aplicación habla español e inglés desde #198**, pero el modelo sigue sin columna de idioma y es deliberado: la elección vive en `localStorage`, igual que el tema. Lo que sí cambió el modelo es #197 — `notifications.params` guarda los nombres que la frase necesita en vez de la frase, y `title` pasa a ser nulable. |
 
 ### 7.1 Campañas y Temporadas: qué queda por resolver al construirlas
 

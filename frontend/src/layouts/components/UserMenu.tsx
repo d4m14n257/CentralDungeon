@@ -1,4 +1,4 @@
-import { CircleQuestionMark, Moon, Sun } from 'lucide-react'
+import { CircleQuestionMark, Languages, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -13,17 +13,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { LANGUAGES } from '@/config/language'
 import { helpPath, paths } from '@/config/paths'
 import { useLogout } from '@/features/auth'
+import { useLanguage } from '@/hooks/useLanguage'
 import { useAuth } from '@/providers/AuthProvider'
 
-/** Avatar, tema y cerrar sesión (frontend-diseno.md 5, inventario de compuestos). */
+/**
+ * Avatar, language, theme and sign out (frontend-diseno.md §5, inventario de compuestos).
+ *
+ * Language sits next to theme because it is the same kind of thing (#198): a preference of the
+ * person and not of the account, chosen once and remembered, with no server round trip.
+ */
 export function UserMenu({ displayName }: { displayName: string | null }) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
   const { signOut } = useAuth()
   const logout = useLogout()
   const { resolvedTheme, setTheme } = useTheme()
+  const { language, setLanguage } = useLanguage()
 
   // Antes de onboarding todavía no hay nombre a mostrar (#134); el avatar no puede quedar vacío.
   const label = displayName ?? t('nav.accountFallback')
@@ -63,7 +71,21 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
           {t('nav.help')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {/* El ítem nombra la acción, no el estado actual: en oscuro dice "Tema claro". */}
+        {/* Each language names itself — "English", never "Inglés": somebody looking for their own
+            language does not necessarily read the one currently on screen (#198). */}
+        <DropdownMenuLabel className="text-fg-muted text-xs font-normal">
+          <span className="flex items-center gap-2">
+            <Languages className="size-4" />
+            {t('language.label')}
+          </span>
+        </DropdownMenuLabel>
+        {LANGUAGES.map((code) => (
+          <DropdownMenuItem key={code} onSelect={() => setLanguage(code)} aria-current={code === language ? 'true' : undefined}>
+            <span className={code === language ? 'font-semibold' : undefined}>{t(`language.${code}`)}</span>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        {/* The item names the action, not the current state: in dark mode it reads "Light theme". */}
         <DropdownMenuItem onSelect={() => setTheme(isDark ? 'light' : 'dark')}>
           {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
           {isDark ? t('theme.switchToLight') : t('theme.switchToDark')}

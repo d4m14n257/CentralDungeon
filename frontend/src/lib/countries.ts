@@ -19,13 +19,22 @@ const ISO_3166_1_ALPHA_2 = (
   'TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW'
 ).split(' ')
 
-const displayNames = new Intl.DisplayNames(['es'], { type: 'region' })
-
 /**
  * The country list the onboarding selector offers, ISO 3166-1 alpha-2. Kept as data here rather
  * than fetched: it changes about once a decade, and a select that waits on the network to render is
  * worse than a list that ships with the bundle.
+ *
+ * **The locale is a parameter** (#111, #192, #198). `Intl.DisplayNames` names the countries and
+ * `localeCompare` orders them, and both answers change with the language: Germany is "Alemania"
+ * near the top of a Spanish list and "Germany" in the middle of an English one. Sorting once in
+ * Spanish and reusing it would leave an English reader with an alphabet that is not theirs.
+ *
+ * @param locale the BCP-47 locale to name and sort the countries in
+ * @returns the countries, named in that locale and sorted the way it sorts
  */
-export const countries: Country[] = ISO_3166_1_ALPHA_2.map((code) => ({ code, name: displayNames.of(code) ?? code })).sort((a, b) =>
-  a.name.localeCompare(b.name, 'es'),
-)
+export function countriesIn(locale: string): Country[] {
+  const displayNames = new Intl.DisplayNames([locale], { type: 'region' })
+  return ISO_3166_1_ALPHA_2.map((code) => ({ code, name: displayNames.of(code) ?? code })).sort((a, b) =>
+    a.name.localeCompare(b.name, locale),
+  )
+}

@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import '@/providers/i18n'
+import { LANGUAGE_STORAGE_KEY } from '@/config/language'
+import i18n from '@/providers/i18n'
 import { UserMenu } from './UserMenu'
 
 const setTheme = vi.fn()
@@ -65,5 +66,33 @@ describe('UserMenu', () => {
     renderMenu()
 
     expect(screen.getByText('AV')).toBeInTheDocument()
+  })
+
+  /**
+   * #198: each language names itself. Somebody hunting for their own language does not necessarily
+   * read the one currently on screen, so "English" is never offered as "Inglés".
+   */
+  it('names every language in itself, not in the one currently active', async () => {
+    renderMenu()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ana Valdez' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Español' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'English' })).toBeInTheDocument()
+  })
+
+  it('switches the language and remembers the choice', async () => {
+    renderMenu()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ana Valdez' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'English' }))
+
+    expect(i18n.language).toBe('en')
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en')
+    // The labels follow immediately, without a reload.
+    expect(screen.getByRole('button', { name: 'Ana Valdez' })).toBeInTheDocument()
+
+    await i18n.changeLanguage('es')
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY)
   })
 })

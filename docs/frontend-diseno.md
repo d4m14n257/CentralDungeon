@@ -127,6 +127,24 @@ Ambos, con `next-themes` o equivalente. El frontend viejo ya tenía `ColorModeCo
 
 **Se cambia desde el `UserMenu`**, no desde una pantalla de configuración, y **sin opción "seguir al sistema"** (#144): que el default sea oscuro es una decisión de diseño, no la preferencia del sistema operativo de cada uno. El ítem nombra la acción, no el estado — estando en oscuro dice "Tema claro". La elección queda guardada. Como el menú solo existe con sesión, `/login` se ve siempre en oscuro; el gradiente de marca que lo cubre no depende del tema.
 
+### Idioma
+
+Dos, **español e inglés** (#198), y se elige en el mismo lugar y con la misma lógica que el tema:
+desde el `UserMenu`, guardado en el navegador, sin pantalla de configuración.
+
+**El primer idioma se calcula**, a diferencia del tema: se mira la elección guardada, después
+`navigator.languages` por su subtag primario —`en-GB` y `en-US` son los dos inglés— y, si nada
+coincide, **español**. Que el fallback no sea inglés es deliberado: la comunidad escribe y juega en
+español, así que un navegador que no se reconoce es mucho más probable que sea de alguien que lo
+habla.
+
+**Cada idioma se nombra a sí mismo** en el selector —«Español», «English»—, nunca traducido al que
+está activo: quien busca el suyo no necesariamente lee el que está viendo. `<html lang>` sigue al
+idioma elegido, para que un lector de pantalla cambie de voz con la página.
+
+Como el menú solo existe con sesión, `/login` se ve en el idioma que se detectó y no se puede
+cambiar desde ahí. Es el mismo límite que el tema; la detección cubre el caso común.
+
 **El acento como texto es un token propio**, `--color-brand-fg`, distinto del acento como relleno: ningún tono único pasa AA en los dos temas (`brand-400` da 3.29:1 sobre el canvas claro). Cualquier texto en color de marca —el wordmark, el karma— usa ese token y nunca una escala elegida a mano.
 
 ### Colores de estado — lo que más se repite
@@ -333,7 +351,7 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (#164) | `features/users/` |
 | `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |
 | `ContextSwitcher` — el selector de rol de §2 | `app/components/` (es shell, no dominio) |
-| `UserMenu` — avatar, tema y cerrar sesión | `app/components/` |
+| `UserMenu` — avatar, idioma, tema y cerrar sesión | `app/components/` |
 | `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto | `features/feedback/` |
 
 ### Hooks compartidos

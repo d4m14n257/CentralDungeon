@@ -1,0 +1,38 @@
+{
+  "status": {
+    "Candidate": "Applied",
+    "Player": "Accepted",
+    "Rejected": "Rejected"
+  },
+  "myApplications": {
+    "title": "My applications",
+    "emptyTitle": "You have not applied to any table",
+    "emptyDescription": "Browse the open tables and apply to the one you like.",
+    "appliedOn": "Applied on {{date}}",
+    "viewTable": "View table",
+    "withdraw": "Withdraw",
+    "withdrawTitle": "Withdraw the application",
+    "withdrawDescription": "Your application to {{name}} will be withdrawn. To try again you will have to apply from scratch, and you lose your place in the queue.",
+    "withdrawConfirm": "Withdraw",
+    "withdrawSuccess": "Application withdrawn"
+  },
+  "candidates": {
+    "title": "Candidates",
+    "emptyTitle": "No candidates waiting",
+    "emptyDescription": "Nobody has applied to this table yet.",
+    "order": "The order is by application date and is never re-sorted",
+    "accept": "Accept",
+    "reject": "Reject",
+    "rejectDialogTitle": "Reject {{name}}",
+    "rejectDialogDescription": "This cannot be undone. Explain why you are turning them down.",
+    "rejectReasonLabel": "Reason",
+    "acceptConfirmTitle": "Accept {{name}}",
+    "acceptConfirmDefault": "Do you confirm this candidate joins the table?",
+    "acceptConfirmFillsTable": "This acceptance fills the last seat: every remaining candidate will be rejected automatically.",
+    "acceptSuccess": "Candidate accepted",
+    "rejectSuccess": "Candidate rejected"
+  },
+  "rejectionReason": {
+    "TABLE_FULL": "The table filled up"
+  }
+}

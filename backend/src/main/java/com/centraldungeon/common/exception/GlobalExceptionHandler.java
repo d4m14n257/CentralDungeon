@@ -24,13 +24,20 @@ public class GlobalExceptionHandler {
     /**
      * Everything the application refuses on purpose: 404, 409, 403, 401.
      *
-     * @param exception the intentional failure, carrying its own status and code
+     * <p>{@code errorParams} rides along when the failure has values its message needs (#197). The
+     * {@code detail} is still sent, in English, but it is for a log: what the person reads is
+     * rendered by the frontend from the code and these values, in the language they chose.
+     *
+     * @param exception the intentional failure, carrying its own status, code and parameters
      * @return the problem detail, with {@code errorCode} for the client to branch on
      */
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleApiException(ApiException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());
         problem.setProperty("errorCode", exception.getErrorCode());
+        if (!exception.getErrorParams().isEmpty()) {
+            problem.setProperty("errorParams", exception.getErrorParams());
+        }
         return problem;
     }
 

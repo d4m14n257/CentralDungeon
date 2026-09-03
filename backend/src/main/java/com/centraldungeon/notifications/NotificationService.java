@@ -13,8 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Emits rows only - no WebSocket push yet (that lands in F5, plan-desarrollo.md). "Personal" notifications only;
- * the shared admin queue signal (#101) is a different mechanism, out of E1's scope.
+ * Emits rows only - no WebSocket push yet (that lands in F5, plan-desarrollo.md). "Personal"
+ * notifications only; the shared admin queue signal (#101) is a different mechanism, out of E1's
+ * scope.
+ *
+ * <p><b>No method here writes a sentence</b> (#197). Each one records the type of thing that
+ * happened and the names involved; the sentence is rendered by whoever opens their inbox, in the
+ * language they chose. Before #197 the text was written here in Spanish - which froze every row in
+ * the language it happened to be created in.
  */
 @Service
 public class NotificationService {
@@ -43,52 +49,51 @@ public class NotificationService {
     /**
      * Tells an applicant a master accepted them.
      *
-     * <p>Titles/messages are content a player reads, not code (decisiones.md #34, #102 does not apply
-     * to them) - written in Spanish directly, same precedent as RegistrationService's auto-reject
-     * justification.
-     *
      * @param userId the applicant
      * @param table  the table they were accepted into
      */
     @Transactional
     public void notifyRegistrationAccepted(String userId, GameTable table) {
         User recipient = userRepository.getReferenceById(userId);
-        String title = "Te aceptaron en " + table.getName();
-        notificationRepository.save(
-                new Notification(recipient, NotificationType.RegistrationAccepted, title, null, "game_table", table.getId()));
+        notificationRepository.save(new Notification(
+                recipient, NotificationType.RegistrationAccepted, NotificationParams.ofTable(table.getName()),
+                "game_table", table.getId()));
     }
 
     /**
-     * Tells an applicant their application was turned down, and why. The reason travels as the
-     * message rather than the title: the bell shows only titles (#156), and a rejection reason is
-     * something to read on the notifications screen.
+     * Tells an applicant their application was turned down.
      *
-     * @param userId        the applicant
-     * @param table         the table they applied to
-     * @param justification the master's reason, shown to them verbatim
+     * <p>The master's reason is <b>not</b> copied in here. It is already stored on the rejection
+     * itself, and it is text a person wrote: duplicating it into a second row would mean two places
+     * to keep in step, and the screen this links to shows it verbatim anyway.
+     *
+     * @param userId the applicant
+     * @param table  the table they applied to
      */
     @Transactional
-    public void notifyRegistrationRejected(String userId, GameTable table, String justification) {
+    public void notifyRegistrationRejected(String userId, GameTable table) {
         User recipient = userRepository.getReferenceById(userId);
-        String title = "Tu postulación a " + table.getName() + " fue rechazada";
         notificationRepository.save(new Notification(
-                recipient, NotificationType.RegistrationRejected, title, justification, "game_table", table.getId()));
+                recipient, NotificationType.RegistrationRejected, NotificationParams.ofTable(table.getName()),
+                "game_table", table.getId()));
     }
 
     /**
      * Every master of the table is notified, Primary and Secondary alike - both can act on candidates.
-     * The applicant's name goes in the title, not message - readable at a glance from the bell, which
-     * only ever shows the title (frontend-diseno.md, decisiones.md #156).
+     *
+     * <p>The applicant's name travels as a parameter so the rendered title names them: the bell shows
+     * only the title, and "somebody applied" is a worse headline than "Carla applied" (#156).
      *
      * @param masterUserId  one master of the table; the caller loops over all of them
      * @param table         the table applied to
-     * @param applicantName the applicant's display name, so the title reads as a sentence
+     * @param applicantName the applicant's display name
      */
     @Transactional
     public void notifyNewCandidate(String masterUserId, GameTable table, String applicantName) {
         User recipient = userRepository.getReferenceById(masterUserId);
-        String title = applicantName + " se postuló a " + table.getName();
-        notificationRepository.save(new Notification(recipient, NotificationType.NewCandidate, title, null, "game_table", table.getId()));
+        NotificationParams params = new NotificationParams(table.getName(), null, applicantName);
+        notificationRepository.save(
+                new Notification(recipient, NotificationType.NewCandidate, params, "game_table", table.getId()));
     }
 
     /**
@@ -98,28 +103,27 @@ public class NotificationService {
      * there, because deciding which one to keep is the person's call and not the system's (#70). The
      * way out is on the screen it links to - withdrawing the application, or talking to the master.
      *
-     * @param userId        who has the clash
-     * @param table         the table the notification links to. R4 points at the application that
-     *                      clashes, so the person lands where they can act
-     * @param otherTableName the table it clashes with, named in the message so the person does not
-     *                      have to work out which of theirs it was
+     * @param userId         who has the clash
+     * @param table          the table the notification links to. R4 points at the application that
+     *                       clashes, so the person lands where they can act
+     * @param otherTableName the table it clashes with, named in the rendered message so the person
+     *                       does not have to work out which of theirs it was
      */
     @Transactional
     public void notifyScheduleConflict(String userId, GameTable table, String otherTableName) {
         User recipient = userRepository.getReferenceById(userId);
-        String title = "Tu horario en " + table.getName() + " choca con otra mesa";
-        String message = "Se superpone con " + otherTableName + ". Podés retirar una postulación o hablarlo con el master.";
+        NotificationParams params = new NotificationParams(table.getName(), otherTableName, null);
         notificationRepository.save(
-                new Notification(recipient, NotificationType.ScheduleConflict, title, message, "game_table", table.getId()));
+                new Notification(recipient, NotificationType.ScheduleConflict, params, "game_table", table.getId()));
     }
 
     /**
      * Tells the people signed up to a table that its calendar moved (#33).
      *
      * <p>It names no date. One notification covers a single correction and a whole re-laying after a
-     * pause alike, and spelling out an instant here would mean writing UTC into a message that the
-     * reader would then have to convert in their head - the conversion belongs on the screen it links
-     * to, where {@code lib/date.ts} does it (#22).
+     * pause alike, and carrying an instant would mean handing the reader a UTC time to convert in
+     * their head - the conversion belongs on the screen it links to, where {@code lib/date.ts} does
+     * it (#22).
      *
      * @param userId the person signed up to the table
      * @param table  the table whose calendar moved; the notification links to it
@@ -127,17 +131,16 @@ public class NotificationService {
     @Transactional
     public void notifySessionScheduled(String userId, GameTable table) {
         User recipient = userRepository.getReferenceById(userId);
-        String title = "Cambió el calendario de " + table.getName();
-        String message = "Revisá las fechas de las sesiones en tu hora local.";
-        notificationRepository.save(
-                new Notification(recipient, NotificationType.SessionScheduled, title, message, "game_table", table.getId()));
+        notificationRepository.save(new Notification(
+                recipient, NotificationType.SessionScheduled, NotificationParams.ofTable(table.getName()),
+                "game_table", table.getId()));
     }
 
     /**
      * Tells the people signed up to a table that one of its sessions was called off.
      *
-     * <p>The message says the run is not shorter, because that is the first thing a player wonders:
-     * the table gets the session back at the end (#194).
+     * <p>The rendered message says the run is not shorter, because that is the first thing a player
+     * wonders: the table gets the session back at the end (#194).
      *
      * @param userId the person signed up to the table
      * @param table  the table the session belonged to
@@ -145,10 +148,9 @@ public class NotificationService {
     @Transactional
     public void notifySessionCanceled(String userId, GameTable table) {
         User recipient = userRepository.getReferenceById(userId);
-        String title = "Se canceló una sesión de " + table.getName();
-        String message = "La mesa suma otra sesión al final, así que sigue siendo la misma cantidad.";
-        notificationRepository.save(
-                new Notification(recipient, NotificationType.SessionCanceled, title, message, "game_table", table.getId()));
+        notificationRepository.save(new Notification(
+                recipient, NotificationType.SessionCanceled, NotificationParams.ofTable(table.getName()),
+                "game_table", table.getId()));
     }
 
     /**

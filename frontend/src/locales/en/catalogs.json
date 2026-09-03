@@ -1,0 +1,86 @@
+{
+  "status": {
+    "Created": "Pending",
+    "Accepted": "Accepted",
+    "Rejected": "Rejected",
+    "Disabled": "Disabled"
+  },
+  "kind": {
+    "systems": {
+      "label": "Systems",
+      "placeholder": "Pick a system",
+      "searchPlaceholder": "Search for a system…"
+    },
+    "tags": {
+      "label": "Tags",
+      "placeholder": "Pick a tag",
+      "searchPlaceholder": "Search for a tag…"
+    },
+    "platforms": {
+      "label": "Platforms",
+      "placeholder": "Pick a platform",
+      "searchPlaceholder": "Search for a platform…"
+    }
+  },
+  "chip": {
+    "pending": "· pending",
+    "pendingHint": "An admin still has to approve it. Until then only you can see it.",
+    "remove": "Remove {{name}}"
+  },
+  "combobox": {
+    "loading": "Searching…",
+    "noResults": "Nothing by that name.",
+    "propose": "Propose “{{name}}”",
+    "proposeHint": "You can use it on your table right away, but nobody else sees it until an admin approves it."
+  },
+  "picker": {
+    "searchPlaceholder": "Search for a group…",
+    "noGroups": "No groups match."
+  },
+  "admin": {
+    "title": "Catalogs",
+    "helpLink": "How groups work",
+    "searchLabel": "Search the catalog",
+    "searchPlaceholder": "Search by name…",
+    "tableLabel": "Catalog {{kind}}",
+    "columnName": "Name",
+    "columnStatus": "Status",
+    "columnGroup": "Group",
+    "columnUses": "Tables",
+    "isCanonical": "Is the main one",
+    "emptyTitle": "There is nothing in this catalog yet",
+    "emptyDescription": "Whatever masters propose from the table wizard shows up here for you to review.",
+    "emptySearchDescription": "No value matches what you searched for.",
+    "cancel": "Cancel",
+    "accept": "Accept",
+    "acceptDialogTitle": "Accept “{{name}}”",
+    "acceptDialogDescription": "Decide whether this is a new value or another way of writing one that already exists.",
+    "acceptAsNewGroup": "It is a new value",
+    "acceptAsNewGroupHint": "It becomes the main entry of its own group. You can merge it later if an equivalent turns up.",
+    "acceptAsAliasHint": "“{{name}}” becomes equivalent to the chosen group: searching for either one brings back the same tables.",
+    "acceptSuccess": "“{{name}}” was accepted",
+    "reject": "Reject",
+    "rejectConfirmTitle": "Reject “{{name}}”",
+    "rejectConfirmDescription": "It will not be shown and cannot be filtered by. You can accept it later if you change your mind.",
+    "rejectSuccess": "“{{name}}” was rejected",
+    "merge": "Merge",
+    "mergeDialogTitle": "Merge “{{name}}” into another group",
+    "mergeDialogDescription": "The group you pick is the one that stays; “{{name}}” becomes one more way of naming it.",
+    "mergePickTarget": "Pick the group that stays",
+    "mergeHint": "“{{source}}” and all of its equivalents move into the chosen group. No table changes: the ones already tagged are still found, under either name.",
+    "mergeSuccess": "“{{source}}” is now equivalent to “{{target}}”",
+    "split": "Split from the group",
+    "splitConfirmTitle": "Split “{{name}}” from its group",
+    "splitConfirmDescription": "It stops being equivalent to the rest and becomes a value of its own. The tables tagged with it do not change.",
+    "splitSuccess": "“{{name}}” is now a value of its own",
+    "disable": "Disable",
+    "disableDialogTitle": "Disable “{{name}}”",
+    "disableDialogDescription": "It stops being shown and stops filtering, but nothing is deleted.",
+    "disableKeepsLinks": "The tables using it keep it. If you restore it, everything comes back as it was.",
+    "disableNeedsSuccessor_one": "It is the main entry of a group with one other value. Pick which one becomes the main entry:",
+    "disableNeedsSuccessor_other": "It is the main entry of a group with {{count}} other values. Pick which one becomes the main entry:",
+    "disableSuccess": "“{{name}}” was disabled",
+    "restore": "Restore",
+    "restoreSuccess": "“{{name}}” was restored"
+  }
+}

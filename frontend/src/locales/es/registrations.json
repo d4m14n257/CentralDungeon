@@ -31,5 +31,8 @@
     "acceptConfirmFillsTable": "Esta aceptación completa el cupo: el resto de los candidatos se va a rechazar automáticamente.",
     "acceptSuccess": "Candidato aceptado",
     "rejectSuccess": "Candidato rechazado"
+  },
+  "rejectionReason": {
+    "TABLE_FULL": "La mesa se llenó"
   }
 }

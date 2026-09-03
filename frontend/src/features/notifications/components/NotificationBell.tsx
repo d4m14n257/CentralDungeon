@@ -14,6 +14,8 @@ import {
 import { relativeTimeFrom } from '@/lib/relativeTime'
 import { cn } from '@/lib/utils'
 
+import { notificationText } from '../lib/notificationText'
+
 import { useNotifications } from '../api/useNotifications'
 import { useNotificationClick } from '../hooks/useNotificationClick'
 
@@ -75,7 +77,7 @@ export function NotificationBell() {
               <span className={cn('w-[15px] shrink-0 text-center', unread ? 'text-brand-fg' : 'text-fg-subtle')} aria-hidden>
                 {unread ? '●' : '○'}
               </span>
-              <span className="flex-1 truncate">{notification.title}</span>
+              <span className="flex-1 truncate">{notificationText(notification, t).title}</span>
               <span className="text-fg-subtle shrink-0 text-[11px]">{relativeTimeLabel(notification.createdAt)}</span>
             </DropdownMenuItem>
           )

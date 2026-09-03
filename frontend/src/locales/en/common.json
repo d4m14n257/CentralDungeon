@@ -1,0 +1,81 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "accept": "Accept",
+    "reject": "Reject",
+    "retry": "Try again",
+    "back": "Back",
+    "logout": "Sign out"
+  },
+  "states": {
+    "loading": "Loading...",
+    "emptyTitle": "There is nothing here",
+    "errorTitle": "Something went wrong",
+    "errorDescription": "We could not load this. Try again.",
+    "forbiddenTitle": "You do not have access",
+    "forbiddenDescription": "Your account cannot see this section."
+  },
+  "nav": {
+    "brand": "CentralDungeon",
+    "brandFirst": "Central",
+    "brandSecond": "Dungeon",
+    "player": "Player",
+    "master": "Master",
+    "admin": "Admin",
+    "notifications": "Notifications",
+    "switchContext": "Switch context",
+    "accountFallback": "My account",
+    "help": "Help"
+  },
+  "theme": {
+    "switchToLight": "Light theme",
+    "switchToDark": "Dark theme"
+  },
+  "search": {
+    "connectorAnd": "and",
+    "connectorOr": "or",
+    "joinWith": "Join with “{{connector}}”",
+    "toggleConnector": "Switch and / or",
+    "removeTerm": "Remove criterion",
+    "removeField": "Search without the field",
+    "hint": "Type / to pick a field or join criteria; commas separate alternatives.",
+    "helpLink": "How to search"
+  },
+  "connection": {
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "errors": {
+    "offline": "No connection to the server. Try again in a moment.",
+    "mutationFailed": "We could not complete the action. Try again.",
+    "codes": {
+      "SCHEDULE_CONFLICT": "It clashes with “{{otherTableName}}”, where you are already committed."
+    }
+  },
+  "pagination": {
+    "label": "Pagination",
+    "showing": "Showing {{shown}} of {{total}}",
+    "loadMore": "Show more",
+    "loading": "Loading...",
+    "page": "Page {{page}} of {{pages}}",
+    "total": "{{total}} in total",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "richText": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "heading": "Heading",
+    "bulletList": "List",
+    "orderedList": "Numbered list",
+    "quote": "Quote",
+    "code": "Code"
+  },
+  "language": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English"
+  }
+}

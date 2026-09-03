@@ -1,0 +1,41 @@
+{
+  "nav": {
+    "label": "Administration sections",
+    "tables": "Tables",
+    "catalogs": "Catalogs"
+  },
+  "tables": {
+    "title": "Tables to review",
+    "emptyTitle": "No tables waiting for review",
+    "emptyDescription": "New tables and the ones needing a decision will show up here.",
+    "noPrimaryMaster": "Unassigned",
+    "approve": "Approve",
+    "approveConfirmTitle": "Approve this table",
+    "approveConfirmDescription": "The table will open so players can apply to it.",
+    "approveSuccess": "Table approved",
+    "requestChanges": "Request changes",
+    "requestChangesDialogTitle": "Request changes on {{name}}",
+    "requestChangesDialogDescription": "Tell the master what to fix before you approve it.",
+    "requestChangesSuccess": "Changes requested",
+    "assignMasters": "Assign masters",
+    "assignMastersDialogTitle": "Assign masters to {{name}}",
+    "assignMastersDialogDescription": "The table opens as soon as it gets a master.",
+    "assignMastersSuccess": "Masters assigned, table opened",
+    "selectedMastersLabel": "Masters of the table",
+    "noMastersSelected": "You have not picked anybody yet.",
+    "mastersOrderHint": "The first one you add is the master and the rest are co-masters. Tap a name to make them the master.",
+    "primaryBadge": "Master",
+    "makePrimary": "Make {{name}} the master",
+    "removeMaster": "Remove {{name}}",
+    "createUnassigned": "Create table without a master",
+    "createUnassignedDialogTitle": "Create a table without a master",
+    "createUnassignedDialogDescription": "It stays unassigned until you give it a master.",
+    "createUnassignedSuccess": "Table created, unassigned",
+    "nameLabel": "Name",
+    "mastersHelpLink": "How it works",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete this table",
+    "deleteConfirmDescription": "It was never published, so it is removed without a trace. This cannot be undone.",
+    "deleteSuccess": "Table deleted"
+  }
+}

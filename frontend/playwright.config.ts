@@ -15,6 +15,11 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'retain-on-failure',
+    // Every spec runs in Spanish unless it says otherwise. Without this the language would come
+    // from the browser's own locale (#198), so a spec asserting on a label would pass or fail
+    // depending on the machine running it. `language.spec.ts` overrides it per context, which is
+    // exactly what it is testing.
+    locale: 'es-AR',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
