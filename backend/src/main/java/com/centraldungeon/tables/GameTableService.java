@@ -1,9 +1,13 @@
 package com.centraldungeon.tables;
 
+import com.centraldungeon.catalogs.CatalogType;
+import com.centraldungeon.catalogs.TableCatalogService;
+import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.common.text.RichTextSanitizer;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
@@ -15,12 +19,15 @@ import com.centraldungeon.tables.dto.CreateGameTableRequest;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
+import com.centraldungeon.tables.dto.TableScheduleEntry;
 import com.centraldungeon.tables.dto.TableStatusChangeResponse;
+import com.centraldungeon.tables.dto.UpdateGameTableRequest;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
@@ -56,6 +63,14 @@ public class GameTableService {
     private static final Set<GameTableStatus> DELETABLE_STATUSES =
             Set.of(GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
 
+    /**
+     * The statuses in which a table is still being written, and therefore still its master's to
+     * rewrite. Past this point people have applied on the strength of what it says, and changing it
+     * under them is a different conversation than editing a draft.
+     */
+    private static final Set<GameTableStatus> EDITABLE_STATUSES =
+            Set.of(GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
+
     private static final List<TableRegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
@@ -71,6 +86,10 @@ public class GameTableService {
     private final MasterService masterService;
     private final GameTableMapper gameTableMapper;
     private final UserService userService;
+    private final TableScheduleService tableScheduleService;
+    private final ScheduleConflictService scheduleConflictService;
+    private final TableCatalogService tableCatalogService;
+    private final RichTextSanitizer richTextSanitizer;
 
     /**
      * @param gameTableRepository        the {@code game_tables} table, and the row everything locks on
@@ -80,6 +99,10 @@ public class GameTableService {
      * @param masterService              answers pertenencia and keeps the one-Primary invariant
      * @param gameTableMapper            entity to DTO
      * @param userService                resolves the actor, and their roles for the admin checks
+     * @param tableScheduleService       owns the weekly agenda and the clash check that guards it (#178)
+     * @param scheduleConflictService    computes the warning the explorer's cards show (#178)
+     * @param tableCatalogService        links the table to its systems, tags and platforms (#56)
+     * @param richTextSanitizer          cleans the rich text on the way in and on the way out (#62)
      */
     public GameTableService(
             GameTableRepository gameTableRepository,
@@ -88,7 +111,11 @@ public class GameTableService {
             TableStatusChangeRepository tableStatusChangeRepository,
             MasterService masterService,
             GameTableMapper gameTableMapper,
-            UserService userService) {
+            UserService userService,
+            TableScheduleService tableScheduleService,
+            ScheduleConflictService scheduleConflictService,
+            TableCatalogService tableCatalogService,
+            RichTextSanitizer richTextSanitizer) {
         this.gameTableRepository = gameTableRepository;
         this.tableTypeRepository = tableTypeRepository;
         this.tableRegistrationRepository = tableRegistrationRepository;
@@ -96,6 +123,10 @@ public class GameTableService {
         this.masterService = masterService;
         this.gameTableMapper = gameTableMapper;
         this.userService = userService;
+        this.tableScheduleService = tableScheduleService;
+        this.scheduleConflictService = scheduleConflictService;
+        this.tableCatalogService = tableCatalogService;
+        this.richTextSanitizer = richTextSanitizer;
     }
 
     /** The creator becomes the table's Primary master (#73); a Master row is the source of pertenencia, not the role alone (#135). */
@@ -106,6 +137,58 @@ public class GameTableService {
 
         gameTable = gameTableRepository.save(gameTable);
         masterService.createPrimary(gameTable, creator);
+        applyCatalogs(gameTable.getId(), request.systemIds(), request.tagIds(), request.platformIds());
+        // After the Master row exists: R1 measures the agenda against what the actor is already
+        // committed to, and creating the table is itself one of those commitments (#178).
+        tableScheduleService.replace(gameTable, orEmpty(request.schedule()), creatorId);
+
+        return toDetail(gameTable);
+    }
+
+    /**
+     * The master editing their own table: the wizard's second pass, and how a table sent back with
+     * {@code ChangesRequested} is corrected.
+     *
+     * <p>Pertenencia, not role (#17, #121, #135): running <em>this</em> table is what authorizes the
+     * edit, and it is checked here because no {@code @PreAuthorize} can see the resource. Only the
+     * statuses in which a table is still being written are editable - once it is open, people have
+     * applied on the strength of what it says, and changing it out from under them is a different
+     * flow.
+     *
+     * <p>The agenda goes last on purpose: {@code duration} is what gives a slot its length, so the
+     * clash check has to run against the duration the table is about to have and not the one it had
+     * (#178).
+     *
+     * @param gameTableId the table to edit
+     * @param request     the whole table as it should end up. Absent means empty, not unchanged
+     * @param actorId     the actor, from the token; has to run the table
+     * @return the table after the edit
+     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws ConflictException if the table is past the point where its own master may rewrite it,
+     *         or if the new agenda clashes with something the actor is committed to (#178)
+     */
+    @Transactional
+    public GameTableDetailResponse update(String gameTableId, UpdateGameTableRequest request, String actorId) {
+        GameTable gameTable = lockTable(gameTableId);
+        if (!masterService.isMasterOf(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table can edit it");
+        }
+        if (!EDITABLE_STATUSES.contains(gameTable.getStatus())) {
+            throw new ConflictException("A table in status " + gameTable.getStatus() + " can no longer be edited by its master");
+        }
+
+        gameTable.setName(request.name());
+        gameTable.setDescription(richTextSanitizer.sanitize(request.description()));
+        gameTable.setPermitted(richTextSanitizer.sanitize(request.permitted()));
+        gameTable.setRequirements(richTextSanitizer.sanitize(request.requirements()));
+        gameTable.setStartDate(request.startDate());
+        gameTable.setDuration(request.duration());
+        gameTable.setTotalSessions(request.totalSessions());
+        gameTable.setMaxPlayers(request.maxPlayers());
+        gameTable.setTableType(resolveTableType(request.tableTypeId()));
+
+        applyCatalogs(gameTableId, request.systemIds(), request.tagIds(), request.platformIds());
+        tableScheduleService.replace(gameTable, orEmpty(request.schedule()), actorId);
 
         return toDetail(gameTable);
     }
@@ -125,6 +208,10 @@ public class GameTableService {
         gameTable.setStatus(GameTableStatus.Unassigned);
 
         gameTable = gameTableRepository.save(gameTable);
+        applyCatalogs(gameTable.getId(), request.systemIds(), request.tagIds(), request.platformIds());
+        // No owner yet, so there is nobody whose commitments the agenda could clash with. R1 is
+        // checked when the table gets its masters, in assignInitialMasters (#178).
+        tableScheduleService.replace(gameTable, orEmpty(request.schedule()), null);
         return toDetail(gameTable);
     }
 
@@ -136,6 +223,18 @@ public class GameTableService {
             throw new ConflictException("Cannot assign masters to a table in status " + gameTable.getStatus());
         }
         List<String> secondaries = request.secondaryUserIds() != null ? request.secondaryUserIds() : List.of();
+
+        // R1, deferred from creation: an Unassigned table had no master to clash with, and this is
+        // the moment it gets one. Refusing here is better than opening a table its own master cannot
+        // actually run (#178).
+        CommittedTable clash = scheduleConflictService.findClash(
+                request.primaryUserId(), gameTableId, scheduleConflictService.intervalsOf(gameTable));
+        if (clash != null) {
+            throw new ConflictException(
+                    "La agenda de esta mesa se pisa con «" + clash.name() + "», donde ese master ya está comprometido.",
+                    ConflictException.SCHEDULE_CONFLICT);
+        }
+
         masterService.assignInitialMasters(gameTable, request.primaryUserId(), secondaries);
         recordStatusChange(gameTable, GameTableStatus.Unassigned, GameTableStatus.Opened, actorId, null);
         return toDetail(gameTable);
@@ -216,8 +315,10 @@ public class GameTableService {
     /**
      * The master closing a table that ran its course. InProgress to Finished.
      *
-     * <p>Stamping {@code closed_at} here - which starts the two-week window in which profiles stay
-     * visible (#44) - is F1.2's job (#180); the column is not mapped yet.
+     * <p>This is where {@code closed_at} gets stamped (#180). It is not bookkeeping: it starts the
+     * two-week window in which the people who shared the table can still see each other's profiles
+     * (#44), and a phase that delivers the end of a table without recording when it ended has not
+     * delivered it.
      *
      * @param gameTableId the table
      * @param actorId     the actor, from the token; has to be the table's Primary
@@ -233,6 +334,7 @@ public class GameTableService {
         if (gameTable.getStatus() != GameTableStatus.InProgress) {
             throw new ConflictException("Cannot finish a table in status " + gameTable.getStatus());
         }
+        sealClosedAt(gameTable);
         recordStatusChange(gameTable, GameTableStatus.InProgress, GameTableStatus.Finished, actorId, null);
         return toDetail(gameTable);
     }
@@ -248,6 +350,7 @@ public class GameTableService {
         if (!CANCELABLE_STATUSES.contains(from)) {
             throw new ConflictException("Cannot cancel a table in status " + from);
         }
+        sealClosedAt(gameTable);
         recordStatusChange(gameTable, from, GameTableStatus.Canceled, actorId, request.justification());
         return toDetail(gameTable);
     }
@@ -367,23 +470,34 @@ public class GameTableService {
         return masterService.findByGameTable(gameTableId).stream().map(gameTableMapper::toMasterSummary).toList();
     }
 
-    /** Excludes tables the actor masters (#154): a master cannot browse their own table to apply as a Player at it. */
+    /**
+     * Excludes tables the actor masters (#154): a master cannot browse their own table to apply as a
+     * Player at it.
+     *
+     * <p>It is also the one listing that carries the clash warning of #178, computed for the actor
+     * of the token: this is the screen where the question "can I actually take this on?" is asked.
+     */
     @Transactional(readOnly = true)
     public PageResponse<GameTableSummaryResponse> list(Pageable pageable, String actorId) {
         Page<GameTable> page = gameTableRepository.findByStatusInAndNotMasteredByActor(VISIBLE_STATUSES, actorId, pageable);
-        return PageResponse.from(page.map(this::toSummary));
+        return toSummaryPage(page, actorId);
     }
 
     /**
      * The public detail of a table, for /tables/:id.
      *
+     * <p>It carries the clash flag of #178 computed for the actor: the apply button on that screen
+     * has to be able to say <em>why</em> it is disabled, and R2 is the one reason the reader can do
+     * something about (principio 2 de frontend-diseno.md 1).
+     *
      * @param gameTableId the table
+     * @param actorId     the actor, from the token - never from the URL (#121)
      * @return its detail
      * @throws com.centraldungeon.common.exception.NotFoundException if it does not exist
      */
     @Transactional(readOnly = true)
-    public GameTableDetailResponse getDetail(String gameTableId) {
-        return toDetail(getEntityById(gameTableId));
+    public GameTableDetailResponse getDetail(String gameTableId, String actorId) {
+        return toDetail(getEntityById(gameTableId), actorId);
     }
 
     /**
@@ -406,14 +520,14 @@ public class GameTableService {
     @Transactional(readOnly = true)
     public PageResponse<GameTableSummaryResponse> listMine(String actorId, Pageable pageable) {
         Page<TableRegistration> page = tableRegistrationRepository.findByUser_IdAndStatus(actorId, TableRegistrationStatus.Player, pageable);
-        return PageResponse.from(page.map(registration -> toSummary(registration.getGameTable())));
+        return toSummaryPage(page.map(TableRegistration::getGameTable), null);
     }
 
     /** /master/tables: every status, including Preparation - a master needs to see and open their own drafts. */
     @Transactional(readOnly = true)
     public PageResponse<GameTableSummaryResponse> listManaged(String actorId, Pageable pageable) {
         Page<GameTable> page = gameTableRepository.findByMasterUserId(actorId, pageable);
-        return PageResponse.from(page.map(this::toSummary));
+        return toSummaryPage(page, null);
     }
 
     /**
@@ -448,18 +562,48 @@ public class GameTableService {
 
     private GameTable buildTable(CreateGameTableRequest request, User creator) {
         GameTable gameTable = new GameTable(request.name(), creator);
-        gameTable.setDescription(request.description());
-        gameTable.setRequirements(request.requirements());
+        gameTable.setDescription(richTextSanitizer.sanitize(request.description()));
+        gameTable.setPermitted(richTextSanitizer.sanitize(request.permitted()));
+        gameTable.setRequirements(richTextSanitizer.sanitize(request.requirements()));
         gameTable.setStartDate(request.startDate());
         gameTable.setDuration(request.duration());
         gameTable.setTotalSessions(request.totalSessions());
         gameTable.setMaxPlayers(request.maxPlayers());
-        if (request.tableTypeId() != null) {
-            gameTable.setTableType(tableTypeRepository
-                    .findById(request.tableTypeId())
-                    .orElseThrow(() -> new NotFoundException("Table type not found: " + request.tableTypeId())));
-        }
+        gameTable.setTableType(resolveTableType(request.tableTypeId()));
         return gameTable;
+    }
+
+    /** Resolves the type a draft names, or clears it when the draft names none. */
+    private @Nullable TableType resolveTableType(@Nullable String tableTypeId) {
+        if (tableTypeId == null) {
+            return null;
+        }
+        return tableTypeRepository
+                .findById(tableTypeId)
+                .orElseThrow(() -> new NotFoundException("Table type not found: " + tableTypeId));
+    }
+
+    /** Sets the three catalogs of a table in one step - each of them a full replacement (#56). */
+    private void applyCatalogs(
+            String gameTableId, @Nullable List<String> systemIds, @Nullable List<String> tagIds, @Nullable List<String> platformIds) {
+        tableCatalogService.replaceLinks(gameTableId, CatalogType.SYSTEMS, orEmpty(systemIds));
+        tableCatalogService.replaceLinks(gameTableId, CatalogType.TAGS, orEmpty(tagIds));
+        tableCatalogService.replaceLinks(gameTableId, CatalogType.PLATFORMS, orEmpty(platformIds));
+    }
+
+    /**
+     * Stamps the closing instant, once. A table closes one time (#44, #180): if the column already
+     * carries a date, that is the date, and no later transition gets to move it.
+     */
+    private void sealClosedAt(GameTable gameTable) {
+        if (gameTable.getClosedAt() == null) {
+            gameTable.setClosedAt(LocalDateTime.now());
+        }
+    }
+
+    /** An absent list and an empty one mean the same thing on the wire; here they are the same object. */
+    private <T> List<T> orEmpty(@Nullable List<T> values) {
+        return values != null ? values : List.of();
     }
 
     private void requirePrimaryOf(String gameTableId, String actorId, String action) {
@@ -481,10 +625,25 @@ public class GameTableService {
         tableStatusChangeRepository.save(new TableStatusChange(gameTable, from, to, changedBy, justification));
     }
 
-    private GameTableSummaryResponse toSummary(GameTable gameTable) {
-        int playerCount = countPlayers(gameTable.getId());
-        MasterSummaryResponse primaryMaster = findPrimaryMaster(gameTable.getId());
-        return gameTableMapper.toSummary(gameTable, playerCount, primaryMaster);
+    /**
+     * One page of cards, with the agendas read in a single query and - when the listing is one where
+     * the question makes sense - the clash warning of #178 computed for the actor of the token.
+     *
+     * <p>{@code /my/tables} and {@code /master/tables} pass {@code false}: a table you already run or
+     * play at is the commitment, so warning that it clashes with itself would be noise.
+     */
+    private PageResponse<GameTableSummaryResponse> toSummaryPage(Page<GameTable> page, @Nullable String conflictActorId) {
+        List<GameTable> tables = page.getContent();
+        List<String> ids = tables.stream().map(GameTable::getId).toList();
+        Map<String, List<TableScheduleEntry>> schedules = tableScheduleService.findByTables(ids);
+        Set<String> clashing = conflictActorId == null ? Set.of() : scheduleConflictService.clashingAmong(conflictActorId, tables);
+
+        return PageResponse.from(page.map(gameTable -> gameTableMapper.toSummary(
+                gameTable,
+                countPlayers(gameTable.getId()),
+                findPrimaryMaster(gameTable.getId()),
+                schedules.getOrDefault(gameTable.getId(), List.of()),
+                clashing.contains(gameTable.getId()))));
     }
 
     private AdminTableSummaryResponse toAdminSummary(GameTable gameTable) {
@@ -500,11 +659,36 @@ public class GameTableService {
                 gameTable.getCreatedAt());
     }
 
+    /** Every transition answers with the table; none of them is the read where the clash matters. */
     private GameTableDetailResponse toDetail(GameTable gameTable) {
+        return toDetail(gameTable, null);
+    }
+
+    /**
+     * @param conflictActorId whose commitments to measure the agenda against, or null when the read
+     *                        has no actor for whom the question means anything (#121, #178)
+     */
+    private GameTableDetailResponse toDetail(GameTable gameTable, @Nullable String conflictActorId) {
         int playerCount = countPlayers(gameTable.getId());
         List<MasterSummaryResponse> masters =
                 masterService.findByGameTable(gameTable.getId()).stream().map(gameTableMapper::toMasterSummary).toList();
-        return gameTableMapper.toDetail(gameTable, playerCount, masters);
+        Map<CatalogType, List<CatalogValueResponse>> catalogs = tableCatalogService.findLinks(gameTable.getId());
+
+        // Sanitized on the way out as well as on the way in (#62): a row written before this gate
+        // existed, or by any path that ever skips it, still reaches the browser through here. The
+        // cleaned strings are passed to the mapper and not written back - a read stays a read.
+        return gameTableMapper.toDetail(
+                gameTable,
+                playerCount,
+                masters,
+                tableScheduleService.findByTable(gameTable.getId()),
+                catalogs.get(CatalogType.SYSTEMS),
+                catalogs.get(CatalogType.TAGS),
+                catalogs.get(CatalogType.PLATFORMS),
+                richTextSanitizer.sanitize(gameTable.getDescription()),
+                richTextSanitizer.sanitize(gameTable.getPermitted()),
+                richTextSanitizer.sanitize(gameTable.getRequirements()),
+                conflictActorId != null && scheduleConflictService.findClashWith(conflictActorId, gameTable) != null);
     }
 
     private int countPlayers(String gameTableId) {

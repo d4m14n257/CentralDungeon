@@ -11,6 +11,7 @@ import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
 import com.centraldungeon.tables.dto.TableStatusChangeResponse;
+import com.centraldungeon.tables.dto.UpdateGameTableRequest;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -84,14 +86,16 @@ public class GameTableController {
     /**
      * The public detail of a table, /tables/:id.
      *
-     * @param id the table to read
+     * @param id          the table to read
+     * @param currentUser the actor, from the token. The clash flag of #178 is computed for them and
+     *                    for nobody else (#121)
      * @return 200 with the table. 404 when it does not exist or the actor is vetoed from it - a 403
      *         there would confirm what the 404 denies
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public GameTableDetailResponse getDetail(@PathVariable String id) {
-        return gameTableService.getDetail(id);
+    public GameTableDetailResponse getDetail(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.getDetail(id, currentUser.userId());
     }
 
     /**
@@ -167,6 +171,28 @@ public class GameTableController {
             @Valid @RequestBody CreateGameTableRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
         GameTableDetailResponse created = gameTableService.create(request, currentUser.userId());
         return ResponseEntity.created(URI.create("/api/v1/game-tables/" + created.id())).body(created);
+    }
+
+    /**
+     * The master editing their own table - the wizard's second pass, and how a table sent back with
+     * {@code ChangesRequested} is corrected.
+     *
+     * <p>{@code isAuthenticated()} and no role, like every other endpoint about a concrete table:
+     * pertenencia decides, and only the service can see it (#17, #121, #135).
+     *
+     * @param id          the table to edit
+     * @param request     the whole table as it should end up. It is a replacement and not a patch:
+     *                    an absent field empties it
+     * @param currentUser the actor, from the token
+     * @return 200 with the table after the edit. 403 when the actor does not run it, 409 when it is
+     *         past the point where its master may rewrite it or when the new agenda clashes (#178),
+     *         400 when the agenda overlaps itself
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public GameTableDetailResponse update(
+            @PathVariable String id, @Valid @RequestBody UpdateGameTableRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.update(id, request, currentUser.userId());
     }
 
     /**

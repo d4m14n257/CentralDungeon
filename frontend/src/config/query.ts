@@ -14,6 +14,17 @@ export const staleTime = {
 } as const
 
 /**
+ * Los códigos de error cuyo `detail` se muestra tal cual, porque el backend lo escribió para que
+ * alguien lo lea y no para un log.
+ *
+ * Es una lista corta a propósito: el mensaje del servidor solo llega al usuario cuando el servidor
+ * se comprometió a redactarlo. `SCHEDULE_CONFLICT` (#178) es el primero — un choque de horarios se
+ * rechaza nombrando la mesa con la que choca, y decir «no se pudo guardar» ahí sería esconder
+ * justamente lo único que la persona puede resolver (principio 2 de frontend-diseno.md 1).
+ */
+const EXPLAINED_ERROR_CODES = new Set(['SCHEDULE_CONFLICT'])
+
+/**
  * Red de seguridad para toda mutación que no trae su propio `onError`: hoy ninguna lo trae, así
  * que una escritura que falla (backend caído, 500, lo que sea) no decía nada - el botón dejaba
  * de estar "pending" y ahí terminaba, sin que quien lo tocó se enterara. Las queries no pasan por
@@ -24,8 +35,11 @@ export const staleTime = {
  * `useMutation` - React Query llama a los dos, no reemplaza este.
  */
 function reportMutationError(error: unknown) {
-  const isOffline = !(error instanceof ApiError)
-  toast.error(isOffline ? i18n.t('errors.offline') : i18n.t('errors.mutationFailed'))
+  if (!(error instanceof ApiError)) {
+    toast.error(i18n.t('errors.offline'))
+    return
+  }
+  toast.error(EXPLAINED_ERROR_CODES.has(error.problem.errorCode) ? error.problem.detail : i18n.t('errors.mutationFailed'))
 }
 
 /**

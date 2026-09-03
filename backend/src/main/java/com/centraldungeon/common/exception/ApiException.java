@@ -7,12 +7,12 @@ import org.springframework.http.HttpStatus;
  * these into an RFC 9457 {@code ProblemDetail}, so a service never has to know about HTTP to answer
  * correctly.
  *
- * <p>Sealed: the four subclasses below are the whole vocabulary of intentional failure, and keeping
+ * <p>Sealed: the five subclasses below are the whole vocabulary of intentional failure, and keeping
  * it closed is what lets a {@code switch} over them stay exhaustive (arquitectura.md 2.4). Anything
  * that is not one of these is a bug, and a bug answers 500.
  */
 public sealed abstract class ApiException extends RuntimeException
-        permits NotFoundException, ConflictException, ForbiddenActionException, UnauthorizedException {
+        permits NotFoundException, ConflictException, ForbiddenActionException, UnauthorizedException, InvalidRequestException {
 
     /** The HTTP status this failure maps to. */
     private final HttpStatus status;

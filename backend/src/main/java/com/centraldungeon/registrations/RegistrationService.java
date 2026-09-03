@@ -11,8 +11,10 @@ import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
+import com.centraldungeon.tables.CommittedTable;
 import com.centraldungeon.tables.Master;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tables.ScheduleConflictService;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserAuthSnapshot;
@@ -67,6 +69,9 @@ public class RegistrationService {
     /** Emits what the applicant and the masters have to be told (#77). */
     private final NotificationService notificationService;
 
+    /** Answers the three clash questions of #178 this service asks: R2, R3 and R4. */
+    private final ScheduleConflictService scheduleConflictService;
+
     /** Entity to DTO. */
     private final RegistrationMapper registrationMapper;
 
@@ -77,6 +82,7 @@ public class RegistrationService {
      * @param masterService          answers pertenencia
      * @param userService            resolves the people involved
      * @param notificationService    tells the applicant and the masters what happened
+     * @param scheduleConflictService answers whether the applicant is already busy at that hour (#178)
      * @param registrationMapper     entity to DTO
      */
     public RegistrationService(
@@ -86,6 +92,7 @@ public class RegistrationService {
             MasterService masterService,
             UserService userService,
             NotificationService notificationService,
+            ScheduleConflictService scheduleConflictService,
             RegistrationMapper registrationMapper) {
         this.registrationRepository = registrationRepository;
         this.rejectionRepository = rejectionRepository;
@@ -93,6 +100,7 @@ public class RegistrationService {
         this.masterService = masterService;
         this.userService = userService;
         this.notificationService = notificationService;
+        this.scheduleConflictService = scheduleConflictService;
         this.registrationMapper = registrationMapper;
     }
 
@@ -116,6 +124,15 @@ public class RegistrationService {
         }
         if (registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(gameTableId, actorId, ACTIVE_STATUSES)) {
             throw new ConflictException("An active application for this table already exists");
+        }
+
+        // R2 (#178): a table where they already play is a real commitment, so this blocks rather
+        // than warns. Running and playing weigh the same - it is one person and one Tuesday night.
+        CommittedTable clash = scheduleConflictService.findClashWith(actorId, table);
+        if (clash != null) {
+            throw new ConflictException(
+                    "El horario de esta mesa se pisa con «" + clash.name() + "», donde ya jugás.",
+                    ConflictException.SCHEDULE_CONFLICT);
         }
 
         User actor = userService.getById(actorId);
@@ -144,8 +161,19 @@ public class RegistrationService {
             throw new ConflictException("Registration is not a pending candidate");
         }
 
+        // R3 (#178): asked again here and not only at apply time, because the candidate may have
+        // been accepted somewhere else in between - the answer is a different one now than it was.
+        String candidateId = registration.getUser().getId();
+        CommittedTable clash = scheduleConflictService.findClashWith(candidateId, table);
+        if (clash != null) {
+            throw new ConflictException(
+                    "Esta persona ya juega en «" + clash.name() + "», que se pisa con el horario de esta mesa.",
+                    ConflictException.SCHEDULE_CONFLICT);
+        }
+
         registration.setStatus(TableRegistrationStatus.Player);
-        notificationService.notifyRegistrationAccepted(registration.getUser().getId(), table);
+        notificationService.notifyRegistrationAccepted(candidateId, table);
+        warnAboutNowClashingApplications(candidateId, table);
 
         Integer maxPlayers = table.getMaxPlayers();
         if (maxPlayers != null) {
@@ -188,6 +216,37 @@ public class RegistrationService {
         return registrationMapper.toResponse(registration);
     }
 
+    /**
+     * The applicant taking their own application back, while it is still pending.
+     *
+     * <p>It exists because R4 needs it to (#178). When accepting somebody makes their other pending
+     * applications clash, they get told - and a notification that asks for an action nobody can take
+     * is the dead end E1 already documented with /my/tables. This is the action.
+     *
+     * <p>Only a {@code Candidate}, and only their own: once accepted there is a table full of people
+     * counting on them, and leaving it is a conversation with a master rather than a button. The
+     * registration is marked, never dropped (#25, #175) - that somebody applied and thought better
+     * of it is part of the record.
+     *
+     * @param registrationId the application to withdraw
+     * @param actorId        the applicant, from the token. Never an id from the URL: the check is
+     *                       that the registration is theirs (#121)
+     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the application is
+     *         somebody else's
+     * @throws ConflictException if it is no longer pending
+     */
+    @Transactional
+    public void withdraw(String registrationId, String actorId) {
+        TableRegistration registration = getRegistrationById(registrationId);
+        if (!registration.getUser().getId().equals(actorId)) {
+            throw new ForbiddenActionException("Cannot withdraw another user's application");
+        }
+        if (registration.getStatus() != TableRegistrationStatus.Candidate) {
+            throw new ConflictException("Only a pending application can be withdrawn");
+        }
+        registration.setStatus(TableRegistrationStatus.Deleted);
+    }
+
     /** Candidates only, FIFO by arrival - never re-sorted, whatever the caller's sort param says (#28). */
     @Transactional(readOnly = true)
     public PageResponse<RegistrationResponse> listCandidatesForTable(String gameTableId, String actorId, Pageable pageable) {
@@ -209,7 +268,8 @@ public class RegistrationService {
      */
     @Transactional(readOnly = true)
     public PageResponse<RegistrationResponse> listMine(String actorId, Pageable pageable) {
-        Page<TableRegistration> page = registrationRepository.findByUser_Id(actorId, pageable);
+        Page<TableRegistration> page =
+                registrationRepository.findByUser_IdAndStatusNot(actorId, TableRegistrationStatus.Deleted, pageable);
         Map<String, String> justificationByRegistrationId = loadRejectionJustifications(page.getContent());
         return PageResponse.from(page.map(registration -> {
             RegistrationResponse response = registrationMapper.toResponse(registration);
@@ -233,6 +293,27 @@ public class RegistrationService {
         return rejectionRepository.findByRegistration_IdIn(rejectedIds).stream()
                 .collect(Collectors.toMap(
                         rejection -> rejection.getRegistration().getId(), RegistrationRejection::getDescription));
+    }
+
+    /**
+     * R4 (#178): now that this person plays here, tell them which of their other pending
+     * applications fall at the same hour.
+     *
+     * <p><b>Told, not rejected.</b> Somebody sends three applications to see which one comes
+     * through, and until one does there is no commitment to defend; deciding for them which to drop
+     * would be the system making a choice that is theirs, the same reasoning as #70. A table where
+     * they already play is different, and that is why R2 and R3 block for real.
+     */
+    private void warnAboutNowClashingApplications(String userId, GameTable acceptedTable) {
+        for (TableRegistration other : registrationRepository.findByUser_IdAndStatus(userId, TableRegistrationStatus.Candidate)) {
+            GameTable otherTable = other.getGameTable();
+            if (otherTable.getId().equals(acceptedTable.getId())) {
+                continue;
+            }
+            if (scheduleConflictService.overlap(acceptedTable, otherTable)) {
+                notificationService.notifyScheduleConflict(userId, otherTable, acceptedTable.getName());
+            }
+        }
     }
 
     private void autoRejectRemainingCandidates(GameTable table) {

@@ -10,7 +10,17 @@ import type {
   GameTableStatus,
   GameTableSummary,
   TableStatusChange,
+  TableType,
+  UpdateGameTableRequest,
 } from '../types'
+
+/**
+ * The table types the wizard's selector offers. Its own object because it is a different resource:
+ * /api/v1/table-types is a catalog of the platform, not something that hangs off a table.
+ */
+export const tableTypesApi = {
+  list: () => api.getPage<TableType>('/api/v1/table-types', { page: 0, size: 50 }),
+}
 
 /** Every call about a game table: the listings, the detail, and each lifecycle transition. */
 export const gameTablesApi = {
@@ -25,6 +35,9 @@ export const gameTablesApi = {
   managedById: (id: string) => api.get<GameTableDetail>(`/api/v1/game-tables/${id}/managed`),
   statusHistory: (id: string) => api.get<TableStatusChange[]>(`/api/v1/game-tables/${id}/status-history`),
   create: (request: CreateGameTableRequest) => api.post<GameTableDetail, CreateGameTableRequest>('/api/v1/game-tables', request),
+  /** A full replacement, not a patch: an absent field empties it, which is how the agenda gets cleared. */
+  update: (id: string, request: UpdateGameTableRequest) =>
+    api.put<GameTableDetail, UpdateGameTableRequest>(`/api/v1/game-tables/${id}`, request),
   createUnassigned: (request: CreateGameTableRequest) =>
     api.post<GameTableDetail, CreateGameTableRequest>('/api/v1/game-tables/unassigned', request),
   assignMasters: (id: string, request: AssignMastersRequest) =>

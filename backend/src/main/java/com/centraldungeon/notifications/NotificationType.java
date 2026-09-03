@@ -10,5 +10,16 @@ public enum NotificationType {
     RegistrationRejected,
 
     /** To every master of the table, Primary and Secondary alike: someone applied. */
-    NewCandidate
+    NewCandidate,
+
+    /**
+     * To somebody whose commitments now overlap: the table named in the notification clashes with
+     * another one they are in (#178).
+     *
+     * <p>It is a warning and never an eviction. R4 sends it when accepting somebody makes their
+     * other pending applications clash, and {@code TableScheduleService} sends it when a master
+     * moves an agenda under people who were already signed up. In both cases the system says what
+     * happened and the person decides - the same principle as #70.
+     */
+    ScheduleConflict
 }

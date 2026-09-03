@@ -10,13 +10,16 @@ import java.net.URI;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -108,6 +111,28 @@ public class RegistrationController {
             @Valid @RequestBody RejectRegistrationRequest request,
             @AuthenticationPrincipal CurrentUser currentUser) {
         return registrationService.reject(registrationId, currentUser.userId(), request);
+    }
+
+    /**
+     * The applicant withdrawing their own pending application.
+     *
+     * <p>It is the way out R4's clash notice needs to leave open (#178): a notification saying two
+     * of your tables now fall at the same hour is only useful if you can do something about it.
+     *
+     * <p>The path addresses the registration and the actor comes from the token, so there is no way
+     * to spell "withdraw somebody else's" (#121) - the service still checks, because a path that
+     * cannot express it is not the same as a rule that is enforced.
+     *
+     * @param registrationId the application to withdraw
+     * @param currentUser    the applicant, from the token
+     * @return nothing - 204. 403 when the application is somebody else's, 409 once it is no longer
+     *         pending
+     */
+    @DeleteMapping("/api/v1/registrations/{registrationId}")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void withdraw(@PathVariable String registrationId, @AuthenticationPrincipal CurrentUser currentUser) {
+        registrationService.withdraw(registrationId, currentUser.userId());
     }
 
     /**

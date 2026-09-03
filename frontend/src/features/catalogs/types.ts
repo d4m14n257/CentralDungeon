@@ -1,3 +1,7 @@
+import type { CatalogValue } from '@/types/catalog'
+
+export type { CatalogStatus, CatalogValue } from '@/types/catalog'
+
 /**
  * Which of the three catalogs a call is about. It is the path segment the API expects, so the value
  * that travels and the value the UI branches on are the same string - there is no lookup table
@@ -6,26 +10,14 @@
 export type CatalogKind = 'systems' | 'tags' | 'platforms'
 
 /**
- * A catalog value's lifecycle. A union of literals rather than a TS `enum`, because the backend
- * serializes it as a string and because `Record<CatalogStatus, …>` then forces every case to be
- * covered when mapping to a label or a badge variant (#3.2 regla 9).
- *
- * Only `Accepted` shows to players and filters (#57, #81); the other three exist for
- * /admin/catalogs.
- */
-export type CatalogStatus = 'Created' | 'Accepted' | 'Rejected' | 'Disabled'
-
-/**
  * Mirror of `AdminCatalogValueResponse` - **the one type of this feature written by hand** (#3.2).
  *
- * The admin shape is the base rather than the public one because it is the wider of the two: what a
- * player receives is a strict subset of it, so `CatalogValue` derives from here and the two cannot
- * drift apart the day the backend adds a field.
+ * It extends the public shape rather than restating it: what /admin/catalogs receives is what
+ * everyone else receives plus the four fields only an admin has business seeing. `CatalogValue`
+ * itself lives in `types/catalog.ts` because `features/tables` needs it too and a feature never
+ * imports another (regla dura 16).
  */
-export interface AdminCatalogValue {
-  id: string
-  name: string
-  status: CatalogStatus
+export interface AdminCatalogValue extends CatalogValue {
   /** The group this value belongs to, or null when it *is* its group's canonical entry (#59). */
   canonicalId: string | null
   /** The canonical entry's name, so a row can read "DANDD → D&D 5e" without a second request. */
@@ -35,15 +27,6 @@ export interface AdminCatalogValue {
   /** ISO-8601 UTC. The conversion to the reader's zone is the frontend's (#22, #111). */
   createdAt: string
 }
-
-/**
- * Mirror of `CatalogValueResponse` - what the combobox and, later, the explorer's filters receive.
- *
- * Derived, not re-declared: it is the admin value minus everything only an admin has business
- * seeing. `status` stays because a master who just proposed a value has to be told it is pending
- * (#57).
- */
-export type CatalogValue = Pick<AdminCatalogValue, 'id' | 'name' | 'status'>
 
 /** What proposing sends. The status is the server's to decide - it is always born `Created` (#55). */
 export type ProposeCatalogValueInput = Pick<AdminCatalogValue, 'name'>

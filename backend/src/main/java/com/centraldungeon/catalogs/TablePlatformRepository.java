@@ -10,6 +10,19 @@ import org.springframework.data.repository.query.Param;
 public interface TablePlatformRepository extends JpaRepository<TablePlatform, TablePlatformId> {
 
     /**
+     * Every link a table ever had to a platform, live or removed - what replacing a table's platforms
+     * starts from.
+     *
+     * <p>The removed ones are part of the answer: a link is marked and never dropped, so a master who
+     * takes a platform off their table and puts it back is reviving a row rather than inserting a key
+     * that still exists.
+     *
+     * @param gameTableId the table
+     * @return all of its platform links, whatever their status
+     */
+    List<TablePlatform> findById_GameTableId(String gameTableId);
+
+    /**
      * Counts, in one grouped query, how many tables use each of the given platforms - so a page of
      * twenty values on /admin/catalogs costs one round trip instead of twenty.
      *

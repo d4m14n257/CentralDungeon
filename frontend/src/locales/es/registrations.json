@@ -9,7 +9,12 @@
     "emptyTitle": "No te postulaste a ninguna mesa",
     "emptyDescription": "Explorá las mesas abiertas y postulate a la que te interese.",
     "appliedOn": "Postulado el {{date}}",
-    "viewTable": "Ver mesa"
+    "viewTable": "Ver mesa",
+    "withdraw": "Retirar",
+    "withdrawTitle": "Retirar la postulación",
+    "withdrawDescription": "Se retira tu postulación a {{name}}. Para volver a intentarlo vas a tener que postularte de nuevo, y el orden de llegada se pierde.",
+    "withdrawConfirm": "Retirar",
+    "withdrawSuccess": "Postulación retirada"
   },
   "candidates": {
     "title": "Candidatos",

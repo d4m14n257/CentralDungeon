@@ -8,6 +8,8 @@ export const queryKeys = {
     managed: () => ['tables', 'managed'] as const,
     admin: (statuses?: string[], page = 0) => ['tables', 'admin', statuses, page] as const,
     statusHistory: (id: string) => ['tables', 'status-history', id] as const,
+    /** The platform's table types. One list for the whole app - admins change it rarely (#72). */
+    types: () => ['tables', 'types'] as const,
   },
   catalogs: {
     /** The whole branch. What every catalog mutation invalidates: one admin action can move rows

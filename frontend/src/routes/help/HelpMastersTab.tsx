@@ -15,6 +15,13 @@ export function HelpMastersTab() {
           <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4, 5].map((n) => t(`masters.creating.steps.step${n}`))} />
         </HelpSection>
 
+        <HelpSection id="schedule" title={t('masters.schedule.title')}>
+          <HelpList
+            items={['local', 'duration', 'interval', 'chained', 'conflict', 'paused', 'players'].map((key) => t(`masters.schedule.${key}`))}
+          />
+          <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`masters.schedule.steps.step${n}`))} />
+        </HelpSection>
+
         <HelpSection id="propose-catalog" title={t('masters.proposeCatalog.title')}>
           <HelpList items={['what', 'pending', 'marked', 'existing'].map((key) => t(`masters.proposeCatalog.${key}`))} />
           <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`masters.proposeCatalog.steps.step${n}`))} />

@@ -17,5 +17,9 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     // Playwright owns e2e/; Vitest must not try to run those specs.
     exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
+    // A fixed zone, and deliberately not UTC: half of what lib/date.ts does is move the weekday
+    // across midnight (#22), and a suite running in UTC would never exercise it. This is where the
+    // community actually plays.
+    env: { TZ: 'America/Argentina/Buenos_Aires' },
   },
 })

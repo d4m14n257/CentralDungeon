@@ -25,9 +25,8 @@ import org.jspecify.annotations.Nullable;
  * <b>not</b> a column here: it is a row in {@code masters} (#135), and who plays in it is a row in
  * {@code table_registrations}.
  *
- * <p>Only the columns the built flows need are mapped. {@code permitted} and {@code closed_at} are
- * in the baseline and land with F1.2 (#180); {@code claimed_by} / {@code claimed_at}, the admin
- * queue's reservation (#100), land with F3. Neither needs a migration to be added later
+ * <p>Only the columns the built flows need are mapped. {@code claimed_by} / {@code claimed_at}, the
+ * admin queue's reservation (#100), land with F3 and need no migration to be added later
  * (modelo-datos.md 4).
  */
 @Entity
@@ -46,6 +45,13 @@ public class GameTable extends BaseEntity {
     /** What the table is about. Rich text, sanitized on write and on read (#62). */
     @Column(columnDefinition = "LONGTEXT")
     private @Nullable String description;
+
+    /**
+     * What is allowed at this table - the house rules a master writes out so nobody has to guess.
+     * Rich text, same sanitization as the description (#62).
+     */
+    @Column(columnDefinition = "LONGTEXT")
+    private @Nullable String permitted;
 
     /** What is asked of a player to be accepted. Rich text, same sanitization as the description. */
     @Column(columnDefinition = "LONGTEXT")
@@ -71,6 +77,17 @@ public class GameTable extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private GameTableStatus status = GameTableStatus.Preparation;
+
+    /**
+     * When the table stopped being an ongoing thing: stamped on entering {@code Finished} or
+     * {@code Canceled}, and never again (#180).
+     *
+     * <p>It is not decoration. It starts the two-week window in which the people who shared the
+     * table can still see each other's profiles (#44), and it is what tells a table closed yesterday
+     * from one closed a year ago.
+     */
+    @Column(name = "closed_at")
+    private @Nullable LocalDateTime closedAt;
 
     /** Soft delete (#25). Only set for a table that was never public (#175); anything past that is cancelled. */
     @Column(name = "deleted_at")
@@ -127,6 +144,16 @@ public class GameTable extends BaseEntity {
     }
 
     /**
+     * Renames the table.
+     *
+     * @param name the new title. A table is still being written while its master may edit it, and
+     *             the title is part of what they are writing
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
      * Returns what the table is about.
      *
      * @return the description as rich text, or null when there is none
@@ -142,6 +169,24 @@ public class GameTable extends BaseEntity {
      */
     public void setDescription(@Nullable String description) {
         this.description = description;
+    }
+
+    /**
+     * Returns the table's house rules.
+     *
+     * @return what is allowed at the table, as rich text, or null when nothing was written
+     */
+    public @Nullable String getPermitted() {
+        return permitted;
+    }
+
+    /**
+     * Sets the table's house rules.
+     *
+     * @param permitted rich text, already sanitized by the service (#62)
+     */
+    public void setPermitted(@Nullable String permitted) {
+        this.permitted = permitted;
     }
 
     /**
@@ -243,6 +288,28 @@ public class GameTable extends BaseEntity {
      */
     public GameTableStatus getStatus() {
         return status;
+    }
+
+    /**
+     * Returns when the table was closed.
+     *
+     * @return the instant it entered {@code Finished} or {@code Canceled} (#180), or null while it
+     *         is still going
+     */
+    public @Nullable LocalDateTime getClosedAt() {
+        return closedAt;
+    }
+
+    /**
+     * Stamps when the table closed.
+     *
+     * <p>Only {@link GameTableService} calls this, on the two transitions that end a table's life,
+     * and it never overwrites a stamp that is already there: a table closes once (#44, #180).
+     *
+     * @param closedAt the closing instant, in UTC
+     */
+    public void setClosedAt(@Nullable LocalDateTime closedAt) {
+        this.closedAt = closedAt;
     }
 
     /**

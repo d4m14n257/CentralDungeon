@@ -31,6 +31,13 @@ export function HelpPlayersTab() {
           <HelpList items={[t('help:players.applicationStatus.auto')]} />
         </HelpSection>
 
+        <HelpSection id="schedule-conflicts" title={t('help:players.scheduleConflict.title')}>
+          <HelpList
+            items={['local', 'blocked', 'candidate', 'notified', 'withdraw'].map((key) => t(`help:players.scheduleConflict.${key}`))}
+          />
+          <HelpSteps title={t('help:stepsTitle')} items={[1, 2, 3].map((n) => t(`help:players.scheduleConflict.steps.step${n}`))} />
+        </HelpSection>
+
         <HelpSection id="my-tables" title={t('help:players.myTables.title')}>
           <HelpList items={['list', 'status'].map((key) => t(`help:players.myTables.${key}`))} />
         </HelpSection>

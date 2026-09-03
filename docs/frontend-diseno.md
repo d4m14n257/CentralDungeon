@@ -404,7 +404,7 @@ Las 15 páginas del legacy quedan cubiertas: 4 se fusionan en el explorador, 3 e
 | `CardSettings` | `UserMenu` en `app/components/`, sobre `dropdown-menu`. El click-fuera escrito a mano con `window.addEventListener` desaparece: lo resuelve Radix |
 | `MenuItemComponent` | `ContextSwitcher`. Su cadena de ternarios para elegir el icono según el nombre del rol se vuelve un `Record<Role, LucideIcon>` |
 | `Span`, `forms/TextArea` | Desaparecen: eran estilo. `textarea` de shadcn/ui y clases de Tailwind |
-| `@tinymce/tinymce-react` | Otro editor (TipTap o similar): TinyMCE necesita API key para uso alojado |
+| `@tinymce/tinymce-react` | **TipTap** (`@tiptap/react` + `starter-kit`), elegido en F1.2: TinyMCE necesita API key para uso alojado. La barra ofrece exactamente lo que la lista blanca del backend conserva (#186) |
 
 | Hook o utilidad legacy | Equivalente |
 |---|---|

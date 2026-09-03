@@ -717,9 +717,14 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | `Pause` y `Canceled` exigen justificación, que se registra en `table_status_changes` | `GameTableService` | #32 |
 | La pausa pedida por un master no aplica hasta que un admin la aprueba (`approval_requests`) | `GameTableService` | #32 |
 | `Pause` congela la agenda: las sesiones pendientes dejan de aparecer. Al retomar hay que reagendar | `TableSessionService` | #32, #33 |
-| Al entrar en `Finished` o `Canceled` se sella `closed_at`, que arranca la ventana de visibilidad | `GameTableService` | #44, #180 |
+| Al entrar en `Finished` o `Canceled` se sella `closed_at`, que arranca la ventana de visibilidad. **Se sella una sola vez**: si ya tiene fecha, ninguna transición posterior la mueve | `GameTableService` | #44, #180 |
+| El texto enriquecido (`description`, `permitted`, `requirements`) se sanitiza **al guardar y al servir**, con lista blanca | `RichTextSanitizer` | #62, #186 |
+| Un master edita su propia mesa solo en `Preparation` y `ChangesRequested`; el `PUT` **reemplaza la mesa entera**, un campo ausente vacía | `GameTableService.update` | #189 |
+| La agenda y los vínculos de catálogo se **reemplazan como conjunto** y sus filas se marcan, nunca se borran: la clave primaria incluye el valor, así que sacar y volver a poner tiene que ser un `UPDATE` | `TableScheduleService` · `TableCatalogService` | #190 |
 | **Un master no puede tener dos mesas vivas con agendas solapadas**. Se compara intervalo contra intervalo —`[hourtime, hourtime + duration)` en UTC, semiabierto y con envoltura semanal—, no `weekday`+`hourtime` exacto | `ScheduleConflictService` | #178 |
-| Dos filas de `table_schedules` **de la misma mesa** no pueden solaparse entre sí | `TableScheduleService` | #178 |
+| Dos filas de `table_schedules` **de la misma mesa** no pueden solaparse entre sí. Responde `400`, no `409`: es una semana que no se puede jugar, no un choque con el estado de nadie | `TableScheduleService` | #178, #187 |
+| Una mesa `Unassigned` no tiene master contra quien medir R1: la verificación se difiere al momento de asignarle masters | `GameTableService.assignInitialMasters` | #72, #178 |
+| Una mesa sin `duration` o sin agenda no ocupa ningún intervalo, así que nunca choca | `ScheduleConflictService` | #178 |
 | **`Pause` no reserva horario**: congela la agenda, así que sus franjas no cuentan como choque. Al reanudar se reagenda y se vuelve a verificar | `ScheduleConflictService` | #32, #178 |
 | Editar la agenda de una mesa ya poblada **avisa** al master a quiénes les genera choque; no expulsa a nadie | `TableScheduleService` | #70, #178 |
 | **Una mesa se borra solo si nunca fue pública** (`Unassigned`/`Preparation`/`ChangesRequested`) **y no tiene postulaciones activas**; lo demás se cancela. El borrado es lógico y arrastra `masters` y `table_registrations` con la misma marca de tiempo | `GameTableService.delete` | #25, #175 |
@@ -742,7 +747,8 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | **No se puede postular a una mesa que choca de horario con otra donde ya se es `Player`.** Dirigir y jugar cuentan igual: los compromisos de una persona son sus mesas como master y como jugador | `RegistrationService` | #178 |
 | **No se puede aceptar a un candidato que ya es `Player` en una mesa que choca.** Se verifica al aceptar y no solo al postularse: el estado puede haber cambiado entre las dos | `RegistrationService` | #178 |
 | Al aceptar a alguien, sus otras postulaciones `Candidate` que chocan **se notifican, no se rechazan**: hasta que lo aceptan en una no hay compromiso y elegir es suyo | `RegistrationService` | #70, #178 |
-| **Se puede retirar la propia postulación** mientras esté en `Candidate`. Es el borrado lógico de `table_registrations` que la notificación de choque exige poder resolver | `RegistrationService` | #175, #178 |
+| **Se puede retirar la propia postulación** mientras esté en `Candidate`. Es el borrado lógico de `table_registrations` que la notificación de choque exige poder resolver. Ya aceptada no: eso se habla con el master | `RegistrationService` | #175, #178 |
+| Una postulación `Deleted` —retirada o arrastrada por la mesa— no aparece en ninguna lectura | `RegistrationService` | #25, #175 |
 
 ### Sesiones y peticiones
 
@@ -798,6 +804,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | La mesa muestra siempre el alias que le puso su master | `CatalogService` | #58 |
 | Dar de baja un valor no rompe vínculos: las lecturas lo saltan por estado y restaurarlo devuelve todo | `CatalogService` | #81 |
 | Dar de baja el canónico de un grupo con alias vivos **es** cambiar el canónico: exige sucesor, y lo elige el admin | `CatalogService` | #55, #59, #81 |
+| Una mesa puede vincular un valor en `Created` —su master lo acaba de proponer— pero no uno `Rejected` ni `Disabled`. Dar de baja un valor **no** rompe los vínculos que ya tenía | `TableCatalogService` | #57, #81 |
 
 ### Archivos
 

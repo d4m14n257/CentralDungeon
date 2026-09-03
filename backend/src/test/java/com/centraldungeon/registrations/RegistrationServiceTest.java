@@ -19,7 +19,9 @@ import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
+import com.centraldungeon.tables.CommittedTable;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tables.ScheduleConflictService;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserAuthSnapshot;
 import com.centraldungeon.users.UserService;
@@ -56,6 +58,9 @@ class RegistrationServiceTest {
     private NotificationService notificationService;
 
     @Mock
+    private ScheduleConflictService scheduleConflictService;
+
+    @Mock
     private RegistrationMapper registrationMapper;
 
     private RegistrationService registrationService;
@@ -64,7 +69,7 @@ class RegistrationServiceTest {
     void setUp() {
         registrationService = new RegistrationService(
                 registrationRepository, rejectionRepository, gameTableRepository, masterService, userService, notificationService,
-                registrationMapper);
+                scheduleConflictService, registrationMapper);
     }
 
     @Test
@@ -240,7 +245,7 @@ class RegistrationServiceTest {
     void listMineIncludesTheRejectionJustificationForRejectedApplications() {
         TableRegistration registration = persistedRegistration("reg-8", "table-12", TableRegistrationStatus.Rejected, null);
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 20);
-        when(registrationRepository.findByUser_Id("player-1", pageable))
+        when(registrationRepository.findByUser_IdAndStatusNot("player-1", TableRegistrationStatus.Deleted, pageable))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
         when(registrationMapper.toResponse(registration))
                 .thenReturn(new RegistrationResponse("reg-8", "table-12", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null));
@@ -268,6 +273,91 @@ class RegistrationServiceTest {
 
         assertThatThrownBy(() -> registrationService.apply("missing", "player-1", new CreateRegistrationRequest(null)))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    /** R2 (#178): a table where you already play is a real commitment, so applying elsewhere at that hour is refused. */
+    @Test
+    void refusesAnApplicationThatClashesWithATableTheApplicantAlreadyPlaysAt() {
+        GameTable table = persistedTable("table-r2", GameTableStatus.Opened, null);
+        when(gameTableRepository.findByIdForUpdate("table-r2")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
+        when(scheduleConflictService.findClashWith("player-1", table)).thenReturn(new CommittedTable("other", "La cripta"));
+
+        assertThatThrownBy(() -> registrationService.apply("table-r2", "player-1", new CreateRegistrationRequest(null)))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("La cripta");
+
+        verify(registrationRepository, never()).save(any(TableRegistration.class));
+    }
+
+    /** R3 (#178): asked again at accept time, because the candidate may have been taken elsewhere in between. */
+    @Test
+    void refusesToAcceptACandidateWhoNowPlaysAtAClashingTable() {
+        TableRegistration registration = persistedRegistration("reg-r3", "table-r3", TableRegistrationStatus.Candidate, null);
+        when(registrationRepository.findById("reg-r3")).thenReturn(Optional.of(registration));
+        when(gameTableRepository.findByIdForUpdate("table-r3")).thenReturn(Optional.of(registration.getGameTable()));
+        when(masterService.isMasterOf("table-r3", "master-1")).thenReturn(true);
+        when(scheduleConflictService.findClashWith("player-1", registration.getGameTable()))
+                .thenReturn(new CommittedTable("other", "El faro"));
+
+        assertThatThrownBy(() -> registrationService.accept("reg-r3", "master-1"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("El faro");
+
+        assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Candidate);
+    }
+
+    /**
+     * R4 (#178): the other pending applications that now clash are <b>notified</b>, not rejected.
+     * Until somebody is accepted there is no commitment, and choosing between them is theirs (#70).
+     */
+    @Test
+    void acceptingSomebodyWarnsThemAboutTheirOtherApplicationsThatNowClash() {
+        TableRegistration accepted = persistedRegistration("reg-r4", "table-r4", TableRegistrationStatus.Candidate, null);
+        GameTable acceptedTable = accepted.getGameTable();
+        TableRegistration pendingElsewhere = persistedRegistration("reg-r4b", "table-other", TableRegistrationStatus.Candidate, null);
+        when(registrationRepository.findById("reg-r4")).thenReturn(Optional.of(accepted));
+        when(gameTableRepository.findByIdForUpdate("table-r4")).thenReturn(Optional.of(acceptedTable));
+        when(masterService.isMasterOf("table-r4", "master-1")).thenReturn(true);
+        when(registrationRepository.findByUser_IdAndStatus("player-1", TableRegistrationStatus.Candidate))
+                .thenReturn(List.of(accepted, pendingElsewhere));
+        when(scheduleConflictService.overlap(acceptedTable, pendingElsewhere.getGameTable())).thenReturn(true);
+        when(registrationMapper.toResponse(any(TableRegistration.class)))
+                .thenReturn(new RegistrationResponse("reg-r4", "table-r4", "Test table", "player-1", "P1", 8000, "Player", null, null, null));
+
+        registrationService.accept("reg-r4", "master-1");
+
+        verify(notificationService).notifyScheduleConflict("player-1", pendingElsewhere.getGameTable(), acceptedTable.getName());
+        assertThat(pendingElsewhere.getStatus()).isEqualTo(TableRegistrationStatus.Candidate);
+    }
+
+    /** The way out R4's notice needs to leave open (#178): withdrawing your own pending application. */
+    @Test
+    void withdrawMarksTheOwnPendingApplicationAsDeleted() {
+        TableRegistration registration = persistedRegistration("reg-w1", "table-w1", TableRegistrationStatus.Candidate, null);
+        when(registrationRepository.findById("reg-w1")).thenReturn(Optional.of(registration));
+
+        registrationService.withdraw("reg-w1", "player-1");
+
+        assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Deleted);
+    }
+
+    @Test
+    void cannotWithdrawSomebodyElsesApplication() {
+        TableRegistration registration = persistedRegistration("reg-w2", "table-w2", TableRegistrationStatus.Candidate, null);
+        when(registrationRepository.findById("reg-w2")).thenReturn(Optional.of(registration));
+
+        assertThatThrownBy(() -> registrationService.withdraw("reg-w2", "someone-else")).isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** Once accepted there is a table counting on you: leaving is a conversation, not a button. */
+    @Test
+    void cannotWithdrawAnApplicationThatWasAlreadyAccepted() {
+        TableRegistration registration = persistedRegistration("reg-w3", "table-w3", TableRegistrationStatus.Player, null);
+        when(registrationRepository.findById("reg-w3")).thenReturn(Optional.of(registration));
+
+        assertThatThrownBy(() -> registrationService.withdraw("reg-w3", "player-1")).isInstanceOf(ConflictException.class);
     }
 
     private GameTable persistedTable(String id, GameTableStatus status, Integer maxPlayers) {

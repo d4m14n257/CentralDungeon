@@ -7,7 +7,7 @@
   },
   "create": {
     "title": "Crear una mesa",
-    "description": "La mesa queda en preparación hasta que un admin la revise.",
+    "description": "Cuatro pasos. La mesa queda en preparación hasta que un admin la revise.",
     "nameLabel": "Nombre",
     "descriptionLabel": "Descripción",
     "requirementsLabel": "Requisitos",
@@ -16,7 +16,31 @@
     "reviewNotice": "Un admin va a revisar la mesa antes de que quede abierta a postulaciones.",
     "submit": "Crear mesa",
     "submitting": "Creando...",
-    "success": "Mesa creada, queda en preparación"
+    "success": "Mesa creada, queda en preparación",
+    "stepsLabel": "Pasos de la creación",
+    "steps": {
+      "identity": "Identidad",
+      "catalogs": "Catálogos",
+      "schedule": "Agenda",
+      "capacity": "Cupo y revisión"
+    },
+    "tableTypeLabel": "Tipo de mesa",
+    "tableTypePlaceholder": "Elegí cómo se dirige",
+    "permittedLabel": "Qué se permite en la mesa",
+    "permittedHint": "Las reglas de la casa: qué material entra, qué tono tiene la mesa, qué no.",
+    "systemsLabel": "Sistemas",
+    "tagsLabel": "Tags",
+    "platformsLabel": "Plataformas",
+    "startDateLabel": "Primera sesión",
+    "startDateHint": "En tu hora local. Se guarda en UTC.",
+    "durationLabel": "Duración de una sesión",
+    "durationHint": "De una sesión, no de la campaña.",
+    "scheduleLabel": "Agenda semanal",
+    "reviewTitle": "Revisión",
+    "reviewEmpty": "Sin definir",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "scheduleHelp": "Cómo funcionan los horarios"
   },
   "detail": {
     "tabs": {
@@ -51,5 +75,13 @@
     "deleteConfirmTitle": "Eliminar esta mesa",
     "deleteConfirmDescription": "Todavía no la vio nadie, así que se borra sin dejar rastro público. No se puede deshacer. Si ya se había abierto, lo que corresponde es cancelarla.",
     "deleteSuccess": "Mesa eliminada"
+  },
+  "schedule": {
+    "weekdayLabel": "Día",
+    "hourLabel": "Hora",
+    "add": "Agregar",
+    "remove": "Quitar {{slot}}",
+    "utcEquivalent": "En UTC: {{slot}}",
+    "timeZoneHint": "Las horas se escriben en tu zona ({{timeZone}}) y se guardan en UTC."
   }
 }

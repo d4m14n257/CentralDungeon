@@ -1,4 +1,4 @@
-import { test, expect, type APIRequestContext, type Browser } from '@playwright/test'
+import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 /**
  * E2 sub-rebanada 1, de punta a punta (decisiones.md #163): un master crea una mesa por el
@@ -25,6 +25,23 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
   await testLogin(context.request, discordId, asMaster, asAdmin)
   const page = await context.newPage()
   return { context, page }
+}
+
+/**
+ * Crea una mesa por el wizard de cuatro pasos de F1.2. Estos tests son sobre la máquina de estados,
+ * no sobre la agenda, así que pasan de largo por los tres pasos que no piden nada obligatorio.
+ *
+ * @param page  la pestaña, ya autenticada como master
+ * @param name  el nombre de la mesa
+ */
+async function createTableThroughWizard(page: Page, name: string) {
+  await page.goto('/master/tables/new')
+  await page.getByRole('textbox', { name: 'Nombre' }).fill(name)
+  await page.getByRole('button', { name: 'Siguiente' }).click()
+  await page.getByRole('button', { name: 'Siguiente' }).click()
+  await page.getByRole('button', { name: 'Siguiente' }).click()
+  await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await expect(page.getByRole('heading', { name })).toBeVisible()
 }
 
 /**
@@ -100,10 +117,7 @@ test('a master deletes a draft that never went public, and cannot delete it once
   const master = await newAuthenticatedPage(browser, masterDiscordId, true, false)
   try {
     // Un borrador: se crea y se elimina sin que nadie lo haya visto.
-    await master.page.goto('/master/tables/new')
-    await master.page.getByRole('textbox', { name: 'Nombre' }).fill(draftName)
-    await master.page.getByRole('button', { name: 'Crear mesa' }).click()
-    await expect(master.page.getByRole('heading', { name: draftName })).toBeVisible()
+    await createTableThroughWizard(master.page, draftName)
 
     await master.page.getByRole('link', { name: 'Estado' }).click()
     await master.page.getByRole('button', { name: 'Eliminar mesa' }).click()
@@ -114,11 +128,8 @@ test('a master deletes a draft that never went public, and cannot delete it once
     await expect(master.page.getByText(draftName)).toBeHidden()
 
     // Una mesa aprobada ya fue pública: el botón de eliminar no existe.
-    await master.page.goto('/master/tables/new')
-    await master.page.getByRole('textbox', { name: 'Nombre' }).fill(openedName)
-    await master.page.getByRole('button', { name: 'Crear mesa' }).click()
-    // La URL recién sirve cuando la navegación terminó: sin esto todavía dice /master/tables/new.
-    await expect(master.page.getByRole('heading', { name: openedName })).toBeVisible()
+    // La URL recién sirve cuando la navegación terminó, y el helper ya espera al encabezado.
+    await createTableThroughWizard(master.page, openedName)
     const tableId = master.page.url().split('/master/tables/')[1]
 
     const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
@@ -148,11 +159,7 @@ test('a master creates a table, an admin approves it, and the master runs it end
 
   const master = await newAuthenticatedPage(browser, masterDiscordId, true, false)
   try {
-    await master.page.goto('/master/tables/new')
-    await master.page.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
-    await master.page.getByRole('button', { name: 'Crear mesa' }).click()
-
-    await expect(master.page.getByRole('heading', { name: tableName })).toBeVisible()
+    await createTableThroughWizard(master.page, tableName)
     await expect(master.page.getByText('En preparación', { exact: true })).toBeVisible()
     const tableUrl = master.page.url()
     const tableId = tableUrl.split('/master/tables/')[1]

@@ -21,6 +21,7 @@
         <java.version>25</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <spring-dotenv.version>5.1.0</spring-dotenv.version>
+        <owasp-html-sanitizer.version>20260313.1</owasp-html-sanitizer.version>
     </properties>
 
     <dependencyManagement>
@@ -117,6 +118,15 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>3.1.0</version>
+        </dependency>
+
+        <dependency>
+            <!-- Allowlist HTML sanitizer for the rich text of #62 (decisiones.md #186). Hand-written
+                 escaping is how XSS gets shipped; this is the OWASP reference implementation and it
+                 is the only thing between a table's description and the browser that renders it. -->
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+            <version>${owasp-html-sanitizer.version}</version>
         </dependency>
 
         <dependency>

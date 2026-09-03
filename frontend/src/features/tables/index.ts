@@ -8,6 +8,7 @@
 
 export { CreateUnassignedTableDialog } from './components/CreateUnassignedTableDialog'
 export { GameTableCard } from './components/GameTableCard'
+export { ScheduleEditor } from './components/ScheduleEditor'
 export { JustifiedTableActionDialog } from './components/JustifiedTableActionDialog'
 export { TableStatusBadge } from './components/TableStatusBadge'
 export { useAdminTables } from './api/useAdminTables'
@@ -27,9 +28,11 @@ export { useRequestChanges } from './api/useRequestChanges'
 export { useResubmitTable } from './api/useResubmitTable'
 export { useStartTable } from './api/useStartTable'
 export { useTableStatusHistory } from './api/useTableStatusHistory'
-export { changeTableStatusSchema, createGameTableSchema } from './schemas'
-/** The form value types, inferred from the zod schemas above. */
-export type { ChangeTableStatusForm, CreateGameTableForm } from './schemas'
+export { useTableTypes } from './api/useTableTypes'
+export { useUpdateTable } from './api/useUpdateTable'
+export { changeTableStatusSchema, createGameTableSchema, WIZARD_STEPS } from './schemas'
+/** The form value types, inferred from the zod schemas above, plus the wizard's four steps. */
+export type { ChangeTableStatusForm, CreateGameTableForm, WizardStep } from './schemas'
 /** The feature's domain types. Each is written once in `types.ts` and derived from there (#3.2). */
 export type {
   AdminTableSummary,
@@ -40,5 +43,8 @@ export type {
   GameTableStatus,
   GameTableSummary,
   MasterSummary,
+  TableScheduleEntry,
   TableStatusChange,
+  TableType,
+  UpdateGameTableRequest,
 } from './types'

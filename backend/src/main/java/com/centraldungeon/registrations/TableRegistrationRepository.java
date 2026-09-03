@@ -1,10 +1,14 @@
 package com.centraldungeon.registrations;
 
+import com.centraldungeon.tables.GameTable;
+import com.centraldungeon.tables.GameTableStatus;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /** Reads and writes {@code table_registrations} - who applied to what, and how it went. */
 public interface TableRegistrationRepository extends JpaRepository<TableRegistration, String> {
@@ -62,6 +66,18 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     Page<TableRegistration> findByUser_Id(String userId, Pageable pageable);
 
     /**
+     * The same listing, minus the soft-deleted rows. A withdrawn application (#178) and one that
+     * fell with its table (#175) are both {@code Deleted}, and neither is something the applicant
+     * should keep reading about on /my/applications.
+     *
+     * @param userId   the actor, from the token (#121)
+     * @param status   the status to leave out, in practice Deleted
+     * @param pageable page, size and sort
+     * @return one page of their applications, the marked ones excluded
+     */
+    Page<TableRegistration> findByUser_IdAndStatusNot(String userId, TableRegistrationStatus status, Pageable pageable);
+
+    /**
      * Backs /my/tables: every game table where the actor holds an active Player registration.
      *
      * @param userId   the actor, from the token (#121)
@@ -70,6 +86,34 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
      * @return one page of their registrations in that status
      */
     Page<TableRegistration> findByUser_IdAndStatus(String userId, TableRegistrationStatus status, Pageable pageable);
+
+    /**
+     * The tables somebody plays at, in the statuses that count as a live commitment - the other half
+     * of what the clash rules of #178 compare against. Playing and running weigh the same there:
+     * they are the same person in the same stretch of the week.
+     *
+     * @param userId   the person whose commitments are being collected, always from the token (#121)
+     * @param statuses the table statuses that count as committed. {@code Pause} is not among them,
+     *                 because a paused table does not reserve the slot (#32, #178)
+     * @return the tables where they hold a Player registration and the table is in one of those
+     *         statuses
+     */
+    @Query("select r.gameTable from TableRegistration r where r.user.id = :userId "
+            + "and r.status = com.centraldungeon.registrations.TableRegistrationStatus.Player "
+            + "and r.gameTable.status in :statuses")
+    List<GameTable> findTablesPlayedByUserInStatuses(
+            @Param("userId") String userId, @Param("statuses") Collection<GameTableStatus> statuses);
+
+    /**
+     * Somebody's applications in one status, unpaginated. Used for the notice R4 sends: when a
+     * person is accepted somewhere, their other pending applications are checked for a clash and
+     * they are told about it (#178).
+     *
+     * @param userId the applicant
+     * @param status the status to match, in practice Candidate
+     * @return their registrations in that status
+     */
+    List<TableRegistration> findByUser_IdAndStatus(String userId, TableRegistrationStatus status);
 
     /**
      * Whether anybody is involved with a table yet. It is what separates a table that can still be

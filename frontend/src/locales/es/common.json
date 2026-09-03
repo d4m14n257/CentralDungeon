@@ -60,5 +60,14 @@
     "total": "{{total}} en total",
     "previous": "Anterior",
     "next": "Siguiente"
+  },
+  "richText": {
+    "bold": "Negrita",
+    "italic": "Cursiva",
+    "heading": "Título",
+    "bulletList": "Lista",
+    "orderedList": "Lista numerada",
+    "quote": "Cita",
+    "code": "Código"
   }
 }

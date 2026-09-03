@@ -25,15 +25,15 @@ Verificado en el repositorio al abrir la fase, no asumido. Es la foto contra la 
 
 **Los huecos concretos que F1 cierra:**
 
-| Hueco | Dónde se ve hoy |
-|---|---|
-| `game_tables.permitted` y `closed_at` **sin mapear** | comentario en `backend/.../tables/GameTable.java` |
-| **`closed_at` nunca se sella** — es una regla de `modelo-datos.md` §5 que no se cumple | `GameTableService.finish()` / `.cancel()` |
-| El wizard de `/master/tables/new` es **un formulario de cinco campos** | `frontend/src/routes/master/MasterTableCreatePage.tsx` lo dice explícito |
-| `TableTypeController` **no existe** — `V2__seed.sql` siembra los tipos y no hay forma de listarlos | — |
-| `NotificationType` tiene **tres valores** | `backend/.../notifications/NotificationType.java` |
-| `features/catalogs/` y `features/files/` son carpetas con un `.gitkeep` | — |
-| `POST /{id}/masters` existe desde E2 y **nunca tuvo interfaz** | — |
+| Hueco | Dónde se ve hoy | Cerrado en |
+|---|---|---|
+| `game_tables.permitted` y `closed_at` **sin mapear** | comentario en `backend/.../tables/GameTable.java` | F1.2 |
+| **`closed_at` nunca se sella** — es una regla de `modelo-datos.md` §5 que no se cumple | `GameTableService.finish()` / `.cancel()` | F1.2 |
+| El wizard de `/master/tables/new` es **un formulario de cinco campos** | `frontend/src/routes/master/MasterTableCreatePage.tsx` lo dice explícito | F1.2 |
+| `TableTypeController` **no existe** — `V2__seed.sql` siembra los tipos y no hay forma de listarlos | — | F1.1 (backend) · F1.2 (el `useTableTypes` que lo consume) |
+| `NotificationType` tiene **tres valores** | `backend/.../notifications/NotificationType.java` | F1.2 suma `ScheduleConflict`; F1.3 y F1.5 el resto |
+| `features/catalogs/` y `features/files/` son carpetas con un `.gitkeep` | — | F1.1 y F1.4 |
+| `POST /{id}/masters` existe desde E2 y **nunca tuvo interfaz** | — | F1.6 |
 
 **Piezas del inventario de `frontend-diseno.md` §5 que F1 estrena:** `RichTextEditor`, `RichTextView`, `ScheduleEditor`, `FilePicker`, `DataTable`, `CollapsibleSection`, `IconAction`, `useConfirm`, `lib/date.ts`.
 
@@ -165,6 +165,62 @@ npx playwright test → 12 tests, todos verdes, contra el backend y el frontend 
 **Tests:** `ScheduleConflictServiceTest` con la matriz completa —solapa, adyacente, envuelve la semana, sin duración, mesa en `Pause`, dos filas de la misma mesa—; `RegistrationServiceTest` para R2, R3 y R4; e2e Playwright del wizard.
 
 **Se prueba:** un master arma una mesa con agenda real; un jugador la ve en su hora local y, si ya juega a esa hora, la ve advertida y no puede postularse.
+
+
+#### ✅ Terminada
+
+Siete decisiones nuevas salieron de construirla: **#186** (sanitizador de OWASP), **#187** (`InvalidRequestException`, el `400` de una agenda incoherente), **#188** (un `409` con código propio y su mensaje redactado), **#189** (`PUT` que reemplaza la mesa entera), **#190** (agenda y catálogos se reemplazan como conjunto y sus filas se marcan), **#191** (`Weekday` propio) y **#192** (locale y zona como parámetros de `lib/date.ts`).
+
+**Un bug de producto encontrado por el e2e, no por un test unitario**: el botón «Siguiente» y el de enviar eran el mismo nodo del DOM con distinto `type`, así que React le cambiaba el atributo *durante* el despacho del click y el navegador ejecutaba la acción por defecto sobre el nodo ya convertido — el tercer «Siguiente» creaba la mesa. Se arregla con una `key` distinta por rama, más una guarda en `onSubmit` que ignora el envío fuera del último paso (Enter en un campo de texto hacía lo mismo desde el teclado).
+
+Queda fuera a propósito, con su motivo: **el `PUT` no tiene todavía su pantalla**. El endpoint, el hook y los tipos están; la pantalla de edición del master vive en `/master/tables/:id` y su rediseño es de F1.6, cuando esa pantalla gane además co-masters y el resto de las pestañas. Y **`table_sessions` no se materializa**: la agenda queda guardada y verificada, pero convertirla en sesiones es F1.3 (#26, #33).
+
+**Backend** (`backend/src/main/java/com/centraldungeon/`):
+
+| Ruta | Qué es |
+|---|---|
+| `tables/Weekday.java` · `WeeklyInterval.java` | El vocabulario del tiempo semanal: el día en UTC y el intervalo semiabierto con envoltura |
+| `tables/TableSchedule.java` · `TableScheduleId` · `TableScheduleStatus` · `TableScheduleRepository` | La agenda, con su clave compuesta de tres columnas |
+| `tables/ScheduleConflictService.java` + `CommittedTable.java` | El corazón de #178, sin base en la parte que se puede calcular |
+| `tables/TableScheduleService.java` | Reemplazo de la agenda, el `400` de la incoherencia, R1 y el aviso a quien ya estaba |
+| `catalogs/TableCatalogService.java` | El vínculo mesa↔catálogo que F1.1 dejó anotado |
+| `common/text/RichTextSanitizer.java` | La lista blanca de #62, al guardar y al servir |
+| `common/exception/InvalidRequestException.java` | El quinto miembro de la jerarquía sellada (#187) |
+| `tables/dto/TableScheduleEntry.java` · `UpdateGameTableRequest.java` | Los dos records nuevos |
+| `test/…/tables/ScheduleConflictServiceTest.java` · `TableScheduleServiceTest` · `TableScheduleIT` | 20 + 10 unitarios y 8 de integración sobre MySQL real |
+| `test/…/common/text/RichTextSanitizerTest.java` | 9 unitarios sobre la superficie de XSS |
+
+Modificados: `GameTable` (+`permitted`, +`closedAt`, +`setName`), `GameTableService` (sanitización, catálogos, agenda, `update()`, sellado de `closed_at`), `GameTableMapper`, `GameTableController` (+`PUT`), `GameTableRepository` y `TableRegistrationRepository` (las dos consultas de compromisos), `CreateGameTableRequest`, `GameTableSummaryResponse` y `GameTableDetailResponse` (agenda, catálogos, `closedAt`, campo derivado de choque), `RegistrationService` y `RegistrationController` (R2, R3, R4 y el retiro), `NotificationService` y `NotificationType` (+`ScheduleConflict`), `ConflictException` (+`errorCode`), `ApiException`, `TableRegistrationStatus`, los tres repositorios puente y `TestDataService` — sin este último la limpieza del e2e rompía la clave foránea de `table_schedules` y respondía `500`, que es lo que llenaba la base y hacía fallar la corrida siguiente por paginación (#171, #172).
+
+**Sin migración Flyway**: `permitted`, `closed_at` y las cinco columnas de `table_schedules` ya estaban en `V1__baseline.sql`. F1.2 mapea, no agrega.
+
+**Frontend** (`frontend/src/`):
+
+| Ruta | Qué es |
+|---|---|
+| `lib/date.ts` + `date.test.ts` | UTC↔local con `Intl`, sin librería de fechas; locale y zona por parámetro (#111) |
+| `types/catalog.ts` | El tipo de valor de catálogo, subido a la raíz porque lo necesitan dos features (regla dura 16) |
+| `components/RichTextEditor.tsx` · `RichTextView.tsx` | TipTap, con la barra alineada a la lista blanca del backend |
+| `features/tables/components/ScheduleEditor.tsx` + su test | Día y hora en zona local, con el equivalente UTC a la vista |
+| `features/tables/api/useUpdateTable.ts` · `useTableTypes.ts` | El `PUT` y los tipos de mesa, que se sembraban desde E1 y nada leía |
+| `features/registrations/api/useWithdrawApplication.ts` | El retiro que R4 obliga |
+| `routes/master/MasterTableCreatePage.tsx` | El wizard reescrito a cuatro pasos, con su resumen |
+| `components/ui/tooltip.tsx` · `separator.tsx` | Primitivas de shadcn |
+| `e2e/table-schedule.spec.ts` | Wizard con agenda, R1 con el motivo en pantalla y R2 desde el lado del jugador |
+
+Tocados: `features/tables/types.ts`, `schemas.ts`, `index.ts`, `gameTablesApi.ts`, `components/GameTableCard.tsx` (+ su test), `features/catalogs/types.ts` (deriva del tipo subido), `features/registrations/` (api e index), `routes/TableDetailPage.tsx`, `routes/my/MyApplicationsPage.tsx`, `routes/help/HelpMastersTab.tsx` y `HelpPlayersTab.tsx`, `api/queryKeys.ts`, `config/query.ts` (los códigos de error que se muestran verbatim), `vite.config.ts`, `e2e/table-lifecycle.spec.ts` y los locales `master`, `tables`, `registrations`, `common` y `help`.
+
+**Ayuda:** `/help/masters#schedule` (agenda, duración, intervalos y choque) y `/help/players#schedule-conflicts` (por qué no se puede postular y cómo retirar), enlazadas desde el paso de agenda del wizard y desde el aviso de `/tables/:id`.
+
+**Salida real de las suites:**
+
+```
+./mvnw test    → 159 tests, 0 fallos
+./mvnw verify  → 159 unitarios + 31 integración, 0 fallos
+npx tsc -b     → limpio
+npm run test   → 13 archivos, 112 tests
+npx playwright test → 15 tests, todos verdes, contra el backend y el frontend reales
+```
 
 ---
 

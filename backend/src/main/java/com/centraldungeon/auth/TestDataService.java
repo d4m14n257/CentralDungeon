@@ -61,6 +61,13 @@ public class TestDataService {
         delete("delete from Notification n where n.user.id in (" + E2E_USERS + ")");
         delete("delete from TableStatusChange c where c.gameTable.id in (" + E2E_TABLES + ") or c.changedBy.id in (" + E2E_USERS + ")");
         delete("delete from Master m where m.gameTable.id in (" + E2E_TABLES + ") or m.user.id in (" + E2E_USERS + ")");
+        // F1.2 y F1.1: la agenda y los vínculos de catálogo cuelgan de la mesa por clave compuesta.
+        // Sin estos cuatro, borrar las mesas rompe la foreign key y la limpieza responde 500 - que
+        // es lo que hace que la corrida siguiente encuentre la base llena y falle por paginación (#171, #172).
+        delete("delete from TableSchedule s where s.id.gameTableId in (" + E2E_TABLES + ")");
+        delete("delete from TableSystem ts where ts.id.gameTableId in (" + E2E_TABLES + ")");
+        delete("delete from TableTag tt where tt.id.gameTableId in (" + E2E_TABLES + ")");
+        delete("delete from TablePlatform tp where tp.id.gameTableId in (" + E2E_TABLES + ")");
         int gameTables =
                 delete("delete from GameTable gt where gt.name like :tableName or gt.createdBy.id in (" + E2E_USERS + ")");
         delete("delete from UserRole ur where ur.user.id in (" + E2E_USERS + ")");

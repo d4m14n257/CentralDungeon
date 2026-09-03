@@ -92,6 +92,28 @@ public class NotificationService {
     }
 
     /**
+     * Tells somebody that two of their tables now fall at the same time (#178).
+     *
+     * <p>It carries no action of its own on purpose: the notification names both tables and stops
+     * there, because deciding which one to keep is the person's call and not the system's (#70). The
+     * way out is on the screen it links to - withdrawing the application, or talking to the master.
+     *
+     * @param userId        who has the clash
+     * @param table         the table the notification links to. R4 points at the application that
+     *                      clashes, so the person lands where they can act
+     * @param otherTableName the table it clashes with, named in the message so the person does not
+     *                      have to work out which of theirs it was
+     */
+    @Transactional
+    public void notifyScheduleConflict(String userId, GameTable table, String otherTableName) {
+        User recipient = userRepository.getReferenceById(userId);
+        String title = "Tu horario en " + table.getName() + " choca con otra mesa";
+        String message = "Se superpone con " + otherTableName + ". Podés retirar una postulación o hablarlo con el master.";
+        notificationRepository.save(
+                new Notification(recipient, NotificationType.ScheduleConflict, title, message, "game_table", table.getId()));
+    }
+
+    /**
      * Somebody's inbox, newest first.
      *
      * @param userId   the recipient, always the actor from the token (#121)

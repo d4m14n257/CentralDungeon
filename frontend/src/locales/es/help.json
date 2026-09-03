@@ -103,20 +103,49 @@
       "title": "Tus mesas",
       "list": "«Mis mesas» muestra aquellas en las que te aceptaron y siguen vivas.",
       "status": "Cada una lleva su estado a la vista: mientras esté pausada o en preparación no hay nada que hacer, y se avisa."
+    },
+    "scheduleConflict": {
+      "title": "Choques de horario",
+      "local": "Las mesas muestran su agenda en tu hora local, aunque por dentro se guarde en UTC.",
+      "blocked": "No podés postularte a una mesa que se pisa con otra donde ya jugás. La mesa te lo dice y explica con cuál.",
+      "candidate": "Tener varias postulaciones pendientes que se pisan sí se puede: hasta que te aceptan en una no hay compromiso.",
+      "notified": "Cuando te aceptan en una, si alguna de tus otras postulaciones se pisa con esa, te llega un aviso. Nadie las rechaza por vos.",
+      "withdraw": "Podés retirar una postulación pendiente desde «Mis postulaciones». Una vez aceptada, ya no: eso se habla con el master.",
+      "steps": {
+        "step1": "Entrá a «Mis postulaciones».",
+        "step2": "Buscá la postulación pendiente que querés soltar.",
+        "step3": "Tocá «Retirar» y confirmá. Si después cambiás de idea, tenés que postularte de nuevo."
+      }
     }
   },
   "masters": {
     "creating": {
       "title": "Crear una mesa",
       "role": "Crear mesas propias necesita el rol Master. Dirigir una mesa que te asignaron, no: son cosas distintas.",
-      "wizard": "La mesa nace en preparación, con nombre y descripción. Ahí la armás sin apuro: nadie la ve todavía.",
+      "wizard": "El wizard va en cuatro pasos: identidad, catálogos, agenda y cupo. El último te muestra el resumen antes de mandar.",
       "submit": "Cuando está lista se manda a revisión de un admin.",
       "steps": {
         "step1": "Cambiá al contexto Master con el selector de arriba.",
         "step2": "Entrá a «Mis mesas» y tocá «Crear mesa».",
-        "step3": "Poné el nombre y la descripción. La mesa nace en preparación y todavía no la ve nadie.",
+        "step3": "Seguí los cuatro pasos. La mesa nace en preparación y todavía no la ve nadie.",
         "step4": "Cuando esté lista, mandala a revisión desde la pestaña Estado.",
         "step5": "Esperá la decisión de un admin: te avisa la campana. Si pide cambios, llega con el motivo escrito."
+      }
+    },
+    "schedule": {
+      "title": "Agenda y horarios",
+      "local": "Los horarios se escriben en tu zona horaria y se guardan en UTC. El editor te muestra las dos cosas: si el día se corre, es lo esperado.",
+      "duration": "La duración es de una sesión, no de la campaña. Es lo que decide hasta qué hora ocupa cada franja.",
+      "interval": "Dos mesas chocan si se pisan, no solo si empiezan a la misma hora: una de tres horas a las 20:00 se pisa con otra a las 22:00.",
+      "chained": "Encadenar dos mesas sí se puede: una que arranca justo cuando termina la otra no choca.",
+      "conflict": "No podés dirigir dos mesas vivas que se pisen. Si intentás guardar una agenda así, el sistema te dice con cuál choca.",
+      "paused": "Una mesa pausada no reserva horario: su agenda está congelada. Al reanudarla se vuelve a verificar.",
+      "players": "Si movés la agenda de una mesa que ya tiene gente, a quien le genera choque le llega un aviso. Nadie queda afuera por eso: el sistema informa, las personas deciden.",
+      "steps": {
+        "step1": "En el paso «Agenda» del wizard, poné la fecha de la primera sesión y cuánto dura una sesión.",
+        "step2": "Agregá una franja por cada día que juega la mesa, con el día y la hora en tu zona.",
+        "step3": "Mirá la línea «En UTC» de cada franja: eso es lo que se guarda.",
+        "step4": "Si al guardar aparece un choque, cambiá la hora o liberá la otra mesa."
       }
     },
     "review": {

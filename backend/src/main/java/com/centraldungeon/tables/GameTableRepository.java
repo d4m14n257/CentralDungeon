@@ -2,6 +2,7 @@ package com.centraldungeon.tables;
 
 import jakarta.persistence.LockModeType;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +40,24 @@ public interface GameTableRepository extends JpaRepository<GameTable, String> {
     @Query("select m.gameTable from Master m where m.user.id = :userId "
             + "and m.gameTable.status <> com.centraldungeon.tables.GameTableStatus.Deleted")
     Page<GameTable> findByMasterUserId(@Param("userId") String userId, Pageable pageable);
+
+    /**
+     * The tables somebody runs, in the statuses that count as a live commitment - half of what the
+     * clash rules of #178 compare against. Not paginated: it feeds a computation, not a screen.
+     *
+     * <p>Only live master rows count. Somebody whose master row fell with a deleted table (#175) no
+     * longer occupies that stretch of the week.
+     *
+     * @param userId   the person whose commitments are being collected, always from the token (#121)
+     * @param statuses the statuses that count as committed. {@code Pause} is deliberately not among
+     *                 them: a paused table freezes its agenda and does not reserve the slot (#32, #178)
+     * @return the tables they run in those statuses
+     */
+    @Query("select m.gameTable from Master m where m.user.id = :userId "
+            + "and m.status = com.centraldungeon.tables.MasterRowStatus.Created "
+            + "and m.gameTable.status in :statuses")
+    List<GameTable> findMasteredByUserInStatuses(
+            @Param("userId") String userId, @Param("statuses") Collection<GameTableStatus> statuses);
 
     /**
      * /admin/tables: management listing, unfiltered by pertenencia - the caller is already an admin.

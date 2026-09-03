@@ -16,7 +16,8 @@
     "emptyDescription": "Volvé más tarde, los masters siguen publicando mesas nuevas.",
     "players": "{{current}} / {{max}} jugadores",
     "playersUnlimited": "{{current}} jugadores",
-    "alreadyApplied": "Ya te postulaste"
+    "alreadyApplied": "Ya te postulaste",
+    "scheduleConflict": "Choca con una mesa tuya"
   },
   "detail": {
     "requirements": "Requisitos",
@@ -35,7 +36,16 @@
     "applyDialogDescription": "Contale al master por qué querés sumarte (opcional).",
     "applyDescriptionLabel": "Mensaje para el master",
     "notFoundTitle": "Esta mesa no existe",
-    "notFoundDescription": "Puede que ya no esté disponible."
+    "notFoundDescription": "Puede que ya no esté disponible.",
+    "permitted": "Qué se permite",
+    "schedule": "Agenda",
+    "scheduleTimeZone": "Horarios en tu zona ({{timeZone}}).",
+    "scheduleConflict": "Choca con una mesa tuya",
+    "scheduleConflictExplained": "Ya jugás en otra mesa a esa hora. Retirá esa postulación o dejá esa mesa para poder postularte acá.",
+    "scheduleConflictHelp": "Cómo funcionan los choques",
+    "startDate": "Primera sesión",
+    "totalSessions_one": "{{count}} sesión planeada",
+    "totalSessions_other": "{{count}} sesiones planeadas"
   },
   "myTables": {
     "title": "Mis mesas",
