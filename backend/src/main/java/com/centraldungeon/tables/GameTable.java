@@ -52,6 +52,10 @@ public class GameTable extends BaseEntity {
     @Column(nullable = false, length = 32)
     private GameTableStatus status = GameTableStatus.Preparation;
 
+    /** Soft delete (#25): the column already existed in the baseline; nothing maps it until now. */
+    @Column(name = "deleted_at")
+    private @Nullable LocalDateTime deletedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
@@ -126,6 +130,14 @@ public class GameTable extends BaseEntity {
 
     public GameTableStatus getStatus() {
         return status;
+    }
+
+    public @Nullable LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(@Nullable LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     public void setStatus(GameTableStatus status) {

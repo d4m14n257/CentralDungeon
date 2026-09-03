@@ -87,6 +87,60 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
   }
 })
 
+/**
+ * Borrar lo que nunca fue público (decisiones.md #175): el master arma una mesa, decide que no va
+ * a pasar y la elimina antes de publicarla. Una vez abierta ya no se puede: eso se cancela.
+ */
+test('a master deletes a draft that never went public, and cannot delete it once open', async ({ browser }) => {
+  const masterDiscordId = `e2e-del-master-${runId}`
+  const adminDiscordId = `e2e-del-admin-${runId}`
+  const draftName = `Mesa Borrador E2E ${runId}`
+  const openedName = `Mesa Publicada E2E ${runId}`
+
+  const master = await newAuthenticatedPage(browser, masterDiscordId, true, false)
+  try {
+    // Un borrador: se crea y se elimina sin que nadie lo haya visto.
+    await master.page.goto('/master/tables/new')
+    await master.page.getByRole('textbox', { name: 'Nombre' }).fill(draftName)
+    await master.page.getByRole('button', { name: 'Crear mesa' }).click()
+    await expect(master.page.getByRole('heading', { name: draftName })).toBeVisible()
+
+    await master.page.getByRole('link', { name: 'Estado' }).click()
+    await master.page.getByRole('button', { name: 'Eliminar mesa' }).click()
+    await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+
+    // Vuelve al listado y la mesa ya no está en ningún lado.
+    await expect(master.page).toHaveURL(/\/master\/tables$/)
+    await expect(master.page.getByText(draftName)).toBeHidden()
+
+    // Una mesa aprobada ya fue pública: el botón de eliminar no existe.
+    await master.page.goto('/master/tables/new')
+    await master.page.getByRole('textbox', { name: 'Nombre' }).fill(openedName)
+    await master.page.getByRole('button', { name: 'Crear mesa' }).click()
+    // La URL recién sirve cuando la navegación terminó: sin esto todavía dice /master/tables/new.
+    await expect(master.page.getByRole('heading', { name: openedName })).toBeVisible()
+    const tableId = master.page.url().split('/master/tables/')[1]
+
+    const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
+    try {
+      await admin.page.goto('/admin/tables')
+      const row = admin.page.getByRole('listitem').filter({ hasText: openedName })
+      await row.getByRole('button', { name: 'Aprobar' }).click()
+      await admin.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+      await expect(row).toBeHidden()
+    } finally {
+      await admin.context.close()
+    }
+
+    await master.page.goto(`/master/tables/${tableId}/status`)
+    await expect(master.page.getByText('Abierta', { exact: true })).toBeVisible()
+    await expect(master.page.getByRole('button', { name: 'Eliminar mesa' })).toBeHidden()
+    await expect(master.page.getByRole('button', { name: 'Cancelar mesa' })).toBeVisible()
+  } finally {
+    await master.context.close()
+  }
+})
+
 test('a master creates a table, an admin approves it, and the master runs it end to end', async ({ browser }) => {
   const masterDiscordId = `e2e-master-${runId}`
   const adminDiscordId = `e2e-admin-${runId}`

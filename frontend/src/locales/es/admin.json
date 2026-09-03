@@ -27,6 +27,10 @@
     "createUnassignedDialogDescription": "Queda sin asignar hasta que le asignes un master.",
     "createUnassignedSuccess": "Mesa creada, sin asignar",
     "nameLabel": "Nombre",
-    "mastersHelpLink": "Cómo funciona"
+    "mastersHelpLink": "Cómo funciona",
+    "delete": "Eliminar",
+    "deleteConfirmTitle": "Eliminar esta mesa",
+    "deleteConfirmDescription": "Nunca se publicó, así que se borra sin dejar rastro. No se puede deshacer.",
+    "deleteSuccess": "Mesa eliminada"
   }
 }

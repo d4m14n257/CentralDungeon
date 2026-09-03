@@ -19,6 +19,8 @@ export const gameTablesApi = {
   admin: (statuses?: GameTableStatus[], page = 0, size = pageSize.adminQueue) =>
     api.getPage<AdminTableSummary>('/api/v1/game-tables/admin', { status: statuses?.join(','), page, size }),
   byId: (id: string) => api.get<GameTableDetail>(`/api/v1/game-tables/${id}`),
+  /** Solo una mesa que nunca fue pública; el backend rechaza el resto (#175). */
+  delete: (id: string) => api.delete(`/api/v1/game-tables/${id}`),
   managedById: (id: string) => api.get<GameTableDetail>(`/api/v1/game-tables/${id}/managed`),
   statusHistory: (id: string) => api.get<TableStatusChange[]>(`/api/v1/game-tables/${id}/status-history`),
   create: (request: CreateGameTableRequest) => api.post<GameTableDetail, CreateGameTableRequest>('/api/v1/game-tables', request),

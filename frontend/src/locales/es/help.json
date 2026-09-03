@@ -154,6 +154,17 @@
       "one": "Cada mesa tiene un master y puede tener co-masters.",
       "primary": "El master es quien decide sobre la mesa; los co-masters ayudan a dirigirla.",
       "assign": "Cuando un admin asigna masters, el primero que agrega es el master y el resto quedan de co-masters."
+    },
+    "deleting": {
+      "title": "Cuando una mesa no va a pasar",
+      "draft": "Si nunca se publicó —está en preparación o con cambios pedidos— y nadie se postuló, se elimina: no la vio nadie, así que no hay nada que contar.",
+      "public": "Si ya estuvo abierta, en curso o pausada, no se elimina: se cancela con un motivo escrito. Otras personas la vieron o jugaron en ella, y eso es historia.",
+      "gone": "Eliminar es definitivo y no deja rastro público: la mesa desaparece de tus mesas y de todos lados. Cancelar la deja visible como cancelada.",
+      "steps": {
+        "step1": "Abrí la mesa y andá a la pestaña Estado.",
+        "step2": "Si todavía no se publicó vas a ver «Eliminar mesa» al lado de «Cancelar mesa».",
+        "step3": "Confirmá. Si la mesa ya se había abierto, el botón no está: ahí lo que corresponde es cancelar."
+      }
     }
   },
   "admins": {
@@ -182,7 +193,8 @@
         "step4": "Sumá a los demás igual. El primero es el master; el resto quedan de co-masters.",
         "step5": "Si querés otro master, tocá su nombre en los chips: el que estaba pasa a co-master.",
         "step6": "Tocá «Asignar masters». La mesa queda abierta al instante, sin pasar por revisión."
-      }
+      },
+      "delete": "Si la mesa sin master ya no va a hacerse, se elimina desde la misma fila: nunca se publicó, así que no queda rastro."
     },
     "owner": {
       "title": "Owner",

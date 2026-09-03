@@ -19,6 +19,7 @@ import com.centraldungeon.tables.dto.TableStatusChangeResponse;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -35,6 +36,17 @@ public class GameTableService {
     /** /admin/tables default view: mesas esperando alguna acción del admin (plan-desarrollo.md E2). */
     private static final List<GameTableStatus> DEFAULT_ADMIN_REVIEW_STATUSES =
             List.of(GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
+
+    /**
+     * A table can be deleted only while it was never public (decisiones.md #175): nobody saw it, so
+     * there is no history worth keeping. Everything past this point is cancelled instead, because a
+     * table other people looked at, applied to or played is a record of something that happened.
+     */
+    private static final Set<GameTableStatus> DELETABLE_STATUSES =
+            Set.of(GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
+
+    private static final List<TableRegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
+            List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
     /** cancel() is the one transition with more than one valid "from" (docs/decisiones.md, Ciclo de vida de la mesa). */
     private static final Set<GameTableStatus> CANCELABLE_STATUSES = Set.of(
@@ -175,6 +187,38 @@ public class GameTableService {
     }
 
     /** Immediate pause by an admin (#32) - a master asking for one goes through approval_requests instead (E2 sub-rebanada 2). */
+    /**
+     * Soft delete of a table that never went public (#25, #175). Same actors as cancel - the Primary
+     * or an admin - and the same lock, but a different meaning: cancel closes a table that existed
+     * for other people, this one removes a draft that did not.
+     *
+     * <p>The cascade is explicit and in one transaction, as #25 requires: the master rows and the
+     * registrations of the table fall with it, all stamped with the same instant. The status change
+     * is recorded too - the trail survives even when the table does not.
+     */
+    @Transactional
+    public void delete(String gameTableId, String actorId) {
+        GameTable gameTable = lockTable(gameTableId);
+        if (!masterService.isPrimaryOf(gameTableId, actorId) && !isAdmin(actorId)) {
+            throw new ForbiddenActionException("Only the Primary master or an admin can delete this table");
+        }
+        GameTableStatus from = gameTable.getStatus();
+        if (!DELETABLE_STATUSES.contains(from)) {
+            throw new ConflictException("A table in status " + from + " cannot be deleted - cancel it instead");
+        }
+        if (tableRegistrationRepository.existsByGameTable_IdAndStatusIn(gameTableId, ACTIVE_REGISTRATION_STATUSES)) {
+            throw new ConflictException("A table with candidates or players cannot be deleted - cancel it instead");
+        }
+
+        LocalDateTime deletedAt = LocalDateTime.now();
+        for (TableRegistration registration : tableRegistrationRepository.findByGameTable_Id(gameTableId)) {
+            registration.setStatus(TableRegistrationStatus.Deleted);
+        }
+        masterService.softDeleteAllOfTable(gameTableId, deletedAt);
+        gameTable.setDeletedAt(deletedAt);
+        recordStatusChange(gameTable, from, GameTableStatus.Deleted, actorId, null);
+    }
+
     @Transactional
     public GameTableDetailResponse pauseDirect(String gameTableId, String actorId, ChangeTableStatusRequest request) {
         GameTable gameTable = lockTable(gameTableId);
@@ -260,15 +304,28 @@ public class GameTableService {
      */
     @Transactional(readOnly = true)
     public PageResponse<AdminTableSummaryResponse> listForAdmin(@Nullable List<GameTableStatus> statuses, Pageable pageable) {
-        List<GameTableStatus> effective = (statuses == null || statuses.isEmpty()) ? DEFAULT_ADMIN_REVIEW_STATUSES : statuses;
+        // Deleted no se lista aunque lo pidan: el filtro es del listado, no del que llama (#25).
+        List<GameTableStatus> effective = (statuses == null || statuses.isEmpty())
+                ? DEFAULT_ADMIN_REVIEW_STATUSES
+                : statuses.stream().filter(status -> status != GameTableStatus.Deleted).toList();
         Page<GameTable> page = gameTableRepository.findByStatusIn(effective, pageable);
         return PageResponse.from(page.map(this::toAdminSummary));
     }
 
     /** Internal read used by other services (e.g. registrations) - never exposed raw over HTTP (arquitectura.md 2.2/2.3). */
     @Transactional(readOnly = true)
+    /**
+     * The single lookup every read goes through, so it is the single place where a soft-deleted
+     * table stops existing (#25, #175): 404 and not 403, because "it was deleted" is not something
+     * a caller is entitled to learn.
+     */
     public GameTable getEntityById(String gameTableId) {
-        return gameTableRepository.findById(gameTableId).orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
+        GameTable gameTable =
+                gameTableRepository.findById(gameTableId).orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
+        if (gameTable.getStatus() == GameTableStatus.Deleted) {
+            throw new NotFoundException("Table not found: " + gameTableId);
+        }
+        return gameTable;
     }
 
     private GameTable buildTable(CreateGameTableRequest request, User creator) {

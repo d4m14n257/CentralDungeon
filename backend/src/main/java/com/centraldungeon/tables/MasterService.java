@@ -6,6 +6,7 @@ import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,6 +89,15 @@ public class MasterService {
         masterRepository.save(new Master(gameTable, userService.getById(primaryUserId), MasterType.Primary));
         for (String secondaryId : secondaryUserIds) {
             masterRepository.save(new Master(gameTable, userService.getById(secondaryId), MasterType.Secondary));
+        }
+    }
+
+    /** Cascada del borrado lógico de una mesa (#25): las filas de master caen con ella (#175). */
+    @Transactional
+    public void softDeleteAllOfTable(String gameTableId, LocalDateTime deletedAt) {
+        for (Master master : masterRepository.findByGameTable_Id(gameTableId)) {
+            master.setStatus(MasterRowStatus.Deleted);
+            master.setDeletedAt(deletedAt);
         }
     }
 

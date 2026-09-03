@@ -80,4 +80,13 @@ public class Master {
     public MasterRowStatus getStatus() {
         return status;
     }
+
+    /** Only the cascade of a deleted table writes these two (#25, #175); a master row is never dropped. */
+    public void setStatus(MasterRowStatus status) {
+        this.status = status;
+    }
+
+    public void setDeletedAt(@Nullable LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 }

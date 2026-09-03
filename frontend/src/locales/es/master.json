@@ -46,6 +46,10 @@
     "cancel": "Cancelar mesa",
     "cancelDialogTitle": "Cancelar esta mesa",
     "cancelDialogDescription": "Contá por qué se cancela - queda registrado en el historial.",
-    "cancelSuccess": "Mesa cancelada"
+    "cancelSuccess": "Mesa cancelada",
+    "delete": "Eliminar mesa",
+    "deleteConfirmTitle": "Eliminar esta mesa",
+    "deleteConfirmDescription": "Todavía no la vio nadie, así que se borra sin dejar rastro público. No se puede deshacer. Si ya se había abierto, lo que corresponde es cancelarla.",
+    "deleteSuccess": "Mesa eliminada"
   }
 }

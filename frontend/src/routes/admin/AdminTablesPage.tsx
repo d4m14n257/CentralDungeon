@@ -16,6 +16,7 @@ import {
   TableStatusBadge,
   useAdminTables,
   useApproveTable,
+  useDeleteTable,
   useRequestChanges,
   type AdminTableSummary,
 } from '@/features/tables'
@@ -28,6 +29,7 @@ function AdminTableRow({ table }: { table: AdminTableSummary }) {
   const confirm = useConfirm()
   const approveTable = useApproveTable()
   const requestChanges = useRequestChanges()
+  const removeTable = useDeleteTable(table.id)
   const assignDialog = useDisclosure()
   const requestChangesDialog = useDisclosure()
 
@@ -35,6 +37,13 @@ function AdminTableRow({ table }: { table: AdminTableSummary }) {
     const confirmed = await confirm({ title: t('tables.approveConfirmTitle'), description: t('tables.approveConfirmDescription') })
     if (!confirmed) return
     approveTable.mutate(table.id, { onSuccess: () => toast.success(t('tables.approveSuccess')) })
+  }
+
+  // Una mesa sin master nunca se publicó: se borra, no se cancela (decisiones.md #175).
+  async function handleDelete() {
+    const confirmed = await confirm({ title: t('tables.deleteConfirmTitle'), description: t('tables.deleteConfirmDescription') })
+    if (!confirmed) return
+    removeTable.mutate(undefined, { onSuccess: () => toast.success(t('tables.deleteSuccess')) })
   }
 
   return (
@@ -48,9 +57,14 @@ function AdminTableRow({ table }: { table: AdminTableSummary }) {
       </div>
       <div className="flex flex-wrap gap-2">
         {table.status === 'Unassigned' && (
-          <Button size="sm" onClick={() => assignDialog.open()}>
-            {t('tables.assignMasters')}
-          </Button>
+          <>
+            <Button size="sm" onClick={() => assignDialog.open()}>
+              {t('tables.assignMasters')}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => void handleDelete()} disabled={removeTable.isPending}>
+              {t('tables.delete')}
+            </Button>
+          </>
         )}
         {table.status === 'Preparation' && (
           <>

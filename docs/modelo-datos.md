@@ -708,6 +708,8 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | La pausa pedida por un master no aplica hasta que un admin la aprueba (`approval_requests`) | `GameTableService` | #32 |
 | `Pause` congela la agenda: las sesiones pendientes dejan de aparecer. Al retomar hay que reagendar | `TableSessionService` | #32, #33 |
 | Al entrar en `Finished` o `Canceled` se sella `closed_at`, que arranca la ventana de visibilidad | `GameTableService` | #44 |
+| **Una mesa se borra solo si nunca fue pública** (`Unassigned`/`Preparation`/`ChangesRequested`) **y no tiene postulaciones activas**; lo demás se cancela. El borrado es lógico y arrastra `masters` y `table_registrations` con la misma marca de tiempo | `GameTableService.delete` | #25, #175 |
+| Una mesa `Deleted` no existe para ninguna lectura: detalle y listados responden `404` o la omiten | `GameTableService` | #25, #175 |
 
 ### Postulaciones
 

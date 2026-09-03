@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useOutletContext } from 'react-router'
+import { useNavigate, useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/components/ConfirmDialog'
@@ -8,9 +8,11 @@ import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDisclosure } from '@/hooks/useDisclosure'
+import { masterTablesPath } from '@/config/paths'
 import {
   JustifiedTableActionDialog,
   useCancelTable,
+  useDeleteTable,
   useFinishTable,
   useResubmitTable,
   useStartTable,
@@ -19,6 +21,8 @@ import {
 } from '@/features/tables'
 
 const CANCELABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested', 'Opened', 'InProgress', 'Pause']
+/** Solo lo que nunca fue público se borra; lo demás se cancela y queda en el historial (#175). */
+const DELETABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested']
 
 interface OutletContext {
   tableId: string
@@ -66,7 +70,9 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
   const start = useStartTable(tableId)
   const finish = useFinishTable(tableId)
   const cancel = useCancelTable(tableId)
+  const remove = useDeleteTable(tableId)
   const cancelDialog = useDisclosure()
+  const navigate = useNavigate()
 
   if (!isPrimary) {
     return null
@@ -90,6 +96,17 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
     finish.mutate(undefined, { onSuccess: () => toast.success(t('status.finishSuccess')) })
   }
 
+  async function handleDelete() {
+    const confirmed = await confirm({ title: t('status.deleteConfirmTitle'), description: t('status.deleteConfirmDescription') })
+    if (!confirmed) return
+    remove.mutate(undefined, {
+      onSuccess: () => {
+        toast.success(t('status.deleteSuccess'))
+        void navigate(masterTablesPath())
+      },
+    })
+  }
+
   return (
     <div className="flex flex-wrap gap-2">
       {status === 'ChangesRequested' && (
@@ -110,6 +127,11 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
       {CANCELABLE_STATUSES.includes(status) && (
         <Button size="sm" variant="destructive" onClick={() => cancelDialog.open()}>
           {t('status.cancel')}
+        </Button>
+      )}
+      {DELETABLE_STATUSES.includes(status) && (
+        <Button size="sm" variant="outline" onClick={() => void handleDelete()} disabled={remove.isPending}>
+          {t('status.delete')}
         </Button>
       )}
       <JustifiedTableActionDialog

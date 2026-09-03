@@ -22,8 +22,12 @@ public interface GameTableRepository extends JpaRepository<GameTable, String> {
     Page<GameTable> findByStatusInAndNotMasteredByActor(
             @Param("statuses") Collection<GameTableStatus> statuses, @Param("actorId") String actorId, Pageable pageable);
 
-    /** /master/tables: every status, including Preparation - a master needs to see and open their own drafts. */
-    @Query("select m.gameTable from Master m where m.user.id = :userId")
+    /**
+     * /master/tables: every status, including Preparation - a master needs to see and open their own
+     * drafts. Deleted is the exception: a soft-deleted table is gone for everyone (#25, #175).
+     */
+    @Query("select m.gameTable from Master m where m.user.id = :userId "
+            + "and m.gameTable.status <> com.centraldungeon.tables.GameTableStatus.Deleted")
     Page<GameTable> findByMasterUserId(@Param("userId") String userId, Pageable pageable);
 
     /** /admin/tables: management listing, unfiltered by pertenencia - the caller is already an admin. */

@@ -21,4 +21,8 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /** Backs /my/tables: every game table where the actor holds an active Player registration. */
     Page<TableRegistration> findByUser_IdAndStatus(String userId, TableRegistrationStatus status, Pageable pageable);
+
+    boolean existsByGameTable_IdAndStatusIn(String gameTableId, Collection<TableRegistrationStatus> statuses);
+
+    List<TableRegistration> findByGameTable_Id(String gameTableId);
 }

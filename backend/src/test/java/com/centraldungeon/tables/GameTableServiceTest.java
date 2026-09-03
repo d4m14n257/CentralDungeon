@@ -3,6 +3,8 @@ package com.centraldungeon.tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.exception.ConflictException;
@@ -205,6 +207,62 @@ class GameTableServiceTest {
 
         assertThatThrownBy(() -> gameTableService.cancel("table-6d", "primary-1", new ChangeTableStatusRequest("motivo")))
                 .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void deletesADraftNobodyEverSaw() {
+        GameTable table = persistedTable("table-7a", GameTableStatus.Preparation);
+        User primary = persistedUser("primary-1");
+        when(gameTableRepository.findByIdForUpdate("table-7a")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-7a", "primary-1")).thenReturn(true);
+        when(tableRegistrationRepository.existsByGameTable_IdAndStatusIn(eq("table-7a"), any())).thenReturn(false);
+        when(tableRegistrationRepository.findByGameTable_Id("table-7a")).thenReturn(List.of());
+        when(userService.getById("primary-1")).thenReturn(primary);
+
+        gameTableService.delete("table-7a", "primary-1");
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Deleted);
+        assertThat(table.getDeletedAt()).isNotNull();
+        verify(masterService).softDeleteAllOfTable(eq("table-7a"), any());
+    }
+
+    /** La línea de #175: lo que ya fue público se cancela, no se borra. */
+    @Test
+    void cannotDeleteATableThatWasAlreadyPublic() {
+        GameTable table = persistedTable("table-7b", GameTableStatus.Opened);
+        when(gameTableRepository.findByIdForUpdate("table-7b")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-7b", "primary-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.delete("table-7b", "primary-1")).isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void cannotDeleteATableThatSomeoneAlreadyAppliedTo() {
+        GameTable table = persistedTable("table-7c", GameTableStatus.ChangesRequested);
+        when(gameTableRepository.findByIdForUpdate("table-7c")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-7c", "primary-1")).thenReturn(true);
+        when(tableRegistrationRepository.existsByGameTable_IdAndStatusIn(eq("table-7c"), any())).thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.delete("table-7c", "primary-1")).isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void someoneWhoIsNeitherPrimaryNorAdminCannotDelete() {
+        GameTable table = persistedTable("table-7d", GameTableStatus.Preparation);
+        when(gameTableRepository.findByIdForUpdate("table-7d")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-7d", "secondary-1")).thenReturn(false);
+        when(userService.loadAuthSnapshot("secondary-1")).thenReturn(new UserAuthSnapshot("secondary-1", UserStatus.Allowed, Set.of("Master")));
+
+        assertThatThrownBy(() -> gameTableService.delete("table-7d", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** Una mesa borrada no existe para nadie: 404, no 403 (#25). */
+    @Test
+    void aDeletedTableIsNotFound() {
+        GameTable table = persistedTable("table-7e", GameTableStatus.Deleted);
+        when(gameTableRepository.findById("table-7e")).thenReturn(Optional.of(table));
+
+        assertThatThrownBy(() -> gameTableService.getDetail("table-7e")).isInstanceOf(NotFoundException.class);
     }
 
     @Test

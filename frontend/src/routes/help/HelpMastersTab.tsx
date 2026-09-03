@@ -29,6 +29,11 @@ export function HelpMastersTab() {
           <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`masters.running.steps.step${n}`))} />
         </HelpSection>
 
+        <HelpSection id="deleting" title={t('masters.deleting.title')}>
+          <HelpList items={['draft', 'public', 'gone'].map((key) => t(`masters.deleting.${key}`))} />
+          <HelpSteps title={t('stepsTitle')} items={[1, 2, 3].map((n) => t(`masters.deleting.steps.step${n}`))} />
+        </HelpSection>
+
         <HelpSection id="co-masters" title={t('masters.coMasters.title')}>
           <HelpList items={['one', 'primary', 'assign'].map((key) => t(`masters.coMasters.${key}`))} />
         </HelpSection>

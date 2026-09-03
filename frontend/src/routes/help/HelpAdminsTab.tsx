@@ -19,7 +19,7 @@ export function HelpAdminsTab() {
         </HelpSection>
 
         <HelpSection id="assign-masters" title={t('admins.assignMasters.title')}>
-          <HelpList items={['create', 'search', 'order', 'opens'].map((key) => t(`admins.assignMasters.${key}`))} />
+          <HelpList items={['create', 'search', 'order', 'opens', 'delete'].map((key) => t(`admins.assignMasters.${key}`))} />
           <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4, 5, 6].map((n) => t(`admins.assignMasters.steps.step${n}`))} />
         </HelpSection>
 
