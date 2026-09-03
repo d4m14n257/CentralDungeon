@@ -26,6 +26,11 @@ public enum UserSearchField {
         this.attribute = attribute;
     }
 
+    /**
+     * Returns what the person types after the slash.
+     *
+     * @return the wire name, lowercase
+     */
     public String wireName() {
         return wireName;
     }
@@ -34,6 +39,11 @@ public enum UserSearchField {
         return attribute;
     }
 
+    /**
+     * The set the parser needs in order to tell a {@code /field} from literal text.
+     *
+     * @return every wire name a user search accepts
+     */
     public static Set<String> wireNames() {
         return Arrays.stream(values()).map(UserSearchField::wireName).collect(Collectors.toUnmodifiableSet());
     }

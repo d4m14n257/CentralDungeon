@@ -84,6 +84,59 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 
 **Se prueba:** un admin abre `/admin/catalogs`, fusiona "DANDD" con "D&D", y el explorador encuentra las mesas de las dos formas sin que se haya migrado una sola fila de `table_tags` (#56).
 
+#### ✅ Terminada
+
+Tres decisiones nuevas salieron de construirla: **#182** (`GameSystem`, no `System`), **#183** (dar de baja el canónico exige sucesor) y **#184** (`GET .../{id}/group`), más **#185** para el estado en la URL de la pantalla.
+
+Queda fuera a propósito, con su motivo: **el alta de vínculos mesa↔catálogo**. F1.1 entrega las tres entidades puente, sus repositorios y la resolución de grupos —lo que §5 llama "el backend de F1.1 ya los resuelve"—, pero vincular no tiene quien lo llame hasta que exista el wizard, así que `TableCatalogService` entra con F1.2. Los repositorios puente sí tienen uso hoy: cuentan el `uses` de cada valor en `/admin/catalogs`.
+
+**Backend** (`backend/src/main/java/com/centraldungeon/`):
+
+| Ruta | Qué es |
+|---|---|
+| `catalogs/CatalogValue.java` · `GameSystem` · `Tag` · `Platform` | `@MappedSuperclass` + las tres `@Entity` |
+| `catalogs/TableCatalogLink.java` · `TableSystem` · `TableTag` · `TablePlatform` (+ sus tres `…Id`) | Las tablas puente, con clave compuesta |
+| `catalogs/CatalogStatus.java` · `TableCatalogLinkStatus.java` · `CatalogType.java` (+ `CatalogTypeConverter`) | Los vocabularios |
+| `catalogs/CatalogValueRepository.java` + `SystemRepository` · `TagRepository` · `PlatformRepository` | Base `@NoRepositoryBean` y las tres concretas |
+| `catalogs/TableSystemRepository.java` · `TableTagRepository` · `TablePlatformRepository` (+ `CatalogUsageCount`) | El conteo de uso, en una consulta agrupada por página |
+| `catalogs/CatalogSearchField.java` · `CatalogSearchSpecification.java` | El buscador, sobre `common/search/` |
+| `catalogs/AbstractCatalogService.java` + `SystemService` · `TagService` · `PlatformService` · `CatalogServices` | Las reglas, escritas una vez; la extracción se hizo después de ver la repetición (§2.4) |
+| `catalogs/CatalogMapper.java` | Entidad → los dos DTOs |
+| `catalogs/SystemController.java` · `TagController` · `PlatformController` · `AdminCatalogController` | Clases concretas, con su `@PreAuthorize` en cada método |
+| `catalogs/dto/` | 7 records: `CatalogValueResponse`, `AdminCatalogValueResponse`, `CreateCatalogValueRequest`, `AcceptCatalogValueRequest`, `MergeCatalogGroupsRequest`, `SplitCatalogGroupRequest`, `DisableCatalogValueRequest` |
+| `tables/TableTypeController.java` · `TableTypeService.java` · `dto/TableTypeResponse.java` | El hueco que F1 abrió: los tipos se sembraban desde E1 y nada podía listarlos |
+| `resources/db/migration/V3__catalog_seed.sql` | 9 sistemas (3 grupos), 5 plataformas (1 grupo), 5 tags. Datos, no schema |
+| `test/…/catalogs/SystemServiceTest.java` · `CatalogGroupIT.java` | 27 unitarios + 12 de integración |
+
+Modificados: `MapperConfig` (+`catalogMapper`), `TableType` (+`description`), `GlobalExceptionHandler` (+`MethodArgumentTypeMismatchException` → `400`; sin eso `/admin/catalogs/colores` respondía `500`).
+
+**Frontend** (`frontend/src/`):
+
+| Ruta | Qué es |
+|---|---|
+| `features/catalogs/types.ts` | El tipo base (`AdminCatalogValue`) y todo lo demás derivado |
+| `features/catalogs/api/` | `catalogsApi.ts` + 11 hooks (3 queries, 8 mutations) |
+| `features/catalogs/components/` | `CatalogCombobox`, `CatalogChip`, `CatalogStatusBadge`, `CanonicalPicker`, y los tres diálogos: aceptar, fusionar, dar de baja |
+| `features/catalogs/index.ts` | La superficie pública de la feature |
+| `routes/admin/AdminCatalogsPage.tsx` | La pantalla, con sus cuatro estados |
+| `components/DataTable.tsx` | La tabla ancha que en móvil deja de ser tabla (§5.b) |
+| `components/ui/command.tsx` · `table.tsx` | Primitivas de shadcn |
+| `layouts/components/AdminSectionNav.tsx` | La navegación del contexto Admin, que con una sola pantalla no hacía falta |
+| `locales/es/catalogs.json` | Los textos, todos por `t()` |
+| Tests | `CatalogChip.test.tsx`, `DataTable.test.tsx`, `e2e/admin-catalogs.spec.ts` |
+
+Tocados: `api/queryKeys.ts`, `config/paths.ts`, `routes/router.tsx`, `providers/i18n.ts`, `layouts/AdminLayout.tsx`, `locales/es/admin.json`, `locales/es/help.json`, `routes/help/HelpAdminsTab.tsx`, `routes/help/HelpMastersTab.tsx`.
+
+**Salida real de las suites:**
+
+```
+./mvnw test    → 112 tests, 0 fallos
+./mvnw verify  → 112 unitarios + 23 integración, 0 fallos
+npx tsc -b     → limpio
+npm run test   → 11 archivos, 89 tests
+npx playwright test → 12 tests, todos verdes, contra el backend y el frontend reales
+```
+
 ---
 
 ### F1.2 — Agenda, horarios y wizard completo

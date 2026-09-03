@@ -11,12 +11,24 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Renewing a session. It is the moment the system re-asks "is this person still allowed in", because
+ * a refresh is the only regular point where the answer can change without the user doing anything
+ * (#122, #125).
+ *
+ * <p>Rotating: every refresh issues a new refresh token, so a leaked one has a short useful life and
+ * a reused one is detectable.
+ */
 @Service
 public class AuthService {
 
     private final JwtService jwtService;
     private final UserService userService;
 
+    /**
+     * @param jwtService  validates the incoming refresh token and issues the new pair
+     * @param userService  re-reads status and roles, which is the point of the re-affirmation
+     */
     public AuthService(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
         this.userService = userService;

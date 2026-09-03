@@ -21,6 +21,12 @@ const STATE_CLASSES: Record<GameTableStatus, { badge: string; dot: string }> = {
   Canceled: { badge: 'bg-state-canceled-bg text-state-canceled-fg', dot: 'bg-state-canceled-dot' },
 }
 
+/**
+ * A table's lifecycle status, as a badge. Its variants come from a `Record` over
+ * `GameTableStatus`, so a new state cannot be added without deciding how it looks (#3.2 regla 9).
+ *
+ * @param props.status the table's status
+ */
 export function TableStatusBadge({ status }: { status: GameTableStatus }) {
   const { t } = useTranslation('tables')
   const classes = STATE_CLASSES[status]

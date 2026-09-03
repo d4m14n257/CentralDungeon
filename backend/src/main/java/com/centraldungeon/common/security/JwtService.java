@@ -30,6 +30,9 @@ public class JwtService {
     private final MACSigner signer;
     private final MACVerifier verifier;
 
+    /**
+     * @param properties the signing key and the two lifetimes, bound from {@code app.jwt.*}
+     */
     public JwtService(JwtProperties properties) {
         this.properties = properties;
         byte[] secretBytes = properties.secret().getBytes(StandardCharsets.UTF_8);
@@ -41,18 +44,47 @@ public class JwtService {
         }
     }
 
+    /**
+     * Issues the token sent as {@code Authorization: Bearer} on every call.
+     *
+     * <p>It carries the subject and the token type, and <b>no roles</b>: the JWT asserts identity,
+     * not authorization, so what the person may do is read from the database on each request (#122).
+     *
+     * @param userId who the token identifies
+     * @return the signed token
+     */
     public String issueAccessToken(String userId) {
         return issue(userId, TokenType.ACCESS, properties.accessTokenTtl());
     }
 
+    /**
+     * Issues the long-lived rotating token that travels in an httpOnly cookie (#125).
+     *
+     * <p>Typed as a refresh token so it can never be replayed as an access token, which is what the
+     * type claim is for.
+     *
+     * @param userId who the token identifies
+     * @return the signed token
+     */
     public String issueRefreshToken(String userId) {
         return issue(userId, TokenType.REFRESH, properties.refreshTokenTtl());
     }
 
+    /**
+     * How long an access token lasts.
+     *
+     * @return the configured lifetime. Short on purpose: it is the window a stolen bearer token is
+     *         worth anything in (#125)
+     */
     public Duration accessTokenTtl() {
         return properties.accessTokenTtl();
     }
 
+    /**
+     * How long a refresh token lasts.
+     *
+     * @return the configured lifetime, which is also the max age of the cookie carrying it
+     */
     public Duration refreshTokenTtl() {
         return properties.refreshTokenTtl();
     }

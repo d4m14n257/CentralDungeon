@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+/**
+ * Which section of the app the navigation is showing: player, master, admin or owner.
+ *
+ * **UI organisation, not authorization** (#103). Being "in the Admin context" allows nothing: the
+ * backend decides endpoint by endpoint, and a forced route without the role gets a 403 and paints
+ * `ForbiddenState`.
+ */
 export type AppContext = 'player' | 'master' | 'admin'
 
 interface ContextState {

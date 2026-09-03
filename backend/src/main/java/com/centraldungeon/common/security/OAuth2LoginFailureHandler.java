@@ -19,15 +19,29 @@ import org.springframework.stereotype.Component;
 @Component
 public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
 
+    /** Source of the invite URL. Configuration, never a constant in the code (#38). */
     private final DiscordProperties discordProperties;
 
+    /** Where to send the browser back to; the callback screen turns the query string into a message. */
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
+    /**
+     * @param discordProperties holds the guild id and the invite URL
+     */
     public OAuth2LoginFailureHandler(DiscordProperties discordProperties) {
         this.discordProperties = discordProperties;
     }
 
+    /**
+     * Redirects to the frontend callback with the reason, and - only when the reason is "not a
+     * member of the guild" - with the invite to join.
+     *
+     * @param request   the failed login callback
+     * @param response  the response to redirect on
+     * @param exception what failed. Only its error code travels, never its message
+     * @throws IOException if the redirect cannot be written
+     */
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
             throws IOException {
@@ -43,6 +57,12 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
         response.sendRedirect(redirectUrl.toString());
     }
 
+    /**
+     * URL-encodes a query string value.
+     *
+     * @param value the raw value
+     * @return the value, safe to concatenate into the redirect
+     */
     private static String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }

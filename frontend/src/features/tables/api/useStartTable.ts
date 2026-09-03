@@ -4,6 +4,11 @@ import { queryKeys } from '@/api/queryKeys'
 
 import { gameTablesApi } from './gameTablesApi'
 
+/**
+ * The master declaring play has begun: Opened to InProgress.
+ *
+ * @returns the mutation, taking the table's id
+ */
 export function useStartTable(tableId: string) {
   const queryClient = useQueryClient()
   return useMutation({

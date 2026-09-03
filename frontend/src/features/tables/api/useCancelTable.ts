@@ -5,6 +5,12 @@ import { queryKeys } from '@/api/queryKeys'
 import { gameTablesApi } from './gameTablesApi'
 import type { ChangeTableStatusRequest } from '../types'
 
+/**
+ * Ends a table early, with a reason on the record. Either its master or an admin may - which of the
+ * two the caller is gets decided by the backend, not here.
+ *
+ * @returns the mutation, taking the table's id and the justification
+ */
 export function useCancelTable(tableId: string) {
   const queryClient = useQueryClient()
   return useMutation({

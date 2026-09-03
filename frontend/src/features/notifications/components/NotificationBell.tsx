@@ -17,6 +17,12 @@ import { cn } from '@/lib/utils'
 import { useNotifications } from '../api/useNotifications'
 import { useNotificationClick } from '../hooks/useNotificationClick'
 
+/**
+ * The header's bell: the unread count, and the last few notifications in a dropdown.
+ *
+ * It shows **titles only**, which is why every notification's title has to be readable on its own
+ * (#156). Clicking one marks it read and navigates to what it is about.
+ */
 export function NotificationBell() {
   const { t } = useTranslation('notifications')
   const { data } = useNotifications()

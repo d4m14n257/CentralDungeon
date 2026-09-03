@@ -11,22 +11,51 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Who runs a table, and the invariant that there is exactly one live Primary per table (#73).
+ *
+ * <p>MySQL has no partial unique index, so that invariant cannot be a constraint: it is held here,
+ * behind a pessimistic lock on the table's master rows, and covered by {@code MasterServiceIT}.
+ *
+ * <p>This is also where pertenencia is answered from. A row here - not the {@code Master} role - is
+ * what authorizes acting on a concrete table (#135), which is why {@link #isMasterOf} and
+ * {@link #isPrimaryOf} are read by half the transitions in {@code GameTableService}.
+ */
 @Service
 public class MasterService {
 
+    /** The statuses that mean somebody is already involved with a table as a player. */
     private static final List<TableRegistrationStatus> ACTIVE_APPLICATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
+    /** The {@code masters} table. */
     private final MasterRepository masterRepository;
+
+    /** Used to refuse making somebody a master of a table they already play at (#154). */
     private final TableRegistrationRepository registrationRepository;
+
+    /** Resolves the people being added. */
     private final UserService userService;
 
+    /**
+     * @param masterRepository       the {@code masters} table
+     * @param registrationRepository used to check nobody is made master of a table they play at
+     * @param userService            resolves the people being added
+     */
     public MasterService(MasterRepository masterRepository, TableRegistrationRepository registrationRepository, UserService userService) {
         this.masterRepository = masterRepository;
         this.registrationRepository = registrationRepository;
         this.userService = userService;
     }
 
+    /**
+     * Makes the creator of a table its Primary. Called right after the table is saved, which is what
+     * turns "created it" into the pertenencia that authorizes running it (#73, #135).
+     *
+     * @param gameTable the freshly created table
+     * @param creator   its author
+     * @return the master row
+     */
     @Transactional
     public Master createPrimary(GameTable gameTable, User creator) {
         return masterRepository.save(new Master(gameTable, creator, MasterType.Primary));
@@ -92,7 +121,14 @@ public class MasterService {
         }
     }
 
-    /** Cascada del borrado lógico de una mesa (#25): las filas de master caen con ella (#175). */
+    /**
+     * The cascade of a table's logical delete (#25): its master rows go down with it (#175).
+     *
+     * <p>Marked, never dropped - the record of who ran a table outlives the table itself.
+     *
+     * @param gameTableId the table being deleted
+     * @param deletedAt   the same timestamp stamped on the table, so the cascade is one event
+     */
     @Transactional
     public void softDeleteAllOfTable(String gameTableId, LocalDateTime deletedAt) {
         for (Master master : masterRepository.findByGameTable_Id(gameTableId)) {
@@ -101,16 +137,40 @@ public class MasterService {
         }
     }
 
+    /**
+     * Everyone who runs a table.
+     *
+     * @param gameTableId the table
+     * @return its master rows
+     */
     @Transactional(readOnly = true)
     public List<Master> findByGameTable(String gameTableId) {
         return masterRepository.findByGameTable_Id(gameTableId);
     }
 
+    /**
+     * Pertenencia: does this person run this table, in any capacity.
+     *
+     * <p>This, and not {@code hasRole('MASTER')}, is what authorizes acting on a concrete table
+     * (#135). The role only says somebody may create tables of their own.
+     *
+     * @param gameTableId the table
+     * @param userId      the actor, always from the token (#121)
+     * @return true when they have a master row on it
+     */
     @Transactional(readOnly = true)
     public boolean isMasterOf(String gameTableId, String userId) {
         return masterRepository.findByGameTable_IdAndUser_Id(gameTableId, userId).isPresent();
     }
 
+    /**
+     * The narrower check: is this person the table's Primary, rather than one of its co-masters.
+     * What the lifecycle transitions reserved to the owner ask (#71).
+     *
+     * @param gameTableId the table
+     * @param userId      the actor, always from the token (#121)
+     * @return true when their master row is the Primary one
+     */
     @Transactional(readOnly = true)
     public boolean isPrimaryOf(String gameTableId, String userId) {
         return masterRepository

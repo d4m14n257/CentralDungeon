@@ -12,9 +12,19 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class CorsConfig {
 
+    /** The single frontend origin allowed to call the API, set per profile. */
     @Value("${app.cors.allowed-origin}")
     private String allowedOrigin;
 
+    /**
+     * The CORS policy the security filter chain installs.
+     *
+     * <p>{@code allowCredentials} is on because the refresh call authenticates with a cookie, and
+     * that is exactly why the origin can never be {@code "*"} - the two are incompatible, and a
+     * wildcard here would let any site drive a logged-in browser's refresh.
+     *
+     * @return a source that applies the same policy to every path
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

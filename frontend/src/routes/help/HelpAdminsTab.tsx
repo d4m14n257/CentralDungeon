@@ -23,6 +23,13 @@ export function HelpAdminsTab() {
           <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4, 5, 6].map((n) => t(`admins.assignMasters.steps.step${n}`))} />
         </HelpSection>
 
+        <HelpSection id="catalogs" title={t('admins.catalogs.title')}>
+          <HelpList
+            items={['what', 'pending', 'groups', 'alias', 'merge', 'disable', 'successor'].map((key) => t(`admins.catalogs.${key}`))}
+          />
+          <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4, 5, 6].map((n) => t(`admins.catalogs.steps.step${n}`))} />
+        </HelpSection>
+
         <HelpSection id="owner" title={t('admins.owner.title')}>
           <HelpList items={['same', 'exclusive', 'soon'].map((key) => t(`admins.owner.${key}`))} />
         </HelpSection>

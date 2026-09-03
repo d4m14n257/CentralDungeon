@@ -20,12 +20,25 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("test")
 public class TestDataController {
 
+    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
     private final TestDataService testDataService;
 
+    /**
+     * @param testDataService performs the cleanup
+     */
     public TestDataController(TestDataService testDataService) {
         this.testDataService = testDataService;
     }
 
+    /**
+     * Wipes what the Playwright suite left behind, so a run starts from a known state.
+     *
+     * <p>Reachable only under the {@code test} profile: without that profile there is no bean, so the
+     * path 404s in dev and in prod no matter what {@code SecurityConfig} says about it.
+     *
+     * @return 200 with how many rows were removed per table, which is what makes a failed cleanup
+     *         visible instead of silent
+     */
     @DeleteMapping("/e2e")
     public TestCleanupResponse deleteE2eData() {
         return testDataService.deleteE2eData();

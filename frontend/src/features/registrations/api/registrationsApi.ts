@@ -2,6 +2,7 @@ import { api } from '@/api/client'
 
 import type { CreateRegistrationInput, Registration } from '../types'
 
+/** The calls about applications: applying, reading the queue, and answering it. */
 export const registrationsApi = {
   apply: (tableId: string, input: CreateRegistrationInput) =>
     api.post<Registration, CreateRegistrationInput>(`/api/v1/game-tables/${tableId}/registrations`, input),

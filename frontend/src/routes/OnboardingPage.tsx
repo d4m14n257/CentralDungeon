@@ -12,6 +12,10 @@ import { paths } from '@/config/paths'
 import { completeOnboardingSchema, useCompleteOnboarding, type CompleteOnboardingForm } from '@/features/users'
 import { countries } from '@/lib/countries'
 
+/**
+ * The blocking first step: display name and country (#134). Nothing else in the app is reachable
+ * until it is done, which is why the redirect lives in the session guard and not in each screen.
+ */
 export function OnboardingPage() {
   const { t } = useTranslation('onboarding')
   const navigate = useNavigate()

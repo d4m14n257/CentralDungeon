@@ -15,12 +15,27 @@ import tools.jackson.databind.json.JsonMapper;
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
+    /** Writes the body by hand: this runs inside the filter chain, before any message converter. */
     private final JsonMapper jsonMapper;
 
+    /**
+     * @param jsonMapper the application's configured Jackson 3 mapper
+     */
     public RestAuthenticationEntryPoint(JsonMapper jsonMapper) {
         this.jsonMapper = jsonMapper;
     }
 
+    /**
+     * Answers 401 with a ProblemDetail body.
+     *
+     * <p>The detail is deliberately the same whatever went wrong - no token, expired, wrong type.
+     * Telling the caller which check failed only helps someone probing.
+     *
+     * @param request       the unauthenticated request
+     * @param response      the response to write the 401 into
+     * @param authException what Spring Security rejected it with. Logged, never echoed
+     * @throws IOException if the response body cannot be written
+     */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException {

@@ -450,6 +450,16 @@ CREATE INDEX ix_platforms_canonical ON platforms (canonical_id);
 -- Always depth 1: an alias points at the canonical entry, never at another
 -- alias (#59). CatalogService enforces it: the target canonical_id must
 -- itself have canonical_id NULL.
+--
+-- Vocabulario de `status` en los tres catálogos (F1.1, `CatalogStatus`):
+--   Created   propuesto por un master o un admin, sin revisar (#55)
+--   Accepted  en circulación: se muestra y filtra (#57)
+--   Rejected  revisado y descartado; no se muestra ni filtra nunca (#57)
+--   Disabled  dado de baja sin romper vínculos; restaurable (#81)
+--
+-- Vocabulario de `status` en las tres tablas puente (`TableCatalogLinkStatus`):
+--   Used      la mesa está etiquetada con ese valor
+--   Removed   el master lo quitó; la fila queda como registro
 
 CREATE TABLE table_systems (
     game_table_id VARCHAR(64) NOT NULL,
@@ -787,6 +797,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Un valor en `Created` no filtra ni se muestra a los jugadores; al aceptarse, sí | `CatalogService` | #57 |
 | La mesa muestra siempre el alias que le puso su master | `CatalogService` | #58 |
 | Dar de baja un valor no rompe vínculos: las lecturas lo saltan por estado y restaurarlo devuelve todo | `CatalogService` | #81 |
+| Dar de baja el canónico de un grupo con alias vivos **es** cambiar el canónico: exige sucesor, y lo elige el admin | `CatalogService` | #55, #59, #81 |
 
 ### Archivos
 

@@ -28,6 +28,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * The table's whole lifecycle, and the only place its nine states move (decisiones.md, ciclo de vida
+ * de la mesa). Every transition below follows the same three steps: lock the table, refuse if it is
+ * not in the one status the transition starts from, and record the change with its author.
+ *
+ * <p>Two things it never leaves to the caller. <b>Pertenencia</b>: who may act on a concrete table
+ * is a row in {@code masters}, not a role, so it is checked here rather than in a
+ * {@code @PreAuthorize} that cannot see the resource (#17, #121, #135). And <b>locking</b>: the
+ * invariants MySQL cannot express as constraints - one live Primary (#73), one active registration
+ * per pair (#28), the player cap (#34) - are held by taking a pessimistic lock on the table row.
+ */
 @Service
 public class GameTableService {
 
@@ -61,6 +72,15 @@ public class GameTableService {
     private final GameTableMapper gameTableMapper;
     private final UserService userService;
 
+    /**
+     * @param gameTableRepository        the {@code game_tables} table, and the row everything locks on
+     * @param tableTypeRepository        resolves the type a draft names
+     * @param tableRegistrationRepository counts players and finds out whether anybody is involved yet
+     * @param tableStatusChangeRepository the lifecycle's audit trail
+     * @param masterService              answers pertenencia and keeps the one-Primary invariant
+     * @param gameTableMapper            entity to DTO
+     * @param userService                resolves the actor, and their roles for the admin checks
+     */
     public GameTableService(
             GameTableRepository gameTableRepository,
             TableTypeRepository tableTypeRepository,
@@ -91,8 +111,12 @@ public class GameTableService {
     }
 
     /**
-     * A mesa an admin creates without being its master (#72): it nests directly in Unassigned, no
-     * Primary yet. assignInitialMasters is what moves it to Opened.
+     * A table an admin creates without running it (#72): it is born directly in Unassigned, with no
+     * Primary. {@link #assignInitialMasters} is what moves it to Opened.
+     *
+     * @param request the draft
+     * @param actorId the admin, from the token. Recorded as the author, not as a master
+     * @return the created table, in Unassigned
      */
     @Transactional
     public GameTableDetailResponse createUnassigned(CreateGameTableRequest request, String actorId) {
@@ -128,6 +152,15 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
+    /**
+     * An admin sending a draft back to its master, with a reason. Preparation to ChangesRequested.
+     *
+     * @param gameTableId the table
+     * @param actorId     the admin, from the token
+     * @param request     the justification, which the master reads on the status tab
+     * @return the table after the change
+     * @throws ConflictException if the table was not awaiting review
+     */
     @Transactional
     public GameTableDetailResponse requestChanges(String gameTableId, String actorId, ChangeTableStatusRequest request) {
         GameTable gameTable = lockTable(gameTableId);
@@ -138,6 +171,16 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
+    /**
+     * The master sending a corrected draft back for review. ChangesRequested to Preparation.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token; has to be the table's Primary
+     * @return the table after the change
+     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor is not its
+     *         Primary
+     * @throws ConflictException if the table was not in ChangesRequested
+     */
     @Transactional
     public GameTableDetailResponse resubmit(String gameTableId, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
@@ -149,6 +192,16 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
+    /**
+     * The master declaring play has begun. Opened to InProgress.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token; has to be the table's Primary
+     * @return the table after the change
+     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor is not its
+     *         Primary
+     * @throws ConflictException if the table was not Opened
+     */
     @Transactional
     public GameTableDetailResponse start(String gameTableId, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
@@ -160,6 +213,19 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
+    /**
+     * The master closing a table that ran its course. InProgress to Finished.
+     *
+     * <p>Stamping {@code closed_at} here - which starts the two-week window in which profiles stay
+     * visible (#44) - is F1.2's job (#180); the column is not mapped yet.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token; has to be the table's Primary
+     * @return the table after the change
+     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor is not its
+     *         Primary
+     * @throws ConflictException if the table was not InProgress
+     */
     @Transactional
     public GameTableDetailResponse finish(String gameTableId, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
@@ -219,6 +285,19 @@ public class GameTableService {
         recordStatusChange(gameTable, from, GameTableStatus.Deleted, actorId, null);
     }
 
+    /**
+     * An admin pausing a table directly. InProgress to Pause.
+     *
+     * <p>The other road to Pause - a master <em>asking</em> for one - needs
+     * {@code approval_requests} and lands in F3. Freezing the agenda while paused (#32, #33) is
+     * F1.3.
+     *
+     * @param gameTableId the table
+     * @param actorId     the admin, from the token
+     * @param request     the justification
+     * @return the table after the change
+     * @throws ConflictException if the table was not InProgress
+     */
     @Transactional
     public GameTableDetailResponse pauseDirect(String gameTableId, String actorId, ChangeTableStatusRequest request) {
         GameTable gameTable = lockTable(gameTableId);
@@ -229,6 +308,17 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
+    /**
+     * Bringing a paused table back. Pause to InProgress.
+     *
+     * <p>Rescheduling the pending sessions from the resume date, and re-checking the schedule clash
+     * that may have appeared in the meantime, is F1.3 (#33, #178).
+     *
+     * @param gameTableId the table
+     * @param actorId     the admin, from the token
+     * @return the table after the change
+     * @throws ConflictException if the table was not paused
+     */
     @Transactional
     public GameTableDetailResponse resume(String gameTableId, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
@@ -239,6 +329,18 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
+    /**
+     * The table's lifecycle history, oldest first.
+     *
+     * <p>Masters of the table and admins only: the history carries the reasons behind a refusal or a
+     * cancellation, which are written between them and not for the public.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token
+     * @return the whole history, oldest first
+     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor neither runs
+     *         the table nor is an admin
+     */
     @Transactional(readOnly = true)
     public List<TableStatusChangeResponse> getStatusHistory(String gameTableId, String actorId) {
         if (!masterService.isMasterOf(gameTableId, actorId) && !isAdmin(actorId)) {
@@ -249,6 +351,15 @@ public class GameTableService {
                 .toList();
     }
 
+    /**
+     * Adds a co-master or promotes one to Primary, and answers with the table's masters afterwards -
+     * which is what the section on screen re-renders.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token; {@code MasterService} checks their pertenencia
+     * @param request     who to add or promote, and as what
+     * @return every master of the table after the change
+     */
     @Transactional
     public List<MasterSummaryResponse> addOrPromoteMaster(String gameTableId, String actorId, AddMasterRequest request) {
         GameTable gameTable = getEntityById(gameTableId);
@@ -263,6 +374,13 @@ public class GameTableService {
         return PageResponse.from(page.map(this::toSummary));
     }
 
+    /**
+     * The public detail of a table, for /tables/:id.
+     *
+     * @param gameTableId the table
+     * @return its detail
+     * @throws com.centraldungeon.common.exception.NotFoundException if it does not exist
+     */
     @Transactional(readOnly = true)
     public GameTableDetailResponse getDetail(String gameTableId) {
         return toDetail(getEntityById(gameTableId));

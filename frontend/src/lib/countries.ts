@@ -21,6 +21,11 @@ const ISO_3166_1_ALPHA_2 = (
 
 const displayNames = new Intl.DisplayNames(['es'], { type: 'region' })
 
+/**
+ * The country list the onboarding selector offers, ISO 3166-1 alpha-2. Kept as data here rather
+ * than fetched: it changes about once a decade, and a select that waits on the network to render is
+ * worse than a list that ships with the bundle.
+ */
 export const countries: Country[] = ISO_3166_1_ALPHA_2.map((code) => ({ code, name: displayNames.of(code) ?? code })).sort((a, b) =>
   a.name.localeCompare(b.name, 'es'),
 )

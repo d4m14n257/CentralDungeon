@@ -7,6 +7,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useMyApplications } from '@/features/registrations'
 import { GameTableCard, useGameTables } from '@/features/tables'
 
+/**
+ * The explorer, `/` - the open tables anyone can apply to.
+ *
+ * A master never finds their own table here: a table has one set of people who play at it and a
+ * disjoint set who run it (#154), and the backend filters by the actor rather than the screen
+ * hiding rows after the fact.
+ */
 export function TableListPage() {
   const { t } = useTranslation('tables')
   // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista que ya

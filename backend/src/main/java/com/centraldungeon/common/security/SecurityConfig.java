@@ -31,6 +31,14 @@ public class SecurityConfig {
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
+    /**
+     * @param corsConfigurationSource   the per-profile CORS policy
+     * @param jwtAuthenticationFilter   turns a bearer token into the request's authorities
+     * @param discordOAuth2UserService  the guild-membership gate of the login (#38)
+     * @param oAuth2LoginSuccessHandler sets the refresh cookie and redirects on success
+     * @param oAuth2LoginFailureHandler redirects with the reason, and the invite when it applies
+     * @param restAuthenticationEntryPoint answers 401 with a ProblemDetail instead of a redirect
+     */
     public SecurityConfig(
             CorsConfigurationSource corsConfigurationSource,
             JwtAuthenticationFilter jwtAuthenticationFilter,
@@ -46,6 +54,19 @@ public class SecurityConfig {
         this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
     }
 
+    /**
+     * The application's filter chain.
+     *
+     * <p>Only the transversal decisions are here - CORS, what is public, where CSRF applies, how the
+     * session behaves. <b>Not one endpoint's permission</b>: those are declared on each concrete
+     * controller method (#123), because the previous attempt kept them in a route list where five of
+     * six paths were written without a leading slash, matched nothing, and let any authenticated user
+     * through to the admin endpoints.
+     *
+     * @param http the builder Spring Security hands in
+     * @return the configured chain
+     * @throws Exception if the chain cannot be built
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         RequestMatcher refreshOnly = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, REFRESH_PATH);

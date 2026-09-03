@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next'
 
 import admin from '@/locales/es/admin.json'
 import auth from '@/locales/es/auth.json'
+import catalogs from '@/locales/es/catalogs.json'
 import common from '@/locales/es/common.json'
 import dev from '@/locales/es/dev.json'
 import help from '@/locales/es/help.json'
@@ -18,7 +19,7 @@ void i18n.use(initReactI18next).init({
   fallbackLng: 'es',
   defaultNS: 'common',
   resources: {
-    es: { common, auth, onboarding, tables, registrations, notifications, master, admin, users, help, dev },
+    es: { common, auth, onboarding, catalogs, tables, registrations, notifications, master, admin, users, help, dev },
   },
   interpolation: { escapeValue: false },
 })

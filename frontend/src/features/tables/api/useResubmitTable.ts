@@ -4,6 +4,11 @@ import { queryKeys } from '@/api/queryKeys'
 
 import { gameTablesApi } from './gameTablesApi'
 
+/**
+ * The master sending a corrected draft back for review.
+ *
+ * @returns the mutation, taking the table's id
+ */
 export function useResubmitTable(tableId: string) {
   const queryClient = useQueryClient()
   return useMutation({

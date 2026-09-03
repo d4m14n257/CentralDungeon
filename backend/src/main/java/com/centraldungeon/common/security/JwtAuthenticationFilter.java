@@ -26,16 +26,38 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    /** The scheme every authenticated call uses. A header the browser never attaches on its own (#127). */
     private static final String BEARER_PREFIX = "Bearer ";
 
+    /** Validates the token and reads its subject. */
     private final JwtService jwtService;
+
+    /** Reads the roles and status from the database - the whole point of #122. */
     private final UserService userService;
 
+    /**
+     * @param jwtService  validates the bearer token
+     * @param userService loads the authorization snapshot behind the token's subject
+     */
     public JwtAuthenticationFilter(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
         this.userService = userService;
     }
 
+    /**
+     * Turns a bearer token into the request's {@code Authentication}, with the authorities the person
+     * holds <em>right now</em> rather than the ones their token was minted with (#122).
+     *
+     * <p>A missing or invalid token is not an error here: the chain continues unauthenticated and
+     * whatever the request was aimed at decides. That is what lets the public paths work and what
+     * makes {@code RestAuthenticationEntryPoint} the single place a 401 is written.
+     *
+     * @param request     the incoming request
+     * @param response    the response, untouched by this filter
+     * @param filterChain the rest of the chain, always continued
+     * @throws ServletException if a later filter fails
+     * @throws IOException if a later filter fails
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {

@@ -7,6 +7,16 @@ interface ErrorStateProps {
   onRetry?: () => void
 }
 
+/**
+ * The error state of a screen: the request failed and there is nothing to render.
+ *
+ * It always offers a way forward - retrying, or going somewhere that works. A dead end with an error
+ * message is where a session ends.
+ *
+ * @param props.title   what failed, in the user's words
+ * @param props.description optional detail
+ * @param props.onRetry optional retry, when the failure is worth trying again
+ */
 export function ErrorState({ message, onRetry }: ErrorStateProps) {
   const { t } = useTranslation('common')
 

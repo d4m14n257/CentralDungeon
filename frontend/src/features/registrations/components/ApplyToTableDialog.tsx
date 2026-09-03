@@ -18,6 +18,14 @@ interface ApplyToTableDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+/**
+ * The dialog that wraps the application form. It owns the mutation, closes on success and reports
+ * the outcome; the form inside it only collects and validates (#106, #110).
+ *
+ * @param props.tableId the table being applied to
+ * @param props.open    whether the dialog is showing
+ * @param props.onOpenChange called to open or close it
+ */
 export function ApplyToTableDialog({ tableId, tableName, open, onOpenChange }: ApplyToTableDialogProps) {
   const { t } = useTranslation('tables')
   const applyToTable = useApplyToTable(tableId)

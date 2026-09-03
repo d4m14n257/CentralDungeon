@@ -174,6 +174,10 @@ function StatusPanel(context: OutletContext) {
   )
 }
 
+/**
+ * The status tab: where the table is in its lifecycle, the transitions available from here, and the
+ * history with the reason behind each step.
+ */
 export function MasterTableStatusTab() {
   const context = useOutletContext<OutletContext>()
   return <StatusPanel {...context} />

@@ -3,6 +3,11 @@ import type { AppContext } from '@/stores/contextStore'
 
 import type { Notification } from '../types'
 
+/**
+ * Where clicking a notification should go, resolved from its `relatedEntityType` and
+ * `relatedEntityId`. Null-safe by construction: a notification that points nowhere is not a bug,
+ * it is one that simply has nothing to open.
+ */
 export interface NotificationTarget {
   context: AppContext
   path: string

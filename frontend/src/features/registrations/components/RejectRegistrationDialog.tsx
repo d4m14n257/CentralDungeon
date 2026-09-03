@@ -19,6 +19,15 @@ interface RejectRegistrationDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+/**
+ * The dialog a master turns down a candidate from. The justification is required, and it reaches the
+ * applicant verbatim in their notification.
+ *
+ * @param props.registrationId the application being rejected
+ * @param props.tableId        the table, for the cache invalidation
+ * @param props.open           whether the dialog is showing
+ * @param props.onOpenChange   called to open or close it
+ */
 export function RejectRegistrationDialog({ tableId, registrationId, candidateName, open, onOpenChange }: RejectRegistrationDialogProps) {
   const { t } = useTranslation('registrations')
   const rejectRegistration = useRejectRegistration(tableId)

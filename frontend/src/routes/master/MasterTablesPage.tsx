@@ -9,6 +9,11 @@ import { masterTableDetailPath, masterTableNewPath } from '@/config/paths'
 import { GameTableCard, useManagedTables } from '@/features/tables'
 import { useMe } from '@/features/users'
 
+/**
+ * /master/tables - every table the person runs, whatever its status, drafts included.
+ *
+ * Membership, not role (#135): a co-master without the `Master` role sees their table here.
+ */
 export function MasterTablesPage() {
   const { t } = useTranslation('master')
   // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya

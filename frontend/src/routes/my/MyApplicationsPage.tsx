@@ -7,6 +7,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { tableDetailPath } from '@/config/paths'
 import { RegistrationStatusBadge, useMyApplications } from '@/features/registrations'
 
+/**
+ * /my/applications - everything they applied to and how it went, rejections and their reasons
+ * included.
+ */
 export function MyApplicationsPage() {
   const { t, i18n } = useTranslation('registrations')
   // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya

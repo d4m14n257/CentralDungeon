@@ -378,6 +378,19 @@ Qué se protege exactamente: un sitio ajeno no podría leer la respuesta —lo i
 
 Convención: `<ClaseATestear>Test` para unitarios, `<ClaseATestear>IT` para integración. Cada test nombra el caso, no el método: `rechazaPostulacionDeUsuarioBloqueado()`, no `testRegister2()`.
 
+### 2.8 Javadoc: la API pública documentada en el código
+
+El proyecto se entrega para que el cliente lo use y lo siga mejorando. Eso pone la documentación **en el código**, no solo en `docs/`: quien abra una clase tiene que entender qué hace sin reconstruirlo leyendo su cuerpo.
+
+**Todo lo `public` y `protected` lleva su Javadoc, sin excepciones**: clases, interfaces, enums, `record`, métodos, constructores y campos de entidad. **Getters y setters incluidos.** No hay umbral de trivialidad — un criterio de "solo lo que no se explica solo" es una discusión por método, y lo que produce es cobertura despareja.
+
+- Cada componente de un `record` lleva su `@param`. **Todos**, incluidos `id` y `name`.
+- Todo método con retorno lleva `@return`; el que lanza una excepción de negocio, su `@throws`.
+- El bloque dice **qué hace y por qué existe**, nunca cómo está implementado: el cuerpo ya cuenta el cómo, y un comentario que lo repite se desincroniza en el primer refactor.
+- Cuando una decisión de `decisiones.md` explica la forma de algo, se cita con su `#n`. Es lo que hace que el código se pueda mantener sin la conversación que lo produjo.
+- **En inglés**, como el resto del código (`CLAUDE.md`, *Idioma*). El Javadoc es código.
+- Se actualiza **en el mismo cambio** que la firma. Un `@param` que ya no existe es peor que no tener bloque.
+
 ## 3. Frontend — estructura y patrón
 
 ### 3.1 Patrón: features de dominio, con capas transversales en la raíz
@@ -823,6 +836,8 @@ export function EditGameTableDialog({ table, open, onOpenChange }: EditGameTable
 
 **Tipos**: un tipo base por entidad y derivados con utility types (§3.2). Ningún componente declara a mano una variante de un tipo que ya existe.
 
+**Documentación**: la contraparte exacta de §2.8, con JSDoc. **Todo `export` lleva su bloque** — componentes, hooks, funciones, tipos, interfaces, constantes y esquemas zod —, y los `props` de un componente se documentan campo por campo en su `interface` o `type`. En inglés, diciendo qué hace y por qué existe, citando la decisión `#n` que lo justifica cuando la hay. La única excepción del proyecto es `components/ui/`: lo genera el CLI de shadcn y no se edita a mano.
+
 **Ubicación y nombres**: dónde va cada archivo, cuándo sube a la raíz y qué sufijo lleva está en §3.1.1–§3.1.3, y el ruteo en §3.1.6.
 
 **Estilos** (#109): Tailwind en el JSX. Los tokens del tema —colores, tipografía, radios, y los estados de mesa y postulación— se definen en el bloque `@theme` de `styles/globals.css`; no hay `tailwind.config.ts` en Tailwind 4.
@@ -863,6 +878,7 @@ const badge = cva('inline-flex items-center rounded-md px-2 py-1 text-xs font-me
 11. Datos de servidor en el frontend: solo TanStack Query.
 12. En el frontend, un tipo base por entidad. Las variantes se derivan con utility types (`Pick`, `Omit`, `Partial`…), nunca se re-declaran a mano (§3.2). Nunca `any`.
 13. Subir una major de cualquier cosa del stack de §1 es una decisión: se registra en `decisiones.md` y se actualiza §1 en el mismo commit.
+14. Todo lo público lleva su bloque de documentación —Javadoc en el backend (§2.8), JSDoc en el frontend (§3.3)—, en inglés, getters y setters incluidos. Código sin documentar no está terminado.
 
 ## 5. Deuda del proyecto viejo que no se repite
 

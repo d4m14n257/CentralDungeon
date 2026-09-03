@@ -48,8 +48,12 @@ public class TestDiscordController {
     private final Map<String, StubIdentity> identityByCode = new ConcurrentHashMap<>();
     private final Map<String, StubIdentity> identityByAccessToken = new ConcurrentHashMap<>();
 
+    /** The guild id to claim membership of, so the stub agrees with whatever is configured. */
     private final DiscordProperties discordProperties;
 
+    /**
+     * @param discordProperties the guild the stub reports membership of
+     */
     public TestDiscordController(DiscordProperties discordProperties) {
         this.discordProperties = discordProperties;
     }
@@ -93,6 +97,13 @@ public class TestDiscordController {
         return new StubDiscordTokenResponse(accessToken, "Bearer", 3600, "identify guilds");
     }
 
+    /**
+     * Stands in for Discord's user-info endpoint.
+     *
+     * @param authorization the bearer header carrying an access token this stub handed out earlier
+     * @return the identity behind that token
+     * @throws IllegalStateException if the token was never issued by this stub
+     */
     @GetMapping("/users/@me")
     public StubDiscordUserResponse currentUser(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
         StubIdentity identity = identityOf(authorization);

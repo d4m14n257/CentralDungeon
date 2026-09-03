@@ -12,6 +12,7 @@ import type {
   TableStatusChange,
 } from '../types'
 
+/** Every call about a game table: the listings, the detail, and each lifecycle transition. */
 export const gameTablesApi = {
   list: (page = 0, size = pageSize.explorer) => api.getPage<GameTableSummary>('/api/v1/game-tables', { page, size }),
   mine: (page = 0, size = pageSize.list) => api.getPage<GameTableSummary>('/api/v1/game-tables/mine', { page, size }),

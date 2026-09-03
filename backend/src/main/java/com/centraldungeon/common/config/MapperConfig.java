@@ -1,5 +1,6 @@
 package com.centraldungeon.common.config;
 
+import com.centraldungeon.catalogs.CatalogMapper;
 import com.centraldungeon.notifications.NotificationMapper;
 import com.centraldungeon.registrations.RegistrationMapper;
 import com.centraldungeon.tables.GameTableMapper;
@@ -20,23 +21,53 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MapperConfig {
 
+    /**
+     * The mapper for people.
+     *
+     * @return the MapStruct-generated implementation
+     */
     @Bean
     public UserMapper userMapper() {
         return Mappers.getMapper(UserMapper.class);
     }
 
+    /**
+     * The mapper for game tables, their masters and their status history.
+     *
+     * @return the MapStruct-generated implementation
+     */
     @Bean
     public GameTableMapper gameTableMapper() {
         return Mappers.getMapper(GameTableMapper.class);
     }
 
+    /**
+     * The mapper for applications to a table.
+     *
+     * @return the MapStruct-generated implementation
+     */
     @Bean
     public RegistrationMapper registrationMapper() {
         return Mappers.getMapper(RegistrationMapper.class);
     }
 
+    /**
+     * The mapper for notifications.
+     *
+     * @return the MapStruct-generated implementation
+     */
     @Bean
     public NotificationMapper notificationMapper() {
         return Mappers.getMapper(NotificationMapper.class);
+    }
+
+    /**
+     * The mapper for the three catalogs.
+     *
+     * @return the MapStruct-generated implementation
+     */
+    @Bean
+    public CatalogMapper catalogMapper() {
+        return Mappers.getMapper(CatalogMapper.class);
     }
 }

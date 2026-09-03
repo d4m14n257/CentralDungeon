@@ -27,23 +27,58 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Applying to a table, and what a master does about it.
+ *
+ * <p>Two invariants MySQL cannot express live here, and both are held by taking a pessimistic lock
+ * on the <b>table</b> row: only one active registration per (table, person) pair (#28), and the
+ * player cap (#34). The table is the thing to lock because "no registration exists yet" has no row
+ * of its own to lock, and because the cap is a property of the table rather than of any one
+ * application.
+ *
+ * <p>Filling the last seat auto-rejects the candidates still queued, in FIFO order (#34). Nobody is
+ * left waiting on a table that can no longer take them.
+ */
 @Service
 public class RegistrationService {
 
+    /** The statuses that make a registration count as alive for the one-per-pair rule (#28). */
     private static final List<TableRegistrationStatus> ACTIVE_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
     /** decisiones.md #34 fixes this literal in Spanish - it is content a player reads, not code (#102 does not apply to it). */
     private static final String AUTO_REJECT_JUSTIFICATION = "Mesa llena";
 
+    /** The {@code table_registrations} table. */
     private final TableRegistrationRepository registrationRepository;
+
+    /** The reasons attached to turned-down applications. */
     private final RegistrationRejectionRepository rejectionRepository;
+
+    /** Used to lock the table row, which is what serializes the two invariants above. */
     private final GameTableRepository gameTableRepository;
+
+    /** Answers pertenencia: only a master of the table may accept or reject (#17, #121). */
     private final MasterService masterService;
+
+    /** Resolves the applicant and the acting master. */
     private final UserService userService;
+
+    /** Emits what the applicant and the masters have to be told (#77). */
     private final NotificationService notificationService;
+
+    /** Entity to DTO. */
     private final RegistrationMapper registrationMapper;
 
+    /**
+     * @param registrationRepository the {@code table_registrations} table
+     * @param rejectionRepository    the reasons behind turned-down applications
+     * @param gameTableRepository    used to lock the table row the invariants serialize on
+     * @param masterService          answers pertenencia
+     * @param userService            resolves the people involved
+     * @param notificationService    tells the applicant and the masters what happened
+     * @param registrationMapper     entity to DTO
+     */
     public RegistrationService(
             TableRegistrationRepository registrationRepository,
             RegistrationRejectionRepository rejectionRepository,
@@ -123,6 +158,20 @@ public class RegistrationService {
         return registrationMapper.toResponse(registration);
     }
 
+    /**
+     * A master turning down an application, with a reason.
+     *
+     * <p>The reason is stored and sent to the applicant: a rejection they can learn nothing from is
+     * the worst outcome the flow can produce.
+     *
+     * @param registrationId the application
+     * @param actorId        the actor, from the token; has to run the table (#17, #121)
+     * @param request        the justification
+     * @return the application afterwards
+     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor does not run
+     *         the table
+     * @throws ConflictException if the application was not a pending candidate
+     */
     @Transactional
     public RegistrationResponse reject(String registrationId, String actorId, RejectRegistrationRequest request) {
         TableRegistration registration = getRegistrationById(registrationId);
@@ -148,7 +197,16 @@ public class RegistrationService {
         return PageResponse.from(page.map(registrationMapper::toResponse));
     }
 
-    /** La justificación del rechazo importa acá - es la única pantalla donde el propio postulante la lee (#34). */
+    /**
+     * Everything the actor applied to, whatever came of it. Backs /my/applications.
+     *
+     * <p>It is the one place a rejection's justification is loaded, because it is the only screen
+     * where the applicant themselves reads it (#34) - the master's queue has no use for it.
+     *
+     * @param actorId  the actor, from the token (#121)
+     * @param pageable page, size and sort
+     * @return one page of their applications, each with its rejection reason when there is one
+     */
     @Transactional(readOnly = true)
     public PageResponse<RegistrationResponse> listMine(String actorId, Pageable pageable) {
         Page<TableRegistration> page = registrationRepository.findByUser_Id(actorId, pageable);

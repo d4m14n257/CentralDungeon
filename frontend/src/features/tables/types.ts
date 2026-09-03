@@ -1,6 +1,16 @@
+/**
+ * A table's nine lifecycle states plus `Deleted`. A union of literals, not a TS `enum`: the backend
+ * serializes them as strings, and the union is what makes `Record<GameTableStatus, …>` force every
+ * case to be covered when mapping to labels or badge variants (#3.2 regla 9).
+ */
 export type GameTableStatus =
   'Unassigned' | 'Preparation' | 'ChangesRequested' | 'Opened' | 'InProgress' | 'PauseRequested' | 'Pause' | 'Finished' | 'Canceled'
 
+/**
+ * One of a table's masters, as it arrives nested in a table response. `masterType` is `Primary` or
+ * `Secondary` on the wire; on screen these read as "master" and "co-master" and never as these
+ * words (#166).
+ */
 export interface MasterSummary {
   userId: string
   name: string

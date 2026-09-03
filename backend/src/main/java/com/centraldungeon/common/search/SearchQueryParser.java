@@ -43,6 +43,17 @@ public final class SearchQueryParser {
     private SearchQueryParser() {
     }
 
+    /**
+     * Parses one search box.
+     *
+     * <p>It never throws on bad input, by design: a search box has to survive being typed into, so
+     * an unrecognized {@code /field} is searched as literal text rather than answered with a 400.
+     *
+     * @param raw         what the person typed, or null
+     * @param knownFields the wire names this endpoint accepts, from its own search-field enum.
+     *                    Anything else stays text
+     * @return the parsed query, or {@link SearchQuery#EMPTY} when there was nothing usable
+     */
     public static SearchQuery parse(@Nullable String raw, Set<String> knownFields) {
         if (raw == null || raw.isBlank()) {
             return SearchQuery.EMPTY;

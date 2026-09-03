@@ -10,6 +10,12 @@ const STATE_CLASSES: Record<RegistrationStatus, { badge: string; dot: string }> 
   Rejected: { badge: 'bg-state-canceled-bg text-state-canceled-fg', dot: 'bg-state-canceled-dot' },
 }
 
+/**
+ * Where an application stands, as a badge. Its variants come from a `Record` over the status union,
+ * so adding a status is a compile error here rather than a badge that silently renders unstyled.
+ *
+ * @param props.status the application's status
+ */
 export function RegistrationStatusBadge({ status }: { status: RegistrationStatus }) {
   const { t } = useTranslation('registrations')
   const classes = STATE_CLASSES[status]

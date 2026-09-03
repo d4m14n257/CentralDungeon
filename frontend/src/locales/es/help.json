@@ -165,6 +165,19 @@
         "step2": "Si todavía no se publicó vas a ver «Eliminar mesa» al lado de «Cancelar mesa».",
         "step3": "Confirmá. Si la mesa ya se había abierto, el botón no está: ahí lo que corresponde es cancelar."
       }
+    },
+    "proposeCatalog": {
+      "title": "Proponer un sistema, tag o plataforma",
+      "what": "Al armar una mesa elegís sus sistemas, tags y plataformas de una lista. Si el que buscás no está, podés proponerlo desde el mismo campo.",
+      "pending": "Lo vas a poder usar en tu mesa enseguida, pero queda pendiente de aprobación: hasta que un admin lo acepte, los demás no lo ven y nadie puede filtrar por él.",
+      "marked": "Mientras esté pendiente aparece marcado como tal en tu mesa, para que sepas por qué no lo ve nadie más.",
+      "existing": "Si lo que ibas a proponer ya existe escrito de otra forma, elegí el que está: el buscador encuentra la mesa por cualquiera de los dos nombres una vez que un admin los une.",
+      "steps": {
+        "step1": "En el campo de sistema, tag o plataforma, escribí lo que buscás.",
+        "step2": "Si aparece en la lista, elegilo.",
+        "step3": "Si no aparece, tocá «Proponer» con el nombre que escribiste.",
+        "step4": "Seguí armando la mesa: no tenés que esperar a que lo aprueben para publicarla."
+      }
     }
   },
   "admins": {
@@ -201,6 +214,24 @@
       "same": "Un owner puede todo lo de un admin: es el mismo rol con más alcance.",
       "soon": "Lo suyo propio —auditoría, borrado de archivos y migración de cuentas— todavía se está construyendo, y esta ayuda lo va a explicar cuando exista.",
       "exclusive": "Por eso nadie es admin y owner a la vez: se tiene uno de los dos, y owner está por encima."
+    },
+    "catalogs": {
+      "title": "Catálogos: sistemas, tags y plataformas",
+      "what": "Un catálogo es la lista de valores que los masters pueden elegir al armar una mesa. Los masters también pueden proponer uno nuevo, y ahí es donde entrás vos.",
+      "pending": "Un valor propuesto queda pendiente: el master ya puede usarlo en su mesa, pero los jugadores no lo ven ni pueden filtrar por él hasta que lo aceptes.",
+      "groups": "Al aceptarlo decidís si es un valor nuevo o si es otra forma de escribir uno que ya existe. Lo segundo arma un grupo: «DANDD» y «D&D 5e» pasan a ser el mismo valor a la hora de buscar.",
+      "alias": "Cada mesa sigue mostrando el nombre que eligió su master. La equivalencia funciona en la búsqueda, no en la pantalla.",
+      "merge": "Fusionar une dos grupos; separar saca un valor de su grupo. Ninguna de las dos toca las mesas: lo que ya estaba etiquetado se sigue encontrando igual.",
+      "disable": "Dar de baja saca un valor de circulación sin romper nada. Las mesas que lo usan lo conservan y restaurarlo devuelve todo como estaba.",
+      "successor": "Si das de baja el valor principal de un grupo, elegís vos cuál de sus equivalentes queda como principal. El sistema no lo decide solo.",
+      "steps": {
+        "step1": "Cambiá al contexto Admin y entrá a «Catálogos».",
+        "step2": "Elegí la pestaña del catálogo que querés revisar: sistemas, tags o plataformas.",
+        "step3": "Buscá por nombre si la lista es larga.",
+        "step4": "En un valor pendiente, tocá «Aceptar» y decidí si es nuevo o si va a un grupo existente.",
+        "step5": "Para unir dos grupos, tocá «Fusionar» en el que quieras que deje de existir y elegí el que queda.",
+        "step6": "Para sacar un valor de circulación, tocá «Dar de baja». Si es el principal de un grupo, elegí quién lo reemplaza."
+      }
     }
   },
   "stepsTitle": "Cómo se hace"

@@ -66,7 +66,10 @@ export const router = createBrowserRouter([
       {
         path: 'admin',
         Component: AdminLayout,
-        children: [{ path: 'tables', lazy: () => import('./admin/AdminTablesPage') }],
+        children: [
+          { path: 'tables', lazy: () => import('./admin/AdminTablesPage') },
+          { path: 'catalogs', lazy: () => import('./admin/AdminCatalogsPage') },
+        ],
       },
       { path: '*', lazy: () => import('./NotFoundPage') },
     ],

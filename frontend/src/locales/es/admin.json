@@ -1,4 +1,9 @@
 {
+  "nav": {
+    "label": "Secciones de administración",
+    "tables": "Mesas",
+    "catalogs": "Catálogos"
+  },
   "tables": {
     "title": "Mesas por revisar",
     "emptyTitle": "No hay mesas esperando revisión",

@@ -27,23 +27,49 @@ import org.springframework.web.client.RestClient;
 @Service
 public class DiscordOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
+    /**
+     * The login was refused because the person is not in the guild. Not a dead end: the failure
+     * handler passes the invite along so they can join and try again (#38).
+     */
     public static final String NOT_GUILD_MEMBER_ERROR = "not_guild_member";
+
+    /** The login was refused because the account is blocked (#84, #86). This one <em>is</em> a dead end. */
     public static final String USER_BLOCKED_ERROR = "user_blocked";
 
     private static final String INTERNAL_USER_ID_ATTRIBUTE = "internalUserId";
 
+    /** Spring's own user-info call to Discord. Kept as a field so the unit test can stand in for it. */
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate;
+
+    /** Calls Discord's guilds endpoint. {@code RestClient}, because Boot 4 no longer autoconfigures RestTemplate. */
     private final RestClient restClient;
+
+    /** Holds the guild id and the guilds URI - configuration, never constants in the code (#38). */
     private final DiscordProperties discordProperties;
+
+    /** Creates the local user on first login, or refreshes their handle on every later one. */
     private final UserService userService;
 
+    /**
+     * @param restClientBuilder  builder for the client that calls Discord's guilds endpoint
+     * @param discordProperties  the guild to check membership against
+     * @param userService        creates or refreshes the local user
+     */
     @Autowired
     public DiscordOAuth2UserService(
             RestClient.Builder restClientBuilder, DiscordProperties discordProperties, UserService userService) {
         this(new DefaultOAuth2UserService(), restClientBuilder, discordProperties, userService);
     }
 
-    /** Seam for the unit test: it stands in for the delegate's HTTP call to Discord's user-info endpoint. */
+    /**
+     * Seam for the unit test: it stands in for the delegate's HTTP call to Discord's user-info
+     * endpoint.
+     *
+     * @param delegate           the user-info call to fake out
+     * @param restClientBuilder  builder for the guilds client
+     * @param discordProperties  the guild to check membership against
+     * @param userService        creates or refreshes the local user
+     */
     DiscordOAuth2UserService(
             OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate,
             RestClient.Builder restClientBuilder,
@@ -55,6 +81,21 @@ public class DiscordOAuth2UserService implements OAuth2UserService<OAuth2UserReq
         this.userService = userService;
     }
 
+    /**
+     * The gate of the whole system: Discord says who this is, and this method decides whether they
+     * get in at all.
+     *
+     * <p>Three steps, in order - read the Discord profile, refuse anyone outside the guild (#38), and
+     * create or refresh the local user. The Discord access token is used once here to check
+     * membership and then discarded: keeping it would mean maintaining a second refresh cycle for a
+     * capability v1 does not have (#125).
+     *
+     * @param userRequest the completed OAuth2 exchange, carrying Discord's access token
+     * @return the principal, whose name is the <b>local</b> user id - which is what ends up as the
+     *         JWT's subject
+     * @throws OAuth2AuthenticationException with {@link #NOT_GUILD_MEMBER_ERROR} when the person is
+     *         not in the guild, or {@link #USER_BLOCKED_ERROR} when the account is blocked
+     */
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User discordUser = delegate.loadUser(userRequest);

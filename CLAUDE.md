@@ -68,6 +68,24 @@ Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<f
 16. En el frontend, **una feature nunca importa de otra**. Las pantallas van en `src/routes/` y son el único lugar que compone dominios; cada bloque de una pantalla compuesta recibe un **id**, no una entidad (§3.1.5). Cada feature expone su superficie en `features/<dominio>/index.ts`.
 17. **El rol no es la pertenencia**, y en las mesas la pertenencia manda: dirigir una mesa concreta se autoriza **solo por la fila en `masters`**, sin exigir el rol `Master` — que significa "puedo crear mesas propias" y nada más (#135). Toda lectura o mutación de un recurso concreto filtra por el actor —el actor en el `WHERE`, o verificación explícita en el service antes de tocar nada— y el actor sale siempre del token, nunca de la URL (#121). El JWT afirma **identidad, no autorización**: roles y `status` se leen de la base en cada request (#122).
 18. Ningún string visible se escribe en el JSX: todo pasa por `t('espacio.clave')` con el JSON en `src/locales/es/` (#117). Y ningún valor de estilo suelto: los tokens salen del `@theme`, que se transcribe desde el design system en Claude Design (#118, #130).
+19. **Todo lleva su bloque de documentación, sin excepciones**: Javadoc en el backend, JSDoc en el frontend, siempre en inglés. Ver *Documentación del código*, abajo. Código nuevo sin documentar no está terminado; una modificación que deja el bloque desactualizado es un bug.
+
+## Documentación del código
+
+El cliente recibe este proyecto para usarlo y para seguir mejorándolo. Eso exige que **la API pública del código esté documentada en el código**, no solo en `docs/` — quien abra una clase tiene que entender qué hace sin reconstruirlo leyendo su cuerpo.
+
+**Regla:** toda clase, interfaz, enum, `record`, método, constructor, campo, función, hook, componente y tipo exportado lleva su bloque. **Incluidos los getters y setters.** No hay umbral de trivialidad ni lista de excepciones: si es público, se documenta.
+
+| | Formato | Alcance |
+|---|---|---|
+| Backend | **Javadoc** (`/** … */`) | Todo lo `public` y `protected`, más los campos de entidad. Cada componente de un `record` lleva su `@param`, todos, incluso `id` y `name`. Métodos con retorno llevan `@return`; los que lanzan una excepción de negocio, su `@throws` |
+| Frontend | **JSDoc** (`/** … */`) | Todo `export` — componentes, hooks, funciones, tipos, interfaces, constantes y esquemas zod. Los `props` de un componente se documentan en su `interface` o `type`, campo por campo |
+
+**Qué escribir.** El bloque dice **qué hace y por qué existe**, nunca cómo está implementado — el cuerpo ya cuenta el cómo, y un comentario que lo repite se desincroniza en el primer refactor. Cuando una decisión de `docs/decisiones.md` explica la forma de algo, se cita con su `#n`: es lo que convierte el código en algo que se puede mantener sin la conversación que lo produjo.
+
+**En inglés, como todo el código** (ver *Idioma*). Un archivo de código sigue sin tener una sola palabra en español, y el Javadoc y el JSDoc son código.
+
+**Se mantiene al mismo tiempo que el código.** Cambiar una firma, un `@param` o el significado de un valor de retorno y no tocar el bloque deja documentación que miente, que es peor que no tener ninguna. `components/ui/` es lo único fuera de esto: es código generado por el CLI de shadcn y no se edita a mano.
 
 ## Comandos
 

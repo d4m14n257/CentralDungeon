@@ -5,6 +5,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { GameTableCard, useMyTables } from '@/features/tables'
 
+/** /my/tables - the tables the signed-in person plays at, as an accepted player. */
 export function MyTablesPage() {
   const { t } = useTranslation('tables')
   // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya

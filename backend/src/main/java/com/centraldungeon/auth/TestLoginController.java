@@ -29,12 +29,28 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("test")
 public class TestLoginController {
 
+    /** Creates the test user, or reuses them across runs. */
     private final UserService userService;
+
+    /** Resolves the roles the shortcut can grant. */
     private final RoleRepository roleRepository;
+
+    /** Grants them. */
     private final UserRoleRepository userRoleRepository;
+
+    /** Issues the same pair of tokens the real login would. */
     private final JwtService jwtService;
+
+    /** Sets the same refresh cookie the real login would, attributes included. */
     private final RefreshCookieFactory refreshCookieFactory;
 
+    /**
+     * @param userService          creates or reuses the test user
+     * @param roleRepository       resolves the roles to grant
+     * @param userRoleRepository   grants them
+     * @param jwtService           issues the tokens
+     * @param refreshCookieFactory sets the refresh cookie
+     */
     public TestLoginController(
             UserService userService,
             RoleRepository roleRepository,
@@ -48,6 +64,24 @@ public class TestLoginController {
         this.refreshCookieFactory = refreshCookieFactory;
     }
 
+    /**
+     * Logs somebody in without going through Discord, so a Playwright spec can set up the actor it
+     * needs in one call.
+     *
+     * <p>Reachable only under the {@code test} profile: without it there is no bean and the path 404s,
+     * which is what keeps this from ever being an authentication bypass in dev or prod.
+     *
+     * <p>It issues the real tokens through the real {@link JwtService} and sets the real cookie -
+     * only the Discord handshake is skipped. A shortcut that produced a different kind of session
+     * would be testing something the users never do.
+     *
+     * @param discordId the identity to log in as. Also used as the display name, since the suite only
+     *                  needs someone distinguishable
+     * @param asMaster  whether to grant the Master role on the way in
+     * @param asAdmin   whether to grant the Admin role on the way in
+     * @param response  the response the refresh cookie is written onto
+     * @return the access token and its lifetime, exactly as a real login would answer
+     */
     @PostMapping("/test-login")
     @Transactional
     public TokenResponse testLogin(

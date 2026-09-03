@@ -13,10 +13,16 @@ export const createGameTableSchema = z.object({
   totalSessions: z.string().optional(),
 })
 
+/**
+ * The create-table form's values, inferred from its schema and tied to `CreateGameTableRequest` by a
+ * compile-time assertion (#3.2 regla 7).
+ */
 export type CreateGameTableForm = z.infer<typeof createGameTableSchema>
 
+/** Validates the justification every denying transition needs: cancel, request changes, pause. */
 export const changeTableStatusSchema = z.object({
   justification: z.string().min(1).max(2000),
 })
 
+/** The justification form's values, inferred from the schema. */
 export type ChangeTableStatusForm = z.infer<typeof changeTableStatusSchema>

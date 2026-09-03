@@ -45,6 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext value={{ isBootstrapping, isAuthenticated, signOut }}>{children}</AuthContext>
 }
 
+/**
+ * The session: who is signed in, whether it is still loading, and how to end it.
+ *
+ * What it exposes is **for deciding what to render, never what to allow** (#103). The backend
+ * authorizes endpoint by endpoint, and no component decides a permission by reading this.
+ *
+ * @returns the session context
+ * @throws if called outside `AuthProvider`
+ */
 export function useAuth(): AuthContextValue {
   const context = use(AuthContext)
   if (!context) {

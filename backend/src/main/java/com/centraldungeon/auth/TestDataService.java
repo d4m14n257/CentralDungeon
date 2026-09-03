@@ -35,12 +35,25 @@ public class TestDataService {
     private static final String E2E_REGISTRATIONS = "select reg.id from TableRegistration reg where reg.gameTable.id in ("
             + E2E_TABLES + ") or reg.user.id in (" + E2E_USERS + ")";
 
+    /** Bulk JPQL deletes, which is the one job that does not fit a repository. */
     private final EntityManager entityManager;
 
+    /**
+     * @param entityManager used for the bulk deletes this cleanup is made of
+     */
     public TestDataService(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
 
+    /**
+     * Removes every row the e2e suite created, children first so no foreign key is ever left dangling.
+     *
+     * <p>The order below is the dependency order and is not interchangeable. It only ever matches rows
+     * the suite itself made - test users by their Discord id prefix, test tables by name - so running
+     * it against a database with real data touches nothing.
+     *
+     * @return how many rows were deleted per table
+     */
     @Transactional
     public TestCleanupResponse deleteE2eData() {
         delete("delete from RegistrationRejection r where r.registration.id in (" + E2E_REGISTRATIONS + ")");

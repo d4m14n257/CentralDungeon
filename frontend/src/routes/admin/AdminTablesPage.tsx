@@ -101,6 +101,12 @@ function AdminTableRow({ table }: { table: AdminTableSummary }) {
   )
 }
 
+/**
+ * /admin/tables - the tables waiting on an admin: unassigned, submitted for review, and sent back.
+ *
+ * A work list, so it pages by number with `keepPreviousData` instead of "load more" (#173) - the
+ * rows are worked through, not browsed.
+ */
 export function AdminTablesPage() {
   const { t } = useTranslation('admin')
   const createDialog = useDisclosure()

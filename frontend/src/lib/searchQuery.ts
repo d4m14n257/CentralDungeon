@@ -18,6 +18,11 @@
 
 export type SearchConnector = 'and' | 'or'
 
+/**
+ * One criterion of a search box: a field, the values that satisfy it, and how it joins the one
+ * before it. Mirror of the backend's `SearchTerm` - the two parsers cover the same cases and are
+ * kept in step by their tests (#164).
+ */
 export interface SearchTerm {
   /** null = criterio básico: lo que se escribe sin un `/campo` adelante. */
   field: string | null
@@ -46,6 +51,7 @@ export interface SearchQueryValue {
   pendingConnector: SearchConnector
 }
 
+/** The value of an empty search box. Shared, since the shape is never mutated in place. */
 export const emptySearchQuery: SearchQueryValue = { terms: [], activeField: null, draft: '', pendingConnector: 'and' }
 
 /**

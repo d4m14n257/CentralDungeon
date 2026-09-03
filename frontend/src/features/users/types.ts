@@ -20,6 +20,7 @@ export interface UserSummary {
   name: string | null
 }
 
+/** What onboarding sends: the display name and country that unblock the rest of the app (#134). */
 export interface CompleteOnboardingInput {
   name: NonNullable<User['name']>
   country: NonNullable<User['country']>

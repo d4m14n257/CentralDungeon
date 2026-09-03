@@ -4,6 +4,11 @@ import { queryKeys } from '@/api/queryKeys'
 
 import { notificationsApi } from './notificationsApi'
 
+/**
+ * Empties the unread count in one call.
+ *
+ * @returns the mutation
+ */
 export function useMarkAllAsRead() {
   const queryClient = useQueryClient()
   return useMutation({

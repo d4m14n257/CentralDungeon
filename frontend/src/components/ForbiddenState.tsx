@@ -1,5 +1,14 @@
 import { useTranslation } from 'react-i18next'
 
+/**
+ * What a screen paints on a 403.
+ *
+ * It exists because the context layouts do **not** check roles (#103): the navigation is UI
+ * organisation, the backend is the authorization, and someone who forces a route they cannot use
+ * has to land on an explanation rather than on a blank page.
+ *
+ * @param props.description optional override of the default explanation
+ */
 export function ForbiddenState() {
   const { t } = useTranslation('common')
 

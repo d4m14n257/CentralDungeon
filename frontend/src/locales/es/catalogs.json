@@ -1,0 +1,86 @@
+{
+  "status": {
+    "Created": "Pendiente",
+    "Accepted": "Aceptado",
+    "Rejected": "Rechazado",
+    "Disabled": "Dado de baja"
+  },
+  "kind": {
+    "systems": {
+      "label": "Sistemas",
+      "placeholder": "Elegí un sistema",
+      "searchPlaceholder": "Buscar un sistema…"
+    },
+    "tags": {
+      "label": "Tags",
+      "placeholder": "Elegí un tag",
+      "searchPlaceholder": "Buscar un tag…"
+    },
+    "platforms": {
+      "label": "Plataformas",
+      "placeholder": "Elegí una plataforma",
+      "searchPlaceholder": "Buscar una plataforma…"
+    }
+  },
+  "chip": {
+    "pending": "· pendiente",
+    "pendingHint": "Todavía lo tiene que aprobar un admin. Hasta entonces solo lo ves vos.",
+    "remove": "Quitar {{name}}"
+  },
+  "combobox": {
+    "loading": "Buscando…",
+    "noResults": "No hay nada con ese nombre.",
+    "propose": "Proponer «{{name}}»",
+    "proposeHint": "Lo vas a poder usar en tu mesa enseguida, pero el resto no lo ve hasta que un admin lo apruebe."
+  },
+  "picker": {
+    "searchPlaceholder": "Buscar un grupo…",
+    "noGroups": "No hay grupos que coincidan."
+  },
+  "admin": {
+    "title": "Catálogos",
+    "helpLink": "Cómo funcionan los grupos",
+    "searchLabel": "Buscar en el catálogo",
+    "searchPlaceholder": "Buscar por nombre…",
+    "tableLabel": "{{kind}} del catálogo",
+    "columnName": "Nombre",
+    "columnStatus": "Estado",
+    "columnGroup": "Grupo",
+    "columnUses": "Mesas",
+    "isCanonical": "Es el principal",
+    "emptyTitle": "Todavía no hay nada en este catálogo",
+    "emptyDescription": "Lo que propongan los masters desde el asistente de mesa va a aparecer acá para que lo revises.",
+    "emptySearchDescription": "Ningún valor coincide con lo que buscaste.",
+    "cancel": "Cancelar",
+    "accept": "Aceptar",
+    "acceptDialogTitle": "Aceptar «{{name}}»",
+    "acceptDialogDescription": "Decidí si es un valor nuevo o si es otra forma de escribir uno que ya existe.",
+    "acceptAsNewGroup": "Es un valor nuevo",
+    "acceptAsNewGroupHint": "Va a quedar como principal de su propio grupo. Después podés fusionarlo si aparece un equivalente.",
+    "acceptAsAliasHint": "«{{name}}» va a ser equivalente al grupo elegido: buscar por cualquiera de los dos trae las mismas mesas.",
+    "acceptSuccess": "Se aceptó «{{name}}»",
+    "reject": "Rechazar",
+    "rejectConfirmTitle": "Rechazar «{{name}}»",
+    "rejectConfirmDescription": "No se va a mostrar ni se va a poder filtrar por él. Podés aceptarlo más adelante si cambiás de idea.",
+    "rejectSuccess": "Se rechazó «{{name}}»",
+    "merge": "Fusionar",
+    "mergeDialogTitle": "Fusionar «{{name}}» con otro grupo",
+    "mergeDialogDescription": "El grupo que elijas es el que queda; «{{name}}» pasa a ser una forma más de nombrarlo.",
+    "mergePickTarget": "Elegí el grupo que queda",
+    "mergeHint": "«{{source}}» y todos sus equivalentes pasan al grupo elegido. Ninguna mesa cambia: las que ya estaban etiquetadas se encuentran igual, por cualquiera de los dos nombres.",
+    "mergeSuccess": "«{{source}}» ahora es equivalente a «{{target}}»",
+    "split": "Separar del grupo",
+    "splitConfirmTitle": "Separar «{{name}}» de su grupo",
+    "splitConfirmDescription": "Deja de ser equivalente al resto y pasa a ser un valor por su cuenta. Las mesas etiquetadas con él no cambian.",
+    "splitSuccess": "«{{name}}» quedó como valor propio",
+    "disable": "Dar de baja",
+    "disableDialogTitle": "Dar de baja «{{name}}»",
+    "disableDialogDescription": "Deja de mostrarse y de filtrar, pero no se borra nada.",
+    "disableKeepsLinks": "Las mesas que lo usan lo conservan. Si lo restaurás, vuelve todo como estaba.",
+    "disableNeedsSuccessor_one": "Es el principal de un grupo con otro valor. Elegí cuál queda como principal:",
+    "disableNeedsSuccessor_other": "Es el principal de un grupo con {{count}} valores más. Elegí cuál queda como principal:",
+    "disableSuccess": "Se dio de baja «{{name}}»",
+    "restore": "Restaurar",
+    "restoreSuccess": "Se restauró «{{name}}»"
+  }
+}

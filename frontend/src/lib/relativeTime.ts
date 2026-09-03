@@ -1,5 +1,10 @@
+/** The coarse buckets a relative time falls into. `now` means less than a minute ago. */
 export type RelativeTimeUnit = 'now' | 'minutes' | 'hours' | 'days' | 'months'
 
+/**
+ * A time difference already reduced to a unit and a count, ready for i18n's pluralization. The
+ * formatting itself is the caller's, so the same value renders in any language.
+ */
 export interface RelativeTime {
   unit: RelativeTimeUnit
   count: number

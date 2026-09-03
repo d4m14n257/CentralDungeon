@@ -85,6 +85,12 @@ function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
   )
 }
 
+/**
+ * The candidates tab: who applied, in the order they did, and the accept/reject actions.
+ *
+ * FIFO is the backend's order and this screen never re-sorts it - it is what decides who gets
+ * auto-rejected when the last seat goes (#28, #34).
+ */
 export function MasterTableCandidatesTab() {
   const context = useOutletContext<OutletContext>()
   return <CandidatesList {...context} />

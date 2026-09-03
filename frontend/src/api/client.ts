@@ -7,6 +7,16 @@ import { ApiError, type PageResponse, type ProblemDetail } from '@/types/api'
  */
 let accessToken: string | null = null
 
+/**
+ * Stores the access token every later request is signed with, or clears it on logout.
+ *
+ * The token lives **in memory only** - never `localStorage`, never `sessionStorage` (#125). The app
+ * renders rich text written by other people (#62), which is the most direct XSS surface it has, and
+ * a token in web storage is readable by any script that gets in through it. The refresh token is not
+ * here at all: it is an httpOnly cookie the frontend can neither read nor write.
+ *
+ * @param token the new access token, or null to forget the current one
+ */
 export function setAccessToken(token: string | null): void {
   accessToken = token
 }
@@ -107,6 +117,14 @@ async function request<TRes>(method: string, path: string, options: RequestOptio
   return (await response.json()) as TRes
 }
 
+/**
+ * The one HTTP client, typed (#104). It injects the bearer token, turns a `ProblemDetail` body into
+ * a typed `ApiError`, and handles the 401 in a single place: refresh once, retry the call, and if
+ * the refresh fails too, clear the session and go to /login.
+ *
+ * A feature never calls `fetch` directly - it builds its own module on top of this one, which is
+ * what makes a backend contract change a compile error instead of a runtime surprise (#108).
+ */
 export const api = {
   get: <TRes>(path: string, params?: QueryParams) => request<TRes>('GET', path, { params }),
   getPage: <TItem>(path: string, params?: QueryParams) => request<PageResponse<TItem>>('GET', path, { params }),

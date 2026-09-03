@@ -15,6 +15,12 @@ const TAB_LINK_CLASSES = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'border-brand-fg text-fg' : 'border-transparent text-fg-muted hover:text-fg',
   )
 
+/**
+ * /master/tables/:id - the table as the people running it see it, with its tabs.
+ *
+ * The tabs are child routes rather than `useState` (#3.1.6 regla 5), so each has a URL, can be
+ * linked, and the back button behaves.
+ */
 export function MasterTableDetailPage() {
   const { t } = useTranslation('master')
   const { id } = useParams<{ id: string }>()

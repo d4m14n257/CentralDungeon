@@ -14,6 +14,10 @@ const OUTCOME_TONE: Record<string, { badge: string; dot: string; labelKey: strin
   RegistrationRejected: { badge: 'bg-state-canceled-bg text-state-canceled-fg', dot: 'bg-state-canceled-dot', labelKey: 'badge.rejected' },
 }
 
+/**
+ * The full inbox, /notifications - what the bell only summarizes. Titles *and* messages here, and
+ * "mark all as read".
+ */
 export function NotificationsPage() {
   const { t } = useTranslation('notifications')
   // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya

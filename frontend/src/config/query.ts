@@ -28,6 +28,13 @@ function reportMutationError(error: unknown) {
   toast.error(isOffline ? i18n.t('errors.offline') : i18n.t('errors.mutationFailed'))
 }
 
+/**
+ * The application's single QueryClient.
+ *
+ * Two decisions live in it. Queries get an explicit `staleTime` instead of the library's default of
+ * 0, which is what produces the steady drip of refetches; and every mutation without its own
+ * `onError` gets a toast, so a failed write never ends in silence.
+ */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

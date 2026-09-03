@@ -63,6 +63,14 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   )
 }
 
+/**
+ * Asks for confirmation from anywhere, without each caller mounting its own dialog.
+ *
+ * A Context and not Zustand: the hook has to *render* something, so the state belongs to the subtree
+ * that provides it (#105).
+ *
+ * @returns a function that opens the dialog and resolves to whether the user confirmed
+ */
 export function useConfirm(): ConfirmFn {
   const context = use(ConfirmContext)
   if (!context) {

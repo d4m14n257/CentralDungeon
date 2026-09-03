@@ -9,6 +9,20 @@ export const queryKeys = {
     admin: (statuses?: string[], page = 0) => ['tables', 'admin', statuses, page] as const,
     statusHistory: (id: string) => ['tables', 'status-history', id] as const,
   },
+  catalogs: {
+    /** The whole branch. What every catalog mutation invalidates: one admin action can move rows
+     *  that are not on screen - a merge repoints a group, a disable hands it to a successor - so
+     *  patching one entry would leave the rest of the cache describing a state that no longer is. */
+    all: () => ['catalogs'] as const,
+    /** The accepted values a combobox offers. Keyed by catalog and by what was typed. */
+    list: (kind: string, query?: string) => ['catalogs', 'list', kind, query] as const,
+    /** One value by id, whatever its status - how a pending proposal is read back (#57). */
+    detail: (kind: string, id: string) => ['catalogs', 'detail', kind, id] as const,
+    /** One value's whole synonym group - what the merge and disable dialogs are built on. */
+    group: (kind: string, id: string) => ['catalogs', 'group', kind, id] as const,
+    /** The /admin/catalogs table. Every admin mutation invalidates this branch and nothing else. */
+    admin: (kind: string, query?: string, statuses?: string[], page = 0) => ['catalogs', 'admin', kind, query, statuses, page] as const,
+  },
   registrations: {
     candidates: (tableId: string) => ['registrations', 'candidates', tableId] as const,
     mine: () => ['registrations', 'mine'] as const,

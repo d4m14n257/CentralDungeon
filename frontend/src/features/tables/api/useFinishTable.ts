@@ -4,6 +4,11 @@ import { queryKeys } from '@/api/queryKeys'
 
 import { gameTablesApi } from './gameTablesApi'
 
+/**
+ * The master closing a table that ran its course.
+ *
+ * @returns the mutation, taking the table's id
+ */
 export function useFinishTable(tableId: string) {
   const queryClient = useQueryClient()
   return useMutation({

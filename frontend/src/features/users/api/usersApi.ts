@@ -2,6 +2,7 @@ import { api } from '@/api/client'
 
 import type { CompleteOnboardingInput, User, UserSummary } from '../types'
 
+/** The calls about people: the caller's own profile, the picker search, and onboarding. */
 export const usersApi = {
   me: () => api.get<User>('/api/v1/users/me'),
   completeOnboarding: (input: CompleteOnboardingInput) => api.patch<User, CompleteOnboardingInput>('/api/v1/users/me', input),
