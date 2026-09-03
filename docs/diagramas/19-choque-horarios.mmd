@@ -1,0 +1,63 @@
+---
+title: 19. Choque de horarios (#178)
+---
+flowchart TB
+
+    subgraph calc["Que es un choque"]
+        C1["Intervalo semiabierto en UTC<br/>[hourtime, hourtime + duration)"]
+        C2["Envuelve la semana:<br/>martes 23:00 + 3h termina<br/>miercoles 02:00"]
+        C3["Adyacente NO choca:<br/>una arranca cuando<br/>la otra termina"]
+        C1 --> C2 --> C3
+    end
+
+    subgraph r1["R1 - el master se compromete"]
+        M1["El master guarda la agenda<br/>o crea la mesa"]
+        M2{"Se solapa con otra<br/>mesa viva suya?"}
+        M3["409 - no puede dirigir<br/>dos mesas a la vez"]
+        M4["Se guarda"]
+        M1 --> M2
+        M2 -->|si| M3
+        M2 -->|no| M4
+    end
+
+    subgraph r2["R2 - el jugador se postula"]
+        P1["El jugador se postula"]
+        P2{"Choca con una mesa<br/>donde ya es Player?"}
+        P3["409 - ya juega<br/>en esa franja"]
+        P4["Candidate"]
+        P1 --> P2
+        P2 -->|si| P3
+        P2 -->|no| P4
+    end
+
+    subgraph r34["R3 y R4 - el master acepta"]
+        A1["El master acepta<br/>a un candidato"]
+        A2{"Ya es Player en<br/>una mesa que choca?"}
+        A3["409 - R3<br/>el estado cambio entre<br/>postularse y aceptar"]
+        A4["Pasa a Player"]
+        A5{"Le quedan otras<br/>postulaciones Candidate<br/>que ahora chocan?"}
+        A6["Notificacion ScheduleConflict<br/>R4: avisa, NO rechaza"]
+        A7["El jugador elige:<br/>retira las que no quiere"]
+        A8["Nada mas que hacer"]
+        A1 --> A2
+        A2 -->|si| A3
+        A2 -->|no| A4
+        A4 --> A5
+        A5 -->|si| A6 --> A7
+        A5 -->|no| A8
+    end
+
+    note1["Por que R4 avisa y no rechaza:<br/>tres postulaciones a mesas Opened<br/>no son un compromiso. Recien al ser<br/>aceptado en una hay algo que respetar,<br/>y elegir cual es del jugador (#70)."]
+    A6 -.- note1
+
+    note2["Pause NO reserva horario:<br/>congela la agenda (#32), asi que<br/>sus franjas no cuentan. Al reanudar<br/>se reagenda y se vuelve a verificar."]
+    M2 -.- note2
+
+    note3["En el explorador cada mesa trae<br/>un campo derivado que dice si choca<br/>con lo ya comprometido, y la card<br/>lo advierte antes de postularse."]
+    P1 -.- note3
+
+    %% Enlaces invisibles: sin esto mermaid apila los subgrafos en orden inverso
+    %% y se lee R3/R4 antes que R1.
+    calc ~~~ r1
+    r1 ~~~ r2
+    r2 ~~~ r34

@@ -99,9 +99,11 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **La mesa completa, de la creación al cierre.** Es la fase que produce lo que todo lo demás consume.
 
-**Backend** — Catálogos que la mesa usa: `systems`/`tags`/`platforms` con `canonical_id` y grupos de sinónimos de profundidad 1 (#59), lectura y **propuesta** al crear (#55). Un valor en `Created` no filtra ni se muestra a los jugadores (#57), y la mesa muestra siempre el alias que le puso su master (#58). `TableTypeController`, que falta: `V2__seed.sql` siembra los tipos y hoy no hay forma de listarlos. `table_schedules` con la agenda semanal, y `table_sessions` materializadas al pasar a `Opened` a partir de `start_date` + agenda + `total_sessions` (#26, #33), con asistencia por sesión (#36). `table_tasks` publicadas por el master, que notifican a sus destinatarios (#77), con entregas que se acumulan y no bloquean (#63, #70, #76). **Archivos**: `files` con nombre físico por id (#80), `content_hash` para deduplicar, `file_type`, `public_audience` (#64) y `last_used_at`; `StorageService` detrás de interfaz (#15), compresión al guardar y job de retención por desuso (#75); `table_files` sin duplicar el archivo (#79).
+> **El detalle de implementación está en [`fase-1-master.md`](fase-1-master.md)**: las siete rebanadas, el punto de partida verificado y el camino de verificación. Acá está el alcance; allá, cómo se construye.
 
-**Frontend** — Wizard de creación completo: tipo, sistema, tags, plataformas, fecha de inicio, duración, sesiones, cupo y agenda. `ScheduleEditor` en hora local. Sesiones y asistencia en `/master/tables/:id`. Publicar peticiones y ver entregas. `FilePicker` con subida o reutilización del historial (#65). Co-masters desde la pantalla del master — `POST /{id}/masters` existe desde E2 y nunca tuvo interfaz. El dashboard **`/master`** (#136).
+**Backend** — Catálogos que la mesa usa: `systems`/`tags`/`platforms` con `canonical_id` y grupos de sinónimos de profundidad 1 (#59), lectura, **propuesta** al crear y **su administración completa** —aceptar, clasificar, fusionar, separar, dar de baja— que se adelantó desde F3 (#179). Un valor en `Created` no filtra ni se muestra a los jugadores (#57), y la mesa muestra siempre el alias que le puso su master (#58). `TableTypeController`, que falta: `V2__seed.sql` siembra los tipos y hoy no hay forma de listarlos. `table_schedules` con la agenda semanal y el **choque de horarios** (#178): un master no se compromete dos veces en la misma franja, nadie se postula ni es aceptado en una mesa que se pisa con otra donde ya juega, y las postulaciones sin resolver que chocan se avisan — lo que trae consigo el **retiro de una postulación**, adelantado desde F2. `table_sessions` materializadas al pasar a `Opened` a partir de `start_date` + agenda + `total_sessions` (#26, #33), con asistencia por sesión (#36). `closed_at` sellado al cerrar la mesa (#180), que E2 dejó sin implementar. `table_tasks` publicadas por el master, que notifican a sus destinatarios (#77), con entregas que se acumulan y no bloquean (#63, #70, #76). **Archivos**: `files` con nombre físico por id (#80), `content_hash` para deduplicar, `file_type`, `public_audience` (#64) y `last_used_at`; `StorageService` detrás de interfaz (#15), compresión al guardar y job de retención por desuso (#75); `table_files` sin duplicar el archivo (#79).
+
+**Frontend** — Wizard de creación completo: tipo, sistema, tags, plataformas, fecha de inicio, duración, sesiones, cupo y agenda. `ScheduleEditor` en hora local, con la advertencia de choque en el explorador y el motivo del bloqueo en el botón de postularse. `/admin/catalogs` (#179). Sesiones y asistencia en `/master/tables/:id`. Publicar peticiones y ver entregas. `FilePicker` con subida o reutilización del historial (#65). Co-masters desde la pantalla del master — `POST /{id}/masters` existe desde E2 y nunca tuvo interfaz. El dashboard **`/master`** (#136).
 
 **El mínimo del jugador para poder probar**: en `/tables/:id` y `/my/tables/:id`, lectura de la agenda, las sesiones, las peticiones publicadas y los archivos públicos. Solo lectura.
 
@@ -113,7 +115,7 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **Todo lo que el jugador hace con lo que el master publicó.**
 
-**Backend** — `task_submissions` + `submission_files` (#63, #76). `registration_files` para el archivo de personaje en la postulación. Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56). Retirar una postulación, que es el borrado que #175 dejó anotado para esta fase.
+**Backend** — `task_submissions` + `submission_files` (#63, #76). `registration_files` para el archivo de personaje en la postulación. Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56). **Retirar una postulación ya no está acá**: se adelantó a F1, porque la notificación de choque de horarios (#178) pide una acción que sin ella no existe.
 
 **Frontend** — `/my/tables/:id` completo: agenda en hora local, sesiones, su asistencia y sus peticiones. Entregar respuestas con adjuntos. Archivo de personaje al postularse, sobre el `FilePicker` de F1. **`/my/files`** (#65) y **`/my/history`** (#133). Filtros del explorador por sistema, tag y plataforma — es donde el buscador estrena `/tag`, el caso que motivó el diseño de #164. **`/profile`** y **`/users/:id`** con lo que exista; el karma llega en F4.
 
@@ -123,9 +125,9 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **Revisión, moderación de flujo y administración.**
 
-**Backend** — `approval_requests` como mecanismo único para todo pedido con aprobación, con reserva (#42, #78, #90, #100). Pausa pedida por un master (#32) y veto acotado a la mesa, aplicado por el `Primary` y pedible por un `Secondary` (#39, #71). Administración de catálogos: aceptar, clasificar, fusionar y dar de baja sin romper vínculos (#55, #57, #59, #81). `system_settings` (#141): la tabla clave-valor, el `SettingsService` con accesores tipados y la auditoría de cada cambio; los valores que hoy son constantes —karma inicial, justificación del rechazo automático (#34)— pasan a leerse por el service. El service que otorga roles, con la exclusión `Admin`/`Owner` que #169 dejó pendiente, y el bloqueo de cuentas (#84).
+**Backend** — `approval_requests` como mecanismo único para todo pedido con aprobación, con reserva (#42, #78, #90, #100). Pausa pedida por un master (#32) y veto acotado a la mesa, aplicado por el `Primary` y pedible por un `Secondary` (#39, #71). **La administración de catálogos ya no está acá**: se adelantó a F1 (#179) — dejarla en esta fase le abría a F1 el hueco de proponer valores que nadie podía aceptar. `system_settings` (#141): la tabla clave-valor, el `SettingsService` con accesores tipados y la auditoría de cada cambio; los valores que hoy son constantes —karma inicial, justificación del rechazo automático (#34)— pasan a leerse por el service. El service que otorga roles, con la exclusión `Admin`/`Owner` que #169 dejó pendiente, y el bloqueo de cuentas (#84).
 
-**Frontend** — **`/admin/queue`**, la bandeja compartida con reserva; al nacer, Aprobar y Pedir cambios **se mudan ahí** desde `/admin/tables` (#176). **`/admin/tables`** completo: todas las mesas, cualquier estado, filtros y `?q=` (#176), con los botones de pausa y reanudación que hoy tienen endpoint y ninguna pantalla (#163). **`/admin/catalogs`**, **`/admin/users`**, **`/admin/settings`** y **`/admin/requests`**.
+**Frontend** — **`/admin/queue`**, la bandeja compartida con reserva; al nacer, Aprobar y Pedir cambios **se mudan ahí** desde `/admin/tables` (#176). **`/admin/tables`** completo: todas las mesas, cualquier estado, filtros y `?q=` (#176), con los botones de pausa y reanudación que hoy tienen endpoint y ninguna pantalla (#163). **`/admin/users`**, **`/admin/settings`** y **`/admin/requests`** — `/admin/catalogs` llegó en F1 (#179).
 
 La bandeja funciona **por HTTP** en esta fase; el vivo es F5.
 
@@ -164,7 +166,7 @@ Para leer las decisiones ya escritas, que citan la numeración anterior:
 | Etapa vieja | Dónde vive ahora |
 |---|---|
 | E2 sub-rebanada 2 — `approval_requests`, bandeja, veto | **F3** |
-| E2 sub-rebanada 3 — catálogos | Consumo y propuesta en **F1**; administración en **F3** |
+| E2 sub-rebanada 3 — catálogos | **F1 completo**: consumo, propuesta y administración (#179) |
 | E2 sub-rebanada 4 — `system_settings` | **F3** |
 | E2 sub-rebanada 5 — `/admin/users`, `/master`, `/my/history`, `/admin/requests`, `/admin/tables` completo | `/master` en **F1**, `/my/history` en **F2**, el resto en **F3** |
 | E3 — sesiones y peticiones | Lo que publica el master en **F1**; lo que entrega el jugador en **F2** |
@@ -217,7 +219,55 @@ Los puntos 6 y 7 son el corte entre fases: **no se arranca la siguiente sin ello
 
 Al terminar F5 no puede quedar ninguna regla de §5 sin implementar ni ninguna ruta del sitemap sin construir.
 
-## 7. Fuera de estas fases
+## 7. Cómo se ejecuta cada rebanada
+
+Vale para F1 a F5 (#181). No es una sugerencia por rebanada: es el procedimiento.
+
+### El paso 0 no es un agente
+
+**El contrato se escribe en el hilo principal, antes de repartir**: la lista de endpoints —verbo, ruta, `record` de entrada, `record` de salida, códigos de estado—, las rutas nuevas del sitemap y las ramas nuevas de `queryKeys`.
+
+Sin esto los dos constructores divergen y el trabajo de uno se tira: el frontend no puede esperar a que el backend exista para empezar, y si adivina la forma del DTO, adivina mal. Es lo que hace que el paralelismo ahorre tiempo en vez de gastarlo.
+
+### Los tres agentes
+
+| Agente | Alcance de archivos | Qué entrega | Skills |
+|---|---|---|---|
+| **A1 · Backend** | solo `backend/` | `@Entity`, migración Flyway, repository, service, DTO, mapper, controller — **y el test unitario de cada regla de negocio que escribe** | `nuevo-endpoint-java`, `er-diagram-sync`, `tests-java` |
+| **A2 · Frontend** | solo `frontend/` | tipos derivados del contrato, `features/<dominio>/`, componentes, pantallas, i18n — **y sus tests de Vitest** | `nuevo-componente-react` |
+| **A3 · Verificación** | transversal, lectura + tests | corre las cuatro suites, escribe lo que ningún constructor cubre, recorre el camino manual | `tests-java` |
+
+**A1 y A2 corren en paralelo** una vez que existe el contrato: tocan directorios disjuntos, así que comparten el árbol de trabajo y no hace falta un worktree aparte. **A3 arranca cuando los dos terminaron.**
+
+### A3 no es "el que escribe los tests"
+
+Es la parte que más fácil se malinterpreta. La regla dura 7 pide que toda regla de negocio nueva llegue con su test unitario **con ella, escrito por quien la escribió**. Un constructor que entrega lógica pelada y deja que otro le ponga los tests después produce tests que describen lo que el código hace, no lo que la regla exige — que es exactamente el bug que nadie encuentra.
+
+Lo que A3 aporta es el nivel que ningún constructor puede cubrir solo:
+
+1. Las **invariantes de concurrencia** con Testcontainers — las que MySQL no garantiza (§1).
+2. El **flujo principal en Playwright**, que cruza backend y frontend y por definición no es de ninguno de los dos.
+3. Los **cuatro estados obligatorios** de cada pantalla nueva, verificados y no asumidos.
+4. El **camino manual** de la rebanada, de punta a punta.
+5. **La salida real de las cuatro suites, reportada.** Una rebanada con tests en rojo no está terminada; si algo queda fuera, se dice cuál y por qué.
+
+**A3 usa el backend y el frontend que ya están corriendo.** No levanta instancias paralelas en otros puertos.
+
+### El cuarto agente, en las rebanadas pesadas
+
+**A4 · Revisor**, entre los constructores y A3: lee el diff contra las reglas duras de `CLAUDE.md` y las de capa de `arquitectura.md` §2.2. Un controller que llama a un repository, un `Map<String, Object>` cruzando HTTP, un string en el JSX sin `t()` o un valor de color suelto se ven en el diff en un minuto y cuestan una tarde si los encuentra un test.
+
+Se usa donde la rebanada toca varios flujos a la vez o algo fuera del proceso —el sistema de archivos, un job—; en las livianas, A3 alcanza.
+
+### El cierre vuelve al hilo principal
+
+Documentación sincronizada en el mismo commit, inventario de archivos nuevos, ayuda escrita (#167, #168), y **un solo commit por rebanada** con su push. **Los agentes no commitean**: un commit por agente rompe el punto 5 de las reglas de git, que pide un mensaje que describa todo lo que se hizo.
+
+### Qué se le pasa a cada agente
+
+Todo agente arranca en frío y no hereda la conversación. Cada invocación lleva, sí o sí: la rebanada y su alcance, el contrato del paso 0, las decisiones `#n` que su parte implementa, los archivos existentes que tiene que seguir como patrón, y **su límite de directorio**. A un agente al que no se le dice "solo `backend/`" toca `frontend/` y pisa al otro.
+
+## 8. Fuera de estas fases
 
 Nada de esto entra en F1–F5, y ninguna fase debe derivar hacia ellos sin decisión explícita:
 

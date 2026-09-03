@@ -5,6 +5,16 @@ stateDiagram-v2
     direction TB
 
     [*] --> Preparation : el master crea la mesa
+    [*] --> Unassigned : el admin crea la mesa<br/>sin ser su master (#72)
+
+    note right of Unassigned
+        Le falta dueño. Al asignarle
+        Primary (y opcionalmente
+        Secondary) salta la revision
+        y abre directo.
+    end note
+
+    Unassigned --> Opened : el admin asigna masters
 
     Preparation --> ChangesRequested : el admin pide correcciones<br/>(justificacion + aviso al master)
     ChangesRequested --> Preparation : el master corrige y reenvia
@@ -40,6 +50,7 @@ stateDiagram-v2
         visibilidad de perfiles.
     end note
 
+    Unassigned --> Canceled
     Preparation --> Canceled
     ChangesRequested --> Canceled
     Opened --> Canceled
