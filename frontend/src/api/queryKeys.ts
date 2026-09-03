@@ -12,11 +12,11 @@ export const queryKeys = {
     types: () => ['tables', 'types'] as const,
   },
   sessions: {
-    /** El calendario de una mesa, como lo ve quien la dirige. Lista entera, no paginada. */
+    /** A table's calendar, as the people running it see it. The whole list, never paginated. */
     list: (tableId: string) => ['sessions', 'list', tableId] as const,
     /**
-     * El calendario del jugador y su asistencia. Rama aparte de `list` y no un filtro suyo: son dos
-     * respuestas distintas del servidor y quien lee una casi nunca puede leer la otra.
+     * The player's own calendar and attendance. Its own branch rather than a filter over `list`:
+     * they are two different answers from the server, and whoever reads one can rarely read the other.
      */
     mine: (tableId: string) => ['sessions', 'mine', tableId] as const,
   },

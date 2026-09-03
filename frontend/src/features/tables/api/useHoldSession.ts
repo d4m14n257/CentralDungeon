@@ -5,13 +5,14 @@ import { queryKeys } from '@/api/queryKeys'
 import { sessionsApi } from './sessionsApi'
 
 /**
- * El master declarando que una sesión se jugó (#195).
+ * The master declaring that a session was played (#195).
  *
- * Es una acción propia y no un efecto de registrar la asistencia: «jugamos» y «vino esta gente» son
- * dos hechos, y deducir uno del otro dejaría marcada como jugada una sesión que se suspendió.
+ * It is its own action and not a side effect of recording attendance: "we played" and "these people
+ * came" are two facts, and inferring one from the other would silently mark as played a session that
+ * was called off.
  *
- * @param tableId la mesa del calendario que se invalida
- * @returns la mutación, que toma el id de la sesión
+ * @param tableId the table whose calendar is invalidated
+ * @returns the mutation, taking the session id
  */
 export function useHoldSession(tableId: string) {
   const queryClient = useQueryClient()

@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils'
 import type { TableSessionStatus } from '../types'
 
 /**
- * El color nunca es el único portador de información (frontend-diseno.md §3): siempre punto +
- * etiqueta. Clases completas y estáticas a propósito — Tailwind 4 escanea literales en el código
- * fuente y no puede ver un nombre de clase armado con un template string.
+ * Colour is never the only carrier of information (frontend-diseno.md §3): always a dot plus a
+ * label. The class names are complete and static on purpose — Tailwind 4 scans the source for
+ * literals and cannot see a class name built out of a template string.
  */
 const STATE_CLASSES: Record<TableSessionStatus, { badge: string; dot: string }> = {
   Scheduled: { badge: 'bg-state-open-bg text-state-open-fg', dot: 'bg-state-open-dot' },
@@ -16,10 +16,10 @@ const STATE_CLASSES: Record<TableSessionStatus, { badge: string; dot: string }> 
 }
 
 /**
- * El estado de una sesión, como badge. Sus variantes salen de un `Record` sobre
- * `TableSessionStatus`, así que no se puede agregar un estado sin decidir cómo se ve (§3.2 regla 9).
+ * A session's status, as a badge. Its variants come from a `Record` over `TableSessionStatus`, so a
+ * new status cannot be added without deciding how it looks (§3.2 regla 9).
  *
- * @param props.status el estado de la sesión
+ * @param props.status the session's status
  */
 export function SessionStatusBadge({ status }: { status: TableSessionStatus }) {
   const { t } = useTranslation('tables')

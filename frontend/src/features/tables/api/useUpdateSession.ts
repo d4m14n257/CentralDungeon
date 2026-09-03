@@ -6,13 +6,13 @@ import { sessionsApi } from './sessionsApi'
 import type { UpdateSessionRequest } from '../types'
 
 /**
- * El master corrigiendo una sesión: su fecha, sus notas, o las dos.
+ * The master correcting a session: its date, its notes, or both.
  *
- * Invalida el calendario entero y no parchea la fila: mover una fecha reordena cómo se lee la
- * tanda, y el servidor es quien sabe qué quedó pendiente después.
+ * It invalidates the whole calendar instead of patching the one row: moving a date changes how the
+ * run reads, and the server is what knows what is still pending afterwards.
  *
- * @param tableId la mesa del calendario que se invalida
- * @returns la mutación, que toma el id de la sesión y los campos nuevos
+ * @param tableId the table whose calendar is invalidated
+ * @returns the mutation, taking the session id and the new fields
  */
 export function useUpdateSession(tableId: string) {
   const queryClient = useQueryClient()

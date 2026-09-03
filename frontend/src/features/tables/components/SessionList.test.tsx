@@ -12,11 +12,11 @@ function session(overrides: Partial<SessionListItem> & Pick<SessionListItem, 'id
 }
 
 describe('SessionList', () => {
-  /** Lo que llega es UTC y lo que se lee es hora local (#22): el día se corre uno para atrás. */
+  /** What arrives is UTC and what is read is local time (#22): the day moves one back. */
   it('shows a UTC instant in the reader zone, not in UTC', () => {
     render(<SessionList sessions={[session({ id: 's1', sequenceNumber: 1 })]} timeZone={BUENOS_AIRES} />)
 
-    // Miércoles 01:00 UTC es martes 22:00 en Buenos Aires: el día tiene que ser el 8, no el 9.
+    // Wednesday 01:00 UTC is Tuesday 22:00 in Buenos Aires: the day has to be the 8th, not the 9th.
     expect(screen.getByText(/8 sept/)).toBeInTheDocument()
     expect(screen.getByText(/22:00/)).toBeInTheDocument()
   })
@@ -45,7 +45,7 @@ describe('SessionList', () => {
     expect(screen.getByText('Jugada')).toBeInTheDocument()
   })
 
-  /** `Unknown` no es una ausencia: es que nadie registró nada, y no se muestra como un dato (#137). */
+  /** `Unknown` is not an absence: it means nobody recorded anything, and it is not shown as data (#137). */
   it('shows my attendance when there is one, and stays silent when there is not', () => {
     render(
       <SessionList

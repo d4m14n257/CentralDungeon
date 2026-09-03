@@ -97,9 +97,9 @@ export interface GameTableDetail {
   /** The weekly agenda, in UTC (#22). Ordered as a week reads. */
   schedule: TableScheduleEntry[]
   /**
-   * El calendario materializado (#26, #33): fechas, no la forma semanal. Viaja con el detalle y no
-   * en un endpoint propio porque esta lectura ya decide quién puede ver la mesa. Vacío hasta que la
-   * mesa abre, y en pausa trae solo lo que ya pasó (#32).
+   * The materialized calendar (#26, #33): dates, not the weekly shape. It travels inside the detail
+   * rather than on an endpoint of its own because this read already decides who may see the table.
+   * Empty until the table opens, and while it is paused it carries only what already happened (#32).
    */
   sessions: PublicSession[]
   /** Each value under the alias its master chose, never rewritten to the group's canonical one (#58). */
@@ -118,20 +118,20 @@ export interface GameTableDetail {
 }
 
 /**
- * Lo que le pasó a una sesión materializada (#33). Unión de literales y no un `enum` de TS, por el
- * mismo motivo que `GameTableStatus`: es lo que obliga a un `Record<TableSessionStatus, …>` a cubrir
- * los tres casos al mapear a etiquetas o a variantes de badge.
+ * What became of a materialized session (#33). A union of literals and not a TS `enum`, for the same
+ * reason as `GameTableStatus`: it is what forces a `Record<TableSessionStatus, …>` to cover all
+ * three cases when mapping to labels or badge variants.
  */
 export type TableSessionStatus = 'Scheduled' | 'Held' | 'Cancelled'
 
 /**
- * Si alguien estuvo en una sesión (#36). **Los cuatro valores no se colapsan en dos** (#137): una
- * falta avisada y un plantón son hechos distintos, y `Unknown` significa que nadie registró nada —
- * queda fuera del denominador de todo conteo.
+ * Whether somebody was at a session (#36). **The four values do not collapse into two** (#137): a
+ * warned absence and a no-show are different facts, and `Unknown` means nobody recorded anything —
+ * it stays out of the denominator of every count.
  */
 export type AttendanceStatus = 'Present' | 'Absent' | 'Excused' | 'Unknown'
 
-/** Una línea del padrón de una sesión: quién, y qué se registró de esa persona. */
+/** One line of a session's roster: who, and what was recorded for them. */
 export interface SessionAttendanceEntry {
   userId: string
   userName: string
@@ -139,39 +139,40 @@ export interface SessionAttendanceEntry {
 }
 
 /**
- * Espejo de TableSessionResponse — una sesión como la ve quien dirige la mesa, con sus notas y el
- * padrón completo. **Es el tipo base de las sesiones**: la vista del jugador se deriva de él (#3.2).
+ * Mirror of TableSessionResponse — a session as the people running the table see it, with its notes
+ * and the whole roster. **It is the base type for sessions**: the player's view derives from it (#3.2).
  */
 export interface TableSession {
   id: string
-  /** Qué sesión de la tanda es, desde 1. Una cancelada conserva su número y la reposición toma el siguiente (#194). */
+  /** Which session of the run this is, from 1. A cancelled one keeps its number and the replacement takes the next (#194). */
   sequenceNumber: number
-  /** Cuándo ocurre, **en UTC** (#22). La conversión a hora local pasa una sola vez, por `lib/date.ts`. */
+  /** When it happens, **in UTC** (#22). The conversion to local time happens once, through `lib/date.ts`. */
   scheduledAt: string
   status: TableSessionStatus
-  /** Lo que el master escribió sobre la sesión. Nunca llega a un jugador. */
+  /** What the master wrote about the session. It never reaches a player. */
   notes: string | null
   attendance: SessionAttendanceEntry[]
 }
 
 /**
- * Espejo de PublicSessionResponse — la sesión como la ve cualquiera que mire la mesa: cuándo es y
- * cómo salió. Derivada del tipo base con `Pick` (regla dura 6); ni las notas ni el padrón viajan acá.
+ * Mirror of PublicSessionResponse — the session as anybody looking at the table sees it: when it is
+ * and how it went. Derived from the base type with `Pick` (regla dura 6); neither the notes nor the
+ * roster travel here.
  */
 export type PublicSession = Pick<TableSession, 'id' | 'sequenceNumber' | 'scheduledAt' | 'status'>
 
 /**
- * Espejo de PlayerSessionResponse — la misma sesión, vista por quien juega. Derivada del tipo base
- * con `Omit` (regla dura 6): lo que cambia es que no lleva notas ni el padrón ajeno, solo *mi*
- * asistencia (#121).
+ * Mirror of PlayerSessionResponse — the same session, seen by the person playing. Derived from the
+ * base type with `Omit` (regla dura 6): what changes is that it carries neither notes nor anybody
+ * else's roster, only *my* attendance (#121).
  */
 export type PlayerSession = Omit<TableSession, 'notes' | 'attendance'> & { myAttendance: AttendanceStatus }
 
 /**
- * Espejo de AttendanceSummaryResponse — la asistencia histórica de alguien en una mesa (#137).
+ * Mirror of AttendanceSummaryResponse — somebody's historical attendance on a table (#137).
  *
- * **Tres números y nunca un porcentaje**: una razón escondería justo la distinción que importa.
- * `registered` es el denominador y cuenta solo las sesiones **con algo registrado**.
+ * **Three numbers and never a percentage**: a ratio would hide exactly the distinction that matters.
+ * `registered` is the denominator and counts only the sessions **with something recorded**.
  */
 export interface AttendanceSummary {
   present: number
@@ -180,30 +181,30 @@ export interface AttendanceSummary {
   registered: number
 }
 
-/** Espejo de MySessionsResponse — lo que lee `/my/tables/:id`: mi calendario y mi asistencia. */
+/** Mirror of MySessionsResponse — what `/my/tables/:id` reads: my calendar and my attendance. */
 export interface MySessions {
   sessions: PlayerSession[]
   summary: AttendanceSummary
 }
 
 /**
- * Espejo de UpdateSessionRequest — el master corrigiendo una sesión.
+ * Mirror of UpdateSessionRequest — the master correcting a session.
  *
- * Reemplaza los dos campos, no parchea (#189): unas notas ausentes las vacían. La fecha es la única
- * excepción — ausente significa «no la muevas», porque una sesión siempre ocurre en algún instante.
+ * It replaces both fields rather than patching them (#189): absent notes clear them. The date is the
+ * one exception — absent means "do not move it", because a session always happens at some instant.
  */
 export interface UpdateSessionRequest {
-  /** El instante nuevo, **en UTC** (#22), o null para dejar la fecha donde está. */
+  /** The new instant, **in UTC** (#22), or null to leave the date where it is. */
   scheduledAt?: string | null
   notes?: string | null
 }
 
-/** Espejo de AttendanceEntryRequest — una línea del padrón de entrada. */
+/** Mirror of AttendanceEntryRequest — one line of the roster on the way in. */
 export type AttendanceEntryRequest = Pick<SessionAttendanceEntry, 'userId' | 'attendance'>
 
 /**
- * Espejo de RecordAttendanceRequest. El padrón viaja entero porque así se completa en pantalla; a
- * quien se deja afuera de la lista no se le toca la fila.
+ * Mirror of RecordAttendanceRequest. The roster travels whole because that is how it is filled in on
+ * screen; anybody left out of the list has their row left alone.
  */
 export interface RecordAttendanceRequest {
   attendance: AttendanceEntryRequest[]

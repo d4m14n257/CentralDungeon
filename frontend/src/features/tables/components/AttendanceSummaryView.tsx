@@ -3,22 +3,24 @@ import { useTranslation } from 'react-i18next'
 import type { AttendanceSummary } from '../types'
 
 interface AttendanceSummaryViewProps {
-  /** Los tres números y su denominador, como los devuelve el servidor. */
+  /** The three counts and their denominator, exactly as the server returns them. */
   summary: AttendanceSummary
 }
 
 /**
- * La asistencia histórica de alguien en una mesa (#137).
+ * Somebody's historical attendance on a table (#137).
  *
- * **Tres números y nunca un porcentaje.** Una razón escondería justo lo que importa: faltar
- * avisando y no aparecer son hechos distintos, y colapsarlos vuelve la asistencia inexplicable —
- * es #98 aplicado un nivel más abajo. Quien lee saca su conclusión mejor con los tres números que
- * con un promedio que ya decidió por él.
+ * **Three numbers and never a percentage.** A ratio would have decided for the reader, and the
+ * distinction it hides is the one that matters: missing after warning and simply not turning up are
+ * different facts, and collapsing them makes attendance unexplainable — it is #98 applied one level
+ * down. The reader draws a better conclusion from the three numbers than from an average that
+ * already drew it for them.
  *
- * El denominador son las sesiones **con algo registrado**: una mesa de doce que arrancó ayer tiene
- * once sin registrar, y contarlas haría ver a todos como ausentes crónicos.
+ * The denominator is the sessions **with something recorded**: a table of twelve that started
+ * yesterday has eleven unrecorded ones, and counting those would make everybody read as a chronic
+ * absentee.
  *
- * @param props.summary la asistencia a mostrar
+ * @param props.summary the attendance to show
  */
 export function AttendanceSummaryView({ summary }: AttendanceSummaryViewProps) {
   const { t } = useTranslation('tables')

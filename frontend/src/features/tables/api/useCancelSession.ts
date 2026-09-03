@@ -6,13 +6,13 @@ import { sessionsApi } from './sessionsApi'
 import type { TableSession } from '../types'
 
 /**
- * El master cancelando una sesión — y la mesa recuperándola al final (#194).
+ * The master calling off a session — and the table getting it back at the end (#194).
  *
- * La respuesta es el calendario entero porque la cancelación y su reposición son un solo cambio, así
- * que se escribe directo en la caché en vez de invalidar y volver a pedir.
+ * The response is the whole calendar, because the cancellation and its replacement are one change,
+ * so it is written straight into the cache instead of invalidating and asking again.
  *
- * @param tableId la mesa del calendario
- * @returns la mutación, que toma el id de la sesión a cancelar
+ * @param tableId the table's calendar
+ * @returns the mutation, taking the id of the session to call off
  */
 export function useCancelSession(tableId: string) {
   const queryClient = useQueryClient()

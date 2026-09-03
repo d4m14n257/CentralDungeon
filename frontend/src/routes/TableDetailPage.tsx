@@ -159,8 +159,8 @@ export function TableDetailPage() {
           </section>
         )}
 
-        {/* El calendario real, no la forma semanal: una vez que la mesa se pausó y volvió, las dos
-            dejan de coincidir, y las fechas son lo que sirve para decidir si postularse (#26, #33). */}
+        {/* The real calendar, not the weekly shape: once a table has been paused and resumed the two
+            stop matching, and the dates are what somebody deciding whether to apply needs (#26, #33). */}
         {table.sessions.length > 0 && (
           <section>
             <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('sessions.calendarTitle')}</h2>

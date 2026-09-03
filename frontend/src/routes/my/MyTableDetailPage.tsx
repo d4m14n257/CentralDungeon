@@ -11,12 +11,12 @@ import { browserTimeZone, formatSlot, utcSlotToLocal } from '@/lib/date'
 import { ApiError } from '@/types/api'
 
 /**
- * Mi calendario y mi asistencia en esta mesa. Bloque propio con su query, no algo que la página le
- * pase hacia abajo: cada bloque de una pantalla compuesta recibe un id y busca lo suyo (§3.1.5).
+ * My calendar and my attendance on this table. Its own block with its own query, not something the
+ * page passes down: each block of a composed screen takes an id and fetches its own data (§3.1.5).
  */
 function MySessionsSection({ tableId }: { tableId: string }) {
   const { t } = useTranslation('tables')
-  // isLoadingError, no isError: ver docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, error, isLoadingError, refetch } = useMySessions(tableId)
 
   if (isPending) {
@@ -38,7 +38,7 @@ function MySessionsSection({ tableId }: { tableId: string }) {
       <section className="space-y-2">
         <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('sessions.myAttendanceTitle')}</h2>
         <AttendanceSummaryView summary={mine.summary} />
-        {/* Los tres números se explican en la ayuda, con su #ref estable (#137, #167, #168). */}
+        {/* The three numbers are explained in the help, under its stable #ref (#137, #167, #168). */}
         <Link to={helpPath('players', 'my-sessions')} className="text-fg-muted inline-block text-xs underline">
           {t('sessions.myAttendanceHelp')}
         </Link>
@@ -57,12 +57,12 @@ function MySessionsSection({ tableId }: { tableId: string }) {
 }
 
 /**
- * `/my/tables/:id` — mi mesa: su agenda, sus sesiones y **mi** asistencia, de solo lectura.
+ * `/my/tables/:id` — my table: its agenda, its sessions and **my** attendance, read-only.
  *
- * Es el mínimo del jugador que F1 necesita para poder probarse de punta a punta; el resto de la
- * pantalla —peticiones, archivos, compañeros— llega con F2 y F1.5.
+ * It is the minimum player-side screen F1 needs to be testable end to end; the rest of it — tasks,
+ * files, the other players — arrives with F1.5 and F2.
  *
- * Todo lo que se ve está en la hora de quien lee; lo que guarda el servidor es UTC (#22).
+ * Everything on it is in the reader's own time; what the server stores is UTC (#22).
  */
 export function MyTableDetailPage() {
   const { t, i18n } = useTranslation('tables')

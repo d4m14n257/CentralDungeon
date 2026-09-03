@@ -6,34 +6,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import type { AttendanceStatus, SessionAttendanceEntry } from '../types'
 
-/** Los cuatro valores, en el orden en que se eligen: lo normal primero, `Unknown` último por ser el que deshace. */
+/** The four values, in the order they are picked: the usual ones first, `Unknown` last as the one that undoes. */
 const ATTENDANCE_OPTIONS: readonly AttendanceStatus[] = ['Present', 'Excused', 'Absent', 'Unknown'] as const
 
 interface AttendanceEditorProps {
-  /** El padrón que llegó del servidor: una línea por jugador activo, con o sin registro previo. */
+  /** The roster the server sent: one line per active player, with or without an earlier record. */
   roster: SessionAttendanceEntry[]
-  /** Si los controles están bloqueados mientras se guarda. */
+  /** Whether the controls are locked while a save is in flight. */
   isSaving: boolean
-  /** Guarda el padrón entero. Se llama con lo que hay en pantalla, no con lo que cambió. */
+  /** Saves the whole roster. It is called with what is on screen, not with what changed. */
   onSave: (attendance: Pick<SessionAttendanceEntry, 'userId' | 'attendance'>[]) => void
 }
 
 /**
- * El padrón de una sesión: un selector por jugador, y un solo botón de guardar (#36).
+ * A session's roster: one select per player, and a single save button (#36).
  *
- * **Se guarda entero, no línea por línea.** Un master mira la lista y dice qué pasó; guardar cada
- * selector por separado convertiría una decisión en cinco escrituras y dejaría estados a medio
- * guardar que la pantalla tendría que explicar.
+ * **It is saved whole, not line by line.** A master looks at the list and says what happened; saving
+ * each select on its own would turn one decision into five writes and leave half-saved states the
+ * screen would then have to explain.
  *
- * Registrar la asistencia **no** marca la sesión como jugada: eso es una acción aparte (#195).
+ * Recording attendance does **not** mark the session as played: that is a separate action (#195).
  *
- * @param props.roster   el padrón que devolvió el servidor
- * @param props.isSaving si hay un guardado en curso
- * @param props.onSave   qué hacer con el padrón completo
+ * @param props.roster   the roster the server returned
+ * @param props.isSaving whether a save is in flight
+ * @param props.onSave   what to do with the complete roster
  */
 export function AttendanceEditor({ roster, isSaving, onSave }: AttendanceEditorProps) {
   const { t } = useTranslation('tables')
-  // El padrón vive en estado local mientras se edita: es un formulario, no datos de servidor.
+  // The roster lives in local state while it is edited: it is a form, not server data.
   const [draft, setDraft] = useState<Record<string, AttendanceStatus>>(() =>
     Object.fromEntries(roster.map((line) => [line.userId, line.attendance])),
   )

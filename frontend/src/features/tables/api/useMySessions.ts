@@ -6,13 +6,13 @@ import { staleTime } from '@/config/query'
 import { sessionsApi } from './sessionsApi'
 
 /**
- * Mi calendario y mi asistencia en una mesa, para `/my/tables/:id`.
+ * My calendar and my attendance on a table, for `/my/tables/:id`.
  *
- * Las dos mitades son sobre el actor del token y no hay parámetro que pueda nombrar a otra persona,
- * que es lo que hace imposible pedirlas en nombre de nadie (#121).
+ * Both halves are about the actor of the token and there is no parameter that could name anybody
+ * else, which is what makes them impossible to ask for on someone's behalf (#121).
  *
- * @param tableId la mesa
- * @returns la query de mis sesiones y mi resumen de asistencia
+ * @param tableId the table
+ * @returns the query for my sessions and my attendance summary
  */
 export function useMySessions(tableId: string) {
   return useQuery({

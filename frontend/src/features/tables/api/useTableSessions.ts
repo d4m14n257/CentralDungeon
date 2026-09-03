@@ -6,13 +6,13 @@ import { staleTime } from '@/config/query'
 import { sessionsApi } from './sessionsApi'
 
 /**
- * El calendario de una mesa como lo ve quien la dirige, con notas y padrón.
+ * A table's calendar as the people running it see it, with notes and rosters.
  *
- * Mientras la mesa está en `Pause` el backend no devuelve las sesiones pendientes (#32, #33): una
- * pausa no promete fechas, así que la pantalla muestra lo jugado y lo cancelado, y nada más.
+ * While the table is in `Pause` the backend does not return the pending sessions (#32, #33): a pause
+ * promises no dates, so the screen shows what was played and what was called off, and nothing else.
  *
- * @param tableId la mesa
- * @returns la query del calendario
+ * @param tableId the table
+ * @returns the query for its calendar
  */
 export function useTableSessions(tableId: string) {
   return useQuery({

@@ -6,33 +6,33 @@ import { SessionStatusBadge } from './SessionStatusBadge'
 import type { AttendanceStatus, TableSession } from '../types'
 
 /**
- * Lo mínimo que hace falta para listar una sesión, derivado del tipo base con `Pick` (regla dura 6).
- * `myAttendance` es opcional porque solo la vista del jugador la tiene.
+ * The least a session needs to be listed, derived from the base type with `Pick` (regla dura 6).
+ * `myAttendance` is optional because only the player's view carries it.
  */
 export type SessionListItem = Pick<TableSession, 'id' | 'sequenceNumber' | 'scheduledAt' | 'status'> & {
   myAttendance?: AttendanceStatus
 }
 
 interface SessionListProps {
-  /** Las sesiones a mostrar, ya en el orden en que se juegan. */
+  /** The sessions to show, already in the order they are played. */
   sessions: SessionListItem[]
   /**
-   * La zona en la que mostrarlas. Parámetro y no constante (#111, #192): quien la use puede pasar
-   * la del perfil, y `browserTimeZone()` es solo el valor por defecto — alguien de viaje no movió
-   * su mesa.
+   * The zone to show them in. A parameter and not a constant (#111, #192): a caller can pass the
+   * one from the profile, and `browserTimeZone()` is only the default — somebody travelling has not
+   * moved their table.
    */
   timeZone?: string
 }
 
 /**
- * El calendario de una mesa, de solo lectura — lo que se ve en `/tables/:id` y en `/my/tables/:id`.
+ * A table's calendar, read-only — what `/tables/:id` and `/my/tables/:id` show.
  *
- * **Las fechas se muestran en la hora de quien lee** (#22). Lo que llega del servidor es UTC y la
- * conversión pasa una sola vez, acá, con `lib/date.ts`. El pie dice en qué zona se está mostrando,
- * porque un horario sin zona es una fecha que cada quien interpreta distinto.
+ * **The dates are shown in the reader's own time** (#22). What arrives from the server is UTC and
+ * the conversion happens once, here, through `lib/date.ts`. The footer names the zone it is showing,
+ * because a time with no zone is a date everybody reads differently.
  *
- * @param props.sessions las sesiones a listar
- * @param props.timeZone la zona en la que mostrarlas; por defecto, la del navegador
+ * @param props.sessions the sessions to list
+ * @param props.timeZone the zone to show them in; the browser's by default
  */
 export function SessionList({ sessions, timeZone = browserTimeZone() }: SessionListProps) {
   const { t, i18n } = useTranslation('tables')

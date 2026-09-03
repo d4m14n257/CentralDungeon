@@ -33,11 +33,11 @@ interface OutletContext {
 }
 
 /**
- * Una sesión y todo lo que se puede hacer con ella: corregir su fecha, escribir notas, marcarla
- * jugada, cancelarla y registrar quién vino.
+ * One session and everything that can be done to it: correct its date, write notes, mark it played,
+ * call it off, and record who came.
  *
- * Está plegada por defecto: un calendario de doce sesiones abiertas es una pantalla que no se puede
- * leer, y la cabecera ya dice lo único que se mira de un vistazo — cuándo es y cómo salió.
+ * It is collapsed by default: a calendar of twelve open sessions is a screen nobody can read, and
+ * the header already says the only thing that gets read at a glance — when it is and how it went.
  */
 function SessionRow({ session, tableId }: { session: TableSession; tableId: string }) {
   const { t, i18n } = useTranslation('master')
@@ -67,8 +67,8 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
   }
 
   async function handleCancel() {
-    // La reposición de #194 se avisa **antes** de confirmar, no después: es la mitad de lo que
-    // pasa al cancelar, y enterarse al ver una sesión nueva sería una sorpresa.
+    // The replacement of #194 is announced **before** confirming, not after: it is half of what
+    // cancelling does, and finding out by spotting a new session would be a surprise.
     const confirmed = await confirm({
       title: t('sessions.cancelConfirmTitle', { number: session.sequenceNumber }),
       description: t('sessions.cancelConfirmDescription'),
@@ -115,7 +115,7 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
             disabled={!isScheduled}
             onChange={(event) => setScheduledAt(event.target.value)}
           />
-          {/* La fecha se guarda en UTC (#22); acá se dice en qué zona se está escribiendo. */}
+          {/* The date is stored in UTC (#22); this says which zone it is being typed in. */}
           <p className="text-fg-subtle text-xs">{t('sessions.timeZone', { timeZone, ns: 'tables' })}</p>
         </div>
 
@@ -140,7 +140,7 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
             </Button>
           </div>
         ) : (
-          // Principio 2: un control gris que no dice por qué está gris es peor que no tener control.
+          // Principio 2: a greyed-out control that does not say why is worse than no control at all.
           <p className="text-fg-muted text-xs">{t(`sessions.locked.${session.status}`)}</p>
         )}
 
@@ -168,7 +168,7 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
 
 function SessionsPanel({ tableId, status }: OutletContext) {
   const { t } = useTranslation('master')
-  // isLoadingError, no isError: ver docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, refetch } = useTableSessions(tableId)
 
   if (isPending) {
@@ -179,8 +179,8 @@ function SessionsPanel({ tableId, status }: OutletContext) {
     return <ErrorState onRetry={() => void refetch()} />
   }
 
-  // Una mesa en pausa no promete fechas, así que el backend no manda las pendientes (#32, #33). El
-  // vacío tiene que decir eso y no parecer que se rompió algo.
+  // A paused table promises no dates, so the backend does not send the pending ones (#32, #33). The
+  // empty state has to say that, and not look like something broke.
   if (data.length === 0) {
     return (
       <EmptyState
@@ -212,11 +212,11 @@ function SessionsPanel({ tableId, status }: OutletContext) {
 }
 
 /**
- * La pestaña Sesiones de `/master/tables/:id`: el calendario materializado y las cuatro cosas que un
- * master hace con él — corregir una fecha, escribir notas, marcar jugada (#195) y cancelar, que
- * repone una sesión al final (#194).
+ * The Sessions tab of `/master/tables/:id`: the materialized calendar and the four things a master
+ * does with it — correct a date, write notes, mark it played (#195), and cancel, which adds a
+ * replacement session at the end (#194).
  *
- * Las fechas se escriben y se leen en la hora de quien mira; lo que viaja es UTC (#22).
+ * Dates are typed and read in the viewer's own time; what travels is UTC (#22).
  */
 export function MasterTableSessionsTab() {
   const context = useOutletContext<OutletContext>()

@@ -4,26 +4,27 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface IconActionProps extends Omit<ComponentProps<typeof Button>, 'children' | 'size'> {
-  /** Qué hace la acción, en palabras. Es el tooltip **y** el nombre accesible: un icono solo no dice nada. */
+  /** What the action does, in words. It is both the tooltip and the accessible name — an icon alone says nothing. */
   label: string
-  /** El icono. Se marca `aria-hidden` acá mismo, así el lector de pantalla anuncia `label` y no dos cosas. */
+  /** The icon. Marked `aria-hidden` here, so a screen reader announces `label` and not two things. */
   icon: ReactNode
 }
 
 /**
- * Un botón de icono con su tooltip, para las acciones de una fila o una ficha
- * (`frontend-diseno.md` §5) — el reemplazo del `ActionButtonDefault` del legacy.
+ * An icon button with its tooltip, for the actions of a row or a card
+ * (`frontend-diseno.md` §5) — the replacement for the legacy `ActionButtonDefault`.
  *
- * **El texto no es decoración**: viaja como `aria-label` además de como tooltip, porque un icono sin
- * nombre accesible es un botón que no existe para quien no lo ve. Y el tooltip no es la única forma
- * de saber qué hace: en táctil no hay hover, así que el nombre tiene que estar en el DOM igual.
+ * **The text is not decoration**: it travels as `aria-label` as well as a tooltip, because an icon
+ * with no accessible name is a button that does not exist for anyone who cannot see it. And the
+ * tooltip is not the only way to find out what the button does: there is no hover on touch, so the
+ * name has to be in the DOM regardless.
  *
- * El `TooltipProvider` va acá adentro y no en un layout: con `delayDuration` en 0 no hay demora
- * compartida que ganar subiéndolo, y así el componente funciona en cualquier árbol —incluido el de
- * un test— sin pedirle a quien lo usa que recuerde montar nada.
+ * The `TooltipProvider` lives in here rather than in a layout: with `delayDuration` at 0 there is no
+ * shared delay to gain by hoisting it, and this way the component works in any tree — a test's
+ * included — without asking its callers to remember to mount anything.
  *
- * @param props.label qué hace la acción, ya pasado por `t()`
- * @param props.icon  el icono a mostrar
+ * @param props.label what the action does, already passed through `t()`
+ * @param props.icon  the icon to show
  */
 export function IconAction({ label, icon, ...props }: IconActionProps) {
   return (

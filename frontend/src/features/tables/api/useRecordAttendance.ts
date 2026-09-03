@@ -6,13 +6,13 @@ import { sessionsApi } from './sessionsApi'
 import type { RecordAttendanceRequest } from '../types'
 
 /**
- * El master registrando quién estuvo en una sesión (#36).
+ * The master recording who was at a session (#36).
  *
- * El padrón se guarda entero de una vez: así se completa en pantalla, y un padrón a medio guardar
- * sería un estado que la pantalla tendría que explicar.
+ * The roster is saved as a whole: that is how it is filled in on screen, and a half-saved roster
+ * would be a state the screen then has to explain.
  *
- * @param tableId la mesa del calendario que se invalida
- * @returns la mutación, que toma el id de la sesión y el padrón completo
+ * @param tableId the table whose calendar is invalidated
+ * @returns the mutation, taking the session id and the whole roster
  */
 export function useRecordAttendance(tableId: string) {
   const queryClient = useQueryClient()

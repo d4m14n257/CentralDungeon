@@ -110,9 +110,9 @@ describe('the datetime-local round trip', () => {
 
 describe('formatDateTime and formatDate', () => {
   /**
-   * El backend serializa `LocalDateTime` sin offset — `2026-09-09T01:00:00` — y JavaScript lee una
-   * fecha así como hora **local**. Sin normalizarla, una sesión de las 01:00 UTC se mostraba como
-   * 01:00 a alguien tres horas atrás: justo el error que la conversión existe para evitar (#22).
+   * The backend serializes `LocalDateTime` with no offset — `2026-09-09T01:00:00` — and JavaScript
+   * reads a date like that as **local** time. Without normalizing it, a session at 01:00 UTC showed
+   * as 01:00 to somebody three hours behind: exactly the bug the conversion exists to prevent (#22).
    */
   it('reads a bare instant from the API as UTC and not as the reader wall clock', () => {
     expect(formatDateTime('2026-09-09T01:00:00', 'es', BUENOS_AIRES)).toMatch(/8 sept/)

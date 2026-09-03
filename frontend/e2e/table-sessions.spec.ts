@@ -1,22 +1,22 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 /**
- * F1.3 de punta a punta, contra el backend real: el calendario que se materializa al abrir la mesa,
- * las cuatro cosas que un master hace con él, y lo que ve el jugador en `/my/tables/:id`.
+ * F1.3 end to end, against the real backend: the calendar that gets materialized when the table
+ * opens, the four things a master does with it, and what the player sees on `/my/tables/:id`.
  *
- * Lo que ningún test unitario prueba y esto sí: que aprobar una mesa **crea las sesiones de verdad**
- * a partir de la agenda, que cancelar una repone otra al final (#194), y que la asistencia que el
- * master registra es la que el jugador ve, con los tres números de #137 y no con un porcentaje.
+ * What no unit test proves and this does: that approving a table **really creates the sessions** out
+ * of its agenda, that cancelling one adds a replacement at the end (#194), and that the attendance a
+ * master records is the one the player reads, as the three numbers of #137 and not as a percentage.
  *
- * Login por TestLoginController (perfil `test` del backend), igual que el resto de los specs.
+ * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
 
-/** Un viernes a las 20:00 locales, la franja típica de la comunidad. */
+/** A Friday at 20:00 local time, the community's usual slot. */
 const FRIDAY_EVENING = '20:00'
 
-/** Cuatro sesiones: suficiente para ver la numeración y la reposición sin llenar la pantalla. */
+/** Four sessions: enough to see the numbering and the replacement without filling the screen. */
 const TOTAL_SESSIONS = '4'
 
 async function testLogin(request: APIRequestContext, discordId: string, asMaster = false, asAdmin = false) {
@@ -34,12 +34,12 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 }
 
 /**
- * Arma una mesa completa: nombre, fecha de inicio, duración, una franja semanal y la cantidad de
- * sesiones. Los tres últimos son lo que la materialización necesita (#26, #33).
+ * Builds a complete table: name, start date, duration, one weekly slot and the session count. The
+ * last three are what materialization needs (#26, #33).
  *
- * @param page la pestaña, ya autenticada como master
- * @param name el nombre de la mesa
- * @returns el id de la mesa creada
+ * @param page the tab, already authenticated as a master
+ * @param name the table's name
+ * @returns the id of the created table
  */
 async function createTableWithCalendar(page: Page, name: string): Promise<string> {
   await page.goto('/master/tables/new')
@@ -62,7 +62,7 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
   return id as string
 }
 
-/** Aprueba la mesa desde `/admin/tables`, que es lo que dispara la materialización. */
+/** Approves the table from `/admin/tables`, which is what triggers materialization. */
 async function approve(page: Page, name: string) {
   await page.goto('/admin/tables')
   const row = page.getByRole('listitem').filter({ hasText: name })
@@ -72,8 +72,8 @@ async function approve(page: Page, name: string) {
 }
 
 /**
- * El escenario central: abrir la mesa crea las cuatro sesiones, y el master las corrige, las cierra
- * y las cancela desde la pestaña.
+ * The central scenario: opening the table creates the four sessions, and the master corrects, closes
+ * and cancels them from the tab.
  */
 test('opening a table materializes its calendar, and the master can run it', async ({ browser }) => {
   const tableName = `Mesa Sesiones E2E ${runId}`
@@ -86,14 +86,14 @@ test('opening a table materializes its calendar, and the master can run it', asy
 
     await master.page.goto(`/master/tables/${tableId}/sessions`)
 
-    // Las cuatro sesiones existen, numeradas, sin que nadie las haya escrito a mano.
+    // The four sessions exist, numbered, without anybody having typed them in.
     await expect(master.page.getByRole('button', { name: /^Sesión 1/ })).toBeVisible()
     await expect(master.page.getByRole('button', { name: /^Sesión 4/ })).toBeVisible()
 
-    // Marcar jugada es una acción propia, separada de la asistencia (#195).
+    // Marking a session played is its own action, separate from attendance (#195).
     await master.page.getByRole('button', { name: 'Marcar como jugada' }).first().click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-    // `exact`: el toast de confirmación dice «Sesión marcada como jugada» y también contiene la palabra.
+    // `exact`: the confirmation toast reads "Sesión marcada como jugada" and contains the word too.
     await expect(master.page.getByText('Jugada', { exact: true })).toBeVisible()
   } finally {
     await admin.context.close()
@@ -102,8 +102,8 @@ test('opening a table materializes its calendar, and the master can run it', asy
 })
 
 /**
- * #194 con el aviso antes de confirmar: cancelar una sesión repone otra al final, y la interfaz lo
- * dice **antes** de que el master apriete, no después de que aparezca una sesión que no esperaba.
+ * #194 with the warning up front: cancelling a session adds a replacement at the end, and the UI says
+ * so **before** the master commits, not after an unexpected session shows up.
  */
 test('cancelling a session warns about the replacement first, then adds it at the end', async ({ browser }) => {
   const tableName = `Mesa Reposicion E2E ${runId}`
@@ -118,7 +118,7 @@ test('cancelling a session warns about the replacement first, then adds it at th
     await expect(master.page.getByRole('button', { name: /^Sesión 5/ })).toBeHidden()
 
     await master.page.getByRole('button', { name: 'Cancelar sesión' }).nth(1).click()
-    // El motivo está en el diálogo, antes de confirmar: la mesa sigue jugando la misma cantidad.
+    // The reason is in the dialog, before confirming: the table still plays the same number.
     await expect(master.page.getByRole('dialog').getByText(/suma otra al final/)).toBeVisible()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
 
@@ -131,8 +131,8 @@ test('cancelling a session warns about the replacement first, then adds it at th
 })
 
 /**
- * El otro lado: el master registra la asistencia y el jugador la ve en `/my/tables/:id`, con los
- * tres números de #137 — nunca un porcentaje, que escondería la distinción que importa.
+ * The other side: the master records the attendance and the player reads it on `/my/tables/:id`, as
+ * the three numbers of #137 — never a percentage, which would hide the distinction that matters.
  */
 test('a player sees their own calendar and their attendance as three numbers', async ({ browser }) => {
   const tableName = `Mesa Asistencia E2E ${runId}`
@@ -146,7 +146,7 @@ test('a player sees their own calendar and their attendance as three numbers', a
     await approve(admin.page, tableName)
 
     await player.page.goto(`/tables/${tableId}`)
-    // La ficha pública ya muestra el calendario real, no solo la forma semanal.
+    // The public detail already shows the real calendar, not only the weekly shape.
     await expect(player.page.getByText('Sesión 1')).toBeVisible()
     await player.page.getByRole('button', { name: 'Postularme' }).click()
     await player.page.getByRole('dialog').getByRole('button', { name: 'Postularme' }).click()
@@ -158,7 +158,7 @@ test('a player sees their own calendar and their attendance as three numbers', a
 
     await master.page.goto(`/master/tables/${tableId}/sessions`)
     await master.page.getByRole('button', { name: /^Sesión 1/ }).click()
-    // El Select de shadcn no es un <select> nativo: se abre y se elige la opción de la lista.
+    // The shadcn Select is not a native <select>: it is opened and the option is picked from the list.
     await master.page.getByRole('combobox', { name: /^Asistencia de/ }).click()
     await master.page.getByRole('option', { name: 'Presente' }).click()
     await master.page.getByRole('button', { name: 'Guardar asistencia' }).click()
@@ -166,9 +166,9 @@ test('a player sees their own calendar and their attendance as three numbers', a
     await player.page.goto(`/my/tables/${tableId}`)
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
     await expect(player.page.getByText('Mis sesiones')).toBeVisible()
-    // El resumen, no la línea de la sesión: los dos dicen «Presente» y son cosas distintas.
+    // The summary, not the session row: both say "Presente" and they are different things.
     await expect(player.page.getByRole('term').filter({ hasText: 'Presente' })).toBeVisible()
-    // Tres números y su denominador; nunca un «1 de 4» ni un porcentaje (#137).
+    // Three numbers and their denominator; never a "1 of 4" and never a percentage (#137).
     await expect(player.page.getByText('Sesiones registradas')).toBeVisible()
     await expect(player.page.getByText('%')).toBeHidden()
   } finally {

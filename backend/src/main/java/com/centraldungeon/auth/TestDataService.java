@@ -61,11 +61,11 @@ public class TestDataService {
         delete("delete from Notification n where n.user.id in (" + E2E_USERS + ")");
         delete("delete from TableStatusChange c where c.gameTable.id in (" + E2E_TABLES + ") or c.changedBy.id in (" + E2E_USERS + ")");
         delete("delete from Master m where m.gameTable.id in (" + E2E_TABLES + ") or m.user.id in (" + E2E_USERS + ")");
-        // F1.2 y F1.1: la agenda y los vínculos de catálogo cuelgan de la mesa por clave compuesta.
-        // Sin estos cuatro, borrar las mesas rompe la foreign key y la limpieza responde 500 - que
-        // es lo que hace que la corrida siguiente encuentre la base llena y falle por paginación (#171, #172).
-        // F1.3: la asistencia cuelga de la sesión y la sesión de la mesa, así que van en ese orden y
-        // antes que la mesa. Es el mismo motivo que los cuatro de abajo (#171, #172).
+        // Attendance hangs off a session and a session off the table, so they go in that order and
+        // before the table itself. Same reason as the agenda and the catalog links below: all of
+        // them are keyed on the table, and deleting the tables first breaks the foreign key. The
+        // cleanup then answers 500, which is what leaves the next run with a full database and
+        // makes it fail on pagination (#171, #172).
         delete("delete from SessionAttendance a where a.session.gameTable.id in (" + E2E_TABLES + ") or a.id.userId in ("
                 + E2E_USERS + ")");
         delete("delete from TableSession ses where ses.gameTable.id in (" + E2E_TABLES + ")");

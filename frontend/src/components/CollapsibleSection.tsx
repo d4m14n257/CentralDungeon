@@ -4,33 +4,34 @@ import { useId, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 interface CollapsibleSectionProps {
-  /** El título de la sección, ya pasado por `t()`. */
+  /** The section's title, already passed through `t()`. */
   title: string
-  /** La línea que resume el contenido plegado, para no tener que abrirlo solo para saber qué hay. */
+  /** The line that sums up the collapsed content, so it does not have to be opened just to find out what is in it. */
   summary?: ReactNode
-  /** Las acciones de la cabecera. No abren ni cierran: viven al lado del control, no dentro de él. */
+  /** The header actions. They do not open or close: they sit next to the control, not inside it. */
   actions?: ReactNode
-  /** Si arranca abierta. La sección recuerda su estado mientras esté montada, no más allá. */
+  /** Whether it starts open. The section remembers its state while mounted, and no longer. */
   defaultOpen?: boolean
   children: ReactNode
 }
 
 /**
- * Un bloque plegable con título, resumen y acciones en la cabecera
- * (`frontend-diseno.md` §5) — el patrón que el legacy repetía en `CardComponent` y `ListComponent`.
+ * A collapsible block with a title, a summary and actions in its header
+ * (`frontend-diseno.md` §5) — the pattern the legacy repeated in `CardComponent` and `ListComponent`.
  *
- * **El control de plegado es un botón y las acciones están fuera de él.** Anidar un botón dentro de
- * otro es HTML inválido y, peor, vuelve impredecible qué pasa al tocar: quien quiere cancelar una
- * sesión no quiere además cerrar la ficha.
+ * **The collapse control is a button and the actions live outside it.** Nesting a button inside
+ * another is invalid HTML and, worse, makes it unpredictable what a tap does: somebody cancelling a
+ * session does not also want to close the card.
  *
- * El resumen existe para que plegado siga informando. Una sección que al cerrarse no dice nada
- * obliga a abrirlas todas, que es exactamente lo que plegar venía a evitar.
+ * The summary exists so that a collapsed section still tells you something. A section that says
+ * nothing when closed forces you to open all of them, which is exactly what collapsing was meant to
+ * avoid.
  *
- * @param props.title       el título
- * @param props.summary     qué mostrar en la cabecera cuando está plegada
- * @param props.actions     las acciones de la cabecera
- * @param props.defaultOpen si arranca abierta
- * @param props.children    el contenido plegable
+ * @param props.title       the title
+ * @param props.summary     what to show in the header while collapsed
+ * @param props.actions     the header actions
+ * @param props.defaultOpen whether it starts open
+ * @param props.children    the collapsible content
  */
 export function CollapsibleSection({ title, summary, actions, defaultOpen = false, children }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen)
