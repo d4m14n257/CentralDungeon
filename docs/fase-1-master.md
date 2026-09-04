@@ -552,6 +552,12 @@ El instrumento de esa revisión es un **artifact** — [*Revisión de cierre F1*
 1. **Las cuatro suites en verde**, con la salida real reportada.
 2. **Revisión de producto contra el artifact**: cada pantalla de F1 alcanzable **por navegación**, no por URL escrita a mano; cada una con sus cuatro estados; y el recorrido del rol Master cerrado de punta a punta, con los saltos donde depende de otro actor marcados.
 3. **Inventario de huérfanos triado**, uno por uno: *bug de F1* o *alcance de F2/F3 anotado a propósito*. Un hueco implícito es una sorpresa (`plan-desarrollo.md` §1). Lo relevado al abrir F1.7:
+
+   **Dos bugs de F1, de corregir antes de cerrar:**
+   - **El contexto Jugador no tiene navegación.** `/my/applications` y `/my/tables` no reciben **ni un solo enlace** en toda la aplicación —ni un `Link`, ni un `navigate`, ni siquiera un constructor en `config/paths.ts`— y `/my/tables/:id` cae con ellas porque solo se abre desde la segunda. Admin ganó su `AdminSectionNav` en F1.1 y Master su `MasterSectionNav` en F1.6, cada uno al pasar de una pantalla a dos; Jugador pasó de una a cinco desde E1 y nunca la tuvo. Es lo más urgente de la lista: el jugador es el actor de F2, y su navegación se construye ahora o F2 la hereda rota.
+   - **Tres de los siete tipos de notificación no llevan a ningún lado.** `notificationTarget()` resuelve destino para cuatro; `ScheduleConflict`, `SessionScheduled` y `SessionCanceled` caen en el `default` y devuelven `null`. El aviso llega, se lee, se marca como leído y el clic no abre nada. Los tres tienen destino evidente y nada en `decisiones.md` dice que deban ser solo informativos.
+
+   **Y cinco piezas que sí pueden esperar:**
    - `POST /{id}/pause` y `POST /{id}/resume` — construidos y **sin botón en ninguna pantalla**, anotado desde #163;
    - `GET /api/v1/files/{fileId}` — solo se consume `/content`;
    - `useUpdateFile`, `useDeleteFile` y `useCatalogValue` — hooks montados en **cero** pantallas;
