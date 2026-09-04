@@ -547,7 +547,7 @@ npx playwright test → 33 tests, todos verdes, contra el backend y el frontend 
 
 No es trabajo nuevo ni es de un agente: es el corte de `plan-desarrollo.md` §6, puntos 6 y 7, en el hilo principal. **Y no es solo correr las suites.** Los tests de cada rebanada ya corrieron en verde en su momento; lo que nadie miró todavía es el **producto entero**: si cada pantalla es alcanzable navegando, si cada endpoint tiene puerta, si el recorrido del master cierra de punta a punta.
 
-El instrumento de esa revisión es un **artifact** — *Revisión de cierre F1* — con el checklist, el diagrama de navegación del rol Master y el inventario de lo que quedó sin puerta en la UI. El detalle de los puntos 2 y 3 vive ahí y no se copia acá.
+El instrumento de esa revisión es un **artifact** — [*Revisión de cierre F1*](https://claude.ai/code/artifact/60e90c45-e336-4f2d-8c02-7bc6d06b4cb2) — con el checklist, el diagrama de navegación del rol Master y el inventario de lo que quedó sin puerta en la UI. El detalle de los puntos 2 y 3 vive ahí y no se copia acá.
 
 1. **Las cuatro suites en verde**, con la salida real reportada.
 2. **Revisión de producto contra el artifact**: cada pantalla de F1 alcanzable **por navegación**, no por URL escrita a mano; cada una con sus cuatro estados; y el recorrido del rol Master cerrado de punta a punta, con los saltos donde depende de otro actor marcados.
