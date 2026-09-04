@@ -3,6 +3,8 @@ package com.centraldungeon.tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.exception.ConflictException;
@@ -11,7 +13,9 @@ import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,9 +108,101 @@ class MasterServiceTest {
 
     @Test
     void isPrimaryOfIsFalseWhenThereIsNoMasterRow() {
-        when(masterRepository.findByGameTable_IdAndUser_Id("table-5", "nobody")).thenReturn(java.util.Optional.empty());
+        when(masterRepository.findByGameTable_IdAndUser_IdAndStatus("table-5", "nobody", MasterRowStatus.Created))
+                .thenReturn(Optional.empty());
 
         assertThat(masterService.isPrimaryOf("table-5", "nobody")).isFalse();
+    }
+
+    /**
+     * The row of a removed co-master survives as a record (#175), and membership has to stop
+     * counting it - otherwise removing somebody would take away their screens and leave their
+     * permissions.
+     */
+    @Test
+    void isMasterOfIgnoresARowThatWasRemoved() {
+        when(masterRepository.findByGameTable_IdAndUser_IdAndStatus("table-7", "removed", MasterRowStatus.Created))
+                .thenReturn(Optional.empty());
+
+        assertThat(masterService.isMasterOf("table-7", "removed")).isFalse();
+    }
+
+    @Test
+    void removesACoMaster() {
+        GameTable table = persistedTable("table-8");
+        Master primary = new Master(table, persistedUser("primary-1"), MasterType.Primary);
+        Master secondary = new Master(table, persistedUser("secondary-1"), MasterType.Secondary);
+        when(masterRepository.findByGameTableIdForUpdate("table-8")).thenReturn(List.of(primary, secondary));
+
+        masterService.removeMaster(table, "primary-1", "secondary-1");
+
+        assertThat(secondary.getStatus()).isEqualTo(MasterRowStatus.Deleted);
+        assertThat(primary.getStatus()).isEqualTo(MasterRowStatus.Created);
+    }
+
+    @Test
+    void rejectsASecondaryTryingToRemoveAnotherMaster() {
+        GameTable table = persistedTable("table-9");
+        Master primary = new Master(table, persistedUser("primary-1"), MasterType.Primary);
+        Master secondary = new Master(table, persistedUser("secondary-1"), MasterType.Secondary);
+        Master other = new Master(table, persistedUser("secondary-2"), MasterType.Secondary);
+        when(masterRepository.findByGameTableIdForUpdate("table-9")).thenReturn(List.of(primary, secondary, other));
+
+        assertThatThrownBy(() -> masterService.removeMaster(table, "secondary-1", "secondary-2"))
+                .isInstanceOf(ForbiddenActionException.class);
+        assertThat(other.getStatus()).isEqualTo(MasterRowStatus.Created);
+    }
+
+    /** A table with nobody in charge has nobody authorized to run it: hand the role over first (#73). */
+    @Test
+    void refusesToRemoveThePrimary() {
+        GameTable table = persistedTable("table-10");
+        Master primary = new Master(table, persistedUser("primary-1"), MasterType.Primary);
+        when(masterRepository.findByGameTableIdForUpdate("table-10")).thenReturn(List.of(primary));
+
+        assertThatThrownBy(() -> masterService.removeMaster(table, "primary-1", "primary-1")).isInstanceOf(ConflictException.class);
+        assertThat(primary.getStatus()).isEqualTo(MasterRowStatus.Created);
+    }
+
+    @Test
+    void refusesToRemoveSomebodyWhoDoesNotRunTheTable() {
+        GameTable table = persistedTable("table-11");
+        Master primary = new Master(table, persistedUser("primary-1"), MasterType.Primary);
+        when(masterRepository.findByGameTableIdForUpdate("table-11")).thenReturn(List.of(primary));
+
+        assertThatThrownBy(() -> masterService.removeMaster(table, "primary-1", "stranger")).isInstanceOf(ConflictException.class);
+    }
+
+    /**
+     * The composite key is (table, user), so adding back somebody who was removed cannot insert a
+     * second row - it has to bring the first one back.
+     */
+    @Test
+    void revivesTheRowOfSomebodyWhoHadBeenRemoved() {
+        GameTable table = persistedTable("table-12");
+        Master primary = new Master(table, persistedUser("primary-1"), MasterType.Primary);
+        Master removed = new Master(table, persistedUser("secondary-1"), MasterType.Secondary);
+        removed.setStatus(MasterRowStatus.Deleted);
+        removed.setDeletedAt(LocalDateTime.now());
+        when(masterRepository.findByGameTableIdForUpdate("table-12")).thenReturn(List.of(primary, removed));
+
+        masterService.addOrPromote(table, "primary-1", "secondary-1", MasterType.Secondary);
+
+        assertThat(removed.getStatus()).isEqualTo(MasterRowStatus.Created);
+        assertThat(removed.getMasterType()).isEqualTo(MasterType.Secondary);
+        verify(masterRepository, never()).save(any(Master.class));
+    }
+
+    /** A removed Primary must not be able to keep managing the table it was taken off. */
+    @Test
+    void rejectsARemovedMasterActing() {
+        GameTable table = persistedTable("table-13");
+        Master removed = new Master(table, persistedUser("primary-1"), MasterType.Primary);
+        removed.setStatus(MasterRowStatus.Deleted);
+        when(masterRepository.findByGameTableIdForUpdate("table-13")).thenReturn(List.of(removed));
+
+        assertThatThrownBy(() -> masterService.addOrPromote(table, "primary-1", "target", MasterType.Secondary))
+                .isInstanceOf(ForbiddenActionException.class);
     }
 
     private GameTable persistedTable(String id) {

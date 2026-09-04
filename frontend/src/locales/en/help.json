@@ -243,7 +243,18 @@
       "title": "Master and co-masters",
       "one": "Every table has one master and can have co-masters.",
       "primary": "The master is the one who decides about the table; co-masters help run it.",
-      "assign": "When an admin assigns masters, the first one they add is the master and the rest become co-masters."
+      "assign": "When an admin assigns masters, the first one they add is the master and the rest become co-masters.",
+      "add": "Only the table’s master adds, removes or promotes; a co-master cannot change who runs it.",
+      "cannotPlay": "Nobody can be a co-master of a table they already play at, nor play at one they run.",
+      "promote": "Handing the table over to a co-master leaves you as a co-master: there is one master per table.",
+      "removeKeeps": "Removing a co-master takes their access away at once, but the record that they ran the table stays; add them back and they get the same place.",
+      "cannotRemovePrimary": "The table’s master cannot be removed: hand the table over to somebody else first.",
+      "steps": {
+        "step1": "Open your table and go to the “Players” tab.",
+        "step2": "Find the person in the search box under “Who runs this table” and pick them: they come in as a co-master.",
+        "step3": "To hand the table over, press the crown next to their name and confirm.",
+        "step4": "To remove them, press the cross and confirm."
+      }
     },
     "deleting": {
       "title": "When a table is not going to happen",
@@ -302,6 +313,35 @@
         "step2": "Hit \"Add a file\" and pick whether it is preparation material or something from a session.",
         "step3": "Decide whether your players see it or whether it stays with whoever runs the table, then upload a file or pick one from \"My files\" or \"Published\".",
         "step4": "From the list you can change who sees it at any time, or take it off the table without deleting it."
+      }
+    },
+    "dashboard": {
+      "title": "Waiting on you",
+      "what": "“Waiting on you” is a work tray, not a summary with numbers: it lists only things you can resolve.",
+      "order": "The order is by time waited, not by volume: whatever has gone unanswered longest goes first.",
+      "kinds": "It lists unanswered candidates, overdue requests with people who did not hand anything in, played sessions with nothing recorded, tables an admin asked changes on, and tables whose start date has passed.",
+      "noReservation": "There is no reservation and no turn-taking: the work of a table has one owner and nobody competes with you for it.",
+      "empty": "Empty is good news, not an error: it means your tables are up to date.",
+      "notMetrics": "You will not find how many players you have or your average attendance here: neither number changes what you do next.",
+      "steps": {
+        "step1": "Pick the “Master” context at the top: you land straight on the tray.",
+        "step2": "Read the first row: it is what has been waiting longest.",
+        "step3": "Press “Resolve” and it takes you to the tab where that gets resolved."
+      }
+    },
+    "editTable": {
+      "title": "Editing a table",
+      "when": "You can edit while the table is in preparation, or when an admin asked for changes. Not after: the people who applied saw it as it was.",
+      "who": "Only the table’s master edits it; a co-master does not.",
+      "replaces": "Saving replaces the whole table, it does not patch field by field: anything you clear from a field ends up empty.",
+      "sets": "The agenda and the catalogs are replaced as sets too: what is on screen when you save is what stays.",
+      "conflict": "If the new agenda overlaps another table of yours, the save fails and the screen says which one.",
+      "resubmit": "Correcting does not send the table back for review: that is done from the “Status” tab.",
+      "steps": {
+        "step1": "Open your table and press “Edit” at the top right.",
+        "step2": "Change whatever needs changing: identity, catalogs, agenda or capacity.",
+        "step3": "Save the changes.",
+        "step4": "If an admin had asked for changes, go to “Status” and send the table back for review."
       }
     }
   },

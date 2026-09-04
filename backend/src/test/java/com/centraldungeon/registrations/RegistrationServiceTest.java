@@ -29,6 +29,7 @@ import com.centraldungeon.users.UserStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -323,9 +324,18 @@ class RegistrationServiceTest {
         when(scheduleConflictService.findClashWith("player-1", registration.getGameTable()))
                 .thenReturn(new CommittedTable("other", "El faro"));
 
+        // The code and the parameter, not the sentence: what the master reads is written by the
+        // frontend in their language (#197). This assertion used to look for the table's name inside
+        // the message, which is how the one Spanish sentence left in the backend went unnoticed.
         assertThatThrownBy(() -> registrationService.accept("reg-r3", "master-1"))
                 .isInstanceOf(ConflictException.class)
-                .hasMessageContaining("El faro");
+                .asInstanceOf(InstanceOfAssertFactories.type(ConflictException.class))
+                .satisfies(exception -> {
+                    // Its own code: the sentence is about a third person, so the applicant's wording
+                    // ("where you are already committed") would be plainly false here.
+                    assertThat(exception.getErrorCode()).isEqualTo(ConflictException.CANDIDATE_SCHEDULE_CONFLICT);
+                    assertThat(exception.getErrorParams()).containsEntry(ConflictException.PARAM_OTHER_TABLE_NAME, "El faro");
+                });
 
         assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Candidate);
     }

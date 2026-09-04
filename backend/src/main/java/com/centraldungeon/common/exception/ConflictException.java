@@ -21,6 +21,17 @@ public final class ConflictException extends ApiException {
     public static final String SCHEDULE_CONFLICT = "SCHEDULE_CONFLICT";
 
     /**
+     * The same clash of #178, seen from the other side: a master accepting somebody whose own
+     * commitments collide with this table (R3).
+     *
+     * <p>It gets a code of its own and not {@link #SCHEDULE_CONFLICT} because the sentence is about
+     * a <b>third person</b>, not about the reader - "it clashes with a table where you are already
+     * committed" is simply false when what clashed is the candidate's week. Two situations, two
+     * messages, and the backend picks neither of them (#197).
+     */
+    public static final String CANDIDATE_SCHEDULE_CONFLICT = "CANDIDATE_SCHEDULE_CONFLICT";
+
+    /**
      * The placeholder the clash message fills in: the name of the table the agenda collides with.
      *
      * <p>It travels as data rather than baked into a sentence (#197), which is what lets the same

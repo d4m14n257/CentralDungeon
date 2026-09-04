@@ -21,6 +21,7 @@ export function useCancelSession(tableId: string) {
     onSuccess: (sessions: TableSession[]) => {
       queryClient.setQueryData(queryKeys.sessions.list(tableId), sessions)
       void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.mine(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })
 }

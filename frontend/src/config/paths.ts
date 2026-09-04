@@ -17,9 +17,13 @@ export const paths = {
   helpPlayers: 'players',
   helpMasters: 'masters',
   helpAdmins: 'admins',
+  masterDashboard: 'master',
   masterTables: 'master/tables',
   masterTableNew: 'master/tables/new',
   masterTableDetail: 'master/tables/:id',
+  masterTableEdit: 'master/tables/:id/edit',
+  masterTablePlayers: 'master/tables/:id/players',
+  masterTableSchedule: 'master/tables/:id/schedule',
   masterTableSessions: 'master/tables/:id/sessions',
   masterTableTasks: 'master/tables/:id/tasks',
   masterTableFiles: 'master/tables/:id/files',
@@ -49,6 +53,15 @@ export function tableDetailPath(id: string): string {
   return `/tables/${id}`
 }
 
+/**
+ * @returns the absolute path to the master's work tray — the home of the Master context (#136).
+ *          It is where the context switcher and the logo land, because it is the screen that says
+ *          what to do next
+ */
+export function masterDashboardPath(): string {
+  return '/master'
+}
+
 /** @returns the absolute path to the master's table list */
 export function masterTablesPath(): string {
   return '/master/tables'
@@ -65,6 +78,32 @@ export function masterTableNewPath(): string {
  */
 export function masterTableDetailPath(id: string): string {
   return `/master/tables/${id}`
+}
+
+/**
+ * @param id the table
+ * @returns the absolute path to the form that rewrites it (#189). A sibling of the detail and not
+ *          one of its tabs, the same way the wizard is a sibling of the list: correcting a whole
+ *          table is its own screen, not a panel inside another
+ */
+export function masterTableEditPath(id: string): string {
+  return `/master/tables/${id}/edit`
+}
+
+/**
+ * @param id the table
+ * @returns the absolute path to its people tab — who runs it and who plays at it
+ */
+export function masterTablePlayersPath(id: string): string {
+  return `/master/tables/${id}/players`
+}
+
+/**
+ * @param id the table
+ * @returns the absolute path to its agenda tab — the weekly shape, in the reader's time (#22)
+ */
+export function masterTableSchedulePath(id: string): string {
+  return `/master/tables/${id}/schedule`
 }
 
 /**

@@ -139,8 +139,9 @@ public class Master {
     }
 
     /**
-     * Marks the row live or deleted. Only the cascade of a deleted table writes this (#25, #175); a
-     * master row is never dropped.
+     * Marks the row live or deleted - by the cascade of a deleted table (#25, #175), by a Primary
+     * removing a co-master, or by re-adding somebody who had been removed. A master row is never
+     * dropped.
      *
      * @param status the new row status
      */
@@ -149,7 +150,7 @@ public class Master {
     }
 
     /**
-     * Stamps or clears the logical delete. Written by the same cascade as {@link #setStatus}.
+     * Stamps or clears the logical delete. Written together with {@link #setStatus}, never alone.
      *
      * @param deletedAt when the row was deleted, or null to bring it back
      */

@@ -48,8 +48,11 @@
       "status": "Status",
       "sessions": "Sessions",
       "tasks": "Requests",
-      "files": "Files"
-    }
+      "files": "Files",
+      "players": "Players",
+      "schedule": "Agenda"
+    },
+    "edit": "Edit"
   },
   "status": {
     "justificationLabel": "Justification",
@@ -85,7 +88,15 @@
     "add": "Add",
     "remove": "Remove {{slot}}",
     "utcEquivalent": "In UTC: {{slot}}",
-    "timeZoneHint": "Times are typed in your zone ({{timeZone}}) and stored in UTC."
+    "timeZoneHint": "Times are typed in your zone ({{timeZone}}) and stored in UTC.",
+    "startDate": "Start date",
+    "duration": "One session lasts",
+    "totalSessions": "Planned sessions",
+    "notSet": "Not set",
+    "emptyTitle": "This table has no agenda",
+    "emptyDescription": "With no agenda, no sessions are laid out when it opens.",
+    "edit": "Edit the table",
+    "lockedHint": "The agenda can no longer be edited: the table is past the point where its master could rewrite it."
   },
   "sessions": {
     "title_one": "Calendar · {{count}} session",
@@ -117,5 +128,75 @@
     "attendanceTitle": "Attendance",
     "attendanceNotForCancelled": "A cancelled session has no attendance: it did not happen.",
     "attendanceSuccess": "Attendance recorded"
+  },
+  "nav": {
+    "label": "Master sections",
+    "dashboard": "Waiting on you",
+    "tables": "My tables"
+  },
+  "dashboard": {
+    "title": "Waiting on you",
+    "subtitle": "Everything actionable across your tables, longest wait first.",
+    "resolve": "Resolve",
+    "waitingSince": "since {{since}}",
+    "emptyTitle": "Nothing is waiting on you",
+    "emptyDescription": "Every one of your tables is up to date.",
+    "emptyAction": "See my tables",
+    "noReservationHint": "Nobody competes with you for this work: each table has one owner.",
+    "helpLink": "How to read this list",
+    "item": {
+      "CandidatesWaiting_one": "{{count}} person waiting for an answer",
+      "CandidatesWaiting_other": "{{count}} people waiting for an answer",
+      "OverdueTaskMissing_one": "“{{subject}}” is overdue and {{count}} person did not hand it in",
+      "OverdueTaskMissing_other": "“{{subject}}” is overdue and {{count}} people did not hand it in",
+      "SessionToRecord_one": "{{count}} played session with nothing recorded",
+      "SessionToRecord_other": "{{count}} played sessions with nothing recorded",
+      "ChangesRequested_one": "An admin asked for changes",
+      "ChangesRequested_other": "An admin asked for changes",
+      "ReadyToStart_one": "The start date has passed and the table has not begun",
+      "ReadyToStart_other": "The start date has passed and the table has not begun"
+    }
+  },
+  "masters": {
+    "title": "Who runs this table",
+    "summary_one": "{{count}} person",
+    "summary_other": "{{count}} people",
+    "roleMaster": "Master",
+    "roleCoMaster": "Co-master",
+    "addLabel": "Add a co-master",
+    "addSuccess": "{{name}} is now a co-master",
+    "promote": "Hand the table over to {{name}}",
+    "promoteConfirmTitle": "Hand the table over to {{name}}?",
+    "promoteConfirmDescription": "A table has a single master: {{name}} becomes it and you stay on as a co-master. You lose the lifecycle actions and the edit form.",
+    "promoteSuccess": "{{name}} now runs this table",
+    "remove": "Remove {{name}}",
+    "removeConfirmTitle": "Remove {{name}} from the table?",
+    "removeConfirmDescription": "They stop seeing and managing this table right away. The record that they ran it stays, and you can add them back whenever you want.",
+    "removeSuccess": "{{name}} no longer runs this table",
+    "hint": "A co-master manages the table but cannot close it, cancel it, or change who runs it.",
+    "helpLink": "What a co-master can do"
+  },
+  "players": {
+    "title": "Players",
+    "summary_one": "{{count}} player",
+    "summary_other": "{{count}} players",
+    "karma": "karma {{karma}}",
+    "emptyTitle": "Nobody is playing yet",
+    "emptyDescription": "Once you accept a candidate, they show up here."
+  },
+  "edit": {
+    "title": "Edit “{{name}}”",
+    "description": "All on one page: what you save replaces the whole table.",
+    "identitySection": "Identity",
+    "catalogsSection": "Systems, tags and platforms",
+    "scheduleSection": "Agenda and duration",
+    "capacitySection": "Capacity",
+    "replaceNotice": "Saving replaces the whole table: anything you clear from a field ends up empty, and the agenda and the catalogs are replaced as a set.",
+    "helpLink": "How saving works",
+    "cancel": "Cancel",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "success": "Table updated",
+    "lockedDescription": "This table can no longer be edited: either you do not run it, or it is past the point where its master could rewrite it."
   }
 }

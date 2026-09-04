@@ -12,6 +12,7 @@ import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
 import com.centraldungeon.tables.dto.TableStatusChangeResponse;
 import com.centraldungeon.tables.dto.UpdateGameTableRequest;
+import com.centraldungeon.users.dto.UserSummaryResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -378,5 +379,52 @@ public class GameTableController {
     public List<MasterSummaryResponse> addOrPromoteMaster(
             @PathVariable String id, @Valid @RequestBody AddMasterRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.addOrPromoteMaster(id, currentUser.userId(), request);
+    }
+
+    /**
+     * Removes a co-master. The row is marked, not dropped: who ran a table is a record (#175).
+     *
+     * <p>200 and not 204, unlike the table's own delete: the caller needs the list it has to
+     * re-render, and asking for it in a second request would show a stale section in between.
+     *
+     * @param id          the table
+     * @param userId      who to remove
+     * @param currentUser the actor, from the token; the service checks pertenencia (#17, #121)
+     * @return 200 with the table's masters after the change. 403 when the actor is not its Primary,
+     *         409 when the target is the Primary - handing the role over comes first
+     */
+    @DeleteMapping("/{id}/masters/{userId}")
+    @PreAuthorize("isAuthenticated()")
+    public List<MasterSummaryResponse> removeMaster(
+            @PathVariable String id, @PathVariable String userId, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.removeMaster(id, currentUser.userId(), userId);
+    }
+
+    /**
+     * The people search behind adding a co-master, scoped to one table.
+     *
+     * <p>It is not {@code GET /api/v1/users/search}: that one is an admin directory and its own
+     * Javadoc said widening it would have to be a decision rather than a side effect (#165). This
+     * is that decision, taken the other way - instead of opening the directory to more roles, the
+     * search hangs off the table and the service checks the actor is <b>this</b> table's Primary
+     * before answering. It also covers the case a role check cannot: a Primary an admin assigned
+     * without giving them the {@code Master} role (#72, #135) would fail {@code hasRole('MASTER')}
+     * while legitimately running the table.
+     *
+     * @param id          the table the search is for
+     * @param query       the search box, or null to list a first page
+     * @param pageable    page, size and sort; ten at a time, which is a picker's worth
+     * @param currentUser the actor, from the token (#121)
+     * @return 200 with one page of people who could be made a master of this table. 403 when the
+     *         actor is not its Primary
+     */
+    @GetMapping("/{id}/master-candidates")
+    @PreAuthorize("isAuthenticated()")
+    public PageResponse<UserSummaryResponse> searchMasterCandidates(
+            @PathVariable String id,
+            @RequestParam(name = "q", required = false) @Nullable String query,
+            @PageableDefault(size = 10, sort = {"discordUsername", "id"}) Pageable pageable,
+            @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.searchMasterCandidates(id, currentUser.userId(), query, pageable);
     }
 }

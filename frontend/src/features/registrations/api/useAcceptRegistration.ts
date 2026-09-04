@@ -20,6 +20,7 @@ export function useAcceptRegistration(tableId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.candidates(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.detail(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })
 }

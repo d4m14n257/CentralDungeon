@@ -132,4 +132,24 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
      * @return all of its registrations
      */
     List<TableRegistration> findByGameTable_Id(String gameTableId);
+
+    /**
+     * Who is waiting for an answer across several tables at once - the first probe of the master
+     * dashboard (#136).
+     *
+     * @param gameTableIds the tables somebody runs. A table with nobody waiting is absent from the
+     *                     result rather than reported as zero
+     * @param status       the status that means "waiting", always {@code Candidate}
+     * @return one row per table that has at least one application in that status
+     */
+    @Query("""
+            select new com.centraldungeon.registrations.PendingCandidateCount(
+                       r.gameTable.id, count(r), min(r.createdAt))
+            from TableRegistration r
+            where r.gameTable.id in :gameTableIds
+              and r.status = :status
+            group by r.gameTable.id
+            """)
+    List<PendingCandidateCount> countPendingByTables(
+            @Param("gameTableIds") Collection<String> gameTableIds, @Param("status") TableRegistrationStatus status);
 }

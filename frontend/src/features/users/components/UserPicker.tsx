@@ -15,6 +15,13 @@ interface UserPickerProps {
   onSelect: (user: UserSummary) => void
   /** Who not to offer: normally the people already picked. */
   excludedIds?: readonly string[]
+  /**
+   * Search among the people who could be made a master of this table, instead of the whole
+   * directory. An id and never an entity (§3.1.5), so this component still knows nothing about
+   * tables — what changes is which endpoint answers, because the two are authorized differently
+   * (#165).
+   */
+  tableId?: string
 }
 
 /**
@@ -22,7 +29,7 @@ interface UserPickerProps {
  * system: whoever is searching knows one of the two, not which of them is stored where
  * (decisiones.md #164).
  */
-export function UserPicker({ onSelect, excludedIds = [] }: UserPickerProps) {
+export function UserPicker({ onSelect, excludedIds = [], tableId }: UserPickerProps) {
   const { t } = useTranslation('users')
   const [query, setQuery] = useState(emptySearchQuery)
 
@@ -38,7 +45,7 @@ export function UserPicker({ onSelect, excludedIds = [] }: UserPickerProps) {
   const rawQuery = buildSearchQuery(query)
   const debouncedQuery = useDebounce(rawQuery, 400)
   const hasQuery = debouncedQuery.trim().length > 0
-  const { data, isFetching, isLoadingError, refetch } = useUserSearch(debouncedQuery, hasQuery)
+  const { data, isFetching, isLoadingError, refetch } = useUserSearch(debouncedQuery, hasQuery, tableId)
   /** While the debounce runs, what is on screen is the previous search: it is dimmed so it does not lie. */
   const isStale = isFetching || rawQuery.trim() !== debouncedQuery.trim()
 

@@ -16,6 +16,7 @@ export function useResubmitTable(tableId: string) {
     onSuccess: (table) => {
       queryClient.setQueryData(queryKeys.tables.managedDetail(tableId), table)
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.statusHistory(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })
 }

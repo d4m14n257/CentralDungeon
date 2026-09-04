@@ -24,6 +24,7 @@ export function useUpdateTable(id: string) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managedDetail(id) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.detail(id) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managed() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })
 }

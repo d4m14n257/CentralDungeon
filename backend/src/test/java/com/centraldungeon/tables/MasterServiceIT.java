@@ -2,6 +2,7 @@ package com.centraldungeon.tables;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
@@ -25,9 +26,10 @@ import org.testcontainers.mysql.MySQLContainer;
 
 /**
  * Exactly one live Primary per table (modelo-datos.md #73) - MySQL has no partial unique index for
- * it, so MasterService's row lock on the table's masters is what has to hold under a race. Several
- * concurrent hand-offs from the same original Primary to different targets: only the one that
- * grabs the lock first should still find the actor as Primary; every later one must lose.
+ * it, so MasterService's row lock on the table's masters is what has to hold under a race. Two
+ * shapes of that race are covered: concurrent hand-offs from the same original Primary, where only
+ * the one that grabs the lock first should still find the actor as Primary; and hand-offs racing
+ * removals, where the table must never come out with nobody in charge.
  *
  * Wired with @DynamicPropertySource, not @ServiceConnection: see RegistrationServiceIT for why
  * (spring-boot-testcontainers has an open Boot 4.x regression breaking unrelated bean injection).
@@ -104,6 +106,62 @@ class MasterServiceIT {
                 .filter(master -> master.getMasterType() == MasterType.Primary)
                 .count();
         assertThat(primaryCount).isEqualTo(1);
+    }
+
+    /**
+     * The same invariant from the other side. Several threads try to hand Primary over and to remove
+     * co-masters at the same time; whatever interleaving wins, the table must end with exactly one
+     * live Primary and must never end with none - a table nobody is in charge of has nobody
+     * authorized to run it.
+     */
+    @Test
+    void concurrentPromotionsAndRemovalsNeverLeaveTheTableWithoutAPrimary() throws InterruptedException {
+        for (User candidate : candidates) {
+            masterService.addOrPromote(table, originalPrimary.getId(), candidate.getId(), MasterType.Secondary);
+        }
+
+        ExecutorService pool = Executors.newFixedThreadPool(candidates.size());
+        CountDownLatch start = new CountDownLatch(1);
+
+        for (int i = 0; i < candidates.size(); i++) {
+            User candidate = candidates.get(i);
+            boolean promote = i % 2 == 0;
+            pool.submit(() -> {
+                start.await();
+                try {
+                    if (promote) {
+                        masterService.addOrPromote(table, originalPrimary.getId(), candidate.getId(), MasterType.Primary);
+                    } else {
+                        masterService.removeMaster(table, originalPrimary.getId(), candidate.getId());
+                    }
+                    return true;
+                } catch (ForbiddenActionException | ConflictException e) {
+                    return false;
+                }
+            });
+        }
+        start.countDown();
+        pool.shutdown();
+        assertThat(pool.awaitTermination(30, TimeUnit.SECONDS)).isTrue();
+
+        List<Master> live = masterRepository.findByGameTable_IdAndStatus(table.getId(), MasterRowStatus.Created);
+        assertThat(live).filteredOn(master -> master.getMasterType() == MasterType.Primary).hasSize(1);
+    }
+
+    /** Removed rows stay as a record (#175), and re-adding the same person revives that row. */
+    @Test
+    void reAddingARemovedCoMasterRevivesTheRowInsteadOfCreatingASecond() {
+        User coMaster = candidates.getFirst();
+        masterService.addOrPromote(table, originalPrimary.getId(), coMaster.getId(), MasterType.Secondary);
+        masterService.removeMaster(table, originalPrimary.getId(), coMaster.getId());
+
+        assertThat(masterService.isMasterOf(table.getId(), coMaster.getId())).isFalse();
+        assertThat(masterRepository.findByGameTable_Id(table.getId())).hasSize(2);
+
+        masterService.addOrPromote(table, originalPrimary.getId(), coMaster.getId(), MasterType.Secondary);
+
+        assertThat(masterService.isMasterOf(table.getId(), coMaster.getId())).isTrue();
+        assertThat(masterRepository.findByGameTable_Id(table.getId())).hasSize(2);
     }
 
     private boolean succeeded(Future<Boolean> future) {

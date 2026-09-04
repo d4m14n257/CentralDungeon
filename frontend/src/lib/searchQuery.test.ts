@@ -6,76 +6,76 @@ const FIELDS = ['discord_name', 'user_name', 'tag']
 
 /** The same cases as the backend's SearchQueryParserTest: if they diverge, one of the two is wrong. */
 describe('parseSearchQuery', () => {
-  it('deja el texto suelto como un criterio sin campo', () => {
+  it('leaves loose text as a criterion with no field', () => {
     expect(parseSearchQuery('juan', FIELDS)).toEqual<SearchTerm[]>([{ field: null, values: ['juan'], connector: 'and' }])
   })
 
-  it('todo lo que sigue a un campo es su valor, espacios incluidos', () => {
+  it('everything after a field is its value, spaces included', () => {
     expect(parseSearchQuery('/user_name juan pablo', FIELDS)).toEqual<SearchTerm[]>([
       { field: 'user_name', values: ['juan pablo'], connector: 'and' },
     ])
   })
 
-  it('las comas separan alternativas del mismo criterio', () => {
+  it('commas separate alternatives of the same criterion', () => {
     expect(parseSearchQuery('/user_name damian,carlos, daniel', FIELDS)).toEqual<SearchTerm[]>([
       { field: 'user_name', values: ['damian', 'carlos', 'daniel'], connector: 'and' },
     ])
   })
 
-  it('descarta los huecos entre comas', () => {
+  it('drops the gaps between commas', () => {
     expect(parseSearchQuery('damian, ,carlos,', FIELDS)).toEqual<SearchTerm[]>([
       { field: null, values: ['damian', 'carlos'], connector: 'and' },
     ])
   })
 
-  it('une dos criterios con el conector escrito', () => {
+  it('joins two criteria with the connector that was written', () => {
     expect(parseSearchQuery('/user_name juan /or /discord_name pablo', FIELDS)).toEqual<SearchTerm[]>([
       { field: 'user_name', values: ['juan'], connector: 'and' },
       { field: 'discord_name', values: ['pablo'], connector: 'or' },
     ])
   })
 
-  it('usa and cuando no se escribe conector', () => {
+  it('uses and when no connector is written', () => {
     expect(parseSearchQuery('/user_name juan /discord_name pablo', FIELDS).map((term) => term.connector)).toEqual(['and', 'and'])
   })
 
-  it('lee los conectores sin importar mayúsculas', () => {
+  it('reads the connectors regardless of case', () => {
     expect(parseSearchQuery('juan /OR pablo', FIELDS).map((term) => term.connector)).toEqual(['and', 'or'])
   })
 
   /** Without this nobody could search for a value containing the word: the separator is the slash. */
-  it('un and o un or sueltos son texto', () => {
+  it('a bare and or or is text', () => {
     expect(parseSearchQuery('/user_name juan or pablo', FIELDS)).toEqual<SearchTerm[]>([
       { field: 'user_name', values: ['juan or pablo'], connector: 'and' },
     ])
   })
 
-  it('descarta un conector al final', () => {
+  it('drops a trailing connector', () => {
     expect(parseSearchQuery('juan /or', FIELDS)).toEqual<SearchTerm[]>([{ field: null, values: ['juan'], connector: 'and' }])
   })
 
-  it('ignora un campo sin valor todavía', () => {
+  it('ignores a field that has no value yet', () => {
     expect(parseSearchQuery('/user_name', FIELDS)).toEqual([])
     expect(parseSearchQuery('/user_name ,,', FIELDS)).toEqual([])
   })
 
-  it('deja un prefijo desconocido como texto literal', () => {
+  it('leaves an unknown prefix as literal text', () => {
     expect(parseSearchQuery('/nickname juan', FIELDS)).toEqual<SearchTerm[]>([
       { field: null, values: ['/nickname juan'], connector: 'and' },
     ])
   })
 
-  it('un conector al principio no une nada y es inofensivo', () => {
+  it('a leading connector joins nothing and is harmless', () => {
     expect(parseSearchQuery('/or juan', FIELDS)).toEqual<SearchTerm[]>([{ field: null, values: ['juan'], connector: 'and' }])
   })
 
-  it('devuelve vacío con una consulta en blanco', () => {
+  it('returns empty for a blank query', () => {
     expect(parseSearchQuery('   ', FIELDS)).toEqual([])
   })
 })
 
 describe('serializeSearchQuery', () => {
-  it('escribe siempre el conector explícito, con barra', () => {
+  it('always writes the connector explicitly, with its slash', () => {
     const terms: SearchTerm[] = [
       { field: 'user_name', values: ['juan'], connector: 'and' },
       { field: 'discord_name', values: ['pablo', 'pedro'], connector: 'or' },
@@ -84,7 +84,7 @@ describe('serializeSearchQuery', () => {
     expect(serializeSearchQuery(terms)).toBe('/user_name juan /or /discord_name pablo,pedro')
   })
 
-  it('ida y vuelta: lo serializado se vuelve a parsear igual', () => {
+  it('round trip: what was serialized parses back the same', () => {
     const raw = '/user_name juan,ana /or /discord_name pablo /and mesa'
     const terms = parseSearchQuery(raw, FIELDS)
 
@@ -93,30 +93,30 @@ describe('serializeSearchQuery', () => {
 })
 
 describe('buildSearchQuery', () => {
-  it('agrega lo que se está escribiendo detrás de su conector', () => {
+  it('appends what is being typed behind its connector', () => {
     const terms: SearchTerm[] = [{ field: 'user_name', values: ['juan'], connector: 'and' }]
 
     expect(buildSearchQuery({ terms, activeField: null, draft: 'pab', pendingConnector: 'or' })).toBe('/user_name juan /or pab')
   })
 
-  it('el criterio abierto se busca por su campo, no como texto suelto', () => {
+  it('the open criterion searches by its field, not as loose text', () => {
     expect(buildSearchQuery({ ...emptySearchQuery, activeField: 'discord_name', draft: 'pab' })).toBe('/discord_name pab')
   })
 
-  it('las comas de lo que se está escribiendo ya son alternativas', () => {
+  it('the commas of what is being typed are already alternatives', () => {
     expect(buildSearchQuery({ ...emptySearchQuery, activeField: 'user_name', draft: 'damian,carlos' })).toBe('/user_name damian,carlos')
   })
 
-  it('un campo a medio escribir no busca nada', () => {
+  it('a half-typed field searches for nothing', () => {
     expect(buildSearchQuery({ ...emptySearchQuery, draft: '/dis' })).toBe('')
     expect(buildSearchQuery({ ...emptySearchQuery, draft: 'juan /dis' })).toBe('juan')
   })
 
-  it('un campo abierto sin valor no busca nada', () => {
+  it('an open field with no value searches for nothing', () => {
     expect(buildSearchQuery({ ...emptySearchQuery, activeField: 'discord_name', draft: '  ' })).toBe('')
   })
 
-  it('sin borrador, la consulta son solo los chips', () => {
+  it('with no draft, the query is only the chips', () => {
     const terms: SearchTerm[] = [{ field: 'tag', values: ['terror'], connector: 'and' }]
 
     expect(buildSearchQuery({ terms, activeField: null, draft: '  ', pendingConnector: 'and' })).toBe('/tag terror')

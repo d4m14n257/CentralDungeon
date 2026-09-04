@@ -21,6 +21,7 @@ export function useHoldSession(tableId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.list(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.mine(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })
 }

@@ -70,14 +70,7 @@ public class MasterService {
     @Transactional
     public void addOrPromote(GameTable gameTable, String actorId, String targetUserId, MasterType requestedType) {
         List<Master> masters = masterRepository.findByGameTableIdForUpdate(gameTable.getId());
-
-        Master actorMaster = masters.stream()
-                .filter(m -> m.getUser().getId().equals(actorId))
-                .findFirst()
-                .orElseThrow(() -> new ForbiddenActionException("Only a master of this table can manage its masters"));
-        if (actorMaster.getMasterType() != MasterType.Primary) {
-            throw new ForbiddenActionException("Only the Primary master can add or promote masters");
-        }
+        Master actorMaster = requirePrimary(masters, actorId, "add or promote masters");
 
         Master target = masters.stream()
                 .filter(m -> m.getUser().getId().equals(targetUserId))
@@ -90,6 +83,14 @@ public class MasterService {
                     return masterRepository.save(new Master(gameTable, userService.getById(targetUserId), MasterType.Secondary));
                 });
 
+        // Somebody removed earlier keeps their row - the record of who ran a table is not erased
+        // (#175) - so re-adding them revives it. Inserting a second one would break the composite key.
+        if (target.getStatus() == MasterRowStatus.Deleted) {
+            target.setStatus(MasterRowStatus.Created);
+            target.setDeletedAt(null);
+            target.setMasterType(MasterType.Secondary);
+        }
+
         if (requestedType == MasterType.Primary) {
             if (!target.getUser().getId().equals(actorId)) {
                 actorMaster.setMasterType(MasterType.Secondary);
@@ -98,6 +99,59 @@ public class MasterService {
         } else {
             target.setMasterType(MasterType.Secondary);
         }
+    }
+
+    /**
+     * Removes a co-master. Only the Primary may do it, and the Primary itself cannot be removed:
+     * a table without one has nobody authorized to run it, so handing the role over comes first.
+     *
+     * <p>The row is marked, never dropped (#175), which is also what lets the same person be added
+     * back later without colliding with the composite key.
+     *
+     * @param gameTable    the table
+     * @param actorId      the actor, always from the token (#121)
+     * @param targetUserId who to remove
+     * @throws ForbiddenActionException when the actor is not this table's Primary
+     * @throws ConflictException        when the target is the Primary, or does not run the table
+     */
+    @Transactional
+    public void removeMaster(GameTable gameTable, String actorId, String targetUserId) {
+        List<Master> masters = masterRepository.findByGameTableIdForUpdate(gameTable.getId());
+        requirePrimary(masters, actorId, "remove masters");
+
+        Master target = masters.stream()
+                .filter(m -> m.getUser().getId().equals(targetUserId))
+                .filter(m -> m.getStatus() == MasterRowStatus.Created)
+                .findFirst()
+                .orElseThrow(() -> new ConflictException("That person does not run this table"));
+
+        if (target.getMasterType() == MasterType.Primary) {
+            throw new ConflictException("The table's master cannot be removed; hand the role over first");
+        }
+
+        target.setStatus(MasterRowStatus.Deleted);
+        target.setDeletedAt(LocalDateTime.now());
+    }
+
+    /**
+     * The gate both management operations share: the actor has to be this table's live Primary.
+     *
+     * @param masters the table's rows, already locked
+     * @param actorId the actor, always from the token (#121)
+     * @param action  what they were trying to do, for the message
+     * @return the actor's own row, so the caller can demote it when handing Primary over
+     * @throws ForbiddenActionException when the actor does not run the table, or is not its Primary
+     */
+    private Master requirePrimary(List<Master> masters, String actorId, String action) {
+        Master actorMaster = masters.stream()
+                .filter(m -> m.getUser().getId().equals(actorId))
+                .filter(m -> m.getStatus() == MasterRowStatus.Created)
+                .findFirst()
+                .orElseThrow(() -> new ForbiddenActionException("Only a master of this table can manage its masters"));
+        if (actorMaster.getMasterType() != MasterType.Primary) {
+            throw new ForbiddenActionException("Only the Primary master can " + action);
+        }
+        return actorMaster;
     }
 
     /**
@@ -138,14 +192,26 @@ public class MasterService {
     }
 
     /**
-     * Everyone who runs a table.
+     * Everyone who runs a table right now. Removed co-masters keep their row (#175) but are not
+     * part of the answer: this is what the table's screens list as its masters.
      *
      * @param gameTableId the table
-     * @return its master rows
+     * @return its live master rows
      */
     @Transactional(readOnly = true)
     public List<Master> findByGameTable(String gameTableId) {
-        return masterRepository.findByGameTable_Id(gameTableId);
+        return masterRepository.findByGameTable_IdAndStatus(gameTableId, MasterRowStatus.Created);
+    }
+
+    /**
+     * Every table the person runs right now - where the master dashboard starts (#136).
+     *
+     * @param userId the actor, always from the token (#121)
+     * @return their live master rows, table included
+     */
+    @Transactional(readOnly = true)
+    public List<Master> findLiveByUser(String userId) {
+        return masterRepository.findLiveByUser(userId, MasterRowStatus.Created);
     }
 
     /**
@@ -156,11 +222,14 @@ public class MasterService {
      *
      * @param gameTableId the table
      * @param userId      the actor, always from the token (#121)
-     * @return true when they have a master row on it
+     * @return true when they have a live master row on it. A co-master who was removed does not
+     *         count: their row survives as a record, not as a permission
      */
     @Transactional(readOnly = true)
     public boolean isMasterOf(String gameTableId, String userId) {
-        return masterRepository.findByGameTable_IdAndUser_Id(gameTableId, userId).isPresent();
+        return masterRepository
+                .findByGameTable_IdAndUser_IdAndStatus(gameTableId, userId, MasterRowStatus.Created)
+                .isPresent();
     }
 
     /**
@@ -169,12 +238,12 @@ public class MasterService {
      *
      * @param gameTableId the table
      * @param userId      the actor, always from the token (#121)
-     * @return true when their master row is the Primary one
+     * @return true when their live master row is the Primary one
      */
     @Transactional(readOnly = true)
     public boolean isPrimaryOf(String gameTableId, String userId) {
         return masterRepository
-                .findByGameTable_IdAndUser_Id(gameTableId, userId)
+                .findByGameTable_IdAndUser_IdAndStatus(gameTableId, userId, MasterRowStatus.Created)
                 .map(master -> master.getMasterType() == MasterType.Primary)
                 .orElse(false);
     }

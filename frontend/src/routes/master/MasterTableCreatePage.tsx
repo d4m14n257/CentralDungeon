@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { helpPath, masterTableDetailPath } from '@/config/paths'
-import { CatalogChip, CatalogCombobox } from '@/features/catalogs'
+import { CatalogChip, CatalogPicker } from '@/features/catalogs'
 import { ScheduleEditor, createGameTableSchema, useCreateTable, useTableTypes, WIZARD_STEPS } from '@/features/tables'
 import type { CreateGameTableForm, TableScheduleEntry, WizardStep } from '@/features/tables'
 import { useMe } from '@/features/users'
@@ -343,12 +343,12 @@ export function MasterTableCreatePage() {
               {t('create.back')}
             </Button>
             {/*
-              Los dos botones llevan `key` distinta a propósito. Sin eso React reutiliza el mismo
-              nodo y solo le cambia el `type`: al tocar «Siguiente» en el penúltimo paso, el
-              atributo pasaba a `submit` **durante** el despacho del click, y el navegador ejecutaba
-              la acción por defecto sobre el nodo ya convertido — es decir, creaba la mesa sin que
-              nadie tocara «Crear mesa». Con la key son dos elementos, y el que recibió el click
-              deja de existir antes de que haya acción por defecto que ejecutar.
+              The two buttons carry different `key`s on purpose. Without them React reuses one node
+              and only swaps its `type`: pressing "Next" on the second-to-last step flipped the
+              attribute to `submit` **during** the click's dispatch, and the browser then ran the
+              default action on the already-converted node — that is, it created the table without
+              anybody pressing "Create table". With the keys they are two elements, and the one that
+              received the click stops existing before there is any default action left to run.
             */}
             {step === 'capacity' ? (
               <Button key="submit" type="submit" disabled={createTable.isPending}>
@@ -362,45 +362,6 @@ export function MasterTableCreatePage() {
           </div>
         </form>
       </Form>
-    </div>
-  )
-}
-
-/** What one catalog block of the wizard needs. Private: it is a piece of this screen, not of a feature. */
-interface CatalogPickerProps {
-  kind: 'systems' | 'tags' | 'platforms'
-  label: string
-  selected: CatalogValue[]
-  onChange: (values: CatalogValue[]) => void
-}
-
-/**
- * One catalog on the wizard: the chips already chosen plus the combobox that adds another.
- *
- * A master who does not find their system proposes it here and keeps going; what comes back is
- * marked as pending, because the table publishes while the value waits for an admin (#55, #57).
- */
-function CatalogPicker({ kind, label, selected, onChange }: CatalogPickerProps) {
-  return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium">{label}</p>
-      {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {selected.map((value) => (
-            <CatalogChip key={value.id} value={value} onRemove={(id) => onChange(selected.filter((item) => item.id !== id))} />
-          ))}
-        </div>
-      )}
-      <CatalogCombobox
-        kind={kind}
-        selected={selected}
-        canPropose
-        onSelect={(value) => {
-          if (!selected.some((item) => item.id === value.id)) {
-            onChange([...selected, value])
-          }
-        }}
-      />
     </div>
   )
 }

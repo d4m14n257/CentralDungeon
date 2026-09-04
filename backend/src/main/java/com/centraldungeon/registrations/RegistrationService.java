@@ -177,8 +177,9 @@ public class RegistrationService {
         CommittedTable clash = scheduleConflictService.findClashWith(candidateId, table);
         if (clash != null) {
             throw new ConflictException(
-                    "Esta persona ya juega en «" + clash.name() + "», que se pisa con el horario de esta mesa.",
-                    ConflictException.SCHEDULE_CONFLICT);
+                    "The candidate already plays at a table clashing with this one's agenda",
+                    ConflictException.CANDIDATE_SCHEDULE_CONFLICT,
+                    Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
         }
 
         registration.setStatus(TableRegistrationStatus.Player);

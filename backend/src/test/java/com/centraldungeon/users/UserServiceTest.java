@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.tables.MasterRepository;
+import com.centraldungeon.tables.MasterRowStatus;
 import com.centraldungeon.users.dto.UpdateUserRequest;
 import com.centraldungeon.users.dto.UserDetailResponse;
 import java.util.Optional;
@@ -92,7 +93,7 @@ class UserServiceTest {
         User user = persistedUser("user-4", "discord-4", "X");
         when(userRepository.findById("user-4")).thenReturn(Optional.of(user));
         when(userRoleRepository.findActiveRoleNames("user-4")).thenReturn(Set.of("Player"));
-        when(masterRepository.existsByUser_Id("user-4")).thenReturn(false);
+        when(masterRepository.existsByUser_IdAndStatus("user-4", MasterRowStatus.Created)).thenReturn(false);
         when(userMapper.toDetailResponse(user, Set.of("Player"), false))
                 .thenReturn(new UserDetailResponse("user-4", "Onboarded Name", "AR", 8000, false, Set.of("Player"), false));
 
@@ -108,7 +109,7 @@ class UserServiceTest {
         User user = persistedUser("user-5", "discord-5", "X");
         when(userRepository.findById("user-5")).thenReturn(Optional.of(user));
         when(userRoleRepository.findActiveRoleNames("user-5")).thenReturn(Set.of("Player"));
-        when(masterRepository.existsByUser_Id("user-5")).thenReturn(true);
+        when(masterRepository.existsByUser_IdAndStatus("user-5", MasterRowStatus.Created)).thenReturn(true);
         when(userMapper.toDetailResponse(user, Set.of("Player"), true))
                 .thenReturn(new UserDetailResponse("user-5", "X", null, 8000, true, Set.of("Player"), true));
 

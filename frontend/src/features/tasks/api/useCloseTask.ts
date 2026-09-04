@@ -18,6 +18,7 @@ export function useCloseTask(tableId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.tasks.table(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tasks.applicable(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })
 }

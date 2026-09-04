@@ -26,6 +26,7 @@ import com.centraldungeon.tables.dto.UpdateGameTableRequest;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
+import com.centraldungeon.users.dto.UserSummaryResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -518,6 +519,47 @@ public class GameTableService {
         GameTable gameTable = getEntityById(gameTableId);
         masterService.addOrPromote(gameTable, actorId, request.userId(), request.masterType());
         return masterService.findByGameTable(gameTableId).stream().map(gameTableMapper::toMasterSummary).toList();
+    }
+
+    /**
+     * Removes a co-master, and answers with the table's masters afterwards - the same shape
+     * {@link #addOrPromoteMaster} returns, because the section on screen re-renders from it.
+     *
+     * @param gameTableId  the table
+     * @param actorId      the actor, from the token; {@code MasterService} checks their pertenencia
+     * @param targetUserId who to remove
+     * @return every master of the table after the change
+     */
+    @Transactional
+    public List<MasterSummaryResponse> removeMaster(String gameTableId, String actorId, String targetUserId) {
+        GameTable gameTable = getEntityById(gameTableId);
+        masterService.removeMaster(gameTable, actorId, targetUserId);
+        return masterService.findByGameTable(gameTableId).stream().map(gameTableMapper::toMasterSummary).toList();
+    }
+
+    /**
+     * The people search behind adding a co-master, answered only for a table's own Primary.
+     *
+     * <p>The scope is the whole point (#165): the admin directory stays closed, and what opens is a
+     * search that only the person who may actually add a master can run. The check is membership and
+     * not a role, because a Primary an admin assigned may never have been given {@code Master}
+     * (#72, #135) - and the actor comes from the token, never from the URL (#121).
+     *
+     * @param gameTableId the table the search is for
+     * @param actorId     the actor, from the token
+     * @param query       the search box, or null for a first page
+     * @param pageable    page, size and sort
+     * @return one page of people who could be made a master of this table
+     * @throws ForbiddenActionException when the actor is not this table's Primary
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<UserSummaryResponse> searchMasterCandidates(
+            String gameTableId, String actorId, @Nullable String query, Pageable pageable) {
+        getEntityById(gameTableId);
+        if (!masterService.isPrimaryOf(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only the table's master can search for co-masters");
+        }
+        return userService.search(query, pageable);
     }
 
     /**

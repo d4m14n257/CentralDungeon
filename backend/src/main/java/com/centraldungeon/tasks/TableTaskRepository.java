@@ -1,5 +1,6 @@
 package com.centraldungeon.tasks;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,4 +35,19 @@ public interface TableTaskRepository extends JpaRepository<TableTask, String> {
      */
     List<TableTask> findByGameTable_IdAndAudienceInAndStatusOrderByCreatedAtAsc(
             String gameTableId, Collection<TaskAudience> audiences, TaskStatus status);
+
+    /**
+     * Tasks whose deadline went by while they were still open, across several tables at once - the
+     * second probe of the master dashboard (#136).
+     *
+     * <p>Missing a deadline neither blocks nor expels anybody (#70): it becomes something the
+     * master can see and act on, which is the whole of what the rule asks for.
+     *
+     * @param gameTableIds the tables somebody runs
+     * @param status       the status that means still open, always {@link TaskStatus#Open}
+     * @param before       the cutoff, in UTC (#22) - in practice now
+     * @return the overdue tasks, the longest overdue first
+     */
+    List<TableTask> findByGameTable_IdInAndStatusAndDueAtBeforeOrderByDueAtAsc(
+            Collection<String> gameTableIds, TaskStatus status, LocalDateTime before);
 }

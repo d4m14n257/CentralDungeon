@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 
-import { adminTablesPath, masterTablesPath } from '@/config/paths'
+import { adminTablesPath, masterDashboardPath } from '@/config/paths'
 import { NotificationBell } from '@/features/notifications'
 import { useMe } from '@/features/users'
 import { useContextStore, type AppContext } from '@/stores/contextStore'
@@ -34,7 +34,7 @@ export function AppHeader() {
   // behind (decisiones.md #156; no real exploit, it only misdirects the logo's link, and no /master
   // endpoint trusts this value).
   const effectiveContext: AppContext = availableContexts.includes(activeContext) ? activeContext : 'player'
-  const homePath = effectiveContext === 'master' ? masterTablesPath() : effectiveContext === 'admin' ? adminTablesPath() : '/'
+  const homePath = effectiveContext === 'master' ? masterDashboardPath() : effectiveContext === 'admin' ? adminTablesPath() : '/'
 
   return (
     <header className="border-border bg-surface sticky top-0 z-10 border-b">

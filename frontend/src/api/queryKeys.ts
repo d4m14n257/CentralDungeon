@@ -11,6 +11,13 @@ export const queryKeys = {
     /** The platform's table types. One list for the whole app - admins change it rarely (#72). */
     types: () => ['tables', 'types'] as const,
   },
+  master: {
+    /**
+     * The master's work tray (#136). Its own branch and not part of `tables`: it is an answer about
+     * a person across every table they run, and every mutation that resolves work invalidates it.
+     */
+    dashboard: () => ['master', 'dashboard'] as const,
+  },
   sessions: {
     /** A table's calendar, as the people running it see it. The whole list, never paginated. */
     list: (tableId: string) => ['sessions', 'list', tableId] as const,
@@ -74,7 +81,9 @@ export const queryKeys = {
   },
   users: {
     me: () => ['users', 'me'] as const,
-    search: (query: string) => ['users', 'search', query] as const,
+    /** The picker's results. Keyed by scope too: the admin directory and a table's candidate
+     *  search are different answers to the same words, and must not share a cache entry. */
+    search: (query: string, tableId?: string) => ['users', 'search', tableId ?? 'all', query] as const,
   },
   system: {
     health: () => ['system', 'health'] as const,

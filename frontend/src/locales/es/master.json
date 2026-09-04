@@ -48,8 +48,11 @@
       "status": "Estado",
       "sessions": "Sesiones",
       "tasks": "Peticiones",
-      "files": "Archivos"
-    }
+      "files": "Archivos",
+      "players": "Jugadores",
+      "schedule": "Agenda"
+    },
+    "edit": "Editar"
   },
   "status": {
     "justificationLabel": "Justificación",
@@ -85,7 +88,15 @@
     "add": "Agregar",
     "remove": "Quitar {{slot}}",
     "utcEquivalent": "En UTC: {{slot}}",
-    "timeZoneHint": "Las horas se escriben en tu zona ({{timeZone}}) y se guardan en UTC."
+    "timeZoneHint": "Las horas se escriben en tu zona ({{timeZone}}) y se guardan en UTC.",
+    "startDate": "Fecha de inicio",
+    "duration": "Duración de una sesión",
+    "totalSessions": "Sesiones previstas",
+    "notSet": "Sin definir",
+    "emptyTitle": "La mesa no tiene agenda",
+    "emptyDescription": "Sin agenda no se materializan sesiones al abrirla.",
+    "edit": "Editar la mesa",
+    "lockedHint": "La agenda ya no se edita: la mesa pasó el punto en que su master podía reescribirla."
   },
   "sessions": {
     "title_one": "Calendario · {{count}} sesión",
@@ -117,5 +128,75 @@
     "attendanceTitle": "Asistencia",
     "attendanceNotForCancelled": "Una sesión cancelada no tiene asistencia: no ocurrió.",
     "attendanceSuccess": "Asistencia registrada"
+  },
+  "nav": {
+    "label": "Secciones de master",
+    "dashboard": "Lo que espera",
+    "tables": "Mis mesas"
+  },
+  "dashboard": {
+    "title": "Lo que espera tu respuesta",
+    "subtitle": "Todo lo accionable de tus mesas, lo que más tiempo lleva esperando primero.",
+    "resolve": "Resolver",
+    "waitingSince": "desde {{since}}",
+    "emptyTitle": "Nada espera tu respuesta",
+    "emptyDescription": "Todas tus mesas están al día.",
+    "emptyAction": "Ver mis mesas",
+    "noReservationHint": "Nadie te disputa este trabajo: cada mesa tiene un solo dueño.",
+    "helpLink": "Cómo se lee esta lista",
+    "item": {
+      "CandidatesWaiting_one": "{{count}} persona esperando respuesta",
+      "CandidatesWaiting_other": "{{count}} personas esperando respuesta",
+      "OverdueTaskMissing_one": "«{{subject}}» venció y {{count}} persona no entregó",
+      "OverdueTaskMissing_other": "«{{subject}}» venció y {{count}} personas no entregaron",
+      "SessionToRecord_one": "{{count}} sesión jugada sin registrar",
+      "SessionToRecord_other": "{{count}} sesiones jugadas sin registrar",
+      "ChangesRequested_one": "Un admin pidió correcciones",
+      "ChangesRequested_other": "Un admin pidió correcciones",
+      "ReadyToStart_one": "La fecha de inicio ya pasó y la mesa no arrancó",
+      "ReadyToStart_other": "La fecha de inicio ya pasó y la mesa no arrancó"
+    }
+  },
+  "masters": {
+    "title": "Quién dirige esta mesa",
+    "summary_one": "{{count}} persona",
+    "summary_other": "{{count}} personas",
+    "roleMaster": "Master",
+    "roleCoMaster": "Co-master",
+    "addLabel": "Agregar un co-master",
+    "addSuccess": "{{name}} ahora es co-master",
+    "promote": "Pasarle la mesa a {{name}}",
+    "promoteConfirmTitle": "¿Pasarle la mesa a {{name}}?",
+    "promoteConfirmDescription": "Una mesa tiene un solo master: {{name}} pasa a serlo y vos quedás como co-master. Perdés las acciones de estado y la edición de la mesa.",
+    "promoteSuccess": "{{name}} es ahora el master de la mesa",
+    "remove": "Quitar a {{name}}",
+    "removeConfirmTitle": "¿Quitar a {{name}} de la mesa?",
+    "removeConfirmDescription": "Deja de ver y de gestionar esta mesa de inmediato. Queda registrado que la dirigió, y podés volver a agregarlo cuando quieras.",
+    "removeSuccess": "{{name}} ya no dirige esta mesa",
+    "hint": "Un co-master gestiona la mesa pero no puede cerrarla, cancelarla ni tocar quién la dirige.",
+    "helpLink": "Qué puede un co-master"
+  },
+  "players": {
+    "title": "Jugadores",
+    "summary_one": "{{count}} jugador",
+    "summary_other": "{{count}} jugadores",
+    "karma": "karma {{karma}}",
+    "emptyTitle": "Todavía no hay nadie jugando",
+    "emptyDescription": "Cuando aceptes a un candidato, aparece acá."
+  },
+  "edit": {
+    "title": "Editar «{{name}}»",
+    "description": "Todo en una página: lo que guardes reemplaza la mesa entera.",
+    "identitySection": "Identidad",
+    "catalogsSection": "Sistemas, tags y plataformas",
+    "scheduleSection": "Agenda y duración",
+    "capacitySection": "Cupo",
+    "replaceNotice": "Guardar reemplaza la mesa completa: lo que borres de un campo queda vacío, y la agenda y los catálogos se reemplazan como conjunto.",
+    "helpLink": "Cómo funciona guardar",
+    "cancel": "Cancelar",
+    "save": "Guardar cambios",
+    "saving": "Guardando…",
+    "success": "Mesa actualizada",
+    "lockedDescription": "Esta mesa ya no se puede editar: o no sos su master, o pasó el punto en que su master podía reescribirla."
   }
 }

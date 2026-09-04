@@ -33,7 +33,7 @@ Verificado en el repositorio al abrir la fase, no asumido. Es la foto contra la 
 | `TableTypeController` **no existe** — `V2__seed.sql` siembra los tipos y no hay forma de listarlos | — | F1.1 (backend) · F1.2 (el `useTableTypes` que lo consume) |
 | ~~`NotificationType` tiene **tres valores**~~ | — | Cerrado: F1.2 sumó `ScheduleConflict`, F1.3 `SessionScheduled` y `SessionCanceled`, F1.5 `TaskPublished` |
 | ~~`features/catalogs/` y `features/files/` son carpetas con un `.gitkeep`~~ | — | Cerrado: F1.1 y F1.4 |
-| `POST /{id}/masters` existe desde E2 y **nunca tuvo interfaz** | — | F1.6 |
+| ~~`POST /{id}/masters` existe desde E2 y **nunca tuvo interfaz**~~ | — | Cerrado: F1.6 |
 
 **Piezas del inventario de `frontend-diseno.md` §5 que F1 estrena:** `RichTextEditor`, `RichTextView`, `ScheduleEditor`, `FilePicker`, `DataTable`, `CollapsibleSection`, `IconAction`, `useConfirm`, `lib/date.ts`.
 
@@ -484,18 +484,82 @@ npx playwright test → 31 tests, todos verdes, contra el backend y el frontend 
 
 **Se prueba:** un master con tres mesas entra a `/master` y ve a quién le debe una respuesta sin abrir ninguna.
 
+#### ✅ Terminada
+
+Seis decisiones nuevas salieron de construirla: **#216** (quitar un co-master marca la fila, y la pertenencia pasa a filtrar por estado), **#217** (los cinco tipos de la bandeja, y por qué «entregas sin revisar» se resuelve como petición vencida con faltantes), **#218** (la edición es una página con secciones, no el wizard), **#219** (paquete `dashboard/` propio), **#220** (`/master` pasa a ser el home del contexto) y **#221** (el buscador de personas se acota a la mesa en vez de abrirse a más roles).
+
+**Lo que se agrandó a propósito.** La spec pedía co-masters y dashboard. Entraron además dos cosas que estaban anotadas como pendientes y sin las cuales F1 no cerraba: la **pantalla de edición** que F1.2 difirió textualmente a esta rebanada —sin ella una mesa en `ChangesRequested` no se podía corregir: el botón de reenviar a revisión existía y la forma de aplicar la corrección no— y las dos **pestañas que el sitemap pide y no existían**, Jugadores y Agenda. Con eso las siete pestañas del diseño están completas.
+
+**Un bug latente que solo se activaba al construir esta rebanada.** `MasterService.isMasterOf()` e `isPrimaryOf()` leían la fila de `masters` **sin mirar `MasterRowStatus`**, y `findByGameTable()` devolvía filas vivas y borradas por igual. Mientras `Deleted` solo lo produjera la cascada de una mesa borrada nadie podía notarlo —la mesa entera dejaba de existir—, pero en el momento en que una fila puede morir sola, **un co-master quitado seguía autorizado**: las pantallas dejaban de listarlo y los endpoints seguían aceptándolo. Se arregló en la misma rebanada que introduce la causa (#216), `UserService` incluido, que es lo que decide si el `ContextSwitcher` ofrece el contexto Master.
+
+**Un `403` que ningún unitario podía ver** (#221): el `UserPicker` de la sección de co-masters llamaba a `GET /api/v1/users/search`, que es de admin. En Vitest el picker está mockeado y nunca llama a la API, así que el fallo solo aparece con el navegador y el backend reales — en pantalla, como «Algo salió mal» debajo del buscador. La salida no fue ampliar el directorio sino acotar la búsqueda a la mesa.
+
+**Un incumplimiento de #197 que encontró el barrido de idioma, no un test.** `RegistrationService.accept()` era el único de los cinco puntos de choque que **no** mandaba el nombre de la otra mesa como parámetro: armaba una frase en español y la metía en el `detail`. Y el código que usaba, `SCHEDULE_CONFLICT`, tiene el texto escrito desde el punto de vista de quien se postula —«donde ya estás comprometido»—, que es **falso** cuando quien lee es el master y el choque es de la semana de un tercero. Ahora manda `CANDIDATE_SCHEDULE_CONFLICT` con su parámetro, y las dos frases están en `es` y en `en`. El test que lo cubría buscaba el nombre de la mesa **dentro del mensaje**, que es exactamente cómo la frase en español pasó desapercibida; ahora afirma el código y el parámetro.
+
+**Barrido de idioma** (regla dura 19, y lo que motivó encontrar lo anterior): pasaron a inglés los 39 nombres de test de `SearchQueryInput.test.tsx` y `lib/searchQuery.test.ts`, que estaban en español desde E2, más el comentario en español que quedaba en `MasterTableCreatePage`. Lo que **no** se tocó: las ~115 referencias a `regla dura`, `principio N` y `pertenencia` dentro de Javadoc y JSDoc en inglés — son citas a los nombres que estos documentos usan, no prosa en español, y renombrarlas rompería el puente entre el código y la documentación.
+
+Queda fuera a propósito, con su motivo: **la bandeja no lista `PauseRequested`** aunque el preview de diseño la dibuje — es F3 y ningún endpoint la produce todavía. Y **«entregas sin revisar» no existe como tal**: no hay marcador de revisada en el modelo y #76 prohíbe que el sistema juzgue las entregas, así que el ítem es el que #70 sí pide, la petición vencida con gente que no entregó (#217).
+
+**Backend** (`backend/src/main/java/com/centraldungeon/`):
+
+| Ruta | Qué es |
+|---|---|
+| `dashboard/MasterDashboardService.java` · `MasterDashboardController` · `MasterWorkItemKind` | La bandeja de #136, en paquete propio para no acoplar `tables` con `tasks` (#219) |
+| `dashboard/dto/MasterDashboardResponse.java` · `MasterWorkItem` | Código y parámetros, nunca la frase (#197) |
+| `registrations/PendingCandidateCount.java` · `tables/UnrecordedSessionCount.java` | Las dos proyecciones agrupadas de las sondas — mismo patrón que `CatalogUsageCount` |
+| `test/…/dashboard/MasterDashboardServiceTest.java` | 11 unitarios: un caso por tipo, el orden, y la bandeja vacía como éxito |
+
+Modificados: `MasterRepository` (+4 lecturas que filtran `MasterRowStatus`, +`findLiveByUser`), `MasterService` (`removeMaster`, revivir una fila borrada, `requirePrimary` extraído, y las tres lecturas de pertenencia filtradas), `MasterRowStatus` y `Master` (el Javadoc que decía que `Deleted` solo venía de la cascada dejó de ser cierto), `UserService` (`existsByUser_IdAndStatus`), `GameTableService` (+`removeMaster`, +`searchMasterCandidates`), `GameTableController` (+`DELETE /{id}/masters/{userId}`, +`GET /{id}/master-candidates`), `TableRegistrationRepository`, `TableSessionRepository` y `TableTaskRepository` (una consulta agregada cada uno), `ConflictException` y `RegistrationService` (el `CANDIDATE_SCHEDULE_CONFLICT` de más abajo), `MasterServiceTest` (+7) y `MasterServiceIT` (+2: promociones y bajas concurrentes, y revivir sin duplicar fila).
+
+**Sin migración Flyway**: `masters.status` y `masters.deleted_at` ya estaban en `V1__baseline.sql`. F1.6 mapea comportamiento, no schema.
+
+**Frontend** (`frontend/src/`):
+
+| Ruta | Qué es |
+|---|---|
+| `features/tables/api/useMasterDashboard.ts` · `useAddMaster.ts` · `useRemoveMaster.ts` | La bandeja y las dos mutaciones de co-masters |
+| `features/tables/components/MasterWorkItemList.tsx` (+ test) | La bandeja renderizada: recibe los ítems, no los pide |
+| `features/catalogs/components/CatalogPicker.tsx` | Extraído del wizard, porque ahora lo usan dos pantallas |
+| `layouts/components/MasterSectionNav.tsx` | La navegación del contexto Master, que con una sola pantalla no hacía falta (#220) |
+| `routes/master/MasterDashboardPage.tsx` | `/master`, con sus cuatro estados y el vacío como buena noticia |
+| `routes/master/MasterTablePlayersTab.tsx` (+ test) | Quién dirige la mesa y quién juega en ella, en un solo lugar |
+| `routes/master/MasterTableScheduleTab.tsx` | La agenda en hora local, solo lectura, con el enlace a editar |
+| `routes/master/MasterTableEditPage.tsx` | El `PUT` que F1.2 dejó sin pantalla (#218) |
+| `e2e/master-dashboard.spec.ts` | El co-master que gana y pierde la mesa, y la bandeja de llena a vacía |
+
+Tocados: `api/queryKeys.ts` (+rama `master`, +alcance en `users.search`), `config/paths.ts`, `routes/router.tsx`, `layouts/MasterLayout.tsx`, `layouts/components/ContextSwitcher.tsx` y `AppHeader.tsx` (el home del contexto pasa a `/master`), `components/ForbiddenState.tsx` (acepta la explicación que su propio JSDoc ya documentaba), `features/users/` (`usersApi`, `useUserSearch`, `UserPicker` con `tableId`), `features/tables/` (tipos, índice, `gameTablesApi`, `useUpdateTable`), `features/catalogs/index.ts`, `routes/master/MasterTableDetailPage.tsx` (siete pestañas y el botón de editar), `MasterTableCreatePage.tsx` (usa el `CatalogPicker` compartido; su comentario en español pasó a inglés), siete hooks que invalidan la bandeja al resolver trabajo, `routes/help/HelpMastersTab.tsx` y los locales `master` y `help`.
+
+**Ayuda:** `/help/masters#dashboard` (qué lista, por qué el orden es por tiempo, que el vacío es buena noticia y que no hay métricas), `#co-masters` (ampliada: quién agrega, que promover te degrada, que quitar no borra el registro y que al master no se lo quita) y `#edit-table` (cuándo se puede, que reemplaza en vez de parchear, y que corregir no reenvía a revisión). Las tres en `es` y en `en`, enlazadas desde la pantalla que las necesita.
+
+**Salida real de las suites:**
+
+```
+./mvnw test    → 288 tests, 0 fallos
+./mvnw verify  → 288 unitarios + 58 integración, 0 fallos
+npx tsc -b     → limpio
+npm run test   → 24 archivos, 178 tests
+npx playwright test → 33 tests, todos verdes, contra el backend y el frontend reales
+```
+
 ---
 
 ### F1.7 — Cierre de fase
 
-No es trabajo nuevo ni es de un agente: es el corte de `plan-desarrollo.md` §6, puntos 6 y 7, en el hilo principal.
+No es trabajo nuevo ni es de un agente: es el corte de `plan-desarrollo.md` §6, puntos 6 y 7, en el hilo principal. **Y no es solo correr las suites.** Los tests de cada rebanada ya corrieron en verde en su momento; lo que nadie miró todavía es el **producto entero**: si cada pantalla es alcanzable navegando, si cada endpoint tiene puerta, si el recorrido del master cierra de punta a punta.
 
-1. `./mvnw test` y `./mvnw verify` en verde, con la salida real reportada.
-2. `npx vitest run` y `npx playwright test` en verde.
-3. Inventario de archivos nuevos de la fase, con su ruta.
-4. Los cuatro estados obligatorios verificados en cada pantalla nueva.
-5. Documentación sincronizada; `er-diagram-sync` corrida por cada `@Entity` nueva.
-6. `/help` completo para lo que F1 agregó, con sus `#ref` enlazados desde la pantalla que los necesita (#167, #168).
+El instrumento de esa revisión es un **artifact** — *Revisión de cierre F1* — con el checklist, el diagrama de navegación del rol Master y el inventario de lo que quedó sin puerta en la UI. El detalle de los puntos 2 y 3 vive ahí y no se copia acá.
+
+1. **Las cuatro suites en verde**, con la salida real reportada.
+2. **Revisión de producto contra el artifact**: cada pantalla de F1 alcanzable **por navegación**, no por URL escrita a mano; cada una con sus cuatro estados; y el recorrido del rol Master cerrado de punta a punta, con los saltos donde depende de otro actor marcados.
+3. **Inventario de huérfanos triado**, uno por uno: *bug de F1* o *alcance de F2/F3 anotado a propósito*. Un hueco implícito es una sorpresa (`plan-desarrollo.md` §1). Lo relevado al abrir F1.7:
+   - `POST /{id}/pause` y `POST /{id}/resume` — construidos y **sin botón en ninguna pantalla**, anotado desde #163;
+   - `GET /api/v1/files/{fileId}` — solo se consume `/content`;
+   - `useUpdateFile`, `useDeleteFile` y `useCatalogValue` — hooks montados en **cero** pantallas;
+   - `PauseRequested` — estado del enum que ningún endpoint produce.
+4. **Inventario de archivos nuevos de la fase**, con su ruta.
+5. **Documentación sincronizada**; `er-diagram-sync` corrida por cada `@Entity` nueva; i18n a la par (`es`/`en`); Javadoc y JSDoc **en inglés**.
+6. **`/help` completo** para lo que F1 agregó, con sus `#ref` enlazados desde la pantalla que los necesita (#167, #168).
+7. **Los hallazgos corregidos**, con su commit.
 
 ## 5. Lo que F1 explícitamente NO construye
 

@@ -83,7 +83,24 @@ export function HelpMastersTab() {
         </HelpSection>
 
         <HelpSection id="co-masters" title={t('masters.coMasters.title')}>
-          <HelpList items={['one', 'primary', 'assign'].map((key) => t(`masters.coMasters.${key}`))} />
+          <HelpList
+            items={['one', 'primary', 'assign', 'add', 'cannotPlay', 'promote', 'removeKeeps', 'cannotRemovePrimary'].map((key) =>
+              t(`masters.coMasters.${key}`),
+            )}
+          />
+          <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`masters.coMasters.steps.step${n}`))} />
+        </HelpSection>
+
+        <HelpSection id="dashboard" title={t('masters.dashboard.title')}>
+          <HelpList
+            items={['what', 'order', 'kinds', 'noReservation', 'empty', 'notMetrics'].map((key) => t(`masters.dashboard.${key}`))}
+          />
+          <HelpSteps title={t('stepsTitle')} items={[1, 2, 3].map((n) => t(`masters.dashboard.steps.step${n}`))} />
+        </HelpSection>
+
+        <HelpSection id="edit-table" title={t('masters.editTable.title')}>
+          <HelpList items={['when', 'who', 'replaces', 'sets', 'conflict', 'resubmit'].map((key) => t(`masters.editTable.${key}`))} />
+          <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`masters.editTable.steps.step${n}`))} />
         </HelpSection>
       </div>
     </HelpAudienceGate>

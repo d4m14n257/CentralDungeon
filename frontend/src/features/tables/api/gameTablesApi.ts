@@ -2,6 +2,7 @@ import { api } from '@/api/client'
 import { pageSize } from '@/config/pagination'
 
 import type {
+  AddMasterRequest,
   AdminTableSummary,
   AssignMastersRequest,
   ChangeTableStatusRequest,
@@ -9,6 +10,8 @@ import type {
   GameTableDetail,
   GameTableStatus,
   GameTableSummary,
+  MasterDashboard,
+  MasterSummary,
   TableStatusChange,
   TableType,
   UpdateGameTableRequest,
@@ -50,4 +53,17 @@ export const gameTablesApi = {
   finish: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/finish`),
   cancel: (id: string, request: ChangeTableStatusRequest) =>
     api.post<GameTableDetail, ChangeTableStatusRequest>(`/api/v1/game-tables/${id}/cancel`, request),
+  /** Adds a co-master or hands the table over; answers with the masters afterwards (#73). */
+  addMaster: (id: string, request: AddMasterRequest) =>
+    api.post<MasterSummary[], AddMasterRequest>(`/api/v1/game-tables/${id}/masters`, request),
+  /** Removes a co-master. The row is marked, not dropped (#175); the answer is the list to re-render. */
+  removeMaster: (id: string, userId: string) => api.delete<MasterSummary[]>(`/api/v1/game-tables/${id}/masters/${userId}`),
+}
+
+/**
+ * The master's work tray (#136). Its own object because it is a different resource:
+ * /api/v1/master/dashboard is about the person, not about any one table.
+ */
+export const masterDashboardApi = {
+  get: () => api.get<MasterDashboard>('/api/v1/master/dashboard'),
 }

@@ -10,11 +10,13 @@ export { AttendanceEditor } from './components/AttendanceEditor'
 export { AttendanceSummaryView } from './components/AttendanceSummaryView'
 export { CreateUnassignedTableDialog } from './components/CreateUnassignedTableDialog'
 export { GameTableCard } from './components/GameTableCard'
+export { MasterWorkItemList } from './components/MasterWorkItemList'
 export { ScheduleEditor } from './components/ScheduleEditor'
 export { JustifiedTableActionDialog } from './components/JustifiedTableActionDialog'
 export { SessionList } from './components/SessionList'
 export { SessionStatusBadge } from './components/SessionStatusBadge'
 export { TableStatusBadge } from './components/TableStatusBadge'
+export { useAddMaster } from './api/useAddMaster'
 export { useAdminTables } from './api/useAdminTables'
 export { useApproveTable } from './api/useApproveTable'
 export { useAssignMasters } from './api/useAssignMasters'
@@ -30,8 +32,10 @@ export { useGameTables } from './api/useGameTables'
 export { useManagedTable } from './api/useManagedTable'
 export { useManagedTables } from './api/useManagedTables'
 export { useMySessions } from './api/useMySessions'
+export { useMasterDashboard } from './api/useMasterDashboard'
 export { useMyTables } from './api/useMyTables'
 export { useRecordAttendance } from './api/useRecordAttendance'
+export { useRemoveMaster } from './api/useRemoveMaster'
 export { useRequestChanges } from './api/useRequestChanges'
 export { useResubmitTable } from './api/useResubmitTable'
 export { useStartTable } from './api/useStartTable'
@@ -46,6 +50,7 @@ export type { ChangeTableStatusForm, CreateGameTableForm, WizardStep } from './s
 /** The feature's domain types. Each is written once in `types.ts` and derived from there (#3.2). */
 export type { SessionListItem } from './components/SessionList'
 export type {
+  AddMasterRequest,
   AdminTableSummary,
   AttendanceEntryRequest,
   AttendanceStatus,
@@ -56,7 +61,10 @@ export type {
   GameTableDetail,
   GameTableStatus,
   GameTableSummary,
+  MasterDashboard,
   MasterSummary,
+  MasterWorkItem,
+  MasterWorkItemKind,
   MySessions,
   PlayerSession,
   PublicSession,

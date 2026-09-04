@@ -52,6 +52,7 @@
     "mutationFailed": "No pudimos completar la acción. Probá de nuevo.",
     "codes": {
       "SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde ya estás comprometido.",
+      "CANDIDATE_SCHEDULE_CONFLICT": "No se lo puede aceptar: ya juega en «{{otherTableName}}», que se pisa con el horario de esta mesa.",
       "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Se pueden subir PDF, Word, PNG y JPG.",
       "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es 2 MB por archivo.",
       "FILE_EMPTY": "El archivo está vacío. Elegí otro."

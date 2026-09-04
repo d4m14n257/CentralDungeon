@@ -1,6 +1,8 @@
 package com.centraldungeon.tables;
 
 import jakarta.persistence.LockModeType;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -65,4 +67,28 @@ public interface TableSessionRepository extends JpaRepository<TableSession, Stri
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from TableSession s where s.id = :id")
     Optional<TableSession> findByIdForUpdate(@Param("id") String id);
+
+    /**
+     * Sessions whose date has gone by and that nobody closed, across several tables at once - the
+     * third probe of the master dashboard (#136).
+     *
+     * @param gameTableIds the tables somebody runs. A table with nothing overdue is absent from the
+     *                     result rather than reported as zero
+     * @param status       the status that means "still open", always {@code Scheduled}
+     * @param before       the cutoff, in UTC (#22) - in practice now
+     * @return one row per table that has at least one overdue open session
+     */
+    @Query("""
+            select new com.centraldungeon.tables.UnrecordedSessionCount(
+                       s.gameTable.id, count(s), min(s.scheduledAt))
+            from TableSession s
+            where s.gameTable.id in :gameTableIds
+              and s.status = :status
+              and s.scheduledAt < :before
+            group by s.gameTable.id
+            """)
+    List<UnrecordedSessionCount> countUnrecordedByTables(
+            @Param("gameTableIds") Collection<String> gameTableIds,
+            @Param("status") TableSessionStatus status,
+            @Param("before") LocalDateTime before);
 }

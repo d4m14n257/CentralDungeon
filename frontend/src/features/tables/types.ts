@@ -33,7 +33,7 @@ export interface TableScheduleEntry {
   hourtime: string
 }
 
-/** Espejo de GameTableSummaryResponse. */
+/** Mirror of GameTableSummaryResponse. */
 export interface GameTableSummary {
   id: string
   name: string
@@ -75,13 +75,13 @@ export interface CreateGameTableRequest {
 }
 
 /**
- * Espejo de UpdateGameTableRequest. Identical in shape to the create request today, and kept as its
+ * Mirror of UpdateGameTableRequest. Identical in shape to the create request today, and kept as its
  * own name rather than an alias because the two are different messages: the day one of them grows a
  * field the other should not have, the type is already there to grow it in.
  */
 export type UpdateGameTableRequest = CreateGameTableRequest
 
-/** Espejo de GameTableDetailResponse. */
+/** Mirror of GameTableDetailResponse. */
 export interface GameTableDetail {
   id: string
   name: string
@@ -220,7 +220,7 @@ export interface RecordAttendanceRequest {
 /**
  * Mirror of TableTypeResponse - how a table is run ("Public", "First class"). Admins add the rest
  * from the application, so the wizard's selector reads them from the API rather than from a
- * lista escrita a mano.
+ * a hand-written list.
  */
 export interface TableType {
   id: string
@@ -229,7 +229,7 @@ export interface TableType {
   description: string | null
 }
 
-/** Espejo de TableStatusChangeResponse. */
+/** Mirror of TableStatusChangeResponse. */
 export interface TableStatusChange {
   id: string
   fromStatus: GameTableStatus
@@ -239,15 +239,58 @@ export interface TableStatusChange {
   createdAt: string
 }
 
-/** Espejo de ChangeTableStatusRequest - usado por cancel/request-changes/pause. */
+/** Mirror of ChangeTableStatusRequest - used by cancel, request-changes and pause. */
 export interface ChangeTableStatusRequest {
   justification: string
 }
 
-/** Espejo de AssignMastersRequest. */
+/** Mirror of AssignMastersRequest. */
 export interface AssignMastersRequest {
   primaryUserId: string
   secondaryUserIds: string[]
+}
+
+/**
+ * Mirror of AddMasterRequest — adding a co-master, or handing the table over.
+ *
+ * `masterType` is `Primary` or `Secondary` on the wire; asking for `Primary` promotes the target
+ * and demotes whoever held it, because a table has exactly one (#73). On screen the two words are
+ * "master" and "co-master" and never these (#166).
+ */
+export interface AddMasterRequest {
+  userId: string
+  masterType: 'Primary' | 'Secondary'
+}
+
+/**
+ * Mirror of MasterWorkItemKind — what a table is waiting on, as a code rather than a sentence
+ * (#197). The union is what forces a `Record<MasterWorkItemKind, …>` to cover every case when the
+ * screen turns it into a phrase.
+ */
+export type MasterWorkItemKind = 'CandidatesWaiting' | 'OverdueTaskMissing' | 'SessionToRecord' | 'ChangesRequested' | 'ReadyToStart'
+
+/**
+ * Mirror of MasterWorkItem — one thing waiting for an answer, on one table (#136).
+ *
+ * The server sends the code and the numbers; the phrase is written here, in the reader's language.
+ */
+export interface MasterWorkItem {
+  tableId: string
+  tableName: string
+  kind: MasterWorkItemKind
+  /** The task's title, the session's date — whatever makes the row concrete. Null when the kind has none. */
+  subject: string | null
+  count: number
+  /** When the wait started, **in UTC** (#22). It is what the tray is ordered by. */
+  since: string
+}
+
+/**
+ * Mirror of MasterDashboardResponse. An empty `items` is a success, not a failure: every table is
+ * up to date, and the screen has to say so in those words (frontend-diseno.md §5).
+ */
+export interface MasterDashboard {
+  items: MasterWorkItem[]
 }
 
 /**

@@ -243,7 +243,18 @@
       "title": "Master y co-masters",
       "one": "Cada mesa tiene un master y puede tener co-masters.",
       "primary": "El master es quien decide sobre la mesa; los co-masters ayudan a dirigirla.",
-      "assign": "Cuando un admin asigna masters, el primero que agrega es el master y el resto quedan de co-masters."
+      "assign": "Cuando un admin asigna masters, el primero que agrega es el master y el resto quedan de co-masters.",
+      "add": "Solo el master de la mesa agrega, quita o promueve; un co-master no puede tocar quién dirige.",
+      "cannotPlay": "Nadie puede ser co-master de una mesa donde ya juega, ni jugar en una que dirige.",
+      "promote": "Pasarle la mesa a un co-master te deja a vos de co-master: hay un solo master por mesa.",
+      "removeKeeps": "Quitar a un co-master le saca el acceso en el momento, pero queda registrado que dirigió la mesa; podés volver a agregarlo y recupera el mismo lugar.",
+      "cannotRemovePrimary": "Al master de la mesa no se lo puede quitar: primero hay que pasarle la mesa a otra persona.",
+      "steps": {
+        "step1": "Entrá a tu mesa y abrí la pestaña «Jugadores».",
+        "step2": "Buscá a la persona en el buscador de «Quién dirige esta mesa» y elegila: entra como co-master.",
+        "step3": "Para pasarle la mesa, tocá la corona al lado de su nombre y confirmá.",
+        "step4": "Para quitarla, tocá la cruz y confirmá."
+      }
     },
     "deleting": {
       "title": "Cuando una mesa no va a pasar",
@@ -302,6 +313,35 @@
         "step2": "Tocá «Agregar un archivo» y elegí si es material de preparación o algo de una sesión.",
         "step3": "Decidí si lo ven tus jugadores o si queda solo para quienes dirigen, y subí el archivo o elegí uno de «Mis archivos» o de «Publicados».",
         "step4": "Desde la lista podés cambiar en cualquier momento quién lo ve, o quitarlo de la mesa sin borrarlo."
+      }
+    },
+    "dashboard": {
+      "title": "Lo que espera tu respuesta",
+      "what": "«Lo que espera» es una bandeja de trabajo, no un resumen con números: lista solo cosas que podés resolver.",
+      "order": "El orden es por tiempo de espera, no por cantidad: arriba va lo que lleva más tiempo sin respuesta.",
+      "kinds": "Lista candidatos sin responder, peticiones vencidas con gente que no entregó, sesiones jugadas sin registrar, mesas con correcciones pedidas y mesas cuya fecha de inicio ya pasó.",
+      "noReservation": "No hay reserva ni turnos: el trabajo de una mesa tiene un solo dueño y nadie te lo disputa.",
+      "empty": "Vacía es buena noticia, no un error: significa que tus mesas están al día.",
+      "notMetrics": "No vas a encontrar acá cuántos jugadores tenés ni la asistencia promedio: ninguno de esos números cambia lo que hacés a continuación.",
+      "steps": {
+        "step1": "Elegí el contexto «Master» arriba: caés directo en la bandeja.",
+        "step2": "Leé la primera fila: es lo que lleva más tiempo esperando.",
+        "step3": "Tocá «Resolver» y te lleva a la pestaña donde eso se resuelve."
+      }
+    },
+    "editTable": {
+      "title": "Editar una mesa",
+      "when": "Se edita mientras la mesa está en preparación o cuando un admin pidió correcciones. Después ya no: la gente que se postuló la vio como estaba.",
+      "who": "Solo el master de la mesa la edita; un co-master no.",
+      "replaces": "Guardar reemplaza la mesa entera, no parchea campo por campo: lo que borres de un campo queda vacío.",
+      "sets": "La agenda y los catálogos también se reemplazan como conjunto: lo que quede en pantalla al guardar es lo que queda.",
+      "conflict": "Si la agenda nueva se pisa con otra mesa tuya, el guardado falla y la pantalla dice con cuál.",
+      "resubmit": "Corregir no reenvía la mesa a revisión: eso se hace desde la pestaña «Estado».",
+      "steps": {
+        "step1": "Abrí tu mesa y tocá «Editar» arriba a la derecha.",
+        "step2": "Cambiá lo que haga falta: identidad, catálogos, agenda o cupo.",
+        "step3": "Guardá los cambios.",
+        "step4": "Si un admin había pedido correcciones, andá a «Estado» y reenviá la mesa a revisión."
       }
     }
   },

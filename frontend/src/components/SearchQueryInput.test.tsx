@@ -33,7 +33,7 @@ function query() {
 }
 
 describe('SearchQueryInput', () => {
-  it('manda lo que se escribe sin necesidad de cerrar un chip', async () => {
+  it('searches what is typed without having to close a chip first', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), 'juan')
@@ -41,7 +41,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('juan')
   })
 
-  it('la barra abre la lista de campos y elegir uno deja su chip fijo', async () => {
+  it('the slash opens the field list, and picking one leaves its chip fixed', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us')
@@ -51,7 +51,7 @@ describe('SearchQueryInput', () => {
     expect(searchBox()).toHaveValue('')
   })
 
-  it('con el campo abierto, todo lo que se escribe es su valor, espacios incluidos', async () => {
+  it('with a field open, everything typed is its value, spaces included', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us{Enter}juan pablo')
@@ -59,7 +59,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('/user_name juan pablo')
   })
 
-  it('las comas separan alternativas del mismo criterio', async () => {
+  it('commas separate alternatives of the same criterion', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us{Enter}damian,carlos,daniel')
@@ -67,7 +67,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('/user_name damian,carlos,daniel')
   })
 
-  it('las flechas eligen entre las sugerencias, y Enter confirma', async () => {
+  it('the arrows move through the suggestions and Enter confirms', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/')
@@ -76,7 +76,7 @@ describe('SearchQueryInput', () => {
     expect(screen.getByText('Nombre:')).toBeInTheDocument()
   })
 
-  it('las flechas dan la vuelta al llegar al final de la lista', async () => {
+  it('the arrows wrap around at the end of the list', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/')
@@ -85,7 +85,7 @@ describe('SearchQueryInput', () => {
     expect(screen.getByText('Nombre:')).toBeInTheDocument()
   })
 
-  it('otra barra cierra el criterio abierto y empieza el siguiente', async () => {
+  it('another slash closes the open criterion and starts the next one', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us{Enter}juan /dis{Enter}pablo')
@@ -93,7 +93,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('/user_name juan /and /discord_name pablo')
   })
 
-  it('/or aparece entre las sugerencias cuando ya hay algo que unir, y deja su chip', async () => {
+  it('/or shows up among the suggestions once there is something to join, and leaves its chip', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), 'juan{Enter}pablo /o')
@@ -103,7 +103,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('juan /and pablo /or pedro')
   })
 
-  it('ofrece el conector aunque el criterio anterior todavía no esté cerrado', async () => {
+  it('offers the connector even while the previous criterion is still open', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), 'juan /o')
@@ -113,7 +113,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('juan /or pablo')
   })
 
-  it('no ofrece conectores cuando todavía no hay nada que unir', async () => {
+  it('offers no connector while there is nothing to join', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/o')
@@ -122,7 +122,7 @@ describe('SearchQueryInput', () => {
   })
 
   /** Without this nobody could search for a value containing the word: the separator is the slash. */
-  it('un or suelto es parte del valor, no un conector', async () => {
+  it('a bare or is part of the value, not a connector', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us{Enter}juan or pablo')
@@ -130,7 +130,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('/user_name juan or pablo')
   })
 
-  it('Enter cierra el criterio abierto en un chip', async () => {
+  it('Enter closes the open criterion into a chip', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/dis{Enter}juan{Enter}')
@@ -140,7 +140,7 @@ describe('SearchQueryInput', () => {
     expect(searchBox()).toHaveValue('')
   })
 
-  it('cambia el conector entre dos chips al tocarlo', async () => {
+  it('toggles the connector between two chips when it is tapped', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), 'juan{Enter}pablo{Enter}')
@@ -149,7 +149,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('juan /or pablo')
   })
 
-  it('quita un criterio con la X del chip', async () => {
+  it('removes a criterion through the chip X button', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us{Enter}juan{Enter}')
@@ -158,7 +158,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('')
   })
 
-  it('Backspace con el texto vacío suelta primero el campo abierto', async () => {
+  it('Backspace on an empty box releases the open field first', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us{Enter}')
@@ -167,7 +167,7 @@ describe('SearchQueryInput', () => {
     expect(screen.queryByText('Nombre:')).not.toBeInTheDocument()
   })
 
-  it('Backspace con el texto vacío y sin campo abierto devuelve el último chip al input', async () => {
+  it('Backspace on an empty box with no open field returns the last chip to the input', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us{Enter}juan{Enter}')
@@ -177,7 +177,7 @@ describe('SearchQueryInput', () => {
     expect(screen.getByText('Nombre:')).toBeInTheDocument()
   })
 
-  it('Escape cierra la lista de campos sin tocar lo escrito', async () => {
+  it('Escape closes the field list without touching what was typed', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), 'juan /us')
@@ -187,7 +187,7 @@ describe('SearchQueryInput', () => {
     expect(searchBox()).toHaveValue('juan')
   })
 
-  it('un /campo escrito de una sola vez llega al mismo chip que elegirlo de la lista', async () => {
+  it('a /field typed in one go reaches the same chip as picking it from the list', async () => {
     render(<Harness />)
 
     await userEvent.click(searchBox())
@@ -198,7 +198,7 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('/discord_name juan')
   })
 
-  it('un prefijo que no es un campo queda como texto, sin romper la búsqueda', async () => {
+  it('a prefix that is not a field stays as text, without breaking the search', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/nickname juan{Enter}')

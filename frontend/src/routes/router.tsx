@@ -52,13 +52,19 @@ export const router = createBrowserRouter([
         path: 'master',
         Component: MasterLayout,
         children: [
+          { index: true, lazy: () => import('./master/MasterDashboardPage') },
           { path: 'tables', lazy: () => import('./master/MasterTablesPage') },
           { path: 'tables/new', lazy: () => import('./master/MasterTableCreatePage') },
+          // A sibling of the detail rather than one of its tabs, like `tables/new` is a sibling of
+          // the list: rewriting the whole table is its own screen and does not want the tab chrome.
+          { path: 'tables/:id/edit', lazy: () => import('./master/MasterTableEditPage') },
           {
             path: 'tables/:id',
             lazy: () => import('./master/MasterTableDetailPage'),
             children: [
               { index: true, lazy: () => import('./master/MasterTableCandidatesTab') },
+              { path: 'players', lazy: () => import('./master/MasterTablePlayersTab') },
+              { path: 'schedule', lazy: () => import('./master/MasterTableScheduleTab') },
               { path: 'sessions', lazy: () => import('./master/MasterTableSessionsTab') },
               { path: 'tasks', lazy: () => import('./master/MasterTableTasksTab') },
               { path: 'files', lazy: () => import('./master/MasterTableFilesTab') },

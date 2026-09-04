@@ -5,6 +5,7 @@ import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.search.SearchQuery;
 import com.centraldungeon.common.search.SearchQueryParser;
 import com.centraldungeon.tables.MasterRepository;
+import com.centraldungeon.tables.MasterRowStatus;
 import com.centraldungeon.users.dto.UpdateUserRequest;
 import com.centraldungeon.users.dto.UserDetailResponse;
 import com.centraldungeon.users.dto.UserSummaryResponse;
@@ -145,7 +146,10 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserDetailResponse getDetailResponse(String userId) {
         User user = getById(userId);
-        return userMapper.toDetailResponse(user, userRoleRepository.findActiveRoleNames(userId), masterRepository.existsByUser_Id(userId));
+        return userMapper.toDetailResponse(
+                user,
+                userRoleRepository.findActiveRoleNames(userId),
+                masterRepository.existsByUser_IdAndStatus(userId, MasterRowStatus.Created));
     }
 
     /**
@@ -175,6 +179,9 @@ public class UserService {
         User user = getById(userId);
         user.setName(request.name());
         user.setCountry(request.country());
-        return userMapper.toDetailResponse(user, userRoleRepository.findActiveRoleNames(userId), masterRepository.existsByUser_Id(userId));
+        return userMapper.toDetailResponse(
+                user,
+                userRoleRepository.findActiveRoleNames(userId),
+                masterRepository.existsByUser_IdAndStatus(userId, MasterRowStatus.Created));
     }
 }

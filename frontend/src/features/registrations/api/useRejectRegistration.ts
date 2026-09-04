@@ -21,6 +21,7 @@ export function useRejectRegistration(tableId: string) {
     mutationFn: ({ registrationId, justification }: RejectVariables) => registrationsApi.reject(registrationId, justification),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.candidates(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })
 }
