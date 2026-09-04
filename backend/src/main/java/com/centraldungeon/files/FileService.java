@@ -16,6 +16,7 @@ import com.centraldungeon.files.dto.PublishFileRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tasks.SubmissionFileRepository;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
 import java.io.IOException;
@@ -62,6 +63,16 @@ public class FileService {
     /** The attachments, which is what makes a file reachable to anybody but its owner (#79). */
     private final TableFileRepository tableFileRepository;
 
+    /**
+     * The other way a file becomes reachable: it was handed in as an answer to a table's task (#63).
+     *
+     * <p>A repository from another feature, which no other collaborator here is. It is the read rule
+     * that drags it in: whether a master may open what their player submitted is a question about
+     * submissions, and the alternative - a second download endpoint living in {@code tasks/} with its
+     * own copy of the rule - is exactly the drift #206 already cost us once.
+     */
+    private final SubmissionFileRepository submissionFileRepository;
+
     /** Resolves the uploader from the token. */
     private final UserRepository userRepository;
 
@@ -78,17 +89,19 @@ public class FileService {
     private final FileMapper fileMapper;
 
     /**
-     * @param fileRepository         the {@code files} rows
-     * @param tableFileRepository    the attachments, for resolving who may read a file
-     * @param userRepository         resolves the uploader from the token
-     * @param storageService         where the bytes live (#15)
-     * @param storageProperties      the cap, the whitelist and the retention window
-     * @param masterService          answers pertenencia (#17, #121, #135)
-     * @param fileMapper             entity to DTO
+     * @param fileRepository           the {@code files} rows
+     * @param tableFileRepository      the attachments, for resolving who may read a file
+     * @param submissionFileRepository the answers a file was handed in with, for the same question
+     * @param userRepository           resolves the uploader from the token
+     * @param storageService           where the bytes live (#15)
+     * @param storageProperties        the cap, the whitelist and the retention window
+     * @param masterService            answers pertenencia (#17, #121, #135)
+     * @param fileMapper               entity to DTO
      */
     public FileService(
             StoredFileRepository fileRepository,
             TableFileRepository tableFileRepository,
+            SubmissionFileRepository submissionFileRepository,
             UserRepository userRepository,
             StorageService storageService,
             StorageProperties storageProperties,
@@ -96,6 +109,7 @@ public class FileService {
             FileMapper fileMapper) {
         this.fileRepository = fileRepository;
         this.tableFileRepository = tableFileRepository;
+        this.submissionFileRepository = submissionFileRepository;
         this.userRepository = userRepository;
         this.storageService = storageService;
         this.storageProperties = storageProperties;
@@ -440,7 +454,7 @@ public class FileService {
     /**
      * The read rule, in one place, and the reason this class has to know about tables at all.
      *
-     * <p>Four ways a file is reachable, in the order they are cheapest to answer:
+     * <p>Five ways a file is reachable, in the order they are cheapest to answer:
      *
      * <ol>
      *   <li><b>It is yours.</b> Whatever else is true about it.
@@ -449,6 +463,11 @@ public class FileService {
      *   <li><b>You run a table it is attached to</b> (#135). Private or shared: a master sees
      *       everything on their own table, and this is pertenencia and not the {@code Master} role.
      *   <li><b>A table shares it.</b> Not "a table you play at" - <b>any</b> table that shares it.
+     *   <li><b>It was handed in to a task of a table you run</b> (#63, #76). A master asks for a
+     *       character sheet and has to be able to open the one that arrives; without this they would
+     *       see the row on the answer and get a 404 opening it, which is the exact mismatch #206 had
+     *       to fix for the files a table shares. It is the master's, and nobody else's: the submitter
+     *       already reaches it through the first way.
      * </ol>
      *
      * <p><b>The fourth one is deliberately as wide as the table itself, and no wider.</b> A shared
@@ -475,6 +494,13 @@ public class FileService {
         List<TableFile> links = tableFileRepository.findById_FileIdAndStatus(fileId, TableFileStatus.Current);
         for (TableFile link : links) {
             if (!link.isPrivate() || masterService.isMasterOf(link.getId().gameTableId(), actorId)) {
+                return file;
+            }
+        }
+        // The fifth way, last because it is the one that costs a join: what somebody handed in to a
+        // task is readable by the people running the table that asked for it (#63, #76).
+        for (String gameTableId : submissionFileRepository.findTableIdsBySubmittedFileId(fileId)) {
+            if (masterService.isMasterOf(gameTableId, actorId)) {
                 return file;
             }
         }

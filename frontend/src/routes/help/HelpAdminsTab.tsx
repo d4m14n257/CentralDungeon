@@ -4,8 +4,8 @@ import { HelpAudienceGate } from './HelpAudienceGate'
 import { HelpList, HelpSection, HelpSteps } from './HelpSection'
 
 /**
- * Lo que necesita saber quien modera (decisiones.md #168), y cómo se hace cada cosa (#170).
- * Owner entra acá y no en una audiencia propia: es un admin con más privilegios (#169).
+ * What somebody moderating needs to know (decisiones.md #168), and how each thing is done (#170).
+ * Owner reads this rather than an audience of its own: it is an admin with more privileges (#169).
  */
 export function HelpAdminsTab() {
   const { t } = useTranslation('help')

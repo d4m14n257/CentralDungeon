@@ -123,7 +123,7 @@ class TableScheduleIT {
         GameTable second = gameTableRepository.save(withDuration(new GameTable("Mesa que choca", master), LocalTime.of(3, 0)));
         masterService.createPrimary(second, master);
 
-        // 22:00 cae dentro de la franja de 20:00 + 3 h: se pisan sin compartir hourtime (#178).
+        // 22:00 falls inside the 20:00 + 3 h stretch: they overlap without sharing an hourtime (#178).
         assertThatThrownBy(() -> tableScheduleService.replace(
                         second, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(22, 0))), master.getId()))
                 .isInstanceOf(ConflictException.class)
@@ -132,7 +132,7 @@ class TableScheduleIT {
         assertThat(tableScheduleService.findByTable(second.getId())).isEmpty();
     }
 
-    /** Encadenar dos mesas es legítimo: el intervalo es semiabierto (#178). */
+    /** Chaining two tables is legitimate: the interval is half-open (#178). */
     @Test
     void aMasterCanRunATableThatStartsExactlyWhenAnotherEnds() {
         tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0))), master.getId());
@@ -145,7 +145,7 @@ class TableScheduleIT {
         assertThat(tableScheduleService.findByTable(second.getId())).hasSize(1);
     }
 
-    /** La envoltura semanal, contra la base: martes 23:00 + 3 h termina el miércoles (#22, #178). */
+    /** The weekly wrap, against the database: Tuesday 23:00 + 3 h ends on Wednesday (#22, #178). */
     @Test
     void aSessionThatRunsIntoTheNextDayBlocksTheNextMorning() {
         tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(23, 0))), master.getId());
@@ -158,7 +158,7 @@ class TableScheduleIT {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** Dos franjas de la misma mesa que se pisan son entrada inválida, no un conflicto (#178). */
+    /** Two slots of the same table overlapping is bad input, not a clash with anybody (#178). */
     @Test
     void anAgendaThatOverlapsItselfIsRejectedBeforeAnythingIsWritten() {
         assertThatThrownBy(() -> tableScheduleService.replace(
@@ -172,7 +172,7 @@ class TableScheduleIT {
         assertThat(tableScheduleService.findByTable(table.getId())).isEmpty();
     }
 
-    /** Una mesa sin duración no ocupa ningún intervalo, así que no choca con nada (#178). */
+    /** A table with no duration occupies no interval, so it clashes with nothing (#178). */
     @Test
     void aTableWithoutADurationNeverClashes() {
         tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Thursday, LocalTime.of(20, 0))), master.getId());

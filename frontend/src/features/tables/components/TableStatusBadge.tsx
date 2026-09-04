@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils'
 import type { GameTableStatus } from '../types'
 
 /**
- * El color nunca es el único portador de información (frontend-diseno.md 3): siempre punto +
- * etiqueta. Clases completas y estáticas a propósito - Tailwind 4 escanea el código fuente
- * buscando literales, no puede ver nombres de clase construidos con template strings.
+ * Colour is never the only carrier of information (frontend-diseno.md 3): always a dot plus a
+ * label. The class names are complete and static on purpose - Tailwind 4 scans the source for
+ * literals and cannot see a class name built out of a template string.
  */
 const STATE_CLASSES: Record<GameTableStatus, { badge: string; dot: string }> = {
   Unassigned: { badge: 'bg-state-draft-bg text-state-draft-fg', dot: 'bg-state-draft-dot' },

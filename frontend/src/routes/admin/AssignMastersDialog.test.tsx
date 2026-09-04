@@ -14,7 +14,7 @@ const PEOPLE: UserSummary[] = [
 
 const mutate = vi.fn()
 
-/** El buscador real tiene su propio test; acá interesa el orden de los chips y lo que se envía. */
+/** The real search box has its own test; what matters here is the order of the chips and what gets sent. */
 vi.mock('@/features/users', () => ({
   UserPicker: ({ onSelect, excludedIds }: { onSelect: (user: UserSummary) => void; excludedIds: readonly string[] }) => (
     <div>

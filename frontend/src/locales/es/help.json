@@ -132,6 +132,23 @@
         "step3": "Mirá «Mis sesiones» para el calendario y «Mi asistencia» para los tres números."
       }
     },
+    "tasks": {
+      "title": "Peticiones: lo que te pide una mesa",
+      "what": "Una mesa puede pedirte cosas: una ficha de personaje, un trasfondo, lo que el master necesite. Se responde con texto, con archivos, o con las dos cosas.",
+      "where": "Aparecen en la mesa: en su página pública y en «mi mesa». Cuando el master publica una, te llega una notificación.",
+      "beforeApplying": "Antes de postularte ya podés leer lo que se le pide a los candidatos: es parte de decidir si te anotás. Responder viene después de postularte.",
+      "howToAnswer": "Abrí la petición y tocá «Entregar». Si acepta archivos podés subir uno nuevo o reusar uno que ya subiste antes, sin volver a subirlo.",
+      "accumulate": "Cada entrega se guarda aparte y no reemplaza a la anterior. Si mandás una segunda versión, la primera sigue estando y el master ve las dos.",
+      "noJudgement": "Nadie te aprueba ni te rechaza una entrega: el sistema se la acerca al master y ahí termina su trabajo.",
+      "mandatory": "Una petición marcada como importante es un aviso del master, no una condición del sistema: no entregarla no te bloquea ni te saca de la mesa.",
+      "closed": "Si el master cierra una petición, deja de aceptar entregas. Lo que hayas entregado antes sigue estando.",
+      "due": "La fecha sugerida es una referencia. No pasa nada automático cuando se vence.",
+      "steps": {
+        "step1": "Entrá a la mesa y buscá «Lo que pide esta mesa».",
+        "step2": "Abrí la petición para leer el detalle y ver si acepta texto, archivos o ambos.",
+        "step3": "Tocá «Entregar», escribí o adjuntá lo que te pidieron, y enviá."
+      }
+    },
     "files": {
       "title": "Los archivos de mi mesa",
       "where": "Lo que tu master comparte aparece en «Mis mesas» → la mesa, y también en el detalle público de la mesa.",
@@ -250,6 +267,25 @@
         "step2": "Si aparece en la lista, elegilo.",
         "step3": "Si no aparece, tocá «Proponer» con el nombre que escribiste.",
         "step4": "Seguí armando la mesa: no tenés que esperar a que lo aprueben para publicarla."
+      }
+    },
+    "tasks": {
+      "title": "Peticiones: pedirle cosas a tu mesa",
+      "what": "Una petición es algo que le pedís a tu mesa: una ficha de personaje, un trasfondo, un mapa. Se responde con texto, con archivos, o con las dos cosas.",
+      "audience": "Elegís a quién se lo pedís. «Para quien quiera postularse» lo ve cualquiera que mire la mesa, incluso antes de anotarse; «para los jugadores» lo ven los que ya aceptaste.",
+      "single": "También podés pedirle algo a una sola persona de tu mesa: sirve para darle a cada jugador su material, y nadie más la ve.",
+      "notify": "Publicar es avisar: al confirmar, a cada destinatario le llega una notificación con el título de lo que pediste.",
+      "edit": "Corregir una petición no vuelve a avisar. El aviso sale una sola vez, cuando la publicás, para que la campana siga significando algo.",
+      "answers": "Al abrir una petición ves lo que entregaron y quiénes faltan. Los archivos que te mandan los podés abrir vos, aunque no sean tuyos.",
+      "accumulate": "Las entregas se acumulan: si alguien manda una segunda versión, la primera sigue estando. El sistema no decide cuál vale.",
+      "noJudgement": "No hay aprobar ni rechazar una entrega. Revisarla es tuyo: el sistema entrega lo que llegó y no opina.",
+      "mandatory": "Marcar una petición como importante es solo una etiqueta. No bloquea a nadie, no expulsa a nadie y no cambia ninguna otra cosa.",
+      "close": "Cerrar una petición corta las entregas nuevas. Lo que ya entregaron sigue estando y se sigue leyendo.",
+      "steps": {
+        "step1": "Entrá a tu mesa y abrí la pestaña Peticiones.",
+        "step2": "Tocá «Publicar petición» y escribí qué pedís y a quién.",
+        "step3": "Elegí si se responde con texto, con archivos o con ambos, y publicá: ahí sale el aviso.",
+        "step4": "Abrí la petición cuando quieras para ver lo que entregaron y a quién le falta."
       }
     },
     "files": {

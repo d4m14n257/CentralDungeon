@@ -8,13 +8,13 @@ import { useBackendStatus } from '@/hooks/useBackendStatus'
 import { BrandMark } from '@/layouts/components/BrandMark'
 
 /**
- * La puerta de entrada (frontend-diseno.md 4). Sobre el gradiente propio de la comunidad, el
- * único lugar donde aparece entero (#132). La letra chica no es decorativa: explica por qué no
- * hay registro ni contraseña, que es la primera pregunta de cualquiera que llega (#38).
+ * The front door (frontend-diseno.md 4). Over the community's own gradient, the one place it shows
+ * in full (#132). The small print is not decoration: it explains why there is no sign-up and no
+ * password, which is the first question anybody arriving asks (#38).
  *
- * El cambio de idioma vive dentro de la tarjeta (#198). Es la única pantalla sin `UserMenu`, así que
- * sin esto alguien que cae en un idioma que no lee no tiene forma de saber que se puede cambiar —
- * y la detección del navegador, que resuelve el caso común, no lo resuelve para todos.
+ * The language switch lives inside the card (#198). This is the only screen with no `UserMenu`, so
+ * without it somebody landing in a language they do not read has no way to know it can be changed —
+ * and browser detection, which handles the common case, does not handle everybody's.
  */
 export function LoginPage() {
   const { t } = useTranslation('auth')
@@ -30,9 +30,9 @@ export function LoginPage() {
             <a href={`${env.apiBaseUrl}/oauth2/authorization/discord`}>{t('login.cta')}</a>
           </Button>
         ) : (
-          // Sin backend, el <a> real llevaría a un error de conexión del navegador en vez de uno
-          // explicado (principio 2, frontend-diseno.md 1) - un <a> no acepta `disabled`, así que
-          // en este estado se reemplaza por un botón sin href en vez de deshabilitar el enlace.
+          // With no backend, a real <a> would lead to the browser's own connection error instead of
+          // an explained one (principio 2, frontend-diseno.md 1) - an <a> takes no `disabled`, so in
+          // this state it is replaced by a button with no href rather than a disabled link.
           <Button size="lg" className="mt-6 w-full" disabled>
             {t('login.cta')}
           </Button>

@@ -25,9 +25,9 @@ export function MasterTableDetailPage() {
   const { t } = useTranslation('master')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
-  // useManagedTable, no useGameTable: el backend verifica pertenencia antes de leer nada y
-  // devuelve 403 sin cuerpo si el actor no es master de esta mesa - useGameTable es el detalle
-  // público que cualquier jugador consulta en /tables/:id (decisiones.md #152).
+  // useManagedTable and not useGameTable: the backend checks membership before reading anything and
+  // answers 403 with no body when the actor does not run this table - useGameTable is the public
+  // detail any player reads on /tables/:id (decisiones.md #152).
   const { data: table, isPending, error, isLoadingError } = useManagedTable(tableId)
   const { data: me } = useMe()
 
@@ -57,6 +57,9 @@ export function MasterTableDetailPage() {
         </NavLink>
         <NavLink to="sessions" className={TAB_LINK_CLASSES}>
           {t('detail.tabs.sessions')}
+        </NavLink>
+        <NavLink to="tasks" className={TAB_LINK_CLASSES}>
+          {t('detail.tabs.tasks')}
         </NavLink>
         <NavLink to="files" className={TAB_LINK_CLASSES}>
           {t('detail.tabs.files')}

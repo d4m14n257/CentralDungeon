@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { gameTablesApi } from './gameTablesApi'
 import type { CreateGameTableRequest } from '../types'
 
-/** El admin puede crear una mesa sin ser su master (#72); assignMasters es lo que la abre. */
+/** An admin can create a table without running it (#72); assignMasters is what opens it. */
 export function useCreateUnassignedTable() {
   const queryClient = useQueryClient()
   return useMutation({

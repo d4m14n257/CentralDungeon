@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { HelpAudienceGate } from './HelpAudienceGate'
 import { HelpList, HelpSection, HelpSteps } from './HelpSection'
 
-/** Lo que necesita saber quien dirige (decisiones.md #168), y cómo se hace cada cosa (#170). */
+/** What somebody running a table needs to know (decisiones.md #168), and how each thing is done (#170). */
 export function HelpMastersTab() {
   const { t } = useTranslation('help')
 
@@ -40,6 +40,15 @@ export function HelpMastersTab() {
             ].map((key) => t(`masters.sessions.${key}`))}
           />
           <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4, 5].map((n) => t(`masters.sessions.steps.step${n}`))} />
+        </HelpSection>
+
+        <HelpSection id="tasks" title={t('masters.tasks.title')}>
+          <HelpList
+            items={['what', 'audience', 'single', 'notify', 'edit', 'answers', 'accumulate', 'noJudgement', 'mandatory', 'close'].map(
+              (key) => t(`masters.tasks.${key}`),
+            )}
+          />
+          <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`masters.tasks.steps.step${n}`))} />
         </HelpSection>
 
         <HelpSection id="files" title={t('masters.files.title')}>

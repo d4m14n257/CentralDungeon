@@ -13,7 +13,7 @@ const FIELDS = [
   { name: 'user_name', label: 'Nombre' },
 ]
 
-/** Envoltorio controlado: el componente no guarda estado, así que el test hace de dueño. */
+/** A controlled wrapper: the component keeps no state, so the test plays the owner. */
 function Harness() {
   const [value, setValue] = useState<SearchQueryValue>(emptySearchQuery)
   return (
@@ -121,7 +121,7 @@ describe('SearchQueryInput', () => {
     expect(screen.queryByRole('option', { name: /Unir/ })).not.toBeInTheDocument()
   })
 
-  /** Sin esto nadie podría buscar un valor que contenga la palabra: el separador es la barra. */
+  /** Without this nobody could search for a value containing the word: the separator is the slash. */
   it('un or suelto es parte del valor, no un conector', async () => {
     render(<Harness />)
 

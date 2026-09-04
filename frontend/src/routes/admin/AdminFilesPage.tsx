@@ -71,7 +71,7 @@ export function AdminFilesPage() {
   const query = buildSearchQuery(search)
   const debouncedQuery = useDebounce(query, 300)
 
-  // isLoadingError, no isError: ver docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(debouncedQuery, undefined, undefined, page)
   const publish = usePublishFile()
   const unpublish = useUnpublishFile()

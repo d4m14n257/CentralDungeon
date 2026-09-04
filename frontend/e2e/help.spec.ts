@@ -1,10 +1,10 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
 
 /**
- * La ayuda (decisiones.md #167) partida por audiencia (#168), enlazada por `#ref` y **atada al rol
- * de quien lee** (#169, #170). Se prueba acá y no en tests de componente porque lo que puede
- * romperse es la resolución de rutas: con el patrón relativo de `paths` el link terminaba en
- * `/admin/tables/help`, y un MemoryRouter no lo delata.
+ * The help (decisiones.md #167) split by audience (#168), linked by `#ref` and **tied to the
+ * reader's role** (#169, #170). It is tested here rather than in component tests because what can
+ * break is route resolution: with the relative pattern in `paths` the link ended at
+ * `/admin/tables/help`, and a MemoryRouter does not give that away.
  */
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
@@ -16,7 +16,7 @@ async function testLogin(request: APIRequestContext, discordId: string, roles: {
   expect(response.ok()).toBeTruthy()
 }
 
-/** El nombre lleva `label` porque un mismo test abre el diálogo dos veces: dos mesas, dos nombres. */
+/** The name carries a `label` because one test opens the dialog twice: two tables, two names. */
 async function openAssignMastersDialog(page: Page, label: string) {
   const tableName = `Mesa Ayuda E2E ${runId} ${label}`
   await page.goto('/admin/tables')
@@ -39,10 +39,10 @@ test('el buscador y el diálogo enlazan a la sección de ayuda que corresponde, 
     const dialog = await openAssignMastersDialog(page, 'ref')
     await dialog.getByRole('link', { name: 'Cómo funciona' }).click()
 
-    // Un #ref de otra audiencia: la ayuda de asignar masters vive en la de admins.
+    // A #ref from another audience: the help for assigning masters lives in the admins' page.
     await expect(page).toHaveURL(/\/help\/admins#assign-masters$/)
     await expect(page.getByRole('heading', { name: 'Mesas sin master' })).toBeVisible()
-    // La sección que la URL nombra queda marcada, para saber cuál se vino a leer (#170).
+    // The section the URL names is marked, so the reader can tell which one they came for (#170).
     await expect(page.locator('section#assign-masters')).toHaveAttribute('aria-current', 'location')
     await expect(page.locator('section#reviewing')).not.toHaveAttribute('aria-current', 'location')
 
@@ -64,7 +64,7 @@ test('la ayuda enseña con pasos, no solo describe', async ({ browser }) => {
     const page = await context.newPage()
 
     await page.goto('/help/masters')
-    // Los pasos son una lista ordenada: es lo que separa "enseñar a usarlo" de "describirlo" (#170).
+    // The steps are an ordered list: that is what separates "teaching how to use it" from "describing it" (#170).
     const steps = page.locator('section#creating ol > li')
     await expect(page.locator('section#creating').getByRole('heading', { name: 'Cómo se hace' })).toBeVisible()
     await expect(steps).toHaveCount(5)
@@ -89,7 +89,7 @@ test('cada quien ve la ayuda de su rol, y solo la de su rol', async ({ browser }
     await expect(page).toHaveURL(/\/help\/players$/)
     await expect(page.getByRole('heading', { name: 'Postularte a una mesa' })).toBeVisible()
 
-    // Entrar por URL a la ayuda de otro rol tampoco la muestra.
+    // Reaching another role's help by URL does not show it either.
     await page.goto('/help/admins')
     await expect(page.getByText('No tenés permiso')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Mesas sin master' })).toBeHidden()

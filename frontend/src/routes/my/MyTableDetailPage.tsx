@@ -6,8 +6,9 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { helpPath, tableDetailPath } from '@/config/paths'
-import { FileList } from '@/features/files'
+import { FileList, FilePicker } from '@/features/files'
 import { AttendanceSummaryView, SessionList, TableStatusBadge, useGameTable, useMySessions, type MySessions } from '@/features/tables'
+import { TableTasksSection } from '@/features/tasks'
 import { browserTimeZone, formatSlot, utcSlotToLocal } from '@/lib/date'
 import { ApiError } from '@/types/api'
 
@@ -132,6 +133,18 @@ export function MyTableDetailPage() {
           {tFiles('table.helpLink')}
         </Link>
       </section>
+
+      {/* What the table asks of its players, and of me in particular (#63, #76). The block owns its
+          own query and its own dialog; this screen only hands it the id and the two pieces that
+          belong to the files domain (§3.1.5, regla dura 16). */}
+      <div className="border-border border-t pt-4">
+        <TableTasksSection
+          tableId={tableId}
+          helpAudience="players"
+          renderFiles={(files) => <FileList files={files} />}
+          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished />}
+        />
+      </div>
 
       <div className="border-border border-t pt-4">
         <MySessionsSection tableId={tableId} />

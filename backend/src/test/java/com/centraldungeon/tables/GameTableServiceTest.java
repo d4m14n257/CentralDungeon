@@ -253,7 +253,7 @@ class GameTableServiceTest {
         verify(masterService).softDeleteAllOfTable(eq("table-7a"), any());
     }
 
-    /** La línea de #175: lo que ya fue público se cancela, no se borra. */
+    /** The line #175 draws: what was once public is cancelled, never deleted. */
     @Test
     void cannotDeleteATableThatWasAlreadyPublic() {
         GameTable table = persistedTable("table-7b", GameTableStatus.Opened);
@@ -283,7 +283,7 @@ class GameTableServiceTest {
         assertThatThrownBy(() -> gameTableService.delete("table-7d", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
     }
 
-    /** Una mesa borrada no existe para nadie: 404, no 403 (#25). */
+    /** A deleted table exists for nobody: 404 and not 403 (#25). */
     @Test
     void aDeletedTableIsNotFound() {
         GameTable table = persistedTable("table-7e", GameTableStatus.Deleted);

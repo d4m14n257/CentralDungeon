@@ -18,6 +18,7 @@ import com.centraldungeon.files.dto.PublishFileRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tasks.SubmissionFileRepository;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
 import java.nio.charset.StandardCharsets;
@@ -53,6 +54,10 @@ class FileServiceTest {
     @Mock
     private TableFileRepository tableFileRepository;
 
+    /** The fifth way a file is reachable: it was handed in to a task of a table the actor runs (#63). */
+    @Mock
+    private SubmissionFileRepository submissionFileRepository;
+
     @Mock
     private UserRepository userRepository;
 
@@ -71,6 +76,7 @@ class FileServiceTest {
         return new FileService(
                 fileRepository,
                 tableFileRepository,
+                submissionFileRepository,
                 userRepository,
                 storageService,
                 storageProperties,

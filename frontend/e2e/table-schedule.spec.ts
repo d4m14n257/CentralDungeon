@@ -1,19 +1,19 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 /**
- * F1.2 de punta a punta, contra el backend real: el wizard completo con agenda, y las dos reglas de
- * #178 que se ven desde la interfaz.
+ * F1.2 end to end, against the real backend: the complete wizard with an agenda, and the two rules
+ * of #178 that can be seen from the interface.
  *
- * Lo que un test unitario no puede probar y esto sí: que la hora que el master escribe en su zona
- * viaja en UTC y vuelve a leerse en su zona (#22), y que un choque se rechaza **con el motivo en
- * pantalla** — el 409 nombrando la mesa con la que se pisa, no un «no se pudo guardar».
+ * What no unit test can prove and this does: that the time a master types in their own zone travels
+ * as UTC and is read back in their zone (#22), and that a clash is refused **with the reason on
+ * screen** — the 409 naming the table it collides with, not a "could not save".
  *
- * Login por TestLoginController (perfil `test` del backend), igual que el resto de los specs.
+ * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
 
-/** Un viernes a las 20:00 locales, la franja típica de la comunidad. */
+/** A Friday at 20:00 local time, the community's usual slot. */
 const FRIDAY_EVENING = '20:00'
 
 async function testLogin(request: APIRequestContext, discordId: string, asMaster = false, asAdmin = false) {
@@ -31,17 +31,17 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 }
 
 /**
- * Recorre los cuatro pasos del wizard poniendo agenda: nombre, duración, una franja y el envío.
+ * Walks the wizard's four steps filling in an agenda: name, duration, one slot and the submit.
  *
- * @param page     la pestaña, ya autenticada como master
- * @param name     el nombre de la mesa
- * @param hourtime la hora local de la franja, `HH:mm`
+ * @param page     the tab, already signed in as a master
+ * @param name     the table's name
+ * @param hourtime the slot's local time, `HH:mm`
  */
 async function fillWizard(page: Page, name: string, hourtime: string) {
   await page.goto('/master/tables/new')
   await page.getByRole('textbox', { name: 'Nombre' }).fill(name)
   await page.getByRole('button', { name: 'Siguiente' }).click()
-  // Paso de catálogos: nada obligatorio, se pasa de largo.
+  // The catalogs step: nothing is required, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByLabel('Duración de una sesión').fill('03:00')
@@ -53,8 +53,8 @@ async function fillWizard(page: Page, name: string, hourtime: string) {
 }
 
 /**
- * El escenario central de F1.2: el master arma una mesa con agenda de verdad y la vuelve a ver en su
- * propia hora, con el equivalente UTC a la vista mientras la escribe (#22).
+ * F1.2's central scenario: the master builds a table with a real agenda and reads it back in their
+ * own time, with the UTC equivalent in view while they type it (#22).
  */
 test('a master builds a table with a real weekly agenda through the wizard', async ({ browser }) => {
   const tableName = `Mesa Con Agenda E2E ${runId}`
@@ -70,13 +70,13 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
     await master.page.getByLabel('Hora', { exact: true }).fill(FRIDAY_EVENING)
     await master.page.getByRole('button', { name: 'Agregar' }).click()
 
-    // La franja se lee en hora local y dice debajo qué se guarda: es la mitad de #22 que se ve.
+    // The slot reads in local time and says underneath what gets stored: it is the half of #22 that shows.
     await expect(master.page.getByText(`viernes ${FRIDAY_EVENING}`)).toBeVisible()
     await expect(master.page.getByText(/^En UTC:/)).toBeVisible()
 
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
 
-    // El último paso es el resumen: la agenda aparece antes de mandar nada a revisión.
+    // The last step is the summary: the agenda shows before anything is sent for review.
     await expect(master.page.getByRole('heading', { name: 'Revisión' })).toBeVisible()
     await expect(master.page.getByText(`viernes ${FRIDAY_EVENING}`)).toBeVisible()
 
@@ -88,9 +88,9 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
 })
 
 /**
- * R1 de #178, con el motivo en pantalla: la segunda mesa del mismo master en la misma franja se
- * rechaza con un 409 que **nombra** la mesa con la que se pisa. Un «no se pudo guardar» acá sería
- * exactamente el botón gris sin explicación que el principio 2 de `frontend-diseno.md` prohíbe.
+ * R1 of #178, with the reason on screen: the same master's second table in the same slot is refused
+ * with a 409 that **names** the table it collides with. A "could not save" here would be exactly the
+ * unexplained grey button that principio 2 of `frontend-diseno.md` forbids.
  */
 test('a master cannot run two tables in the same slot, and is told which one it clashes with', async ({ browser }) => {
   const firstName = `Mesa Choque A E2E ${runId}`
@@ -101,11 +101,11 @@ test('a master cannot run two tables in the same slot, and is told which one it 
     await fillWizard(master.page, firstName, FRIDAY_EVENING)
     await expect(master.page.getByRole('heading', { name: firstName })).toBeVisible()
 
-    // La segunda mesa se pisa entera con la primera: misma franja, misma duración.
+    // The second table overlaps the first entirely: same slot, same duration.
     await fillWizard(master.page, secondName, FRIDAY_EVENING)
 
     await expect(master.page.getByText(new RegExp(firstName))).toBeVisible()
-    // Y no se creó: el wizard sigue donde estaba, no navegó a la mesa nueva.
+    // And it was not created: the wizard is where it was, it did not navigate to a new table.
     await expect(master.page).toHaveURL(/\/master\/tables\/new$/)
   } finally {
     await master.context.close()
@@ -113,8 +113,8 @@ test('a master cannot run two tables in the same slot, and is told which one it 
 })
 
 /**
- * R2 de #178 desde el lado del jugador: una mesa que se pisa con otra donde ya juega se ve advertida
- * en el explorador y el botón de postularse explica por qué no se puede.
+ * R2 of #178 from the player's side: a table that overlaps one they already play at shows warned in
+ * the explorer, and the apply button explains why it cannot be used.
  */
 test('a player sees the clash warning and cannot apply to a table that overlaps one they play at', async ({ browser }) => {
   const playerDiscordId = `e2e-clash-player-${runId}`
@@ -125,7 +125,7 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
   const player = await newAuthenticatedPage(browser, playerDiscordId, false, false)
 
   try {
-    // Dos mesas de dos masters distintos en la misma franja: si fueran del mismo, R1 no dejaría.
+    // Two tables from two different masters in the same slot: from the same one, R1 would refuse.
     await fillWizard(master.page, firstTable, FRIDAY_EVENING)
     await expect(master.page.getByRole('heading', { name: firstTable })).toBeVisible()
     const firstId = master.page.url().split('/master/tables/')[1]
@@ -148,7 +148,7 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
       await expect(row).toBeHidden()
     }
 
-    // El jugador entra a la primera y se postula; el master lo acepta.
+    // The player opens the first one and applies; the master accepts them.
     await player.page.goto(`/tables/${firstId}`)
     await player.page.getByRole('button', { name: 'Postularme' }).click()
     await player.page.getByRole('dialog').getByRole('button', { name: 'Postularme' }).click()
@@ -158,7 +158,7 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
     await candidate.getByRole('button', { name: 'Aceptar' }).click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
 
-    // Ahora la segunda mesa choca: la card lo advierte y el detalle no deja postularse.
+    // Now the second table clashes: the card warns about it and the detail does not allow applying.
     await player.page.goto('/')
     const clashingCard = player.page.getByRole('link').filter({ hasText: secondTable })
     await expect(clashingCard.getByText('Choca con una mesa tuya')).toBeVisible()

@@ -5,9 +5,9 @@ import { queryKeys } from '@/api/queryKeys'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * Borrar el borrador de una mesa que nunca fue pública (decisiones.md #175). No hay detalle que
- * actualizar después: la mesa deja de existir para todos, así que se limpia su caché y se
- * invalidan los listados donde estaba.
+ * Deleting the draft of a table that was never public (decisiones.md #175). There is no detail to
+ * update afterwards: the table stops existing for everybody, so its cache entry is dropped and the
+ * listings it was in are invalidated.
  */
 export function useDeleteTable(tableId: string) {
   const queryClient = useQueryClient()

@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface PaginationControlsProps {
-  /** Página actual, base 0 — la misma base que usa el backend. */
+  /** The current page, zero-based — the same base the backend uses. */
   page: number
   totalPages: number
   totalElements: number
@@ -12,9 +12,9 @@ interface PaginationControlsProps {
 }
 
 /**
- * Paginación de una lista de trabajo (decisiones.md #173): acá sí hacen falta páginas con número,
- * porque quien modera necesita saber cuánto falta y poder volver a donde estaba. Anterior y
- * siguiente, no una tira de números: con el orden fijo del listado, saltar a la página 7 no
+ * Pagination for a working list (decisiones.md #173): numbered pages do earn their place here,
+ * because somebody moderating needs to know how much is left and to get back to where they were.
+ * Previous and next, not a strip of numbers: with the listing's fixed order, jumping to page 7 does not
  * significa nada estable.
  */
 export function PaginationControls({ page, totalPages, totalElements, onPageChange }: PaginationControlsProps) {

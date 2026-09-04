@@ -8,7 +8,7 @@ import { notificationText, useMarkAllAsRead, useNotificationClick, useNotificati
 import { relativeTimeFrom } from '@/lib/relativeTime'
 import { cn } from '@/lib/utils'
 
-/** Tono del badge por tipo - solo los que representan un desenlace cerrado (design/build.py sc_notifications). */
+/** The badge's tone per type - only the ones that stand for a settled outcome (design/build.py sc_notifications). */
 const OUTCOME_TONE: Record<string, { badge: string; dot: string; labelKey: string }> = {
   RegistrationAccepted: { badge: 'bg-state-open-bg text-state-open-fg', dot: 'bg-state-open-dot', labelKey: 'badge.accepted' },
   RegistrationRejected: { badge: 'bg-state-canceled-bg text-state-canceled-fg', dot: 'bg-state-canceled-dot', labelKey: 'badge.rejected' },
@@ -20,8 +20,8 @@ const OUTCOME_TONE: Record<string, { badge: string; dot: string; labelKey: strin
  */
 export function NotificationsPage() {
   const { t } = useTranslation('notifications')
-  // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya
-  // cargada (docs/decisiones.md #150).
+  // isLoadingError, not isError: a background refetch that fails must not hide a list that already
+  // loaded (docs/decisiones.md #150).
   const { data, isPending, isLoadingError, refetch } = useNotifications()
   const markAllAsRead = useMarkAllAsRead()
   const handleClick = useNotificationClick()
@@ -64,9 +64,9 @@ export function NotificationsPage() {
                   type="button"
                   onClick={() => handleClick(notification)}
                   className={cn(
-                    // hover:bg-accent no se nota sobre una fila "raised" - --color-accent es
-                    // --color-raised en globals.css. Un tono propio, más fuerte, que sí cambia
-                    // sobre las dos superficies (leída y no leída).
+                    // hover:bg-accent does not show on a "raised" row - --color-accent is
+                    // --color-raised in globals.css. A stronger tone of its own, which does change
+                    // over both surfaces (read and unread).
                     'hover:bg-border-strong/60! flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left',
                     unread ? 'bg-raised' : 'bg-transparent',
                   )}

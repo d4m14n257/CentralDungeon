@@ -5,6 +5,7 @@ import com.centraldungeon.files.FileMapper;
 import com.centraldungeon.notifications.NotificationMapper;
 import com.centraldungeon.registrations.RegistrationMapper;
 import com.centraldungeon.tables.GameTableMapper;
+import com.centraldungeon.tasks.TaskMapper;
 import com.centraldungeon.users.UserMapper;
 import org.mapstruct.factory.Mappers;
 import org.springframework.context.annotation.Bean;
@@ -80,5 +81,15 @@ public class MapperConfig {
     @Bean
     public FileMapper fileMapper() {
         return Mappers.getMapper(FileMapper.class);
+    }
+
+    /**
+     * The mapper for what a table asks and what people hand in.
+     *
+     * @return the MapStruct-generated implementation
+     */
+    @Bean
+    public TaskMapper taskMapper() {
+        return Mappers.getMapper(TaskMapper.class);
     }
 }

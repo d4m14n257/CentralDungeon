@@ -35,6 +35,9 @@ public class TestDataService {
     private static final String E2E_REGISTRATIONS = "select reg.id from TableRegistration reg where reg.gameTable.id in ("
             + E2E_TABLES + ") or reg.user.id in (" + E2E_USERS + ")";
     private static final String E2E_FILES = "select f.id from StoredFile f where f.userCreated.id in (" + E2E_USERS + ")";
+    private static final String E2E_TASKS = "select task.id from TableTask task where task.gameTable.id in (" + E2E_TABLES + ")";
+    private static final String E2E_SUBMISSIONS = "select sub.id from TaskSubmission sub where sub.task.id in ("
+            + E2E_TASKS + ") or sub.user.id in (" + E2E_USERS + ")";
 
     /** Bulk JPQL deletes, which is the one job that does not fit a repository. */
     private final EntityManager entityManager;
@@ -79,6 +82,15 @@ public class TestDataService {
         // remembered here - the agenda in F1.2 and the calendar in F1.3 were the other two (#171, #172).
         delete("delete from TableFile tf where tf.id.gameTableId in (" + E2E_TABLES + ") or tf.id.fileId in ("
                 + E2E_FILES + ")");
+        // And the fourth time, with tasks: submission_files -> task_submissions -> table_tasks ->
+        // game_tables is a three-deep chain, so it unwinds in that order and all of it before the
+        // table. The submitted files also point at `files`, which is why this goes before StoredFile
+        // below as well - the same two directions table_files has (#171, #172).
+        delete("delete from SubmissionFile sf where sf.id.submissionId in (" + E2E_SUBMISSIONS + ") or sf.id.fileId in ("
+                + E2E_FILES + ")");
+        delete("delete from TaskSubmission sub2 where sub2.task.id in (" + E2E_TASKS + ") or sub2.user.id in ("
+                + E2E_USERS + ")");
+        delete("delete from TableTask task2 where task2.gameTable.id in (" + E2E_TABLES + ")");
         int gameTables =
                 delete("delete from GameTable gt where gt.name like :tableName or gt.createdBy.id in (" + E2E_USERS + ")");
         // The blobs on disk are not touched. They are in a temporary directory under the test profile

@@ -33,6 +33,7 @@ export function notificationText(notification: Notification, t: TFunction<'notif
     tableName: params.tableName ?? '',
     otherTableName: params.otherTableName ?? '',
     actorName: params.actorName ?? '',
+    taskTitle: params.taskTitle ?? '',
   }
   // A type this build does not know about still has to render as something readable, so it falls
   // back to its own label rather than showing a raw key.

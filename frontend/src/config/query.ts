@@ -13,6 +13,8 @@ export const staleTime = {
   profile: 5 * 60 * 1000,
   /** A person's own files and a table's attachments: they change when somebody acts, not on their own. */
   files: 60_000,
+  /** What a table asks and what came in: same shape as files — somebody publishes, somebody answers. */
+  tasks: 60_000,
 } as const
 
 /**
@@ -29,24 +31,28 @@ export const staleTime = {
  */
 const EXPLAINED_ERROR_CODES = new Set([
   'SCHEDULE_CONFLICT',
-  // Every refusal of an upload (F1.4). "No se pudo guardar" would be the worst possible answer here:
+  // Every refusal of an upload (F1.4). "Could not save" would be the worst possible answer here:
   // the person picked a file, and what they need to know is which file and why - the type, or the
   // size and the limit. The limit travels as a number of bytes and the sentence is written on this
   // side, in their language and their units (#197).
   'FILE_TOO_LARGE',
   'FILE_TYPE_NOT_ALLOWED',
   'FILE_EMPTY',
+  // Handing in an answer to a request the master already closed (F1.5). "Could not save" is the
+  // worst possible answer to somebody who just wrote one: retrying will not help, and what they need
+  // to know is that the intake ended — which is a fact about the table, not about their connection.
+  'TASK_CLOSED',
 ])
 
 /**
- * Red de seguridad para toda mutación que no trae su propio `onError`: hoy ninguna lo trae, así
- * que una escritura que falla (backend caído, 500, lo que sea) no decía nada - el botón dejaba
- * de estar "pending" y ahí terminaba, sin que quien lo tocó se enterara. Las queries no pasan por
- * acá: sus cuatro estados obligatorios (frontend-diseno.md 5) ya muestran el error en la propia
- * pantalla, y duplicarlo acá sería el mismo aviso dos veces.
+ * The safety net for every mutation that does not bring its own `onError`, which today is all of
+ * them: a write that fails - backend down, a 500, whatever it is - used to say nothing at all. The
+ * button simply stopped being "pending" and that was the end of it, with whoever pressed it none the
+ * wiser. Queries do not come through here: their four mandatory states (frontend-diseno.md 5)
+ * already show the error on the screen itself, and repeating it here would be the same notice twice.
  *
- * Si una mutación puntual necesita un mensaje más específico, agrega su propio `onError` en el
- * `useMutation` - React Query llama a los dos, no reemplaza este.
+ * A particular mutation that needs a more specific message adds its own `onError` on the
+ * `useMutation` - React Query calls both, it does not replace this one.
  */
 function reportMutationError(error: unknown) {
   if (!(error instanceof ApiError)) {

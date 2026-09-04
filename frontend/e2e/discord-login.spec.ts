@@ -28,12 +28,12 @@ test('un miembro del servidor entra con Discord y queda logueado', async ({ page
   await page.goto('/login')
   await page.getByRole('link', { name: 'Entrar con Discord' }).click()
 
-  // Usuario nuevo: el callback lo manda a completar el onboarding, no al home.
+  // A new user: the callback sends them to complete the onboarding, not to the home.
   // CardTitle de shadcn es un div, no un heading: por texto, no por rol.
   await expect(page.getByText('Antes de empezar')).toBeVisible()
   await expect(page).toHaveURL(/\/onboarding$/)
 
-  // Y la sesión es real: al completar el onboarding el backend acepta el access token.
+  // And the session is real: on completing the onboarding the backend accepts the access token.
   await page.getByLabel('Nombre a mostrar').fill(`Vecna ${runId}`)
   await page.getByRole('combobox', { name: 'País' }).click()
   await page.getByRole('option', { name: 'Argentina' }).click()
@@ -48,9 +48,9 @@ test('quien no está en el servidor no entra y recibe la invitación', async ({ 
   await page.goto('/login')
   await page.getByRole('link', { name: 'Entrar con Discord' }).click()
 
-  // El título va dentro de un chip de tono (CallbackCard), no en un heading: por texto, no por rol.
+  // The title sits inside a toned chip (CallbackCard) rather than a heading: matched by text, not by role.
   await expect(page.getByText('Todavía no sos parte del servidor')).toBeVisible()
-  // Que sea una invitación de Discord, no cuál: si backend/.env define DISCORD_INVITE_URL, esa
-  // variable de entorno le gana a application-test.yml y el valor concreto depende de la máquina.
+  // That it is a Discord invitation, not which one: if backend/.env defines DISCORD_INVITE_URL, that
+  // environment variable beats application-test.yml and the concrete value depends on the machine.
   await expect(page.getByRole('link', { name: 'Unirme al servidor' })).toHaveAttribute('href', /^https:\/\/discord\.gg\//)
 })

@@ -16,11 +16,15 @@ import type { PublicAudience, StoredFile } from '../types'
 
 interface FilePickerProps {
   /**
-   * Called with the id of the file that was chosen — whether it was just uploaded or picked out of
-   * the history. **The two paths end in the same callback on purpose**: to whoever is attaching, they
+   * Called with the file that was chosen — whether it was just uploaded or picked out of the
+   * history. **The two paths end in the same callback on purpose**: to whoever is attaching, they
    * are the same decision, and the difference is only where the bytes came from (#65).
+   *
+   * The name travels alongside the id because some callers show the pick back before doing anything
+   * with it — answering a request lets several files be gathered and then sent (#76) — and looking a
+   * name up again for something the picker just had is a round trip for nothing.
    */
-  onPick: (fileId: string) => void
+  onPick: (file: { fileId: string; name: string }) => void
   /** True while the caller is doing something with the pick, to keep the buttons from firing twice. */
   isBusy?: boolean
   /**
@@ -55,7 +59,7 @@ interface FilePickerProps {
  * The per-file cap is stated up front rather than after a failed upload, because a limit somebody
  * only meets by breaking it is a limit that reads as a bug (principio 2 de frontend-diseno.md §1).
  *
- * @param props.onPick            called with the id of the chosen file
+ * @param props.onPick            called with the chosen file's id and name
  * @param props.isBusy            true while the caller is acting on a pick
  * @param props.offerPublished    whether to offer what the platform published
  * @param props.publishedAudience narrows that tab to one audience, or undefined for all of it
@@ -79,7 +83,7 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, pub
     upload.mutate(
       { file, input: { fileType: 'Private' } },
       {
-        onSuccess: (uploaded: StoredFile) => onPick(uploaded.id),
+        onSuccess: (uploaded: StoredFile) => onPick({ fileId: uploaded.id, name: uploaded.name }),
         // Cleared on failure too, not only on success: the input keeps the rejected file otherwise,
         // and picking the same one again fires no change event at all - so somebody who fixes what
         // the message told them to fix would find the control silently dead.
@@ -136,7 +140,13 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, pub
                     <p className="truncate text-sm">{file.name}</p>
                     <p className="text-fg-muted text-xs">{t(`size.${size.unit}`, { value: size.value })}</p>
                   </div>
-                  <Button type="button" size="sm" variant="secondary" disabled={isBusy} onClick={() => onPick(file.id)}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={isBusy}
+                    onClick={() => onPick({ fileId: file.id, name: file.name })}
+                  >
                     {t('picker.use')}
                   </Button>
                 </li>
@@ -162,7 +172,13 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, pub
                       <p className="truncate text-sm">{file.name}</p>
                       <p className="text-fg-muted text-xs">{t(`size.${size.unit}`, { value: size.value })}</p>
                     </div>
-                    <Button type="button" size="sm" variant="secondary" disabled={isBusy} onClick={() => onPick(file.id)}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={isBusy}
+                      onClick={() => onPick({ fileId: file.id, name: file.name })}
+                    >
                       {t('picker.use')}
                     </Button>
                   </li>

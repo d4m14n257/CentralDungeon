@@ -10,19 +10,19 @@ import type { GameTableSummary } from '../types'
 import { TableStatusBadge } from './TableStatusBadge'
 
 /**
- * La ficha del explorador (frontend-diseno.md 4). El estado va debajo del título y no al lado:
- * es lo primero que se lee después del nombre, y así no compite con él por el ancho.
- * El pie separa lo que describe a la mesa de lo que describe a quien la dirige.
+ * The explorer's card (frontend-diseno.md 4). The status goes under the title rather than beside
+ * it: it is the first thing read after the name, and this way it does not compete with it for
+ * width. The footer separates what describes the table from what describes whoever runs it.
  *
- * `alreadyApplied` es un booleano plano, no el estado real de la postulación (Candidate/Player):
- * esta feature no puede importar de `features/registrations` (regla dura 16), y "ya te
- * postulaste" es verdad tanto si sigue pendiente como si ya te aceptaron - no hace falta más.
- * Quien cruza esa data es la ruta que compone (`TableListPage`), no esta card.
+ * `alreadyApplied` is a plain boolean and not the application's real status (Candidate/Player):
+ * this feature cannot import from `features/registrations` (regla dura 16), and "you already
+ * applied" is true whether it is still pending or you were accepted - nothing more is needed. What
+ * crosses that data is the screen that composes them (`TableListPage`), not this card.
  *
- * La agenda se muestra **en hora local** (#22): lo que viaja es UTC y la conversión es de
- * `lib/date.ts`. Y si la mesa choca con algo a lo que el lector ya se comprometió, la card lo
- * advierte con el motivo a la vista (#178) - un aviso que no se explica es tan inútil como un botón
- * gris sin razón (principio 2 de frontend-diseno.md 1).
+ * The agenda is shown **in local time** (#22): what travels is UTC and the conversion belongs to
+ * `lib/date.ts`. And when the table clashes with something the reader is already committed to, the
+ * card warns with the reason in view (#178) - a warning that does not explain itself is as useless
+ * as a grey button with no stated reason (principio 2 de frontend-diseno.md 1).
  */
 export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTableSummary; linkTo?: string; alreadyApplied?: boolean }) {
   const { t, i18n } = useTranslation('tables')
@@ -61,7 +61,7 @@ export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTa
               ? t('explorer.players', { current: table.playerCount, max: table.maxPlayers })
               : t('explorer.playersUnlimited', { current: table.playerCount })}
           </span>
-          {/* Si el nombre no entra se recorta él, nunca el karma: el karma es el dato que se compara. */}
+          {/* If the name does not fit, the name is what gets cut, never the karma: the karma is the number being compared. */}
           <span className="flex min-w-0 items-center gap-1">
             <span className="truncate">{table.primaryMaster.name}</span>
             <span className="shrink-0">·</span>

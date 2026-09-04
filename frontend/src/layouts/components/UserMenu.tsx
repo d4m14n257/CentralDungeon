@@ -33,7 +33,7 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
   const { resolvedTheme, setTheme } = useTheme()
   const { language, setLanguage } = useLanguage()
 
-  // Antes de onboarding todavía no hay nombre a mostrar (#134); el avatar no puede quedar vacío.
+  // Before onboarding there is no name to show yet (#134); the avatar cannot be left empty.
   const label = displayName ?? t('nav.accountFallback')
   const initials = label
     .split(' ')
@@ -65,7 +65,7 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel className="truncate">{label}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {/* La ayuda vive acá y no en la barra: se consulta una vez y no compite con la navegación. */}
+        {/* The help lives here and not in the bar: it is read once and does not compete with the navigation. */}
         <DropdownMenuItem onSelect={() => void navigate(helpPath())}>
           <CircleQuestionMark className="size-4" />
           {t('nav.help')}

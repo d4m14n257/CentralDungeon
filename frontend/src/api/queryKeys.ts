@@ -35,6 +35,20 @@ export const queryKeys = {
     admin: (query?: string, statuses?: string[], fileTypes?: string[], page = 0) =>
       ['files', 'admin', query, statuses, fileTypes, page] as const,
   },
+  tasks: {
+    /** One table's board, as the people running it see it. The whole list, never paginated. */
+    table: (tableId: string) => ['tasks', 'table', tableId] as const,
+    /**
+     * What the table asks of **this** reader. Its own branch and not part of `tables.detail`:
+     * the answer depends on who is asking — whether they play there, and who a `Single` task names —
+     * so two people looking at the same table must not share one cache entry (#121).
+     */
+    applicable: (tableId: string) => ['tasks', 'applicable', tableId] as const,
+    /** Everything handed in to one task, plus who has not answered. Only the masters read it. */
+    submissions: (taskId: string) => ['tasks', 'submissions', taskId] as const,
+    /** My own answers to one task. A list, because answers accumulate (#76). */
+    mine: (taskId: string) => ['tasks', 'mine', taskId] as const,
+  },
   catalogs: {
     /** The whole branch. What every catalog mutation invalidates: one admin action can move rows
      *  that are not on screen - a merge repoints a group, a disable hands it to a successor - so
@@ -52,6 +66,8 @@ export const queryKeys = {
   registrations: {
     candidates: (tableId: string) => ['registrations', 'candidates', tableId] as const,
     mine: () => ['registrations', 'mine'] as const,
+    /** A table's roster. Its own branch: the candidate queue's order is a rule (#28), a roster's is not. */
+    players: (tableId: string) => ['registrations', 'players', tableId] as const,
   },
   notifications: {
     list: () => ['notifications', 'list'] as const,

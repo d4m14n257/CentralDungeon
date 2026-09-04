@@ -15,6 +15,7 @@ import enNotifications from '@/locales/en/notifications.json'
 import enOnboarding from '@/locales/en/onboarding.json'
 import enRegistrations from '@/locales/en/registrations.json'
 import enTables from '@/locales/en/tables.json'
+import enTasks from '@/locales/en/tasks.json'
 import enUsers from '@/locales/en/users.json'
 
 import admin from '@/locales/es/admin.json'
@@ -29,6 +30,7 @@ import notifications from '@/locales/es/notifications.json'
 import onboarding from '@/locales/es/onboarding.json'
 import registrations from '@/locales/es/registrations.json'
 import tables from '@/locales/es/tables.json'
+import tasks from '@/locales/es/tasks.json'
 import users from '@/locales/es/users.json'
 
 /**
@@ -47,7 +49,7 @@ void i18n.use(initReactI18next).init({
   fallbackLng: DEFAULT_LANGUAGE,
   defaultNS: 'common',
   resources: {
-    es: { common, auth, onboarding, catalogs, tables, registrations, notifications, master, admin, users, help, dev, files },
+    es: { common, auth, onboarding, catalogs, tables, registrations, notifications, master, admin, users, help, dev, files, tasks },
     en: {
       common: enCommon,
       auth: enAuth,
@@ -61,6 +63,7 @@ void i18n.use(initReactI18next).init({
       users: enUsers,
       help: enHelp,
       files: enFiles,
+      tasks: enTasks,
       dev: enDev,
     },
   },

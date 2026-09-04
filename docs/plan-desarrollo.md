@@ -105,9 +105,9 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **Frontend** — Wizard de creación completo: tipo, sistema, tags, plataformas, fecha de inicio, duración, sesiones, cupo y agenda. `ScheduleEditor` en hora local, con la advertencia de choque en el explorador y el motivo del bloqueo en el botón de postularse. `/admin/catalogs` (#179). Sesiones y asistencia en `/master/tables/:id`. Publicar peticiones y ver entregas. `FilePicker` con subida o reutilización del historial (#65). Co-masters desde la pantalla del master — `POST /{id}/masters` existe desde E2 y nunca tuvo interfaz. El dashboard **`/master`** (#136).
 
-**El mínimo del jugador para poder probar**: en `/tables/:id` y `/my/tables/:id`, lectura de la agenda, las sesiones, las peticiones publicadas y los archivos públicos. Solo lectura.
+**El mínimo del jugador para poder probar**: en `/tables/:id` y `/my/tables/:id`, lectura de la agenda, las sesiones y los archivos públicos, más las peticiones que le aplican **con su entrega** — texto y archivos. Entregar se adelantó de F2 a F1.5 (#210): sin nadie que pueda entregar, el padrón de faltantes muestra a todos como faltantes siempre y la regla que más importa del subsistema —las entregas se acumulan (#76)— queda sin ejercitar. El resto del lado del jugador sigue siendo solo lectura.
 
-**No entra**: pedir pausa ni veto (F3, necesitan `approval_requests`), entregar respuestas a las peticiones (F2), karma (F4).
+**No entra**: pedir pausa ni veto (F3, necesitan `approval_requests`), `/my/files` ni el archivo de personaje en la postulación (F2), karma (F4).
 
 **Entrega**: un master arma su mesa entera y la lleva hasta el final, y un jugador ve todo lo que publicó.
 
@@ -117,7 +117,7 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **Backend** — `task_submissions` + `submission_files` (#63, #76). `registration_files` para el archivo de personaje en la postulación. Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56). **Retirar una postulación ya no está acá**: se adelantó a F1, porque la notificación de choque de horarios (#178) pide una acción que sin ella no existe.
 
-**Frontend** — `/my/tables/:id` completo: agenda en hora local, sesiones, su asistencia y sus peticiones. Entregar respuestas con adjuntos. Archivo de personaje al postularse, sobre el `FilePicker` de F1. **`/my/files`** (#65) y **`/my/history`** (#133). Filtros del explorador por sistema, tag y plataforma — es donde el buscador estrena `/tag`, el caso que motivó el diseño de #164. **`/profile`** y **`/users/:id`** con lo que exista; el karma llega en F4.
+**Frontend** — `/my/tables/:id` completo: agenda en hora local, sesiones, su asistencia y sus peticiones — entregar respuestas con adjuntos ya llegó con F1.5 (#210). Archivo de personaje al postularse, sobre el `FilePicker` de F1. **`/my/files`** (#65) y **`/my/history`** (#133). Filtros del explorador por sistema, tag y plataforma — es donde el buscador estrena `/tag`, el caso que motivó el diseño de #164. **`/profile`** y **`/users/:id`** con lo que exista; el karma llega en F4.
 
 **Entrega**: el jugador vive la mesa dentro del sistema, no solo se postula.
 

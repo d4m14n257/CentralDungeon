@@ -1,0 +1,98 @@
+{
+  "audience": {
+    "Candidates": "Para quien quiera postularse",
+    "Players": "Para los jugadores",
+    "Single": "Para una persona",
+    "singleNamed": "Para {{name}}"
+  },
+  "status": {
+    "Open": "Abierta",
+    "Closed": "Cerrada"
+  },
+  "board": {
+    "title": "Peticiones",
+    "publish": "Publicar petición",
+    "emptyTitle": "Esta mesa todavía no pide nada",
+    "emptyDescription": "Publicá una petición para pedirles algo a tus candidatos o a tus jugadores. Al publicarla les llega un aviso.",
+    "answered": "Entregaron {{people}} de {{total}}",
+    "mandatory": "Importante",
+    "edit": "Editar la petición",
+    "close": "Cerrar la petición",
+    "closeTitle": "¿Cerrar esta petición?",
+    "closeDescription": "Deja de recibir entregas. Lo que ya entregaron sigue estando y se puede seguir leyendo.",
+    "answersWith": "Se responde con:",
+    "due": "Fecha sugerida:",
+    "session": "Atada a:",
+    "channels": {
+      "both": "texto y archivos",
+      "text": "solo texto",
+      "files": "solo archivos"
+    },
+    "helpLink": "Cómo funcionan las peticiones"
+  },
+  "form": {
+    "publishTitle": "Publicar una petición",
+    "publishDescription": "Al publicarla les llega un aviso a las personas a las que va dirigida.",
+    "editTitle": "Editar la petición",
+    "editDescription": "Corregirla no vuelve a avisar: el aviso sale una sola vez, al publicarla.",
+    "titleLabel": "Qué pedís",
+    "titleRequired": "Poné un título: es lo que se ve en el aviso y en la lista.",
+    "descriptionLabel": "Detalle",
+    "audienceLabel": "A quién se lo pedís",
+    "audienceHint": {
+      "Candidates": "Lo ve cualquiera que mire la mesa, incluso antes de postularse. Responden los candidatos.",
+      "Players": "Lo ven y lo responden los jugadores que ya aceptaste.",
+      "Single": "Lo ve y lo responde una sola persona de tu mesa."
+    },
+    "targetLabel": "A quién",
+    "targetPlaceholder": "Elegí a un jugador",
+    "targetRequired": "Elegí a la persona a la que se lo pedís.",
+    "targetNoPlayers": "Todavía no hay jugadores aceptados en esta mesa.",
+    "answerLabel": "Cómo se responde",
+    "acceptsText": "Con texto",
+    "acceptsFiles": "Con archivos",
+    "answerChannelRequired": "Elegí al menos una forma de responder.",
+    "sessionLabel": "Atarla a una sesión",
+    "sessionNone": "En cualquier momento",
+    "sessionOption": "Sesión {{number}}",
+    "dueLabel": "Fecha sugerida",
+    "dueHint": "En tu zona horaria ({{timeZone}}). No pasa nada cuando se vence: es una referencia.",
+    "mandatoryLabel": "Marcarla como importante",
+    "mandatoryHint": "Es solo una etiqueta. No bloquea nada ni saca a nadie de la mesa.",
+    "cancel": "Cancelar",
+    "publish": "Publicar y avisar",
+    "save": "Guardar",
+    "publishedToast": "Petición publicada. Ya les llegó el aviso.",
+    "savedToast": "Petición actualizada."
+  },
+  "submissions": {
+    "title": "Entregas",
+    "emptyTitle": "Todavía no entregó nadie",
+    "emptyDescription": "Cuando alguien entregue algo, va a aparecer acá con lo que haya mandado.",
+    "missingTitle": "Faltan {{missing}} de {{total}}",
+    "nobodyMissing": "Ya entregaron todos.",
+    "missingHint": "Esta lista es informativa: no entregar no bloquea nada ni saca a nadie de la mesa."
+  },
+  "applicable": {
+    "title": "Lo que pide esta mesa",
+    "emptyTitle": "Esta mesa no te pide nada",
+    "emptyDescription": "Cuando el master publique una petición que te toque, la vas a ver acá.",
+    "answered_one": "Entregaste 1 vez",
+    "answered_other": "Entregaste {{count}} veces",
+    "answer": "Entregar",
+    "answerAgain": "Entregar de nuevo",
+    "cannotAnswer": "Vas a poder responder esto cuando te postules a la mesa.",
+    "mineTitle": "Lo que entregué",
+    "helpLink": "Cómo funcionan las peticiones"
+  },
+  "submit": {
+    "title": "Entregar: {{title}}",
+    "description": "Lo que mandes se suma a lo anterior; nada se reemplaza.",
+    "contentLabel": "Tu respuesta",
+    "filesLabel": "Archivos",
+    "removeFile": "Quitar el archivo",
+    "accumulatesHint": "Cada entrega se guarda aparte. Si ya entregaste algo, sigue estando.",
+    "send": "Entregar",
+    "sentToast": "Entregado."
+  }
+}

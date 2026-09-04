@@ -1,13 +1,13 @@
 import { z } from 'zod'
 
 /**
- * El formulario usa undefined/"" para "vacío"; la API espera null - se convierte al enviar.
- * maxPlayers/totalSessions quedan como string (no z.coerce.number()): mezclar coerce con
- * .optional() bajo exactOptionalPropertyTypes rompe la inferencia de tipos del resolver.
+ * The form uses undefined/"" for "empty"; the API expects null - the conversion happens on submit.
+ * maxPlayers/totalSessions stay strings (not z.coerce.number()): mixing coerce with .optional()
+ * under exactOptionalPropertyTypes breaks the resolver's type inference.
  *
- * Los catálogos y la agenda **no** están acá: no son campos de texto sino colecciones que el wizard
- * maneja con su propio estado y que valida el servidor —profundidad de catálogo (#59), choque de
- * horarios (#178)—. Meterlos en el esquema duplicaría reglas que solo el backend puede decidir.
+ * The catalogs and the agenda are **not** here: they are not text fields but collections the wizard
+ * keeps in its own state and the server validates - catalog depth (#59), schedule clashes (#178).
+ * Putting them in the schema would duplicate rules only the backend can decide.
  */
 export const createGameTableSchema = z.object({
   name: z.string().min(1).max(128),
@@ -15,9 +15,9 @@ export const createGameTableSchema = z.object({
   permitted: z.string().max(10000).optional(),
   requirements: z.string().max(10000).optional(),
   tableTypeId: z.string().optional(),
-  /** `YYYY-MM-DDTHH:mm` tal como lo entrega un `<input type="datetime-local">`, en hora local. */
+  /** `YYYY-MM-DDTHH:mm` exactly as an `<input type="datetime-local">` gives it, in local time. */
   startDate: z.string().optional(),
-  /** `HH:mm` - cuánto dura **una** sesión, no la campaña. */
+  /** `HH:mm` - how long **one** session lasts, not the campaign. */
   duration: z.string().optional(),
   maxPlayers: z.string().optional(),
   totalSessions: z.string().optional(),
@@ -30,16 +30,16 @@ export const createGameTableSchema = z.object({
 export type CreateGameTableForm = z.infer<typeof createGameTableSchema>
 
 /**
- * Los cuatro pasos del wizard, en orden: identidad → catálogos → agenda → cupo y revisión. Una
- * decisión por paso (`fase-1-master.md` F1.2), y el resumen antes de enviar.
+ * The wizard's four steps, in order: identity → catalogs → agenda → capacity and review. One
+ * decision per step (`fase-1-master.md` F1.2), and the summary before sending.
  *
- * Es una tupla de literales y no un `number`: `Record<WizardStep, …>` obliga a cubrir los cuatro
- * casos al mapear a un título, que es la misma razón por la que los estados de mesa son una unión
+ * A tuple of literals and not a `number`: `Record<WizardStep, …>` forces all four cases to be
+ * covered when mapping to a title, which is the same reason the table statuses are a union
  * (§3.2 regla 9).
  */
 export const WIZARD_STEPS = ['identity', 'catalogs', 'schedule', 'capacity'] as const
 
-/** Uno de los cuatro pasos del wizard de creación. */
+/** One of the four steps of the create-table wizard. */
 export type WizardStep = (typeof WIZARD_STEPS)[number]
 
 /** Validates the justification every denying transition needs: cancel, request changes, pause. */

@@ -25,6 +25,15 @@ export interface Registration {
 }
 
 /**
+ * Mirror of `TablePlayerResponse` — one player currently at a table.
+ *
+ * Derived from {@link Registration} rather than declared again (regla dura 6): it is the same three
+ * facts about the same person, minus everything that is about the application rather than about
+ * them. A roster, not a queue.
+ */
+export type TablePlayer = Pick<Registration, 'userId' | 'userName' | 'userKarma'>
+
+/**
  * What applying sends. The table comes from the URL and the applicant from the session, so the note
  * is all that is left (#121).
  */

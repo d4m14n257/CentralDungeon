@@ -11,11 +11,11 @@ import { BrandMark } from '@/layouts/components/BrandMark'
 import { useAuth } from '@/providers/AuthProvider'
 
 /**
- * Los cinco estados del retorno de OAuth (design/out/screen-auth-callback.html). El de
- * verificación queda como título llano; los otros cuatro llevan el título adentro de un chip de
- * tono, que reemplaza al heading - así lee cada uno como lo que es (un paso que espera, uno que
- * se cortó) en vez de un heading gris repetido cuatro veces. El wordmark arriba es lo único que
- * esta pantalla comparte con /login - sin header, es la única marca de que seguís en CentralDungeon.
+ * The five states of the OAuth return (design/out/screen-auth-callback.html). The verifying one
+ * stays a plain title; the other four carry the title inside a toned chip that replaces the heading -
+ * so each reads as what it is (a step that is waiting, a step that broke) instead of a grey heading
+ * repeated four times. The wordmark at the top is the only thing this screen shares with /login -
+ * with no header, it is the only sign you are still in CentralDungeon.
  */
 function CallbackCard({ tone, title, children }: { tone?: 'pending' | 'canceled'; title: string; children?: ReactNode }) {
   return (
@@ -73,9 +73,9 @@ export function OAuthCallbackPage() {
     )
   }
 
-  // status = Blocked del lado nuestro, sin relación con Discord ni con el guild - por eso no
-  // ofrece reintentar, reintentar no cambia nada (design/build.py, sc_callback). La única salida
-  // es volver al login.
+  // status = Blocked on our side, with nothing to do with Discord or the guild - which is why it
+  // offers no retry: retrying changes nothing (design/build.py, sc_callback). The only way out is
+  // back to the login.
   if (error === 'user_blocked') {
     return (
       <CallbackCard tone="canceled" title={t('callback.blockedTitle')}>

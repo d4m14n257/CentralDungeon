@@ -50,6 +50,12 @@ export function RichTextEditor({ value, onChange, ariaLabel, className }: RichTe
     content: value,
     editorProps: {
       attributes: {
+        // The role is written out because a `contenteditable` div is not announced as a text field
+        // on its own: Chrome exposes this one as a plain group, so a screen reader reaches an
+        // editing area that never says it can be typed into. `aria-multiline` is the other half —
+        // without it, assistive tech reads it as a single-line field and Enter means "submit".
+        role: 'textbox',
+        'aria-multiline': 'true',
         'aria-label': ariaLabel,
         class: 'min-h-32 px-3 py-2 focus:outline-none text-sm leading-6',
       },

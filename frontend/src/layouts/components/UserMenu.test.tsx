@@ -58,7 +58,7 @@ describe('UserMenu', () => {
   it('falls back to a generic label before onboarding sets a display name', async () => {
     renderMenu(null)
 
-    // El avatar no puede quedar vacío ni mostrar un signo de pregunta como nombre.
+    // The avatar cannot be left empty, nor show a question mark as a name.
     expect(screen.getByRole('button', { name: 'Mi cuenta' })).toBeInTheDocument()
   })
 

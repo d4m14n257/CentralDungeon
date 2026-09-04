@@ -23,8 +23,8 @@ import type { Registration } from '@/features/registrations'
 export function MyApplicationsPage() {
   const { t, i18n } = useTranslation('registrations')
   const withdraw = useWithdrawApplication()
-  // Retirarse no tiene vuelta atrás: la fila queda marcada y hay que postularse de nuevo, así que
-  // pasa por ConfirmDialog explicando la consecuencia (principio 3 de frontend-diseno.md 1).
+  // Withdrawing has no way back: the row is marked and applying again is a new application, so it
+  // goes through ConfirmDialog explaining the consequence (principio 3 de frontend-diseno.md 1).
   const confirm = useConfirm()
 
   async function onWithdraw(registration: Registration) {
@@ -40,8 +40,8 @@ export function MyApplicationsPage() {
       onSuccess: () => toast.success(t('myApplications.withdrawSuccess')),
     })
   }
-  // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya
-  // cargada (docs/decisiones.md #150).
+  // isLoadingError, not isError: a background refetch that fails must not hide a list that already
+  // loaded (docs/decisiones.md #150).
   const { data, isPending, isLoadingError, refetch } = useMyApplications()
 
   return (
@@ -65,7 +65,7 @@ export function MyApplicationsPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium">{registration.gameTableName}</p>
                 <p className="text-fg-subtle text-xs">
-                  {/* La fecha pasa por lib/date.ts: locale y zona son parámetros, nunca constantes (#111). */}
+                  {/* The date goes through lib/date.ts: locale and zone are parameters, never constants (#111). */}
                   {t('myApplications.appliedOn', {
                     date: formatDate(registration.createdAt, i18n.language, browserTimeZone()),
                   })}
@@ -84,8 +84,8 @@ export function MyApplicationsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <RegistrationStatusBadge status={registration.status} />
-                {/* Solo mientras esté pendiente: una vez aceptado hay una mesa contando con vos, y
-                    salirse es una conversación con el master, no un botón (#178). */}
+                {/* Only while it is pending: once accepted there is a table counting on you, and
+                    leaving is a conversation with the master, not a button (#178). */}
                 {registration.status === 'Candidate' && (
                   <Button
                     variant="ghost"

@@ -7,7 +7,7 @@ import { HelpList, HelpSection, HelpSteps, HelpTerms } from './HelpSection'
 
 const APPLICATION_STATUSES: RegistrationStatus[] = ['Candidate', 'Player', 'Rejected']
 
-/** Lo que necesita saber quien juega (decisiones.md #168), y cómo se hace cada cosa (#170). */
+/** What somebody playing needs to know (decisiones.md #168), and how each thing is done (#170). */
 export function HelpPlayersTab() {
   const { t } = useTranslation(['help', 'registrations'])
 
@@ -49,6 +49,15 @@ export function HelpPlayersTab() {
             )}
           />
           <HelpSteps title={t('help:stepsTitle')} items={[1, 2, 3].map((n) => t(`help:players.mySessions.steps.step${n}`))} />
+        </HelpSection>
+
+        <HelpSection id="tasks" title={t('help:players.tasks.title')}>
+          <HelpList
+            items={['what', 'where', 'beforeApplying', 'howToAnswer', 'accumulate', 'noJudgement', 'mandatory', 'closed', 'due'].map(
+              (key) => t(`help:players.tasks.${key}`),
+            )}
+          />
+          <HelpSteps title={t('help:stepsTitle')} items={[1, 2, 3].map((n) => t(`help:players.tasks.steps.step${n}`))} />
         </HelpSection>
 
         <HelpSection id="files" title={t('help:players.files.title')}>

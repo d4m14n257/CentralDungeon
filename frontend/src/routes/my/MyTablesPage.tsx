@@ -14,8 +14,8 @@ import { GameTableCard, useMyTables } from '@/features/tables'
  */
 export function MyTablesPage() {
   const { t } = useTranslation('tables')
-  // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya
-  // cargada (docs/decisiones.md #150).
+  // isLoadingError, not isError: a background refetch that fails must not hide a list that already
+  // loaded (docs/decisiones.md #150).
   const { data, isPending, isLoadingError, refetch } = useMyTables()
 
   return (

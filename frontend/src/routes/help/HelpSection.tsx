@@ -6,23 +6,23 @@ import { useScrollOnHash } from '@/hooks/useScrollOnHash'
 import { cn } from '@/lib/utils'
 
 interface HelpSectionProps {
-  /** El `#ref` con el que se enlaza desde el resto de la aplicación (decisiones.md #168). */
+  /** The `#ref` the rest of the application links to (decisiones.md #168). */
   id: string
   title: string
   children: ReactNode
 }
 
 /**
- * Un bloque de la ayuda. El `id` es su dirección: `/help#search`, `/help/admins#assign-masters`.
- * Cambiarlo rompe los links que ya existen, así que se trata como parte del contrato de la
- * pantalla y no como un detalle de maquetado.
+ * One block of the help. The `id` is its address: `/help#search`, `/help/admins#assign-masters`.
+ * Changing it breaks the links that already exist, so it is treated as part of the screen's contract
+ * and not as a layout detail.
  *
- * **La sección que la URL nombra queda resaltada** (#170): quien llega desde un link cae en medio
- * de una página larga, y sin una marca no sabe cuál de los bloques vino a leer. El resaltado dura
- * mientras el `#ref` la nombre — se apaga al navegar a otra, no con un temporizador que obligue a
- * leer rápido.
+ * **The section the URL names is highlighted** (#170): somebody arriving from a link lands in the
+ * middle of a long page, and without a mark they cannot tell which block they came to read. The
+ * highlight lasts as long as the `#ref` names it — it goes out on navigating elsewhere, not on a
+ * timer that would force people to read fast.
  *
- * El título va en un `h2` real y no en el `div` de `CardTitle`: es una página para leer.
+ * The title is a real `h2` and not `CardTitle`'s `div`: this is a page meant to be read.
  */
 export function HelpSection({ id, title, children }: HelpSectionProps) {
   const ref = useScrollOnHash<HTMLElement>(id)
@@ -41,7 +41,7 @@ export function HelpSection({ id, title, children }: HelpSectionProps) {
   )
 }
 
-/** Lista de puntos de un bloque: lo que hay que saber. */
+/** A block's bullet list: what there is to know. */
 export function HelpList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2 text-sm">
@@ -58,8 +58,9 @@ export function HelpList({ items }: { items: string[] }) {
 }
 
 /**
- * Los pasos de una tarea: cómo se hace, en orden. La ayuda no describe nada más que exista, enseña
- * a usarlo (#170), y para eso el paso numerado es la forma que se sigue con el sitio abierto al lado.
+ * The steps of a task: how it is done, in order. The help does not merely describe what exists, it
+ * teaches how to use it (#170), and for that a numbered step is the shape somebody can follow with
+ * the site open beside it.
  */
 export function HelpSteps({ title, items }: { title: string; items: string[] }) {
   return (
@@ -79,7 +80,7 @@ export function HelpSteps({ title, items }: { title: string; items: string[] }) 
   )
 }
 
-/** Pares término/explicación: estados, roles, cualquier cosa con nombre propio. */
+/** Term and explanation pairs: statuses, roles, anything with a name of its own. */
 export function HelpTerms({ terms, termWidth = 'w-40' }: { terms: { term: string; description: string }[]; termWidth?: string }) {
   return (
     <dl className="space-y-2 text-sm">

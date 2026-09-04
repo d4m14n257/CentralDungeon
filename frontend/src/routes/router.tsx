@@ -7,15 +7,15 @@ import { PublicLayout } from '@/layouts/PublicLayout'
 import { RootLayout } from '@/layouts/RootLayout'
 
 /**
- * El árbol espeja el sitemap de frontend-diseno.md 2 - E1 registra solo su subconjunto de las
- * 28 rutas totales; las etapas siguientes agregan el resto acá, no en otro lado.
+ * The tree mirrors the sitemap of frontend-diseno.md 2 - E1 registers only its subset of the 28
+ * routes; the later stages add the rest here, and nowhere else.
  */
 export const router = createBrowserRouter([
   {
     Component: RootLayout,
     children: [
-      // /login arma su propio encuadre: es la única pantalla a sangre, sobre el gradiente de
-      // marca (#132). Las otras dos públicas comparten la tarjeta centrada de PublicLayout.
+      // /login builds its own frame: it is the one full-bleed screen, over the brand gradient
+      // (#132). The other two public screens share PublicLayout's centred card.
       { path: '/login', lazy: () => import('./LoginPage') },
       {
         Component: PublicLayout,
@@ -33,9 +33,9 @@ export const router = createBrowserRouter([
           { path: 'my/tables', lazy: () => import('./my/MyTablesPage') },
           { path: 'my/tables/:id', lazy: () => import('./my/MyTableDetailPage') },
           { path: 'notifications', lazy: () => import('./NotificationsPage') },
-          // Global, no del contexto Jugador: los tres layouts son el mismo shell y la cabecera
-          // ya se adapta sola. Va acá por la misma razón que /notifications. Las audiencias son
-          // rutas hijas (#168): cada una con URL propia, enlazable con su #ref.
+          // Global rather than part of the Player context: the three layouts are the same shell and
+          // the header already adapts on its own. It sits here for the same reason /notifications
+          // does. The audiences are child routes (#168): each with its own URL, linkable by #ref.
           {
             path: 'help',
             lazy: () => import('./help/HelpPage'),
@@ -60,6 +60,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, lazy: () => import('./master/MasterTableCandidatesTab') },
               { path: 'sessions', lazy: () => import('./master/MasterTableSessionsTab') },
+              { path: 'tasks', lazy: () => import('./master/MasterTableTasksTab') },
               { path: 'files', lazy: () => import('./master/MasterTableFilesTab') },
               { path: 'status', lazy: () => import('./master/MasterTableStatusTab') },
             ],

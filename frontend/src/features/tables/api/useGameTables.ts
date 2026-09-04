@@ -6,9 +6,9 @@ import { staleTime } from '@/config/query'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * El explorador trae de a una página y suma con "Ver más" (decisiones.md #173): es un listado para
- * mirar, no para recorrer por número de página. `useInfiniteQuery` acumula las páginas ya traídas,
- * así que volver atrás en el navegador no vuelve a pedirlas.
+ * The explorer brings one page at a time and adds to it with "See more" (decisiones.md #173): it is
+ * a listing to browse, not one to walk by page number. `useInfiniteQuery` keeps the pages already
+ * fetched, so going back in the browser does not ask for them again.
  */
 export function useGameTables() {
   return useInfiniteQuery({

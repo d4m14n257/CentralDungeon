@@ -1,13 +1,13 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 /**
- * E2 sub-rebanada 1, de punta a punta (decisiones.md #163): un master crea una mesa por el
- * wizard -> Preparation; un admin la aprueba desde /admin/tables -> Opened; el Primary la inicia
- * -> InProgress; el Primary la finaliza -> Finished. Cubre la máquina de estados real, no el
- * self-service que E1 tenía.
+ * E2 sub-slice 1, end to end (decisiones.md #163): a master creates a table through the wizard ->
+ * Preparation; an admin approves it from /admin/tables -> Opened; the Primary starts it ->
+ * InProgress; the Primary finishes it -> Finished. It covers the real state machine, not the
+ * self-service E1 had.
  *
- * Login por TestLoginController (backend "test" profile), igual que registration-flow.spec.ts -
- * no hay Discord real todavía.
+ * Login through TestLoginController (the backend's "test" profile), like registration-flow.spec.ts -
+ * there is no real Discord yet.
  */
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
@@ -28,11 +28,11 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 }
 
 /**
- * Crea una mesa por el wizard de cuatro pasos de F1.2. Estos tests son sobre la máquina de estados,
- * no sobre la agenda, así que pasan de largo por los tres pasos que no piden nada obligatorio.
+ * Creates a table through F1.2's four-step wizard. These tests are about the state machine and not
+ * about the agenda, so they walk straight past the three steps that ask for nothing required.
  *
- * @param page  la pestaña, ya autenticada como master
- * @param name  el nombre de la mesa
+ * @param page  the tab, already signed in as a master
+ * @param name  the table's name
  */
 async function createTableThroughWizard(page: Page, name: string) {
   await page.goto('/master/tables/new')
@@ -45,9 +45,10 @@ async function createTableThroughWizard(page: Page, name: string) {
 }
 
 /**
- * Asignar masters con el buscador de personas (decisiones.md #164, #165): un admin crea una mesa
- * sin master, busca a dos personas —una por texto suelto, la otra acotando con /discord_name—,
- * asciende a la segunda y asigna. La mesa nace Unassigned y sale de la bandeja al quedar Opened.
+ * Assigning masters with the people search (decisiones.md #164, #165): an admin creates a table
+ * with no master, searches for two people — one by loose text, the other narrowed with
+ * /discord_name — promotes the second and assigns. The table is born Unassigned and leaves the queue
+ * once it is Opened.
  */
 test('an admin searches for people and assigns the masters of an unassigned table', async ({ browser }) => {
   const adminDiscordId = `e2e-assign-admin-${runId}`
@@ -55,7 +56,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
   const secondCandidate = `e2e-cand-b-${runId}`
   const tableName = `Mesa Sin Master E2E ${runId}`
 
-  // Las dos personas tienen que existir para poder encontrarlas: el login de prueba las crea.
+  // Both people have to exist to be findable: the test login creates them.
   const candidates = await browser.newContext()
   await testLogin(candidates.request, firstCandidate)
   await testLogin(candidates.request, secondCandidate)
@@ -75,25 +76,25 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
 
     const dialog = admin.page.getByRole('dialog')
     const search = dialog.getByRole('combobox', { name: 'Buscar personas' })
-    // Anclado al principio: el nombre suelto también aparece en la X del chip y en la del master.
+    // Anchored at the start: the bare name also shows in the chip's X and in the master's.
     const result = (discordId: string) => dialog.getByRole('button', { name: new RegExp(`^${discordId}\\b`) })
 
-    // Con prefijo: Enter cierra el criterio en un chip, que acota la búsqueda a un solo campo.
-    // El input siempre se llena estando vacío -Enter y la X del chip lo vacían solos-. Escribir
-    // encima de texto existente quedó fuera del caso a propósito: en una corrida previa de esta
-    // suite el `fill` sobre el input ya cargado terminó con el input en blanco, y el manejo de
-    // teclas ya está cubierto por SearchQueryInput.test.tsx, que no depende del navegador.
+    // With a prefix: Enter closes the criterion into a chip, which narrows the search to one field.
+    // The input is always filled while empty - Enter and the chip's X clear it on their own. Typing
+    // over existing text was deliberately left out of the case: in an earlier run of this suite the
+    // `fill` over an already-loaded input ended with the input blank, and key handling is already
+    // covered by SearchQueryInput.test.tsx, which does not depend on the browser.
     await search.fill(`/discord_name ${firstCandidate}`)
     await search.press('Enter')
     await expect(dialog.getByText('Discord:')).toBeVisible()
     await result(firstCandidate).click()
 
-    // Quitar el chip devuelve la búsqueda al criterio básico: nombre de Discord o del sistema.
+    // Removing the chip returns the search to the basic criterion: the Discord name or the system one.
     await dialog.getByRole('button', { name: `Quitar criterio: ${firstCandidate}` }).click()
     await search.fill(secondCandidate)
     await result(secondCandidate).click()
 
-    // El primero entró de Primary; ascender al segundo degrada al primero.
+    // The first one came in as Primary; promoting the second demotes the first.
     await dialog.getByRole('button', { name: `Hacer master a ${secondCandidate}` }).click()
     await expect(dialog.getByRole('button', { name: `Hacer master a ${firstCandidate}` })).toBeVisible()
 
@@ -105,8 +106,9 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
 })
 
 /**
- * Borrar lo que nunca fue público (decisiones.md #175): el master arma una mesa, decide que no va
- * a pasar y la elimina antes de publicarla. Una vez abierta ya no se puede: eso se cancela.
+ * Deleting what was never public (decisiones.md #175): the master builds a table, decides it is not
+ * going to happen and removes it before publishing. Once open that is no longer possible: an open
+ * table is cancelled.
  */
 test('a master deletes a draft that never went public, and cannot delete it once open', async ({ browser }) => {
   const masterDiscordId = `e2e-del-master-${runId}`
@@ -116,19 +118,19 @@ test('a master deletes a draft that never went public, and cannot delete it once
 
   const master = await newAuthenticatedPage(browser, masterDiscordId, true, false)
   try {
-    // Un borrador: se crea y se elimina sin que nadie lo haya visto.
+    // A draft: created and removed without anybody having seen it.
     await createTableThroughWizard(master.page, draftName)
 
     await master.page.getByRole('link', { name: 'Estado' }).click()
     await master.page.getByRole('button', { name: 'Eliminar mesa' }).click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
 
-    // Vuelve al listado y la mesa ya no está en ningún lado.
+    // It goes back to the listing and the table is nowhere to be found.
     await expect(master.page).toHaveURL(/\/master\/tables$/)
     await expect(master.page.getByText(draftName)).toBeHidden()
 
-    // Una mesa aprobada ya fue pública: el botón de eliminar no existe.
-    // La URL recién sirve cuando la navegación terminó, y el helper ya espera al encabezado.
+    // An approved table has been public: the delete button does not exist.
+    // The URL is only usable once the navigation finished, and the helper already waits for the heading.
     await createTableThroughWizard(master.page, openedName)
     const tableId = master.page.url().split('/master/tables/')[1]
 
@@ -171,8 +173,8 @@ test('a master creates a table, an admin approves it, and the master runs it end
       await expect(row).toBeVisible()
       await row.getByRole('button', { name: 'Aprobar' }).click()
       await admin.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-      // /admin/tables solo lista lo que espera revisión (Unassigned/Preparation/ChangesRequested):
-      // una vez Opened, la fila desaparece de esta bandeja en vez de quedar con el badge actualizado.
+      // /admin/tables only lists what is waiting on a review (Unassigned/Preparation/ChangesRequested):
+      // once Opened, the row leaves this queue rather than staying with an updated badge.
       await expect(row).toBeHidden()
     } finally {
       await admin.context.close()

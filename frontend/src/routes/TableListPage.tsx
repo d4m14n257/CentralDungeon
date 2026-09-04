@@ -16,18 +16,19 @@ import { GameTableCard, useGameTables } from '@/features/tables'
  */
 export function TableListPage() {
   const { t } = useTranslation('tables')
-  // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista que ya
-  // se cargó bien - TanStack Query pone isError en true igual, sin borrar el data cacheado
-  // (docs/decisiones.md #150). El indicador global de conexión ya avisa que algo anda mal.
+  // isLoadingError, not isError: a background refetch that fails must not hide a list that already
+  // loaded fine - TanStack Query sets isError to true anyway, without dropping the cached data
+  // (docs/decisiones.md #150). The global connection indicator already says something is wrong.
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useGameTables()
-  // Cruce de dominios: la ruta compone, GameTableCard no importa de features/registrations
-  // (regla dura 16). "Rejected" no cuenta como aplicada - ahí sí tiene sentido volver a postularse.
+  // A crossing of domains: the screen composes them, GameTableCard does not import from
+  // features/registrations (regla dura 16). "Rejected" does not count as applied - applying again is
+  // exactly what makes sense there.
   const { data: myApplications } = useMyApplications()
   const appliedTableIds = new Set(
     myApplications?.content.filter((registration) => registration.status !== 'Rejected').map((registration) => registration.gameTableId),
   )
 
-  // El explorador pagina con "Ver más" (#173): las páginas ya traídas se acumulan y se muestran juntas.
+  // The explorer paginates with "See more" (#173): the pages already fetched accumulate and show together.
   const tables = data?.pages.flatMap((page) => page.content) ?? []
   const total = data?.pages[0]?.totalElements ?? 0
 

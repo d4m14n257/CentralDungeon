@@ -38,5 +38,17 @@ public enum NotificationType {
      * <p>The table gets the session back at the end (#194), so this is news about one evening and not
      * about the run being shorter.
      */
-    SessionCanceled
+    SessionCanceled,
+
+    /**
+     * To everybody a task is addressed to: the table is asking them for something (#77).
+     *
+     * <p>It exists because a task nobody heard about cannot be answered - which is the whole of #77.
+     * It is sent once, when the task is published; correcting it later says nothing, because a
+     * request fixed three times ringing three times is how people learn to ignore the bell.
+     *
+     * <p>Like every other notification in this list it asks and never threatens: not answering blocks
+     * nothing and evicts nobody (#70).
+     */
+    TaskPublished
 }

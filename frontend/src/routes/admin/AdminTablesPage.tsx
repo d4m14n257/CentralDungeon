@@ -39,7 +39,7 @@ function AdminTableRow({ table }: { table: AdminTableSummary }) {
     approveTable.mutate(table.id, { onSuccess: () => toast.success(t('tables.approveSuccess')) })
   }
 
-  // Una mesa sin master nunca se publicó: se borra, no se cancela (decisiones.md #175).
+  // A table with no master was never public: it is deleted, not cancelled (decisiones.md #175).
   async function handleDelete() {
     const confirmed = await confirm({ title: t('tables.deleteConfirmTitle'), description: t('tables.deleteConfirmDescription') })
     if (!confirmed) return
@@ -110,9 +110,9 @@ function AdminTableRow({ table }: { table: AdminTableSummary }) {
 export function AdminTablesPage() {
   const { t } = useTranslation('admin')
   const createDialog = useDisclosure()
-  // Lista de trabajo: se pagina con número de página y total a la vista, no con "Ver más" (#173).
+  // A working list: it paginates by page number with the total in view, not with "See more" (#173).
   const [page, setPage] = useState(0)
-  // isLoadingError, no isError: ver docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, error, refetch } = useAdminTables(undefined, page)
 
   if (error instanceof ApiError && error.status === 403) {

@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 /**
- * El wordmark en dos tonos. El acento aparece como relleno sólido o como esta segunda mitad,
- * nunca como fondo suave: eso está reservado a los estados (frontend-diseno.md 3).
+ * The wordmark in two tones. The accent appears as a solid fill or as this second half, never as a
+ * soft background: that is reserved for the states (frontend-diseno.md 3).
  *
- * No lleva enlace propio — en el header lo envuelve un Link a la home, y en /login no hay
- * adónde ir.
+ * It carries no link of its own — in the header a Link to the home wraps it, and on /login there is
+ * nowhere to go.
  */
 export function BrandMark({ className }: { className?: string }) {
   const { t } = useTranslation('common')

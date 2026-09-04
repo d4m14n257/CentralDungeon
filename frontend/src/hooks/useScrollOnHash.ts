@@ -2,14 +2,15 @@ import { useEffect, useRef, type RefObject } from 'react'
 import { useLocation } from 'react-router'
 
 /**
- * Lleva la pantalla a este elemento cuando el `#ref` de la URL lo nombra (decisiones.md #168).
+ * Scrolls to this element when the URL's `#ref` names it (decisiones.md #168).
  *
- * Dos razones para que sea el propio elemento el que se ocupe, y no la pantalla que lo contiene:
- * React Router navega sin recargar, así que el salto nativo del navegador al ancla nunca ocurre; y
- * las páginas cargan con `lazy`, así que un efecto en el padre corre **antes** de que la sección
- * exista en el DOM y no encuentra nada a dónde saltar.
+ * Two reasons the element takes care of it rather than the screen containing it: React Router
+ * navigates without a reload, so the browser's own jump to the anchor never happens; and pages load
+ * with `lazy`, so an effect in the parent runs **before** the section exists in the DOM and finds
+ * nothing to jump to.
  *
- * Depende de `key` además del hash para que volver al mismo ancla desde otra pantalla también salte.
+ * It depends on `key` as well as on the hash, so that coming back to the same anchor from another
+ * screen jumps too.
  */
 export function useScrollOnHash<T extends HTMLElement>(id: string): RefObject<T | null> {
   const ref = useRef<T>(null)

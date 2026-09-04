@@ -27,7 +27,7 @@ const SEARCH_EXAMPLES = [
 const SEARCH_RULES = ['plain', 'field', 'commas', 'connectors', 'onlySlash', 'order', 'chips', 'debounce']
 const CONTEXT_ROLES = ['player', 'master', 'admin', 'owner']
 
-/** Lo que sirve a cualquiera, sin importar el rol. Es el índice de /help (decisiones.md #168). */
+/** What is useful to anybody, whatever their role. It is the index of /help (decisiones.md #168). */
 export function HelpBasicsTab() {
   const { t } = useTranslation(['help', 'tables'])
 

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-/** El formulario usa undefined para "vacío"; la API espera null - se convierte al enviar. */
+/** The form uses undefined for "empty"; the API expects null - the conversion happens on submit. */
 export const createRegistrationSchema = z.object({
   description: z.string().max(2000).optional(),
 })

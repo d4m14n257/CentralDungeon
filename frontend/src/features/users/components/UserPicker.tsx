@@ -13,13 +13,14 @@ import type { UserSummary } from '../types'
 
 interface UserPickerProps {
   onSelect: (user: UserSummary) => void
-  /** A quién no ofrecer: normalmente los que ya se eligieron. */
+  /** Who not to offer: normally the people already picked. */
   excludedIds?: readonly string[]
 }
 
 /**
- * Buscar una persona y elegirla. El criterio básico es el nombre de Discord **o** el del sistema:
- * quien busca sabe uno de los dos, no cuál guarda el sistema dónde (decisiones.md #164).
+ * Finding a person and picking them. The basic criterion is the Discord name **or** the one in the
+ * system: whoever is searching knows one of the two, not which of them is stored where
+ * (decisiones.md #164).
  */
 export function UserPicker({ onSelect, excludedIds = [] }: UserPickerProps) {
   const { t } = useTranslation('users')
@@ -33,12 +34,12 @@ export function UserPicker({ onSelect, excludedIds = [] }: UserPickerProps) {
     [t],
   )
 
-  // 400 ms: la búsqueda sale cuando se deja de escribir, no una por tecla (decisiones.md #164).
+  // 400 ms: the search goes out when typing stops, not once per keystroke (decisiones.md #164).
   const rawQuery = buildSearchQuery(query)
   const debouncedQuery = useDebounce(rawQuery, 400)
   const hasQuery = debouncedQuery.trim().length > 0
   const { data, isFetching, isLoadingError, refetch } = useUserSearch(debouncedQuery, hasQuery)
-  /** Mientras corre el debounce lo que se ve es la búsqueda anterior: se atenúa para no mentir. */
+  /** While the debounce runs, what is on screen is the previous search: it is dimmed so it does not lie. */
   const isStale = isFetching || rawQuery.trim() !== debouncedQuery.trim()
 
   const results = (data?.content ?? []).filter((user) => !excludedIds.includes(user.id))

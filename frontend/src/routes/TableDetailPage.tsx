@@ -9,21 +9,23 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
-import { FileList } from '@/features/files'
+import { FileList, FilePicker } from '@/features/files'
 import { ApplyToTableDialog, useMyApplications } from '@/features/registrations'
 import { SessionList, TableStatusBadge, useGameTable } from '@/features/tables'
+import { TableTasksSection } from '@/features/tasks'
 import { useMe } from '@/features/users'
 import type { GameTableDetail, MasterSummary } from '@/features/tables'
 import { browserTimeZone, formatDateTime, formatSlot, utcSlotToLocal } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 
 /**
- * Por qué el botón está como está. Cada rama devuelve el motivo, no solo el estado: un botón gris
- * que no dice por qué está gris es peor que no tener botón (principio 2 de frontend-diseno.md 1).
+ * Why the button is the way it is. Every branch returns the reason and not only the state: a grey
+ * button that does not say why it is grey is worse than no button (principio 2 de
+ * frontend-diseno.md 1).
  *
- * El choque de horarios (R2 de #178) va **antes** del cupo: es el bloqueo que el backend va a
- * aplicar de todos modos con un 409, y es el único de la lista que el lector puede resolver por su
- * cuenta - retirando una postulación o dejando una mesa.
+ * The schedule clash (R2 of #178) comes **before** the cap: it is the block the backend will apply
+ * anyway with a 409, and it is the only one on the list the reader can resolve on their own - by
+ * withdrawing an application or leaving a table.
  */
 function applyState(
   t: (key: string) => string,
@@ -50,7 +52,7 @@ function applyState(
   return { disabled: false, label: t('detail.apply') }
 }
 
-/** El principal: cualquier co-master queda relegado a la línea de masters (frontend-diseno.md 4). */
+/** The lead one: any co-master is relegated to the masters line (frontend-diseno.md 4). */
 function primaryMasterOf(masters: MasterSummary[]) {
   return masters.find((master) => master.masterType === 'Primary') ?? masters[0]
 }
@@ -68,9 +70,9 @@ export function TableDetailPage() {
   const { t: tFiles } = useTranslation('files')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
-  // isLoadingError, no isError: si ya se cargó la mesa, un refetch de fondo que falla no debe
-  // reemplazar la pantalla por un error - dejaría de verse algo que hasta hace un segundo andaba
-  // bien (docs/decisiones.md #150).
+  // isLoadingError, not isError: once the table has loaded, a background refetch that fails must not
+  // replace the screen with an error - it would take away something that was working a second ago
+  // (docs/decisiones.md #150).
   const { data: table, isPending, isLoadingError } = useGameTable(tableId)
   const { data: me } = useMe()
   const { data: myApplications } = useMyApplications()
@@ -92,9 +94,9 @@ export function TableDetailPage() {
   const hasActiveApplication =
     myApplications?.content.some((registration) => registration.gameTableId === table.id && registration.status !== 'Rejected') ?? false
 
-  // El choque lo calcula el servidor para el actor del token y viaja en el detalle (#121, #178):
-  // la agenda de las otras mesas del lector no está de este lado, y adivinarla sería escribir la
-  // regla por segunda vez, en el idioma equivocado.
+  // The clash is computed by the server for the actor of the token and travels in the detail
+  // (#121, #178): the agendas of the reader's other tables are not on this side, and guessing them
+  // would be writing the rule a second time, in the wrong language.
   const hasScheduleConflict = table.scheduleConflict
   const state = applyState(t, table, me?.roles ?? [], hasActiveApplication, hasScheduleConflict)
   const localSchedule = table.schedule.map((slot) => utcSlotToLocal(slot, browserTimeZone()))
@@ -158,7 +160,7 @@ export function TableDetailPage() {
                 <li key={`${slot.weekday}-${slot.hourtime}`}>{formatSlot(slot, i18n.language, table.duration)}</li>
               ))}
             </ul>
-            {/* La agenda se guarda en UTC (#22); acá se dice en qué zona se está mostrando. */}
+            {/* The agenda is stored in UTC (#22); this says which zone it is being shown in. */}
             <p className="text-fg-subtle mt-1 text-xs">{t('detail.scheduleTimeZone', { timeZone: browserTimeZone() })}</p>
           </section>
         )}
@@ -188,6 +190,17 @@ export function TableDetailPage() {
           </section>
         )}
 
+        {/* What the table asks of whoever is reading it. Somebody who has not applied still sees the
+            requests aimed at candidates: what will be asked of you is half of deciding whether to
+            apply (#206). The block owns its query; this screen hands it the id and the two pieces
+            that belong to the files domain (§3.1.5, regla dura 16). */}
+        <TableTasksSection
+          tableId={table.id}
+          helpAudience="players"
+          renderFiles={(files) => <FileList files={files} />}
+          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished />}
+        />
+
         {table.startDate && (
           <section>
             <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.startDate')}</h2>
@@ -209,7 +222,7 @@ export function TableDetailPage() {
       </div>
 
       <div className="border-border mt-4 flex flex-col items-end gap-2 border-t pt-4">
-        {/* R2 explicada, no insinuada: el bloqueo dice con qué choca y qué se puede hacer (#178). */}
+        {/* R2 explained rather than hinted at: the block says what it clashes with and what can be done (#178). */}
         {hasScheduleConflict && (
           <p className="text-state-canceled-fg flex items-start gap-1.5 text-xs">
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />

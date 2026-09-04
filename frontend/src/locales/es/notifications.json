@@ -20,7 +20,8 @@
     "NewCandidate": "Nueva postulación",
     "ScheduleConflict": "Choque de horarios",
     "SessionScheduled": "Calendario actualizado",
-    "SessionCanceled": "Sesión cancelada"
+    "SessionCanceled": "Sesión cancelada",
+    "TaskPublished": "Nueva petición"
   },
   "badge": {
     "accepted": "Aceptada",
@@ -47,6 +48,10 @@
     "SessionCanceled": {
       "title": "Se canceló una sesión de {{tableName}}",
       "message": "La mesa suma otra sesión al final, así que sigue siendo la misma cantidad."
+    },
+    "TaskPublished": {
+      "title": "{{tableName}} te pide: {{taskTitle}}",
+      "message": "Entrá a la mesa para ver el detalle y responder."
     }
   }
 }

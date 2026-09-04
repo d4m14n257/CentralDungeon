@@ -4,7 +4,7 @@ import { buildSearchQuery, emptySearchQuery, parseSearchQuery, serializeSearchQu
 
 const FIELDS = ['discord_name', 'user_name', 'tag']
 
-/** Los mismos casos que SearchQueryParserTest del backend: si divergen, uno de los dos está mal. */
+/** The same cases as the backend's SearchQueryParserTest: if they diverge, one of the two is wrong. */
 describe('parseSearchQuery', () => {
   it('deja el texto suelto como un criterio sin campo', () => {
     expect(parseSearchQuery('juan', FIELDS)).toEqual<SearchTerm[]>([{ field: null, values: ['juan'], connector: 'and' }])
@@ -43,7 +43,7 @@ describe('parseSearchQuery', () => {
     expect(parseSearchQuery('juan /OR pablo', FIELDS).map((term) => term.connector)).toEqual(['and', 'or'])
   })
 
-  /** Sin esto nadie podría buscar un valor que contenga la palabra: el separador es la barra. */
+  /** Without this nobody could search for a value containing the word: the separator is the slash. */
   it('un and o un or sueltos son texto', () => {
     expect(parseSearchQuery('/user_name juan or pablo', FIELDS)).toEqual<SearchTerm[]>([
       { field: 'user_name', values: ['juan or pablo'], connector: 'and' },

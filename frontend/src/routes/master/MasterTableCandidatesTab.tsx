@@ -19,7 +19,7 @@ interface OutletContext {
 
 function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
   const { t } = useTranslation('registrations')
-  // isLoadingError, no isError: ver docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, refetch } = useCandidates(tableId)
   const acceptRegistration = useAcceptRegistration(tableId)
   const confirm = useConfirm()

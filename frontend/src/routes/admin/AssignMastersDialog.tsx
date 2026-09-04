@@ -19,14 +19,15 @@ interface AssignMastersDialogProps {
 }
 
 /**
- * Vive en `routes/` y no en `features/tables/` porque compone dos dominios —el buscador de personas
- * es de `users`, la asignación es de `tables`— y una feature nunca importa de otra (arquitectura.md
- * 3.1.5). Es la misma razón por la que `MasterTableStatusTab` está acá al lado.
+ * It lives in `routes/` and not in `features/tables/` because it composes two domains — the people
+ * search belongs to `users`, the assignment to `tables` — and a feature never imports from another
+ * (arquitectura.md 3.1.5). It is the same reason `MasterTableStatusTab` sits next to it.
  *
- * **El orden es el rol**: el primero que se agrega es el Primary y el resto Secondary, y tocar un
- * chip lo asciende (decisiones.md #165). Una mesa tiene un solo Primary (modelo-datos.md #73), así
- * que ascender a uno degrada al que estaba — que es exactamente lo que hace mover el chip al frente.
- * Sin formulario ni zod: no hay ningún campo que validar, solo una lista con orden.
+ * **The order is the role**: the first one added is the Primary and the rest are Secondary, and
+ * tapping a chip promotes it (decisiones.md #165). A table has exactly one Primary
+ * (modelo-datos.md #73), so promoting somebody demotes whoever held it — which is precisely what
+ * moving the chip to the front does. No form and no zod: there is no field to validate, only a list
+ * with an order.
  */
 export function AssignMastersDialog({ tableId, tableName, open, onOpenChange }: AssignMastersDialogProps) {
   const { t } = useTranslation('admin')

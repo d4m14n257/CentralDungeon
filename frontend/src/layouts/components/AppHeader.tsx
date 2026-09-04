@@ -10,28 +10,29 @@ import { ContextSwitcher } from './ContextSwitcher'
 import { UserMenu } from './UserMenu'
 
 /**
- * La barra del shell (frontend-diseno.md 2): wordmark, contexto, notificaciones y avatar.
- * Va sobre `surface`, no sobre el canvas — es lo que la separa del contenido sin una sombra.
+ * The shell's bar (frontend-diseno.md 2): wordmark, context, notifications and avatar.
+ * It sits on `surface` rather than on the canvas — that is what separates it from the content
+ * without a shadow.
  */
 export function AppHeader() {
   const { data: me } = useMe()
   const { activeContext } = useContextStore()
 
-  // El contexto Master aparece con el rol de plataforma o con al menos una fila viva en `masters`
-  // (decisiones.md #135) - un master de una sola mesa, asignado sin el rol, sigue siendo master.
+  // The Master context shows with the platform role or with at least one live row in `masters`
+  // (decisiones.md #135) - somebody running a single table, assigned without the role, still runs it.
   const availableContexts: AppContext[] = []
   if (me?.roles.includes('Player')) availableContexts.push('player')
   if (me?.roles.includes('Master') || me?.hasManagedTables) availableContexts.push('master')
   if (me?.roles.includes('Admin') || me?.roles.includes('Owner')) availableContexts.push('admin')
 
-  // El logo vuelve al "home" del contexto activo, igual que ContextSwitcher al cambiar de
-  // contexto - #master todavía no existe (dashboard de Master, F1 #136), así que el destino en
-  // ese contexto es /master/tables, el punto de entrada real de E1 (decisiones.md #151). Se
-  // recalcula contra availableContexts de la cuenta actual, no se confía crudo en el valor
-  // persistido: activeContext es un store con `persist` en localStorage, ajeno a qué cuenta está
-  // logueada - cambiar de cuenta en el mismo navegador puede dejar pisado el contexto de la
-  // sesión anterior (decisiones.md #156, hallazgo sin explotación real: solo desvía el link del
-  // logo, ningún endpoint de /master confía en este valor).
+  // The logo goes back to the active context's "home", the same way ContextSwitcher does on a
+  // context change - /master does not exist yet (the Master dashboard, F1 #136), so the destination
+  // in that context is /master/tables, E1's real entry point (decisiones.md #151). It is recomputed
+  // against the current account's availableContexts rather than trusting the persisted value raw:
+  // activeContext is a store with `persist` in localStorage, which knows nothing about which account
+  // is signed in - switching accounts in the same browser can leave the previous session's context
+  // behind (decisiones.md #156; no real exploit, it only misdirects the logo's link, and no /master
+  // endpoint trusts this value).
   const effectiveContext: AppContext = availableContexts.includes(activeContext) ? activeContext : 'player'
   const homePath = effectiveContext === 'master' ? masterTablesPath() : effectiveContext === 'admin' ? adminTablesPath() : '/'
 

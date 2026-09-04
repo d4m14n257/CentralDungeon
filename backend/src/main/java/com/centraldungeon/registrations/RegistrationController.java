@@ -5,8 +5,10 @@ import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.registrations.dto.CreateRegistrationRequest;
 import com.centraldungeon.registrations.dto.RegistrationResponse;
 import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
+import com.centraldungeon.registrations.dto.TablePlayerResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -78,6 +80,27 @@ public class RegistrationController {
             @PageableDefault(sort = {"createdAt", "id"}) Pageable pageable,
             @AuthenticationPrincipal CurrentUser currentUser) {
         return registrationService.listCandidatesForTable(tableId, currentUser.userId(), pageable);
+    }
+
+    /**
+     * The table's current players - its roster, for the master.
+     *
+     * <p>A different endpoint from the one above and not a {@code ?status=} on it: the candidate
+     * queue is FIFO and its order is a fairness rule (#28), while a roster is just a roster. One
+     * endpoint answering two questions with two different orderings is how a caller ends up relying
+     * on the wrong one.
+     *
+     * <p>A list and not a page: it is bounded by {@code max_players}.
+     *
+     * @param tableId     the table
+     * @param currentUser the actor, from the token; the service checks they run the table
+     * @return 200 with its players. 403 when the actor does not run it
+     */
+    @GetMapping("/api/v1/game-tables/{tableId}/players")
+    @PreAuthorize("isAuthenticated()")
+    public List<TablePlayerResponse> listPlayers(
+            @PathVariable String tableId, @AuthenticationPrincipal CurrentUser currentUser) {
+        return registrationService.listPlayersForTable(tableId, currentUser.userId());
     }
 
     /**

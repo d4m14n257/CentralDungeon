@@ -37,8 +37,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The table's whole lifecycle, and the only place its nine states move (decisiones.md, ciclo de vida
- * de la mesa). Every transition below follows the same three steps: lock the table, refuse if it is
+ * The table's whole lifecycle, and the only place its nine states move (decisiones.md, the table's
+ * life cycle). Every transition below follows the same three steps: lock the table, refuse if it is
  * not in the one status the transition starts from, and record the change with its author.
  *
  * <p>Two things it never leaves to the caller. <b>Pertenencia</b>: who may act on a concrete table
@@ -52,7 +52,7 @@ public class GameTableService {
 
     private static final List<GameTableStatus> VISIBLE_STATUSES = List.of(GameTableStatus.Opened, GameTableStatus.InProgress);
 
-    /** /admin/tables default view mientras no exista la bandeja: mesas esperando una acción del admin (#176, F3). */
+    /** The /admin/tables default until the queue screen exists: the tables waiting on an admin (#176, F3). */
     private static final List<GameTableStatus> DEFAULT_ADMIN_REVIEW_STATUSES =
             List.of(GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
 
@@ -75,7 +75,7 @@ public class GameTableService {
     private static final List<TableRegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
-    /** cancel() is the one transition with more than one valid "from" (docs/decisiones.md, Ciclo de vida de la mesa). */
+    /** cancel() is the one transition with more than one valid "from" (docs/decisiones.md, the table's life cycle). */
     private static final Set<GameTableStatus> CANCELABLE_STATUSES = Set.of(
             GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested,
             GameTableStatus.Opened, GameTableStatus.InProgress, GameTableStatus.Pause);
@@ -586,7 +586,8 @@ public class GameTableService {
      */
     @Transactional(readOnly = true)
     public PageResponse<AdminTableSummaryResponse> listForAdmin(@Nullable List<GameTableStatus> statuses, Pageable pageable) {
-        // Deleted no se lista aunque lo pidan: el filtro es del listado, no del que llama (#25).
+        // Deleted is never listed even when asked for: the filter belongs to the listing, not to the
+        // caller (#25).
         List<GameTableStatus> effective = (statuses == null || statuses.isEmpty())
                 ? DEFAULT_ADMIN_REVIEW_STATUSES
                 : statuses.stream().filter(status -> status != GameTableStatus.Deleted).toList();

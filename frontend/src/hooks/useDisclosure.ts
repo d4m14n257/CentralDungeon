@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-/** Abrir/cerrar modales guardando el ítem que los abrió (arquitectura.md 3.3). */
+/** Opening and closing dialogs while remembering the item that opened them (arquitectura.md 3.3). */
 export function useDisclosure<T = undefined>() {
   const [isOpen, setIsOpen] = useState(false)
   const [item, setItem] = useState<T | undefined>(undefined)

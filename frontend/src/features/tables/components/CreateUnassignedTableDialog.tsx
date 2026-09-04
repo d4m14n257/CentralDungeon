@@ -19,7 +19,7 @@ interface CreateUnassignedTableDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-/** Admin puede crear una mesa sin ser su master (#72) - assignMasters es lo que la abre después. */
+/** An admin can create a table without running it (#72) - assignMasters is what opens it afterwards. */
 export function CreateUnassignedTableDialog({ open, onOpenChange }: CreateUnassignedTableDialogProps) {
   const { t } = useTranslation('admin')
   const createUnassignedTable = useCreateUnassignedTable()

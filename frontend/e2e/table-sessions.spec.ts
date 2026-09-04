@@ -93,7 +93,7 @@ test('opening a table materializes its calendar, and the master can run it', asy
     // Marking a session played is its own action, separate from attendance (#195).
     await master.page.getByRole('button', { name: 'Marcar como jugada' }).first().click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-    // `exact`: the confirmation toast reads "Sesión marcada como jugada" and contains the word too.
+    // `exact`: the confirmation toast also contains the word, inside a longer sentence.
     await expect(master.page.getByText('Jugada', { exact: true })).toBeVisible()
   } finally {
     await admin.context.close()

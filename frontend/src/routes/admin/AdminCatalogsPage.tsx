@@ -164,7 +164,7 @@ export function AdminCatalogsPage() {
   const page = Number(searchParams.get('page') ?? '0')
   const debouncedQuery = useDebounce(query, 300)
 
-  // isLoadingError, no isError: ver docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, error, refetch } = useAdminCatalog(kind, debouncedQuery, undefined, page)
 
   /**

@@ -2,12 +2,12 @@ import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import type { ReactNode } from 'react'
 
 /**
- * Oscuro por defecto (#131) - la comunidad juega de noche; el claro se deriva de él.
+ * Dark by default (#131) - the community plays at night; the light theme is derived from it.
  *
- * `enableSystem={false}` a propósito: "por defecto oscuro" es una decisión de diseño, no una
- * preferencia del sistema operativo. Quien quiera claro lo elige desde el UserMenu y queda
- * guardado. El atributo es `data-theme` porque es el selector que emite el design system
- * (`:root[data-theme="light"]` en el CSS transcrito, #118, #130).
+ * `enableSystem={false}` on purpose: "dark by default" is a design decision, not an operating
+ * system preference. Somebody who wants light picks it from the UserMenu and it is remembered. The
+ * attribute is `data-theme` because that is the selector the design system emits
+ * (`:root[data-theme="light"]` in the transcribed CSS, #118, #130).
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   return (

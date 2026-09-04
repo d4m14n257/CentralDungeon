@@ -1,19 +1,19 @@
 /**
- * El lenguaje de una línea que hablan todos los buscadores de la app (decisiones.md #164).
+ * The one-line language every search box in the application speaks (decisiones.md #164).
  *
- *   juan                                     -> criterio básico del endpoint
- *   /discord_name juan                       -> ese campo
- *   /user_name damian,carlos                 -> ese campo, cualquiera de los dos valores
- *   /user_name juan /or /discord_name pablo  -> dos criterios, unidos
+ *   juan                                     -> the endpoint's basic criterion
+ *   /discord_name juan                       -> that field
+ *   /user_name damian,carlos                 -> that field, either of the two values
+ *   /user_name juan /or /discord_name pablo  -> two criteria, joined
  *
- * **La barra es el único separador**: todo lo que sigue a un `/campo` es su valor, espacios
- * incluidos, hasta el próximo `/`. Un "and" o un "or" sueltos son texto — tienen que serlo, o
- * nadie podría buscar un valor que contenga esas palabras.
+ * **The slash is the only separator**: everything after a `/field` is its value, spaces included,
+ * up to the next `/`. A bare "and" or "or" is text — it has to be, or nobody could search for a
+ * value containing those words.
  *
- * Es el espejo exacto de `common/search/SearchQueryParser.java`: el backend es el que decide qué
- * devuelve la consulta, y esta copia existe para pintar los chips mientras se escribe. Las reglas
- * están escritas una vez de cada lado a propósito — si una cambia, cambian las dos, y los tests de
- * los dos lados cubren los mismos casos.
+ * It is an exact mirror of `common/search/SearchQueryParser.java`: the backend is what decides what
+ * a query returns, and this copy exists to draw the chips while somebody types. The rules are
+ * written once on each side on purpose — change one and both change, and the tests on either side
+ * cover the same cases.
  */
 
 export type SearchConnector = 'and' | 'or'
@@ -24,28 +24,28 @@ export type SearchConnector = 'and' | 'or'
  * kept in step by their tests (#164).
  */
 export interface SearchTerm {
-  /** null = criterio básico: lo que se escribe sin un `/campo` adelante. */
+  /** null = the basic criterion: whatever is typed without a `/field` in front of it. */
   field: string | null
-  /** Alternativas del mismo criterio, separadas por coma al escribir. Nunca vacío. */
+  /** Alternatives within one criterion, typed comma-separated. Never empty. */
   values: string[]
-  /** Cómo se une al término anterior. En el primero siempre es 'and' y no significa nada. */
+  /** How it joins the previous term. On the first one it is always 'and' and means nothing. */
   connector: SearchConnector
 }
 
-/** Un campo que el buscador acepta, con la etiqueta que ve quien lo usa. */
+/** A field the search box accepts, with the label whoever uses it reads. */
 export interface SearchField {
   name: string
   label: string
 }
 
 /**
- * El estado de un buscador: los criterios ya cerrados, el campo abierto —el chip que se queda
- * fijo mientras se escribe su valor—, lo que se está escribiendo, y el conector con el que va a
- * entrar el próximo criterio.
+ * The state of a search box: the criteria already closed, the open field — the chip that stays put
+ * while its value is typed — what is being typed, and the connector the next criterion will come in
+ * with.
  */
 export interface SearchQueryValue {
   terms: SearchTerm[]
-  /** El `/campo` elegido: todo lo que se escriba es su valor hasta escribir `/` de nuevo. */
+  /** The chosen `/field`: everything typed is its value until a `/` is typed again. */
   activeField: string | null
   draft: string
   pendingConnector: SearchConnector
@@ -55,14 +55,14 @@ export interface SearchQueryValue {
 export const emptySearchQuery: SearchQueryValue = { terms: [], activeField: null, draft: '', pendingConnector: 'and' }
 
 /**
- * El `/algo` a medio escribir al final del texto: mientras exista, se está eligiendo un campo y
- * todavía no hay nada que buscar con eso.
+ * The half-typed `/something` at the end of the text: while it is there, a field is being chosen and
+ * there is nothing to search with yet.
  */
 export const OPEN_FIELD_PREFIX = /(^|\s)\/([\w-]*)$/
 
 const CONNECTOR_TOKENS: Record<string, SearchConnector> = { '/and': 'and', '/or': 'or' }
 
-/** Separa las alternativas de un criterio y descarta los huecos: `damian, ,carlos,` son dos. */
+/** Splits a criterion's alternatives and drops the gaps: `damian, ,carlos,` is two of them. */
 export function splitValues(raw: string): string[] {
   return raw
     .split(',')
@@ -81,8 +81,8 @@ function fieldOf(token: string, knownFields: readonly string[]): string | null {
 }
 
 /**
- * Un `/token` que no sea un campo conocido ni un conector queda como texto literal: un typo busca
- * lo que se escribió, no rompe la búsqueda. Un campo sin valor todavía no es un criterio.
+ * A `/token` that is neither a known field nor a connector stays literal text: a typo searches for
+ * what was typed rather than breaking the search. A field with no value is not a criterion yet.
  */
 export function parseSearchQuery(raw: string, knownFields: readonly string[]): SearchTerm[] {
   const terms: SearchTerm[] = []
@@ -120,7 +120,7 @@ export function parseSearchQuery(raw: string, knownFields: readonly string[]): S
   return terms
 }
 
-/** Devuelve la consulta canónica: siempre con el conector explícito, para que el backend la lea igual. */
+/** The canonical query: always with the connector written out, so the backend reads it the same way. */
 export function serializeSearchQuery(terms: readonly SearchTerm[]): string {
   return terms
     .map((term, index) => {
@@ -131,7 +131,7 @@ export function serializeSearchQuery(terms: readonly SearchTerm[]): string {
     .join(' ')
 }
 
-/** El criterio abierto también se busca: se manda como un término más, detrás de su conector. */
+/** The open criterion is searched too: it travels as one more term, behind its connector. */
 export function buildSearchQuery({ terms, activeField, draft, pendingConnector }: SearchQueryValue): string {
   const values = splitValues(draft.replace(OPEN_FIELD_PREFIX, ''))
   const open: SearchTerm[] = values.length > 0 ? [{ field: activeField, values, connector: pendingConnector }] : []

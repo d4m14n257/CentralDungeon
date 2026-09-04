@@ -7,10 +7,10 @@ import { notificationTarget } from '../lib/notificationTarget'
 import type { Notification } from '../types'
 
 /**
- * Click en una notificación: la marca leída si no lo estaba, y te lleva a lo que le corresponde -
- * cambiando el contexto activo primero si hace falta (una notificación de Master llegando en
- * contexto Jugador no debe abrir la pantalla de gestión con el selector marcado en el contexto
- * equivocado, decisiones.md #156).
+ * Clicking a notification: it marks it read if it was not, and takes the reader where it points -
+ * switching the active context first when that is needed. A Master notification arriving while the
+ * reader is in the Player context must not open the management screen with the switcher pointing at
+ * the wrong one (decisiones.md #156).
  */
 export function useNotificationClick() {
   const navigate = useNavigate()

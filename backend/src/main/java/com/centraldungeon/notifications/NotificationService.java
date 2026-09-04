@@ -91,7 +91,7 @@ public class NotificationService {
     @Transactional
     public void notifyNewCandidate(String masterUserId, GameTable table, String applicantName) {
         User recipient = userRepository.getReferenceById(masterUserId);
-        NotificationParams params = new NotificationParams(table.getName(), null, applicantName);
+        NotificationParams params = new NotificationParams(table.getName(), null, applicantName, null);
         notificationRepository.save(
                 new Notification(recipient, NotificationType.NewCandidate, params, "game_table", table.getId()));
     }
@@ -112,7 +112,7 @@ public class NotificationService {
     @Transactional
     public void notifyScheduleConflict(String userId, GameTable table, String otherTableName) {
         User recipient = userRepository.getReferenceById(userId);
-        NotificationParams params = new NotificationParams(table.getName(), otherTableName, null);
+        NotificationParams params = new NotificationParams(table.getName(), otherTableName, null, null);
         notificationRepository.save(
                 new Notification(recipient, NotificationType.ScheduleConflict, params, "game_table", table.getId()));
     }
@@ -151,6 +151,31 @@ public class NotificationService {
         notificationRepository.save(new Notification(
                 recipient, NotificationType.SessionCanceled, NotificationParams.ofTable(table.getName()),
                 "game_table", table.getId()));
+    }
+
+    /**
+     * Tells somebody that a table is asking them for something (#77).
+     *
+     * <p>Sent once, at publication - correcting the task later says nothing, because a request fixed
+     * three times ringing three times is how people learn to ignore the bell.
+     *
+     * <p>It carries the task's title so the bell can name <em>which</em> request arrived: "the table
+     * is asking you for something" is a worse headline than "Ficha de personaje", the same reasoning
+     * #156 gives for naming the applicant in {@link #notifyNewCandidate}.
+     *
+     * <p>It links to the table and not to the task. There is no screen for one task on its own: a
+     * request is read next to the others of its table, which is where the answer is handed in too.
+     *
+     * @param userId    the recipient, resolved from the task's audience (#63)
+     * @param table     the table doing the asking; the notification links to it
+     * @param taskTitle what is being asked, named in the rendered title
+     */
+    @Transactional
+    public void notifyTaskPublished(String userId, GameTable table, String taskTitle) {
+        User recipient = userRepository.getReferenceById(userId);
+        NotificationParams params = new NotificationParams(table.getName(), null, null, taskTitle);
+        notificationRepository.save(
+                new Notification(recipient, NotificationType.TaskPublished, params, "game_table", table.getId()));
     }
 
     /**

@@ -10,10 +10,10 @@ interface HealthResponse {
 const POLL_INTERVAL_MS = 15_000
 
 /**
- * Sondea GET /api/v1/health, público y sin dependencias (docs/decisiones.md #146) - funciona
- * incluso en /login, antes de tener sesión. `retry: false` a propósito: un solo fetch fallido ya
- * alcanza para marcar "sin conexión", reintentar de a poco por debajo solo demoraría el aviso.
- * El sondeo periódico es el reintento real.
+ * Polls GET /api/v1/health, which is public and has no dependencies (docs/decisiones.md #146) - so
+ * it works on /login too, before there is a session. `retry: false` on purpose: one failed fetch is
+ * already enough to say "offline", and retrying quietly underneath would only delay the notice. The
+ * periodic poll is the real retry.
  */
 export function useBackendStatus() {
   const { isError } = useQuery({
@@ -25,6 +25,6 @@ export function useBackendStatus() {
     gcTime: POLL_INTERVAL_MS,
   })
 
-  // Antes de la primera respuesta se asume online: no hay motivo para alarmar mientras carga.
+  // Online is assumed until the first answer arrives: there is no reason to alarm anybody while it loads.
   return { isOnline: !isError }
 }

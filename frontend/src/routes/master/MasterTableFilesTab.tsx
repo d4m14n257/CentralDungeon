@@ -59,7 +59,7 @@ export function MasterTableFilesTab() {
   const [kind, setKind] = useState<TableFileType>('Preparation')
   const [isPrivate, setIsPrivate] = useState(false)
 
-  function handlePick(fileId: string) {
+  function handlePick({ fileId }: { fileId: string }) {
     attach.mutate(
       { fileId, tableFileType: kind, isPrivate },
       {

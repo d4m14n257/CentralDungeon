@@ -74,7 +74,7 @@ describe('FilePicker', () => {
     const file = new File(['hoja'], 'ficha.pdf', { type: 'application/pdf' })
     await userEvent.upload(screen.getByLabelText('Elegir un archivo para subir'), file)
 
-    await waitFor(() => expect(onPick).toHaveBeenCalledWith('file-new'))
+    await waitFor(() => expect(onPick).toHaveBeenCalledWith({ fileId: 'file-new', name: 'ficha.pdf' }))
     expect(upload).toHaveBeenCalledWith(file, { fileType: 'Private' })
   })
 
@@ -107,7 +107,10 @@ describe('FilePicker', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Mis archivos' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Usar' }))
 
-    expect(onPick).toHaveBeenCalledWith('file-old')
+    // The name travels with the id: a caller that gathers several files before sending them shows
+    // them back by name, and looking that up again for something the picker just had is a round trip
+    // for nothing.
+    expect(onPick).toHaveBeenCalledWith({ fileId: 'file-old', name: 'ficha-vieja.pdf' })
     expect(upload).not.toHaveBeenCalled()
   })
 

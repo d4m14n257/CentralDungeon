@@ -21,7 +21,7 @@ import {
 } from '@/features/tables'
 
 const CANCELABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested', 'Opened', 'InProgress', 'Pause']
-/** Solo lo que nunca fue público se borra; lo demás se cancela y queda en el historial (#175). */
+/** Only what was never public is deleted; everything else is cancelled and stays in the history (#175). */
 const DELETABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested']
 
 interface OutletContext {

@@ -16,12 +16,12 @@ import { useMe } from '@/features/users'
  */
 export function MasterTablesPage() {
   const { t } = useTranslation('master')
-  // isLoadingError, no isError: un refetch de fondo que falla no debe tapar una lista ya
-  // cargada (docs/decisiones.md #150).
+  // isLoadingError, not isError: a background refetch that fails must not hide a list that already
+  // loaded (docs/decisiones.md #150).
   const { data, isPending, isLoadingError, refetch } = useManagedTables()
   const { data: me } = useMe()
-  // Dirigir no es crear (decisiones.md #135): un master de una sola mesa asignado sin el rol de
-  // plataforma ve esta lista, pero no el botón de crear una mesa propia.
+  // Running is not creating (decisiones.md #135): somebody running a single table, assigned without
+  // the platform role, sees this list but not the button to create a table of their own.
   const canCreate = me?.roles.includes('Master') ?? false
 
   return (

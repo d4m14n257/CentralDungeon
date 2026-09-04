@@ -4,8 +4,8 @@ import { useBackendStatus } from '@/hooks/useBackendStatus'
 import { cn } from '@/lib/utils'
 
 /**
- * Indicador global de conectividad con el backend. Vive en RootLayout para verse en cualquier
- * pantalla, incluida /login, que no tiene header. Reusa los tokens de estado ya medidos para AA
+ * The global backend-connectivity indicator. It lives in RootLayout so it shows on every screen,
+ * including /login, which has no header. It reuses the state tokens already measured for AA
  * (open=verde, canceled=rojo, frontend-diseno.md 3) en vez de inventar un color nuevo.
  */
 export function BackendStatusIndicator() {

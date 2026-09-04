@@ -21,8 +21,8 @@ interface JustifiedTableActionDialogProps {
 }
 
 /**
- * Toda transición que exige justificación (Pedir cambios, Cancelar) comparte esta forma - una
- * sola pantalla, sin abstraerla de más: dos usos reales ya (arquitectura.md 2.4).
+ * Every transition that demands a justification (Request changes, Cancel) shares this shape - one
+ * screen, abstracted no further than it earns: two real uses already (arquitectura.md 2.4).
  */
 export function JustifiedTableActionDialog({
   open,

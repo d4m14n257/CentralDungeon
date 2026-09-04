@@ -10,7 +10,7 @@ export interface RelativeTime {
   count: number
 }
 
-/** Escala simple para notificaciones - minutos, horas, días o meses desde createdAt, sin librería. */
+/** A simple scale for notifications - minutes, hours, days or months since createdAt, with no library. */
 export function relativeTimeFrom(iso: string, now: Date = new Date()): RelativeTime {
   const minutes = Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000)
   if (minutes < 1) return { unit: 'now', count: 0 }

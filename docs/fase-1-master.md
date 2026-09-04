@@ -31,7 +31,7 @@ Verificado en el repositorio al abrir la fase, no asumido. Es la foto contra la 
 | **`closed_at` nunca se sella** — es una regla de `modelo-datos.md` §5 que no se cumple | `GameTableService.finish()` / `.cancel()` | F1.2 |
 | El wizard de `/master/tables/new` es **un formulario de cinco campos** | `frontend/src/routes/master/MasterTableCreatePage.tsx` lo dice explícito | F1.2 |
 | `TableTypeController` **no existe** — `V2__seed.sql` siembra los tipos y no hay forma de listarlos | — | F1.1 (backend) · F1.2 (el `useTableTypes` que lo consume) |
-| `NotificationType` tiene **tres valores** | `backend/.../notifications/NotificationType.java` | F1.2 suma `ScheduleConflict`; F1.3 y F1.5 el resto |
+| ~~`NotificationType` tiene **tres valores**~~ | — | Cerrado: F1.2 sumó `ScheduleConflict`, F1.3 `SessionScheduled` y `SessionCanceled`, F1.5 `TaskPublished` |
 | ~~`features/catalogs/` y `features/files/` son carpetas con un `.gitkeep`~~ | — | Cerrado: F1.1 y F1.4 |
 | `POST /{id}/masters` existe desde E2 y **nunca tuvo interfaz** | — | F1.6 |
 
@@ -395,7 +395,7 @@ npx playwright test → 27 tests, todos verdes, contra el backend y el frontend 
 - `TableTask` (`@Entity`), `TaskService`, `TableTaskController`.
 - `audience` `Candidates` / `Players` / `Single`, con `target_user_id` solo en `Single` (#63, #76); `accepts_text` / `accepts_files` con al menos uno en `true`; `is_mandatory` **informativo, no bloqueante** (#70); `due_at` opcional.
 - **Publicar una petición notifica a sus destinatarios** (#77) — `NotificationType.TaskPublished`. Una petición que nadie ve no se cumple.
-- Lectura de entregas: el master ve quién entregó y quién no. **Las entregas se acumulan y el sistema no juzga si cumplen** (#76). `task_submissions` se **lee** en F1; el jugador entrega en F2.
+- Lectura de entregas: el master ve quién entregó y quién no. **Las entregas se acumulan y el sistema no juzga si cumplen** (#76). ~~`task_submissions` se **lee** en F1; el jugador entrega en F2~~ — **corregido al construirla**: entregar se adelantó entera a F1.5 (#210), con texto y archivos.
 - El incumplimiento se avisa y queda visible, pero **no bloquea ni expulsa** (#70): el sistema informa, las personas deciden.
 
 **Frontend**:
@@ -404,6 +404,68 @@ npx playwright test → 27 tests, todos verdes, contra el backend y el frontend 
 - Peticiones aplicables, solo lectura, en `/tables/:id` (audiencia `Candidates`) y `/my/tables/:id` (audiencia `Players` y las `Single` propias).
 
 **Se prueba:** el master publica una petición para sus jugadores, les llega la notificación y la ven en su mesa.
+
+#### ✅ Terminada
+
+Siete decisiones nuevas salieron de construirla: **#209** (endpoint propio para las peticiones aplicables, en vez de un campo del detalle), **#210** (la entrega del jugador se adelanta de F2), **#211** (la quinta vía de lectura de un archivo), **#212** (a dónde manda `TaskPublished`), **#213** (`GET .../players`), **#214** (el alto de un diálogo de formulario) y **#215** (el editor se anuncia como campo de texto).
+
+**Lo que se agrandó a propósito**: F1.5 iba a *leer* `task_submissions` y el jugador entregaba en F2. Con nadie que pudiera entregar, el padrón de faltantes muestra a todos como faltantes siempre, no hay flujo e2e que probar, y **la regla que más importa del subsistema —las entregas se acumulan (#76)— queda escrita y sin ejercitar**. Se adelantó entera, con archivos (#210), y `plan-desarrollo.md` y §5 de este documento se corrigieron con ella. Lo que **no** se adelantó: `/my/files` y el archivo de personaje en la postulación siguen en F2.
+
+**Dos bugs que encontró el e2e y ningún test unitario podía ver**, los dos en piezas compartidas y no en la rebanada:
+
+1. **Un diálogo alto no se puede usar** (#214). `DialogContent` de shadcn se centra con `top-50%` + `translate-y-[-50%]` y no acota alto ni overflow, así que el diálogo de entrega —editor más selector de archivos— se derramaba fuera de la ventana y **la mitad de arriba quedaba inalcanzable**: lo que scrollea es la página de atrás. Playwright se colgó esperando que el editor fuera clickeable, que es exactamente lo que le habría pasado a una persona. Arreglado en `FormDialog`, que es nuestro; `components/ui/` lo genera el CLI y no se toca.
+2. **El editor de texto enriquecido no se anunciaba como campo de texto** (#215). Chrome expone el `contenteditable` de TipTap como un grupo cualquiera, así que `getByRole('textbox')` no lo encontraba — y **la búsqueda que hace el test es la misma que hace un lector de pantalla**. Se le pusieron `role="textbox"` y `aria-multiline` explícitos: el test dejó de colgarse y el editor pasó a ser navegable con tecnología asistiva, que era el problema de fondo.
+
+Queda fuera a propósito, con su motivo: **borrar una petición**. Se puede cerrar, que es lo que §4 pide; borrar una que ya se publicó y notificó haría desaparecer algo que la gente vio, y nada lo pide. `TaskStatus.Deleted` existe para la baja lógica del día que haga falta. Y **el incumplimiento no genera un aviso automático**: #70 pide que quede visible para el master, y lo está en el padrón de faltantes; mandar una notificación cuando pasa un `due_at` sería el sistema empujando, que es justo lo que #70 evita.
+
+**Sin migración Flyway**: `table_tasks`, `task_submissions` y `submission_files` ya estaban completas en `V1__baseline.sql`, con su `updated_at` y su `ck_task_accepts`. F1.5 mapea, no agrega. El cuarto componente de `NotificationParams` tampoco la necesitó: es JSON en una columna, y una fila vieja sin esa clave se lee con el campo en `null`.
+
+**Backend** (`backend/src/main/java/com/centraldungeon/`):
+
+| Ruta | Qué es |
+|---|---|
+| `tasks/TableTask.java` · `TaskAudience` · `TaskStatus` | Lo que una mesa pide, y sus dos vocabularios. No hay `Draft`: crear es publicar (#77) |
+| `tasks/TaskSubmission.java` · `SubmissionStatus` | Las entregas, que se acumulan y no se editan (#76). Dos estados, no cuatro |
+| `tasks/SubmissionFile.java` · `SubmissionFileId` · `SubmissionFileStatus` | El puente con clave compuesta. Vive en `tasks/` y no en `files/` porque la entrega es su agregado dueño |
+| `tasks/TableTaskRepository.java` · `TaskSubmissionRepository` (+ `TaskSubmissionCount`) · `SubmissionFileRepository` | Las lecturas, el conteo agrupado —entregas y personas son números distintos (#76)— y la consulta de alcance que la quinta vía necesita |
+| `tasks/TableTaskService.java` | Publicar y notificar, corregir sin volver a notificar, cerrar, y la audiencia resuelta en un solo lugar |
+| `tasks/TaskSubmissionService.java` | Entregar, y lo que el master lee: las entregas más el padrón de faltantes |
+| `tasks/TaskMapper.java` | Entidad → los cuatro DTOs de salida |
+| `tasks/TableTaskController.java` · `TaskSubmissionController` | Clases concretas, con su `@PreAuthorize` en cada método |
+| `tasks/dto/` | 9 records: `TaskResponse`, `ApplicableTaskResponse`, `TaskSubmissionResponse`, `TaskSubmissionsResponse`, `TaskRecipientResponse`, `SubmittedFileResponse`, `CreateTaskRequest`, `UpdateTaskRequest`, `CreateSubmissionRequest` |
+| `registrations/dto/TablePlayerResponse.java` | El padrón de la mesa, que hasta ahora nada podía listar (#213) |
+| `test/…/tasks/TableTaskServiceTest.java` · `TaskSubmissionServiceTest` · `TaskIT` | 19 + 13 unitarios y 9 de integración sobre MySQL real |
+
+Modificados: `FileService` (la quinta vía de lectura, #211), `NotificationType` (+`TaskPublished`), `NotificationParams` (+`taskTitle`, el cuarto componente que su propio Javadoc anticipaba) y `NotificationService`, `RegistrationService` y `RegistrationController` (+`GET /game-tables/{id}/players`), `MapperConfig`, y `TestDataService` — **cuarta vez** que esta clase de foreign key rompe la limpieza del e2e, ahora con una cadena de tres niveles (#171, #172).
+
+**Frontend** (`frontend/src/`):
+
+| Ruta | Qué es |
+|---|---|
+| `features/tasks/types.ts` · `schemas.ts` | El tipo base (`TableTask`) y todo lo demás derivado; el zod con las dos reglas de forma |
+| `features/tasks/api/` | `tasksApi.ts` + 8 hooks (4 queries, 4 mutations) |
+| `features/tasks/components/` | `TableTasksSection` (el bloque que montan las dos pantallas de lectura), `TaskBoardList`, `ApplicableTaskList`, `TaskFormDialog`, `TaskSubmitDialog`, `TaskSubmissionsPanel`, `MySubmissions`, `TaskAudienceBadge`, `TaskStatusBadge` |
+| `features/tasks/index.ts` | La superficie pública de la feature |
+| `routes/master/MasterTableTasksTab.tsx` | La pestaña Peticiones, como ruta hija |
+| `features/registrations/api/useTablePlayers.ts` | El padrón, para elegir a quién va una petición `Single` |
+| `locales/es/tasks.json` · `locales/en/tasks.json` | Los textos, en los dos idiomas y en el mismo commit (#198) |
+| Tests | `ApplicableTaskList.test.tsx`, `TaskFormDialog.test.tsx`, `e2e/table-tasks.spec.ts` |
+
+**Cómo se resolvió el cruce de dominios** (regla dura 16): `features/tasks` no importa de `files` ni de `registrations`. `TableTasksSection` y `TaskSubmitDialog` reciben el listado y el selector de archivos como **render props**, y `TaskFormDialog` recibe el padrón y las sesiones como datos planos. Las pantallas de `routes/` son las que componen.
+
+Tocados: `components/FormDialog.tsx` (#214), `components/RichTextEditor.tsx` (#215), `features/files/components/FilePicker.tsx` (el `onPick` pasa el nombre además del id) y su test, `api/queryKeys.ts` (+rama `tasks`, +`registrations.players`), `config/paths.ts`, `config/query.ts` (+`TASK_CLOSED`), `providers/i18n.ts`, `routes/router.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), `routes/TableDetailPage.tsx` y `routes/my/MyTableDetailPage.tsx` (+la sección de peticiones), `features/notifications/` (tipo, texto y destino de `TaskPublished`), `test/setup.ts` (los huecos de jsdom que Radix usa) y los locales `master`, `notifications` y `help`.
+
+**Ayuda:** `/help/masters#tasks` (las tres audiencias, que publicar avisa y corregir no, que las entregas se acumulan y el sistema no las juzga, que "importante" no expulsa a nadie, y qué pasa al cerrar) y `/help/players#tasks` (dónde las veo, que puedo leer lo que se le pide a los candidatos antes de postularme, cómo entregar reusando un archivo, y que no entregar no me saca de la mesa), enlazadas desde la pestaña y desde las dos pantallas de lectura.
+
+**Salida real de las suites:**
+
+```
+./mvnw test    → 270 tests, 0 fallos
+./mvnw verify  → 270 unitarios + 56 integración, 0 fallos
+npx tsc -b     → limpio
+npm run test   → 22 archivos, 168 tests
+npx playwright test → 31 tests, todos verdes, contra el backend y el frontend reales
+```
 
 ---
 
@@ -441,7 +503,7 @@ Anotado a propósito: un hueco implícito es una sorpresa (`plan-desarrollo.md` 
 
 | Queda fuera | Dónde vive |
 |---|---|
-| Entregar respuestas a las peticiones | F2 |
+| ~~Entregar respuestas a las peticiones~~ | **Se adelantó a F1.5** (#210) |
 | Archivo de personaje en la postulación, `/my/files`, `/my/history` | F2 |
 | Filtros del explorador por catálogo | F2 — el backend de F1.1 ya los resuelve |
 | `/profile`, `/users/:id` | F2 |

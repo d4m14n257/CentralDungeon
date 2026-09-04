@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-/** Filtros y buscadores: retrasa el valor para no pedirle al servidor una consulta por tecla (arquitectura.md 3.3). */
+/** Filters and search boxes: delays the value so the server is not asked one query per keystroke (arquitectura.md 3.3). */
 export function useDebounce<T>(value: T, delay = 400): T {
   const [debounced, setDebounced] = useState(value)
 

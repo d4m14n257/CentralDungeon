@@ -14,7 +14,7 @@ function renderEditor(value: TableScheduleEntry[], onChange = vi.fn()) {
 }
 
 describe('ScheduleEditor', () => {
-  /** Lo que se guarda es UTC y lo que se lee es hora local (#22): el día se corre uno para atrás. */
+  /** What is stored is UTC and what is read is local time (#22): the day shifts one back. */
   it('shows a UTC slot in the reader zone, and says what is stored underneath', () => {
     renderEditor([{ weekday: 'Wednesday', hourtime: '01:00:00' }])
 
@@ -30,7 +30,7 @@ describe('ScheduleEditor', () => {
     await user.type(screen.getByLabelText('Hora'), '22:00')
     await user.click(screen.getByRole('button', { name: 'Agregar' }))
 
-    // Viernes 22:00 en Buenos Aires es sábado 01:00 en UTC.
+    // Friday 22:00 in Buenos Aires is Saturday 01:00 in UTC.
     expect(onChange).toHaveBeenCalledWith([{ weekday: 'Saturday', hourtime: '01:00' }])
   })
 
@@ -46,7 +46,7 @@ describe('ScheduleEditor', () => {
     expect(onChange).toHaveBeenCalledWith([{ weekday: 'Saturday', hourtime: '23:00:00' }])
   })
 
-  /** La clave primaria es (mesa, día, hora): la misma franja dos veces es una sola franja. */
+  /** The primary key is (table, weekday, time): the same slot twice is one slot. */
   it('refuses to add a slot the agenda already has', async () => {
     const user = userEvent.setup()
     const onChange = renderEditor([{ weekday: 'Saturday', hourtime: '01:00:00' }])

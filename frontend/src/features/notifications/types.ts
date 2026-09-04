@@ -8,6 +8,8 @@ export interface NotificationParams {
   tableName?: string | null
   otherTableName?: string | null
   actorName?: string | null
+  /** What a table is asking for, so the bell names the request rather than announcing one (#77). */
+  taskTitle?: string | null
 }
 
 /**

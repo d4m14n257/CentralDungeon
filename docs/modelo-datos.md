@@ -777,9 +777,22 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | La asistencia se registra por sesión y alimenta la evaluación de karma | `TableSessionService.recordAttendance` | #36 |
 | El padrón de una sesión son los `Player` activos de la mesa, resuelto en el servidor: un `userId` que no juega ahí es `400` | `TableSessionService.recordAttendance` | #121 |
 | La asistencia histórica se **deriva con `GROUP BY` y no se cachea**, con `Unknown` fuera del denominador y los tres números sin colapsar | `TableSessionService.summarize` | #11, #137 |
-| Publicar una petición notifica a sus destinatarios | `TaskService` | #77 |
-| Las entregas se acumulan, nunca se reemplazan; el sistema no juzga si cumplen | `TaskService` | #76 |
-| El incumplimiento se avisa y queda visible para el master, pero no bloquea ni expulsa | `TaskService` | #70 |
+| **Crear una petición es publicarla**: no hay borrador, y la creación notifica a sus destinatarios en la misma transacción | `TableTaskService.publish` | #77 |
+| Corregir una petición **no vuelve a notificar**. El aviso sale una sola vez | `TableTaskService.update` | #77 |
+| La audiencia resuelve a personas en un solo lugar, y de ahí salen las tres respuestas: a quién se notifica, quién puede entregar y quién figura como faltante | `TableTaskService.recipientsOf` | #63 |
+| `audience = 'Single'` exige `target_user_id`, y cualquier otra audiencia lo prohíbe. El destinatario tiene que ser `Player` vivo de la mesa | `TableTaskService` | #63, #76 |
+| Una petición acepta texto, archivos o ambos: **al menos uno**. El `CHECK` de la base es la red, no la regla | `TableTaskService` | #63 |
+| Una petición atada a una sesión solo puede atarse a una sesión **de su propia mesa** | `TableTaskService` | #63 |
+| `is_mandatory` es **informativo**: ninguna ruta de código lo lee para bloquear, expulsar ni rechazar | todo `tasks/` | #70 |
+| Las peticiones de audiencia `Candidates` las lee **cualquiera que pueda ver la mesa**, aunque todavía no se haya postulado: lo que te van a pedir es parte de decidir si te postulás | `TableTaskService.listApplicable` | #63, #206 |
+| Una petición `Single` solo la ve su destinatario, también entre los jugadores de la mesa | `TableTaskService.listApplicable` | #76 |
+| **Las entregas se acumulan, nunca se reemplazan**: cada envío es una fila nueva y no hay `update`. El sistema no juzga si cumplen, y no hay aprobar ni rechazar | `TaskSubmissionService.submit` | #76 |
+| Entregar exige estar **en la audiencia** de la petición, y que siga `Open` (`409 TASK_CLOSED`) | `TaskSubmissionService.submit` | #63, #76 |
+| Una entrega tiene que usar un canal que la petición abrió, y no puede ir vacía de los dos | `TaskSubmissionService.submit` | #63 |
+| Los archivos de una entrega se **vinculan**, nunca se copian, y pasan por el mismo permiso que adjuntar a una mesa: propios o publicados | `TaskSubmissionService.submit` | #65, #79 |
+| Un master puede abrir un archivo que le entregaron a una petición de su mesa — la quinta vía de lectura | `FileService.requireReadable` | #206, #211 |
+| El incumplimiento se avisa y queda visible para el master, pero **no bloquea ni expulsa**: el padrón de faltantes no tiene ninguna acción asociada | `TaskSubmissionService.listForTask` | #70 |
+| Cerrar una petición corta las entregas nuevas y **no borra** lo ya entregado | `TableTaskService.close` | #76 |
 
 ### Comentarios y karma
 

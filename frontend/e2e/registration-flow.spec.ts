@@ -24,8 +24,8 @@ async function testLogin(request: APIRequestContext, discordId: string, asMaster
 }
 
 /**
- * Preparation -> Opened ya no es self-service del master (E2 sub-rebanada 1, decisiones.md #163):
- * un admin tiene que aprobarla. Se loguea un admin efímero solo para eso.
+ * Preparation -> Opened is no longer the master's to do alone (E2 sub-slice 1, decisiones.md #163):
+ * an admin has to approve it. An ephemeral admin signs in for that and nothing else.
  */
 async function createOpenTable(request: APIRequestContext, accessToken: string, name: string) {
   const created = await request.post(`${BACKEND_URL}/api/v1/game-tables`, {

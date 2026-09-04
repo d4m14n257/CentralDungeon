@@ -22,18 +22,18 @@ import { browserTimeZone, formatSlot, localInputToUtcIso, utcSlotToLocal } from 
 import type { CatalogValue } from '@/types/catalog'
 
 /**
- * El wizard de creación, `/master/tables/new` (frontend-diseno.md sitemap).
+ * The create-table wizard, `/master/tables/new` (frontend-diseno.md sitemap).
  *
- * **Cuatro pasos, una decisión cada uno**: identidad → catálogos → agenda y duración → cupo y
- * revisión. No es decoración: una mesa completa pide quince datos de cinco clases distintas, y un
- * formulario único obliga a leerlos todos antes de contestar el primero. El último paso es el
- * resumen, porque lo que se envía queda a revisión de un admin (#27) y conviene verlo entero antes.
+ * **Four steps, one decision each**: identity → catalogs → agenda and duration → capacity and
+ * review. It is not decoration: a complete table asks for fifteen values of five different kinds,
+ * and a single form forces somebody to read all of them before answering the first. The last step is
+ * the summary, because what is sent goes to an admin for review (#27) and is worth seeing whole.
  *
- * La pantalla compone: los catálogos los trae `features/catalogs` y la agenda `features/tables`,
- * y ninguna de las dos sabe de la otra (§3.1.5, regla dura 16).
+ * The screen composes: the catalogs come from `features/catalogs` and the agenda from
+ * `features/tables`, and neither knows about the other (§3.1.5, regla dura 16).
  *
- * La hora se escribe en la zona del lector y viaja en UTC (#22): la conversión es de `lib/date.ts`
- * y ocurre una sola vez, al enviar.
+ * The time is typed in the reader's zone and travels as UTC (#22): the conversion belongs to
+ * `lib/date.ts` and happens once, on submit.
  */
 export function MasterTableCreatePage() {
   const { t, i18n } = useTranslation('master')
@@ -47,9 +47,9 @@ export function MasterTableCreatePage() {
   const [platforms, setPlatforms] = useState<CatalogValue[]>([])
   const [schedule, setSchedule] = useState<TableScheduleEntry[]>([])
 
-  // #22 quitó `users.timezone` del modelo, así que hoy la única fuente es el navegador. `lib/date.ts`
-  // recibe la zona como parámetro justamente para que el día que exista una preferencia de perfil
-  // se cambie esta línea y nada más (#111).
+  // #22 took `users.timezone` out of the model, so today the browser is the only source. `lib/date.ts`
+  // takes the zone as a parameter precisely so that the day a profile preference exists, this line
+  // changes and nothing else (#111).
   const timeZone = useMemo(() => browserTimeZone(), [])
 
   const form = useForm<CreateGameTableForm>({
@@ -57,8 +57,9 @@ export function MasterTableCreatePage() {
     defaultValues: { name: '', description: '', permitted: '', requirements: '', duration: '03:00' },
   })
 
-  // Crear exige el rol de plataforma Master, no solo pertenencia (#135) - el backend ya lo rechaza
-  // con 403, pero mostrar un formulario que siempre va a fallar sería peor que no mostrar nada.
+  // Creating requires the Master platform role, not merely membership (#135) - the backend already
+  // refuses with a 403, but showing a form that is always going to fail would be worse than showing
+  // nothing.
   if (me && !me.roles.includes('Master')) {
     return <ForbiddenState />
   }
@@ -67,8 +68,8 @@ export function MasterTableCreatePage() {
   const values = form.getValues()
 
   async function goNext() {
-    // Solo el primer paso tiene campos obligatorios; validar de más frenaría al que todavía no
-    // decidió el cupo, que es justamente lo que el paso siguiente sirve para decidir.
+    // Only the first step has required fields; validating more would stop somebody who has not
+    // decided the capacity yet, which is exactly what the next step is there to decide.
     if (step === 'identity' && !(await form.trigger('name'))) {
       return
     }
@@ -86,9 +87,9 @@ export function MasterTableCreatePage() {
   }
 
   function onSubmit(formValues: CreateGameTableForm) {
-    // Un wizard no se manda desde cualquier paso: Enter en un campo de texto dispara el submit
-    // nativo del formulario, y sin esta guarda crearía la mesa mientras la persona todavía está
-    // escribiendo el nombre. El botón de enviar solo existe en el último paso; esto cubre el teclado.
+    // A wizard is not submitted from any step: Enter in a text field fires the form's native submit,
+    // and without this guard it would create the table while somebody is still typing the name. The
+    // submit button only exists on the last step; this covers the keyboard.
     if (step !== 'capacity') {
       return
     }
@@ -264,7 +265,7 @@ export function MasterTableCreatePage() {
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-sm font-medium">{t('create.scheduleLabel')}</p>
-                  {/* La ayuda se enlaza desde la pantalla que la necesita, con su #ref (#167, #168). */}
+                  {/* The help is linked from the screen that needs it, by its #ref (#167, #168). */}
                   <Link to={helpPath('masters', 'schedule')} className="text-fg-muted hover:text-fg text-xs underline">
                     {t('create.scheduleHelp')}
                   </Link>

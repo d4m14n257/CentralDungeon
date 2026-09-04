@@ -1,0 +1,98 @@
+{
+  "audience": {
+    "Candidates": "For anyone thinking of applying",
+    "Players": "For the players",
+    "Single": "For one person",
+    "singleNamed": "For {{name}}"
+  },
+  "status": {
+    "Open": "Open",
+    "Closed": "Closed"
+  },
+  "board": {
+    "title": "Requests",
+    "publish": "Publish request",
+    "emptyTitle": "This table is not asking for anything yet",
+    "emptyDescription": "Publish a request to ask something of your candidates or your players. Publishing it notifies them.",
+    "answered": "{{people}} of {{total}} have answered",
+    "mandatory": "Important",
+    "edit": "Edit the request",
+    "close": "Close the request",
+    "closeTitle": "Close this request?",
+    "closeDescription": "It stops taking answers. What was already handed in stays and can still be read.",
+    "answersWith": "Answered with:",
+    "due": "Suggested date:",
+    "session": "Tied to:",
+    "channels": {
+      "both": "text and files",
+      "text": "text only",
+      "files": "files only"
+    },
+    "helpLink": "How requests work"
+  },
+  "form": {
+    "publishTitle": "Publish a request",
+    "publishDescription": "Publishing it notifies the people it is addressed to.",
+    "editTitle": "Edit the request",
+    "editDescription": "Correcting it does not notify again: the notice goes out once, when it is published.",
+    "titleLabel": "What you are asking for",
+    "titleRequired": "Give it a title: it is what shows in the notice and in the list.",
+    "descriptionLabel": "Details",
+    "audienceLabel": "Who you are asking",
+    "audienceHint": {
+      "Candidates": "Anyone looking at the table sees it, even before applying. Candidates answer it.",
+      "Players": "The players you have accepted see it and answer it.",
+      "Single": "One person at your table sees it and answers it."
+    },
+    "targetLabel": "Who",
+    "targetPlaceholder": "Pick a player",
+    "targetRequired": "Pick the person you are asking.",
+    "targetNoPlayers": "There are no accepted players at this table yet.",
+    "answerLabel": "How it is answered",
+    "acceptsText": "With text",
+    "acceptsFiles": "With files",
+    "answerChannelRequired": "Pick at least one way to answer.",
+    "sessionLabel": "Tie it to a session",
+    "sessionNone": "At any point",
+    "sessionOption": "Session {{number}}",
+    "dueLabel": "Suggested date",
+    "dueHint": "In your time zone ({{timeZone}}). Nothing happens when it passes — it is a reference.",
+    "mandatoryLabel": "Mark it as important",
+    "mandatoryHint": "It is only a label. It blocks nothing and removes nobody from the table.",
+    "cancel": "Cancel",
+    "publish": "Publish and notify",
+    "save": "Save",
+    "publishedToast": "Request published. Everyone has been notified.",
+    "savedToast": "Request updated."
+  },
+  "submissions": {
+    "title": "Answers",
+    "emptyTitle": "Nobody has answered yet",
+    "emptyDescription": "When somebody hands something in, it will show up here with whatever they sent.",
+    "missingTitle": "{{missing}} of {{total}} still to answer",
+    "nobodyMissing": "Everybody has answered.",
+    "missingHint": "This list is information: not answering blocks nothing and removes nobody from the table."
+  },
+  "applicable": {
+    "title": "What this table asks for",
+    "emptyTitle": "This table is not asking anything of you",
+    "emptyDescription": "When the master publishes a request that applies to you, it will show up here.",
+    "answered_one": "You answered once",
+    "answered_other": "You answered {{count}} times",
+    "answer": "Answer",
+    "answerAgain": "Answer again",
+    "cannotAnswer": "You will be able to answer this once you apply to the table.",
+    "mineTitle": "What I sent",
+    "helpLink": "How requests work"
+  },
+  "submit": {
+    "title": "Answer: {{title}}",
+    "description": "What you send is added to what you sent before; nothing is replaced.",
+    "contentLabel": "Your answer",
+    "filesLabel": "Files",
+    "removeFile": "Remove the file",
+    "accumulatesHint": "Each answer is kept separately. If you already sent something, it stays.",
+    "send": "Send",
+    "sentToast": "Sent."
+  }
+}

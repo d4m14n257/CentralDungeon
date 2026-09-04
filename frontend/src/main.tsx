@@ -1,5 +1,6 @@
-// Las dos familias del @theme, autohospedadas. Sin esto el navegador cae al ui-serif del sistema
-// y la app solo se ve como el design system en una máquina que ya las tenga instaladas.
+// The @theme's two families, self-hosted. Without this the browser falls back to the system's
+// ui-serif, and the application only looks like the design system on a machine that already has
+// the fonts installed.
 import '@fontsource-variable/inter'
 import '@fontsource/spectral/500.css'
 import '@fontsource/spectral/600.css'

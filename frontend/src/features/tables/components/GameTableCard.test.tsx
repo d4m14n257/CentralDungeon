@@ -71,8 +71,8 @@ describe('GameTableCard', () => {
   })
 
   /**
-   * La agenda viaja en UTC y se muestra en hora local (#22): miércoles 01:00 UTC es martes 22:00 en
-   * la zona en la que corre la suite (`vite.config.ts`), o sea que el día se corre uno para atrás.
+   * The agenda travels in UTC and is shown in local time (#22): Wednesday 01:00 UTC is Tuesday 22:00
+   * in the zone the suite runs in (`vite.config.ts`), so the day shifts one back.
    */
   it('shows the agenda converted to the reader zone, not the UTC it travels in', () => {
     renderCard({ ...baseTable, schedule: [{ weekday: 'Wednesday', hourtime: '01:00:00' }] })
@@ -80,7 +80,7 @@ describe('GameTableCard', () => {
     expect(screen.getByText(/martes 22:00/)).toBeInTheDocument()
   })
 
-  /** #178: la advertencia se ve en la card, no solo al intentar postularse. */
+  /** #178: the warning shows on the card, not only when somebody tries to apply. */
   it('warns when the table clashes with something the reader is already in', () => {
     renderCard({ ...baseTable, scheduleConflict: true })
 

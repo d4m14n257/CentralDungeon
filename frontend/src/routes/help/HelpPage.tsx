@@ -10,13 +10,13 @@ import { canReadHelp } from './HelpAudienceGate'
 const AUDIENCES: HelpAudience[] = ['players', 'masters', 'admins']
 
 /**
- * La ayuda del sistema (decisiones.md #167), partida por audiencia (#168): lo que sirve a todos
- * vive en el índice y cada rol tiene su página, para que nadie tenga que leer la ayuda de otro
- * para encontrar la suya. Las secciones son rutas hijas, no pestañas con `useState`, así cada una
- * tiene URL propia y se enlaza con su `#ref` desde la pantalla que la necesita (arquitectura.md 3.1.6).
+ * The system's help (decisiones.md #167), split by audience (#168): what serves everybody lives in
+ * the index and each role has its own page, so nobody has to read somebody else's help to find
+ * theirs. The sections are child routes rather than tabs with `useState`, so each has its own URL
+ * and is linked by its `#ref` from the screen that needs it (arquitectura.md 3.1.6).
  *
- * La navegación **solo ofrece las audiencias del usuario** (#169): un jugador no ve la pestaña de
- * admins. Entrar por URL igual queda cortado, en `HelpAudienceGate`.
+ * The navigation **only offers the reader's own audiences** (#169): a player does not see the admin
+ * tab. Reaching it by URL anyway is cut off in `HelpAudienceGate`.
  */
 export function HelpPage() {
   const { t } = useTranslation('help')

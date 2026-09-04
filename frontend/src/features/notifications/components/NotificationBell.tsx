@@ -44,15 +44,15 @@ export function NotificationBell() {
         <Button variant="ghost" size="icon" className="relative" aria-label={t('title')}>
           <Bell className="size-5" />
           {unreadCount > 0 && (
-            /* El contador es acento sólido, no destructivo: notificar no es un error. */
+            /* The counter is a solid accent and not a destructive one: being notified is not an error. */
             <Badge className="bg-primary text-primary-foreground absolute -top-1 -right-1 h-4 min-w-4 justify-center rounded-full px-1 text-xs font-bold">
               {unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
-      {/* Máximo 5 (notificationsApi.list pide size=5), diseño de design/build.py sc_comp_shell:
-          punto lleno + fila resaltada para lo no leído, punto hueco y texto atenuado para lo leído. */}
+      {/* At most 5 (notificationsApi.list asks for size=5), design from design/build.py sc_comp_shell:
+          a filled dot and a raised row for the unread, a hollow dot and muted text for the read. */}
       <DropdownMenuContent align="end" className="w-72 p-0 py-1">
         <div className="text-fg-subtle border-border border-b px-3 py-2 text-[11px] tracking-wide uppercase">
           {t('title')}
@@ -66,10 +66,10 @@ export function NotificationBell() {
               key={notification.id}
               onSelect={() => handleClick(notification)}
               className={cn(
-                // --color-accent es --color-raised (globals.css): el focus:bg-accent de base no se
-                // nota sobre una fila ya "raised" - se pisa con un tono propio y más fuerte que
-                // funciona igual en las leídas y las no leídas, más cursor-pointer (la base trae
-                // cursor-default, pensado para ítems no clickeables).
+                // --color-accent is --color-raised (globals.css), so the base focus:bg-accent does
+                // not show on a row that is already raised - it is overridden with a stronger tone of
+                // its own that works on read and unread rows alike, plus cursor-pointer (the base
+                // ships cursor-default, meant for items that cannot be clicked).
                 'focus:bg-border-strong! gap-2.5 px-3 py-2 text-[13px] cursor-pointer',
                 unread ? 'bg-raised text-fg' : 'text-fg-muted',
               )}

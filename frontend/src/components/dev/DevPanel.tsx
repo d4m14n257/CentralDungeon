@@ -13,19 +13,20 @@ import { useAuth } from '@/providers/AuthProvider'
 
 import { testLoginAndReload } from './devApi'
 
-// Las cuentas compartidas de pruebas-e1.md, no una inventada: master-1 ya es Secondary de "La
-// Cripta de Ondrak" y "Tumbas de Sal", con postulaciones reales - reusarlas mantiene el panel
-// conectado a los datos con los que ya se viene probando, en vez de arrancar una cuenta vacía.
+// The shared accounts from pruebas-e1.md, rather than an invented one: master-1 is already
+// Secondary of "La Cripta de Ondrak" and "Tumbas de Sal", with real applications - reusing them
+// keeps the panel connected to the data everything has been tested against, instead of starting
+// from an empty account.
 const DEFAULT_PLAYER_ID = 'jugador-1'
 const DEFAULT_MASTER_ID = 'master-1'
 const DEFAULT_ADMIN_ID = 'admin-1'
 
 /**
- * Solo en `npm run dev` (import.meta.env.DEV, reemplazado en build y eliminado del bundle de
- * producción) - reemplaza los fetch() de consola de pruebas-e1.md por botones. Depende de que el
- * backend corra con el perfil `test`; si no, test-login responde 404 y el toast de error global
- * (config/query.ts) lo avisa. Roles nuevos (Admin, Owner) se agregan acá cuando test-login los
- * soporte - no se anticipa la forma todavía.
+ * Only under `npm run dev` (import.meta.env.DEV, substituted at build time and dropped from the
+ * production bundle) - it replaces the console `fetch()` calls of pruebas-e1.md with buttons. It
+ * depends on the backend running with the `test` profile; without it, test-login answers 404 and the
+ * global error toast (config/query.ts) says so. New roles (Admin, Owner) are added here once
+ * test-login supports them - the shape is not anticipated yet.
  */
 export function DevPanel() {
   if (!import.meta.env.DEV) {
@@ -36,9 +37,10 @@ export function DevPanel() {
 
 function DevPanelContent() {
   const { t } = useTranslation('dev')
-  // enabled: isAuthenticated - el panel también vive en /login (para el login rápido ahí mismo),
-  // y sin esto useMe() dispara un 401 en bucle: falla el refresh y client.ts manda a /login con un
-  // reload completo, que vuelve a montar el panel y a disparar la misma consulta (rompía discord-login.spec.ts).
+  // enabled: isAuthenticated - the panel lives on /login too (for the quick sign-in right there),
+  // and without this useMe() fires a 401 in a loop: the refresh fails, client.ts sends the browser to
+  // /login with a full reload, which mounts the panel again and fires the same query
+  // (it was breaking discord-login.spec.ts).
   const { isAuthenticated } = useAuth()
   const { data: me } = useMe(isAuthenticated)
   const [playerDiscordId, setPlayerDiscordId] = useState(DEFAULT_PLAYER_ID)

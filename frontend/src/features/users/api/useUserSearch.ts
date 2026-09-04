@@ -6,8 +6,8 @@ import { staleTime } from '@/config/query'
 import { usersApi } from './usersApi'
 
 /**
- * Buscador de personas (#164, #165). `keepPreviousData` evita que la lista parpadee entre teclas:
- * los resultados viejos se quedan en pantalla, atenuados, hasta que llegan los nuevos.
+ * Searching for people (#164, #165). `keepPreviousData` keeps the list from flickering between
+ * keystrokes: the previous results stay on screen, dimmed, until the new ones arrive.
  */
 export function useUserSearch(query: string, enabled: boolean) {
   return useQuery({

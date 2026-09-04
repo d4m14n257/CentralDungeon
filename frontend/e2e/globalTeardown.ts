@@ -3,12 +3,13 @@ import { request } from '@playwright/test'
 const BACKEND_URL = 'http://localhost:8080'
 
 /**
- * Borra lo que la corrida dejó: mesas con "E2E" en el nombre y usuarios `e2e-*` (decisiones.md #172).
- * Sin esto cada corrida sumaba filas a la base de desarrollo, y una base llena no es solo ruido —
- * fue lo que hizo fallar a registration-flow.spec.ts cuando el explorador todavía no tenía orden (#171).
+ * Deletes what the run left behind: tables with "E2E" in the name and `e2e-*` users
+ * (decisiones.md #172). Without this every run added rows to the development database, and a full
+ * database is not merely noise — it is what made registration-flow.spec.ts fail back when the
+ * explorer had no fixed order (#171).
  *
- * No falla la suite si no puede limpiar: el endpoint solo existe con el perfil "test" y los tests
- * ya terminaron. Se avisa por consola y listo.
+ * It does not fail the suite when it cannot clean up: the endpoint only exists under the "test"
+ * profile and the tests are over by then. It says so on the console and that is all.
  */
 export default async function globalTeardown() {
   const context = await request.newContext()

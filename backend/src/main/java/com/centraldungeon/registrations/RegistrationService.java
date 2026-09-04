@@ -8,6 +8,7 @@ import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.registrations.dto.CreateRegistrationRequest;
 import com.centraldungeon.registrations.dto.RegistrationResponse;
 import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
+import com.centraldungeon.registrations.dto.TablePlayerResponse;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
@@ -296,6 +297,33 @@ public class RegistrationService {
                     automatic ? null : rejection.getDescription(),
                     automatic ? rejection.getDescription() : null);
         }));
+    }
+
+    /**
+     * The table's current players - its roster, as the people running it need it.
+     *
+     * <p>A different question from {@link #listCandidatesForTable}, which answers with the queue
+     * waiting to get in (#28). Nothing could ask this one until F1.5 needed it: addressing a task to
+     * one player (#76) means being able to choose among them, and offering the platform's whole user
+     * directory there would be offering people who cannot be chosen.
+     *
+     * <p>A list and not a page: it is bounded by {@code max_players} and read as one roster.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token (#121)
+     * @return its players, in the order they were accepted
+     * @throws ForbiddenActionException if the actor does not run the table (#17, #135)
+     */
+    @Transactional(readOnly = true)
+    public List<TablePlayerResponse> listPlayersForTable(String gameTableId, String actorId) {
+        requireMasterOf(gameTableId, actorId, "view its players");
+        return registrationRepository
+                .findByGameTable_IdAndStatusOrderByCreatedAtAsc(gameTableId, TableRegistrationStatus.Player).stream()
+                .map(registration -> new TablePlayerResponse(
+                        registration.getUser().getId(),
+                        registration.getUser().getDiscordUsername(),
+                        registration.getUser().getKarma()))
+                .toList();
     }
 
     private Map<String, RegistrationRejection> loadRejections(List<TableRegistration> registrations) {

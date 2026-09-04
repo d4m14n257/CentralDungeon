@@ -1,9 +1,9 @@
 import { Outlet } from 'react-router'
 
 /**
- * Tarjeta centrada sobre el canvas, sin header: el retorno de OAuth y el onboarding.
- * /login queda fuera de este layout a propósito — se pinta a sangre con el gradiente de marca
- * (#132) y por eso arma su propio encuadre.
+ * A card centred on the canvas, with no header: the OAuth return and the onboarding.
+ * /login is deliberately outside this layout — it is painted full-bleed over the brand gradient
+ * (#132) and therefore builds its own frame.
  */
 export function PublicLayout() {
   return (

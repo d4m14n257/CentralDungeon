@@ -11,11 +11,11 @@ interface LoadMoreProps {
 }
 
 /**
- * Paginación de un listado de lectura: se trae más, no se salta de página (decisiones.md #173).
+ * Pagination for a reading list: it brings more, it does not jump between pages (decisiones.md #173).
  *
- * Botón explícito y no scroll infinito: el scroll infinito se dispara solo, deja el pie de página
- * inalcanzable y no avisa cuánto falta. Acá siempre se ve cuántos hay de cuántos, que es la mitad
- * de la información que una paginación tiene que dar.
+ * An explicit button and not infinite scroll: infinite scroll fires on its own, leaves the footer
+ * unreachable and never says how much is left. Here you always see how many of how many, which is
+ * half of what pagination has to tell you.
  */
 export function LoadMore({ hasMore, isLoading, onLoadMore, shown, total }: LoadMoreProps) {
   const { t } = useTranslation('common')

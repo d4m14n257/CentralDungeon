@@ -63,7 +63,7 @@ class SearchQueryParserTest {
         assertThat(query.terms()).extracting(SearchTerm::connector).containsExactly(SearchConnector.AND, SearchConnector.OR);
     }
 
-    /** Sin esto nadie podría buscar un valor que contenga la palabra: el separador es la barra. */
+    /** Without this nobody could search for a value containing the word: the separator is the slash. */
     @Test
     void aBareAndOrOrIsPlainText() {
         SearchQuery query = SearchQueryParser.parse("/user_name juan or pablo", FIELDS);

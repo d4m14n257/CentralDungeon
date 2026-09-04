@@ -47,6 +47,7 @@
       "candidates": "Candidates",
       "status": "Status",
       "sessions": "Sessions",
+      "tasks": "Requests",
       "files": "Files"
     }
   },

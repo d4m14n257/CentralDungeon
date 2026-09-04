@@ -19,8 +19,9 @@ const CHIP_CLASSES = 'border-border-strong text-fg-muted h-auto gap-1.5 rounded-
 
 /**
  * UI organization only, never authorization (#103) - the backend authorizes every endpoint on
- * its own. Con un solo contexto no hay nada que elegir, así que el chip queda sin caret ni menú
- * (#144) - sigue mostrando en qué contexto estás, pero no sugiere una interacción que no existe.
+ * its own. With a single context there is nothing to choose, so the chip has neither a caret nor a
+ * menu (#144) - it still says which context you are in, without suggesting an interaction that does
+ * not exist.
  */
 export function ContextSwitcher({ availableContexts }: { availableContexts: AppContext[] }) {
   const { t } = useTranslation('common')
@@ -49,7 +50,7 @@ export function ContextSwitcher({ availableContexts }: { availableContexts: AppC
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {/* Chip, no botón: el relleno sólido está reservado al acento (frontend-diseno.md 3). */}
+        {/* A chip and not a button: the solid fill is reserved for the accent (frontend-diseno.md 3). */}
         <Button variant="ghost" className={`${CHIP_CLASSES} hover:text-fg`}>
           {t(`nav.${activeContext}`)}
           <ChevronDown className="size-3.5" />

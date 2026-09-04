@@ -13,7 +13,7 @@ export interface NotificationTarget {
   path: string
 }
 
-/** A dónde manda cada tipo de notificación, y en qué contexto hay que estar parado para verlo (decisiones.md #156). */
+/** Where each kind of notification leads, and which context the reader has to be in to see it (decisiones.md #156). */
 export function notificationTarget(notification: Notification): NotificationTarget | null {
   if (notification.relatedEntityType !== 'game_table' || !notification.relatedEntityId) {
     return null
@@ -21,6 +21,11 @@ export function notificationTarget(notification: Notification): NotificationTarg
   switch (notification.notificationType) {
     case 'RegistrationAccepted':
     case 'RegistrationRejected':
+      return { context: 'player', path: tableDetailPath(notification.relatedEntityId) }
+    // The public detail and not `/my/tables/:id`, because the same notice reaches a candidate and a
+    // player alike: a candidate has no `/my/tables` entry for a table they are not in yet, and the
+    // public detail shows both of them what the table is asking of them (#63, #206).
+    case 'TaskPublished':
       return { context: 'player', path: tableDetailPath(notification.relatedEntityId) }
     case 'NewCandidate':
       return { context: 'master', path: masterTableDetailPath(notification.relatedEntityId) }

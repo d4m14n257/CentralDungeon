@@ -16,7 +16,7 @@ import {
 } from '@/lib/searchQuery'
 
 interface SearchQueryInputProps {
-  /** Los campos que este buscador acepta detrás de un `/`. El orden es el de las sugerencias. */
+  /** The fields this box accepts behind a `/`. Their order is the order of the suggestions. */
   fields: readonly SearchField[]
   value: SearchQueryValue
   onChange: (value: SearchQueryValue) => void
@@ -29,22 +29,23 @@ type Suggestion =
   { kind: 'field'; name: string; label: string } | { kind: 'connector'; name: string; label: string; connector: SearchConnector }
 
 /**
- * El buscador de toda la app (decisiones.md #164): se escribe en una línea, y cada criterio se
- * vuelve un chip para que quede a la vista qué se está buscando y por qué campo.
+ * The application's one search box (decisiones.md #164): it is typed on a single line, and each
+ * criterion becomes a chip so that what is being searched, and by which field, stays in view.
  *
- * Sin dominio a propósito — recibe los campos que acepta, no los conoce (arquitectura.md 3.1.1).
+ * It knows no domain, on purpose — it receives the fields it accepts rather than knowing them
+ * (arquitectura.md 3.1.1).
  *
- * **La barra es el único separador.** Al elegir un campo, su chip queda fijo a la izquierda del
- * cursor y **todo lo que se escriba después es el valor de ese criterio**, espacios incluidos;
- * `/and` y `/or` cierran el criterio y dejan su propio chip entre los dos, que se toca para
- * cambiarlo. Las comas separan alternativas dentro del mismo criterio. Nada de esto usa palabras
- * reservadas sueltas: un "or" escrito sin barra es parte del valor, que es lo que hace posible
- * buscar a alguien que se llame así.
+ * **The slash is the only separator.** Choosing a field pins its chip to the left of the cursor and
+ * **everything typed after it is that criterion's value**, spaces included; `/and` and `/or` close
+ * the criterion and leave a chip of their own between the two, which can be tapped to change it.
+ * Commas separate alternatives within one criterion. None of this uses bare reserved words: an "or"
+ * typed without a slash is part of the value, which is what makes it possible to search for somebody
+ * named that.
  *
- * Teclado: las flechas eligen entre las sugerencias y Enter o Tab confirman; Enter sin lista
- * abierta cierra el criterio; Escape cierra la lista sin llevarse por delante el diálogo que la
- * aloja; Backspace con el texto vacío deshace hacia atrás, primero soltando el campo abierto y
- * después devolviendo el último chip al input.
+ * Keyboard: the arrows move through the suggestions and Enter or Tab confirm; Enter with no list
+ * open closes the criterion; Escape closes the list without taking down the dialog hosting it;
+ * Backspace on empty text undoes backwards, first releasing the open field and then returning the
+ * last chip to the input.
  */
 export function SearchQueryInput({ fields, value, onChange, placeholder, label, autoFocus }: SearchQueryInputProps) {
   const { t } = useTranslation('common')
@@ -59,14 +60,14 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
   const openPrefix = OPEN_FIELD_PREFIX.exec(value.draft)?.[2] ?? null
   const hasOpenCriterion = value.activeField !== null || splitValues(value.draft.replace(OPEN_FIELD_PREFIX, '')).length > 0
   /**
-   * Los conectores solo se ofrecen cuando hay algo que unir: unir nada no significa nada. Alcanza
-   * con un criterio, cerrado o abierto — elegir el conector cierra el que está abierto.
+   * The connectors are only offered when there is something to join: joining nothing means nothing.
+   * One criterion is enough, closed or open — choosing the connector closes the open one.
    */
   const canJoin = value.terms.length > 0 || hasOpenCriterion
 
   const suggestions: Suggestion[] = openPrefix === null ? [] : buildSuggestions(openPrefix)
   const isChoosing = suggestions.length > 0
-  /** Se deriva en el render en vez de guardarse: la lista cambia de largo mientras se escribe. */
+  /** Derived on render rather than stored: the list changes length while somebody types. */
   const highlighted = isChoosing ? ((highlightStep % suggestions.length) + suggestions.length) % suggestions.length : 0
 
   function buildSuggestions(prefix: string): Suggestion[] {
@@ -81,9 +82,9 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
   }
 
   /**
-   * Cierra el criterio abierto y lo agrega como chip, si tiene valor. Con un campo abierto el
-   * texto es su valor entero, tal cual; sin campo abierto se parsea, para que pegar o escribir
-   * `/campo valor` de una sola vez llegue al mismo chip que elegirlo de la lista.
+   * Closes the open criterion and adds it as a chip, if it has a value. With a field open, the text
+   * is its whole value, exactly as typed; with no field open it is parsed, so that pasting or typing
+   * `/field value` in one go ends in the same chip as picking it from the list.
    */
   function closeTerm(rawValue: string, nextField: string | null, nextConnector: SearchConnector): SearchQueryValue {
     const closed: SearchTerm[] =
@@ -110,7 +111,7 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
     if (suggestion.kind === 'field') {
       onChange(closeTerm(rest, suggestion.name, 'and'))
     } else {
-      // Aunque no haya nada que cerrar, el conector elegido se guarda: es lo que se acaba de pedir.
+      // Even with nothing to close, the chosen connector is kept: it is what was just asked for.
       onChange({ ...closeTerm(rest, null, suggestion.connector), pendingConnector: suggestion.connector })
     }
     inputRef.current?.focus()
@@ -159,7 +160,7 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
         return
       }
       if (event.key === 'Escape') {
-        // Solo cierra la lista: el Escape no tiene que llevarse por delante el diálogo que la aloja.
+        // It only closes the list: Escape must not take down the dialog hosting it.
         event.preventDefault()
         event.stopPropagation()
         onChange({ ...value, draft: value.draft.replace(OPEN_FIELD_PREFIX, '') })
@@ -253,8 +254,8 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
               role="option"
               aria-selected={index === highlighted}
               onMouseEnter={() => setHighlightStep(index)}
-              // onMouseDown y no onClick: el click empieza por quitarle el foco al input, y la
-              // lista desaparece con él antes de que el evento llegue.
+              // onMouseDown and not onClick: a click starts by taking focus off the input, and the
+              // list disappears with it before the event ever arrives.
               onMouseDown={(event) => {
                 event.preventDefault()
                 chooseSuggestion(suggestion)

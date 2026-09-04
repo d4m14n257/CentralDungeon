@@ -6,11 +6,11 @@ import { staleTime } from '@/config/query'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * /master/tables/:id - distinto de useGameTable a propósito (decisiones.md #152): ese es
- * público (cualquier jugador lo usa en /tables/:id para decidir si postularse), así que
- * reusarlo acá mandaría el detalle completo de la mesa por la red antes de que el frontend
- * pudiera decidir si el actor tiene permiso de gestionarla. Este pega a /managed, que el
- * backend rechaza con 403 antes de leer nada si el actor no es master de esa mesa.
+ * /master/tables/:id - a different hook from useGameTable on purpose (decisiones.md #152): that one
+ * is public, since any player uses it on /tables/:id to decide whether to apply, so reusing it here
+ * would send the table's whole detail over the network before the frontend could decide whether the
+ * actor may manage it. This one hits /managed, which the backend refuses with a 403 before reading
+ * anything if the actor does not run that table.
  */
 export function useManagedTable(id: string) {
   return useQuery({

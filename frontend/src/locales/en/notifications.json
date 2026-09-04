@@ -20,7 +20,8 @@
     "NewCandidate": "New application",
     "ScheduleConflict": "Schedule clash",
     "SessionScheduled": "Calendar updated",
-    "SessionCanceled": "Session cancelled"
+    "SessionCanceled": "Session cancelled",
+    "TaskPublished": "New request"
   },
   "badge": {
     "accepted": "Accepted",
@@ -47,6 +48,10 @@
     "SessionCanceled": {
       "title": "A session of {{tableName}} was cancelled",
       "message": "The table adds another one at the end, so it still plays the same number."
+    },
+    "TaskPublished": {
+      "title": "{{tableName}} is asking you for: {{taskTitle}}",
+      "message": "Open the table to read it in full and answer."
     }
   }
 }

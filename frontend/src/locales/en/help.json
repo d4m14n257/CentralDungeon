@@ -132,6 +132,23 @@
         "step3": "Look at “My sessions” for the calendar and “My attendance” for the three numbers."
       }
     },
+    "tasks": {
+      "title": "Requests: what a table asks of you",
+      "what": "A table can ask you for things: a character sheet, a backstory, whatever the master needs. You answer with text, with files, or with both.",
+      "where": "They show up on the table — on its public page and on “my table”. When the master publishes one, you get a notification.",
+      "beforeApplying": "Before applying you can already read what is asked of candidates: it is part of deciding whether to sign up. Answering comes after you apply.",
+      "howToAnswer": "Open the request and press “Answer”. If it takes files you can upload a new one or reuse one you uploaded before, without uploading it again.",
+      "accumulate": "Each answer is kept separately and does not replace the previous one. Send a second version and the first one stays; the master sees both.",
+      "noJudgement": "Nobody approves or rejects your answer: the system puts it in front of the master and its job ends there.",
+      "mandatory": "A request marked as important is the master saying so, not a condition the system enforces: not answering does not block you or remove you from the table.",
+      "closed": "If the master closes a request, it stops taking answers. Whatever you handed in before stays.",
+      "due": "The suggested date is a reference. Nothing automatic happens when it passes.",
+      "steps": {
+        "step1": "Open the table and look for “What this table asks for”.",
+        "step2": "Open the request to read it in full and see whether it takes text, files or both.",
+        "step3": "Press “Answer”, write or attach what was asked for, and send."
+      }
+    },
     "files": {
       "title": "My table's files",
       "where": "Whatever your master shares shows up under \"My tables\" → the table, and on the table's public page too.",
@@ -250,6 +267,25 @@
         "step2": "If it shows up in the list, pick it.",
         "step3": "If it does not, tap “Propose” with the name you typed.",
         "step4": "Carry on building the table: you do not have to wait for approval to publish it."
+      }
+    },
+    "tasks": {
+      "title": "Requests: asking things of your table",
+      "what": "A request is something you ask your table for: a character sheet, a backstory, a map. It is answered with text, with files, or with both.",
+      "audience": "You choose who you are asking. “For anyone thinking of applying” is visible to anybody looking at the table, even before they sign up; “for the players” is for the ones you already accepted.",
+      "single": "You can also ask one single person at your table. It is how you hand each player their own material, and nobody else sees it.",
+      "notify": "Publishing is notifying: on confirm, every recipient gets a notification naming what you asked for.",
+      "edit": "Correcting a request does not notify again. The notice goes out once, when you publish it, so the bell keeps meaning something.",
+      "answers": "Opening a request shows what came in and who is still missing. You can open the files people send you, even though they are not yours.",
+      "accumulate": "Answers accumulate: if somebody sends a second version, the first one stays. The system does not decide which one counts.",
+      "noJudgement": "There is no approving or rejecting an answer. Reviewing it is yours: the system delivers what arrived and has no opinion.",
+      "mandatory": "Marking a request as important is only a label. It blocks nobody, removes nobody and changes nothing else.",
+      "close": "Closing a request stops new answers. What was already handed in stays and can still be read.",
+      "steps": {
+        "step1": "Open your table and go to the Requests tab.",
+        "step2": "Press “Publish request” and write what you are asking for, and of whom.",
+        "step3": "Choose whether it is answered with text, files or both, and publish: that is when the notice goes out.",
+        "step4": "Open the request whenever you like to see what came in and who is still missing."
       }
     },
     "files": {

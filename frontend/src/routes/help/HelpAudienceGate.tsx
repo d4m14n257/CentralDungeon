@@ -7,11 +7,12 @@ import { useMe } from '@/features/users'
 import type { User } from '@/features/users'
 
 /**
- * Quién ve la ayuda de cada rol (decisiones.md #169, #170): **solo quien tiene ese rol**, con
- * `Owner` como única excepción — es un admin con más privilegios y ve todo.
+ * Who reads each role's help (decisiones.md #169, #170): **only somebody holding that role**, with
+ * `Owner` as the one exception — it is an admin with more privileges and reads everything.
  *
- * El contexto Master se abre también con una fila viva en `masters`, igual que el `ContextSwitcher`
- * (#135): a un master de una sola mesa, asignado sin el rol, la ayuda de master le sirve igual.
+ * The Master context also opens with a live row in `masters`, the same way `ContextSwitcher` does
+ * (#135): somebody running a single table, assigned without the role, needs the master's help just
+ * as much.
  */
 export function canReadHelp(audience: HelpAudience, me: User): boolean {
   if (me.roles.includes('Owner')) return true
@@ -26,8 +27,8 @@ export function canReadHelp(audience: HelpAudience, me: User): boolean {
 }
 
 /**
- * Esto **no es seguridad**: la ayuda es texto fijo y no hay nada que proteger (#103). Es
- * relevancia — la ayuda de un rol que no tenés no te sirve, y mezclarla con la tuya es ruido.
+ * This is **not security**: the help is fixed text and there is nothing to protect (#103). It is
+ * relevance — the help for a role you do not hold is of no use, and mixing it with yours is noise.
  */
 export function HelpAudienceGate({ audience, children }: { audience: HelpAudience; children: ReactNode }) {
   const { data: me, isPending } = useMe()

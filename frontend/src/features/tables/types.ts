@@ -53,8 +53,8 @@ export interface GameTableSummary {
 }
 
 /**
- * Espejo de CreateGameTableRequest - forma de entrada, no se deriva de GameTableDetail: la mesa
- * entra por id de tipo y de catálogo, y sale por nombre y por valor completo.
+ * Mirror of CreateGameTableRequest - an input shape, not derived from GameTableDetail: a table goes
+ * in by type id and catalog id, and comes out by name and by whole value.
  */
 export interface CreateGameTableRequest {
   name: string
@@ -218,14 +218,14 @@ export interface RecordAttendanceRequest {
 }
 
 /**
- * Espejo de TableTypeResponse - cómo se dirige una mesa ("Public", "First class"). Los admins dan de
- * alta el resto desde la aplicación, así que el selector del wizard lo lee de la API y no de una
+ * Mirror of TableTypeResponse - how a table is run ("Public", "First class"). Admins add the rest
+ * from the application, so the wizard's selector reads them from the API rather than from a
  * lista escrita a mano.
  */
 export interface TableType {
   id: string
   name: string
-  /** Qué significa el tipo. Null cuando la fila nunca lo tuvo: "Public" no se explica solo. */
+  /** What the type means. Null when the row never had it: "Public" does not explain itself. */
   description: string | null
 }
 
@@ -251,9 +251,9 @@ export interface AssignMastersRequest {
 }
 
 /**
- * Espejo de AdminTableSummaryResponse - no GameTableSummary: una mesa Unassigned todavía no tiene
- * Primary, así que acá el nombre del master es nullable en vez de forzar esa nulabilidad sobre
- * GameTableCard y las tres pantallas que ya la renderizan con un Primary garantizado.
+ * Mirror of AdminTableSummaryResponse - not GameTableSummary: an Unassigned table has no Primary
+ * yet, so the master's name is nullable here rather than forcing that nullability onto GameTableCard
+ * and the three screens that already render it with a Primary guaranteed.
  */
 export interface AdminTableSummary {
   id: string

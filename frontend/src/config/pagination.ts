@@ -1,14 +1,14 @@
 /**
- * Tamaño de página por tipo de listado (decisiones.md #173). Vive acá y no en cada hook para que
- * "cuánto trae una página" sea una decisión y no un número suelto repetido.
+ * The page size of each kind of listing (decisiones.md #173). It lives here rather than in each hook
+ * so that "how much a page brings" is a decision and not a loose number repeated in ten places.
  */
 export const pageSize = {
-  /** Grilla de fichas a tres columnas: cuatro filas completas. */
+  /** The three-column grid of cards: four complete rows. */
   explorer: 12,
-  /** Listados de lectura en una columna: mis mesas, mis postulaciones, notificaciones. */
+  /** Single-column reading lists: my tables, my applications, notifications. */
   list: 20,
-  /** Listas de trabajo de admin: más densas, y con el total a la vista. */
+  /** An admin's working lists: denser, and with the total in view. */
   adminQueue: 25,
-  /** Resultados dentro de un diálogo, donde el espacio es el que hay. */
+  /** Results inside a dialog, where the space is whatever is left. */
   picker: 8,
 } as const

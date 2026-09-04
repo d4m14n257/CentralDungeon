@@ -1,8 +1,9 @@
 package com.centraldungeon.users;
 
 /**
- * The four global roles (modelo-datos.md #37, #67). Acumulables, sin jerarquía: no
- * RoleHierarchy is registered anywhere (arquitectura.md 2.6). Values mirror {@code roles.name}.
+ * The four global roles (modelo-datos.md #37, #67). They stack, and there is no hierarchy among
+ * them: no RoleHierarchy is registered anywhere (arquitectura.md 2.6). Values mirror
+ * {@code roles.name}.
  *
  * Not to be confused with {@code masters.master_type} (Primary/Secondary), a different
  * "Owner" concept scoped to a single table (decisiones.md #67).

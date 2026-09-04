@@ -21,6 +21,7 @@ export const paths = {
   masterTableNew: 'master/tables/new',
   masterTableDetail: 'master/tables/:id',
   masterTableSessions: 'master/tables/:id/sessions',
+  masterTableTasks: 'master/tables/:id/tasks',
   masterTableFiles: 'master/tables/:id/files',
   masterTableStatus: 'master/tables/:id/status',
   adminTables: 'admin/tables',
@@ -28,13 +29,13 @@ export const paths = {
   adminFiles: 'admin/files',
 } as const
 
-/** Las audiencias de la ayuda (#168). El índice, `/help`, es la que sirve a todos. */
+/** The help's audiences (#168). The index, `/help`, is the one that serves everybody. */
 export type HelpAudience = 'players' | 'masters' | 'admins'
 
 /**
  * `helpPath()` -> /help, `helpPath('admins', 'assign-masters')` -> /help/admins#assign-masters.
- * Siempre absoluto: los patrones de arriba son relativos porque los consume el router, y un
- * `<Link to={paths.help}>` desde /admin/tables resolvía a /admin/tables/help.
+ * Always absolute: the patterns above are relative because the router consumes them, and a
+ * `<Link to={paths.help}>` from /admin/tables resolved to /admin/tables/help.
  */
 export function helpPath(audience?: HelpAudience, ref?: string): string {
   return `/help${audience ? `/${audience}` : ''}${ref ? `#${ref}` : ''}`
@@ -72,6 +73,14 @@ export function masterTableDetailPath(id: string): string {
  */
 export function masterTableSessionsPath(id: string): string {
   return `/master/tables/${id}/sessions`
+}
+
+/**
+ * @param id the table
+ * @returns the absolute path to its tasks tab — what the table asks of its people (#63)
+ */
+export function masterTableTasksPath(id: string): string {
+  return `/master/tables/${id}/tasks`
 }
 
 /**
