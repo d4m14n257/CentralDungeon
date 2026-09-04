@@ -1,0 +1,109 @@
+{
+  "fileType": {
+    "Public": "Published",
+    "Private": "Saved",
+    "SingleUse": "Table only"
+  },
+  "audience": {
+    "Masters": "Masters",
+    "Players": "Players",
+    "Announcements": "Everyone"
+  },
+  "status": {
+    "Current": "Current",
+    "Deleted": "Removed"
+  },
+  "tableFileType": {
+    "Preparation": "Preparation",
+    "Session": "From a session"
+  },
+  "size": {
+    "bytes": "{{value}} B",
+    "kilobytes": "{{value}} KB",
+    "megabytes": "{{value}} MB"
+  },
+  "actions": {
+    "download": "Download",
+    "detach": "Remove from table",
+    "share": "Share with the table",
+    "unshare": "Keep it to the masters",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "delete": "Remove"
+  },
+  "picker": {
+    "upload": "Upload",
+    "reuse": "My files",
+    "published": "Published",
+    "uploadLabel": "Choose a file to upload",
+    "limits": "Up to 2 MB per file. PDF, Word, PNG and JPG are accepted.",
+    "searchPlaceholder": "Search my files",
+    "searchLabel": "Search my files",
+    "use": "Use",
+    "historyEmptyTitle": "You haven't uploaded anything yet",
+    "historyEmptyDescription": "Whatever you upload stays here, and you can use it again on any table without uploading it twice.",
+    "publishedEmptyTitle": "Nothing published yet",
+    "publishedEmptyDescription": "Admins publish templates and documents here for every table to use."
+  },
+  "publish": {
+    "title": "Publish file",
+    "description": "\"{{name}}\" will become available to the whole community.",
+    "audienceLabel": "Who it is for",
+    "audienceHint": "Decides where the file is offered. Anyone with the link can still open it.",
+    "cancel": "Cancel",
+    "confirm": "Publish"
+  },
+  "table": {
+    "title": "Table files",
+    "attach": "Add a file",
+    "attachTitle": "Add a file to the table",
+    "attachDescription": "Upload a new one or reuse something you already have. The file is linked, not copied: removing it here does not delete it.",
+    "kindLabel": "What it is",
+    "privateLabel": "Only for whoever runs the table",
+    "privateHint": "Left unchecked, players and candidates see it too.",
+    "sharedBadge": "Shared with the table",
+    "privateBadge": "Masters only",
+    "emptyTitle": "This table has no files",
+    "emptyDescription": "Preparation material, maps and anything you want to share with your players goes here.",
+    "detachTitle": "Remove the file from this table?",
+    "detachDescription": "It stops showing on this table. The file still exists, in your own list and on any other table using it.",
+    "detachConfirm": "Remove",
+    "readOnlyTitle": "Files",
+    "readOnlyEmptyTitle": "No files",
+    "readOnlyEmptyDescription": "Nothing has been shared on this table yet.",
+    "helpLink": "How files work"
+  },
+  "admin": {
+    "title": "Files",
+    "description": "Everything the community has uploaded. Publishing a file makes it available to every table without anyone having to copy it.",
+    "searchLabel": "Search files",
+    "searchPlaceholder": "Search by name, /owner or /type",
+    "columns": {
+      "name": "File",
+      "type": "Kind",
+      "audience": "Audience",
+      "owner": "Uploaded by",
+      "uses": "Tables",
+      "size": "Size",
+      "status": "Status",
+      "createdAt": "Uploaded"
+    },
+    "usesValue_one": "{{count}} table",
+    "usesValue_other": "{{count}} tables",
+    "emptyTitle": "No files",
+    "emptyDescription": "Once the community starts uploading table material, it will show up here.",
+    "noResultsTitle": "No results",
+    "noResultsDescription": "No file matches that search.",
+    "deleteTitle": "Remove the file?",
+    "deleteDescription": "It stops showing on every table using it. It is not erased from disk: that is the owner's, from their maintenance menu.",
+    "deleteConfirm": "Remove",
+    "unpublishTitle": "Stop publishing it?",
+    "unpublishDescription": "It leaves the published list and goes back to being its uploader's file. Tables that already added it keep it.",
+    "unpublishConfirm": "Unpublish"
+  },
+  "search": {
+    "name": "name",
+    "owner": "uploaded by",
+    "type": "kind"
+  }
+}

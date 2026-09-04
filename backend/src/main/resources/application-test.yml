@@ -27,6 +27,13 @@ discord:
   invite-url: https://discord.gg/test-invite
   guilds-uri: http://localhost:8080/test-discord/users/@me/guilds
 
+app:
+  storage:
+    # Out of the repository and out of the dev root: a Playwright run uploads real files and then
+    # TestDataController wipes the database, so the blobs it leaves behind are garbage by definition.
+    # Pointing this at a temporary directory is what keeps them from piling up next to the source.
+    root: ${java.io.tmpdir}/centraldungeon-test-storage
+
 logging:
   level:
     org.testcontainers: INFO

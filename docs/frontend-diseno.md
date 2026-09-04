@@ -65,6 +65,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | **Admin** | `/admin/queue` | Bandeja compartida con reserva (#100): **solo lo que pide una acción**, no un listado de consulta (#176) |
 | | `/admin/tables` | **Todas** las mesas, en cualquier estado, con filtros y buscador: el listado de administración, no una cola (#176). **Hoy** muestra solo las que esperan revisión porque `/admin/queue` todavía no existe; al llegar la bandeja (F3), las acciones de revisión se mudan ahí |
 | | `/admin/catalogs` | Sistemas, tags y plataformas; fusionar y separar grupos |
+| | `/admin/files` | Todo lo que subió la comunidad, con su dueño y en cuántas mesas se usa; publicar con audiencia (#64), despublicar y dar de baja. **No es `/owner/storage`**: acá solo se marca, los bytes los libera el owner y eso es F5 (#66, #207) |
 | | `/admin/moderation` | Comentarios por moderar |
 | | `/admin/requests` | Solicitudes de rol, de mesa y generales |
 | | `/admin/feedback` | Feedback del sistema |
@@ -191,7 +192,7 @@ El detalle son los comentarios listados debajo. Nada de gráficos: el rango real
 
 ## 4. Wireframes
 
-> Los de abajo son los cinco que definieron el resto y se conservan como referencia rápida en texto. **Las 28 rutas del sitemap están dibujadas** en `design/out/screen-*.html`, en tema claro y oscuro — se regeneran con `python3 design/build.py`.
+> Los de abajo son los cinco que definieron el resto y se conservan como referencia rápida en texto. **Las 28 rutas del sitemap están dibujadas** en `design/out/screen-*.html`, en tema claro y oscuro — se regeneran con `python3 design/build.py`. La excepción es **`/admin/files`** (#207), que llegó con F1.4 y todavía no tiene preview: se construyó directo sobre `DataTable`, con la misma forma que `/admin/catalogs`, igual que `SearchQueryInput` y `UserPicker`.
 
 ### Explorar mesas — `/`
 
@@ -381,7 +382,7 @@ Lo único que cada pantalla define por su cuenta es **el texto del vacío y qué
 
 ## 5.b Responsive
 
-**Las 27 rutas funcionan en teléfono, tablet y escritorio** (#138). Puntos de corte de Tailwind, sin inventar ninguno, y se diseña **de menor a mayor**: las clases sin prefijo son las del teléfono.
+**Las 28 rutas funcionan en teléfono, tablet y escritorio** (#138). Puntos de corte de Tailwind, sin inventar ninguno, y se diseña **de menor a mayor**: las clases sin prefijo son las del teléfono.
 
 | Prefijo | Ancho | Qué cambia |
 |---|---|---|
@@ -389,7 +390,7 @@ Lo único que cada pantalla define por su cuenta es **el texto del vacío y qué
 | `md` | ≥ 768 px | Dos columnas. Los filtros vuelven a la barra |
 | `lg` | ≥ 1024 px | Tres columnas. Barra lateral donde la haya |
 
-**La regla de la tabla ancha**, que es el caso caro: `/admin/catalogs`, `/admin/users` y `/owner/audit` tienen cinco o más columnas. En móvil **dejan de ser tablas** — cada fila se vuelve una ficha con identidad y estado arriba, el resto como texto y la acción al pie. **Nunca scroll horizontal.**
+**La regla de la tabla ancha**, que es el caso caro: `/admin/catalogs`, `/admin/files`, `/admin/users` y `/owner/audit` tienen cinco o más columnas. En móvil **dejan de ser tablas** — cada fila se vuelve una ficha con identidad y estado arriba, el resto como texto y la acción al pie. **Nunca scroll horizontal.**
 
 Referencia visual en `design/out/responsive.html`.
 

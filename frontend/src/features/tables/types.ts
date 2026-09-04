@@ -1,4 +1,5 @@
 import type { CatalogValue } from '@/types/catalog'
+import type { SharedFile } from '@/types/file'
 import type { Weekday } from '@/lib/date'
 
 /**
@@ -102,6 +103,12 @@ export interface GameTableDetail {
    * Empty until the table opens, and while it is paused it carries only what already happened (#32).
    */
   sessions: PublicSession[]
+  /**
+   * What the table shares with its candidates and players (#79). Only the shared ones: an attachment
+   * the master kept private is absent, not listed and locked. It rides inside the detail for the same
+   * reason `sessions` does — this read already settles who may see the table (#29).
+   */
+  files: SharedFile[]
   /** Each value under the alias its master chose, never rewritten to the group's canonical one (#58). */
   systems: CatalogValue[]
   tags: CatalogValue[]

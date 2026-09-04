@@ -32,12 +32,12 @@ Verificado en el repositorio al abrir la fase, no asumido. Es la foto contra la 
 | El wizard de `/master/tables/new` es **un formulario de cinco campos** | `frontend/src/routes/master/MasterTableCreatePage.tsx` lo dice explícito | F1.2 |
 | `TableTypeController` **no existe** — `V2__seed.sql` siembra los tipos y no hay forma de listarlos | — | F1.1 (backend) · F1.2 (el `useTableTypes` que lo consume) |
 | `NotificationType` tiene **tres valores** | `backend/.../notifications/NotificationType.java` | F1.2 suma `ScheduleConflict`; F1.3 y F1.5 el resto |
-| `features/catalogs/` y `features/files/` son carpetas con un `.gitkeep` | — | F1.1 y F1.4 |
+| ~~`features/catalogs/` y `features/files/` son carpetas con un `.gitkeep`~~ | — | Cerrado: F1.1 y F1.4 |
 | `POST /{id}/masters` existe desde E2 y **nunca tuvo interfaz** | — | F1.6 |
 
 **Piezas del inventario de `frontend-diseno.md` §5 que F1 estrena:** `RichTextEditor`, `RichTextView`, `ScheduleEditor`, `FilePicker`, `DataTable`, `CollapsibleSection`, `IconAction`, `useConfirm`, `lib/date.ts`.
 
-**Primitivas de shadcn que faltan y F1 necesita:** `command` (combobox), `calendar`, `table`, `sheet`, `tooltip`, `separator`, `checkbox`.
+**Primitivas de shadcn que faltan y F1 necesita:** `command` (combobox), `calendar`, `table`, `sheet`, `tooltip`, `separator`, `checkbox`. Al cerrar F1.4 quedan todas salvo `calendar` y `sheet`, que ninguna rebanada terminó necesitando: la agenda se resolvió con campos de fecha y hora nativos, y los diálogos con `dialog`.
 
 ## 3. Las decisiones que F1 abrió
 
@@ -320,6 +320,70 @@ npx playwright test → 18 tests, todos verdes, contra el backend y el frontend 
 
 **Se prueba:** el master sube una hoja de personaje, la vincula a dos mesas sin duplicarla, y el jugador la descarga desde el detalle público.
 
+#### ✅ Terminada
+
+Nueve decisiones nuevas salieron de construirla: **#199** (`StoredFile`, no `File`), **#200** (escritura a staging confirmada al commit), **#201** (deduplicación por dueño), **#202** (gzip adentro del almacenamiento), **#203** (subir y vincular son dos llamadas), **#204** (`is_private` y `Public` son ejes distintos), **#205** (el selector ofrece todos los publicados), **#206** (lo que la mesa comparte lo lee quien puede ver la mesa) y **#207** (`/admin/files` entra en la fase). Con #200 y #199 queda **cerrada M26**, que arrastraba dos puntos abiertos desde el relevamiento del legacy.
+
+**Dos bugs de producto que encontró el e2e, no un test unitario.** El primero: `useDownloadFile` revocaba el object URL en la misma tarea que el click, y el navegador solo empieza a buscar el blob cuando esa tarea termina — la descarga se cancelaba sola, sin que nada lanzara un error. Se arregla revocando en un `setTimeout(…, 0)`. El segundo es de diseño y más caro: el `FilePicker` del master filtraba los publicados por audiencia `Masters`, así que la hoja de personaje por defecto —publicada **para jugadores**— no aparecía, y el ejemplo que motiva #79 no se podía ejecutar. La audiencia dice quién **lee** el archivo, no quién lo adjunta (#205).
+
+**Una regla que hubo que corregir sobre la marcha**: la descarga exigía pertenencia y el detalle de la mesa ya listaba el archivo, así que un candidato veía la ficha y recibía `404` al abrirla. Lo que una mesa comparte es tan alcanzable como la mesa (#206) — y queda anotado, acá y en `modelo-datos.md` §5, que al construir el veto (F3) hay que excluir al vetado también en esa lectura.
+
+Queda fuera a propósito, con su motivo: **`/my/files`** es F2, y en F1.4 el historial se ve dentro del `FilePicker`, que es donde #65 lo pide. **El borrado físico** no entra: es F5 (#66), y todo lo de acá solo marca. **`registration_files` y `submission_files`** siguen sin mapear — el archivo de personaje en la postulación es F2. Y **la deduplicación entre usuarios** no se puede hacer sin una tabla de blobs con conteo de referencias, que el baseline no tiene: lo prohíbe `uk_files_storage_key` (#201).
+
+**Backend** (`backend/src/main/java/com/centraldungeon/`):
+
+| Ruta | Qué es |
+|---|---|
+| `common/storage/StorageService.java` · `LocalDiskStorageService.java` | La interfaz que sí gana serlo (§2.4, #15) y su implementación en disco: gzip, clave validada como segmento simple, y el staging de M26.2 |
+| `common/config/StorageProperties.java` · `SchedulingConfig.java` | La raíz, el tope, la whitelist MIME y la ventana de retención; y `@EnableScheduling`, que nada necesitaba hasta ahora |
+| `files/StoredFile.java` · `FileType` (+ `FileTypeConverter`) · `PublicAudience` · `FileStatus` | La entidad y sus tres vocabularios. El converter existe porque la columna guarda `Single-use` con guion |
+| `files/TableFile.java` · `TableFileId` · `TableFileStatus` · `TableFileType` | El puente, con clave compuesta — y su estado propio, que es lo que hace que re-vincular reviva la fila |
+| `files/StoredFileRepository.java` · `TableFileRepository` (+ `FileUsageCount`) | Las lecturas, el conteo de usos agrupado y la consulta de la purga |
+| `files/FileSearchField.java` · `FileSearchSpecification.java` | El buscador de `/admin/files`, sobre `common/search/` (#164) |
+| `files/FileService.java` | Subida, whitelist y tope, deduplicación, promoción, baja lógica, publicación y la regla de lectura de #206 |
+| `files/TableFileService.java` | Vincular, compartir, desvincular y lo que la mesa muestra — todo sin tocar el archivo (#79) |
+| `files/FileRetentionService.java` | La purga de #75, por lotes y solo marcando |
+| `files/FileMapper.java` | Entidad → los cinco DTOs |
+| `files/FileController.java` · `AdminFileController` · `TableFileController` | Clases concretas, con su `@PreAuthorize` en cada método |
+| `files/dto/` | 9 records: `FileResponse`, `AdminFileResponse`, `TableFileResponse`, `SharedFileResponse`, `PublicFileResponse`, `UploadFileRequest`, `UpdateFileRequest`, `LinkTableFileRequest`, `UpdateTableFileRequest`, `PublishFileRequest` |
+| `files/FileDownload.java` | El portador interno de la descarga: bytes, nombre y tipo. No cruza HTTP como JSON |
+| `resources/db/migration/V5__files_updated_at.sql` | La primera migración de **schema** desde el baseline. Aditiva y obligatoria: sin ella `ddl-auto: validate` no deja arrancar |
+| `test/…/common/storage/LocalDiskStorageServiceTest.java` | 10 unitarios sobre lo que llega al disco, incluido el rollback |
+| `test/…/files/FileServiceTest.java` · `TableFileServiceTest` · `FileRetentionServiceTest` · `FileIT` | 22 + 10 + 4 unitarios y 9 de integración sobre MySQL real |
+
+Modificados: `GameTableDetailResponse` (+`files`), `GameTableMapper` y `GameTableService` (los archivos compartidos viajan con el detalle, igual que las sesiones en F1.3), `GlobalExceptionHandler` (+`MaxUploadSizeExceededException` → `400` con `FILE_TOO_LARGE`; sin eso pasarse del tope era un `500`), `InvalidRequestException` (+código y parámetros, misma forma que `ConflictException` ganó en F1.2), `MapperConfig`, `CentralDungeonApplication` (+`StorageProperties`), `application.yml` y `application-test.yml`, y `TestDataService` — **tercera vez** que esta clase de foreign key rompe la limpieza del e2e, después de la agenda en F1.2 y el calendario en F1.3 (#171, #172).
+
+**Frontend** (`frontend/src/`):
+
+| Ruta | Qué es |
+|---|---|
+| `types/file.ts` | `SharedFile` y `TableFileType`, subidos a la raíz porque los necesitan dos features (regla dura 16), igual que `types/catalog.ts` |
+| `features/files/types.ts` | El tipo base (`StoredFile`) y todo lo demás derivado |
+| `features/files/api/` | `filesApi.ts` + 14 hooks (4 queries, 10 mutations) |
+| `features/files/format.ts` | El tamaño en unidades legibles, con el locale por parámetro (#111, #192) |
+| `features/files/components/` | `FilePicker` (#65), `FileList`, `FileTypeBadge`, `FileAudienceBadge` y `PublishFileDialog` |
+| `features/files/index.ts` | La superficie pública de la feature |
+| `routes/master/MasterTableFilesTab.tsx` | La pestaña Archivos, como ruta hija |
+| `routes/admin/AdminFilesPage.tsx` | La pantalla ancha, con sus cuatro estados y el estado en la URL |
+| `components/ui/checkbox.tsx` | La última primitiva de shadcn que §2 anotaba como faltante |
+| `locales/es/files.json` · `locales/en/files.json` | Los textos, en los dos idiomas y en el mismo commit (#198) |
+| Tests | `FilePicker.test.tsx`, `FileList.test.tsx`, `e2e/table-files.spec.ts` |
+
+Tocados: `api/client.ts` (la parte JSON del multipart pasa a `Blob`, y `api.download` nuevo), `api/queryKeys.ts` (+rama `files`), `config/paths.ts`, `config/query.ts` (los tres códigos de error que se explican), `providers/i18n.ts`, `routes/router.tsx`, `layouts/components/AdminSectionNav.tsx`, `features/tables/types.ts` (+`files` en el detalle), `routes/TableDetailPage.tsx`, `routes/my/MyTableDetailPage.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), las tres pestañas de `/help` y los locales `master`, `admin`, `help` y `common`.
+
+**Ayuda:** `/help/masters#files` (subir o reutilizar, qué significa privado en una mesa, por qué quitar no borra, los límites), `/help/players#files` (dónde están los archivos de mi mesa y qué no voy a ver) y `/help/admins#files` (publicar, la audiencia como listado y no como permiso, y qué purga el job), enlazadas desde la pestaña, desde `/my/tables/:id` y desde `/admin/files`.
+
+**Salida real de las suites:**
+
+```
+./mvnw test    → 238 tests, 0 fallos
+./mvnw verify  → 238 unitarios + 46 integración, 0 fallos
+npx tsc -b     → limpio
+npm run test   → 20 archivos, 157 tests
+npx playwright test → 27 tests, todos verdes, contra el backend y el frontend reales
+```
+
+
 ---
 
 ### F1.5 — Peticiones (lo que publica el master)
@@ -415,4 +479,4 @@ cd frontend && npm run format      # prettier del repo (#174)
 
 - **`ScheduleConflictService` es la pieza con más casos borde de la fase** y toca tres flujos distintos: crear mesa, postularse y aceptar. Se escribe con sus tests **antes** de conectarla a nada.
 - **La envoltura semanal en UTC es el bug más probable de F1.** La comunidad juega de noche en América, o sea de madrugada del día siguiente en UTC (#22): una sesión de martes 23:00 + 3 h termina miércoles 02:00. Va con test explícito.
-- **F1.4 es la rebanada más pesada** y la única que toca el sistema de archivos. Si hay que recortar por tiempo, el candidato es el job de retención (#75): se puede diferir sin dejar callejón sin salida — pero se dice explícitamente, no se omite.
+- ~~**F1.4 es la rebanada más pesada**~~ — **cerrada.** Lo fue, y el job de retención no hizo falta recortarlo. El riesgo real resultó ser otro y no estaba anotado: **los dos ejes de visibilidad** (#204). `table_files.is_private` es del vínculo y `files.file_type = 'Public'` es del archivo, y confundirlos produjo los dos únicos bugs de la rebanada — uno de ellos escondía justamente el archivo que #79 existe para compartir.

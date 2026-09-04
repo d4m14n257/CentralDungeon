@@ -51,7 +51,10 @@
     "offline": "No hay conexión con el servidor. Probá de nuevo en un momento.",
     "mutationFailed": "No pudimos completar la acción. Probá de nuevo.",
     "codes": {
-      "SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde ya estás comprometido."
+      "SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde ya estás comprometido.",
+      "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Se pueden subir PDF, Word, PNG y JPG.",
+      "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es 2 MB por archivo.",
+      "FILE_EMPTY": "El archivo está vacío. Elegí otro."
     }
   },
   "pagination": {

@@ -8,6 +8,7 @@ import enAuth from '@/locales/en/auth.json'
 import enCatalogs from '@/locales/en/catalogs.json'
 import enCommon from '@/locales/en/common.json'
 import enDev from '@/locales/en/dev.json'
+import enFiles from '@/locales/en/files.json'
 import enHelp from '@/locales/en/help.json'
 import enMaster from '@/locales/en/master.json'
 import enNotifications from '@/locales/en/notifications.json'
@@ -21,6 +22,7 @@ import auth from '@/locales/es/auth.json'
 import catalogs from '@/locales/es/catalogs.json'
 import common from '@/locales/es/common.json'
 import dev from '@/locales/es/dev.json'
+import files from '@/locales/es/files.json'
 import help from '@/locales/es/help.json'
 import master from '@/locales/es/master.json'
 import notifications from '@/locales/es/notifications.json'
@@ -45,7 +47,7 @@ void i18n.use(initReactI18next).init({
   fallbackLng: DEFAULT_LANGUAGE,
   defaultNS: 'common',
   resources: {
-    es: { common, auth, onboarding, catalogs, tables, registrations, notifications, master, admin, users, help, dev },
+    es: { common, auth, onboarding, catalogs, tables, registrations, notifications, master, admin, users, help, dev, files },
     en: {
       common: enCommon,
       auth: enAuth,
@@ -58,6 +60,7 @@ void i18n.use(initReactI18next).init({
       admin: enAdmin,
       users: enUsers,
       help: enHelp,
+      files: enFiles,
       dev: enDev,
     },
   },

@@ -1,6 +1,7 @@
 package com.centraldungeon.tables;
 
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
+import com.centraldungeon.files.dto.SharedFileResponse;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
@@ -49,6 +50,7 @@ public interface GameTableMapper {
             List<CatalogValueResponse> systems,
             List<CatalogValueResponse> tags,
             List<CatalogValueResponse> platforms,
+            List<SharedFileResponse> files,
             @Nullable String description,
             @Nullable String permitted,
             @Nullable String requirements,

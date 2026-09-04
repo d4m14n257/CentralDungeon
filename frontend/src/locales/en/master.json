@@ -46,7 +46,8 @@
     "tabs": {
       "candidates": "Candidates",
       "status": "Status",
-      "sessions": "Sessions"
+      "sessions": "Sessions",
+      "files": "Files"
     }
   },
   "status": {

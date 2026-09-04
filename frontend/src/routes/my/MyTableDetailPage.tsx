@@ -6,6 +6,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { helpPath, tableDetailPath } from '@/config/paths'
+import { FileList } from '@/features/files'
 import { AttendanceSummaryView, SessionList, TableStatusBadge, useGameTable, useMySessions, type MySessions } from '@/features/tables'
 import { browserTimeZone, formatSlot, utcSlotToLocal } from '@/lib/date'
 import { ApiError } from '@/types/api'
@@ -66,6 +67,9 @@ function MySessionsSection({ tableId }: { tableId: string }) {
  */
 export function MyTableDetailPage() {
   const { t, i18n } = useTranslation('tables')
+  // A second namespace rather than copying the file labels into `tables`: the words belong to the
+  // files domain and are the same ones the master's tab shows (regla dura 18).
+  const { t: tFiles } = useTranslation('files')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   const { data: table, isPending, isLoadingError } = useGameTable(tableId)
@@ -109,6 +113,25 @@ export function MyTableDetailPage() {
           <p className="text-fg-subtle mt-1 text-xs">{t('detail.scheduleTimeZone', { timeZone })}</p>
         </section>
       )}
+
+      {/* What the table shares (#79). Private attachments never arrive here — the server leaves them
+          out of the detail, so the screen has nothing to hide. */}
+      <section className="border-border border-t pt-4">
+        <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{tFiles('table.readOnlyTitle')}</h2>
+        <div className="mt-1.5">
+          {table.files.length === 0 ? (
+            <EmptyState title={tFiles('table.readOnlyEmptyTitle')} description={tFiles('table.readOnlyEmptyDescription')} />
+          ) : (
+            <FileList
+              files={table.files}
+              renderMeta={(file) => <span className="text-fg-muted text-xs">{tFiles(`tableFileType.${file.tableFileType}`)}</span>}
+            />
+          )}
+        </div>
+        <Link to={helpPath('players', 'files')} className="text-fg-muted mt-2 inline-block text-xs underline">
+          {tFiles('table.helpLink')}
+        </Link>
+      </section>
 
       <div className="border-border border-t pt-4">
         <MySessionsSection tableId={tableId} />

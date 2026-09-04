@@ -11,6 +11,8 @@ export const staleTime = {
   tableDetail: 60_000,
   notifications: Infinity,
   profile: 5 * 60 * 1000,
+  /** A person's own files and a table's attachments: they change when somebody acts, not on their own. */
+  files: 60_000,
 } as const
 
 /**
@@ -25,7 +27,16 @@ export const staleTime = {
  * Before #197 the backend's own `detail` was shown verbatim, which meant a Spanish sentence no
  * matter what language the reader had picked.
  */
-const EXPLAINED_ERROR_CODES = new Set(['SCHEDULE_CONFLICT'])
+const EXPLAINED_ERROR_CODES = new Set([
+  'SCHEDULE_CONFLICT',
+  // Every refusal of an upload (F1.4). "No se pudo guardar" would be the worst possible answer here:
+  // the person picked a file, and what they need to know is which file and why - the type, or the
+  // size and the limit. The limit travels as a number of bytes and the sentence is written on this
+  // side, in their language and their units (#197).
+  'FILE_TOO_LARGE',
+  'FILE_TYPE_NOT_ALLOWED',
+  'FILE_EMPTY',
+])
 
 /**
  * Red de seguridad para toda mutación que no trae su propio `onError`: hoy ninguna lo trae, así

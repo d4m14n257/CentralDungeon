@@ -51,7 +51,10 @@
     "offline": "No connection to the server. Try again in a moment.",
     "mutationFailed": "We could not complete the action. Try again.",
     "codes": {
-      "SCHEDULE_CONFLICT": "It clashes with “{{otherTableName}}”, where you are already committed."
+      "SCHEDULE_CONFLICT": "It clashes with “{{otherTableName}}”, where you are already committed.",
+      "FILE_TYPE_NOT_ALLOWED": "That file type is not accepted. PDF, Word, PNG and JPG can be uploaded.",
+      "FILE_TOO_LARGE": "The file is over the limit. The maximum is 2 MB per file.",
+      "FILE_EMPTY": "The file is empty. Pick another one."
     }
   },
   "pagination": {

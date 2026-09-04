@@ -1,5 +1,6 @@
 package com.centraldungeon.common.exception;
 
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -15,10 +16,37 @@ import org.springframework.http.HttpStatus;
 public final class InvalidRequestException extends ApiException {
 
     /**
-     * @param message what about the request does not hold together. It reaches the user, so it names
+     * @param message what about the request does not hold together, for whoever reads a log. It names
      *                the two things that contradict each other rather than saying "invalid"
      */
     public InvalidRequestException(String message) {
         super(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", message);
+    }
+
+    /**
+     * The same 400 under a code of its own, so the frontend can tell one bad request from another
+     * and write a sentence about the actual problem.
+     *
+     * @param message   the developer-facing detail, in English
+     * @param errorCode the stable code the frontend branches on. {@code INVALID_REQUEST} stays the
+     *                  fallback for anything that has no message worth writing separately
+     */
+    public InvalidRequestException(String message, String errorCode) {
+        super(HttpStatus.BAD_REQUEST, errorCode, message);
+    }
+
+    /**
+     * A coded 400 that carries values, for the messages that are useless without a number in them -
+     * "up to 2 MB" says something, "too large" does not.
+     *
+     * <p>Same shape {@link ConflictException} grew for #188, and the same reason: the sentence is the
+     * frontend's to write, in the reader's language, from a code and its parameters (#197).
+     *
+     * @param message     the developer-facing detail, in English
+     * @param errorCode   the stable code the frontend branches on
+     * @param errorParams the values the translated sentence needs, keyed by placeholder name
+     */
+    public InvalidRequestException(String message, String errorCode, Map<String, String> errorParams) {
+        super(HttpStatus.BAD_REQUEST, errorCode, message, errorParams);
     }
 }

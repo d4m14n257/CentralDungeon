@@ -60,6 +60,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, lazy: () => import('./master/MasterTableCandidatesTab') },
               { path: 'sessions', lazy: () => import('./master/MasterTableSessionsTab') },
+              { path: 'files', lazy: () => import('./master/MasterTableFilesTab') },
               { path: 'status', lazy: () => import('./master/MasterTableStatusTab') },
             ],
           },
@@ -71,6 +72,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'tables', lazy: () => import('./admin/AdminTablesPage') },
           { path: 'catalogs', lazy: () => import('./admin/AdminCatalogsPage') },
+          { path: 'files', lazy: () => import('./admin/AdminFilesPage') },
         ],
       },
       { path: '*', lazy: () => import('./NotFoundPage') },

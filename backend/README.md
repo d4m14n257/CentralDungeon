@@ -34,6 +34,8 @@ docker compose up -d          # MySQL 8 en localhost:3306
 
 `.env` es gitignored y `springboot4-dotenv` lo carga solo — nada que exportar a mano en el shell. Sin Discord real configurado en él, el login por Discord no funciona; para eso está el perfil `test` de más abajo.
 
+Los archivos que sube la gente van a `backend/storage/` (`app.storage.root`), que se crea solo al arrancar y está gitignored: son datos, no código. En producción esa variable apunta a un volumen de verdad, y bajo el perfil `test` a un temporal, para que una corrida de Playwright no deje blobs en el árbol de trabajo.
+
 Contrato publicado en `http://localhost:8080/swagger-ui.html`.
 
 ## Tests

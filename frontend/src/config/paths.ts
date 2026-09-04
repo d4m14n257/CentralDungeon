@@ -21,9 +21,11 @@ export const paths = {
   masterTableNew: 'master/tables/new',
   masterTableDetail: 'master/tables/:id',
   masterTableSessions: 'master/tables/:id/sessions',
+  masterTableFiles: 'master/tables/:id/files',
   masterTableStatus: 'master/tables/:id/status',
   adminTables: 'admin/tables',
   adminCatalogs: 'admin/catalogs',
+  adminFiles: 'admin/files',
 } as const
 
 /** Las audiencias de la ayuda (#168). El índice, `/help`, es la que sirve a todos. */
@@ -74,6 +76,14 @@ export function masterTableSessionsPath(id: string): string {
 
 /**
  * @param id the table
+ * @returns the absolute path to its files tab
+ */
+export function masterTableFilesPath(id: string): string {
+  return `/master/tables/${id}/files`
+}
+
+/**
+ * @param id the table
  * @returns the absolute path to its status tab
  */
 export function masterTableStatusPath(id: string): string {
@@ -96,4 +106,9 @@ export function adminTablesPath(): string {
 /** @returns the absolute path to the catalog administration screen */
 export function adminCatalogsPath(): string {
   return '/admin/catalogs'
+}
+
+/** @returns the absolute path to the file administration screen (#64, #79) */
+export function adminFilesPath(): string {
+  return '/admin/files'
 }

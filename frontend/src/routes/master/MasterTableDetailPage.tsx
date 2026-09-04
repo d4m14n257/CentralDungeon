@@ -58,6 +58,9 @@ export function MasterTableDetailPage() {
         <NavLink to="sessions" className={TAB_LINK_CLASSES}>
           {t('detail.tabs.sessions')}
         </NavLink>
+        <NavLink to="files" className={TAB_LINK_CLASSES}>
+          {t('detail.tabs.files')}
+        </NavLink>
         <NavLink to="status" className={TAB_LINK_CLASSES}>
           {t('detail.tabs.status')}
         </NavLink>

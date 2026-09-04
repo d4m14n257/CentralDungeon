@@ -1,6 +1,7 @@
 package com.centraldungeon.tables.dto;
 
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
+import com.centraldungeon.files.dto.SharedFileResponse;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -37,6 +38,11 @@ import org.jspecify.annotations.Nullable;
  * @param platforms     where the table is played, same rule
  * @param masters       everyone who runs the table, Primary first. Never null; an Unassigned table
  *                      has an empty list
+ * @param files         the files the table shares with its candidates and players. Only the shared
+ *                      ones: a private attachment is absent, not listed and locked, because a reader
+ *                      has no reason to know their master keeps notes (#79). Travels here for the
+ *                      same reason {@code sessions} does - this read already settles who may see the
+ *                      table (#29), so the files inherit that one answer
  * @param createdAt     when the table was created, in UTC
  * @param closedAt      when it entered Finished or Canceled (#180), or null while it is still going.
  *                      It is what starts the two-week profile visibility window of #44
@@ -65,6 +71,7 @@ public record GameTableDetailResponse(
         List<CatalogValueResponse> tags,
         List<CatalogValueResponse> platforms,
         List<MasterSummaryResponse> masters,
+        List<SharedFileResponse> files,
         LocalDateTime createdAt,
         @Nullable LocalDateTime closedAt,
         boolean scheduleConflict) {

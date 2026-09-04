@@ -2,7 +2,8 @@
   "nav": {
     "label": "Administration sections",
     "tables": "Tables",
-    "catalogs": "Catalogs"
+    "catalogs": "Catalogs",
+    "files": "Files"
   },
   "tables": {
     "title": "Tables to review",

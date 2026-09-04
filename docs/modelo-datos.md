@@ -113,6 +113,7 @@ propia migración, y se anota acá para que este documento no mienta por omisió
 |---|---|
 | `V2__seed.sql` · `V3__catalog_seed.sql` | Solo datos: roles, tipos de mesa y el catálogo de la comunidad |
 | `V4__notification_params.sql` | `notifications` gana `params VARCHAR(1024) NULL` y su `title` pasa a nulable; el motivo automático de #34 pasa de «Mesa llena» al código `TABLE_FULL` (#197) |
+| `V5__files_updated_at.sql` | `files` gana `updated_at DATETIME NULL`. Obligatoria, no cosmética: F1.4 mapea la tabla, la entidad extiende `BaseEntity` —que mapea esa columna— y con `ddl-auto: validate` la aplicación no arranca sin ella. Además F1.4 muta la fila de cuatro formas (renombrar, promover a `Private`, sellar `last_used_at`, dar de baja) y el momento del cambio se estaba perdiendo. `table_files` no la lleva: es puente con clave compuesta y no extiende `BaseEntity` |
 
 ```sql
 SET NAMES utf8mb4;
@@ -830,11 +831,14 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| Nombre físico = id del archivo; el nombre original es solo metadato | `StorageService` | #80 |
+| Nombre físico = un id generado por el servidor; el nombre original es solo metadato y nunca toca el sistema de archivos | `LocalDiskStorageService` | #80 |
 | El usuario ve y reutiliza todo lo que subió; vincular no duplica | `FileService` | #65 |
-| Un master puede usar un archivo `Public` como requisito sin copiarlo; quitarlo de la mesa no borra el archivo global | `FileService` | #79 |
-| Los `Single-use` se purgan cuando su contexto termina; el resto, tras ~3 meses sin uso | `FileRetentionService` | #75 |
-| Se deduplica por `content_hash` y se comprime al guardar | `FileService` | #75 |
+| Un master puede usar un archivo `Public` como requisito sin copiarlo; quitarlo de la mesa no borra el archivo global | `TableFileService` | #79 |
+| Se purgan los archivos sin vínculo vivo y con ~3 meses sin uso. Los `Public` quedan exentos, y el marcado no libera bytes | `FileRetentionService` | #75, #66 |
+| Se deduplica por `content_hash` **dentro del mismo dueño** —`uk_files_storage_key` prohíbe que dos filas compartan blob— y se comprime con gzip al guardar | `FileService` · `LocalDiskStorageService` | #75 |
+| El contenido se escribe a un área de staging y se confirma al commit de la transacción; un rollback no deja huérfanos | `LocalDiskStorageService` | M26.2 |
+| Publicar exige audiencia y solo lo hace un admin; el archivo sigue siendo de quien lo subió | `FileService` | #55, #64 |
+| Lo que una mesa comparte lo lee cualquiera que pueda ver la mesa; lo privado, solo quien la dirige. **Al llegar el veto (F3) hay que excluir al vetado acá también** | `FileService` | #17, #29, #121 |
 | El borrado físico lo ejecuta el owner desde el menú de administración | `StorageService` | #66 |
 | `comments` y `comment_drafts` **nunca** se auditan | `AuditService` | #43 |
 

@@ -131,6 +131,13 @@
         "step2": "Tocá la mesa que te interesa.",
         "step3": "Mirá «Mis sesiones» para el calendario y «Mi asistencia» para los tres números."
       }
+    },
+    "files": {
+      "title": "Los archivos de mi mesa",
+      "where": "Lo que tu master comparte aparece en «Mis mesas» → la mesa, y también en el detalle público de la mesa.",
+      "download": "Cada archivo tiene su botón de descarga. Al lado dice cuánto pesa, así sabés qué estás por bajar si estás con datos.",
+      "private": "Si tu master guardó algo solo para quienes dirigen la mesa, no lo vas a ver acá. No es un error ni un permiso que te falte: esos archivos son sus notas.",
+      "shared": "Un archivo que aparece hoy puede no estar mañana si el master lo quita de la mesa. Si lo necesitás, descargalo."
     }
   },
   "masters": {
@@ -244,6 +251,22 @@
         "step3": "Si no aparece, tocá «Proponer» con el nombre que escribiste.",
         "step4": "Seguí armando la mesa: no tenés que esperar a que lo aprueben para publicarla."
       }
+    },
+    "files": {
+      "title": "Archivos de la mesa",
+      "what": "En la pestaña Archivos ponés el material de la mesa: mapas, handouts, la ficha que pedís, tus notas.",
+      "reuse": "Podés subir uno nuevo o reutilizar algo que ya subiste antes. Reutilizar no vuelve a ocupar espacio y es lo que hace que la misma ficha no se guarde diez veces.",
+      "published": "La pestaña «Publicados» trae los archivos que subieron los admins para toda la comunidad. Si usás uno, no se copia: si el admin lo corrige, tu mesa ve la corrección.",
+      "shared": "Un archivo compartido lo ven tus jugadores y tus candidatos, en el detalle público de la mesa y en «Mis mesas».",
+      "private": "Marcado como «solo para quienes dirigen la mesa», lo ven únicamente vos y tus co-masters. No aparece en ningún lado para el resto: no está bloqueado, directamente no está.",
+      "detach": "Quitar un archivo lo saca de esta mesa y nada más. Sigue en tu lista y en las otras mesas donde lo hayas puesto.",
+      "limits": "Hasta 2 MB por archivo, y se aceptan PDF, Word, PNG y JPG. Si un archivo se pasa o no es de esos tipos, la pantalla te dice cuál es el problema antes de guardar nada.",
+      "steps": {
+        "step1": "Entrá a tu mesa desde «Mis mesas» como master y abrí la pestaña Archivos.",
+        "step2": "Tocá «Agregar un archivo» y elegí si es material de preparación o algo de una sesión.",
+        "step3": "Decidí si lo ven tus jugadores o si queda solo para quienes dirigen, y subí el archivo o elegí uno de «Mis archivos» o de «Publicados».",
+        "step4": "Desde la lista podés cambiar en cualquier momento quién lo ve, o quitarlo de la mesa sin borrarlo."
+      }
     }
   },
   "admins": {
@@ -297,6 +320,22 @@
         "step4": "En un valor pendiente, tocá «Aceptar» y decidí si es nuevo o si va a un grupo existente.",
         "step5": "Para unir dos grupos, tocá «Fusionar» en el que quieras que deje de existir y elegí el que queda.",
         "step6": "Para sacar un valor de circulación, tocá «Dar de baja». Si es el principal de un grupo, elegí quién lo reemplaza."
+      }
+    },
+    "files": {
+      "title": "Archivos",
+      "what": "En /admin/files está todo lo que subió la comunidad, con quién lo subió y en cuántas mesas se usa.",
+      "publish": "Publicar un archivo lo pone a disposición de todas las mesas. Es la forma de tener una ficha por defecto: cada master la agrega a su mesa en vez de subir su propia copia.",
+      "audience": "Al publicar elegís para quién es: masters, jugadores o todos. Eso decide dónde se ofrece el archivo.",
+      "notALock": "La audiencia no es un permiso. Define en qué listados aparece, no quién puede abrirlo: un archivo publicado es público.",
+      "unpublish": "Dejar de publicar lo saca del listado, pero las mesas que ya lo agregaron lo conservan. Deja de ser de la plataforma y vuelve a ser de quien lo subió.",
+      "remove": "Dar de baja un archivo lo saca de todas las mesas que lo usan. No borra el archivo del disco: eso lo hace el owner desde su menú de mantenimiento.",
+      "purge": "Los archivos que nadie usa ni tiene agregado a una mesa se dan de baja solos a los tres meses. Los publicados no: son de la plataforma y no caducan.",
+      "steps": {
+        "step1": "Entrá a /admin/files desde la navegación del contexto Admin.",
+        "step2": "Buscá el archivo por nombre, o acotá con /subido por y /tipo.",
+        "step3": "Tocá «Publicar» y elegí la audiencia.",
+        "step4": "La columna «Mesas» te dice en cuántas se está usando antes de que lo des de baja."
       }
     }
   },

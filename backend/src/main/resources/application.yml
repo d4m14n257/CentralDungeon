@@ -21,6 +21,14 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      # The container's own cap, which has to agree with app.storage.max-file-size below. This one
+      # is enforced before a single byte reaches a controller; the other produces the explained
+      # message (#197). Kept slightly higher so the application's rule is the one that normally
+      # answers, and this stays the backstop against a request that lies about its size.
+      max-file-size: 3MB
+      max-request-size: 4MB
   cache:
     type: caffeine
     cache-names: userAuth
@@ -75,3 +83,21 @@ app:
     secret: ${APP_JWT_SECRET:dev-only-insecure-secret-change-me-0123456789abcdef}
     access-token-ttl: PT15M
     refresh-token-ttl: P30D
+  storage:
+    # Where the blobs live. Never inside the repository - the dev default is gitignored and prod
+    # points this at a real volume.
+    root: ${APP_STORAGE_ROOT:./storage}
+    # The one limit #75 kept when it repealed the per-user quota of #61. The levers that replaced
+    # it - reuse, compression and the unused-file purge - attack total volume instead of the user.
+    max-file-size: 2MB
+    # The legacy's own whitelist (M21.4), which is the only part of its file handling worth keeping.
+    # It had no size or count limit whatsoever, but it did check the type.
+    allowed-mime-types:
+      - image/png
+      - image/jpeg
+      - application/pdf
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    # How long a file survives unused before the purge marks it gone (#75). Marks only - freeing the
+    # bytes is the platform owner's, from the administration menu, and that is F5 (#66).
+    retention: P90D

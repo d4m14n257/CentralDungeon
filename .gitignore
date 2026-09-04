@@ -1,6 +1,10 @@
 # Uploads del backend viejo — nunca fueron parte del repo
 /uploads
 
+# Los archivos que sube la gente. Es el `app.storage.root` de dev (application.yml): datos, no
+# código, y nunca se versionan. En producción apunta a un volumen de verdad, fuera del repo.
+backend/storage/
+
 # Configuración personal de Claude Code. Las skills de .claude/skills/ SÍ se versionan:
 # codifican las convenciones de docs/arquitectura.md y valen para quien clone el repo.
 .claude/settings.local.json

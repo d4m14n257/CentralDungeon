@@ -8,6 +8,7 @@ import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.text.RichTextSanitizer;
+import com.centraldungeon.files.TableFileService;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
@@ -90,6 +91,7 @@ public class GameTableService {
     private final ScheduleConflictService scheduleConflictService;
     private final TableCatalogService tableCatalogService;
     private final TableSessionService tableSessionService;
+    private final TableFileService tableFileService;
     private final RichTextSanitizer richTextSanitizer;
 
     /**
@@ -105,6 +107,8 @@ public class GameTableService {
      * @param tableCatalogService        links the table to its systems, tags and platforms (#56)
      * @param tableSessionService        materializes the calendar when the table opens, and re-lays it
      *                                   when it comes back from a pause (#26, #33)
+     * @param tableFileService           the files the table shares, which ride along with the detail
+     *                                   for the same reason the calendar does (#29, #79)
      * @param richTextSanitizer          cleans the rich text on the way in and on the way out (#62)
      */
     public GameTableService(
@@ -119,6 +123,7 @@ public class GameTableService {
             ScheduleConflictService scheduleConflictService,
             TableCatalogService tableCatalogService,
             TableSessionService tableSessionService,
+            TableFileService tableFileService,
             RichTextSanitizer richTextSanitizer) {
         this.gameTableRepository = gameTableRepository;
         this.tableTypeRepository = tableTypeRepository;
@@ -131,6 +136,7 @@ public class GameTableService {
         this.scheduleConflictService = scheduleConflictService;
         this.tableCatalogService = tableCatalogService;
         this.tableSessionService = tableSessionService;
+        this.tableFileService = tableFileService;
         this.richTextSanitizer = richTextSanitizer;
     }
 
@@ -733,6 +739,9 @@ public class GameTableService {
                 catalogs.get(CatalogType.SYSTEMS),
                 catalogs.get(CatalogType.TAGS),
                 catalogs.get(CatalogType.PLATFORMS),
+                // Same call, same reason as the calendar above: only what the table shares, and only
+                // once this read has already established the reader may see the table at all (#29, #79).
+                tableFileService.sharedFilesOf(gameTable.getId()),
                 richTextSanitizer.sanitize(gameTable.getDescription()),
                 richTextSanitizer.sanitize(gameTable.getPermitted()),
                 richTextSanitizer.sanitize(gameTable.getRequirements()),

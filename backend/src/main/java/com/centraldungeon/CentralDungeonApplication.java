@@ -2,6 +2,7 @@ package com.centraldungeon;
 
 import com.centraldungeon.common.config.DiscordProperties;
 import com.centraldungeon.common.config.JwtProperties;
+import com.centraldungeon.common.config.StorageProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -10,12 +11,13 @@ import org.springframework.cache.annotation.EnableCaching;
 /**
  * The application's entry point.
  *
- * <p>{@code @EnableConfigurationProperties} binds the two records that carry external configuration
- * - Discord's guild and the JWT settings - and {@code @EnableCaching} turns on the Caffeine cache
- * that keeps the per-request authorization read from being a query per call (#128).
+ * <p>{@code @EnableConfigurationProperties} binds the three records that carry external
+ * configuration - Discord's guild, the JWT settings and where uploaded files live - and
+ * {@code @EnableCaching} turns on the Caffeine cache that keeps the per-request authorization read
+ * from being a query per call (#128).
  */
 @SpringBootApplication
-@EnableConfigurationProperties({DiscordProperties.class, JwtProperties.class})
+@EnableConfigurationProperties({DiscordProperties.class, JwtProperties.class, StorageProperties.class})
 @EnableCaching
 public class CentralDungeonApplication {
 

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router'
 
-import { adminCatalogsPath, adminTablesPath } from '@/config/paths'
+import { adminCatalogsPath, adminFilesPath, adminTablesPath } from '@/config/paths'
 import { cn } from '@/lib/utils'
 
 /**
@@ -20,6 +20,7 @@ export function AdminSectionNav() {
   const sections = [
     { to: adminTablesPath(), label: t('nav.tables') },
     { to: adminCatalogsPath(), label: t('nav.catalogs') },
+    { to: adminFilesPath(), label: t('nav.files') },
   ]
 
   return (

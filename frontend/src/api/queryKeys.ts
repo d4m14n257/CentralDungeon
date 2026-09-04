@@ -20,6 +20,21 @@ export const queryKeys = {
      */
     mine: (tableId: string) => ['sessions', 'mine', tableId] as const,
   },
+  files: {
+    /** The reuse history of #65, keyed by what the picker searched. */
+    mine: (query?: string, page = 0) => ['files', 'mine', query, page] as const,
+    /** What the platform published, by audience (#64). */
+    public: (audience?: string) => ['files', 'public', audience] as const,
+    /**
+     * One table's attachments, as the people running it see them. Its own branch and not part of
+     * `tables.detail`: what a master sees includes the private ones, and the table's detail carries
+     * only what it shares - two different answers that must not share a cache entry (#79).
+     */
+    table: (tableId: string) => ['files', 'table', tableId] as const,
+    /** The /admin/files table. Every admin mutation invalidates this branch and nothing else. */
+    admin: (query?: string, statuses?: string[], fileTypes?: string[], page = 0) =>
+      ['files', 'admin', query, statuses, fileTypes, page] as const,
+  },
   catalogs: {
     /** The whole branch. What every catalog mutation invalidates: one admin action can move rows
      *  that are not on screen - a merge repoints a group, a disable hands it to a successor - so

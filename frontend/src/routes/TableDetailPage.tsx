@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
+import { FileList } from '@/features/files'
 import { ApplyToTableDialog, useMyApplications } from '@/features/registrations'
 import { SessionList, TableStatusBadge, useGameTable } from '@/features/tables'
 import { useMe } from '@/features/users'
@@ -62,6 +63,9 @@ function primaryMasterOf(masters: MasterSummary[]) {
  */
 export function TableDetailPage() {
   const { t, i18n } = useTranslation('tables')
+  // A second namespace rather than copying the file labels into `tables`: the words belong to the
+  // files domain and are the same ones the master's tab shows (regla dura 18).
+  const { t: tFiles } = useTranslation('files')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   // isLoadingError, no isError: si ya se cargó la mesa, un refetch de fondo que falla no debe
@@ -166,6 +170,20 @@ export function TableDetailPage() {
             <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('sessions.calendarTitle')}</h2>
             <div className="mt-1.5">
               <SessionList sessions={table.sessions} />
+            </div>
+          </section>
+        )}
+
+        {/* The files the table shares (#79). Only the shared ones ever arrive here — an attachment
+            the master kept private is absent from the response, not hidden by the screen. */}
+        {table.files.length > 0 && (
+          <section>
+            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{tFiles('table.readOnlyTitle')}</h2>
+            <div className="mt-1.5">
+              <FileList
+                files={table.files}
+                renderMeta={(file) => <span className="text-fg-muted text-xs">{tFiles(`tableFileType.${file.tableFileType}`)}</span>}
+              />
             </div>
           </section>
         )}

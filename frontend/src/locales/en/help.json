@@ -131,6 +131,13 @@
         "step2": "Tap the table you care about.",
         "step3": "Look at “My sessions” for the calendar and “My attendance” for the three numbers."
       }
+    },
+    "files": {
+      "title": "My table's files",
+      "where": "Whatever your master shares shows up under \"My tables\" → the table, and on the table's public page too.",
+      "download": "Every file has its download button, with its size next to it, so you know what you are about to fetch if you are on mobile data.",
+      "private": "If your master kept something for whoever runs the table, you will not see it here. It is not an error and not a permission you are missing: those files are their notes.",
+      "shared": "A file that is here today may be gone tomorrow if the master takes it off the table. If you need it, download it."
     }
   },
   "masters": {
@@ -244,6 +251,22 @@
         "step3": "If it does not, tap “Propose” with the name you typed.",
         "step4": "Carry on building the table: you do not have to wait for approval to publish it."
       }
+    },
+    "files": {
+      "title": "Table files",
+      "what": "The Files tab is where your table's material goes: maps, handouts, the sheet you ask for, your own notes.",
+      "reuse": "You can upload something new or reuse something you uploaded before. Reusing costs no extra space, and it is what keeps the same sheet from being stored ten times.",
+      "published": "The \"Published\" tab holds the files admins uploaded for the whole community. Using one does not copy it: if the admin corrects it, your table sees the correction.",
+      "shared": "A shared file is visible to your players and candidates, on the table's public page and under \"My tables\".",
+      "private": "Marked \"only for whoever runs the table\", it is visible to you and your co-masters and nobody else. It does not appear elsewhere at all: it is not locked, it is simply not there.",
+      "detach": "Removing a file takes it off this table and nothing more. It stays in your own list and on any other table you put it on.",
+      "limits": "Up to 2 MB per file, and PDF, Word, PNG and JPG are accepted. If a file is too big or is not one of those, the screen tells you what the problem is before anything is saved.",
+      "steps": {
+        "step1": "Open your table from \"My tables\" as a master and go to the Files tab.",
+        "step2": "Hit \"Add a file\" and pick whether it is preparation material or something from a session.",
+        "step3": "Decide whether your players see it or whether it stays with whoever runs the table, then upload a file or pick one from \"My files\" or \"Published\".",
+        "step4": "From the list you can change who sees it at any time, or take it off the table without deleting it."
+      }
     }
   },
   "admins": {
@@ -297,6 +320,22 @@
         "step4": "On a pending value, tap “Accept” and decide whether it is new or belongs to an existing group.",
         "step5": "To join two groups, tap “Merge” on the one you want to stop existing and pick the one that stays.",
         "step6": "To take a value out of circulation, tap “Disable”. If it is a group's main one, pick who replaces it."
+      }
+    },
+    "files": {
+      "title": "Files",
+      "what": "/admin/files holds everything the community has uploaded, with who uploaded it and how many tables use it.",
+      "publish": "Publishing a file makes it available to every table. It is how a default character sheet works: each master adds that one instead of uploading their own copy.",
+      "audience": "When you publish, you choose who it is for: masters, players or everyone. That decides where the file is offered.",
+      "notALock": "The audience is not a permission. It decides which listings the file appears in, not who may open it: a published file is public.",
+      "unpublish": "Unpublishing takes it out of the list, but tables that already added it keep it. It stops being the platform's and goes back to its uploader.",
+      "remove": "Removing a file takes it off every table using it. It does not erase the file from disk: that is the owner's, from their maintenance menu.",
+      "purge": "Files nobody uses and no table has added are removed automatically after three months. Published ones are not: they belong to the platform and do not expire.",
+      "steps": {
+        "step1": "Go to /admin/files from the Admin context navigation.",
+        "step2": "Find the file by name, or narrow it down with /uploaded by and /kind.",
+        "step3": "Hit \"Publish\" and choose the audience.",
+        "step4": "The \"Tables\" column tells you how many are using it before you remove it."
       }
     }
   },

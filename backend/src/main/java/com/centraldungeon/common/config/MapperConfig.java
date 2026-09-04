@@ -1,6 +1,7 @@
 package com.centraldungeon.common.config;
 
 import com.centraldungeon.catalogs.CatalogMapper;
+import com.centraldungeon.files.FileMapper;
 import com.centraldungeon.notifications.NotificationMapper;
 import com.centraldungeon.registrations.RegistrationMapper;
 import com.centraldungeon.tables.GameTableMapper;
@@ -69,5 +70,15 @@ public class MapperConfig {
     @Bean
     public CatalogMapper catalogMapper() {
         return Mappers.getMapper(CatalogMapper.class);
+    }
+
+    /**
+     * The mapper for uploaded files and their attachments to a table.
+     *
+     * @return the MapStruct-generated implementation
+     */
+    @Bean
+    public FileMapper fileMapper() {
+        return Mappers.getMapper(FileMapper.class);
     }
 }

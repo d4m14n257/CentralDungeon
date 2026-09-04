@@ -1,0 +1,109 @@
+{
+  "fileType": {
+    "Public": "Publicado",
+    "Private": "Guardado",
+    "SingleUse": "De una mesa"
+  },
+  "audience": {
+    "Masters": "Masters",
+    "Players": "Jugadores",
+    "Announcements": "Todos"
+  },
+  "status": {
+    "Current": "Vigente",
+    "Deleted": "Dado de baja"
+  },
+  "tableFileType": {
+    "Preparation": "Preparación",
+    "Session": "De sesión"
+  },
+  "size": {
+    "bytes": "{{value}} B",
+    "kilobytes": "{{value}} KB",
+    "megabytes": "{{value}} MB"
+  },
+  "actions": {
+    "download": "Descargar",
+    "detach": "Quitar de la mesa",
+    "share": "Compartir con la mesa",
+    "unshare": "Dejar solo para masters",
+    "publish": "Publicar",
+    "unpublish": "Dejar de publicar",
+    "delete": "Dar de baja"
+  },
+  "picker": {
+    "upload": "Subir",
+    "reuse": "Mis archivos",
+    "published": "Publicados",
+    "uploadLabel": "Elegir un archivo para subir",
+    "limits": "Hasta 2 MB por archivo. Se aceptan PDF, Word, PNG y JPG.",
+    "searchPlaceholder": "Buscar entre mis archivos",
+    "searchLabel": "Buscar entre mis archivos",
+    "use": "Usar",
+    "historyEmptyTitle": "Todavía no subiste nada",
+    "historyEmptyDescription": "Lo que subas queda acá y lo podés volver a usar en cualquier mesa, sin subirlo de nuevo.",
+    "publishedEmptyTitle": "No hay archivos publicados",
+    "publishedEmptyDescription": "Los admins publican acá las plantillas y los documentos que sirven para todas las mesas."
+  },
+  "publish": {
+    "title": "Publicar archivo",
+    "description": "«{{name}}» va a quedar disponible para toda la comunidad.",
+    "audienceLabel": "Para quién es",
+    "audienceHint": "Define dónde se ofrece el archivo. Cualquiera con el enlace puede abrirlo igual.",
+    "cancel": "Cancelar",
+    "confirm": "Publicar"
+  },
+  "table": {
+    "title": "Archivos de la mesa",
+    "attach": "Agregar un archivo",
+    "attachTitle": "Agregar un archivo a la mesa",
+    "attachDescription": "Subí uno nuevo o reutilizá algo que ya tengas. El archivo se vincula, no se copia: sacarlo de acá no lo borra.",
+    "kindLabel": "Qué es",
+    "privateLabel": "Solo para quienes dirigen la mesa",
+    "privateHint": "Sin marcar, lo ven también los jugadores y los candidatos.",
+    "sharedBadge": "Lo ve la mesa",
+    "privateBadge": "Solo masters",
+    "emptyTitle": "La mesa no tiene archivos",
+    "emptyDescription": "Acá van el material de preparación, los mapas y lo que quieras compartir con tus jugadores.",
+    "detachTitle": "¿Quitar el archivo de la mesa?",
+    "detachDescription": "Deja de aparecer en esta mesa. El archivo sigue existiendo, en tu historial y en las otras mesas que lo usen.",
+    "detachConfirm": "Quitar",
+    "readOnlyTitle": "Archivos",
+    "readOnlyEmptyTitle": "Sin archivos",
+    "readOnlyEmptyDescription": "Todavía no hay nada compartido en esta mesa.",
+    "helpLink": "Cómo funcionan los archivos"
+  },
+  "admin": {
+    "title": "Archivos",
+    "description": "Todo lo que subió la comunidad. Publicar un archivo lo pone a disposición de todas las mesas sin que nadie tenga que copiarlo.",
+    "searchLabel": "Buscar archivos",
+    "searchPlaceholder": "Buscar por nombre, /owner o /type",
+    "columns": {
+      "name": "Archivo",
+      "type": "Tipo",
+      "audience": "Audiencia",
+      "owner": "Subido por",
+      "uses": "Mesas",
+      "size": "Tamaño",
+      "status": "Estado",
+      "createdAt": "Subido"
+    },
+    "usesValue_one": "{{count}} mesa",
+    "usesValue_other": "{{count}} mesas",
+    "emptyTitle": "No hay archivos",
+    "emptyDescription": "Cuando la comunidad empiece a subir material de mesa, va a aparecer acá.",
+    "noResultsTitle": "Sin resultados",
+    "noResultsDescription": "Ningún archivo coincide con la búsqueda.",
+    "deleteTitle": "¿Dar de baja el archivo?",
+    "deleteDescription": "Deja de verse en todas las mesas que lo usan. No se borra del disco: eso lo hace el owner desde su menú de mantenimiento.",
+    "deleteConfirm": "Dar de baja",
+    "unpublishTitle": "¿Dejar de publicarlo?",
+    "unpublishDescription": "Sale del listado de publicados y vuelve a ser un archivo de quien lo subió. Las mesas que ya lo tienen agregado lo conservan.",
+    "unpublishConfirm": "Dejar de publicar"
+  },
+  "search": {
+    "name": "nombre",
+    "owner": "subido por",
+    "type": "tipo"
+  }
+}

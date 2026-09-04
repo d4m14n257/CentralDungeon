@@ -34,6 +34,7 @@ public class TestDataService {
             "select t.id from GameTable t where t.name like :tableName or t.createdBy.id in (" + E2E_USERS + ")";
     private static final String E2E_REGISTRATIONS = "select reg.id from TableRegistration reg where reg.gameTable.id in ("
             + E2E_TABLES + ") or reg.user.id in (" + E2E_USERS + ")";
+    private static final String E2E_FILES = "select f.id from StoredFile f where f.userCreated.id in (" + E2E_USERS + ")";
 
     /** Bulk JPQL deletes, which is the one job that does not fit a repository. */
     private final EntityManager entityManager;
@@ -73,8 +74,16 @@ public class TestDataService {
         delete("delete from TableSystem ts where ts.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TableTag tt where tt.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TablePlatform tp where tp.id.gameTableId in (" + E2E_TABLES + ")");
+        // Attachments before tables, and before the files themselves: table_files points at both, so
+        // it has to go first in each direction. Third time this foreign key shape has had to be
+        // remembered here - the agenda in F1.2 and the calendar in F1.3 were the other two (#171, #172).
+        delete("delete from TableFile tf where tf.id.gameTableId in (" + E2E_TABLES + ") or tf.id.fileId in ("
+                + E2E_FILES + ")");
         int gameTables =
                 delete("delete from GameTable gt where gt.name like :tableName or gt.createdBy.id in (" + E2E_USERS + ")");
+        // The blobs on disk are not touched. They are in a temporary directory under the test profile
+        // (application-test.yml) and deleting bytes is F5's, never a side effect of a cleanup (#25, #66).
+        delete("delete from StoredFile f2 where f2.userCreated.id in (" + E2E_USERS + ")");
         delete("delete from UserRole ur where ur.user.id in (" + E2E_USERS + ")");
         int users = delete("delete from User u2 where u2.discordId like :discordId");
 

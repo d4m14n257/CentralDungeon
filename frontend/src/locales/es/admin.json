@@ -2,7 +2,8 @@
   "nav": {
     "label": "Secciones de administración",
     "tables": "Mesas",
-    "catalogs": "Catálogos"
+    "catalogs": "Catálogos",
+    "files": "Archivos"
   },
   "tables": {
     "title": "Mesas por revisar",

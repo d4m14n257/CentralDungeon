@@ -50,6 +50,10 @@ export function HelpPlayersTab() {
           />
           <HelpSteps title={t('help:stepsTitle')} items={[1, 2, 3].map((n) => t(`help:players.mySessions.steps.step${n}`))} />
         </HelpSection>
+
+        <HelpSection id="files" title={t('help:players.files.title')}>
+          <HelpList items={['where', 'download', 'private', 'shared'].map((key) => t(`help:players.files.${key}`))} />
+        </HelpSection>
       </div>
     </HelpAudienceGate>
   )

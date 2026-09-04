@@ -67,7 +67,14 @@ export async function refreshSession(): Promise<string | null> {
   return data.accessToken
 }
 
-async function request<TRes>(method: string, path: string, options: RequestOptions = {}, isRetry = false): Promise<TRes> {
+/**
+ * Sends the call and settles the 401 - refresh once, retry, and give up to /login if that fails too.
+ *
+ * Split out of `request` so a download can share it. A binary response is not JSON and must not be
+ * parsed as any, but everything up to the body - the bearer token, the credentials, the refresh
+ * dance - is the same, and having two copies of the 401 handling is how they drift apart.
+ */
+async function send(method: string, path: string, options: RequestOptions = {}, isRetry = false): Promise<Response> {
   const headers: Record<string, string> = {}
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`
@@ -77,10 +84,13 @@ async function request<TRes>(method: string, path: string, options: RequestOptio
   if (options.files) {
     const formData = new FormData()
     for (const file of options.files) {
-      formData.append('files', file)
+      formData.append('file', file)
     }
     if (options.body !== undefined) {
-      formData.append('data', JSON.stringify(options.body))
+      // A Blob and not a plain string: appending a string gives the part no content type, Spring
+      // reads it as `text/plain`, and `@RequestPart` then refuses to bind it to a record. Tagging
+      // the part as JSON is what makes the two halves of the upload arrive as one typed request.
+      formData.append('data', new Blob([JSON.stringify(options.body)], { type: 'application/json' }))
     }
     body = formData
   } else if (options.body !== undefined) {
@@ -98,15 +108,11 @@ async function request<TRes>(method: string, path: string, options: RequestOptio
   if (response.status === 401 && !isRetry) {
     const newToken = await refreshSession()
     if (newToken) {
-      return request<TRes>(method, path, options, true)
+      return send(method, path, options, true)
     }
     setAccessToken(null)
     window.location.assign('/login')
     throw new ApiError(401, { title: 'Unauthorized', status: 401, detail: 'Session expired', errorCode: 'UNAUTHORIZED' })
-  }
-
-  if (response.status === 204) {
-    return undefined as TRes
   }
 
   if (!response.ok) {
@@ -114,7 +120,58 @@ async function request<TRes>(method: string, path: string, options: RequestOptio
     throw new ApiError(response.status, problem)
   }
 
+  return response
+}
+
+async function request<TRes>(method: string, path: string, options: RequestOptions = {}): Promise<TRes> {
+  const response = await send(method, path, options)
+  if (response.status === 204) {
+    return undefined as TRes
+  }
   return (await response.json()) as TRes
+}
+
+/**
+ * What a download hands back: the bytes and the name to save them under.
+ *
+ * The name comes from the response, not from anything the caller knows, because it is the server
+ * that holds the original filename - it is metadata on the file row and never part of a path (#80).
+ */
+export interface DownloadedFile {
+  blob: Blob
+  filename: string
+}
+
+/** Reads the filename out of a `Content-Disposition`, accepting both the RFC 5987 form and the plain one. */
+function filenameFrom(header: string | null, fallback: string): string {
+  if (!header) {
+    return fallback
+  }
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header)
+  if (encoded?.[1]) {
+    return decodeURIComponent(encoded[1])
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header)
+  return plain?.[1] ?? fallback
+}
+
+/**
+ * Fetches a file's content.
+ *
+ * A plain `<a href>` cannot do this: the endpoint is authenticated with a bearer token, which the
+ * browser never attaches on its own, so the bytes have to be fetched like any other call and handed
+ * to the page as a blob.
+ *
+ * @param path     the content endpoint
+ * @param fallback the name to save under if the response carries no `Content-Disposition`
+ * @returns the bytes and the filename the server sent
+ */
+async function download(path: string, fallback: string): Promise<DownloadedFile> {
+  const response = await send('GET', path)
+  return {
+    blob: await response.blob(),
+    filename: filenameFrom(response.headers.get('Content-Disposition'), fallback),
+  }
 }
 
 /**
@@ -133,4 +190,6 @@ export const api = {
   patch: <TRes, TBody = unknown>(path: string, body?: TBody) => request<TRes>('PATCH', path, { body }),
   delete: <TRes = void>(path: string) => request<TRes>('DELETE', path),
   upload: <TRes>(path: string, files: File[], body?: unknown) => request<TRes>('POST', path, { files, body }),
+  /** Binary responses. Everything else here returns JSON; this one returns the bytes and a filename. */
+  download: (path: string, fallbackFilename: string) => download(path, fallbackFilename),
 }

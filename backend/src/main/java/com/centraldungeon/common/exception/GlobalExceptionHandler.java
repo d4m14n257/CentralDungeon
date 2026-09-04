@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
  * Turns every exception that escapes a controller into an RFC 9457 {@code ProblemDetail}
@@ -88,6 +89,30 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, "Invalid value for '" + exception.getName() + "'");
         problem.setProperty("errorCode", "VALIDATION_ERROR");
+        return problem;
+    }
+
+    /**
+     * An upload bigger than what the servlet container accepts.
+     *
+     * <p>Without this it would fall through to handleUnexpected and answer 500 to somebody who simply
+     * picked a large file - a "the site is broken" where the truth is "that file is too big". It
+     * carries {@code FILE_TOO_LARGE}, the same code {@code FileService} raises when the application's
+     * own cap is the one that refuses, so the frontend writes one sentence for both (#197).
+     *
+     * <p>The container's limit sits slightly above {@code app.storage.max-file-size} on purpose
+     * (application.yml), so in normal use it is the application that answers and this stays the
+     * backstop for a request that lied about its size. That is why the limit is not in the parameters
+     * here: this handler does not know it, and it is not the number the person needs anyway.
+     *
+     * @param exception the container's complaint
+     * @return a 400 problem detail carrying {@code FILE_TOO_LARGE}
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail handleUploadTooLarge(MaxUploadSizeExceededException exception) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "The uploaded file is over the limit");
+        problem.setProperty("errorCode", "FILE_TOO_LARGE");
         return problem;
     }
 
