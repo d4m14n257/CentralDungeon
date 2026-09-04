@@ -322,7 +322,9 @@ npx playwright test → 18 tests, todos verdes, contra el backend y el frontend 
 
 #### ✅ Terminada
 
-Nueve decisiones nuevas salieron de construirla: **#199** (`StoredFile`, no `File`), **#200** (escritura a staging confirmada al commit), **#201** (deduplicación por dueño), **#202** (gzip adentro del almacenamiento), **#203** (subir y vincular son dos llamadas), **#204** (`is_private` y `Public` son ejes distintos), **#205** (el selector ofrece todos los publicados), **#206** (lo que la mesa comparte lo lee quien puede ver la mesa) y **#207** (`/admin/files` entra en la fase). Con #200 y #199 queda **cerrada M26**, que arrastraba dos puntos abiertos desde el relevamiento del legacy.
+Diez decisiones nuevas salieron de construirla: **#199** (`StoredFile`, no `File`), **#200** (escritura a staging confirmada al commit), **#201** (deduplicación por dueño), **#202** (gzip adentro del almacenamiento), **#203** (subir y vincular son dos llamadas), **#204** (`is_private` y `Public` son ejes distintos), **#205** (el selector ofrece todos los publicados), **#206** (lo que la mesa comparte lo lee quien puede ver la mesa), **#207** (`/admin/files` entra en la fase) y **#208** (`@Transactional` en el método que llama el scheduler). Con #200 y #199 queda **cerrada M26**, que arrastraba dos puntos abiertos desde el relevamiento del legacy.
+
+**Un bug que solo podía ver un test de integración.** `FileRetentionService.purgeUnusedFiles()` llamaba a `markUnusedFiles()`, que era el que tenía el `@Transactional`. Eso es autoinvocación: no pasa por el proxy de Spring, así que la anotación no aplicaba cuando el que llamaba era el scheduler. Sin transacción, la consulta corre en la suya propia de lectura, las entidades vuelven **desprendidas**, y marcarlas escribe sobre objetos que nadie observa — el job registraba un conteo y no cambiaba una sola fila, **en silencio**. Ningún unitario lo puede ver: mockean el repositorio y las aserciones son sobre los objetos devueltos. Va con su `FileIT`, que llama al método que llama el scheduler y después le pregunta a la base.
 
 **Dos bugs de producto que encontró el e2e, no un test unitario.** El primero: `useDownloadFile` revocaba el object URL en la misma tarea que el click, y el navegador solo empieza a buscar el blob cuando esa tarea termina — la descarga se cancelaba sola, sin que nada lanzara un error. Se arregla revocando en un `setTimeout(…, 0)`. El segundo es de diseño y más caro: el `FilePicker` del master filtraba los publicados por audiencia `Masters`, así que la hoja de personaje por defecto —publicada **para jugadores**— no aparecía, y el ejemplo que motiva #79 no se podía ejecutar. La audiencia dice quién **lee** el archivo, no quién lo adjunta (#205).
 
@@ -349,7 +351,7 @@ Queda fuera a propósito, con su motivo: **`/my/files`** es F2, y en F1.4 el his
 | `files/FileDownload.java` | El portador interno de la descarga: bytes, nombre y tipo. No cruza HTTP como JSON |
 | `resources/db/migration/V5__files_updated_at.sql` | La primera migración de **schema** desde el baseline. Aditiva y obligatoria: sin ella `ddl-auto: validate` no deja arrancar |
 | `test/…/common/storage/LocalDiskStorageServiceTest.java` | 10 unitarios sobre lo que llega al disco, incluido el rollback |
-| `test/…/files/FileServiceTest.java` · `TableFileServiceTest` · `FileRetentionServiceTest` · `FileIT` | 22 + 10 + 4 unitarios y 9 de integración sobre MySQL real |
+| `test/…/files/FileServiceTest.java` · `TableFileServiceTest` · `FileRetentionServiceTest` · `FileIT` | 22 + 10 + 4 unitarios y 10 de integración sobre MySQL real |
 
 Modificados: `GameTableDetailResponse` (+`files`), `GameTableMapper` y `GameTableService` (los archivos compartidos viajan con el detalle, igual que las sesiones en F1.3), `GlobalExceptionHandler` (+`MaxUploadSizeExceededException` → `400` con `FILE_TOO_LARGE`; sin eso pasarse del tope era un `500`), `InvalidRequestException` (+código y parámetros, misma forma que `ConflictException` ganó en F1.2), `MapperConfig`, `CentralDungeonApplication` (+`StorageProperties`), `application.yml` y `application-test.yml`, y `TestDataService` — **tercera vez** que esta clase de foreign key rompe la limpieza del e2e, después de la agenda en F1.2 y el calendario en F1.3 (#171, #172).
 
@@ -377,7 +379,7 @@ Tocados: `api/client.ts` (la parte JSON del multipart pasa a `Blob`, y `api.down
 
 ```
 ./mvnw test    → 238 tests, 0 fallos
-./mvnw verify  → 238 unitarios + 46 integración, 0 fallos
+./mvnw verify  → 238 unitarios + 47 integración, 0 fallos
 npx tsc -b     → limpio
 npm run test   → 20 archivos, 157 tests
 npx playwright test → 27 tests, todos verdes, contra el backend y el frontend reales

@@ -13,6 +13,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -93,14 +94,17 @@ public class FileController {
      *
      * @param currentUser whose files, from the token. There is no parameter that could name anybody
      *                    else (#121)
-     * @param pageable    page, size and sort; newest first, with a tie-break by id (#171)
+     * @param pageable    page, size and sort; <b>most recently used first</b>, with a tie-break by id
+     *                    (#171). The direction is spelled out because the default is ascending, and
+     *                    ascending here would open the picker on whatever this person has not touched
+     *                    in the longest time - the exact opposite of what reuse needs (#65)
      * @return 200 with one page of their files
      */
     @GetMapping("/mine")
     @PreAuthorize("isAuthenticated()")
     public PageResponse<FileResponse> listMine(
             @AuthenticationPrincipal CurrentUser currentUser,
-            @PageableDefault(size = 20, sort = {"lastUsedAt", "id"}) Pageable pageable) {
+            @PageableDefault(size = 20, sort = {"lastUsedAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable) {
         return fileService.listMine(currentUser.userId(), pageable);
     }
 

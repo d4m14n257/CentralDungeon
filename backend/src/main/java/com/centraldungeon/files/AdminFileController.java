@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -55,7 +56,9 @@ public class AdminFileController {
      *                  null for everything
      * @param statuses  the statuses to keep, or null for all of them, marked-gone files included
      * @param fileTypes the lifecycles to keep (#68), or null for all of them
-     * @param pageable  page, size and sort; newest first, with a tie-break by id (#171)
+     * @param pageable  page, size and sort; <b>newest first</b>, with a tie-break by id (#171). The
+     *                  direction is spelled out because the default is ascending: what an admin opens
+     *                  this screen for is what just arrived, not the oldest thing on the platform
      * @return 200 with one page of files
      */
     @GetMapping
@@ -64,7 +67,7 @@ public class AdminFileController {
             @RequestParam(name = "q", required = false) @Nullable String query,
             @RequestParam(name = "status", required = false) @Nullable List<FileStatus> statuses,
             @RequestParam(name = "fileType", required = false) @Nullable List<FileType> fileTypes,
-            @PageableDefault(size = 20, sort = {"createdAt", "id"}) Pageable pageable) {
+            @PageableDefault(size = 20, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable) {
         return fileService.listForAdmin(
                 query, statuses == null ? List.of() : statuses, fileTypes == null ? List.of() : fileTypes, pageable);
     }

@@ -63,8 +63,17 @@ public class FileRetentionService {
      * <p>The time is not arbitrary: the community plays at night in the Americas, which is the early
      * morning of the next day in UTC (#22), so 05:00 UTC is roughly when the fewest people are around
      * to notice a batch of writes.
+     *
+     * <p>⚠️ <b>{@code @Transactional} has to be on <em>this</em> method, not only on the one it
+     * calls.</b> A call from here to {@link #markUnusedFiles()} is self-invocation and never goes
+     * through the Spring proxy, so the annotation over there does nothing when the scheduler is the
+     * caller. Without it the query would run in its own read-only transaction, the entities would come
+     * back detached, and marking them would be writes to objects nobody is watching - the job would
+     * report a count and change not one row. It fails <b>silently</b>, which is why it is written out
+     * here and covered by an integration test rather than a unit one.
      */
     @Scheduled(cron = "0 0 5 * * *")
+    @Transactional
     public void purgeUnusedFiles() {
         int marked = markUnusedFiles();
         if (marked > 0) {
@@ -78,6 +87,9 @@ public class FileRetentionService {
      * <p>Separate from the schedule so it can be called and asserted on directly - a test should not
      * have to wait for a cron expression to come round, and the rule worth testing is which files
      * qualify, not that Spring can read a crontab.
+     *
+     * <p>Transactional in its own right for those direct callers. When {@link #purgeUnusedFiles()}
+     * calls it the outer transaction is already open and this simply joins it.
      *
      * @return how many files this pass marked. Zero means nothing had gone stale, which is the normal
      *         answer on a healthy platform

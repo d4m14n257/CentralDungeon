@@ -79,8 +79,11 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, pub
     upload.mutate(
       { file, input: { fileType: 'Private' } },
       {
-        onSuccess: (uploaded: StoredFile) => {
-          onPick(uploaded.id)
+        onSuccess: (uploaded: StoredFile) => onPick(uploaded.id),
+        // Cleared on failure too, not only on success: the input keeps the rejected file otherwise,
+        // and picking the same one again fires no change event at all - so somebody who fixes what
+        // the message told them to fix would find the control silently dead.
+        onSettled: () => {
           if (fileInput.current) {
             fileInput.current.value = ''
           }

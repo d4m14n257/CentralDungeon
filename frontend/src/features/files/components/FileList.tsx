@@ -50,6 +50,9 @@ interface FileListProps<T extends FileListItem> {
 export function FileList<T extends FileListItem>({ files, renderMeta, renderActions }: FileListProps<T>) {
   const { t, i18n } = useTranslation('files')
   const download = useDownloadFile()
+  // Which row is fetching, so one download does not disable every other row's button: the mutation
+  // is shared by the whole list, and `isPending` alone would say "all of them are busy".
+  const busyFileId = download.isPending ? download.variables?.fileId : undefined
 
   return (
     <ul className="divide-border divide-y">
@@ -66,7 +69,7 @@ export function FileList<T extends FileListItem>({ files, renderMeta, renderActi
               <IconAction
                 label={t('actions.download')}
                 icon={<DownloadIcon className="size-4" />}
-                disabled={download.isPending}
+                disabled={busyFileId === file.fileId}
                 onClick={() => download.mutate({ fileId: file.fileId, filename: file.name })}
               />
               {renderActions?.(file)}

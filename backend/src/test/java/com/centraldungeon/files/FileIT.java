@@ -229,6 +229,24 @@ class FileIT {
         assertThat(statusOf(published.id())).isEqualTo(FileStatus.Current);
     }
 
+    /**
+     * The purge through the <b>scheduled entry point</b>, which is the only way to catch what a unit
+     * test structurally cannot: a self-invocation that bypasses the proxy leaves the whole pass
+     * without a transaction, the entities come back detached, and marking them writes to nothing. The
+     * job would log a count and change zero rows, silently. So this calls the method the scheduler
+     * calls, on the real bean, and then asks the database.
+     */
+    @Test
+    void theScheduledPassActuallyWritesItsMarksToTheDatabase() {
+        FileResponse stale = upload("olvidado.pdf", "nadie lo abre nunca");
+        ageOut(stale.id());
+
+        fileRetentionService.purgeUnusedFiles();
+
+        assertThat(statusOf(stale.id())).isEqualTo(FileStatus.Deleted);
+        assertThat(fileRepository.findById(stale.id()).orElseThrow().getDeletedAt()).isNotNull();
+    }
+
     /** /admin/files shows the usage count, which is what makes #79 visible instead of merely true. */
     @Test
     void theAdminListingCountsHowManyTablesUseEachFile() {
