@@ -5,6 +5,7 @@ import com.centraldungeon.catalogs.TableCatalogService;
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
+import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.text.RichTextSanitizer;
@@ -144,6 +145,7 @@ public class GameTableService {
     /** The creator becomes the table's Primary master (#73); a Master row is the source of pertenencia, not the role alone (#135). */
     @Transactional
     public GameTableDetailResponse create(CreateGameTableRequest request, String creatorId) {
+        requireRunnableDraft(request.systemIds(), request.platformIds(), request.schedule());
         User creator = userService.getById(creatorId);
         GameTable gameTable = buildTable(request, creator);
 
@@ -188,6 +190,11 @@ public class GameTableService {
         if (!EDITABLE_STATUSES.contains(gameTable.getStatus())) {
             throw new ConflictException("A table in status " + gameTable.getStatus() + " can no longer be edited by its master");
         }
+        // Authorized first, then the draft itself: somebody who does not run this table gets a 403,
+        // not a complaint about its agenda. Same three requirements as create (#226) - a rewrite that
+        // empties the agenda or the catalogs would leave the table in a state creating it could never
+        // have reached.
+        requireRunnableDraft(request.systemIds(), request.platformIds(), request.schedule());
 
         gameTable.setName(request.name());
         gameTable.setDescription(richTextSanitizer.sanitize(request.description()));
@@ -737,6 +744,37 @@ public class GameTableService {
                 findPrimaryMaster(gameTable.getId()),
                 schedules.getOrDefault(gameTable.getId(), List.of()),
                 clashing.contains(gameTable.getId()))));
+    }
+
+    /**
+     * The three things a table cannot be run without: what is played, where, and when (#226).
+     *
+     * <p>#196 left this exact door open - "if it is later decided that a table cannot open without a
+     * calendar, it is a validation of CreateGameTableRequest and not a silent effect of approve()".
+     * This is that decision, and it lands where #196 said it would.
+     *
+     * <p>Tags stay optional on purpose: they are free-form labels that help a table be found, not
+     * facts that define it, and forcing one produces filler tags an admin then has to merge (#59).
+     *
+     * <p>It does not apply to {@link #createUnassigned}: that one is an admin's stub, deliberately
+     * created with a name and nothing else, for a master to fill in later (#72).
+     *
+     * @throws InvalidRequestException naming which of the three is missing, so the frontend can say
+     *                                 which field to go fix rather than "invalid"
+     */
+    private void requireRunnableDraft(
+            @Nullable List<String> systemIds,
+            @Nullable List<String> platformIds,
+            @Nullable List<TableScheduleEntry> schedule) {
+        if (orEmpty(systemIds).isEmpty()) {
+            throw new InvalidRequestException("A table must declare at least one system", "TABLE_NEEDS_SYSTEM");
+        }
+        if (orEmpty(platformIds).isEmpty()) {
+            throw new InvalidRequestException("A table must declare at least one platform", "TABLE_NEEDS_PLATFORM");
+        }
+        if (orEmpty(schedule).isEmpty()) {
+            throw new InvalidRequestException("A table must declare at least one weekly slot", "TABLE_NEEDS_SCHEDULE");
+        }
     }
 
     private AdminTableSummaryResponse toAdminSummary(GameTable gameTable) {

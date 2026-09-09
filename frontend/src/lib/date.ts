@@ -106,16 +106,25 @@ export function localSlotToUtc(slot: WeeklySlot, timeZone: string): WeeklySlot {
 }
 
 /**
- * The name of a weekday in the reader's language.
+ * The name of a weekday in the reader's language, always starting with a capital.
+ *
+ * `Intl` writes each language by its own orthography, and Spanish spells weekdays in lowercase
+ * ("lunes") while English capitalizes them ("Monday"). Here they are always capitalized: a day is a
+ * label in a selector and a heading in an agenda, never a word inside a sentence, and mixing the two
+ * shapes made the same list read differently depending on the language.
+ *
+ * The uppercasing goes through the locale, not through `toUpperCase()`: mapping a character to its
+ * capital is itself language-dependent.
  *
  * @param weekday the day to name
  * @param locale  the BCP-47 locale — a parameter, never a constant (#111)
  * @param width   how long the name should be; `'short'` for a card, `'long'` for a form
- * @returns the localized name, capitalized as the locale writes it
+ * @returns the localized name, capitalized
  */
 export function weekdayName(weekday: Weekday, locale: string, width: 'long' | 'short' = 'long'): string {
   const date = new Date(REFERENCE_MONDAY_UTC + WEEKDAYS.indexOf(weekday) * MINUTES_PER_DAY * 60_000)
-  return new Intl.DateTimeFormat(locale, { weekday: width, timeZone: 'UTC' }).format(date)
+  const name = new Intl.DateTimeFormat(locale, { weekday: width, timeZone: 'UTC' }).format(date)
+  return name.charAt(0).toLocaleUpperCase(locale) + name.slice(1)
 }
 
 /**

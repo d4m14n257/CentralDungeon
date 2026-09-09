@@ -17,6 +17,24 @@
     "forbiddenTitle": "You do not have access",
     "forbiddenDescription": "Your account cannot see this section."
   },
+  "validation": {
+    "required": "This is required",
+    "invalid": "That value is not valid",
+    "tooSmall": {
+      "string": "Write at least {{count}} characters",
+      "number": "It has to be {{count}} or more",
+      "array": "Pick at least {{count}}"
+    },
+    "tooBig": {
+      "string": "It cannot go over {{count}} characters",
+      "number": "It has to be {{count}} or less",
+      "array": "There cannot be more than {{count}}"
+    },
+    "format": {
+      "email": "That does not look like an email",
+      "url": "That does not look like a web address"
+    }
+  },
   "notFound": {
     "backHome": "Back to home"
   },
@@ -58,7 +76,10 @@
       "CANDIDATE_SCHEDULE_CONFLICT": "They cannot be accepted: they already play at “{{otherTableName}}”, which clashes with this table’s agenda.",
       "FILE_TYPE_NOT_ALLOWED": "That file type is not accepted. PDF, Word, PNG and JPG can be uploaded.",
       "FILE_TOO_LARGE": "The file is over the limit. The maximum is 2 MB per file.",
-      "FILE_EMPTY": "The file is empty. Pick another one."
+      "FILE_EMPTY": "The file is empty. Pick another one.",
+      "TABLE_NEEDS_SYSTEM": "The table has to say what system is played. Pick one or propose your own.",
+      "TABLE_NEEDS_PLATFORM": "The table has to say where it is played. Pick a platform or propose your own.",
+      "TABLE_NEEDS_SCHEDULE": "The table has to say when it is played. Add at least one day and time."
     }
   },
   "pagination": {

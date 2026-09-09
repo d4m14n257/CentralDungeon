@@ -42,6 +42,12 @@ const EXPLAINED_ERROR_CODES = new Set([
   'FILE_TOO_LARGE',
   'FILE_TYPE_NOT_ALLOWED',
   'FILE_EMPTY',
+  // The three things a table cannot be run without (#226): what is played, where, and when. The
+  // wizard blocks all three before sending, so these only surface when somebody reaches the API by
+  // another route - and then "could not save" would hide which of the three is missing.
+  'TABLE_NEEDS_SYSTEM',
+  'TABLE_NEEDS_PLATFORM',
+  'TABLE_NEEDS_SCHEDULE',
   // Handing in an answer to a request the master already closed (F1.5). "Could not save" is the
   // worst possible answer to somebody who just wrote one: retrying will not help, and what they need
   // to know is that the intake ended — which is a fact about the table, not about their connection.

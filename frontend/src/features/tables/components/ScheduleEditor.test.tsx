@@ -18,8 +18,8 @@ describe('ScheduleEditor', () => {
   it('shows a UTC slot in the reader zone, and says what is stored underneath', () => {
     renderEditor([{ weekday: 'Wednesday', hourtime: '01:00:00' }])
 
-    expect(screen.getByText('martes 22:00–01:00')).toBeInTheDocument()
-    expect(screen.getByText('En UTC: miércoles 01:00')).toBeInTheDocument()
+    expect(screen.getByText('Martes 22:00–01:00')).toBeInTheDocument()
+    expect(screen.getByText('En UTC: Miércoles 01:00')).toBeInTheDocument()
   })
 
   it('sends the new slot back in UTC, not in the zone it was typed in', async () => {
@@ -41,7 +41,7 @@ describe('ScheduleEditor', () => {
       { weekday: 'Saturday', hourtime: '23:00:00' },
     ])
 
-    await user.click(screen.getByRole('button', { name: 'Quitar martes 22:00' }))
+    await user.click(screen.getByRole('button', { name: 'Quitar Martes 22:00' }))
 
     expect(onChange).toHaveBeenCalledWith([{ weekday: 'Saturday', hourtime: '23:00:00' }])
   })

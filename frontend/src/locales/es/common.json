@@ -17,6 +17,24 @@
     "forbiddenTitle": "No tenés permiso",
     "forbiddenDescription": "Tu cuenta no puede ver esta sección."
   },
+  "validation": {
+    "required": "Esto es obligatorio",
+    "invalid": "Ese valor no es válido",
+    "tooSmall": {
+      "string": "Escribí al menos {{count}} caracteres",
+      "number": "Tiene que ser {{count}} o más",
+      "array": "Elegí al menos {{count}}"
+    },
+    "tooBig": {
+      "string": "No puede pasar de {{count}} caracteres",
+      "number": "Tiene que ser {{count}} o menos",
+      "array": "No puede haber más de {{count}}"
+    },
+    "format": {
+      "email": "Eso no parece un correo",
+      "url": "Eso no parece una dirección web"
+    }
+  },
   "notFound": {
     "backHome": "Volver al inicio"
   },
@@ -58,7 +76,10 @@
       "CANDIDATE_SCHEDULE_CONFLICT": "No se lo puede aceptar: ya juega en «{{otherTableName}}», que se pisa con el horario de esta mesa.",
       "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Se pueden subir PDF, Word, PNG y JPG.",
       "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es 2 MB por archivo.",
-      "FILE_EMPTY": "El archivo está vacío. Elegí otro."
+      "FILE_EMPTY": "El archivo está vacío. Elegí otro.",
+      "TABLE_NEEDS_SYSTEM": "La mesa tiene que decir qué sistema se juega. Elegí uno o proponé el tuyo.",
+      "TABLE_NEEDS_PLATFORM": "La mesa tiene que decir dónde se juega. Elegí una plataforma o proponé la tuya.",
+      "TABLE_NEEDS_SCHEDULE": "La mesa tiene que decir cuándo se juega. Agregá al menos un día y horario."
     }
   },
   "pagination": {

@@ -16,8 +16,13 @@ import { I18nProvider } from '@/providers/I18nProvider'
 import { QueryProvider } from '@/providers/QueryProvider'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import { router } from '@/routes/router'
+import { installZodErrorMap } from '@/config/zodErrors'
 import '@/styles/globals.css'
 import '@/styles/base.css'
+
+// Before anything renders: a schema defined at module load would otherwise validate once with zod's
+// English text before the map is in place (#226).
+installZodErrorMap()
 
 const root = document.getElementById('root')
 if (!root) throw new Error('#root is missing from index.html')

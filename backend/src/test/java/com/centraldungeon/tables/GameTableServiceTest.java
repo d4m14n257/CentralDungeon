@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +22,7 @@ import com.centraldungeon.tables.dto.CreateGameTableRequest;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
+import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.tables.dto.TableScheduleEntry;
 import com.centraldungeon.tables.dto.UpdateGameTableRequest;
 import com.centraldungeon.users.User;
@@ -29,10 +31,12 @@ import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.UserStatus;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -106,7 +110,7 @@ class GameTableServiceTest {
                         "table-1", "Test", null, null, null, null, null, "Preparation", null, 0, null, null, null,
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
 
-        CreateGameTableRequest request = new CreateGameTableRequest("Test", null, null, null, null, null, null, null, null, null, null, null, null);
+        CreateGameTableRequest request = runnableRequest(null);
         GameTableDetailResponse response = gameTableService.create(request, "creator-1");
 
         assertThat(response.id()).isEqualTo("table-1");
@@ -118,9 +122,68 @@ class GameTableServiceTest {
         when(userService.getById("creator-1")).thenReturn(persistedUser("creator-1"));
         when(tableTypeRepository.findById("missing-type")).thenReturn(Optional.empty());
 
-        CreateGameTableRequest request = new CreateGameTableRequest("Test", null, null, null, "missing-type", null, null, null, null, null, null, null, null);
+        CreateGameTableRequest request = runnableRequest("missing-type");
 
         assertThatThrownBy(() -> gameTableService.create(request, "creator-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("una mesa sin sistema no se crea: hay que decir qué se juega (#226)")
+    void rejectsCreationWithoutASystem() {
+        CreateGameTableRequest request = new CreateGameTableRequest(
+                "Test", null, null, null, null, List.of(), null, List.of("platform-1"), null, null, null, null,
+                List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0))));
+
+        assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .extracting(exception -> ((InvalidRequestException) exception).getErrorCode())
+                .isEqualTo("TABLE_NEEDS_SYSTEM");
+        // Nothing is written when the draft does not hold together: the check runs before the save.
+        verify(gameTableRepository, never()).save(any(GameTable.class));
+    }
+
+    @Test
+    @DisplayName("una mesa sin plataforma no se crea: hay que decir dónde se juega (#226)")
+    void rejectsCreationWithoutAPlatform() {
+        CreateGameTableRequest request = new CreateGameTableRequest(
+                "Test", null, null, null, null, List.of("system-1"), null, null, null, null, null, null,
+                List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0))));
+
+        assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .extracting(exception -> ((InvalidRequestException) exception).getErrorCode())
+                .isEqualTo("TABLE_NEEDS_PLATFORM");
+        verify(gameTableRepository, never()).save(any(GameTable.class));
+    }
+
+    @Test
+    @DisplayName("una mesa sin agenda no se crea: hay que decir cuándo se juega (#226, lo que #196 dejó anotado)")
+    void rejectsCreationWithoutASchedule() {
+        CreateGameTableRequest request = new CreateGameTableRequest(
+                "Test", null, null, null, null, List.of("system-1"), null, List.of("platform-1"), null, null, null, null, List.of());
+
+        assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .extracting(exception -> ((InvalidRequestException) exception).getErrorCode())
+                .isEqualTo("TABLE_NEEDS_SCHEDULE");
+        verify(gameTableRepository, never()).save(any(GameTable.class));
+    }
+
+    @Test
+    @DisplayName("los tags siguen siendo opcionales: etiquetar ayuda a encontrar la mesa, no la define (#59)")
+    void tagsAreStillOptional() {
+        CreateGameTableRequest request = runnableRequest(null);
+
+        assertThat(request.tagIds()).isNull();
+        assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
+                .isNotInstanceOf(InvalidRequestException.class);
+    }
+
+    /** A draft that carries the three things #226 requires, so a test about something else gets past them. */
+    private static CreateGameTableRequest runnableRequest(@Nullable String tableTypeId) {
+        return new CreateGameTableRequest(
+                "Test", null, null, null, tableTypeId, List.of("system-1"), null, List.of("platform-1"), null, null, null, null,
+                List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0))));
     }
 
     @Test
@@ -451,7 +514,8 @@ class GameTableServiceTest {
         gameTableService.update(
                 "table-edit-1",
                 new UpdateGameTableRequest(
-                        "Nuevo", "<p>Hola</p><script>alert(1)</script>", null, null, null, null, null, null, null, null, null, 5, null),
+                        "Nuevo", "<p>Hola</p><script>alert(1)</script>", null, null, null, List.of("system-1"), null, List.of("platform-1"),
+                        null, null, null, 5, List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0)))),
                 "master-1");
 
         assertThat(table.getName()).isEqualTo("Nuevo");
@@ -496,7 +560,8 @@ class GameTableServiceTest {
         gameTableService.update(
                 "table-edit-4",
                 new UpdateGameTableRequest(
-                        "Test", null, null, null, null, null, null, null, null, LocalTime.of(3, 0), null, null, agenda),
+                        "Test", null, null, null, null, List.of("system-1"), null, List.of("platform-1"), null, LocalTime.of(3, 0),
+                        null, null, agenda),
                 "master-1");
 
         org.mockito.InOrder order = org.mockito.Mockito.inOrder(tableScheduleService);
@@ -504,6 +569,10 @@ class GameTableServiceTest {
         assertThat(table.getDuration()).isEqualTo(LocalTime.of(3, 0));
     }
 
+    /**
+     * A bare request, on purpose: the two tests that use it are refused before the draft is looked at
+     * - permission and status come first (#226) - and that ordering is part of what they assert.
+     */
     private UpdateGameTableRequest updateRequest() {
         return new UpdateGameTableRequest("Test", null, null, null, null, null, null, null, null, null, null, null, null);
     }

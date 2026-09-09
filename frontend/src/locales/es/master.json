@@ -40,7 +40,10 @@
     "reviewEmpty": "Sin definir",
     "back": "Atrás",
     "next": "Siguiente",
-    "scheduleHelp": "Cómo funcionan los horarios"
+    "scheduleHelp": "Cómo funcionan los horarios",
+    "missingSystem": "Elegí al menos un sistema: la mesa tiene que decir qué se juega.",
+    "missingPlatform": "Elegí al menos una plataforma: la mesa tiene que decir dónde se juega.",
+    "missingSchedule": "Agregá al menos un día y horario: la mesa tiene que decir cuándo se juega."
   },
   "detail": {
     "tabs": {

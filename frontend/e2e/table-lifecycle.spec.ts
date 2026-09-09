@@ -1,5 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
+import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+
 /**
  * E2 sub-slice 1, end to end (decisiones.md #163): a master creates a table through the wizard ->
  * Preparation; an admin approves it from /admin/tables -> Opened; the Primary starts it ->
@@ -38,8 +40,13 @@ async function createTableThroughWizard(page: Page, name: string) {
   await page.goto('/master/tables/new')
   await page.getByRole('textbox', { name: 'Nombre' }).fill(name)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
+  await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
+  await addScheduleSlot(page, '20:00')
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
   await page.getByRole('button', { name: 'Crear mesa' }).click()
   await expect(page.getByRole('heading', { name })).toBeVisible()
 }

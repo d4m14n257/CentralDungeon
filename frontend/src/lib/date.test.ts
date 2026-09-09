@@ -78,18 +78,24 @@ describe('minutesOfDay and formatMinutes', () => {
 
 describe('weekdayName', () => {
   it('names the day in the given locale, never a hard-coded one (#111)', () => {
-    expect(weekdayName('Tuesday', 'es-AR')).toBe('martes')
+    expect(weekdayName('Tuesday', 'es-AR')).toBe('Martes')
     expect(weekdayName('Tuesday', 'en-US')).toBe('Tuesday')
+  })
+
+  it('capitalizes it even where the language would not, because it is a label and not a sentence', () => {
+    // `Intl` gives "miércoles" in Spanish; the accent has to survive the capital.
+    expect(weekdayName('Wednesday', 'es-AR')).toBe('Miércoles')
+    expect(weekdayName('Saturday', 'es-AR')).toBe('Sábado')
   })
 })
 
 describe('formatSlot', () => {
   it('writes the start alone when there is no duration', () => {
-    expect(formatSlot({ weekday: 'Friday', hourtime: '20:00' }, 'es-AR')).toBe('viernes 20:00')
+    expect(formatSlot({ weekday: 'Friday', hourtime: '20:00' }, 'es-AR')).toBe('Viernes 20:00')
   })
 
   it('closes the range with the duration, wrapping past midnight', () => {
-    expect(formatSlot({ weekday: 'Tuesday', hourtime: '23:00' }, 'es-AR', '03:00')).toBe('martes 23:00–02:00')
+    expect(formatSlot({ weekday: 'Tuesday', hourtime: '23:00' }, 'es-AR', '03:00')).toBe('Martes 23:00–02:00')
   })
 })
 

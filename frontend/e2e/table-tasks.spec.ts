@@ -1,5 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
+import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+
 /**
  * F1.5 end to end, against the real backend: the criterion of `fase-1-master.md` §4 — *a master
  * publishes a request for their players, the notification reaches them, and they see it on their
@@ -35,8 +37,13 @@ async function createTable(page: Page, name: string): Promise<string> {
   await page.goto('/master/tables/new')
   await page.getByRole('textbox', { name: 'Nombre' }).fill(name)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
+  await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
+  await addScheduleSlot(page, '20:00')
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
   await page.getByRole('button', { name: 'Crear mesa' }).click()
   await expect(page.getByRole('heading', { name })).toBeVisible()
 

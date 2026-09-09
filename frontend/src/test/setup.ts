@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 
 import { DEFAULT_LANGUAGE } from '@/config/language'
+import { installZodErrorMap } from '@/config/zodErrors'
 import i18n from '@/providers/i18n'
 
 /**
@@ -12,6 +13,12 @@ import i18n from '@/providers/i18n'
  * rather than about the environment; the language switch itself is covered by its own tests.
  */
 void i18n.changeLanguage(DEFAULT_LANGUAGE)
+
+/**
+ * The same map `main.tsx` installs, so a test that asserts on a validation message reads what the
+ * application shows and not zod's English default (#226).
+ */
+installZodErrorMap()
 
 /**
  * jsdom implements no `ResizeObserver`, and Radix measures its triggers with one.

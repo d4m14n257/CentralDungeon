@@ -1,5 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser } from '@playwright/test'
 
+import { runnableTableBody } from './helpers/tableApi'
+
 /**
  * E1's vertical slice, end to end: a player finds an open table, applies, and the master
  * accepts them. Login goes through TestLoginController (backend "test" profile) instead of
@@ -30,7 +32,7 @@ async function testLogin(request: APIRequestContext, discordId: string, asMaster
 async function createOpenTable(request: APIRequestContext, accessToken: string, name: string) {
   const created = await request.post(`${BACKEND_URL}/api/v1/game-tables`, {
     headers: { Authorization: `Bearer ${accessToken}` },
-    data: { name, maxPlayers: 4 },
+    data: runnableTableBody(name, { maxPlayers: 4 }),
   })
   expect(created.ok()).toBeTruthy()
   const table = (await created.json()) as { id: string }

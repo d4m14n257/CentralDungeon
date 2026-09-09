@@ -1,5 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
+import { chooseRequiredCatalogs } from './helpers/tableWizard'
+
 /**
  * F1.2 end to end, against the real backend: the complete wizard with an agenda, and the two rules
  * of #178 that can be seen from the interface.
@@ -41,7 +43,9 @@ async function fillWizard(page: Page, name: string, hourtime: string) {
   await page.goto('/master/tables/new')
   await page.getByRole('textbox', { name: 'Nombre' }).fill(name)
   await page.getByRole('button', { name: 'Siguiente' }).click()
-  // The catalogs step: nothing is required, so it is walked past.
+
+  // A system and a platform are required now (#226), so the catalogs step is filled in, not skipped.
+  await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByLabel('Duración de una sesión').fill('03:00')
@@ -64,6 +68,8 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
     await master.page.goto('/master/tables/new')
     await master.page.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
+
+    await chooseRequiredCatalogs(master.page)
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
 
     await master.page.getByLabel('Duración de una sesión').fill('03:00')
@@ -71,14 +77,14 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
     await master.page.getByRole('button', { name: 'Agregar' }).click()
 
     // The slot reads in local time and says underneath what gets stored: it is the half of #22 that shows.
-    await expect(master.page.getByText(`viernes ${FRIDAY_EVENING}`)).toBeVisible()
+    await expect(master.page.getByText(`Viernes ${FRIDAY_EVENING}`)).toBeVisible()
     await expect(master.page.getByText(/^En UTC:/)).toBeVisible()
 
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
 
     // The last step is the summary: the agenda shows before anything is sent for review.
     await expect(master.page.getByRole('heading', { name: 'Revisión' })).toBeVisible()
-    await expect(master.page.getByText(`viernes ${FRIDAY_EVENING}`)).toBeVisible()
+    await expect(master.page.getByText(`Viernes ${FRIDAY_EVENING}`)).toBeVisible()
 
     await master.page.getByRole('button', { name: 'Crear mesa' }).click()
     await expect(master.page.getByRole('heading', { name: tableName })).toBeVisible()

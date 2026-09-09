@@ -57,6 +57,10 @@ export function MasterTableCreatePage() {
   const [tags, setTags] = useState<CatalogValue[]>([])
   const [platforms, setPlatforms] = useState<CatalogValue[]>([])
   const [schedule, setSchedule] = useState<TableScheduleEntry[]>([])
+  // What the current step is missing, as an i18n key. The backend refuses the same three things
+  // (#226); saying it here means the master finds out on the step that can fix it, not after
+  // filling in four steps and pressing «Crear mesa».
+  const [stepError, setStepError] = useState<string | null>(null)
 
   // #22 took `users.timezone` out of the model, so today the browser is the only source. `lib/date.ts`
   // takes the zone as a parameter precisely so that the day a profile preference exists, this line
@@ -80,12 +84,33 @@ export function MasterTableCreatePage() {
   const selectedType = tableTypes?.content.find((type) => type.id === values.tableTypeId)
   const selectedTableTypeLabel = selectedType ? tableTypeLabel(tTables, selectedType.code, selectedType.name) : null
 
+  /**
+   * What the step the master is on still needs, as an i18n key, or null when it is complete.
+   *
+   * The capacity step asks for nothing: how many people play and how many sessions are both
+   * legitimately undecided while a table is in preparation.
+   */
+  function whatIsMissing(current: WizardStep): string | null {
+    if (current === 'catalogs') {
+      if (systems.length === 0) return 'create.missingSystem'
+      if (platforms.length === 0) return 'create.missingPlatform'
+    }
+    if (current === 'schedule' && schedule.length === 0) {
+      return 'create.missingSchedule'
+    }
+    return null
+  }
+
   async function goNext() {
-    // Only the first step has required fields; validating more would stop somebody who has not
-    // decided the capacity yet, which is exactly what the next step is there to decide.
     if (step === 'identity' && !(await form.trigger('name'))) {
       return
     }
+    const missing = whatIsMissing(step)
+    if (missing) {
+      setStepError(missing)
+      return
+    }
+    setStepError(null)
     const next = WIZARD_STEPS[stepIndex + 1]
     if (next) {
       setStep(next)
@@ -93,6 +118,7 @@ export function MasterTableCreatePage() {
   }
 
   function goBack() {
+    setStepError(null)
     const previous = WIZARD_STEPS[stepIndex - 1]
     if (previous) {
       setStep(previous)
@@ -104,6 +130,13 @@ export function MasterTableCreatePage() {
     // and without this guard it would create the table while somebody is still typing the name. The
     // submit button only exists on the last step; this covers the keyboard.
     if (step !== 'capacity') {
+      return
+    }
+    // Belt and braces for the path back: somebody can reach the last step, go back, empty the
+    // catalogs or the agenda and come forward again. goNext catches that, and so does this.
+    const missing = WIZARD_STEPS.map(whatIsMissing).find(Boolean)
+    if (missing) {
+      setStepError(missing)
       return
     }
     createTable.mutate(
@@ -349,6 +382,12 @@ export function MasterTableCreatePage() {
 
               <p className="text-fg-subtle text-xs">{t('create.reviewNotice')}</p>
             </>
+          )}
+
+          {stepError && (
+            <p role="alert" className="text-state-canceled-fg text-sm">
+              {t(stepError)}
+            </p>
           )}
 
           <div className="flex items-center justify-between gap-3">

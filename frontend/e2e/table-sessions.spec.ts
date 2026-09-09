@@ -1,5 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
+import { chooseRequiredCatalogs } from './helpers/tableWizard'
+
 /**
  * F1.3 end to end, against the real backend: the calendar that gets materialized when the table
  * opens, the four things a master does with it, and what the player sees on `/player/my-tables/:id`.
@@ -45,6 +47,8 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
   await page.goto('/master/tables/new')
   await page.getByRole('textbox', { name: 'Nombre' }).fill(name)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
+  await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByLabel('Primera sesión').fill('2026-09-11T20:00')

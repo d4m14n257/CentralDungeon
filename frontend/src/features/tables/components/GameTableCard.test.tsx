@@ -91,7 +91,7 @@ describe('GameTableCard', () => {
   it('shows the agenda converted to the reader zone, not the UTC it travels in', () => {
     renderCard({ ...baseTable, schedule: [{ weekday: 'Wednesday', hourtime: '01:00:00' }] })
 
-    expect(screen.getByText(/martes 22:00/)).toBeInTheDocument()
+    expect(screen.getByText(/Martes 22:00/)).toBeInTheDocument()
   })
 
   /** #178: the warning shows on the card, not only when somebody tries to apply. */

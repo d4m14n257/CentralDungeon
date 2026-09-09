@@ -1,5 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
+import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+
 /**
  * F1.4 end to end, against the real backend: the criterion of `fase-1-master.md` §4 — *a master
  * uploads a character sheet, attaches it to two tables without duplicating it, and the player
@@ -36,12 +38,23 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
  * @param name the table's name
  * @returns the id of the created table
  */
-async function createTable(page: Page, name: string): Promise<string> {
+/**
+ * @param page    the master's page
+ * @param name    the table's name
+ * @param weekday the agenda's day. Two tables for the same master need different ones: R1 of #178
+ *                refuses overlapping agendas, and every table carries one now (#226)
+ */
+async function createTable(page: Page, name: string, weekday = 'Viernes'): Promise<string> {
   await page.goto('/master/tables/new')
   await page.getByRole('textbox', { name: 'Nombre' }).fill(name)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
+  await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
+  await addScheduleSlot(page, '20:00', weekday)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+
   await page.getByRole('button', { name: 'Crear mesa' }).click()
   await expect(page.getByRole('heading', { name })).toBeVisible()
 
@@ -83,7 +96,7 @@ test('a file attached to two tables is stored once, and the player downloads it'
 
   try {
     const firstId = await createTable(master.page, firstName)
-    const secondId = await createTable(master.page, secondName)
+    const secondId = await createTable(master.page, secondName, 'Sábado')
 
     // Upload it on the first table.
     await master.page.goto(`/master/tables/${firstId}/files`)
@@ -131,7 +144,7 @@ test('taking a file off one table leaves it on the other', async ({ browser }) =
 
   try {
     const firstId = await createTable(master.page, firstName)
-    const secondId = await createTable(master.page, secondName)
+    const secondId = await createTable(master.page, secondName, 'Sábado')
 
     await master.page.goto(`/master/tables/${firstId}/files`)
     await attach(master.page, false, async (dialog) => {
