@@ -97,6 +97,28 @@ test('cada quien ve la ayuda de su rol, y solo la de su rol', async ({ browser }
     await player.close()
   }
 
+  // A master is a master and nothing else: the test actor holds exactly the role it was asked for,
+  // so this is also what proves the roles do not stack on the way in (#222).
+  const master = await browser.newContext()
+  try {
+    await testLogin(master.request, `e2e-help-onlymaster-${runId}`, { asMaster: true })
+    const page = await master.newPage()
+
+    await page.goto('/help')
+    await expect(page.getByRole('link', { name: 'Masters' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Jugadores' })).toBeHidden()
+    await expect(page.getByRole('link', { name: 'Admins' })).toBeHidden()
+
+    // And the chip reports where they are, not what they hold: on a player screen it says Jugador,
+    // even for somebody who has no Player role (#222).
+    await page.goto('/player')
+    await expect(page.getByRole('banner').getByText('Jugador', { exact: true })).toBeVisible()
+    await page.goto('/master')
+    await expect(page.getByRole('banner').getByText('Master', { exact: true })).toBeVisible()
+  } finally {
+    await master.close()
+  }
+
   const admin = await browser.newContext()
   try {
     await testLogin(admin.request, `e2e-help-admin-${runId}`, { asAdmin: true })

@@ -25,7 +25,7 @@ interface SessionListProps {
 }
 
 /**
- * A table's calendar, read-only — what `/tables/:id` and `/my/tables/:id` show.
+ * A table's calendar, read-only — what `/player/tables/:id` and `/player/my-tables/:id` show.
  *
  * **The dates are shown in the reader's own time** (#22). What arrives from the server is UTC and
  * the conversion happens once, here, through `lib/date.ts`. The footer names the zone it is showing,

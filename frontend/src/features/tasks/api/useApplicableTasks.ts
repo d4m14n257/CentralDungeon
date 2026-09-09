@@ -6,7 +6,7 @@ import { staleTime } from '@/config/query'
 import { tasksApi } from './tasksApi'
 
 /**
- * What this table is asking of **me**, for `/tables/:id` and `/my/tables/:id`.
+ * What this table is asking of **me**, for `/player/tables/:id` and `/player/my-tables/:id`.
  *
  * The answer depends on the reader — whether they play there, and who a `Single` task names — so it
  * has a cache entry of its own rather than riding in the table's detail (#121). Two people looking at

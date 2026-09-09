@@ -59,7 +59,7 @@ function MySessionsSection({ tableId }: { tableId: string }) {
 }
 
 /**
- * `/my/tables/:id` — my table: its agenda, its sessions and **my** attendance, read-only.
+ * `/player/my-tables/:id` — my table: its agenda, its sessions and **my** attendance, read-only.
  *
  * It is the minimum player-side screen F1 needs to be testable end to end; the rest of it — tasks,
  * files, the other players — arrives with F1.5 and F2.

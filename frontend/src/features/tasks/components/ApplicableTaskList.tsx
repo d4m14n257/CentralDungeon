@@ -20,7 +20,7 @@ export interface ApplicableTaskListProps {
 }
 
 /**
- * What a table is asking of the person reading it, on `/tables/:id` and `/my/tables/:id`.
+ * What a table is asking of the person reading it, on `/player/tables/:id` and `/player/my-tables/:id`.
  *
  * **A request you cannot answer yet still says why.** Somebody who has not applied sees what will be
  * asked of them - which is half of deciding whether to apply (#206) - with a line explaining that

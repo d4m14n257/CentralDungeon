@@ -31,7 +31,7 @@ describe('GameTableCard', () => {
   it('links to the default player detail route when linkTo is not given', () => {
     renderCard(baseTable)
 
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/tables/table-1')
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/player/tables/table-1')
   })
 
   it('links to the given route when linkTo is passed (master detail route)', () => {

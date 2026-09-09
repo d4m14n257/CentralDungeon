@@ -7,7 +7,7 @@ import { gameTablesApi } from './gameTablesApi'
 
 /**
  * The tables the signed-in person plays at - an accepted registration, not a master row. Backs
- * /my/tables.
+ * /player/my-tables.
  *
  * @returns the query for the tables they play at
  */

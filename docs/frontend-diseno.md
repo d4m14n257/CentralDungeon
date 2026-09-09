@@ -34,7 +34,9 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 
 - **Quien tiene un solo rol ve el chip igual, pero sin caret ni menú** (#145): no hay nada que elegir, pero sí algo que mostrar — sin esto el header no da ninguna señal de en qué contexto está.
 - **El contexto Master aparece con el rol `Master` o con al menos una fila viva en `masters`** (#135). Un jugador al que un admin asignó como master de una mesa entra por ahí, ve solo esa mesa, y **no ve `/master/tables/new`**: dirigir no es crear.
-- El contexto activo se recuerda en Zustand + `localStorage`. Por defecto `Jugador` si lo tiene; si no, el primero disponible.
+- **El chip dice dónde estás, no qué elegiste** (#222). Cada contexto es dueño de un prefijo —`/player`, `/master`, `/admin`—, así que el contexto sale de la URL. Un master que abre `/player` lee «Jugador», porque ahí es donde está. Las dos pantallas transversales (`/notifications`, `/help`) no son de ningún contexto y conservan el que traía quien las abrió.
+- El contexto se recuerda en Zustand + `localStorage`, pero **solo como respaldo** para esas transversales y para elegir a dónde despacha `/`. Solo se recuerda un contexto que la cuenta tenga: por defecto `Jugador` si lo tiene, si no el primero disponible.
+- **Al entrar siempre se cae en la home del contexto propio** (#222). `/` no tiene pantalla: mira los contextos de la cuenta y reenvía. El retorno del OAuth, el onboarding y el 404 apuntan ahí y no recalculan el destino cada uno.
 - **El contexto es organización de UI, no seguridad.** Estar "en contexto Admin" no habilita nada: el backend autoriza endpoint por endpoint (#103). Si alguien fuerza la ruta `/admin/queue` sin el rol, el backend responde `403` y la pantalla muestra el error — no se confía en el selector para nada.
 - Las notificaciones y el avatar son globales: no dependen del contexto.
 - **El feedback del sistema también es global y vive en el layout, no en una ruta** (#133). No tiene pantalla propia porque no tiene contenido que mostrar: es una acción. Se abre desde el shell, en cualquier contexto, y manda a `system_feedback` — anónima (#93), una cada 24 h (#94), directo a la bandeja de admins sin moderación (#95). Como el límite es del servidor, la interfaz **no lo predice**: ofrece el botón siempre y explica el `429` si toca.
@@ -46,16 +48,17 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | Público | `/login` | Entrar con Discord |
 | | `/auth/callback` | Retorno del OAuth, incluye el paso de invitación al servidor (#38) |
 | | `/onboarding` | **Solo la primera vez**: nombre a mostrar y país. Bloquea hasta completarse (#134) |
-| **Jugador** | `/` | Explorar mesas, con filtros por sistema, tag y plataforma |
-| | `/tables/:id` | Detalle de una mesa y postulación |
-| | `/my/applications` | Mis postulaciones y en qué estado están |
-| | `/my/tables` | Mesas donde soy jugador — **solo las vivas** |
-| | `/my/tables/:id` | Mi mesa: agenda, sesiones, peticiones pendientes |
-| | `/my/history` | Mesas terminadas y canceladas, con la asistencia final (#133) |
-| | `/my/files` | Mis archivos, reutilizables al adjuntar (#65) |
-| | `/profile` | Mi karma y los comentarios que recibí |
-| | `/users/:id` | Perfil de otra persona, sujeto a #41, #44 y #47 |
-| | `/notifications` | Historial de notificaciones |
+| | `/` | **No es una pantalla**: despacha a la home del contexto de quien entra (#222) |
+| **Jugador** | `/player` | Explorar mesas, con filtros por sistema, tag y plataforma. **Home del contexto** |
+| | `/player/tables/:id` | Detalle de una mesa y postulación |
+| | `/player/applications` | Mis postulaciones y en qué estado están |
+| | `/player/my-tables` | Mesas donde soy jugador — **solo las vivas** |
+| | `/player/my-tables/:id` | Mi mesa: agenda, sesiones, peticiones pendientes |
+| | `/player/history` | Mesas terminadas y canceladas, con la asistencia final (#133) |
+| | `/player/files` | Mis archivos, reutilizables al adjuntar (#65) |
+| | `/player/profile` | Mi karma y los comentarios que recibí |
+| | `/player/users/:id` | Perfil de otra persona, sujeto a #41, #44 y #47 |
+| Transversal | `/notifications` | Historial de notificaciones. **De ningún contexto**: no cambia el chip (#222) |
 | | `/help` | **Global, no del contexto Jugador**: lo que sirve a todos —buscar, contextos, estados de mesa, cuenta, notificaciones—. Se entra desde el menú de la cuenta y pide sesión (#167) |
 | | `/help/players` · `/help/masters` · `/help/admins` | La ayuda de cada rol, como rutas hijas. Cada bloque tiene su `#ref` estable y se enlaza desde la pantalla que lo necesita: `/help#search`, `/help/admins#assign-masters` (#168) |
 | **Master** | `/master` | Dashboard: qué necesita tu atención hoy, en todas tus mesas (#136) |

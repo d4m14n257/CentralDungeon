@@ -18,7 +18,7 @@ export function NotFoundPage() {
       {/* The digits are not a translatable string: they read the same in every language. */}
       <h1 className="font-serif text-3xl font-semibold">404</h1>
       <Button asChild>
-        <Link to={paths.home}>{t('notFound.backHome')}</Link>
+        <Link to={paths.root}>{t('notFound.backHome')}</Link>
       </Button>
     </div>
   )

@@ -6,7 +6,7 @@ import { staleTime } from '@/config/query'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * One table's public detail, for /tables/:id.
+ * One table's public detail, for /player/tables/:id.
  *
  * @param id the table to read
  * @returns the query for its detail

@@ -10,7 +10,7 @@ import type { UpdateGameTableRequest } from '../types'
  * `ChangesRequested` is corrected.
  *
  * Both detail queries are invalidated, not just the managed one: the same table is read from
- * /tables/:id as well, and leaving that cache holding the previous agenda is how somebody applies
+ * /player/tables/:id as well, and leaving that cache holding the previous agenda is how somebody applies
  * to a Tuesday that no longer exists.
  *
  * @param id the table being edited

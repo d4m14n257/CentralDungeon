@@ -114,7 +114,7 @@ export function OAuthCallbackPage() {
     return <Navigate to={paths.onboarding} replace />
   }
 
-  return <Navigate to={paths.home} replace />
+  return <Navigate to={paths.root} replace />
 }
 
 export { OAuthCallbackPage as Component }

@@ -1,17 +1,24 @@
+import type { AppContext } from '@/stores/contextStore'
+
 /**
  * Route path patterns for router.tsx registration, plus small builders for links. This is the
  * only place path strings are written (arquitectura.md 3.1.6 regla 2) - E1's subset of the full
  * 28-route sitemap (frontend-diseno.md 2). Future fases add the rest here, not somewhere else.
+ *
+ * Every context owns a prefix and nothing sits outside one (#222): `/player`, `/master`, `/admin`,
+ * plus the entry screens and the two transversal ones. `/` is not a screen - it dispatches to the
+ * reader's own home.
  */
 export const paths = {
   login: '/login',
   authCallback: '/auth/callback',
   onboarding: '/onboarding',
-  home: '/',
-  tableDetail: 'tables/:id',
-  myApplications: 'my/applications',
-  myTables: 'my/tables',
-  myTableDetail: 'my/tables/:id',
+  root: '/',
+  playerHome: 'player',
+  playerTableDetail: 'player/tables/:id',
+  playerApplications: 'player/applications',
+  playerMyTables: 'player/my-tables',
+  playerMyTableDetail: 'player/my-tables/:id',
   notifications: 'notifications',
   help: 'help',
   helpPlayers: 'players',
@@ -50,7 +57,22 @@ export function helpPath(audience?: HelpAudience, ref?: string): string {
  * @returns the absolute path to its public detail
  */
 export function tableDetailPath(id: string): string {
-  return `/tables/${id}`
+  return `/player/tables/${id}`
+}
+
+/** @returns the absolute path to the explorer - the home of the Player context */
+export function playerHomePath(): string {
+  return '/player'
+}
+
+/** @returns the absolute path to the list of what the reader applied to, and how each one went */
+export function playerApplicationsPath(): string {
+  return '/player/applications'
+}
+
+/** @returns the absolute path to the tables the reader plays at */
+export function playerMyTablesPath(): string {
+  return '/player/my-tables'
 }
 
 /**
@@ -143,7 +165,7 @@ export function masterTableStatusPath(id: string): string {
  * @returns the absolute path to the player's own view of it - agenda, sessions and their attendance
  */
 export function myTableDetailPath(id: string): string {
-  return `/my/tables/${id}`
+  return `/player/my-tables/${id}`
 }
 
 /** @returns the absolute path to the admin's table list */
@@ -159,4 +181,39 @@ export function adminCatalogsPath(): string {
 /** @returns the absolute path to the file administration screen (#64, #79) */
 export function adminFilesPath(): string {
   return '/admin/files'
+}
+
+/**
+ * Which context a path belongs to, or `null` when it belongs to none.
+ *
+ * The three contexts each own a prefix - `/player`, `/master`, `/admin` - so the URL alone says
+ * which navigation the reader is looking at. That is what lets the header report the context
+ * instead of guessing it from a value chosen who knows when (#222).
+ *
+ * `/notifications`, `/help` and the entry screens deliberately return `null`: they are transversal
+ * and belong to whoever is reading them. Flipping the chip to another context on the way to the
+ * inbox would be a worse lie than the one this replaces.
+ *
+ * @param pathname the current location's pathname
+ * @returns the context that owns it, or null when no context does
+ */
+export function contextOfPath(pathname: string): AppContext | null {
+  const segment = pathname.split('/')[1]
+  if (segment === 'player') return 'player'
+  if (segment === 'master') return 'master'
+  if (segment === 'admin') return 'admin'
+  return null
+}
+
+/**
+ * Where a context starts - the screen its logo, its switcher entry and the post-login redirect all
+ * land on (#222).
+ *
+ * @param context the context to enter
+ * @returns the absolute path to its home
+ */
+export function homePathFor(context: AppContext): string {
+  if (context === 'master') return masterDashboardPath()
+  if (context === 'admin') return adminTablesPath()
+  return playerHomePath()
 }

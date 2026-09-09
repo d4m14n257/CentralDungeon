@@ -149,7 +149,7 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
     }
 
     // The player opens the first one and applies; the master accepts them.
-    await player.page.goto(`/tables/${firstId}`)
+    await player.page.goto(`/player/tables/${firstId}`)
     await player.page.getByRole('button', { name: 'Postularme' }).click()
     await player.page.getByRole('dialog').getByRole('button', { name: 'Postularme' }).click()
 
@@ -159,11 +159,11 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
 
     // Now the second table clashes: the card warns about it and the detail does not allow applying.
-    await player.page.goto('/')
+    await player.page.goto('/player')
     const clashingCard = player.page.getByRole('link').filter({ hasText: secondTable })
     await expect(clashingCard.getByText('Choca con una mesa tuya')).toBeVisible()
 
-    await player.page.goto(`/tables/${secondId}`)
+    await player.page.goto(`/player/tables/${secondId}`)
     await expect(player.page.getByRole('button', { name: 'Choca con una mesa tuya' })).toBeDisabled()
     await expect(player.page.getByText(/Ya jugás en otra mesa a esa hora/)).toBeVisible()
   } finally {

@@ -108,7 +108,7 @@ test('a file attached to two tables is stored once, and the player downloads it'
     await expect(row).toContainText('2 mesas')
 
     // The player reads it from the public detail, without belonging to the table.
-    await player.page.goto(`/tables/${firstId}`)
+    await player.page.goto(`/player/tables/${firstId}`)
     await expect(player.page.getByText('ficha-e2e.pdf')).toBeVisible()
     const download = player.page.waitForEvent('download')
     await player.page.getByRole('button', { name: 'Descargar' }).first().click()
@@ -177,7 +177,7 @@ test('a private attachment never reaches the public detail', async ({ browser })
     })
     await expect(master.page.getByText('Solo masters')).toBeVisible()
 
-    await player.page.goto(`/tables/${tableId}`)
+    await player.page.goto(`/player/tables/${tableId}`)
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
     await expect(player.page.getByText('notas-e2e.pdf')).toBeHidden()
   } finally {

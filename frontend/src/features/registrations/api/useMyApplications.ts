@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { registrationsApi } from './registrationsApi'
 
 /**
- * Everything the signed-in person applied to, whatever came of it. Backs /my/applications.
+ * Everything the signed-in person applied to, whatever came of it. Backs /player/applications.
  *
  * @returns the query for their applications
  */

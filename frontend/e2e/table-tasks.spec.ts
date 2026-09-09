@@ -56,7 +56,7 @@ async function approve(page: Page, name: string) {
 
 /** Applies and gets accepted, which is what turns somebody into a recipient of a `Players` request. */
 async function joinAsPlayer(playerPage: Page, masterPage: Page, tableId: string, playerDiscordId: string) {
-  await playerPage.goto(`/tables/${tableId}`)
+  await playerPage.goto(`/player/tables/${tableId}`)
   await playerPage.getByRole('button', { name: 'Postularme' }).click()
   await playerPage.getByRole('dialog').getByRole('button', { name: 'Postularme' }).click()
 
@@ -130,7 +130,7 @@ test('a request reaches the players, and what they hand in reaches the master', 
     await expect(player.page.getByText(new RegExp(`Ficha E2E ${runId}`))).toBeVisible()
 
     // The player reads it on their own table and answers with text and a file.
-    await player.page.goto(`/my/tables/${tableId}`)
+    await player.page.goto(`/player/my-tables/${tableId}`)
     await player.page.getByRole('button', { name: new RegExp(`Ficha E2E ${runId}`) }).click()
     await player.page.getByRole('button', { name: 'Entregar', exact: true }).click()
 
@@ -176,7 +176,7 @@ test('a second answer is added and never replaces the first', async ({ browser }
     await joinAsPlayer(player.page, master.page, tableId, playerDiscordId)
     await publishTask(master.page, tableId, `Trasfondo E2E ${runId}`, 'Para los jugadores')
 
-    await player.page.goto(`/my/tables/${tableId}`)
+    await player.page.goto(`/player/my-tables/${tableId}`)
     await player.page.getByRole('button', { name: new RegExp(`Trasfondo E2E ${runId}`) }).click()
 
     await player.page.getByRole('button', { name: 'Entregar', exact: true }).click()
@@ -222,7 +222,7 @@ test('somebody who has not applied reads the candidate requests and is told why 
     await approve(admin.page, tableName)
     await publishTask(master.page, tableId, `Concepto E2E ${runId}`, 'Para quien quiera postularse')
 
-    await visitor.page.goto(`/tables/${tableId}`)
+    await visitor.page.goto(`/player/tables/${tableId}`)
     await visitor.page.getByRole('button', { name: new RegExp(`Concepto E2E ${runId}`) }).click()
 
     await expect(visitor.page.getByText('Vas a poder responder esto cuando te postules a la mesa.')).toBeVisible()
@@ -251,7 +251,7 @@ test('closing a request stops new answers and keeps the ones already in', async 
     await joinAsPlayer(player.page, master.page, tableId, playerDiscordId)
     await publishTask(master.page, tableId, `Mapa E2E ${runId}`, 'Para los jugadores')
 
-    await player.page.goto(`/my/tables/${tableId}`)
+    await player.page.goto(`/player/my-tables/${tableId}`)
     await player.page.getByRole('button', { name: new RegExp(`Mapa E2E ${runId}`) }).click()
     await player.page.getByRole('button', { name: 'Entregar', exact: true }).click()
     await writeAnswer(player.page, 'Ahi va el mapa')
@@ -270,7 +270,7 @@ test('closing a request stops new answers and keeps the ones already in', async 
     await expect(master.page.getByText('Ahi va el mapa')).toBeVisible()
 
     // And the player is no longer being asked for it.
-    await player.page.goto(`/my/tables/${tableId}`)
+    await player.page.goto(`/player/my-tables/${tableId}`)
     await expect(player.page.getByRole('button', { name: new RegExp(`Mapa E2E ${runId}`) })).toBeHidden()
   } finally {
     await player.context.close()

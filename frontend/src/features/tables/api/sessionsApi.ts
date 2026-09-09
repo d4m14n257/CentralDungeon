@@ -14,7 +14,7 @@ import type { MySessions, RecordAttendanceRequest, TableSession, UpdateSessionRe
 export const sessionsApi = {
   /** The calendar as the people running the table see it, with notes and roster. */
   forTable: (tableId: string) => api.get<TableSession[]>(`/api/v1/game-tables/${tableId}/sessions`),
-  /** The player's own calendar and their attendance, for `/my/tables/:id`. */
+  /** The player's own calendar and their attendance, for `/player/my-tables/:id`. */
   mine: (tableId: string) => api.get<MySessions>(`/api/v1/game-tables/${tableId}/sessions/mine`),
   /** Correcting the date and the notes. It replaces both fields rather than patching them (#189). */
   update: (sessionId: string, request: UpdateSessionRequest) =>

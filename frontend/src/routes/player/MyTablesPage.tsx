@@ -7,9 +7,9 @@ import { myTableDetailPath } from '@/config/paths'
 import { GameTableCard, useMyTables } from '@/features/tables'
 
 /**
- * /my/tables - the tables the signed-in person plays at, as an accepted player.
+ * /player/my-tables - the tables the signed-in person plays at, as an accepted player.
  *
- * The cards link to `/my/tables/:id` and not to the public detail: from here the question is "how is
+ * The cards link to `/player/my-tables/:id` and not to the public detail: from here the question is "how is
  * my table going?" - the calendar and my attendance - and not "should I apply?".
  */
 export function MyTablesPage() {

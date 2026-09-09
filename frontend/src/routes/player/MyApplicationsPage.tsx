@@ -13,7 +13,7 @@ import { RegistrationStatusBadge, useMyApplications, useWithdrawApplication } fr
 import type { Registration } from '@/features/registrations'
 
 /**
- * /my/applications - everything they applied to and how it went, rejections and their reasons
+ * /player/applications - everything they applied to and how it went, rejections and their reasons
  * included.
  *
  * It is also where a pending application is taken back (#178). That action exists because R4's

@@ -58,7 +58,7 @@ function primaryMasterOf(masters: MasterSummary[]) {
 }
 
 /**
- * A table's public detail, /tables/:id - what a prospective player reads before applying.
+ * A table's public detail, /player/tables/:id - what a prospective player reads before applying.
  *
  * It composes: the page owns only the table query, and each block is a section that fetches its own
  * data from an id (#3.1.5). That is what keeps a feature from ever importing another.

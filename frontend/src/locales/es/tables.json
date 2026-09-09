@@ -1,4 +1,10 @@
 {
+  "nav": {
+    "label": "Secciones de jugador",
+    "explore": "Explorar",
+    "applications": "Mis postulaciones",
+    "myTables": "Mis mesas"
+  },
   "status": {
     "Unassigned": "Sin asignar",
     "Preparation": "En preparación",

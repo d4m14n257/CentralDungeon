@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 /**
  * F1.3 end to end, against the real backend: the calendar that gets materialized when the table
- * opens, the four things a master does with it, and what the player sees on `/my/tables/:id`.
+ * opens, the four things a master does with it, and what the player sees on `/player/my-tables/:id`.
  *
  * What no unit test proves and this does: that approving a table **really creates the sessions** out
  * of its agenda, that cancelling one adds a replacement at the end (#194), and that the attendance a
@@ -131,7 +131,7 @@ test('cancelling a session warns about the replacement first, then adds it at th
 })
 
 /**
- * The other side: the master records the attendance and the player reads it on `/my/tables/:id`, as
+ * The other side: the master records the attendance and the player reads it on `/player/my-tables/:id`, as
  * the three numbers of #137 — never a percentage, which would hide the distinction that matters.
  */
 test('a player sees their own calendar and their attendance as three numbers', async ({ browser }) => {
@@ -145,7 +145,7 @@ test('a player sees their own calendar and their attendance as three numbers', a
     const tableId = await createTableWithCalendar(master.page, tableName)
     await approve(admin.page, tableName)
 
-    await player.page.goto(`/tables/${tableId}`)
+    await player.page.goto(`/player/tables/${tableId}`)
     // The public detail already shows the real calendar, not only the weekly shape.
     await expect(player.page.getByText('Sesión 1')).toBeVisible()
     await player.page.getByRole('button', { name: 'Postularme' }).click()
@@ -163,7 +163,7 @@ test('a player sees their own calendar and their attendance as three numbers', a
     await master.page.getByRole('option', { name: 'Presente' }).click()
     await master.page.getByRole('button', { name: 'Guardar asistencia' }).click()
 
-    await player.page.goto(`/my/tables/${tableId}`)
+    await player.page.goto(`/player/my-tables/${tableId}`)
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
     await expect(player.page.getByText('Mis sesiones')).toBeVisible()
     // The summary, not the session row: both say "Presente" and they are different things.

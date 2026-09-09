@@ -1,4 +1,10 @@
 {
+  "nav": {
+    "label": "Player sections",
+    "explore": "Explore",
+    "applications": "My applications",
+    "myTables": "My tables"
+  },
   "status": {
     "Unassigned": "Unassigned",
     "Preparation": "In preparation",

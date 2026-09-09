@@ -28,7 +28,7 @@ export const tasksApi = {
   listForTable: (tableId: string) => api.get<TableTask[]>(`/api/v1/game-tables/${tableId}/tasks`),
 
   /**
-   * What this table is asking of **me** — the read-only list on `/tables/:id` and `/my/tables/:id`.
+   * What this table is asking of **me** — the read-only list on `/player/tables/:id` and `/player/my-tables/:id`.
    *
    * Somebody who has not applied still gets the `Candidates` ones: what will be asked of you is half
    * of deciding whether to apply (#206).

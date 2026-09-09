@@ -60,7 +60,7 @@ test('a player applies to an open table and the master accepts them', async ({ b
 
   const player = await newAuthenticatedPage(browser, playerDiscordId, false)
   try {
-    await player.page.goto('/')
+    await player.page.goto('/player')
     const tableCard = player.page.getByRole('link', { name: new RegExp(tableName) })
     await expect(tableCard).toBeVisible()
     await tableCard.click()
@@ -85,7 +85,7 @@ test('a player applies to an open table and the master accepts them', async ({ b
       await master2.context.close()
     }
 
-    await player.page.goto('/my/tables')
+    await player.page.goto('/player/my-tables')
     await expect(player.page.getByRole('link', { name: new RegExp(tableName) })).toBeVisible()
 
     await player.page.goto('/notifications')

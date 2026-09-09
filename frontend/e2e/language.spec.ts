@@ -28,7 +28,7 @@ async function contextSpeaking(browser: Browser, locale: string, discordId: stri
 test('an English browser gets English on the first visit, with no choice stored', async ({ browser }) => {
   const { context, page } = await contextSpeaking(browser, 'en-US', `e2e-lang-en-${runId}`)
   try {
-    await page.goto('/')
+    await page.goto('/player')
     await expect(page.getByRole('heading', { name: 'Browse tables' })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   } finally {
@@ -40,7 +40,7 @@ test('an English browser gets English on the first visit, with no choice stored'
 test('a browser in a language the app does not speak falls back to Spanish', async ({ browser }) => {
   const { context, page } = await contextSpeaking(browser, 'fr-FR', `e2e-lang-fr-${runId}`)
   try {
-    await page.goto('/')
+    await page.goto('/player')
     await expect(page.getByRole('heading', { name: 'Explorar mesas' })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('lang', 'es')
   } finally {
@@ -80,7 +80,7 @@ test('the language can be changed from the login card, before signing in', async
 test('choosing a language sticks, and outlasts a reload', async ({ browser }) => {
   const { context, page } = await contextSpeaking(browser, 'es-AR', `e2e-lang-switch-${runId}`)
   try {
-    await page.goto('/')
+    await page.goto('/player')
     await expect(page.getByRole('heading', { name: 'Explorar mesas' })).toBeVisible()
 
     await page.getByRole('button', { name: 'Mi cuenta' }).click()

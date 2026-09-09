@@ -30,7 +30,7 @@ export function OnboardingPage() {
 
   function onSubmit(values: CompleteOnboardingForm) {
     completeOnboarding.mutate(values, {
-      onSuccess: () => navigate(paths.home),
+      onSuccess: () => navigate(paths.root),
     })
   }
 

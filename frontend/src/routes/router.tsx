@@ -5,6 +5,7 @@ import { MasterLayout } from '@/layouts/MasterLayout'
 import { PlayerLayout } from '@/layouts/PlayerLayout'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { RootLayout } from '@/layouts/RootLayout'
+import { ShellLayout } from '@/layouts/ShellLayout'
 
 /**
  * The tree mirrors the sitemap of frontend-diseno.md 2 - E1 registers only its subset of the 28
@@ -24,18 +25,28 @@ export const router = createBrowserRouter([
           { path: '/onboarding', lazy: () => import('./OnboardingPage') },
         ],
       },
+      // `/` is not a screen: every context owns a prefix, so the root only dispatches to the home
+      // of the one the reader has (#222).
+      { index: true, lazy: () => import('./RootRedirect') },
       {
+        path: 'player',
         Component: PlayerLayout,
         children: [
-          { index: true, lazy: () => import('./TableListPage') },
-          { path: 'tables/:id', lazy: () => import('./TableDetailPage') },
-          { path: 'my/applications', lazy: () => import('./my/MyApplicationsPage') },
-          { path: 'my/tables', lazy: () => import('./my/MyTablesPage') },
-          { path: 'my/tables/:id', lazy: () => import('./my/MyTableDetailPage') },
+          { index: true, lazy: () => import('./player/TableListPage') },
+          { path: 'tables/:id', lazy: () => import('./player/TableDetailPage') },
+          { path: 'applications', lazy: () => import('./player/MyApplicationsPage') },
+          { path: 'my-tables', lazy: () => import('./player/MyTablesPage') },
+          { path: 'my-tables/:id', lazy: () => import('./player/MyTableDetailPage') },
+        ],
+      },
+      // The two transversal screens: they belong to no context and get the bare shell, without any
+      // section nav. Which is why they keep the chip on whatever context the reader came from
+      // (#222) instead of flipping it.
+      {
+        Component: ShellLayout,
+        children: [
           { path: 'notifications', lazy: () => import('./NotificationsPage') },
-          // Global rather than part of the Player context: the three layouts are the same shell and
-          // the header already adapts on its own. It sits here for the same reason /notifications
-          // does. The audiences are child routes (#168): each with its own URL, linkable by #ref.
+          // The audiences are child routes (#168): each with its own URL, linkable by #ref.
           {
             path: 'help',
             lazy: () => import('./help/HelpPage'),

@@ -33,7 +33,7 @@ export interface TableTasksSectionProps {
 }
 
 /**
- * What this table asks of the person reading it — the block `/tables/:id` and `/my/tables/:id` both
+ * What this table asks of the person reading it — the block `/player/tables/:id` and `/player/my-tables/:id` both
  * mount.
  *
  * It runs its own query and owns its own dialog, taking only a `tableId` from the screen around it

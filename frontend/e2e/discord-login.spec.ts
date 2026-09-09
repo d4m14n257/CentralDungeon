@@ -39,7 +39,9 @@ test('un miembro del servidor entra con Discord y queda logueado', async ({ page
   await page.getByRole('option', { name: 'Argentina' }).click()
   await page.getByRole('button', { name: 'Continuar' }).click()
 
-  await expect(page).toHaveURL(/\/$/)
+  // The onboarding lands on `/`, which is a dispatcher and not a screen: it forwards to the home of
+  // the context this account has, which for a fresh Player account is the explorer (#222).
+  await expect(page).toHaveURL(/\/player$/)
 })
 
 test('quien no está en el servidor no entra y recibe la invitación', async ({ page, request }) => {

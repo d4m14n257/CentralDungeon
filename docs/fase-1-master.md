@@ -159,7 +159,7 @@ npx playwright test → 12 tests, todos verdes, contra el backend y el frontend 
 - `RichTextEditor` + `RichTextView` en `components/` — TipTap: TinyMCE necesita API key para uso alojado (`frontend-diseno.md` §6).
 - Wizard de `/master/tables/new` **reescrito a pasos**: identidad → catálogos → agenda y duración → cupo y revisión. Un paso por decisión, con el resumen antes de enviar.
 - `GameTableCard` muestra la agenda en hora local y la **advertencia de choque**.
-- `/tables/:id` muestra la agenda en hora local y **explica** el bloqueo de R2 en el botón, con el motivo — principio 2 de `frontend-diseno.md` §1: un botón gris que no dice por qué está gris es peor que no tener botón.
+- `/player/tables/:id` muestra la agenda en hora local y **explica** el bloqueo de R2 en el botón, con el motivo — principio 2 de `frontend-diseno.md` §1: un botón gris que no dice por qué está gris es peor que no tener botón.
 - Primitivas: `calendar`, `sheet`, `tooltip`, `separator`.
 
 **Tests:** `ScheduleConflictServiceTest` con la matriz completa —solapa, adyacente, envuelve la semana, sin duración, mesa en `Pause`, dos filas de la misma mesa—; `RegistrationServiceTest` para R2, R3 y R4; e2e Playwright del wizard.
@@ -208,9 +208,9 @@ Modificados: `GameTable` (+`permitted`, +`closedAt`, +`setName`), `GameTableServ
 | `components/ui/tooltip.tsx` · `separator.tsx` | Primitivas de shadcn |
 | `e2e/table-schedule.spec.ts` | Wizard con agenda, R1 con el motivo en pantalla y R2 desde el lado del jugador |
 
-Tocados: `features/tables/types.ts`, `schemas.ts`, `index.ts`, `gameTablesApi.ts`, `components/GameTableCard.tsx` (+ su test), `features/catalogs/types.ts` (deriva del tipo subido), `features/registrations/` (api e index), `routes/TableDetailPage.tsx`, `routes/my/MyApplicationsPage.tsx`, `routes/help/HelpMastersTab.tsx` y `HelpPlayersTab.tsx`, `api/queryKeys.ts`, `config/query.ts` (los códigos de error que se muestran verbatim), `vite.config.ts`, `e2e/table-lifecycle.spec.ts` y los locales `master`, `tables`, `registrations`, `common` y `help`.
+Tocados: `features/tables/types.ts`, `schemas.ts`, `index.ts`, `gameTablesApi.ts`, `components/GameTableCard.tsx` (+ su test), `features/catalogs/types.ts` (deriva del tipo subido), `features/registrations/` (api e index), `routes/player/TableDetailPage.tsx`, `routes/player/MyApplicationsPage.tsx`, `routes/help/HelpMastersTab.tsx` y `HelpPlayersTab.tsx`, `api/queryKeys.ts`, `config/query.ts` (los códigos de error que se muestran verbatim), `vite.config.ts`, `e2e/table-lifecycle.spec.ts` y los locales `master`, `tables`, `registrations`, `common` y `help`.
 
-**Ayuda:** `/help/masters#schedule` (agenda, duración, intervalos y choque) y `/help/players#schedule-conflicts` (por qué no se puede postular y cómo retirar), enlazadas desde el paso de agenda del wizard y desde el aviso de `/tables/:id`.
+**Ayuda:** `/help/masters#schedule` (agenda, duración, intervalos y choque) y `/help/players#schedule-conflicts` (por qué no se puede postular y cómo retirar), enlazadas desde el paso de agenda del wizard y desde el aviso de `/player/tables/:id`.
 
 **Salida real de las suites:**
 
@@ -238,11 +238,11 @@ npx playwright test → 15 tests, todos verdes, contra el backend y el frontend 
 **Frontend**:
 
 - Pestaña **Sesiones** en `/master/tables/:id` — lista, editar fecha, cancelar, registrar asistencia.
-- **`/my/tables/:id`, ruta nueva** — agenda, sesiones y *mi* asistencia, solo lectura. Es el mínimo del jugador para poder probar la fase; el resto de la pantalla es F2.
-- Sesiones en `/tables/:id`, solo lectura.
+- **`/player/my-tables/:id`, ruta nueva** — agenda, sesiones y *mi* asistencia, solo lectura. Es el mínimo del jugador para poder probar la fase; el resto de la pantalla es F2.
+- Sesiones en `/player/tables/:id`, solo lectura.
 - `CollapsibleSection`, `IconAction`, `useConfirm`.
 
-**Se prueba:** el master abre la mesa y aparecen las 12 sesiones; registra la asistencia de la primera; el jugador ve su calendario en `/my/tables/:id`, en su hora local.
+**Se prueba:** el master abre la mesa y aparecen las 12 sesiones; registra la asistencia de la primera; el jugador ve su calendario en `/player/my-tables/:id`, en su hora local.
 
 #### ✅ Terminada
 
@@ -250,7 +250,7 @@ Cuatro decisiones nuevas salieron de construirla: **#193** (reanudar con choque 
 
 **Un bug encontrado por el test, no por la pantalla**: `formatDateTime` y `formatDate` leían mal todo instante que venía del backend. Jackson serializa `LocalDateTime` sin offset —`2026-09-09T01:00:00`— y JavaScript interpreta una fecha así como hora **local**, así que una sesión de la 01:00 UTC se mostraba como 01:00 a alguien tres horas atrás: exactamente el error que la conversión existe para evitar (#22). `utcIsoToLocalInput` ya lo resolvía agregando la `Z`; las otras dos no. Corregido en `lib/date.ts` con su test de regresión, y arregla de paso cómo se venían mostrando `startDate` y `createdAt`.
 
-**Una decisión de forma que el contrato no tenía**: el calendario de solo lectura de `/tables/:id` **viaja dentro del detalle de la mesa** (`GameTableDetailResponse.sessions`) y no en un endpoint propio. Esa lectura ya decide quién puede ver la mesa —un vetado recibe `404` (#29)—, así que las sesiones heredan esa única respuesta en vez de repetir la verificación en un segundo lugar donde podría desincronizarse.
+**Una decisión de forma que el contrato no tenía**: el calendario de solo lectura de `/player/tables/:id` **viaja dentro del detalle de la mesa** (`GameTableDetailResponse.sessions`) y no en un endpoint propio. Esa lectura ya decide quién puede ver la mesa —un vetado recibe `404` (#29)—, así que las sesiones heredan esa única respuesta en vez de repetir la verificación en un segundo lugar donde podría desincronizarse.
 
 Queda fuera a propósito, con su motivo: **agregar una sesión suelta**. F1.3 entrega las cuatro operaciones que §4 nombra —corregir fecha, notas, marcar jugada, cancelar— más la reposición de #194; un «agregar sesión» a mano no lo pide ningún documento y sin él la cantidad de la mesa sigue siendo la que prometió. Y **la asistencia no aparece todavía en un perfil**: el agregado de #137 está construido y expuesto por mesa para el propio jugador, pero `/profile` y `/users/:id` son F2.
 
@@ -278,12 +278,12 @@ Modificados: `GameTableService` (materializa en `approve()` y `assignInitialMast
 | `features/tables/api/sessionsApi.ts` + 6 hooks | Dos queries y cuatro mutations |
 | `features/tables/components/SessionList.tsx` (+ test) · `SessionStatusBadge` · `AttendanceEditor` · `AttendanceSummaryView` (+ test) | El calendario de solo lectura, el badge, el padrón y los tres números de #137 |
 | `routes/master/MasterTableSessionsTab.tsx` | La pestaña Sesiones, con una `CollapsibleSection` por sesión |
-| `routes/my/MyTableDetailPage.tsx` | La ruta nueva `/my/tables/:id` — agenda, sesiones y mi asistencia, solo lectura |
+| `routes/player/MyTableDetailPage.tsx` | La ruta nueva `/player/my-tables/:id` — agenda, sesiones y mi asistencia, solo lectura |
 | `e2e/table-sessions.spec.ts` | Materialización al aprobar, la reposición de #194 avisada antes de confirmar, y la asistencia vista desde el lado del jugador |
 
-Tocados: `lib/date.ts` (+ `date.test.ts`, la corrección del instante sin offset), `features/tables/types.ts` e `index.ts`, `api/queryKeys.ts` (+rama `sessions`), `config/paths.ts`, `routes/router.tsx`, `routes/TableDetailPage.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), `routes/my/MyTablesPage.tsx` (las fichas ahora llevan a `/my/tables/:id`), `routes/help/HelpMastersTab.tsx` y `HelpPlayersTab.tsx`, y los locales `tables`, `master` y `help`.
+Tocados: `lib/date.ts` (+ `date.test.ts`, la corrección del instante sin offset), `features/tables/types.ts` e `index.ts`, `api/queryKeys.ts` (+rama `sessions`), `config/paths.ts`, `routes/router.tsx`, `routes/player/TableDetailPage.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), `routes/player/MyTablesPage.tsx` (las fichas ahora llevan a `/player/my-tables/:id`), `routes/help/HelpMastersTab.tsx` y `HelpPlayersTab.tsx`, y los locales `tables`, `master` y `help`.
 
-**Ayuda:** `/help/masters#sessions` (cuándo aparece el calendario, corregir una fecha, marcar jugada, la reposición de #194, qué congela la pausa y por qué puede fallar reanudar) y `/help/players#my-sessions` (dónde está mi calendario y cómo se leen los tres números de #137), enlazadas desde la pestaña Sesiones y desde `/my/tables/:id`.
+**Ayuda:** `/help/masters#sessions` (cuándo aparece el calendario, corregir una fecha, marcar jugada, la reposición de #194, qué congela la pausa y por qué puede fallar reanudar) y `/help/players#my-sessions` (dónde está mi calendario y cómo se leen los tres números de #137), enlazadas desde la pestaña Sesiones y desde `/player/my-tables/:id`.
 
 **Salida real de las suites:**
 
@@ -315,8 +315,8 @@ npx playwright test → 18 tests, todos verdes, contra el backend y el frontend 
 
 - `FilePicker` (#65): subir **o** reutilizar del historial, con el tope por archivo. Es la palanca principal de costo de la fase.
 - Pestaña **Archivos** en `/master/tables/:id`.
-- Archivos públicos, solo lectura, en `/tables/:id` y `/my/tables/:id`.
-- `/my/files` **no entra** — es F2.
+- Archivos públicos, solo lectura, en `/player/tables/:id` y `/player/my-tables/:id`.
+- `/player/files` **no entra** — es F2.
 
 **Se prueba:** el master sube una hoja de personaje, la vincula a dos mesas sin duplicarla, y el jugador la descarga desde el detalle público.
 
@@ -330,7 +330,7 @@ Diez decisiones nuevas salieron de construirla: **#199** (`StoredFile`, no `File
 
 **Una regla que hubo que corregir sobre la marcha**: la descarga exigía pertenencia y el detalle de la mesa ya listaba el archivo, así que un candidato veía la ficha y recibía `404` al abrirla. Lo que una mesa comparte es tan alcanzable como la mesa (#206) — y queda anotado, acá y en `modelo-datos.md` §5, que al construir el veto (F3) hay que excluir al vetado también en esa lectura.
 
-Queda fuera a propósito, con su motivo: **`/my/files`** es F2, y en F1.4 el historial se ve dentro del `FilePicker`, que es donde #65 lo pide. **El borrado físico** no entra: es F5 (#66), y todo lo de acá solo marca. **`registration_files` y `submission_files`** siguen sin mapear — el archivo de personaje en la postulación es F2. Y **la deduplicación entre usuarios** no se puede hacer sin una tabla de blobs con conteo de referencias, que el baseline no tiene: lo prohíbe `uk_files_storage_key` (#201).
+Queda fuera a propósito, con su motivo: **`/player/files`** es F2, y en F1.4 el historial se ve dentro del `FilePicker`, que es donde #65 lo pide. **El borrado físico** no entra: es F5 (#66), y todo lo de acá solo marca. **`registration_files` y `submission_files`** siguen sin mapear — el archivo de personaje en la postulación es F2. Y **la deduplicación entre usuarios** no se puede hacer sin una tabla de blobs con conteo de referencias, que el baseline no tiene: lo prohíbe `uk_files_storage_key` (#201).
 
 **Backend** (`backend/src/main/java/com/centraldungeon/`):
 
@@ -371,9 +371,9 @@ Modificados: `GameTableDetailResponse` (+`files`), `GameTableMapper` y `GameTabl
 | `locales/es/files.json` · `locales/en/files.json` | Los textos, en los dos idiomas y en el mismo commit (#198) |
 | Tests | `FilePicker.test.tsx`, `FileList.test.tsx`, `e2e/table-files.spec.ts` |
 
-Tocados: `api/client.ts` (la parte JSON del multipart pasa a `Blob`, y `api.download` nuevo), `api/queryKeys.ts` (+rama `files`), `config/paths.ts`, `config/query.ts` (los tres códigos de error que se explican), `providers/i18n.ts`, `routes/router.tsx`, `layouts/components/AdminSectionNav.tsx`, `features/tables/types.ts` (+`files` en el detalle), `routes/TableDetailPage.tsx`, `routes/my/MyTableDetailPage.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), las tres pestañas de `/help` y los locales `master`, `admin`, `help` y `common`.
+Tocados: `api/client.ts` (la parte JSON del multipart pasa a `Blob`, y `api.download` nuevo), `api/queryKeys.ts` (+rama `files`), `config/paths.ts`, `config/query.ts` (los tres códigos de error que se explican), `providers/i18n.ts`, `routes/router.tsx`, `layouts/components/AdminSectionNav.tsx`, `features/tables/types.ts` (+`files` en el detalle), `routes/player/TableDetailPage.tsx`, `routes/player/MyTableDetailPage.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), las tres pestañas de `/help` y los locales `master`, `admin`, `help` y `common`.
 
-**Ayuda:** `/help/masters#files` (subir o reutilizar, qué significa privado en una mesa, por qué quitar no borra, los límites), `/help/players#files` (dónde están los archivos de mi mesa y qué no voy a ver) y `/help/admins#files` (publicar, la audiencia como listado y no como permiso, y qué purga el job), enlazadas desde la pestaña, desde `/my/tables/:id` y desde `/admin/files`.
+**Ayuda:** `/help/masters#files` (subir o reutilizar, qué significa privado en una mesa, por qué quitar no borra, los límites), `/help/players#files` (dónde están los archivos de mi mesa y qué no voy a ver) y `/help/admins#files` (publicar, la audiencia como listado y no como permiso, y qué purga el job), enlazadas desde la pestaña, desde `/player/my-tables/:id` y desde `/admin/files`.
 
 **Salida real de las suites:**
 
@@ -401,7 +401,7 @@ npx playwright test → 27 tests, todos verdes, contra el backend y el frontend 
 **Frontend**:
 
 - Pestaña **Peticiones** en `/master/tables/:id`: publicar, editar, cerrar, ver entregas y faltantes.
-- Peticiones aplicables, solo lectura, en `/tables/:id` (audiencia `Candidates`) y `/my/tables/:id` (audiencia `Players` y las `Single` propias).
+- Peticiones aplicables, solo lectura, en `/player/tables/:id` (audiencia `Candidates`) y `/player/my-tables/:id` (audiencia `Players` y las `Single` propias).
 
 **Se prueba:** el master publica una petición para sus jugadores, les llega la notificación y la ven en su mesa.
 
@@ -409,7 +409,7 @@ npx playwright test → 27 tests, todos verdes, contra el backend y el frontend 
 
 Siete decisiones nuevas salieron de construirla: **#209** (endpoint propio para las peticiones aplicables, en vez de un campo del detalle), **#210** (la entrega del jugador se adelanta de F2), **#211** (la quinta vía de lectura de un archivo), **#212** (a dónde manda `TaskPublished`), **#213** (`GET .../players`), **#214** (el alto de un diálogo de formulario) y **#215** (el editor se anuncia como campo de texto).
 
-**Lo que se agrandó a propósito**: F1.5 iba a *leer* `task_submissions` y el jugador entregaba en F2. Con nadie que pudiera entregar, el padrón de faltantes muestra a todos como faltantes siempre, no hay flujo e2e que probar, y **la regla que más importa del subsistema —las entregas se acumulan (#76)— queda escrita y sin ejercitar**. Se adelantó entera, con archivos (#210), y `plan-desarrollo.md` y §5 de este documento se corrigieron con ella. Lo que **no** se adelantó: `/my/files` y el archivo de personaje en la postulación siguen en F2.
+**Lo que se agrandó a propósito**: F1.5 iba a *leer* `task_submissions` y el jugador entregaba en F2. Con nadie que pudiera entregar, el padrón de faltantes muestra a todos como faltantes siempre, no hay flujo e2e que probar, y **la regla que más importa del subsistema —las entregas se acumulan (#76)— queda escrita y sin ejercitar**. Se adelantó entera, con archivos (#210), y `plan-desarrollo.md` y §5 de este documento se corrigieron con ella. Lo que **no** se adelantó: `/player/files` y el archivo de personaje en la postulación siguen en F2.
 
 **Dos bugs que encontró el e2e y ningún test unitario podía ver**, los dos en piezas compartidas y no en la rebanada:
 
@@ -453,7 +453,7 @@ Modificados: `FileService` (la quinta vía de lectura, #211), `NotificationType`
 
 **Cómo se resolvió el cruce de dominios** (regla dura 16): `features/tasks` no importa de `files` ni de `registrations`. `TableTasksSection` y `TaskSubmitDialog` reciben el listado y el selector de archivos como **render props**, y `TaskFormDialog` recibe el padrón y las sesiones como datos planos. Las pantallas de `routes/` son las que componen.
 
-Tocados: `components/FormDialog.tsx` (#214), `components/RichTextEditor.tsx` (#215), `features/files/components/FilePicker.tsx` (el `onPick` pasa el nombre además del id) y su test, `api/queryKeys.ts` (+rama `tasks`, +`registrations.players`), `config/paths.ts`, `config/query.ts` (+`TASK_CLOSED`), `providers/i18n.ts`, `routes/router.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), `routes/TableDetailPage.tsx` y `routes/my/MyTableDetailPage.tsx` (+la sección de peticiones), `features/notifications/` (tipo, texto y destino de `TaskPublished`), `test/setup.ts` (los huecos de jsdom que Radix usa) y los locales `master`, `notifications` y `help`.
+Tocados: `components/FormDialog.tsx` (#214), `components/RichTextEditor.tsx` (#215), `features/files/components/FilePicker.tsx` (el `onPick` pasa el nombre además del id) y su test, `api/queryKeys.ts` (+rama `tasks`, +`registrations.players`), `config/paths.ts`, `config/query.ts` (+`TASK_CLOSED`), `providers/i18n.ts`, `routes/router.tsx`, `routes/master/MasterTableDetailPage.tsx` (+pestaña), `routes/player/TableDetailPage.tsx` y `routes/player/MyTableDetailPage.tsx` (+la sección de peticiones), `features/notifications/` (tipo, texto y destino de `TaskPublished`), `test/setup.ts` (los huecos de jsdom que Radix usa) y los locales `master`, `notifications` y `help`.
 
 **Ayuda:** `/help/masters#tasks` (las tres audiencias, que publicar avisa y corregir no, que las entregas se acumulan y el sistema no las juzga, que "importante" no expulsa a nadie, y qué pasa al cerrar) y `/help/players#tasks` (dónde las veo, que puedo leer lo que se le pide a los candidatos antes de postularme, cómo entregar reusando un archivo, y que no entregar no me saca de la mesa), enlazadas desde la pestaña y desde las dos pantallas de lectura.
 
@@ -547,14 +547,14 @@ npx playwright test → 33 tests, todos verdes, contra el backend y el frontend 
 
 No es trabajo nuevo ni es de un agente: es el corte de `plan-desarrollo.md` §6, puntos 6 y 7, en el hilo principal. **Y no es solo correr las suites.** Los tests de cada rebanada ya corrieron en verde en su momento; lo que nadie miró todavía es el **producto entero**: si cada pantalla es alcanzable navegando, si cada endpoint tiene puerta, si el recorrido del master cierra de punta a punta.
 
-El instrumento de esa revisión es un **artifact** — [*Revisión de cierre F1*](https://claude.ai/code/artifact/60e90c45-e336-4f2d-8c02-7bc6d06b4cb2) — con el checklist, el diagrama de navegación del rol Master y el inventario de lo que quedó sin puerta en la UI. El detalle de los puntos 2 y 3 vive ahí y no se copia acá.
+El instrumento de esa revisión es un **artifact** — [*Revisión de cierre F1*](https://claude.ai/code/artifact/60e90c45-e336-4f2d-8c02-7bc6d06b4cb2) — con el checklist, el mapa de navegación ampliable, el ledger literal de las rutas con su guard y sus enlaces, y el inventario de lo que quedó sin puerta. El detalle de los puntos 2 y 3 vive ahí y no se copia acá.
 
 1. **Las cuatro suites en verde**, con la salida real reportada.
 2. **Revisión de producto contra el artifact**: cada pantalla de F1 alcanzable **por navegación**, no por URL escrita a mano; cada una con sus cuatro estados; y el recorrido del rol Master cerrado de punta a punta, con los saltos donde depende de otro actor marcados.
 3. **Inventario de huérfanos triado**, uno por uno: *bug de F1* o *alcance de F2/F3 anotado a propósito*. Un hueco implícito es una sorpresa (`plan-desarrollo.md` §1). Lo relevado al abrir F1.7:
 
    **Dos bugs de F1, de corregir antes de cerrar:**
-   - **El contexto Jugador no tiene navegación.** `/my/applications` y `/my/tables` no reciben **ni un solo enlace** en toda la aplicación —ni un `Link`, ni un `navigate`, ni siquiera un constructor en `config/paths.ts`— y `/my/tables/:id` cae con ellas porque solo se abre desde la segunda. Admin ganó su `AdminSectionNav` en F1.1 y Master su `MasterSectionNav` en F1.6, cada uno al pasar de una pantalla a dos; Jugador pasó de una a cinco desde E1 y nunca la tuvo. Es lo más urgente de la lista: el jugador es el actor de F2, y su navegación se construye ahora o F2 la hereda rota.
+   - ~~**El contexto Jugador no tiene navegación.**~~ **Corregido** con #222, que lo resolvió por arriba: el contexto se mudó a `/player/*` y estrenó su `PlayerSectionNav`, igual que Admin en F1.1 y Master en F1.6. `/player/applications` y `/player/my-tables` ya se alcanzan navegando, y `/player/my-tables/:id` con ellas.
    - **Tres de los siete tipos de notificación no llevan a ningún lado.** `notificationTarget()` resuelve destino para cuatro; `ScheduleConflict`, `SessionScheduled` y `SessionCanceled` caen en el `default` y devuelven `null`. El aviso llega, se lee, se marca como leído y el clic no abre nada. Los tres tienen destino evidente y nada en `decisiones.md` dice que deban ser solo informativos.
 
    **Y cinco piezas que sí pueden esperar:**
@@ -574,7 +574,7 @@ Anotado a propósito: un hueco implícito es una sorpresa (`plan-desarrollo.md` 
 | Queda fuera | Dónde vive |
 |---|---|
 | ~~Entregar respuestas a las peticiones~~ | **Se adelantó a F1.5** (#210) |
-| Archivo de personaje en la postulación, `/my/files`, `/my/history` | F2 |
+| Archivo de personaje en la postulación, `/player/files`, `/my/history` | F2 |
 | Filtros del explorador por catálogo | F2 — el backend de F1.1 ya los resuelve |
 | `/profile`, `/users/:id` | F2 |
 | Pedir pausa (`PauseRequested`) y veto — necesitan `approval_requests` | F3 |
@@ -603,7 +603,7 @@ cd frontend && npm run format      # prettier del repo (#174)
 4. El admin la aprueba; la mesa pasa a `Opened` y se materializan las sesiones.
 5. Un jugador ve la mesa en el explorador **con la advertencia de choque** si corresponde, se postula, y en una mesa que choca con la suya no puede (R2).
 6. El master lo acepta; las otras postulaciones del jugador que chocan le llegan como notificación (R4) y él retira una.
-7. El master publica una petición y sube un archivo de preparación; al jugador le llega la notificación y ve las dos cosas en `/my/tables/:id`.
+7. El master publica una petición y sube un archivo de preparación; al jugador le llega la notificación y ve las dos cosas en `/player/my-tables/:id`.
 8. El master registra la asistencia de la primera sesión.
 9. El master agrega un co-master; el co-master entra por su contexto y ve la mesa.
 10. El master finaliza la mesa → `closed_at` sellado (#180).

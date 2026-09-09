@@ -70,8 +70,8 @@ export interface TableTask {
 }
 
 /**
- * Mirror of `ApplicableTaskResponse` — a task as the person being asked sees it, on `/tables/:id` and
- * `/my/tables/:id`.
+ * Mirror of `ApplicableTaskResponse` — a task as the person being asked sees it, on `/player/tables/:id` and
+ * `/player/my-tables/:id`.
  *
  * Deliberately narrower than {@link TableTask}: no counts and no roster. How many other people handed
  * in their sheet is the master's information, not a recipient's. What it adds is about the reader

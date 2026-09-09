@@ -1,34 +1,35 @@
 import { masterTableDetailPath, tableDetailPath } from '@/config/paths'
-import type { AppContext } from '@/stores/contextStore'
 
 import type { Notification } from '../types'
 
 /**
- * Where clicking a notification should go, resolved from its `relatedEntityType` and
+ * Where clicking a notification leads, resolved from its `relatedEntityType` and
  * `relatedEntityId`. Null-safe by construction: a notification that points nowhere is not a bug,
  * it is one that simply has nothing to open.
+ *
+ * It returns a path and nothing else. The context used to travel with it, so the reader would not
+ * land on a master screen with the switcher pointing at the player one (#156) - now the path carries
+ * that on its own, because every context owns a prefix and the header reads the context off the URL
+ * (#222).
+ *
+ * @param notification the one that was clicked
+ * @returns the absolute path to open, or null when it opens nothing
  */
-export interface NotificationTarget {
-  context: AppContext
-  path: string
-}
-
-/** Where each kind of notification leads, and which context the reader has to be in to see it (decisiones.md #156). */
-export function notificationTarget(notification: Notification): NotificationTarget | null {
+export function notificationTarget(notification: Notification): string | null {
   if (notification.relatedEntityType !== 'game_table' || !notification.relatedEntityId) {
     return null
   }
   switch (notification.notificationType) {
     case 'RegistrationAccepted':
     case 'RegistrationRejected':
-      return { context: 'player', path: tableDetailPath(notification.relatedEntityId) }
-    // The public detail and not `/my/tables/:id`, because the same notice reaches a candidate and a
-    // player alike: a candidate has no `/my/tables` entry for a table they are not in yet, and the
-    // public detail shows both of them what the table is asking of them (#63, #206).
+      return tableDetailPath(notification.relatedEntityId)
+    // The public detail and not `/player/my-tables/:id`, because the same notice reaches a candidate
+    // and a player alike: a candidate has no entry under their own tables for one they are not in
+    // yet, and the public detail shows both of them what the table is asking of them (#63, #206).
     case 'TaskPublished':
-      return { context: 'player', path: tableDetailPath(notification.relatedEntityId) }
+      return tableDetailPath(notification.relatedEntityId)
     case 'NewCandidate':
-      return { context: 'master', path: masterTableDetailPath(notification.relatedEntityId) }
+      return masterTableDetailPath(notification.relatedEntityId)
     default:
       return null
   }

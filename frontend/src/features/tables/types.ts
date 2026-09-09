@@ -188,7 +188,7 @@ export interface AttendanceSummary {
   registered: number
 }
 
-/** Mirror of MySessionsResponse — what `/my/tables/:id` reads: my calendar and my attendance. */
+/** Mirror of MySessionsResponse — what `/player/my-tables/:id` reads: my calendar and my attendance. */
 export interface MySessions {
   sessions: PlayerSession[]
   summary: AttendanceSummary
