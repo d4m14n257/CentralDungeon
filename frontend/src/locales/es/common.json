@@ -17,6 +17,9 @@
     "forbiddenTitle": "No tenés permiso",
     "forbiddenDescription": "Tu cuenta no puede ver esta sección."
   },
+  "notFound": {
+    "backHome": "Volver al inicio"
+  },
   "nav": {
     "brand": "CentralDungeon",
     "brandFirst": "Central",

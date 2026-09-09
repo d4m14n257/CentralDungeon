@@ -17,6 +17,9 @@
     "forbiddenTitle": "You do not have access",
     "forbiddenDescription": "Your account cannot see this section."
   },
+  "notFound": {
+    "backHome": "Back to home"
+  },
   "nav": {
     "brand": "CentralDungeon",
     "brandFirst": "Central",
