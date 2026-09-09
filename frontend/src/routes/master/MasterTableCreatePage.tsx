@@ -11,12 +11,15 @@ import { RichTextView } from '@/components/RichTextView'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { helpPath, masterTableDetailPath } from '@/config/paths'
 import { CatalogChip, CatalogPicker } from '@/features/catalogs'
 import {
   ScheduleEditor,
+  WeeklyScheduleGrid,
+  useMySchedule,
   createGameTableSchema,
   tableTypeDescription,
   tableTypeLabel,
@@ -26,7 +29,7 @@ import {
 } from '@/features/tables'
 import type { CreateGameTableForm, TableScheduleEntry, WizardStep } from '@/features/tables'
 import { useMe } from '@/features/users'
-import { browserTimeZone, formatSlot, localInputToUtcIso, utcSlotToLocal } from '@/lib/date'
+import { WEEKDAYS, browserTimeZone, formatMinutes, formatSlot, localInputToUtcIso, minutesOfDay, utcSlotToLocal } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 
 /**
@@ -61,6 +64,8 @@ export function MasterTableCreatePage() {
   // (#226); saying it here means the master finds out on the step that can fix it, not after
   // filling in four steps and pressing «Crear mesa».
   const [stepError, setStepError] = useState<string | null>(null)
+  // The week as it already is, so the grid can show what is taken before anything is taken again.
+  const myWeek = useMySchedule()
 
   // #22 took `users.timezone` out of the model, so today the browser is the only source. `lib/date.ts`
   // takes the zone as a parameter precisely so that the day a profile preference exists, this line
@@ -83,6 +88,29 @@ export function MasterTableCreatePage() {
   const values = form.getValues()
   const selectedType = tableTypes?.content.find((type) => type.id === values.tableTypeId)
   const selectedTableTypeLabel = selectedType ? tableTypeLabel(tTables, selectedType.code, selectedType.name) : null
+
+  // What this table has claimed so far, drawn on the same grid as everything else. A slot with no
+  // duration yet is given an hour so it is visible: the master is choosing when, and the length
+  // comes from the field above (#178 measures the interval, so the real one arrives with it).
+  const durationMinutes = values.duration ? minutesOfDay(values.duration) : 60
+  const pendingBlocks = schedule.map((entry) => ({
+    startMinute: WEEKDAYS.indexOf(entry.weekday) * 24 * 60 + minutesOfDay(entry.hourtime),
+    durationMinutes,
+  }))
+
+  /**
+   * Adds the hour the master clicked on the grid, in UTC, unless the table already claimed it.
+   * The editor above stays: somebody who would rather type it still can.
+   */
+  function claimHour(utcStartMinute: number) {
+    const weekday = WEEKDAYS[Math.floor(utcStartMinute / (24 * 60))]
+    const hourtime = formatMinutes(utcStartMinute % (24 * 60))
+    if (!weekday || schedule.some((entry) => entry.weekday === weekday && entry.hourtime.slice(0, 5) === hourtime)) {
+      return
+    }
+    setSchedule([...schedule, { weekday, hourtime }])
+    setStepError(null)
+  }
 
   /**
    * What the step the master is on still needs, as an i18n key, or null when it is complete.
@@ -320,6 +348,25 @@ export function MasterTableCreatePage() {
                   </Link>
                 </div>
                 <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} duration={values.duration} />
+
+                {/* The week the master already gave away, so finding room is looking and not guessing
+                    (#227). Clicking a free hour claims it: the gap and taking it are one gesture. */}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{tTables('schedule.inWizardTitle')}</h3>
+                    <p className="text-fg-muted text-xs">{tTables('schedule.inWizardDescription')}</p>
+                  </div>
+                  {myWeek.isPending ? (
+                    <Skeleton className="h-64 w-full" />
+                  ) : (
+                    <WeeklyScheduleGrid
+                      commitments={myWeek.data ?? []}
+                      timeZone={timeZone}
+                      pending={pendingBlocks}
+                      onPickHour={claimHour}
+                    />
+                  )}
+                </div>
               </div>
             </>
           )}

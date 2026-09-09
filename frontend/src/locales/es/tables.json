@@ -15,6 +15,25 @@
       "description": "Mesa curada, con requisitos más estrictos"
     }
   },
+  "schedule": {
+    "title": "Mi horario",
+    "subtitle": "Todo lo que tenés comprometido en la semana: lo que dirigís y lo que jugás, junto. Las horas están en tu zona ({{timeZone}}).",
+    "emptyTitle": "Tu semana está libre",
+    "emptyDescription": "Cuando dirijas o juegues en una mesa con agenda, va a aparecer acá.",
+    "role": {
+      "Master": "la dirigís",
+      "Player": "jugás"
+    },
+    "legendMaster": "Mesas que dirigís",
+    "legendPlayer": "Mesas donde jugás",
+    "legendNew": "Esta mesa",
+    "thisTable": "Esta mesa",
+    "pickHour": "Ocupar {{slot}}",
+    "withoutAgendaTitle": "Sin horario todavía",
+    "withoutAgendaDescription": "Estas mesas no ocupan ninguna franja porque no definieron su agenda o su duración.",
+    "inWizardTitle": "Tu semana",
+    "inWizardDescription": "Hacé clic en una hora libre para agregarla a la agenda de esta mesa."
+  },
   "status": {
     "Unassigned": "Sin asignar",
     "Preparation": "En preparación",

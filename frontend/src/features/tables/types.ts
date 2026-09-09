@@ -1,3 +1,4 @@
+import type { WeekBlock } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 import type { SharedFile } from '@/types/file'
 import type { Weekday } from '@/lib/date'
@@ -237,6 +238,26 @@ export interface TableType {
   name: string
   /** What the type means. Null when the row never had it: "Public" does not explain itself. */
   description: string | null
+}
+
+/**
+ * Mirror of WeeklyCommitmentResponse — one table the reader's week is committed to (#227).
+ *
+ * It is the same data #178 compares to refuse a clash, read instead of enforced: what the grid draws
+ * is what the rule measures, so a gap on screen is a gap the server will accept.
+ */
+export interface WeeklyCommitment {
+  id: string
+  /** The table, so a block can link to it. */
+  tableId: string
+  /** Its name, which is what the block is labelled with. */
+  tableName: string
+  /** `Master` when the reader runs it, `Player` when they play at it. Running wins when both. */
+  role: 'Master' | 'Player'
+  /** The table's status, so a draft reads differently from a table already running. */
+  status: GameTableStatus
+  /** What it occupies, in UTC minutes from Monday 00:00. Empty when it has no agenda yet. */
+  blocks: WeekBlock[]
 }
 
 /** Mirror of TableStatusChangeResponse. */

@@ -19,6 +19,7 @@ export const paths = {
   playerApplications: 'player/applications',
   playerMyTables: 'player/my-tables',
   playerMyTableDetail: 'player/my-tables/:id',
+  mySchedule: 'my/schedule',
   notifications: 'notifications',
   help: 'help',
   helpPlayers: 'players',
@@ -190,7 +191,8 @@ export function adminFilesPath(): string {
  * which navigation the reader is looking at. That is what lets the header report the context
  * instead of guessing it from a value chosen who knows when (#222).
  *
- * `/notifications`, `/help` and the entry screens deliberately return `null`: they are transversal
+ * `/notifications`, `/help`, `/my/schedule` and the entry screens deliberately return `null`: they
+ * are transversal
  * and belong to whoever is reading them. Flipping the chip to another context on the way to the
  * inbox would be a worse lie than the one this replaces.
  *
@@ -216,4 +218,13 @@ export function homePathFor(context: AppContext): string {
   if (context === 'master') return masterDashboardPath()
   if (context === 'admin') return adminTablesPath()
   return playerHomePath()
+}
+
+/**
+ * @returns the absolute path to the reader's own week (#227). Under `/my` and not under a context:
+ *          the evenings somebody runs and the evenings they play are the same evenings, so the
+ *          screen belongs to the person and not to one of their roles
+ */
+export function mySchedulePath(): string {
+  return '/my/schedule'
 }

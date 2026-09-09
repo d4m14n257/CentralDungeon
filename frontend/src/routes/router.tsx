@@ -46,6 +46,9 @@ export const router = createBrowserRouter([
         Component: ShellLayout,
         children: [
           { path: 'notifications', lazy: () => import('./NotificationsPage') },
+          // The reader's own week (#227). Transversal like the two above, and for the same reason:
+          // the evenings somebody runs and the evenings they play are the same evenings.
+          { path: 'my/schedule', lazy: () => import('./my/MySchedulePage') },
           // The audiences are child routes (#168): each with its own URL, linkable by #ref.
           {
             path: 'help',

@@ -1,14 +1,20 @@
 package com.centraldungeon.tables;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.registrations.TableRegistrationRepository;
+import com.centraldungeon.tables.dto.WeeklyBlockResponse;
+import com.centraldungeon.tables.dto.WeeklyCommitmentResponse;
 import com.centraldungeon.users.User;
 import java.time.LocalTime;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -197,6 +203,78 @@ class ScheduleConflictServiceTest {
     @Test
     void anEmptyAgendaNeverClashes() {
         assertThat(scheduleConflictService.findClash("master-1", null, List.of())).isNull();
+    }
+
+    /** The week as the reader's own screen asks for it (#227) - the same commitments, read instead of enforced. */
+    @Nested
+    class MyWeek {
+
+        @Test
+        @DisplayName("la semana junta lo que dirigís y lo que jugás, y dice cuál es cuál")
+        void bringsTogetherWhatIsRunAndWhatIsPlayed() {
+            GameTable mastered = table("mastered", GameTableStatus.InProgress, LocalTime.of(3, 0));
+            GameTable played = table("played", GameTableStatus.Opened, LocalTime.of(4, 0));
+            when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(mastered));
+            when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of(played));
+            when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
+                    .thenReturn(List.of(
+                            new TableSchedule("mastered", Weekday.Tuesday, LocalTime.of(20, 0)),
+                            new TableSchedule("played", Weekday.Saturday, LocalTime.of(18, 0))));
+
+            List<WeeklyCommitmentResponse> week = scheduleConflictService.weekOf("person-1");
+
+            assertThat(week).extracting(WeeklyCommitmentResponse::tableId, WeeklyCommitmentResponse::role)
+                    .containsExactlyInAnyOrder(tuple("mastered", "Master"), tuple("played", "Player"));
+            // Tuesday 20:00 UTC is 1 * 1440 + 20 * 60 minutes from Monday 00:00.
+            assertThat(week.stream().filter(entry -> entry.tableId().equals("mastered")).findFirst().orElseThrow().blocks())
+                    .containsExactly(new WeeklyBlockResponse(1440 + 1200, 180));
+        }
+
+        /** Running wins: it is the stronger claim on the same evening, and the label has to pick one. */
+        @Test
+        @DisplayName("quien dirige y además juega en la misma mesa se lee como que la dirige")
+        void runningWinsOverPlaying() {
+            GameTable both = table("both", GameTableStatus.InProgress, LocalTime.of(3, 0));
+            when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(both));
+            when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of(both));
+            when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
+                    .thenReturn(List.of(new TableSchedule("both", Weekday.Monday, LocalTime.of(10, 0))));
+
+            List<WeeklyCommitmentResponse> week = scheduleConflictService.weekOf("person-1");
+
+            assertThat(week).singleElement().extracting(WeeklyCommitmentResponse::role).isEqualTo("Master");
+        }
+
+        /**
+         * A draft with no agenda commits nobody to anything (#178), but it is still something the
+         * reader has on - so it comes back with no blocks rather than disappearing.
+         */
+        @Test
+        @DisplayName("una mesa sin agenda viaja sin bloques, no se omite")
+        void aTableWithNoAgendaTravelsWithoutBlocks() {
+            GameTable draft = table("draft", GameTableStatus.Preparation, null);
+            when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(draft));
+            when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
+
+            List<WeeklyCommitmentResponse> week = scheduleConflictService.weekOf("person-1");
+
+            // And it costs no query: a table with no duration has no agenda worth reading.
+            verify(scheduleRepository, never()).findById_GameTableIdInAndStatus(any(), any());
+            assertThat(week).singleElement().satisfies(entry -> {
+                assertThat(entry.tableId()).isEqualTo("draft");
+                assertThat(entry.blocks()).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("sin mesas, la semana está vacía y no se consulta ninguna agenda")
+        void anEmptyWeekAsksForNoAgendas() {
+            when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of());
+            when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
+
+            assertThat(scheduleConflictService.weekOf("person-1")).isEmpty();
+            verify(scheduleRepository, never()).findById_GameTableIdInAndStatus(any(), any());
+        }
     }
 
     private static WeeklyInterval interval(Weekday weekday, String start, String duration) {

@@ -42,6 +42,8 @@ export { useStartTable } from './api/useStartTable'
 export { useTableSessions } from './api/useTableSessions'
 export { useTableStatusHistory } from './api/useTableStatusHistory'
 export { useTableTypes } from './api/useTableTypes'
+export { useMySchedule } from './api/useMySchedule'
+export { WeeklyScheduleGrid } from './components/WeeklyScheduleGrid'
 export { tableTypeDescription, tableTypeLabel } from './lib/tableTypeLabel'
 export { useUpdateSession } from './api/useUpdateSession'
 export { useUpdateTable } from './api/useUpdateTable'
@@ -76,6 +78,7 @@ export type {
   TableSessionStatus,
   TableStatusChange,
   TableType,
+  WeeklyCommitment,
   UpdateGameTableRequest,
   UpdateSessionRequest,
 } from './types'

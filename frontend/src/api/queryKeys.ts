@@ -11,6 +11,14 @@ export const queryKeys = {
     /** The platform's table types. One list for the whole app - admins change it rarely (#72). */
     types: () => ['tables', 'types'] as const,
   },
+  /**
+   * The reader's own week (#227). Its own branch and not part of `tables`: it is an answer about a
+   * person across everything they run *and* everything they play at, so every mutation that moves an
+   * agenda invalidates it, whichever side it came from.
+   */
+  schedule: {
+    mine: () => ['schedule', 'mine'] as const,
+  },
   master: {
     /**
      * The master's work tray (#136). Its own branch and not part of `tables`: it is an answer about

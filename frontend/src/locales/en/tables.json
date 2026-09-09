@@ -15,6 +15,25 @@
       "description": "Curated table with stricter requirements"
     }
   },
+  "schedule": {
+    "title": "My schedule",
+    "subtitle": "Everything you have on this week: what you run and what you play at, together. Times are in your zone ({{timeZone}}).",
+    "emptyTitle": "Your week is free",
+    "emptyDescription": "Once you run or play at a table with an agenda, it will show up here.",
+    "role": {
+      "Master": "you run it",
+      "Player": "you play"
+    },
+    "legendMaster": "Tables you run",
+    "legendPlayer": "Tables you play at",
+    "legendNew": "This table",
+    "thisTable": "This table",
+    "pickHour": "Take {{slot}}",
+    "withoutAgendaTitle": "No schedule yet",
+    "withoutAgendaDescription": "These tables take up no slot because they have not set an agenda or a duration.",
+    "inWizardTitle": "Your week",
+    "inWizardDescription": "Click a free hour to add it to this table’s agenda."
+  },
   "status": {
     "Unassigned": "Unassigned",
     "Preparation": "In preparation",

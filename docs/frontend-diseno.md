@@ -58,7 +58,8 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/player/files` | Mis archivos, reutilizables al adjuntar (#65) |
 | | `/player/profile` | Mi karma y los comentarios que recibí |
 | | `/player/users/:id` | Perfil de otra persona, sujeto a #41, #44 y #47 |
-| Transversal | `/notifications` | Historial de notificaciones. **De ningún contexto**: no cambia el chip (#222) |
+| Transversal | `/my/schedule` | **Mi horario**: la semana entera en una grilla — lo que dirigís y lo que jugás, junto. De ningún contexto a propósito: son las mismas noches (#227) |
+| | `/notifications` | Historial de notificaciones. **De ningún contexto**: no cambia el chip (#222) |
 | | `/help` | **Global, no del contexto Jugador**: lo que sirve a todos —buscar, contextos, estados de mesa, cuenta, notificaciones—. Se entra desde el menú de la cuenta y pide sesión (#167) |
 | | `/help/players` · `/help/masters` · `/help/admins` | La ayuda de cada rol, como rutas hijas. Cada bloque tiene su `#ref` estable y se enlaza desde la pantalla que lo necesita: `/help#search`, `/help/admins#assign-masters` (#168) |
 | **Master** | `/master` | Dashboard: qué necesita tu atención hoy, en todas tus mesas (#136) |

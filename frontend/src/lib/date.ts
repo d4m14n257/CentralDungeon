@@ -105,6 +105,84 @@ export function localSlotToUtc(slot: WeeklySlot, timeZone: string): WeeklySlot {
   return shiftSlot(slot, -offsetMinutes(slot, timeZone))
 }
 
+/** How many minutes a week has. What a week-minute is reduced modulo, and what a block can run past. */
+export const MINUTES_PER_WEEK_TOTAL = MINUTES_PER_WEEK
+
+/**
+ * A stretch of the week as the API sends it: minutes from Monday 00:00 **UTC**, and a length (#227).
+ *
+ * A single offset rather than a weekday and a time, because the reader's week does not start where
+ * UTC's does: a Tuesday-night table in America is Wednesday in UTC (#22), and sending the pair would
+ * make this side undo a conversion the other side had already half-made.
+ */
+export interface WeekBlock {
+  /** When it starts, in minutes from Monday 00:00 UTC. */
+  startMinute: number
+  /** How long it lasts, in minutes. Always positive. */
+  durationMinutes: number
+}
+
+/**
+ * The same week-minute, expressed in the reader's zone (#22, #111).
+ *
+ * It wraps: a Sunday-night slot in UTC can be Monday morning locally, and the other way round.
+ *
+ * @param startMinute the minute, from Monday 00:00 UTC
+ * @param timeZone    the IANA zone to read it in
+ * @returns the minute from Monday 00:00 in that zone, inside the week
+ */
+export function utcWeekMinuteToLocal(startMinute: number, timeZone: string): number {
+  const instant = new Date(REFERENCE_MONDAY_UTC + startMinute * 60_000)
+  return mod(startMinute + zoneOffsetMinutes(instant, timeZone), MINUTES_PER_WEEK)
+}
+
+/**
+ * The inverse: a minute the reader picked on their own grid, as the UTC that travels (#22).
+ *
+ * @param startMinute the minute, from Monday 00:00 in the reader's zone
+ * @param timeZone    the zone they picked it in
+ * @returns the minute from Monday 00:00 UTC
+ */
+export function localWeekMinuteToUtc(startMinute: number, timeZone: string): number {
+  // The offset is measured at the instant the local minute names, which is that minute read as if
+  // it were UTC — close enough that only a slot within an hour of a DST change could pick the
+  // neighbouring offset, and this community's slots are evenings.
+  const instant = new Date(REFERENCE_MONDAY_UTC + startMinute * 60_000)
+  return mod(startMinute - zoneOffsetMinutes(instant, timeZone), MINUTES_PER_WEEK)
+}
+
+/**
+ * Splits a block into the day-sized pieces a grid can draw.
+ *
+ * A block that runs past midnight belongs to two columns, and one that runs past Sunday night comes
+ * back round to Monday — the same wrap {@code WeeklyInterval} does on the other side (#178).
+ *
+ * @param block the stretch, already in the reader's zone
+ * @returns one piece per day it touches, each with the day's index from Monday and the minutes of
+ *          that day it covers
+ */
+export function splitBlockByDay(block: WeekBlock): { dayIndex: number; startMinuteOfDay: number; durationMinutes: number }[] {
+  const pieces: { dayIndex: number; startMinuteOfDay: number; durationMinutes: number }[] = []
+  let remaining = block.durationMinutes
+  let cursor = mod(block.startMinute, MINUTES_PER_WEEK)
+
+  while (remaining > 0) {
+    const dayIndex = Math.floor(cursor / MINUTES_PER_DAY)
+    const startMinuteOfDay = cursor % MINUTES_PER_DAY
+    const untilMidnight = MINUTES_PER_DAY - startMinuteOfDay
+    const slice = Math.min(remaining, untilMidnight)
+    pieces.push({ dayIndex, startMinuteOfDay, durationMinutes: slice })
+    remaining -= slice
+    cursor = mod(cursor + slice, MINUTES_PER_WEEK)
+  }
+  return pieces
+}
+
+/** Positive modulo: `%` keeps the sign in JavaScript, and a wrapped week must not go negative. */
+function mod(value: number, modulus: number): number {
+  return ((value % modulus) + modulus) % modulus
+}
+
 /**
  * The name of a weekday in the reader's language, always starting with a capital.
  *

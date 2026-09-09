@@ -1,4 +1,4 @@
-import { CircleQuestionMark, Languages, Moon, Sun } from 'lucide-react'
+import { CalendarDays, CircleQuestionMark, Languages, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LANGUAGES } from '@/config/language'
-import { helpPath, paths } from '@/config/paths'
+import { helpPath, mySchedulePath, paths } from '@/config/paths'
 import { useLogout } from '@/features/auth'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useAuth } from '@/providers/AuthProvider'
@@ -65,6 +65,12 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel className="truncate">{label}</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {/* The reader's own week (#227). In the account menu and not in a context's nav, because it
+            belongs to the person: it is the one screen where what they run and what they play meet. */}
+        <DropdownMenuItem onSelect={() => void navigate(mySchedulePath())}>
+          <CalendarDays className="size-4" />
+          {t('nav.mySchedule')}
+        </DropdownMenuItem>
         {/* The help lives here and not in the bar: it is read once and does not compete with the navigation. */}
         <DropdownMenuItem onSelect={() => void navigate(helpPath())}>
           <CircleQuestionMark className="size-4" />

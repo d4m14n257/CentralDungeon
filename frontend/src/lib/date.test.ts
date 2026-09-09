@@ -11,6 +11,9 @@ import {
   utcIsoToLocalInput,
   utcSlotToLocal,
   weekdayName,
+  splitBlockByDay,
+  utcWeekMinuteToLocal,
+  localWeekMinuteToUtc,
 } from './date'
 
 /**
@@ -86,6 +89,49 @@ describe('weekdayName', () => {
     // `Intl` gives "miércoles" in Spanish; the accent has to survive the capital.
     expect(weekdayName('Wednesday', 'es-AR')).toBe('Miércoles')
     expect(weekdayName('Saturday', 'es-AR')).toBe('Sábado')
+  })
+})
+
+describe('splitBlockByDay', () => {
+  it('leaves a block that fits in one day alone', () => {
+    // Tuesday 20:00 = 1 * 1440 + 1200, three hours.
+    expect(splitBlockByDay({ startMinute: 1440 + 1200, durationMinutes: 180 })).toEqual([
+      { dayIndex: 1, startMinuteOfDay: 1200, durationMinutes: 180 },
+    ])
+  })
+
+  it('cuts a block that runs past midnight into the two days it touches (#178)', () => {
+    // Tuesday 23:00 plus three hours ends Wednesday 02:00.
+    expect(splitBlockByDay({ startMinute: 1440 + 1380, durationMinutes: 180 })).toEqual([
+      { dayIndex: 1, startMinuteOfDay: 1380, durationMinutes: 60 },
+      { dayIndex: 2, startMinuteOfDay: 0, durationMinutes: 120 },
+    ])
+  })
+
+  it('wraps a Sunday night block round to Monday, the way the week does', () => {
+    // Sunday 23:00 = 6 * 1440 + 1380, two hours: one on Sunday, one back at the start of the week.
+    expect(splitBlockByDay({ startMinute: 6 * 1440 + 1380, durationMinutes: 120 })).toEqual([
+      { dayIndex: 6, startMinuteOfDay: 1380, durationMinutes: 60 },
+      { dayIndex: 0, startMinuteOfDay: 0, durationMinutes: 60 },
+    ])
+  })
+})
+
+describe('week minutes', () => {
+  it('round-trips a minute through a zone and back (#22)', () => {
+    const tuesdayEvening = 1440 + 1200
+    const local = utcWeekMinuteToLocal(tuesdayEvening, 'America/Argentina/Buenos_Aires')
+
+    expect(local).not.toBe(tuesdayEvening)
+    expect(localWeekMinuteToUtc(local, 'America/Argentina/Buenos_Aires')).toBe(tuesdayEvening)
+  })
+
+  it('wraps instead of going negative when a zone pushes a Monday slot back past the week', () => {
+    // Monday 00:30 UTC is Sunday night in Buenos Aires, which is the end of the week and not -180.
+    const local = utcWeekMinuteToLocal(30, 'America/Argentina/Buenos_Aires')
+
+    expect(local).toBeGreaterThan(0)
+    expect(local).toBeLessThan(7 * 24 * 60)
   })
 })
 

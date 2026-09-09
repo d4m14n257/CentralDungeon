@@ -31,7 +31,8 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 
 /**
  * Creates a table through F1.2's four-step wizard. These tests are about the state machine and not
- * about the agenda, so they walk straight past the three steps that ask for nothing required.
+ * about the agenda, so the three things a table cannot exist without (#226) are filled in with the
+ * shared helpers and nothing more is said about them.
  *
  * @param page  the tab, already signed in as a master
  * @param name  the table's name
