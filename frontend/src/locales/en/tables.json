@@ -26,13 +26,12 @@
     },
     "legendMaster": "Tables you run",
     "legendPlayer": "Tables you play at",
-    "legendNew": "This table",
     "thisTable": "This table",
     "pickHour": "Take {{slot}}",
-    "withoutAgendaTitle": "No schedule yet",
-    "withoutAgendaDescription": "These tables take up no slot because they have not set an agenda or a duration.",
     "inWizardTitle": "Your week",
-    "inWizardDescription": "Click a free hour to add it to this table’s agenda."
+    "inWizardDescription": "Click a free hour to add it to this table’s agenda.",
+    "tablesTitle": "Your tables this week",
+    "withoutAgenda": "no schedule"
   },
   "status": {
     "Unassigned": "Unassigned",

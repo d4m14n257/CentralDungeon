@@ -41,7 +41,16 @@ test('a master sees the week they have committed, and takes a free hour from the
     // It shows on the person's own week, which belongs to no context (#222).
     await page.goto('/my/schedule')
     await expect(page.getByRole('heading', { name: 'Mi horario' })).toBeVisible()
-    await expect(page.getByText(firstName).first()).toBeVisible()
+    // The list underneath says when, for the blocks too small to read their own label.
+    await expect(page.getByText('Mar 20:00–23:00')).toBeVisible()
+
+    // And the block itself is a shortcut: looking at the week and going to one of its tables is one
+    // errand, not two (#227).
+    await page
+      .getByRole('link', { name: `${firstName} — la dirigís` })
+      .first()
+      .click()
+    await expect(page).toHaveURL(/\/master\/tables\/[0-9a-f-]+$/)
 
     // And the same grid, inside the wizard, is what the next table is built from: the hour the first
     // table took is no longer offered, and a free one can be claimed with a click.
@@ -52,6 +61,8 @@ test('a master sees the week they have committed, and takes a free hour from the
     await page.getByRole('button', { name: 'Siguiente' }).click()
 
     await expect(page.getByRole('button', { name: 'Ocupar Martes 20:00' })).toBeHidden()
+    // In the wizard the blocks lead nowhere on purpose: navigating away would throw away the form.
+    await expect(page.getByRole('link', { name: `${firstName} — la dirigís` })).toHaveCount(0)
     await page.getByRole('button', { name: 'Ocupar Jueves 21:00' }).click()
     // Claiming it fills the agenda, which is what lets the step be left at all (#226).
     await page.getByRole('button', { name: 'Siguiente' }).click()

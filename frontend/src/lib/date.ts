@@ -178,6 +178,27 @@ export function splitBlockByDay(block: WeekBlock): { dayIndex: number; startMinu
   return pieces
 }
 
+/**
+ * A week block written the way a person reads it: "Martes 20:00–23:00" (#227).
+ *
+ * The same phrasing {@link formatSlot} produces, for a block that travels as minutes rather than as
+ * a weekday and a time. It names the day the block **starts** on, in the reader's zone, and closes
+ * the range with where it ends — even when that is the small hours of the next day.
+ *
+ * @param block    the stretch, in UTC minutes from Monday 00:00
+ * @param locale   the BCP-47 locale (#111)
+ * @param timeZone the IANA zone to read it in (#22)
+ * @returns the block as a phrase
+ */
+export function formatWeekBlock(block: WeekBlock, locale: string, timeZone: string): string {
+  const localStart = utcWeekMinuteToLocal(block.startMinute, timeZone)
+  const day = WEEKDAYS[Math.floor(localStart / MINUTES_PER_DAY)]
+  const startOfDay = localStart % MINUTES_PER_DAY
+  const start = formatMinutes(startOfDay)
+  const end = formatMinutes((startOfDay + block.durationMinutes) % MINUTES_PER_DAY)
+  return `${weekdayName(day ?? 'Monday', locale, 'short')} ${start}–${end}`
+}
+
 /** Positive modulo: `%` keeps the sign in JavaScript, and a wrapped week must not go negative. */
 function mod(value: number, modulus: number): number {
   return ((value % modulus) + modulus) % modulus

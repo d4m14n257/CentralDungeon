@@ -26,13 +26,12 @@
     },
     "legendMaster": "Mesas que dirigís",
     "legendPlayer": "Mesas donde jugás",
-    "legendNew": "Esta mesa",
     "thisTable": "Esta mesa",
     "pickHour": "Ocupar {{slot}}",
-    "withoutAgendaTitle": "Sin horario todavía",
-    "withoutAgendaDescription": "Estas mesas no ocupan ninguna franja porque no definieron su agenda o su duración.",
     "inWizardTitle": "Tu semana",
-    "inWizardDescription": "Hacé clic en una hora libre para agregarla a la agenda de esta mesa."
+    "inWizardDescription": "Hacé clic en una hora libre para agregarla a la agenda de esta mesa.",
+    "tablesTitle": "Tus mesas esta semana",
+    "withoutAgenda": "sin horario"
   },
   "status": {
     "Unassigned": "Sin asignar",

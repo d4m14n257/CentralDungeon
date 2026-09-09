@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 
 import { cn } from '@/lib/utils'
 import {
@@ -29,6 +30,8 @@ interface Piece {
   label: string
   role: WeeklyCommitment['role'] | 'new'
   title: string
+  /** Where the block leads, when the grid is a shortcut as well as a picture. */
+  href: string | null
 }
 
 /** What the grid needs to draw a week, and optionally to let somebody claim an hour of it. */
@@ -49,6 +52,16 @@ export interface WeeklyScheduleGridProps {
    * not: finding the gap and taking it should be the same gesture.
    */
   onPickHour?: (utcStartMinute: number) => void
+  /**
+   * Where a block leads when it is clicked, resolved per commitment.
+   *
+   * Given it, every rectangle is a shortcut to its table — which is what somebody looking at their
+   * week wants next, and it saves reading the name off the grid to then go find it in a list.
+   *
+   * **The wizard deliberately does not pass it**: navigating away mid-form would throw away a
+   * half-filled table, and there the click already means something else (claiming the hour).
+   */
+  linkFor?: (commitment: WeeklyCommitment) => string
 }
 
 /**
@@ -73,7 +86,7 @@ export interface WeeklyScheduleGridProps {
  * @param props.pending     blocks of the table being built, drawn apart from the rest
  * @param props.onPickHour  what to do with an hour the reader claims. Omit for a read-only grid
  */
-export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPickHour }: WeeklyScheduleGridProps) {
+export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPickHour, linkFor }: WeeklyScheduleGridProps) {
   const { t, i18n } = useTranslation('tables')
 
   const pieces: Piece[] = []
@@ -89,6 +102,7 @@ export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPick
           label: commitment.tableName,
           role: commitment.role,
           title: `${commitment.tableName} — ${t(`schedule.role.${commitment.role}`)}`,
+          href: linkFor ? linkFor(commitment) : null,
         })
       }
     }
@@ -104,6 +118,8 @@ export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPick
         label: t('schedule.thisTable'),
         role: 'new',
         title: t('schedule.thisTable'),
+        // The table being built has nowhere to lead: it does not exist yet.
+        href: null,
       })
     }
   }
@@ -173,21 +189,38 @@ export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPick
 
             {pieces
               .filter((piece) => piece.dayIndex === dayIndex)
-              .map((piece) => (
-                <span
-                  key={piece.key}
-                  title={piece.title}
-                  className={cn(
-                    'pointer-events-none absolute inset-x-0.5 overflow-hidden rounded-sm px-1 py-0.5 text-[10px] leading-tight',
-                    piece.role === 'Master' && 'bg-brand-500/85 text-white',
-                    piece.role === 'Player' && 'bg-state-active-bg text-state-active-fg',
-                    piece.role === 'new' && 'bg-state-open-bg text-state-open-fg ring-state-open-dot ring-1',
-                  )}
-                  style={{ top: piece.top, height: piece.height }}
-                >
-                  {piece.label}
-                </span>
-              ))}
+              .map((piece) => {
+                const shape = cn(
+                  'absolute inset-x-0.5 overflow-hidden rounded-sm px-1 py-0.5 text-[10px] leading-tight',
+                  piece.role === 'Master' && 'bg-brand-500/85 text-white',
+                  piece.role === 'Player' && 'bg-state-active-bg text-state-active-fg',
+                  piece.role === 'new' && 'bg-state-open-bg text-state-open-fg ring-state-open-dot ring-1',
+                )
+                // A block with nowhere to go must not eat the click of the free hour underneath it,
+                // which is what `pointer-events-none` is for. One that leads somewhere is a link and
+                // has to take it.
+                return piece.href ? (
+                  <Link
+                    key={piece.key}
+                    to={piece.href}
+                    title={piece.title}
+                    aria-label={piece.title}
+                    className={cn(shape, 'hover:ring-brand-fg block hover:ring-2')}
+                    style={{ top: piece.top, height: piece.height }}
+                  >
+                    {piece.label}
+                  </Link>
+                ) : (
+                  <span
+                    key={piece.key}
+                    title={piece.title}
+                    className={cn(shape, 'pointer-events-none')}
+                    style={{ top: piece.top, height: piece.height }}
+                  >
+                    {piece.label}
+                  </span>
+                )
+              })}
           </div>
         ))}
       </div>
