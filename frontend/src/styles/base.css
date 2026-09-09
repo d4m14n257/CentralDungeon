@@ -16,6 +16,14 @@
   h3 {
     font-family: var(--font-serif);
   }
+
+  /* Tailwind 4 sacó de su preflight el `cursor: pointer` de los botones, así que un <button>
+     queda con la flecha del sistema y no se ve clickeable. Se repone acá, una vez, en vez de
+     acordarse de una clase en cada botón. Lo deshabilitado no: ahí la flecha es la verdad. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }
 
 @layer components {
@@ -24,4 +32,30 @@
   .bg-brand-gradient {
     background-image: var(--gradient-brand);
   }
+}
+
+/* Correcciones a lo que trae shadcn de fábrica, sobre sus propios `data-slot`.
+   Van SIN `@layer` a propósito: una regla sin capa le gana a cualquier utilidad de Tailwind, y
+   estas dos tienen que ganarle a clases que vienen en el componente generado — que no se edita
+   a mano. Por eso no alcanza con ponerlas en `base` o en `components`. */
+
+/* El ítem de menú viene con `cursor-default`: parece texto, no una opción que se elige. */
+[data-slot='dropdown-menu-item'],
+[data-slot='dropdown-menu-checkbox-item'],
+[data-slot='dropdown-menu-radio-item'],
+[data-slot='dropdown-menu-sub-trigger'] {
+  cursor: pointer;
+}
+
+[data-slot='dropdown-menu-item'][data-disabled],
+[data-slot='dropdown-menu-checkbox-item'][data-disabled],
+[data-slot='dropdown-menu-radio-item'][data-disabled] {
+  cursor: default;
+}
+
+/* El separador se pinta con `bg-border`, y en un popover eso es el mismo tono que el fondo:
+   `border` y `raised` son el mismo valor en oscuro, así que la línea existía y no se veía.
+   Sobre una superficie elevada la línea es `border-strong`, que es el escalón siguiente. */
+[data-slot='dropdown-menu-separator'] {
+  background-color: var(--color-border-strong);
 }

@@ -65,14 +65,11 @@ export function NotificationBell() {
             <DropdownMenuItem
               key={notification.id}
               onSelect={() => handleClick(notification)}
-              className={cn(
-                // --color-accent is --color-raised (globals.css), so the base focus:bg-accent does
-                // not show on a row that is already raised - it is overridden with a stronger tone of
-                // its own that works on read and unread rows alike, plus cursor-pointer (the base
-                // ships cursor-default, meant for items that cannot be clicked).
-                'focus:bg-border-strong! gap-2.5 px-3 py-2 text-[13px] cursor-pointer',
-                unread ? 'bg-raised text-fg' : 'text-fg-muted',
-              )}
+              // The hover and the pointer are the base's now: `--color-accent` stopped being an
+              // alias of `--color-raised` (#224), so `focus:bg-accent` shows on a raised row on its
+              // own, and `styles/base.css` gives every menu item its cursor. This used to carry both
+              // by hand (#157).
+              className={cn('gap-2.5 px-3 py-2 text-[13px]', unread ? 'bg-raised text-fg' : 'text-fg-muted')}
             >
               <span className={cn('w-[15px] shrink-0 text-center', unread ? 'text-brand-fg' : 'text-fg-subtle')} aria-hidden>
                 {unread ? '●' : '○'}
@@ -83,7 +80,7 @@ export function NotificationBell() {
           )
         })}
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="focus:bg-border-strong! cursor-pointer justify-center px-3 py-2 text-[13px]">
+        <DropdownMenuItem asChild className="justify-center px-3 py-2 text-[13px]">
           <Link to="/notifications" className="text-brand-fg">
             {t('viewAll')}
           </Link>

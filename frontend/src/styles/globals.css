@@ -116,7 +116,7 @@
   --color-secondary-foreground: var(--color-fg);
   --color-muted: var(--color-raised);
   --color-muted-foreground: var(--color-fg-muted);
-  --color-accent: var(--color-raised);
+  --color-accent: var(--color-border-strong);
   --color-accent-foreground: var(--color-fg);
   --color-destructive: var(--color-state-canceled-dot);
   --color-destructive-foreground: #020617;

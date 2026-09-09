@@ -462,7 +462,12 @@ lines += ["", "  /* -- shadcn/ui bridge: aliases of the tokens above, not new co
           "  --color-secondary-foreground: var(--color-fg);",
           "  --color-muted: var(--color-raised);",
           "  --color-muted-foreground: var(--color-fg-muted);",
-          "  --color-accent: var(--color-raised);",
+          # `accent` is shadcn's *hover and selection* surface, and it is the one alias that cannot
+          # be `raised`: menus, popovers and the notification panel are already painted `raised`, so
+          # aliasing it there made every hover paint the background it was sitting on - invisible.
+          # #157 found this on the notification rows and worked around it row by row; the tone it
+          # picked by hand, `border-strong`, is the one that belongs in the token.
+          "  --color-accent: var(--color-border-strong);",
           "  --color-accent-foreground: var(--color-fg);",
           "  --color-destructive: var(--color-state-canceled-dot);",
           f"  --color-destructive-foreground: {on_solid(dark_destructive)};",
