@@ -13,6 +13,8 @@ import org.jspecify.annotations.Nullable;
  * @param name              the table's title
  * @param status            where the table is in its lifecycle, as a string
  * @param tableTypeName     how the table is run, resolved to its label. Null when none was chosen
+ * @param tableTypeCode     the identifier the frontend translates by, when the application shipped
+ *                          that type. Null for one a person named, whose label is read verbatim (#225)
  * @param maxPlayers        the player cap (#24), or null for no cap
  * @param playerCount       how many people are accepted right now
  * @param primaryMasterName who runs the table, as a display name. <b>Null for an Unassigned table</b>,
@@ -25,6 +27,7 @@ public record AdminTableSummaryResponse(
         String name,
         String status,
         @Nullable String tableTypeName,
+        @Nullable String tableTypeCode,
         @Nullable Integer maxPlayers,
         int playerCount,
         @Nullable String primaryMasterName,

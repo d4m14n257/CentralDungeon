@@ -15,7 +15,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator'
 import { helpPath, masterTableDetailPath } from '@/config/paths'
 import { CatalogChip, CatalogPicker } from '@/features/catalogs'
-import { ScheduleEditor, createGameTableSchema, useCreateTable, useTableTypes, WIZARD_STEPS } from '@/features/tables'
+import {
+  ScheduleEditor,
+  createGameTableSchema,
+  tableTypeDescription,
+  tableTypeLabel,
+  useCreateTable,
+  useTableTypes,
+  WIZARD_STEPS,
+} from '@/features/tables'
 import type { CreateGameTableForm, TableScheduleEntry, WizardStep } from '@/features/tables'
 import { useMe } from '@/features/users'
 import { browserTimeZone, formatSlot, localInputToUtcIso, utcSlotToLocal } from '@/lib/date'
@@ -37,6 +45,9 @@ import type { CatalogValue } from '@/types/catalog'
  */
 export function MasterTableCreatePage() {
   const { t, i18n } = useTranslation('master')
+  // A second namespace rather than copying the labels into `master`: the words belong to the
+  // tables domain and are the same ones the explorer's card shows (regla dura 18).
+  const { t: tTables } = useTranslation('tables')
   const navigate = useNavigate()
   const createTable = useCreateTable()
   const { data: me } = useMe()
@@ -66,6 +77,8 @@ export function MasterTableCreatePage() {
 
   const stepIndex = WIZARD_STEPS.indexOf(step)
   const values = form.getValues()
+  const selectedType = tableTypes?.content.find((type) => type.id === values.tableTypeId)
+  const selectedTableTypeLabel = selectedType ? tableTypeLabel(tTables, selectedType.code, selectedType.name) : null
 
   async function goNext() {
     // Only the first step has required fields; validating more would stop somebody who has not
@@ -167,12 +180,15 @@ export function MasterTableCreatePage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(tableTypes?.content ?? []).map((type) => (
-                          <SelectItem key={type.id} value={type.id}>
-                            {type.name}
-                            {type.description && <span className="text-fg-subtle ml-2 text-xs">{type.description}</span>}
-                          </SelectItem>
-                        ))}
+                        {(tableTypes?.content ?? []).map((type) => {
+                          const description = tableTypeDescription(tTables, type.code, type.description)
+                          return (
+                            <SelectItem key={type.id} value={type.id}>
+                              {tableTypeLabel(tTables, type.code, type.name)}
+                              {description && <span className="text-fg-subtle ml-2 text-xs">{description}</span>}
+                            </SelectItem>
+                          )
+                        })}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -311,10 +327,7 @@ export function MasterTableCreatePage() {
               <section className="space-y-3" aria-label={t('create.reviewTitle')}>
                 <h2 className="font-serif text-lg font-semibold">{t('create.reviewTitle')}</h2>
                 <SummaryRow label={t('create.nameLabel')} value={values.name} />
-                <SummaryRow
-                  label={t('create.tableTypeLabel')}
-                  value={tableTypes?.content.find((type) => type.id === values.tableTypeId)?.name ?? t('create.reviewEmpty')}
-                />
+                <SummaryRow label={t('create.tableTypeLabel')} value={selectedTableTypeLabel ?? t('create.reviewEmpty')} />
                 <SummaryChips label={t('create.systemsLabel')} values={systems} empty={t('create.reviewEmpty')} />
                 <SummaryChips label={t('create.tagsLabel')} values={tags} empty={t('create.reviewEmpty')} />
                 <SummaryChips label={t('create.platformsLabel')} values={platforms} empty={t('create.reviewEmpty')} />

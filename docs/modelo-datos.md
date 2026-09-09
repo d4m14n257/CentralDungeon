@@ -161,13 +161,15 @@ CREATE TABLE users_roles (
 CREATE TABLE table_types (
     id          VARCHAR(64)  NOT NULL,
     name        VARCHAR(64)  NOT NULL,
+    code        VARCHAR(32)  NULL,                   -- #225: lo trajo la aplicación -> se traduce; NULL -> lo escribió una persona
     description VARCHAR(256) NULL,
     status      VARCHAR(32)  NOT NULL DEFAULT 'Created',
     created_at  DATETIME     NOT NULL,
     updated_at  DATETIME     NULL,
     deleted_at  DATETIME     NULL,
     CONSTRAINT pk_table_types PRIMARY KEY (id),
-    CONSTRAINT uk_table_types_name UNIQUE (name)
+    CONSTRAINT uk_table_types_name UNIQUE (name),
+    CONSTRAINT uk_table_types_code UNIQUE (code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE game_tables (
@@ -896,7 +898,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 Va en `V2__seed.sql`. Sin esto la aplicación no funciona.
 
 - `roles`: **`Player`, `Master`, `Admin`, `Owner`** — cuatro, no tres (#67).
-- `table_types`: `Public`, `First class` — los valores del enum heredado, para no perder la clasificación existente. Los admins agregan el resto desde la aplicación.
+- `table_types`: `Public` / `PUBLIC` y `First class` / `FIRST_CLASS` — los valores del enum heredado, para no perder la clasificación existente. Llevan `code` porque los trajo la aplicación y por eso se traducen en el frontend (#225); los que agreguen los admins desde la aplicación **no lo llevan**, y su nombre se lee tal cual lo escribieron, igual que en `systems`, `tags` y `platforms`.
 
 ## 7. Fuera de alcance de v1 (decidido, no olvidado)
 

@@ -20,6 +20,8 @@ import org.jspecify.annotations.Nullable;
  * @param permitted     the house rules, as sanitized rich text
  * @param requirements  what is asked of a player to be accepted, as sanitized rich text
  * @param tableTypeName how the table is run, resolved to its label. Null when none was chosen
+ * @param tableTypeCode the identifier the frontend translates by, when the application shipped
+ *                      that type. Null for one a person named, whose label is read verbatim (#225)
  * @param status        where the table is in its lifecycle, as a string (arquitectura.md 2.3)
  * @param maxPlayers    the player cap (#24), or null for no cap
  * @param playerCount   how many people are accepted right now. Derived, never stored
@@ -59,6 +61,7 @@ public record GameTableDetailResponse(
         @Nullable String permitted,
         @Nullable String requirements,
         @Nullable String tableTypeName,
+        @Nullable String tableTypeCode,
         String status,
         @Nullable Integer maxPlayers,
         int playerCount,

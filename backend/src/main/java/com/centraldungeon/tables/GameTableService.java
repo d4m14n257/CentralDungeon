@@ -746,6 +746,7 @@ public class GameTableService {
                 gameTable.getName(),
                 gameTable.getStatus().name(),
                 gameTable.getTableType() != null ? gameTable.getTableType().getName() : null,
+                gameTable.getTableType() != null ? gameTable.getTableType().getCode() : null,
                 gameTable.getMaxPlayers(),
                 countPlayers(gameTable.getId()),
                 primaryMaster != null ? primaryMaster.name() : null,

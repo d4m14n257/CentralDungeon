@@ -5,6 +5,16 @@
     "applications": "My applications",
     "myTables": "My tables"
   },
+  "tableTypes": {
+    "PUBLIC": {
+      "name": "Public",
+      "description": "Open table, visible to the whole community"
+    },
+    "FIRST_CLASS": {
+      "name": "First class",
+      "description": "Curated table with stricter requirements"
+    }
+  },
   "status": {
     "Unassigned": "Unassigned",
     "Preparation": "In preparation",

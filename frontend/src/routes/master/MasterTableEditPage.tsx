@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { helpPath, masterTableDetailPath } from '@/config/paths'
 import { CatalogPicker } from '@/features/catalogs'
-import { ScheduleEditor, createGameTableSchema, useManagedTable, useTableTypes, useUpdateTable } from '@/features/tables'
+import { ScheduleEditor, createGameTableSchema, tableTypeLabel, useManagedTable, useTableTypes, useUpdateTable } from '@/features/tables'
 import type { CreateGameTableForm, GameTableStatus, TableScheduleEntry } from '@/features/tables'
 import { useMe } from '@/features/users'
 import { browserTimeZone, localInputToUtcIso, utcIsoToLocalInput } from '@/lib/date'
@@ -43,6 +43,8 @@ const EDITABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested']
  */
 export function MasterTableEditPage() {
   const { t } = useTranslation('master')
+  // The type's words belong to the tables domain, same as in the wizard (regla dura 18).
+  const { t: tTables } = useTranslation('tables')
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
@@ -77,7 +79,11 @@ export function MasterTableEditPage() {
       description: table.description ?? '',
       permitted: table.permitted ?? '',
       requirements: table.requirements ?? '',
-      tableTypeId: tableTypes?.content.find((type) => type.name === table.tableTypeName)?.id ?? '',
+      // By code when the application shipped the type, by name when a person created it (#225):
+      // matching on the label alone broke as soon as the label started being translated.
+      tableTypeId:
+        tableTypes?.content.find((type) => (table.tableTypeCode ? type.code === table.tableTypeCode : type.name === table.tableTypeName))
+          ?.id ?? '',
       startDate: utcIsoToLocalInput(table.startDate, timeZone),
       duration: table.duration ? table.duration.slice(0, 5) : '',
       maxPlayers: table.maxPlayers === null ? '' : String(table.maxPlayers),
@@ -174,7 +180,7 @@ export function MasterTableEditPage() {
                     <SelectContent>
                       {(tableTypes?.content ?? []).map((type) => (
                         <SelectItem key={type.id} value={type.id}>
-                          {type.name}
+                          {tableTypeLabel(tTables, type.code, type.name)}
                         </SelectItem>
                       ))}
                     </SelectContent>

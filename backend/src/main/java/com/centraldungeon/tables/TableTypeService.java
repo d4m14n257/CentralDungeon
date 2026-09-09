@@ -33,6 +33,6 @@ public class TableTypeService {
     public PageResponse<TableTypeResponse> list(Pageable pageable) {
         return PageResponse.from(tableTypeRepository
                 .findAll(pageable)
-                .map(type -> new TableTypeResponse(type.getId(), type.getName(), type.getDescription())));
+                .map(type -> new TableTypeResponse(type.getId(), type.getCode(), type.getName(), type.getDescription())));
     }
 }

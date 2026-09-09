@@ -5,6 +5,16 @@
     "applications": "Mis postulaciones",
     "myTables": "Mis mesas"
   },
+  "tableTypes": {
+    "PUBLIC": {
+      "name": "Pública",
+      "description": "Mesa abierta, visible para toda la comunidad"
+    },
+    "FIRST_CLASS": {
+      "name": "Primera clase",
+      "description": "Mesa curada, con requisitos más estrictos"
+    }
+  },
   "status": {
     "Unassigned": "Sin asignar",
     "Preparation": "En preparación",

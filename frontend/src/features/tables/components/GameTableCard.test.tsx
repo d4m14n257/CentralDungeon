@@ -11,6 +11,7 @@ const baseTable: GameTableSummary = {
   name: 'Curse of Strahd',
   status: 'Opened',
   tableTypeName: 'Public',
+  tableTypeCode: 'PUBLIC',
   maxPlayers: 4,
   playerCount: 2,
   duration: '03:00:00',
@@ -28,6 +29,19 @@ function renderCard(table: GameTableSummary, options: { linkTo?: string; already
 }
 
 describe('GameTableCard', () => {
+  it('translates the type the application shipped, and does not show its English label', () => {
+    renderCard(baseTable)
+
+    expect(screen.getByText('Pública')).toBeInTheDocument()
+    expect(screen.queryByText('Public')).not.toBeInTheDocument()
+  })
+
+  it('shows verbatim the type a person named, because that one has no code (#225)', () => {
+    renderCard({ ...baseTable, tableTypeCode: null, tableTypeName: 'Mesa de campaña larga' })
+
+    expect(screen.getByText('Mesa de campaña larga')).toBeInTheDocument()
+  })
+
   it('links to the default player detail route when linkTo is not given', () => {
     renderCard(baseTable)
 

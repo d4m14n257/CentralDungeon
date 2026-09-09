@@ -24,6 +24,7 @@ public interface GameTableMapper {
     @Mapping(target = "name", source = "gameTable.name")
     @Mapping(target = "status", expression = "java(gameTable.getStatus().name())")
     @Mapping(target = "tableTypeName", expression = "java(gameTable.getTableType() != null ? gameTable.getTableType().getName() : null)")
+    @Mapping(target = "tableTypeCode", expression = "java(gameTable.getTableType() != null ? gameTable.getTableType().getCode() : null)")
     GameTableSummaryResponse toSummary(
             GameTable gameTable,
             int playerCount,
@@ -38,6 +39,7 @@ public interface GameTableMapper {
      */
     @Mapping(target = "status", expression = "java(gameTable.getStatus().name())")
     @Mapping(target = "tableTypeName", expression = "java(gameTable.getTableType() != null ? gameTable.getTableType().getName() : null)")
+    @Mapping(target = "tableTypeCode", expression = "java(gameTable.getTableType() != null ? gameTable.getTableType().getCode() : null)")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "permitted", source = "permitted")
     @Mapping(target = "requirements", source = "requirements")

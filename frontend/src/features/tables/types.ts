@@ -39,6 +39,8 @@ export interface GameTableSummary {
   name: string
   status: GameTableStatus
   tableTypeName: string | null
+  /** The code to translate the label by, or null when a person named the type (#225). */
+  tableTypeCode: string | null
   maxPlayers: number | null
   playerCount: number
   /** `HH:mm:ss` - how long one session lasts, so a card can close the range and not only open it. */
@@ -89,6 +91,8 @@ export interface GameTableDetail {
   permitted: string | null
   requirements: string | null
   tableTypeName: string | null
+  /** The code to translate the label by, or null when a person named the type (#225). */
+  tableTypeCode: string | null
   status: GameTableStatus
   maxPlayers: number | null
   playerCount: number
@@ -224,6 +228,12 @@ export interface RecordAttendanceRequest {
  */
 export interface TableType {
   id: string
+  /**
+   * The identifier the label is translated by, for a type the application shipped (#225). Null for
+   * one an admin created, whose `name` is then read verbatim. Never shown.
+   */
+  code: string | null
+  /** The API's label. What a reader sees when there is no `code` to translate, and the fallback when there is. */
   name: string
   /** What the type means. Null when the row never had it: "Public" does not explain itself. */
   description: string | null
@@ -303,6 +313,8 @@ export interface AdminTableSummary {
   name: string
   status: GameTableStatus
   tableTypeName: string | null
+  /** The code to translate the label by, or null when a person named the type (#225). */
+  tableTypeCode: string | null
   maxPlayers: number | null
   playerCount: number
   primaryMasterName: string | null

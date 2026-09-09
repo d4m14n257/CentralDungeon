@@ -7,6 +7,8 @@ import { tableDetailPath } from '@/config/paths'
 import { browserTimeZone, formatSlot, utcSlotToLocal } from '@/lib/date'
 
 import type { GameTableSummary } from '../types'
+import { tableTypeLabel } from '../lib/tableTypeLabel'
+
 import { TableStatusBadge } from './TableStatusBadge'
 
 /**
@@ -26,6 +28,7 @@ import { TableStatusBadge } from './TableStatusBadge'
  */
 export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTableSummary; linkTo?: string; alreadyApplied?: boolean }) {
   const { t, i18n } = useTranslation('tables')
+  const typeLabel = tableTypeLabel(t, table.tableTypeCode, table.tableTypeName)
 
   return (
     <Link to={linkTo ?? tableDetailPath(table.id)} className="group block h-full">
@@ -40,7 +43,7 @@ export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTa
             </span>
           )}
         </div>
-        {table.tableTypeName && <p className="text-fg-muted text-sm">{table.tableTypeName}</p>}
+        {typeLabel && <p className="text-fg-muted text-sm">{typeLabel}</p>}
         {table.schedule.length > 0 && (
           <p className="text-fg-muted flex items-start gap-1.5 text-sm">
             <Calendar className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
