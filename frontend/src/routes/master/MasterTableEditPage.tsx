@@ -16,10 +16,20 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { helpPath, masterTableDetailPath } from '@/config/paths'
 import { CatalogPicker } from '@/features/catalogs'
-import { ScheduleEditor, createGameTableSchema, tableTypeLabel, useManagedTable, useTableTypes, useUpdateTable } from '@/features/tables'
+import {
+  DEFAULT_SLOT_DURATION,
+  ScheduleEditor,
+  WeeklyScheduleGrid,
+  createGameTableSchema,
+  tableTypeLabel,
+  useManagedTable,
+  useMySchedule,
+  useTableTypes,
+  useUpdateTable,
+} from '@/features/tables'
 import type { CreateGameTableForm, GameTableStatus, TableScheduleEntry } from '@/features/tables'
 import { useMe } from '@/features/users'
-import { browserTimeZone, localInputToUtcIso, utcIsoToLocalInput } from '@/lib/date'
+import { WEEKDAYS, browserTimeZone, formatMinutes, localInputToUtcIso, minutesOfDay, utcIsoToLocalInput } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 import { ApiError } from '@/types/api'
 
@@ -43,7 +53,7 @@ const EDITABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested']
  */
 export function MasterTableEditPage() {
   const { t } = useTranslation('master')
-  // The type's words belong to the tables domain, same as in the wizard (regla dura 18).
+  // The type's and the week's words belong to the tables domain (regla dura 18).
   const { t: tTables } = useTranslation('tables')
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
@@ -63,10 +73,27 @@ export function MasterTableEditPage() {
   // #22 took `users.timezone` out of the model, so the browser is the only source today; `lib/date.ts`
   // takes the zone as a parameter so a profile preference would change this line and no other (#111).
   const timeZone = useMemo(() => browserTimeZone(), [])
+  // The reader's other commitments, so rewriting an agenda is looking and not guessing (#227). This
+  // table is filtered out: it cannot clash with itself, and drawing it twice would say it did.
+  const myWeek = useMySchedule()
+  const pendingBlocks = schedule.map((entry) => ({
+    startMinute: WEEKDAYS.indexOf(entry.weekday) * 24 * 60 + minutesOfDay(entry.hourtime),
+    durationMinutes: minutesOfDay(entry.duration ?? DEFAULT_SLOT_DURATION),
+  }))
+
+  /** Adds the hour the master clicked, in UTC, unless this table already claimed it (#228). */
+  function claimHour(utcStartMinute: number) {
+    const weekday = WEEKDAYS[Math.floor(utcStartMinute / (24 * 60))]
+    const hourtime = formatMinutes(utcStartMinute % (24 * 60))
+    if (!weekday || schedule.some((entry) => entry.weekday === weekday && entry.hourtime.slice(0, 5) === hourtime)) {
+      return
+    }
+    setSchedule([...schedule, { weekday, hourtime, duration: DEFAULT_SLOT_DURATION }])
+  }
 
   const form = useForm<CreateGameTableForm>({
     resolver: zodResolver(createGameTableSchema),
-    defaultValues: { name: '', description: '', permitted: '', requirements: '', duration: '' },
+    defaultValues: { name: '', description: '', permitted: '', requirements: '' },
   })
 
   // The form is filled from the server's answer rather than rendered off it: react-hook-form owns
@@ -85,7 +112,6 @@ export function MasterTableEditPage() {
         tableTypes?.content.find((type) => (table.tableTypeCode ? type.code === table.tableTypeCode : type.name === table.tableTypeName))
           ?.id ?? '',
       startDate: utcIsoToLocalInput(table.startDate, timeZone),
-      duration: table.duration ? table.duration.slice(0, 5) : '',
       maxPlayers: table.maxPlayers === null ? '' : String(table.maxPlayers),
       totalSessions: table.totalSessions === null ? '' : String(table.totalSessions),
     })
@@ -127,7 +153,6 @@ export function MasterTableEditPage() {
         tagIds: tags.map((value) => value.id),
         platformIds: platforms.map((value) => value.id),
         startDate: values.startDate ? localInputToUtcIso(values.startDate, timeZone) : null,
-        duration: values.duration ? values.duration : null,
         maxPlayers: values.maxPlayers ? Number(values.maxPlayers) : null,
         totalSessions: values.totalSessions ? Number(values.totalSessions) : null,
         schedule,
@@ -142,7 +167,9 @@ export function MasterTableEditPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    // Centred rather than hugging the left: these two are forms, and a form read against one
+    // edge of a wide screen is a column of text with a desert next to it (#228).
+    <div className="mx-auto max-w-2xl space-y-6">
       <div className="space-y-1">
         <h1 className="font-serif text-2xl font-semibold">{t('edit.title', { name: table.name })}</h1>
         <p className="text-fg-muted text-sm">{t('edit.description')}</p>
@@ -259,20 +286,6 @@ export function MasterTableEditPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('create.durationLabel')}</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormDescription>{t('create.durationHint')}</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
             <div className="space-y-2">
               <div className="flex items-baseline justify-between gap-3">
@@ -282,7 +295,26 @@ export function MasterTableEditPage() {
                   {t('create.scheduleHelp')}
                 </Link>
               </div>
-              <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} duration={form.watch('duration')} />
+              <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} />
+
+              {/* The same week the wizard offers (#227, #228): the master rewriting an agenda needs
+                  to see what else they gave away just as much as the one building it does. */}
+              <div className="space-y-2 pt-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{tTables('schedule.inWizardTitle')}</h3>
+                  <p className="text-fg-muted text-xs">{tTables('schedule.inWizardDescription')}</p>
+                </div>
+                {myWeek.isPending ? (
+                  <Skeleton className="h-64 w-full" />
+                ) : (
+                  <WeeklyScheduleGrid
+                    commitments={(myWeek.data ?? []).filter((commitment) => commitment.tableId !== tableId)}
+                    timeZone={timeZone}
+                    pending={pendingBlocks}
+                    onPickHour={claimHour}
+                  />
+                )}
+              </div>
             </div>
           </section>
 

@@ -96,7 +96,7 @@ class TableSessionIT {
 
         table = gameTableRepository.save(draft("Mesa de los martes"));
         masterService.createPrimary(table, master);
-        tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0))), master.getId());
+        tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0))), master.getId());
     }
 
     /** The whole point of #26 and #33: approving a draft is what turns an agenda into dates. */
@@ -188,7 +188,7 @@ class TableSessionIT {
         // Legal precisely because a paused table does not reserve its slot (#32, #178).
         GameTable second = gameTableRepository.save(draft("Mesa que ocupó el martes"));
         masterService.createPrimary(second, master);
-        tableScheduleService.replace(second, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(21, 0))), master.getId());
+        tableScheduleService.replace(second, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(21, 0), LocalTime.of(3, 0))), master.getId());
 
         assertThatThrownBy(() -> gameTableService.resume(table.getId(), admin.getId()))
                 .isInstanceOf(ConflictException.class)
@@ -211,7 +211,6 @@ class TableSessionIT {
 
     private GameTable draft(String name) {
         GameTable draft = new GameTable(name, master);
-        draft.setDuration(LocalTime.of(3, 0));
         draft.setStartDate(LocalDateTime.parse("2026-09-08T20:00"));
         draft.setTotalSessions(4);
         return draft;

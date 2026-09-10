@@ -18,7 +18,6 @@ erDiagram
         longtext description
         longtext requirements "texto enriquecido"
         datetime start_date "UTC, sin columna timezone"
-        time duration "duracion de UNA sesion"
         int total_sessions
         int max_players
         varchar status "Unassigned | Preparation | ChangesRequested | Opened | InProgress | PauseRequested | Pause | Finished | Canceled"
@@ -42,6 +41,7 @@ erDiagram
         time hourtime PK "UTC"
         varchar status
         datetime deleted_at
+        time duration "de ESTA sesion (#228)"
     }
 
     table_sessions {

@@ -201,7 +201,6 @@ public class GameTableService {
         gameTable.setPermitted(richTextSanitizer.sanitize(request.permitted()));
         gameTable.setRequirements(richTextSanitizer.sanitize(request.requirements()));
         gameTable.setStartDate(request.startDate());
-        gameTable.setDuration(request.duration());
         gameTable.setTotalSessions(request.totalSessions());
         gameTable.setMaxPlayers(request.maxPlayers());
         gameTable.setTableType(resolveTableType(request.tableTypeId()));
@@ -666,7 +665,6 @@ public class GameTableService {
         gameTable.setPermitted(richTextSanitizer.sanitize(request.permitted()));
         gameTable.setRequirements(richTextSanitizer.sanitize(request.requirements()));
         gameTable.setStartDate(request.startDate());
-        gameTable.setDuration(request.duration());
         gameTable.setTotalSessions(request.totalSessions());
         gameTable.setMaxPlayers(request.maxPlayers());
         gameTable.setTableType(resolveTableType(request.tableTypeId()));

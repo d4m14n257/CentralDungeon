@@ -43,6 +43,9 @@ async function createTableThroughWizard(page: Page, name: string) {
   await addScheduleSlot(page, '20:00')
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
+  // The files step (#228): nothing is required there, so it is walked past.
+  await page.getByRole('button', { name: 'Siguiente' }).click()
+
   await page.getByRole('button', { name: 'Crear mesa' }).click()
   await expect(page.getByRole('heading', { name })).toBeVisible()
   return page.url().split('/master/tables/')[1]

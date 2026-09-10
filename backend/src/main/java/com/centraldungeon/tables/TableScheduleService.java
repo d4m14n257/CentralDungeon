@@ -88,7 +88,7 @@ public class TableScheduleService {
     @Transactional(readOnly = true)
     public List<TableScheduleEntry> findByTable(String gameTableId) {
         return scheduleRepository.findById_GameTableIdAndStatus(gameTableId, TableScheduleStatus.Created).stream()
-                .map(slot -> new TableScheduleEntry(slot.getWeekday(), slot.getHourtime()))
+                .map(slot -> new TableScheduleEntry(slot.getWeekday(), slot.getHourtime(), slot.getDuration()))
                 .sorted(WEEK_ORDER)
                 .toList();
     }
@@ -112,7 +112,7 @@ public class TableScheduleService {
         for (TableSchedule slot : scheduleRepository.findById_GameTableIdInAndStatus(gameTableIds, TableScheduleStatus.Created)) {
             byTable
                     .computeIfAbsent(slot.getId().gameTableId(), id -> new ArrayList<>())
-                    .add(new TableScheduleEntry(slot.getWeekday(), slot.getHourtime()));
+                    .add(new TableScheduleEntry(slot.getWeekday(), slot.getHourtime(), slot.getDuration()));
         }
         byTable.values().forEach(entries -> entries.sort(WEEK_ORDER));
         return byTable;
@@ -125,9 +125,9 @@ public class TableScheduleService {
      * {@code (table, weekday, hourtime)}, so a master who removes Tuesday 20:00 and puts it back
      * would otherwise collide with the row they just deleted (see {@link TableScheduleStatus}).
      *
-     * @param table    the table whose agenda is being set. Its {@code duration} is what turns a slot
-     *                 into an interval, so a table without one can hold an agenda and still never
-     *                 clash with anything (#178)
+     * @param table    the table whose agenda is being set. Each slot carries its own length (#228),
+     *                 and one without a length claims no interval - it can sit in the agenda and
+     *                 never clash with anything (#178)
      * @param entries  the week the master wants. Empty clears the agenda
      * @param actorId  the master, from the token. Their <em>other</em> commitments are what R1
      *                 compares against, so it is theirs and never an id from the URL (#121). Null
@@ -141,7 +141,7 @@ public class TableScheduleService {
     @Transactional
     public void replace(GameTable table, List<TableScheduleEntry> entries, @Nullable String actorId) {
         List<TableScheduleEntry> normalized = normalize(entries);
-        List<WeeklyInterval> intervals = intervalsOf(normalized, table.getDuration());
+        List<WeeklyInterval> intervals = intervalsOf(normalized);
 
         if (scheduleConflictService.hasSelfOverlap(intervals)) {
             throw new InvalidRequestException("Two slots of this table's agenda overlap each other");
@@ -177,10 +177,13 @@ public class TableScheduleService {
             TableScheduleId id = new TableScheduleId(gameTableId, entry.weekday(), entry.hourtime());
             TableSchedule slot = existing.remove(id);
             if (slot == null) {
-                scheduleRepository.save(new TableSchedule(gameTableId, entry.weekday(), entry.hourtime()));
+                scheduleRepository.save(new TableSchedule(gameTableId, entry.weekday(), entry.hourtime(), entry.duration()));
             } else {
                 slot.setStatus(TableScheduleStatus.Created);
                 slot.setDeletedAt(null);
+                // A slot that comes back can come back a different length (#228): the key is the day
+                // and the hour, so changing only how long it runs is this branch and not an insert.
+                slot.setDuration(entry.duration());
             }
         }
         for (TableSchedule leftover : existing.values()) {
@@ -215,16 +218,22 @@ public class TableScheduleService {
      */
     private List<TableScheduleEntry> normalize(List<TableScheduleEntry> entries) {
         return entries.stream()
-                .map(entry -> new TableScheduleEntry(entry.weekday(), entry.hourtime().truncatedTo(ChronoUnit.MINUTES)))
+                .map(entry -> new TableScheduleEntry(
+                        entry.weekday(),
+                        entry.hourtime().truncatedTo(ChronoUnit.MINUTES),
+                        // Same reason as the start: the agenda is written in minutes.
+                        entry.duration() == null ? null : entry.duration().truncatedTo(ChronoUnit.MINUTES)))
                 .distinct()
                 .toList();
     }
 
-    /** The stretches of the week the requested agenda would occupy. Empty when the table has no duration. */
-    private List<WeeklyInterval> intervalsOf(List<TableScheduleEntry> entries, @Nullable LocalTime duration) {
-        if (duration == null) {
-            return List.of();
-        }
-        return entries.stream().map(entry -> WeeklyInterval.of(entry.weekday(), entry.hourtime(), duration)).toList();
+    /** The stretches of the week the requested agenda would occupy. A slot with no length occupies nothing. */
+    private List<WeeklyInterval> intervalsOf(List<TableScheduleEntry> entries) {
+        // Each slot brings its own length since #228, so a slot without one is skipped rather than
+        // the whole agenda being written off - the two used to be the same thing.
+        return entries.stream()
+                .filter(entry -> entry.duration() != null)
+                .map(entry -> WeeklyInterval.of(entry.weekday(), entry.hourtime(), entry.duration()))
+                .toList();
     }
 }

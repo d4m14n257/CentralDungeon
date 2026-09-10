@@ -62,8 +62,6 @@ public class GameTable extends BaseEntity {
     private @Nullable LocalDateTime startDate;
 
     /** How long <b>one</b> session lasts - not the campaign. Stored as a time of day, read as a length. */
-    @Column
-    private @Nullable LocalTime duration;
 
     /** How many sessions are planned (#26). With the start date and the schedule, it is the whole agenda. */
     @Column(name = "total_sessions")
@@ -226,23 +224,7 @@ public class GameTable extends BaseEntity {
         this.startDate = startDate;
     }
 
-    /**
-     * Returns how long one session lasts.
-     *
-     * @return the length of a single session, or null when it is not set
-     */
-    public @Nullable LocalTime getDuration() {
-        return duration;
-    }
 
-    /**
-     * Sets how long one session lasts.
-     *
-     * @param duration the length of a single session, not of the campaign
-     */
-    public void setDuration(@Nullable LocalTime duration) {
-        this.duration = duration;
-    }
 
     /**
      * Returns how many sessions are planned.

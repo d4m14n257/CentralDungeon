@@ -33,6 +33,16 @@ public class TableSchedule {
     @EmbeddedId
     private TableScheduleId id;
 
+    /**
+     * How long <em>this</em> session lasts (#228). Null when the slot commits nobody to anything: an
+     * agenda without a length has no interval to compare, and #178 leaves it alone.
+     *
+     * <p>It lives here and not on the table because a table can legitimately run three hours midweek
+     * and six on a Saturday, and one column for both meant lying about one of them.
+     */
+    @Column(name = "duration")
+    private @Nullable LocalTime duration;
+
     /** Whether the slot is still part of the agenda. Rows are marked, never dropped - see the enum. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
@@ -55,6 +65,37 @@ public class TableSchedule {
      */
     public TableSchedule(String gameTableId, Weekday weekday, LocalTime hourtime) {
         this.id = new TableScheduleId(gameTableId, weekday, hourtime);
+    }
+
+    /**
+     * Adds a slot that says how long it runs (#228).
+     *
+     * @param gameTableId the table
+     * @param weekday     the day, in UTC (#22)
+     * @param hourtime    the time it starts, in UTC
+     * @param duration    how long this session lasts, or null for a slot that claims no interval
+     */
+    public TableSchedule(String gameTableId, Weekday weekday, LocalTime hourtime, @Nullable LocalTime duration) {
+        this(gameTableId, weekday, hourtime);
+        this.duration = duration;
+    }
+
+    /**
+     * Returns how long this session lasts.
+     *
+     * @return the duration, or null when the slot claims no interval
+     */
+    public @Nullable LocalTime getDuration() {
+        return duration;
+    }
+
+    /**
+     * Sets how long this session lasts.
+     *
+     * @param duration the new length, or null to make the slot claim nothing
+     */
+    public void setDuration(@Nullable LocalTime duration) {
+        this.duration = duration;
     }
 
     /**

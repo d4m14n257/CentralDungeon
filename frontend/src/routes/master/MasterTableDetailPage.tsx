@@ -100,7 +100,6 @@ export function MasterTableDetailPage() {
           masters: table.masters,
           schedule: table.schedule,
           startDate: table.startDate,
-          duration: table.duration,
           totalSessions: table.totalSessions,
         }}
       />

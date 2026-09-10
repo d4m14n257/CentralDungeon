@@ -2,6 +2,7 @@ package com.centraldungeon.tables;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -121,14 +122,14 @@ class ScheduleConflictServiceTest {
     /** A table that never said how long a session lasts has no interval, so it clashes with nothing. */
     @Test
     void aTableWithoutADurationHasNoIntervals() {
-        GameTable table = table("table-1", GameTableStatus.Opened, null);
+        GameTable table = table("table-1", GameTableStatus.Opened);
 
         assertThat(scheduleConflictService.intervalsOf(table)).isEmpty();
     }
 
     @Test
     void aTableWithoutAnAgendaHasNoIntervals() {
-        GameTable table = table("table-2", GameTableStatus.Opened, LocalTime.of(3, 0));
+        GameTable table = table("table-2", GameTableStatus.Opened);
         when(scheduleRepository.findById_GameTableIdAndStatus("table-2", TableScheduleStatus.Created)).thenReturn(List.of());
 
         assertThat(scheduleConflictService.intervalsOf(table)).isEmpty();
@@ -136,11 +137,11 @@ class ScheduleConflictServiceTest {
 
     @Test
     void findsTheCommittedTableAnAgendaCollidesWith() {
-        GameTable committed = table("committed", GameTableStatus.InProgress, LocalTime.of(3, 0));
+        GameTable committed = table("committed", GameTableStatus.InProgress);
         when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(committed));
         when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
         when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
-                .thenReturn(List.of(new TableSchedule("committed", Weekday.Tuesday, LocalTime.of(20, 0))));
+                .thenReturn(List.of(new TableSchedule("committed", Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
 
         CommittedTable clash =
                 scheduleConflictService.findClash("master-1", "new-table", List.of(interval(Weekday.Tuesday, "22:00", "02:00")));
@@ -152,11 +153,11 @@ class ScheduleConflictServiceTest {
     /** Running one table and playing at another weigh the same: it is one person and one Tuesday (#178). */
     @Test
     void aTableSomebodyOnlyPlaysAtCountsAsACommitmentToo() {
-        GameTable played = table("played", GameTableStatus.InProgress, LocalTime.of(4, 0));
+        GameTable played = table("played", GameTableStatus.InProgress);
         when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of());
         when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of(played));
         when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
-                .thenReturn(List.of(new TableSchedule("played", Weekday.Saturday, LocalTime.of(18, 0))));
+                .thenReturn(List.of(new TableSchedule("played", Weekday.Saturday, LocalTime.of(18, 0), LocalTime.of(4, 0))));
 
         CommittedTable clash =
                 scheduleConflictService.findClash("player-1", null, List.of(interval(Weekday.Saturday, "20:00", "03:00")));
@@ -190,7 +191,7 @@ class ScheduleConflictServiceTest {
     /** The table being edited is not one of its own obstacles. */
     @Test
     void aTableDoesNotClashWithItself() {
-        GameTable itself = table("table-x", GameTableStatus.Opened, LocalTime.of(3, 0));
+        GameTable itself = table("table-x", GameTableStatus.Opened);
         when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(itself));
         when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
 
@@ -212,14 +213,14 @@ class ScheduleConflictServiceTest {
         @Test
         @DisplayName("la semana junta lo que dirigís y lo que jugás, y dice cuál es cuál")
         void bringsTogetherWhatIsRunAndWhatIsPlayed() {
-            GameTable mastered = table("mastered", GameTableStatus.InProgress, LocalTime.of(3, 0));
-            GameTable played = table("played", GameTableStatus.Opened, LocalTime.of(4, 0));
+            GameTable mastered = table("mastered", GameTableStatus.InProgress);
+            GameTable played = table("played", GameTableStatus.Opened);
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(mastered));
             when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of(played));
             when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
                     .thenReturn(List.of(
-                            new TableSchedule("mastered", Weekday.Tuesday, LocalTime.of(20, 0)),
-                            new TableSchedule("played", Weekday.Saturday, LocalTime.of(18, 0))));
+                            new TableSchedule("mastered", Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0)),
+                            new TableSchedule("played", Weekday.Saturday, LocalTime.of(18, 0), LocalTime.of(4, 0))));
 
             List<WeeklyCommitmentResponse> week = scheduleConflictService.weekOf("person-1");
 
@@ -230,15 +231,33 @@ class ScheduleConflictServiceTest {
                     .containsExactly(new WeeklyBlockResponse(1440 + 1200, 180));
         }
 
+        @Test
+        @DisplayName("una mesa puede correr tres horas entre semana y seis el sábado (#228)")
+        void eachSlotClaimsItsOwnLength() {
+            GameTable table = table("mixed", GameTableStatus.InProgress);
+            when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(table));
+            when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
+            when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
+                    .thenReturn(List.of(
+                            new TableSchedule("mixed", Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0)),
+                            new TableSchedule("mixed", Weekday.Saturday, LocalTime.of(15, 0), LocalTime.of(6, 0))));
+
+            List<WeeklyCommitmentResponse> week = scheduleConflictService.weekOf("person-1");
+
+            assertThat(week).singleElement().extracting(WeeklyCommitmentResponse::blocks, list(WeeklyBlockResponse.class))
+                    .extracting(WeeklyBlockResponse::durationMinutes)
+                    .containsExactlyInAnyOrder(180, 360);
+        }
+
         /** Running wins: it is the stronger claim on the same evening, and the label has to pick one. */
         @Test
         @DisplayName("quien dirige y además juega en la misma mesa se lee como que la dirige")
         void runningWinsOverPlaying() {
-            GameTable both = table("both", GameTableStatus.InProgress, LocalTime.of(3, 0));
+            GameTable both = table("both", GameTableStatus.InProgress);
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(both));
             when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of(both));
             when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
-                    .thenReturn(List.of(new TableSchedule("both", Weekday.Monday, LocalTime.of(10, 0))));
+                    .thenReturn(List.of(new TableSchedule("both", Weekday.Monday, LocalTime.of(10, 0), LocalTime.of(3, 0))));
 
             List<WeeklyCommitmentResponse> week = scheduleConflictService.weekOf("person-1");
 
@@ -252,14 +271,16 @@ class ScheduleConflictServiceTest {
         @Test
         @DisplayName("una mesa sin agenda viaja sin bloques, no se omite")
         void aTableWithNoAgendaTravelsWithoutBlocks() {
-            GameTable draft = table("draft", GameTableStatus.Preparation, null);
+            GameTable draft = table("draft", GameTableStatus.Preparation);
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(draft));
             when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
+            // A slot that exists and never got a length: since #228 that is what "no agenda" means,
+            // and it is why the query happens at all - the table alone no longer knows the answer.
+            when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
+                    .thenReturn(List.of(new TableSchedule("draft", Weekday.Monday, LocalTime.of(20, 0), null)));
 
             List<WeeklyCommitmentResponse> week = scheduleConflictService.weekOf("person-1");
 
-            // And it costs no query: a table with no duration has no agenda worth reading.
-            verify(scheduleRepository, never()).findById_GameTableIdInAndStatus(any(), any());
             assertThat(week).singleElement().satisfies(entry -> {
                 assertThat(entry.tableId()).isEqualTo("draft");
                 assertThat(entry.blocks()).isEmpty();
@@ -281,13 +302,13 @@ class ScheduleConflictServiceTest {
         return WeeklyInterval.of(weekday, LocalTime.parse(start), LocalTime.parse(duration));
     }
 
-    private static GameTable table(String id, GameTableStatus status, LocalTime duration) {
+    /** Since #228 a table has no length of its own: it is the slots that say how long they run. */
+    private static GameTable table(String id, GameTableStatus status) {
         User creator = new User("discord-" + id, "name-" + id);
         ReflectionTestUtils.setField(creator, "id", "creator-" + id);
         GameTable table = new GameTable("Table " + id, creator);
         ReflectionTestUtils.setField(table, "id", id);
         table.setStatus(status);
-        table.setDuration(duration);
         return table;
     }
 }

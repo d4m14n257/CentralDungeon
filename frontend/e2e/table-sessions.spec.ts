@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
-import { chooseRequiredCatalogs } from './helpers/tableWizard'
+import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
 
 /**
  * F1.3 end to end, against the real backend: the calendar that gets materialized when the table
@@ -52,9 +52,10 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByLabel('Primera sesión').fill('2026-09-11T20:00')
-  await page.getByLabel('Duración de una sesión').fill('03:00')
-  await page.getByLabel('Hora', { exact: true }).fill(FRIDAY_EVENING)
-  await page.getByRole('button', { name: 'Agregar' }).click()
+  await addScheduleSlot(page, FRIDAY_EVENING)
+  await page.getByRole('button', { name: 'Siguiente' }).click()
+
+  // The files step (#228): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByLabel('Sesiones planeadas').fill(TOTAL_SESSIONS)

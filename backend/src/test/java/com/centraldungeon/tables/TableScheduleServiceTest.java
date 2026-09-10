@@ -47,7 +47,7 @@ class TableScheduleServiceTest {
 
     @Test
     void savesTheSlotsTheMasterAsked() {
-        GameTable table = table("table-1", LocalTime.of(3, 0));
+        GameTable table = table("table-1");
         when(scheduleRepository.findById_GameTableId("table-1")).thenReturn(List.of());
 
         tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00"), entry(Weekday.Friday, "21:00")), "master-1");
@@ -58,7 +58,7 @@ class TableScheduleServiceTest {
     /** Two slots of the same table that overlap each other: malformed input, not a conflict (#178). */
     @Test
     void refusesAnAgendaThatOverlapsItself() {
-        GameTable table = table("table-2", LocalTime.of(3, 0));
+        GameTable table = table("table-2");
         when(scheduleConflictService.hasSelfOverlap(any())).thenReturn(true);
 
         assertThatThrownBy(() -> tableScheduleService.replace(
@@ -71,7 +71,7 @@ class TableScheduleServiceTest {
     /** R1: nothing is written when the agenda collides with something the master already runs. */
     @Test
     void refusesAnAgendaThatCollidesWithAnotherTableTheMasterIsCommittedTo() {
-        GameTable table = table("table-3", LocalTime.of(3, 0));
+        GameTable table = table("table-3");
         when(scheduleConflictService.findClash(eq("master-1"), eq("table-3"), any())).thenReturn(new CommittedTable("other", "La cripta"));
 
         assertThatThrownBy(() -> tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1"))
@@ -87,7 +87,7 @@ class TableScheduleServiceTest {
      */
     @Test
     void carriesTheClashingTableNameAsAParameterAndNotOnlyInsideTheMessage() {
-        GameTable table = table("table-3b", LocalTime.of(3, 0));
+        GameTable table = table("table-3b");
         when(scheduleConflictService.findClash(eq("master-1"), eq("table-3b"), any()))
                 .thenReturn(new CommittedTable("other", "La cripta"));
 
@@ -101,7 +101,7 @@ class TableScheduleServiceTest {
     /** An Unassigned table has no master yet, so R1 has nobody to compare against (#72, #178). */
     @Test
     void skipsTheOwnerCheckWhenTheTableHasNoMasterYet() {
-        GameTable table = table("table-4", LocalTime.of(3, 0));
+        GameTable table = table("table-4");
         when(scheduleRepository.findById_GameTableId("table-4")).thenReturn(List.of());
 
         tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), null);
@@ -113,7 +113,7 @@ class TableScheduleServiceTest {
     /** Rows are marked, never dropped, so putting a slot back is an update and not a collision. */
     @Test
     void revivesASlotThatWasRemovedInsteadOfInsertingItAgain() {
-        GameTable table = table("table-5", LocalTime.of(3, 0));
+        GameTable table = table("table-5");
         TableSchedule removed = new TableSchedule("table-5", Weekday.Tuesday, LocalTime.of(20, 0));
         removed.setStatus(TableScheduleStatus.Deleted);
         when(scheduleRepository.findById_GameTableId("table-5")).thenReturn(List.of(removed));
@@ -127,7 +127,7 @@ class TableScheduleServiceTest {
 
     @Test
     void marksTheSlotsThatLeftTheAgenda() {
-        GameTable table = table("table-6", LocalTime.of(3, 0));
+        GameTable table = table("table-6");
         TableSchedule dropped = new TableSchedule("table-6", Weekday.Monday, LocalTime.of(19, 0));
         when(scheduleRepository.findById_GameTableId("table-6")).thenReturn(List.of(dropped));
 
@@ -140,7 +140,7 @@ class TableScheduleServiceTest {
     /** Moving an agenda under people who are already in warns them; it never expels anybody (#70, #178). */
     @Test
     void warnsThePeopleTheNewAgendaNowClashesFor() {
-        GameTable table = table("table-7", LocalTime.of(3, 0));
+        GameTable table = table("table-7");
         when(scheduleRepository.findById_GameTableId("table-7")).thenReturn(List.of());
         TableRegistration player = registration(table, "player-1", TableRegistrationStatus.Player);
         when(registrationRepository.findByGameTable_Id("table-7")).thenReturn(List.of(player));
@@ -154,7 +154,7 @@ class TableScheduleServiceTest {
 
     @Test
     void doesNotWarnSomebodyWhoseOtherTablesStillFit() {
-        GameTable table = table("table-8", LocalTime.of(3, 0));
+        GameTable table = table("table-8");
         when(scheduleRepository.findById_GameTableId("table-8")).thenReturn(List.of());
         when(registrationRepository.findByGameTable_Id("table-8"))
                 .thenReturn(List.of(registration(table, "player-2", TableRegistrationStatus.Player)));
@@ -168,25 +168,33 @@ class TableScheduleServiceTest {
     /** The column is part of the primary key, so 20:00:00 and 20:00:45 have to be one slot. */
     @Test
     void dropsTheSecondsAndCollapsesDuplicateSlots() {
-        GameTable table = table("table-9", LocalTime.of(3, 0));
+        GameTable table = table("table-9");
         when(scheduleRepository.findById_GameTableId("table-9")).thenReturn(List.of());
 
         tableScheduleService.replace(
                 table,
-                List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0, 45)), entry(Weekday.Tuesday, "20:00")),
+                List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0, 45), LocalTime.of(3, 0)), entry(Weekday.Tuesday, "20:00")),
                 "master-1");
 
         verify(scheduleRepository, org.mockito.Mockito.times(1)).save(any(TableSchedule.class));
     }
 
+    /** A slot that lasts three hours, which is the length these tests are not about. */
     private static TableScheduleEntry entry(Weekday weekday, String hourtime) {
-        return new TableScheduleEntry(weekday, LocalTime.parse(hourtime));
+        return entry(weekday, hourtime, "03:00");
     }
 
-    private static GameTable table(String id, LocalTime duration) {
+    /**
+     * A slot with the length it is meant to claim (#228). The duration belongs to the slot now, so
+     * it is here and no longer on the table.
+     */
+    private static TableScheduleEntry entry(Weekday weekday, String hourtime, String duration) {
+        return new TableScheduleEntry(weekday, LocalTime.parse(hourtime), LocalTime.parse(duration));
+    }
+
+    private static GameTable table(String id) {
         GameTable table = new GameTable("Table " + id, user("creator-" + id));
         ReflectionTestUtils.setField(table, "id", id);
-        table.setDuration(duration);
         return table;
     }
 

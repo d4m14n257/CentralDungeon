@@ -7,7 +7,7 @@
   },
   "create": {
     "title": "Crear una mesa",
-    "description": "Cuatro pasos. La mesa queda en preparación hasta que un admin la revise.",
+    "description": "Cinco pasos. La mesa queda en preparación hasta que un admin la revise.",
     "nameLabel": "Nombre",
     "descriptionLabel": "Descripción",
     "requirementsLabel": "Requisitos",
@@ -22,6 +22,7 @@
       "identity": "Identidad",
       "catalogs": "Catálogos",
       "schedule": "Agenda",
+      "files": "Archivos",
       "capacity": "Cupo y revisión"
     },
     "tableTypeLabel": "Tipo de mesa",
@@ -33,8 +34,6 @@
     "platformsLabel": "Plataformas",
     "startDateLabel": "Primera sesión",
     "startDateHint": "En tu hora local. Se guarda en UTC.",
-    "durationLabel": "Duración de una sesión",
-    "durationHint": "De una sesión, no de la campaña.",
     "scheduleLabel": "Agenda semanal",
     "reviewTitle": "Revisión",
     "reviewEmpty": "Sin definir",
@@ -43,7 +42,9 @@
     "scheduleHelp": "Cómo funcionan los horarios",
     "missingSystem": "Elegí al menos un sistema: la mesa tiene que decir qué se juega.",
     "missingPlatform": "Elegí al menos una plataforma: la mesa tiene que decir dónde se juega.",
-    "missingSchedule": "Agregá al menos un día y horario: la mesa tiene que decir cuándo se juega."
+    "missingSchedule": "Agregá al menos un día y horario: la mesa tiene que decir cuándo se juega.",
+    "filesTitle": "Archivos",
+    "filesHint": "Lo que le das a la mesa: mapas, fichas, reglas de la casa. Los jugadores los descargan desde la mesa."
   },
   "detail": {
     "tabs": {
@@ -99,7 +100,11 @@
     "emptyTitle": "La mesa no tiene agenda",
     "emptyDescription": "Sin agenda no se materializan sesiones al abrirla.",
     "edit": "Editar la mesa",
-    "lockedHint": "La agenda ya no se edita: la mesa pasó el punto en que su master podía reescribirla."
+    "lockedHint": "La agenda ya no se edita: la mesa pasó el punto en que su master podía reescribirla.",
+    "emptyHint": "Todavía no elegiste ninguna franja. Hacé clic en una hora libre de la grilla.",
+    "hours": "{{count}} h",
+    "hoursAndMinutes": "{{hours}} h {{minutes}} min",
+    "durationOf": "Duración de {{slot}}"
   },
   "sessions": {
     "title_one": "Calendario · {{count}} sesión",

@@ -89,7 +89,8 @@ export function MyTableDetailPage() {
   }
 
   const timeZone = browserTimeZone()
-  const localSchedule = table.schedule.map((slot) => utcSlotToLocal(slot, timeZone))
+  // The length rides along: it belongs to the slot now (#228), and utcSlotToLocal only moves the day and the hour.
+  const localSchedule = table.schedule.map((slot) => ({ ...utcSlotToLocal(slot, timeZone), duration: slot.duration }))
 
   return (
     <div className="border-border-strong bg-surface space-y-6 rounded-xl border p-6">
@@ -108,7 +109,7 @@ export function MyTableDetailPage() {
           <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.schedule')}</h2>
           <ul className="mt-1.5 space-y-0.5 text-sm">
             {localSchedule.map((slot) => (
-              <li key={`${slot.weekday}-${slot.hourtime}`}>{formatSlot(slot, i18n.language, table.duration)}</li>
+              <li key={`${slot.weekday}-${slot.hourtime}`}>{formatSlot(slot, i18n.language, slot.duration)}</li>
             ))}
           </ul>
           <p className="text-fg-subtle mt-1 text-xs">{t('detail.scheduleTimeZone', { timeZone })}</p>

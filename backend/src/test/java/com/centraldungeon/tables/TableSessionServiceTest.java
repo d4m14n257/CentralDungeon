@@ -529,8 +529,9 @@ class TableSessionServiceTest {
         return new ArrayList<>(captor.getAllValues());
     }
 
+    /** The length is the slot's since #228; these tests are about dates, so three hours will do. */
     private static TableScheduleEntry entry(Weekday weekday, String hourtime) {
-        return new TableScheduleEntry(weekday, LocalTime.parse(hourtime));
+        return new TableScheduleEntry(weekday, LocalTime.parse(hourtime), LocalTime.of(3, 0));
     }
 
     private static GameTable table(String id, java.time.LocalDateTime startDate, Integer totalSessions) {
@@ -538,7 +539,6 @@ class TableSessionServiceTest {
         ReflectionTestUtils.setField(table, "id", id);
         table.setStartDate(startDate);
         table.setTotalSessions(totalSessions);
-        table.setDuration(LocalTime.of(3, 0));
         table.setStatus(GameTableStatus.Opened);
         return table;
     }

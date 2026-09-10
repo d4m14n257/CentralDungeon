@@ -32,6 +32,12 @@ export interface TableScheduleEntry {
   weekday: Weekday
   /** `HH:mm:ss` as the API writes it; the seconds are always zero and always ignored. */
   hourtime: string
+  /**
+   * `HH:mm:ss` — how long **this** session lasts (#228). A property of the slot and not of the
+   * table: three hours midweek and six on a Saturday is one table with two answers. Null claims no
+   * interval at all, and then #178 has nothing to compare.
+   */
+  duration: string | null
 }
 
 /** Mirror of GameTableSummaryResponse. */
@@ -44,8 +50,6 @@ export interface GameTableSummary {
   tableTypeCode: string | null
   maxPlayers: number | null
   playerCount: number
-  /** `HH:mm:ss` - how long one session lasts, so a card can close the range and not only open it. */
-  duration: string | null
   schedule: TableScheduleEntry[]
   /**
    * Whether this table overlaps something the reader is already committed to (#178). Computed by
@@ -70,7 +74,6 @@ export interface CreateGameTableRequest {
   tagIds?: string[] | null
   platformIds?: string[] | null
   startDate?: string | null
-  duration?: string | null
   totalSessions?: number | null
   maxPlayers?: number | null
   /** The weekly agenda, already converted to UTC by `lib/date.ts` before it is sent (#22). */
@@ -98,7 +101,6 @@ export interface GameTableDetail {
   maxPlayers: number | null
   playerCount: number
   startDate: string | null
-  duration: string | null
   totalSessions: number | null
   /** The weekly agenda, in UTC (#22). Ordered as a week reads. */
   schedule: TableScheduleEntry[]

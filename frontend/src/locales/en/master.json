@@ -7,7 +7,7 @@
   },
   "create": {
     "title": "Create a table",
-    "description": "Four steps. The table stays in preparation until an admin reviews it.",
+    "description": "Five steps. The table stays in preparation until an admin reviews it.",
     "nameLabel": "Name",
     "descriptionLabel": "Description",
     "requirementsLabel": "Requirements",
@@ -22,6 +22,7 @@
       "identity": "Identity",
       "catalogs": "Catalogs",
       "schedule": "Agenda",
+      "files": "Files",
       "capacity": "Seats and review"
     },
     "tableTypeLabel": "Table type",
@@ -33,8 +34,6 @@
     "platformsLabel": "Platforms",
     "startDateLabel": "First session",
     "startDateHint": "In your own time. It is stored in UTC.",
-    "durationLabel": "Length of one session",
-    "durationHint": "Of one session, not of the campaign.",
     "scheduleLabel": "Weekly agenda",
     "reviewTitle": "Review",
     "reviewEmpty": "Not set",
@@ -43,7 +42,9 @@
     "scheduleHelp": "How schedules work",
     "missingSystem": "Pick at least one system: the table has to say what is played.",
     "missingPlatform": "Pick at least one platform: the table has to say where it is played.",
-    "missingSchedule": "Add at least one day and time: the table has to say when it is played."
+    "missingSchedule": "Add at least one day and time: the table has to say when it is played.",
+    "filesTitle": "Files",
+    "filesHint": "What you hand the table: maps, sheets, house rules. Players download them from the table."
   },
   "detail": {
     "tabs": {
@@ -99,7 +100,11 @@
     "emptyTitle": "This table has no agenda",
     "emptyDescription": "With no agenda, no sessions are laid out when it opens.",
     "edit": "Edit the table",
-    "lockedHint": "The agenda can no longer be edited: the table is past the point where its master could rewrite it."
+    "lockedHint": "The agenda can no longer be edited: the table is past the point where its master could rewrite it.",
+    "emptyHint": "You have not picked a slot yet. Click a free hour on the grid.",
+    "hours": "{{count}} h",
+    "hoursAndMinutes": "{{hours}} h {{minutes}} min",
+    "durationOf": "Length of {{slot}}"
   },
   "sessions": {
     "title_one": "Calendar · {{count}} session",

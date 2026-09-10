@@ -9,8 +9,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -95,13 +97,22 @@ public class ScheduleConflictService {
      */
     @Transactional(readOnly = true)
     public List<WeeklyInterval> intervalsOf(GameTable table) {
-        LocalTime duration = table.getDuration();
-        if (duration == null) {
-            return List.of();
-        }
         return scheduleRepository.findById_GameTableIdAndStatus(table.getId(), TableScheduleStatus.Created).stream()
-                .map(slot -> WeeklyInterval.of(slot.getWeekday(), slot.getHourtime(), duration))
+                .map(ScheduleConflictService::intervalOf)
+                .filter(Objects::nonNull)
                 .toList();
+    }
+
+    /**
+     * One slot as the stretch it occupies, or null when it occupies nothing.
+     *
+     * <p>The length is the slot's own since #228: a table can run three hours midweek and six on a
+     * Saturday, and a slot that never got a duration claims no interval - which is the same answer
+     * the table-wide column used to give when it was null.
+     */
+    private static @Nullable WeeklyInterval intervalOf(TableSchedule slot) {
+        LocalTime duration = slot.getDuration();
+        return duration == null ? null : WeeklyInterval.of(slot.getWeekday(), slot.getHourtime(), duration);
     }
 
     /**
@@ -300,26 +311,21 @@ public class ScheduleConflictService {
 
     /** The agendas of several tables in one read, so a page of cards costs one query and not twenty. */
     private Map<String, List<WeeklyInterval>> intervalsByTable(Collection<GameTable> tables) {
-        Map<String, GameTable> byId = new LinkedHashMap<>();
+        Set<String> ids = new LinkedHashSet<>();
         for (GameTable table : tables) {
-            if (table.getDuration() != null) {
-                byId.put(table.getId(), table);
-            }
+            ids.add(table.getId());
         }
-        if (byId.isEmpty()) {
+        if (ids.isEmpty()) {
             return Map.of();
         }
 
         Map<String, List<WeeklyInterval>> intervals = new HashMap<>();
-        for (TableSchedule slot : scheduleRepository.findById_GameTableIdInAndStatus(byId.keySet(), TableScheduleStatus.Created)) {
-            GameTable table = byId.get(slot.getId().gameTableId());
-            LocalTime duration = table.getDuration();
-            if (duration == null) {
+        for (TableSchedule slot : scheduleRepository.findById_GameTableIdInAndStatus(ids, TableScheduleStatus.Created)) {
+            WeeklyInterval interval = intervalOf(slot);
+            if (interval == null) {
                 continue;
             }
-            intervals
-                    .computeIfAbsent(table.getId(), id -> new ArrayList<>())
-                    .add(WeeklyInterval.of(slot.getWeekday(), slot.getHourtime(), duration));
+            intervals.computeIfAbsent(slot.getId().gameTableId(), id -> new ArrayList<>()).add(interval);
         }
         return intervals;
     }

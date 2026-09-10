@@ -31,24 +31,20 @@ export async function chooseRequiredCatalogs(page: Page): Promise<void> {
 }
 
 /**
- * Adds one weekly slot to the agenda.
+ * Claims one weekly slot by clicking it on the grid.
  *
- * Call it while the wizard is on step 3.
+ * Since #228 that is the only way in: the day-and-hour form is gone, because having it *and* the
+ * grid meant two ways to do one thing. The slot is born three hours long, which is the default the
+ * editor gives it.
  *
  * **A spec that creates two tables for the same master has to give them different days.** R1 of #178
- * refuses a master two live tables with overlapping agendas, and now that every table must carry an
- * agenda (#226), two tables built with the same default would collide - which is the rule working,
- * not a broken spec.
+ * refuses a master two live tables with overlapping agendas, and every table carries an agenda now
+ * (#226), so two built on the same day would collide - which is the rule working, not a broken spec.
  *
  * @param page     the master's page, on the schedule step
- * @param hourtime the local start time, `HH:mm`
- * @param weekday  the day, as the selector spells it. Defaults to the editor's own default
+ * @param hourtime the local start time, `HH:mm`, as the grid labels it
+ * @param weekday  the day, as the grid spells it
  */
-export async function addScheduleSlot(page: Page, hourtime: string, weekday?: string): Promise<void> {
-  if (weekday) {
-    await page.locator('#schedule-weekday').click()
-    await page.getByRole('option', { name: weekday, exact: true }).click()
-  }
-  await page.getByLabel('Hora', { exact: true }).fill(hourtime)
-  await page.getByRole('button', { name: 'Agregar' }).click()
+export async function addScheduleSlot(page: Page, hourtime: string, weekday = 'Viernes'): Promise<void> {
+  await page.getByRole('button', { name: `Ocupar ${weekday} ${hourtime}` }).click()
 }

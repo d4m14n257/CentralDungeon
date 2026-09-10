@@ -17,8 +17,6 @@ export const createGameTableSchema = z.object({
   tableTypeId: z.string().optional(),
   /** `YYYY-MM-DDTHH:mm` exactly as an `<input type="datetime-local">` gives it, in local time. */
   startDate: z.string().optional(),
-  /** `HH:mm` - how long **one** session lasts, not the campaign. */
-  duration: z.string().optional(),
   maxPlayers: z.string().optional(),
   totalSessions: z.string().optional(),
 })
@@ -30,14 +28,17 @@ export const createGameTableSchema = z.object({
 export type CreateGameTableForm = z.infer<typeof createGameTableSchema>
 
 /**
- * The wizard's four steps, in order: identity → catalogs → agenda → capacity and review. One
- * decision per step (`fase-1-master.md` F1.2), and the summary before sending.
+ * The wizard's five steps, in order: identity → catalogs → agenda → files → capacity and review.
+ * One decision per step (`fase-1-master.md` F1.2), and the summary before sending.
  *
- * A tuple of literals and not a `number`: `Record<WizardStep, …>` forces all four cases to be
- * covered when mapping to a title, which is the same reason the table statuses are a union
- * (§3.2 regla 9).
+ * **Files earn a step of their own** (#228) rather than a section inside another: what the master
+ * hands the players is its own decision, and folded into the review step it would be the thing
+ * nobody notices — which is exactly how it went missing until somebody tried to create a table.
+ *
+ * A tuple of literals and not a `number`: `Record<WizardStep, …>` forces every case to be covered
+ * when mapping to a title, which is the same reason the table statuses are a union (§3.2 regla 9).
  */
-export const WIZARD_STEPS = ['identity', 'catalogs', 'schedule', 'capacity'] as const
+export const WIZARD_STEPS = ['identity', 'catalogs', 'schedule', 'files', 'capacity'] as const
 
 /** One of the four steps of the create-table wizard. */
 export type WizardStep = (typeof WIZARD_STEPS)[number]

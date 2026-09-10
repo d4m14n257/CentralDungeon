@@ -8,59 +8,45 @@ import type { TableScheduleEntry } from '../types'
 
 const BUENOS_AIRES = 'America/Argentina/Buenos_Aires'
 
-function renderEditor(value: TableScheduleEntry[], onChange = vi.fn()) {
-  render(<ScheduleEditor value={value} onChange={onChange} timeZone={BUENOS_AIRES} duration="03:00" />)
-  return onChange
-}
+/** Wednesday 01:00 UTC is Tuesday 22:00 in Buenos Aires — the case where the day itself moves (#22). */
+const CROSSES_MIDNIGHT: TableScheduleEntry = { weekday: 'Wednesday', hourtime: '01:00:00', duration: '03:00' }
 
 describe('ScheduleEditor', () => {
-  /** What is stored is UTC and what is read is local time (#22): the day shifts one back. */
-  it('shows a UTC slot in the reader zone, and says what is stored underneath', () => {
-    renderEditor([{ weekday: 'Wednesday', hourtime: '01:00:00' }])
+  it('shows the slot in the reader zone, and says what is stored underneath (#22)', () => {
+    render(<ScheduleEditor value={[CROSSES_MIDNIGHT]} onChange={vi.fn()} timeZone={BUENOS_AIRES} />)
 
     expect(screen.getByText('Martes 22:00–01:00')).toBeInTheDocument()
     expect(screen.getByText('En UTC: Miércoles 01:00')).toBeInTheDocument()
   })
 
-  it('sends the new slot back in UTC, not in the zone it was typed in', async () => {
+  it('adds nothing on its own: slots come from the grid now (#228)', () => {
+    render(<ScheduleEditor value={[]} onChange={vi.fn()} timeZone={BUENOS_AIRES} />)
+
+    // No day picker, no hour field, no «Agregar» — one way to add a slot, and it is not here.
+    expect(screen.queryByRole('button', { name: 'Agregar' })).not.toBeInTheDocument()
+    expect(screen.getByText(/grilla/i)).toBeInTheDocument()
+  })
+
+  it('changes the length of one slot without touching the others (#228)', async () => {
     const user = userEvent.setup()
-    const onChange = renderEditor([])
+    const onChange = vi.fn()
+    const saturday: TableScheduleEntry = { weekday: 'Saturday', hourtime: '18:00:00', duration: '03:00' }
+    render(<ScheduleEditor value={[CROSSES_MIDNIGHT, saturday]} onChange={onChange} timeZone={BUENOS_AIRES} />)
 
-    await user.clear(screen.getByLabelText('Hora'))
-    await user.type(screen.getByLabelText('Hora'), '22:00')
-    await user.click(screen.getByRole('button', { name: 'Agregar' }))
+    await user.click(screen.getByRole('combobox', { name: 'Duración de Sábado 15:00' }))
+    await user.click(screen.getByRole('option', { name: '6 h' }))
 
-    // Friday 22:00 in Buenos Aires is Saturday 01:00 in UTC.
-    expect(onChange).toHaveBeenCalledWith([{ weekday: 'Saturday', hourtime: '01:00' }])
+    expect(onChange).toHaveBeenCalledWith([CROSSES_MIDNIGHT, { ...saturday, duration: '06:00' }])
   })
 
   it('removes the slot the person asked to remove', async () => {
     const user = userEvent.setup()
-    const onChange = renderEditor([
-      { weekday: 'Wednesday', hourtime: '01:00:00' },
-      { weekday: 'Saturday', hourtime: '23:00:00' },
-    ])
+    const onChange = vi.fn()
+    const saturday: TableScheduleEntry = { weekday: 'Saturday', hourtime: '18:00:00', duration: '03:00' }
+    render(<ScheduleEditor value={[CROSSES_MIDNIGHT, saturday]} onChange={onChange} timeZone={BUENOS_AIRES} />)
 
     await user.click(screen.getByRole('button', { name: 'Quitar Martes 22:00' }))
 
-    expect(onChange).toHaveBeenCalledWith([{ weekday: 'Saturday', hourtime: '23:00:00' }])
-  })
-
-  /** The primary key is (table, weekday, time): the same slot twice is one slot. */
-  it('refuses to add a slot the agenda already has', async () => {
-    const user = userEvent.setup()
-    const onChange = renderEditor([{ weekday: 'Saturday', hourtime: '01:00:00' }])
-
-    await user.clear(screen.getByLabelText('Hora'))
-    await user.type(screen.getByLabelText('Hora'), '22:00')
-    await user.click(screen.getByRole('button', { name: 'Agregar' }))
-
-    expect(onChange).not.toHaveBeenCalled()
-  })
-
-  it('names the zone the times are being written in', () => {
-    renderEditor([])
-
-    expect(screen.getByText(/America\/Argentina\/Buenos_Aires/)).toBeInTheDocument()
+    expect(onChange).toHaveBeenCalledWith([saturday])
   })
 })

@@ -26,7 +26,6 @@ import org.jspecify.annotations.Nullable;
  * @param maxPlayers    the player cap (#24), or null for no cap
  * @param playerCount   how many people are accepted right now. Derived, never stored
  * @param startDate     when the first session happens, in UTC. The frontend converts (#22, #111)
- * @param duration      how long one session lasts
  * @param totalSessions how many sessions are planned (#26)
  * @param schedule      the weekly agenda, in UTC (#22), ordered as a week reads
  * @param sessions      the materialized calendar, first to last (#26, #33). Dates rather than the
@@ -66,7 +65,6 @@ public record GameTableDetailResponse(
         @Nullable Integer maxPlayers,
         int playerCount,
         @Nullable LocalDateTime startDate,
-        @Nullable LocalTime duration,
         @Nullable Integer totalSessions,
         List<TableScheduleEntry> schedule,
         List<PublicSessionResponse> sessions,

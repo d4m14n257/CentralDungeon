@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { XIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -10,13 +11,16 @@ import { RichTextEditor } from '@/components/RichTextEditor'
 import { RichTextView } from '@/components/RichTextView'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { IconAction } from '@/components/IconAction'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { helpPath, masterTableDetailPath } from '@/config/paths'
 import { CatalogChip, CatalogPicker } from '@/features/catalogs'
+import { FilePicker, useAttachFilesToTable } from '@/features/files'
 import {
+  DEFAULT_SLOT_DURATION,
   ScheduleEditor,
   WeeklyScheduleGrid,
   useMySchedule,
@@ -53,6 +57,7 @@ export function MasterTableCreatePage() {
   const { t: tTables } = useTranslation('tables')
   const navigate = useNavigate()
   const createTable = useCreateTable()
+  const attachFiles = useAttachFilesToTable()
   const { data: me } = useMe()
   const { data: tableTypes } = useTableTypes()
   const [step, setStep] = useState<WizardStep>('identity')
@@ -64,6 +69,8 @@ export function MasterTableCreatePage() {
   // (#226); saying it here means the master finds out on the step that can fix it, not after
   // filling in four steps and pressing «Crear mesa».
   const [stepError, setStepError] = useState<string | null>(null)
+  // Picked while the table does not exist yet; attached the moment it does (#228).
+  const [files, setFiles] = useState<{ fileId: string; name: string }[]>([])
   // The week as it already is, so the grid can show what is taken before anything is taken again.
   const myWeek = useMySchedule()
 
@@ -74,7 +81,7 @@ export function MasterTableCreatePage() {
 
   const form = useForm<CreateGameTableForm>({
     resolver: zodResolver(createGameTableSchema),
-    defaultValues: { name: '', description: '', permitted: '', requirements: '', duration: '03:00' },
+    defaultValues: { name: '', description: '', permitted: '', requirements: '' },
   })
 
   // Creating requires the Master platform role, not merely membership (#135) - the backend already
@@ -89,13 +96,11 @@ export function MasterTableCreatePage() {
   const selectedType = tableTypes?.content.find((type) => type.id === values.tableTypeId)
   const selectedTableTypeLabel = selectedType ? tableTypeLabel(tTables, selectedType.code, selectedType.name) : null
 
-  // What this table has claimed so far, drawn on the same grid as everything else. A slot with no
-  // duration yet is given an hour so it is visible: the master is choosing when, and the length
-  // comes from the field above (#178 measures the interval, so the real one arrives with it).
-  const durationMinutes = values.duration ? minutesOfDay(values.duration) : 60
+  // What this table has claimed so far, drawn on the same grid as everything else. Each slot brings
+  // its own length now (#228), so the rectangle is the size the slot actually is.
   const pendingBlocks = schedule.map((entry) => ({
     startMinute: WEEKDAYS.indexOf(entry.weekday) * 24 * 60 + minutesOfDay(entry.hourtime),
-    durationMinutes,
+    durationMinutes: minutesOfDay(entry.duration ?? DEFAULT_SLOT_DURATION),
   }))
 
   /**
@@ -108,7 +113,7 @@ export function MasterTableCreatePage() {
     if (!weekday || schedule.some((entry) => entry.weekday === weekday && entry.hourtime.slice(0, 5) === hourtime)) {
       return
     }
-    setSchedule([...schedule, { weekday, hourtime }])
+    setSchedule([...schedule, { weekday, hourtime, duration: DEFAULT_SLOT_DURATION }])
     setStepError(null)
   }
 
@@ -178,13 +183,21 @@ export function MasterTableCreatePage() {
         tagIds: tags.map((value) => value.id),
         platformIds: platforms.map((value) => value.id),
         startDate: formValues.startDate ? localInputToUtcIso(formValues.startDate, timeZone) : null,
-        duration: formValues.duration ? formValues.duration : null,
         maxPlayers: formValues.maxPlayers ? Number(formValues.maxPlayers) : null,
         totalSessions: formValues.totalSessions ? Number(formValues.totalSessions) : null,
         schedule,
       },
       {
-        onSuccess: (table) => {
+        onSuccess: async (table) => {
+          // The files were picked before the table had an id, so they are attached now (#228).
+          // Shared with the players by default: handing them something is the reason they were
+          // picked, and the Archivos tab is where a master makes one private afterwards.
+          if (files.length > 0) {
+            await attachFiles.mutateAsync({
+              tableId: table.id,
+              files: files.map((file) => ({ fileId: file.fileId, tableFileType: 'Preparation', isPrivate: false })),
+            })
+          }
           toast.success(t('create.success'))
           void navigate(masterTableDetailPath(table.id))
         },
@@ -193,7 +206,9 @@ export function MasterTableCreatePage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    // Centred rather than hugging the left: these two are forms, and a form read against one
+    // edge of a wide screen is a column of text with a desert next to it (#228).
+    <div className="mx-auto max-w-2xl space-y-6">
       <div className="space-y-1">
         <h1 className="font-serif text-2xl font-semibold">{t('create.title')}</h1>
         <p className="text-fg-muted text-sm">{t('create.description')}</p>
@@ -301,15 +316,27 @@ export function MasterTableCreatePage() {
 
           {step === 'catalogs' && (
             <>
-              <CatalogPicker kind="systems" label={t('create.systemsLabel')} selected={systems} onChange={setSystems} />
+              <CatalogPicker
+                kind="systems"
+                label={t('create.systemsLabel')}
+                selected={systems}
+                onChange={setSystems}
+                error={stepError && systems.length === 0 ? t('create.missingSystem') : null}
+              />
               <CatalogPicker kind="tags" label={t('create.tagsLabel')} selected={tags} onChange={setTags} />
-              <CatalogPicker kind="platforms" label={t('create.platformsLabel')} selected={platforms} onChange={setPlatforms} />
+              <CatalogPicker
+                kind="platforms"
+                label={t('create.platformsLabel')}
+                selected={platforms}
+                onChange={setPlatforms}
+                error={stepError && platforms.length === 0 ? t('create.missingPlatform') : null}
+              />
             </>
           )}
 
           {step === 'schedule' && (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4">
                 <FormField
                   control={form.control}
                   name="startDate"
@@ -324,20 +351,6 @@ export function MasterTableCreatePage() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('create.durationLabel')}</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormDescription>{t('create.durationHint')}</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between gap-3">
@@ -347,7 +360,7 @@ export function MasterTableCreatePage() {
                     {t('create.scheduleHelp')}
                   </Link>
                 </div>
-                <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} duration={values.duration} />
+                <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} />
 
                 {/* The week the master already gave away, so finding room is looking and not guessing
                     (#227). Clicking a free hour claims it: the gap and taking it are one gesture. */}
@@ -369,6 +382,36 @@ export function MasterTableCreatePage() {
                 </div>
               </div>
             </>
+          )}
+
+          {step === 'files' && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{t('create.filesTitle')}</p>
+                <p className="text-fg-muted text-sm">{t('create.filesHint')}</p>
+              </div>
+              {files.length > 0 && (
+                <ul className="divide-border divide-y rounded-lg border">
+                  {files.map((file) => (
+                    <li key={file.fileId} className="flex items-center gap-3 px-3 py-2">
+                      <span className="min-w-0 flex-1 truncate text-sm">{file.name}</span>
+                      <IconAction
+                        icon={<XIcon />}
+                        label={t('create.filesRemove', { name: file.name })}
+                        onClick={() => setFiles(files.filter((picked) => picked.fileId !== file.fileId))}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <FilePicker
+                onPick={(file) => {
+                  if (!files.some((picked) => picked.fileId === file.fileId)) {
+                    setFiles([...files, file])
+                  }
+                }}
+              />
+            </div>
           )}
 
           {step === 'capacity' && (
@@ -416,7 +459,7 @@ export function MasterTableCreatePage() {
                   value={
                     schedule.length === 0
                       ? t('create.reviewEmpty')
-                      : schedule.map((entry) => formatSlot(utcSlotToLocal(entry, timeZone), i18n.language, values.duration)).join(' · ')
+                      : schedule.map((entry) => formatSlot(utcSlotToLocal(entry, timeZone), i18n.language, entry.duration)).join(' · ')
                   }
                 />
                 {values.description && (
@@ -431,7 +474,9 @@ export function MasterTableCreatePage() {
             </>
           )}
 
-          {stepError && (
+          {/* Not on the catalogs step: there the blocks mark themselves, and repeating it underneath
+              says the same thing twice without saying which field it is about (#228). */}
+          {stepError && step !== 'catalogs' && (
             <p role="alert" className="text-state-canceled-fg text-sm">
               {t(stepError)}
             </p>

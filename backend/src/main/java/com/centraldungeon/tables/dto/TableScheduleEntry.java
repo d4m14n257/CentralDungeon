@@ -2,6 +2,7 @@ package com.centraldungeon.tables.dto;
 
 import com.centraldungeon.tables.Weekday;
 import jakarta.validation.constraints.NotNull;
+import org.jspecify.annotations.Nullable;
 import java.time.LocalTime;
 
 /**
@@ -16,6 +17,9 @@ import java.time.LocalTime;
  * @param weekday  the day of the week, in UTC. A Tuesday-night table in America is a Wednesday here
  * @param hourtime the time of day the session starts, in UTC. Seconds are dropped when it is saved:
  *                 the agenda is written in minutes and the column is part of the primary key
+ * @param duration how long <em>this</em> session lasts (#228). A property of the slot and not of the
+ *                 table: three hours midweek and six on a Saturday is one table with two answers.
+ *                 Null claims no interval at all, and then #178 has nothing to compare
  */
-public record TableScheduleEntry(@NotNull Weekday weekday, @NotNull LocalTime hourtime) {
+public record TableScheduleEntry(@NotNull Weekday weekday, @NotNull LocalTime hourtime, @Nullable LocalTime duration) {
 }

@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import type { CatalogValue } from '@/types/catalog'
 
 import { CatalogChip } from './CatalogChip'
@@ -13,6 +14,14 @@ interface CatalogPickerProps {
   selected: CatalogValue[]
   /** Called with the new set. It is a set, not a diff: the whole selection is replaced (#190). */
   onChange: (values: CatalogValue[]) => void
+  /**
+   * What is missing from this block, already translated, or null when it is fine (#228).
+   *
+   * Given it, the block marks *itself* — label, border and message. A single sentence at the foot of
+   * a form with three of these says something is wrong without saying which one, and the reader has
+   * to work that out by elimination.
+   */
+  error?: string | null
 }
 
 /**
@@ -29,11 +38,12 @@ interface CatalogPickerProps {
  * @param props.label    the block's label
  * @param props.selected what is chosen so far
  * @param props.onChange called with the new set
+ * @param props.error    what this block is missing, or null when it is fine
  */
-export function CatalogPicker({ kind, label, selected, onChange }: CatalogPickerProps) {
+export function CatalogPicker({ kind, label, selected, onChange, error }: CatalogPickerProps) {
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">{label}</p>
+      <p className={cn('text-sm font-medium', error && 'text-state-canceled-fg')}>{label}</p>
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selected.map((value) => (
@@ -41,16 +51,23 @@ export function CatalogPicker({ kind, label, selected, onChange }: CatalogPicker
           ))}
         </div>
       )}
-      <CatalogCombobox
-        kind={kind}
-        selected={selected}
-        canPropose
-        onSelect={(value) => {
-          if (!selected.some((item) => item.id === value.id)) {
-            onChange([...selected, value])
-          }
-        }}
-      />
+      <div className={cn(error && 'ring-state-canceled-dot rounded-md ring-1')}>
+        <CatalogCombobox
+          kind={kind}
+          selected={selected}
+          canPropose
+          onSelect={(value) => {
+            if (!selected.some((item) => item.id === value.id)) {
+              onChange([...selected, value])
+            }
+          }}
+        />
+      </div>
+      {error && (
+        <p role="alert" className="text-state-canceled-fg text-sm">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

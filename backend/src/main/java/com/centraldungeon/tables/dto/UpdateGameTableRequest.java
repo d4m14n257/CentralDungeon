@@ -30,8 +30,6 @@ import org.jspecify.annotations.Nullable;
  * @param tagIds        the tags the table ends up labelled with. Empty clears them
  * @param platformIds   where the table ends up being played. Empty clears them
  * @param startDate     when the first session happens, in UTC (#22)
- * @param duration      how long one session lasts. Changing it re-measures the whole agenda against
- *                      the master's other commitments, because it is what gives a slot its length (#178)
  * @param totalSessions how many sessions are planned (#26)
  * @param maxPlayers    the player cap (#24), or null for no cap
  * @param schedule      the weekly agenda the table ends up with, in UTC. Empty clears it
@@ -46,7 +44,6 @@ public record UpdateGameTableRequest(
         @Nullable List<String> tagIds,
         @Nullable List<String> platformIds,
         @Nullable LocalDateTime startDate,
-        @Nullable LocalTime duration,
         @Positive @Nullable Integer totalSessions,
         @Positive @Nullable Integer maxPlayers,
         @Valid @Nullable List<TableScheduleEntry> schedule) {

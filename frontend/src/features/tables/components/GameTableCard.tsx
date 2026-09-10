@@ -48,7 +48,7 @@ export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTa
           <p className="text-fg-muted flex items-start gap-1.5 text-sm">
             <Calendar className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
             <span>
-              {table.schedule.map((slot) => formatSlot(utcSlotToLocal(slot, browserTimeZone()), i18n.language, table.duration)).join(' · ')}
+              {table.schedule.map((slot) => formatSlot(utcSlotToLocal(slot, browserTimeZone()), i18n.language, slot.duration)).join(' · ')}
             </span>
           </p>
         )}

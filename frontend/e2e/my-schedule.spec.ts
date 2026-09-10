@@ -32,8 +32,9 @@ test('a master sees the week they have committed, and takes a free hour from the
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await chooseRequiredCatalogs(page)
     await page.getByRole('button', { name: 'Siguiente' }).click()
-    await page.getByLabel('Duración de una sesión').fill('03:00')
     await addScheduleSlot(page, '20:00', 'Martes')
+    await page.getByRole('button', { name: 'Siguiente' }).click()
+    // The files step (#228): nothing is required there.
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await page.getByRole('button', { name: 'Crear mesa' }).click()
     await expect(page.getByRole('heading', { name: firstName })).toBeVisible()
@@ -65,6 +66,8 @@ test('a master sees the week they have committed, and takes a free hour from the
     await expect(page.getByRole('link', { name: `${firstName} — la dirigís` })).toHaveCount(0)
     await page.getByRole('button', { name: 'Ocupar Jueves 21:00' }).click()
     // Claiming it fills the agenda, which is what lets the step be left at all (#226).
+    await page.getByRole('button', { name: 'Siguiente' }).click()
+    await expect(page.getByText('Lo que le das a la mesa', { exact: false })).toBeVisible()
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await expect(page.getByRole('heading', { name: 'Revisión' })).toBeVisible()
   } finally {

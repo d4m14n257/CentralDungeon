@@ -15,8 +15,6 @@ import org.jspecify.annotations.Nullable;
  *                         that type. Null for one a person named, whose label is read verbatim (#225)
  * @param maxPlayers       the player cap (#24), or null for no cap
  * @param playerCount      how many people are accepted right now, so the card can show "3/5"
- * @param duration         how long one session lasts, so the card can show when a slot ends and not
- *                         only when it starts
  * @param schedule         the weekly agenda, in UTC (#22). The card converts it to the reader's own
  *                         time with {@code lib/date.ts}; the API never sends a local time
  * @param scheduleConflict whether this table's agenda overlaps something the <b>actor of the
@@ -36,7 +34,6 @@ public record GameTableSummaryResponse(
         @Nullable String tableTypeCode,
         @Nullable Integer maxPlayers,
         int playerCount,
-        @Nullable LocalTime duration,
         List<TableScheduleEntry> schedule,
         boolean scheduleConflict,
         MasterSummaryResponse primaryMaster) {

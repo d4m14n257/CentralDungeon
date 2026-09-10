@@ -180,7 +180,6 @@ CREATE TABLE game_tables (
     permitted      LONGTEXT      NULL,
     requirements   LONGTEXT      NULL,   -- rich text (#62)
     start_date     DATETIME      NULL,   -- UTC (#22)
-    duration       TIME          NULL,   -- duration of ONE session
     total_sessions INT           NULL,   -- planned number of sessions (#26)
     max_players    INT           NULL,   -- player cap (#24)
     status         VARCHAR(32)   NOT NULL DEFAULT 'Preparation',
@@ -220,6 +219,7 @@ CREATE TABLE table_schedules (
     game_table_id VARCHAR(64) NOT NULL,
     weekday       VARCHAR(16) NOT NULL,
     hourtime      TIME        NOT NULL,   -- UTC (#22)
+    duration      TIME        NULL,       -- de ESTA sesión, no de la mesa (#228)
     status        VARCHAR(32) NOT NULL DEFAULT 'Created',
     deleted_at    DATETIME    NULL,
     CONSTRAINT pk_table_schedules PRIMARY KEY (game_table_id, weekday, hourtime),
@@ -736,10 +736,10 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | El texto enriquecido (`description`, `permitted`, `requirements`) se sanitiza **al guardar y al servir**, con lista blanca | `RichTextSanitizer` | #62, #186 |
 | Un master edita su propia mesa solo en `Preparation` y `ChangesRequested`; el `PUT` **reemplaza la mesa entera**, un campo ausente vacía | `GameTableService.update` | #189 |
 | La agenda y los vínculos de catálogo se **reemplazan como conjunto** y sus filas se marcan, nunca se borran: la clave primaria incluye el valor, así que sacar y volver a poner tiene que ser un `UPDATE` | `TableScheduleService` · `TableCatalogService` | #190 |
-| **Un master no puede tener dos mesas vivas con agendas solapadas**. Se compara intervalo contra intervalo —`[hourtime, hourtime + duration)` en UTC, semiabierto y con envoltura semanal—, no `weekday`+`hourtime` exacto | `ScheduleConflictService` | #178 |
+| **Un master no puede tener dos mesas vivas con agendas solapadas**. Se compara intervalo contra intervalo —`[hourtime, hourtime + duration)` con la `duration` **de cada franja** (#228), en UTC, semiabierto y con envoltura semanal—, no `weekday`+`hourtime` exacto | `ScheduleConflictService` | #178 |
 | Dos filas de `table_schedules` **de la misma mesa** no pueden solaparse entre sí. Responde `400`, no `409`: es una semana que no se puede jugar, no un choque con el estado de nadie | `TableScheduleService` | #178, #187 |
 | Una mesa `Unassigned` no tiene master contra quien medir R1: la verificación se difiere al momento de asignarle masters | `GameTableService.assignInitialMasters` | #72, #178 |
-| Una mesa sin `duration` o sin agenda no ocupa ningún intervalo, así que nunca choca | `ScheduleConflictService` | #178 |
+| Una franja sin `duration`, o una mesa sin agenda, no ocupa ningún intervalo y por lo tanto nunca choca | `ScheduleConflictService` | #178, #228 |
 | **`Pause` no reserva horario**: congela la agenda, así que sus franjas no cuentan como choque. Al reanudar se reagenda y se vuelve a verificar | `ScheduleConflictService` | #32, #178 |
 | Editar la agenda de una mesa ya poblada **avisa** al master a quiénes les genera choque; no expulsa a nadie | `TableScheduleService` | #70, #178 |
 | **Una mesa se borra solo si nunca fue pública** (`Unassigned`/`Preparation`/`ChangesRequested`) **y no tiene postulaciones activas**; lo demás se cancela. El borrado es lógico y arrastra `masters` y `table_registrations` con la misma marca de tiempo | `GameTableService.delete` | #25, #175 |

@@ -99,7 +99,8 @@ export function TableDetailPage() {
   // would be writing the rule a second time, in the wrong language.
   const hasScheduleConflict = table.scheduleConflict
   const state = applyState(t, table, me?.roles ?? [], hasActiveApplication, hasScheduleConflict)
-  const localSchedule = table.schedule.map((slot) => utcSlotToLocal(slot, browserTimeZone()))
+  // The length rides along: it belongs to the slot now (#228), and utcSlotToLocal only moves the day and the hour.
+  const localSchedule = table.schedule.map((slot) => ({ ...utcSlotToLocal(slot, browserTimeZone()), duration: slot.duration }))
   const primaryMaster = primaryMasterOf(table.masters)
   const coMasters = table.masters.filter((master) => master.userId !== primaryMaster?.userId)
 
@@ -157,7 +158,7 @@ export function TableDetailPage() {
             <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.schedule')}</h2>
             <ul className="mt-1.5 space-y-0.5 text-sm">
               {localSchedule.map((slot) => (
-                <li key={`${slot.weekday}-${slot.hourtime}`}>{formatSlot(slot, i18n.language, table.duration)}</li>
+                <li key={`${slot.weekday}-${slot.hourtime}`}>{formatSlot(slot, i18n.language, slot.duration)}</li>
               ))}
             </ul>
             {/* The agenda is stored in UTC (#22); this says which zone it is being shown in. */}

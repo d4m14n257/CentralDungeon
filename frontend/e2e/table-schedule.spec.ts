@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
-import { chooseRequiredCatalogs } from './helpers/tableWizard'
+import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
 
 /**
  * F1.2 end to end, against the real backend: the complete wizard with an agenda, and the two rules
@@ -47,10 +47,10 @@ async function fillWizard(page: Page, name: string, hourtime: string) {
   // A system and a platform are required now (#226), so the catalogs step is filled in, not skipped.
   await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
+  await addScheduleSlot(page, hourtime)
+  await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  await page.getByLabel('Duración de una sesión').fill('03:00')
-  await page.getByLabel('Hora', { exact: true }).fill(hourtime)
-  await page.getByRole('button', { name: 'Agregar' }).click()
+  // The files step (#228): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -71,20 +71,19 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
 
     await chooseRequiredCatalogs(master.page)
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
-
-    await master.page.getByLabel('Duración de una sesión').fill('03:00')
-    await master.page.getByLabel('Hora', { exact: true }).fill(FRIDAY_EVENING)
-    await master.page.getByRole('button', { name: 'Agregar' }).click()
+    await addScheduleSlot(master.page, FRIDAY_EVENING)
 
     // The slot reads in local time and says underneath what gets stored: it is the half of #22 that shows.
-    await expect(master.page.getByText(`Viernes ${FRIDAY_EVENING}`)).toBeVisible()
+    await expect(master.page.getByText(`Viernes ${FRIDAY_EVENING}–23:00`)).toBeVisible()
     await expect(master.page.getByText(/^En UTC:/)).toBeVisible()
 
+    await master.page.getByRole('button', { name: 'Siguiente' }).click()
+    // The files step (#228): nothing is required there.
     await master.page.getByRole('button', { name: 'Siguiente' }).click()
 
     // The last step is the summary: the agenda shows before anything is sent for review.
     await expect(master.page.getByRole('heading', { name: 'Revisión' })).toBeVisible()
-    await expect(master.page.getByText(`Viernes ${FRIDAY_EVENING}`)).toBeVisible()
+    await expect(master.page.getByText(new RegExp(`Viernes ${FRIDAY_EVENING}`))).toBeVisible()
 
     await master.page.getByRole('button', { name: 'Crear mesa' }).click()
     await expect(master.page.getByRole('heading', { name: tableName })).toBeVisible()
@@ -107,11 +106,20 @@ test('a master cannot run two tables in the same slot, and is told which one it 
     await fillWizard(master.page, firstName, FRIDAY_EVENING)
     await expect(master.page.getByRole('heading', { name: firstName })).toBeVisible()
 
-    // The second table overlaps the first entirely: same slot, same duration.
-    await fillWizard(master.page, secondName, FRIDAY_EVENING)
+    // Building a second table, the hour the first one holds is not on offer at all: the grid draws
+    // what #178 measures, so the clash is prevented rather than refused afterwards (#227, #228).
+    await master.page.goto('/master/tables/new')
+    await master.page.getByRole('textbox', { name: 'Nombre' }).fill(secondName)
+    await master.page.getByRole('button', { name: 'Siguiente' }).click()
+    await chooseRequiredCatalogs(master.page)
+    await master.page.getByRole('button', { name: 'Siguiente' }).click()
 
-    await expect(master.page.getByText(new RegExp(firstName))).toBeVisible()
-    // And it was not created: the wizard is where it was, it did not navigate to a new table.
+    await expect(master.page.getByRole('button', { name: `Ocupar Viernes ${FRIDAY_EVENING}` })).toBeHidden()
+    // And it says which table has it, so the master knows what they are up against.
+    await expect(master.page.getByTitle(new RegExp(firstName))).toBeVisible()
+
+    // The server still refuses the overlap on its own - that half is covered by the backend's tests,
+    // and it is no longer reachable from this screen, which is the point.
     await expect(master.page).toHaveURL(/\/master\/tables\/new$/)
   } finally {
     await master.context.close()

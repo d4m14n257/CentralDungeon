@@ -14,7 +14,6 @@ const baseTable: GameTableSummary = {
   tableTypeCode: 'PUBLIC',
   maxPlayers: 4,
   playerCount: 2,
-  duration: '03:00:00',
   schedule: [],
   scheduleConflict: false,
   primaryMaster: { userId: 'master-1', name: 'BrowserTester', karma: 8000, masterType: 'Primary' },
@@ -89,7 +88,7 @@ describe('GameTableCard', () => {
    * in the zone the suite runs in (`vite.config.ts`), so the day shifts one back.
    */
   it('shows the agenda converted to the reader zone, not the UTC it travels in', () => {
-    renderCard({ ...baseTable, schedule: [{ weekday: 'Wednesday', hourtime: '01:00:00' }] })
+    renderCard({ ...baseTable, schedule: [{ weekday: 'Wednesday', hourtime: '01:00:00', duration: '03:00' }] })
 
     expect(screen.getByText(/Martes 22:00/)).toBeInTheDocument()
   })

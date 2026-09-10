@@ -28,8 +28,6 @@ import org.jspecify.annotations.Nullable;
  * @param tagIds        the tags the table is labelled with
  * @param platformIds   where the table is played
  * @param startDate     when the first session happens, in UTC (#22)
- * @param duration      how long <b>one</b> session lasts, not the campaign. It is what turns each
- *                      slot of the agenda into the interval the clash check compares (#178)
  * @param totalSessions how many sessions are planned (#26). Positive when present
  * @param maxPlayers    the player cap (#24). Positive when present; absent means no cap
  * @param schedule      the weekly agenda, in UTC (#22). Null and empty mean no agenda yet, and a
@@ -45,7 +43,6 @@ public record CreateGameTableRequest(
         @Nullable List<String> tagIds,
         @Nullable List<String> platformIds,
         @Nullable LocalDateTime startDate,
-        @Nullable LocalTime duration,
         @Positive @Nullable Integer totalSessions,
         @Positive @Nullable Integer maxPlayers,
         @Valid @Nullable List<TableScheduleEntry> schedule) {

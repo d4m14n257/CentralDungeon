@@ -1,126 +1,103 @@
-import { PlusIcon, XIcon } from 'lucide-react'
-import { useState } from 'react'
+import { XIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { IconAction } from '@/components/IconAction'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { WEEKDAYS, formatSlot, localSlotToUtc, utcSlotToLocal, weekdayName, type Weekday } from '@/lib/date'
+import { formatSlot, minutesOfDay, utcSlotToLocal } from '@/lib/date'
 
 import type { TableScheduleEntry } from '../types'
 
+/**
+ * The lengths a session can be offered as. Not a free text field: a session is chosen from what
+ * people actually play, and letting somebody type 03:47 asks a question the table cannot answer.
+ */
+const DURATIONS = ['01:00', '01:30', '02:00', '02:30', '03:00', '03:30', '04:00', '05:00', '06:00', '08:00'] as const
+
+/** The default a slot is born with, which is what this community's tables run. */
+export const DEFAULT_SLOT_DURATION = '03:00'
+
 /** What the schedule editor needs to know. */
 export interface ScheduleEditorProps {
-  /** The agenda as it will travel: **UTC** (#22). The editor converts for display and back on change. */
+  /** The agenda as it will travel: **UTC** (#22). The editor converts for display only. */
   value: TableScheduleEntry[]
   /** Called with the new agenda, again in UTC. */
   onChange: (schedule: TableScheduleEntry[]) => void
-  /** The IANA zone to show and read the times in — from the profile, or the browser's (#111). */
+  /** The IANA zone to show the times in — from the profile, or the browser's (#111). */
   timeZone: string
-  /** How long one session lasts, `HH:mm`, so each row can show when it ends. Optional. */
-  duration?: string | null | undefined
 }
 
 /**
- * Builds a table's weekly agenda: a weekday and a time, as many rows as the table plays.
+ * The slots a table has claimed, each with how long it runs and a way to drop it.
  *
- * **The person types local time; what travels is UTC** (#22). Both are on screen at once, because
- * the day can move — a Tuesday-night table in Buenos Aires is stored as Wednesday — and a master
- * who sees only one of the two has no way to tell that is expected rather than a bug.
+ * **It no longer adds anything**: slots come from clicking the week (#228). Having a day-and-hour
+ * form here *as well as* the grid meant two ways to do one thing, and the master had to work out
+ * which of the two the table was actually going to believe. Now the grid says *when* and this says
+ * *how long*, which are two different questions.
  *
- * Rows are added through a small form of their own rather than appearing empty and editable: a
- * blank row is neither a slot nor not-a-slot, and the agenda would have to carry half-written
- * entries the clash check cannot measure.
+ * The length is per slot: a table can legitimately run three hours midweek and six on a Saturday,
+ * and the single table-wide duration this replaces forced the master to lie about one of them.
  *
  * @param props.value    the agenda, in UTC
  * @param props.onChange called with the new agenda, in UTC
- * @param props.timeZone the zone to show and read local times in
- * @param props.duration how long one session lasts, to close each range
+ * @param props.timeZone the zone to show local times in
  */
-export function ScheduleEditor({ value, onChange, timeZone, duration }: ScheduleEditorProps) {
+export function ScheduleEditor({ value, onChange, timeZone }: ScheduleEditorProps) {
   const { t, i18n } = useTranslation('master')
-  const [weekday, setWeekday] = useState<Weekday>('Friday')
-  const [hourtime, setHourtime] = useState('20:00')
 
-  const rows = value.map((entry) => ({
-    utc: entry,
-    local: utcSlotToLocal({ weekday: entry.weekday, hourtime: entry.hourtime }, timeZone),
-  }))
-
-  function addSlot() {
-    if (!hourtime) {
-      return
-    }
-    const utc = localSlotToUtc({ weekday, hourtime }, timeZone)
-    // The primary key is (table, weekday, hourtime), so the same slot twice is one slot. Catching
-    // it here keeps the person from sending an agenda the server would quietly collapse.
-    const alreadyThere = value.some((entry) => entry.weekday === utc.weekday && entry.hourtime.slice(0, 5) === utc.hourtime)
-    if (alreadyThere) {
-      return
-    }
-    onChange([...value, { weekday: utc.weekday, hourtime: utc.hourtime }])
+  /** "3 h" and "3 h 30 min" — a length, which is not the same shape as a time of day. */
+  function durationLabel(duration: string): string {
+    const minutes = minutesOfDay(duration)
+    const hours = Math.floor(minutes / 60)
+    const rest = minutes % 60
+    return rest === 0 ? t('schedule.hours', { count: hours }) : t('schedule.hoursAndMinutes', { hours, minutes: rest })
   }
 
-  function removeSlot(index: number) {
+  function setDuration(index: number, duration: string) {
+    onChange(value.map((entry, position) => (position === index ? { ...entry, duration } : entry)))
+  }
+
+  function remove(index: number) {
     onChange(value.filter((_, position) => position !== index))
   }
 
+  if (value.length === 0) {
+    return <p className="text-fg-muted text-sm">{t('schedule.emptyHint')}</p>
+  }
+
   return (
-    <div className="space-y-3">
-      {rows.length > 0 && (
-        <ul className="divide-border divide-y rounded-md border">
-          {rows.map((row, index) => (
-            <li key={`${row.utc.weekday}-${row.utc.hourtime}`} className="flex items-center justify-between gap-3 px-3 py-2">
-              <div>
-                <p className="text-sm font-medium">{formatSlot(row.local, i18n.language, duration)}</p>
-                {/* #22 made visible: the master sees what is stored, so a shifted day reads as expected. */}
-                <p className="text-fg-subtle text-xs">{t('schedule.utcEquivalent', { slot: formatSlot(row.utc, i18n.language) })}</p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label={t('schedule.remove', { slot: formatSlot(row.local, i18n.language) })}
-                onClick={() => removeSlot(index)}
-              >
-                <XIcon className="size-4" aria-hidden="true" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="min-w-40 flex-1 space-y-1">
-          <label className="text-fg-muted text-xs" htmlFor="schedule-weekday">
-            {t('schedule.weekdayLabel')}
-          </label>
-          <Select value={weekday} onValueChange={(next) => setWeekday(next as Weekday)}>
-            <SelectTrigger id="schedule-weekday" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {WEEKDAYS.map((day) => (
-                <SelectItem key={day} value={day}>
-                  {weekdayName(day, i18n.language)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-32 space-y-1">
-          <label className="text-fg-muted text-xs" htmlFor="schedule-hourtime">
-            {t('schedule.hourLabel')}
-          </label>
-          <Input id="schedule-hourtime" type="time" value={hourtime} onChange={(event) => setHourtime(event.target.value)} />
-        </div>
-        <Button type="button" variant="outline" onClick={addSlot}>
-          <PlusIcon className="mr-1 size-4" aria-hidden="true" />
-          {t('schedule.add')}
-        </Button>
-      </div>
-
-      <p className="text-fg-subtle text-xs">{t('schedule.timeZoneHint', { timeZone })}</p>
-    </div>
+    <ul className="divide-border divide-y rounded-lg border">
+      {value.map((entry, index) => {
+        const local = utcSlotToLocal({ weekday: entry.weekday, hourtime: entry.hourtime }, timeZone)
+        return (
+          <li key={`${entry.weekday}-${entry.hourtime}`} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2">
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm">{formatSlot(local, i18n.language, entry.duration)}</span>
+              {/* Both times on screen at once (#22): the day moves between the reader's zone and UTC,
+                  and a master who sees only one has no way to tell that is expected. */}
+              <span className="text-fg-subtle block text-xs">
+                {t('schedule.utcEquivalent', { slot: formatSlot({ weekday: entry.weekday, hourtime: entry.hourtime }, i18n.language) })}
+              </span>
+            </span>
+            <Select value={entry.duration ?? DEFAULT_SLOT_DURATION} onValueChange={(next) => setDuration(index, next)}>
+              <SelectTrigger className="w-36" aria-label={t('schedule.durationOf', { slot: formatSlot(local, i18n.language) })}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DURATIONS.map((duration) => (
+                  <SelectItem key={duration} value={duration}>
+                    {durationLabel(duration)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <IconAction
+              icon={<XIcon />}
+              label={t('schedule.remove', { slot: formatSlot(local, i18n.language) })}
+              onClick={() => remove(index)}
+            />
+          </li>
+        )
+      })}
+    </ul>
   )
 }
