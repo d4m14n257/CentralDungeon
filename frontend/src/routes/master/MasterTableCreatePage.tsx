@@ -127,6 +127,7 @@ export function MasterTableCreatePage() {
     if (current === 'catalogs') {
       if (systems.length === 0) return 'create.missingSystem'
       if (platforms.length === 0) return 'create.missingPlatform'
+      if (tags.length === 0) return 'create.missingTag'
     }
     if (current === 'schedule' && schedule.length === 0) {
       return 'create.missingSchedule'
@@ -323,7 +324,13 @@ export function MasterTableCreatePage() {
                 onChange={setSystems}
                 error={stepError && systems.length === 0 ? t('create.missingSystem') : null}
               />
-              <CatalogPicker kind="tags" label={t('create.tagsLabel')} selected={tags} onChange={setTags} />
+              <CatalogPicker
+                kind="tags"
+                label={t('create.tagsLabel')}
+                selected={tags}
+                onChange={setTags}
+                error={stepError && tags.length === 0 ? t('create.missingTag') : null}
+              />
               <CatalogPicker
                 kind="platforms"
                 label={t('create.platformsLabel')}

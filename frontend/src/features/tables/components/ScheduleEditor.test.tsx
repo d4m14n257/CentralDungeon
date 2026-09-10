@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -28,15 +28,23 @@ describe('ScheduleEditor', () => {
   })
 
   it('changes the length of one slot without touching the others (#228)', async () => {
-    const user = userEvent.setup()
     const onChange = vi.fn()
     const saturday: TableScheduleEntry = { weekday: 'Saturday', hourtime: '18:00:00', duration: '03:00' }
     render(<ScheduleEditor value={[CROSSES_MIDNIGHT, saturday]} onChange={onChange} timeZone={BUENOS_AIRES} />)
 
-    await user.click(screen.getByRole('combobox', { name: 'Duración de Sábado 15:00' }))
-    await user.click(screen.getByRole('option', { name: '6 h' }))
+    fireEvent.change(screen.getByLabelText('Duración de Sábado 15:00'), { target: { value: '06:00' } })
 
     expect(onChange).toHaveBeenCalledWith([CROSSES_MIDNIGHT, { ...saturday, duration: '06:00' }])
+  })
+
+  it('takes a length that is not a round number of hours (#229)', () => {
+    const onChange = vi.fn()
+    render(<ScheduleEditor value={[CROSSES_MIDNIGHT]} onChange={onChange} timeZone={BUENOS_AIRES} />)
+
+    // 45 minutes and 2 h 45 are real sessions; a list of round numbers could not hold either.
+    fireEvent.change(screen.getByLabelText('Duración de Martes 22:00'), { target: { value: '00:45' } })
+
+    expect(onChange).toHaveBeenCalledWith([{ ...CROSSES_MIDNIGHT, duration: '00:45' }])
   })
 
   it('removes the slot the person asked to remove', async () => {

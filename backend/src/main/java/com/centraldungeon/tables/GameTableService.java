@@ -145,7 +145,7 @@ public class GameTableService {
     /** The creator becomes the table's Primary master (#73); a Master row is the source of pertenencia, not the role alone (#135). */
     @Transactional
     public GameTableDetailResponse create(CreateGameTableRequest request, String creatorId) {
-        requireRunnableDraft(request.systemIds(), request.platformIds(), request.schedule());
+        requireRunnableDraft(request.systemIds(), request.tagIds(), request.platformIds(), request.schedule());
         User creator = userService.getById(creatorId);
         GameTable gameTable = buildTable(request, creator);
 
@@ -194,7 +194,7 @@ public class GameTableService {
         // not a complaint about its agenda. Same three requirements as create (#226) - a rewrite that
         // empties the agenda or the catalogs would leave the table in a state creating it could never
         // have reached.
-        requireRunnableDraft(request.systemIds(), request.platformIds(), request.schedule());
+        requireRunnableDraft(request.systemIds(), request.tagIds(), request.platformIds(), request.schedule());
 
         gameTable.setName(request.name());
         gameTable.setDescription(richTextSanitizer.sanitize(request.description()));
@@ -745,14 +745,15 @@ public class GameTableService {
     }
 
     /**
-     * The three things a table cannot be run without: what is played, where, and when (#226).
+     * The four things a table cannot be run without: what is played, how it is labelled, where, and when (#226, #229).
      *
      * <p>#196 left this exact door open - "if it is later decided that a table cannot open without a
      * calendar, it is a validation of CreateGameTableRequest and not a silent effect of approve()".
      * This is that decision, and it lands where #196 said it would.
      *
-     * <p>Tags stay optional on purpose: they are free-form labels that help a table be found, not
-     * facts that define it, and forcing one produces filler tags an admin then has to merge (#59).
+     * <p>Tags are required too since #229, which reverses that part of #226: they were left optional
+     * to avoid filler labels (#59), and the owner decided that a table nobody can find by subject is
+     * the worse of the two problems.
      *
      * <p>It does not apply to {@link #createUnassigned}: that one is an admin's stub, deliberately
      * created with a name and nothing else, for a master to fill in later (#72).
@@ -762,6 +763,7 @@ public class GameTableService {
      */
     private void requireRunnableDraft(
             @Nullable List<String> systemIds,
+            @Nullable List<String> tagIds,
             @Nullable List<String> platformIds,
             @Nullable List<TableScheduleEntry> schedule) {
         if (orEmpty(systemIds).isEmpty()) {
@@ -769,6 +771,9 @@ public class GameTableService {
         }
         if (orEmpty(platformIds).isEmpty()) {
             throw new InvalidRequestException("A table must declare at least one platform", "TABLE_NEEDS_PLATFORM");
+        }
+        if (orEmpty(tagIds).isEmpty()) {
+            throw new InvalidRequestException("A table must carry at least one tag", "TABLE_NEEDS_TAG");
         }
         if (orEmpty(schedule).isEmpty()) {
             throw new InvalidRequestException("A table must declare at least one weekly slot", "TABLE_NEEDS_SCHEDULE");

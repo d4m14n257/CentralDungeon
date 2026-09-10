@@ -2,16 +2,10 @@ import { XIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { IconAction } from '@/components/IconAction'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { formatSlot, minutesOfDay, utcSlotToLocal } from '@/lib/date'
+import { Input } from '@/components/ui/input'
+import { formatSlot, utcSlotToLocal } from '@/lib/date'
 
 import type { TableScheduleEntry } from '../types'
-
-/**
- * The lengths a session can be offered as. Not a free text field: a session is chosen from what
- * people actually play, and letting somebody type 03:47 asks a question the table cannot answer.
- */
-const DURATIONS = ['01:00', '01:30', '02:00', '02:30', '03:00', '03:30', '04:00', '05:00', '06:00', '08:00'] as const
 
 /** The default a slot is born with, which is what this community's tables run. */
 export const DEFAULT_SLOT_DURATION = '03:00'
@@ -35,7 +29,9 @@ export interface ScheduleEditorProps {
  * *how long*, which are two different questions.
  *
  * The length is per slot: a table can legitimately run three hours midweek and six on a Saturday,
- * and the single table-wide duration this replaces forced the master to lie about one of them.
+ * and the single table-wide duration this replaces forced the master to lie about one of them. It is
+ * **typed** rather than picked off a list (#229) — a one-shot of 45 minutes and a session of 2 h 45
+ * are both real, and a list of round numbers only fits the tables that happen to be round.
  *
  * @param props.value    the agenda, in UTC
  * @param props.onChange called with the new agenda, in UTC
@@ -43,14 +39,6 @@ export interface ScheduleEditorProps {
  */
 export function ScheduleEditor({ value, onChange, timeZone }: ScheduleEditorProps) {
   const { t, i18n } = useTranslation('master')
-
-  /** "3 h" and "3 h 30 min" — a length, which is not the same shape as a time of day. */
-  function durationLabel(duration: string): string {
-    const minutes = minutesOfDay(duration)
-    const hours = Math.floor(minutes / 60)
-    const rest = minutes % 60
-    return rest === 0 ? t('schedule.hours', { count: hours }) : t('schedule.hoursAndMinutes', { hours, minutes: rest })
-  }
 
   function setDuration(index: number, duration: string) {
     onChange(value.map((entry, position) => (position === index ? { ...entry, duration } : entry)))
@@ -78,18 +66,15 @@ export function ScheduleEditor({ value, onChange, timeZone }: ScheduleEditorProp
                 {t('schedule.utcEquivalent', { slot: formatSlot({ weekday: entry.weekday, hourtime: entry.hourtime }, i18n.language) })}
               </span>
             </span>
-            <Select value={entry.duration ?? DEFAULT_SLOT_DURATION} onValueChange={(next) => setDuration(index, next)}>
-              <SelectTrigger className="w-36" aria-label={t('schedule.durationOf', { slot: formatSlot(local, i18n.language) })}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DURATIONS.map((duration) => (
-                  <SelectItem key={duration} value={duration}>
-                    {durationLabel(duration)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Typed, not chosen from a list: 45 minutes and 2 h 45 are real sessions, and a closed
+                list of round numbers cannot hold them (#229). */}
+            <Input
+              type="time"
+              className="w-32"
+              aria-label={t('schedule.durationOf', { slot: formatSlot(local, i18n.language) })}
+              value={(entry.duration ?? DEFAULT_SLOT_DURATION).slice(0, 5)}
+              onChange={(event) => setDuration(index, event.target.value)}
+            />
             <IconAction
               icon={<XIcon />}
               label={t('schedule.remove', { slot: formatSlot(local, i18n.language) })}

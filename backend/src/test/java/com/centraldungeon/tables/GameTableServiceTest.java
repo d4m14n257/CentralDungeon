@@ -131,7 +131,7 @@ class GameTableServiceTest {
     @DisplayName("una mesa sin sistema no se crea: hay que decir qué se juega (#226)")
     void rejectsCreationWithoutASystem() {
         CreateGameTableRequest request = new CreateGameTableRequest(
-                "Test", null, null, null, null, List.of(), null, List.of("platform-1"), null, null, null,
+                "Test", null, null, null, null, List.of(), List.of("tag-1"), List.of("platform-1"), null, null, null,
                 List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
 
         assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
@@ -146,7 +146,7 @@ class GameTableServiceTest {
     @DisplayName("una mesa sin plataforma no se crea: hay que decir dónde se juega (#226)")
     void rejectsCreationWithoutAPlatform() {
         CreateGameTableRequest request = new CreateGameTableRequest(
-                "Test", null, null, null, null, List.of("system-1"), null, null, null, null, null,
+                "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), null, null, null, null,
                 List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
 
         assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
@@ -160,7 +160,7 @@ class GameTableServiceTest {
     @DisplayName("una mesa sin agenda no se crea: hay que decir cuándo se juega (#226, lo que #196 dejó anotado)")
     void rejectsCreationWithoutASchedule() {
         CreateGameTableRequest request = new CreateGameTableRequest(
-                "Test", null, null, null, null, List.of("system-1"), null, List.of("platform-1"), null, null, null, List.of());
+                "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, null, List.of());
 
         assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
                 .isInstanceOf(InvalidRequestException.class)
@@ -170,19 +170,23 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("los tags siguen siendo opcionales: etiquetar ayuda a encontrar la mesa, no la define (#59)")
-    void tagsAreStillOptional() {
-        CreateGameTableRequest request = runnableRequest(null);
+    @DisplayName("una mesa sin tags no se crea: hay que poder encontrarla por tema (#229, corrige #226)")
+    void rejectsCreationWithoutATag() {
+        CreateGameTableRequest request = new CreateGameTableRequest(
+                "Test", null, null, null, null, List.of("system-1"), List.of(), List.of("platform-1"), null, null, null,
+                List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
 
-        assertThat(request.tagIds()).isNull();
         assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
-                .isNotInstanceOf(InvalidRequestException.class);
+                .isInstanceOf(InvalidRequestException.class)
+                .extracting(exception -> ((InvalidRequestException) exception).getErrorCode())
+                .isEqualTo("TABLE_NEEDS_TAG");
+        verify(gameTableRepository, never()).save(any(GameTable.class));
     }
 
     /** A draft that carries the three things #226 requires, so a test about something else gets past them. */
     private static CreateGameTableRequest runnableRequest(@Nullable String tableTypeId) {
         return new CreateGameTableRequest(
-                "Test", null, null, null, tableTypeId, List.of("system-1"), null, List.of("platform-1"), null, null, null,
+                "Test", null, null, null, tableTypeId, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, null,
                 List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
     }
 
@@ -514,7 +518,7 @@ class GameTableServiceTest {
         gameTableService.update(
                 "table-edit-1",
                 new UpdateGameTableRequest(
-                        "Nuevo", "<p>Hola</p><script>alert(1)</script>", null, null, null, List.of("system-1"), null, List.of("platform-1"),
+                        "Nuevo", "<p>Hola</p><script>alert(1)</script>", null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"),
                         null, null, 5, List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0)))),
                 "master-1");
 
@@ -563,7 +567,7 @@ class GameTableServiceTest {
         gameTableService.update(
                 "table-edit-4",
                 new UpdateGameTableRequest(
-                        "Test", null, null, null, null, List.of("system-1"), null, List.of("platform-1"), null, null, null, agenda),
+                        "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, null, agenda),
                 "master-1");
 
         // The agenda travels whole, each slot with its own length (#228): three hours midweek and six

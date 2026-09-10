@@ -80,7 +80,8 @@
       "FILE_EMPTY": "El archivo está vacío. Elegí otro.",
       "TABLE_NEEDS_SYSTEM": "La mesa tiene que decir qué sistema se juega. Elegí uno o proponé el tuyo.",
       "TABLE_NEEDS_PLATFORM": "La mesa tiene que decir dónde se juega. Elegí una plataforma o proponé la tuya.",
-      "TABLE_NEEDS_SCHEDULE": "La mesa tiene que decir cuándo se juega. Agregá al menos un día y horario."
+      "TABLE_NEEDS_SCHEDULE": "La mesa tiene que decir cuándo se juega. Agregá al menos un día y horario.",
+      "TABLE_NEEDS_TAG": "La mesa tiene que llevar al menos un tag. Elegí uno o proponé el tuyo."
     }
   },
   "pagination": {

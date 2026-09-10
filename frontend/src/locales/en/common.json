@@ -80,7 +80,8 @@
       "FILE_EMPTY": "The file is empty. Pick another one.",
       "TABLE_NEEDS_SYSTEM": "The table has to say what system is played. Pick one or propose your own.",
       "TABLE_NEEDS_PLATFORM": "The table has to say where it is played. Pick a platform or propose your own.",
-      "TABLE_NEEDS_SCHEDULE": "The table has to say when it is played. Add at least one day and time."
+      "TABLE_NEEDS_SCHEDULE": "The table has to say when it is played. Add at least one day and time.",
+      "TABLE_NEEDS_TAG": "The table has to carry at least one tag. Pick one or propose your own."
     }
   },
   "pagination": {

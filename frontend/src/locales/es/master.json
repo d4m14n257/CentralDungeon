@@ -44,7 +44,8 @@
     "missingPlatform": "Elegí al menos una plataforma: la mesa tiene que decir dónde se juega.",
     "missingSchedule": "Agregá al menos un día y horario: la mesa tiene que decir cuándo se juega.",
     "filesTitle": "Archivos",
-    "filesHint": "Lo que le das a la mesa: mapas, fichas, reglas de la casa. Los jugadores los descargan desde la mesa."
+    "filesHint": "Lo que le das a la mesa: mapas, fichas, reglas de la casa. Los jugadores los descargan desde la mesa.",
+    "missingTag": "Elegí al menos un tag: es lo que hace que la mesa se encuentre."
   },
   "detail": {
     "tabs": {
@@ -102,8 +103,6 @@
     "edit": "Editar la mesa",
     "lockedHint": "La agenda ya no se edita: la mesa pasó el punto en que su master podía reescribirla.",
     "emptyHint": "Todavía no elegiste ninguna franja. Hacé clic en una hora libre de la grilla.",
-    "hours": "{{count}} h",
-    "hoursAndMinutes": "{{hours}} h {{minutes}} min",
     "durationOf": "Duración de {{slot}}"
   },
   "sessions": {

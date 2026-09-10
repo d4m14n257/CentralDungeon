@@ -14,10 +14,10 @@ const A_SYSTEM = 'D&D 5e'
 const A_PLATFORM = 'Discord'
 
 /**
- * Picks the system and the platform the table cannot be created without (#226).
+ * Picks the three catalogs the table cannot be created without (#226, #229).
  *
- * Call it while the wizard is on step 2. Tags stay untouched on purpose: they are optional, and a
- * spec that picked one would be asserting a rule that does not exist.
+ * Call it while the wizard is on step 2. Tags joined the list with #229, which reversed the part of
+ * #226 that left them optional.
  *
  * @param page the master's page, on the catalogs step
  */
@@ -26,6 +26,8 @@ export async function chooseRequiredCatalogs(page: Page): Promise<void> {
   // paragraph, not a <label>, so `getByLabel` finds nothing. Worth fixing in the component one day.
   await page.getByRole('combobox').filter({ hasText: 'Elegí un sistema' }).click()
   await page.getByRole('option', { name: A_SYSTEM, exact: true }).click()
+  await page.getByRole('combobox').filter({ hasText: 'Elegí un tag' }).click()
+  await page.getByRole('option').first().click()
   await page.getByRole('combobox').filter({ hasText: 'Elegí una plataforma' }).click()
   await page.getByRole('option', { name: A_PLATFORM, exact: true }).click()
 }

@@ -47,6 +47,7 @@ const EXPLAINED_ERROR_CODES = new Set([
   // another route - and then "could not save" would hide which of the three is missing.
   'TABLE_NEEDS_SYSTEM',
   'TABLE_NEEDS_PLATFORM',
+  'TABLE_NEEDS_TAG',
   'TABLE_NEEDS_SCHEDULE',
   // Handing in an answer to a request the master already closed (F1.5). "Could not save" is the
   // worst possible answer to somebody who just wrote one: retrying will not help, and what they need
