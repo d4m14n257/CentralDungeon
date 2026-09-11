@@ -104,6 +104,40 @@ test('the library shows what each file is, where it is used, and reuses an uploa
   }
 })
 
+/**
+ * The cajones offered are the reader's own (#237).
+ *
+ * `/my/files` is the **personal** library: a plain member of the community never files table
+ * material, and an announcement is nobody's — it is the community's, always published, and it lives
+ * only in `/admin/files`. Whoever runs tables gets the master-side ones as well.
+ */
+test('the library offers only the cajones that are the reader’s own', async ({ browser }) => {
+  const player = await newAuthenticatedPage(browser, `e2e-myfiles-player-${runId}`, false)
+  const master = await newAuthenticatedPage(browser, `e2e-myfiles-master-${runId}`, true)
+
+  try {
+    await player.page.goto('/my/files')
+    const playerFilter = player.page.getByRole('group', { name: 'Filtrar por dónde se usa' })
+    await expect(playerFilter.getByRole('button', { name: 'Solicitud de jugador' })).toBeVisible()
+    await expect(playerFilter.getByRole('button', { name: 'Entrega del jugador' })).toBeVisible()
+    // Not theirs: filing something of their own as table material is not a thing a player does.
+    await expect(playerFilter.getByRole('button', { name: 'De mesa' })).toHaveCount(0)
+    await expect(playerFilter.getByRole('button', { name: 'Petición del master' })).toHaveCount(0)
+    // Nobody's, whoever is asking.
+    await expect(playerFilter.getByRole('button', { name: 'Anuncios de la comunidad' })).toHaveCount(0)
+
+    await master.page.goto('/my/files')
+    const masterFilter = master.page.getByRole('group', { name: 'Filtrar por dónde se usa' })
+    await expect(masterFilter.getByRole('button', { name: 'De mesa' })).toBeVisible()
+    // A master is also a person who plays (#38), so they keep the player-side ones too.
+    await expect(masterFilter.getByRole('button', { name: 'Solicitud de jugador' })).toBeVisible()
+    await expect(masterFilter.getByRole('button', { name: 'Anuncios de la comunidad' })).toHaveCount(0)
+  } finally {
+    await player.context.close()
+    await master.context.close()
+  }
+})
+
 test('a file can be renamed and let go of', async ({ browser }) => {
   const master = await newAuthenticatedPage(browser, `e2e-myfiles-edit-${runId}`, true)
   const { page } = master

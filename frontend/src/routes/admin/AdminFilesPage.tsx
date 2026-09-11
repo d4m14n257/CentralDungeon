@@ -18,6 +18,7 @@ import { useDisclosure } from '@/hooks/useDisclosure'
 import {
   FileCategoryBadge,
   FileCategoryFilter,
+  FileDropzone,
   FileTypeBadge,
   PublishFileDialog,
   formatFileSize,
@@ -87,6 +88,7 @@ export function AdminFilesPage() {
   const unpublish = useUnpublishFile()
   const remove = useDeleteFileAsAdmin()
   const publishDialog = useDisclosure<AdminFile>()
+  const uploadPanel = useDisclosure()
 
   /** Writes the screen's state into the URL, resetting the page whenever the search changes. */
   function updateParams(changes: Record<string, string>) {
@@ -168,11 +170,22 @@ export function AdminFilesPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-serif text-2xl font-semibold">{t('admin.title')}</h1>
-        <HelpLink section="admins.files" className="text-sm">
-          {t('table.helpLink')}
-        </HelpLink>
+        <div className="flex items-center gap-3">
+          <HelpLink section="admins.files" className="text-sm">
+            {t('table.helpLink')}
+          </HelpLink>
+          <Button type="button" onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}>
+            {uploadPanel.isOpen ? t('admin.uploadClose') : t('admin.upload')}
+          </Button>
+        </div>
       </div>
       <p className="text-fg-muted text-sm">{t('admin.description')}</p>
+
+      {/* **The admin's own upload box** (#237). Until this existed, the only way to get a file into
+          the platform's library was to attach it to a table first and publish it from there - so the
+          file arrived carrying a cajón it got by accident. It asks no cajón: what it is offered for
+          is said when it is published, which is the deliberate act. */}
+      {uploadPanel.isOpen && <FileDropzone onUploaded={() => void refetch()} />}
 
       <SearchQueryInput
         fields={[

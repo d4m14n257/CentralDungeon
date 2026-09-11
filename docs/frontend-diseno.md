@@ -55,7 +55,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/player/my-tables` | Mesas donde soy jugador — **solo las vivas** |
 | | `/player/my-tables/:id` | Mi mesa: agenda, sesiones, peticiones pendientes |
 | | `/player/history` | Mesas terminadas y canceladas, con la asistencia final (#133) |
-| | `/my/files` | Mis archivos: a qué flujos pertenece cada uno (#233) y dónde se usa hoy (#232), reutilizables al adjuntar (#65). **Es el único lugar que pregunta el cajón**, porque es el único sin flujo del que deducirlo. **Transversal, no del contexto Jugador** — lo que alguien subió como jugador y como master es una sola biblioteca (#222) |
+| | `/my/files` | Mis archivos: a qué flujos pertenece cada uno (#233) y dónde se usa hoy (#232), reutilizables al adjuntar (#65). **Es el único lugar que pregunta el cajón**, porque es el único sin flujo del que deducirlo — y solo ofrece los que son tuyos (#237): los de jugador a cualquiera, los de master a quien dirija mesas, y nunca los anuncios. **Transversal, no del contexto Jugador** — lo que alguien subió como jugador y como master es una sola biblioteca (#222) |
 | | `/player/profile` | Mi karma y los comentarios que recibí |
 | | `/player/users/:id` | Perfil de otra persona, sujeto a #41, #44 y #47 |
 | Transversal | `/my/schedule` | **Mi horario**: la semana entera en una grilla — lo que dirigís y lo que jugás, junto. De ningún contexto a propósito: son las mismas noches (#227) |
@@ -68,7 +68,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | **Admin** | `/admin/queue` | Bandeja compartida con reserva (#100): **solo lo que pide una acción**, no un listado de consulta (#176) |
 | | `/admin/tables` | **Todas** las mesas, en cualquier estado, con filtros y buscador: el listado de administración, no una cola (#176). **Hoy** muestra solo las que esperan revisión porque `/admin/queue` todavía no existe; al llegar la bandeja (F3), las acciones de revisión se mudan ahí |
 | | `/admin/catalogs` | Sistemas, tags y plataformas; fusionar y separar grupos |
-| | `/admin/files` | Todo lo que subió la comunidad, con su dueño y en cuántas mesas se usa; publicar con audiencia (#64), despublicar y dar de baja. **No es `/owner/storage`**: acá solo se marca, los bytes los libera el owner y eso es F5 (#66, #207) |
+| | `/admin/files` | **La biblioteca de la plataforma**, no la personal (#237): el admin **sube acá** y publica diciendo en qué cajones se ofrece el archivo (#233, reemplaza la audiencia de #64). Además, todo lo que subió la comunidad con su dueño y en cuántas mesas se usa, despublicar y dar de baja. **No es `/owner/storage`**: acá solo se marca, los bytes los libera el owner y eso es F5 (#66, #207) |
 | | `/admin/moderation` | Comentarios por moderar |
 | | `/admin/requests` | Solicitudes de rol, de mesa y generales |
 | | `/admin/feedback` | Feedback del sistema |

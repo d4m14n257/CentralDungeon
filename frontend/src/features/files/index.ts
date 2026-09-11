@@ -17,6 +17,7 @@ export { PublishFileDialog } from './components/PublishFileDialog'
 export { EditFileDialog } from './components/EditFileDialog'
 
 export { useMyFiles } from './api/useMyFiles'
+export { useMyCategories } from './api/useMyCategories'
 export { usePublicFiles } from './api/usePublicFiles'
 export { useTableFiles } from './api/useTableFiles'
 export { useAdminFiles } from './api/useAdminFiles'

@@ -233,6 +233,22 @@ public class MasterService {
     }
 
     /**
+     * Whether this person runs any table at all.
+     *
+     * <p><b>Pertenencia and not the role</b> (#135): somebody an admin assigned to a table has a live
+     * row in {@code masters} and may hold no {@code Master} role whatsoever, and they run that table
+     * all the same. Callers that want "can create their own tables" are asking about the role and
+     * should not come here.
+     *
+     * @param userId the actor, always from the token (#121)
+     * @return true when they have at least one live master row
+     */
+    @Transactional(readOnly = true)
+    public boolean runsAnyTable(String userId) {
+        return masterRepository.existsByUser_IdAndStatus(userId, MasterRowStatus.Created);
+    }
+
+    /**
      * The narrower check: is this person the table's Primary, rather than one of its co-masters.
      * What the lifecycle transitions reserved to the owner ask (#71).
      *

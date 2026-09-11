@@ -125,6 +125,24 @@ public class FileController {
     }
 
     /**
+     * The cajones this person may file something of their own under (#237).
+     *
+     * <p>It exists so the screen offers exactly what the service accepts. The rule depends on the
+     * actor's roles <em>and</em> on the tables they run, and re-deriving that in the frontend is how
+     * the two drift apart until a select offers an option the server rejects.
+     *
+     * @param currentUser whose library, from the token. There is no parameter naming anybody else
+     * @return 200 with the cajones they may use. Never empty - every account is a {@code Player} (#38)
+     */
+    @GetMapping("/mine/categories")
+    @PreAuthorize("isAuthenticated()")
+    public List<String> listMyCategories(@AuthenticationPrincipal CurrentUser currentUser) {
+        return fileService.personalCategoriesOf(currentUser.userId()).stream()
+                .map(FileCategory::name)
+                .toList();
+    }
+
+    /**
      * What the platform published, for whoever is choosing one to attach (#64, #79).
      *
      * @param category the cajón to narrow to (#233), or null for everything published. It replaced

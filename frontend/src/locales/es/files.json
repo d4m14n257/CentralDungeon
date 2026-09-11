@@ -101,7 +101,9 @@
     "deleteConfirm": "Dar de baja",
     "unpublishTitle": "¿Dejar de publicarlo?",
     "unpublishDescription": "Sale del listado de publicados y vuelve a ser un archivo de quien lo subió. Las mesas que ya lo tienen agregado lo conservan.",
-    "unpublishConfirm": "Dejar de publicar"
+    "unpublishConfirm": "Dejar de publicar",
+    "upload": "Subir archivo",
+    "uploadClose": "Cerrar"
   },
   "search": {
     "name": "nombre",

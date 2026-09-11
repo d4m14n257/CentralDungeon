@@ -21,6 +21,7 @@ import {
   FileTypeBadge,
   FileUsageChips,
   useDeleteFile,
+  useMyCategories,
   useMyFiles,
   useUpdateFile,
   type FileCategory,
@@ -45,7 +46,12 @@ import { formatRelativeDate } from '@/lib/date'
  *   stored as a column — a file attached to two tables shows two, and neither of them is a lie.
  * - **A file nothing points at is "sin usar"**, which is the honest warning that the purge will
  *   reach it first, without the screen ever having to explain retention.
- * - **What each file is** (#233), which is what makes a library of thirty documents navigable.
+ * - **Which flows each file belongs to** (#233), which is what makes a library of thirty navigable.
+ *
+ * **It is the personal library and not the platform's** (#237). What an admin publishes for the
+ * community lives in `/admin/files`, which is a different screen with a different job — so the
+ * `Admin` role adds no cajón here and takes none away, and `Announcement` never appears at all. What
+ * somebody may file under is their roles plus the tables they run, and the server decides it.
  *
  * **What was searched and which page are in the URL**, like /admin/files (#185): a tidying session
  * survives a refresh, and a filtered view can be linked to.
@@ -64,6 +70,9 @@ export function MyFilesPage() {
   // isLoadingError, not isError: a background refetch that fails must not blank a list that already
   // loaded (#150).
   const { data, isPending, isLoadingError, refetch } = useMyFiles(debouncedSearch || undefined, category ?? undefined, page)
+  // Which cajones are this person's to use (#237). The server decides: it depends on their roles
+  // *and* on whether they run a table, and a co-master an admin assigned has no Master role (#135).
+  const { data: myCategories } = useMyCategories()
   const update = useUpdateFile()
   const remove = useDeleteFile()
   const editDialog = useDisclosure<StoredFile>()
@@ -128,7 +137,7 @@ export function MyFilesPage() {
           person is left where they are if they have another file to add. */}
       {/* **The one place that asks which cajón** (#233): every other upload happens inside a flow that
           already knows, and this one has no flow to observe. */}
-      {uploadPanel.isOpen && <FileDropzone onUploaded={() => {}} askForCategory />}
+      {uploadPanel.isOpen && <FileDropzone onUploaded={() => {}} askForCategory categories={myCategories ?? []} />}
 
       <div className="space-y-3">
         <Input
@@ -141,7 +150,9 @@ export function MyFilesPage() {
           placeholder={t('mine.searchPlaceholder')}
           aria-label={t('mine.searchLabel')}
         />
-        <FileCategoryFilter value={category} onChange={(next) => updateParams({ category: next ?? '' })} />
+        {/* Only the cajones that can hold something of theirs: a plain member never files table
+            material, and `Announcement` is nobody's — it lives in the platform's library (#237). */}
+        <FileCategoryFilter value={category} onChange={(next) => updateParams({ category: next ?? '' })} options={myCategories ?? []} />
       </div>
 
       {isPending && <Skeleton className="h-64 w-full" />}

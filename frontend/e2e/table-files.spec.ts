@@ -213,14 +213,13 @@ test('a master attaches a file the platform published without copying it', async
   const master = await newAuthenticatedPage(browser, `e2e-pub-master-${runId}`, true, false)
 
   try {
-    // The admin needs a table only to get at an upload box; publishing is done from /admin/files.
-    const adminTableId = await createTable(admin.page, `Mesa Admin Publicar E2E ${runId}`)
-    await admin.page.goto(`/master/tables/${adminTableId}/files`)
-    await attach(admin.page, false, async (dialog) => {
-      await dialog.locator('input[type="file"]').setInputFiles(pdf('ficha-comunidad-e2e.pdf', runId))
-    })
-
+    // The admin uploads straight into the platform's library (#237). It used to take a table to get
+    // at an upload box at all, so the file arrived carrying a cajón it got by accident.
     await admin.page.goto('/admin/files')
+    await admin.page.getByRole('button', { name: 'Subir archivo' }).click()
+    await admin.page.locator('input[type="file"]').setInputFiles(pdf('ficha-comunidad-e2e.pdf', runId))
+    await expect(admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })).toBeVisible()
+
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')
     const row = admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })
     await row.getByRole('button', { name: 'Publicar' }).click()

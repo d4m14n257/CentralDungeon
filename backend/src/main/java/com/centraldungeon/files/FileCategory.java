@@ -79,6 +79,25 @@ public enum FileCategory {
     }
 
     /**
+     * Whether this cajón can hold somebody's <b>personal</b> file - one they keep in their own
+     * library rather than one the platform offers.
+     *
+     * <p>Four of the five can. {@link #Announcement} cannot, and the reason is not a permission: an
+     * announcement is the community's by definition, always published, and it comes out of no flow
+     * anybody lives through. It exists only in the platform's library, where an admin puts it there
+     * by publishing - never in somebody's own.
+     *
+     * <p><b>This is about the cajón, not about who is asking.</b> Which of the other four a given
+     * person may use depends on their roles and on the tables they run, and that is
+     * {@code FileService.personalCategoriesOf}'s to answer.
+     *
+     * @return true when a person may keep a file of their own in this cajón
+     */
+    public boolean isPersonal() {
+        return this != Announcement;
+    }
+
+    /**
      * Returns whether an admin may publish a file into this cajón.
      *
      * <p>The two player-side cajones say no. They hold what individual people answered with, and a

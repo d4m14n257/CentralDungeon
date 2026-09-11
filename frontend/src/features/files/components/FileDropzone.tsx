@@ -29,6 +29,12 @@ interface FileDropzoneProps {
    * library has no flow to observe, and only there is the question honest.
    */
   askForCategory?: boolean
+  /**
+   * Which cajones to offer when it asks (#237). Only somebody's own: a plain member of the community
+   * gets the two player-side ones, whoever runs a table also gets the two master-side ones, and
+   * `Announcement` is nobody's — it lives only in the platform's library.
+   */
+  categories?: readonly FileCategory[]
 }
 
 /**
@@ -58,14 +64,17 @@ interface FileDropzoneProps {
  * @param props.onUploaded     called with the file once it is on the server
  * @param props.isBusy         true while the caller is acting on the result
  * @param props.askForCategory whether to ask which cajón it goes in — only where there is no flow
+ * @param props.categories     which cajones to offer when it asks; only the actor's own (#237)
  */
-export function FileDropzone({ onUploaded, isBusy = false, askForCategory = false }: FileDropzoneProps) {
+export function FileDropzone({ onUploaded, isBusy = false, askForCategory = false, categories = FILE_CATEGORIES }: FileDropzoneProps) {
   const { t } = useTranslation('files')
   const inputId = useId()
   const input = useRef<HTMLInputElement>(null)
 
   const [isOver, setIsOver] = useState(false)
-  const [category, setCategory] = useState<FileCategory>('TableMaterial')
+  // The first one offered, so the select never opens on something this person may not use.
+  const [category, setCategory] = useState<FileCategory | null>(null)
+  const chosen = category ?? categories[0] ?? null
   const [error, setError] = useState<string | null>(null)
   const [reused, setReused] = useState<string | null>(null)
 
@@ -79,7 +88,7 @@ export function FileDropzone({ onUploaded, isBusy = false, askForCategory = fals
       // `Private` and not `SingleUse`: somebody who took the trouble to upload a character sheet
       // will want it on the next table, and the history of #65 only works if it has anything in it.
       // No cajón unless the caller has none to infer: in a flow the link that follows classifies it.
-      { file, input: { fileType: 'Private', fileCategory: askForCategory ? category : null } },
+      { file, input: { fileType: 'Private', fileCategory: askForCategory ? chosen : null } },
       {
         onSuccess: ({ file: uploaded, deduplicated }) => {
           if (deduplicated) {
@@ -108,15 +117,15 @@ export function FileDropzone({ onUploaded, isBusy = false, askForCategory = fals
 
   return (
     <div className="space-y-3">
-      {askForCategory && (
+      {askForCategory && chosen !== null && (
         <div className="space-y-2">
           <Label htmlFor={`${inputId}-category`}>{t('dropzone.categoryLabel')}</Label>
-          <Select value={category} onValueChange={(value) => setCategory(value as FileCategory)} disabled={isPending}>
+          <Select value={chosen} onValueChange={(value) => setCategory(value as FileCategory)} disabled={isPending}>
             <SelectTrigger id={`${inputId}-category`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FILE_CATEGORIES.map((value) => (
+              {categories.map((value) => (
                 <SelectItem key={value} value={value}>
                   {t(`category.${value}`)}
                 </SelectItem>

@@ -21,13 +21,16 @@ import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
 import com.centraldungeon.tasks.TaskFileRepository;
+import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
+import com.centraldungeon.users.UserRoleRepository;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +116,15 @@ public class FileService {
     private final MasterService masterService;
 
     /**
+     * The actor's platform roles, for deciding which cajones are theirs to use (#237).
+     *
+     * <p>The one place in this class that asks about a <b>role</b> rather than about pertenencia, and
+     * it is not an authorization: it decides what somebody's own library can hold, not what they may
+     * reach. Reaching is still membership, always (#17, #121, #135).
+     */
+    private final UserRoleRepository userRoleRepository;
+
+    /**
      * Who belongs to a table, for the sixth way a file is reachable: a request's blank has to open
      * for the people the request reaches. Pertenencia again, and again a row rather than a role
      * (#17, #121, #135).
@@ -132,6 +144,7 @@ public class FileService {
      * @param storageService           where the bytes live (#15)
      * @param storageProperties        the cap, the whitelist and the retention window
      * @param masterService            answers pertenencia (#17, #121, #135)
+     * @param userRoleRepository       the actor's roles, for their own cajones (#237)
      * @param registrationRepository   who belongs to a table, for reading a request's blank
      * @param fileMapper               entity to DTO
      */
@@ -145,6 +158,7 @@ public class FileService {
             StorageService storageService,
             StorageProperties storageProperties,
             MasterService masterService,
+            UserRoleRepository userRoleRepository,
             TableRegistrationRepository registrationRepository,
             FileMapper fileMapper) {
         this.fileRepository = fileRepository;
@@ -156,6 +170,7 @@ public class FileService {
         this.storageService = storageService;
         this.storageProperties = storageProperties;
         this.masterService = masterService;
+        this.userRoleRepository = userRoleRepository;
         this.registrationRepository = registrationRepository;
         this.fileMapper = fileMapper;
     }
@@ -195,6 +210,7 @@ public class FileService {
         }
         requireAllowedMimeType(upload.getContentType());
         requireWithinSizeLimit(upload.getSize());
+        requireOwnCajon(request.fileCategory(), actorId);
 
         byte[] content = readContent(upload);
         requireWithinSizeLimit(content.length);
@@ -234,6 +250,47 @@ public class FileService {
         // screen with no flow to observe - somebody's own library (#233).
         classify(saved.getId(), request.fileCategory());
         return new UploadResult(fileMapper.toResponse(saved, List.of(), List.of()), false);
+    }
+
+    /**
+     * The cajones this person may file something of their own under (#237).
+     *
+     * <p><b>The personal library and the platform's are two different libraries</b>, and this answers
+     * for the first one only. {@code /my/files} is where somebody keeps what is theirs, to have it
+     * to hand; {@code /admin/files} is the platform's, where an admin uploads what the community
+     * offers and says which cajones it belongs to by publishing it. An admin does none of their
+     * admin work in their own library, which is why the {@code Admin} role adds nothing here.
+     *
+     * <p>Three rules, and each one is a different kind of answer:
+     *
+     * <ul>
+     *   <li><b>The two player-side cajones, for everybody.</b> Every account is created with
+     *       {@code Player} (#38), so there is nobody who cannot apply to a table or answer a
+     *       request - an admin included, because an admin is also a person who plays.
+     *   <li><b>The two master-side ones, for whoever runs tables.</b> Not the role alone: a row in
+     *       {@code masters} is what authorizes running a table, and somebody an admin assigned has
+     *       no {@code Master} role at all (#135). Either answer opens them.
+     *   <li><b>Never {@link FileCategory#Announcement}.</b> It is the community's by definition and
+     *       lives only in the platform's library.
+     * </ul>
+     *
+     * @param actorId whose library, from the token (#121)
+     * @return the cajones they may use, in the order the enum declares them
+     */
+    @Transactional(readOnly = true)
+    public List<FileCategory> personalCategoriesOf(String actorId) {
+        boolean runsTables = userRoleRepository.findAllGrants(actorId).stream()
+                        .anyMatch(grant -> PlatformRole.MASTER.roleName().equals(grant.getRole().getName()))
+                || masterService.runsAnyTable(actorId);
+        return Arrays.stream(FileCategory.values())
+                .filter(FileCategory::isPersonal)
+                .filter(category -> runsTables || isPlayerSide(category))
+                .toList();
+    }
+
+    /** Whether a cajón is one of the two a plain member of the community fills by themselves. */
+    private static boolean isPlayerSide(FileCategory category) {
+        return category == FileCategory.PlayerApplication || category == FileCategory.PlayerSubmission;
     }
 
     /**
@@ -710,6 +767,27 @@ public class FileService {
             }
         }
         throw new NotFoundException("File " + fileId + " not found");
+    }
+
+    /**
+     * Refuses a cajón this person has no business filing something of their own under (#237).
+     *
+     * <p>It is a rule of the domain and not of the screen, which is why it is here: the frontend
+     * offers only what {@link #personalCategoriesOf} allows, but a request that names another cajón
+     * is a request, and the authority over it is the service (#121).
+     *
+     * <p>Null passes, and that is the normal case: a file uploaded from inside a flow declares
+     * nothing, because the link that follows is what classifies it (#233).
+     *
+     * @throws InvalidRequestException naming the cajón, so the frontend can say which one
+     */
+    private void requireOwnCajon(@Nullable FileCategory category, String actorId) {
+        if (category != null && !personalCategoriesOf(actorId).contains(category)) {
+            throw new InvalidRequestException(
+                    "Cannot file a personal upload under " + category,
+                    "FILE_CATEGORY_NOT_YOURS",
+                    Map.of("category", category.name()));
+        }
     }
 
     /**

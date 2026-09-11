@@ -27,6 +27,7 @@ import com.centraldungeon.tasks.SubmissionFileRepository;
 import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
+import com.centraldungeon.users.UserRoleRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -89,6 +90,10 @@ class FileServiceTest {
     @Mock
     private TableRegistrationRepository registrationRepository;
 
+    /** The actor's platform roles, for deciding which cajones are their own to use (#237). */
+    @Mock
+    private UserRoleRepository userRoleRepository;
+
     private final FileMapper fileMapper = org.mapstruct.factory.Mappers.getMapper(FileMapper.class);
 
     private final StorageProperties storageProperties = new StorageProperties(
@@ -105,6 +110,7 @@ class FileServiceTest {
                 storageService,
                 storageProperties,
                 masterService,
+                userRoleRepository,
                 registrationRepository,
                 fileMapper);
     }
@@ -222,6 +228,80 @@ class FileServiceTest {
         when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-2"));
 
         fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-2");
+
+        verify(storageService).store(anyString(), any());
+    }
+
+    // ---------------------------------------------------------------- whose cajón is whose (#237)
+
+    /**
+     * Everybody gets the two player-side cajones, because every account is a {@code Player} (#38).
+     *
+     * <p>An admin included: their admin work lives in the platform's library, not in their own, so
+     * the {@code Admin} role adds nothing here and takes nothing away. They are also a person who
+     * plays.
+     */
+    @Test
+    void everyoneMayFileTheirOwnApplicationsAndSubmissions() {
+        when(userRoleRepository.findAllGrants("player-1")).thenReturn(List.of());
+        when(masterService.runsAnyTable("player-1")).thenReturn(false);
+
+        assertThat(fileService().personalCategoriesOf("player-1"))
+                .containsExactly(FileCategory.PlayerApplication, FileCategory.PlayerSubmission);
+    }
+
+    /** Running a table opens the master-side cajones - by the row in {@code masters}, not the role (#135). */
+    @Test
+    void runningATableOpensTheMasterSideCajonesEvenWithoutTheRole() {
+        when(userRoleRepository.findAllGrants("master-1")).thenReturn(List.of());
+        when(masterService.runsAnyTable("master-1")).thenReturn(true);
+
+        assertThat(fileService().personalCategoriesOf("master-1"))
+                .contains(FileCategory.TableMaterial, FileCategory.MasterRequest);
+    }
+
+    /**
+     * {@code Announcement} is nobody's own, whoever is asking (#237).
+     *
+     * <p>Not a permission: an announcement is the community's by definition and lives only in the
+     * platform's library, where an admin puts it there by publishing.
+     */
+    @Test
+    void announcementIsNeverSomebodysOwnCajon() {
+        when(userRoleRepository.findAllGrants("admin-1")).thenReturn(List.of());
+        when(masterService.runsAnyTable("admin-1")).thenReturn(true);
+
+        assertThat(fileService().personalCategoriesOf("admin-1")).doesNotContain(FileCategory.Announcement);
+    }
+
+    /** The rule is the service's and not the screen's: a request naming another cajón is refused. */
+    @Test
+    void refusesAnUploadFiledUnderACajonThatIsNotTheirs() {
+        User owner = persistedUser("player-1");
+        when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
+        when(userRoleRepository.findAllGrants("player-1")).thenReturn(List.of());
+        when(masterService.runsAnyTable("player-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> fileService()
+                        .upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, FileCategory.TableMaterial), "player-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
+                        .isEqualTo("FILE_CATEGORY_NOT_YOURS"));
+
+        verify(storageService, never()).store(anyString(), any());
+    }
+
+    /** No cajón declared is the normal case, and it never trips the check: the link classifies it. */
+    @Test
+    void anUploadFromInsideAFlowDeclaresNoCajonAndIsNotRefused() {
+        User owner = persistedUser("player-1");
+        when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
+        when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
+                        eq("player-1"), anyString(), eq(FileStatus.Current)))
+                .thenReturn(Optional.empty());
+        when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-1"));
+
+        fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-1");
 
         verify(storageService).store(anyString(), any());
     }

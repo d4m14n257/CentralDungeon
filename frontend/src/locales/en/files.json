@@ -101,7 +101,9 @@
     "deleteConfirm": "Remove",
     "unpublishTitle": "Stop publishing it?",
     "unpublishDescription": "It leaves the published list and goes back to being its uploader's file. Tables that already added it keep it.",
-    "unpublishConfirm": "Unpublish"
+    "unpublishConfirm": "Unpublish",
+    "upload": "Upload a file",
+    "uploadClose": "Close"
   },
   "search": {
     "name": "name",

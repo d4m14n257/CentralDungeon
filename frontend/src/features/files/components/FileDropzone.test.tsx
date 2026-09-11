@@ -38,8 +38,24 @@ describe('FileDropzone', () => {
     const { rerender } = render(wrap(<FileDropzone onUploaded={vi.fn()} />))
     expect(screen.queryByLabelText('En qué cajón va')).not.toBeInTheDocument()
 
-    rerender(wrap(<FileDropzone onUploaded={vi.fn()} askForCategory />))
+    rerender(wrap(<FileDropzone onUploaded={vi.fn()} askForCategory categories={['PlayerApplication']} />))
     expect(screen.getByLabelText('En qué cajón va')).toBeInTheDocument()
+  })
+
+  /**
+   * It offers only the cajones it was given (#237), and files under the first of them.
+   *
+   * A plain member of the community never files table material, and `Announcement` is nobody's — so
+   * a select that offered either would offer something the server refuses.
+   */
+  it('files under the first cajón it was offered, and never one it was not', async () => {
+    const onUploaded = vi.fn()
+    render(wrap(<FileDropzone onUploaded={onUploaded} askForCategory categories={['PlayerApplication', 'PlayerSubmission']} />))
+
+    await userEvent.upload(fileInput(), pdf())
+
+    await waitFor(() => expect(upload).toHaveBeenCalled())
+    expect(upload.mock.calls[0]?.[1]).toEqual({ fileType: 'Private', fileCategory: 'PlayerApplication' })
   })
 
   /** A limit somebody only meets by breaking it reads as a bug (principio 2 de frontend-diseno.md §1). */

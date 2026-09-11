@@ -53,6 +53,13 @@ export const filesApi = {
     api.getPage<StoredFile>('/api/v1/files/mine', { q: query, category, page, size: pageSize.picker }),
 
   /**
+   * The cajones this person may file something of their own under (#237).
+   *
+   * The server decides, so the screen cannot offer a cajón the upload would be refused for.
+   */
+  listMyCategories: () => api.get<FileCategory[]>('/api/v1/files/mine/categories'),
+
+  /**
    * What the platform published, for whoever is choosing one to attach (#64, #79).
    *
    * @param category the cajón to narrow to (#233), or undefined for everything published. It
