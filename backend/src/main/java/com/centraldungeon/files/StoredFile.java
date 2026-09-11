@@ -68,10 +68,9 @@ public class StoredFile extends BaseEntity {
     @Column(name = "file_type", nullable = false, length = 32)
     private FileType fileType = FileType.SingleUse;
 
-    /** Who a published file is for (#64). Null on anything that is not {@link FileType#Public}. */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "public_audience", length = 32)
-    private @Nullable PublicAudience publicAudience;
+    // The cajones a file belongs to are rows in `file_categories`, never a column here (#233): a
+    // file belongs to every flow it has been used in, and deduplication (#75) makes two the normal
+    // case rather than an edge one. See FileCategoryLink.
 
     /**
      * Who uploaded it. A file belongs to whoever put it there, and that never changes - publishing it
@@ -112,9 +111,9 @@ public class StoredFile extends BaseEntity {
      *                    name
      * @param contentHash SHA-256 of the content, for recognising the same upload again (#75)
      * @param mimeType    the declared MIME type, already checked against the whitelist
-     * @param sizeBytes   the uncompressed size in bytes
-     * @param fileType    whether the uploader is keeping it or it is tied to one context (#68)
-     * @param userCreated who uploaded it
+     * @param sizeBytes    the uncompressed size in bytes
+     * @param fileType     whether the uploader is keeping it or it is tied to one context (#68)
+     * @param userCreated  who uploaded it
      */
     public StoredFile(String name, String storageKey, String contentHash, String mimeType, long sizeBytes,
             FileType fileType, User userCreated) {
@@ -200,24 +199,6 @@ public class StoredFile extends BaseEntity {
      */
     public void setFileType(FileType fileType) {
         this.fileType = fileType;
-    }
-
-    /**
-     * Returns who a published file is for.
-     *
-     * @return the audience, or null on anything that is not {@link FileType#Public} (#64)
-     */
-    public @Nullable PublicAudience getPublicAudience() {
-        return publicAudience;
-    }
-
-    /**
-     * Declares who a published file is for, or clears it when the file stops being published.
-     *
-     * @param publicAudience the audience, or null
-     */
-    public void setPublicAudience(@Nullable PublicAudience publicAudience) {
-        this.publicAudience = publicAudience;
     }
 
     /**

@@ -43,6 +43,7 @@ export function CreateUnassignedTableDialog({ open, onOpenChange }: CreateUnassi
 
   return (
     <FormDialog
+      isDirty={form.formState.isDirty}
       open={open}
       onOpenChange={onOpenChange}
       title={t('tables.createUnassignedDialogTitle')}

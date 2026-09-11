@@ -73,6 +73,7 @@ export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFileP
 
   return (
     <FormDialog
+      isDirty={content !== '' || files.length > 0}
       open={open}
       onOpenChange={onOpenChange}
       title={t('submit.title', { title: task.title })}

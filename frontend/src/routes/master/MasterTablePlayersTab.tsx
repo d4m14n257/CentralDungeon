@@ -1,6 +1,6 @@
 import { Crown, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link, useOutletContext } from 'react-router'
+import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { CollapsibleSection } from '@/components/CollapsibleSection'
@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { IconAction } from '@/components/IconAction'
 import { Skeleton } from '@/components/ui/skeleton'
-import { helpPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import { useAddMaster, useRemoveMaster } from '@/features/tables'
 import type { MasterSummary } from '@/features/tables'
 import { useTablePlayers } from '@/features/registrations'
@@ -108,9 +108,7 @@ function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
             <UserPicker onSelect={handleAdd} excludedIds={masters.map((master) => master.userId)} tableId={tableId} />
             <p className="text-fg-subtle text-xs">
               {t('masters.hint')} {/* To the exact #ref and not the whole page: that is what makes it worth opening (#168). */}
-              <Link to={helpPath('masters', 'co-masters')} className="underline underline-offset-2">
-                {t('masters.helpLink')}
-              </Link>
+              <HelpLink section="masters.co-masters">{t('masters.helpLink')}</HelpLink>
             </p>
           </div>
         )}

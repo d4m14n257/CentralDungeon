@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   formatDate,
   formatDateTime,
+  formatPlainDate,
+  formatRelativeDate,
   formatMinutes,
   formatSlot,
   localInputToUtcIso,
@@ -181,5 +183,50 @@ describe('formatDateTime and formatDate', () => {
 
   it('applies the same reading to a plain date', () => {
     expect(formatDate('2026-09-09T01:00:00', 'es', BUENOS_AIRES)).toMatch(/8 sept/)
+  })
+})
+
+/**
+ * #230: `start_date` is a day, and a day does not move.
+ *
+ * The suite runs three hours behind UTC on purpose (#192), which is exactly the zone where treating
+ * a date as an instant shows the day before — the bug this function exists to not have.
+ */
+describe('formatPlainDate', () => {
+  it('shows the day the API sent, whatever zone the reader is in', () => {
+    expect(formatPlainDate('2026-09-09', 'es')).toMatch(/9 sept/)
+    expect(formatPlainDate('2026-01-01', 'es')).toMatch(/1 ene/)
+  })
+
+  it('follows the locale', () => {
+    expect(formatPlainDate('2026-09-09', 'en')).toMatch(/Sep 9/)
+  })
+})
+
+describe('formatRelativeDate', () => {
+  const now = new Date('2026-09-10T12:00:00Z')
+
+  it('reads as a distance, which is what the question about lastUsedAt actually is', () => {
+    expect(formatRelativeDate('2026-09-07T12:00:00', 'es', now)).toBe('hace 3 días')
+    expect(formatRelativeDate('2026-08-27T12:00:00', 'es', now)).toBe('hace 2 semanas')
+    expect(formatRelativeDate('2026-01-10T12:00:00', 'es', now)).toBe('hace 8 meses')
+  })
+
+  it('speaks the reader’s language, because the locale is a parameter (#111, #192)', () => {
+    expect(formatRelativeDate('2026-09-07T12:00:00', 'en', now)).toBe('3 days ago')
+  })
+
+  /**
+   * The API sends `2026-09-10T11:00:00` with no offset and JavaScript reads a bare date-time as
+   * local, which would make an hour ago read as hours off for anybody not on UTC (#22).
+   */
+  it('reads the instant as UTC even when it does not say so', () => {
+    expect(formatRelativeDate('2026-09-10T11:00:00', 'es', now)).toBe('hace 1 hora')
+    expect(formatRelativeDate('2026-09-10T11:00:00Z', 'es', now)).toBe('hace 1 hora')
+  })
+
+  /** Under a minute is "ahora": nobody needs to be told a file was touched four seconds ago. */
+  it('collapses anything under a minute', () => {
+    expect(formatRelativeDate('2026-09-10T11:59:56', 'es', now)).toBe('ahora')
   })
 })

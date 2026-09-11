@@ -107,7 +107,7 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **El mínimo del jugador para poder probar**: en `/tables/:id` y `/my/tables/:id`, lectura de la agenda, las sesiones y los archivos públicos, más las peticiones que le aplican **con su entrega** — texto y archivos. Entregar se adelantó de F2 a F1.5 (#210): sin nadie que pueda entregar, el padrón de faltantes muestra a todos como faltantes siempre y la regla que más importa del subsistema —las entregas se acumulan (#76)— queda sin ejercitar. El resto del lado del jugador sigue siendo solo lectura.
 
-**No entra**: pedir pausa ni veto (F3, necesitan `approval_requests`), `/my/files` ni el archivo de personaje en la postulación (F2), karma (F4).
+**No entra**: pedir pausa ni veto (F3, necesitan `approval_requests`), el archivo de personaje en la postulación (F2), karma (F4). ~~`/my/files`~~ — **adelantada a F1**: es la pantalla que le da sentido al historial de #65, y sin ella la reutilización solo existe dentro del diálogo de adjuntar. Llegó junto con la clasificación por flujo (#232, #233) y con los archivos del pedido (#236), que no existían.
 
 **Entrega**: un master arma su mesa entera y la lleva hasta el final, y un jugador ve todo lo que publicó.
 
@@ -170,7 +170,7 @@ Para leer las decisiones ya escritas, que citan la numeración anterior:
 | E2 sub-rebanada 4 — `system_settings` | **F3** |
 | E2 sub-rebanada 5 — `/admin/users`, `/master`, `/my/history`, `/admin/requests`, `/admin/tables` completo | `/master` en **F1**, `/my/history` en **F2**, el resto en **F3** |
 | E3 — sesiones y peticiones | Lo que publica el master en **F1**; lo que entrega el jugador en **F2** |
-| E4 — archivos | **F1** (subsistema y preparación) y **F2** (personaje, `/my/files`) |
+| E4 — archivos | **F1** (subsistema, preparación, `/my/files`, cajones #232/#233, formularios del pedido #236) y **F2** (archivo de personaje en la postulación: `registration_files` es el cajón `PlayerApplication` y la cuarta fuente de usos) |
 | E5 — comentarios y karma | **F4** |
 | E6 — tiempo real, auditoría y owner | **F5** |
 

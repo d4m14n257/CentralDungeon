@@ -49,17 +49,12 @@ export const router = createBrowserRouter([
           // The reader's own week (#227). Transversal like the two above, and for the same reason:
           // the evenings somebody runs and the evenings they play are the same evenings.
           { path: 'my/schedule', lazy: () => import('./my/MySchedulePage') },
-          // The audiences are child routes (#168): each with its own URL, linkable by #ref.
-          {
-            path: 'help',
-            lazy: () => import('./help/HelpPage'),
-            children: [
-              { index: true, lazy: () => import('./help/HelpBasicsTab') },
-              { path: 'players', lazy: () => import('./help/HelpPlayersTab') },
-              { path: 'masters', lazy: () => import('./help/HelpMastersTab') },
-              { path: 'admins', lazy: () => import('./help/HelpAdminsTab') },
-            ],
-          },
+          // The reader's own library (#65, #232). Transversal for the same reason: the sheet you
+          // applied with and the map you attached to a table you run are one library, not two.
+          { path: 'my/files', lazy: () => import('./my/MyFilesPage') },
+          // `/help` is not a route any more (#231): the explanations are dialogs raised from the
+          // screen that prompts the question. The path stays unclaimed for the support screen -
+          // asking for assistance, reporting a bug - which has no backend yet.
         ],
       },
       {

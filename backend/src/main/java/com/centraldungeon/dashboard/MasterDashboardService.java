@@ -18,6 +18,7 @@ import com.centraldungeon.tasks.TableTaskService;
 import com.centraldungeon.tasks.TaskStatus;
 import com.centraldungeon.tasks.TaskSubmissionCount;
 import com.centraldungeon.tasks.TaskSubmissionRepository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -224,10 +225,12 @@ public class MasterDashboardService {
                 items.add(new MasterWorkItem(
                         table.getId(), table.getName(), MasterWorkItemKind.ChangesRequested, null, 1, since));
             }
-            LocalDateTime startDate = table.getStartDate();
-            if (table.getStatus() == GameTableStatus.Opened && startDate != null && startDate.isBefore(now)) {
-                items.add(
-                        new MasterWorkItem(table.getId(), table.getName(), MasterWorkItemKind.ReadyToStart, null, 1, startDate));
+            LocalDate startDate = table.getStartDate();
+            // The start day having arrived, not an instant having passed: the date carries no hour
+            // any more (#230), and a table is ready to start on the day it starts.
+            if (table.getStatus() == GameTableStatus.Opened && startDate != null && !now.toLocalDate().isBefore(startDate)) {
+                items.add(new MasterWorkItem(
+                        table.getId(), table.getName(), MasterWorkItemKind.ReadyToStart, null, 1, startDate.atStartOfDay()));
             }
         }
         return items;

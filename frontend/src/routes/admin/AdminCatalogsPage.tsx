@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/components/ConfirmDialog'
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { helpPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import {
@@ -208,9 +208,9 @@ export function AdminCatalogsPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-serif text-2xl font-semibold">{t('admin.title')}</h1>
-        <Link to={helpPath('admins', 'catalogs')} className="text-fg-muted hover:text-fg text-sm underline">
+        <HelpLink section="admins.catalogs" className="text-sm">
           {t('admin.helpLink')}
-        </Link>
+        </HelpLink>
       </div>
 
       <Tabs value={kind} onValueChange={(value) => updateParams({ kind: value })}>

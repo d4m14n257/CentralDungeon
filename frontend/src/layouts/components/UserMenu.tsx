@@ -1,4 +1,4 @@
-import { CalendarDays, CircleQuestionMark, Languages, Moon, Sun } from 'lucide-react'
+import { CalendarDays, FolderOpen, Languages, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LANGUAGES } from '@/config/language'
-import { helpPath, mySchedulePath, paths } from '@/config/paths'
+import { myFilesPath, mySchedulePath, paths } from '@/config/paths'
 import { useLogout } from '@/features/auth'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useAuth } from '@/providers/AuthProvider'
@@ -71,10 +71,11 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
           <CalendarDays className="size-4" />
           {t('nav.mySchedule')}
         </DropdownMenuItem>
-        {/* The help lives here and not in the bar: it is read once and does not compete with the navigation. */}
-        <DropdownMenuItem onSelect={() => void navigate(helpPath())}>
-          <CircleQuestionMark className="size-4" />
-          {t('nav.help')}
+        {/* And their own library, beside it and for the same reason (#65, #232): what somebody
+            uploaded as a player and as a master is one library, not one per context. */}
+        <DropdownMenuItem onSelect={() => void navigate(myFilesPath())}>
+          <FolderOpen className="size-4" />
+          {t('nav.myFiles')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/* Each language names itself — "English", never "Inglés": somebody looking for their own

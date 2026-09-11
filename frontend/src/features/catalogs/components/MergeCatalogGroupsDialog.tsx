@@ -58,6 +58,7 @@ export function MergeCatalogGroupsDialog({ kind, source, open, onOpenChange }: M
 
   return (
     <FormDialog
+      isDirty={target !== null}
       open={open}
       onOpenChange={onOpenChange}
       title={t('admin.mergeDialogTitle', { name: source.name })}

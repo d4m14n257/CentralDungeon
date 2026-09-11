@@ -1,45 +1,7 @@
-import type { ReactNode } from 'react'
-import { useLocation } from 'react-router'
-
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { useScrollOnHash } from '@/hooks/useScrollOnHash'
-import { cn } from '@/lib/utils'
-
-interface HelpSectionProps {
-  /** The `#ref` the rest of the application links to (decisiones.md #168). */
-  id: string
-  title: string
-  children: ReactNode
-}
-
 /**
- * One block of the help. The `id` is its address: `/help#search`, `/help/admins#assign-masters`.
- * Changing it breaks the links that already exist, so it is treated as part of the screen's contract
- * and not as a layout detail.
- *
- * **The section the URL names is highlighted** (#170): somebody arriving from a link lands in the
- * middle of a long page, and without a mark they cannot tell which block they came to read. The
- * highlight lasts as long as the `#ref` names it — it goes out on navigating elsewhere, not on a
- * timer that would force people to read fast.
- *
- * The title is a real `h2` and not `CardTitle`'s `div`: this is a page meant to be read.
+ * The shapes a help section is built out of. They carry no layout of their own beyond their own
+ * rhythm, so the same body reads the same wherever it is rendered.
  */
-export function HelpSection({ id, title, children }: HelpSectionProps) {
-  const ref = useScrollOnHash<HTMLElement>(id)
-  const { hash } = useLocation()
-  const isTargeted = hash.slice(1) === id
-
-  return (
-    <section id={id} ref={ref} className="scroll-mt-20" aria-current={isTargeted ? 'location' : undefined}>
-      <Card className={cn(isTargeted && 'border-primary ring-primary/30 ring-2')}>
-        <CardHeader>
-          <h2 className="font-serif text-lg leading-none font-semibold">{title}</h2>
-        </CardHeader>
-        <CardContent className="space-y-4">{children}</CardContent>
-      </Card>
-    </section>
-  )
-}
 
 /** A block's bullet list: what there is to know. */
 export function HelpList({ items }: { items: string[] }) {
@@ -60,7 +22,7 @@ export function HelpList({ items }: { items: string[] }) {
 /**
  * The steps of a task: how it is done, in order. The help does not merely describe what exists, it
  * teaches how to use it (#170), and for that a numbered step is the shape somebody can follow with
- * the site open beside it.
+ * the screen open behind the dialog.
  */
 export function HelpSteps({ title, items }: { title: string; items: string[] }) {
   return (

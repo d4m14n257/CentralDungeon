@@ -180,7 +180,9 @@ class TableScheduleIT {
         GameTable noDuration = gameTableRepository.save(new GameTable("Mesa sin duración", master));
         masterService.createPrimary(noDuration, master);
 
-        tableScheduleService.replace(noDuration, List.of(new TableScheduleEntry(Weekday.Thursday, LocalTime.of(20, 0), LocalTime.of(3, 0))), master.getId());
+        // No length, which is what the test is about: #228 made the duration a property of the slot
+        // and left it nullable, and a slot without one claims no interval.
+        tableScheduleService.replace(noDuration, List.of(new TableScheduleEntry(Weekday.Thursday, LocalTime.of(20, 0), null)), master.getId());
 
         assertThat(scheduleConflictService.intervalsOf(noDuration)).isEmpty();
         assertThat(tableScheduleService.findByTable(noDuration.getId())).hasSize(1);

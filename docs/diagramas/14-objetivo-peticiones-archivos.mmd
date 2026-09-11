@@ -58,9 +58,21 @@ erDiagram
         varchar mime_type
         bigint size_bytes
         varchar file_type "Public | Private | Single-use"
-        varchar public_audience "Masters | Players | Announcements"
         varchar user_created_id FK
         datetime last_used_at "purga por desuso"
+        varchar status
+        datetime deleted_at
+    }
+
+    file_categories {
+        varchar file_id PK,FK
+        varchar category PK "el flujo: mesa | peticion | solicitud | entrega | anuncio"
+        datetime created_at
+    }
+
+    task_files {
+        varchar task_id PK,FK
+        varchar file_id PK,FK
         varchar status
         datetime deleted_at
     }
@@ -80,7 +92,10 @@ erDiagram
     table_tasks    ||--o{ task_submissions : "recibe entregas, se acumulan"
     users          ||--o{ task_submissions : "entrega"
     task_submissions ||--o{ submission_files : "adjunta"
-    files          ||--o{ submission_files : ""
-    files          ||--o{ table_files      : ""
-    game_tables    ||--o{ table_files      : "adjunta"
-    users          ||--o{ files            : "subio y puede reutilizar"
+    files            ||--o{ file_categories  : "a que flujos pertenece (#233)"
+    files            ||--o{ submission_files : "entrega del jugador"
+    files            ||--o{ task_files       : "formulario del pedido (#236)"
+    files            ||--o{ table_files      : "material de mesa"
+    table_tasks      ||--o{ task_files       : "adjunta el formulario"
+    game_tables      ||--o{ table_files      : "adjunta"
+    users            ||--o{ files            : "subio y puede reutilizar"

@@ -17,7 +17,7 @@ erDiagram
         varchar name
         longtext description
         longtext requirements "texto enriquecido"
-        datetime start_date "UTC, sin columna timezone"
+        date start_date "día de inicio, sin hora ni zona (#230)"
         int total_sessions
         int max_players
         varchar status "Unassigned | Preparation | ChangesRequested | Opened | InProgress | PauseRequested | Pause | Finished | Canceled"

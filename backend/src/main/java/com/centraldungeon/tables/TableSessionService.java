@@ -20,6 +20,7 @@ import com.centraldungeon.tables.dto.TableSessionResponse;
 import com.centraldungeon.tables.dto.UpdateSessionRequest;
 import com.centraldungeon.users.User;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -117,6 +118,9 @@ public class TableSessionService {
      * Turns the table's agenda into its calendar. Called once, when the table reaches {@code Opened}
      * (#26, #33).
      *
+     * <p>The hours are the agenda's, always: {@code start_date} only says which day to start looking
+     * from, which is why it is a date and carries no hour of its own (#230).
+     *
      * <p><b>A table missing any of the three inputs opens with no sessions and is not refused</b>
      * (#196): {@code start_date}, the agenda and {@code total_sessions} are all nullable, and turning
      * them into a precondition of approval would be a new gate on the admin's flow rather than the
@@ -132,7 +136,7 @@ public class TableSessionService {
         if (sessionRepository.existsByGameTable_Id(table.getId())) {
             return;
         }
-        LocalDateTime startDate = table.getStartDate();
+        LocalDate startDate = table.getStartDate();
         Integer totalSessions = table.getTotalSessions();
         if (startDate == null || totalSessions == null || totalSessions <= 0) {
             return;
@@ -143,7 +147,9 @@ public class TableSessionService {
         }
 
         int sequenceNumber = 1;
-        for (LocalDateTime instant : occurrencesFrom(startDate, agenda, totalSessions, true)) {
+        // From the very start of the day, so a slot on the start date itself is the first session
+        // rather than one the cut-off walks past (#230).
+        for (LocalDateTime instant : occurrencesFrom(startDate.atStartOfDay(), agenda, totalSessions, true)) {
             sessionRepository.save(new TableSession(table, sequenceNumber++, instant));
         }
     }

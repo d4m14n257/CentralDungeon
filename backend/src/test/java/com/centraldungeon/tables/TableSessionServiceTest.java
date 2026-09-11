@@ -22,6 +22,7 @@ import com.centraldungeon.tables.dto.RecordAttendanceRequest;
 import com.centraldungeon.tables.dto.TableScheduleEntry;
 import com.centraldungeon.tables.dto.UpdateSessionRequest;
 import com.centraldungeon.users.User;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -82,7 +83,7 @@ class TableSessionServiceTest {
 
     @Test
     void materializesOneSessionPerWeekFromTheStartDate() {
-        GameTable table = table("t1", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t1", LocalDate.parse("2026-09-08"), 3);
         agenda("t1", entry(Weekday.Tuesday, "20:00"));
 
         service().materialize(table);
@@ -102,8 +103,8 @@ class TableSessionServiceTest {
      */
     @Test
     void materializesAcrossTheWeekendWrapWithoutMovingTheDayBack() {
-        // Starts Tuesday 23:00 UTC; the agenda is Wednesday 02:00 UTC - the same evening in America.
-        GameTable table = table("t2", LocalDateTime.parse("2026-09-08T23:00"), 2);
+        // Starts Tuesday; the agenda is Wednesday 02:00 UTC - the same evening in America.
+        GameTable table = table("t2", LocalDate.parse("2026-09-08"), 2);
         agenda("t2", entry(Weekday.Wednesday, "02:00"));
 
         service().materialize(table);
@@ -115,7 +116,7 @@ class TableSessionServiceTest {
     /** A table that plays twice a week fills its run in half the weeks, in week order. */
     @Test
     void materializesTwoSlotsAWeekInWeekOrder() {
-        GameTable table = table("t3", LocalDateTime.parse("2026-09-07T00:00"), 4);
+        GameTable table = table("t3", LocalDate.parse("2026-09-07"), 4);
         agenda("t3", entry(Weekday.Tuesday, "20:00"), entry(Weekday.Friday, "21:00"));
 
         service().materialize(table);
@@ -131,13 +132,32 @@ class TableSessionServiceTest {
     /** A slot earlier in the week than the start date belongs to the next week, not to this one. */
     @Test
     void skipsTheSlotsOfTheFirstWeekThatAreAlreadyBehindTheStartDate() {
-        GameTable table = table("t4", LocalDateTime.parse("2026-09-10T00:00"), 1);
+        GameTable table = table("t4", LocalDate.parse("2026-09-10"), 1);
         agenda("t4", entry(Weekday.Tuesday, "20:00"));
 
         service().materialize(table);
 
         assertThat(savedSessions(1)).extracting(TableSession::getScheduledAt)
                 .containsExactly(LocalDateTime.parse("2026-09-15T20:00"));
+    }
+
+    /**
+     * #230: the whole of the start day counts, however early in it the agenda's slot falls.
+     *
+     * <p>This is what the date replaced an instant for. While it was a DATETIME a master typing the
+     * hour they actually play - the only hour they would think to type - pushed the first session a
+     * week out whenever the agenda's slot fell earlier that day in UTC, and nothing on the screen
+     * said so.
+     */
+    @Test
+    void takesASlotOnTheStartDayItselfHoweverEarlyInTheDayItFalls() {
+        GameTable table = table("t22", LocalDate.parse("2026-09-08"), 2);
+        agenda("t22", entry(Weekday.Tuesday, "02:00"));
+
+        service().materialize(table);
+
+        assertThat(savedSessions(2)).extracting(TableSession::getScheduledAt)
+                .containsExactly(LocalDateTime.parse("2026-09-08T02:00"), LocalDateTime.parse("2026-09-15T02:00"));
     }
 
     /** #196, first case: no start date, no calendar - and no refusal. */
@@ -150,14 +170,14 @@ class TableSessionServiceTest {
     /** #196, second case: no session count. */
     @Test
     void materializesNothingWhenTheTableHasNoSessionCount() {
-        service().materialize(table("t6", LocalDateTime.parse("2026-09-08T20:00"), null));
+        service().materialize(table("t6", LocalDate.parse("2026-09-08"), null));
         verify(sessionRepository, never()).save(any());
     }
 
     /** #196, third case: an approved table whose master never wrote an agenda. */
     @Test
     void materializesNothingWhenTheTableHasNoAgenda() {
-        GameTable table = table("t7", LocalDateTime.parse("2026-09-08T20:00"), 12);
+        GameTable table = table("t7", LocalDate.parse("2026-09-08"), 12);
         agenda("t7");
 
         service().materialize(table);
@@ -168,7 +188,7 @@ class TableSessionServiceTest {
     /** Opening a table twice must not double its calendar. */
     @Test
     void doesNotMaterializeATableThatAlreadyHasSessions() {
-        GameTable table = table("t8", LocalDateTime.parse("2026-09-08T20:00"), 12);
+        GameTable table = table("t8", LocalDate.parse("2026-09-08"), 12);
         when(sessionRepository.existsByGameTable_Id("t8")).thenReturn(true);
 
         service().materialize(table);
@@ -182,7 +202,7 @@ class TableSessionServiceTest {
     /** A paused table promises no dates, so the pending sessions are not shown - to its master either. */
     @Test
     void hidesThePendingSessionsWhileTheTableIsPaused() {
-        GameTable table = table("t9", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t9", LocalDate.parse("2026-09-08"), 3);
         table.setStatus(GameTableStatus.Pause);
         TableSession held = session(table, "s1", 1, "2026-09-08T20:00", TableSessionStatus.Held);
         TableSession pending = session(table, "s2", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
@@ -199,7 +219,7 @@ class TableSessionServiceTest {
     /** Resuming re-lays what was still pending, keeping the run's numbering (#33). */
     @Test
     void relaysThePendingSessionsFromTheResumeDate() {
-        GameTable table = table("t10", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t10", LocalDate.parse("2026-09-08"), 3);
         TableSession fourth = session(table, "s4", 4, "2026-09-29T20:00", TableSessionStatus.Scheduled);
         TableSession fifth = session(table, "s5", 5, "2026-10-06T20:00", TableSessionStatus.Scheduled);
         when(sessionRepository.findByGameTable_IdAndStatusOrderBySequenceNumberAsc("t10", TableSessionStatus.Scheduled))
@@ -217,7 +237,7 @@ class TableSessionServiceTest {
     /** What was played and what was called off keep their dates: those are facts, not plans. */
     @Test
     void leavesTheHeldAndCancelledSessionsWhereTheyAreWhenResuming() {
-        GameTable table = table("t11", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t11", LocalDate.parse("2026-09-08"), 3);
         when(sessionRepository.findByGameTable_IdAndStatusOrderBySequenceNumberAsc("t11", TableSessionStatus.Scheduled))
                 .thenReturn(List.of());
 
@@ -230,7 +250,7 @@ class TableSessionServiceTest {
     /** An agenda emptied during the pause leaves the dates alone rather than inventing instants. */
     @Test
     void keepsTheDatesWhenTheAgendaWasEmptiedDuringThePause() {
-        GameTable table = table("t12", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t12", LocalDate.parse("2026-09-08"), 3);
         TableSession pending = session(table, "s6", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
         when(sessionRepository.findByGameTable_IdAndStatusOrderBySequenceNumberAsc("t12", TableSessionStatus.Scheduled))
                 .thenReturn(List.of(pending));
@@ -245,7 +265,7 @@ class TableSessionServiceTest {
 
     @Test
     void movesOneSessionAndTellsThePlayers() {
-        GameTable table = table("t13", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t13", LocalDate.parse("2026-09-08"), 3);
         TableSession target = lockedSession(table, "s7", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
         emptyRoster("t13", "s7");
         when(registrationRepository.findByGameTable_Id("t13"))
@@ -261,7 +281,7 @@ class TableSessionServiceTest {
     /** Writing a note is not moving a date, and does not wake anybody's notification bell. */
     @Test
     void doesNotNotifyWhenOnlyTheNotesChange() {
-        GameTable table = table("t14", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t14", LocalDate.parse("2026-09-08"), 3);
         lockedSession(table, "s8", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
         emptyRoster("t14", "s8");
 
@@ -272,7 +292,7 @@ class TableSessionServiceTest {
 
     @Test
     void refusesToCorrectASessionThatWasAlreadyPlayed() {
-        GameTable table = table("t15", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t15", LocalDate.parse("2026-09-08"), 3);
         lockedSession(table, "s9", 1, "2026-09-08T20:00", TableSessionStatus.Held);
 
         assertThatThrownBy(() -> service().update("s9", new UpdateSessionRequest(LocalDateTime.parse("2026-09-09T20:00"), null), "master-1"))
@@ -282,7 +302,7 @@ class TableSessionServiceTest {
     /** Pertenencia and not role: somebody who does not run this table cannot touch its calendar (#17, #135). */
     @Test
     void refusesToCorrectASessionOfATableTheActorDoesNotRun() {
-        GameTable table = table("t16", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t16", LocalDate.parse("2026-09-08"), 3);
         TableSession target = session(table, "s10", 1, "2026-09-08T20:00", TableSessionStatus.Scheduled);
         when(sessionRepository.findByIdForUpdate("s10")).thenReturn(Optional.of(target));
         when(masterService.isMasterOf("t16", "stranger")).thenReturn(false);
@@ -294,7 +314,7 @@ class TableSessionServiceTest {
     /** #195: marking a session played is its own action, and it starts from Scheduled. */
     @Test
     void marksASessionAsHeld() {
-        GameTable table = table("t17", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t17", LocalDate.parse("2026-09-08"), 3);
         TableSession target = lockedSession(table, "s11", 1, "2026-09-08T20:00", TableSessionStatus.Scheduled);
         emptyRoster("t17", "s11");
 
@@ -305,7 +325,7 @@ class TableSessionServiceTest {
 
     @Test
     void refusesToHoldASessionThatWasCancelled() {
-        GameTable table = table("t18", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t18", LocalDate.parse("2026-09-08"), 3);
         lockedSession(table, "s12", 1, "2026-09-08T20:00", TableSessionStatus.Cancelled);
 
         assertThatThrownBy(() -> service().hold("s12", "master-1")).isInstanceOf(ConflictException.class);
@@ -314,7 +334,7 @@ class TableSessionServiceTest {
     /** #194: the row stays as a record and the table gets the session back at the end. */
     @Test
     void cancelsASessionAndAppendsAReplacementAtTheEndOfTheRun() {
-        GameTable table = table("t19", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t19", LocalDate.parse("2026-09-08"), 3);
         TableSession second = lockedSession(table, "s13", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
         TableSession third = session(table, "s14", 3, "2026-09-22T20:00", TableSessionStatus.Scheduled);
         agenda("t19", entry(Weekday.Tuesday, "20:00"));
@@ -339,7 +359,7 @@ class TableSessionServiceTest {
     /** No agenda, no slot to put a replacement on - a made-up date would be worse than a shorter run. */
     @Test
     void cancelsWithoutAReplacementWhenTheTableHasNoAgendaLeft() {
-        GameTable table = table("t20", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t20", LocalDate.parse("2026-09-08"), 3);
         TableSession second = lockedSession(table, "s15", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
         agenda("t20");
         when(sessionRepository.findByGameTable_IdOrderBySequenceNumberAsc("t20")).thenReturn(List.of(second));
@@ -355,7 +375,7 @@ class TableSessionServiceTest {
 
     @Test
     void tellsThePlayersWhenASessionIsCalledOff() {
-        GameTable table = table("t21", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t21", LocalDate.parse("2026-09-08"), 3);
         TableSession second = lockedSession(table, "s16", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
         agenda("t21");
         when(sessionRepository.findByGameTable_IdOrderBySequenceNumberAsc("t21")).thenReturn(List.of(second));
@@ -374,7 +394,7 @@ class TableSessionServiceTest {
 
     @Test
     void recordsAttendanceForThePlayersOfTheTable() {
-        GameTable table = table("t22", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t22", LocalDate.parse("2026-09-08"), 3);
         TableSession target = lockedSession(table, "s17", 1, "2026-09-08T20:00", TableSessionStatus.Scheduled);
         roster("t22", "s17", registration(table, "player-1", TableRegistrationStatus.Player));
         when(attendanceRepository.findById(new SessionAttendanceId("s17", "player-1"))).thenReturn(Optional.empty());
@@ -392,7 +412,7 @@ class TableSessionServiceTest {
     /** The roster is the server's, not the caller's: a stranger's id is malformed input (#121). */
     @Test
     void refusesToRecordAttendanceForSomebodyWhoDoesNotPlayAtTheTable() {
-        GameTable table = table("t23", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t23", LocalDate.parse("2026-09-08"), 3);
         lockedSession(table, "s18", 1, "2026-09-08T20:00", TableSessionStatus.Scheduled);
         when(registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc("t23", TableRegistrationStatus.Player))
                 .thenReturn(List.of());
@@ -405,7 +425,7 @@ class TableSessionServiceTest {
 
     @Test
     void refusesToRecordAttendanceForASessionThatWasCancelled() {
-        GameTable table = table("t24", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t24", LocalDate.parse("2026-09-08"), 3);
         lockedSession(table, "s19", 1, "2026-09-08T20:00", TableSessionStatus.Cancelled);
 
         RecordAttendanceRequest request =
@@ -417,7 +437,7 @@ class TableSessionServiceTest {
     /** Everybody who plays is on the roster, whether or not anything was recorded for them. */
     @Test
     void listsEveryActivePlayerOnTheRosterEvenWithNothingRecorded() {
-        GameTable table = table("t25", LocalDateTime.parse("2026-09-08T20:00"), 3);
+        GameTable table = table("t25", LocalDate.parse("2026-09-08"), 3);
         TableSession first = session(table, "s20", 1, "2026-09-08T20:00", TableSessionStatus.Scheduled);
         when(gameTableRepository.findById("t25")).thenReturn(Optional.of(table));
         when(masterService.isMasterOf("t25", "master-1")).thenReturn(true);
@@ -466,7 +486,7 @@ class TableSessionServiceTest {
 
     @Test
     void givesAPlayerTheirOwnCalendarAndTheirOwnAttendance() {
-        GameTable table = table("t28", LocalDateTime.parse("2026-09-08T20:00"), 2);
+        GameTable table = table("t28", LocalDate.parse("2026-09-08"), 2);
         TableSession first = session(table, "s21", 1, "2026-09-08T20:00", TableSessionStatus.Held);
         when(gameTableRepository.findById("t28")).thenReturn(Optional.of(table));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t28", "player-1", List.of(TableRegistrationStatus.Player)))
@@ -488,7 +508,7 @@ class TableSessionServiceTest {
 
     @Test
     void refusesTheOwnCalendarToSomebodyWhoDoesNotPlayAtTheTable() {
-        GameTable table = table("t29", LocalDateTime.parse("2026-09-08T20:00"), 2);
+        GameTable table = table("t29", LocalDate.parse("2026-09-08"), 2);
         when(gameTableRepository.findById("t29")).thenReturn(Optional.of(table));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t29", "stranger", List.of(TableRegistrationStatus.Player)))
                 .thenReturn(false);
@@ -534,7 +554,7 @@ class TableSessionServiceTest {
         return new TableScheduleEntry(weekday, LocalTime.parse(hourtime), LocalTime.of(3, 0));
     }
 
-    private static GameTable table(String id, java.time.LocalDateTime startDate, Integer totalSessions) {
+    private static GameTable table(String id, LocalDate startDate, Integer totalSessions) {
         GameTable table = new GameTable("Mesa " + id, user("creator-" + id));
         ReflectionTestUtils.setField(table, "id", id);
         table.setStartDate(startDate);

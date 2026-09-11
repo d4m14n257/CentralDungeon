@@ -56,6 +56,14 @@ export interface TableTask {
    * nothing in the application refuses, blocks or removes anybody over it.
    */
   isMandatory: boolean
+  /**
+   * The blanks the master attached — the forms the ask is about (#63, #233).
+   *
+   * **The half of a request the model never had.** `acceptsFiles` says whether an *answer* may carry
+   * files; this is what the *asking* carries. Without it, "send me your sheet on this form" arrived
+   * with no form and the master had to describe it in prose.
+   */
+  files: SubmittedFile[]
   /** ISO-8601 UTC, or null for no date. Nothing happens when it passes (#22, #70). */
   dueAt: string | null
   status: TaskStatus
@@ -88,6 +96,7 @@ export type ApplicableTask = Pick<
   | 'acceptsText'
   | 'acceptsFiles'
   | 'isMandatory'
+  | 'files'
   | 'dueAt'
   | 'createdAt'
 > & {
@@ -146,7 +155,13 @@ export interface TaskSubmissions {
 export type CreateTaskInput = Pick<
   TableTask,
   'title' | 'description' | 'audience' | 'targetUserId' | 'tableSessionId' | 'acceptsText' | 'acceptsFiles' | 'isMandatory' | 'dueAt'
->
+> & {
+  /**
+   * The blanks to attach, by id (#63). Already uploaded and linked, never copied (#79), so the
+   * community's published form is attached rather than re-uploaded by every master.
+   */
+  fileIds: string[]
+}
 
 /** What correcting sends. The same shape: a full replacement, never a patch (#189). */
 export type UpdateTaskInput = CreateTaskInput

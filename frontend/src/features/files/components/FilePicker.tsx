@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { EmptyState } from '@/components/EmptyState'
@@ -7,12 +7,15 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDebounce } from '@/hooks/useDebounce'
+import { formatRelativeDate } from '@/lib/date'
 
 import { useMyFiles } from '../api/useMyFiles'
 import { usePublicFiles } from '../api/usePublicFiles'
-import { useUploadFile } from '../api/useUploadFile'
-import { formatFileSize } from '../format'
-import type { PublicAudience, StoredFile } from '../types'
+import { FileCard } from './FileCard'
+import { FileCategoryBadge } from './FileCategoryBadge'
+import { FileCategoryFilter } from './FileCategoryFilter'
+import { FileDropzone } from './FileDropzone'
+import type { FileCategory } from '../types'
 
 interface FilePickerProps {
   /**
@@ -32,15 +35,15 @@ interface FilePickerProps {
    */
   offerPublished?: boolean
   /**
-   * Narrows the published tab to one audience, or undefined to offer everything published.
+   * The cajón this picker is standing in (#233) — the flow the file is being chosen for.
    *
-   * **Undefined is the right answer for a master attaching to their table**, and getting this wrong
-   * is what broke #79's own example: the community's default character sheet is published *for
-   * players*, but the person who attaches it is the master. The audience says who ends up reading
-   * the file, not who does the attaching, so narrowing by the picker's own audience would hide
-   * exactly the file the feature exists to share.
+   * **It is what the published tab asks for**, and it is how the community's blanks reach the right
+   * moment: a master attaching to their table passes `TableMaterial` and gets the sheet published for
+   * that; the same master writing a request passes `MasterRequest` and gets the forms published for
+   * that. The old audience could not do this — it said who ends up reading the file, which is a
+   * different question, and narrowing by it hid exactly the file #79 exists to share.
    */
-  publishedAudience?: PublicAudience
+  cajon?: FileCategory
 }
 
 /**
@@ -56,45 +59,25 @@ interface FilePickerProps {
  * their own. That tab shows everything published unless a caller narrows it — see
  * {@link FilePickerProps.publishedAudience} for why narrowing it by the reader's own role is wrong.
  *
- * The per-file cap is stated up front rather than after a failed upload, because a limit somebody
- * only meets by breaking it is a limit that reads as a bug (principio 2 de frontend-diseno.md §1).
+ * **The published tab is narrowed to the cajón the picker stands in** (#233), which is what makes it
+ * usable once the community has published more than a handful — and what puts the right blank in
+ * front of the right moment without anybody filtering by hand.
  *
- * @param props.onPick            called with the chosen file's id and name
- * @param props.isBusy            true while the caller is acting on a pick
- * @param props.offerPublished    whether to offer what the platform published
- * @param props.publishedAudience narrows that tab to one audience, or undefined for all of it
+ * @param props.onPick         called with the chosen file's id and name
+ * @param props.isBusy         true while the caller is acting on a pick
+ * @param props.offerPublished whether to offer what the platform published
+ * @param props.cajon          the flow the file is being chosen for; narrows the published tab
  */
-export function FilePicker({ onPick, isBusy = false, offerPublished = false, publishedAudience }: FilePickerProps) {
+export function FilePicker({ onPick, isBusy = false, offerPublished = false, cajon }: FilePickerProps) {
   const { t, i18n } = useTranslation('files')
   const [tab, setTab] = useState('upload')
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
-  const fileInput = useRef<HTMLInputElement>(null)
+  const [historyCategory, setHistoryCategory] = useState<FileCategory | null>(null)
 
-  const upload = useUploadFile()
-  const history = useMyFiles(debouncedSearch || undefined, 0, tab === 'reuse')
-  const published = usePublicFiles(publishedAudience, tab === 'published' && offerPublished)
-
-  function handleUpload(file: File) {
-    // `Private` and not `SingleUse`: somebody who took the trouble to upload a character sheet will
-    // want it again on the next table, and #65 only works if the history has anything in it. Letting
-    // go of it is one click away in /admin/files or in the owner's own list; getting it back after a
-    // purge is not (#68, #75).
-    upload.mutate(
-      { file, input: { fileType: 'Private' } },
-      {
-        onSuccess: (uploaded: StoredFile) => onPick({ fileId: uploaded.id, name: uploaded.name }),
-        // Cleared on failure too, not only on success: the input keeps the rejected file otherwise,
-        // and picking the same one again fires no change event at all - so somebody who fixes what
-        // the message told them to fix would find the control silently dead.
-        onSettled: () => {
-          if (fileInput.current) {
-            fileInput.current.value = ''
-          }
-        },
-      },
-    )
-  }
+  const history = useMyFiles(debouncedSearch || undefined, historyCategory ?? undefined, 0, tab === 'reuse')
+  // Narrowed to the cajón this picker stands in: what the community published *for this moment*.
+  const published = usePublicFiles(cajon, tab === 'published' && offerPublished)
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="space-y-4">
@@ -104,20 +87,8 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, pub
         {offerPublished && <TabsTrigger value="published">{t('picker.published')}</TabsTrigger>}
       </TabsList>
 
-      <TabsContent value="upload" className="space-y-2">
-        <Input
-          ref={fileInput}
-          type="file"
-          aria-label={t('picker.uploadLabel')}
-          disabled={upload.isPending || isBusy}
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            if (file) {
-              handleUpload(file)
-            }
-          }}
-        />
-        <p className="text-fg-muted text-xs">{t('picker.limits')}</p>
+      <TabsContent value="upload">
+        <FileDropzone onUploaded={(uploaded) => onPick({ fileId: uploaded.id, name: uploaded.name })} isBusy={isBusy} />
       </TabsContent>
 
       <TabsContent value="reuse" className="space-y-3">
@@ -128,50 +99,30 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, pub
           placeholder={t('picker.searchPlaceholder')}
           aria-label={t('picker.searchLabel')}
         />
+        <FileCategoryFilter value={historyCategory} onChange={setHistoryCategory} />
         {history.isPending ? (
           <Skeleton className="h-24 w-full" />
         ) : history.data && history.data.content.length > 0 ? (
           <ul className="divide-border divide-y">
-            {history.data.content.map((file) => {
-              const size = formatFileSize(file.sizeBytes, i18n.language)
-              return (
-                <li key={file.id} className="flex items-center justify-between gap-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm">{file.name}</p>
-                    <p className="text-fg-muted text-xs">{t(`size.${size.unit}`, { value: size.value })}</p>
-                  </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    disabled={isBusy}
-                    onClick={() => onPick({ fileId: file.id, name: file.name })}
-                  >
-                    {t('picker.use')}
-                  </Button>
-                </li>
-              )
-            })}
-          </ul>
-        ) : (
-          <EmptyState title={t('picker.historyEmptyTitle')} description={t('picker.historyEmptyDescription')} />
-        )}
-      </TabsContent>
-
-      {offerPublished && (
-        <TabsContent value="published" className="space-y-3">
-          {published.isPending ? (
-            <Skeleton className="h-24 w-full" />
-          ) : published.data && published.data.content.length > 0 ? (
-            <ul className="divide-border divide-y">
-              {published.data.content.map((file) => {
-                const size = formatFileSize(file.sizeBytes, i18n.language)
-                return (
-                  <li key={file.id} className="flex items-center justify-between gap-3 py-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm">{file.name}</p>
-                      <p className="text-fg-muted text-xs">{t(`size.${size.unit}`, { value: size.value })}</p>
+            {history.data.content.map((file) => (
+              <li key={file.id}>
+                <FileCard
+                  name={file.name}
+                  mimeType={file.mimeType}
+                  sizeBytes={file.sizeBytes}
+                  meta={
+                    <div className="flex flex-wrap items-center gap-2">
+                      {file.categories.map((category) => (
+                        <FileCategoryBadge key={category} category={category} />
+                      ))}
+                      {file.lastUsedAt && (
+                        <span className="text-fg-muted text-xs">
+                          {t('picker.lastUsed', { when: formatRelativeDate(file.lastUsedAt, i18n.language) })}
+                        </span>
+                      )}
                     </div>
+                  }
+                  actions={
                     <Button
                       type="button"
                       size="sm"
@@ -181,9 +132,52 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, pub
                     >
                       {t('picker.use')}
                     </Button>
-                  </li>
-                )
-              })}
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState
+            title={search || historyCategory ? t('picker.noResultsTitle') : t('picker.historyEmptyTitle')}
+            description={search || historyCategory ? t('picker.noResultsDescription') : t('picker.historyEmptyDescription')}
+          />
+        )}
+      </TabsContent>
+
+      {offerPublished && (
+        <TabsContent value="published" className="space-y-3">
+          {published.isPending ? (
+            <Skeleton className="h-24 w-full" />
+          ) : published.data && published.data.content.length > 0 ? (
+            <ul className="divide-border divide-y">
+              {published.data.content.map((file) => (
+                <li key={file.id}>
+                  <FileCard
+                    name={file.name}
+                    mimeType={file.mimeType}
+                    sizeBytes={file.sizeBytes}
+                    meta={
+                      <div className="flex flex-wrap items-center gap-2">
+                        {file.categories.map((category) => (
+                          <FileCategoryBadge key={category} category={category} />
+                        ))}
+                      </div>
+                    }
+                    actions={
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={isBusy}
+                        onClick={() => onPick({ fileId: file.id, name: file.name })}
+                      >
+                        {t('picker.use')}
+                      </Button>
+                    }
+                  />
+                </li>
+              ))}
             </ul>
           ) : (
             <EmptyState title={t('picker.publishedEmptyTitle')} description={t('picker.publishedEmptyDescription')} />

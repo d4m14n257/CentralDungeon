@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/components/ConfirmDialog'
@@ -12,11 +12,12 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { helpPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import {
-  FileAudienceBadge,
+  FileCategoryBadge,
+  FileCategoryFilter,
   FileTypeBadge,
   PublishFileDialog,
   formatFileSize,
@@ -25,7 +26,7 @@ import {
   usePublishFile,
   useUnpublishFile,
   type AdminFile,
-  type PublicAudience,
+  type FileCategory,
 } from '@/features/files'
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib/searchQuery'
@@ -72,7 +73,16 @@ export function AdminFilesPage() {
   const debouncedQuery = useDebounce(query, 300)
 
   // isLoadingError, not isError: see docs/decisiones.md #150.
-  const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(debouncedQuery, undefined, undefined, page)
+  // The category is a filter and not a search term (#233): five known values are chosen from, never
+  // typed at, so offering "contains" over them would let one letter match four categories.
+  const category = (searchParams.get('category') as FileCategory | null) ?? null
+  const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(
+    debouncedQuery,
+    undefined,
+    undefined,
+    category ?? undefined,
+    page,
+  )
   const publish = usePublishFile()
   const unpublish = useUnpublishFile()
   const remove = useDeleteFileAsAdmin()
@@ -89,11 +99,11 @@ export function AdminFilesPage() {
     setSearchParams(next, { replace: true })
   }
 
-  function handlePublish(audience: PublicAudience) {
+  function handlePublish(categories: FileCategory[]) {
     const file = publishDialog.item
     if (!file) return
     publish.mutate(
-      { fileId: file.id, input: { publicAudience: audience } },
+      { fileId: file.id, input: { categories } },
       {
         onSuccess: () => {
           publishDialog.close()
@@ -123,9 +133,16 @@ export function AdminFilesPage() {
     { id: 'name', header: t('admin.columns.name'), role: 'title', cell: (file) => file.name },
     { id: 'type', header: t('admin.columns.type'), role: 'badge', cell: (file) => <FileTypeBadge fileType={file.fileType} /> },
     {
-      id: 'audience',
-      header: t('admin.columns.audience'),
-      cell: (file) => (file.publicAudience ? <FileAudienceBadge audience={file.publicAudience} /> : null),
+      id: 'category',
+      header: t('admin.columns.category'),
+      // Plural: a published blank can serve more than one flow at once (#233).
+      cell: (file) => (
+        <div className="flex flex-wrap gap-1">
+          {file.categories.map((category) => (
+            <FileCategoryBadge key={category} category={category} />
+          ))}
+        </div>
+      ),
     },
     { id: 'owner', header: t('admin.columns.owner'), cell: (file) => file.ownerName },
     // The number that makes #79 visible: one file, three tables.
@@ -151,9 +168,9 @@ export function AdminFilesPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-serif text-2xl font-semibold">{t('admin.title')}</h1>
-        <Link to={helpPath('admins', 'files')} className="text-fg-muted hover:text-fg text-sm underline">
+        <HelpLink section="admins.files" className="text-sm">
           {t('table.helpLink')}
-        </Link>
+        </HelpLink>
       </div>
       <p className="text-fg-muted text-sm">{t('admin.description')}</p>
 
@@ -171,6 +188,8 @@ export function AdminFilesPage() {
         placeholder={t('admin.searchPlaceholder')}
         label={t('admin.searchLabel')}
       />
+
+      <FileCategoryFilter value={category} onChange={(next) => updateParams({ category: next ?? '' })} />
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}

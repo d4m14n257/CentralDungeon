@@ -3,7 +3,7 @@ import { XIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { ForbiddenState } from '@/components/ForbiddenState'
@@ -16,8 +16,11 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { helpPath, masterTableDetailPath } from '@/config/paths'
+import { WizardSteps } from '@/components/WizardSteps'
+import { masterTableDetailPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import { CatalogChip, CatalogPicker } from '@/features/catalogs'
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChanges'
 import { FilePicker, useAttachFilesToTable } from '@/features/files'
 import {
   DEFAULT_SLOT_DURATION,
@@ -33,7 +36,7 @@ import {
 } from '@/features/tables'
 import type { CreateGameTableForm, TableScheduleEntry, WizardStep } from '@/features/tables'
 import { useMe } from '@/features/users'
-import { WEEKDAYS, browserTimeZone, formatMinutes, formatSlot, localInputToUtcIso, minutesOfDay, utcSlotToLocal } from '@/lib/date'
+import { WEEKDAYS, browserTimeZone, formatMinutes, formatSlot, minutesOfDay, utcSlotToLocal } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 
 /**
@@ -47,8 +50,9 @@ import type { CatalogValue } from '@/types/catalog'
  * The screen composes: the catalogs come from `features/catalogs` and the agenda from
  * `features/tables`, and neither knows about the other (§3.1.5, regla dura 16).
  *
- * The time is typed in the reader's zone and travels as UTC (#22): the conversion belongs to
- * `lib/date.ts` and happens once, on submit.
+ * The agenda's hours are typed in the reader's zone and travel as UTC (#22): the conversion belongs
+ * to `lib/date.ts` and happens once. The start date is the exception and carries none - it is a day
+ * and not an instant (#230).
  */
 export function MasterTableCreatePage() {
   const { t, i18n } = useTranslation('master')
@@ -81,8 +85,40 @@ export function MasterTableCreatePage() {
 
   const form = useForm<CreateGameTableForm>({
     resolver: zodResolver(createGameTableSchema),
-    defaultValues: { name: '', description: '', permitted: '', requirements: '' },
+    // **Every field, not only the text ones.** A field missing from here registers as `''`
+    // against a default of `undefined`, which react-hook-form reads as dirty - and on the edit
+    // page `keepDirtyValues` then defended that emptiness against the value the table actually
+    // had, which is how the table type was being silently dropped (#231).
+    defaultValues: {
+      name: '',
+      description: '',
+      permitted: '',
+      requirements: '',
+      tableTypeId: '',
+      startDate: '',
+      maxPlayers: '',
+      totalSessions: '',
+    },
   })
+
+  // Everything on this screen counts, not just the text fields: the catalogs, the agenda and the
+  // picked files live outside react-hook-form and are most of what gets lost (#231).
+  //
+  // What is asked of the form is "is anything written in it", not `formState.isDirty`. Dirty
+  // compares against `defaultValues`, and the fields this wizard leaves out of that object read as
+  // changed the moment they register - which made a wizard nobody had touched refuse to be left.
+  // `watch` and not `getValues` because this has to re-render: the blocker closes over what the
+  // last render saw, and somebody who types a name and clicks straight out would slip past a value
+  // that was only read once.
+  const written = form.watch()
+  const hasProgress =
+    Object.values(written).some((value) => typeof value === 'string' && value.trim() !== '') ||
+    systems.length > 0 ||
+    tags.length > 0 ||
+    platforms.length > 0 ||
+    schedule.length > 0 ||
+    files.length > 0
+  const { allowNextNavigation } = useUnsavedChangesGuard(hasProgress)
 
   // Creating requires the Master platform role, not merely membership (#135) - the backend already
   // refuses with a 403, but showing a form that is always going to fail would be worse than showing
@@ -135,26 +171,55 @@ export function MasterTableCreatePage() {
     return null
   }
 
-  async function goNext() {
-    if (step === 'identity' && !(await form.trigger('name'))) {
+  /**
+   * Walks to `target`, which is where both the buttons and the indicator go through.
+   *
+   * Backwards is free: changing an answer that is already given costs nothing. Forwards checks
+   * every step between here and there, and **stops at the first one that is not finished** rather
+   * than at the destination - the master ends up on the step that can fix what is missing, which
+   * is the whole reason the wizard says it per step and not on submit.
+   */
+  async function goTo(target: WizardStep) {
+    const targetIndex = WIZARD_STEPS.indexOf(target)
+    if (targetIndex === stepIndex) {
       return
     }
-    const missing = whatIsMissing(step)
-    if (missing) {
-      setStepError(missing)
+    if (targetIndex < stepIndex) {
+      setStepError(null)
+      setStep(target)
       return
+    }
+    for (let index = stepIndex; index < targetIndex; index++) {
+      const walked = WIZARD_STEPS[index]
+      if (!walked) {
+        continue
+      }
+      if (walked === 'identity' && !(await form.trigger('name'))) {
+        setStep(walked)
+        return
+      }
+      const missing = whatIsMissing(walked)
+      if (missing) {
+        setStepError(missing)
+        setStep(walked)
+        return
+      }
     }
     setStepError(null)
+    setStep(target)
+  }
+
+  async function goNext() {
     const next = WIZARD_STEPS[stepIndex + 1]
     if (next) {
-      setStep(next)
+      await goTo(next)
     }
   }
 
   function goBack() {
-    setStepError(null)
     const previous = WIZARD_STEPS[stepIndex - 1]
     if (previous) {
+      setStepError(null)
       setStep(previous)
     }
   }
@@ -183,7 +248,7 @@ export function MasterTableCreatePage() {
         systemIds: systems.map((value) => value.id),
         tagIds: tags.map((value) => value.id),
         platformIds: platforms.map((value) => value.id),
-        startDate: formValues.startDate ? localInputToUtcIso(formValues.startDate, timeZone) : null,
+        startDate: formValues.startDate ? formValues.startDate : null,
         maxPlayers: formValues.maxPlayers ? Number(formValues.maxPlayers) : null,
         totalSessions: formValues.totalSessions ? Number(formValues.totalSessions) : null,
         schedule,
@@ -200,6 +265,8 @@ export function MasterTableCreatePage() {
             })
           }
           toast.success(t('create.success'))
+          // The wizard's own redirect is not somebody walking out on it.
+          allowNextNavigation()
           void navigate(masterTableDetailPath(table.id))
         },
       },
@@ -215,17 +282,17 @@ export function MasterTableCreatePage() {
         <p className="text-fg-muted text-sm">{t('create.description')}</p>
       </div>
 
-      <ol className="flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label={t('create.stepsLabel')}>
-        {WIZARD_STEPS.map((name, index) => (
-          <li
-            key={name}
-            aria-current={name === step ? 'step' : undefined}
-            className={index === stepIndex ? 'text-brand-fg font-medium' : 'text-fg-subtle'}
-          >
-            {index + 1}. {t(`create.steps.${name}`)}
-          </li>
-        ))}
-      </ol>
+      <WizardSteps
+        steps={WIZARD_STEPS.map((name) => ({ id: name, label: t(`create.steps.${name}`) }))}
+        currentIndex={stepIndex}
+        label={t('create.stepsLabel')}
+        statusLabels={{
+          done: t('create.stepDone'),
+          current: t('create.stepCurrent'),
+          pending: t('create.stepPending'),
+        }}
+        onGoTo={(id) => void goTo(id)}
+      />
 
       <Form {...form}>
         <form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)} className="space-y-5">
@@ -351,7 +418,9 @@ export function MasterTableCreatePage() {
                     <FormItem>
                       <FormLabel>{t('create.startDateLabel')}</FormLabel>
                       <FormControl>
-                        <Input type="datetime-local" {...field} value={field.value ?? ''} />
+                        {/* A day and not an instant (#230): no session takes its hour from here,
+                            the weekly agenda below does. So there is nothing to convert. */}
+                        <Input type="date" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormDescription>{t('create.startDateHint')}</FormDescription>
                       <FormMessage />
@@ -363,9 +432,9 @@ export function MasterTableCreatePage() {
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-sm font-medium">{t('create.scheduleLabel')}</p>
                   {/* The help is linked from the screen that needs it, by its #ref (#167, #168). */}
-                  <Link to={helpPath('masters', 'schedule')} className="text-fg-muted hover:text-fg text-xs underline">
+                  <HelpLink section="masters.schedule" className="text-xs">
                     {t('create.scheduleHelp')}
-                  </Link>
+                  </HelpLink>
                 </div>
                 <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} />
 
@@ -412,6 +481,8 @@ export function MasterTableCreatePage() {
                 </ul>
               )}
               <FilePicker
+                cajon="TableMaterial"
+                offerPublished
                 onPick={(file) => {
                   if (!files.some((picked) => picked.fileId === file.fileId)) {
                     setFiles([...files, file])

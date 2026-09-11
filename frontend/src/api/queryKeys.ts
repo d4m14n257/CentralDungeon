@@ -36,10 +36,10 @@ export const queryKeys = {
     mine: (tableId: string) => ['sessions', 'mine', tableId] as const,
   },
   files: {
-    /** The reuse history of #65, keyed by what the picker searched. */
-    mine: (query?: string, page = 0) => ['files', 'mine', query, page] as const,
-    /** What the platform published, by audience (#64). */
-    public: (audience?: string) => ['files', 'public', audience] as const,
+    /** The reuse history of #65, keyed by what the picker searched and how /my/files narrowed it. */
+    mine: (query?: string, category?: string, page = 0) => ['files', 'mine', query, category, page] as const,
+    /** What the platform published, by cajón (#233, which derogated the audience of #64). */
+    public: (category?: string) => ['files', 'public', category] as const,
     /**
      * One table's attachments, as the people running it see them. Its own branch and not part of
      * `tables.detail`: what a master sees includes the private ones, and the table's detail carries
@@ -47,8 +47,8 @@ export const queryKeys = {
      */
     table: (tableId: string) => ['files', 'table', tableId] as const,
     /** The /admin/files table. Every admin mutation invalidates this branch and nothing else. */
-    admin: (query?: string, statuses?: string[], fileTypes?: string[], page = 0) =>
-      ['files', 'admin', query, statuses, fileTypes, page] as const,
+    admin: (query?: string, statuses?: string[], fileTypes?: string[], category?: string, page = 0) =>
+      ['files', 'admin', query, statuses, fileTypes, category, page] as const,
   },
   tasks: {
     /** One table's board, as the people running it see it. The whole list, never paginated. */

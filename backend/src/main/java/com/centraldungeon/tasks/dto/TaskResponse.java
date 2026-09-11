@@ -1,6 +1,7 @@
 package com.centraldungeon.tasks.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -50,6 +51,7 @@ public record TaskResponse(
         boolean acceptsText,
         boolean acceptsFiles,
         boolean isMandatory,
+        List<TaskFileResponse> files,
         @Nullable LocalDateTime dueAt,
         String status,
         int submissionCount,

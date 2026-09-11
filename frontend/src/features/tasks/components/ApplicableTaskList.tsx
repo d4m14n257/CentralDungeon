@@ -57,6 +57,16 @@ export function ApplicableTaskList({ tasks, onAnswer, renderFiles }: ApplicableT
             <div className="space-y-4">
               {task.description && <RichTextView html={task.description} />}
 
+              {/* The blanks the master attached (#63). They go above the answer, not below it: the
+                  form is part of the question, and somebody reading what is being asked of them
+                  needs it before they open the dialog to reply. */}
+              {task.files.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('list.blanks')}</p>
+                  {renderFiles(task.files)}
+                </div>
+              )}
+
               <dl className="text-fg-muted grid gap-1 text-xs">
                 {task.dueAt && (
                   <div className="flex gap-2">

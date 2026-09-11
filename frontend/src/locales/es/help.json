@@ -313,7 +313,10 @@
         "step2": "Tocá «Agregar un archivo» y elegí si es material de preparación o algo de una sesión.",
         "step3": "Decidí si lo ven tus jugadores o si queda solo para quienes dirigen, y subí el archivo o elegí uno de «Mis archivos» o de «Publicados».",
         "step4": "Desde la lista podés cambiar en cualquier momento quién lo ve, o quitarlo de la mesa sin borrarlo."
-      }
+      },
+      "category": "Cada archivo dice qué es: ficha de personaje, material de mesa, plantilla o reglamento. No es decoración: es lo que te deja encontrar la plantilla de la comunidad entre treinta documentos sin ir leyendo nombres de archivo.",
+      "dedup": "Si subís algo que ya tenías subido, el sistema lo reconoce y reutiliza el que ya estaba en vez de guardarlo dos veces. La pantalla te lo avisa cuando pasa.",
+      "library": "Todo lo que subís queda en «Mis archivos», con dónde se está usando cada uno. Un archivo que no aparece en ninguna mesa es el primero que se libera cuando pasa mucho tiempo sin usarse."
     },
     "dashboard": {
       "title": "Lo que espera tu respuesta",

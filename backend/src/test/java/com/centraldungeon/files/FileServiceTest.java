@@ -2,6 +2,8 @@ package com.centraldungeon.files;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -14,11 +16,15 @@ import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.storage.StorageService;
+import com.centraldungeon.files.dto.FileResponse;
+import com.centraldungeon.files.dto.FileUsageResponse;
 import com.centraldungeon.files.dto.PublishFileRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
+import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
+import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
 import java.nio.charset.StandardCharsets;
@@ -29,10 +35,14 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.unit.DataSize;
@@ -54,6 +64,14 @@ class FileServiceTest {
     @Mock
     private TableFileRepository tableFileRepository;
 
+    /** The cajones a file belongs to (#233). Add-only: nothing here ever revokes one. */
+    @Mock
+    private FileCategoryLinkRepository categoryRepository;
+
+    /** The blanks a master attached to a request - the third source of uses and the sixth read (#63). */
+    @Mock
+    private TaskFileRepository taskFileRepository;
+
     /** The fifth way a file is reachable: it was handed in to a task of a table the actor runs (#63). */
     @Mock
     private SubmissionFileRepository submissionFileRepository;
@@ -67,6 +85,10 @@ class FileServiceTest {
     @Mock
     private MasterService masterService;
 
+    /** Who belongs to a table, for the sixth way a file is reachable (#63). */
+    @Mock
+    private TableRegistrationRepository registrationRepository;
+
     private final FileMapper fileMapper = org.mapstruct.factory.Mappers.getMapper(FileMapper.class);
 
     private final StorageProperties storageProperties = new StorageProperties(
@@ -76,11 +98,14 @@ class FileServiceTest {
         return new FileService(
                 fileRepository,
                 tableFileRepository,
+                categoryRepository,
+                taskFileRepository,
                 submissionFileRepository,
                 userRepository,
                 storageService,
                 storageProperties,
                 masterService,
+                registrationRepository,
                 fileMapper);
     }
 
@@ -92,7 +117,7 @@ class FileServiceTest {
         when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
         when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-1"));
 
-        fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private), "player-1");
+        fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-1");
 
         ArgumentCaptor<String> key = ArgumentCaptor.forClass(String.class);
         verify(storageService).store(key.capture(), any());
@@ -114,7 +139,7 @@ class FileServiceTest {
         when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
         when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-1"));
 
-        fileService().upload(pdf("../../etc/passwd", "x"), new UploadFileRequest(FileType.Private), "player-1");
+        fileService().upload(pdf("../../etc/passwd", "x"), new UploadFileRequest(FileType.Private, null), "player-1");
 
         ArgumentCaptor<String> key = ArgumentCaptor.forClass(String.class);
         verify(storageService).store(key.capture(), any());
@@ -130,7 +155,7 @@ class FileServiceTest {
         MockMultipartFile executable =
                 new MockMultipartFile("file", "cheat.exe", "application/x-msdownload", "MZ".getBytes(StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> fileService().upload(executable, new UploadFileRequest(FileType.Private), "player-1"))
+        assertThatThrownBy(() -> fileService().upload(executable, new UploadFileRequest(FileType.Private, null), "player-1"))
                 .isInstanceOf(InvalidRequestException.class)
                 .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
                         .isEqualTo("FILE_TYPE_NOT_ALLOWED"));
@@ -143,7 +168,7 @@ class FileServiceTest {
     void refusesAFileOverTheCapAndSaysWhatTheCapIs() {
         MockMultipartFile huge = new MockMultipartFile("file", "mapa.png", "image/png", new byte[3 * 1024 * 1024]);
 
-        assertThatThrownBy(() -> fileService().upload(huge, new UploadFileRequest(FileType.Private), "player-1"))
+        assertThatThrownBy(() -> fileService().upload(huge, new UploadFileRequest(FileType.Private, null), "player-1"))
                 .isInstanceOf(InvalidRequestException.class)
                 .satisfies(thrown -> {
                     InvalidRequestException failure = (InvalidRequestException) thrown;
@@ -157,7 +182,7 @@ class FileServiceTest {
     @Test
     void refusesAnUploaderWhoDeclaresTheFilePublic() {
         assertThatThrownBy(() ->
-                        fileService().upload(pdf("reglas.pdf", "x"), new UploadFileRequest(FileType.Public), "player-1"))
+                        fileService().upload(pdf("reglas.pdf", "x"), new UploadFileRequest(FileType.Public, null), "player-1"))
                 .isInstanceOf(InvalidRequestException.class)
                 .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
                         .isEqualTo("FILE_CANNOT_SELF_PUBLISH"));
@@ -173,13 +198,18 @@ class FileServiceTest {
                         eq("player-1"), anyString(), eq(FileStatus.Current)))
                 .thenReturn(Optional.of(existing));
 
-        var response = fileService().upload(pdf("otra-copia.pdf", "hoja"), new UploadFileRequest(FileType.Private), "player-1");
+        var response = fileService().upload(pdf("otra-copia.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-1");
 
-        assertThat(response.id()).isEqualTo("file-1");
+        assertThat(response.file().id()).isEqualTo("file-1");
+        // #234: the caller has to be able to tell this apart from a fresh write, which is what turns
+        // the cheapest lever of #75 into something the person who triggered it can actually see.
+        assertThat(response.deduplicated()).isTrue();
         verify(storageService, never()).store(anyString(), any());
         verify(fileRepository, never()).save(any(StoredFile.class));
         assertThat(existing.getLastUsedAt()).isNotNull();
     }
+
+
 
     /** Dedup is scoped to the owner: the schema's unique storage key forbids sharing a blob. */
     @Test
@@ -191,9 +221,56 @@ class FileServiceTest {
                 .thenReturn(Optional.empty());
         when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-2"));
 
-        fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private), "player-2");
+        fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-2");
 
         verify(storageService).store(anyString(), any());
+    }
+
+    // ---------------------------------------------------------------- the owner's own list
+
+    /**
+     * The owner's list merges both sources of uses into one row, in two queries (#232).
+     *
+     * <p>Two matters as much as the merge does. The whole reason the origin is derived rather than
+     * stored is that deriving it stays honest when a file is used in more than one way - and that is
+     * only affordable if a page of files costs a constant number of round trips instead of one per
+     * row.
+     */
+    @Test
+    void listsSomebodysOwnFilesWithEveryPlaceEachOneIsUsed() {
+        User owner = persistedUser("player-1");
+        StoredFile sheet = persistedFile("file-1", owner, FileType.Private);
+        when(fileRepository.findAll(ArgumentMatchers.<Specification<StoredFile>>any(), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(sheet)));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1")))
+                .thenReturn(List.of(new FileUsage("file-1", FileCategory.TableMaterial, "table-1", "Hijos del Vacío")));
+        when(submissionFileRepository.findUsagesByFileIds(List.of("file-1")))
+                .thenReturn(List.of(new FileUsage("file-1", FileCategory.PlayerSubmission, "table-2", "El Río Negro")));
+
+        var page = fileService().listMine("player-1", null, null, PageRequest.of(0, 20));
+
+        assertThat(page.content())
+                .singleElement()
+                .extracting(FileResponse::usages, list(FileUsageResponse.class))
+                .extracting(FileUsageResponse::category, FileUsageResponse::contextName)
+                .containsExactlyInAnyOrder(
+                        tuple("TableMaterial", "Hijos del Vacío"), tuple("PlayerSubmission", "El Río Negro"));
+        verify(tableFileRepository).findUsagesByFileIds(List.of("file-1"));
+        verify(submissionFileRepository).findUsagesByFileIds(List.of("file-1"));
+    }
+
+    /** A file nobody uses reports no uses - which is the owner's warning that #75 has its eye on it. */
+    @Test
+    void reportsNoUsesForAFileNothingPointsAt() {
+        User owner = persistedUser("player-1");
+        when(fileRepository.findAll(ArgumentMatchers.<Specification<StoredFile>>any(), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(persistedFile("file-1", owner, FileType.Private))));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
+        when(submissionFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
+
+        var page = fileService().listMine("player-1", null, null, PageRequest.of(0, 20));
+
+        assertThat(page.content()).singleElement().extracting(FileResponse::usages, list(FileUsageResponse.class)).isEmpty();
     }
 
     // ---------------------------------------------------------------- reading
@@ -278,6 +355,7 @@ class FileServiceTest {
         assertThat(file.getName()).isEqualTo("Mi ficha.pdf");
     }
 
+
     @Test
     void renamingNeverTouchesTheContent() {
         StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
@@ -327,30 +405,32 @@ class FileServiceTest {
     // ---------------------------------------------------------------- publishing
 
     @Test
-    void publishingKeepsTheUploaderAndRecordsTheAudience() {
+    void publishingKeepsTheUploaderAndRecordsTheCajones() {
         User uploader = persistedUser("admin-1");
         StoredFile file = persistedFile("file-1", uploader, FileType.Private);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
         when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
 
-        var response = fileService().publish("file-1", new PublishFileRequest(PublicAudience.Players));
+        var response = fileService().publish("file-1", new PublishFileRequest(List.of(FileCategory.TableMaterial)));
 
         assertThat(file.getFileType()).isEqualTo(FileType.Public);
-        assertThat(file.getPublicAudience()).isEqualTo(PublicAudience.Players);
         assertThat(response.ownerId()).isEqualTo("admin-1");
+        verify(categoryRepository).save(any(FileCategoryLink.class));
     }
+
 
     @Test
     void unpublishingReturnsTheFileToItsOwnerAsSomethingTheyKeep() {
         StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
-        file.setPublicAudience(PublicAudience.Masters);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
         when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
 
         fileService().unpublish("file-1");
 
+        // The cajones stay: unpublishing says the platform no longer offers the file, not that it was
+        // never a blank for those flows (#233).
         assertThat(file.getFileType()).isEqualTo(FileType.Private);
-        assertThat(file.getPublicAudience()).isNull();
+        verify(categoryRepository, never()).delete(any(FileCategoryLink.class));
     }
 
     @Test

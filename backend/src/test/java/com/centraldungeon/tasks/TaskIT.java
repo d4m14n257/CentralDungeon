@@ -2,10 +2,14 @@ package com.centraldungeon.tasks;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.files.FileCategory;
 import com.centraldungeon.files.FileService;
+import com.centraldungeon.files.FileStatus;
 import com.centraldungeon.files.FileType;
+import com.centraldungeon.files.StoredFileRepository;
 import com.centraldungeon.files.dto.FileResponse;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.notifications.Notification;
@@ -20,9 +24,11 @@ import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tasks.dto.ApplicableTaskResponse;
 import com.centraldungeon.tasks.dto.CreateSubmissionRequest;
 import com.centraldungeon.tasks.dto.CreateTaskRequest;
+import com.centraldungeon.tasks.dto.TaskFileResponse;
 import com.centraldungeon.tasks.dto.TaskRecipientResponse;
 import com.centraldungeon.tasks.dto.TaskResponse;
 import com.centraldungeon.tasks.dto.TaskSubmissionsResponse;
+import com.centraldungeon.tasks.dto.UpdateTaskRequest;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
 import java.nio.charset.StandardCharsets;
@@ -84,6 +90,9 @@ class TaskIT {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private StoredFileRepository fileRepository;
 
     @Autowired
     private GameTableRepository gameTableRepository;
@@ -189,7 +198,8 @@ class TaskIT {
     void theMasterCanOpenAFileTheirPlayerHandedInAndAStrangerCannot() {
         TaskResponse task = publish(TaskAudience.Players, null);
         FileResponse sheet = fileService.upload(
-                pdf("ficha.pdf", "elfa exploradora"), new UploadFileRequest(FileType.Private), firstPlayer.getId());
+                pdf("ficha.pdf", "elfa exploradora"), new UploadFileRequest(FileType.Private, null), firstPlayer.getId())
+                .file();
 
         taskSubmissionService.submit(
                 task.taskId(), new CreateSubmissionRequest(null, List.of(sheet.id())), firstPlayer.getId());
@@ -205,7 +215,8 @@ class TaskIT {
     void aSubmittedFileTravelsWithTheAnswerAndIsNotCopied() {
         TaskResponse task = publish(TaskAudience.Players, null);
         FileResponse sheet = fileService.upload(
-                pdf("ficha.pdf", "elfa exploradora"), new UploadFileRequest(FileType.Private), firstPlayer.getId());
+                pdf("ficha.pdf", "elfa exploradora"), new UploadFileRequest(FileType.Private, null), firstPlayer.getId())
+                .file();
         taskSubmissionService.submit(
                 task.taskId(), new CreateSubmissionRequest("ahi va", List.of(sheet.id())), firstPlayer.getId());
 
@@ -264,11 +275,84 @@ class TaskIT {
 
     // ---------------------------------------------------------------- fixtures
 
+    /**
+     * The master's half of a request, end to end (#63, #233).
+     *
+     * <p>Three things only a real round trip proves. The master can attach a blank at all - which the
+     * model simply could not express before, since {@code accepts_files} only ever said whether an
+     * <em>answer</em> could carry one. The blank reaches the people the request reaches, which is the
+     * sixth way a file becomes readable and the whole point: "fill in this form" is useless if the
+     * form 404s. And attaching it is what puts the file in the {@code MasterRequest} cajón, without
+     * anybody declaring anything.
+     */
+    @Test
+    void theMasterAttachesABlankToTheirRequestAndTheirPlayersCanOpenIt() {
+        FileResponse blank = fileService
+                .upload(pdf("formulario.pdf", "rellenar y devolver"), new UploadFileRequest(FileType.Private, null), master.getId())
+                .file();
+
+        TaskResponse task = tableTaskService.publish(
+                table.getId(),
+                new CreateTaskRequest(
+                        "Completá el formulario",
+                        null,
+                        TaskAudience.Players,
+                        null,
+                        null,
+                        true,
+                        true,
+                        false,
+                        List.of(blank.id()),
+                        null),
+                master.getId());
+
+        // The master sees it on their own board.
+        assertThat(task.files()).extracting(TaskFileResponse::fileId).containsExactly(blank.id());
+
+        // And so does the player the request reaches - on the list and, crucially, as a real download.
+        assertThat(tableTaskService.listApplicable(table.getId(), firstPlayer.getId()))
+                .filteredOn(applicable -> applicable.taskId().equals(task.taskId()))
+                .singleElement()
+                .extracting(ApplicableTaskResponse::files, list(TaskFileResponse.class))
+                .extracting(TaskFileResponse::fileId)
+                .containsExactly(blank.id());
+        assertThat(fileService.download(blank.id(), firstPlayer.getId()).name()).isEqualTo("formulario.pdf");
+
+        // Somebody with no registration on the table still gets nothing (#9, #29).
+        User stranger = userRepository.save(new User(randomDiscordId(), "Nadie"));
+        assertThatThrownBy(() -> fileService.download(blank.id(), stranger.getId()))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    /** Taking a blank off the ask marks the link and leaves the file, and its cajón, alone (#79, #233). */
+    @Test
+    void takingABlankOffTheRequestNeverTouchesTheFile() {
+        FileResponse blank = fileService
+                .upload(pdf("formulario.pdf", "rellenar"), new UploadFileRequest(FileType.Private, null), master.getId())
+                .file();
+        TaskResponse task = tableTaskService.publish(
+                table.getId(),
+                new CreateTaskRequest(
+                        "Completá el formulario", null, TaskAudience.Players, null, null, true, true, false,
+                        List.of(blank.id()), null),
+                master.getId());
+
+        TaskResponse without = tableTaskService.update(
+                task.taskId(),
+                new UpdateTaskRequest(
+                        "Completá el formulario", null, TaskAudience.Players, null, null, true, true, false,
+                        List.of(), null),
+                master.getId());
+
+        assertThat(without.files()).isEmpty();
+        assertThat(fileRepository.findByIdAndStatus(blank.id(), FileStatus.Current)).isPresent();
+    }
+
     private TaskResponse publish(TaskAudience audience, String targetUserId) {
         return tableTaskService.publish(
                 table.getId(),
                 new CreateTaskRequest(
-                        "Ficha de personaje", "<p>Nivel 3</p>", audience, targetUserId, null, true, true, false, null),
+                        "Ficha de personaje", "<p>Nivel 3</p>", audience, targetUserId, null, true, true, false, List.of(), null),
                 master.getId());
     }
 

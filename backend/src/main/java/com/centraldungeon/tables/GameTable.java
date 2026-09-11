@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import org.jspecify.annotations.Nullable;
@@ -57,9 +58,15 @@ public class GameTable extends BaseEntity {
     @Column(columnDefinition = "LONGTEXT")
     private @Nullable String requirements;
 
-    /** When the first session happens, in UTC (#22). It is what the sessions are materialized from (#26). */
+    /**
+     * The day the table starts running - the cut-off the calendar is laid out from (#26, #230).
+     *
+     * <p><b>A date and not an instant</b>: no session ever takes its hour from here. The hours come
+     * from the weekly agenda, and this only says which week the first one falls in. A plain date is
+     * also the same day in every zone, which an instant is not (#22, #230).
+     */
     @Column(name = "start_date")
-    private @Nullable LocalDateTime startDate;
+    private @Nullable LocalDate startDate;
 
     /** How long <b>one</b> session lasts - not the campaign. Stored as a time of day, read as a length. */
 
@@ -206,21 +213,20 @@ public class GameTable extends BaseEntity {
     }
 
     /**
-     * Returns when the first session happens.
+     * Returns the day the table starts running.
      *
-     * @return the start, in UTC (#22), or null while it is undecided
+     * @return the day, or null while it is undecided
      */
-    public @Nullable LocalDateTime getStartDate() {
+    public @Nullable LocalDate getStartDate() {
         return startDate;
     }
 
     /**
-     * Sets when the first session happens.
+     * Sets the day the table starts running.
      *
-     * @param startDate the start in UTC - the frontend converts from the user's zone, never the
-     *                  other way round (#22)
+     * @param startDate the day, with no hour and no zone attached (#230)
      */
-    public void setStartDate(@Nullable LocalDateTime startDate) {
+    public void setStartDate(@Nullable LocalDate startDate) {
         this.startDate = startDate;
     }
 

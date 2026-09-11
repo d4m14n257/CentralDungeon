@@ -1,7 +1,7 @@
 import { EyeIcon, EyeOffIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useOutletContext } from 'react-router'
+import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/components/ConfirmDialog'
@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { helpPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import {
   FileList,
   FilePicker,
@@ -132,11 +132,12 @@ export function MasterTableFilesTab() {
         />
       )}
 
-      <Link to={helpPath('masters', 'files')} className="text-fg-muted inline-block text-xs underline">
+      <HelpLink section="masters.files" className="inline-block text-xs">
         {t('table.helpLink')}
-      </Link>
+      </HelpLink>
 
       <FormDialog
+        isDirty={kind !== 'Preparation' || isPrivate}
         open={isAttaching}
         onOpenChange={setIsAttaching}
         title={t('table.attachTitle')}
@@ -167,7 +168,7 @@ export function MasterTableFilesTab() {
           {/* Everything published is offered, not only the `Masters` audience: the community's
               default character sheet is published *for players* and the master is the one attaching
               it, which is #79's own example (#64). */}
-          <FilePicker onPick={handlePick} isBusy={attach.isPending} offerPublished />
+          <FilePicker onPick={handlePick} isBusy={attach.isPending} offerPublished cajon="TableMaterial" />
         </div>
       </FormDialog>
     </div>

@@ -4,11 +4,6 @@
     "Private": "Saved",
     "SingleUse": "Table only"
   },
-  "audience": {
-    "Masters": "Masters",
-    "Players": "Players",
-    "Announcements": "Everyone"
-  },
   "status": {
     "Current": "Current",
     "Deleted": "Removed"
@@ -29,27 +24,34 @@
     "unshare": "Keep it to the masters",
     "publish": "Publish",
     "unpublish": "Unpublish",
-    "delete": "Remove"
+    "delete": "Remove",
+    "edit": "Edit"
   },
   "picker": {
     "upload": "Upload",
     "reuse": "My files",
     "published": "Published",
-    "uploadLabel": "Choose a file to upload",
-    "limits": "Up to 2 MB per file. PDF, Word, PNG and JPG are accepted.",
     "searchPlaceholder": "Search my files",
     "searchLabel": "Search my files",
     "use": "Use",
     "historyEmptyTitle": "You haven't uploaded anything yet",
     "historyEmptyDescription": "Whatever you upload stays here, and you can use it again on any table without uploading it twice.",
     "publishedEmptyTitle": "Nothing published yet",
-    "publishedEmptyDescription": "Admins publish templates and documents here for every table to use."
+    "publishedEmptyDescription": "Admins publish templates and documents here for every table to use.",
+    "lastUsed": "Used {{when}}",
+    "noResultsTitle": "No results",
+    "noResultsDescription": "None of your files match the search."
   },
   "publish": {
     "title": "Publish file",
-    "description": "\"{{name}}\" will become available to the whole community.",
-    "audienceLabel": "Who it is for",
-    "audienceHint": "Decides where the file is offered. Anyone with the link can still open it.",
+    "description": "“{{name}}” will be available to the whole community.",
+    "categoriesLabel": "Where it is offered",
+    "categoriesHint": "You can pick more than one: the same blank sheet serves when a table is being set up and when something is asked mid-season.",
+    "hint": {
+      "TableMaterial": "Shows up when a master sets up their table or recruits.",
+      "MasterRequest": "Shows up when a master asks for something on a table already running.",
+      "Announcement": "The community's rules and announcements. It comes from no table."
+    },
     "cancel": "Cancel",
     "confirm": "Publish"
   },
@@ -81,12 +83,12 @@
     "columns": {
       "name": "File",
       "type": "Kind",
-      "audience": "Audience",
       "owner": "Uploaded by",
       "uses": "Tables",
       "size": "Size",
       "status": "Status",
-      "createdAt": "Uploaded"
+      "createdAt": "Uploaded",
+      "category": "Kind"
     },
     "usesValue_one": "{{count}} table",
     "usesValue_other": "{{count}} tables",
@@ -105,5 +107,62 @@
     "name": "name",
     "owner": "uploaded by",
     "type": "kind"
+  },
+  "category": {
+    "TableMaterial": "Table material",
+    "MasterRequest": "Master's request",
+    "PlayerApplication": "Player application",
+    "PlayerSubmission": "Player submission",
+    "Announcement": "Community announcements",
+    "filterLabel": "Filter by where it is used"
+  },
+  "usage": {
+    "TableMaterial": "{{tableName}}",
+    "MasterRequest": "Asked on {{tableName}}",
+    "PlayerApplication": "Application to {{tableName}}",
+    "PlayerSubmission": "Handed in on {{tableName}}",
+    "Announcement": "Community announcement",
+    "unused": "Unused"
+  },
+  "dropzone": {
+    "prompt": "Drag a file here, or click to pick one",
+    "uploading": "Uploading…",
+    "limits": "Up to 2 MB per file. PDF, Word, PNG and JPG are accepted.",
+    "categoryLabel": "Which drawer it goes in",
+    "reused": "You already had “{{name}}”: it was reused and takes no extra space.",
+    "categoryHint": "Only needed here: when you upload from a table or an answer, the drawer follows from where you uploaded it."
+  },
+  "errors": {
+    "uploadFailed": "The file could not be uploaded. Try again.",
+    "FILE_TYPE_NOT_ALLOWED": "That file type is not accepted. You can upload PDF, Word, PNG and JPG.",
+    "FILE_TOO_LARGE": "The file is larger than allowed. The maximum is 2 MB per file.",
+    "FILE_EMPTY": "The file is empty. Pick another one."
+  },
+  "mine": {
+    "title": "My files",
+    "description": "Everything you have uploaded. When you attach something to a table you can reuse one of these: it is not duplicated and takes no extra space.",
+    "upload": "Upload a file",
+    "uploadClose": "Close",
+    "searchLabel": "Search my files",
+    "searchPlaceholder": "Search by name",
+    "lastUsed": "Used {{when}}",
+    "emptyTitle": "You have not uploaded anything yet",
+    "emptyDescription": "Whatever you upload stays here and can be used again on any table, without uploading it twice.",
+    "noResultsTitle": "No results",
+    "noResultsDescription": "None of your files match the search.",
+    "deleteTitle": "Remove this file?",
+    "deleteDescription": "“{{name}}” stops appearing in your list and on the tables that use it. It is not erased from disk: the owner does that from the maintenance menu.",
+    "deleteConfirm": "Remove"
+  },
+  "edit": {
+    "title": "Edit file",
+    "description": "Change what it is called, what it is, and whether you are keeping it. The content is untouched.",
+    "nameLabel": "Name",
+    "categoryLabel": "What it is",
+    "keepLabel": "Keep it to reuse",
+    "keepHint": "Unchecked, it stays tied to where you used it and is released after a long time unused.",
+    "cancel": "Cancel",
+    "confirm": "Save",
+    "saved": "File updated"
   }
 }

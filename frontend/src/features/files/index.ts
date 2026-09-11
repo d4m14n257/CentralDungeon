@@ -7,9 +7,14 @@
  */
 export { FilePicker } from './components/FilePicker'
 export { FileList, type FileListItem } from './components/FileList'
+export { FileCard } from './components/FileCard'
+export { FileDropzone } from './components/FileDropzone'
 export { FileTypeBadge } from './components/FileTypeBadge'
-export { FileAudienceBadge } from './components/FileAudienceBadge'
+export { FileCategoryBadge } from './components/FileCategoryBadge'
+export { FileCategoryFilter } from './components/FileCategoryFilter'
+export { FileUsageChips } from './components/FileUsageChips'
 export { PublishFileDialog } from './components/PublishFileDialog'
+export { EditFileDialog } from './components/EditFileDialog'
 
 export { useMyFiles } from './api/useMyFiles'
 export { usePublicFiles } from './api/usePublicFiles'
@@ -28,13 +33,15 @@ export { useUnpublishFile } from './api/useUnpublishFile'
 export { useDeleteFileAsAdmin } from './api/useDeleteFileAsAdmin'
 
 export { formatFileSize, type FormattedSize } from './format'
+export { FILE_CATEGORIES, PUBLISHABLE_CATEGORIES } from './categories'
 
 export type {
   AdminFile,
+  FileCategory,
   FileStatus,
   FileType,
+  FileUsage,
   LinkTableFileInput,
-  PublicAudience,
   PublicFile,
   PublishFileInput,
   SharedFile,
@@ -43,5 +50,6 @@ export type {
   TableFileType,
   UpdateFileInput,
   UpdateTableFileInput,
+  UploadedFile,
   UploadFileInput,
 } from './types'

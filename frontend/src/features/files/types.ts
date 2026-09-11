@@ -10,8 +10,35 @@ import type { TableFileType } from '@/types/file'
  */
 export type FileType = 'Public' | 'Private' | 'SingleUse'
 
-/** Who a published file is meant for (#64). Null on anything that is not `Public`. */
-export type PublicAudience = 'Masters' | 'Players' | 'Announcements'
+/**
+ * The flow a file belongs to (#233) — its cajón.
+ *
+ * **It says where a file is used, not what the document is.** Nobody uploading can honestly declare
+ * "this is a character sheet template": what a master asks for might be a form in a `.doc`. What the
+ * system knows for certain is which screen the file came from, so the cajón is observed and never
+ * asked — the one exception is `/my/files`, where there is no flow to observe.
+ *
+ * A file belongs to **as many cajones as it has been used in**, and a membership is never revoked:
+ * detaching a file from a table says it is no longer that table's, never that it was never its
+ * material. That is why this is a list everywhere and never a single value.
+ *
+ * `public_audience` is gone (#64 derogated): the flow already says who a document is for.
+ */
+export type FileCategory = 'TableMaterial' | 'MasterRequest' | 'PlayerApplication' | 'PlayerSubmission' | 'Announcement'
+
+/**
+ * One place a file is linked **right now** (#232).
+ *
+ * Not the same question as a cajón, though it names one: a cajón is what the file has belonged to and
+ * never goes away, a use is a live link and vanishes when the link does.
+ */
+export interface FileUsage {
+  category: FileCategory
+  /** The table the use belongs to — for a submission or a request too: the one whose task it is. */
+  contextId: string
+  /** The table's name, which is what a person actually recognises their own file by. */
+  contextName: string
+}
 
 /** Whether a file still counts. Marking is the only delete F1 has — the bytes wait for F5 (#25, #66). */
 export type FileStatus = 'Current' | 'Deleted'
@@ -32,11 +59,31 @@ export interface StoredFile {
   /** The size as uploaded, before compression (#75). What is shown, and what the cap applies to. */
   sizeBytes: number
   fileType: FileType
-  publicAudience: PublicAudience | null
+  /**
+   * The cajones it belongs to (#233). Plural and cumulative. **Only `/files/mine` fills this in** —
+   * an upload and a single-file read answer with an empty array.
+   */
+  categories: FileCategory[]
+  /**
+   * Where the file is linked right now (#232). Same rule: only the owner's own list pays for it.
+   */
+  usages: FileUsage[]
   /** ISO-8601 UTC, or null when never recorded. The conversion to the reader's zone is ours (#22, #111). */
   lastUsedAt: string | null
   /** ISO-8601 UTC. */
   createdAt: string
+}
+
+/**
+ * What an upload answers with: the file, and whether it was recognised rather than written (#234).
+ *
+ * The flag is a fact about *this request* and not about the file, which is why it rides alongside
+ * `StoredFile` instead of on it. It exists so the screen can say "you already had this" — until #234
+ * the two cases were the same 201 and deduplication happened in complete silence.
+ */
+export interface UploadedFile {
+  file: StoredFile
+  deduplicated: boolean
 }
 
 /**
@@ -64,9 +111,7 @@ export interface AdminFile extends StoredFile {
  * Deliberately narrower than {@link StoredFile}: choosing the community's default character sheet
  * needs its name and its size, not who uploaded it or when it was last touched.
  */
-export type PublicFile = Pick<StoredFile, 'id' | 'name' | 'mimeType' | 'sizeBytes'> & {
-  publicAudience: PublicAudience
-}
+export type PublicFile = Pick<StoredFile, 'id' | 'name' | 'mimeType' | 'sizeBytes' | 'categories'>
 
 /**
  * Mirror of `TableFileResponse` — one row of the master's Archivos tab.
@@ -91,6 +136,12 @@ export interface TableFile extends Pick<StoredFile, 'name' | 'mimeType' | 'sizeB
 /** What an upload sends alongside the bytes. `Public` is an admin's to grant, never an uploader's (#64). */
 export interface UploadFileInput {
   fileType: Extract<FileType, 'Private' | 'SingleUse'>
+  /**
+   * The cajón to put it in (#233), or **null** — which is the normal case. A file uploaded to attach
+   * to a table or to answer a request is classified by the link that follows, because the flow knows
+   * what the uploader cannot be asked to declare. Only `/my/files` sends one.
+   */
+  fileCategory: FileCategory | null
 }
 
 /**
@@ -108,5 +159,11 @@ export type LinkTableFileInput = Pick<TableFile, 'fileId' | 'tableFileType' | 'i
 /** What changing an attachment sends. Nothing here can reach the file itself. */
 export type UpdateTableFileInput = Pick<TableFile, 'tableFileType' | 'isPrivate'>
 
-/** What publishing sends: who the file is for (#64). The audience is not optional — that is M24.1's fix. */
-export type PublishFileInput = Pick<AdminFile, 'publicAudience'> & { publicAudience: PublicAudience }
+/**
+ * What publishing sends: the cajones the file is offered in (#233).
+ *
+ * **Plural, and that is the point.** The community's blank sheet is asked for while a table recruits
+ * *and* once it is running, so it is published into `TableMaterial` and `MasterRequest` at once — one
+ * file, two rows. It replaced the audience of #64 outright: a flow already says who a document is for.
+ */
+export type PublishFileInput = Pick<AdminFile, 'categories'>

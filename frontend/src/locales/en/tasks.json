@@ -63,7 +63,10 @@
     "publish": "Publish and notify",
     "save": "Save",
     "publishedToast": "Request published. Everyone has been notified.",
-    "savedToast": "Request updated."
+    "savedToast": "Request updated.",
+    "blanksLabel": "Forms for this request",
+    "blanksHint": "What you are asking people to fill in: a template, a blank form. Use one of the community's or upload your own.",
+    "blanksRemove": "Remove “{{name}}”"
   },
   "submissions": {
     "title": "Answers",
@@ -94,5 +97,8 @@
     "accumulatesHint": "Each answer is kept separately. If you already sent something, it stays.",
     "send": "Send",
     "sentToast": "Sent."
+  },
+  "list": {
+    "blanks": "To fill in"
   }
 }

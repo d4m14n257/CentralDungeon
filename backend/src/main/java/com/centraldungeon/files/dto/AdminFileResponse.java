@@ -1,6 +1,7 @@
 package com.centraldungeon.files.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -16,8 +17,8 @@ import org.jspecify.annotations.Nullable;
  * @param mimeType       the declared MIME type
  * @param sizeBytes      the size as it was uploaded, before compression (#75)
  * @param fileType       which of the three lifecycles it has (#68), as a string
- * @param publicAudience who a published file is for (#64). Null on anything that is not
- *                       {@code Public}
+ * @param categories     the cajones it belongs to (#233), as strings. An admin sees them because
+ *                       they are the one who declares them when publishing
  * @param ownerId        who uploaded it. Publishing a file changes what it is for, never whose it is
  * @param ownerName      how to name them on screen - their Discord username, which everybody has
  * @param uses           how many tables hold a live link to it. <b>This is where #79 stops being a
@@ -34,7 +35,7 @@ public record AdminFileResponse(
         String mimeType,
         long sizeBytes,
         String fileType,
-        @Nullable String publicAudience,
+        List<String> categories,
         String ownerId,
         String ownerName,
         long uses,

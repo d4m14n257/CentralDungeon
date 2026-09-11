@@ -65,7 +65,19 @@ const EXPLAINED_ERROR_CODES = new Set([
  * A particular mutation that needs a more specific message adds its own `onError` on the
  * `useMutation` - React Query calls both, it does not replace this one.
  */
-function reportMutationError(error: unknown) {
+function reportMutationError(
+  error: unknown,
+  _variables: unknown,
+  _onMutateResult: unknown,
+  mutation: { meta?: Record<string, unknown> | undefined },
+) {
+  // A mutation that shows the failure on the screen itself opts out, so the person is not told the
+  // same thing twice in two places. The dropzone is the case: what went wrong with the file you just
+  // dropped belongs under the drop area, where you are already looking and where it stays while you
+  // pick another one - not in a toast that disappears in four seconds.
+  if (mutation.meta?.showsItsOwnError === true) {
+    return
+  }
   if (!(error instanceof ApiError)) {
     toast.error(i18n.t('errors.offline'))
     return

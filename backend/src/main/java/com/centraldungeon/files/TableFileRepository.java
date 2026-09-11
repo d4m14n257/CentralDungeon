@@ -61,4 +61,34 @@ public interface TableFileRepository extends JpaRepository<TableFile, TableFileI
             group by link.id.fileId
             """)
     List<FileUsageCount> countUsesByFileIds(@Param("fileIds") Collection<String> fileIds);
+
+    /**
+     * Which tables hold each of the given files, <b>named</b>, in one query for the whole page.
+     *
+     * <p>The difference from {@link #countUsesByFileIds} is who is asking. An admin wants the number
+     * - one file, three tables - because the point is that linking is not copying (#79). An owner
+     * looking at their own list wants the names, because "the sheet I use on Hijos del Vacío" is how
+     * a person recognises their own file (#232).
+     *
+     * <p>Joined against {@code GameTable} rather than reading the id off the key: the name is the
+     * whole reason this exists, and the alternative - collect ids here, fetch tables in a second
+     * round trip - is the N+1 this method is shaped to avoid.
+     *
+     * <p>Named parameters only, never positional (#124).
+     *
+     * @param fileIds the files to resolve uses for
+     * @return one row per live attachment. A file nothing points at is simply absent
+     */
+    @Query("""
+            select new com.centraldungeon.files.FileUsage(
+                link.id.fileId,
+                com.centraldungeon.files.FileCategory.TableMaterial,
+                gameTable.id,
+                gameTable.name)
+            from TableFile link, GameTable gameTable
+            where link.id.fileId in :fileIds
+              and link.status = com.centraldungeon.files.TableFileStatus.Current
+              and gameTable.id = link.id.gameTableId
+            """)
+    List<FileUsage> findUsagesByFileIds(@Param("fileIds") Collection<String> fileIds);
 }

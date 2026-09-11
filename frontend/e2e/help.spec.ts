@@ -1,10 +1,12 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
 
 /**
- * The help (decisiones.md #167) split by audience (#168), linked by `#ref` and **tied to the
- * reader's role** (#169, #170). It is tested here rather than in component tests because what can
- * break is route resolution: with the relative pattern in `paths` the link ended at
- * `/admin/tables/help`, and a MemoryRouter does not give that away.
+ * The help as dialogs raised in place (decisiones.md #231), which replaced the `/help` routes of
+ * #167 and #168.
+ *
+ * It is tested here and not in a component test because what the change is *for* only exists in a
+ * real browser: that asking a question does not cost the screen you asked it from. A MemoryRouter
+ * cannot tell you whether the page behind the dialog survived.
  */
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
@@ -30,28 +32,23 @@ async function openAssignMastersDialog(page: Page, label: string) {
   return page.getByRole('dialog')
 }
 
-test('el buscador y el diálogo enlazan a la sección de ayuda que corresponde, y la resaltan', async ({ browser }) => {
+test('la ayuda se lee sin salir de la pantalla, y la pantalla sigue ahí detrás', async ({ browser }) => {
   const context = await browser.newContext()
   try {
     await testLogin(context.request, `e2e-help-${runId}`, { asAdmin: true })
     const page = await context.newPage()
 
-    const dialog = await openAssignMastersDialog(page, 'ref')
-    await dialog.getByRole('link', { name: 'Cómo funciona' }).click()
+    const dialog = await openAssignMastersDialog(page, 'modal')
+    await dialog.getByRole('button', { name: 'Cómo funciona' }).click()
 
-    // A #ref from another audience: the help for assigning masters lives in the admins' page.
-    await expect(page).toHaveURL(/\/help\/admins#assign-masters$/)
+    // The help for assigning masters, on top of the dialog that asked for it - and the URL did not
+    // move, which is the whole point (#231).
     await expect(page.getByRole('heading', { name: 'Mesas sin master' })).toBeVisible()
-    // The section the URL names is marked, so the reader can tell which one they came for (#170).
-    await expect(page.locator('section#assign-masters')).toHaveAttribute('aria-current', 'location')
-    await expect(page.locator('section#reviewing')).not.toHaveAttribute('aria-current', 'location')
+    await expect(page).toHaveURL(/\/admin\/tables$/)
 
-    const searchDialog = await openAssignMastersDialog(page, 'buscador')
-    await searchDialog.getByRole('link', { name: 'Cómo buscar' }).click()
-
-    await expect(page).toHaveURL(/\/help#search$/)
-    await expect(page.getByRole('heading', { name: 'Cómo buscar' })).toBeVisible()
-    await expect(page.getByText('/user_name damian,carlos,daniel')).toBeVisible()
+    await page.getByRole('button', { name: 'Close' }).first().click()
+    // The dialog underneath is still open with what was typed in it.
+    await expect(page.getByRole('heading', { name: 'Asignar masters' })).toBeVisible()
   } finally {
     await context.close()
   }
@@ -63,70 +60,31 @@ test('la ayuda enseña con pasos, no solo describe', async ({ browser }) => {
     await testLogin(context.request, `e2e-help-steps-${runId}`, { asMaster: true })
     const page = await context.newPage()
 
-    await page.goto('/help/masters')
-    // The steps are an ordered list: that is what separates "teaching how to use it" from "describing it" (#170).
-    const steps = page.locator('section#creating ol > li')
-    await expect(page.locator('section#creating').getByRole('heading', { name: 'Cómo se hace' })).toBeVisible()
-    await expect(steps).toHaveCount(5)
-    await expect(steps.first()).toContainText('Cambiá al contexto Master')
+    await page.goto('/master')
+    await page.getByRole('button', { name: 'Cómo se lee esta lista' }).click()
+
+    const helpDialog = page.getByRole('dialog')
+    // The steps are an ordered list: that is what separates "teaching how to use it" from
+    // "describing it" (#170, kept by #231).
+    await expect(helpDialog.getByRole('heading', { name: 'Cómo se hace' })).toBeVisible()
+    await expect(helpDialog.locator('ol > li')).toHaveCount(3)
   } finally {
     await context.close()
   }
 })
 
-test('cada quien ve la ayuda de su rol, y solo la de su rol', async ({ browser }) => {
-  const player = await browser.newContext()
+test('/help ya no es una pantalla: queda libre para soporte', async ({ browser }) => {
+  const context = await browser.newContext()
   try {
-    await testLogin(player.request, `e2e-help-player-${runId}`)
-    const page = await player.newPage()
+    await testLogin(context.request, `e2e-help-gone-${runId}`, { asMaster: true })
+    const page = await context.newPage()
 
     await page.goto('/help')
-    await expect(page.getByRole('link', { name: 'Jugadores' })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Masters' })).toBeHidden()
-    await expect(page.getByRole('link', { name: 'Admins' })).toBeHidden()
 
-    await page.getByRole('link', { name: 'Jugadores' }).click()
-    await expect(page).toHaveURL(/\/help\/players$/)
-    await expect(page.getByRole('heading', { name: 'Postularte a una mesa' })).toBeVisible()
-
-    // Reaching another role's help by URL does not show it either.
-    await page.goto('/help/admins')
-    await expect(page.getByText('No tenés permiso')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Mesas sin master' })).toBeHidden()
+    // Not a redirect and not an empty page: nothing claims the path until the support screen does
+    // (#231). A route that resolved to nothing would be the dead end E1 already documented.
+    await expect(page.getByRole('heading', { name: '404' })).toBeVisible()
   } finally {
-    await player.close()
-  }
-
-  // A master is a master and nothing else: the test actor holds exactly the role it was asked for,
-  // so this is also what proves the roles do not stack on the way in (#222).
-  const master = await browser.newContext()
-  try {
-    await testLogin(master.request, `e2e-help-onlymaster-${runId}`, { asMaster: true })
-    const page = await master.newPage()
-
-    await page.goto('/help')
-    await expect(page.getByRole('link', { name: 'Masters' })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Jugadores' })).toBeHidden()
-    await expect(page.getByRole('link', { name: 'Admins' })).toBeHidden()
-
-    // And the chip reports where they are, not what they hold: on a player screen it says Jugador,
-    // even for somebody who has no Player role (#222).
-    await page.goto('/player')
-    await expect(page.getByRole('banner').getByText('Jugador', { exact: true })).toBeVisible()
-    await page.goto('/master')
-    await expect(page.getByRole('banner').getByText('Master', { exact: true })).toBeVisible()
-  } finally {
-    await master.close()
-  }
-
-  const admin = await browser.newContext()
-  try {
-    await testLogin(admin.request, `e2e-help-admin-${runId}`, { asAdmin: true })
-    const page = await admin.newPage()
-
-    await page.goto('/help/admins')
-    await expect(page.getByRole('heading', { name: 'Mesas sin master' })).toBeVisible()
-  } finally {
-    await admin.close()
+    await context.close()
   }
 })

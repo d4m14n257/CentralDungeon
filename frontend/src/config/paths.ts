@@ -20,6 +20,7 @@ export const paths = {
   playerMyTables: 'player/my-tables',
   playerMyTableDetail: 'player/my-tables/:id',
   mySchedule: 'my/schedule',
+  myFiles: 'my/files',
   notifications: 'notifications',
   help: 'help',
   helpPlayers: 'players',
@@ -40,18 +41,6 @@ export const paths = {
   adminCatalogs: 'admin/catalogs',
   adminFiles: 'admin/files',
 } as const
-
-/** The help's audiences (#168). The index, `/help`, is the one that serves everybody. */
-export type HelpAudience = 'players' | 'masters' | 'admins'
-
-/**
- * `helpPath()` -> /help, `helpPath('admins', 'assign-masters')` -> /help/admins#assign-masters.
- * Always absolute: the patterns above are relative because the router consumes them, and a
- * `<Link to={paths.help}>` from /admin/tables resolved to /admin/tables/help.
- */
-export function helpPath(audience?: HelpAudience, ref?: string): string {
-  return `/help${audience ? `/${audience}` : ''}${ref ? `#${ref}` : ''}`
-}
 
 /**
  * @param id the table
@@ -227,4 +216,14 @@ export function homePathFor(context: AppContext): string {
  */
 export function mySchedulePath(): string {
   return '/my/schedule'
+}
+
+/**
+ * @returns the absolute path to the reader's own files
+ * @remarks Under `/my` and not under a role, for the same reason as `/my/schedule` (#222): what
+ *          somebody uploaded as a player and what they uploaded as a master is one library, and
+ *          splitting it would ask them to remember which hat they were wearing
+ */
+export function myFilesPath(): string {
+  return '/my/files'
 }

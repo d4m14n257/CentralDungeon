@@ -13,6 +13,7 @@ import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.text.RichTextSanitizer;
+import com.centraldungeon.files.FileCategory;
 import com.centraldungeon.files.FileService;
 import com.centraldungeon.files.FileType;
 import com.centraldungeon.files.StoredFile;

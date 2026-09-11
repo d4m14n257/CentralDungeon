@@ -118,6 +118,9 @@ public class TableFileService {
     public TableFileResponse attach(String gameTableId, LinkTableFileRequest request, String actorId) {
         requireMasterOf(gameTableId, actorId);
         StoredFile file = fileService.requireAttachable(request.fileId(), actorId);
+        // The link is what classifies the file, not the upload (#233): attaching it to a table is
+        // what makes it table material, and the membership stands even if it is detached later.
+        fileService.classify(file.getId(), FileCategory.TableMaterial);
 
         TableFile link = tableFileRepository.findById(new TableFileId(gameTableId, file.getId()))
                 .orElseGet(() -> new TableFile(gameTableId, file.getId(), request.tableFileType(), request.isPrivate()));

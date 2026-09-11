@@ -90,11 +90,20 @@ public class TestDataService {
                 + E2E_FILES + ")");
         delete("delete from TaskSubmission sub2 where sub2.task.id in (" + E2E_TASKS + ") or sub2.user.id in ("
                 + E2E_USERS + ")");
+        // The blanks a master attached to their ask (#63): task_files points at both table_tasks and
+        // files, so it unwinds before either. Fifth time this shape has had to be remembered here.
+        delete("delete from TaskFile tkf where tkf.id.taskId in (" + E2E_TASKS + ") or tkf.id.fileId in ("
+                + E2E_FILES + ")");
         delete("delete from TableTask task2 where task2.gameTable.id in (" + E2E_TABLES + ")");
         int gameTables =
                 delete("delete from GameTable gt where gt.name like :tableName or gt.createdBy.id in (" + E2E_USERS + ")");
         // The blobs on disk are not touched. They are in a temporary directory under the test profile
         // (application-test.yml) and deleting bytes is F5's, never a side effect of a cleanup (#25, #66).
+        // And the sixth: a file's cajones (#233) point at `files` and nothing else, so they go
+        // immediately before it. Missing this is not a visible failure - the whole cleanup is one
+        // transaction, so a foreign key here rolls back *everything* and the next run starts on a
+        // full database, which is the failure mode #171 and #172 were about.
+        delete("delete from FileCategoryLink fc where fc.id.fileId in (" + E2E_FILES + ")");
         delete("delete from StoredFile f2 where f2.userCreated.id in (" + E2E_USERS + ")");
         delete("delete from UserRole ur where ur.user.id in (" + E2E_USERS + ")");
         int users = delete("delete from User u2 where u2.discordId like :discordId");

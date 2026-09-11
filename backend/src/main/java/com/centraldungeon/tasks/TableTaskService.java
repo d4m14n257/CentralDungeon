@@ -4,6 +4,9 @@ import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.text.RichTextSanitizer;
+import com.centraldungeon.files.FileCategory;
+import com.centraldungeon.files.FileService;
+import com.centraldungeon.files.StoredFile;
 import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
@@ -16,15 +19,18 @@ import com.centraldungeon.tables.TableSession;
 import com.centraldungeon.tables.TableSessionRepository;
 import com.centraldungeon.tasks.dto.ApplicableTaskResponse;
 import com.centraldungeon.tasks.dto.CreateTaskRequest;
+import com.centraldungeon.tasks.dto.TaskFileResponse;
 import com.centraldungeon.tasks.dto.TaskRecipientResponse;
 import com.centraldungeon.tasks.dto.TaskResponse;
 import com.centraldungeon.tasks.dto.UpdateTaskRequest;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,6 +86,15 @@ public class TableTaskService {
     /** The whitelist of #62, applied on the way in and on the way out. */
     private final RichTextSanitizer richTextSanitizer;
 
+    /** The blanks a master attaches to their ask (#63). */
+    private final TaskFileRepository taskFileRepository;
+
+    /**
+     * Resolves and classifies the blanks. A request's form is a file like any other: linked and never
+     * copied (#79), and put in its cajón by the act of attaching it (#233).
+     */
+    private final FileService fileService;
+
     /** Entity to DTO. */
     private final TaskMapper taskMapper;
 
@@ -93,6 +108,8 @@ public class TableTaskService {
      * @param userService            resolves the target of a {@code Single} task
      * @param notificationService    tells the recipients on publication (#77)
      * @param richTextSanitizer      the whitelist of #62
+     * @param taskFileRepository     the blanks attached to an ask (#63)
+     * @param fileService            resolves and classifies those blanks (#79, #233)
      * @param taskMapper             entity to DTO
      */
     public TableTaskService(
@@ -105,6 +122,8 @@ public class TableTaskService {
             UserService userService,
             NotificationService notificationService,
             RichTextSanitizer richTextSanitizer,
+            TaskFileRepository taskFileRepository,
+            FileService fileService,
             TaskMapper taskMapper) {
         this.taskRepository = taskRepository;
         this.submissionRepository = submissionRepository;
@@ -115,6 +134,8 @@ public class TableTaskService {
         this.userService = userService;
         this.notificationService = notificationService;
         this.richTextSanitizer = richTextSanitizer;
+        this.taskFileRepository = taskFileRepository;
+        this.fileService = fileService;
         this.taskMapper = taskMapper;
     }
 
@@ -153,11 +174,12 @@ public class TableTaskService {
         task.setDueAt(request.dueAt());
 
         TableTask saved = taskRepository.save(task);
+        syncBlanks(saved.getId(), request.fileIds(), actorId);
         List<TaskRecipientResponse> recipients = recipientsOf(saved);
         for (TaskRecipientResponse recipient : recipients) {
             notificationService.notifyTaskPublished(recipient.userId(), gameTable, saved.getTitle());
         }
-        return toResponse(saved, 0, 0, recipients.size());
+        return toResponse(saved, blanksOf(List.of(saved)).getOrDefault(saved.getId(), List.of()), 0, 0, recipients.size());
     }
 
     /**
@@ -191,6 +213,9 @@ public class TableTaskService {
         task.setAcceptsFiles(request.acceptsFiles());
         task.setMandatory(request.isMandatory());
         task.setDueAt(request.dueAt());
+        // The whole list travels (#189), so a blank absent from it is taken off the ask - which marks
+        // the link and never the file (#79), and leaves its cajón standing (#233).
+        syncBlanks(taskId, request.fileIds(), actorId);
 
         return describe(task);
     }
@@ -236,11 +261,13 @@ public class TableTaskService {
             return List.of();
         }
         Map<String, TaskSubmissionCount> counts = countsOf(tasks);
+        Map<String, List<TaskFileResponse>> blanks = blanksOf(tasks);
         return tasks.stream()
                 .map(task -> {
                     TaskSubmissionCount count = counts.get(task.getId());
                     return toResponse(
                             task,
+                            blanks.getOrDefault(task.getId(), List.of()),
                             count == null ? 0 : (int) count.submissions(),
                             count == null ? 0 : (int) count.distinctPeople(),
                             recipientsOf(task).size());
@@ -280,16 +307,22 @@ public class TableTaskService {
             audiences.add(TaskAudience.Single);
         }
 
-        return taskRepository
+        List<TableTask> applicable = taskRepository
                 .findByGameTable_IdAndAudienceInAndStatusOrderByCreatedAtAsc(gameTableId, audiences, TaskStatus.Open)
                 .stream()
                 // A Single task is its target's business and nobody else's, so it is narrowed here
                 // rather than in the query: the repository resolves rows, the service decides who
                 // may see them.
                 .filter(task -> task.getAudience() != TaskAudience.Single || isTargetOf(task, actorId))
+                .toList();
+        // The blanks for the whole list in one query, and they matter most here: a request that says
+        // "fill in this form" is useless to its reader if the form is not on it (#63).
+        Map<String, List<TaskFileResponse>> blanks = blanksOf(applicable);
+        return applicable.stream()
                 .map(task -> taskMapper.toApplicable(
                         task,
                         richTextSanitizer.sanitize(task.getDescription()),
+                        blanks.getOrDefault(task.getId(), List.of()),
                         canSubmit(task, isPlayer, isCandidate, actorId),
                         submissionRepository
                                 .findByTask_IdAndUser_IdAndDeletedAtIsNullOrderByCreatedAtAsc(task.getId(), actorId)
@@ -369,15 +402,89 @@ public class TableTaskService {
         TaskSubmissionCount count = countsOf(List.of(task)).get(task.getId());
         return toResponse(
                 task,
+                blanksOf(List.of(task)).getOrDefault(task.getId(), List.of()),
                 count == null ? 0 : (int) count.submissions(),
                 count == null ? 0 : (int) count.distinctPeople(),
                 recipientsOf(task).size());
     }
 
     /** The mapper call, with the description sanitized on the way out as well as in (#62). */
-    private TaskResponse toResponse(TableTask task, int submissionCount, int respondentCount, int recipientCount) {
+    private TaskResponse toResponse(
+            TableTask task,
+            List<TaskFileResponse> files,
+            int submissionCount,
+            int respondentCount,
+            int recipientCount) {
         return taskMapper.toResponse(
-                task, richTextSanitizer.sanitize(task.getDescription()), submissionCount, respondentCount, recipientCount);
+                task,
+                richTextSanitizer.sanitize(task.getDescription()),
+                files,
+                submissionCount,
+                respondentCount,
+                recipientCount);
+    }
+
+    /**
+     * The blanks of a whole board, keyed by request, in one query (#63).
+     *
+     * <p>One round trip and never one per request, the same rule the submission counts follow: a
+     * board of ten asks costs one query, not ten.
+     *
+     * @param tasks the requests to resolve blanks for
+     * @return the blanks per task id; a request with none is absent, which reads as empty
+     */
+    private Map<String, List<TaskFileResponse>> blanksOf(List<TableTask> tasks) {
+        if (tasks.isEmpty()) {
+            return Map.of();
+        }
+        return taskFileRepository.findBlanksByTaskIds(tasks.stream().map(TableTask::getId).toList()).stream()
+                .collect(Collectors.groupingBy(
+                        TaskFileRow::taskId,
+                        Collectors.mapping(
+                                row -> new TaskFileResponse(row.fileId(), row.name(), row.mimeType(), row.sizeBytes()),
+                                Collectors.toList())));
+    }
+
+    /**
+     * Brings a request's blanks to exactly the list it should end with (#189).
+     *
+     * <p><b>Revives rather than inserts</b>, because the pair is the primary key: re-attaching a file
+     * that was taken off has to bring its row back to life, not fail on a duplicate. And taking one
+     * off marks the link and never the file - the blank stays in its owner's library and on every
+     * other request that uses it (#79).
+     *
+     * <p>Each file goes through {@code requireAttachable}, so a master can attach their own or one
+     * the platform published, and never somebody else's private upload (#79). Attaching is also what
+     * puts the file in the {@code MasterRequest} cajón (#233) - the flow classifies it, never the
+     * upload.
+     *
+     * @param taskId  the request
+     * @param fileIds the blanks it should end up with
+     * @param actorId the master, from the token
+     */
+    private void syncBlanks(String taskId, List<String> fileIds, String actorId) {
+        List<String> wanted = fileIds == null ? List.of() : fileIds;
+        Map<String, TaskFile> existing = taskFileRepository.findById_TaskId(taskId).stream()
+                .collect(Collectors.toMap(link -> link.getId().fileId(), link -> link));
+
+        for (String fileId : wanted) {
+            StoredFile file = fileService.requireAttachable(fileId, actorId);
+            TaskFile link = existing.get(file.getId());
+            if (link == null) {
+                taskFileRepository.save(new TaskFile(taskId, file.getId()));
+            } else {
+                link.setStatus(TaskFileStatus.Current);
+                link.setDeletedAt(null);
+            }
+            fileService.classify(file.getId(), FileCategory.MasterRequest);
+        }
+
+        for (TaskFile link : existing.values()) {
+            if (!wanted.contains(link.getId().fileId()) && link.getStatus() == TaskFileStatus.Current) {
+                link.setStatus(TaskFileStatus.Detached);
+                link.setDeletedAt(LocalDateTime.now());
+            }
+        }
     }
 
     /** The grouped count of a whole board in one round trip, keyed by task. */

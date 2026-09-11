@@ -51,7 +51,8 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
   await chooseRequiredCatalogs(page)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  await page.getByLabel('Primera sesión').fill('2026-09-11T20:00')
+  // A day and no hour since #230: the sessions take their hour from the agenda slot below.
+  await page.getByLabel('Comienza a partir de').fill('2026-09-11')
   await addScheduleSlot(page, FRIDAY_EVENING)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 

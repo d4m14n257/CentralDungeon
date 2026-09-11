@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useOutletContext } from 'react-router'
+import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/components/ConfirmDialog'
@@ -8,8 +8,8 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { helpPath } from '@/config/paths'
-import { FileList } from '@/features/files'
+import { HelpLink } from '@/features/help'
+import { FileList, FilePicker } from '@/features/files'
 import { useTablePlayers } from '@/features/registrations'
 import { useTableSessions } from '@/features/tables'
 import {
@@ -131,9 +131,9 @@ export function MasterTableTasksTab() {
         />
       )}
 
-      <Link to={helpPath('masters', 'tasks')} className="text-fg-muted inline-block text-xs underline">
+      <HelpLink section="masters.tasks" className="inline-block text-xs">
         {t('board.helpLink')}
-      </Link>
+      </HelpLink>
 
       <TaskFormDialog
         open={isFormOpen}
@@ -142,6 +142,7 @@ export function MasterTableTasksTab() {
         players={players ?? []}
         sessions={(sessions ?? []).map((session) => ({ id: session.id, sequenceNumber: session.sequenceNumber }))}
         isBusy={publish.isPending || update.isPending}
+        renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="MasterRequest" />}
         onSubmit={handleSubmit}
       />
     </div>

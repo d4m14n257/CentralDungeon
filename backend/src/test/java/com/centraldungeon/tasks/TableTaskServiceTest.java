@@ -13,6 +13,7 @@ import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.text.RichTextSanitizer;
+import com.centraldungeon.files.FileService;
 import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
@@ -76,6 +77,14 @@ class TableTaskServiceTest {
 
     private final TaskMapper taskMapper = org.mapstruct.factory.Mappers.getMapper(TaskMapper.class);
 
+    /** The blanks a master attaches to their ask (#63). Empty in every case here but the one that is about them. */
+    @Mock
+    private TaskFileRepository taskFileRepository;
+
+    /** Resolves and classifies those blanks (#79, #233). */
+    @Mock
+    private FileService fileService;
+
     private TableTaskService service() {
         return new TableTaskService(
                 taskRepository,
@@ -87,6 +96,8 @@ class TableTaskServiceTest {
                 userService,
                 notificationService,
                 new RichTextSanitizer(),
+                taskFileRepository,
+                fileService,
                 taskMapper);
     }
 
@@ -223,7 +234,7 @@ class TableTaskServiceTest {
         givenTable("table-1");
         when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
         CreateTaskRequest neither = new CreateTaskRequest(
-                "Ficha de personaje", null, TaskAudience.Players, null, null, false, false, false, null);
+                "Ficha de personaje", null, TaskAudience.Players, null, null, false, false, false, List.of(), null);
 
         assertThatThrownBy(() -> service().publish("table-1", neither, "master-1"))
                 .isInstanceOf(InvalidRequestException.class);
@@ -241,7 +252,7 @@ class TableTaskServiceTest {
         when(sessionRepository.findById("session-9")).thenReturn(Optional.of(foreign));
 
         CreateTaskRequest tied = new CreateTaskRequest(
-                "Ficha de personaje", null, TaskAudience.Players, null, "session-9", true, true, false, null);
+                "Ficha de personaje", null, TaskAudience.Players, null, "session-9", true, true, false, List.of(), null);
 
         assertThatThrownBy(() -> service().publish("table-1", tied, "master-1"))
                 .isInstanceOf(InvalidRequestException.class)
@@ -263,6 +274,7 @@ class TableTaskServiceTest {
                 true,
                 true,
                 false,
+                List.of(),
                 null);
 
         TaskResponse response = service().publish("table-1", withScript, "master-1");
@@ -283,7 +295,7 @@ class TableTaskServiceTest {
         when(taskRepository.save(any(TableTask.class))).thenAnswer(persistTask("task-1"));
         givenRoster("table-1", TableRegistrationStatus.Player, "player-1");
         CreateTaskRequest mandatory = new CreateTaskRequest(
-                "Ficha de personaje", null, TaskAudience.Players, null, null, true, true, true, null);
+                "Ficha de personaje", null, TaskAudience.Players, null, null, true, true, true, List.of(), null);
 
         TaskResponse response = service().publish("table-1", mandatory, "master-1");
 
@@ -441,11 +453,11 @@ class TableTaskServiceTest {
 
     private static CreateTaskRequest createRequest(TaskAudience audience, String targetUserId) {
         return new CreateTaskRequest(
-                "Ficha de personaje", null, audience, targetUserId, null, true, true, false, null);
+                "Ficha de personaje", null, audience, targetUserId, null, true, true, false, List.of(), null);
     }
 
     private static UpdateTaskRequest updateRequest(TaskAudience audience, String targetUserId) {
-        return new UpdateTaskRequest("Ficha corregida", null, audience, targetUserId, null, true, true, false, null);
+        return new UpdateTaskRequest("Ficha corregida", null, audience, targetUserId, null, true, true, false, List.of(), null);
     }
 
     private static org.mockito.stubbing.Answer<TableTask> persistTask(String id) {

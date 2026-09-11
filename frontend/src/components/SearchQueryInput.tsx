@@ -1,9 +1,8 @@
 import { Fragment, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 import { X } from 'lucide-react'
 
-import { helpPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import { cn } from '@/lib/utils'
 import {
   OPEN_FIELD_PREFIX,
@@ -269,10 +268,7 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
         </ul>
       )}
       <p className="text-fg-subtle text-xs">
-        {t('search.hint')}{' '}
-        <Link to={helpPath(undefined, 'search')} className="underline underline-offset-2">
-          {t('search.helpLink')}
-        </Link>
+        {t('search.hint')} <HelpLink section="basics.search">{t('search.helpLink')}</HelpLink>
       </p>
     </div>
   )

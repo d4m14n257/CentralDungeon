@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { IconAction } from '@/components/IconAction'
 
 import { useDownloadFile } from '../api/useDownloadFile'
-import { formatFileSize } from '../format'
+import { FileCard } from './FileCard'
 
 /**
  * The least a row needs to be listed and downloaded.
@@ -48,7 +48,7 @@ interface FileListProps<T extends FileListItem> {
  * @param props.renderActions optional per-row actions
  */
 export function FileList<T extends FileListItem>({ files, renderMeta, renderActions }: FileListProps<T>) {
-  const { t, i18n } = useTranslation('files')
+  const { t } = useTranslation('files')
   const download = useDownloadFile()
   // Which row is fetching, so one download does not disable every other row's button: the mutation
   // is shared by the whole list, and `isPending` alone would say "all of them are busy".
@@ -56,27 +56,27 @@ export function FileList<T extends FileListItem>({ files, renderMeta, renderActi
 
   return (
     <ul className="divide-border divide-y">
-      {files.map((file) => {
-        const size = formatFileSize(file.sizeBytes, i18n.language)
-        return (
-          <li key={file.fileId} className="flex items-start justify-between gap-3 py-3">
-            <div className="min-w-0 space-y-1">
-              <p className="text-fg truncate text-sm font-medium">{file.name}</p>
-              <p className="text-fg-muted text-xs">{t(`size.${size.unit}`, { value: size.value })}</p>
-              {renderMeta?.(file)}
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <IconAction
-                label={t('actions.download')}
-                icon={<DownloadIcon className="size-4" />}
-                disabled={busyFileId === file.fileId}
-                onClick={() => download.mutate({ fileId: file.fileId, filename: file.name })}
-              />
-              {renderActions?.(file)}
-            </div>
-          </li>
-        )
-      })}
+      {files.map((file) => (
+        <li key={file.fileId}>
+          <FileCard
+            name={file.name}
+            mimeType={file.mimeType}
+            sizeBytes={file.sizeBytes}
+            meta={renderMeta?.(file)}
+            actions={
+              <>
+                <IconAction
+                  label={t('actions.download')}
+                  icon={<DownloadIcon className="size-4" />}
+                  disabled={busyFileId === file.fileId}
+                  onClick={() => download.mutate({ fileId: file.fileId, filename: file.name })}
+                />
+                {renderActions?.(file)}
+              </>
+            }
+          />
+        </li>
+      ))}
     </ul>
   )
 }

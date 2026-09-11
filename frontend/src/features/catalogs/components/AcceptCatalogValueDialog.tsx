@@ -53,6 +53,7 @@ export function AcceptCatalogValueDialog({ kind, value, open, onOpenChange }: Ac
 
   return (
     <FormDialog
+      isDirty={canonicalId !== null}
       open={open}
       onOpenChange={onOpenChange}
       title={t('admin.acceptDialogTitle', { name: value.name })}

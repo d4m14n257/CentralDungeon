@@ -54,11 +54,13 @@ public class AdminFileController {
      *
      * @param query     the search box in the language of #164 - by name, by uploader or by type - or
      *                  null for everything
-     * @param statuses  the statuses to keep, or null for all of them, marked-gone files included
-     * @param fileTypes the lifecycles to keep (#68), or null for all of them
-     * @param pageable  page, size and sort; <b>newest first</b>, with a tie-break by id (#171). The
-     *                  direction is spelled out because the default is ascending: what an admin opens
-     *                  this screen for is what just arrived, not the oldest thing on the platform
+     * @param statuses   the statuses to keep, or null for all of them, marked-gone files included
+     * @param fileTypes  the lifecycles to keep (#68), or null for all of them
+     * @param category   the cajón to keep (#233), or null for all of them. A filter and not a search
+     *                   term, because five known values are chosen from and not typed at
+     * @param pageable   page, size and sort; <b>newest first</b>, with a tie-break by id (#171). The
+     *                   direction is spelled out because the default is ascending: what an admin opens
+     *                   this screen for is what just arrived, not the oldest thing on the platform
      * @return 200 with one page of files
      */
     @GetMapping
@@ -67,20 +69,28 @@ public class AdminFileController {
             @RequestParam(name = "q", required = false) @Nullable String query,
             @RequestParam(name = "status", required = false) @Nullable List<FileStatus> statuses,
             @RequestParam(name = "fileType", required = false) @Nullable List<FileType> fileTypes,
+            @RequestParam(name = "category", required = false) @Nullable FileCategory category,
             @PageableDefault(size = 20, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable) {
         return fileService.listForAdmin(
-                query, statuses == null ? List.of() : statuses, fileTypes == null ? List.of() : fileTypes, pageable);
+                query,
+                statuses == null ? List.of() : statuses,
+                fileTypes == null ? List.of() : fileTypes,
+                category,
+                pageable);
     }
 
     /**
-     * Publishing a file for the whole platform, with the audience #64 requires.
+     * Publishing a file for the whole platform, into the cajones it is offered in (#233).
      *
-     * <p>The audience is not optional, and that is the fix for M24.1: the legacy returned every public
-     * file everywhere, so a document written for masters turned up in front of a player.
+     * <p>The cajones are not optional, and that is M24.1's fix carried across from the audience they
+     * replaced: the legacy returned every public file everywhere, so a document written for masters
+     * turned up in front of a player. They are plural because the same blank serves more than one
+     * flow (#233).
      *
      * @param fileId  the file to publish
-     * @param request who it is for
-     * @return 200 with the file after publishing. 404 when it is not there or was marked gone
+     * @param request the cajones it is offered in (#233), at least one
+     * @return 200 with the file after publishing. 400 when a cajón is one nobody may publish into,
+     *         404 when the file is not there or was marked gone
      */
     @PostMapping("/{fileId}/publish")
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")

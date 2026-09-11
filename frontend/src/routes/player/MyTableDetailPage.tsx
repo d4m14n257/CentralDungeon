@@ -5,7 +5,8 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Skeleton } from '@/components/ui/skeleton'
-import { helpPath, tableDetailPath } from '@/config/paths'
+import { tableDetailPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import { FileList, FilePicker } from '@/features/files'
 import { AttendanceSummaryView, SessionList, TableStatusBadge, useGameTable, useMySessions, type MySessions } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
@@ -41,9 +42,9 @@ function MySessionsSection({ tableId }: { tableId: string }) {
         <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('sessions.myAttendanceTitle')}</h2>
         <AttendanceSummaryView summary={mine.summary} />
         {/* The three numbers are explained in the help, under its stable #ref (#137, #167, #168). */}
-        <Link to={helpPath('players', 'my-sessions')} className="text-fg-muted inline-block text-xs underline">
+        <HelpLink section="players.my-sessions" className="inline-block text-xs">
           {t('sessions.myAttendanceHelp')}
-        </Link>
+        </HelpLink>
       </section>
 
       <section className="space-y-2">
@@ -71,6 +72,7 @@ export function MyTableDetailPage() {
   // A second namespace rather than copying the file labels into `tables`: the words belong to the
   // files domain and are the same ones the master's tab shows (regla dura 18).
   const { t: tFiles } = useTranslation('files')
+  const { t: tTasks } = useTranslation('tasks')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   const { data: table, isPending, isLoadingError } = useGameTable(tableId)
@@ -130,9 +132,9 @@ export function MyTableDetailPage() {
             />
           )}
         </div>
-        <Link to={helpPath('players', 'files')} className="text-fg-muted mt-2 inline-block text-xs underline">
+        <HelpLink section="players.files" className="mt-2 inline-block text-xs">
           {tFiles('table.helpLink')}
-        </Link>
+        </HelpLink>
       </section>
 
       {/* What the table asks of its players, and of me in particular (#63, #76). The block owns its
@@ -141,9 +143,13 @@ export function MyTableDetailPage() {
       <div className="border-border border-t pt-4">
         <TableTasksSection
           tableId={tableId}
-          helpAudience="players"
+          renderHelpLink={() => (
+            <HelpLink section="players.tasks" className="inline-block text-xs">
+              {tTasks('applicable.helpLink')}
+            </HelpLink>
+          )}
           renderFiles={(files) => <FileList files={files} />}
-          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished />}
+          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerSubmission" />}
         />
       </div>
 

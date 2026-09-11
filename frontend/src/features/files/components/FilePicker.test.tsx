@@ -20,9 +20,23 @@ function wrap(children: ReactNode) {
 
 const emptyPage = { content: [], page: 0, size: 8, totalElements: 0, totalPages: 0 }
 
+/**
+ * The dropzone's file input, which is `sr-only` rather than absent: a `<div>` with an `onClick`
+ * would look the same on screen and be unreachable by keyboard, and no browser opens a file dialog
+ * for a synthetic click.
+ */
+function dropzoneInput(): HTMLInputElement {
+  const input = document.querySelector('input[type="file"]')
+  if (!input) {
+    throw new Error('The dropzone rendered no file input')
+  }
+  return input as HTMLInputElement
+}
+
 describe('FilePicker', () => {
   beforeEach(() => {
-    upload.mockReset().mockResolvedValue({ id: 'file-new', name: 'ficha.pdf' })
+    // The mutation answers with the file *and* whether it was recognised rather than written (#234).
+    upload.mockReset().mockResolvedValue({ file: { id: 'file-new', name: 'ficha.pdf' }, deduplicated: false })
     listMine.mockReset().mockResolvedValue(emptyPage)
     listPublic.mockReset().mockResolvedValue(emptyPage)
   })
@@ -55,16 +69,18 @@ describe('FilePicker', () => {
   })
 
   /**
-   * #79's own example, as a regression test: the community's default sheet is published *for
-   * players* and the master is the one attaching it, so a picker that narrowed by its own reader's
-   * role would hide exactly the file the feature exists to share.
+   * #233: the published tab is asked for the cajón the picker stands in, and never for an audience.
+   * A master attaching to their table wants what the community published for tables; the same master
+   * writing a request wants what it published for requests. One control, two answers.
    */
-  it('asks for every published file unless the caller narrows the audience', async () => {
-    render(wrap(<FilePicker onPick={vi.fn()} offerPublished />))
+  it('asks the published tab for the cajón it is standing in', async () => {
+    render(wrap(<FilePicker onPick={vi.fn()} offerPublished cajon="TableMaterial" />))
 
     await userEvent.click(screen.getByRole('tab', { name: 'Publicados' }))
 
-    await waitFor(() => expect(listPublic).toHaveBeenCalledWith(undefined))
+    // The cajón is the flow, so a master attaching to their table gets the blanks published *for*
+    // that moment - which is what the audience of #64 could never express (#233).
+    await waitFor(() => expect(listPublic).toHaveBeenCalledWith('TableMaterial'))
   })
 
   it('uploads what was picked and hands the caller the resulting file', async () => {
@@ -72,10 +88,11 @@ describe('FilePicker', () => {
     render(wrap(<FilePicker onPick={onPick} />))
 
     const file = new File(['hoja'], 'ficha.pdf', { type: 'application/pdf' })
-    await userEvent.upload(screen.getByLabelText('Elegir un archivo para subir'), file)
+    await userEvent.upload(dropzoneInput(), file)
 
     await waitFor(() => expect(onPick).toHaveBeenCalledWith({ fileId: 'file-new', name: 'ficha.pdf' }))
-    expect(upload).toHaveBeenCalledWith(file, { fileType: 'Private' })
+    // No cajón on an upload made inside a flow: the link that follows classifies it (#233).
+    expect(upload).toHaveBeenCalledWith(file, { fileType: 'Private', fileCategory: null })
   })
 
   /**
@@ -85,19 +102,26 @@ describe('FilePicker', () => {
   it('keeps what was uploaded in the reuse history', async () => {
     render(wrap(<FilePicker onPick={vi.fn()} />))
 
-    await userEvent.upload(
-      screen.getByLabelText('Elegir un archivo para subir'),
-      new File(['hoja'], 'ficha.pdf', { type: 'application/pdf' }),
-    )
+    await userEvent.upload(dropzoneInput(), new File(['hoja'], 'ficha.pdf', { type: 'application/pdf' }))
 
     await waitFor(() => expect(upload).toHaveBeenCalled())
-    expect(upload.mock.calls[0]?.[1]).toEqual({ fileType: 'Private' })
+    expect(upload.mock.calls[0]?.[1]).toEqual({ fileType: 'Private', fileCategory: null })
   })
 
   it('picks a file from the history without uploading anything', async () => {
     listMine.mockResolvedValue({
       ...emptyPage,
-      content: [{ id: 'file-old', name: 'ficha-vieja.pdf', mimeType: 'application/pdf', sizeBytes: 1024 }],
+      content: [
+        {
+          id: 'file-old',
+          name: 'ficha-vieja.pdf',
+          mimeType: 'application/pdf',
+          sizeBytes: 1024,
+          categories: ['TableMaterial'],
+          lastUsedAt: null,
+          usages: [],
+        },
+      ],
       totalElements: 1,
       totalPages: 1,
     })

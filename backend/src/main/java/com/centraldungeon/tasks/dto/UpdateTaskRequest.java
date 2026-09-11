@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -27,6 +28,9 @@ import org.jspecify.annotations.Nullable;
  * @param acceptsText    whether a written answer is expected
  * @param acceptsFiles   whether files are expected. At least one of the two has to be true
  * @param isMandatory    whether to label it indispensable (#70)
+ * @param fileIds        the blanks the request should end up with (#63). The whole list travels,
+ *                       like every other field here: a file absent from it is taken off the ask,
+ *                       which never touches the file itself (#79)
  * @param dueAt          when the master would like it by, in UTC (#22). Null clears the date
  */
 public record UpdateTaskRequest(
@@ -38,5 +42,6 @@ public record UpdateTaskRequest(
         boolean acceptsText,
         boolean acceptsFiles,
         boolean isMandatory,
+        List<String> fileIds,
         @Nullable LocalDateTime dueAt) {
 }

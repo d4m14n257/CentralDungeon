@@ -1,12 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
-import { helpPath, type HelpAudience } from '@/config/paths'
 
 import { ApplicableTaskList } from './ApplicableTaskList'
 import { TaskSubmitDialog, type PickedFile } from './TaskSubmitDialog'
@@ -20,8 +18,13 @@ export interface TableTasksSectionProps {
    * what keeps `features/tasks` from depending on `features/tables`.
    */
   tableId: string
-  /** Which help page the "how this works" link should point at — it differs per screen (#168). */
-  helpAudience: HelpAudience
+  /**
+   * The "how this works" link, rendered by the screen.
+   *
+   * A render prop for the same reason `renderFiles` is one: the help lives in `features/help` and a
+   * feature never imports from another (regla dura 16, §3.1.5). The screen names the section.
+   */
+  renderHelpLink: () => ReactNode
   /**
    * How to render the files of an answer, and how to render the file picker.
    *
@@ -49,7 +52,7 @@ export interface TableTasksSectionProps {
  * @param props.renderFiles      how to render the files of an answer
  * @param props.renderFilePicker how to render the file picker inside the answer dialog
  */
-export function TableTasksSection({ tableId, helpAudience, renderFiles, renderFilePicker }: TableTasksSectionProps) {
+export function TableTasksSection({ tableId, renderHelpLink, renderFiles, renderFilePicker }: TableTasksSectionProps) {
   const { t } = useTranslation('tasks')
   // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data: tasks, isPending, isLoadingError, refetch } = useApplicableTasks(tableId)
@@ -70,9 +73,7 @@ export function TableTasksSection({ tableId, helpAudience, renderFiles, renderFi
         <ApplicableTaskList tasks={tasks} onAnswer={setAnswering} renderFiles={renderFiles} />
       )}
 
-      <Link to={helpPath(helpAudience, 'tasks')} className="text-fg-muted inline-block text-xs underline">
-        {t('applicable.helpLink')}
-      </Link>
+      {renderHelpLink()}
 
       {answering && (
         <TaskSubmitDialog

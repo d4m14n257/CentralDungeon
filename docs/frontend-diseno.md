@@ -34,7 +34,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 
 - **Quien tiene un solo rol ve el chip igual, pero sin caret ni menú** (#145): no hay nada que elegir, pero sí algo que mostrar — sin esto el header no da ninguna señal de en qué contexto está.
 - **El contexto Master aparece con el rol `Master` o con al menos una fila viva en `masters`** (#135). Un jugador al que un admin asignó como master de una mesa entra por ahí, ve solo esa mesa, y **no ve `/master/tables/new`**: dirigir no es crear.
-- **El chip dice dónde estás, no qué elegiste** (#222). Cada contexto es dueño de un prefijo —`/player`, `/master`, `/admin`—, así que el contexto sale de la URL. Un master que abre `/player` lee «Jugador», porque ahí es donde está. Las dos pantallas transversales (`/notifications`, `/help`) no son de ningún contexto y conservan el que traía quien las abrió.
+- **El chip dice dónde estás, no qué elegiste** (#222). Cada contexto es dueño de un prefijo —`/player`, `/master`, `/admin`—, así que el contexto sale de la URL. Un master que abre `/player` lee «Jugador», porque ahí es donde está. Las pantallas transversales (`/notifications`, `/my/schedule`) no son de ningún contexto y conservan el que traía quien las abrió.
 - El contexto se recuerda en Zustand + `localStorage`, pero **solo como respaldo** para esas transversales y para elegir a dónde despacha `/`. Solo se recuerda un contexto que la cuenta tenga: por defecto `Jugador` si lo tiene, si no el primero disponible.
 - **Al entrar siempre se cae en la home del contexto propio** (#222). `/` no tiene pantalla: mira los contextos de la cuenta y reenvía. El retorno del OAuth, el onboarding y el 404 apuntan ahí y no recalculan el destino cada uno.
 - **El contexto es organización de UI, no seguridad.** Estar "en contexto Admin" no habilita nada: el backend autoriza endpoint por endpoint (#103). Si alguien fuerza la ruta `/admin/queue` sin el rol, el backend responde `403` y la pantalla muestra el error — no se confía en el selector para nada.
@@ -55,13 +55,12 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/player/my-tables` | Mesas donde soy jugador — **solo las vivas** |
 | | `/player/my-tables/:id` | Mi mesa: agenda, sesiones, peticiones pendientes |
 | | `/player/history` | Mesas terminadas y canceladas, con la asistencia final (#133) |
-| | `/player/files` | Mis archivos, reutilizables al adjuntar (#65) |
+| | `/my/files` | Mis archivos: a qué flujos pertenece cada uno (#233) y dónde se usa hoy (#232), reutilizables al adjuntar (#65). **Es el único lugar que pregunta el cajón**, porque es el único sin flujo del que deducirlo. **Transversal, no del contexto Jugador** — lo que alguien subió como jugador y como master es una sola biblioteca (#222) |
 | | `/player/profile` | Mi karma y los comentarios que recibí |
 | | `/player/users/:id` | Perfil de otra persona, sujeto a #41, #44 y #47 |
 | Transversal | `/my/schedule` | **Mi horario**: la semana entera en una grilla — lo que dirigís y lo que jugás, junto. De ningún contexto a propósito: son las mismas noches (#227) |
 | | `/notifications` | Historial de notificaciones. **De ningún contexto**: no cambia el chip (#222) |
-| | `/help` | **Global, no del contexto Jugador**: lo que sirve a todos —buscar, contextos, estados de mesa, cuenta, notificaciones—. Se entra desde el menú de la cuenta y pide sesión (#167) |
-| | `/help/players` · `/help/masters` · `/help/admins` | La ayuda de cada rol, como rutas hijas. Cada bloque tiene su `#ref` estable y se enlaza desde la pantalla que lo necesita: `/help#search`, `/help/admins#assign-masters` (#168) |
+| | ~~`/help`~~ · ~~`/help/players`~~ · ~~`/help/masters`~~ · ~~`/help/admins`~~ | **Ya no son pantallas** (#231). La ayuda se lee en un diálogo levantado desde la pantalla que provoca la pregunta —`<HelpLink section="masters.schedule">`—, porque navegar a leerla tiraba el wizard a medio llenar. Las secciones y sus textos siguen enteros, en `features/help/sections/`. **`/help` queda reservada para soporte**: pedir asistencia, reportar un error. No se registra hasta que exista |
 | **Master** | `/master` | Dashboard: qué necesita tu atención hoy, en todas tus mesas (#136) |
 | | `/master/tables` | Mis mesas como master |
 | | `/master/tables/new` | Wizard de creación — **solo con el rol `Master`** (#135) |
@@ -357,7 +356,11 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `ScheduleEditor` — día de semana + hora, mostrado en hora local | `features/tables/` |
 | `GameTableCard` — la ficha del explorador | `features/tables/` |
 | `RegistrationStatusBadge` — los cinco de postulación | `features/registrations/` |
-| `FilePicker` — subir **o** reutilizar del historial (#65), con el tope por archivo | `features/files/` |
+| `FilePicker` — subir **o** reutilizar del historial (#65) o de lo publicado (#79). Recibe el **cajón en el que está parado** y la pestaña Publicados pide justo lo que la comunidad publicó para ese momento (#233) | `features/files/` |
+| `FileDropzone` — arrastrar y soltar, con los límites dichos antes de romperlos, el error **inline** bajo la zona y el aviso de que el archivo ya estaba (#234) | `features/files/` |
+| `FileCard` — la fila de un archivo: icono por MIME, tamaño, categoría, último uso y dónde se usa | `features/files/` |
+| `FileCategoryFilter` — los cinco cajones como fila de toggles, no como `<Select>` (#233) | `features/files/` |
+| `FileUsageChips` — dónde se usa un archivo, o «sin usar», que es el aviso de la purga (#232, #75) | `features/files/` |
 | `KarmaBadge` — número + indicador cualitativo | `features/users/` |
 | `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (#164) | `features/users/` |
 | `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |

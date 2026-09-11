@@ -49,7 +49,8 @@
     "mySchedule": "Mi horario",
     "switchContext": "Cambiar de contexto",
     "accountFallback": "Mi cuenta",
-    "help": "Ayuda"
+    "help": "Ayuda",
+    "myFiles": "Mis archivos"
   },
   "theme": {
     "switchToLight": "Tema claro",
@@ -107,5 +108,12 @@
     "label": "Idioma",
     "es": "Español",
     "en": "English"
+  },
+  "unsavedChanges": {
+    "title": "¿Salir sin guardar?",
+    "description": "Lo que completaste todavía no se guardó y se va a perder. Si volvés, sigue como estaba.",
+    "leave": "Salir y perder lo hecho",
+    "discard": "Descartar lo hecho",
+    "stay": "Seguir editando"
   }
 }

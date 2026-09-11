@@ -1,7 +1,7 @@
 import { CalendarClock, CircleCheck, CircleX } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useOutletContext } from 'react-router'
+import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { CollapsibleSection } from '@/components/CollapsibleSection'
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { helpPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import {
   AttendanceEditor,
   SessionStatusBadge,
@@ -197,9 +197,9 @@ function SessionsPanel({ tableId, status }: OutletContext) {
           <CalendarClock aria-hidden="true" className="text-fg-muted size-4" />
           <h2 className="text-sm font-medium">{t('sessions.title', { count: data.length })}</h2>
         </div>
-        <Link to={helpPath('masters', 'sessions')} className="text-fg-muted text-xs underline">
+        <HelpLink section="masters.sessions" className="text-xs">
           {t('sessions.help')}
-        </Link>
+        </HelpLink>
       </div>
       {status === 'Pause' && <p className="text-fg-muted text-sm">{t('sessions.pausedDescription')}</p>}
       <div className="space-y-2">

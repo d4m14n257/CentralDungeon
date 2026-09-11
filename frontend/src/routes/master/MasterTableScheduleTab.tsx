@@ -5,7 +5,7 @@ import { Link, useOutletContext } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
 import { masterTableEditPath } from '@/config/paths'
-import { browserTimeZone, formatDate, formatSlot, utcSlotToLocal } from '@/lib/date'
+import { browserTimeZone, formatPlainDate, formatSlot, utcSlotToLocal } from '@/lib/date'
 import type { GameTableStatus, TableScheduleEntry } from '@/features/tables'
 
 /** The two states where the backend still accepts a rewrite of the table (#189). */
@@ -43,7 +43,7 @@ export function MasterTableScheduleTab() {
       <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
           <dt className="text-fg-subtle text-xs">{t('schedule.startDate')}</dt>
-          <dd className="text-sm">{startDate ? formatDate(startDate, i18n.language, timeZone) : t('schedule.notSet')}</dd>
+          <dd className="text-sm">{startDate ? formatPlainDate(startDate, i18n.language) : t('schedule.notSet')}</dd>
         </div>
         <div>
           <dt className="text-fg-subtle text-xs">{t('schedule.duration')}</dt>

@@ -313,7 +313,10 @@
         "step2": "Hit \"Add a file\" and pick whether it is preparation material or something from a session.",
         "step3": "Decide whether your players see it or whether it stays with whoever runs the table, then upload a file or pick one from \"My files\" or \"Published\".",
         "step4": "From the list you can change who sees it at any time, or take it off the table without deleting it."
-      }
+      },
+      "category": "Every file says what it is: character sheet, handout, template or rules. It is not decoration — it is what lets you find the community's template among thirty documents without reading filenames.",
+      "dedup": "If you upload something you already had, the system recognises it and reuses the one that was already there instead of storing it twice. The screen tells you when that happens.",
+      "library": "Everything you upload stays in “My files”, with where each one is being used. A file that appears on no table is the first to be released after a long time unused."
     },
     "dashboard": {
       "title": "Waiting on you",

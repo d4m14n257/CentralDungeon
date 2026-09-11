@@ -1,5 +1,6 @@
 package com.centraldungeon.tasks;
 
+import com.centraldungeon.files.FileUsage;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -46,4 +47,35 @@ public interface SubmissionFileRepository extends JpaRepository<SubmissionFile, 
               and task.id = submission.task.id
             """)
     List<String> findTableIdsBySubmittedFileId(@Param("fileId") String fileId);
+
+    /**
+     * The same reachability as {@link #findTableIdsBySubmittedFileId}, but for a whole page of files
+     * and carrying the table's name - the second source of the uses an owner sees on their own list
+     * (#232).
+     *
+     * <p>It answers with {@link FileUsage}, a type of the {@code files} feature, which is the one
+     * import that direction. The alternative is a second projection here that {@code FileService}
+     * would immediately convert into the first, and the read rule already crosses this way for the
+     * same reason (#206): whether a submitted file is reachable is a question about submissions, and
+     * splitting it across two features is what let the two answers drift apart once already.
+     *
+     * <p>Named parameters only, never positional (#124).
+     *
+     * @param fileIds the files to resolve uses for
+     * @return one row per live attachment on a live answer, absent for a file never submitted
+     */
+    @Query("""
+            select new com.centraldungeon.files.FileUsage(
+                link.id.fileId,
+                com.centraldungeon.files.FileCategory.PlayerSubmission,
+                task.gameTable.id,
+                task.gameTable.name)
+            from SubmissionFile link, TaskSubmission submission, TableTask task
+            where link.id.fileId in :fileIds
+              and link.status = com.centraldungeon.tasks.SubmissionFileStatus.Current
+              and submission.id = link.id.submissionId
+              and submission.deletedAt is null
+              and task.id = submission.task.id
+            """)
+    List<FileUsage> findUsagesByFileIds(@Param("fileIds") Collection<String> fileIds);
 }

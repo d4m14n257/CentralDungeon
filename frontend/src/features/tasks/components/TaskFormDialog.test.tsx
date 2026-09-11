@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import '@/providers/i18n'
+import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
 import { TaskFormDialog } from './TaskFormDialog'
 
 const players = [
@@ -11,7 +12,21 @@ const players = [
 ]
 
 function renderForm(onSubmit = vi.fn()) {
-  render(<TaskFormDialog open onOpenChange={vi.fn()} players={players} sessions={[]} isBusy={false} onSubmit={onSubmit} />)
+  // FormDialog asks the provider before discarding a dirty form (#231), so it has to be there.
+  render(
+    <ConfirmDialogProvider>
+      <TaskFormDialog
+        open
+        onOpenChange={vi.fn()}
+        players={players}
+        sessions={[]}
+        isBusy={false}
+        onSubmit={onSubmit}
+        // The picker belongs to `features/files` and this suite is about the form, not about it.
+        renderFilePicker={() => null}
+      />
+    </ConfirmDialogProvider>,
+  )
   return onSubmit
 }
 

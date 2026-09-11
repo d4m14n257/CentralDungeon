@@ -3,6 +3,7 @@ import { pageSize } from '@/config/pagination'
 
 import type {
   AdminFile,
+  FileCategory,
   LinkTableFileInput,
   PublicFile,
   PublishFileInput,
@@ -10,6 +11,7 @@ import type {
   TableFile,
   UpdateFileInput,
   UpdateTableFileInput,
+  UploadedFile,
   UploadFileInput,
 } from '../types'
 
@@ -26,25 +28,37 @@ export const filesApi = {
   /**
    * Uploads a file.
    *
+   * **Reads the status, not just the body** (#234): a 201 wrote the content, a 200 means this person
+   * already had it and the row they had came back instead. Both are successes and the caller gets a
+   * `StoredFile` either way — the flag exists so the screen can say reuse happened, which until now
+   * it had no way of knowing.
+   *
    * @param file  the content the person picked
-   * @param input which lifecycle it should have (#68)
+   * @param input which lifecycle it should have (#68) and what it is (#233)
    */
-  upload: (file: File, input: UploadFileInput) => api.upload<StoredFile>('/api/v1/files', [file], input),
+  upload: async (file: File, input: UploadFileInput): Promise<UploadedFile> => {
+    const { data, status } = await api.uploadWithStatus<StoredFile>('/api/v1/files', [file], input)
+    return { file: data, deduplicated: status === 200 }
+  },
 
   /**
-   * The reuse history of #65 — everything this person uploaded and still keeps.
+   * The reuse history of #65 — everything this person uploaded and still keeps, each with where it
+   * is being used (#232).
    *
-   * @param query the search box, or undefined for everything
-   * @param page  zero-based page number
+   * @param query    the search box over their own filenames, or undefined for everything
+   * @param category the kind of document to narrow to (#233), or undefined for every kind
+   * @param page     zero-based page number
    */
-  listMine: (query?: string, page = 0) => api.getPage<StoredFile>('/api/v1/files/mine', { q: query, page, size: pageSize.picker }),
+  listMine: (query?: string, category?: FileCategory, page = 0) =>
+    api.getPage<StoredFile>('/api/v1/files/mine', { q: query, category, page, size: pageSize.picker }),
 
   /**
    * What the platform published, for whoever is choosing one to attach (#64, #79).
    *
-   * @param audience who to narrow to, or undefined for everything published
+   * @param category the cajón to narrow to (#233), or undefined for everything published. It
+   *                 replaced the audience of #64: a flow already says who a document is for
    */
-  listPublic: (audience?: string) => api.getPage<PublicFile>('/api/v1/files/public', { audience, size: pageSize.picker }),
+  listPublic: (category?: FileCategory) => api.getPage<PublicFile>('/api/v1/files/public', { category, size: pageSize.picker }),
 
   /**
    * Fetches a file's bytes.
@@ -108,10 +122,11 @@ export const filesApi = {
    *
    * @param query     the search box in the language of #164, or undefined for everything
    * @param statuses  the statuses to keep, or undefined for all of them
-   * @param fileTypes the lifecycles to keep (#68), or undefined for all of them
-   * @param page      zero-based page number
+   * @param fileTypes  the lifecycles to keep (#68), or undefined for all of them
+   * @param category   the cajón to keep (#233), or undefined for all of them
+   * @param page       zero-based page number
    */
-  listForAdmin: (query?: string, statuses?: string[], fileTypes?: string[], page = 0) => {
+  listForAdmin: (query?: string, statuses?: string[], fileTypes?: string[], category?: FileCategory, page = 0) => {
     const params = new URLSearchParams()
     if (query) {
       params.set('q', query)
@@ -121,6 +136,9 @@ export const filesApi = {
     }
     for (const fileType of fileTypes ?? []) {
       params.append('fileType', fileType)
+    }
+    if (category) {
+      params.set('category', category)
     }
     params.set('page', String(page))
     params.set('size', String(pageSize.adminQueue))

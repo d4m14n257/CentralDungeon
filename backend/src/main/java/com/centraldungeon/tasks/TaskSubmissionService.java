@@ -4,6 +4,7 @@ import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.text.RichTextSanitizer;
+import com.centraldungeon.files.FileCategory;
 import com.centraldungeon.files.FileService;
 import com.centraldungeon.files.FileStatus;
 import com.centraldungeon.files.StoredFile;
@@ -148,6 +149,9 @@ public class TaskSubmissionService {
             // The same gate attaching a file to a table goes through: the actor's own, or one the
             // platform published. Somebody else's private upload never gets here (#79).
             StoredFile file = fileService.requireAttachable(fileId, actorId);
+            // Handing a file in is what puts it in the player-side cajón (#233). Cumulative: the
+            // sheet somebody applied with and now hands in belongs to both, and neither is revoked.
+            fileService.classify(fileId, FileCategory.PlayerSubmission);
             submissionFileRepository.save(new SubmissionFile(submission.getId(), file.getId()));
             files.add(toSubmittedFile(file));
         }

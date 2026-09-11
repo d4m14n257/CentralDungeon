@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router'
 
 import '@/providers/i18n'
+import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
 import type { UserSummary } from '@/features/users'
 import { AssignMastersDialog } from './AssignMastersDialog'
 
@@ -33,8 +34,12 @@ vi.mock('@/features/tables', () => ({
 
 function renderDialog() {
   return render(
+    // The provider is real and not a stub: FormDialog asks it before discarding a dirty form
+    // (#231), so a dialog rendered without it throws rather than rendering.
     <MemoryRouter>
-      <AssignMastersDialog tableId="table-1" tableName="Curse of Strahd" open onOpenChange={vi.fn()} />
+      <ConfirmDialogProvider>
+        <AssignMastersDialog tableId="table-1" tableName="Curse of Strahd" open onOpenChange={vi.fn()} />
+      </ConfirmDialogProvider>
     </MemoryRouter>,
   )
 }

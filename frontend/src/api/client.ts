@@ -132,6 +132,28 @@ async function request<TRes>(method: string, path: string, options: RequestOptio
 }
 
 /**
+ * A response body together with the status that carried it.
+ *
+ * Almost every call in this app only wants the body — the status either was 2xx or already became an
+ * `ApiError`. This exists for the handful where a 200 and a 201 **mean different things**, which is
+ * the uploads of #234: a file that was recognised rather than written answers 200, and that is the
+ * only signal telling the screen to say so.
+ *
+ * @template TRes the response body's type
+ */
+export interface WithStatus<TRes> {
+  data: TRes
+  status: number
+}
+
+/** As {@link request}, but keeping the status for the callers whose meaning depends on it. */
+async function requestWithStatus<TRes>(method: string, path: string, options: RequestOptions = {}): Promise<WithStatus<TRes>> {
+  const response = await send(method, path, options)
+  const data = response.status === 204 ? (undefined as TRes) : ((await response.json()) as TRes)
+  return { data, status: response.status }
+}
+
+/**
  * What a download hands back: the bytes and the name to save them under.
  *
  * The name comes from the response, not from anything the caller knows, because it is the server
@@ -190,6 +212,8 @@ export const api = {
   patch: <TRes, TBody = unknown>(path: string, body?: TBody) => request<TRes>('PATCH', path, { body }),
   delete: <TRes = void>(path: string) => request<TRes>('DELETE', path),
   upload: <TRes>(path: string, files: File[], body?: unknown) => request<TRes>('POST', path, { files, body }),
+  /** An upload whose caller needs the status: 201 wrote something, 200 recognised it (#234). */
+  uploadWithStatus: <TRes>(path: string, files: File[], body?: unknown) => requestWithStatus<TRes>('POST', path, { files, body }),
   /** Binary responses. Everything else here returns JSON; this one returns the bytes and a filename. */
   download: (path: string, fallbackFilename: string) => download(path, fallbackFilename),
 }

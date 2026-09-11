@@ -49,6 +49,7 @@ export function ApplyToTableDialog({ tableId, tableName, open, onOpenChange }: A
 
   return (
     <FormDialog
+      isDirty={form.formState.isDirty}
       open={open}
       onOpenChange={onOpenChange}
       title={t('detail.applyDialogTitle', { name: tableName })}

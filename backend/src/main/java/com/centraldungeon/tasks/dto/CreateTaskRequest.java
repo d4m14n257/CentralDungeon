@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -28,6 +29,10 @@ import org.jspecify.annotations.Nullable;
  * @param acceptsText    whether a written answer is expected
  * @param acceptsFiles   whether files are expected. At least one of the two has to be true
  * @param isMandatory    whether to label it indispensable. A label and nothing more (#70)
+ * @param fileIds        the blanks to attach to the ask - the form the request is about (#63). The
+ *                       files are linked and never copied (#79), so the community's published form
+ *                       is attached rather than re-uploaded by every master. Empty for a request
+ *                       that asks for something in prose
  * @param dueAt          when the master would like it by, <b>in UTC</b> (#22), or null for no date.
  *                       A date in the past is accepted: recording what was asked for last week is
  *                       legitimate, and nothing in the system acts when a due date passes
@@ -41,5 +46,6 @@ public record CreateTaskRequest(
         boolean acceptsText,
         boolean acceptsFiles,
         boolean isMandatory,
+        List<String> fileIds,
         @Nullable LocalDateTime dueAt) {
 }

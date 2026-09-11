@@ -14,8 +14,10 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { helpPath, masterTableDetailPath } from '@/config/paths'
+import { masterTableDetailPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import { CatalogPicker } from '@/features/catalogs'
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChanges'
 import {
   DEFAULT_SLOT_DURATION,
   ScheduleEditor,
@@ -29,7 +31,7 @@ import {
 } from '@/features/tables'
 import type { CreateGameTableForm, GameTableStatus, TableScheduleEntry } from '@/features/tables'
 import { useMe } from '@/features/users'
-import { WEEKDAYS, browserTimeZone, formatMinutes, localInputToUtcIso, minutesOfDay, utcIsoToLocalInput } from '@/lib/date'
+import { WEEKDAYS, browserTimeZone, formatMinutes, minutesOfDay } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 import { ApiError } from '@/types/api'
 
@@ -91,17 +93,17 @@ export function MasterTableEditPage() {
     setSchedule([...schedule, { weekday, hourtime, duration: DEFAULT_SLOT_DURATION }])
   }
 
-  const form = useForm<CreateGameTableForm>({
-    resolver: zodResolver(createGameTableSchema),
-    defaultValues: { name: '', description: '', permitted: '', requirements: '' },
-  })
-
-  // The form is filled from the server's answer rather than rendered off it: react-hook-form owns
-  // the values from here on, and re-seeding it on every refetch would throw away what is being typed.
-  const { reset } = form
-  useEffect(() => {
-    if (!table) return
-    reset({
+  /**
+   * The table as it came from the server, in the shape the form takes.
+   *
+   * Recomputed rather than stored: it is what the form is seeded with **and** what "unchanged"
+   * means, and two copies of that would drift.
+   */
+  const loadedValues = useMemo<CreateGameTableForm | undefined>(() => {
+    if (!table) {
+      return undefined
+    }
+    return {
       name: table.name,
       description: table.description ?? '',
       permitted: table.permitted ?? '',
@@ -111,15 +113,77 @@ export function MasterTableEditPage() {
       tableTypeId:
         tableTypes?.content.find((type) => (table.tableTypeCode ? type.code === table.tableTypeCode : type.name === table.tableTypeName))
           ?.id ?? '',
-      startDate: utcIsoToLocalInput(table.startDate, timeZone),
+      // A plain day, straight into the control: nothing to convert (#230).
+      startDate: table.startDate ?? '',
       maxPlayers: table.maxPlayers === null ? '' : String(table.maxPlayers),
       totalSessions: table.totalSessions === null ? '' : String(table.totalSessions),
-    })
+    }
+  }, [table, tableTypes])
+
+  /**
+   * Seeded with `values` and not with a `reset` in an effect.
+   *
+   * **That effect was silently dropping the table type.** It ran the moment the table arrived, which
+   * is before a single field has registered - and the `Select` behind `tableTypeId` is a
+   * `Controller`, so when it did mount it overwrote what the reset had put there. The screen then
+   * showed the placeholder for a table that had a type, and saving wrote that emptiness back.
+   *
+   * `keepDirtyValues` is what the old effect was really after: a refetch refreshes the fields nobody
+   * is editing and leaves the ones somebody is.
+   */
+  const form = useForm<CreateGameTableForm>({
+    resolver: zodResolver(createGameTableSchema),
+    // **Every field, not only the text ones.** A field missing from here registers as `''`
+    // against a default of `undefined`, which react-hook-form reads as dirty - and on the edit
+    // page `keepDirtyValues` then defended that emptiness against the value the table actually
+    // had, which is how the table type was being silently dropped (#231).
+    defaultValues: {
+      name: '',
+      description: '',
+      permitted: '',
+      requirements: '',
+      tableTypeId: '',
+      startDate: '',
+      maxPlayers: '',
+      totalSessions: '',
+    },
+    // Spread rather than passed as `undefined`: `exactOptionalPropertyTypes` draws a line between
+    // "no values yet" and "values are undefined", and react-hook-form only accepts the first.
+    ...(loadedValues ? { values: loadedValues } : {}),
+    // A refetch refreshes the fields nobody is editing and leaves the ones somebody is - which is
+    // what the old `reset` in an effect was trying to protect by hand.
+    resetOptions: { keepDirtyValues: true },
+  })
+
+  // "Changed" means changed from what the table said, which `formState.isDirty` cannot answer here:
+  // the fields left out of `defaultValues` read as dirty the moment they register, and a page nobody
+  // had touched refused to be left. `watch` and not `getValues` so it is recomputed on every
+  // keystroke - the blocker only ever sees what the last render put in its closure (#231).
+  const written = form.watch()
+  const formChanged =
+    loadedValues !== undefined &&
+    (Object.keys(loadedValues) as (keyof CreateGameTableForm)[]).some((key) => (written[key] ?? '') !== (loadedValues[key] ?? ''))
+
+  // The catalogs and the agenda are compared against the table too, and for the same reason the
+  // form is: a flag set from their `onChange` looked simpler and was wrong, because the pickers emit
+  // once while they settle and a page nobody had touched refused to be left (#231).
+  const catalogsOrAgendaChanged =
+    table !== undefined &&
+    (!sameCatalog(systems, table.systems) ||
+      !sameCatalog(tags, table.tags) ||
+      !sameCatalog(platforms, table.platforms) ||
+      !sameAgenda(schedule, table.schedule))
+
+  const { allowNextNavigation } = useUnsavedChangesGuard(formChanged || catalogsOrAgendaChanged)
+
+  // Only what lives outside the form still needs seeding by hand.
+  useEffect(() => {
+    if (!table) return
     setSystems(table.systems)
     setTags(table.tags)
     setPlatforms(table.platforms)
     setSchedule(table.schedule)
-  }, [table, tableTypes, timeZone, reset])
+  }, [table])
 
   if (isPending) {
     return <Skeleton className="h-96 w-full" />
@@ -152,13 +216,15 @@ export function MasterTableEditPage() {
         systemIds: systems.map((value) => value.id),
         tagIds: tags.map((value) => value.id),
         platformIds: platforms.map((value) => value.id),
-        startDate: values.startDate ? localInputToUtcIso(values.startDate, timeZone) : null,
+        startDate: values.startDate ? values.startDate : null,
         maxPlayers: values.maxPlayers ? Number(values.maxPlayers) : null,
         totalSessions: values.totalSessions ? Number(values.totalSessions) : null,
         schedule,
       },
       {
         onSuccess: () => {
+          // Saving and then leaving is not walking out on the work.
+          allowNextNavigation()
           toast.success(t('edit.success'))
           void navigate(masterTableDetailPath(tableId))
         },
@@ -198,7 +264,16 @@ export function MasterTableEditPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('create.tableTypeLabel')}</FormLabel>
-                  <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                  {/*
+                    **The empty emission is dropped on purpose.** Radix's Select reports a change
+                    when its controlled value goes from empty to something after mount, and wiring
+                    that straight into `field.onChange` wrote `''` back over the id the table
+                    actually had - the screen then showed the placeholder for a classified table and
+                    saving stored that emptiness. A person can never select nothing here: every
+                    option carries an id, so an empty value is only ever the control talking to
+                    itself (#231).
+                  */}
+                  <Select value={field.value ?? ''} onValueChange={(value) => value && field.onChange(value)}>
                     <FormControl>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder={t('create.tableTypePlaceholder')} />
@@ -279,7 +354,7 @@ export function MasterTableEditPage() {
                   <FormItem>
                     <FormLabel>{t('create.startDateLabel')}</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} value={field.value ?? ''} />
+                      <Input type="date" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormDescription>{t('create.startDateHint')}</FormDescription>
                     <FormMessage />
@@ -291,9 +366,9 @@ export function MasterTableEditPage() {
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-sm font-medium">{t('create.scheduleLabel')}</p>
                 {/* The help is linked from the screen that needs it, by its #ref (#167, #168). */}
-                <Link to={helpPath('masters', 'schedule')} className="text-fg-muted hover:text-fg text-xs underline">
+                <HelpLink section="masters.schedule" className="text-xs">
                   {t('create.scheduleHelp')}
-                </Link>
+                </HelpLink>
               </div>
               <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} />
 
@@ -353,10 +428,7 @@ export function MasterTableEditPage() {
           </section>
 
           <p className="text-fg-subtle text-xs">
-            {t('edit.replaceNotice')}{' '}
-            <Link to={helpPath('masters', 'edit-table')} className="underline underline-offset-2">
-              {t('edit.helpLink')}
-            </Link>
+            {t('edit.replaceNotice')} <HelpLink section="masters.edit-table">{t('edit.helpLink')}</HelpLink>
           </p>
 
           <div className="flex items-center justify-between gap-3">
@@ -370,6 +442,27 @@ export function MasterTableEditPage() {
         </form>
       </Form>
     </div>
+  )
+}
+
+/** Two sets of catalog values are the same when they hold the same ids, in the same order. */
+function sameCatalog(a: CatalogValue[], b: CatalogValue[]): boolean {
+  return a.length === b.length && a.every((value, index) => value.id === b[index]?.id)
+}
+
+/** Two agendas are the same when they hold the same slots, in the same order. */
+function sameAgenda(a: TableScheduleEntry[], b: TableScheduleEntry[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((slot, index) => {
+      const other = b[index]
+      return (
+        other !== undefined &&
+        slot.weekday === other.weekday &&
+        slot.hourtime.slice(0, 5) === other.hourtime.slice(0, 5) &&
+        (slot.duration ?? '').slice(0, 5) === (other.duration ?? '').slice(0, 5)
+      )
+    })
   )
 }
 

@@ -146,7 +146,7 @@ test('a request reaches the players, and what they hand in reaches the master', 
 
     const submitDialog = player.page.getByRole('dialog')
     await writeAnswer(player.page, 'Elfa exploradora')
-    await submitDialog.getByLabel('Elegir un archivo para subir').setInputFiles(pdf('ficha-tarea-e2e.pdf', runId))
+    await submitDialog.locator('input[type="file"]').setInputFiles(pdf('ficha-tarea-e2e.pdf', runId))
     await expect(submitDialog.getByText('ficha-tarea-e2e.pdf')).toBeVisible()
     await submitDialog.getByRole('button', { name: 'Entregar' }).click()
     await expect(submitDialog).toBeHidden()

@@ -8,6 +8,7 @@ import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import java.nio.charset.StandardCharsets;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.ByteArrayResource;
@@ -68,13 +69,19 @@ public class FileController {
      * {@code Content-Type: application/json} for Spring to bind it to a record - the frontend sends
      * it as a {@code Blob} for exactly that reason.
      *
+     * <p><b>Uploading content this person already has answers 200, not 201</b> (#234). That is the
+     * deduplication of #75 and never an error - but it is also not a creation, and until now it said
+     * it was: the same 201 as a fresh write, which left the frontend unable to tell the person that
+     * their file was recognised rather than stored again. The lever only changes behaviour if
+     * somebody can see it working.
+     *
      * @param file        the content and the name the browser sent
-     * @param request     which lifecycle the uploader wants for it (#68)
+     * @param request     which lifecycle the uploader wants for it (#68) and what it is (#233)
      * @param currentUser the uploader, from the token
-     * @return 201 with the file and its {@code Location}. 400 when the part is empty, its type is not
-     *         on the whitelist, it is over the cap, or the request asks for {@code Public} - which is
-     *         an admin's to grant (#64). <b>An upload of content this person already has answers 201
-     *         with the file they already had</b>, which is the deduplication of #75 and not an error
+     * @return 201 with the file and its {@code Location} when the content was written; <b>200 with
+     *         the file they already had</b> when it was recognised (#234). 400 when the part is
+     *         empty, its type is not on the whitelist, it is over the cap, or the request asks for
+     *         {@code Public} - which is an admin's to grant (#64)
      */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -82,8 +89,11 @@ public class FileController {
             @RequestPart("file") MultipartFile file,
             @Valid @RequestPart("data") UploadFileRequest request,
             @AuthenticationPrincipal CurrentUser currentUser) {
-        FileResponse created = fileService.upload(file, request, currentUser.userId());
-        return ResponseEntity.created(URI.create("/api/v1/files/" + created.id())).body(created);
+        UploadResult result = fileService.upload(file, request, currentUser.userId());
+        if (result.deduplicated()) {
+            return ResponseEntity.ok(result.file());
+        }
+        return ResponseEntity.created(URI.create("/api/v1/files/" + result.file().id())).body(result.file());
     }
 
     /**
@@ -94,33 +104,40 @@ public class FileController {
      *
      * @param currentUser whose files, from the token. There is no parameter that could name anybody
      *                    else (#121)
+     * @param query       the search box over their own filenames, or null for everything. <b>The
+     *                    frontend has always sent this</b>; until now nothing here received it, so the
+     *                    picker's search input filtered nothing
+     * @param category    the cajón to narrow to (#233), or null for all of them
      * @param pageable    page, size and sort; <b>most recently used first</b>, with a tie-break by id
      *                    (#171). The direction is spelled out because the default is ascending, and
      *                    ascending here would open the picker on whatever this person has not touched
      *                    in the longest time - the exact opposite of what reuse needs (#65)
-     * @return 200 with one page of their files
+     * @return 200 with one page of their files, each with where it is used (#232)
      */
     @GetMapping("/mine")
     @PreAuthorize("isAuthenticated()")
     public PageResponse<FileResponse> listMine(
             @AuthenticationPrincipal CurrentUser currentUser,
+            @RequestParam(name = "q", required = false) @Nullable String query,
+            @RequestParam(name = "category", required = false) @Nullable FileCategory category,
             @PageableDefault(size = 20, sort = {"lastUsedAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable) {
-        return fileService.listMine(currentUser.userId(), pageable);
+        return fileService.listMine(currentUser.userId(), query, category, pageable);
     }
 
     /**
      * What the platform published, for whoever is choosing one to attach (#64, #79).
      *
-     * @param audience who to narrow to, or null for everything published
+     * @param category the cajón to narrow to (#233), or null for everything published. It replaced
+     *                 the audience of #64 outright: a flow already says who a document is for
      * @param pageable page, size and sort; by name, with a tie-break by id (#171)
      * @return 200 with one page of published files
      */
     @GetMapping("/public")
     @PreAuthorize("isAuthenticated()")
     public PageResponse<PublicFileResponse> listPublic(
-            @RequestParam(name = "audience", required = false) @Nullable PublicAudience audience,
+            @RequestParam(name = "category", required = false) @Nullable FileCategory category,
             @PageableDefault(size = 20, sort = {"name", "id"}) Pageable pageable) {
-        return fileService.listPublic(audience, pageable);
+        return fileService.listPublic(category, pageable);
     }
 
     /**

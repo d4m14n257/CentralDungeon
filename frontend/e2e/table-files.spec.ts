@@ -104,7 +104,7 @@ test('a file attached to two tables is stored once, and the player downloads it'
     // Upload it on the first table.
     await master.page.goto(`/master/tables/${firstId}/files`)
     await attach(master.page, false, async (dialog) => {
-      await dialog.getByLabel('Elegir un archivo para subir').setInputFiles(pdf('ficha-e2e.pdf', runId))
+      await dialog.locator('input[type="file"]').setInputFiles(pdf('ficha-e2e.pdf', runId))
     })
     await expect(master.page.getByText('ficha-e2e.pdf')).toBeVisible()
 
@@ -151,7 +151,7 @@ test('taking a file off one table leaves it on the other', async ({ browser }) =
 
     await master.page.goto(`/master/tables/${firstId}/files`)
     await attach(master.page, false, async (dialog) => {
-      await dialog.getByLabel('Elegir un archivo para subir').setInputFiles(pdf('mapa-e2e.pdf', runId))
+      await dialog.locator('input[type="file"]').setInputFiles(pdf('mapa-e2e.pdf', runId))
     })
 
     await master.page.goto(`/master/tables/${secondId}/files`)
@@ -189,7 +189,7 @@ test('a private attachment never reaches the public detail', async ({ browser })
 
     await master.page.goto(`/master/tables/${tableId}/files`)
     await attach(master.page, true, async (dialog) => {
-      await dialog.getByLabel('Elegir un archivo para subir').setInputFiles(pdf('notas-e2e.pdf', runId))
+      await dialog.locator('input[type="file"]').setInputFiles(pdf('notas-e2e.pdf', runId))
     })
     await expect(master.page.getByText('Solo masters')).toBeVisible()
 
@@ -217,15 +217,19 @@ test('a master attaches a file the platform published without copying it', async
     const adminTableId = await createTable(admin.page, `Mesa Admin Publicar E2E ${runId}`)
     await admin.page.goto(`/master/tables/${adminTableId}/files`)
     await attach(admin.page, false, async (dialog) => {
-      await dialog.getByLabel('Elegir un archivo para subir').setInputFiles(pdf('ficha-comunidad-e2e.pdf', runId))
+      await dialog.locator('input[type="file"]').setInputFiles(pdf('ficha-comunidad-e2e.pdf', runId))
     })
 
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')
     const row = admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })
     await row.getByRole('button', { name: 'Publicar' }).click()
-    // The audience is a required choice with no default that could publish to the wrong people (M24.1).
-    await admin.page.getByRole('dialog').getByRole('button', { name: 'Publicar' }).click()
+    // At least one cajón is required and nothing is preselected, so a file cannot be published to
+    // the wrong moment by omission — M24.1's fix, carried across from the audience it replaced (#233).
+    const publishDialog = admin.page.getByRole('dialog')
+    await expect(publishDialog.getByRole('button', { name: 'Publicar' })).toBeDisabled()
+    await publishDialog.getByRole('checkbox', { name: 'De mesa' }).click()
+    await publishDialog.getByRole('button', { name: 'Publicar' }).click()
     await expect(row).toContainText('Publicado')
 
     const tableId = await createTable(master.page, tableName)
@@ -263,7 +267,7 @@ test('an unaccepted file type is refused with a message that says why', async ({
     // The cap is stated before anything is tried, not only after a refusal.
     await expect(dialog.getByText(/2 MB/)).toBeVisible()
 
-    await dialog.getByLabel('Elegir un archivo para subir').setInputFiles({
+    await dialog.locator('input[type="file"]').setInputFiles({
       name: 'trampa-e2e.exe',
       mimeType: 'application/x-msdownload',
       buffer: Buffer.from('MZ'),

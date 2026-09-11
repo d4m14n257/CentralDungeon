@@ -1,6 +1,7 @@
 package com.centraldungeon.files.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -19,8 +20,16 @@ import org.jspecify.annotations.Nullable;
  * @param fileType       whether the owner is keeping it ({@code Private}), it is tied to one context
  *                       ({@code SingleUse}) or the platform published it ({@code Public}) - the three
  *                       lifecycles of #68, as a string (arquitectura.md 2.3)
- * @param publicAudience who a published file is for (#64). Null on anything that is not
- *                       {@code Public}
+ * @param categories     the cajones the file belongs to (#233), as strings. Plural and cumulative:
+ *                       a sheet uploaded on an application and later handed in to a request belongs
+ *                       to both, and nothing ever takes a cajón away. <b>Empty on an upload and on a
+ *                       single-file read</b>, like {@code usages}
+ * @param usages         where the file is linked <em>right now</em> (#232), named by the table each
+ *                       link belongs to - what turns the history of #65 from a list of filenames
+ *                       into something its owner recognises. A different question from the cajones:
+ *                       detaching it from a table removes a use and leaves the cajón standing.
+ *                       <b>Empty on an upload and on a single-file read</b>: only the owner's own
+ *                       list pays for resolving them, because only there is the question asked
  * @param lastUsedAt     when it was last uploaded, attached or downloaded, in UTC. What the purge of
  *                       #75 reads, and what tells the owner whether a file is still in service
  * @param createdAt      when it was uploaded, in UTC. The frontend converts (#22, #111)
@@ -31,7 +40,8 @@ public record FileResponse(
         String mimeType,
         long sizeBytes,
         String fileType,
-        @Nullable String publicAudience,
+        List<String> categories,
+        List<FileUsageResponse> usages,
         @Nullable LocalDateTime lastUsedAt,
         LocalDateTime createdAt) {
 }

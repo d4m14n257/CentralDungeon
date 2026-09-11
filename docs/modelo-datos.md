@@ -114,6 +114,10 @@ propia migración, y se anota acá para que este documento no mienta por omisió
 | `V2__seed.sql` · `V3__catalog_seed.sql` | Solo datos: roles, tipos de mesa y el catálogo de la comunidad |
 | `V4__notification_params.sql` | `notifications` gana `params VARCHAR(1024) NULL` y su `title` pasa a nulable; el motivo automático de #34 pasa de «Mesa llena» al código `TABLE_FULL` (#197) |
 | `V5__files_updated_at.sql` | `files` gana `updated_at DATETIME NULL`. Obligatoria, no cosmética: F1.4 mapea la tabla, la entidad extiende `BaseEntity` —que mapea esa columna— y con `ddl-auto: validate` la aplicación no arranca sin ella. Además F1.4 muta la fila de cuatro formas (renombrar, promover a `Private`, sellar `last_used_at`, dar de baja) y el momento del cambio se estaba perdiendo. `table_files` no la lleva: es puente con clave compuesta y no extiende `BaseEntity` |
+| `V6__table_type_code.sql` | `table_types` gana `code VARCHAR(32) NULL UNIQUE` (#197). Las dos filas que siembra `V2__seed.sql` llegaban a la pantalla en inglés sin importar el idioma elegido. Con `code`, una fila sembrada se traduce en el frontend y una que agrega un admin se muestra tal cual la escribió — igual que `systems`, `tags` y `platforms` |
+| `V7__slot_duration.sql` | La duración deja de ser de la mesa y pasa a ser de la franja (#228): `table_schedules` gana `duration TIME NULL`, se backfillea desde `game_tables.duration` y esa columna se elimina. Una mesa que juega tres horas entre semana y seis el sábado no tenía forma de decirlo |
+| `V8__start_date_is_a_day.sql` | `game_tables.start_date` pasa de `DATETIME` a `DATE` (#230). Ninguna sesión tomaba su hora de ahí, y como instante UTC el día renderizado se corría según dónde se leyera (#22) |
+| `V9__file_categories.sql` | Tres cosas, todas de #233 y #236. **`file_categories`**: el cajón de un archivo pasa a ser una relación —pertenece a todos los flujos en los que se usó, y la deduplicación (#75) vuelve eso el caso normal, no un borde—, add-only, nada revoca una pertenencia. **Se elimina `public_audience`**: el flujo ya dice a quién le sirve, y dos ejes decidiendo lo mismo terminan discrepando; los anuncios pasan a ser su propio cajón. **`task_files`**: la mitad del pedido que el modelo nunca tuvo — `accepts_files` decía si una respuesta podía traer archivos, y nada decía que el pedido pudiera |
 
 ```sql
 SET NAMES utf8mb4;
@@ -179,7 +183,7 @@ CREATE TABLE game_tables (
     description    LONGTEXT      NULL,
     permitted      LONGTEXT      NULL,
     requirements   LONGTEXT      NULL,   -- rich text (#62)
-    start_date     DATETIME      NULL,   -- UTC (#22)
+    start_date     DATE          NULL,   -- el día desde el que corre la mesa; sin hora ni zona (#230)
     total_sessions INT           NULL,   -- planned number of sessions (#26)
     max_players    INT           NULL,   -- player cap (#24)
     status         VARCHAR(32)   NOT NULL DEFAULT 'Preparation',
@@ -361,7 +365,6 @@ CREATE TABLE files (
     mime_type       VARCHAR(128) NOT NULL,
     size_bytes      BIGINT       NOT NULL,
     file_type       VARCHAR(32)  NOT NULL DEFAULT 'Single-use', -- Public|Private|Single-use (#68)
-    public_audience VARCHAR(32)  NULL,      -- Masters|Players|Announcements (#64)
     user_created_id VARCHAR(64)  NOT NULL,
     last_used_at    DATETIME     NULL,      -- drives the unused-file purge (#75)
     status          VARCHAR(32)  NOT NULL DEFAULT 'Current',
@@ -375,6 +378,32 @@ CREATE TABLE files (
 CREATE INDEX ix_files_owner    ON files (user_created_id, file_type, status);
 CREATE INDEX ix_files_hash     ON files (content_hash);
 CREATE INDEX ix_files_lastused ON files (last_used_at);
+
+-- Los cajones de un archivo (#233). Relación y no columna: pertenece a todos los flujos en los que
+-- se usó, y la deduplicación (#75) vuelve eso el caso normal. Add-only: no hay status ni deleted_at.
+CREATE TABLE file_categories (
+    file_id    VARCHAR(64) NOT NULL,
+    category   VARCHAR(32) NOT NULL,  -- TableMaterial|MasterRequest|PlayerApplication|PlayerSubmission|Announcement
+    created_at DATETIME    NOT NULL,
+    CONSTRAINT pk_file_categories PRIMARY KEY (file_id, category),
+    CONSTRAINT fk_file_categories_file FOREIGN KEY (file_id) REFERENCES files (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX ix_file_categories_category ON file_categories (category);
+
+-- Los formularios que un master adjunta a su pedido (#236). La mitad del pedido que faltaba.
+CREATE TABLE task_files (
+    task_id    VARCHAR(64) NOT NULL,
+    file_id    VARCHAR(64) NOT NULL,
+    status     VARCHAR(32) NOT NULL DEFAULT 'Current',
+    created_at DATETIME    NOT NULL,
+    deleted_at DATETIME    NULL,
+    CONSTRAINT pk_task_files PRIMARY KEY (task_id, file_id),
+    CONSTRAINT fk_task_files_task FOREIGN KEY (task_id) REFERENCES table_tasks (id),
+    CONSTRAINT fk_task_files_file FOREIGN KEY (file_id) REFERENCES files (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX ix_task_files_file ON task_files (file_id, status);
 
 CREATE TABLE table_files (
     game_table_id   VARCHAR(64) NOT NULL,
@@ -770,6 +799,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Regla | Dónde | Ref. |
 |---|---|---|
 | Las sesiones se materializan al pasar a `Opened`, a partir de `start_date` + `table_schedules` + `total_sessions` | `TableSessionService.materialize` | #26, #33 |
+| **La hora de cada sesión sale siempre de `table_schedules.hourtime`, nunca de `start_date`**, que solo dice desde qué día buscar. Una franja que cae el mismo día de inicio cuenta, a cualquier hora | `TableSessionService.materialize` | #230 |
 | Si falta `start_date`, la agenda o `total_sessions`, la mesa **abre igual, con cero sesiones**. Materializar es consecuencia de abrir, no requisito | `TableSessionService.materialize` | #196 |
 | Materializar es **idempotente**: una mesa que ya tiene calendario conserva el que tiene | `TableSessionService.materialize` | #33 |
 | Se puede corregir la fecha de una sesión suelta. Es una corrección de esa noche y **no** pasa por el choque de #178, que compara semanas y no instantes | `TableSessionService.update` | #33 |
@@ -853,9 +883,14 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | El usuario ve y reutiliza todo lo que subió; vincular no duplica | `FileService` | #65 |
 | Un master puede usar un archivo `Public` como requisito sin copiarlo; quitarlo de la mesa no borra el archivo global | `TableFileService` | #79 |
 | Se purgan los archivos sin vínculo vivo y con ~3 meses sin uso. Los `Public` quedan exentos, y el marcado no libera bytes | `FileRetentionService` | #75, #66 |
-| Se deduplica por `content_hash` **dentro del mismo dueño** —`uk_files_storage_key` prohíbe que dos filas compartan blob— y se comprime con gzip al guardar | `FileService` · `LocalDiskStorageService` | #75 |
+| Se deduplica por `content_hash` **dentro del mismo dueño** —`uk_files_storage_key` prohíbe que dos filas compartan blob— y se comprime con gzip al guardar. **Reconocer una subida responde 200 y no 201**, y la fila reconocida conserva su categoría | `FileService` · `LocalDiskStorageService` | #75, #234, #235 |
+| **Dónde está vinculado ahora se deriva** —tres consultas agrupadas por página, una por tabla puente— y **dónde perteneció alguna vez se guarda**. Despegar un archivo saca el uso y deja el cajón. Un archivo sin ningún uso reporta vacío, que es el aviso de que la purga lo va a alcanzar primero | `FileService.usagesByFileId` | #232, #233 |
+| **El cajón lo pone el vínculo, no quien sube**: adjuntar a una mesa, responder una petición, adjuntar un formulario a un pedido. El único lugar que pregunta es `/my/files`, que no tiene flujo que observar. Idempotente y **add-only**: nada revoca una pertenencia | `FileService.classify` | #233 |
+| Publicar exige al menos un cajón y acepta varios —la misma hoja sirve al armar la mesa y al pedir algo después—, y **rechaza los dos del lado jugador**: ahí van las respuestas de cada uno, y una plantilla pública no es una respuesta | `FileService.publish` | #233 |
+| Un master adjunta formularios a la petición que escribe, y los abre quien la petición alcanza —candidato o jugador—, no solo quien dirige | `TableTaskService.syncBlanks` · `FileService.requireReadable` | #236, #63 |
+| La búsqueda de «mis archivos» filtra de verdad: el frontend mandaba `q` y el endpoint no tenía parámetro que lo recibiera | `FileService.listMine` | #65 |
 | El contenido se escribe a un área de staging y se confirma al commit de la transacción; un rollback no deja huérfanos | `LocalDiskStorageService` | M26.2 |
-| Publicar exige audiencia y solo lo hace un admin; el archivo sigue siendo de quien lo subió | `FileService` | #55, #64 |
+| Publicar solo lo hace un admin; el archivo sigue siendo de quien lo subió. ~~La audiencia~~ la reemplazó el cajón (#233) | `FileService` | #55, ~~#64~~ |
 | Lo que una mesa comparte lo lee cualquiera que pueda ver la mesa; lo privado, solo quien la dirige. **Al llegar el veto (F3) hay que excluir al vetado acá también** | `FileService` | #17, #29, #121 |
 | El borrado físico lo ejecuta el owner desde el menú de administración | `StorageService` | #66 |
 | `comments` y `comment_drafts` **nunca** se auditan | `AuditService` | #43 |

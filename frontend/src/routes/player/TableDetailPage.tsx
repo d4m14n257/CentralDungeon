@@ -1,12 +1,12 @@
 import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
-import { helpPath } from '@/config/paths'
 import { RichTextView } from '@/components/RichTextView'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
 import { FileList, FilePicker } from '@/features/files'
@@ -15,7 +15,7 @@ import { SessionList, TableStatusBadge, useGameTable } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
 import { useMe } from '@/features/users'
 import type { GameTableDetail, MasterSummary } from '@/features/tables'
-import { browserTimeZone, formatDateTime, formatSlot, utcSlotToLocal } from '@/lib/date'
+import { browserTimeZone, formatPlainDate, formatSlot, utcSlotToLocal } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 
 /**
@@ -68,6 +68,7 @@ export function TableDetailPage() {
   // A second namespace rather than copying the file labels into `tables`: the words belong to the
   // files domain and are the same ones the master's tab shows (regla dura 18).
   const { t: tFiles } = useTranslation('files')
+  const { t: tTasks } = useTranslation('tasks')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   // isLoadingError, not isError: once the table has loaded, a background refetch that fails must not
@@ -197,15 +198,19 @@ export function TableDetailPage() {
             that belong to the files domain (§3.1.5, regla dura 16). */}
         <TableTasksSection
           tableId={table.id}
-          helpAudience="players"
+          renderHelpLink={() => (
+            <HelpLink section="players.tasks" className="inline-block text-xs">
+              {tTasks('applicable.helpLink')}
+            </HelpLink>
+          )}
           renderFiles={(files) => <FileList files={files} />}
-          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished />}
+          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerSubmission" />}
         />
 
         {table.startDate && (
           <section>
             <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.startDate')}</h2>
-            <p className="mt-1.5 text-sm">{formatDateTime(table.startDate, i18n.language, browserTimeZone())}</p>
+            <p className="mt-1.5 text-sm">{formatPlainDate(table.startDate, i18n.language)}</p>
             {table.totalSessions != null && (
               <p className="text-fg-subtle mt-1 text-xs">{t('detail.totalSessions', { count: table.totalSessions })}</p>
             )}
@@ -229,9 +234,7 @@ export function TableDetailPage() {
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
             <span>
               {t('detail.scheduleConflictExplained')} {/* El aviso lleva a la explicación completa, con su #ref estable (#167, #168). */}
-              <Link to={helpPath('players', 'schedule-conflicts')} className="underline">
-                {t('detail.scheduleConflictHelp')}
-              </Link>
+              <HelpLink section="players.schedule-conflicts">{t('detail.scheduleConflictHelp')}</HelpLink>
             </span>
           </p>
         )}

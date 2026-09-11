@@ -14,6 +14,7 @@ import com.centraldungeon.tables.dto.TableScheduleEntry;
 import com.centraldungeon.tables.dto.TableSessionResponse;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -211,7 +212,7 @@ class TableSessionIT {
 
     private GameTable draft(String name) {
         GameTable draft = new GameTable(name, master);
-        draft.setStartDate(LocalDateTime.parse("2026-09-08T20:00"));
+        draft.setStartDate(LocalDate.parse("2026-09-08"));
         draft.setTotalSessions(4);
         return draft;
     }

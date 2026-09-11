@@ -268,6 +268,64 @@ export function formatDate(iso: string, locale: string, timeZone: string): strin
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone }).format(utcInstant(iso))
 }
 
+/** The thresholds `formatRelativeDate` steps through, coarsest last. */
+const RELATIVE_UNITS: { unit: Intl.RelativeTimeFormatUnit; seconds: number }[] = [
+  { unit: 'year', seconds: 365 * 24 * 60 * 60 },
+  { unit: 'month', seconds: 30 * 24 * 60 * 60 },
+  { unit: 'week', seconds: 7 * 24 * 60 * 60 },
+  { unit: 'day', seconds: 24 * 60 * 60 },
+  { unit: 'hour', seconds: 60 * 60 },
+  { unit: 'minute', seconds: 60 },
+]
+
+/**
+ * An instant as "hace 3 días" — how long ago, rather than when exactly.
+ *
+ * **For the values whose meaning is the distance and not the date.** `lastUsedAt` is the case this
+ * was written for: the question a person asks of it is "is this file still in use", and a formatted
+ * date makes them do the subtraction themselves. It is also what warns them, without a word about
+ * retention, that a file nobody has touched in months is the one the purge will reach first (#75).
+ *
+ * **No time zone parameter, and that is not an omission.** A distance between two instants is the
+ * same distance everywhere; there is nothing to convert. Use `formatDate` when the calendar day is
+ * what matters.
+ *
+ * The locale is a parameter like everywhere else in this module (#111, #192).
+ *
+ * @param iso    the instant, as the API sends it
+ * @param locale the BCP-47 locale (#111)
+ * @param now    the instant to measure against. A parameter so the result is testable without
+ *               freezing the clock, and never something a caller needs to pass
+ * @returns the distance in words, e.g. `hace 3 días`
+ */
+export function formatRelativeDate(iso: string, locale: string, now: Date = new Date()): string {
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+  const elapsedSeconds = (utcInstant(iso).getTime() - now.getTime()) / 1000
+  for (const { unit, seconds } of RELATIVE_UNITS) {
+    if (Math.abs(elapsedSeconds) >= seconds) {
+      return formatter.format(Math.round(elapsedSeconds / seconds), unit)
+    }
+  }
+  // Under a minute reads as "ahora" rather than "hace 4 segundos", which nobody needs to know.
+  return formatter.format(0, 'second')
+}
+
+/**
+ * A plain `YYYY-MM-DD` the API sent, formatted as it is.
+ *
+ * **No zone, on purpose** (#230). A date is not an instant: `game_tables.start_date` says which day
+ * the table starts and means the same day to everybody reading it, so converting it would be the
+ * bug and not the fix - a reader west of UTC would be shown the day before. The formatter is pinned
+ * to UTC precisely so that nothing shifts.
+ *
+ * @param value  the date, as the API sends it, `YYYY-MM-DD`
+ * @param locale the BCP-47 locale (#111)
+ * @returns the formatted date
+ */
+export function formatPlainDate(value: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${value.slice(0, 10)}T00:00:00Z`))
+}
+
 /**
  * Reads an instant the API sent, which is **always UTC** even when it does not say so (#22).
  *

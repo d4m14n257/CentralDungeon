@@ -1,0 +1,19 @@
+-- #230: `start_date` stops being an instant and becomes a day.
+--
+-- The column was a DATETIME in UTC, and the wizard asked for it with a datetime-local input, but no
+-- session ever took its hour from here: `TableSessionService.occurrencesFrom` lays the calendar on
+-- the weekly agenda's `hourtime` and reads `start_date` only as the cut-off to start looking from.
+-- So the hour had exactly one effect, and an invisible one - it decided whether a slot on the start
+-- day itself counted or was walked past - which misfired in the most natural case: a master typing
+-- the hour they actually play pushed the first session a week out whenever the agenda's slot fell
+-- earlier that day in UTC.
+--
+-- The second reason is #22. An instant in UTC renders as a different *calendar day* depending on
+-- where it is read: 14/10 21:00 in Mexico is stored 2026-10-15T03:00Z and reads as the 15th in
+-- Madrid. For a coarse "when does this start" marker that day-shift is noise, and a DATE has none
+-- of it - the same day everywhere, with nothing to convert.
+--
+-- Truncating and not rounding: what was stored is the moment the master meant to begin, and the day
+-- of that moment is the day they meant. MySQL's implicit DATETIME -> DATE conversion drops the time
+-- part, which is exactly that.
+ALTER TABLE game_tables MODIFY COLUMN start_date DATE NULL COMMENT 'The day the table starts running (#230). No hour, no zone.';

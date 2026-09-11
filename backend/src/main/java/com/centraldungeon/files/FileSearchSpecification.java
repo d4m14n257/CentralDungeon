@@ -4,10 +4,12 @@ import com.centraldungeon.common.search.SearchConnector;
 import com.centraldungeon.common.search.SearchQuery;
 import com.centraldungeon.common.search.SearchTerm;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -37,12 +39,20 @@ final class FileSearchSpecification {
     /**
      * /admin/files: the search box, plus the filters the screen sets explicitly.
      *
+     * <p><b>The cajón is a filter and not a search field</b> (#233), unlike name, owner and MIME
+     * type. Those are free text somebody half-remembers, so they are matched with a {@code LIKE};
+     * a cajón is one of five known values, and offering "contains" over a closed enum would mean
+     * {@code /category:e} quietly matching four of them. Same shape as {@code status} and
+     * {@code fileType}, which are closed for the same reason.
+     *
      * @param query     the parsed search box; an empty one matches everything
      * @param statuses  the statuses to keep, or empty for no status filter at all
      * @param fileTypes the lifecycles to keep (#68), or empty for no type filter at all
+     * @param category  the cajón to keep (#233), or null for no cajón filter at all
      * @return the predicate
      */
-    static Specification<StoredFile> forAdmin(SearchQuery query, List<FileStatus> statuses, List<FileType> fileTypes) {
+    static Specification<StoredFile> forAdmin(
+            SearchQuery query, List<FileStatus> statuses, List<FileType> fileTypes, @Nullable FileCategory category) {
         return (root, criteriaQuery, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
             Predicate matched = matching(root, builder, query);
@@ -55,8 +65,92 @@ final class FileSearchSpecification {
             if (!fileTypes.isEmpty()) {
                 predicates.add(root.get("fileType").in(fileTypes));
             }
+            Predicate inCajon = inCategory(root, criteriaQuery, builder, category);
+            if (inCajon != null) {
+                predicates.add(inCajon);
+            }
             return predicates.isEmpty() ? builder.conjunction() : builder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    /**
+     * Somebody's own live files, narrowed by what they typed and by what kind of document they want.
+     *
+     * <p><b>The owner is a predicate here and not a convention</b> (#121): it comes from the token
+     * and goes into the {@code WHERE}, so there is no shape of this query that could return anybody
+     * else's file.
+     *
+     * <p>The text is matched against the filename only, unlike the admin search: on your own files
+     * there is no "who uploaded this" to ask, and the MIME type is not something a person types when
+     * they are looking for the sheet they made last month.
+     *
+     * @param ownerId    whose files, from the token
+     * @param query      the parsed search box; an empty one matches everything they have
+     * @param category   the cajón to keep (#233), or null for all of them
+     * @return the predicate
+     */
+    static Specification<StoredFile> forOwner(String ownerId, SearchQuery query, @Nullable FileCategory category) {
+        return (root, criteriaQuery, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(builder.equal(root.get("userCreated").get("id"), ownerId));
+            predicates.add(builder.equal(root.get("status"), FileStatus.Current));
+            Predicate matched = matching(root, builder, query);
+            if (matched != null) {
+                predicates.add(matched);
+            }
+            Predicate inCajon = inCategory(root, criteriaQuery, builder, category);
+            if (inCajon != null) {
+                predicates.add(inCajon);
+            }
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    /**
+     * What the platform published, narrowed to one cajón or to none (#233).
+     *
+     * <p><b>The narrowing does not guard the file</b>, it only decides what is listed. That is the
+     * reading #64 asked for and the part of it worth keeping when the audience went away: treating it
+     * as authorization would 403 somebody out of a document that is, by name, published.
+     *
+     * @param category the cajón to keep, or null for everything published
+     * @return the predicate
+     */
+    static Specification<StoredFile> forPublic(@Nullable FileCategory category) {
+        return (root, criteriaQuery, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(builder.equal(root.get("fileType"), FileType.Public));
+            predicates.add(builder.equal(root.get("status"), FileStatus.Current));
+            Predicate inCajon = inCategory(root, criteriaQuery, builder, category);
+            if (inCajon != null) {
+                predicates.add(inCajon);
+            }
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    /**
+     * «this file is in that cajón», as a subquery over {@code file_categories} (#233).
+     *
+     * <p>A subquery and not a join, because the membership is one-to-many: joining would return the
+     * same file once per cajón it belongs to, and a page of twenty would silently become a page of
+     * twenty rows covering twelve files. {@code exists} asks the question without multiplying rows.
+     *
+     * @param category the cajón to require, or null to require nothing
+     * @return the predicate, or null when there is nothing to narrow by
+     */
+    private static @Nullable Predicate inCategory(
+            Root<StoredFile> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, @Nullable FileCategory category) {
+        if (category == null) {
+            return null;
+        }
+        Subquery<String> membership = criteriaQuery.subquery(String.class);
+        Root<FileCategoryLink> link = membership.from(FileCategoryLink.class);
+        membership.select(link.get("id").get("fileId"));
+        membership.where(
+                builder.equal(link.get("id").get("fileId"), root.get("id")),
+                builder.equal(link.get("id").get("category"), category));
+        return builder.exists(membership);
     }
 
     /**

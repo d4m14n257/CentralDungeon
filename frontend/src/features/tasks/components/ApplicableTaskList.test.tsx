@@ -34,6 +34,7 @@ function task(overrides: Partial<ApplicableTask> = {}): ApplicableTask {
     dueAt: null,
     canSubmit: true,
     mySubmissionCount: 0,
+    files: [],
     createdAt: '2026-09-01T12:00:00',
     ...overrides,
   }

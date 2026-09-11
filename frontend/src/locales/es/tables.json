@@ -77,7 +77,7 @@
     "scheduleConflict": "Choca con una mesa tuya",
     "scheduleConflictExplained": "Ya jugás en otra mesa a esa hora. Retirá esa postulación o dejá esa mesa para poder postularte acá.",
     "scheduleConflictHelp": "Cómo funcionan los choques",
-    "startDate": "Primera sesión",
+    "startDate": "Comienza",
     "totalSessions_one": "{{count}} sesión planeada",
     "totalSessions_other": "{{count}} sesiones planeadas"
   },

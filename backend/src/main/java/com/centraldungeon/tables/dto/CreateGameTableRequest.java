@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
@@ -27,7 +27,8 @@ import org.jspecify.annotations.Nullable;
  *                      and empty mean the same thing: nothing chosen
  * @param tagIds        the tags the table is labelled with
  * @param platformIds   where the table is played
- * @param startDate     when the first session happens, in UTC (#22)
+ * @param startDate     the day the table starts running (#230). A plain date: no session takes
+ *                      its hour from here, the weekly agenda does
  * @param totalSessions how many sessions are planned (#26). Positive when present
  * @param maxPlayers    the player cap (#24). Positive when present; absent means no cap
  * @param schedule      the weekly agenda, in UTC (#22). Null and empty mean no agenda yet, and a
@@ -42,7 +43,7 @@ public record CreateGameTableRequest(
         @Nullable List<String> systemIds,
         @Nullable List<String> tagIds,
         @Nullable List<String> platformIds,
-        @Nullable LocalDateTime startDate,
+        @Nullable LocalDate startDate,
         @Positive @Nullable Integer totalSessions,
         @Positive @Nullable Integer maxPlayers,
         @Valid @Nullable List<TableScheduleEntry> schedule) {

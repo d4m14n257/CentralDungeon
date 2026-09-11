@@ -10,6 +10,10 @@ import jakarta.validation.constraints.Size;
  * a delta - the same reasoning as #189. A partial update would mean "null means leave it alone",
  * which makes clearing a value impossible to express and every caller guess.
  *
+ * <p><b>No cajón here</b> (#233). A membership is what a file's uses made true and is never revoked,
+ * so there is nothing for an edit dialog to correct: the only ways in are to be used in a flow, or to
+ * be put there deliberately on an upload that had no flow to observe.
+ *
  * <p>Renaming touches nothing but metadata: the content lives under the file's id and has never had
  * anything to do with its name (#80).
  *

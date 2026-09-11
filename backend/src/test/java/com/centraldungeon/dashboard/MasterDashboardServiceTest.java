@@ -28,6 +28,7 @@ import com.centraldungeon.tasks.TaskSubmissionCount;
 import com.centraldungeon.tasks.TaskSubmissionRepository;
 import com.centraldungeon.tasks.dto.TaskRecipientResponse;
 import com.centraldungeon.users.User;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -173,19 +174,20 @@ class MasterDashboardServiceTest {
     @Test
     void reportsAnOpenTableWhoseStartDateWentBy() {
         GameTable table = table("table-1", "La Cripta", GameTableStatus.Opened);
-        table.setStartDate(A_WHILE_AGO);
+        table.setStartDate(A_WHILE_AGO.toLocalDate());
         runs(table);
 
         MasterWorkItem item = only(service.forMaster("master-1"));
 
         assertThat(item.kind()).isEqualTo(MasterWorkItemKind.ReadyToStart);
-        assertThat(item.since()).isEqualTo(A_WHILE_AGO);
+        // The start of that day: the date carries no hour of its own any more (#230).
+        assertThat(item.since()).isEqualTo(A_WHILE_AGO.toLocalDate().atStartOfDay());
     }
 
     @Test
     void leavesAnOpenTableOutWhileItsStartDateIsStillAhead() {
         GameTable table = table("table-1", "La Cripta", GameTableStatus.Opened);
-        table.setStartDate(LocalDateTime.now().plusDays(3));
+        table.setStartDate(LocalDate.now().plusDays(3));
         runs(table);
 
         assertThat(service.forMaster("master-1").items()).isEmpty();

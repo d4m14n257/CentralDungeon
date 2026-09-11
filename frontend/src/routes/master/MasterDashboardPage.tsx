@@ -6,7 +6,8 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { helpPath, masterTablesPath } from '@/config/paths'
+import { masterTablesPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import { MasterWorkItemList, useMasterDashboard } from '@/features/tables'
 import { ApiError } from '@/types/api'
 
@@ -62,9 +63,7 @@ export function MasterDashboardPage() {
       <p className="text-fg-subtle text-xs">
         {t('dashboard.noReservationHint')}{' '}
         {/* To the exact #ref and not to the whole help page: that is what makes opening it worth it (#168). */}
-        <Link to={helpPath('masters', 'dashboard')} className="underline underline-offset-2">
-          {t('dashboard.helpLink')}
-        </Link>
+        <HelpLink section="masters.dashboard">{t('dashboard.helpLink')}</HelpLink>
       </p>
     </div>
   )

@@ -42,28 +42,9 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, String>,
      */
     Page<StoredFile> findByUserCreated_IdAndStatus(String userId, FileStatus status, Pageable pageable);
 
-    /**
-     * What the platform published for a given audience (#64).
-     *
-     * @param fileType       always {@link FileType#Public} - a parameter so the constant stays out of
-     *                       the query and the converter handles it (see {@link FileTypeConverter})
-     * @param publicAudience who the files are for
-     * @param status         the status to include
-     * @param pageable       the page and its order
-     * @return the published files for that audience, page by page
-     */
-    Page<StoredFile> findByFileTypeAndPublicAudienceAndStatus(
-            FileType fileType, PublicAudience publicAudience, FileStatus status, Pageable pageable);
-
-    /**
-     * Everything the platform published, whatever the audience.
-     *
-     * @param fileType always {@link FileType#Public}
-     * @param status   the status to include
-     * @param pageable the page and its order
-     * @return the published files, page by page
-     */
-    Page<StoredFile> findByFileTypeAndStatus(FileType fileType, FileStatus status, Pageable pageable);
+    // The published set is read through FileSearchSpecification.forPublic instead of derived methods:
+    // audience and category narrow it independently (#64, #233), and four derived names to cover two
+    // optional filters becomes eight the moment a third one shows up.
 
     /**
      * The same content, already uploaded by the same person - the deduplication of #75.

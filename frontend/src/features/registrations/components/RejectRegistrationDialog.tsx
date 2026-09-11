@@ -51,6 +51,7 @@ export function RejectRegistrationDialog({ tableId, registrationId, candidateNam
 
   return (
     <FormDialog
+      isDirty={form.formState.isDirty}
       open={open}
       onOpenChange={onOpenChange}
       title={t('candidates.rejectDialogTitle', { name: candidateName })}

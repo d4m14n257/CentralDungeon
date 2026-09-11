@@ -66,6 +66,7 @@ export function DisableCatalogValueDialog({ kind, value, open, onOpenChange }: D
 
   return (
     <FormDialog
+      isDirty={successorId !== null}
       open={open}
       onOpenChange={onOpenChange}
       title={t('admin.disableDialogTitle', { name: value.name })}

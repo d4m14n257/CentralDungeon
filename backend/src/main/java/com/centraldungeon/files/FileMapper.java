@@ -2,9 +2,11 @@ package com.centraldungeon.files;
 
 import com.centraldungeon.files.dto.AdminFileResponse;
 import com.centraldungeon.files.dto.FileResponse;
+import com.centraldungeon.files.dto.FileUsageResponse;
 import com.centraldungeon.files.dto.PublicFileResponse;
 import com.centraldungeon.files.dto.SharedFileResponse;
 import com.centraldungeon.files.dto.TableFileResponse;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -27,12 +29,35 @@ public interface FileMapper {
     /**
      * The owner's view of their own file.
      *
-     * @param file the entity to describe
+     * <p>{@code usages} arrives from the service for the same reason {@code uses} does below: it
+     * needs a query, and a mapper never touches a repository (arquitectura.md 2.2). Callers that
+     * have no reason to pay for it - an upload, a single read - pass an empty list rather than null,
+     * so the field is a list that happens to be empty and never a special case to check for.
+     *
+     * @param file       the entity to describe
+     * @param categories the cajones it belongs to (#233), or empty when nobody asked
+     * @param usages     where it is being used right now (#232), or empty when nobody asked
      * @return the file as its owner sees it, in the reuse history and after an upload
      */
+    @Mapping(target = "id", source = "file.id")
+    @Mapping(target = "name", source = "file.name")
+    @Mapping(target = "mimeType", source = "file.mimeType")
+    @Mapping(target = "sizeBytes", source = "file.sizeBytes")
+    @Mapping(target = "lastUsedAt", source = "file.lastUsedAt")
+    @Mapping(target = "createdAt", source = "file.createdAt")
+    @Mapping(target = "usages", source = "usages")
+    @Mapping(target = "categories", source = "categories")
     @Mapping(target = "fileType", expression = "java(file.getFileType().name())")
-    @Mapping(target = "publicAudience", expression = "java(file.getPublicAudience() == null ? null : file.getPublicAudience().name())")
-    FileResponse toResponse(StoredFile file);
+    FileResponse toResponse(StoredFile file, List<String> categories, List<FileUsageResponse> usages);
+
+    /**
+     * One use of a file, on its way out.
+     *
+     * @param usage the projection the repositories produced
+     * @return the same thing with its enum flattened to a string, as the contract asks (2.3)
+     */
+    @Mapping(target = "category", expression = "java(usage.category().name())")
+    FileUsageResponse toUsageResponse(FileUsage usage);
 
     /**
      * The /admin/files view.
@@ -40,8 +65,9 @@ public interface FileMapper {
      * <p>{@code uses} is resolved by the service, not here: it needs a query, and a mapper never
      * touches a repository (arquitectura.md 2.2).
      *
-     * @param file the entity to describe
-     * @param uses how many tables hold a live link to it (#79)
+     * @param file       the entity to describe
+     * @param uses       how many tables hold a live link to it (#79)
+     * @param categories the cajones it belongs to (#233)
      * @return the file as an admin sees it, owner and usage count included
      */
     @Mapping(target = "id", source = "file.id")
@@ -54,8 +80,8 @@ public interface FileMapper {
     @Mapping(target = "ownerName", expression = "java(file.getUserCreated().getDiscordUsername())")
     @Mapping(target = "status", expression = "java(file.getStatus().name())")
     @Mapping(target = "fileType", expression = "java(file.getFileType().name())")
-    @Mapping(target = "publicAudience", expression = "java(file.getPublicAudience() == null ? null : file.getPublicAudience().name())")
-    AdminFileResponse toAdminResponse(StoredFile file, long uses);
+    @Mapping(target = "categories", source = "categories")
+    AdminFileResponse toAdminResponse(StoredFile file, long uses, List<String> categories);
 
     /**
      * One row of the master's Archivos tab: the file and the link that put it there.
@@ -93,9 +119,14 @@ public interface FileMapper {
     /**
      * One row of what the platform published, for whoever is choosing one to attach (#64, #79).
      *
-     * @param file the published file
+     * @param file       the published file
+     * @param categories the cajones it is offered in (#233)
      * @return the file as the picker offers it
      */
-    @Mapping(target = "publicAudience", expression = "java(file.getPublicAudience() == null ? null : file.getPublicAudience().name())")
-    PublicFileResponse toPublicResponse(StoredFile file);
+    @Mapping(target = "id", source = "file.id")
+    @Mapping(target = "name", source = "file.name")
+    @Mapping(target = "mimeType", source = "file.mimeType")
+    @Mapping(target = "sizeBytes", source = "file.sizeBytes")
+    @Mapping(target = "categories", source = "categories")
+    PublicFileResponse toPublicResponse(StoredFile file, List<String> categories);
 }

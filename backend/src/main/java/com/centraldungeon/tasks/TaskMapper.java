@@ -2,6 +2,7 @@ package com.centraldungeon.tasks;
 
 import com.centraldungeon.tasks.dto.ApplicableTaskResponse;
 import com.centraldungeon.tasks.dto.SubmittedFileResponse;
+import com.centraldungeon.tasks.dto.TaskFileResponse;
 import com.centraldungeon.tasks.dto.TaskRecipientResponse;
 import com.centraldungeon.tasks.dto.TaskResponse;
 import com.centraldungeon.tasks.dto.TaskSubmissionResponse;
@@ -49,7 +50,12 @@ public interface TaskMapper {
      * @return the task as the Peticiones tab shows it
      */
     default TaskResponse toResponse(
-            TableTask task, @Nullable String description, int submissionCount, int respondentCount, int recipientCount) {
+            TableTask task,
+            @Nullable String description,
+            List<TaskFileResponse> files,
+            int submissionCount,
+            int respondentCount,
+            int recipientCount) {
         TableSessionRef session = TableSessionRef.of(task);
         User target = task.getTargetUser();
         return new TaskResponse(
@@ -65,6 +71,7 @@ public interface TaskMapper {
                 task.isAcceptsText(),
                 task.isAcceptsFiles(),
                 task.isMandatory(),
+                files,
                 task.getDueAt(),
                 task.getStatus().name(),
                 submissionCount,
@@ -84,7 +91,11 @@ public interface TaskMapper {
      * @return the task as {@code /tables/:id} and {@code /my/tables/:id} show it
      */
     default ApplicableTaskResponse toApplicable(
-            TableTask task, @Nullable String description, boolean canSubmit, int mySubmissionCount) {
+            TableTask task,
+            @Nullable String description,
+            List<TaskFileResponse> files,
+            boolean canSubmit,
+            int mySubmissionCount) {
         TableSessionRef session = TableSessionRef.of(task);
         return new ApplicableTaskResponse(
                 task.getId(),
@@ -96,6 +107,7 @@ public interface TaskMapper {
                 task.isAcceptsText(),
                 task.isAcceptsFiles(),
                 task.isMandatory(),
+                files,
                 task.getDueAt(),
                 canSubmit,
                 mySubmissionCount,

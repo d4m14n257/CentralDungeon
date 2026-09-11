@@ -63,7 +63,10 @@
     "publish": "Publicar y avisar",
     "save": "Guardar",
     "publishedToast": "Petición publicada. Ya les llegó el aviso.",
-    "savedToast": "Petición actualizada."
+    "savedToast": "Petición actualizada.",
+    "blanksLabel": "Formularios de la petición",
+    "blanksHint": "Lo que estás pidiendo que completen: una plantilla, un formulario en blanco. Podés usar uno de la comunidad o subir el tuyo.",
+    "blanksRemove": "Quitar «{{name}}»"
   },
   "submissions": {
     "title": "Entregas",
@@ -94,5 +97,8 @@
     "accumulatesHint": "Cada entrega se guarda aparte. Si ya entregaste algo, sigue estando.",
     "send": "Entregar",
     "sentToast": "Entregado."
+  },
+  "list": {
+    "blanks": "Para completar"
   }
 }

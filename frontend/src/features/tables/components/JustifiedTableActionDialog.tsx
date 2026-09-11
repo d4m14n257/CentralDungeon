@@ -46,7 +46,7 @@ export function JustifiedTableActionDialog({
   }
 
   return (
-    <FormDialog open={open} onOpenChange={onOpenChange} title={title} description={description}>
+    <FormDialog open={open} onOpenChange={onOpenChange} title={title} description={description} isDirty={form.formState.isDirty}>
       <Form {...form}>
         <form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)} className="space-y-4">
           <FormField
