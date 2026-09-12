@@ -26,13 +26,16 @@ import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
 import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.users.User;
+import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.UserRepository;
 import com.centraldungeon.users.UserRoleRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -234,30 +237,52 @@ class FileServiceTest {
 
     // ---------------------------------------------------------------- whose cajón is whose (#237)
 
-    /**
-     * Everybody gets the two player-side cajones, because every account is a {@code Player} (#38).
-     *
-     * <p>An admin included: their admin work lives in the platform's library, not in their own, so
-     * the {@code Admin} role adds nothing here and takes nothing away. They are also a person who
-     * plays.
-     */
+    /** A plain member of the community gets the two cajones their own flows fill, and nothing else. */
     @Test
-    void everyoneMayFileTheirOwnApplicationsAndSubmissions() {
-        when(userRoleRepository.findAllGrants("player-1")).thenReturn(List.of());
-        when(masterService.runsAnyTable("player-1")).thenReturn(false);
+    void aPlayerGetsOnlyThePlayerSideCajones() {
+        givenRoles("player-1", PlatformRole.PLAYER);
 
         assertThat(fileService().personalCategoriesOf("player-1"))
                 .containsExactly(FileCategory.PlayerApplication, FileCategory.PlayerSubmission);
     }
 
-    /** Running a table opens the master-side cajones - by the row in {@code masters}, not the role (#135). */
+    /**
+     * <b>A master who does not hold {@code Player} sees only the master-side cajones</b> (#237).
+     *
+     * <p>The rule follows the roles and never assumes them. In production nearly everybody holds
+     * {@code Player} too, because every account is created with it (#38) - but "nearly everybody" is
+     * not "everybody", and an account without it has to be told the truth rather than offered a
+     * cajón no flow of theirs could ever fill.
+     */
     @Test
-    void runningATableOpensTheMasterSideCajonesEvenWithoutTheRole() {
-        when(userRoleRepository.findAllGrants("master-1")).thenReturn(List.of());
-        when(masterService.runsAnyTable("master-1")).thenReturn(true);
+    void aMasterWithoutThePlayerRoleGetsOnlyTheMasterSideCajones() {
+        givenRoles("master-1", PlatformRole.MASTER);
 
         assertThat(fileService().personalCategoriesOf("master-1"))
-                .contains(FileCategory.TableMaterial, FileCategory.MasterRequest);
+                .containsExactly(FileCategory.TableMaterial, FileCategory.MasterRequest);
+    }
+
+    /** Holding both accumulates, which is the ordinary case in production (#38). */
+    @Test
+    void holdingBothRolesGetsAllFour() {
+        givenRoles("both-1", PlatformRole.PLAYER, PlatformRole.MASTER);
+
+        assertThat(fileService().personalCategoriesOf("both-1"))
+                .containsExactly(
+                        FileCategory.TableMaterial,
+                        FileCategory.MasterRequest,
+                        FileCategory.PlayerApplication,
+                        FileCategory.PlayerSubmission);
+    }
+
+    /** Running a table opens the master side by the row in {@code masters}, without the role (#135). */
+    @Test
+    void runningATableOpensTheMasterSideCajonesEvenWithoutTheRole() {
+        givenRoles("assigned-1");
+        when(masterService.runsAnyTable("assigned-1")).thenReturn(true);
+
+        assertThat(fileService().personalCategoriesOf("assigned-1"))
+                .containsExactly(FileCategory.TableMaterial, FileCategory.MasterRequest);
     }
 
     /**
@@ -268,10 +293,17 @@ class FileServiceTest {
      */
     @Test
     void announcementIsNeverSomebodysOwnCajon() {
-        when(userRoleRepository.findAllGrants("admin-1")).thenReturn(List.of());
-        when(masterService.runsAnyTable("admin-1")).thenReturn(true);
+        givenRoles("admin-1", PlatformRole.PLAYER, PlatformRole.MASTER, PlatformRole.ADMIN);
 
         assertThat(fileService().personalCategoriesOf("admin-1")).doesNotContain(FileCategory.Announcement);
+    }
+
+    /** An account that is neither gets nothing, and that is an answer rather than a failure. */
+    @Test
+    void anAccountThatNeitherPlaysNorRunsTablesHasNoCajonOfItsOwn() {
+        givenRoles("admin-only-1", PlatformRole.ADMIN);
+
+        assertThat(fileService().personalCategoriesOf("admin-only-1")).isEmpty();
     }
 
     /** The rule is the service's and not the screen's: a request naming another cajón is refused. */
@@ -279,8 +311,7 @@ class FileServiceTest {
     void refusesAnUploadFiledUnderACajonThatIsNotTheirs() {
         User owner = persistedUser("player-1");
         when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
-        when(userRoleRepository.findAllGrants("player-1")).thenReturn(List.of());
-        when(masterService.runsAnyTable("player-1")).thenReturn(false);
+        givenRoles("player-1", PlatformRole.PLAYER);
 
         assertThatThrownBy(() -> fileService()
                         .upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, FileCategory.TableMaterial), "player-1"))
@@ -560,6 +591,18 @@ class FileServiceTest {
         User user = new User("discord-" + id, id);
         ReflectionTestUtils.setField(user, "id", id);
         return user;
+    }
+
+    /**
+     * The roles this person holds <b>right now</b>.
+     *
+     * <p>{@code findActiveRoleNames} and not {@code findAllGrants}: the second returns revoked rows
+     * too, and reading it is what handed a master the player-side cajones after their {@code Player}
+     * role had been taken away.
+     */
+    private void givenRoles(String userId, PlatformRole... granted) {
+        when(userRoleRepository.findActiveRoleNames(userId))
+                .thenReturn(Arrays.stream(granted).map(PlatformRole::roleName).collect(Collectors.toSet()));
     }
 
     private static StoredFile persistedFile(String id, User owner, FileType type) {

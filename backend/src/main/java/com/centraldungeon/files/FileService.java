@@ -35,6 +35,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
@@ -261,34 +262,49 @@ public class FileService {
      * offers and says which cajones it belongs to by publishing it. An admin does none of their
      * admin work in their own library, which is why the {@code Admin} role adds nothing here.
      *
-     * <p>Three rules, and each one is a different kind of answer:
+     * <p><b>Each side follows the role that fills it</b>, and neither is assumed:
      *
      * <ul>
-     *   <li><b>The two player-side cajones, for everybody.</b> Every account is created with
-     *       {@code Player} (#38), so there is nobody who cannot apply to a table or answer a
-     *       request - an admin included, because an admin is also a person who plays.
-     *   <li><b>The two master-side ones, for whoever runs tables.</b> Not the role alone: a row in
-     *       {@code masters} is what authorizes running a table, and somebody an admin assigned has
-     *       no {@code Master} role at all (#135). Either answer opens them.
+     *   <li><b>The two player-side cajones need the {@code Player} role.</b> Applying to a table and
+     *       answering a request are a player's, so somebody who is only a master has no business
+     *       filing anything under them - and would never have got one by using the application
+     *       either, because those flows are closed to them.
+     *   <li><b>The two master-side ones need the {@code Master} role <em>or</em> a live row in
+     *       {@code masters}.</b> Not the role alone: somebody an admin assigned to a table has no
+     *       {@code Master} role at all and runs that table all the same (#135).
      *   <li><b>Never {@link FileCategory#Announcement}.</b> It is the community's by definition and
      *       lives only in the platform's library.
      * </ul>
      *
+     * <p><b>In production nearly everybody gets all four</b>, because every account is created with
+     * {@code Player} (#38) and a master accumulates rather than replaces. That is not a reason to
+     * hardcode it: the rule is what the roles say, and an account that does not hold {@code Player} -
+     * one the test profile makes, or one whose role was taken away - has to be told the truth.
+     *
+     * <p>The list can come back <b>empty</b>, for an account that is neither. That is a real answer
+     * and not a failure: their library holds what they were given, and there is no flow of their own
+     * to file anything under.
+     *
      * @param actorId whose library, from the token (#121)
-     * @return the cajones they may use, in the order the enum declares them
+     * @return the cajones they may use, in the order the enum declares them. Possibly empty
      */
     @Transactional(readOnly = true)
     public List<FileCategory> personalCategoriesOf(String actorId) {
-        boolean runsTables = userRoleRepository.findAllGrants(actorId).stream()
-                        .anyMatch(grant -> PlatformRole.MASTER.roleName().equals(grant.getRole().getName()))
-                || masterService.runsAnyTable(actorId);
+        // findActiveRoleNames and not findAllGrants: the latter returns every grant the person ever
+        // had, revoked ones included, because it exists for the write that changes them. Reading it
+        // here counted a Player role that had been taken away, and handed a master the two cajones
+        // their flows can no longer fill.
+        Set<String> roles = userRoleRepository.findActiveRoleNames(actorId);
+        boolean plays = roles.contains(PlatformRole.PLAYER.roleName());
+        boolean runsTables =
+                roles.contains(PlatformRole.MASTER.roleName()) || masterService.runsAnyTable(actorId);
         return Arrays.stream(FileCategory.values())
                 .filter(FileCategory::isPersonal)
-                .filter(category -> runsTables || isPlayerSide(category))
+                .filter(category -> isPlayerSide(category) ? plays : runsTables)
                 .toList();
     }
 
-    /** Whether a cajón is one of the two a plain member of the community fills by themselves. */
+    /** Whether a cajón is one of the two a player fills by themselves, rather than a master. */
     private static boolean isPlayerSide(FileCategory category) {
         return category == FileCategory.PlayerApplication || category == FileCategory.PlayerSubmission;
     }

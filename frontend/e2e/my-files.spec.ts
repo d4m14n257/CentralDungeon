@@ -63,12 +63,12 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     await page.goto('/my/files')
     await page.getByRole('button', { name: 'Subir archivo' }).click()
     await page.getByRole('combobox').first().click()
-    await page.getByRole('option', { name: 'Solicitud de jugador' }).click()
+    await page.getByRole('option', { name: 'De mesa' }).click()
     await page.locator('input[type="file"]').setInputFiles(pdf(`ficha-${runId}.pdf`, runId))
 
     const row = page.getByRole('listitem').filter({ hasText: `ficha-${runId}.pdf` })
     await expect(row).toBeVisible()
-    await expect(row.getByText('Solicitud de jugador')).toBeVisible()
+    await expect(row.getByText('De mesa')).toBeVisible()
     // Nothing uses it yet, and saying so is what warns before the purge does (#75, #232).
     await expect(row.getByText('Sin usar')).toBeVisible()
 
@@ -84,14 +84,13 @@ test('the library shows what each file is, where it is used, and reuses an uploa
       .click()
     await expect(dialog).toBeHidden()
 
-    // The use now shows, resolved from the link and not remembered by the screen. And the file is in
-    // **two** cajones: the one it was uploaded into and the one attaching it added (#233). That is
-    // the case a single column could never express.
+    // The use now shows, resolved from the link and not remembered by the screen. Attaching it put
+    // it in the cajón it was already declared under, and the pair being the key means that wrote no
+    // second row - putting a file in a cajón it is already in is a no-op (#233).
     await page.goto('/my/files')
     await expect(row.getByText(tableName)).toBeVisible()
     await expect(row.getByText('Sin usar')).toBeHidden()
-    await expect(row.getByText('Solicitud de jugador')).toBeVisible()
-    await expect(row.getByText('De mesa')).toBeVisible()
+    await expect(row.getByText('De mesa')).toHaveCount(1)
 
     // The same bytes again: recognised, not stored twice, and the screen says so (#234).
     await page.getByRole('button', { name: 'Subir archivo' }).click()
@@ -129,8 +128,11 @@ test('the library offers only the cajones that are the reader’s own', async ({
     await master.page.goto('/my/files')
     const masterFilter = master.page.getByRole('group', { name: 'Filtrar por dónde se usa' })
     await expect(masterFilter.getByRole('button', { name: 'De mesa' })).toBeVisible()
-    // A master is also a person who plays (#38), so they keep the player-side ones too.
-    await expect(masterFilter.getByRole('button', { name: 'Solicitud de jugador' })).toBeVisible()
+    await expect(masterFilter.getByRole('button', { name: 'Petición del master' })).toBeVisible()
+    // And not the player-side ones: this account holds Master and not Player, so those two cajones
+    // are filled by flows it cannot enter. Each side follows the role that fills it (#237).
+    await expect(masterFilter.getByRole('button', { name: 'Solicitud de jugador' })).toHaveCount(0)
+    await expect(masterFilter.getByRole('button', { name: 'Entrega del jugador' })).toHaveCount(0)
     await expect(masterFilter.getByRole('button', { name: 'Anuncios de la comunidad' })).toHaveCount(0)
   } finally {
     await player.context.close()

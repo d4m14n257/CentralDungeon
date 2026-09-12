@@ -125,9 +125,19 @@ export function MyFilesPage() {
           <h1 className="font-serif text-2xl font-semibold">{t('mine.title')}</h1>
           <p className="text-fg-muted text-sm">{t('mine.description')}</p>
         </div>
-        <Button type="button" onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}>
-          {uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload')}
-        </Button>
+        {/* Absent, not disabled, when this person has no cajón of their own — an account that is
+            neither player nor master has no flow to file anything under, and a button that cannot
+            work is worse than no button (principio 2 de frontend-diseno.md §1). While the list is
+            still loading it is disabled rather than gone, so it does not appear and jump. */}
+        {(myCategories === undefined || myCategories.length > 0) && (
+          <Button
+            type="button"
+            disabled={myCategories === undefined}
+            onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}
+          >
+            {uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload')}
+          </Button>
+        )}
       </div>
 
       {/* **The panel stays open after an upload**, and no toast fires. Closing it on success would
@@ -137,7 +147,7 @@ export function MyFilesPage() {
           person is left where they are if they have another file to add. */}
       {/* **The one place that asks which cajón** (#233): every other upload happens inside a flow that
           already knows, and this one has no flow to observe. */}
-      {uploadPanel.isOpen && <FileDropzone onUploaded={() => {}} askForCategory categories={myCategories ?? []} />}
+      {uploadPanel.isOpen && myCategories !== undefined && <FileDropzone onUploaded={() => {}} askForCategory categories={myCategories} />}
 
       <div className="space-y-3">
         <Input
