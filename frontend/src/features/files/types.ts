@@ -43,7 +43,7 @@ export interface FileUsage {
 /** Whether a file still counts. Marking is the only delete F1 has — the bytes wait for F5 (#25, #66). */
 export type FileStatus = 'Current' | 'Deleted'
 
-export type { SharedFile, TableFileType } from '@/types/file'
+export type { CommitResult, CommitStagedFiles, SharedFile, StagedFile, TableFileType } from '@/types/file'
 
 /**
  * **The base type of this feature** (regla dura 6). Mirror of the backend's `FileResponse`: a file as

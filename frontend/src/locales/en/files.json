@@ -73,7 +73,10 @@
     "readOnlyTitle": "Files",
     "readOnlyEmptyTitle": "No files",
     "readOnlyEmptyDescription": "Nothing has been shared on this table yet.",
-    "helpLink": "How files work"
+    "helpLink": "How files work",
+    "attachConfirm_one": "Add 1 file",
+    "attachConfirm_other": "Add {{count}} files",
+    "someFailed": "Could not upload: {{names}}. The rest were added."
   },
   "admin": {
     "title": "Files",
@@ -103,7 +106,10 @@
     "unpublishDescription": "It leaves the published list and goes back to being its uploader's file. Tables that already added it keep it.",
     "unpublishConfirm": "Unpublish",
     "upload": "Upload a file",
-    "uploadClose": "Close"
+    "uploadClose": "Close",
+    "send_one": "Upload 1 file",
+    "send_other": "Upload {{count}} files",
+    "someFailed": "Could not upload: {{names}}. The rest are in."
   },
   "search": {
     "name": "name",
@@ -128,7 +134,6 @@
   },
   "dropzone": {
     "prompt": "Drag a file here, or click to pick one",
-    "uploading": "Uploading…",
     "limits": "Up to 2 MB per file. PDF, Word, PNG and JPG are accepted.",
     "categoryLabel": "Which drawer it goes in",
     "reused": "You already had “{{name}}”: it was reused and takes no extra space.",
@@ -154,7 +159,11 @@
     "noResultsDescription": "None of your files match the search.",
     "deleteTitle": "Remove this file?",
     "deleteDescription": "“{{name}}” stops appearing in your list and on the tables that use it. It is not erased from disk: the owner does that from the maintenance menu.",
-    "deleteConfirm": "Remove"
+    "deleteConfirm": "Remove",
+    "send_one": "Upload 1 file",
+    "send_other": "Upload {{count}} files",
+    "someFailed": "Could not upload: {{names}}. The rest are in. Try again with those.",
+    "reused": "You already had “{{names}}”: it was reused and takes no extra space."
   },
   "edit": {
     "title": "Edit file",
@@ -166,5 +175,8 @@
     "cancel": "Cancel",
     "confirm": "Save",
     "saved": "File updated"
+  },
+  "staged": {
+    "remove": "Remove “{{name}}”"
   }
 }

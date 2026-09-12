@@ -7,7 +7,7 @@ import { ForbiddenState } from '@/components/ForbiddenState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { tableDetailPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
-import { FileList, FilePicker } from '@/features/files'
+import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
 import { AttendanceSummaryView, SessionList, TableStatusBadge, useGameTable, useMySessions, type MySessions } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
 import { browserTimeZone, formatSlot, utcSlotToLocal } from '@/lib/date'
@@ -68,6 +68,7 @@ function MySessionsSection({ tableId }: { tableId: string }) {
  * Everything on it is in the reader's own time; what the server stores is UTC (#22).
  */
 export function MyTableDetailPage() {
+  const commit = useCommitStagedFiles()
   const { t, i18n } = useTranslation('tables')
   // A second namespace rather than copying the file labels into `tables`: the words belong to the
   // files domain and are the same ones the master's tab shows (regla dura 18).
@@ -150,6 +151,9 @@ export function MyTableDetailPage() {
           )}
           renderFiles={(files) => <FileList files={files} />}
           renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerSubmission" />}
+          // Uploading happens here and not in the picker (#238): this screen owns the send, so it is
+          // what turns the staged files into ids right before the answer travels.
+          commitFiles={(staged) => commit.mutateAsync({ staged, fileCategory: 'PlayerSubmission' })}
         />
       </div>
 

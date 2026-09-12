@@ -15,21 +15,30 @@ import { FileCard } from './FileCard'
 import { FileCategoryBadge } from './FileCategoryBadge'
 import { FileCategoryFilter } from './FileCategoryFilter'
 import { FileDropzone } from './FileDropzone'
-import type { FileCategory } from '../types'
+import { StagedFileList } from './StagedFileList'
+import type { FileCategory, StagedFile } from '../types'
 
 interface FilePickerProps {
   /**
-   * Called with the file that was chosen — whether it was just uploaded or picked out of the
-   * history. **The two paths end in the same callback on purpose**: to whoever is attaching, they
-   * are the same decision, and the difference is only where the bytes came from (#65).
+   * Called with the file that was chosen — **staged, not sent** (#238).
    *
-   * The name travels alongside the id because some callers show the pick back before doing anything
-   * with it — answering a request lets several files be gathered and then sent (#76) — and looking a
-   * name up again for something the picker just had is a round trip for nothing.
+   * **The three sources end in the same callback on purpose**: to whoever is assembling the set they
+   * are the same decision, and the difference is only what the confirm has to do about each (#65). A
+   * fresh pick arrives as bytes still in the browser; something reused or published arrives as an id
+   * that is already on the server.
    */
-  onPick: (file: { fileId: string; name: string }) => void
-  /** True while the caller is doing something with the pick, to keep the buttons from firing twice. */
+  onPick: (staged: StagedFile) => void
+  /** True while the caller is sending, to keep the buttons from firing twice. */
   isBusy?: boolean
+  /**
+   * What is already staged, shown under the upload zone so a pick has visible feedback (#238).
+   *
+   * It has to be here rather than only in the caller: with nothing uploading at pick time, the list
+   * is the only thing that says the file was taken.
+   */
+  staged?: StagedFile[]
+  /** Called with the key of a staged entry to drop. Required whenever `staged` is given. */
+  onRemove?: (key: string) => void
   /**
    * Whether to offer what the platform published (#64, #79). False hides the tab entirely.
    */
@@ -63,12 +72,14 @@ interface FilePickerProps {
  * usable once the community has published more than a handful — and what puts the right blank in
  * front of the right moment without anybody filtering by hand.
  *
- * @param props.onPick         called with the chosen file's id and name
+ * @param props.onPick         called with the chosen file, staged and not yet sent
+ * @param props.staged         what is already staged, listed under the upload zone
+ * @param props.onRemove       called with the key of a staged entry to drop
  * @param props.isBusy         true while the caller is acting on a pick
  * @param props.offerPublished whether to offer what the platform published
  * @param props.cajon          the flow the file is being chosen for; narrows the published tab
  */
-export function FilePicker({ onPick, isBusy = false, offerPublished = false, cajon }: FilePickerProps) {
+export function FilePicker({ onPick, isBusy = false, offerPublished = false, cajon, staged, onRemove }: FilePickerProps) {
   const { t, i18n } = useTranslation('files')
   const [tab, setTab] = useState('upload')
   const [search, setSearch] = useState('')
@@ -87,8 +98,11 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
         {offerPublished && <TabsTrigger value="published">{t('picker.published')}</TabsTrigger>}
       </TabsList>
 
-      <TabsContent value="upload">
-        <FileDropzone onUploaded={(uploaded) => onPick({ fileId: uploaded.id, name: uploaded.name })} isBusy={isBusy} />
+      <TabsContent value="upload" className="space-y-3">
+        <FileDropzone onStaged={onPick} isBusy={isBusy} />
+        {/* What is about to be sent. Nothing has left the browser yet, so this list is the whole
+            confirmation that the pick landed (#238). */}
+        {staged !== undefined && onRemove !== undefined && <StagedFileList files={staged} onRemove={onRemove} />}
       </TabsContent>
 
       <TabsContent value="reuse" className="space-y-3">
@@ -128,7 +142,7 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
                       size="sm"
                       variant="secondary"
                       disabled={isBusy}
-                      onClick={() => onPick({ fileId: file.id, name: file.name })}
+                      onClick={() => onPick({ kind: 'existing', fileId: file.id, name: file.name })}
                     >
                       {t('picker.use')}
                     </Button>
@@ -170,7 +184,7 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
                         size="sm"
                         variant="secondary"
                         disabled={isBusy}
-                        onClick={() => onPick({ fileId: file.id, name: file.name })}
+                        onClick={() => onPick({ kind: 'existing', fileId: file.id, name: file.name })}
                       >
                         {t('picker.use')}
                       </Button>

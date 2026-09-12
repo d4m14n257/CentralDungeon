@@ -17,7 +17,7 @@ export { TaskFormDialog, type TaskFormRecipient, type TaskFormSession } from './
 export { TableTasksSection } from './components/TableTasksSection'
 export { TaskStatusBadge } from './components/TaskStatusBadge'
 export { TaskSubmissionsPanel } from './components/TaskSubmissionsPanel'
-export { TaskSubmitDialog, type PickedFile } from './components/TaskSubmitDialog'
+export { TaskSubmitDialog } from './components/TaskSubmitDialog'
 
 export { useTableTasks } from './api/useTableTasks'
 export { useApplicableTasks } from './api/useApplicableTasks'
@@ -33,6 +33,8 @@ export { taskFormSchema, type TaskForm } from './schemas'
 export type {
   ApplicableTask,
   CreateSubmissionInput,
+  TaskDraft,
+  SubmissionDraft,
   CreateTaskInput,
   SubmittedFile,
   TableTask,

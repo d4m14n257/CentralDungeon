@@ -66,7 +66,8 @@
     "savedToast": "Request updated.",
     "blanksLabel": "Forms for this request",
     "blanksHint": "What you are asking people to fill in: a template, a blank form. Use one of the community's or upload your own.",
-    "blanksRemove": "Remove “{{name}}”"
+    "blanksRemove": "Remove “{{name}}”",
+    "blanksFailed": "Could not upload: {{names}}. The request was saved; add them by editing it."
   },
   "submissions": {
     "title": "Answers",
@@ -96,7 +97,8 @@
     "removeFile": "Remove the file",
     "accumulatesHint": "Each answer is kept separately. If you already sent something, it stays.",
     "send": "Send",
-    "sentToast": "Sent."
+    "sentToast": "Sent.",
+    "someFilesFailed": "Could not upload: {{names}}. The rest was sent; send another answer with those."
   },
   "list": {
     "blanks": "To fill in"

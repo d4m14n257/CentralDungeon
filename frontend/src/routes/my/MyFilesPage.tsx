@@ -15,16 +15,20 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   EditFileDialog,
   FileCategoryBadge,
+  FileCategoryChoice,
   FileCategoryFilter,
   FileDropzone,
+  StagedFileList,
   FileList,
   FileTypeBadge,
   FileUsageChips,
+  useCommitStagedFiles,
   useDeleteFile,
   useMyCategories,
   useMyFiles,
   useUpdateFile,
   type FileCategory,
+  type StagedFile,
   type StoredFile,
   type UpdateFileInput,
 } from '@/features/files'
@@ -77,6 +81,43 @@ export function MyFilesPage() {
   const remove = useDeleteFile()
   const editDialog = useDisclosure<StoredFile>()
   const uploadPanel = useDisclosure()
+
+  // Staged in the browser until the button below is pressed (#238).
+  const [staged, setStaged] = useState<StagedFile[]>([])
+  const [cajon, setCajon] = useState<FileCategory | null>(null)
+  const commit = useCommitStagedFiles()
+
+  function removeStaged(key: string) {
+    setStaged((current) => current.filter((entry) => (entry.kind === 'new' ? entry.localId : entry.fileId) !== key))
+  }
+
+  /**
+   * Sends everything staged, and says what happened to each part.
+   *
+   * A file that failed does not undo the ones that went through: they are already in the library and
+   * the person is told which one to try again — retrying costs nothing, because the server
+   * recognises content it already has (#75, #238).
+   */
+  function send() {
+    const chosen = cajon ?? myCategories?.[0]
+    if (chosen === undefined) return
+    commit.mutate(
+      { staged, fileCategory: chosen },
+      {
+        onSuccess: ({ failed, reused }) => {
+          setStaged(staged.filter((entry) => entry.kind === 'new' && failed.includes(entry.name)))
+          if (reused.length > 0) {
+            toast.info(t('mine.reused', { names: reused.join(', ') }))
+          }
+          if (failed.length > 0) {
+            toast.error(t('mine.someFailed', { names: failed.join(', ') }))
+            return
+          }
+          uploadPanel.close()
+        },
+      },
+    )
+  }
 
   /** Writes the screen's state into the URL, resetting the page whenever the filters change. */
   function updateParams(changes: Record<string, string>) {
@@ -147,7 +188,30 @@ export function MyFilesPage() {
           person is left where they are if they have another file to add. */}
       {/* **The one place that asks which cajón** (#233): every other upload happens inside a flow that
           already knows, and this one has no flow to observe. */}
-      {uploadPanel.isOpen && myCategories !== undefined && <FileDropzone onUploaded={() => {}} askForCategory categories={myCategories} />}
+      {uploadPanel.isOpen && myCategories !== undefined && myCategories.length > 0 && (
+        <div className="border-border space-y-3 rounded-lg border p-4">
+          {/* Nothing uploads on pick (#238). The button below is the confirm — here the operation is
+              just "upload these", so the confirm is that and nothing more. */}
+          <FileDropzone onStaged={(file) => setStaged((current) => [...current, file])} isBusy={commit.isPending} />
+          <StagedFileList files={staged} onRemove={removeStaged} />
+          <div className="space-y-2">
+            <p className="text-sm font-medium">{t('dropzone.categoryLabel')}</p>
+            <FileCategoryChoice
+              value={cajon ?? myCategories[0]!}
+              onChange={setCajon}
+              options={myCategories}
+              label={t('dropzone.categoryLabel')}
+              disabled={commit.isPending}
+            />
+            <p className="text-fg-muted text-xs">{t('dropzone.categoryHint')}</p>
+          </div>
+          <div className="flex justify-end">
+            <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={send}>
+              {t('mine.send', { count: staged.length })}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         <Input

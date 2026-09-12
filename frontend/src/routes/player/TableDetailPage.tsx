@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
-import { FileList, FilePicker } from '@/features/files'
+import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
 import { ApplyToTableDialog, useMyApplications } from '@/features/registrations'
 import { SessionList, TableStatusBadge, useGameTable } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
@@ -64,6 +64,7 @@ function primaryMasterOf(masters: MasterSummary[]) {
  * data from an id (#3.1.5). That is what keeps a feature from ever importing another.
  */
 export function TableDetailPage() {
+  const commit = useCommitStagedFiles()
   const { t, i18n } = useTranslation('tables')
   // A second namespace rather than copying the file labels into `tables`: the words belong to the
   // files domain and are the same ones the master's tab shows (regla dura 18).
@@ -205,6 +206,9 @@ export function TableDetailPage() {
           )}
           renderFiles={(files) => <FileList files={files} />}
           renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerSubmission" />}
+          // Uploading happens here and not in the picker (#238): this screen owns the send, so it is
+          // what turns the staged files into ids right before the answer travels.
+          commitFiles={(staged) => commit.mutateAsync({ staged, fileCategory: 'PlayerSubmission' })}
         />
 
         {table.startDate && (

@@ -1,3 +1,4 @@
+import type { StagedFile } from '@/types/file'
 /**
  * Who a task is addressed to (#63). A union of literals rather than a TypeScript `enum`
  * (arquitectura.md §3.2).
@@ -157,11 +158,19 @@ export type CreateTaskInput = Pick<
   'title' | 'description' | 'audience' | 'targetUserId' | 'tableSessionId' | 'acceptsText' | 'acceptsFiles' | 'isMandatory' | 'dueAt'
 > & {
   /**
-   * The blanks to attach, by id (#63). Already uploaded and linked, never copied (#79), so the
-   * community's published form is attached rather than re-uploaded by every master.
+   * The blanks to attach, by id (#63). Linked and never copied (#79), so the community's published
+   * form is attached rather than re-uploaded by every master.
    */
   fileIds: string[]
 }
+
+/**
+ * What the request form hands up, before anything has been uploaded (#238).
+ *
+ * Same split as {@link SubmissionDraft}, and for the same reason: the wire keeps `fileIds` because
+ * that is what the backend takes, and the form says `staged` because that is what it has.
+ */
+export type TaskDraft = Omit<CreateTaskInput, 'fileIds'> & { staged: StagedFile[] }
 
 /** What correcting sends. The same shape: a full replacement, never a patch (#189). */
 export type UpdateTaskInput = CreateTaskInput
@@ -175,5 +184,20 @@ export type UpdateTaskInput = CreateTaskInput
 export interface CreateSubmissionInput {
   /** The written answer as rich text, or null when the answer is files only. */
   content: string | null
+  /** The files to hand in, by id. Already uploaded by the time this travels (#65, #79). */
   fileIds: string[]
+}
+
+/**
+ * What the answer dialog hands up, before anything has been uploaded (#238).
+ *
+ * **The draft and the request are two different shapes on purpose.** Nothing reaches the server
+ * until the screen that owns the send uploads the staged files and turns them into ids — so the
+ * request body can keep saying `fileIds`, which is what the backend takes, and the dialog can say
+ * `staged`, which is what it actually has. Collapsing them is how a `File` ends up being serialized
+ * into a JSON body.
+ */
+export interface SubmissionDraft {
+  content: string | null
+  staged: StagedFile[]
 }

@@ -85,6 +85,8 @@ async function attach(page: Page, isPrivate: boolean, pick: (dialog: ReturnType<
     await dialog.getByRole('checkbox', { name: 'Solo para quienes dirigen la mesa' }).click()
   }
   await pick(dialog)
+  // Picking only stages it (#238): nothing has reached the server until this button is pressed.
+  await dialog.getByRole('button', { name: /Agregar \d+ archivos?/ }).click()
   await expect(dialog).toBeHidden()
 }
 
@@ -218,6 +220,7 @@ test('a master attaches a file the platform published without copying it', async
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('button', { name: 'Subir archivo' }).click()
     await admin.page.locator('input[type="file"]').setInputFiles(pdf('ficha-comunidad-e2e.pdf', runId))
+    await admin.page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
     await expect(admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })).toBeVisible()
 
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')

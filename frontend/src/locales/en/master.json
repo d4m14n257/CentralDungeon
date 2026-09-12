@@ -48,7 +48,8 @@
     "missingSchedule": "Add at least one day and time: the table has to say when it is played.",
     "filesTitle": "Files",
     "filesHint": "What you hand the table: maps, sheets, house rules. Players download them from the table.",
-    "missingTag": "Pick at least one tag: it is what makes the table findable."
+    "missingTag": "Pick at least one tag: it is what makes the table findable.",
+    "filesFailed": "The table was created, but these could not be uploaded: {{names}}. Add them from the Archivos tab."
   },
   "detail": {
     "tabs": {

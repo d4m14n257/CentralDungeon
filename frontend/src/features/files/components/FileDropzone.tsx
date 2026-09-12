@@ -1,23 +1,22 @@
-import { CheckCircle2Icon, LoaderCircleIcon, UploadCloudIcon } from 'lucide-react'
+import { UploadCloudIcon } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { ApiError } from '@/types/api'
-
-import { useUploadFile } from '../api/useUploadFile'
 import { FILE_CATEGORIES } from '../categories'
-import type { FileCategory, StoredFile } from '../types'
+import { MAX_FILE_BYTES, rejectionOf } from '../limits'
+import { FileCategoryChoice } from './FileCategoryChoice'
+import type { FileCategory, StagedFile } from '../types'
 
 interface FileDropzoneProps {
   /**
-   * Called with the file once it is on the server — **whether it was written or recognised**. To
-   * whoever is uploading, the two are the same outcome; the difference only decides what the zone
-   * says about it (#75, #234).
+   * Called with the file that was picked, **which is not on the server yet** (#238).
+   *
+   * Nothing uploads here any more: the confirm that creates the table, sends the answer or publishes
+   * the request is what uploads, through `useCommitStagedFiles`. Picking a file stages it, and
+   * abandoning the flow leaves nothing behind.
    */
-  onUploaded: (file: StoredFile) => void
+  onStaged: (staged: StagedFile) => void
   /** True while the caller is doing something with the result, to keep the zone from firing twice. */
   isBusy?: boolean
   /**
@@ -61,12 +60,12 @@ interface FileDropzoneProps {
  * and in the four real flows that answer is already known — so the cajón select appears only when the
  * caller says there is no flow to observe, which today is `/my/files` and nothing else.
  *
- * @param props.onUploaded     called with the file once it is on the server
+ * @param props.onStaged       called with the file that was picked, not yet on the server
  * @param props.isBusy         true while the caller is acting on the result
  * @param props.askForCategory whether to ask which cajón it goes in — only where there is no flow
  * @param props.categories     which cajones to offer when it asks; only the actor's own (#237)
  */
-export function FileDropzone({ onUploaded, isBusy = false, askForCategory = false, categories = FILE_CATEGORIES }: FileDropzoneProps) {
+export function FileDropzone({ onStaged, isBusy = false, askForCategory = false, categories = FILE_CATEGORIES }: FileDropzoneProps) {
   const { t } = useTranslation('files')
   const inputId = useId()
   const input = useRef<HTMLInputElement>(null)
@@ -76,62 +75,39 @@ export function FileDropzone({ onUploaded, isBusy = false, askForCategory = fals
   const [category, setCategory] = useState<FileCategory | null>(null)
   const chosen = category ?? categories[0] ?? null
   const [error, setError] = useState<string | null>(null)
-  const [reused, setReused] = useState<string | null>(null)
 
-  const upload = useUploadFile()
-  const isPending = upload.isPending || isBusy
+  const isPending = isBusy
 
+  /**
+   * Takes a file in, or refuses it on the spot.
+   *
+   * **The cap and the whitelist are checked here now**, which they have to be: with the upload
+   * deferred to the confirm, the server's refusal would arrive after four wizard steps. The rule is
+   * the same rule and the message is the same message - `rejectionOf` returns the error code the
+   * backend would have used - so a file refused now and one refused later read identically (#197).
+   */
   function handleFile(file: File) {
+    const rejection = rejectionOf(file)
+    if (rejection !== null) {
+      setError(t([`errors.${rejection}`, 'errors.uploadFailed'], { maxBytes: MAX_FILE_BYTES, sizeBytes: file.size }))
+      return
+    }
     setError(null)
-    setReused(null)
-    upload.mutate(
-      // `Private` and not `SingleUse`: somebody who took the trouble to upload a character sheet
-      // will want it on the next table, and the history of #65 only works if it has anything in it.
-      // No cajón unless the caller has none to infer: in a flow the link that follows classifies it.
-      { file, input: { fileType: 'Private', fileCategory: askForCategory ? chosen : null } },
-      {
-        onSuccess: ({ file: uploaded, deduplicated }) => {
-          if (deduplicated) {
-            setReused(uploaded.name)
-          }
-          onUploaded(uploaded)
-        },
-        onError: (failure) => {
-          setError(
-            failure instanceof ApiError
-              ? t([`errors.${failure.problem.errorCode}`, 'errors.uploadFailed'], { ...failure.problem.errorParams })
-              : t('errors.uploadFailed'),
-          )
-        },
-        // Cleared on failure too, not only on success: the input keeps the rejected file otherwise,
-        // and picking the same one again fires no change event at all — so somebody who fixes what
-        // the message told them to fix would find the control silently dead.
-        onSettled: () => {
-          if (input.current) {
-            input.current.value = ''
-          }
-        },
-      },
-    )
+    onStaged({ kind: 'new', localId: crypto.randomUUID(), name: file.name, file })
   }
 
   return (
     <div className="space-y-3">
       {askForCategory && chosen !== null && (
         <div className="space-y-2">
-          <Label htmlFor={`${inputId}-category`}>{t('dropzone.categoryLabel')}</Label>
-          <Select value={chosen} onValueChange={(value) => setCategory(value as FileCategory)} disabled={isPending}>
-            <SelectTrigger id={`${inputId}-category`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {t(`category.${value}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <p className="text-sm font-medium">{t('dropzone.categoryLabel')}</p>
+          <FileCategoryChoice
+            value={chosen}
+            onChange={setCategory}
+            options={categories}
+            label={t('dropzone.categoryLabel')}
+            disabled={isPending}
+          />
           <p className="text-fg-muted text-xs">{t('dropzone.categoryHint')}</p>
         </div>
       )}
@@ -158,9 +134,9 @@ export function FileDropzone({ onUploaded, isBusy = false, askForCategory = fals
         )}
       >
         <span aria-hidden="true" className="text-fg-muted">
-          {upload.isPending ? <LoaderCircleIcon className="size-6 animate-spin" /> : <UploadCloudIcon className="size-6" />}
+          <UploadCloudIcon className="size-6" />
         </span>
-        <span className="text-sm font-medium">{upload.isPending ? t('dropzone.uploading') : t('dropzone.prompt')}</span>
+        <span className="text-sm font-medium">{t('dropzone.prompt')}</span>
         <span className="text-fg-muted text-xs">{t('dropzone.limits')}</span>
         <input
           ref={input}
@@ -173,6 +149,9 @@ export function FileDropzone({ onUploaded, isBusy = false, askForCategory = fals
             if (picked) {
               handleFile(picked)
             }
+            // Cleared immediately: nothing is in flight, and keeping the value would stop the same
+            // file from firing a change event again after being removed from the list.
+            event.target.value = ''
           }}
         />
       </label>
@@ -182,13 +161,6 @@ export function FileDropzone({ onUploaded, isBusy = false, askForCategory = fals
       {error && (
         <p role="alert" className="text-destructive text-sm">
           {error}
-        </p>
-      )}
-
-      {reused && (
-        <p className="text-fg-muted flex items-center gap-1.5 text-sm">
-          <CheckCircle2Icon aria-hidden="true" className="size-4 shrink-0" />
-          {t('dropzone.reused', { name: reused })}
         </p>
       )}
     </div>

@@ -48,7 +48,8 @@
     "missingSchedule": "Agregá al menos un día y horario: la mesa tiene que decir cuándo se juega.",
     "filesTitle": "Archivos",
     "filesHint": "Lo que le das a la mesa: mapas, fichas, reglas de la casa. Los jugadores los descargan desde la mesa.",
-    "missingTag": "Elegí al menos un tag: es lo que hace que la mesa se encuentre."
+    "missingTag": "Elegí al menos un tag: es lo que hace que la mesa se encuentre.",
+    "filesFailed": "La mesa se creó, pero no se pudieron subir: {{names}}. Agregalos desde la pestaña Archivos."
   },
   "detail": {
     "tabs": {

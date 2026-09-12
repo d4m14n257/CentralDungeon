@@ -7,7 +7,8 @@ import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { ApplicableTaskList } from './ApplicableTaskList'
-import { TaskSubmitDialog, type PickedFile } from './TaskSubmitDialog'
+import { TaskSubmitDialog } from './TaskSubmitDialog'
+import type { CommitStagedFiles, StagedFile } from '@/types/file'
 import { useApplicableTasks } from '../api/useApplicableTasks'
 import { useSubmitTask } from '../api/useSubmitTask'
 import type { ApplicableTask, SubmittedFile } from '../types'
@@ -32,7 +33,15 @@ export interface TableTasksSectionProps {
    * The screens in `src/routes/` are the one place domains are composed (regla dura 16, §3.1.5).
    */
   renderFiles: (files: SubmittedFile[]) => ReactNode
-  renderFilePicker: (onPick: (file: PickedFile) => void) => ReactNode
+  renderFilePicker: (onPick: (file: StagedFile) => void) => ReactNode
+  /**
+   * Uploads what was staged and hands back the ids (#238).
+   *
+   * A prop and not an import, for the same reason `renderFilePicker` is one: this feature may never
+   * import `features/files` (regla dura 16), and the screen that composes both is the one that wires
+   * them. Nothing has reached the server until this runs.
+   */
+  commitFiles: CommitStagedFiles
 }
 
 /**
@@ -52,7 +61,7 @@ export interface TableTasksSectionProps {
  * @param props.renderFiles      how to render the files of an answer
  * @param props.renderFilePicker how to render the file picker inside the answer dialog
  */
-export function TableTasksSection({ tableId, renderHelpLink, renderFiles, renderFilePicker }: TableTasksSectionProps) {
+export function TableTasksSection({ tableId, renderHelpLink, renderFiles, renderFilePicker, commitFiles }: TableTasksSectionProps) {
   const { t } = useTranslation('tasks')
   // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data: tasks, isPending, isLoadingError, refetch } = useApplicableTasks(tableId)
@@ -82,17 +91,24 @@ export function TableTasksSection({ tableId, renderHelpLink, renderFiles, render
           task={answering}
           isBusy={submit.isPending}
           renderFilePicker={renderFilePicker}
-          onSubmit={(input) =>
+          onSubmit={async (draft) => {
+            // Upload first, send second (#238). A file that failed does not hold the answer back:
+            // answers accumulate (#76), so completing it is sending another one - and the person is
+            // told which file to try again with.
+            const { fileIds, failed } = await commitFiles(draft.staged)
+            if (failed.length > 0) {
+              toast.error(t('submit.someFilesFailed', { names: failed.join(', ') }))
+            }
             submit.mutate(
-              { taskId: answering.taskId, input },
+              { taskId: answering.taskId, input: { content: draft.content, fileIds } },
               {
                 onSuccess: () => {
                   setAnswering(null)
-                  toast.success(t('submit.sentToast'))
+                  if (failed.length === 0) toast.success(t('submit.sentToast'))
                 },
               },
             )
-          }
+          }}
         />
       )}
     </section>

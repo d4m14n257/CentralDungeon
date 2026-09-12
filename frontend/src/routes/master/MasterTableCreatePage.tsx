@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { XIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -11,7 +10,6 @@ import { RichTextEditor } from '@/components/RichTextEditor'
 import { RichTextView } from '@/components/RichTextView'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { IconAction } from '@/components/IconAction'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -21,7 +19,7 @@ import { masterTableDetailPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { CatalogChip, CatalogPicker } from '@/features/catalogs'
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChanges'
-import { FilePicker, useAttachFilesToTable } from '@/features/files'
+import { FilePicker, useAttachFilesToTable, useCommitStagedFiles, type StagedFile } from '@/features/files'
 import {
   DEFAULT_SLOT_DURATION,
   ScheduleEditor,
@@ -62,6 +60,7 @@ export function MasterTableCreatePage() {
   const navigate = useNavigate()
   const createTable = useCreateTable()
   const attachFiles = useAttachFilesToTable()
+  const commit = useCommitStagedFiles()
   const { data: me } = useMe()
   const { data: tableTypes } = useTableTypes()
   const [step, setStep] = useState<WizardStep>('identity')
@@ -74,7 +73,9 @@ export function MasterTableCreatePage() {
   // filling in four steps and pressing «Crear mesa».
   const [stepError, setStepError] = useState<string | null>(null)
   // Picked while the table does not exist yet; attached the moment it does (#228).
-  const [files, setFiles] = useState<{ fileId: string; name: string }[]>([])
+  // Staged in the browser through all four steps, and sent only when the table is created (#238):
+  // abandoning the wizard halfway used to leave the files on the server anyway.
+  const [files, setFiles] = useState<StagedFile[]>([])
   // The week as it already is, so the grid can show what is taken before anything is taken again.
   const myWeek = useMySchedule()
 
@@ -255,16 +256,31 @@ export function MasterTableCreatePage() {
       },
       {
         onSuccess: async (table) => {
-          // The files were picked before the table had an id, so they are attached now (#228).
-          // Shared with the players by default: handing them something is the reason they were
-          // picked, and the Archivos tab is where a master makes one private afterwards.
+          // The files were picked before the table had an id *and* before anything was uploaded, so
+          // this is where both happen (#228, #238). Shared with the players by default: handing them
+          // something is the reason they were picked, and the Archivos tab is where a master makes
+          // one private afterwards.
+          //
+          // **A file that fails does not undo the table.** It is created and editable in
+          // preparation, so the master is told which one to add rather than losing four steps of
+          // work over it - and retrying costs nothing, because the server recognises content it
+          // already has (#75).
+          let failedFiles: string[] = []
           if (files.length > 0) {
-            await attachFiles.mutateAsync({
-              tableId: table.id,
-              files: files.map((file) => ({ fileId: file.fileId, tableFileType: 'Preparation', isPrivate: false })),
-            })
+            const { fileIds, failed } = await commit.mutateAsync({ staged: files })
+            failedFiles = failed
+            if (fileIds.length > 0) {
+              await attachFiles.mutateAsync({
+                tableId: table.id,
+                files: fileIds.map((fileId) => ({ fileId, tableFileType: 'Preparation', isPrivate: false })),
+              })
+            }
           }
-          toast.success(t('create.success'))
+          if (failedFiles.length > 0) {
+            toast.error(t('create.filesFailed', { names: failedFiles.join(', ') }))
+          } else {
+            toast.success(t('create.success'))
+          }
           // The wizard's own redirect is not somebody walking out on it.
           allowNextNavigation()
           void navigate(masterTableDetailPath(table.id))
@@ -466,26 +482,16 @@ export function MasterTableCreatePage() {
                 <p className="text-sm font-medium">{t('create.filesTitle')}</p>
                 <p className="text-fg-muted text-sm">{t('create.filesHint')}</p>
               </div>
-              {files.length > 0 && (
-                <ul className="divide-border divide-y rounded-lg border">
-                  {files.map((file) => (
-                    <li key={file.fileId} className="flex items-center gap-3 px-3 py-2">
-                      <span className="min-w-0 flex-1 truncate text-sm">{file.name}</span>
-                      <IconAction
-                        icon={<XIcon />}
-                        label={t('create.filesRemove', { name: file.name })}
-                        onClick={() => setFiles(files.filter((picked) => picked.fileId !== file.fileId))}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
               <FilePicker
                 cajon="TableMaterial"
                 offerPublished
-                onPick={(file) => {
-                  if (!files.some((picked) => picked.fileId === file.fileId)) {
-                    setFiles([...files, file])
+                staged={files}
+                onRemove={(key) => setFiles(files.filter((picked) => (picked.kind === 'new' ? picked.localId : picked.fileId) !== key))}
+                onPick={(picked) => {
+                  // Reusing the same file twice is one attachment, so an id already staged is a no-op.
+                  const already = picked.kind === 'existing' && files.some((f) => f.kind === 'existing' && f.fileId === picked.fileId)
+                  if (!already) {
+                    setFiles([...files, picked])
                   }
                 }}
               />

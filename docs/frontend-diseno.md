@@ -357,7 +357,9 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `GameTableCard` — la ficha del explorador | `features/tables/` |
 | `RegistrationStatusBadge` — los cinco de postulación | `features/registrations/` |
 | `FilePicker` — subir **o** reutilizar del historial (#65) o de lo publicado (#79). Recibe el **cajón en el que está parado** y la pestaña Publicados pide justo lo que la comunidad publicó para ese momento (#233) | `features/files/` |
-| `FileDropzone` — arrastrar y soltar, con los límites dichos antes de romperlos, el error **inline** bajo la zona y el aviso de que el archivo ya estaba (#234) | `features/files/` |
+| `FileDropzone` — arrastrar y soltar, con los límites dichos antes de romperlos y el error **inline** bajo la zona. **No sube: acumula** (#238) | `features/files/` |
+| `StagedFileList` — lo que está por subirse, con su botón de quitar. Sin subida inmediata, es la única señal de que el archivo se tomó (#238) | `features/files/` |
+| `FileCategoryChoice` — el cajón como chips, no como `<Select>`: es una decisión previa al envío y verla entera es lo que deja tomarla (#233) | `features/files/` |
 | `FileCard` — la fila de un archivo: icono por MIME, tamaño, categoría, último uso y dónde se usa | `features/files/` |
 | `FileCategoryFilter` — los cinco cajones como fila de toggles, no como `<Select>` (#233) | `features/files/` |
 | `FileUsageChips` — dónde se usa un archivo, o «sin usar», que es el aviso de la purga (#232, #75) | `features/files/` |

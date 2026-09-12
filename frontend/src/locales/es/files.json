@@ -73,7 +73,10 @@
     "readOnlyTitle": "Archivos",
     "readOnlyEmptyTitle": "Sin archivos",
     "readOnlyEmptyDescription": "Todavía no hay nada compartido en esta mesa.",
-    "helpLink": "Cómo funcionan los archivos"
+    "helpLink": "Cómo funcionan los archivos",
+    "attachConfirm_one": "Agregar 1 archivo",
+    "attachConfirm_other": "Agregar {{count}} archivos",
+    "someFailed": "No se pudieron subir: {{names}}. Los demás quedaron agregados."
   },
   "admin": {
     "title": "Archivos",
@@ -103,7 +106,10 @@
     "unpublishDescription": "Sale del listado de publicados y vuelve a ser un archivo de quien lo subió. Las mesas que ya lo tienen agregado lo conservan.",
     "unpublishConfirm": "Dejar de publicar",
     "upload": "Subir archivo",
-    "uploadClose": "Cerrar"
+    "uploadClose": "Cerrar",
+    "send_one": "Subir 1 archivo",
+    "send_other": "Subir {{count}} archivos",
+    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están."
   },
   "search": {
     "name": "nombre",
@@ -128,7 +134,6 @@
   },
   "dropzone": {
     "prompt": "Arrastrá un archivo acá o hacé clic para elegirlo",
-    "uploading": "Subiendo…",
     "limits": "Hasta 2 MB por archivo. Se aceptan PDF, Word, PNG y JPG.",
     "categoryLabel": "En qué cajón va",
     "reused": "«{{name}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo.",
@@ -154,7 +159,11 @@
     "noResultsDescription": "Ninguno de tus archivos coincide con la búsqueda.",
     "deleteTitle": "¿Dar de baja el archivo?",
     "deleteDescription": "«{{name}}» deja de aparecer en tu lista y en las mesas que lo usan. No se borra del disco: eso lo hace el owner desde su menú de mantenimiento.",
-    "deleteConfirm": "Dar de baja"
+    "deleteConfirm": "Dar de baja",
+    "send_one": "Subir 1 archivo",
+    "send_other": "Subir {{count}} archivos",
+    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están. Probá de nuevo con esos.",
+    "reused": "«{{names}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo."
   },
   "edit": {
     "title": "Editar archivo",
@@ -166,5 +175,8 @@
     "cancel": "Cancelar",
     "confirm": "Guardar",
     "saved": "Archivo actualizado"
+  },
+  "staged": {
+    "remove": "Quitar «{{name}}»"
   }
 }

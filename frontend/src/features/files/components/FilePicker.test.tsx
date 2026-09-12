@@ -83,29 +83,19 @@ describe('FilePicker', () => {
     await waitFor(() => expect(listPublic).toHaveBeenCalledWith('TableMaterial'))
   })
 
-  it('uploads what was picked and hands the caller the resulting file', async () => {
+  /**
+   * **Picking stages, it does not upload** (#238). The confirm that creates the table or sends the
+   * answer is what puts bytes on the server, so abandoning the flow leaves nothing behind.
+   */
+  it('stages what was picked and uploads nothing', async () => {
     const onPick = vi.fn()
     render(wrap(<FilePicker onPick={onPick} />))
 
     const file = new File(['hoja'], 'ficha.pdf', { type: 'application/pdf' })
     await userEvent.upload(dropzoneInput(), file)
 
-    await waitFor(() => expect(onPick).toHaveBeenCalledWith({ fileId: 'file-new', name: 'ficha.pdf' }))
-    // No cajón on an upload made inside a flow: the link that follows classifies it (#233).
-    expect(upload).toHaveBeenCalledWith(file, { fileType: 'Private', fileCategory: null })
-  })
-
-  /**
-   * `Private` and not `SingleUse`: somebody who bothered to upload a sheet will want it on the next
-   * table, and the history of #65 is empty unless uploads land in it (#68).
-   */
-  it('keeps what was uploaded in the reuse history', async () => {
-    render(wrap(<FilePicker onPick={vi.fn()} />))
-
-    await userEvent.upload(dropzoneInput(), new File(['hoja'], 'ficha.pdf', { type: 'application/pdf' }))
-
-    await waitFor(() => expect(upload).toHaveBeenCalled())
-    expect(upload.mock.calls[0]?.[1]).toEqual({ fileType: 'Private', fileCategory: null })
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ kind: 'new', name: 'ficha.pdf', file }))
+    expect(upload).not.toHaveBeenCalled()
   })
 
   it('picks a file from the history without uploading anything', async () => {
@@ -134,7 +124,8 @@ describe('FilePicker', () => {
     // The name travels with the id: a caller that gathers several files before sending them shows
     // them back by name, and looking that up again for something the picker just had is a round trip
     // for nothing.
-    expect(onPick).toHaveBeenCalledWith({ fileId: 'file-old', name: 'ficha-vieja.pdf' })
+    // Something reused arrives already carrying its id: there is nothing to upload for it (#65).
+    expect(onPick).toHaveBeenCalledWith({ kind: 'existing', fileId: 'file-old', name: 'ficha-vieja.pdf' })
     expect(upload).not.toHaveBeenCalled()
   })
 

@@ -12,6 +12,8 @@ export { FileDropzone } from './components/FileDropzone'
 export { FileTypeBadge } from './components/FileTypeBadge'
 export { FileCategoryBadge } from './components/FileCategoryBadge'
 export { FileCategoryFilter } from './components/FileCategoryFilter'
+export { FileCategoryChoice } from './components/FileCategoryChoice'
+export { StagedFileList } from './components/StagedFileList'
 export { FileUsageChips } from './components/FileUsageChips'
 export { PublishFileDialog } from './components/PublishFileDialog'
 export { EditFileDialog } from './components/EditFileDialog'
@@ -22,6 +24,7 @@ export { usePublicFiles } from './api/usePublicFiles'
 export { useTableFiles } from './api/useTableFiles'
 export { useAdminFiles } from './api/useAdminFiles'
 export { useUploadFile } from './api/useUploadFile'
+export { useCommitStagedFiles } from './api/useCommitStagedFiles'
 export { useUpdateFile } from './api/useUpdateFile'
 export { useDeleteFile } from './api/useDeleteFile'
 export { useDownloadFile } from './api/useDownloadFile'
@@ -35,9 +38,12 @@ export { useDeleteFileAsAdmin } from './api/useDeleteFileAsAdmin'
 
 export { formatFileSize, type FormattedSize } from './format'
 export { FILE_CATEGORIES, PUBLISHABLE_CATEGORIES } from './categories'
+export { MAX_FILE_BYTES, ALLOWED_MIME_TYPES, rejectionOf } from './limits'
+export { stagedKey } from '@/types/file'
 
 export type {
   AdminFile,
+  CommitResult,
   FileCategory,
   FileStatus,
   FileType,
@@ -46,6 +52,7 @@ export type {
   PublicFile,
   PublishFileInput,
   SharedFile,
+  StagedFile,
   StoredFile,
   TableFile,
   TableFileType,

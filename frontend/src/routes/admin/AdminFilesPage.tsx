@@ -19,15 +19,18 @@ import {
   FileCategoryBadge,
   FileCategoryFilter,
   FileDropzone,
+  StagedFileList,
   FileTypeBadge,
   PublishFileDialog,
   formatFileSize,
   useAdminFiles,
+  useCommitStagedFiles,
   useDeleteFileAsAdmin,
   usePublishFile,
   useUnpublishFile,
   type AdminFile,
   type FileCategory,
+  type StagedFile,
 } from '@/features/files'
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib/searchQuery'
@@ -89,6 +92,32 @@ export function AdminFilesPage() {
   const remove = useDeleteFileAsAdmin()
   const publishDialog = useDisclosure<AdminFile>()
   const uploadPanel = useDisclosure()
+
+  // Staged in the browser until the button below is pressed (#238).
+  const [staged, setStaged] = useState<StagedFile[]>([])
+  const commit = useCommitStagedFiles()
+
+  function removeStaged(key: string) {
+    setStaged((current) => current.filter((entry) => (entry.kind === 'new' ? entry.localId : entry.fileId) !== key))
+  }
+
+  /** Sends what is staged into the platform's library. What failed stays listed, to try again. */
+  function send() {
+    commit.mutate(
+      { staged },
+      {
+        onSuccess: ({ failed }) => {
+          setStaged(staged.filter((entry) => entry.kind === 'new' && failed.includes(entry.name)))
+          void refetch()
+          if (failed.length > 0) {
+            toast.error(t('admin.someFailed', { names: failed.join(', ') }))
+            return
+          }
+          uploadPanel.close()
+        },
+      },
+    )
+  }
 
   /** Writes the screen's state into the URL, resetting the page whenever the search changes. */
   function updateParams(changes: Record<string, string>) {
@@ -185,7 +214,19 @@ export function AdminFilesPage() {
           the platform's library was to attach it to a table first and publish it from there - so the
           file arrived carrying a cajón it got by accident. It asks no cajón: what it is offered for
           is said when it is published, which is the deliberate act. */}
-      {uploadPanel.isOpen && <FileDropzone onUploaded={() => void refetch()} />}
+      {uploadPanel.isOpen && (
+        <div className="border-border space-y-3 rounded-lg border p-4">
+          {/* Staged until the button below (#238). No cajón is asked for: what a published file is
+              offered for is said when it is published, which is the deliberate act (#233). */}
+          <FileDropzone onStaged={(file) => setStaged((current) => [...current, file])} isBusy={commit.isPending} />
+          <StagedFileList files={staged} onRemove={removeStaged} />
+          <div className="flex justify-end">
+            <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={send}>
+              {t('admin.send', { count: staged.length })}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <SearchQueryInput
         fields={[

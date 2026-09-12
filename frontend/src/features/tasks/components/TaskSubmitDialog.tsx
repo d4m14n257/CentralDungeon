@@ -3,18 +3,14 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { FormDialog } from '@/components/FormDialog'
+import { stagedKey, type StagedFile } from '@/types/file'
 import { IconAction } from '@/components/IconAction'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { Button } from '@/components/ui/button'
 
-import type { ApplicableTask, CreateSubmissionInput } from '../types'
+import type { ApplicableTask, SubmissionDraft } from '../types'
 
 /** A file the person picked, as this dialog needs to show it back before sending. */
-export interface PickedFile {
-  fileId: string
-  name: string
-}
-
 export interface TaskSubmitDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -28,8 +24,8 @@ export interface TaskSubmitDialogProps {
    * A render prop because the picker belongs to `features/files` and a feature never imports from
    * another: the screen composing the two is where they meet (regla dura 16, §3.1.5).
    */
-  renderFilePicker: (onPick: (file: PickedFile) => void) => ReactNode
-  onSubmit: (input: CreateSubmissionInput) => void
+  renderFilePicker: (onPick: (file: StagedFile) => void) => ReactNode
+  onSubmit: (input: SubmissionDraft) => void
 }
 
 /**
@@ -51,7 +47,7 @@ export interface TaskSubmitDialogProps {
 export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFilePicker, onSubmit }: TaskSubmitDialogProps) {
   const { t } = useTranslation('tasks')
   const [content, setContent] = useState('')
-  const [files, setFiles] = useState<PickedFile[]>([])
+  const [files, setFiles] = useState<StagedFile[]>([])
 
   // Cleared on open rather than on close: a dialog that keeps the previous answer would offer to
   // send it again by accident, and clearing on close would wipe the fields while they fade out.
@@ -65,10 +61,9 @@ export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFileP
   const canSend = hasText || files.length > 0
 
   function send() {
-    onSubmit({
-      content: hasText ? content : null,
-      fileIds: files.map((file) => file.fileId),
-    })
+    // The staged list travels, not ids: nothing has been uploaded yet, and the screen that owns the
+    // send is the one that uploads and then submits (#238).
+    onSubmit({ content: hasText ? content : null, staged: files })
   }
 
   return (
@@ -92,12 +87,12 @@ export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFileP
             {files.length > 0 && (
               <ul className="divide-border divide-y">
                 {files.map((file) => (
-                  <li key={file.fileId} className="flex items-center justify-between gap-2 py-2 text-sm">
+                  <li key={stagedKey(file)} className="flex items-center justify-between gap-2 py-2 text-sm">
                     <span className="truncate">{file.name}</span>
                     <IconAction
                       label={t('submit.removeFile')}
                       icon={<XIcon className="size-4" />}
-                      onClick={() => setFiles((current) => current.filter((picked) => picked.fileId !== file.fileId))}
+                      onClick={() => setFiles((current) => current.filter((picked) => stagedKey(picked) !== stagedKey(file)))}
                     />
                   </li>
                 ))}
@@ -105,7 +100,7 @@ export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFileP
             )}
             {/* Uploading a new one and reusing one from the history end in the same place (#65). */}
             {renderFilePicker((file) =>
-              setFiles((current) => (current.some((picked) => picked.fileId === file.fileId) ? current : [...current, file])),
+              setFiles((current) => (current.some((picked) => stagedKey(picked) === stagedKey(file)) ? current : [...current, file])),
             )}
           </div>
         )}

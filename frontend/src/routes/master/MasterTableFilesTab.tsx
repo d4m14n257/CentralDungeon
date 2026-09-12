@@ -20,9 +20,11 @@ import {
   FilePicker,
   FileTypeBadge,
   useAttachTableFile,
+  useCommitStagedFiles,
   useDetachTableFile,
   useTableFiles,
   useUpdateTableFile,
+  type StagedFile,
   type TableFile,
   type TableFileType,
 } from '@/features/files'
@@ -56,14 +58,31 @@ export function MasterTableFilesTab() {
   const detach = useDetachTableFile(tableId)
 
   const [isAttaching, setIsAttaching] = useState(false)
+  const [staged, setStaged] = useState<StagedFile[]>([])
+  const commit = useCommitStagedFiles()
   const [kind, setKind] = useState<TableFileType>('Preparation')
   const [isPrivate, setIsPrivate] = useState(false)
 
-  function handlePick({ fileId }: { fileId: string }) {
-    attach.mutate(
-      { fileId, tableFileType: kind, isPrivate },
+  /**
+   * Sends what was staged and attaches it (#238).
+   *
+   * Nothing uploaded when the file was picked, so this is both steps: upload, then link. A file that
+   * fails leaves the others attached and stays listed to try again - the table is the master's and
+   * editable, so there is nothing to roll back.
+   */
+  function attachStaged() {
+    commit.mutate(
+      { staged },
       {
-        onSuccess: () => {
+        onSuccess: async ({ fileIds, failed }) => {
+          for (const fileId of fileIds) {
+            await attach.mutateAsync({ fileId, tableFileType: kind, isPrivate })
+          }
+          setStaged(staged.filter((entry) => entry.kind === 'new' && failed.includes(entry.name)))
+          if (failed.length > 0) {
+            toast.error(t('table.someFailed', { names: failed.join(', ') }))
+            return
+          }
           setIsAttaching(false)
           toast.success(t('table.attach'))
         },
@@ -139,7 +158,10 @@ export function MasterTableFilesTab() {
       <FormDialog
         isDirty={kind !== 'Preparation' || isPrivate}
         open={isAttaching}
-        onOpenChange={setIsAttaching}
+        onOpenChange={(open) => {
+          setIsAttaching(open)
+          if (!open) setStaged([])
+        }}
         title={t('table.attachTitle')}
         description={t('table.attachDescription')}
       >
@@ -168,7 +190,21 @@ export function MasterTableFilesTab() {
           {/* Everything published is offered, not only the `Masters` audience: the community's
               default character sheet is published *for players* and the master is the one attaching
               it, which is #79's own example (#64). */}
-          <FilePicker onPick={handlePick} isBusy={attach.isPending} offerPublished cajon="TableMaterial" />
+          <FilePicker
+            onPick={(picked) => setStaged((current) => [...current, picked])}
+            isBusy={commit.isPending || attach.isPending}
+            offerPublished
+            cajon="TableMaterial"
+            staged={staged}
+            onRemove={(key) =>
+              setStaged((current) => current.filter((entry) => (entry.kind === 'new' ? entry.localId : entry.fileId) !== key))
+            }
+          />
+          <div className="flex justify-end">
+            <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={attachStaged}>
+              {t('table.attachConfirm', { count: staged.length })}
+            </Button>
+          </div>
         </div>
       </FormDialog>
     </div>

@@ -62,9 +62,10 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     // one place that asks which cajón (#233).
     await page.goto('/my/files')
     await page.getByRole('button', { name: 'Subir archivo' }).click()
-    await page.getByRole('combobox').first().click()
-    await page.getByRole('option', { name: 'De mesa' }).click()
     await page.locator('input[type="file"]').setInputFiles(pdf(`ficha-${runId}.pdf`, runId))
+    // Chips, not a select: the cajón is a decision made before sending, so every option is visible.
+    await page.getByRole('radio', { name: 'De mesa' }).click()
+    await page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
 
     const row = page.getByRole('listitem').filter({ hasText: `ficha-${runId}.pdf` })
     await expect(row).toBeVisible()
@@ -82,6 +83,9 @@ test('the library shows what each file is, where it is used, and reuses an uploa
       .filter({ hasText: `ficha-${runId}.pdf` })
       .getByRole('button', { name: 'Usar' })
       .click()
+    // Reusing stages it too (#238): it already has an id, so there is nothing to upload for it - but
+    // the attach still waits for the confirm, like everything else in this dialog.
+    await dialog.getByRole('button', { name: /Agregar \d+ archivos?/ }).click()
     await expect(dialog).toBeHidden()
 
     // The use now shows, resolved from the link and not remembered by the screen. Attaching it put
@@ -95,6 +99,9 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     // The same bytes again: recognised, not stored twice, and the screen says so (#234).
     await page.getByRole('button', { name: 'Subir archivo' }).click()
     await page.locator('input[type="file"]').setInputFiles(pdf(`otra-copia-${runId}.pdf`, runId))
+    await page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
+    // The server recognised the bytes, and now it says so at the confirm rather than at the pick,
+    // because that is where the upload happens (#234, #238).
     await expect(page.getByText(/ya lo tenías subido/)).toBeVisible()
     // The name that survives is the first one: the row was recognised, not rewritten.
     await expect(page.getByRole('listitem').filter({ hasText: `otra-copia-${runId}.pdf` })).toHaveCount(0)
@@ -148,6 +155,7 @@ test('a file can be renamed and let go of', async ({ browser }) => {
     await page.goto('/my/files')
     await page.getByRole('button', { name: 'Subir archivo' }).click()
     await page.locator('input[type="file"]').setInputFiles(pdf(`mapa-${runId}.pdf`, `mapa ${runId}`))
+    await page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
     await expect(page.getByRole('listitem').filter({ hasText: `mapa-${runId}.pdf` })).toBeVisible()
 
     // Renaming touches metadata only — the content lives under a generated key (#80). There is no

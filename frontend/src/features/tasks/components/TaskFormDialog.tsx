@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import { FormDialog } from '@/components/FormDialog'
+import { stagedKey, type StagedFile } from '@/types/file'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -15,7 +16,7 @@ import { IconAction } from '@/components/IconAction'
 import { browserTimeZone, localInputToUtcIso, utcIsoToLocalInput } from '@/lib/date'
 
 import { taskFormSchema, type TaskForm } from '../schemas'
-import type { CreateTaskInput, TableTask, TaskAudience } from '../types'
+import type { TaskDraft, TableTask, TaskAudience } from '../types'
 
 /** How a person to address is offered to the picker: an id and a name, nothing else. */
 export interface TaskFormRecipient {
@@ -27,12 +28,6 @@ export interface TaskFormRecipient {
 export interface TaskFormSession {
   id: string
   sequenceNumber: number
-}
-
-/** The least a picked file needs for the dialog to show it back and send it. Mirrors the picker. */
-export interface PickedFile {
-  fileId: string
-  name: string
 }
 
 export interface TaskFormDialogProps {
@@ -52,14 +47,14 @@ export interface TaskFormDialogProps {
   sessions: TaskFormSession[]
   /** Whether the request is in flight, so the submit button can say so. */
   isBusy: boolean
-  onSubmit: (input: CreateTaskInput) => void
+  onSubmit: (input: TaskDraft) => void
   /**
    * How to render the file picker for the blanks the master attaches (#63).
    *
    * A render prop and not a direct import, because `features/tasks` may never import
    * `features/files` (regla dura 16). The screen composing both is the one that wires them.
    */
-  renderFilePicker: (onPick: (file: PickedFile) => void) => ReactNode
+  renderFilePicker: (onPick: (file: StagedFile) => void) => ReactNode
 }
 
 const AUDIENCES: TaskAudience[] = ['Candidates', 'Players', 'Single']
@@ -84,7 +79,11 @@ const AUDIENCES: TaskAudience[] = ['Candidates', 'Players', 'Single']
 export function TaskFormDialog({ open, onOpenChange, task, players, sessions, isBusy, onSubmit, renderFilePicker }: TaskFormDialogProps) {
   // The blanks being attached, accumulated as they are picked - mixing fresh uploads, the master's
   // own history and what the community published, which is the mixing case #79 is about.
-  const [blanks, setBlanks] = useState<PickedFile[]>(task?.files.map((file) => ({ fileId: file.fileId, name: file.name })) ?? [])
+  // The blanks being attached. Already-attached ones arrive as `existing` because they are on the
+  // server; anything picked now is bytes in the browser until the request is published (#238).
+  const [blanks, setBlanks] = useState<StagedFile[]>(
+    task?.files.map((file) => ({ kind: 'existing' as const, fileId: file.fileId, name: file.name })) ?? [],
+  )
   const { t } = useTranslation('tasks')
   const timeZone = browserTimeZone()
 
@@ -116,7 +115,7 @@ export function TaskFormDialog({ open, onOpenChange, task, players, sessions, is
 
   function submit(values: TaskForm) {
     onSubmit({
-      fileIds: blanks.map((blank) => blank.fileId),
+      staged: blanks,
       title: values.title,
       description: values.description?.trim() ? values.description : null,
       audience: values.audience,
@@ -203,19 +202,19 @@ export function TaskFormDialog({ open, onOpenChange, task, players, sessions, is
           {blanks.length > 0 && (
             <ul className="divide-border divide-y rounded-lg border">
               {blanks.map((blank) => (
-                <li key={blank.fileId} className="flex items-center gap-3 px-3 py-2">
+                <li key={stagedKey(blank)} className="flex items-center gap-3 px-3 py-2">
                   <span className="min-w-0 flex-1 truncate text-sm">{blank.name}</span>
                   <IconAction
                     icon={<XIcon className="size-4" />}
                     label={t('form.blanksRemove', { name: blank.name })}
-                    onClick={() => setBlanks(blanks.filter((picked) => picked.fileId !== blank.fileId))}
+                    onClick={() => setBlanks(blanks.filter((picked) => stagedKey(picked) !== stagedKey(blank)))}
                   />
                 </li>
               ))}
             </ul>
           )}
           {renderFilePicker((file) =>
-            setBlanks((current) => (current.some((picked) => picked.fileId === file.fileId) ? current : [...current, file])),
+            setBlanks((current) => (current.some((picked) => stagedKey(picked) === stagedKey(file)) ? current : [...current, file])),
           )}
         </div>
 

@@ -9,7 +9,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HelpLink } from '@/features/help'
-import { FileList, FilePicker } from '@/features/files'
+import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
 import { useTablePlayers } from '@/features/registrations'
 import { useTableSessions } from '@/features/tables'
 import {
@@ -20,6 +20,7 @@ import {
   useTableTasks,
   useUpdateTask,
   type CreateTaskInput,
+  type TaskDraft,
   type TableTask,
 } from '@/features/tasks'
 
@@ -48,6 +49,7 @@ interface OutletContext {
  * **here** and passed down as plain data: a feature never imports from another (regla dura 16).
  */
 export function MasterTableTasksTab() {
+  const commit = useCommitStagedFiles()
   const { t } = useTranslation('tasks')
   const { tableId } = useOutletContext<OutletContext>()
   const confirm = useConfirm()
@@ -74,14 +76,26 @@ export function MasterTableTasksTab() {
     setIsFormOpen(true)
   }
 
-  function handleSubmit(input: CreateTaskInput) {
+  /**
+   * Uploads the blanks, then publishes or corrects the request (#238).
+   *
+   * A blank that failed does not hold the request back: it goes out with the ones that made it, and
+   * the master is told which to add — the request is theirs and editable, so completing it is one
+   * more edit rather than writing it again.
+   */
+  async function handleSubmit(draft: TaskDraft) {
+    const { fileIds, failed } = await commit.mutateAsync({ staged: draft.staged, fileCategory: 'MasterRequest' })
+    if (failed.length > 0) {
+      toast.error(t('form.blanksFailed', { names: failed.join(', ') }))
+    }
+    const input: CreateTaskInput = { ...draft, fileIds }
     if (editing) {
       update.mutate(
         { taskId: editing.taskId, input },
         {
           onSuccess: () => {
             setIsFormOpen(false)
-            toast.success(t('form.savedToast'))
+            if (failed.length === 0) toast.success(t('form.savedToast'))
           },
         },
       )
@@ -90,7 +104,7 @@ export function MasterTableTasksTab() {
     publish.mutate(input, {
       onSuccess: () => {
         setIsFormOpen(false)
-        toast.success(t('form.publishedToast'))
+        if (failed.length === 0) toast.success(t('form.publishedToast'))
       },
     })
   }
