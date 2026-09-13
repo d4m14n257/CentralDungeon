@@ -31,13 +31,14 @@ import {
   type AdminFile,
   type FileCategory,
   type StagedFile,
+  FILE_TYPE_CHOICES,
 } from '@/features/files'
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib/searchQuery'
 import { ApiError } from '@/types/api'
 
 /** The three fields the search box accepts behind a `/`, mirroring the backend's `FileSearchField`. */
-const SEARCH_FIELD_NAMES = ['name', 'owner', 'type'] as const
+const SEARCH_FIELD_NAMES = ['file_name', 'file_owner', 'file_type'] as const
 
 /**
  * /admin/files — every file the community has uploaded, and the power to publish one (#64, #79).
@@ -230,9 +231,9 @@ export function AdminFilesPage() {
 
       <SearchQueryInput
         fields={[
-          { name: 'name', label: t('search.name') },
-          { name: 'owner', label: t('search.owner') },
-          { name: 'type', label: t('search.type') },
+          { name: 'file_name', label: t('search.file_name') },
+          { name: 'file_owner', label: t('search.file_owner') },
+          { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
         ]}
         value={search}
         onChange={(value) => {

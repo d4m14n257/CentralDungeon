@@ -82,7 +82,7 @@
     "title": "Files",
     "description": "Everything the community has uploaded. Publishing a file makes it available to every table without anyone having to copy it.",
     "searchLabel": "Search files",
-    "searchPlaceholder": "Search by name, /owner or /type",
+    "searchPlaceholder": "Search by name, or /file_type",
     "columns": {
       "name": "File",
       "type": "Kind",
@@ -112,9 +112,16 @@
     "someFailed": "Could not upload: {{names}}. The rest are in."
   },
   "search": {
-    "name": "name",
-    "owner": "uploaded by",
-    "type": "kind"
+    "file_name": "name",
+    "file_owner": "uploaded by",
+    "file_type": "file type",
+    "types": {
+      "pdf": "PDF",
+      "png": "PNG",
+      "jpeg": "JPG",
+      "doc": "Word (.doc)",
+      "docx": "Word (.docx)"
+    }
   },
   "category": {
     "TableMaterial": "Table material",
@@ -151,7 +158,7 @@
     "upload": "Upload a file",
     "uploadClose": "Close",
     "searchLabel": "Search my files",
-    "searchPlaceholder": "Search by name, or /type",
+    "searchPlaceholder": "Search by name, or /file_type",
     "lastUsed": "Used {{when}}",
     "emptyTitle": "You have not uploaded anything yet",
     "emptyDescription": "Whatever you upload stays here and can be used again on any table, without uploading it twice.",

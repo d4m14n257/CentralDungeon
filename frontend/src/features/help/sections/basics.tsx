@@ -31,7 +31,14 @@ const SEARCH_EXAMPLES = [
   { query: '/user_name damian /and /discord_name dami', meaning: 'example5' },
 ] as const
 
-const SEARCH_RULES = ['plain', 'field', 'commas', 'connectors', 'onlySlash', 'order', 'chips', 'debounce']
+/**
+ * The rules of the search language, in the order they are read (#164).
+ *
+ * `naming` and `choices` sit right after `field` because they are what somebody needs the moment
+ * they first press `/`: what the commands are called, and that some of them are picked from a list
+ * instead of typed.
+ */
+const SEARCH_RULES = ['plain', 'field', 'naming', 'choices', 'commas', 'connectors', 'onlySlash', 'order', 'chips', 'debounce']
 const CONTEXT_ROLES = ['player', 'master', 'admin', 'owner']
 
 /** How the search query language works, with its rules and worked examples. */

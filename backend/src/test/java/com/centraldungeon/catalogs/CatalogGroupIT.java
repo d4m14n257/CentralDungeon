@@ -91,7 +91,7 @@ class CatalogGroupIT {
     @Test
     void searchesByNameFromTheOneQueryParameter() {
         assertThat(namesOf(tagService.search("dandd", FIRST_PAGE))).containsExactly("DANDD");
-        assertThat(namesOf(tagService.search("/name d&d", FIRST_PAGE))).containsExactly("D&D 5e");
+        assertThat(namesOf(tagService.search("/catalog_name d&d", FIRST_PAGE))).containsExactly("D&D 5e");
         // An unknown /field is searched as literal text, never answered with a 400 (#164).
         assertThat(namesOf(tagService.search("/nombre d&d", FIRST_PAGE))).isEmpty();
     }

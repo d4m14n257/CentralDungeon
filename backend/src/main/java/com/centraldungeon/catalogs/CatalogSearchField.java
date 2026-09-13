@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public enum CatalogSearchField {
 
     /** The value's own name. Also what a criterion with no {@code /field} prefix searches. */
-    NAME("name", "name");
+    NAME("catalog_name", "name");
 
     /** What the person types after the slash, and what the chip shows. */
     private final String wireName;

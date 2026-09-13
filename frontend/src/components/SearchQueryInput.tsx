@@ -25,7 +25,10 @@ interface SearchQueryInputProps {
 }
 
 type Suggestion =
-  { kind: 'field'; name: string; label: string } | { kind: 'connector'; name: string; label: string; connector: SearchConnector }
+  | { kind: 'field'; name: string; label: string }
+  | { kind: 'connector'; name: string; label: string; connector: SearchConnector }
+  /** One of a field's fixed values (#164). Only offered while such a field is the open one. */
+  | { kind: 'value'; name: string; label: string }
 
 /**
  * The application's one search box (decisiones.md #164): it is typed on a single line, and each
@@ -54,6 +57,21 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
   const fieldNames = useMemo(() => fields.map((field) => field.name), [fields])
 
   const labelOf = (name: string | null) => fields.find((field) => field.name === name)?.label ?? name
+
+  /**
+   * How a criterion's values read on its chip.
+   *
+   * A field with fixed choices shows their labels and not the values that travel: nobody wants to
+   * see `application/vnd.openxmlformats-officedocument.wordprocessingml.document` on a chip, and the
+   * label is the same word they picked from the list.
+   */
+  const valuesOf = (field: string | null, values: string[]) => {
+    const choices = fields.find((candidate) => candidate.name === field)?.values
+    if (choices === undefined) {
+      return values.join(', ')
+    }
+    return values.map((raw) => choices.find((choice) => choice.value === raw)?.label ?? raw).join(', ')
+  }
   const connectorLabel = (connector: SearchConnector) => t(connector === 'or' ? 'search.connectorOr' : 'search.connectorAnd')
 
   const openPrefix = OPEN_FIELD_PREFIX.exec(value.draft)?.[2] ?? null
@@ -64,10 +82,27 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
    */
   const canJoin = value.terms.length > 0 || hasOpenCriterion
 
-  const suggestions: Suggestion[] = openPrefix === null ? [] : buildSuggestions(openPrefix)
+  /**
+   * The field whose value is being typed, when it is one that takes a fixed set.
+   *
+   * This is what makes a command with choices behave differently from one that takes free text: with
+   * it open, the list offers the values instead of waiting for somebody to spell one.
+   */
+  const openChoiceField = fields.find((field) => field.name === value.activeField && field.values !== undefined)
+
+  const suggestions: Suggestion[] =
+    openPrefix !== null ? buildSuggestions(openPrefix) : openChoiceField !== undefined ? buildValueSuggestions(openChoiceField) : []
   const isChoosing = suggestions.length > 0
   /** Derived on render rather than stored: the list changes length while somebody types. */
   const highlighted = isChoosing ? ((highlightStep % suggestions.length) + suggestions.length) % suggestions.length : 0
+
+  /** A field's fixed values, narrowed by whatever has been typed so far. */
+  function buildValueSuggestions(field: SearchField): Suggestion[] {
+    const typed = value.draft.trim().toLowerCase()
+    return (field.values ?? [])
+      .filter((option) => typed === '' || option.label.toLowerCase().includes(typed))
+      .map((option) => ({ kind: 'value', name: option.value, label: option.label }))
+  }
 
   function buildSuggestions(prefix: string): Suggestion[] {
     const options: Suggestion[] = fields.map((field) => ({ kind: 'field', name: field.name, label: field.label }))
@@ -107,6 +142,13 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
 
   function chooseSuggestion(suggestion: Suggestion) {
     const rest = value.draft.replace(OPEN_FIELD_PREFIX, '')
+    if (suggestion.kind === 'value') {
+      // Picking a value completes the criterion: there is nothing left to type for it, so it closes
+      // into a chip the same way finishing a typed value does.
+      onChange(closeTerm(suggestion.name, null, 'and'))
+      inputRef.current?.focus()
+      return
+    }
     if (suggestion.kind === 'field') {
       onChange(closeTerm(rest, suggestion.name, 'and'))
     } else {
@@ -202,9 +244,9 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
             )}
             <Chip
               label={labelOf(term.field)}
-              text={term.values.join(', ')}
+              text={valuesOf(term.field, term.values)}
               onRemove={() => removeTerm(index)}
-              removeLabel={`${t('search.removeTerm')}: ${term.values.join(', ')}`}
+              removeLabel={`${t('search.removeTerm')}: ${valuesOf(term.field, term.values)}`}
             />
           </Fragment>
         ))}
@@ -262,7 +304,11 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
               className={cn('flex cursor-pointer items-center justify-between gap-2 px-3 py-1.5', index === highlighted && 'bg-surface')}
             >
               <span>{suggestion.kind === 'connector' ? t('search.joinWith', { connector: suggestion.label }) : suggestion.label}</span>
-              <code className="text-fg-subtle text-xs">/{suggestion.name}</code>
+              {/* The command is shown beside a command, so somebody learns what they just picked
+                  from the list. A **value** is not a command: showing `/application/pdf` next to
+                  "PDF" would teach something that is not true, and it drags the MIME type into the
+                  option's accessible name (#164). */}
+              {suggestion.kind !== 'value' && <code className="text-fg-subtle text-xs">/{suggestion.name}</code>}
             </li>
           ))}
         </ul>

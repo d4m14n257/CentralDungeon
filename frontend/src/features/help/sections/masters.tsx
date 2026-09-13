@@ -73,7 +73,7 @@ export function MasterFilesHelp() {
   return (
     <ListAndSteps
       block="files"
-      keys={['what', 'category', 'reuse', 'dedup', 'library', 'published', 'shared', 'private', 'detach', 'limits']}
+      keys={['what', 'category', 'reuse', 'dedup', 'library', 'published', 'shared', 'private', 'detach', 'limits', 'commands']}
       stepCount={4}
     />
   )

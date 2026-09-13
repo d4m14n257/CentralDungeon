@@ -9,6 +9,11 @@ import java.util.stream.Collectors;
 /**
  * The fields the /admin/files search box accepts behind a {@code /prefix} (#164).
  *
+ * <p><b>Every wire name is prefixed with the entity</b>, as {@code UserSearchField} already does with
+ * {@code discord_name} and {@code user_name} (#164). Two screens in the same application both
+ * offering a bare {@code /name} would mean the same command searched different things depending on
+ * where it was typed, and somebody who learned it once would be wrong half the time.
+ *
  * <p>The default criterion is the filename, because it is the only thing anybody remembers about a
  * file. The other two exist because an admin's actual questions are "who uploaded this" and "what
  * kind of file am I looking at" - and without them those questions turn into scrolling.
@@ -16,17 +21,17 @@ import java.util.stream.Collectors;
 public enum FileSearchField {
 
     /** The original filename. Also what a criterion with no {@code /field} prefix searches. */
-    NAME("name", "name"),
+    NAME("file_name", "name"),
 
     /**
      * Who uploaded it. Matched on the Discord username rather than the chosen name, because that one
      * is always there - {@code users.name} is nullable and empty for anybody who never set one, so
      * searching it would silently miss those people.
      */
-    OWNER("owner", "userCreated.discordUsername"),
+    OWNER("file_owner", "userCreated.discordUsername"),
 
     /** The declared MIME type - how "show me the PDFs" is asked. */
-    TYPE("type", "mimeType");
+    TYPE("file_type", "mimeType");
 
     /** What the person types after the slash, and what the chip shows. */
     private final String wireName;

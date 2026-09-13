@@ -33,7 +33,9 @@
         "step3": "If any of several options of the same field will do, separate them with commas: damian,carlos,daniel.",
         "step4": "To add another criterion, type /or or /and, pick it from the list, and carry on with the next one.",
         "step5": "To fix things: tap a chip's ×, tap the connector chip to swap “and” for “or”, or press Backspace on the empty text."
-      }
+      },
+      "naming": "Commands are always in English and carry what they refer to in front: “/file_name”, “/file_type”, “/user_name”. That way the same command searches the same thing on any screen.",
+      "choices": "There are two kinds of command. Free-text ones wait for you to type — a name, for instance. Ones with fixed choices show you the list when you pick them: you do not need to know how each value is spelled, you choose it from there."
     },
     "contexts": {
       "title": "The contexts",
@@ -316,7 +318,8 @@
       },
       "category": "Every file says what it is: character sheet, handout, template or rules. It is not decoration — it is what lets you find the community's template among thirty documents without reading filenames.",
       "dedup": "If you upload something you already had, the system recognises it and reuses the one that was already there instead of storing it twice. The screen tells you when that happens.",
-      "library": "Everything you upload stays in “My files”, with where each one is being used. A file that appears on no table is the first to be released after a long time unused."
+      "library": "Everything you upload stays in “My files”, with where each one is being used. A file that appears on no table is the first to be released after a long time unused.",
+      "commands": "Your files' search understands “/file_name” (the name) and “/file_type” (the format, picked from a list)."
     },
     "dashboard": {
       "title": "Waiting on you",
@@ -415,7 +418,8 @@
         "step2": "Find the file by name, or narrow it down with /uploaded by and /kind.",
         "step3": "Hit \"Publish\" and choose the audience.",
         "step4": "The \"Tables\" column tells you how many are using it before you remove it."
-      }
+      },
+      "commands": "This screen's search understands “/file_name” (the filename), “/file_owner” (who uploaded it) and “/file_type” (the format, picked from a list)."
     }
   },
   "stepsTitle": "How to do it"

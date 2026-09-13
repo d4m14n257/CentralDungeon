@@ -32,10 +32,27 @@ export interface SearchTerm {
   connector: SearchConnector
 }
 
-/** A field the search box accepts, with the label whoever uses it reads. */
+/**
+ * A field the search box accepts, with the label whoever uses it reads.
+ *
+ * **The name is the command somebody types and it is always English and prefixed with its entity**
+ * (#164): `file_name`, `user_name`, `catalog_name`. Two screens both offering a bare `/name` would
+ * mean the same command searched different things depending on where it was typed.
+ */
 export interface SearchField {
   name: string
   label: string
+  /**
+   * The values this field accepts, when it accepts a fixed set rather than free text.
+   *
+   * **Two kinds of command, and the box behaves differently for each.** A filename is typed, because
+   * nobody could list every filename; a file's type is chosen, because there are four of them and
+   * typing `application/vnd.openxmlformats-officedocument.wordprocessingml.document` is not a thing
+   * anybody will do. Declaring the values here is what turns the second kind into a list.
+   *
+   * The `value` is what travels to the backend; the `label` is what is read and matched while typing.
+   */
+  values?: readonly { value: string; label: string }[]
 }
 
 /**

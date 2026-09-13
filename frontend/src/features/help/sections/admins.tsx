@@ -42,7 +42,13 @@ export function CatalogsHelp() {
 
 /** Publishing files to the community and what unpublishing does not undo. */
 export function AdminFilesHelp() {
-  return <ListAndSteps block="files" keys={['what', 'publish', 'audience', 'notALock', 'unpublish', 'remove', 'purge']} stepCount={4} />
+  return (
+    <ListAndSteps
+      block="files"
+      keys={['what', 'publish', 'audience', 'notALock', 'unpublish', 'remove', 'purge', 'commands']}
+      stepCount={4}
+    />
+  )
 }
 
 /** What Owner can do that Admin cannot (#169). */

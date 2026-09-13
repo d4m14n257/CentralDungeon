@@ -31,6 +31,7 @@ import {
   type StagedFile,
   type StoredFile,
   type UpdateFileInput,
+  FILE_TYPE_CHOICES,
 } from '@/features/files'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useDisclosure } from '@/hooks/useDisclosure'
@@ -62,7 +63,7 @@ import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib
  * survives a refresh, and a filtered view can be linked to.
  */
 /** The fields this box accepts behind a `/`, mirroring what the backend resolves for your own files. */
-const SEARCH_FIELD_NAMES = ['name', 'type'] as const
+const SEARCH_FIELD_NAMES = ['file_name', 'file_type'] as const
 
 export function MyFilesPage() {
   const { t, i18n } = useTranslation('files')
@@ -236,8 +237,8 @@ export function MyFilesPage() {
                 that did not speak the shared language. */}
             <SearchQueryInput
               fields={[
-                { name: 'name', label: t('search.name') },
-                { name: 'type', label: t('search.type') },
+                { name: 'file_name', label: t('search.file_name') },
+                { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
               ]}
               value={search}
               onChange={(value) => {

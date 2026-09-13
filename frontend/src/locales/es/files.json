@@ -82,7 +82,7 @@
     "title": "Archivos",
     "description": "Todo lo que subió la comunidad. Publicar un archivo lo pone a disposición de todas las mesas sin que nadie tenga que copiarlo.",
     "searchLabel": "Buscar archivos",
-    "searchPlaceholder": "Buscar por nombre, /owner o /type",
+    "searchPlaceholder": "Buscar por nombre, /file_owner o /file_type",
     "columns": {
       "name": "Archivo",
       "type": "Tipo",
@@ -112,9 +112,16 @@
     "someFailed": "No se pudieron subir: {{names}}. Los demás ya están."
   },
   "search": {
-    "name": "nombre",
-    "owner": "subido por",
-    "type": "tipo"
+    "file_name": "nombre",
+    "file_owner": "subido por",
+    "file_type": "tipo de archivo",
+    "types": {
+      "pdf": "PDF",
+      "png": "PNG",
+      "jpeg": "JPG",
+      "doc": "Word (.doc)",
+      "docx": "Word (.docx)"
+    }
   },
   "category": {
     "TableMaterial": "De mesa",
@@ -151,7 +158,7 @@
     "upload": "Subir archivo",
     "uploadClose": "Cerrar",
     "searchLabel": "Buscar entre mis archivos",
-    "searchPlaceholder": "Buscar por nombre, o /tipo",
+    "searchPlaceholder": "Buscar por nombre, o /file_type",
     "lastUsed": "Usado {{when}}",
     "emptyTitle": "Todavía no subiste nada",
     "emptyDescription": "Lo que subas queda acá y lo podés volver a usar en cualquier mesa, sin subirlo de nuevo.",

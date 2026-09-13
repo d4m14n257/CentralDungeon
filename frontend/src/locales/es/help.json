@@ -33,7 +33,9 @@
         "step3": "Si te sirve cualquiera de varias opciones del mismo campo, separalas con comas: damian,carlos,daniel.",
         "step4": "Si querés sumar otro criterio, escribí /or o /and, elegilo de la lista, y seguí con el siguiente.",
         "step5": "Para corregir: tocá la × de un chip, tocá el chip del conector para cambiar «y» por «o», o borrá con Backspace el texto vacío."
-      }
+      },
+      "naming": "Los comandos están siempre en inglés y llevan adelante a qué se refieren: «/file_name», «/file_type», «/user_name». Así el mismo comando busca lo mismo en cualquier pantalla.",
+      "choices": "Hay dos clases de comando. Los de texto libre esperan que escribas —un nombre, por ejemplo—. Los de opciones fijas te muestran la lista al elegirlos: no hace falta que sepas cómo se escribe cada valor, lo elegís de ahí."
     },
     "contexts": {
       "title": "Los contextos",
@@ -316,7 +318,8 @@
       },
       "category": "Cada archivo dice qué es: ficha de personaje, material de mesa, plantilla o reglamento. No es decoración: es lo que te deja encontrar la plantilla de la comunidad entre treinta documentos sin ir leyendo nombres de archivo.",
       "dedup": "Si subís algo que ya tenías subido, el sistema lo reconoce y reutiliza el que ya estaba en vez de guardarlo dos veces. La pantalla te lo avisa cuando pasa.",
-      "library": "Todo lo que subís queda en «Mis archivos», con dónde se está usando cada uno. Un archivo que no aparece en ninguna mesa es el primero que se libera cuando pasa mucho tiempo sin usarse."
+      "library": "Todo lo que subís queda en «Mis archivos», con dónde se está usando cada uno. Un archivo que no aparece en ninguna mesa es el primero que se libera cuando pasa mucho tiempo sin usarse.",
+      "commands": "El buscador de tus archivos entiende «/file_name» (el nombre) y «/file_type» (el formato, que se elige de una lista)."
     },
     "dashboard": {
       "title": "Lo que espera tu respuesta",
@@ -415,7 +418,8 @@
         "step2": "Buscá el archivo por nombre, o acotá con /subido por y /tipo.",
         "step3": "Tocá «Publicar» y elegí la audiencia.",
         "step4": "La columna «Mesas» te dice en cuántas se está usando antes de que lo des de baja."
-      }
+      },
+      "commands": "El buscador de esta pantalla entiende «/file_name» (el nombre del archivo), «/file_owner» (quién lo subió) y «/file_type» (el formato, que se elige de una lista)."
     }
   },
   "stepsTitle": "Cómo se hace"

@@ -13,6 +13,36 @@ const FIELDS = [
   { name: 'user_name', label: 'Nombre' },
 ]
 
+/**
+ * A command with fixed choices (#164), kept out of the shared harness on purpose: the tests about
+ * moving through the list count what is in it, and a third field would change what they mean.
+ */
+const CHOICE_FIELDS = [
+  {
+    name: 'file_type',
+    label: 'Tipo',
+    values: [
+      { value: 'application/pdf', label: 'PDF' },
+      { value: 'image/png', label: 'PNG' },
+    ],
+  },
+]
+
+/** The same controlled wrapper, for the box that offers fixed choices. */
+function ChoiceHarness() {
+  const [value, setValue] = useState<SearchQueryValue>(emptySearchQuery)
+  return (
+    <MemoryRouter>
+      <SearchQueryInput fields={CHOICE_FIELDS} value={value} onChange={setValue} label="Buscar archivos" />
+      <output>{buildSearchQuery(value)}</output>
+    </MemoryRouter>
+  )
+}
+
+function choiceBox() {
+  return screen.getByRole('combobox', { name: 'Buscar archivos' })
+}
+
 /** A controlled wrapper: the component keeps no state, so the test plays the owner. */
 function Harness() {
   const [value, setValue] = useState<SearchQueryValue>(emptySearchQuery)
@@ -205,5 +235,42 @@ describe('SearchQueryInput', () => {
 
     expect(query()).toHaveTextContent('/nickname juan')
     expect(screen.queryByText('Discord:')).not.toBeInTheDocument()
+  })
+
+  /**
+   * The second kind of command (#164): choosing it offers its values instead of waiting for somebody
+   * to spell one. Nobody is going to type `application/vnd.openxmlformats-…`, and nobody should have
+   * to know it exists.
+   */
+  it('offers the values of a command that has fixed choices', async () => {
+    render(<ChoiceHarness />)
+
+    await userEvent.type(choiceBox(), '/file_type{Enter}')
+
+    expect(screen.getByRole('option', { name: 'PDF' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'PNG' })).toBeInTheDocument()
+  })
+
+  /** The chip reads the label; the value that travels is the MIME type nobody wants to look at. */
+  it('sends the chosen value and shows its label on the chip', async () => {
+    render(<ChoiceHarness />)
+
+    await userEvent.type(choiceBox(), '/file_type{Enter}')
+    await userEvent.click(screen.getByRole('option', { name: 'PDF' }))
+
+    expect(screen.getByText('Tipo:')).toBeInTheDocument()
+    expect(screen.getByText('PDF')).toBeInTheDocument()
+    expect(query()).toHaveTextContent('/file_type application/pdf')
+  })
+
+  /** Typing narrows the choices, so a long list stays usable. */
+  it('narrows the choices by what has been typed', async () => {
+    render(<ChoiceHarness />)
+
+    await userEvent.type(choiceBox(), '/file_type{Enter}')
+    await userEvent.type(choiceBox(), 'pn')
+
+    expect(screen.getByRole('option', { name: 'PNG' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'PDF' })).not.toBeInTheDocument()
   })
 })
