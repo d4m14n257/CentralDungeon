@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
-import { useConfirm } from '@/components/ConfirmDialog'
+import { useConfirm } from '@/hooks/useConfirm'
 import { ErrorState } from '@/components/ErrorState'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import {
   useDeleteTable,
   useFinishTable,
   useResubmitTable,
+  useSubmitTableForReview,
   useStartTable,
   useTableStatusHistory,
   type GameTableStatus,
@@ -22,7 +23,7 @@ import {
 
 const CANCELABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested', 'Opened', 'InProgress', 'Pause']
 /** Only what was never public is deleted; everything else is cancelled and stays in the history (#175). */
-const DELETABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested']
+const DELETABLE_STATUSES: GameTableStatus[] = ['Draft', 'Preparation', 'ChangesRequested']
 
 interface OutletContext {
   tableId: string
@@ -67,6 +68,7 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
   const { t } = useTranslation('master')
   const confirm = useConfirm()
   const resubmit = useResubmitTable(tableId)
+  const submitForReview = useSubmitTableForReview(tableId)
   const start = useStartTable(tableId)
   const finish = useFinishTable(tableId)
   const cancel = useCancelTable(tableId)
@@ -76,6 +78,16 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
 
   if (!isPrimary) {
     return null
+  }
+
+  /**
+   * Sending the draft is what makes the table exist for anybody else (#245), and what takes it out of
+   * the master's hands until an admin answers — so it is confirmed, like every other one-way step.
+   */
+  async function handleSubmitForReview() {
+    const confirmed = await confirm({ title: t('status.submitConfirmTitle'), description: t('status.submitConfirmDescription') })
+    if (!confirmed) return
+    submitForReview.mutate(undefined, { onSuccess: () => toast.success(t('status.submitSuccess')) })
   }
 
   async function handleResubmit() {
@@ -109,6 +121,11 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
 
   return (
     <div className="flex flex-wrap gap-2">
+      {status === 'Draft' && (
+        <Button size="sm" onClick={() => void handleSubmitForReview()} disabled={submitForReview.isPending}>
+          {t('status.submit')}
+        </Button>
+      )}
       {status === 'ChangesRequested' && (
         <Button size="sm" onClick={() => void handleResubmit()} disabled={resubmit.isPending}>
           {t('status.resubmit')}
@@ -164,6 +181,9 @@ function StatusPanel(context: OutletContext) {
   return (
     <div className="space-y-4">
       <StatusActions {...context} />
+      {/* The two halves of the wait, said out loud: a draft nobody has seen yet, and one an admin is
+          already reading — which is also why the Edit button is gone in the second (#245). */}
+      {context.status === 'Draft' && <p className="text-fg-muted text-sm">{t('status.draftHint')}</p>}
       {context.status === 'Preparation' && <p className="text-fg-muted text-sm">{t('status.waitingForAdmin')}</p>}
       {context.status === 'Pause' && <p className="text-fg-muted text-sm">{t('status.pausedByAdmin')}</p>}
       <div className="space-y-2">

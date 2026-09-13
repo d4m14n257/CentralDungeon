@@ -9,6 +9,8 @@ import { UserMenu } from './UserMenu'
 
 const setTheme = vi.fn()
 let resolvedTheme: string | undefined = 'dark'
+/** Whether this account holds `Player` or `Master`, which is what decides the library entry (#241). */
+let hasPersonalLibrary = true
 
 vi.mock('next-themes', () => ({
   useTheme: () => ({ resolvedTheme, setTheme }),
@@ -20,6 +22,11 @@ vi.mock('@/features/auth', () => ({
 
 vi.mock('@/providers/AuthProvider', () => ({
   useAuth: () => ({ signOut: vi.fn() }),
+}))
+
+// Whose roles decide the library entry; the profile query behind it is not what is under test here.
+vi.mock('@/hooks/useHasPersonalLibrary', () => ({
+  useHasPersonalLibrary: () => ({ hasPersonalLibrary, isPending: false }),
 }))
 
 function renderMenu(displayName: string | null = 'Ana Valdez') {
@@ -34,6 +41,7 @@ describe('UserMenu', () => {
   beforeEach(() => {
     setTheme.mockClear()
     resolvedTheme = 'dark'
+    hasPersonalLibrary = true
   })
 
   it('offers the light theme while the dark one is active', async () => {
@@ -79,6 +87,38 @@ describe('UserMenu', () => {
 
     expect(screen.getByRole('menuitem', { name: 'Español' })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'English' })).toBeInTheDocument()
+  })
+
+  /**
+   * #241: a personal library is filled by the player and master flows, so an account holding neither
+   * role — a pure admin, the owner — has none, and an entry leading to a screen that can do nothing
+   * is worse than no entry.
+   */
+  it('offers the personal library to a player or a master', async () => {
+    renderMenu()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ana Valdez' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Mis archivos' })).toBeInTheDocument()
+  })
+
+  it('does not offer it to an account that is neither', async () => {
+    hasPersonalLibrary = false
+    renderMenu()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ana Valdez' }))
+
+    expect(screen.queryByRole('menuitem', { name: 'Mis archivos' })).not.toBeInTheDocument()
+  })
+
+  /** The week is not the library: it is transversal to everybody, and stays where it was (#227). */
+  it('keeps offering the reader their own week either way', async () => {
+    hasPersonalLibrary = false
+    renderMenu()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ana Valdez' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Mi horario' })).toBeInTheDocument()
   })
 
   it('switches the language and remembers the choice', async () => {

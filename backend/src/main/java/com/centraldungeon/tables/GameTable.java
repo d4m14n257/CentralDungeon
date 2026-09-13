@@ -81,7 +81,7 @@ public class GameTable extends BaseEntity {
     /** Where the table is in its nine-state lifecycle. Only GameTableService moves it. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
-    private GameTableStatus status = GameTableStatus.Preparation;
+    private GameTableStatus status = GameTableStatus.Draft;
 
     /**
      * When the table stopped being an ongoing thing: stamped on entering {@code Finished} or

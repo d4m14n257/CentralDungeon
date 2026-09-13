@@ -16,6 +16,7 @@ import {
 import { LANGUAGES } from '@/config/language'
 import { myFilesPath, mySchedulePath, paths } from '@/config/paths'
 import { useLogout } from '@/features/auth'
+import { useHasPersonalLibrary } from '@/hooks/useHasPersonalLibrary'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useAuth } from '@/providers/AuthProvider'
 
@@ -32,6 +33,10 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
   const logout = useLogout()
   const { resolvedTheme, setTheme } = useTheme()
   const { language, setLanguage } = useLanguage()
+
+  // Player or master (#241): the two roles whose flows fill a library. It reads the profile the
+  // header has already loaded for the context chip, so the menu costs no request of its own.
+  const { hasPersonalLibrary } = useHasPersonalLibrary()
 
   // Before onboarding there is no name to show yet (#134); the avatar cannot be left empty.
   const label = displayName ?? t('nav.accountFallback')
@@ -72,11 +77,18 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
           {t('nav.mySchedule')}
         </DropdownMenuItem>
         {/* And their own library, beside it and for the same reason (#65, #232): what somebody
-            uploaded as a player and as a master is one library, not one per context. */}
-        <DropdownMenuItem onSelect={() => void navigate(myFilesPath())}>
-          <FolderOpen className="size-4" />
-          {t('nav.myFiles')}
-        </DropdownMenuItem>
+            uploaded as a player and as a master is one library, not one per context.
+            **Absent for whoever is neither player nor master** (#241): uploading happens inside
+            those two flows, so an account that is only an admin or the owner has nothing to find here
+            — what the platform publishes is `/admin/files`, a different screen. The roles are
+            cumulative, so an admin who also plays keeps the entry: what is asked is whether they hold
+            the role, not whether they hold *only* it. */}
+        {hasPersonalLibrary && (
+          <DropdownMenuItem onSelect={() => void navigate(myFilesPath())}>
+            <FolderOpen className="size-4" />
+            {t('nav.myFiles')}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         {/* Each language names itself — "English", never "Inglés": somebody looking for their own
             language does not necessarily read the one currently on screen (#198). */}

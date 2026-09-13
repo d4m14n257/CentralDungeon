@@ -1,10 +1,10 @@
 import { PencilIcon, Trash2Icon } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
-import { useConfirm } from '@/components/ConfirmDialog'
+import { useConfirm } from '@/hooks/useConfirm'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { IconAction } from '@/components/IconAction'
@@ -16,7 +16,6 @@ import {
   EditFileDialog,
   FileCategoryBadge,
   FileCategoryChoice,
-  FileCategoryFilter,
   FileDropzone,
   StagedFileList,
   FileList,
@@ -31,13 +30,12 @@ import {
   type StagedFile,
   type StoredFile,
   type UpdateFileInput,
-  FILE_TYPE_CHOICES,
-  fileCategoryChoices,
+  myFileSearchFields,
 } from '@/features/files'
-import { useDebounce } from '@/hooks/useDebounce'
 import { useDisclosure } from '@/hooks/useDisclosure'
+import { useHasPersonalLibrary } from '@/hooks/useHasPersonalLibrary'
+import { useSearchQuery } from '@/hooks/useSearchQuery'
 import { formatRelativeDate } from '@/lib/date'
-import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib/searchQuery'
 
 /**
  * `/my/files` — everything this person has uploaded, and what each file is doing.
@@ -60,37 +58,52 @@ import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib
  * `Admin` role adds no cajón here and takes none away, and `Announcement` never appears at all. What
  * somebody may file under is their roles plus the tables they run, and the server decides it.
  *
+ * **And an account that is neither player nor master has no screen here** (#241): filling a library
+ * is what those two flows do, so a pure admin or the owner never fills one. They get the reason
+ * written out rather than an empty library with an upload button that cannot work — and the entry in
+ * the account menu is absent for them too. The roles are cumulative: what is asked is whether they
+ * hold one of the two, never whether they hold only it.
+ *
+ * **The search box is the only filter** (#242). The row of cajón toggles that used to sit under it
+ * asked one question the search already answers better — `/file_categories` narrows by cajón from the
+ * same line, combinable with the rest — while each row carries its cajón as a badge anyway. One way
+ * to narrow, one place to look at what is narrowing.
+ *
  * **What was searched and which page are in the URL**, like /admin/files (#185): a tidying session
- * survives a refresh, and a filtered view can be linked to.
+ * survives a refresh, and a filtered view can be linked to. The list is paged at 20, the server's
+ * default, most recently used first (#171): the controls appear from the second page on.
  */
-/** The fields this box accepts behind a `/`, mirroring what the backend resolves for your own files. */
-const SEARCH_FIELD_NAMES = ['file_name', 'file_type', 'file_categories'] as const
-
 export function MyFilesPage() {
   const { t, i18n } = useTranslation('files')
   const [searchParams, setSearchParams] = useSearchParams()
   const confirm = useConfirm()
 
   const page = Number(searchParams.get('page') ?? '0')
-  const category = (searchParams.get('category') as FileCategory | null) ?? null
+
+  // Whether this account is one of the two that fill a library at all (#241). By role, like the
+  // switcher's contexts; the screen below says so rather than 404ing.
+  const libraryAccess = useHasPersonalLibrary()
+
+  // And *which* cajones are theirs to use (#237), which is a finer question than the one above and
+  // only the server can answer it: it depends on the roles *and* on the tables they run. The search
+  // box needs them before it can offer `/file_categories`, so it is asked first.
+  const { data: myCategories } = useMyCategories()
 
   // The search box holds a structured value, but what travels - to the URL and to the API - is the
-  // raw string of #164, the same way /admin/catalogs and /admin/files do it.
-  const [search, setSearch] = useState<SearchQueryValue>(() => ({
-    terms: parseSearchQuery(searchParams.get('q') ?? '', SEARCH_FIELD_NAMES),
-    activeField: null,
-    draft: '',
-    pendingConnector: 'and',
-  }))
-  const query = buildSearchQuery(search)
-  const debouncedSearch = useDebounce(query, 300)
+  // raw string of #164. One list of commands, given to the box, used to read `?q=` and shown in the
+  // help (#240); the wiring around it is the shared hook, the same one /admin/files uses.
+  const fields = useMemo(() => myFileSearchFields(t, myCategories ?? []), [t, myCategories])
+  const search = useSearchQuery({
+    fields,
+    initialQuery: searchParams.get('q') ?? '',
+    onQueryChange: (query) => updateParams({ q: query }),
+  })
 
   // isLoadingError, not isError: a background refetch that fails must not blank a list that already
   // loaded (#150).
-  const { data, isPending, isLoadingError, refetch } = useMyFiles(debouncedSearch || undefined, category ?? undefined, page)
-  // Which cajones are this person's to use (#237). The server decides: it depends on their roles
-  // *and* on whether they run a table, and a co-master an admin assigned has no Master role (#135).
-  const { data: myCategories } = useMyCategories()
+  // No `category`: the cajón is one more criterion of the search now, and it travels inside `?q=`
+  // like the rest of them (#242).
+  const { data, isPending, isLoadingError, refetch } = useMyFiles(search.debouncedQuery || undefined, undefined, page)
   const update = useUpdateFile()
   const remove = useDeleteFile()
   const editDialog = useDisclosure<StoredFile>()
@@ -171,7 +184,32 @@ export function MyFilesPage() {
     remove.mutate(file.id)
   }
 
-  const isFiltered = debouncedSearch !== '' || category !== null
+  const isFiltered = search.debouncedQuery !== ''
+
+  /**
+   * **The screen is for players and masters** (#241).
+   *
+   * A personal library is filled by those two flows — an application, a submission, a table's
+   * material. An account that holds neither role, a pure admin or the owner, never fills one, so
+   * there is nothing here to search and nothing to upload: what the platform publishes is
+   * `/admin/files`, which is a different screen with a different job (#237).
+   *
+   * **Decided by role**, like the contexts of the switcher: the roles are cumulative, so what is
+   * asked is whether they hold `Player` or `Master`, never whether they hold *only* it — an admin who
+   * also plays is on the screen, and so is a co-master an admin assigned without the role (#135).
+   * Showing or hiding is all it does; authorization stays the backend's, endpoint by endpoint (#103),
+   * which is why this is a state on the screen and not a guard on the route.
+   */
+  if (!libraryAccess.isPending && !libraryAccess.hasPersonalLibrary) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <h1 className="font-serif text-2xl font-semibold">{t('mine.title')}</h1>
+        </div>
+        <EmptyState title={t('mine.noLibraryTitle')} description={t('mine.noLibraryDescription')} />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -180,19 +218,15 @@ export function MyFilesPage() {
           <h1 className="font-serif text-2xl font-semibold">{t('mine.title')}</h1>
           <p className="text-fg-muted text-sm">{t('mine.description')}</p>
         </div>
-        {/* Absent, not disabled, when this person has no cajón of their own — an account that is
-            neither player nor master has no flow to file anything under, and a button that cannot
-            work is worse than no button (principio 2 de frontend-diseno.md §1). While the list is
-            still loading it is disabled rather than gone, so it does not appear and jump. */}
-        {(myCategories === undefined || myCategories.length > 0) && (
-          <Button
-            type="button"
-            disabled={myCategories === undefined}
-            onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}
-          >
-            {uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload')}
-          </Button>
-        )}
+        {/* Disabled rather than gone while the cajones are still loading, so it does not appear and
+            jump. With none of them the screen never gets this far: it says so above (#241). */}
+        <Button
+          type="button"
+          disabled={myCategories === undefined}
+          onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}
+        >
+          {uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload')}
+        </Button>
       </div>
 
       {/* **The panel stays open after an upload**, and no toast fires. Closing it on success would
@@ -202,7 +236,7 @@ export function MyFilesPage() {
           person is left where they are if they have another file to add. */}
       {/* **The one place that asks which cajón** (#233): every other upload happens inside a flow that
           already knows, and this one has no flow to observe. */}
-      {uploadPanel.isOpen && myCategories !== undefined && myCategories.length > 0 && (
+      {uploadPanel.isOpen && myCategories !== undefined && (
         <div className="border-border space-y-3 rounded-lg border p-4">
           {/* Nothing uploads on pick (#238). The button below is the confirm — here the operation is
               just "upload these", so the confirm is that and nothing more. */}
@@ -232,30 +266,21 @@ export function MyFilesPage() {
           zone puts a search box and thirty rows between the person and the button they came for. */}
       {!uploadPanel.isOpen && (
         <>
-          <div className="space-y-3">
-            {/* The application's one search box (#164): free text searches the filename, and a
-                `/campo` searches that field. A plain `<input>` here was the only buscador in the app
-                that did not speak the shared language. */}
-            <SearchQueryInput
-              fields={[
-                { name: 'file_name', label: t('search.file_name') },
-                { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
-                // Only the cajones that are theirs (#237): offering one they can never have a file
-                // in is offering a search that always comes back empty.
-                { name: 'file_categories', label: t('search.file_categories'), values: fileCategoryChoices(t, myCategories ?? []) },
-              ]}
-              value={search}
-              onChange={(value) => {
-                setSearch(value)
-                updateParams({ q: buildSearchQuery(value) })
-              }}
-              placeholder={t('mine.searchPlaceholder')}
-              label={t('mine.searchLabel')}
-            />
-            {/* Only the cajones that can hold something of theirs: a plain member never files table
-                material, and `Announcement` is nobody's — it lives in the platform's library (#237). */}
-            <FileCategoryFilter value={category} onChange={(next) => updateParams({ category: next ?? '' })} options={myCategories ?? []} />
-          </div>
+          {/* The application's one search box (#164): free text searches the filename, and a
+              `/campo` searches that field. A plain `<input>` here was the only buscador in the app
+              that did not speak the shared language.
+              **And it is the only filter on this screen** (#242). The row of cajón toggles that used
+              to sit under it said the same thing twice: `/file_categories` already narrows by cajón,
+              from the same line as everything else and combinable with the rest, and each row already
+              carries its cajón as a badge — so the toggles were a second way to ask one question the
+              search answers better, taking the width of the screen to do it. */}
+          <SearchQueryInput
+            fields={search.fields}
+            value={search.value}
+            onChange={search.onChange}
+            placeholder={t('mine.searchPlaceholder')}
+            label={t('mine.searchLabel')}
+          />
 
           {isPending && <Skeleton className="h-64 w-full" />}
           {isLoadingError && <ErrorState onRetry={() => void refetch()} />}

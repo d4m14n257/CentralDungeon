@@ -4,12 +4,24 @@ import type { SharedFile } from '@/types/file'
 import type { Weekday } from '@/lib/date'
 
 /**
- * A table's nine lifecycle states plus `Deleted`. A union of literals, not a TS `enum`: the backend
+ * A table's ten lifecycle states plus `Deleted`. A union of literals, not a TS `enum`: the backend
  * serializes them as strings, and the union is what makes `Record<GameTableStatus, …>` force every
  * case to be covered when mapping to labels or badge variants (#3.2 regla 9).
+ *
+ * `Draft` is where a master's table is born and the only place, with `ChangesRequested`, where they
+ * can still rewrite it (#245).
  */
 export type GameTableStatus =
-  'Unassigned' | 'Preparation' | 'ChangesRequested' | 'Opened' | 'InProgress' | 'PauseRequested' | 'Pause' | 'Finished' | 'Canceled'
+  | 'Draft'
+  | 'Unassigned'
+  | 'Preparation'
+  | 'ChangesRequested'
+  | 'Opened'
+  | 'InProgress'
+  | 'PauseRequested'
+  | 'Pause'
+  | 'Finished'
+  | 'Canceled'
 
 /**
  * One of a table's masters, as it arrives nested in a table response. `masterType` is `Primary` or

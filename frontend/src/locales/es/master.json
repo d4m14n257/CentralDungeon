@@ -89,7 +89,12 @@
     "delete": "Eliminar mesa",
     "deleteConfirmTitle": "Eliminar esta mesa",
     "deleteConfirmDescription": "Todavía no la vio nadie, así que se borra sin dejar rastro público. No se puede deshacer. Si ya se había abierto, lo que corresponde es cancelarla.",
-    "deleteSuccess": "Mesa eliminada"
+    "deleteSuccess": "Mesa eliminada",
+    "submit": "Enviar a revisión",
+    "submitConfirmTitle": "¿Enviar la mesa a revisión?",
+    "submitConfirmDescription": "Un admin la va a revisar. Mientras tanto no vas a poder editarla: si hay algo que corregir, hacelo antes de enviarla.",
+    "submitSuccess": "Mesa enviada a revisión",
+    "draftHint": "Es un borrador: solo vos la ves. Cuando esté lista, enviala a revisión."
   },
   "schedule": {
     "weekdayLabel": "Día",

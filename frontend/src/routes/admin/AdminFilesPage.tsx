@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
-import { useConfirm } from '@/components/ConfirmDialog'
+import { useConfirm } from '@/hooks/useConfirm'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
@@ -13,8 +13,8 @@ import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HelpLink } from '@/features/help'
-import { useDebounce } from '@/hooks/useDebounce'
 import { useDisclosure } from '@/hooks/useDisclosure'
+import { useSearchQuery } from '@/hooks/useSearchQuery'
 import {
   FileCategoryBadge,
   FileCategoryFilter,
@@ -31,16 +31,10 @@ import {
   type AdminFile,
   type FileCategory,
   type StagedFile,
-  FILE_CATEGORIES,
-  FILE_TYPE_CHOICES,
-  fileCategoryChoices,
+  adminFileSearchFields,
 } from '@/features/files'
 import { browserTimeZone, formatDate } from '@/lib/date'
-import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib/searchQuery'
 import { ApiError } from '@/types/api'
-
-/** The three fields the search box accepts behind a `/`, mirroring the backend's `FileSearchField`. */
-const SEARCH_FIELD_NAMES = ['file_name', 'file_owner', 'file_type', 'file_categories'] as const
 
 /**
  * /admin/files — every file the community has uploaded, and the power to publish one (#64, #79).
@@ -69,22 +63,17 @@ export function AdminFilesPage() {
 
   // The search box holds a structured value, but what travels - to the URL and to the API - is the
   // raw string of #164. Hydrating from the URL on mount is what makes a filtered view linkable
-  // (#185), the same property /admin/catalogs has.
-  const [search, setSearch] = useState<SearchQueryValue>(() => ({
-    terms: parseSearchQuery(searchParams.get('q') ?? '', SEARCH_FIELD_NAMES),
-    activeField: null,
-    draft: '',
-    pendingConnector: 'and',
-  }))
-  const query = buildSearchQuery(search)
-  const debouncedQuery = useDebounce(query, 300)
+  // (#185), the same property /admin/catalogs has. One list of commands, given to the box, used to
+  // read `?q=` and shown in the help; the wiring is the shared hook (#240).
+  const fields = useMemo(() => adminFileSearchFields(t), [t])
+  const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
   // isLoadingError, not isError: see docs/decisiones.md #150.
   // The category is a filter and not a search term (#233): five known values are chosen from, never
   // typed at, so offering "contains" over them would let one letter match four categories.
   const category = (searchParams.get('category') as FileCategory | null) ?? null
   const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(
-    debouncedQuery,
+    search.debouncedQuery,
     undefined,
     undefined,
     category ?? undefined,
@@ -232,18 +221,9 @@ export function AdminFilesPage() {
       )}
 
       <SearchQueryInput
-        fields={[
-          { name: 'file_name', label: t('search.file_name') },
-          { name: 'file_owner', label: t('search.file_owner') },
-          { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
-          // All five here: the platform's library holds every cajón, announcements included.
-          { name: 'file_categories', label: t('search.file_categories'), values: fileCategoryChoices(t, FILE_CATEGORIES) },
-        ]}
-        value={search}
-        onChange={(value) => {
-          setSearch(value)
-          updateParams({ q: buildSearchQuery(value) })
-        }}
+        fields={search.fields}
+        value={search.value}
+        onChange={search.onChange}
         placeholder={t('admin.searchPlaceholder')}
         label={t('admin.searchLabel')}
       />
@@ -254,8 +234,8 @@ export function AdminFilesPage() {
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && (
         <EmptyState
-          title={query ? t('admin.noResultsTitle') : t('admin.emptyTitle')}
-          description={query ? t('admin.noResultsDescription') : t('admin.emptyDescription')}
+          title={search.query ? t('admin.noResultsTitle') : t('admin.emptyTitle')}
+          description={search.query ? t('admin.noResultsDescription') : t('admin.emptyDescription')}
         />
       )}
       {data && data.content.length > 0 && (

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import type { SearchField } from '@/lib/searchQuery'
+
 import { AccountHelp, ContextsHelp, NotificationsHelp, SearchHelp, TableStatusHelp } from './basics'
 import { AdminFilesHelp, AssignMastersHelp, CatalogsHelp, OwnerHelp, ReviewingHelp } from './admins'
 import {
@@ -27,12 +29,26 @@ import {
   ScheduleConflictsHelp,
 } from './players'
 
+/**
+ * What the screen raising the help can tell it about itself.
+ *
+ * **Everything here is optional and most sections take none of it** (#240): the help is fixed text,
+ * and a section that needs no context declares no props — a `() => ReactNode` still satisfies this.
+ * What forced the first one is the search: its rules are the same everywhere, but its *examples* have
+ * to be written with the commands of the box that was being used, or they teach commands that screen
+ * does not have.
+ */
+export interface HelpSectionBodyProps {
+  /** The commands the search box that opened this help accepts, in the order it offers them. */
+  searchFields?: readonly SearchField[]
+}
+
 /** One entry of the help catalogue: what it is called and what it says. */
 export interface HelpSectionDefinition {
   /** Key of the heading in the `help` namespace. It becomes the dialog's title. */
   titleKey: string
   /** The body, as a component so each section keeps its own translation hooks. */
-  Body: () => ReactNode
+  Body: (props: HelpSectionBodyProps) => ReactNode
 }
 
 /**

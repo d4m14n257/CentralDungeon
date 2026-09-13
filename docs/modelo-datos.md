@@ -186,7 +186,7 @@ CREATE TABLE game_tables (
     start_date     DATE          NULL,   -- el día desde el que corre la mesa; sin hora ni zona (#230)
     total_sessions INT           NULL,   -- planned number of sessions (#26)
     max_players    INT           NULL,   -- player cap (#24)
-    status         VARCHAR(32)   NOT NULL DEFAULT 'Preparation',
+    status         VARCHAR(32)   NOT NULL DEFAULT 'Draft',
     created_by     VARCHAR(64)   NOT NULL, -- master or admin (#72)
     claimed_by     VARCHAR(64)   NULL,     -- admin who reserved the review (#100)
     claimed_at     DATETIME      NULL,
@@ -751,7 +751,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| Máquina de estados: `Unassigned`/`Preparation` → `ChangesRequested` → `Opened` → `InProgress` → `PauseRequested` → `Pause` → `Finished`/`Canceled`. Toda transición no declarada devuelve `409` | `GameTableService` | #27, #32, #72 |
+| Máquina de estados: `Draft` → `Preparation` (la envía el master) o `Unassigned` (la crea un admin) → `ChangesRequested` → `Opened` → `InProgress` → `PauseRequested` → `Pause` → `Finished`/`Canceled`. Toda transición no declarada devuelve `409` | `GameTableService` | #27, #32, #72, #245 |
 | Una mesa creada por un admin nace `Unassigned` y, al asignarle masters, pasa directo a `Opened` sin revisión | `GameTableService` | #72 |
 | Exactamente un `Primary` vivo por mesa | `MasterService` | #71, #73 |
 | **La pertenencia mira `masters.status`**: una fila `Deleted` no autoriza nada. Es lo que hace que quitar a un co-master le saque el acceso en el momento, sin borrar el registro de que dirigió la mesa | `MasterService.isMasterOf` · `.isPrimaryOf` · `.findByGameTable` | #135, #175, #216 |
@@ -763,7 +763,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | **Reanudar vuelve a verificar el choque del `Primary`**: si la franja ya no está libre, responde `409` con el nombre de la otra mesa y no reanuda | `GameTableService.resume` | #178, #193 |
 | Al entrar en `Finished` o `Canceled` se sella `closed_at`, que arranca la ventana de visibilidad. **Se sella una sola vez**: si ya tiene fecha, ninguna transición posterior la mueve | `GameTableService` | #44, #180 |
 | El texto enriquecido (`description`, `permitted`, `requirements`) se sanitiza **al guardar y al servir**, con lista blanca | `RichTextSanitizer` | #62, #186 |
-| Un master edita su propia mesa solo en `Preparation` y `ChangesRequested`; el `PUT` **reemplaza la mesa entera**, un campo ausente vacía | `GameTableService.update` | #189 |
+| Un master edita su propia mesa solo en `Draft` y `ChangesRequested` — **no** en `Preparation`, donde un admin la está leyendo; el `PUT` **reemplaza la mesa entera**, un campo ausente vacía | `GameTableService.update` | #189, #245 |
 | La agenda y los vínculos de catálogo se **reemplazan como conjunto** y sus filas se marcan, nunca se borran: la clave primaria incluye el valor, así que sacar y volver a poner tiene que ser un `UPDATE` | `TableScheduleService` · `TableCatalogService` | #190 |
 | **Un master no puede tener dos mesas vivas con agendas solapadas**. Se compara intervalo contra intervalo —`[hourtime, hourtime + duration)` con la `duration` **de cada franja** (#228), en UTC, semiabierto y con envoltura semanal—, no `weekday`+`hourtime` exacto | `ScheduleConflictService` | #178 |
 | Dos filas de `table_schedules` **de la misma mesa** no pueden solaparse entre sí. Responde `400`, no `409`: es una semana que no se puede jugar, no un choque con el estado de nadie | `TableScheduleService` | #178, #187 |
@@ -771,7 +771,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Una franja sin `duration`, o una mesa sin agenda, no ocupa ningún intervalo y por lo tanto nunca choca | `ScheduleConflictService` | #178, #228 |
 | **`Pause` no reserva horario**: congela la agenda, así que sus franjas no cuentan como choque. Al reanudar se reagenda y se vuelve a verificar | `ScheduleConflictService` | #32, #178 |
 | Editar la agenda de una mesa ya poblada **avisa** al master a quiénes les genera choque; no expulsa a nadie | `TableScheduleService` | #70, #178 |
-| **Una mesa se borra solo si nunca fue pública** (`Unassigned`/`Preparation`/`ChangesRequested`) **y no tiene postulaciones activas**; lo demás se cancela. El borrado es lógico y arrastra `masters` y `table_registrations` con la misma marca de tiempo | `GameTableService.delete` | #25, #175 |
+| **Una mesa se borra solo si nunca fue pública** (`Draft`/`Unassigned`/`Preparation`/`ChangesRequested`) **y no tiene postulaciones activas**; lo demás se cancela. El borrado es lógico y arrastra `masters` y `table_registrations` con la misma marca de tiempo | `GameTableService.delete` | #25, #175 |
 | Una mesa `Deleted` no existe para ninguna lectura: detalle y listados responden `404` o la omiten | `GameTableService` | #25, #175 |
 
 ### Postulaciones
@@ -902,7 +902,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| La bandeja es un `UNION ALL` sobre `approval_requests` (`Pending`), `comments` (`Under review`), `system_feedback` (`New`) y `game_tables` (`Preparation`/`ChangesRequested`), normalizado a un DTO común | `AdminQueueService` | #100 |
+| La bandeja es un `UNION ALL` sobre `approval_requests` (`Pending`), `comments` (`Under review`), `system_feedback` (`New`) y `game_tables` (`Preparation`), normalizado a un DTO común. `Draft` nunca entra: nadie la envió todavía. `ChangesRequested` tampoco — la pelota está en el master | `AdminQueueService` | #100, #245 |
 | Un ítem reservado desaparece de la bandeja del resto, pero sigue visible para quien lo reservó: el filtro es `claimed_by IS NULL OR claimed_by = :actual` | `AdminQueueService` | #100 |
 | Reservar es idempotente para el mismo admin; si ya lo tiene otro, responde `409` | `AdminQueueService` | #100 |
 | Resolver un ítem exige tenerlo reservado | `AdminQueueService` | #100 |

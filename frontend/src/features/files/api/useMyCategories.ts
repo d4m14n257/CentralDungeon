@@ -11,7 +11,10 @@ import { filesApi } from './filesApi'
  * *and* on whether they run any table — a co-master an admin assigned has no `Master` role at all
  * (#135) — and re-deriving that here is how a select ends up offering an option the server rejects.
  *
- * @returns the query for the cajones they may use. Never empty: every account is a `Player` (#38)
+ * @returns the query for the cajones they may use. **It can come back empty**: #38 creates every
+ *          account with `Player`, which is about the moment of signup and not an invariant — a role
+ *          can be revoked, so somebody can end up holding only `Admin`. Whether the screen exists at
+ *          all for them is a coarser question, and `useHasPersonalLibrary` answers it (#241)
  */
 export function useMyCategories() {
   return useQuery({

@@ -30,6 +30,18 @@ export function notificationTarget(notification: Notification): string | null {
       return tableDetailPath(notification.relatedEntityId)
     case 'NewCandidate':
       return masterTableDetailPath(notification.relatedEntityId)
+    // The master's own screen, because that is what the news is: the table is now theirs to run
+    // (#244). Sending them to the public detail would show them the table as anybody else sees it,
+    // which is the one view that does not contain the thing they were just told.
+    case 'MasterAssigned':
+      return masterTableDetailPath(notification.relatedEntityId)
+    // The master's screen again, and for the same reason: what came out of review is a table they
+    // run. A rejection has to land where the admin's reason is readable, which is its status tab
+    // (#244) — the notification does not carry the reason, the history does.
+    case 'TableApproved':
+    case 'TableApprovedWithChanges':
+    case 'TableChangesRequested':
+      return masterTableDetailPath(notification.relatedEntityId)
     default:
       return null
   }

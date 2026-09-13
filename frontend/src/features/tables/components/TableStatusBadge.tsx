@@ -10,6 +10,7 @@ import type { GameTableStatus } from '../types'
  * literals and cannot see a class name built out of a template string.
  */
 const STATE_CLASSES: Record<GameTableStatus, { badge: string; dot: string }> = {
+  Draft: { badge: 'bg-state-draft-bg text-state-draft-fg', dot: 'bg-state-draft-dot' },
   Unassigned: { badge: 'bg-state-draft-bg text-state-draft-fg', dot: 'bg-state-draft-dot' },
   Preparation: { badge: 'bg-state-pending-bg text-state-pending-fg', dot: 'bg-state-pending-dot' },
   ChangesRequested: { badge: 'bg-state-warning-bg text-state-warning-fg', dot: 'bg-state-warning-dot' },

@@ -34,7 +34,7 @@ function ChoiceHarness() {
   return (
     <MemoryRouter>
       <SearchQueryInput fields={CHOICE_FIELDS} value={value} onChange={setValue} label="Buscar archivos" />
-      <output>{buildSearchQuery(value)}</output>
+      <output>{buildSearchQuery(value, CHOICE_FIELDS)}</output>
     </MemoryRouter>
   )
 }
@@ -49,7 +49,7 @@ function Harness() {
   return (
     <MemoryRouter>
       <SearchQueryInput fields={FIELDS} value={value} onChange={setValue} label="Buscar personas" />
-      <output>{buildSearchQuery(value)}</output>
+      <output>{buildSearchQuery(value, FIELDS)}</output>
     </MemoryRouter>
   )
 }
@@ -71,14 +71,34 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('juan')
   })
 
-  it('the slash opens the field list, and picking one leaves its chip fixed', async () => {
+  /**
+   * The standardisation of #240: picking writes text, and text is all there is until Enter.
+   *
+   * It used to pin the chip on the spot, so the very same command reached two different states
+   * depending on whether it was picked from the list or typed out — and which of the two somebody did
+   * depended on how long the command was, so the two search boxes of the app felt like two languages.
+   */
+  it('picking a command writes it into the text and closes nothing', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us')
     await userEvent.click(screen.getByRole('option', { name: /Nombre/ }))
 
-    expect(screen.getByText('Nombre:')).toBeInTheDocument()
-    expect(searchBox()).toHaveValue('')
+    expect(searchBox()).toHaveValue('/user_name ')
+    expect(screen.queryByText('Nombre:')).not.toBeInTheDocument()
+  })
+
+  it('picking a command and typing it out by hand leave the box in the same state', async () => {
+    const { unmount } = render(<Harness />)
+    await userEvent.type(searchBox(), '/us{Enter}damian{Enter}')
+    const picked = searchBox().parentElement!.textContent
+
+    unmount()
+    render(<Harness />)
+    await userEvent.type(searchBox(), '/user_name damian{Enter}')
+
+    expect(searchBox().parentElement!.textContent).toBe(picked)
+    expect(query()).toHaveTextContent('/user_name damian')
   })
 
   it('with a field open, everything typed is its value, spaces included', async () => {
@@ -103,7 +123,7 @@ describe('SearchQueryInput', () => {
     await userEvent.type(searchBox(), '/')
     await userEvent.keyboard('{ArrowDown}{Enter}')
 
-    expect(screen.getByText('Nombre:')).toBeInTheDocument()
+    expect(searchBox()).toHaveValue('/user_name ')
   })
 
   it('the arrows wrap around at the end of the list', async () => {
@@ -112,7 +132,7 @@ describe('SearchQueryInput', () => {
     await userEvent.type(searchBox(), '/')
     await userEvent.keyboard('{ArrowUp}{Enter}')
 
-    expect(screen.getByText('Nombre:')).toBeInTheDocument()
+    expect(searchBox()).toHaveValue('/user_name ')
   })
 
   it('another slash closes the open criterion and starts the next one', async () => {
@@ -215,23 +235,24 @@ describe('SearchQueryInput', () => {
     expect(query()).toHaveTextContent('')
   })
 
-  it('Backspace on an empty box releases the open field first', async () => {
-    render(<Harness />)
-
-    await userEvent.type(searchBox(), '/us{Enter}')
-    await userEvent.type(searchBox(), '{Backspace}')
-
-    expect(screen.queryByText('Nombre:')).not.toBeInTheDocument()
-  })
-
-  it('Backspace on an empty box with no open field returns the last chip to the input', async () => {
+  /** Nothing is pinned any more, so Backspace has one job: undo the last chip (#240). */
+  it('Backspace on an empty box returns the last chip to the input, as the text that made it', async () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), '/us{Enter}juan{Enter}')
     await userEvent.type(searchBox(), '{Backspace}')
 
-    expect(searchBox()).toHaveValue('juan')
-    expect(screen.getByText('Nombre:')).toBeInTheDocument()
+    expect(searchBox()).toHaveValue('/user_name juan')
+    expect(screen.queryByText('Nombre:')).not.toBeInTheDocument()
+  })
+
+  it('a chip handed back to the input rebuilds the same query when it is closed again', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), '/us{Enter}juan{Enter}')
+    await userEvent.type(searchBox(), '{Backspace}{Enter}')
+
+    expect(query()).toHaveTextContent('/user_name juan')
   })
 
   it('Escape closes the field list without touching what was typed', async () => {
@@ -284,10 +305,58 @@ describe('SearchQueryInput', () => {
 
     await userEvent.type(choiceBox(), '/file_type{Enter}')
     await userEvent.click(screen.getByRole('option', { name: 'PDF' }))
+    await userEvent.type(choiceBox(), '{Enter}')
 
     expect(screen.getByText('Tipo:')).toBeInTheDocument()
     expect(screen.getByText('PDF')).toBeInTheDocument()
     expect(query()).toHaveTextContent('/file_type application/pdf')
+  })
+
+  /** A chosen value is text like any other until Enter, and it is the label that is written (#240). */
+  it('picking a value writes its label into the text and closes nothing', async () => {
+    render(<ChoiceHarness />)
+
+    await userEvent.type(choiceBox(), '/file_type{Enter}')
+    await userEvent.click(screen.getByRole('option', { name: 'PDF' }))
+
+    expect(choiceBox()).toHaveValue('/file_type PDF')
+    expect(screen.queryByText('Tipo:')).not.toBeInTheDocument()
+  })
+
+  /** Typed by hand it offers the very same list: it is the text that says a command is open, not a chip. */
+  it('offers the values of a command typed out by hand', async () => {
+    render(<ChoiceHarness />)
+
+    await userEvent.type(choiceBox(), '/file_type ')
+
+    expect(screen.getByRole('option', { name: 'PDF' })).toBeInTheDocument()
+  })
+
+  it('the label typed by hand travels as the value it stands for', async () => {
+    render(<ChoiceHarness />)
+
+    await userEvent.type(choiceBox(), '/file_type PNG{Enter}')
+
+    expect(query()).toHaveTextContent('/file_type image/png')
+  })
+
+  it('offers the rest after a comma, and keeps the alternative already picked', async () => {
+    render(<ChoiceHarness />)
+
+    await userEvent.type(choiceBox(), '/file_type PDF,')
+    await userEvent.click(screen.getByRole('option', { name: 'PNG' }))
+    await userEvent.type(choiceBox(), '{Enter}')
+
+    expect(query()).toHaveTextContent('/file_type application/pdf,image/png')
+  })
+
+  /** With the box already saying it, a list repeating it is noise — whoever typed it or picked it. */
+  it('offers nothing once what is typed is one of the values', async () => {
+    render(<ChoiceHarness />)
+
+    await userEvent.type(choiceBox(), '/file_type PDF')
+
+    expect(screen.queryByRole('option')).not.toBeInTheDocument()
   })
 
   /** Typing narrows the choices, so a long list stays usable. */

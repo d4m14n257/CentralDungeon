@@ -1,5 +1,8 @@
 import type { TFunction } from 'i18next'
 
+import type { SearchField } from '@/lib/searchQuery'
+
+import { FILE_CATEGORIES } from './categories'
 import type { FileCategory } from './types'
 
 /**
@@ -45,4 +48,50 @@ export function FILE_TYPE_CHOICES(t: TFunction): { value: string; label: string 
  */
 export function fileCategoryChoices(t: TFunction, categories: readonly FileCategory[]): { value: string; label: string }[] {
   return categories.map((category) => ({ value: category, label: t(`category.${category}`) }))
+}
+
+/**
+ * The commands `/my/files` accepts (#164, #237, #240).
+ *
+ * **Only the cajones that are theirs**: offering one this person can never have a file in is offering
+ * a search that always comes back empty. Which those are is the server's answer, so it arrives as an
+ * argument.
+ *
+ * And with **none** of them — an account that is neither player nor master, or the moment before the
+ * server has answered — the command is not offered at all. It is the same rule one step further: a
+ * `/file_categories` with an empty list is a command that can match nothing, and its help would read
+ * "elegís entre:" with nothing after the colon.
+ *
+ * @param t          the translator of the `files` namespace
+ * @param categories the cajones this person may file under
+ * @returns the commands, in the order they are offered
+ */
+export function myFileSearchFields(t: TFunction, categories: readonly FileCategory[]): SearchField[] {
+  const fields: SearchField[] = [
+    { name: 'file_name', label: t('search.file_name'), examples: ['ficha', 'mapa', 'inventario'] },
+    { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
+  ]
+  if (categories.length > 0) {
+    fields.push({ name: 'file_categories', label: t('search.file_categories'), values: fileCategoryChoices(t, categories) })
+  }
+  return fields
+}
+
+/**
+ * The commands `/admin/files` accepts (#164, #237, #240).
+ *
+ * Two differences from a person's own library, and both come from what the screen is: it holds the
+ * platform's files, so `/file_owner` exists — somebody else uploaded them — and **all five** cajones
+ * are offered, announcements included.
+ *
+ * @param t the translator of the `files` namespace
+ * @returns the commands, in the order they are offered
+ */
+export function adminFileSearchFields(t: TFunction): SearchField[] {
+  return [
+    { name: 'file_name', label: t('search.file_name'), examples: ['ficha', 'mapa', 'inventario'] },
+    { name: 'file_owner', label: t('search.file_owner'), examples: ['damian', 'carlos'] },
+    { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
+    { name: 'file_categories', label: t('search.file_categories'), values: fileCategoryChoices(t, FILE_CATEGORIES) },
+  ]
 }

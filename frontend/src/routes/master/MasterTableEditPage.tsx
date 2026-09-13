@@ -28,15 +28,15 @@ import {
   useMySchedule,
   useTableTypes,
   useUpdateTable,
+  MASTER_EDITABLE_STATUSES,
 } from '@/features/tables'
-import type { CreateGameTableForm, GameTableStatus, TableScheduleEntry } from '@/features/tables'
+import type { CreateGameTableForm, TableScheduleEntry } from '@/features/tables'
 import { useMe } from '@/features/users'
 import { WEEKDAYS, browserTimeZone, formatMinutes, minutesOfDay } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 import { ApiError } from '@/types/api'
 
 /** The two states where the backend still accepts a rewrite of the table (#189). */
-const EDITABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested']
 
 /**
  * `/master/tables/:id/edit` — rewriting a table that has not gone public yet.
@@ -201,7 +201,7 @@ export function MasterTableEditPage() {
 
   // The backend refuses the rewrite past Preparation and ChangesRequested, and only from the table's
   // master. Painting a form that is guaranteed to fail would be worse than saying why it is closed.
-  if (!isPrimary || !EDITABLE_STATUSES.includes(table.status)) {
+  if (!isPrimary || !MASTER_EDITABLE_STATUSES.includes(table.status)) {
     return <ForbiddenState description={t('edit.lockedDescription')} />
   }
 

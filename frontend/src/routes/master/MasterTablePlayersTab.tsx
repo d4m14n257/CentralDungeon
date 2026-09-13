@@ -4,7 +4,7 @@ import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { CollapsibleSection } from '@/components/CollapsibleSection'
-import { useConfirm } from '@/components/ConfirmDialog'
+import { useConfirm } from '@/hooks/useConfirm'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { IconAction } from '@/components/IconAction'

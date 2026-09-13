@@ -1,7 +1,7 @@
 package com.centraldungeon.tables;
 
 /**
- * The full 9-state machine (modelo-datos.md #27, #32, #72), plus Deleted. PauseRequested exists here
+ * The full 10-state machine (modelo-datos.md #27, #32, #72), plus Deleted. PauseRequested exists here
  * but no endpoint produces it yet - it is only reachable once approval_requests lands (F3,
  * plan-desarrollo.md) and a master can ask for a pause instead of an admin pausing directly.
  *
@@ -12,10 +12,29 @@ package com.centraldungeon.tables;
  */
 public enum GameTableStatus {
 
+    /**
+     * The master is still writing it and nobody else has seen it (#245).
+     *
+     * <p>Where a master's table is born. It is theirs alone here: it appears in no explorer, in no
+     * admin list, and no admin is told it exists — sending it to review is a deliberate act, and until
+     * that happens the draft can be fixed or thrown away without anybody having looked.
+     *
+     * <p>A table an <em>admin</em> creates does not pass through here: it is born {@link #Unassigned}
+     * (#72). An admin has nobody to wait for — reviewing is their own job — so a draft state would be
+     * a step that ends where it started.
+     */
+    Draft,
+
     /** Created by an admin who is not going to run it; waiting for masters to be assigned (#72). */
     Unassigned,
 
-    /** The master's draft. Visible only to them, until they submit it for review (#27). */
+    /**
+     * Sent to review and waiting on an admin (#27, #245).
+     *
+     * <p><b>It is no longer the master's to edit.</b> Somebody else is reading it, and moving it while
+     * they read is how a reviewer approves something that no longer exists. It comes back to the
+     * master as {@link #ChangesRequested}, or it opens.
+     */
     Preparation,
 
     /** An admin sent it back with a reason. The master edits and resubmits. */

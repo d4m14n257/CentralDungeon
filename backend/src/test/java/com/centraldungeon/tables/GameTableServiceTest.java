@@ -9,6 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.catalogs.TableCatalogService;
+import com.centraldungeon.notifications.NotificationService;
+import com.centraldungeon.notifications.NotificationType;
+import com.centraldungeon.tables.dto.AddMasterRequest;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
@@ -85,6 +88,9 @@ class GameTableServiceTest {
     @Mock
     private TableFileService tableFileService;
 
+    @Mock
+    private NotificationService notificationService;
+
     private GameTableService gameTableService;
 
     @BeforeEach
@@ -92,7 +98,7 @@ class GameTableServiceTest {
         gameTableService = new GameTableService(
                 gameTableRepository, tableTypeRepository, tableRegistrationRepository, tableStatusChangeRepository, masterService,
                 gameTableMapper, userService, tableScheduleService, scheduleConflictService, tableCatalogService,
-                tableSessionService, tableFileService, new RichTextSanitizer());
+                tableSessionService, tableFileService, new RichTextSanitizer(), notificationService);
     }
 
     @Test
@@ -251,6 +257,83 @@ class GameTableServiceTest {
 
         assertThat(table.getStatus()).isEqualTo(GameTableStatus.Opened);
         org.mockito.Mockito.verify(masterService).assignInitialMasters(table, "primary-1", List.of());
+    }
+
+    /**
+     * #244: the one assignment nobody asked for. An admin creates the table and hands it over, so
+     * without the bell the new master finds out by stumbling on a table they had never seen.
+     */
+    @Test
+    void tellsEveryMasterItJustAssignedThatTheyNowRunTheTable() {
+        GameTable table = persistedTable("table-handed-over", GameTableStatus.Unassigned);
+        when(gameTableRepository.findByIdForUpdate("table-handed-over")).thenReturn(Optional.of(table));
+        when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
+        when(masterService.findByGameTable("table-handed-over")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-handed-over", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.assignInitialMasters(
+                "table-handed-over", new AssignMastersRequest("primary-1", List.of("second-1")), "admin-1");
+
+        // The co-master too: being added to somebody else's table is news for whoever is added (#135).
+        org.mockito.Mockito.verify(notificationService).notifyMasterAssigned("primary-1", table);
+        org.mockito.Mockito.verify(notificationService).notifyMasterAssigned("second-1", table);
+    }
+
+    /**
+     * #244: review is a wait whose other side the master cannot see. The table sits there and nothing
+     * on their screen changes until an admin acts, so the bell is the only thing that says it came out.
+     */
+    @Test
+    void tellsTheMastersWhenTheirTableComesOutOfReviewApproved() {
+        GameTable table = persistedTable("table-approved", GameTableStatus.Preparation);
+        when(gameTableRepository.findByIdForUpdate("table-approved")).thenReturn(Optional.of(table));
+        when(masterService.findByGameTable("table-approved"))
+                .thenReturn(List.of(new Master(table, persistedUser("master-1"), MasterType.Primary)));
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-approved", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.approve("table-approved", "admin-1");
+
+        org.mockito.Mockito.verify(notificationService)
+                .notifyReviewOutcome("master-1", table, NotificationType.TableApproved);
+    }
+
+    @Test
+    void tellsTheMastersWhenTheirTableIsSentBackForChanges() {
+        GameTable table = persistedTable("table-bounced", GameTableStatus.Preparation);
+        when(gameTableRepository.findByIdForUpdate("table-bounced")).thenReturn(Optional.of(table));
+        when(masterService.findByGameTable("table-bounced"))
+                .thenReturn(List.of(new Master(table, persistedUser("master-1"), MasterType.Primary)));
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-bounced", "Test", null, null, null, null, null, "ChangesRequested", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.requestChanges("table-bounced", "admin-1", new ChangeTableStatusRequest("Falta la agenda"));
+
+        // The reason is not in the notification: it is mandatory on the transition and kept in the
+        // status history, which is where the master reads it whole (#197).
+        org.mockito.Mockito.verify(notificationService)
+                .notifyReviewOutcome("master-1", table, NotificationType.TableChangesRequested);
+    }
+
+    /** Being promoted is not news: they already ran the table and are watching the screen that did it. */
+    @Test
+    void doesNotAnnounceAPromotionOfSomebodyWhoAlreadyRanTheTable() {
+        GameTable table = persistedTable("table-promote", GameTableStatus.Opened);
+        when(gameTableRepository.findById("table-promote")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-promote", "second-1")).thenReturn(true);
+        when(masterService.findByGameTable("table-promote")).thenReturn(List.of());
+
+        gameTableService.addOrPromoteMaster("table-promote", "primary-1", new AddMasterRequest("second-1", MasterType.Primary));
+
+        org.mockito.Mockito.verify(notificationService, org.mockito.Mockito.never())
+                .notifyMasterAssigned(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -506,7 +589,7 @@ class GameTableServiceTest {
 
     @Test
     void updateRewritesTheDraftAndSanitizesItsRichText() {
-        GameTable table = persistedTable("table-edit-1", GameTableStatus.Preparation);
+        GameTable table = persistedTable("table-edit-1", GameTableStatus.Draft);
         when(gameTableRepository.findByIdForUpdate("table-edit-1")).thenReturn(Optional.of(table));
         when(masterService.isMasterOf("table-edit-1", "master-1")).thenReturn(true);
         when(masterService.findByGameTable("table-edit-1")).thenReturn(List.of());
@@ -529,7 +612,7 @@ class GameTableServiceTest {
 
     @Test
     void someoneWhoDoesNotRunTheTableCannotEditIt() {
-        GameTable table = persistedTable("table-edit-2", GameTableStatus.Preparation);
+        GameTable table = persistedTable("table-edit-2", GameTableStatus.Draft);
         when(gameTableRepository.findByIdForUpdate("table-edit-2")).thenReturn(Optional.of(table));
         when(masterService.isMasterOf("table-edit-2", "outsider-1")).thenReturn(false);
 
@@ -548,11 +631,55 @@ class GameTableServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
+    /**
+     * #245: a table sent to review is being read by somebody else, and moving it while they read is
+     * how a reviewer approves something that no longer exists.
+     */
+    @Test
+    @DisplayName("una mesa enviada a revisión ya no la edita su master")
+    void aTableAwaitingReviewIsNoLongerItsMastersToRewrite() {
+        GameTable table = persistedTable("table-in-review", GameTableStatus.Preparation);
+        when(gameTableRepository.findByIdForUpdate("table-in-review")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-in-review", "master-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.update("table-in-review", updateRequest(), "master-1"))
+                .isInstanceOf(ConflictException.class);
+    }
+
+    /** Sending it is the act that makes the table exist for anybody else (#245). */
+    @Test
+    @DisplayName("enviar a revisión mueve el borrador a Preparation")
+    void submittingADraftSendsItToReview() {
+        GameTable table = persistedTable("table-draft", GameTableStatus.Draft);
+        when(gameTableRepository.findByIdForUpdate("table-draft")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-draft", "master-1")).thenReturn(true);
+        when(masterService.findByGameTable("table-draft")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-draft", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.submitForReview("table-draft", "master-1");
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Preparation);
+    }
+
+    /** Only once: what is already in the queue cannot be filed again. */
+    @Test
+    void cannotSendATableThatIsNotADraftToReview() {
+        GameTable table = persistedTable("table-sent", GameTableStatus.Preparation);
+        when(gameTableRepository.findByIdForUpdate("table-sent")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-sent", "master-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.submitForReview("table-sent", "master-1"))
+                .isInstanceOf(ConflictException.class);
+    }
+
     /** Each slot carries its own length, so one table can run two different ones (#228). */
     @Test
     @DisplayName("la agenda viaja entera y cada franja con su propia duración")
     void updateSendsEachSlotWithItsOwnDuration() {
-        GameTable table = persistedTable("table-edit-4", GameTableStatus.Preparation);
+        GameTable table = persistedTable("table-edit-4", GameTableStatus.Draft);
         when(gameTableRepository.findByIdForUpdate("table-edit-4")).thenReturn(Optional.of(table));
         when(masterService.isMasterOf("table-edit-4", "master-1")).thenReturn(true);
         when(masterService.findByGameTable("table-edit-4")).thenReturn(List.of());

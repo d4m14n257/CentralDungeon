@@ -3,6 +3,8 @@ package com.centraldungeon.tables;
 import com.centraldungeon.catalogs.CatalogType;
 import com.centraldungeon.catalogs.TableCatalogService;
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
+import com.centraldungeon.notifications.NotificationService;
+import com.centraldungeon.notifications.NotificationType;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
@@ -63,16 +65,23 @@ public class GameTableService {
      * there is no history worth keeping. Everything past this point is cancelled instead, because a
      * table other people looked at, applied to or played is a record of something that happened.
      */
-    private static final Set<GameTableStatus> DELETABLE_STATUSES =
-            Set.of(GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
+    private static final Set<GameTableStatus> DELETABLE_STATUSES = Set.of(
+            GameTableStatus.Draft, GameTableStatus.Unassigned, GameTableStatus.Preparation,
+            GameTableStatus.ChangesRequested);
 
     /**
-     * The statuses in which a table is still being written, and therefore still its master's to
-     * rewrite. Past this point people have applied on the strength of what it says, and changing it
-     * under them is a different conversation than editing a draft.
+     * The statuses in which a table is still its master's to rewrite (#245).
+     *
+     * <p><b>`Preparation` is not one of them.</b> A table that was sent to review is being looked at
+     * by somebody else, and moving it while they read is how a reviewer ends up approving something
+     * that no longer exists. The two ways back into editing are the two that mean "it is yours
+     * again": it has not been sent yet, or it came back with changes requested.
+     *
+     * <p>An admin editing during review is a different door, and it is in {@link #update} itself:
+     * this set is about the master.
      */
     private static final Set<GameTableStatus> EDITABLE_STATUSES =
-            Set.of(GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
+            Set.of(GameTableStatus.Draft, GameTableStatus.ChangesRequested);
 
     private static final List<TableRegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
@@ -95,6 +104,7 @@ public class GameTableService {
     private final TableSessionService tableSessionService;
     private final TableFileService tableFileService;
     private final RichTextSanitizer richTextSanitizer;
+    private final NotificationService notificationService;
 
     /**
      * @param gameTableRepository        the {@code game_tables} table, and the row everything locks on
@@ -126,7 +136,8 @@ public class GameTableService {
             TableCatalogService tableCatalogService,
             TableSessionService tableSessionService,
             TableFileService tableFileService,
-            RichTextSanitizer richTextSanitizer) {
+            RichTextSanitizer richTextSanitizer,
+            NotificationService notificationService) {
         this.gameTableRepository = gameTableRepository;
         this.tableTypeRepository = tableTypeRepository;
         this.tableRegistrationRepository = tableRegistrationRepository;
@@ -140,6 +151,20 @@ public class GameTableService {
         this.tableSessionService = tableSessionService;
         this.tableFileService = tableFileService;
         this.richTextSanitizer = richTextSanitizer;
+        this.notificationService = notificationService;
+    }
+
+    /**
+     * Tells every master of the table how its review ended (#244).
+     *
+     * <p>Every one of them and not only the Primary: a co-master runs the table too, and "it opened"
+     * or "it came back" is news for whoever is going to run it, the same way {@code notifyNewCandidate}
+     * reaches all of them.
+     */
+    private void announceReviewOutcome(GameTable gameTable, NotificationType outcome) {
+        for (Master master : masterService.findByGameTable(gameTable.getId())) {
+            notificationService.notifyReviewOutcome(master.getUser().getId(), gameTable, outcome);
+        }
     }
 
     /** The creator becomes the table's Primary master (#73); a Master row is the source of pertenencia, not the role alone (#135). */
@@ -255,6 +280,14 @@ public class GameTableService {
         }
 
         masterService.assignInitialMasters(gameTable, request.primaryUserId(), secondaries);
+        // **They are told they now run it** (#244). This is the one assignment nobody asked for: an
+        // admin created the table and handed it over, so without the bell the person finds out by
+        // stumbling on a table they had never seen. Co-masters too - being added is news for whoever
+        // is added.
+        notificationService.notifyMasterAssigned(request.primaryUserId(), gameTable);
+        for (String secondaryId : secondaries) {
+            notificationService.notifyMasterAssigned(secondaryId, gameTable);
+        }
         recordStatusChange(gameTable, GameTableStatus.Unassigned, GameTableStatus.Opened, actorId, null);
         tableSessionService.materialize(gameTable);
         return toDetail(gameTable);
@@ -281,6 +314,7 @@ public class GameTableService {
         }
         recordStatusChange(gameTable, GameTableStatus.Preparation, GameTableStatus.Opened, actorId, null);
         tableSessionService.materialize(gameTable);
+        announceReviewOutcome(gameTable, NotificationType.TableApproved);
         return toDetail(gameTable);
     }
 
@@ -300,6 +334,33 @@ public class GameTableService {
             throw new ConflictException("Cannot request changes on a table in status " + gameTable.getStatus());
         }
         recordStatusChange(gameTable, GameTableStatus.Preparation, GameTableStatus.ChangesRequested, actorId, request.justification());
+        announceReviewOutcome(gameTable, NotificationType.TableChangesRequested);
+        return toDetail(gameTable);
+    }
+
+    /**
+     * The master sending their draft to review for the first time. Draft to Preparation (#245).
+     *
+     * <p><b>This is the act that makes the table exist for anybody else.</b> Up to here it was theirs
+     * alone; from here an admin has it, which is also why the master stops being able to edit it —
+     * {@link #EDITABLE_STATUSES}. Deliberate and not automatic on create: a table is written over
+     * several sittings, and a wizard that filed it for review the moment it was saved would put
+     * half-written drafts in front of a reviewer.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token; has to be the table's Primary
+     * @return the table after the change
+     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor is not its Primary
+     * @throws ConflictException if the table was not a draft, or the draft is not runnable yet
+     */
+    @Transactional
+    public GameTableDetailResponse submitForReview(String gameTableId, String actorId) {
+        GameTable gameTable = lockTable(gameTableId);
+        requirePrimaryOf(gameTableId, actorId, "submit for review");
+        if (gameTable.getStatus() != GameTableStatus.Draft) {
+            throw new ConflictException("Cannot send a table in status " + gameTable.getStatus() + " to review");
+        }
+        recordStatusChange(gameTable, GameTableStatus.Draft, GameTableStatus.Preparation, actorId, null);
         return toDetail(gameTable);
     }
 
@@ -523,7 +584,14 @@ public class GameTableService {
     @Transactional
     public List<MasterSummaryResponse> addOrPromoteMaster(String gameTableId, String actorId, AddMasterRequest request) {
         GameTable gameTable = getEntityById(gameTableId);
+        // Asked *before* the change, so it can tell being added apart from being promoted (#244): the
+        // first is news - a table this person did not run until now - and the second is not, because
+        // they were already running it and are watching the screen that did it.
+        boolean joins = !masterService.isMasterOf(gameTableId, request.userId());
         masterService.addOrPromote(gameTable, actorId, request.userId(), request.masterType());
+        if (joins) {
+            notificationService.notifyMasterAssigned(request.userId(), gameTable);
+        }
         return masterService.findByGameTable(gameTableId).stream().map(gameTableMapper::toMasterSummary).toList();
     }
 

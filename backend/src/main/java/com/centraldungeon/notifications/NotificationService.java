@@ -97,6 +97,50 @@ public class NotificationService {
     }
 
     /**
+     * Tells somebody they are now a master of a table (#72, #135, #244).
+     *
+     * <p><b>The recipient did nothing to cause this</b>, which is what makes it the notification that
+     * cannot be skipped: an admin creates a table and assigns it, and until now the person only found
+     * out by wandering into their Master context and seeing a table they had never seen before. Every
+     * other notification follows an act of theirs or lands on a table they already knew.
+     *
+     * <p>It is sent to co-masters too, and by the same reasoning: being added to somebody else's
+     * table is news for whoever is added, whether or not they hold the {@code Master} role (#135).
+     *
+     * @param userId the new master
+     * @param table  the table they now run; the notification links to it
+     */
+    @Transactional
+    public void notifyMasterAssigned(String userId, GameTable table) {
+        User recipient = userRepository.getReferenceById(userId);
+        notificationRepository.save(new Notification(
+                recipient, NotificationType.MasterAssigned, NotificationParams.ofTable(table.getName()),
+                "game_table", table.getId()));
+    }
+
+    /**
+     * Tells a master their table came out of review (#27, #244).
+     *
+     * <p>Review is a wait whose other side the master cannot see: the table sits there and nothing on
+     * their screen changes until an admin acts. These are the three ways out, and each is different
+     * news - it passed, it passed but somebody edited it, or it is back in their hands.
+     *
+     * <p>The reason for a rejection is <b>not</b> carried here. It is already mandatory on the
+     * transition and kept in the status history, which is where the master reads it in full; a copy in
+     * the notification would be a second one, free to drift from the first (#197).
+     *
+     * @param userId one master of the table; the caller loops over all of them
+     * @param table  the table that was reviewed
+     * @param type   which of the three outcomes it was
+     */
+    @Transactional
+    public void notifyReviewOutcome(String userId, GameTable table, NotificationType type) {
+        User recipient = userRepository.getReferenceById(userId);
+        notificationRepository.save(new Notification(
+                recipient, type, NotificationParams.ofTable(table.getName()), "game_table", table.getId()));
+    }
+
+    /**
      * Tells somebody that two of their tables now fall at the same time (#178).
      *
      * <p>It carries no action of its own on purpose: the notification names both tables and stops

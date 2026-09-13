@@ -1,14 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ErrorState } from '@/components/ErrorState'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useDebounce } from '@/hooks/useDebounce'
-import { buildSearchQuery, emptySearchQuery, type SearchField } from '@/lib/searchQuery'
+import { useSearchQuery } from '@/hooks/useSearchQuery'
 import { cn } from '@/lib/utils'
 
 import { useUserSearch } from '../api/useUserSearch'
+import { userSearchFields } from '../searchFields'
 import type { UserSummary } from '../types'
 
 interface UserPickerProps {
@@ -31,29 +31,27 @@ interface UserPickerProps {
  */
 export function UserPicker({ onSelect, excludedIds = [], tableId }: UserPickerProps) {
   const { t } = useTranslation('users')
-  const [query, setQuery] = useState(emptySearchQuery)
 
-  const fields = useMemo<SearchField[]>(
-    () => [
-      { name: 'discord_name', label: t('search.discordName') },
-      { name: 'user_name', label: t('search.userName') },
-    ],
-    [t],
-  )
+  // The commands, the state and the 400 ms debounce, wired the same way as every other box (#240).
+  const fields = useMemo(() => userSearchFields(t), [t])
+  const search = useSearchQuery({ fields })
 
-  // 400 ms: the search goes out when typing stops, not once per keystroke (decisiones.md #164).
-  const rawQuery = buildSearchQuery(query)
-  const debouncedQuery = useDebounce(rawQuery, 400)
-  const hasQuery = debouncedQuery.trim().length > 0
-  const { data, isFetching, isLoadingError, refetch } = useUserSearch(debouncedQuery, hasQuery, tableId)
+  const hasQuery = search.debouncedQuery.trim().length > 0
+  const { data, isFetching, isLoadingError, refetch } = useUserSearch(search.debouncedQuery, hasQuery, tableId)
   /** While the debounce runs, what is on screen is the previous search: it is dimmed so it does not lie. */
-  const isStale = isFetching || rawQuery.trim() !== debouncedQuery.trim()
+  const isStale = isFetching || search.isStale
 
   const results = (data?.content ?? []).filter((user) => !excludedIds.includes(user.id))
 
   return (
     <div className="space-y-2">
-      <SearchQueryInput fields={fields} value={query} onChange={setQuery} label={t('search.label')} placeholder={t('search.placeholder')} />
+      <SearchQueryInput
+        fields={search.fields}
+        value={search.value}
+        onChange={search.onChange}
+        label={t('search.label')}
+        placeholder={t('search.placeholder')}
+      />
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {!isLoadingError && !hasQuery && <p className="text-fg-subtle text-sm">{t('search.startTyping')}</p>}
       {!isLoadingError && hasQuery && !data && <Skeleton className="h-24 w-full" />}

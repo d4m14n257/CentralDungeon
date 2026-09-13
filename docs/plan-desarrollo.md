@@ -109,6 +109,8 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **No entra**: pedir pausa ni veto (F3, necesitan `approval_requests`), el archivo de personaje en la postulación (F2), karma (F4). ~~`/my/files`~~ — **adelantada a F1**: es la pantalla que le da sentido al historial de #65, y sin ella la reutilización solo existe dentro del diálogo de adjuntar. Llegó junto con la clasificación por flujo (#232, #233) y con los archivos del pedido (#236), que no existían.
 
+**Lo que se ajustó después, sobre lo ya entregado**: el buscador quedó **uno solo de verdad** (#240) — elegir un comando de la lista escribe el mismo texto que tipearlo, **Enter** es lo único que cierra un criterio en chips, y `SearchQueryValue` perdió `activeField`; el cableado (estado, string canónico, debounce, `?q=`) se unificó en `useSearchQuery` y cada feature declara sus comandos en su `searchFields.ts`; la ayuda `basics.search` recibe los comandos de la caja que la abrió y arma con ellos su lista y sus ejemplos. `/my/files` pasó a ser **de players y masters** (#241): quien no tiene ninguno de los dos roles no la ve en el menú y la pantalla se lo dice — la regla vive en `useHasPersonalLibrary` y sigue la forma de `useAvailableContexts`, con `hasManagedTables` para el co-master de #135. Y su parte visual se acotó (#242): el buscador es el único filtro, sin la fila de toggles de cajón, con el placeholder diciendo el criterio básico y nada de comandos. **Cuidado al leer #164 y #239**: las dos filas están corregidas por #240 y lo dicen al final; #233 y #237 apuntan a #242 y #241.
+
 **Entrega**: un master arma su mesa entera y la lleva hasta el final, y un jugador ve todo lo que publicó.
 
 ### F2 — Jugador

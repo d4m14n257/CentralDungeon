@@ -55,7 +55,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/player/my-tables` | Mesas donde soy jugador — **solo las vivas** |
 | | `/player/my-tables/:id` | Mi mesa: agenda, sesiones, peticiones pendientes |
 | | `/player/history` | Mesas terminadas y canceladas, con la asistencia final (#133) |
-| | `/my/files` | Mis archivos: a qué flujos pertenece cada uno (#233) y dónde se usa hoy (#232), reutilizables al adjuntar (#65). **Es el único lugar que pregunta el cajón**, porque es el único sin flujo del que deducirlo — y solo ofrece los que son tuyos (#237): los de jugador a cualquiera, los de master a quien dirija mesas, y nunca los anuncios. **Transversal, no del contexto Jugador** — lo que alguien subió como jugador y como master es una sola biblioteca (#222) |
+| | `/my/files` | Mis archivos: a qué flujos pertenece cada uno (#233) y dónde se usa hoy (#232), reutilizables al adjuntar (#65). **Es el único lugar que pregunta el cajón**, porque es el único sin flujo del que deducirlo — y solo ofrece los que son tuyos (#237): los de jugador a cualquiera, los de master a quien dirija mesas, y nunca los anuncios. **Transversal, no del contexto Jugador** — lo que alguien subió como jugador y como master es una sola biblioteca (#222). **Es de players y masters** (#241): quien no tenga ninguno de los dos roles no la ve en el menú y la pantalla le dice por qué. **El buscador es su único filtro** (#242), y la lista va paginada de a 20 con divider entre filas |
 | | `/player/profile` | Mi karma y los comentarios que recibí |
 | | `/player/users/:id` | Perfil de otra persona, sujeto a #41, #44 y #47 |
 | Transversal | `/my/schedule` | **Mi horario**: la semana entera en una grilla — lo que dirigís y lo que jugás, junto. De ningún contexto a propósito: son las mismas noches (#227) |
@@ -344,7 +344,8 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `RichTextView` | Render sanitizado de lo guardado |
 | `LoadMore` | Paginación de un listado de lectura: trae la página siguiente y siempre dice cuántos de cuántos se están viendo. Botón explícito, nunca scroll infinito (#173) |
 | `PaginationControls` | Paginación de una lista de trabajo: anterior/siguiente, página X de Y y el total (#173) |
-| `SearchQueryInput` | **Todo buscador de la app** (#164). Texto suelto busca por el criterio básico; `/` abre la lista —campos, y `/and`/`/or` cuando hay algo que unir— y lo elegido queda como chip fijo, con todo lo que se escriba después como su valor hasta el próximo `/`; las comas separan alternativas y el chip del conector se toca para pasarlo de "y" a "o". Recibe los campos que acepta, no los conoce |
+| `SearchQueryInput` | **Todo buscador de la app** (#164, #240). Texto suelto busca por el criterio básico; `/` abre la lista —comandos, y `/and`/`/or` cuando hay algo que unir— y **elegir de ahí escribe el comando en el texto, igual que tipearlo a mano**: hasta **Enter** todo es texto, y Enter es lo que lo cierra en chips. Un comando de opciones fijas ofrece sus valores en cuanto hay un espacio después de él, venga escrito o elegido; las comas separan alternativas y el chip del conector se toca para pasarlo de "y" a "o". Recibe los comandos que acepta, no los conoce, y con ellos arma además los ejemplos de su ayuda |
+| `useSearchQuery` | El cableado alrededor de esa caja, escrito una vez (#240): estado, string canónico, debounce de 400 ms y escritura del `?q=`. Cada feature declara sus comandos en un `searchFields.ts` propio — `userSearchFields`, `myFileSearchFields`, `adminFileSearchFields` |
 
 ### Compuestos con dominio
 
@@ -361,14 +362,14 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `StagedFileList` — lo que está por subirse, con su botón de quitar. Sin subida inmediata, es la única señal de que el archivo se tomó (#238) | `features/files/` |
 | `FileCategoryChoice` — el cajón como chips, no como `<Select>`: es una decisión previa al envío y verla entera es lo que deja tomarla (#233) | `features/files/` |
 | `FileCard` — la fila de un archivo: icono por MIME, tamaño, categoría, último uso y dónde se usa | `features/files/` |
-| `FileCategoryFilter` — los cinco cajones como fila de toggles, no como `<Select>` (#233) | `features/files/` |
+| `FileCategoryFilter` — los cinco cajones como fila de toggles, no como `<Select>` (#233). **Solo en `/admin/files`**: en `/my/files` el cajón se narrowea desde el buscador con `/file_categories` (#242) | `features/files/` |
 | `FileUsageChips` — dónde se usa un archivo, o «sin usar», que es el aviso de la purga (#232, #75) | `features/files/` |
 | `KarmaBadge` — número + indicador cualitativo | `features/users/` |
 | `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (#164) | `features/users/` |
 | `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |
 | `ContextSwitcher` — el selector de rol de §2 | `app/components/` (es shell, no dominio) |
 | `UserMenu` — avatar, idioma, tema y cerrar sesión | `app/components/` |
-| `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto | `features/feedback/` |
+| `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto. **Todavía no construido**: `features/feedback/` existe vacío y `system_feedback` es de F4 | `features/feedback/` |
 
 ### Hooks compartidos
 
@@ -376,9 +377,15 @@ En `hooks/`:
 
 | Hook | Para qué |
 |---|---|
-| `useTableSelection` | Selección múltiple en tablas, con rango al mantener **Shift**. Se monta como Context **alrededor de la tabla que lo usa**, no global (#105) |
-| `useConfirm` | Confirmación imperativa: devuelve una promesa, para no encadenar estados de diálogo a mano |
-| `useDebounce` | Filtros del explorador |
+| `useTableSelection` | Selección múltiple en tablas, con rango al mantener **Shift**. Se monta como Context **alrededor de la tabla que lo usa**, no global (#105). **Todavía no construido**: ninguna tabla pide selección múltiple por ahora |
+| `useConfirm` | Confirmación imperativa: devuelve una promesa, para no encadenar estados de diálogo a mano. El hook y su Context están en `hooks/useConfirm.ts`; `components/ConfirmDialog.tsx` monta el provider y el diálogo (#243) |
+| `useDebounce` | Filtros del explorador y buscadores |
+| `useSearchQuery` | El cableado de un buscador (#240): estado, string canónico, debounce y escritura del `?q=`. Los comandos se le pasan; no los conoce |
+| `useHasPersonalLibrary` | Si esta cuenta es de las que llenan biblioteca — `Player` o `Master` o `hasManagedTables` (#241) |
+| `useAvailableContexts` | Qué contextos tiene la cuenta y en cuál está parada, resuelto desde la URL (#222) |
+| `useUnsavedChanges` | Avisar antes de perder un formulario a medio llenar |
+| `useLanguage` | El idioma elegido, recordado sin ida al servidor (#198) |
+| `useBackendStatus` | Si el backend responde, para el indicador «En línea» |
 | `useDisclosure<T>` | Abrir/cerrar modales y paneles, y guardar el ítem que los abrió (`open(row)`) — es lo que hacía `useModal` con su `dataModal` |
 
 ### Estados obligatorios

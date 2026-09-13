@@ -82,7 +82,7 @@
     "title": "Archivos",
     "description": "Todo lo que subió la comunidad. Publicar un archivo lo pone a disposición de todas las mesas sin que nadie tenga que copiarlo.",
     "searchLabel": "Buscar archivos",
-    "searchPlaceholder": "Buscar por nombre, /file_owner, /file_type o /file_categories",
+    "searchPlaceholder": "Buscar por nombre",
     "columns": {
       "name": "Archivo",
       "type": "Tipo",
@@ -159,7 +159,7 @@
     "upload": "Subir archivo",
     "uploadClose": "Cerrar",
     "searchLabel": "Buscar entre mis archivos",
-    "searchPlaceholder": "Buscar por nombre, /file_type o /file_categories",
+    "searchPlaceholder": "Buscar por nombre",
     "lastUsed": "Usado {{when}}",
     "emptyTitle": "Todavía no subiste nada",
     "emptyDescription": "Lo que subas queda acá y lo podés volver a usar en cualquier mesa, sin subirlo de nuevo.",
@@ -172,7 +172,9 @@
     "send_other": "Subir {{count}} archivos",
     "someFailed": "No se pudieron subir: {{names}}. Los demás ya están. Probá de nuevo con esos.",
     "reused": "«{{names}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo.",
-    "send_zero": "Subir"
+    "send_zero": "Subir",
+    "noLibraryTitle": "Tu cuenta no tiene biblioteca propia",
+    "noLibraryDescription": "Los archivos propios se suben desde los flujos de jugador y de master: una postulación, una entrega, el material de una mesa. Los archivos que la plataforma publica para la comunidad están en Administración → Archivos."
   },
   "edit": {
     "title": "Editar archivo",

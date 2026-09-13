@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import '@/providers/i18n'
-import { ConfirmDialogProvider, useConfirm } from './ConfirmDialog'
+import { useConfirm } from '@/hooks/useConfirm'
+import { ConfirmDialogProvider } from './ConfirmDialog'
 
 function AskAndReport() {
   const confirm = useConfirm()

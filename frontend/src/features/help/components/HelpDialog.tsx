@@ -2,10 +2,10 @@ import { useTranslation } from 'react-i18next'
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
-import { HELP_SECTIONS, type HelpSectionId } from '../sections/registry'
+import { HELP_SECTIONS, type HelpSectionBodyProps, type HelpSectionId } from '../sections/registry'
 
 /** Props of {@link HelpDialog}. */
-export interface HelpDialogProps {
+export interface HelpDialogProps extends HelpSectionBodyProps {
   /** Which piece of help to show. */
   section: HelpSectionId
   /** Whether the dialog is showing. */
@@ -24,7 +24,7 @@ export interface HelpDialogProps {
  * It scrolls inside itself, the same way {@link FormDialog} does: some sections are long, and a
  * dialog taller than the viewport spills off both edges with only the page behind able to scroll.
  */
-export function HelpDialog({ section, open, onOpenChange }: HelpDialogProps) {
+export function HelpDialog({ section, open, onOpenChange, ...context }: HelpDialogProps) {
   const { t } = useTranslation('help')
   const { titleKey, Body } = HELP_SECTIONS[section]
 
@@ -35,7 +35,7 @@ export function HelpDialog({ section, open, onOpenChange }: HelpDialogProps) {
           <DialogTitle className="font-serif">{t(titleKey)}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 overflow-y-auto">
-          <Body />
+          <Body {...context} />
         </div>
       </DialogContent>
     </Dialog>

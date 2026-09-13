@@ -458,8 +458,11 @@ frontend/
     │   └── …                        compuestos propios: FormDialog, DataTable, EmptyState,
     │                                ErrorState, SearchQueryInput, LoadMore,
     │                                PaginationControls…
-    ├── hooks/                       useDisclosure, useConfirm, useDebounce, useTableSelection,
-    │                                useScrollOnHash (#168)
+    ├── hooks/                       useDisclosure, useDebounce, useUnsavedChanges, useLanguage,
+    │                                useBackendStatus, useAvailableContexts (#222),
+    │                                useSearchQuery (#240), useHasPersonalLibrary (#241),
+    │                                useConfirm (#243) — su Context vive acá con el hook y
+    │                                components/ConfirmDialog.tsx solo exporta el provider
     ├── lib/
     │   ├── utils.ts                 cn() — la ruta que shadcn/ui espera por defecto
     │   ├── date.ts                  formateo de fechas y horas con Intl (§3.3)

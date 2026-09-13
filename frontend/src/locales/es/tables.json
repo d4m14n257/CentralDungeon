@@ -34,6 +34,7 @@
     "withoutAgenda": "sin horario"
   },
   "status": {
+    "Draft": "Borrador",
     "Unassigned": "Sin asignar",
     "Preparation": "En preparación",
     "ChangesRequested": "Con cambios pedidos",

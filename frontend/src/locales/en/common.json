@@ -62,8 +62,7 @@
     "joinWith": "Join with “{{connector}}”",
     "toggleConnector": "Switch and / or",
     "removeTerm": "Remove criterion",
-    "removeField": "Search without the field",
-    "hint": "Type / to pick a field or join criteria; commas separate alternatives.",
+    "hint": "Type / to pick a command or join criteria, commas separate alternatives, and Enter closes the criterion into a chip.",
     "helpLink": "How to search"
   },
   "connection": {

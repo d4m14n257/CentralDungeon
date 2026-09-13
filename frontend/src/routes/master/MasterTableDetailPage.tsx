@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { masterTableEditPath } from '@/config/paths'
 import { cn } from '@/lib/utils'
-import { TableStatusBadge, useManagedTable } from '@/features/tables'
-import type { GameTableStatus } from '@/features/tables'
+import { MASTER_EDITABLE_STATUSES, TableStatusBadge, useManagedTable } from '@/features/tables'
 import { useMe } from '@/features/users'
 import { ApiError } from '@/types/api'
 
@@ -19,7 +18,6 @@ const TAB_LINK_CLASSES = ({ isActive }: { isActive: boolean }) =>
   )
 
 /** The two states where the backend still accepts a rewrite of the table (#189). */
-const EDITABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested']
 
 /**
  * /master/tables/:id - the table as the people running it see it, with its tabs.
@@ -52,7 +50,7 @@ export function MasterTableDetailPage() {
   const isPrimary = table.masters.some((master) => master.userId === me?.id && master.masterType === 'Primary')
   // The edit form is offered only where the backend would accept it. A button that appears when it
   // cannot work is worse than no button (principio 2 de frontend-diseno.md 1).
-  const canEdit = isPrimary && EDITABLE_STATUSES.includes(table.status)
+  const canEdit = isPrimary && MASTER_EDITABLE_STATUSES.includes(table.status)
 
   return (
     <div className="space-y-6">

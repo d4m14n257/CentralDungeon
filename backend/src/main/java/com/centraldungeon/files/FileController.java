@@ -132,7 +132,10 @@ public class FileController {
      * the two drift apart until a select offers an option the server rejects.
      *
      * @param currentUser whose library, from the token. There is no parameter naming anybody else
-     * @return 200 with the cajones they may use. Never empty - every account is a {@code Player} (#38)
+     * @return 200 with the cajones they may use. <b>It can be empty</b>: #38 creates every account
+     *         with {@code Player}, which is a statement about signup and not an invariant - a role can
+     *         be revoked, so an account holding only {@code Admin} or {@code Owner} goes through none of
+     *         the flows that fill a personal library and gets nothing back (#241)
      */
     @GetMapping("/mine/categories")
     @PreAuthorize("isAuthenticated()")

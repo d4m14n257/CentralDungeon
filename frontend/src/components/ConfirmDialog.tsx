@@ -1,26 +1,23 @@
-import { createContext, use, useCallback, useState, type ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-
-interface ConfirmOptions {
-  title: string
-  description: string
-  confirmLabel?: string
-  cancelLabel?: string
-}
-
-type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>
-
-const ConfirmContext = createContext<ConfirmFn | null>(null)
+import { ConfirmContext, type ConfirmFn, type ConfirmOptions } from '@/hooks/useConfirm'
 
 interface PendingConfirm {
   options: ConfirmOptions
   resolve: (value: boolean) => void
 }
 
-/** Every irreversible action goes through this, never a generic "are you sure?" (frontend-diseno.md principio 3). */
+/**
+ * The one dialog every irreversible action goes through, never a generic "are you sure?"
+ * (frontend-diseno.md principio 3).
+ *
+ * **Only components are exported from here**; `useConfirm` and its Context live in `hooks/`, which is
+ * where a hook belongs (arquitectura.md §3.1) and which is also what keeps fast refresh working — a
+ * module exporting a component *and* a hook loses it.
+ */
 export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation('common')
   const [pending, setPending] = useState<PendingConfirm | null>(null)
@@ -61,20 +58,4 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
       </Dialog>
     </ConfirmContext>
   )
-}
-
-/**
- * Asks for confirmation from anywhere, without each caller mounting its own dialog.
- *
- * A Context and not Zustand: the hook has to *render* something, so the state belongs to the subtree
- * that provides it (#105).
- *
- * @returns a function that opens the dialog and resolves to whether the user confirmed
- */
-export function useConfirm(): ConfirmFn {
-  const context = use(ConfirmContext)
-  if (!context) {
-    throw new Error('useConfirm must be used within ConfirmDialogProvider')
-  }
-  return context
 }

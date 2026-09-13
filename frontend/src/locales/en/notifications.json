@@ -21,7 +21,11 @@
     "ScheduleConflict": "Schedule clash",
     "SessionScheduled": "Calendar updated",
     "SessionCanceled": "Session cancelled",
-    "TaskPublished": "New request"
+    "TaskPublished": "New request",
+    "MasterAssigned": "You are a master",
+    "TableApproved": "Table approved",
+    "TableApprovedWithChanges": "Approved with changes",
+    "TableChangesRequested": "Changes requested"
   },
   "badge": {
     "accepted": "Accepted",
@@ -52,6 +56,18 @@
     "TaskPublished": {
       "title": "{{tableName}} is asking you for: {{taskTitle}}",
       "message": "Open the table to read it in full and answer."
+    },
+    "MasterAssigned": {
+      "title": "You were assigned as a master of {{tableName}}"
+    },
+    "TableApproved": {
+      "title": "Your table {{tableName}} was approved and is now open"
+    },
+    "TableApprovedWithChanges": {
+      "title": "{{tableName}} was approved with an admin’s changes"
+    },
+    "TableChangesRequested": {
+      "title": "Changes were requested on {{tableName}}"
     }
   }
 }

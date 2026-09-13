@@ -89,7 +89,12 @@
     "delete": "Delete table",
     "deleteConfirmTitle": "Delete this table",
     "deleteConfirmDescription": "Nobody has seen it yet, so it is removed without a public trace. This cannot be undone. If it had already opened, the right thing is to cancel it.",
-    "deleteSuccess": "Table deleted"
+    "deleteSuccess": "Table deleted",
+    "submit": "Send to review",
+    "submitConfirmTitle": "Send the table to review?",
+    "submitConfirmDescription": "An admin will review it. In the meantime you will not be able to edit it — if something needs fixing, do it before sending.",
+    "submitSuccess": "Table sent to review",
+    "draftHint": "This is a draft: only you can see it. Send it to review when it is ready."
   },
   "schedule": {
     "weekdayLabel": "Day",

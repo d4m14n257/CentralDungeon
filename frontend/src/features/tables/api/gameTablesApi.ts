@@ -49,6 +49,7 @@ export const gameTablesApi = {
   requestChanges: (id: string, request: ChangeTableStatusRequest) =>
     api.post<GameTableDetail, ChangeTableStatusRequest>(`/api/v1/game-tables/${id}/request-changes`, request),
   resubmit: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/resubmit`),
+  submitForReview: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/submit`),
   start: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/start`),
   finish: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/finish`),
   cancel: (id: string, request: ChangeTableStatusRequest) =>

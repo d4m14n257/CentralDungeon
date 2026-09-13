@@ -50,5 +50,42 @@ public enum NotificationType {
      * <p>Like every other notification in this list it asks and never threatens: not answering blocks
      * nothing and evicts nobody (#70).
      */
-    TaskPublished
+    TaskPublished,
+
+    /**
+     * Somebody was made a master of a table (#72, #135, #244).
+     *
+     * <p>The one notification whose recipient did nothing to trigger it: an admin creates a table
+     * and hands it over, so the person finds out they run it only if the bell says so. Every other
+     * type here follows something the recipient did or something on a table they already knew about.
+     */
+    MasterAssigned,
+
+    /**
+     * The admin approved a master's draft and the table is open (#27, #244).
+     *
+     * <p>The end of a wait the master cannot see the other side of: the table sat in review and only
+     * the bell says it came out. It does not distinguish an untouched approval from one the admin
+     * corrected on the way - {@link #TableApprovedWithChanges} is that one, because being told your
+     * text was edited is different news from being told it passed.
+     */
+    TableApproved,
+
+    /**
+     * The admin corrected the draft themselves and approved it (#244).
+     *
+     * <p>Separate from {@link #TableApproved} on purpose: the table is open either way, but somebody
+     * else's hand is now in what the master wrote, and finding that out by re-reading their own table
+     * is worse than being told.
+     */
+    TableApprovedWithChanges,
+
+    /**
+     * The admin sent the draft back for changes (#27, #244).
+     *
+     * <p>It carries no reason of its own: the justification is already mandatory on the transition and
+     * lives in the status history, which is where the master reads it whole. Duplicating it into the
+     * notification would be a second copy free to disagree with the first.
+     */
+    TableChangesRequested
 }

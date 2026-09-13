@@ -21,7 +21,11 @@
     "ScheduleConflict": "Choque de horarios",
     "SessionScheduled": "Calendario actualizado",
     "SessionCanceled": "Sesión cancelada",
-    "TaskPublished": "Nueva petición"
+    "TaskPublished": "Nueva petición",
+    "MasterAssigned": "Sos master de una mesa",
+    "TableApproved": "Mesa aprobada",
+    "TableApprovedWithChanges": "Mesa aprobada con cambios",
+    "TableChangesRequested": "Te piden cambios"
   },
   "badge": {
     "accepted": "Aceptada",
@@ -52,6 +56,18 @@
     "TaskPublished": {
       "title": "{{tableName}} te pide: {{taskTitle}}",
       "message": "Entrá a la mesa para ver el detalle y responder."
+    },
+    "MasterAssigned": {
+      "title": "Te asignaron como master de {{tableName}}"
+    },
+    "TableApproved": {
+      "title": "Tu mesa {{tableName}} fue aprobada y ya está abierta"
+    },
+    "TableApprovedWithChanges": {
+      "title": "Aprobaron {{tableName}} con cambios de un admin"
+    },
+    "TableChangesRequested": {
+      "title": "Te piden cambios en {{tableName}}"
     }
   }
 }

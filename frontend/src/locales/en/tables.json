@@ -34,6 +34,7 @@
     "withoutAgenda": "no schedule"
   },
   "status": {
+    "Draft": "Draft",
     "Unassigned": "Unassigned",
     "Preparation": "In preparation",
     "ChangesRequested": "Changes requested",

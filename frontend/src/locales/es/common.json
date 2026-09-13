@@ -62,8 +62,7 @@
     "joinWith": "Unir con «{{connector}}»",
     "toggleConnector": "Cambiar y / o",
     "removeTerm": "Quitar criterio",
-    "removeField": "Buscar sin el campo",
-    "hint": "Escribí / para elegir un campo o unir criterios; las comas separan alternativas.",
+    "hint": "Escribí / para elegir un comando o unir criterios, las comas separan alternativas, y Enter cierra el criterio en un chip.",
     "helpLink": "Cómo buscar"
   },
   "connection": {

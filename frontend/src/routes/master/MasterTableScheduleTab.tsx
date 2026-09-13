@@ -6,10 +6,10 @@ import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
 import { masterTableEditPath } from '@/config/paths'
 import { browserTimeZone, formatPlainDate, formatSlot, utcSlotToLocal } from '@/lib/date'
+import { MASTER_EDITABLE_STATUSES } from '@/features/tables'
 import type { GameTableStatus, TableScheduleEntry } from '@/features/tables'
 
 /** The two states where the backend still accepts a rewrite of the table (#189). */
-const EDITABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested']
 
 interface OutletContext {
   tableId: string
@@ -36,7 +36,7 @@ export function MasterTableScheduleTab() {
   // #22 took `users.timezone` out of the model, so the browser is the only source today (#111, #192).
   const timeZone = useMemo(() => browserTimeZone(), [])
 
-  const canEdit = isPrimary && EDITABLE_STATUSES.includes(status)
+  const canEdit = isPrimary && MASTER_EDITABLE_STATUSES.includes(status)
 
   return (
     <div className="space-y-4">

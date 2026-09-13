@@ -82,7 +82,7 @@
     "title": "Files",
     "description": "Everything the community has uploaded. Publishing a file makes it available to every table without anyone having to copy it.",
     "searchLabel": "Search files",
-    "searchPlaceholder": "Search by name, /file_owner, /file_type or /file_categories",
+    "searchPlaceholder": "Search by name",
     "columns": {
       "name": "File",
       "type": "Kind",
@@ -159,7 +159,7 @@
     "upload": "Upload a file",
     "uploadClose": "Close",
     "searchLabel": "Search my files",
-    "searchPlaceholder": "Search by name, /file_type or /file_categories",
+    "searchPlaceholder": "Search by name",
     "lastUsed": "Used {{when}}",
     "emptyTitle": "You have not uploaded anything yet",
     "emptyDescription": "Whatever you upload stays here and can be used again on any table, without uploading it twice.",
@@ -172,7 +172,9 @@
     "send_other": "Upload {{count}} files",
     "someFailed": "Could not upload: {{names}}. The rest are in. Try again with those.",
     "reused": "You already had “{{names}}”: it was reused and takes no extra space.",
-    "send_zero": "Upload"
+    "send_zero": "Upload",
+    "noLibraryTitle": "Your account has no library of its own",
+    "noLibraryDescription": "Personal files are uploaded from the player and master flows: an application, a submission, a table’s material. The files the platform publishes for the community are in Administration → Files."
   },
   "edit": {
     "title": "Edit file",

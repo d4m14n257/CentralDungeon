@@ -43,7 +43,7 @@ vi.mock('@/features/registrations', () => ({
   useTablePlayers: () => ({ data: [{ userId: 'user-9', userName: 'Diego', userKarma: 6100 }], isPending: false, isLoadingError: false }),
 }))
 
-vi.mock('@/components/ConfirmDialog', () => ({ useConfirm: () => confirm }))
+vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => confirm }))
 
 function renderTab() {
   render(

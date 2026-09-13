@@ -2,11 +2,11 @@ import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
 
-import type { HelpSectionId } from '../sections/registry'
+import type { HelpSectionBodyProps, HelpSectionId } from '../sections/registry'
 import { HelpDialog } from './HelpDialog'
 
 /** Props of {@link HelpLink}. */
-export interface HelpLinkProps {
+export interface HelpLinkProps extends HelpSectionBodyProps {
   /** Which piece of help to open. */
   section: HelpSectionId
   /** What the trigger says, already translated. */
@@ -26,7 +26,7 @@ export interface HelpLinkProps {
  * recognise as "there is an explanation here", and changing the affordance at the same time as the
  * behaviour would make the change harder to read, not easier.
  */
-export function HelpLink({ section, children, className }: HelpLinkProps) {
+export function HelpLink({ section, children, className, ...context }: HelpLinkProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -38,7 +38,7 @@ export function HelpLink({ section, children, className }: HelpLinkProps) {
       >
         {children}
       </button>
-      <HelpDialog section={section} open={open} onOpenChange={setOpen} />
+      <HelpDialog section={section} open={open} onOpenChange={setOpen} {...context} />
     </>
   )
 }

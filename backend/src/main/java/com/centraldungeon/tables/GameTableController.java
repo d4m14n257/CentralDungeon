@@ -258,6 +258,23 @@ public class GameTableController {
     }
 
     /**
+     * The master sending their draft to review for the first time (#245).
+     *
+     * <p>{@code isAuthenticated()} and no role: pertenencia, not role, decides who may act on THIS
+     * table (#17, #121), and the service checks it before touching anything.
+     *
+     * @param id          the table
+     * @param currentUser the actor, from the token
+     * @return 200 with the table, now in Preparation. 403 when the actor does not run it, 409 when it
+     *         was not a draft
+     */
+    @PostMapping("/{id}/submit")
+    @PreAuthorize("isAuthenticated()")
+    public GameTableDetailResponse submitForReview(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.submitForReview(id, currentUser.userId());
+    }
+
+    /**
      * The master sending a corrected draft back for review.
      *
      * <p>{@code isAuthenticated()} and no role: pertenencia, not role, decides who may act on THIS
