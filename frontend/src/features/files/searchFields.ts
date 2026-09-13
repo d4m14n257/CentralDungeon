@@ -1,5 +1,7 @@
 import type { TFunction } from 'i18next'
 
+import type { FileCategory } from './types'
+
 /**
  * What `/file_type` offers, and what each choice sends (#164).
  *
@@ -24,4 +26,23 @@ export function FILE_TYPE_CHOICES(t: TFunction): { value: string; label: string 
     { value: 'application/msword', label: t('search.types.doc') },
     { value: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', label: t('search.types.docx') },
   ]
+}
+
+/**
+ * What `/file_categories` offers: the cajones a file can belong to (#233, #239).
+ *
+ * **A different question from `/file_type`, and both are commands with fixed choices.** The type is
+ * the format — PDF, PNG — and the cajón is the flow the file came out of: material de mesa, una
+ * entrega, un anuncio. Somebody looking for "the sheet I handed in" is asking the second, and no
+ * amount of searching filenames answers it.
+ *
+ * The caller passes which cajones to offer, because on somebody's own library that is only theirs
+ * (#237) while an admin sees all five.
+ *
+ * @param t          the translator of the `files` namespace
+ * @param categories the cajones to offer
+ * @returns the choices, in the order they were given
+ */
+export function fileCategoryChoices(t: TFunction, categories: readonly FileCategory[]): { value: string; label: string }[] {
+  return categories.map((category) => ({ value: category, label: t(`category.${category}`) }))
 }

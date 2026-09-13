@@ -319,7 +319,7 @@
       "category": "Every file says what it is: character sheet, handout, template or rules. It is not decoration — it is what lets you find the community's template among thirty documents without reading filenames.",
       "dedup": "If you upload something you already had, the system recognises it and reuses the one that was already there instead of storing it twice. The screen tells you when that happens.",
       "library": "Everything you upload stays in “My files”, with where each one is being used. A file that appears on no table is the first to be released after a long time unused.",
-      "commands": "Your files' search understands “/file_name” (the name) and “/file_type” (the format, picked from a list)."
+      "commands": "Your files' search understands “/file_name” (the name), “/file_type” (the format) and “/file_categories” (the drawer, only yours). The last two are picked from a list, and “/and” and “/or” appear as soon as there is something to join."
     },
     "dashboard": {
       "title": "Waiting on you",
@@ -419,7 +419,7 @@
         "step3": "Hit \"Publish\" and choose the audience.",
         "step4": "The \"Tables\" column tells you how many are using it before you remove it."
       },
-      "commands": "This screen's search understands “/file_name” (the filename), “/file_owner” (who uploaded it) and “/file_type” (the format, picked from a list)."
+      "commands": "This screen's search understands “/file_name” (the name), “/file_owner” (who uploaded it), “/file_type” (the format) and “/file_categories” (the drawer). The last two are picked from a list. “/and” and “/or” are offered as soon as there is a criterion to join."
     }
   },
   "stepsTitle": "How to do it"

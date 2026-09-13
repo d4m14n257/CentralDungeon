@@ -11,7 +11,9 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Locale;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -55,7 +57,7 @@ final class FileSearchSpecification {
             SearchQuery query, List<FileStatus> statuses, List<FileType> fileTypes, @Nullable FileCategory category) {
         return (root, criteriaQuery, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
-            Predicate matched = matching(root, builder, query);
+            Predicate matched = matching(root, criteriaQuery, builder, query);
             if (matched != null) {
                 predicates.add(matched);
             }
@@ -94,7 +96,7 @@ final class FileSearchSpecification {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(builder.equal(root.get("userCreated").get("id"), ownerId));
             predicates.add(builder.equal(root.get("status"), FileStatus.Current));
-            Predicate matched = matching(root, builder, query);
+            Predicate matched = matching(root, criteriaQuery, builder, query);
             if (matched != null) {
                 predicates.add(matched);
             }
@@ -161,13 +163,14 @@ final class FileSearchSpecification {
      * @param query   the parsed search box
      * @return the combined predicate, or null when the query is empty
      */
-    private static @Nullable Predicate matching(Root<StoredFile> root, CriteriaBuilder builder, SearchQuery query) {
+    private static @Nullable Predicate matching(
+            Root<StoredFile> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, SearchQuery query) {
         if (query.isEmpty()) {
             return null;
         }
         Predicate matched = null;
         for (SearchTerm term : query.terms()) {
-            Predicate current = termPredicate(root, builder, term);
+            Predicate current = termPredicate(root, criteriaQuery, builder, term);
             matched = matched == null ? current : combine(builder, matched, current, term.connector());
         }
         return matched;
@@ -194,13 +197,56 @@ final class FileSearchSpecification {
      * @param term    one criterion, with at least one value
      * @return a predicate matching any of the criterion's values
      */
-    private static Predicate termPredicate(Root<StoredFile> root, CriteriaBuilder builder, SearchTerm term) {
+    private static Predicate termPredicate(
+            Root<StoredFile> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, SearchTerm term) {
+        FileSearchField field = fieldOrDefault(term.field());
+        // The cajones are rows and not a column, so "contains" has nothing to match on: the criterion
+        // becomes "belongs to any of these" instead (#233, #239).
+        if (field == FileSearchField.CATEGORIES) {
+            return belongsToAny(root, criteriaQuery, builder, term.values());
+        }
         Predicate matched = null;
         for (String value : term.values()) {
-            Predicate current = contains(root, builder, fieldOrDefault(term.field()), value);
+            Predicate current = contains(root, builder, field, value);
             matched = matched == null ? current : builder.or(matched, current);
         }
         return matched;
+    }
+
+    /**
+     * «this file is in any of those cajones» (#233).
+     *
+     * <p>The alternatives of one criterion are an {@code in} inside a single {@code exists}, rather
+     * than one {@code exists} per value joined with {@code or}: the question is the same and one
+     * subquery is one subquery.
+     *
+     * <p>A value that names no cajón matches nothing rather than failing. A typo in a search is a
+     * search that finds nothing, which is what every other field here does too.
+     */
+    private static Predicate belongsToAny(
+            Root<StoredFile> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, List<String> values) {
+        List<FileCategory> wanted = values.stream()
+                .map(FileSearchSpecification::toCategory)
+                .filter(Objects::nonNull)
+                .toList();
+        if (wanted.isEmpty()) {
+            return builder.disjunction();
+        }
+        Subquery<String> membership = criteriaQuery.subquery(String.class);
+        Root<FileCategoryLink> link = membership.from(FileCategoryLink.class);
+        membership.select(link.get("id").get("fileId"));
+        membership.where(
+                builder.equal(link.get("id").get("fileId"), root.get("id")),
+                link.get("id").get("category").in(wanted));
+        return builder.exists(membership);
+    }
+
+    /** A cajón by name, case-insensitively, or null when the text names none. */
+    private static @Nullable FileCategory toCategory(String value) {
+        return Arrays.stream(FileCategory.values())
+                .filter(category -> category.name().equalsIgnoreCase(value.trim()))
+                .findFirst()
+                .orElse(null);
     }
 
     /**

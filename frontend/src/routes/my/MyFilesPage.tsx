@@ -32,6 +32,7 @@ import {
   type StoredFile,
   type UpdateFileInput,
   FILE_TYPE_CHOICES,
+  fileCategoryChoices,
 } from '@/features/files'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useDisclosure } from '@/hooks/useDisclosure'
@@ -63,7 +64,7 @@ import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib
  * survives a refresh, and a filtered view can be linked to.
  */
 /** The fields this box accepts behind a `/`, mirroring what the backend resolves for your own files. */
-const SEARCH_FIELD_NAMES = ['file_name', 'file_type'] as const
+const SEARCH_FIELD_NAMES = ['file_name', 'file_type', 'file_categories'] as const
 
 export function MyFilesPage() {
   const { t, i18n } = useTranslation('files')
@@ -239,6 +240,9 @@ export function MyFilesPage() {
               fields={[
                 { name: 'file_name', label: t('search.file_name') },
                 { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
+                // Only the cajones that are theirs (#237): offering one they can never have a file
+                // in is offering a search that always comes back empty.
+                { name: 'file_categories', label: t('search.file_categories'), values: fileCategoryChoices(t, myCategories ?? []) },
               ]}
               value={search}
               onChange={(value) => {

@@ -301,14 +301,18 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
                 event.preventDefault()
                 chooseSuggestion(suggestion)
               }}
-              className={cn('flex cursor-pointer items-center justify-between gap-2 px-3 py-1.5', index === highlighted && 'bg-surface')}
+              className={cn('flex cursor-pointer items-center gap-2 px-3 py-1.5', index === highlighted && 'bg-surface')}
             >
-              <span>{suggestion.kind === 'connector' ? t('search.joinWith', { connector: suggestion.label }) : suggestion.label}</span>
-              {/* The command is shown beside a command, so somebody learns what they just picked
-                  from the list. A **value** is not a command: showing `/application/pdf` next to
-                  "PDF" would teach something that is not true, and it drags the MIME type into the
-                  option's accessible name (#164). */}
-              {suggestion.kind !== 'value' && <code className="text-fg-subtle text-xs">/{suggestion.name}</code>}
+              {/* **The command first, its description after** (#239). What is being picked from this
+                  list is the command, so it leads; the description explains it. It read the other way
+                  round, with the command dimmed on the right, which is the wrong emphasis for the
+                  thing somebody is here to learn.
+                  A **value** has no command to show: `/application/pdf` next to "PDF" would teach
+                  something that is not true, and it drags the MIME type into the accessible name. */}
+              {suggestion.kind !== 'value' && <code className="text-fg text-xs font-medium">/{suggestion.name}</code>}
+              <span className={cn('text-xs', suggestion.kind === 'value' ? 'text-fg text-sm' : 'text-fg-muted')}>
+                {suggestion.kind === 'connector' ? t('search.joinWith', { connector: suggestion.label }) : suggestion.label}
+              </span>
             </li>
           ))}
         </ul>

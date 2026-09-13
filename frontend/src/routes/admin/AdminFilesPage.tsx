@@ -31,14 +31,16 @@ import {
   type AdminFile,
   type FileCategory,
   type StagedFile,
+  FILE_CATEGORIES,
   FILE_TYPE_CHOICES,
+  fileCategoryChoices,
 } from '@/features/files'
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib/searchQuery'
 import { ApiError } from '@/types/api'
 
 /** The three fields the search box accepts behind a `/`, mirroring the backend's `FileSearchField`. */
-const SEARCH_FIELD_NAMES = ['file_name', 'file_owner', 'file_type'] as const
+const SEARCH_FIELD_NAMES = ['file_name', 'file_owner', 'file_type', 'file_categories'] as const
 
 /**
  * /admin/files — every file the community has uploaded, and the power to publish one (#64, #79).
@@ -234,6 +236,8 @@ export function AdminFilesPage() {
           { name: 'file_name', label: t('search.file_name') },
           { name: 'file_owner', label: t('search.file_owner') },
           { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
+          // All five here: the platform's library holds every cajón, announcements included.
+          { name: 'file_categories', label: t('search.file_categories'), values: fileCategoryChoices(t, FILE_CATEGORIES) },
         ]}
         value={search}
         onChange={(value) => {

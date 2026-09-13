@@ -225,6 +225,40 @@ class FileIT {
         assertThat(cajonesOf(sheet.id())).containsExactlyInAnyOrder("TableMaterial", "PlayerSubmission");
     }
 
+    /**
+     * The cajón as a search command, not only as a filter (#239).
+     *
+     * <p>It is the one field of the search language that is not a column: membership is a row per
+     * cajón, so the criterion resolves to an {@code exists} rather than a {@code LIKE}. Whether
+     * Hibernate builds that subquery from inside the term folding is not something a mock can say.
+     */
+    @Test
+    void theSearchBoxNarrowsByCajonWithItsOwnCommand() {
+        FileResponse attached = upload("ficha.pdf", "la elfa");
+        upload("suelto.pdf", "nada lo usa");
+        attach(firstTable, attached.id(), false);
+
+        PageResponse<FileResponse> material =
+                fileService.listMine(master.getId(), "/file_categories TableMaterial", null, PageRequest.of(0, 20));
+        PageResponse<FileResponse> asSubmission =
+                fileService.listMine(master.getId(), "/file_categories PlayerSubmission", null, PageRequest.of(0, 20));
+
+        assertThat(material.content()).extracting(FileResponse::name).containsExactly("ficha.pdf");
+        // A cajón nothing of theirs is in finds nothing, rather than everything.
+        assertThat(asSubmission.content()).isEmpty();
+    }
+
+    /** A value that names no cajón finds nothing, the same way a typo does in any other field. */
+    @Test
+    void aCajonThatDoesNotExistFindsNothing() {
+        upload("ficha.pdf", "la elfa");
+
+        PageResponse<FileResponse> none =
+                fileService.listMine(master.getId(), "/file_categories NoSuchCajon", null, PageRequest.of(0, 20));
+
+        assertThat(none.content()).isEmpty();
+    }
+
     /** Somebody's own library, narrowed to one cajón, through the {@code exists} subquery (#233). */
     @Test
     void theOwnersListIsNarrowedByCajon() {

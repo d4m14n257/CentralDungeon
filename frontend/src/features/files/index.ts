@@ -39,7 +39,7 @@ export { useDeleteFileAsAdmin } from './api/useDeleteFileAsAdmin'
 export { formatFileSize, type FormattedSize } from './format'
 export { FILE_CATEGORIES, PUBLISHABLE_CATEGORIES } from './categories'
 export { MAX_FILE_BYTES, ALLOWED_MIME_TYPES, rejectionOf } from './limits'
-export { FILE_TYPE_CHOICES } from './searchFields'
+export { FILE_TYPE_CHOICES, fileCategoryChoices } from './searchFields'
 export { stagedKey } from '@/types/file'
 
 export type {

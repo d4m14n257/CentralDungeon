@@ -31,7 +31,20 @@ public enum FileSearchField {
     OWNER("file_owner", "userCreated.discordUsername"),
 
     /** The declared MIME type - how "show me the PDFs" is asked. */
-    TYPE("file_type", "mimeType");
+    TYPE("file_type", "mimeType"),
+
+    /**
+     * Which cajones the file belongs to (#233).
+     *
+     * <p><b>The only field here that is not a column</b>, which is why {@link FileSearchSpecification}
+     * gives it its own predicate: membership lives in {@code file_categories}, one row per cajón, so
+     * a {@code LIKE} over an attribute path has nothing to match. It resolves to an {@code exists}
+     * instead.
+     *
+     * <p>The attribute is the entity, not a path, and nothing reads it - it is here so the enum stays
+     * one shape.
+     */
+    CATEGORIES("file_categories", "categories");
 
     /** What the person types after the slash, and what the chip shows. */
     private final String wireName;

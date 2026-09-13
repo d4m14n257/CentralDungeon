@@ -82,7 +82,7 @@
     "title": "Files",
     "description": "Everything the community has uploaded. Publishing a file makes it available to every table without anyone having to copy it.",
     "searchLabel": "Search files",
-    "searchPlaceholder": "Search by name, or /file_type",
+    "searchPlaceholder": "Search by name, /file_owner, /file_type or /file_categories",
     "columns": {
       "name": "File",
       "type": "Kind",
@@ -121,7 +121,8 @@
       "jpeg": "JPG",
       "doc": "Word (.doc)",
       "docx": "Word (.docx)"
-    }
+    },
+    "file_categories": "drawer"
   },
   "category": {
     "TableMaterial": "Table material",
@@ -158,7 +159,7 @@
     "upload": "Upload a file",
     "uploadClose": "Close",
     "searchLabel": "Search my files",
-    "searchPlaceholder": "Search by name, or /file_type",
+    "searchPlaceholder": "Search by name, /file_type or /file_categories",
     "lastUsed": "Used {{when}}",
     "emptyTitle": "You have not uploaded anything yet",
     "emptyDescription": "Whatever you upload stays here and can be used again on any table, without uploading it twice.",
