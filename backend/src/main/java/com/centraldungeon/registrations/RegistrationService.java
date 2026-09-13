@@ -4,8 +4,12 @@ import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.files.FileCategory;
+import com.centraldungeon.files.FileService;
+import com.centraldungeon.files.StoredFile;
 import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.registrations.dto.CreateRegistrationRequest;
+import com.centraldungeon.registrations.dto.RegistrationFileResponse;
 import com.centraldungeon.registrations.dto.RegistrationResponse;
 import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
 import com.centraldungeon.registrations.dto.TablePlayerResponse;
@@ -20,9 +24,11 @@ import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserAuthSnapshot;
 import com.centraldungeon.users.UserService;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +47,16 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Filling the last seat auto-rejects the candidates still queued, in FIFO order (#34). Nobody is
  * left waiting on a table that can no longer take them.
+ *
+ * <p><b>An application may carry files</b> (#60 uso 2): the character sheet a candidate applies
+ * with, linked rather than copied (#79). There is no endpoint of its own for them - they travel
+ * inside {@link RegistrationResponse}, the same criterion F1.3 used for a table's sessions and F1.4
+ * for its shared files, because this class already decides who may see an application.
+ *
+ * <p><b>Withdrawing never touches {@code registration_files}</b> (#247, deliberate): the row is the
+ * record that a sheet was sent, and withdrawing does not undo that it was. What stops counting a
+ * withdrawn application's file as in use is the read side of {@link RegistrationFileRepository},
+ * never a cascade here - see {@link #withdraw}.
  */
 @Service
 public class RegistrationService {
@@ -66,6 +82,12 @@ public class RegistrationService {
     /** The reasons attached to turned-down applications. */
     private final RegistrationRejectionRepository rejectionRepository;
 
+    /** The files attached to an application - linked, never copied (#65, #79, #60 uso 2). */
+    private final RegistrationFileRepository registrationFileRepository;
+
+    /** Resolves and authorizes each file being attached, and puts it in its cajón (#233). */
+    private final FileService fileService;
+
     /** Used to lock the table row, which is what serializes the two invariants above. */
     private final GameTableRepository gameTableRepository;
 
@@ -85,18 +107,22 @@ public class RegistrationService {
     private final RegistrationMapper registrationMapper;
 
     /**
-     * @param registrationRepository the {@code table_registrations} table
-     * @param rejectionRepository    the reasons behind turned-down applications
-     * @param gameTableRepository    used to lock the table row the invariants serialize on
-     * @param masterService          answers pertenencia
-     * @param userService            resolves the people involved
-     * @param notificationService    tells the applicant and the masters what happened
+     * @param registrationRepository     the {@code table_registrations} table
+     * @param rejectionRepository        the reasons behind turned-down applications
+     * @param registrationFileRepository the files attached to an application (#60 uso 2)
+     * @param fileService                resolves and authorizes each file being attached (#79)
+     * @param gameTableRepository         used to lock the table row the invariants serialize on
+     * @param masterService               answers pertenencia
+     * @param userService                 resolves the people involved
+     * @param notificationService        tells the applicant and the masters what happened
      * @param scheduleConflictService answers whether the applicant is already busy at that hour (#178)
      * @param registrationMapper     entity to DTO
      */
     public RegistrationService(
             TableRegistrationRepository registrationRepository,
             RegistrationRejectionRepository rejectionRepository,
+            RegistrationFileRepository registrationFileRepository,
+            FileService fileService,
             GameTableRepository gameTableRepository,
             MasterService masterService,
             UserService userService,
@@ -105,6 +131,8 @@ public class RegistrationService {
             RegistrationMapper registrationMapper) {
         this.registrationRepository = registrationRepository;
         this.rejectionRepository = rejectionRepository;
+        this.registrationFileRepository = registrationFileRepository;
+        this.fileService = fileService;
         this.gameTableRepository = gameTableRepository;
         this.masterService = masterService;
         this.userService = userService;
@@ -147,13 +175,75 @@ public class RegistrationService {
 
         User actor = userService.getById(actorId);
         TableRegistration registration = registrationRepository.save(new TableRegistration(table, actor, request.description()));
+        List<RegistrationFileResponse> files = attachFiles(registration, request.fileIds(), actorId);
 
         String applicantName = actor.getName() != null ? actor.getName() : actor.getDiscordUsername();
         for (Master master : masterService.findByGameTable(gameTableId)) {
             notificationService.notifyNewCandidate(master.getUser().getId(), table, applicantName);
         }
 
-        return registrationMapper.toResponse(registration);
+        return registrationMapper.toResponse(registration, files);
+    }
+
+    /**
+     * Links whatever the applicant attached to their application (#60 uso 2), and puts each file in
+     * the {@code PlayerApplication} cajón (#233).
+     *
+     * <p>The same gate attaching a file to a table or an answer goes through: the applicant's own, or
+     * one the platform published (#79). Somebody else's private upload never gets here.
+     *
+     * @param registration the application just saved, so the links have a row to point at
+     * @param fileIds      the files to attach, by id. Never null in practice - the request field is
+     *                     {@code @NotNull} - but treated as empty defensively, the same as
+     *                     {@code TaskSubmissionService} treats its own
+     * @param actorId      the applicant, from the token
+     * @return the attached files, in the shape the response carries
+     * @throws ForbiddenActionException if a file belongs to somebody else and is not published
+     * @throws NotFoundException        if a file is not there
+     */
+    private List<RegistrationFileResponse> attachFiles(
+            TableRegistration registration, @Nullable List<String> fileIds, String actorId) {
+        List<String> ids = fileIds == null ? List.of() : fileIds;
+        List<RegistrationFileResponse> files = new ArrayList<>();
+        for (String fileId : ids) {
+            StoredFile file = fileService.requireAttachable(fileId, actorId);
+            // The cajón is a consequence of the link, not of the upload (#233): add-only and
+            // idempotent, so attaching the same sheet to a third table costs nothing extra here.
+            fileService.classify(fileId, FileCategory.PlayerApplication);
+            registrationFileRepository.save(new RegistrationFile(registration.getId(), file.getId()));
+            files.add(new RegistrationFileResponse(file.getId(), file.getName(), file.getMimeType(), file.getSizeBytes()));
+        }
+        return files;
+    }
+
+    /**
+     * The attached files of one application, resolved through the bulk query so a single caller
+     * pays the same one round trip a whole page would.
+     */
+    private List<RegistrationFileResponse> filesOf(String registrationId) {
+        return filesByRegistrationIds(List.of(registrationId)).getOrDefault(registrationId, List.of());
+    }
+
+    /**
+     * The attached files of a whole page of applications, in one query (#232).
+     *
+     * <p>A file its owner has since deleted is left out rather than shown as a broken row - the same
+     * thing {@code TaskSubmissionService} does for a task's answers, and for the same reason: an
+     * owner removing a file removes it from what shows it (#25).
+     *
+     * @param registrationIds the applications to resolve files for
+     * @return the files per application id; an application with nothing attached is absent
+     */
+    private Map<String, List<RegistrationFileResponse>> filesByRegistrationIds(List<String> registrationIds) {
+        if (registrationIds.isEmpty()) {
+            return Map.of();
+        }
+        return registrationFileRepository.findAttachmentsByRegistrationIds(registrationIds).stream()
+                .collect(Collectors.groupingBy(
+                        RegistrationFileRow::registrationId,
+                        Collectors.mapping(
+                                row -> new RegistrationFileResponse(row.fileId(), row.name(), row.mimeType(), row.sizeBytes()),
+                                Collectors.toList())));
     }
 
     /**
@@ -194,7 +284,7 @@ public class RegistrationService {
             }
         }
 
-        return registrationMapper.toResponse(registration);
+        return registrationMapper.toResponse(registration, filesOf(registration.getId()));
     }
 
     /**
@@ -224,7 +314,7 @@ public class RegistrationService {
         rejectionRepository.save(new RegistrationRejection(registration, request.justification(), rejectedBy));
         notificationService.notifyRegistrationRejected(registration.getUser().getId(), registration.getGameTable());
 
-        return registrationMapper.toResponse(registration);
+        return registrationMapper.toResponse(registration, filesOf(registration.getId()));
     }
 
     /**
@@ -238,6 +328,12 @@ public class RegistrationService {
      * counting on them, and leaving it is a conversation with a master rather than a button. The
      * registration is marked, never dropped (#25, #175) - that somebody applied and thought better
      * of it is part of the record.
+     *
+     * <p><b>Deliberately does not touch {@code registration_files}</b> (#247): whatever the
+     * candidate attached stays attached, marked or not. The row is the record that a sheet was sent,
+     * and withdrawing does not undo that it was - only {@link RegistrationFileRepository}'s read
+     * methods stop counting it as in use, by requiring the application to still be
+     * {@code Candidate} or {@code Player}.
      *
      * @param registrationId the application to withdraw
      * @param actorId        the applicant, from the token. Never an id from the URL: the check is
@@ -264,7 +360,10 @@ public class RegistrationService {
         requireMasterOf(gameTableId, actorId, "view its candidates");
         Pageable fifo = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("createdAt").ascending());
         Page<TableRegistration> page = registrationRepository.findByGameTable_IdAndStatus(gameTableId, TableRegistrationStatus.Candidate, fifo);
-        return PageResponse.from(page.map(registrationMapper::toResponse));
+        Map<String, List<RegistrationFileResponse>> filesByRegistration =
+                filesByRegistrationIds(page.getContent().stream().map(TableRegistration::getId).toList());
+        return PageResponse.from(page.map(registration ->
+                registrationMapper.toResponse(registration, filesByRegistration.getOrDefault(registration.getId(), List.of()))));
     }
 
     /**
@@ -282,8 +381,11 @@ public class RegistrationService {
         Page<TableRegistration> page =
                 registrationRepository.findByUser_IdAndStatusNot(actorId, TableRegistrationStatus.Deleted, pageable);
         Map<String, RegistrationRejection> rejectionByRegistrationId = loadRejections(page.getContent());
+        Map<String, List<RegistrationFileResponse>> filesByRegistration =
+                filesByRegistrationIds(page.getContent().stream().map(TableRegistration::getId).toList());
         return PageResponse.from(page.map(registration -> {
-            RegistrationResponse response = registrationMapper.toResponse(registration);
+            RegistrationResponse response = registrationMapper.toResponse(
+                    registration, filesByRegistration.getOrDefault(registration.getId(), List.of()));
             RegistrationRejection rejection = rejectionByRegistrationId.get(registration.getId());
             if (rejection == null) {
                 return response;
@@ -296,7 +398,8 @@ public class RegistrationService {
                     response.id(), response.gameTableId(), response.gameTableName(), response.userId(), response.userName(),
                     response.userKarma(), response.status(), response.description(), response.createdAt(),
                     automatic ? null : rejection.getDescription(),
-                    automatic ? rejection.getDescription() : null);
+                    automatic ? rejection.getDescription() : null,
+                    response.attachedFiles());
         }));
     }
 

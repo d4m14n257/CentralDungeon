@@ -5,6 +5,14 @@
 > El *por qué* de cada decisión está en `decisiones.md`, las reglas de negocio en `modelo-datos.md` §5, las pantallas en `frontend-diseno.md` y el *cómo se escribe el código* en `arquitectura.md`.
 >
 > **Documento vivo mientras F1 esté abierta.** Cada rebanada se marca terminada acá al cerrarse, con su inventario. Cuando F1 cierre, este documento queda como registro y no se toca más.
+>
+> ---
+>
+> **Dos avisos para leerlo hoy, agregados con #250.**
+>
+> **1. F1 cierra hecha y sin revisar.** Sus siete rebanadas están construidas y sus tests en verde; lo que quedó a medias es **F1.7, la revisión**, que ahora no se completa acá: verificar los cuatro estados de cada pantalla, el mapa de navegación y el triaje de huérfanos **pasó a F4**, la fase de revisión. Lo que F1.7 alcanzó a relevar sigue escrito en §4 y es el punto de partida de esa fase. El motivo está en #250: una costura entre actores no se puede revisar hasta que existen sus dos lados.
+>
+> **2. La numeración de las fases corrió.** Entró F4 Revisión, así que **Comunidad pasó a F5 y Operación a F6**. Las referencias dentro de los bloques «✅ Terminada» son **hechos fechados y no se reescriben** (misma regla de #177): donde una de ellas diga «es F5 (#66)» hablando del borrado físico, hay que leer **F6**, y donde diga «F4» hablando de karma o comentarios, **F5**. Las tablas de §5 sí están actualizadas, porque son punteros vivos y no registro.
 
 ## 1. Por qué existe este documento
 
@@ -557,6 +565,11 @@ El instrumento de esa revisión es un **artifact** — [*Revisión de cierre F1*
    - ~~**El contexto Jugador no tiene navegación.**~~ **Corregido** con #222, que lo resolvió por arriba: el contexto se mudó a `/player/*` y estrenó su `PlayerSectionNav`, igual que Admin en F1.1 y Master en F1.6. `/player/applications` y `/player/my-tables` ya se alcanzan navegando, y `/player/my-tables/:id` con ellas.
    - **Tres de los siete tipos de notificación no llevan a ningún lado.** `notificationTarget()` resuelve destino para cuatro; `ScheduleConflict`, `SessionScheduled` y `SessionCanceled` caen en el `default` y devuelven `null`. El aviso llega, se lee, se marca como leído y el clic no abre nada. Los tres tienen destino evidente y nada en `decisiones.md` dice que deban ser solo informativos.
 
+   **Tres hallazgos más, relevados al abrir F2 y corregidos ahí** (detalle en `fase-2-jugador.md`, F2.1). Los tres son de F1 y ninguno se veía desde esta lista, porque nadie había vuelto a correr las suites después de #245:
+   - **La suite estaba en rojo**: 15 de 43 pruebas e2e y 7 de integración fallaban en `master`. Todas por #245 — la mesa nace en `Draft` y el `create → approve` de nueve specs dejó de tener sentido.
+   - **`ScheduleConflictService` no contaba los borradores** aunque su propio Javadoc dijera que sí: una regla documentada y sin implementar, que dejaba a un master armar dos borradores en la misma franja.
+   - **`my-files.spec.ts` verificaba la fila de toggles que #242 había quitado.**
+
    **Y cinco piezas que sí pueden esperar:**
    - `POST /{id}/pause` y `POST /{id}/resume` — construidos y **sin botón en ninguna pantalla**, anotado desde #163;
    - `GET /api/v1/files/{fileId}` — solo se consume `/content`;
@@ -579,8 +592,8 @@ Anotado a propósito: un hueco implícito es una sorpresa (`plan-desarrollo.md` 
 | `/profile`, `/users/:id` | F2 |
 | Pedir pausa (`PauseRequested`) y veto — necesitan `approval_requests` | F3 |
 | `/admin/queue`, `/admin/users`, `/admin/settings`, `/admin/requests` | F3 |
-| Comentarios y karma | F4 |
-| Tiempo real, auditoría, borrado físico de archivos | F5 |
+| Comentarios y karma | F5 |
+| Tiempo real, auditoría, borrado físico de archivos | F6 |
 
 ## 6. Verificación de punta a punta
 

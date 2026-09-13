@@ -4,14 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.files.FileCategory;
+import com.centraldungeon.files.FileService;
+import com.centraldungeon.files.FileType;
+import com.centraldungeon.files.StoredFile;
 import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.registrations.dto.CreateRegistrationRequest;
 import com.centraldungeon.registrations.dto.RegistrationResponse;
@@ -26,6 +32,7 @@ import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserAuthSnapshot;
 import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.UserStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +52,12 @@ class RegistrationServiceTest {
 
     @Mock
     private RegistrationRejectionRepository rejectionRepository;
+
+    @Mock
+    private RegistrationFileRepository registrationFileRepository;
+
+    @Mock
+    private FileService fileService;
 
     @Mock
     private GameTableRepository gameTableRepository;
@@ -69,8 +82,8 @@ class RegistrationServiceTest {
     @BeforeEach
     void setUp() {
         registrationService = new RegistrationService(
-                registrationRepository, rejectionRepository, gameTableRepository, masterService, userService, notificationService,
-                scheduleConflictService, registrationMapper);
+                registrationRepository, rejectionRepository, registrationFileRepository, fileService, gameTableRepository, masterService,
+                userService, notificationService, scheduleConflictService, registrationMapper);
     }
 
     @Test
@@ -79,7 +92,7 @@ class RegistrationServiceTest {
         when(gameTableRepository.findByIdForUpdate("table-1")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("master-only")).thenReturn(new UserAuthSnapshot("master-only", UserStatus.Allowed, Set.of("Master")));
 
-        assertThatThrownBy(() -> registrationService.apply("table-1", "master-only", new CreateRegistrationRequest(null)))
+        assertThatThrownBy(() -> registrationService.apply("table-1", "master-only", new CreateRegistrationRequest(null, List.of())))
                 .isInstanceOf(ForbiddenActionException.class);
     }
 
@@ -91,7 +104,7 @@ class RegistrationServiceTest {
                 .thenReturn(new UserAuthSnapshot("master-player-1", UserStatus.Allowed, Set.of("Player", "Master")));
         when(masterService.isMasterOf("table-1b", "master-player-1")).thenReturn(true);
 
-        assertThatThrownBy(() -> registrationService.apply("table-1b", "master-player-1", new CreateRegistrationRequest(null)))
+        assertThatThrownBy(() -> registrationService.apply("table-1b", "master-player-1", new CreateRegistrationRequest(null, List.of())))
                 .isInstanceOf(ForbiddenActionException.class);
     }
 
@@ -101,7 +114,7 @@ class RegistrationServiceTest {
         when(gameTableRepository.findByIdForUpdate("table-2")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
 
-        assertThatThrownBy(() -> registrationService.apply("table-2", "player-1", new CreateRegistrationRequest(null)))
+        assertThatThrownBy(() -> registrationService.apply("table-2", "player-1", new CreateRegistrationRequest(null, List.of())))
                 .isInstanceOf(ConflictException.class);
     }
 
@@ -114,7 +127,7 @@ class RegistrationServiceTest {
                         "table-3", "player-1", List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player)))
                 .thenReturn(true);
 
-        assertThatThrownBy(() -> registrationService.apply("table-3", "player-1", new CreateRegistrationRequest(null)))
+        assertThatThrownBy(() -> registrationService.apply("table-3", "player-1", new CreateRegistrationRequest(null, List.of())))
                 .isInstanceOf(ConflictException.class);
     }
 
@@ -126,10 +139,10 @@ class RegistrationServiceTest {
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(registrationMapper.toResponse(any(TableRegistration.class)))
-                .thenReturn(new RegistrationResponse("reg-1", "table-4", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null));
+        when(registrationMapper.toResponse(any(TableRegistration.class), any()))
+                .thenReturn(new RegistrationResponse("reg-1", "table-4", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of()));
 
-        RegistrationResponse response = registrationService.apply("table-4", "player-1", new CreateRegistrationRequest("please"));
+        RegistrationResponse response = registrationService.apply("table-4", "player-1", new CreateRegistrationRequest("please", List.of()));
 
         assertThat(response.status()).isEqualTo("Candidate");
     }
@@ -142,15 +155,15 @@ class RegistrationServiceTest {
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(registrationMapper.toResponse(any(TableRegistration.class)))
-                .thenReturn(new RegistrationResponse("reg-1b", "table-4b", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null));
+        when(registrationMapper.toResponse(any(TableRegistration.class), any()))
+                .thenReturn(new RegistrationResponse("reg-1b", "table-4b", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of()));
         com.centraldungeon.tables.Master primary =
                 new com.centraldungeon.tables.Master(table, persistedUser("master-1"), com.centraldungeon.tables.MasterType.Primary);
         com.centraldungeon.tables.Master secondary =
                 new com.centraldungeon.tables.Master(table, persistedUser("master-2"), com.centraldungeon.tables.MasterType.Secondary);
         when(masterService.findByGameTable("table-4b")).thenReturn(List.of(primary, secondary));
 
-        registrationService.apply("table-4b", "player-1", new CreateRegistrationRequest("please"));
+        registrationService.apply("table-4b", "player-1", new CreateRegistrationRequest("please", List.of()));
 
         verify(notificationService).notifyNewCandidate("master-1", table, "name-player-1");
         verify(notificationService).notifyNewCandidate("master-2", table, "name-player-1");
@@ -183,8 +196,8 @@ class RegistrationServiceTest {
         when(gameTableRepository.findByIdForUpdate("table-7")).thenReturn(Optional.of(registration.getGameTable()));
         when(masterService.isMasterOf("table-7", "master-1")).thenReturn(true);
         when(registrationRepository.countByGameTable_IdAndStatus("table-7", TableRegistrationStatus.Player)).thenReturn(1L);
-        when(registrationMapper.toResponse(registration))
-                .thenReturn(new RegistrationResponse("reg-3", "table-7", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null));
+        when(registrationMapper.toResponse(eq(registration), any()))
+                .thenReturn(new RegistrationResponse("reg-3", "table-7", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of()));
 
         registrationService.accept("reg-3", "master-1");
 
@@ -205,8 +218,8 @@ class RegistrationServiceTest {
         when(registrationRepository.countByGameTable_IdAndStatus("table-8", TableRegistrationStatus.Player)).thenReturn(1L);
         when(registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc("table-8", TableRegistrationStatus.Candidate))
                 .thenReturn(List.of(otherCandidate));
-        when(registrationMapper.toResponse(accepted))
-                .thenReturn(new RegistrationResponse("reg-4", "table-8", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null));
+        when(registrationMapper.toResponse(eq(accepted), any()))
+                .thenReturn(new RegistrationResponse("reg-4", "table-8", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of()));
 
         registrationService.accept("reg-4", "master-1");
 
@@ -232,8 +245,8 @@ class RegistrationServiceTest {
         when(registrationRepository.findById("reg-7")).thenReturn(Optional.of(registration));
         when(masterService.isMasterOf("table-10", "master-1")).thenReturn(true);
         when(userService.getById("master-1")).thenReturn(persistedUser("master-1"));
-        when(registrationMapper.toResponse(registration))
-                .thenReturn(new RegistrationResponse("reg-7", "table-10", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null));
+        when(registrationMapper.toResponse(eq(registration), any()))
+                .thenReturn(new RegistrationResponse("reg-7", "table-10", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of()));
 
         registrationService.reject("reg-7", "master-1", new RejectRegistrationRequest("Not a fit"));
 
@@ -252,8 +265,8 @@ class RegistrationServiceTest {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 20);
         when(registrationRepository.findByUser_IdAndStatusNot("player-1", TableRegistrationStatus.Deleted, pageable))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
-        when(registrationMapper.toResponse(registration))
-                .thenReturn(new RegistrationResponse("reg-8", "table-12", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null));
+        when(registrationMapper.toResponse(eq(registration), any()))
+                .thenReturn(new RegistrationResponse("reg-8", "table-12", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of()));
         RegistrationRejection rejection = new RegistrationRejection(registration, "No encaja con el tono", persistedUser("master-9"));
         when(rejectionRepository.findByRegistration_IdIn(List.of("reg-8"))).thenReturn(List.of(rejection));
 
@@ -269,8 +282,8 @@ class RegistrationServiceTest {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 20);
         when(registrationRepository.findByUser_IdAndStatusNot("player-1", TableRegistrationStatus.Deleted, pageable))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
-        when(registrationMapper.toResponse(registration))
-                .thenReturn(new RegistrationResponse("reg-9", "table-13", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null));
+        when(registrationMapper.toResponse(eq(registration), any()))
+                .thenReturn(new RegistrationResponse("reg-9", "table-13", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of()));
         // rejected_by null is what marks the rejection as the system's own (#34).
         RegistrationRejection rejection = new RegistrationRejection(registration, "TABLE_FULL", null);
         when(rejectionRepository.findByRegistration_IdIn(List.of("reg-9"))).thenReturn(List.of(rejection));
@@ -294,7 +307,7 @@ class RegistrationServiceTest {
     void applyThrowsWhenTheTableDoesNotExist() {
         when(gameTableRepository.findByIdForUpdate("missing")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> registrationService.apply("missing", "player-1", new CreateRegistrationRequest(null)))
+        assertThatThrownBy(() -> registrationService.apply("missing", "player-1", new CreateRegistrationRequest(null, List.of())))
                 .isInstanceOf(NotFoundException.class);
     }
 
@@ -307,7 +320,7 @@ class RegistrationServiceTest {
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(scheduleConflictService.findClashWith("player-1", table)).thenReturn(new CommittedTable("other", "La cripta"));
 
-        assertThatThrownBy(() -> registrationService.apply("table-r2", "player-1", new CreateRegistrationRequest(null)))
+        assertThatThrownBy(() -> registrationService.apply("table-r2", "player-1", new CreateRegistrationRequest(null, List.of())))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("La cripta");
 
@@ -355,8 +368,8 @@ class RegistrationServiceTest {
         when(registrationRepository.findByUser_IdAndStatus("player-1", TableRegistrationStatus.Candidate))
                 .thenReturn(List.of(accepted, pendingElsewhere));
         when(scheduleConflictService.overlap(acceptedTable, pendingElsewhere.getGameTable())).thenReturn(true);
-        when(registrationMapper.toResponse(any(TableRegistration.class)))
-                .thenReturn(new RegistrationResponse("reg-r4", "table-r4", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null));
+        when(registrationMapper.toResponse(any(TableRegistration.class), any()))
+                .thenReturn(new RegistrationResponse("reg-r4", "table-r4", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of()));
 
         registrationService.accept("reg-r4", "master-1");
 
@@ -390,6 +403,125 @@ class RegistrationServiceTest {
         when(registrationRepository.findById("reg-w3")).thenReturn(Optional.of(registration));
 
         assertThatThrownBy(() -> registrationService.withdraw("reg-w3", "player-1")).isInstanceOf(ConflictException.class);
+    }
+
+    /**
+     * #247, deliberate: withdrawing a pending application never touches {@code registration_files}.
+     * The row is the record that a sheet was sent, and withdrawing does not undo that it was - only
+     * the read side stops counting it as in use.
+     */
+    @Test
+    void withdrawingNeverTouchesRegistrationFiles() {
+        TableRegistration registration = persistedRegistration("reg-w4", "table-w4", TableRegistrationStatus.Candidate, null);
+        when(registrationRepository.findById("reg-w4")).thenReturn(Optional.of(registration));
+
+        registrationService.withdraw("reg-w4", "player-1");
+
+        verifyNoInteractions(registrationFileRepository);
+    }
+
+    // ---------------------------------------------------------------- files attached to an application (#60 uso 2)
+
+    /** The same gate as attaching to a table or an answer: the applicant's own, or one published (#79). */
+    @Test
+    void attachingOwnFileLinksItAndClassifiesItAsPlayerApplication() {
+        GameTable table = persistedTable("table-f1", GameTableStatus.Opened, null);
+        when(gameTableRepository.findByIdForUpdate("table-f1")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
+        when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
+        when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(persistRegistration("reg-f1"));
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"));
+        when(fileService.requireAttachable("file-1", "player-1")).thenReturn(file);
+        when(registrationMapper.toResponse(any(TableRegistration.class), any()))
+                .thenReturn(new RegistrationResponse(
+                        "reg-f1", "table-f1", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of()));
+
+        registrationService.apply("table-f1", "player-1", new CreateRegistrationRequest(null, List.of("file-1")));
+
+        verify(fileService).classify("file-1", FileCategory.PlayerApplication);
+        verify(registrationFileRepository).save(any(RegistrationFile.class));
+    }
+
+    /**
+     * From this service's point of view, a published file goes through the exact same door as the
+     * applicant's own: {@code FileService.requireAttachable} is where "own or published" is decided
+     * (#79), and it is mocked here on purpose - that gate has its own test in {@code FileServiceTest}.
+     */
+    @Test
+    void attachingAPublishedFileLinksItTheSameWay() {
+        GameTable table = persistedTable("table-f2", GameTableStatus.Opened, null);
+        when(gameTableRepository.findByIdForUpdate("table-f2")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("player-2")).thenReturn(new UserAuthSnapshot("player-2", UserStatus.Allowed, Set.of("Player")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
+        when(userService.getById("player-2")).thenReturn(persistedUser("player-2"));
+        when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(persistRegistration("reg-f2"));
+        StoredFile published = persistedFile("file-published", persistedUser("some-admin"));
+        ReflectionTestUtils.setField(published, "fileType", FileType.Public);
+        when(fileService.requireAttachable("file-published", "player-2")).thenReturn(published);
+        when(registrationMapper.toResponse(any(TableRegistration.class), any()))
+                .thenReturn(new RegistrationResponse(
+                        "reg-f2", "table-f2", "Test table", "player-2", "P2", 8000, "Candidate", null, null, null, null, List.of()));
+
+        registrationService.apply("table-f2", "player-2", new CreateRegistrationRequest(null, List.of("file-published")));
+
+        verify(fileService).classify("file-published", FileCategory.PlayerApplication);
+        verify(registrationFileRepository).save(any(RegistrationFile.class));
+    }
+
+    /** Somebody else's private upload never gets attached (#79) - 403, and nothing is linked. */
+    @Test
+    void refusesAFileThatIsSomebodyElsesAndNotPublished() {
+        GameTable table = persistedTable("table-f3", GameTableStatus.Opened, null);
+        when(gameTableRepository.findByIdForUpdate("table-f3")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("player-3")).thenReturn(new UserAuthSnapshot("player-3", UserStatus.Allowed, Set.of("Player")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
+        when(userService.getById("player-3")).thenReturn(persistedUser("player-3"));
+        when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(persistRegistration("reg-f3"));
+        when(fileService.requireAttachable("file-of-somebody-else", "player-3"))
+                .thenThrow(new ForbiddenActionException("File belongs to somebody else"));
+
+        assertThatThrownBy(() -> registrationService.apply(
+                        "table-f3", "player-3", new CreateRegistrationRequest(null, List.of("file-of-somebody-else"))))
+                .isInstanceOf(ForbiddenActionException.class);
+        verify(registrationFileRepository, never()).save(any());
+    }
+
+    /** Attaching is optional (#60 uso 2): an empty list is a normal application. */
+    @Test
+    void applyingWithNoFilesIsValid() {
+        GameTable table = persistedTable("table-f4", GameTableStatus.Opened, null);
+        when(gameTableRepository.findByIdForUpdate("table-f4")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("player-4")).thenReturn(new UserAuthSnapshot("player-4", UserStatus.Allowed, Set.of("Player")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
+        when(userService.getById("player-4")).thenReturn(persistedUser("player-4"));
+        when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(persistRegistration("reg-f4"));
+        when(registrationMapper.toResponse(any(TableRegistration.class), any()))
+                .thenReturn(new RegistrationResponse(
+                        "reg-f4", "table-f4", "Test table", "player-4", "P4", 8000, "Candidate", null, null, null, null, List.of()));
+
+        RegistrationResponse response =
+                registrationService.apply("table-f4", "player-4", new CreateRegistrationRequest(null, List.of()));
+
+        assertThat(response.status()).isEqualTo("Candidate");
+        verify(fileService, never()).requireAttachable(anyString(), anyString());
+        verify(registrationFileRepository, never()).save(any());
+    }
+
+    private static org.mockito.stubbing.Answer<TableRegistration> persistRegistration(String id) {
+        return invocation -> {
+            TableRegistration registration = invocation.getArgument(0);
+            ReflectionTestUtils.setField(registration, "id", id);
+            ReflectionTestUtils.setField(registration, "createdAt", LocalDateTime.now());
+            return registration;
+        };
+    }
+
+    private static StoredFile persistedFile(String id, User owner) {
+        StoredFile file = new StoredFile("ficha.pdf", "key-" + id, "hash-" + id, "application/pdf", 120, FileType.Private, owner);
+        ReflectionTestUtils.setField(file, "id", id);
+        ReflectionTestUtils.setField(file, "createdAt", LocalDateTime.now());
+        return file;
     }
 
     private GameTable persistedTable(String id, GameTableStatus status, Integer maxPlayers) {

@@ -25,7 +25,9 @@ import {
   MySessionsHelp,
   MyTablesHelp,
   PlayerFilesHelp,
+  PlayerHistoryHelp,
   PlayerTasksHelp,
+  ProfileHelp,
   ScheduleConflictsHelp,
 } from './players'
 
@@ -77,6 +79,8 @@ export const HELP_SECTIONS = {
   'players.my-sessions': { titleKey: 'players.mySessions.title', Body: MySessionsHelp },
   'players.tasks': { titleKey: 'players.tasks.title', Body: PlayerTasksHelp },
   'players.files': { titleKey: 'players.files.title', Body: PlayerFilesHelp },
+  'players.profile': { titleKey: 'players.profile.title', Body: ProfileHelp },
+  'players.history': { titleKey: 'players.history.title', Body: PlayerHistoryHelp },
 
   'masters.creating': { titleKey: 'masters.creating.title', Body: CreatingHelp },
   'masters.schedule': { titleKey: 'masters.schedule.title', Body: ScheduleHelp },

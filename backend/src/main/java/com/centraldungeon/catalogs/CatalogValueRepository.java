@@ -1,5 +1,6 @@
 package com.centraldungeon.catalogs;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -49,4 +50,28 @@ public interface CatalogValueRepository<E extends CatalogValue> extends JpaRepos
      * @return the aliases pointing at it, whatever their status. Never null, possibly empty
      */
     List<E> findByCanonicalId(String canonicalId);
+
+    /**
+     * The canonical entries of several groups at once, in one status.
+     *
+     * <p>Half of what {@link AbstractCatalogService#resolveGroupIdsByName} needs: given the roots a
+     * search landed on, this brings back the roots themselves. The other half is
+     * {@link #findByStatusAndCanonicalIdIn}, and together they are the whole group - depth is always
+     * 1 (#59), so there is no third query.
+     *
+     * @param status  the status to keep. Always {@code Accepted} today: a value nobody accepted does
+     *                not filter (#57)
+     * @param ids     the canonical entries to bring back
+     * @return the matching rows, never null and possibly empty
+     */
+    List<E> findByStatusAndIdIn(CatalogStatus status, Collection<String> ids);
+
+    /**
+     * The aliases of several groups at once, in one status.
+     *
+     * @param status       the status to keep
+     * @param canonicalIds the canonical entries whose aliases are wanted
+     * @return the matching rows, never null and possibly empty
+     */
+    List<E> findByStatusAndCanonicalIdIn(CatalogStatus status, Collection<String> canonicalIds);
 }

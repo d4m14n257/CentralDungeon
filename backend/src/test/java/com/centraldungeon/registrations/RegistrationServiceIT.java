@@ -101,7 +101,7 @@ class RegistrationServiceIT {
             futures.add(pool.submit(() -> {
                 start.await();
                 try {
-                    registrationService.apply(table.getId(), player.getId(), new CreateRegistrationRequest(null));
+                    registrationService.apply(table.getId(), player.getId(), new CreateRegistrationRequest(null, java.util.List.of()));
                     return true;
                 } catch (ConflictException e) {
                     return false;

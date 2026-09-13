@@ -7,27 +7,19 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-/** Reads and writes the {@code game_tables} table. */
-public interface GameTableRepository extends JpaRepository<GameTable, String> {
-
-    /**
-     * /game-tables (the public explorer): a master never sees a table they themselves run in the
-     * list meant for applying as a Player - a table has exactly one set of people who play at it
-     * and a disjoint set who run it (decisiones.md #154).
-     *
-     * @param statuses which statuses count as publicly visible
-     * @param actorId  the actor, from the token. It is in the WHERE, which is the point (#121)
-     * @param pageable page, size and sort
-     * @return one page of tables the actor could apply to
-     */
-    @Query("select t from GameTable t where t.status in :statuses and not exists "
-            + "(select 1 from Master m where m.gameTable = t and m.user.id = :actorId)")
-    Page<GameTable> findByStatusInAndNotMasteredByActor(
-            @Param("statuses") Collection<GameTableStatus> statuses, @Param("actorId") String actorId, Pageable pageable);
+/**
+ * Reads and writes the {@code game_tables} table.
+ *
+ * <p>{@code JpaSpecificationExecutor} is here for the explorer: it combines the visibility rules with
+ * a search box whose shape - how many criteria, joined by which connectors - is only known at runtime
+ * (arquitectura.md 2.2), the same reason the catalogs and the files needed it before.
+ */
+public interface GameTableRepository extends JpaRepository<GameTable, String>, JpaSpecificationExecutor<GameTable> {
 
     /**
      * /master/tables: every status, including Preparation - a master needs to see and open their own

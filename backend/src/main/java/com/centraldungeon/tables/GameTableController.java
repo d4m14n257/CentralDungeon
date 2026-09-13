@@ -8,6 +8,7 @@ import com.centraldungeon.tables.dto.AssignMastersRequest;
 import com.centraldungeon.tables.dto.ChangeTableStatusRequest;
 import com.centraldungeon.tables.dto.CreateGameTableRequest;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
+import com.centraldungeon.tables.dto.GameTableHistoryResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
 import com.centraldungeon.tables.dto.TableStatusChangeResponse;
@@ -56,6 +57,10 @@ public class GameTableController {
      * time-ordered UUIDv7 - so a table published today could fall off the first page as the table
      * grew. The default lives here and not in the JPQL so an explicit ?sort= still wins.
      *
+     * @param q           the search box, in the language of #164: a bare term searches the table's
+     *                    name, and {@code /table_system}, {@code /table_tag} and
+     *                    {@code /table_platform} resolve through their synonym groups (#54, #56,
+     *                    #246). Null or blank means no criteria
      * @param pageable    page, size and sort; newest first, with a tie-break by id (#171)
      * @param currentUser the actor, from the token. It goes into the WHERE so a master never sees
      *                    their own table in the list meant for applying (#121, #154)
@@ -64,9 +69,10 @@ public class GameTableController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public PageResponse<GameTableSummaryResponse> list(
+            @RequestParam(required = false) @Nullable String q,
             @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal CurrentUser currentUser) {
-        return gameTableService.list(pageable, currentUser.userId());
+        return gameTableService.list(q, pageable, currentUser.userId());
     }
 
     /**
@@ -139,6 +145,27 @@ public class GameTableController {
             @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.listMine(currentUser.userId(), pageable);
+    }
+
+    /**
+     * /my/tables/history - the tables the actor played at that are now over, with when each one
+     * closed and their own final attendance (#133a). A table still live, {@code Pause} included
+     * (#32), stays on {@link #listMine} instead - the two never overlap on any one table.
+     *
+     * <p>Not the same read as {@link #listMine} with a different filter: the card here has no cupo
+     * and no schedule-clash warning, and carries {@code closed_at} and the attendance aggregate of
+     * #137 that a live card has no use for. See {@link GameTableHistoryResponse}.
+     *
+     * @param pageable    page, size and sort; newest first
+     * @param currentUser the actor, from the token (#121)
+     * @return 200 with one page of the tables they played at that have ended
+     */
+    @GetMapping("/mine/history")
+    @PreAuthorize("isAuthenticated()")
+    public PageResponse<GameTableHistoryResponse> listMineHistory(
+            @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.listMineHistory(currentUser.userId(), pageable);
     }
 
     /**

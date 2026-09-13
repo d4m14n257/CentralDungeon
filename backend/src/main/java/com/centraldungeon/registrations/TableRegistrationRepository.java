@@ -88,6 +88,23 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     Page<TableRegistration> findByUser_IdAndStatus(String userId, TableRegistrationStatus status, Pageable pageable);
 
     /**
+     * {@link #findByUser_IdAndStatus}'s narrower sibling, filtered by the table's own status rather
+     * than only the registration's (#133a). The registration keeps saying {@code Player} forever
+     * once accepted - it is the table that moves on to {@code Finished} or {@code Canceled} - so
+     * this is what tells /my/tables (still live) apart from /my/tables/history (already over): the
+     * same query, the table statuses in {@code Collection} decide which screen is asking.
+     *
+     * @param userId           the actor, from the token (#121)
+     * @param status           the registration status to match, in practice {@code Player}
+     * @param gameTableStatuses which of the table's own statuses to keep - live ones for the current
+     *                         listing, {@code Finished}/{@code Canceled} for the history
+     * @param pageable         page, size and sort
+     * @return one page of their registrations whose table is in one of those statuses
+     */
+    Page<TableRegistration> findByUser_IdAndStatusAndGameTable_StatusIn(
+            String userId, TableRegistrationStatus status, Collection<GameTableStatus> gameTableStatuses, Pageable pageable);
+
+    /**
      * The tables somebody plays at, in the statuses that count as a live commitment - the other half
      * of what the clash rules of #178 compare against. Playing and running weigh the same there:
      * they are the same person in the same stretch of the week.
@@ -152,4 +169,18 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
             """)
     List<PendingCandidateCount> countPendingByTables(
             @Param("gameTableIds") Collection<String> gameTableIds, @Param("status") TableRegistrationStatus status);
+
+    /**
+     * Whether the person holds an active application among a set of tables - the batched read behind
+     * profile visibility's #41b (modelo-datos.md §5): checking a master's own tables against one
+     * applicant is one query, not one per table they run.
+     *
+     * @param gameTableIds the tables to check, in practice the ones the actor runs
+     * @param userId       the applicant being looked for
+     * @param statuses     which statuses count as active - Candidate and Player, never Deleted or
+     *                     Rejected (#216)
+     * @return their active applications among those tables
+     */
+    List<TableRegistration> findByGameTable_IdInAndUser_IdAndStatusIn(
+            Collection<String> gameTableIds, String userId, Collection<TableRegistrationStatus> statuses);
 }

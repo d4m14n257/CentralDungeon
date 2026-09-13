@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
-import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 /**
  * E2 sub-slice 1, end to end (decisiones.md #163): a master creates a table through the wizard ->
@@ -143,7 +143,10 @@ test('a master deletes a draft that never went public, and cannot delete it once
     // An approved table has been public: the delete button does not exist.
     // The URL is only usable once the navigation finished, and the helper already waits for the heading.
     await createTableThroughWizard(master.page, openedName)
-    const tableId = master.page.url().split('/master/tables/')[1]
+    const tableId = master.page.url().split('/master/tables/')[1] as string
+    // The one above stayed a draft on purpose - that is what the first half tests. This one has to
+    // become public, so it goes to review first (#245).
+    await submitForReview(master.page, tableId)
 
     const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
     try {
@@ -173,9 +176,13 @@ test('a master creates a table, an admin approves it, and the master runs it end
   const master = await newAuthenticatedPage(browser, masterDiscordId, true, false)
   try {
     await createTableThroughWizard(master.page, tableName)
-    await expect(master.page.getByText('En preparación', { exact: true })).toBeVisible()
+    // A table is born in Draft and only becomes Preparation when its master lets go of it (#245).
+    await expect(master.page.getByText('Borrador', { exact: true })).toBeVisible()
     const tableUrl = master.page.url()
-    const tableId = tableUrl.split('/master/tables/')[1]
+    const tableId = tableUrl.split('/master/tables/')[1] as string
+
+    await submitForReview(master.page, tableId)
+    await expect(master.page.getByText('En preparación', { exact: true })).toBeVisible()
 
     const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
     try {

@@ -19,7 +19,9 @@ export function useWithdrawApplication() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.mine() })
       // The explorer's cards carry "ya te postulaste" and the clash warning, and both just changed.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.list() })
+      // The whole branch and not one entry: since the box arrived, the explorer keys by what was
+      // searched, and this mutation has no idea what that was (#246).
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.lists() })
     },
   })
 }

@@ -61,6 +61,13 @@ public class TestDataService {
     @Transactional
     public TestCleanupResponse deleteE2eData() {
         delete("delete from RegistrationRejection r where r.registration.id in (" + E2E_REGISTRATIONS + ")");
+        // The fifth time a foreign key of a bridge table broke this cleanup, after the agenda (F1.2),
+        // the calendar (F1.3), the table files (F1.4) and the submissions (F1.5) - #171, #172. The
+        // files a candidate attached hang off the application, so they go before it; leaving them
+        // behind makes this endpoint answer 500, and a cleanup that 500s is what fills the database
+        // and makes the *next* run fail on pagination, which reads as a broken feature.
+        delete("delete from RegistrationFile rf where rf.id.registrationId in (" + E2E_REGISTRATIONS
+                + ") or rf.id.fileId in (" + E2E_FILES + ")");
         delete("delete from TableRegistration reg2 where reg2.gameTable.id in (" + E2E_TABLES + ") or reg2.user.id in (" + E2E_USERS + ")");
         delete("delete from Notification n where n.user.id in (" + E2E_USERS + ")");
         delete("delete from TableStatusChange c where c.gameTable.id in (" + E2E_TABLES + ") or c.changedBy.id in (" + E2E_USERS + ")");

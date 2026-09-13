@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext, type Browser } from '@playwright/test'
 
-import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 /**
  * `/my/files` end to end, against the real backend.
@@ -116,6 +116,11 @@ test('the library shows what each file is, where it is used, and reuses an uploa
  * `/my/files` is the **personal** library: a plain member of the community never files table
  * material, and an announcement is nobody's — it is the community's, always published, and it lives
  * only in `/admin/files`. Whoever runs tables gets the master-side ones as well.
+ *
+ * **Asserted on the upload panel and not on a row of filters.** #242 took the cajón toggles off this
+ * screen — the search box narrows by cajón from the same line and each row carries its own badge —
+ * so what is left that names the reader's cajones is the one place that has to ask: the panel where
+ * a file with no flow behind it gets filed.
  */
 test('the library offers only the cajones that are the reader’s own', async ({ browser }) => {
   const player = await newAuthenticatedPage(browser, `e2e-myfiles-player-${runId}`, false)
@@ -123,24 +128,24 @@ test('the library offers only the cajones that are the reader’s own', async ({
 
   try {
     await player.page.goto('/my/files')
-    const playerFilter = player.page.getByRole('group', { name: 'Filtrar por dónde se usa' })
-    await expect(playerFilter.getByRole('button', { name: 'Solicitud de jugador' })).toBeVisible()
-    await expect(playerFilter.getByRole('button', { name: 'Entrega del jugador' })).toBeVisible()
+    await player.page.getByRole('button', { name: 'Subir archivo' }).click()
+    await expect(player.page.getByRole('radio', { name: 'Solicitud de jugador' })).toBeVisible()
+    await expect(player.page.getByRole('radio', { name: 'Entrega del jugador' })).toBeVisible()
     // Not theirs: filing something of their own as table material is not a thing a player does.
-    await expect(playerFilter.getByRole('button', { name: 'De mesa' })).toHaveCount(0)
-    await expect(playerFilter.getByRole('button', { name: 'Petición del master' })).toHaveCount(0)
+    await expect(player.page.getByRole('radio', { name: 'De mesa' })).toHaveCount(0)
+    await expect(player.page.getByRole('radio', { name: 'Petición del master' })).toHaveCount(0)
     // Nobody's, whoever is asking.
-    await expect(playerFilter.getByRole('button', { name: 'Anuncios de la comunidad' })).toHaveCount(0)
+    await expect(player.page.getByRole('radio', { name: 'Anuncios de la comunidad' })).toHaveCount(0)
 
     await master.page.goto('/my/files')
-    const masterFilter = master.page.getByRole('group', { name: 'Filtrar por dónde se usa' })
-    await expect(masterFilter.getByRole('button', { name: 'De mesa' })).toBeVisible()
-    await expect(masterFilter.getByRole('button', { name: 'Petición del master' })).toBeVisible()
+    await master.page.getByRole('button', { name: 'Subir archivo' }).click()
+    await expect(master.page.getByRole('radio', { name: 'De mesa' })).toBeVisible()
+    await expect(master.page.getByRole('radio', { name: 'Petición del master' })).toBeVisible()
     // And not the player-side ones: this account holds Master and not Player, so those two cajones
     // are filled by flows it cannot enter. Each side follows the role that fills it (#237).
-    await expect(masterFilter.getByRole('button', { name: 'Solicitud de jugador' })).toHaveCount(0)
-    await expect(masterFilter.getByRole('button', { name: 'Entrega del jugador' })).toHaveCount(0)
-    await expect(masterFilter.getByRole('button', { name: 'Anuncios de la comunidad' })).toHaveCount(0)
+    await expect(master.page.getByRole('radio', { name: 'Solicitud de jugador' })).toHaveCount(0)
+    await expect(master.page.getByRole('radio', { name: 'Entrega del jugador' })).toHaveCount(0)
+    await expect(master.page.getByRole('radio', { name: 'Anuncios de la comunidad' })).toHaveCount(0)
   } finally {
     await player.context.close()
     await master.context.close()

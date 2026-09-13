@@ -210,8 +210,18 @@ class TableSessionIT {
         assertThat(sessionRepository.findByGameTable_IdOrderBySequenceNumberAsc(bare.getId())).isEmpty();
     }
 
+    /**
+     * A table already sent to review, which is what every test here needs: they are about what
+     * happens when an admin approves it.
+     *
+     * <p><b>The status is set explicitly since #245.</b> A new table is born in {@code Draft} - only
+     * its master sees it, and no admin can act on it - so building one and approving it now fails
+     * where it used to work. Going through {@code submitForReview} would be the long way round: these
+     * tests are not about the door into review, they are about what is on the other side of it.
+     */
     private GameTable draft(String name) {
         GameTable draft = new GameTable(name, master);
+        draft.setStatus(GameTableStatus.Preparation);
         draft.setStartDate(LocalDate.parse("2026-09-08"));
         draft.setTotalSessions(4);
         return draft;

@@ -24,11 +24,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -399,10 +401,63 @@ public class TableSessionService {
      */
     @Transactional(readOnly = true)
     public AttendanceSummaryResponse summarize(String gameTableId, String userId) {
+        return toSummary(attendanceRepository.countByTableAndUser(gameTableId, userId));
+    }
+
+    /**
+     * {@link #summarize}'s sibling with no game table to scope it to - the same three numbers of #137
+     * across every table the person has ever played, which is what a profile shows (modelo-datos.md
+     * §5). Never cached (#11), for the same reason the scoped version is not.
+     *
+     * @param userId the person whose profile is being read
+     * @return their present, excused and absent counts across every table, and the denominator they
+     *         share
+     */
+    @Transactional(readOnly = true)
+    public AttendanceSummaryResponse summarizeAll(String userId) {
+        return toSummary(attendanceRepository.countByUser(userId));
+    }
+
+    /**
+     * {@link #summarize}'s batched sibling: the same three numbers of #137, for a whole page of
+     * tables in one grouped query - the history screen's own read (#133a), and the exact risk its
+     * contract calls out by name: resolving one table's attendance at a time would be the N+1
+     * {@code FileService.usagesByFileId} and {@code CatalogUsageCount} already avoid for a page of
+     * files and a page of catalog values.
+     *
+     * @param gameTableIds the tables on the page. Empty answers with an empty map and issues no query
+     * @param userId       the actor, from the token (#121)
+     * @return one summary per table id, including a table with nothing recorded for this person -
+     *         {@code registered} zero rather than the id being absent from the map
+     */
+    @Transactional(readOnly = true)
+    public Map<String, AttendanceSummaryResponse> summarizeByTables(Collection<String> gameTableIds, String userId) {
+        if (gameTableIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, List<AttendanceCount>> byTable = attendanceRepository.countByGameTablesAndUser(gameTableIds, userId).stream()
+                .collect(Collectors.groupingBy(
+                        TableAttendanceCount::gameTableId,
+                        Collectors.mapping(row -> new AttendanceCount(row.attendance(), row.total()), Collectors.toList())));
+
+        Map<String, AttendanceSummaryResponse> summaries = new LinkedHashMap<>();
+        for (String gameTableId : gameTableIds) {
+            summaries.put(gameTableId, toSummary(byTable.getOrDefault(gameTableId, List.of())));
+        }
+        return summaries;
+    }
+
+    /**
+     * Turns the grouped counts of #137 into the three numbers and their shared denominator.
+     *
+     * @param counts one row per attendance value actually recorded; {@code Unknown} never among them
+     * @return the summary, zero for whichever value is absent from {@code counts}
+     */
+    private static AttendanceSummaryResponse toSummary(List<AttendanceCount> counts) {
         int present = 0;
         int excused = 0;
         int absent = 0;
-        for (AttendanceCount count : attendanceRepository.countByTableAndUser(gameTableId, userId)) {
+        for (AttendanceCount count : counts) {
             switch (count.attendance()) {
                 case Present -> present = (int) count.total();
                 case Excused -> excused = (int) count.total();

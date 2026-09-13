@@ -177,15 +177,41 @@ class ScheduleConflictServiceTest {
 
         assertThat(clash).isNull();
         // The proof is in the argument: Pause is never asked for, so a paused table cannot come back.
+        // And Draft *is* asked for, which is the half #245 left broken - the doc above the list said
+        // drafts claim their slot and the list did not contain Draft, so a master could build two
+        // drafts on the same Friday and only find out when an admin approved the second.
         org.mockito.Mockito.verify(gameTableRepository)
                 .findMasteredByUserInStatuses(
                         "master-1",
                         List.of(
+                                GameTableStatus.Draft,
                                 GameTableStatus.Preparation,
                                 GameTableStatus.ChangesRequested,
                                 GameTableStatus.Opened,
                                 GameTableStatus.InProgress,
                                 GameTableStatus.PauseRequested));
+    }
+
+    /**
+     * The rule the list above exists to enforce, asserted on behaviour rather than on an argument: a
+     * master's own draft holds its slot from the moment it exists (#178, #245).
+     *
+     * <p>Letting two drafts through would move the clash to where nobody is looking for it - an admin
+     * approving the second one, with no idea that the first one was already there.
+     */
+    @Test
+    void aDraftOfTheSameMasterAlreadyClaimsItsSlot() {
+        GameTable draft = table("draft-1", GameTableStatus.Draft);
+        when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(draft));
+        when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
+        when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
+                .thenReturn(List.of(new TableSchedule("draft-1", Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
+
+        CommittedTable clash =
+                scheduleConflictService.findClash("master-1", null, List.of(interval(Weekday.Tuesday, "21:00", "01:00")));
+
+        assertThat(clash).isNotNull();
+        assertThat(clash.id()).isEqualTo("draft-1");
     }
 
     /** The table being edited is not one of its own obstacles. */

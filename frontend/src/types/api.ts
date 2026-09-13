@@ -28,6 +28,23 @@ export interface ProblemDetail {
 }
 
 /**
+ * Mirror of the backend's `AttendanceSummaryResponse` (#137): somebody's historical attendance,
+ * as three counts and the denominator that goes with them.
+ *
+ * Lives here and not in `features/tables/types.ts` because a second feature needs the exact same
+ * shape unchanged: `features/tables` uses it for one table's sessions, `features/users` for a
+ * profile's aggregate across every table (arquitectura.md 3.1.2 - it moves up the moment a second
+ * real consumer needs it, and moving it up is what lets `AttendanceSummaryView` stay the one place
+ * that renders it instead of being copied into a second feature).
+ */
+export interface AttendanceSummary {
+  present: number
+  excused: number
+  absent: number
+  registered: number
+}
+
+/**
  * What `api/client.ts` throws when the backend refuses a call. It carries the whole `ProblemDetail`,
  * so a screen can branch on `errorCode` or on the status instead of matching on a message string.
  *

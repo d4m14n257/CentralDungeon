@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router'
 
-import { playerApplicationsPath, playerHomePath, playerMyTablesPath } from '@/config/paths'
+import { playerApplicationsPath, playerHistoryPath, playerHomePath, playerMyTablesPath } from '@/config/paths'
 import { cn } from '@/lib/utils'
 
 /**
@@ -14,7 +14,9 @@ import { cn } from '@/lib/utils'
  * contexts got their nav the moment they grew a second screen; this one did not.
  *
  * It grows with the context, in this list and not in a different one somewhere else: `/player/files`
- * and `/player/history` join here when F2 builds them.
+ * joins here when F2 builds it. `/player/history` (#133) is the one already added, for the exact
+ * reason this whole component exists - without an entry here it would be reachable only by typing
+ * the URL, which is the bug F1's review found with this context the first time.
  */
 export function PlayerSectionNav() {
   const { t } = useTranslation('tables')
@@ -23,6 +25,7 @@ export function PlayerSectionNav() {
     { to: playerHomePath(), label: t('nav.explore'), end: true },
     { to: playerApplicationsPath(), label: t('nav.applications'), end: false },
     { to: playerMyTablesPath(), label: t('nav.myTables'), end: false },
+    { to: playerHistoryPath(), label: t('nav.history'), end: false },
   ]
 
   return (

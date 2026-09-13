@@ -7,5 +7,18 @@
     "startTyping": "Escribí para buscar.",
     "empty": "Nadie coincide con esa búsqueda.",
     "noName": "Sin nombre en el sistema"
+  },
+  "profile": {
+    "noName": "Sin nombre",
+    "attendanceTitle": "Asistencia",
+    "roles": {
+      "Player": "Jugador",
+      "Master": "Master",
+      "Admin": "Admin",
+      "Owner": "Owner"
+    },
+    "loadErrorDescription": "No pudimos cargar este perfil. Probá de nuevo.",
+    "expiredDescription": "Ya no podés ver este perfil.",
+    "help": "¿Quién ve mi perfil?"
   }
 }

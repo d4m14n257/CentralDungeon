@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
 /**
  * The steps of the create-table wizard that every spec has to walk through, in one place.
@@ -49,4 +49,26 @@ export async function chooseRequiredCatalogs(page: Page): Promise<void> {
  */
 export async function addScheduleSlot(page: Page, hourtime: string, weekday = 'Viernes'): Promise<void> {
   await page.getByRole('button', { name: `Ocupar ${weekday} ${hourtime}` }).click()
+}
+
+/**
+ * Sends a freshly created table to review, which is what makes it exist for an admin (#245).
+ *
+ * **Every spec that approves a table needs this now.** A table is born in `Draft` — only its master
+ * sees it, it appears in no listing and no admin is told about it — so the create-then-approve
+ * sequence that worked for a year stopped working the day `Draft` arrived: `/admin/tables` has no
+ * row to click, and the API answers the approval with a 409. Here for the same reason
+ * {@link chooseRequiredCatalogs} is: nine specs had the same two lines and all nine broke at once.
+ *
+ * @param page    the master's page
+ * @param tableId the table to send
+ */
+export async function submitForReview(page: Page, tableId: string): Promise<void> {
+  await page.goto(`/master/tables/${tableId}/status`)
+  const send = page.getByRole('button', { name: 'Enviar a revisión' })
+  await send.click()
+  const confirm = page.getByRole('dialog')
+  await confirm.getByRole('button', { name: 'Confirmar' }).click()
+  await expect(confirm).toBeHidden()
+  await expect(send).toBeHidden()
 }

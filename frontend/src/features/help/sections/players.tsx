@@ -14,8 +14,8 @@ export function ApplyingHelp() {
 
   return (
     <>
-      <HelpList items={['where', 'oneAtATime', 'blocked'].map((key) => t(`players.applying.${key}`))} />
-      <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`players.applying.steps.step${n}`))} />
+      <HelpList items={['where', 'oneAtATime', 'blocked', 'sheet', 'review', 'noEdit'].map((key) => t(`players.applying.${key}`))} />
+      <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4, 5].map((n) => t(`players.applying.steps.step${n}`))} />
     </>
   )
 }
@@ -95,4 +95,31 @@ export function PlayerFilesHelp() {
   const { t } = useTranslation('help')
 
   return <HelpList items={['where', 'download', 'private', 'shared'].map((key) => t(`players.files.${key}`))} />
+}
+
+/**
+ * Who can see a profile, and why one stops being visible (#41, #44, #47).
+ *
+ * **The expiry is the part that needs explaining and the only part nobody would guess.** A profile
+ * that was readable last month and is not today looks like a bug unless somebody says the window
+ * closed — and the screen that refuses it cannot say much, because confirming the person exists is
+ * exactly what the refusal withholds (#249).
+ */
+export function ProfileHelp() {
+  const { t } = useTranslation('help')
+
+  return (
+    <>
+      <HelpList items={['yours', 'attendance', 'unregistered'].map((key) => t(`players.profile.${key}`))} />
+      <HelpList items={['whoSeesYours', 'whoYouSee', 'expiry', 'paused'].map((key) => t(`players.profile.${key}`))} />
+      <p className="text-fg-muted text-sm">{t('players.profile.karma')}</p>
+    </>
+  )
+}
+
+/** Where a table goes once it is over, and why it left the other list (#133a). */
+export function PlayerHistoryHelp() {
+  const { t } = useTranslation('help')
+
+  return <HelpList items={['what', 'moves', 'paused', 'attendance'].map((key) => t(`players.history.${key}`))} />
 }

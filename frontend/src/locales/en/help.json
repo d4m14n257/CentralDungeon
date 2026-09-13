@@ -96,8 +96,12 @@
         "step1": "From the explorer, open the table you are interested in and read its description and requirements.",
         "step2": "Tap “Apply”. If the button is not there, you will read the reason in its place.",
         "step3": "Write a message for the master if you want to tell them something. It is optional.",
-        "step4": "Send it and follow the application from “My applications”: that is where you see the master's decision."
-      }
+        "step4": "Attach your character sheet if you need to. You can upload a new one or reuse one you already have.",
+        "step5": "Review what you are about to send, and send it. Then follow the application from “My applications”."
+      },
+      "sheet": "You can attach your character sheet, or whatever the master asked for. It is optional.",
+      "review": "Before sending you get a review step showing everything that will go out.",
+      "noEdit": "A sent application cannot be edited and no file can be removed from it. If you got it wrong, withdraw it and apply again."
     },
     "applicationStatus": {
       "title": "Where your application stands",
@@ -163,6 +167,24 @@
       "download": "Every file has its download button, with its size next to it, so you know what you are about to fetch if you are on mobile data.",
       "private": "If your master kept something for whoever runs the table, you will not see it here. It is not an error and not a permission you are missing: those files are their notes.",
       "shared": "A file that is here today may be gone tomorrow if the master takes it off the table. If you need it, download it."
+    },
+    "profile": {
+      "title": "Profiles",
+      "yours": "Your profile is in your account menu. It shows your name, your country, your roles and your attendance.",
+      "attendance": "Attendance is three numbers — present, excused and absent — and not a percentage: a heads-up and a no-show are not the same thing, and an average would blend them.",
+      "unregistered": "Sessions the master has not recorded yet count for nothing. A table that started yesterday does not leave you looking absent.",
+      "whoSeesYours": "Your profile is not public. The master of a table sees it from the moment your application arrives, and so do your tablemates.",
+      "whoYouSee": "You can see the profile of the masters of any open table — before applying, which is what it is for — and those of your tablemates.",
+      "expiry": "Two weeks after a table finishes or is cancelled, the profiles it opened stop being visible. The record of who you played with is kept; what expires is access to the profile.",
+      "paused": "A paused table does not start that clock: it has not ended, so those people are still your tablemates.",
+      "karma": "Karma and comments do not exist yet. When they arrive, they will show up here."
+    },
+    "history": {
+      "title": "Your history",
+      "what": "“History” keeps the tables you played at that have finished or been cancelled.",
+      "moves": "A table moves on its own: while it is live you find it under “My tables”, and once it closes it comes here. It is never in both.",
+      "paused": "A paused table stays under “My tables”: it is frozen, not over.",
+      "attendance": "Every table in the history carries your final attendance, with the same three numbers as the profile."
     }
   },
   "masters": {

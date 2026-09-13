@@ -14,4 +14,4 @@ export { ApplyToTableDialog } from './components/ApplyToTableDialog'
 export { RegistrationStatusBadge } from './components/RegistrationStatusBadge'
 export { RejectRegistrationDialog } from './components/RejectRegistrationDialog'
 /** The feature's domain types. Each is written once in `types.ts` and derived from there (#3.2). */
-export type { CreateRegistrationInput, Registration, RegistrationStatus, TablePlayer } from './types'
+export type { CreateRegistrationInput, Registration, RegistrationFile, RegistrationStatus, TablePlayer } from './types'

@@ -1,4 +1,5 @@
 import type { WeekBlock } from '@/lib/date'
+import type { AttendanceSummary } from '@/types/api'
 import type { CatalogValue } from '@/types/catalog'
 import type { SharedFile } from '@/types/file'
 import type { Weekday } from '@/lib/date'
@@ -69,6 +70,27 @@ export interface GameTableSummary {
    */
   scheduleConflict: boolean
   primaryMaster: MasterSummary
+}
+
+/**
+ * Mirror of GameTableHistoryResponse (#133) - one row of `/player/history`: a table that stopped
+ * being active, and how it ended for this reader.
+ *
+ * A type of its own rather than a slice of `GameTableSummary` (#3.2 regla 2): the two answer
+ * different questions. A live table's card is about whether to act on it - the master, the seats
+ * left, the schedule - none of which means anything once a table is done. This one is about how it
+ * ended and how the reader did there, which a live card has no room for and a live table has no
+ * answer to yet (`closedAt` is null and `attendance` incomplete until then).
+ */
+export interface GameTableHistoryEntry {
+  id: string
+  name: string
+  /** Always `Finished` or `Canceled` - the only two statuses `/mine/history` ever returns. */
+  status: GameTableStatus
+  /** When it entered that status (#180). Always set: a row only exists here once one of them has. */
+  closedAt: string
+  /** The reader's own attendance across the whole run, frozen the day it closed. */
+  attendance: AttendanceSummary
 }
 
 /**
@@ -193,19 +215,6 @@ export type PublicSession = Pick<TableSession, 'id' | 'sequenceNumber' | 'schedu
  * else's roster, only *my* attendance (#121).
  */
 export type PlayerSession = Omit<TableSession, 'notes' | 'attendance'> & { myAttendance: AttendanceStatus }
-
-/**
- * Mirror of AttendanceSummaryResponse — somebody's historical attendance on a table (#137).
- *
- * **Three numbers and never a percentage**: a ratio would hide exactly the distinction that matters.
- * `registered` is the denominator and counts only the sessions **with something recorded**.
- */
-export interface AttendanceSummary {
-  present: number
-  excused: number
-  absent: number
-  registered: number
-}
 
 /** Mirror of MySessionsResponse — what `/player/my-tables/:id` reads: my calendar and my attendance. */
 export interface MySessions {

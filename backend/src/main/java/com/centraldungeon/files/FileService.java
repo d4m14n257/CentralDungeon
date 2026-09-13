@@ -16,6 +16,7 @@ import com.centraldungeon.files.dto.PublicFileResponse;
 import com.centraldungeon.files.dto.PublishFileRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
+import com.centraldungeon.registrations.RegistrationFileRepository;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.MasterService;
@@ -132,22 +133,35 @@ public class FileService {
      */
     private final TableRegistrationRepository registrationRepository;
 
+    /**
+     * The files a candidate attached to their own application - the fourth source of uses (#232) and
+     * the seventh way a file becomes readable (#60 uso 2, #247).
+     *
+     * <p>Another feature's repository, dragged in by the same read rule that dragged in
+     * {@code SubmissionFileRepository} and {@code TaskFileRepository}: whether a master may open the
+     * sheet a candidate applied with is a question about applications, and answering it anywhere
+     * else is how #206 drifted the first time.
+     */
+    private final RegistrationFileRepository registrationFileRepository;
+
     /** Entity to DTO. */
     private final FileMapper fileMapper;
 
     /**
-     * @param fileRepository           the {@code files} rows
-     * @param tableFileRepository      the attachments, for resolving who may read a file
-     * @param categoryRepository       the cajones each file belongs to (#233)
-     * @param taskFileRepository       the blanks attached to requests, for the same two questions
-     * @param submissionFileRepository the answers a file was handed in with, for the same question
-     * @param userRepository           resolves the uploader from the token
-     * @param storageService           where the bytes live (#15)
-     * @param storageProperties        the cap, the whitelist and the retention window
-     * @param masterService            answers pertenencia (#17, #121, #135)
-     * @param userRoleRepository       the actor's roles, for their own cajones (#237)
-     * @param registrationRepository   who belongs to a table, for reading a request's blank
-     * @param fileMapper               entity to DTO
+     * @param fileRepository            the {@code files} rows
+     * @param tableFileRepository       the attachments, for resolving who may read a file
+     * @param categoryRepository        the cajones each file belongs to (#233)
+     * @param taskFileRepository        the blanks attached to requests, for the same two questions
+     * @param submissionFileRepository  the answers a file was handed in with, for the same question
+     * @param userRepository            resolves the uploader from the token
+     * @param storageService            where the bytes live (#15)
+     * @param storageProperties         the cap, the whitelist and the retention window
+     * @param masterService             answers pertenencia (#17, #121, #135)
+     * @param userRoleRepository        the actor's roles, for their own cajones (#237)
+     * @param registrationRepository    who belongs to a table, for reading a request's blank
+     * @param registrationFileRepository the files a candidate attached to their application, for the
+     *                                   same two questions (#60 uso 2, #247)
+     * @param fileMapper                entity to DTO
      */
     public FileService(
             StoredFileRepository fileRepository,
@@ -161,6 +175,7 @@ public class FileService {
             MasterService masterService,
             UserRoleRepository userRoleRepository,
             TableRegistrationRepository registrationRepository,
+            RegistrationFileRepository registrationFileRepository,
             FileMapper fileMapper) {
         this.fileRepository = fileRepository;
         this.tableFileRepository = tableFileRepository;
@@ -173,6 +188,7 @@ public class FileService {
         this.masterService = masterService;
         this.userRoleRepository = userRoleRepository;
         this.registrationRepository = registrationRepository;
+        this.registrationFileRepository = registrationFileRepository;
         this.fileMapper = fileMapper;
     }
 
@@ -646,16 +662,17 @@ public class FileService {
     }
 
     /**
-     * Where each of the given files is being used, in <b>two</b> queries for the whole page (#232).
+     * Where each of the given files is being used, in four queries for the whole page (#232).
      *
-     * <p>Three and not one: the sources are different joins over different bridge tables, and a
-     * {@code union} in JPQL buys nothing but a query neither Hibernate nor a reader can follow. Three
+     * <p>Four and not one: the sources are different joins over different bridge tables, and a
+     * {@code union} in JPQL buys nothing but a query neither Hibernate nor a reader can follow. Four
      * is still a constant - what matters is that it is not one per row, which is what a naive
      * "resolve the uses of this file" helper called from a loop would have been.
      *
-     * <p>A fourth source, {@code registration_files}, joins them in F2. Its table is in the baseline
-     * DDL and nothing maps it yet, so a player's application files are simply not among the uses a
-     * file reports today.
+     * <p>The fourth source, {@code registration_files}, joins them in F2: a candidate's application
+     * counts as a use only while the application is still alive ({@code Candidate} or
+     * {@code Player}) - a withdrawn or rejected one does not, which is
+     * {@code RegistrationFileRepository.findUsagesByFileIds}'s own filter and #247's whole point.
      *
      * @param files the files to resolve uses for
      * @return the uses per file id; a file nothing points at is absent, which reads as unused
@@ -668,7 +685,8 @@ public class FileService {
         return Stream.of(
                         tableFileRepository.findUsagesByFileIds(ids),
                         taskFileRepository.findUsagesByFileIds(ids),
-                        submissionFileRepository.findUsagesByFileIds(ids))
+                        submissionFileRepository.findUsagesByFileIds(ids),
+                        registrationFileRepository.findUsagesByFileIds(ids))
                 .flatMap(List::stream)
                 .collect(Collectors.groupingBy(
                         FileUsage::fileId, Collectors.mapping(fileMapper::toUsageResponse, Collectors.toList())));
@@ -721,7 +739,7 @@ public class FileService {
     /**
      * The read rule, in one place, and the reason this class has to know about tables at all.
      *
-     * <p>Five ways a file is reachable, in the order they are cheapest to answer:
+     * <p>Seven ways a file is reachable, in the order they are cheapest to answer:
      *
      * <ol>
      *   <li><b>It is yours.</b> Whatever else is true about it.
@@ -735,6 +753,16 @@ public class FileService {
      *       see the row on the answer and get a 404 opening it, which is the exact mismatch #206 had
      *       to fix for the files a table shares. It is the master's, and nobody else's: the submitter
      *       already reaches it through the first way.
+     *   <li><b>The blank a master attached to a request</b> is readable by everybody the request
+     *       reaches - the master who wrote it, or a candidate/player it addresses (#63).
+     *   <li><b>It was attached to an application to a table you run</b> (#60 uso 2, #247). The sister
+     *       of the fifth (#211): a master has to be able to open the character sheet a candidate
+     *       applied with, and without this they would see the row on the application and get a 404
+     *       opening it. It is the master's, and nobody else's: the applicant already reaches it
+     *       through the first way. Only a <b>live</b> application counts -
+     *       {@code RegistrationFileRepository.findTableIdsByApplicationFileId} excludes a withdrawn
+     *       or rejected one, which is #247's whole reason to exist: without that filter, withdrawing
+     *       would leave the file permanently readable by a master who has nothing left to do with it.
      * </ol>
      *
      * <p><b>The fourth one is deliberately as wide as the table itself, and no wider.</b> A shared
@@ -779,6 +807,16 @@ public class FileService {
             if (masterService.isMasterOf(gameTableId, actorId)
                     || registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
                             gameTableId, actorId, REQUEST_READERS)) {
+                return file;
+            }
+        }
+        // The seventh: what a candidate attached to their application is readable by the people
+        // running the table they applied to (#60 uso 2, #247) - the sister of the fifth, for
+        // applications rather than answers. The repository already excludes a withdrawn or
+        // rejected application, so this loop never even sees a table whose master should not reach
+        // it any more.
+        for (String gameTableId : registrationFileRepository.findTableIdsByApplicationFileId(fileId)) {
+            if (masterService.isMasterOf(gameTableId, actorId)) {
                 return file;
             }
         }

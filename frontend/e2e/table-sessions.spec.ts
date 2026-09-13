@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
-import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { applyToTable } from './helpers/application'
+import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 /**
  * F1.3 end to end, against the real backend: the calendar that gets materialized when the table
@@ -65,6 +66,8 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
 
   const id = page.url().split('/master/tables/')[1]
   expect(id).toBeTruthy()
+  // Born in Draft since #245: nothing an admin can approve until it is sent.
+  await submitForReview(page, id as string)
   return id as string
 }
 
@@ -154,8 +157,7 @@ test('a player sees their own calendar and their attendance as three numbers', a
     await player.page.goto(`/player/tables/${tableId}`)
     // The public detail already shows the real calendar, not only the weekly shape.
     await expect(player.page.getByText('Sesión 1')).toBeVisible()
-    await player.page.getByRole('button', { name: 'Postularme' }).click()
-    await player.page.getByRole('dialog').getByRole('button', { name: 'Postularme' }).click()
+    await applyToTable(player.page)
 
     await master.page.goto(`/master/tables/${tableId}`)
     const candidate = master.page.getByRole('listitem').filter({ hasText: playerDiscordId }).first()

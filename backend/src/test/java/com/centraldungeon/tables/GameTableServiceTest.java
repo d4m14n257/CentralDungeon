@@ -15,14 +15,18 @@ import com.centraldungeon.tables.dto.AddMasterRequest;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.common.search.SearchQuery;
 import com.centraldungeon.common.text.RichTextSanitizer;
 import com.centraldungeon.files.TableFileService;
+import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.dto.AssignMastersRequest;
+import com.centraldungeon.tables.dto.AttendanceSummaryResponse;
 import com.centraldungeon.tables.dto.ChangeTableStatusRequest;
 import com.centraldungeon.tables.dto.CreateGameTableRequest;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
+import com.centraldungeon.tables.dto.GameTableHistoryResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
 import com.centraldungeon.common.exception.InvalidRequestException;
@@ -36,17 +40,21 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import org.jspecify.annotations.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -91,6 +99,9 @@ class GameTableServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private GameTableSearchResolver gameTableSearchResolver;
+
     private GameTableService gameTableService;
 
     @BeforeEach
@@ -98,7 +109,8 @@ class GameTableServiceTest {
         gameTableService = new GameTableService(
                 gameTableRepository, tableTypeRepository, tableRegistrationRepository, tableStatusChangeRepository, masterService,
                 gameTableMapper, userService, tableScheduleService, scheduleConflictService, tableCatalogService,
-                tableSessionService, tableFileService, new RichTextSanitizer(), notificationService);
+                tableSessionService, tableFileService, new RichTextSanitizer(), notificationService,
+                gameTableSearchResolver);
     }
 
     @Test
@@ -442,14 +454,21 @@ class GameTableServiceTest {
         assertThatThrownBy(() -> gameTableService.getDetail("table-7e", "player-1")).isInstanceOf(NotFoundException.class);
     }
 
+    /**
+     * The explorer's visibility rules - public statuses only, and never a table the actor runs
+     * (#154) - moved into {@code GameTableSearchSpecification} when the search box arrived, so what a
+     * unit test can still assert here is the mapping. The predicate itself is covered by
+     * {@code GameTableSearchIT} against real MySQL, which is the only place a Criteria predicate can
+     * be proven to mean what it says.
+     */
     @Test
-    void listExcludesTablesTheActorMasters() {
+    void listMapsEveryTableTheExplorerQueryReturns() {
         GameTable table = persistedTable("table-4b", GameTableStatus.Opened);
         User primaryUser = persistedUser("someone-else");
         Master primary = new Master(table, primaryUser, MasterType.Primary);
         Pageable pageable = PageRequest.of(0, 20);
-        when(gameTableRepository.findByStatusInAndNotMasteredByActor(
-                        List.of(GameTableStatus.Opened, GameTableStatus.InProgress), "player-1", pageable))
+        when(gameTableSearchResolver.resolveCatalogTerms(any())).thenReturn(Map.of());
+        when(gameTableRepository.findAll(ArgumentMatchers.<Specification<GameTable>>any(), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of(table)));
         when(masterService.findByGameTable("table-4b")).thenReturn(List.of(primary));
         MasterSummaryResponse primarySummary = new MasterSummaryResponse("someone-else", "Someone Else", 8000, "Primary");
@@ -458,11 +477,46 @@ class GameTableServiceTest {
                 new GameTableSummaryResponse("table-4b", "Test", "Opened", null, null, null, 0, List.of(), false, primarySummary);
         when(gameTableMapper.toSummary(table, 0, primarySummary, List.of(), false)).thenReturn(summary);
 
-        var result = gameTableService.list(pageable, "player-1");
+        var result = gameTableService.list(null, pageable, "player-1");
 
         assertThat(result.content()).containsExactly(summary);
-        org.mockito.Mockito.verify(gameTableRepository)
-                .findByStatusInAndNotMasteredByActor(List.of(GameTableStatus.Opened, GameTableStatus.InProgress), "player-1", pageable);
+    }
+
+    /**
+     * The resolution of #246 happens before the query is built, and this is what says so: the service
+     * hands the resolver a parsed query, not the raw string, and the criterion arrives as a term of
+     * the field it was written with.
+     */
+    @Test
+    void listResolvesCatalogCriteriaBeforeQueryingTheDatabase() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(gameTableSearchResolver.resolveCatalogTerms(any())).thenReturn(Map.of());
+        when(gameTableRepository.findAll(ArgumentMatchers.<Specification<GameTable>>any(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        gameTableService.list("/table_tag horror", pageable, "player-1");
+
+        ArgumentCaptor<SearchQuery> captor = ArgumentCaptor.forClass(SearchQuery.class);
+        verify(gameTableSearchResolver).resolveCatalogTerms(captor.capture());
+        assertThat(captor.getValue().terms()).singleElement().satisfies(term -> {
+            assertThat(term.field()).isEqualTo("table_tag");
+            assertThat(term.values()).containsExactly("horror");
+        });
+    }
+
+    /** An empty box is not a criterion: the query the resolver gets has nothing in it to resolve. */
+    @Test
+    void listWithAnEmptySearchBoxResolvesNothing() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(gameTableSearchResolver.resolveCatalogTerms(any())).thenReturn(Map.of());
+        when(gameTableRepository.findAll(ArgumentMatchers.<Specification<GameTable>>any(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        gameTableService.list("   ", pageable, "player-1");
+
+        ArgumentCaptor<SearchQuery> captor = ArgumentCaptor.forClass(SearchQuery.class);
+        verify(gameTableSearchResolver).resolveCatalogTerms(captor.capture());
+        assertThat(captor.getValue().isEmpty()).isTrue();
     }
 
     @Test
@@ -482,6 +536,159 @@ class GameTableServiceTest {
         var result = gameTableService.listManaged("master-1", pageable);
 
         assertThat(result.content()).containsExactly(summary);
+    }
+
+    // ---------------------------------------------------------------- /my/tables and its history (#133a)
+
+    /**
+     * #133a: the registration alone never says whether a run is over - it stays {@code Player}
+     * forever once accepted. What decides "still mine to see here" is the table's own status, and
+     * this fakes the repository just enough to prove the service asks for the right ones: a table
+     * that ended is filtered out of /my/tables even though the registration on it never changed.
+     */
+    @Test
+    @DisplayName("/mine no devuelve una mesa Finished ni una Canceled (#133a)")
+    void listMineExcludesFinishedAndCanceledTables() {
+        GameTable opened = persistedTable("table-live", GameTableStatus.Opened);
+        GameTable finished = persistedTable("table-finished", GameTableStatus.Finished);
+        GameTable canceled = persistedTable("table-canceled", GameTableStatus.Canceled);
+        Pageable pageable = PageRequest.of(0, 20);
+        stubStatusFilteredRegistrations(pageable, opened, finished, canceled);
+        stubPrimarylessSummary(opened);
+
+        var result = gameTableService.listMine("player-1", pageable);
+
+        assertThat(result.content()).extracting(GameTableSummaryResponse::id).containsExactly("table-live");
+    }
+
+    /** #32: a paused table is frozen, not over - it stays among "mine" and never moves to the history. */
+    @Test
+    @DisplayName("/mine sí devuelve una mesa en Pause: está viva, solo congelada (#32)")
+    void listMineIncludesPausedTables() {
+        GameTable paused = persistedTable("table-paused", GameTableStatus.Pause);
+        Pageable pageable = PageRequest.of(0, 20);
+        stubStatusFilteredRegistrations(pageable, paused);
+        stubPrimarylessSummary(paused);
+
+        var result = gameTableService.listMine("player-1", pageable);
+
+        assertThat(result.content()).extracting(GameTableSummaryResponse::id).containsExactly("table-paused");
+    }
+
+    /** The mirror of the two tests above: the history shows exactly the two endings, nothing else. */
+    @Test
+    @DisplayName("el historial devuelve Finished y Canceled, y nada más (#133a)")
+    void listMineHistoryReturnsOnlyTheTwoEndings() {
+        GameTable opened = persistedTable("table-still-live", GameTableStatus.Opened);
+        GameTable finished = persistedTable("table-done", GameTableStatus.Finished);
+        GameTable canceled = persistedTable("table-called-off", GameTableStatus.Canceled);
+        Pageable pageable = PageRequest.of(0, 20);
+        stubStatusFilteredRegistrations(pageable, opened, finished, canceled);
+        when(tableSessionService.summarizeByTables(any(), eq("player-1"))).thenReturn(Map.of());
+        when(gameTableMapper.toHistory(any(GameTable.class), any())).thenAnswer(invocation -> {
+            GameTable table = invocation.getArgument(0);
+            return new GameTableHistoryResponse(
+                    table.getId(), table.getName(), table.getStatus().name(), null, null, null,
+                    new AttendanceSummaryResponse(0, 0, 0, 0));
+        });
+
+        var result = gameTableService.listMineHistory("player-1", pageable);
+
+        assertThat(result.content()).extracting(GameTableHistoryResponse::id)
+                .containsExactlyInAnyOrder("table-done", "table-called-off");
+    }
+
+    /**
+     * #133a, #137: the attendance travels with each table's card, resolved for the whole page in one
+     * grouped read - {@link TableSessionService#summarizeByTables} and not one {@code summarize}
+     * call per row - and {@code Unknown} stays out of the denominator the same way #137 already
+     * keeps it out everywhere else.
+     */
+    @Test
+    @DisplayName("el historial trae la asistencia de cada mesa en una sola consulta agrupada, sin Unknown en el denominador")
+    void listMineHistoryCarriesEachTablesOwnAttendanceFromOneGroupedRead() {
+        GameTable tableOne = persistedTable("table-h1", GameTableStatus.Finished);
+        GameTable tableTwo = persistedTable("table-h2", GameTableStatus.Canceled);
+        Pageable pageable = PageRequest.of(0, 20);
+        stubStatusFilteredRegistrations(pageable, tableOne, tableTwo);
+        AttendanceSummaryResponse tableOneAttendance = new AttendanceSummaryResponse(2, 0, 1, 3);
+        AttendanceSummaryResponse tableTwoAttendance = new AttendanceSummaryResponse(0, 0, 0, 0);
+        when(tableSessionService.summarizeByTables(eq(List.of("table-h1", "table-h2")), eq("player-1")))
+                .thenReturn(Map.of("table-h1", tableOneAttendance, "table-h2", tableTwoAttendance));
+        when(gameTableMapper.toHistory(tableOne, tableOneAttendance)).thenReturn(new GameTableHistoryResponse(
+                "table-h1", "Test", "Finished", null, null, null, tableOneAttendance));
+        when(gameTableMapper.toHistory(tableTwo, tableTwoAttendance)).thenReturn(new GameTableHistoryResponse(
+                "table-h2", "Test", "Canceled", null, null, null, tableTwoAttendance));
+
+        var result = gameTableService.listMineHistory("player-1", pageable);
+
+        // One call for the whole page, not one per table - the N+1 the contract calls out by name.
+        verify(tableSessionService).summarizeByTables(any(), eq("player-1"));
+        assertThat(result.content()).extracting(GameTableHistoryResponse::attendance)
+                .containsExactlyInAnyOrder(tableOneAttendance, tableTwoAttendance);
+        // Table two never had a row recorded (all Unknown) and reads as zero, not as absent.
+        assertThat(result.content()).filteredOn(response -> response.id().equals("table-h2"))
+                .singleElement()
+                .extracting(response -> response.attendance().registered())
+                .isEqualTo(0);
+    }
+
+    /**
+     * A row that never became {@code Player} is a candidate the master has not accepted, and it
+     * belongs in neither listing (#28, #133a) - the repository is asked for {@code Player} on both
+     * calls, never {@code Candidate}.
+     */
+    @Test
+    @DisplayName("un actor que fue Candidate y nunca Player no aparece en /mine ni en su historial")
+    void aCandidateWhoNeverBecamePlayerAppearsInNeitherListing() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(tableRegistrationRepository.findByUser_IdAndStatusAndGameTable_StatusIn(
+                        eq("player-1"), eq(TableRegistrationStatus.Player), any(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        gameTableService.listMine("player-1", pageable);
+        gameTableService.listMineHistory("player-1", pageable);
+
+        verify(tableRegistrationRepository, org.mockito.Mockito.times(2))
+                .findByUser_IdAndStatusAndGameTable_StatusIn(eq("player-1"), eq(TableRegistrationStatus.Player), any(), eq(pageable));
+        verify(tableRegistrationRepository, never())
+                .findByUser_IdAndStatusAndGameTable_StatusIn(eq("player-1"), eq(TableRegistrationStatus.Candidate), any(), any());
+    }
+
+    /**
+     * Fakes the derived query {@code findByUser_IdAndStatusAndGameTable_StatusIn} enough to prove the
+     * *service* asks for the right set of table statuses: one Player registration per given table,
+     * and the fake filters by whatever status collection the service actually passed - the real
+     * derived query itself is proven against MySQL by {@code GameTableHistoryIT}.
+     */
+    private void stubStatusFilteredRegistrations(Pageable pageable, GameTable... tables) {
+        List<TableRegistration> registrations = new java.util.ArrayList<>();
+        for (GameTable table : tables) {
+            TableRegistration registration = new TableRegistration(table, persistedUser("player-1"), null);
+            registration.setStatus(TableRegistrationStatus.Player);
+            registrations.add(registration);
+        }
+        when(tableRegistrationRepository.findByUser_IdAndStatusAndGameTable_StatusIn(
+                        eq("player-1"), eq(TableRegistrationStatus.Player), any(), eq(pageable)))
+                .thenAnswer(invocation -> {
+                    java.util.Collection<GameTableStatus> statuses = invocation.getArgument(2);
+                    List<TableRegistration> matching = registrations.stream()
+                            .filter(registration -> statuses.contains(registration.getGameTable().getStatus()))
+                            .toList();
+                    return new PageImpl<>(matching);
+                });
+    }
+
+    /** /my/tables needs a Primary to map a summary at all; this wires the minimum for one table. */
+    private void stubPrimarylessSummary(GameTable table) {
+        Master primary = new Master(table, persistedUser("primary-of-" + table.getId()), MasterType.Primary);
+        when(masterService.findByGameTable(table.getId())).thenReturn(List.of(primary));
+        MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-of-" + table.getId(), "Primary", 8000, "Primary");
+        when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
+        GameTableSummaryResponse summary =
+                new GameTableSummaryResponse(table.getId(), "Test", table.getStatus().name(), null, null, null, 0, List.of(), false, primarySummary);
+        when(gameTableMapper.toSummary(eq(table), org.mockito.ArgumentMatchers.anyInt(), eq(primarySummary), any(), org.mockito.ArgumentMatchers.anyBoolean()))
+                .thenReturn(summary);
     }
 
     @Test

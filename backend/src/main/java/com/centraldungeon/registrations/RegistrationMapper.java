@@ -1,6 +1,8 @@
 package com.centraldungeon.registrations;
 
+import com.centraldungeon.registrations.dto.RegistrationFileResponse;
 import com.centraldungeon.registrations.dto.RegistrationResponse;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -8,6 +10,13 @@ import org.mapstruct.Mapping;
 @Mapper
 public interface RegistrationMapper {
 
+    /**
+     * @param registration the application to describe
+     * @param attachedFiles what the applicant attached (#60 uso 2), resolved by the caller - a
+     *                      mapper never touches a repository (arquitectura.md 2.2). Empty when
+     *                      nothing was attached
+     * @return the application as its reader sees it
+     */
     @Mapping(target = "gameTableId", source = "registration.gameTable.id")
     @Mapping(target = "gameTableName", source = "registration.gameTable.name")
     @Mapping(target = "userId", source = "registration.user.id")
@@ -19,5 +28,6 @@ public interface RegistrationMapper {
     @Mapping(target = "status", expression = "java(registration.getStatus().name())")
     @Mapping(target = "rejectionJustification", ignore = true)
     @Mapping(target = "rejectionReasonCode", ignore = true)
-    RegistrationResponse toResponse(TableRegistration registration);
+    @Mapping(target = "attachedFiles", source = "attachedFiles")
+    RegistrationResponse toResponse(TableRegistration registration, List<RegistrationFileResponse> attachedFiles);
 }

@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
-import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 /**
  * F1.6 end to end: co-masters and the work tray.
@@ -48,7 +48,10 @@ async function createTableThroughWizard(page: Page, name: string) {
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
   await expect(page.getByRole('heading', { name })).toBeVisible()
-  return page.url().split('/master/tables/')[1]
+  const id = page.url().split('/master/tables/')[1] as string
+  // Born in Draft since #245: a draft reaches no tray and no admin, so it is sent right away.
+  await submitForReview(page, id)
+  return id
 }
 
 /**

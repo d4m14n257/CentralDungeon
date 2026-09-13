@@ -84,4 +84,19 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select m from Master m where m.gameTable.id = :gameTableId")
     List<Master> findByGameTableIdForUpdate(@Param("gameTableId") String gameTableId);
+
+    /**
+     * Every master row the person ever held, across every table, live and deleted alike - the caller
+     * filters by status. Table already fetched.
+     *
+     * <p>Unlike {@link #findLiveByUser}, deliberately unfiltered: it backs the profile visibility
+     * check of modelo-datos.md §5 (#41a), where a deleted row has to be seen in order to be told apart
+     * from one that counts (#216) - filtering it out in the query would leave nothing for that rule
+     * to read.
+     *
+     * @param userId the person whose profile visibility is being decided
+     * @return their master rows in every table, whatever their status
+     */
+    @Query("select m from Master m join fetch m.gameTable where m.user.id = :userId")
+    List<Master> findByUser_Id(@Param("userId") String userId);
 }

@@ -793,6 +793,9 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Al aceptar a alguien, sus otras postulaciones `Candidate` que chocan **se notifican, no se rechazan**: hasta que lo aceptan en una no hay compromiso y elegir es suyo | `RegistrationService` | #70, #178 |
 | **Se puede retirar la propia postulación** mientras esté en `Candidate`. Es el borrado lógico de `table_registrations` que la notificación de choque exige poder resolver. Ya aceptada no: eso se habla con el master | `RegistrationService` | #175, #178 |
 | Una postulación `Deleted` —retirada o arrastrada por la mesa— no aparece en ninguna lectura | `RegistrationService` | #25, #175 |
+| Los archivos de una postulación se **vinculan, nunca se copian**, y pasan por el mismo permiso que adjuntar a una mesa: propios o publicados. El vínculo archiva el cajón `PlayerApplication` | `RegistrationService` · `FileService.classify` | #60, #79, #233 |
+| **Retirar una postulación no arrastra sus archivos**: `registration_files` es el registro de qué se mandó y retirarse no lo deshace. Lo que la cascada no hace lo hacen las lecturas — un vínculo cuya postulación no está viva **no cuenta como uso**, así que el archivo vuelve a estar al alcance de la purga | `FileService.usagesByFileId` · `FileRetentionService` | #75, #232, #247 |
+| **Una postulación enviada no se edita**: no hay `PUT` ni forma de quitarle un archivo. Lo que se puede es retirarla | `RegistrationService` | #238, #247 |
 
 ### Sesiones y peticiones
 
@@ -867,7 +870,9 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Regla | Dónde | Ref. |
 |---|---|---|
 | Los grupos son de sinónimos, profundidad 1: un alias apunta al canónico, nunca a otro alias | `CatalogService` | #59 |
-| Buscar por cualquier miembro devuelve las mesas etiquetadas con cualquier otro del grupo | `CatalogService` | #54, #56 |
+| Buscar por cualquier miembro devuelve las mesas etiquetadas con cualquier otro del grupo. **La equivalencia es simétrica y plana**: dos alias del mismo grupo se encuentran entre sí sin pasar por ser el canónico | `AbstractCatalogService.resolveGroupIdsByName` · `GameTableSearchSpecification` | #54, #56, #59 |
+| **Un criterio que no resolvió a ningún valor aceptado no coincide con nada**, nunca con todo: leerlo como «sin filtro» convierte un error de tipeo en el listado completo de la plataforma | `GameTableSearchSpecification` | #246 |
+| **El buscador solo acota lo que el lector ya podía ver**: las reglas de visibilidad y los criterios se unen con `and` y nunca se pliegan en la misma expresión, así que un `/or` entre dos criterios no puede cruzar el filtro | `GameTableSearchSpecification.forExplorer` | #121, #154, #246 |
 | Masters y admins proponen valores; solo un admin acepta y clasifica | `CatalogService` | #55 |
 | Un valor en `Created` no filtra ni se muestra a los jugadores; al aceptarse, sí | `CatalogService` | #57 |
 | La mesa muestra siempre el alias que le puso su master | `CatalogService` | #58 |

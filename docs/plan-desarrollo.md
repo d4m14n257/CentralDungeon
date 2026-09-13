@@ -95,6 +95,19 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 ## 4. Fases
 
+**Seis, desde #250**: entró **F4 Revisión** entre Admin y Comunidad, y las dos que venían detrás corrieron un número.
+
+| Fase | Qué entrega | Estado |
+|---|---|---|
+| **F1 — Master** | La mesa completa, de la creación al cierre | ✅ **Hecha, sin revisar** |
+| **F2 — Jugador** | Todo lo que el jugador hace con lo que el master publicó | ✅ **Hecha, sin revisar** |
+| **F3 — Admin y Owner** | La comunidad se administra, y la línea entre los dos roles queda escrita | ⏳ |
+| **F4 — Revisión** | Mapa de la interfaz, matriz de roles, integridad y seguridad — y la revisión del cliente | ⏳ |
+| **F5 — Comunidad** | Comentarios y karma, con anonimato real | ⏳ |
+| **F6 — Operación** | Tiempo real, auditoría y el panel exclusivo del owner | ⏳ |
+
+**«Hecha, sin revisar» es un estado real y no un eufemismo.** Quiere decir: sus reglas están implementadas, cada una con su test, las suites en verde, y **nadie miró todavía el producto terminado** — si cada pantalla es alcanzable navegando, si tiene sus cuatro estados, si la matriz de roles dice lo que promete. Eso es F4, y cada fase llega ahí con su deuda de revisión escrita (§6, punto 5).
+
 ### F1 — Master
 
 **La mesa completa, de la creación al cierre.** Es la fase que produce lo que todo lo demás consume.
@@ -107,7 +120,7 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **El mínimo del jugador para poder probar**: en `/tables/:id` y `/my/tables/:id`, lectura de la agenda, las sesiones y los archivos públicos, más las peticiones que le aplican **con su entrega** — texto y archivos. Entregar se adelantó de F2 a F1.5 (#210): sin nadie que pueda entregar, el padrón de faltantes muestra a todos como faltantes siempre y la regla que más importa del subsistema —las entregas se acumulan (#76)— queda sin ejercitar. El resto del lado del jugador sigue siendo solo lectura.
 
-**No entra**: pedir pausa ni veto (F3, necesitan `approval_requests`), el archivo de personaje en la postulación (F2), karma (F4). ~~`/my/files`~~ — **adelantada a F1**: es la pantalla que le da sentido al historial de #65, y sin ella la reutilización solo existe dentro del diálogo de adjuntar. Llegó junto con la clasificación por flujo (#232, #233) y con los archivos del pedido (#236), que no existían.
+**No entra**: pedir pausa ni veto (F3, necesitan `approval_requests`), el archivo de personaje en la postulación (F2), karma (F5). ~~`/my/files`~~ — **adelantada a F1**: es la pantalla que le da sentido al historial de #65, y sin ella la reutilización solo existe dentro del diálogo de adjuntar. Llegó junto con la clasificación por flujo (#232, #233) y con los archivos del pedido (#236), que no existían.
 
 **Lo que se ajustó después, sobre lo ya entregado**: el buscador quedó **uno solo de verdad** (#240) — elegir un comando de la lista escribe el mismo texto que tipearlo, **Enter** es lo único que cierra un criterio en chips, y `SearchQueryValue` perdió `activeField`; el cableado (estado, string canónico, debounce, `?q=`) se unificó en `useSearchQuery` y cada feature declara sus comandos en su `searchFields.ts`; la ayuda `basics.search` recibe los comandos de la caja que la abrió y arma con ellos su lista y sus ejemplos. `/my/files` pasó a ser **de players y masters** (#241): quien no tiene ninguno de los dos roles no la ve en el menú y la pantalla se lo dice — la regla vive en `useHasPersonalLibrary` y sigue la forma de `useAvailableContexts`, con `hasManagedTables` para el co-master de #135. Y su parte visual se acotó (#242): el buscador es el único filtro, sin la fila de toggles de cajón, con el placeholder diciendo el criterio básico y nada de comandos. **Cuidado al leer #164 y #239**: las dos filas están corregidas por #240 y lo dicen al final; #233 y #237 apuntan a #242 y #241.
 
@@ -117,25 +130,51 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **Todo lo que el jugador hace con lo que el master publicó.**
 
-**Backend** — `task_submissions` + `submission_files` (#63, #76). `registration_files` para el archivo de personaje en la postulación. Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56). **Retirar una postulación ya no está acá**: se adelantó a F1, porque la notificación de choque de horarios (#178) pide una acción que sin ella no existe.
+> **El detalle de implementación está en [`fase-2-jugador.md`](fase-2-jugador.md)**: las cinco rebanadas, el punto de partida verificado contra el repositorio y el camino de verificación. Acá está el alcance; allá, cómo se construye.
 
-**Frontend** — `/my/tables/:id` completo: agenda en hora local, sesiones, su asistencia y sus peticiones — entregar respuestas con adjuntos ya llegó con F1.5 (#210). Archivo de personaje al postularse, sobre el `FilePicker` de F1. **`/my/files`** (#65) y **`/my/history`** (#133). Filtros del explorador por sistema, tag y plataforma — es donde el buscador estrena `/tag`, el caso que motivó el diseño de #164. **`/profile`** y **`/users/:id`** con lo que exista; el karma llega en F4.
+**F1 se llevó por delante buena parte de lo que este párrafo prometía**, y lo que queda es lo que sobrevivió. Se adelantaron: entregar respuestas a las peticiones, entera y con archivos (#210); `/my/files`, que además creció con los cajones (#232, #233, #237, #241, #242); retirar una postulación, que el choque de horarios exigía (#178); y `/my/tables/:id` completo —agenda, sesiones, asistencia y peticiones—, que era el mínimo del jugador para poder probar F1.
+
+**Backend** — `registration_files` para el archivo de personaje en la postulación (#60 uso 2), con su cajón `PlayerApplication` y la cuarta consulta de usos (#232, #233). Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56) — el backend de F1.1 ya los resuelve y nada los consume. Las cinco reglas de **visibilidad de perfiles** de `modelo-datos.md` §5, ninguna implementada todavía (#41, #44, #45, #47), con la asistencia agregada sobre todas las mesas (#137).
+
+**Frontend** — Filtros del explorador por sistema, tag y plataforma: es donde el buscador estrena `/tag`, el caso que motivó el diseño de #164. Archivo de personaje al postularse, sobre el `FilePicker` y la subida diferida de F1 (#238), con el paso de revisión que una postulación no editable obliga. **`/player/profile`** y **`/player/users/:id`** con lo que exista; el karma llega en F4. **`/player/history`** (#133), y con él `/player/my-tables` acotada a lo vivo.
+
+**Y cierra tres deudas de F1**: los tipos de notificación `ScheduleConflict`, `SessionScheduled` y `SessionCanceled` no llevan a ningún lado, y sus destinos son pantallas de este contexto.
 
 **Entrega**: el jugador vive la mesa dentro del sistema, no solo se postula.
 
 ### F3 — Admin y Owner
 
-**Revisión, moderación de flujo y administración.**
+**Revisión, moderación de flujo y administración — y la línea entre los dos roles que administran.**
 
-**Backend** — `approval_requests` como mecanismo único para todo pedido con aprobación, con reserva (#42, #78, #90, #100). Pausa pedida por un master (#32) y veto acotado a la mesa, aplicado por el `Primary` y pedible por un `Secondary` (#39, #71). **La administración de catálogos ya no está acá**: se adelantó a F1 (#179) — dejarla en esta fase le abría a F1 el hueco de proponer valores que nadie podía aceptar. `system_settings` (#141): la tabla clave-valor, el `SettingsService` con accesores tipados y la auditoría de cada cambio; los valores que hoy son constantes —karma inicial, justificación del rechazo automático (#34)— pasan a leerse por el service. El service que otorga roles, con la exclusión `Admin`/`Owner` que #169 dejó pendiente, y el bloqueo de cuentas (#84).
+> **El detalle de implementación está en [`fase-3-admin-owner.md`](fase-3-admin-owner.md)**: las cinco rebanadas, la matriz de capacidades y el camino de verificación. Acá está el alcance; allá, cómo se construye.
 
-**Frontend** — **`/admin/queue`**, la bandeja compartida con reserva; al nacer, Aprobar y Pedir cambios **se mudan ahí** desde `/admin/tables` (#176). **`/admin/tables`** completo: todas las mesas, cualquier estado, filtros y `?q=` (#176), con los botones de pausa y reanudación que hoy tienen endpoint y ninguna pantalla (#163). **`/admin/users`**, **`/admin/settings`** y **`/admin/requests`** — `/admin/catalogs` llegó en F1 (#179).
+**Backend** — El service que otorga roles, con la exclusión `Admin`/`Owner` que #169 dejó pendiente, y el bloqueo de cuentas (#84). `approval_requests` como mecanismo único para todo pedido con aprobación, con reserva (#42, #78, #90, #100). Pausa pedida por un master (#32) y veto acotado a la mesa, aplicado por el `Primary` y pedible por un `Secondary` (#39, #71) — con la exclusión del vetado en la lectura de archivos que #206 dejó anotada para esta fase. **La administración de catálogos ya no está acá**: se adelantó a F1 (#179) — dejarla en esta fase le abría a F1 el hueco de proponer valores que nadie podía aceptar. `system_settings` (#141): la tabla clave-valor, el `SettingsService` con accesores tipados y la auditoría de cada cambio; los valores que hoy son constantes —karma inicial, justificación del rechazo automático (#34), ventana de visibilidad (#44)— pasan a leerse por el service.
 
-La bandeja funciona **por HTTP** en esta fase; el vivo es F5.
+**Frontend** — **`/admin/users`**, con los roles y el bloqueo. **`/admin/queue`**, la bandeja compartida con reserva; al nacer, Aprobar y Pedir cambios **se mudan ahí** desde `/admin/tables` (#176). **`/admin/tables`** completo: todas las mesas, cualquier estado, filtros y `?q=` (#176), con los botones de pausa y reanudación que hoy tienen endpoint y ninguna pantalla (#163). **`/admin/settings`** y **`/admin/requests`** — `/admin/catalogs` llegó en F1 (#179).
 
-**Entrega**: la comunidad se administra desde la aplicación.
+**La línea entre `Admin` y `Owner` se traza acá y queda escrita** (#67, #89, #169). En F3 la diferencia es **exactamente una**: quién puede otorgar el rol del otro. Todo lo demás que separa a un owner —auditoría, borrado físico, migración de cuenta, «ver como»— es **F6**, y hasta entonces un owner usa la superficie de admin completa y nada más (#169). La matriz vive en `fase-3-admin-owner.md` §3.
 
-### F4 — Comunidad
+La bandeja funciona **por HTTP** en esta fase; el vivo es F6.
+
+**Entrega**: la comunidad se administra desde la aplicación, y quién puede qué está escrito en un solo lugar.
+
+### F4 — Revisión
+
+**No construye producto. Verifica las tres fases anteriores juntas, y termina con la revisión del cliente.**
+
+> **El detalle está en [`fase-4-revision.md`](fase-4-revision.md)**: las cinco rebanadas y el instrumento de cada una.
+
+Nace de #250, que sacó la revisión del final de cada fase. El motivo, en una frase: **una costura no se puede mirar hasta que existen sus dos lados.** F1.7 revisó F1 contra F1 y encontró lo que podía; la matriz de roles, la seguridad entre actores y el mapa completo de la interfaz no tienen respuesta hasta que los cuatro roles están construidos.
+
+- **El mapa de la interfaz**, entero: cada ruta del sitemap con su guard, desde qué pantalla se llega y qué sale de ella — **y el inventario de lo que quedó flotando**: endpoints sin pantalla, hooks montados en cero lugares, valores de enum que nada produce, pantallas alcanzables solo escribiendo la URL.
+- **La matriz de roles**, verificada con tests y no leída de un `@PreAuthorize`, incluida la pertenencia: el rol correcto sobre el recurso ajeno.
+- **Integridad**: las invariantes que MySQL no sostiene, las referencias huérfanas que #78 obliga a vigilar, y la coherencia del borrado lógico en todos los caminos de lectura.
+- **Seguridad**: IDOR por recurso, las vías de lectura de un archivo, la lista blanca del sanitizador, el CSRF de `/auth/refresh`, y el `404` del vetado que nunca debe ser `403`.
+- **La revisión mano a mano del cliente**, con su registro de hallazgos y cada uno triado: bug o alcance diferido.
+
+**Entrega**: se sabe qué hay construido, quién lo alcanza y qué está roto — con nombre y apellido.
+
+### F5 — Comunidad
 
 **Comentarios y karma**, que es lo que convierte al sistema en una comunidad y no en un calendario.
 
@@ -145,7 +184,7 @@ La bandeja funciona **por HTTP** en esta fase; el vivo es F5.
 
 **Entrega**: karma funcionando, con anonimato real.
 
-### F5 — Operación
+### F6 — Operación
 
 **Lo que hace la plataforma operable, y el panel exclusivo del owner.**
 
@@ -155,7 +194,7 @@ La bandeja funciona **por HTTP** en esta fase; el vivo es F5.
 
 **"Ver como" (#140) va acá, y no en F3.** No es preferencia de orden: `audit_logs.impersonation_id` es FK a `impersonation_sessions`, y sobre todo, **sin la auditoría la función es exactamente la versión sin responsable que #140 descartó** — un admin actuando con la identidad de otro y nadie capaz de reconstruir qué pasó. Se construye completa o no se construye: sesión con motivo obligatorio, caducidad a los 30 minutos, bloqueo sobre `Admin` y `Owner`, bloqueo de todo lo irreversible, **exclusión total de lo que toque comentarios** (#43, #45), y notificación inmediata a la persona. Por lo mismo esperan acá el borrado físico y la migración de cuenta: son de la misma clase.
 
-**Un owner usa toda la superficie de admin desde que existe** (#169); lo que espera a F5 es lo exclusivo suyo.
+**Un owner usa toda la superficie de admin desde que existe** (#169); lo que espera a F6 es lo exclusivo suyo.
 
 **Repaso final**: los tipos de notificación que falten y las rutas del sitemap que hayan quedado sin construir.
 
@@ -173,8 +212,8 @@ Para leer las decisiones ya escritas, que citan la numeración anterior:
 | E2 sub-rebanada 5 — `/admin/users`, `/master`, `/my/history`, `/admin/requests`, `/admin/tables` completo | `/master` en **F1**, `/my/history` en **F2**, el resto en **F3** |
 | E3 — sesiones y peticiones | Lo que publica el master en **F1**; lo que entrega el jugador en **F2** |
 | E4 — archivos | **F1** (subsistema, preparación, `/my/files`, cajones #232/#233, formularios del pedido #236) y **F2** (archivo de personaje en la postulación: `registration_files` es el cajón `PlayerApplication` y la cuarta fuente de usos) |
-| E5 — comentarios y karma | **F4** |
-| E6 — tiempo real, auditoría y owner | **F5** |
+| E5 — comentarios y karma | **F5** |
+| E6 — tiempo real, auditoría y owner | **F6** |
 
 ## 5. Motor de notificaciones
 
@@ -212,18 +251,26 @@ Una fase se cierra cuando cumple las ocho:
 2. Cada una tiene su test unitario, con los caminos de error y no solo el feliz.
 3. Las invariantes de concurrencia de su alcance tienen test de integración con Testcontainers.
 4. El flujo principal está cubierto en Playwright.
-5. Ninguna pantalla del sitemap de esa fase quedó sin sus cuatro estados (cargando, vacío, error, sin permiso).
-6. **Se entrega el inventario de archivos nuevos de la fase**, con su ruta, para revisión antes de pasar a la siguiente.
+5. **Se entrega la deuda de revisión de la fase**: lo que se construyó y **no** se verificó, escrito en el momento. Reemplaza al punto que pedía los cuatro estados de cada pantalla (#250) — esa verificación, y toda la demás, se hacen en **F4**.
+6. **Se entrega el inventario de archivos nuevos de la fase**, con su ruta.
 7. **Los tests de la fase corren y pasan**, y se reporta la salida real. Una fase con tests en rojo no está terminada; si algo queda fuera, se dice cuál y por qué en vez de darla por cerrada.
-8. **La ayuda de la fase está escrita** (#167, #168): lo que la fase agregó se explica en `/help`, en la audiencia que corresponde y con su `#ref` enlazado desde la pantalla que lo necesita. La documentación que se escribe "después" no se escribe.
+8. **La ayuda de la fase está escrita** (#231): lo que la fase agregó se explica en `features/help/sections/` y se levanta con `<HelpLink>` desde la pantalla que provoca la pregunta. La documentación que se escribe "después" no se escribe.
 
-Los puntos 6 y 7 son el corte entre fases: **no se arranca la siguiente sin ellos.**
+Los puntos 5, 6 y 7 son el corte entre fases: **no se arranca la siguiente sin ellos.**
 
-Al terminar F5 no puede quedar ninguna regla de §5 sin implementar ni ninguna ruta del sitemap sin construir.
+### Qué cambió con #250, y qué no
+
+**No cambió lo que sostiene la calidad del código**: toda regla de negocio sigue llegando con su test unitario escrito por quien la escribió, las invariantes de concurrencia siguen con su test de integración, y **una fase en rojo sigue sin cerrar**. Eso no se mueve y no se negocia.
+
+**Cambió quién mira el producto terminado.** Verificar los cuatro estados de cada pantalla, que cada ruta sea alcanzable navegando, que la matriz de roles diga lo que promete y que no haya endpoints sin puerta **dejó de ser el final de cada fase y pasó a ser F4**. El motivo está en #250: una costura entre actores no se puede revisar hasta que existen sus dos lados.
+
+**Y apareció una obligación nueva, el punto 5.** Una fase que no se revisa tiene que **decir qué dejó sin revisar**, en el momento, con nombre. Sin eso F4 empieza redescubriendo en vez de verificando, y la deuda deja de ser una decisión para volverse una sorpresa (§1).
+
+Al terminar F6 no puede quedar ninguna regla de §5 sin implementar ni ninguna ruta del sitemap sin construir.
 
 ## 7. Cómo se ejecuta cada rebanada
 
-Vale para F1 a F5 (#181). No es una sugerencia por rebanada: es el procedimiento.
+Vale para toda fase que construya producto — F1, F2, F3, F5 y F6 (#181). No es una sugerencia por rebanada: es el procedimiento. **F4 no lo usa**: no construye, y su forma de trabajo está en `fase-4-revision.md`.
 
 ### El paso 0 no es un agente
 
@@ -271,7 +318,7 @@ Todo agente arranca en frío y no hereda la conversación. Cada invocación llev
 
 ## 8. Fuera de estas fases
 
-Nada de esto entra en F1–F5, y ninguna fase debe derivar hacia ellos sin decisión explícita:
+Nada de esto entra en F1–F6, y ninguna fase debe derivar hacia ellos sin decisión explícita:
 
 | Tema | Estado |
 |---|---|

@@ -111,7 +111,8 @@ public class GameTable extends BaseEntity {
     }
 
     /**
-     * Builds a table in {@code Preparation}, with nothing but its title and its author.
+     * Builds a table in {@code Draft}, with nothing but its title and its author (#245): it is its
+     * master's alone until they send it to review.
      *
      * @param name      the table's title
      * @param createdBy who is creating it

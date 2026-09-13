@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Browser } from '@playwright/test'
 
-import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 const BACKEND_URL = process.env.E2E_BACKEND_URL ?? 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)

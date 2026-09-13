@@ -6,8 +6,8 @@
  * per folder would reintroduce import cycles and draw no boundary at all (#3.1.3).
  */
 
+export { explorerSearchFields } from './searchFields'
 export { AttendanceEditor } from './components/AttendanceEditor'
-export { AttendanceSummaryView } from './components/AttendanceSummaryView'
 export { CreateUnassignedTableDialog } from './components/CreateUnassignedTableDialog'
 export { GameTableCard } from './components/GameTableCard'
 export { MasterWorkItemList } from './components/MasterWorkItemList'
@@ -45,6 +45,7 @@ export { useTableSessions } from './api/useTableSessions'
 export { useTableStatusHistory } from './api/useTableStatusHistory'
 export { useTableTypes } from './api/useTableTypes'
 export { useMySchedule } from './api/useMySchedule'
+export { useTableHistory } from './api/useTableHistory'
 export { WeeklyScheduleGrid } from './components/WeeklyScheduleGrid'
 export { tableTypeDescription, tableTypeLabel } from './lib/tableTypeLabel'
 export { useUpdateSession } from './api/useUpdateSession'
@@ -59,11 +60,11 @@ export type {
   AdminTableSummary,
   AttendanceEntryRequest,
   AttendanceStatus,
-  AttendanceSummary,
   AssignMastersRequest,
   ChangeTableStatusRequest,
   CreateGameTableRequest,
   GameTableDetail,
+  GameTableHistoryEntry,
   GameTableStatus,
   GameTableSummary,
   MasterDashboard,

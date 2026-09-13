@@ -21,6 +21,7 @@ import com.centraldungeon.files.dto.FileUsageResponse;
 import com.centraldungeon.files.dto.PublishFileRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
+import com.centraldungeon.registrations.RegistrationFileRepository;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
@@ -93,6 +94,10 @@ class FileServiceTest {
     @Mock
     private TableRegistrationRepository registrationRepository;
 
+    /** The seventh way a file is reachable, and the fourth source of uses: an application's own file (#60 uso 2, #247). */
+    @Mock
+    private RegistrationFileRepository registrationFileRepository;
+
     /** The actor's platform roles, for deciding which cajones are their own to use (#237). */
     @Mock
     private UserRoleRepository userRoleRepository;
@@ -115,6 +120,7 @@ class FileServiceTest {
                 masterService,
                 userRoleRepository,
                 registrationRepository,
+                registrationFileRepository,
                 fileMapper);
     }
 

@@ -3,7 +3,8 @@
     "label": "Secciones de jugador",
     "explore": "Explorar",
     "applications": "Mis postulaciones",
-    "myTables": "Mis mesas"
+    "myTables": "Mis mesas",
+    "history": "Historial"
   },
   "tableTypes": {
     "PUBLIC": {
@@ -52,7 +53,11 @@
     "players": "{{current}} / {{max}} jugadores",
     "playersUnlimited": "{{current}} jugadores",
     "alreadyApplied": "Ya te postulaste",
-    "scheduleConflict": "Choca con una mesa tuya"
+    "scheduleConflict": "Choca con una mesa tuya",
+    "searchLabel": "Buscar mesas",
+    "searchPlaceholder": "Buscar por nombre de mesa",
+    "noMatchesTitle": "Ninguna mesa coincide",
+    "noMatchesDescription": "Probá con otro término, o quitá alguno de los criterios. Buscar por un sinónimo también encuentra las mesas etiquetadas con los otros."
   },
   "detail": {
     "requirements": "Requisitos",
@@ -70,6 +75,15 @@
     "applyDialogTitle": "Postularme a {{name}}",
     "applyDialogDescription": "Contale al master por qué querés sumarte (opcional).",
     "applyDescriptionLabel": "Mensaje para el master",
+    "applyFilesLabel": "Archivos",
+    "applyRemoveFile": "Quitar el archivo",
+    "applyNext": "Siguiente",
+    "applyBack": "Atrás",
+    "applyCancel": "Cancelar",
+    "applyReviewDescription": "Esto es lo que se va a enviar. Una postulación enviada no se puede editar ni se le puede sacar un archivo después: revisala bien.",
+    "applyReviewNoMessage": "Sin mensaje",
+    "applyReviewNoFiles": "Sin archivos adjuntos",
+    "applyFilesFailed": "No se pudieron subir: {{names}}. La postulación se envió igual con lo que sí se subió.",
     "notFoundTitle": "Esta mesa no existe",
     "notFoundDescription": "Puede que ya no esté disponible.",
     "permitted": "Qué se permite",
@@ -86,6 +100,13 @@
     "title": "Mis mesas",
     "emptyTitle": "Todavía no jugás en ninguna mesa",
     "emptyDescription": "Postulate a una mesa abierta desde el explorador."
+  },
+  "history": {
+    "title": "Historial",
+    "closedOn": "Cerrada el {{date}}",
+    "emptyTitle": "Todavía no terminaste ninguna mesa",
+    "emptyDescription": "Cuando una mesa donde jugás termine o se cancele, va a aparecer acá con tu asistencia final.",
+    "help": "¿Por qué se mudó una mesa?"
   },
   "sessions": {
     "number": "Sesión {{number}}",
@@ -113,5 +134,11 @@
       "forPlayer": "Asistencia de {{name}}",
       "save": "Guardar asistencia"
     }
+  },
+  "search": {
+    "table_name": "nombre",
+    "table_system": "sistema",
+    "table_tag": "tag",
+    "table_platform": "plataforma"
   }
 }

@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -480,6 +481,73 @@ class TableSessionServiceTest {
         AttendanceSummaryResponse summary = service().summarize("t27", "player-1");
 
         assertThat(summary).isEqualTo(new AttendanceSummaryResponse(0, 0, 0, 0));
+    }
+
+    /** The profile's aggregate (F2.3): the same three numbers, with no game table to scope them to. */
+    @Test
+    void summarizesAttendanceAcrossEveryTableWithUnknownOutOfTheDenominator() {
+        when(attendanceRepository.countByUser("player-1"))
+                .thenReturn(List.of(
+                        new AttendanceCount(AttendanceStatus.Present, 5),
+                        new AttendanceCount(AttendanceStatus.Excused, 1),
+                        new AttendanceCount(AttendanceStatus.Absent, 2)));
+
+        AttendanceSummaryResponse summary = service().summarizeAll("player-1");
+
+        assertThat(summary.present()).isEqualTo(5);
+        assertThat(summary.excused()).isEqualTo(1);
+        assertThat(summary.absent()).isEqualTo(2);
+        assertThat(summary.registered()).isEqualTo(8);
+    }
+
+    /** Nobody with an unblemished, unrecorded history reads as a chronic absentee (#137). */
+    @Test
+    void summarizesNoHistoryAcrossEveryTableAsAllZeros() {
+        when(attendanceRepository.countByUser("player-2")).thenReturn(List.of());
+
+        assertThat(service().summarizeAll("player-2")).isEqualTo(new AttendanceSummaryResponse(0, 0, 0, 0));
+    }
+
+    // ---------------------------------------------------------------- the history's batched read (#133a, #137)
+
+    /**
+     * #133a's whole reason to have its own repository method: one grouped query resolves every
+     * table's attendance for the page, {@code Unknown} stays out of each table's own denominator,
+     * and a table with nothing recorded at all still comes back as zeroes rather than missing.
+     */
+    @Test
+    void summarizesEachTablesOwnAttendanceFromOneGroupedQuery() {
+        when(attendanceRepository.countByGameTablesAndUser(List.of("t30", "t31"), "player-1"))
+                .thenReturn(List.of(
+                        new TableAttendanceCount("t30", AttendanceStatus.Present, 2),
+                        new TableAttendanceCount("t30", AttendanceStatus.Absent, 1),
+                        new TableAttendanceCount("t31", AttendanceStatus.Excused, 1)));
+
+        Map<String, AttendanceSummaryResponse> summaries = service().summarizeByTables(List.of("t30", "t31"), "player-1");
+
+        assertThat(summaries.get("t30")).isEqualTo(new AttendanceSummaryResponse(2, 0, 1, 3));
+        assertThat(summaries.get("t31")).isEqualTo(new AttendanceSummaryResponse(0, 1, 0, 1));
+        // One call for the whole page, never one per table - the N+1 the contract calls out by name.
+        verify(attendanceRepository, org.mockito.Mockito.times(1)).countByGameTablesAndUser(any(), anyString());
+    }
+
+    /** A table nothing was ever recorded on still gets an entry, zero rather than absent (#137). */
+    @Test
+    void summarizesATableWithNothingRecordedAsZeroesRatherThanAbsent() {
+        when(attendanceRepository.countByGameTablesAndUser(List.of("t32"), "player-1")).thenReturn(List.of());
+
+        Map<String, AttendanceSummaryResponse> summaries = service().summarizeByTables(List.of("t32"), "player-1");
+
+        assertThat(summaries).containsEntry("t32", new AttendanceSummaryResponse(0, 0, 0, 0));
+    }
+
+    /** No table on the page, no query at all - the empty case is answered without touching the repository. */
+    @Test
+    void summarizingNoTablesIssuesNoQuery() {
+        Map<String, AttendanceSummaryResponse> summaries = service().summarizeByTables(List.of(), "player-1");
+
+        assertThat(summaries).isEmpty();
+        verify(attendanceRepository, never()).countByGameTablesAndUser(any(), anyString());
     }
 
     // ---------------------------------------------------------------- the player's own view (#121)

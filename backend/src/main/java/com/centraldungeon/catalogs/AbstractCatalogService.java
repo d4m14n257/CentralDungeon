@@ -5,12 +5,15 @@ import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.common.search.SearchConnector;
 import com.centraldungeon.common.search.SearchQuery;
 import com.centraldungeon.common.search.SearchQueryParser;
+import com.centraldungeon.common.search.SearchTerm;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -193,6 +196,60 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
                 .filter(member -> member.getStatus() == CatalogStatus.Accepted)
                 .map(CatalogValue::getId)
                 .toList();
+    }
+
+    /**
+     * The same answer as {@link #resolveGroupIds}, asked with words instead of an id (#54, #56).
+     *
+     * <p><b>This is what makes the explorer's {@code /table_tag} command work</b> (#246). Somebody
+     * types {@code D&D}; every table tagged with any accepted synonym of it has to come back, and the
+     * tables were never rewritten - each one still carries the alias its master chose (#56, #58). So
+     * the text is resolved here, to a set of ids, and the caller matches against that set.
+     *
+     * <p>Two steps and three queries, whatever the group's size. First the <b>seeds</b>: the accepted
+     * values whose name contains any of the words, which is the same predicate the public catalog
+     * search uses - a typo finds nothing rather than failing. Then their <b>groups</b>: every seed is
+     * folded to its group's root, and the whole group comes back in two reads. Depth is 1 (#59), so
+     * there is no recursion and no third level to chase.
+     *
+     * <p><b>Only accepted values resolve, on both steps.</b> A value still in {@code Created} does not
+     * filter and is not shown (#57), and a disabled one is out of circulation (#81) - so a table
+     * carrying a tag its master just proposed is findable by nobody but its master, which is exactly
+     * what #57 asks for.
+     *
+     * <p>The empty set is a real answer and means «no accepted value is called that». The caller has
+     * to read it as «matches no table», never as «no filter»: treating it as the second would turn a
+     * search for a system nobody uses into a listing of everything.
+     *
+     * <p><b>Known limit, deliberate:</b> the seed query is not capped, so a one-letter search loads
+     * every accepted value whose name contains that letter and hands the caller a set that large. It
+     * is bounded by the size of the catalog, not by the size of the platform - three tables of a few
+     * hundred rows each, changing only when an admin accepts a proposal (#55). A cap would have to
+     * choose which synonyms to drop, and dropping one silently is worse than the query: it would make
+     * the search quietly stop being symmetric, which is the one property #54 is about.
+     *
+     * @param texts the words to resolve. Alternatives, not a conjunction: any of them seeds the
+     *              search, because the values of one criterion are alternatives (#164)
+     * @return the accepted ids of every group the words landed on, possibly empty
+     */
+    @Transactional(readOnly = true)
+    public Set<String> resolveGroupIdsByName(Collection<String> texts) {
+        List<String> words = texts.stream().map(String::trim).filter(word -> !word.isEmpty()).toList();
+        if (words.isEmpty()) {
+            return Set.of();
+        }
+        SearchQuery seedQuery = new SearchQuery(List.of(new SearchTerm(null, words, SearchConnector.AND)));
+        List<E> seeds = repository.findAll(CatalogSearchSpecification.accepted(seedQuery));
+        if (seeds.isEmpty()) {
+            return Set.of();
+        }
+        Set<String> rootIds = seeds.stream()
+                .map(seed -> seed.isCanonical() ? seed.getId() : requireNonNullCanonical(seed))
+                .collect(Collectors.toSet());
+        Set<String> groupIds = new HashSet<>();
+        repository.findByStatusAndIdIn(CatalogStatus.Accepted, rootIds).forEach(member -> groupIds.add(member.getId()));
+        repository.findByStatusAndCanonicalIdIn(CatalogStatus.Accepted, rootIds).forEach(member -> groupIds.add(member.getId()));
+        return groupIds;
     }
 
     // ----------------------------------------------------- proposing a value

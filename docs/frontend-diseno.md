@@ -49,7 +49,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/auth/callback` | Retorno del OAuth, incluye el paso de invitación al servidor (#38) |
 | | `/onboarding` | **Solo la primera vez**: nombre a mostrar y país. Bloquea hasta completarse (#134) |
 | | `/` | **No es una pantalla**: despacha a la home del contexto de quien entra (#222) |
-| **Jugador** | `/player` | Explorar mesas, con filtros por sistema, tag y plataforma. **Home del contexto** |
+| **Jugador** | `/player` | Explorar mesas. **Home del contexto**. **El buscador es su único filtro** (#242, misma lectura que `/my/files`): los filtros por sistema, tag y plataforma que esta fila describía son los comandos `/table_system`, `/table_tag` y `/table_platform`, que acotan desde la misma línea y se combinan entre sí — y un término sin comando busca el nombre de la mesa. **Los tres son texto libre** (#246): el backend resuelve el grupo de sinónimos, así que buscar por uno encuentra las mesas etiquetadas con cualquier otro (#54, #56). Lo buscado vive en `?q=` (#185); la página no, porque el listado se acumula con «Ver más» (#173) |
 | | `/player/tables/:id` | Detalle de una mesa y postulación |
 | | `/player/applications` | Mis postulaciones y en qué estado están |
 | | `/player/my-tables` | Mesas donde soy jugador — **solo las vivas** |
@@ -68,7 +68,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | **Admin** | `/admin/queue` | Bandeja compartida con reserva (#100): **solo lo que pide una acción**, no un listado de consulta (#176) |
 | | `/admin/tables` | **Todas** las mesas, en cualquier estado, con filtros y buscador: el listado de administración, no una cola (#176). **Hoy** muestra solo las que esperan revisión porque `/admin/queue` todavía no existe; al llegar la bandeja (F3), las acciones de revisión se mudan ahí |
 | | `/admin/catalogs` | Sistemas, tags y plataformas; fusionar y separar grupos |
-| | `/admin/files` | **La biblioteca de la plataforma**, no la personal (#237): el admin **sube acá** y publica diciendo en qué cajones se ofrece el archivo (#233, reemplaza la audiencia de #64). Además, todo lo que subió la comunidad con su dueño y en cuántas mesas se usa, despublicar y dar de baja. **No es `/owner/storage`**: acá solo se marca, los bytes los libera el owner y eso es F5 (#66, #207) |
+| | `/admin/files` | **La biblioteca de la plataforma**, no la personal (#237): el admin **sube acá** y publica diciendo en qué cajones se ofrece el archivo (#233, reemplaza la audiencia de #64). Además, todo lo que subió la comunidad con su dueño y en cuántas mesas se usa, despublicar y dar de baja. **No es `/owner/storage`**: acá solo se marca, los bytes los libera el owner y eso es F6 (#66, #207, #250) |
 | | `/admin/moderation` | Comentarios por moderar |
 | | `/admin/requests` | Solicitudes de rol, de mesa y generales |
 | | `/admin/feedback` | Feedback del sistema |
@@ -369,7 +369,7 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |
 | `ContextSwitcher` — el selector de rol de §2 | `app/components/` (es shell, no dominio) |
 | `UserMenu` — avatar, idioma, tema y cerrar sesión | `app/components/` |
-| `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto. **Todavía no construido**: `features/feedback/` existe vacío y `system_feedback` es de F4 | `features/feedback/` |
+| `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto. **Todavía no construido**: `features/feedback/` existe vacío y `system_feedback` es de F5 (#250) | `features/feedback/` |
 
 ### Hooks compartidos
 

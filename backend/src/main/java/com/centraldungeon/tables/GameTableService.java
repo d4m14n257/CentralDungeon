@@ -10,6 +10,9 @@ import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.common.search.SearchQuery;
+import com.centraldungeon.common.search.SearchQueryParser;
+import com.centraldungeon.common.search.SearchTerm;
 import com.centraldungeon.common.text.RichTextSanitizer;
 import com.centraldungeon.files.TableFileService;
 import com.centraldungeon.registrations.TableRegistration;
@@ -18,9 +21,11 @@ import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.dto.AddMasterRequest;
 import com.centraldungeon.tables.dto.AdminTableSummaryResponse;
 import com.centraldungeon.tables.dto.AssignMastersRequest;
+import com.centraldungeon.tables.dto.AttendanceSummaryResponse;
 import com.centraldungeon.tables.dto.ChangeTableStatusRequest;
 import com.centraldungeon.tables.dto.CreateGameTableRequest;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
+import com.centraldungeon.tables.dto.GameTableHistoryResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
 import com.centraldungeon.tables.dto.TableScheduleEntry;
@@ -55,6 +60,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class GameTableService {
 
     private static final List<GameTableStatus> VISIBLE_STATUSES = List.of(GameTableStatus.Opened, GameTableStatus.InProgress);
+
+    /**
+     * /my/tables: the statuses that still count as "vivo" (#133a). {@code Pause} belongs here and
+     * not with {@link #HISTORY_STATUSES} - it is a table frozen, not one that ended (#32); the
+     * player who plays there still needs to find it among "mine".
+     */
+    private static final List<GameTableStatus> LIVE_MINE_STATUSES =
+            List.of(GameTableStatus.Opened, GameTableStatus.InProgress, GameTableStatus.Pause);
+
+    /** /my/tables/history: the two ways a run is over, and nothing else (#133a). */
+    private static final List<GameTableStatus> HISTORY_STATUSES = List.of(GameTableStatus.Finished, GameTableStatus.Canceled);
 
     /** The /admin/tables default until the queue screen exists: the tables waiting on an admin (#176, F3). */
     private static final List<GameTableStatus> DEFAULT_ADMIN_REVIEW_STATUSES =
@@ -105,6 +121,7 @@ public class GameTableService {
     private final TableFileService tableFileService;
     private final RichTextSanitizer richTextSanitizer;
     private final NotificationService notificationService;
+    private final GameTableSearchResolver gameTableSearchResolver;
 
     /**
      * @param gameTableRepository        the {@code game_tables} table, and the row everything locks on
@@ -122,6 +139,9 @@ public class GameTableService {
      * @param tableFileService           the files the table shares, which ride along with the detail
      *                                   for the same reason the calendar does (#29, #79)
      * @param richTextSanitizer          cleans the rich text on the way in and on the way out (#62)
+     * @param notificationService        tells the masters how the review ended (#244)
+     * @param gameTableSearchResolver    expands the explorer's catalog criteria into synonym groups
+     *                                   before the query is built (#54, #56, #246)
      */
     public GameTableService(
             GameTableRepository gameTableRepository,
@@ -137,7 +157,8 @@ public class GameTableService {
             TableSessionService tableSessionService,
             TableFileService tableFileService,
             RichTextSanitizer richTextSanitizer,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            GameTableSearchResolver gameTableSearchResolver) {
         this.gameTableRepository = gameTableRepository;
         this.tableTypeRepository = tableTypeRepository;
         this.tableRegistrationRepository = tableRegistrationRepository;
@@ -152,6 +173,7 @@ public class GameTableService {
         this.tableFileService = tableFileService;
         this.richTextSanitizer = richTextSanitizer;
         this.notificationService = notificationService;
+        this.gameTableSearchResolver = gameTableSearchResolver;
     }
 
     /**
@@ -637,15 +659,29 @@ public class GameTableService {
     }
 
     /**
-     * Excludes tables the actor masters (#154): a master cannot browse their own table to apply as a
-     * Player at it.
+     * The public explorer, narrowed by what the reader typed (#164, #246).
      *
-     * <p>It is also the one listing that carries the clash warning of #178, computed for the actor
-     * of the token: this is the screen where the question "can I actually take this on?" is asked.
+     * <p>Excludes tables the actor masters (#154): a master cannot browse their own table to apply as
+     * a Player at it. It is also the one listing that carries the clash warning of #178, computed for
+     * the actor of the token: this is the screen where the question "can I actually take this on?" is
+     * asked.
+     *
+     * <p><b>The catalog criteria are resolved before the query is built</b>, not inside it: a search
+     * for {@code D&D} has to find the tables tagged {@code DANDD} too, and that expansion is a read of
+     * its own (#54, #56). The search only ever narrows what the visibility rules already allowed -
+     * see {@code GameTableSearchSpecification} for why the two are joined and never folded together.
+     *
+     * @param query    the raw search box, or null when it is empty
+     * @param pageable page, size and sort
+     * @param actorId  the actor, from the token - never from the URL (#121)
+     * @return one page of the tables the actor could apply to
      */
     @Transactional(readOnly = true)
-    public PageResponse<GameTableSummaryResponse> list(Pageable pageable, String actorId) {
-        Page<GameTable> page = gameTableRepository.findByStatusInAndNotMasteredByActor(VISIBLE_STATUSES, actorId, pageable);
+    public PageResponse<GameTableSummaryResponse> list(@Nullable String query, Pageable pageable, String actorId) {
+        SearchQuery parsed = SearchQueryParser.parse(query, GameTableSearchField.wireNames());
+        Map<SearchTerm, Set<String>> catalogIds = gameTableSearchResolver.resolveCatalogTerms(parsed);
+        Page<GameTable> page = gameTableRepository.findAll(
+                GameTableSearchSpecification.forExplorer(parsed, catalogIds, VISIBLE_STATUSES, actorId), pageable);
         return toSummaryPage(page, actorId);
     }
 
@@ -682,11 +718,61 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
-    /** /my/tables: only the tables where the actor currently holds an active Player registration. */
+    /**
+     * /my/tables: only the tables where the actor currently holds an active Player registration,
+     * <b>and only while the table itself is still live</b> (#133a).
+     *
+     * <p>The registration's own status never moves once somebody is accepted - it stays
+     * {@code Player} whether the table is still running, was finished, or was cancelled. Filtering
+     * by it alone, as this used to, left a table sitting among "mine" forever after it closed. What
+     * decides "still mine to see here" is the table's own status; a closed run moves to
+     * {@link #listMineHistory} instead. {@code Pause} counts as live - the table is frozen, not
+     * over (#32).
+     *
+     * @param actorId  the actor, from the token (#121)
+     * @param pageable page, size and sort
+     * @return one page of the tables they play at that have not ended
+     */
     @Transactional(readOnly = true)
     public PageResponse<GameTableSummaryResponse> listMine(String actorId, Pageable pageable) {
-        Page<TableRegistration> page = tableRegistrationRepository.findByUser_IdAndStatus(actorId, TableRegistrationStatus.Player, pageable);
+        Page<TableRegistration> page = tableRegistrationRepository.findByUser_IdAndStatusAndGameTable_StatusIn(
+                actorId, TableRegistrationStatus.Player, LIVE_MINE_STATUSES, pageable);
         return toSummaryPage(page.map(TableRegistration::getGameTable), null);
+    }
+
+    /**
+     * /my/tables/history: the tables the actor played at that are now over - {@code Finished} or
+     * {@code Canceled} - with when each one closed and the actor's own final attendance (#133a).
+     *
+     * <p><b>A different shape from {@link #listMine}, not the same read with another filter</b>: a
+     * closed table's card has no cupo to show and cannot clash with anything the actor is
+     * committed to, and it carries two things a live card never needs - {@code closed_at} and the
+     * attendance aggregate of #137. See {@link GameTableHistoryResponse} for the exact fields.
+     *
+     * <p>The attendance is resolved for the whole page in one grouped query
+     * ({@link TableSessionService#summarizeByTables}), never one {@code summarize} call per row -
+     * the same N+1 {@code CatalogUsageCount} and {@code FileService.usagesByFileId} already avoid.
+     *
+     * <p>Whether the actor left a comment on the table - the field #133 also names - is not here:
+     * comments are F5, and there is nowhere yet to read that from.
+     *
+     * @param actorId  the actor, from the token (#121)
+     * @param pageable page, size and sort
+     * @return one page of the tables they played at that have ended
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<GameTableHistoryResponse> listMineHistory(String actorId, Pageable pageable) {
+        Page<TableRegistration> page = tableRegistrationRepository.findByUser_IdAndStatusAndGameTable_StatusIn(
+                actorId, TableRegistrationStatus.Player, HISTORY_STATUSES, pageable);
+        List<String> tableIds = page.getContent().stream().map(registration -> registration.getGameTable().getId()).toList();
+        Map<String, AttendanceSummaryResponse> attendanceByTable = tableSessionService.summarizeByTables(tableIds, actorId);
+
+        return PageResponse.from(page.map(registration -> {
+            GameTable gameTable = registration.getGameTable();
+            AttendanceSummaryResponse attendance =
+                    attendanceByTable.getOrDefault(gameTable.getId(), new AttendanceSummaryResponse(0, 0, 0, 0));
+            return gameTableMapper.toHistory(gameTable, attendance);
+        }));
     }
 
     /** /master/tables: every status, including Preparation - a master needs to see and open their own drafts. */

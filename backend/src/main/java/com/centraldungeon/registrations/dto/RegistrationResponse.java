@@ -1,11 +1,17 @@
 package com.centraldungeon.registrations.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
  * One application, in both directions: the master's candidate list and the applicant's own
  * "my applications" screen read the same record.
+ *
+ * <p><b>{@code attachedFiles} travels here rather than through an endpoint of its own</b> (#60 uso
+ * 2), the same criterion F1.3 used for a table's sessions and F1.4 for its shared files: this read
+ * already decides who may see the application - the master of that table, or the applicant
+ * themselves - and repeating that check in a second place is where it would drift.
  *
  * @param id                     the application's identifier
  * @param gameTableId            the table applied to
@@ -25,6 +31,9 @@ import org.jspecify.annotations.Nullable;
  * @param rejectionReasonCode    the code of a rejection the application wrote itself, today only
  *                               {@code TABLE_FULL} (#34). The frontend renders it in the reader's
  *                               language (#197). Null whenever a person did the rejecting
+ * @param attachedFiles          the character sheet, or anything else the applicant attached (#60
+ *                               uso 2). They are linked, never copied (#65, #79). Empty when they
+ *                               attached nothing - attaching was optional
  */
 public record RegistrationResponse(
         String id,
@@ -37,5 +46,6 @@ public record RegistrationResponse(
         @Nullable String description,
         LocalDateTime createdAt,
         @Nullable String rejectionJustification,
-        @Nullable String rejectionReasonCode) {
+        @Nullable String rejectionReasonCode,
+        List<RegistrationFileResponse> attachedFiles) {
 }

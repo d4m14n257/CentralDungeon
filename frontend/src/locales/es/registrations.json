@@ -21,6 +21,7 @@
     "emptyTitle": "No hay candidatos esperando",
     "emptyDescription": "Nadie se postuló todavía a esta mesa.",
     "order": "El orden es por fecha de postulación y no se reordena",
+    "filesTitle": "Archivos adjuntos",
     "accept": "Aceptar",
     "reject": "Rechazar",
     "rejectDialogTitle": "Rechazar a {{name}}",

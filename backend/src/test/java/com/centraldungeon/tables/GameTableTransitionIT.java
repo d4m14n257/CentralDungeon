@@ -62,6 +62,9 @@ class GameTableTransitionIT {
     void setUp() {
         User master = userRepository.save(new User(randomDiscordId(), "Master"));
         GameTable newTable = new GameTable("Concurrency Review Table", master);
+        // Explicit since #245: a table is born in Draft, and an admin cannot approve one. What this
+        // test races is the review, so the table starts where the review starts.
+        newTable.setStatus(GameTableStatus.Preparation);
         table = gameTableRepository.save(newTable);
 
         admins = new ArrayList<>();

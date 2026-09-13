@@ -2,7 +2,9 @@ package com.centraldungeon.tables;
 
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.files.dto.SharedFileResponse;
+import com.centraldungeon.tables.dto.AttendanceSummaryResponse;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
+import com.centraldungeon.tables.dto.GameTableHistoryResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
 import com.centraldungeon.tables.dto.PlayerSessionResponse;
@@ -31,6 +33,21 @@ public interface GameTableMapper {
             MasterSummaryResponse primaryMaster,
             List<TableScheduleEntry> schedule,
             boolean scheduleConflict);
+
+    /**
+     * A table as the player's history shows it (#133a) - a card with when it closed and the actor's
+     * own attendance, and neither the seat count nor the schedule-clash warning
+     * {@link #toSummary} carries: a table that already ended cannot clash with anything, and its
+     * cupo stopped mattering the moment it stopped recruiting.
+     *
+     * @param gameTable  the table, {@code Finished} or {@code Canceled}
+     * @param attendance the actor's own historical attendance on it, the aggregate of #137
+     * @return its history card
+     */
+    @Mapping(target = "status", expression = "java(gameTable.getStatus().name())")
+    @Mapping(target = "tableTypeName", expression = "java(gameTable.getTableType() != null ? gameTable.getTableType().getName() : null)")
+    @Mapping(target = "tableTypeCode", expression = "java(gameTable.getTableType() != null ? gameTable.getTableType().getCode() : null)")
+    GameTableHistoryResponse toHistory(GameTable gameTable, AttendanceSummaryResponse attendance);
 
     /**
      * The three rich-text fields arrive as parameters rather than being read off the entity: they are

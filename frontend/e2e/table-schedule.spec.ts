@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
-import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { applyToTable } from './helpers/application'
+import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 /**
  * F1.2 end to end, against the real backend: the complete wizard with an agenda, and the two rules
@@ -142,14 +143,17 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
     // Two tables from two different masters in the same slot: from the same one, R1 would refuse.
     await fillWizard(master.page, firstTable, FRIDAY_EVENING)
     await expect(master.page.getByRole('heading', { name: firstTable })).toBeVisible()
-    const firstId = master.page.url().split('/master/tables/')[1]
+    const firstId = master.page.url().split('/master/tables/')[1] as string
+    // Both have to reach an admin, and a draft reaches nobody (#245).
+    await submitForReview(master.page, firstId)
 
     const otherMaster = await newAuthenticatedPage(browser, `e2e-clash-m3-${runId}`, true, false)
     let secondId: string | undefined
     try {
       await fillWizard(otherMaster.page, secondTable, FRIDAY_EVENING)
       await expect(otherMaster.page.getByRole('heading', { name: secondTable })).toBeVisible()
-      secondId = otherMaster.page.url().split('/master/tables/')[1]
+      secondId = otherMaster.page.url().split('/master/tables/')[1] as string
+      await submitForReview(otherMaster.page, secondId)
     } finally {
       await otherMaster.context.close()
     }
@@ -164,8 +168,7 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
 
     // The player opens the first one and applies; the master accepts them.
     await player.page.goto(`/player/tables/${firstId}`)
-    await player.page.getByRole('button', { name: 'Postularme' }).click()
-    await player.page.getByRole('dialog').getByRole('button', { name: 'Postularme' }).click()
+    await applyToTable(player.page)
 
     await master.page.goto(`/master/tables/${firstId}`)
     const candidate = master.page.getByRole('listitem').filter({ hasText: playerDiscordId }).first()

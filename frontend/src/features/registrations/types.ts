@@ -4,6 +4,23 @@
  */
 export type RegistrationStatus = 'Candidate' | 'Player' | 'Rejected'
 
+/**
+ * A file attached to an application — a character sheet, most commonly (#238).
+ *
+ * There is no endpoint of its own to read these: F2.2's contract nests them inside
+ * `RegistrationResponse` itself, in the same `{fileId, name, mimeType, sizeBytes}` shape every other
+ * feature's file rows use — `SubmittedFile` in `features/tasks`, `SharedFile` in `types/file.ts`. A
+ * fourth copy of that shape here would be exactly the kind of hand-redeclared variant §3.2 forbids,
+ * but it cannot be one of those three: it is a different response, from a different feature, and
+ * `Pick`/`Omit` only derive from a type already in scope.
+ */
+export interface RegistrationFile {
+  fileId: string
+  name: string
+  mimeType: string
+  sizeBytes: number
+}
+
 /** Espejo de RegistrationResponse. */
 export interface Registration {
   id: string
@@ -22,6 +39,13 @@ export interface Registration {
    * the reader's language (#197). Null whenever a person did the rejecting.
    */
   rejectionReasonCode: string | null
+  /**
+   * What the applicant attached, most commonly a character sheet. Empty when nothing was attached —
+   * attaching is optional (#238). Neither the master's candidate list nor the applicant's own "my
+   * applications" screen can ever add to or remove from this after the application is sent (#238,
+   * #247): there is no `PUT` on a registration and no endpoint to detach one of its files.
+   */
+  attachedFiles: RegistrationFile[]
 }
 
 /**
@@ -34,7 +58,14 @@ export interface Registration {
 export type TablePlayer = Pick<Registration, 'userId' | 'userName' | 'userKarma'>
 
 /**
- * What applying sends. The table comes from the URL and the applicant from the session, so the note
- * is all that is left (#121).
+ * What applying sends. The table comes from the URL and the applicant from the session, so this is
+ * the note plus whatever was attached (#121).
+ *
+ * The files travel by id and **already uploaded** (#238, same split as `features/tasks`'
+ * `CreateSubmissionInput`): the review step's confirm is what turns a staged pick into bytes on the
+ * server, and this is the shape that goes out once that has happened.
  */
-export type CreateRegistrationInput = Pick<Registration, 'description'>
+export type CreateRegistrationInput = Pick<Registration, 'description'> & {
+  /** The files to attach, by id. */
+  fileIds: string[]
+}

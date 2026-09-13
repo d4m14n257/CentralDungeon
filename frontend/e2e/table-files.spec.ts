@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
-import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 /**
  * F1.4 end to end, against the real backend: the criterion of `fase-1-master.md` §4 — *a master
@@ -63,6 +63,8 @@ async function createTable(page: Page, name: string, weekday = 'Viernes'): Promi
 
   const id = page.url().split('/master/tables/')[1]
   expect(id).toBeTruthy()
+  // Born in Draft since #245: nothing an admin can approve until it is sent.
+  await submitForReview(page, id as string)
   return id as string
 }
 

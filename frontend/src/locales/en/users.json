@@ -7,5 +7,18 @@
     "startTyping": "Type to search.",
     "empty": "Nobody matches that search.",
     "noName": "No display name set"
+  },
+  "profile": {
+    "noName": "No name",
+    "attendanceTitle": "Attendance",
+    "roles": {
+      "Player": "Player",
+      "Master": "Master",
+      "Admin": "Admin",
+      "Owner": "Owner"
+    },
+    "loadErrorDescription": "We could not load this profile. Try again.",
+    "expiredDescription": "You can no longer view this profile.",
+    "help": "Who can see my profile?"
   }
 }

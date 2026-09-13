@@ -1,6 +1,6 @@
 import { Crown, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useOutletContext } from 'react-router'
+import { Link, useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { CollapsibleSection } from '@/components/CollapsibleSection'
@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { IconAction } from '@/components/IconAction'
 import { Skeleton } from '@/components/ui/skeleton'
+import { playerUserProfilePath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { useAddMaster, useRemoveMaster } from '@/features/tables'
 import type { MasterSummary } from '@/features/tables'
@@ -78,7 +79,11 @@ function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
                 aria-hidden="true"
                 className={cn('size-4 shrink-0', master.masterType === 'Primary' ? 'text-state-active-fg' : 'text-fg-subtle')}
               />
-              <span className="min-w-0 flex-1 truncate text-sm">{master.name}</span>
+              {/* #41: a master's profile is visible to anyone looking at their table — the co-master
+                  reading this list included. */}
+              <Link to={playerUserProfilePath(master.userId)} className="min-w-0 flex-1 truncate text-sm hover:underline">
+                {master.name}
+              </Link>
               <span className="text-fg-muted shrink-0 text-xs">
                 {t(master.masterType === 'Primary' ? 'masters.roleMaster' : 'masters.roleCoMaster')}
               </span>
@@ -132,7 +137,11 @@ function PlayersSection({ tableId }: { tableId: string }) {
         <ul className="divide-border divide-y">
           {data.map((player) => (
             <li key={player.userId} className="flex items-center justify-between gap-4 py-2 text-sm">
-              <span className="min-w-0 truncate">{player.userName}</span>
+              {/* #47: a master already sees the roster to run the table, and #41's asymmetry does
+                  not apply between a master and a player who is sitting at their own table. */}
+              <Link to={playerUserProfilePath(player.userId)} className="min-w-0 truncate hover:underline">
+                {player.userName}
+              </Link>
               <span className="text-fg-muted shrink-0 text-xs">{t('players.karma', { karma: player.userKarma })}</span>
             </li>
           ))}

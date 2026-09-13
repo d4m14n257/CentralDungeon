@@ -1,5 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser } from '@playwright/test'
 
+import { applyToTable } from './helpers/application'
+
 import { runnableTableBody } from './helpers/tableApi'
 
 /**
@@ -37,6 +39,12 @@ async function createOpenTable(request: APIRequestContext, accessToken: string, 
   expect(created.ok()).toBeTruthy()
   const table = (await created.json()) as { id: string }
 
+  // Born in Draft since #245: an admin has nothing to approve until its master lets go of it.
+  const submitted = await request.post(`${BACKEND_URL}/api/v1/game-tables/${table.id}/submit`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  expect(submitted.ok()).toBeTruthy()
+
   const admin = await testLogin(request, `e2e-admin-${Math.random().toString(36).slice(2, 10)}`, false, true)
   const approved = await request.post(`${BACKEND_URL}/api/v1/game-tables/${table.id}/approve`, {
     headers: { Authorization: `Bearer ${admin.accessToken}` },
@@ -68,9 +76,7 @@ test('a player applies to an open table and the master accepts them', async ({ b
     await tableCard.click()
 
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
-    await player.page.getByRole('button', { name: 'Postularme' }).click()
-    await player.page.getByRole('textbox', { name: 'Mensaje para el master' }).fill('Quiero sumarme a esta mesa')
-    await player.page.getByRole('dialog').getByRole('button', { name: 'Postularme' }).click()
+    await applyToTable(player.page, { message: 'Quiero sumarme a esta mesa' })
 
     await expect(player.page.getByRole('button', { name: 'Ya tenés una postulación en curso' })).toBeVisible()
 

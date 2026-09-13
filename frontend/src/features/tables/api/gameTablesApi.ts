@@ -8,6 +8,7 @@ import type {
   ChangeTableStatusRequest,
   CreateGameTableRequest,
   GameTableDetail,
+  GameTableHistoryEntry,
   GameTableStatus,
   GameTableSummary,
   MasterDashboard,
@@ -27,8 +28,16 @@ export const tableTypesApi = {
 
 /** Every call about a game table: the listings, the detail, and each lifecycle transition. */
 export const gameTablesApi = {
-  list: (page = 0, size = pageSize.explorer) => api.getPage<GameTableSummary>('/api/v1/game-tables', { page, size }),
+  /** The explorer. `q` is the search language of #164: a bare term is the table's name, and
+   *  `/table_system`, `/table_tag` and `/table_platform` resolve through synonym groups (#246). */
+  list: (page = 0, query?: string, size = pageSize.explorer) =>
+    api.getPage<GameTableSummary>('/api/v1/game-tables', { page, size, q: query }),
   mine: (page = 0, size = pageSize.list) => api.getPage<GameTableSummary>('/api/v1/game-tables/mine', { page, size }),
+  /** `/player/history` (#133): every table of theirs that stopped being active, `Finished` or
+   *  `Canceled`, most recently closed first. Its own endpoint and not a filter on `mine` above:
+   *  that one now answers only for the live tables (#133), so a history read must not compete with
+   *  it for the same cache entry. */
+  history: (page = 0, size = pageSize.list) => api.getPage<GameTableHistoryEntry>('/api/v1/game-tables/mine/history', { page, size }),
   managed: (page = 0, size = pageSize.list) => api.getPage<GameTableSummary>('/api/v1/game-tables/managed', { page, size }),
   admin: (statuses?: GameTableStatus[], page = 0, size = pageSize.adminQueue) =>
     api.getPage<AdminTableSummary>('/api/v1/game-tables/admin', { status: statuses?.join(','), page, size }),

@@ -19,6 +19,9 @@ export const paths = {
   playerApplications: 'player/applications',
   playerMyTables: 'player/my-tables',
   playerMyTableDetail: 'player/my-tables/:id',
+  playerHistory: 'player/history',
+  playerProfile: 'player/profile',
+  playerUserProfile: 'player/users/:id',
   mySchedule: 'my/schedule',
   myFiles: 'my/files',
   notifications: 'notifications',
@@ -63,6 +66,24 @@ export function playerApplicationsPath(): string {
 /** @returns the absolute path to the tables the reader plays at */
 export function playerMyTablesPath(): string {
   return '/player/my-tables'
+}
+
+/** @returns the absolute path to the tables the reader played at, once they finished or were cancelled (#133) */
+export function playerHistoryPath(): string {
+  return '/player/history'
+}
+
+/** @returns the absolute path to the reader's own profile (#248) */
+export function playerProfilePath(): string {
+  return '/player/profile'
+}
+
+/**
+ * @param id the profile to open
+ * @returns the absolute path to somebody else's profile, subject to #41, #44 and #47
+ */
+export function playerUserProfilePath(id: string): string {
+  return `/player/users/${id}`
 }
 
 /**

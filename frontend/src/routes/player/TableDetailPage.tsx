@@ -1,11 +1,12 @@
 import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
 import { RichTextView } from '@/components/RichTextView'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { playerUserProfilePath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
@@ -114,14 +115,25 @@ export function TableDetailPage() {
           {primaryMaster && (
             <p className="text-fg-muted mt-1 flex flex-wrap items-center gap-x-1 text-sm">
               <span>{t('detail.masterLabel')}:</span>
-              <span>{primaryMaster.name}</span>
+              {/* #41: a master's profile is visible to anyone looking at their table, no
+                  application required — the asymmetry that makes this link always safe to show. */}
+              <Link to={playerUserProfilePath(primaryMaster.userId)} className="hover:text-fg underline">
+                {primaryMaster.name}
+              </Link>
               <span>·</span>
               <span className="text-brand-fg">{primaryMaster.karma.toLocaleString(i18n.language)}</span>
               {coMasters.length > 0 && (
                 <>
                   <span>·</span>
                   <span>{t('detail.coMasterLabel')}:</span>
-                  <span>{coMasters.map((master) => master.name).join(', ')}</span>
+                  {coMasters.map((master, index) => (
+                    <span key={master.userId}>
+                      <Link to={playerUserProfilePath(master.userId)} className="hover:text-fg underline">
+                        {master.name}
+                      </Link>
+                      {index < coMasters.length - 1 && ', '}
+                    </span>
+                  ))}
                 </>
               )}
             </p>
@@ -247,7 +259,16 @@ export function TableDetailPage() {
         </Button>
       </div>
 
-      <ApplyToTableDialog tableId={table.id} tableName={table.name} open={applyDialog.isOpen} onOpenChange={applyDialog.close} />
+      <ApplyToTableDialog
+        tableId={table.id}
+        tableName={table.name}
+        open={applyDialog.isOpen}
+        onOpenChange={applyDialog.close}
+        renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerApplication" />}
+        // Uploading happens here and not in the picker (#238): this screen owns the send, so it is
+        // what turns the staged files into ids right before the application travels.
+        commitStagedFiles={(staged) => commit.mutateAsync({ staged, fileCategory: 'PlayerApplication' })}
+      />
     </div>
   )
 }

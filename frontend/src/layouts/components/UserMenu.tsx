@@ -1,4 +1,4 @@
-import { CalendarDays, FolderOpen, Languages, Moon, Sun } from 'lucide-react'
+import { CalendarDays, CircleUser, FolderOpen, Languages, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LANGUAGES } from '@/config/language'
-import { myFilesPath, mySchedulePath, paths } from '@/config/paths'
+import { myFilesPath, mySchedulePath, paths, playerProfilePath } from '@/config/paths'
 import { useLogout } from '@/features/auth'
 import { useHasPersonalLibrary } from '@/hooks/useHasPersonalLibrary'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -70,6 +70,13 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel className="truncate">{label}</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {/* Name, country, roles and attendance (#248) — the entry point the sitemap otherwise left
+            unreachable. In the account menu and not in a context's nav because it belongs to the
+            person, the same reason `mySchedule` and `myFiles` are here and not in a context tab. */}
+        <DropdownMenuItem onSelect={() => void navigate(playerProfilePath())}>
+          <CircleUser className="size-4" />
+          {t('nav.myProfile')}
+        </DropdownMenuItem>
         {/* The reader's own week (#227). In the account menu and not in a context's nav, because it
             belongs to the person: it is the one screen where what they run and what they play meet. */}
         <DropdownMenuItem onSelect={() => void navigate(mySchedulePath())}>

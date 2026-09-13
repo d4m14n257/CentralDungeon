@@ -21,6 +21,7 @@
     "emptyTitle": "No candidates waiting",
     "emptyDescription": "Nobody has applied to this table yet.",
     "order": "The order is by application date and is never re-sorted",
+    "filesTitle": "Attached files",
     "accept": "Accept",
     "reject": "Reject",
     "rejectDialogTitle": "Reject {{name}}",

@@ -2,9 +2,28 @@
 export const queryKeys = {
   tables: {
     list: (filters?: Record<string, unknown>) => ['tables', 'list', filters] as const,
+    /**
+     * The whole explorer branch, whatever was searched - what a mutation invalidates when it changes
+     * who may see what.
+     *
+     * **It exists because `list()` stopped being one entry** when the search box arrived (#246): the
+     * explorer now keys by what was typed, so invalidating `list()` - which is
+     * `['tables', 'list', undefined]` - matches the unfiltered page and misses every filtered one.
+     * A mutation never knows what the reader had typed, so it invalidates the branch.
+     */
+    lists: () => ['tables', 'list'] as const,
     detail: (id: string) => ['tables', 'detail', id] as const,
     managedDetail: (id: string) => ['tables', 'managed-detail', id] as const,
     mine: () => ['tables', 'mine'] as const,
+    /**
+     * `/player/history` (#133): closed tables, accumulated with "See more" like the explorer - no
+     * page number in the key, `useInfiniteQuery` keeps the pages already fetched itself. Its own
+     * branch and not `mine()` with a filter tacked on: `mine` answers "what am I playing now" and
+     * this answers "how did it go" - two different questions whose answers must never share a cache
+     * entry, the same reasoning as `schedule.mine()` above having its own branch instead of living
+     * inside `tables`.
+     */
+    history: () => ['tables', 'history'] as const,
     managed: () => ['tables', 'managed'] as const,
     admin: (statuses?: string[], page = 0) => ['tables', 'admin', statuses, page] as const,
     statusHistory: (id: string) => ['tables', 'status-history', id] as const,
@@ -92,6 +111,21 @@ export const queryKeys = {
     /** The picker's results. Keyed by scope too: the admin directory and a table's candidate
      *  search are different answers to the same words, and must not share a cache entry. */
     search: (query: string, tableId?: string) => ['users', 'search', tableId ?? 'all', query] as const,
+  },
+  /**
+   * Profile screens (#248): `/player/profile` and `/player/users/:id`. Its own branch and not part
+   * of `users.me()`: that key backs the app shell (contexts, onboarding, `hasManagedTables`) and
+   * never carries attendance, while this one answers a visibility-gated question (#41, #44, #47)
+   * that can 404 on purpose (#249) — mixing the two would risk a stale shell surviving a profile
+   * that just stopped being visible, or the reverse.
+   */
+  profiles: {
+    /** The reader's own profile. Its own key rather than `detail(myId)`: the reader may not know
+     *  their own id offhand, and `/me/profile` never needs one to ask. */
+    mine: () => ['profiles', 'mine'] as const,
+    /** Somebody else's profile, keyed by id - visibility can change per viewer, so two people
+     *  looking at the same id must not share a cache entry either (#121). */
+    detail: (id: string) => ['profiles', 'detail', id] as const,
   },
   system: {
     health: () => ['system', 'health'] as const,

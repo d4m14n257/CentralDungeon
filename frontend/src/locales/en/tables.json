@@ -3,7 +3,8 @@
     "label": "Player sections",
     "explore": "Explore",
     "applications": "My applications",
-    "myTables": "My tables"
+    "myTables": "My tables",
+    "history": "History"
   },
   "tableTypes": {
     "PUBLIC": {
@@ -52,7 +53,11 @@
     "players": "{{current}} / {{max}} players",
     "playersUnlimited": "{{current}} players",
     "alreadyApplied": "You already applied",
-    "scheduleConflict": "Clashes with a table of yours"
+    "scheduleConflict": "Clashes with a table of yours",
+    "searchLabel": "Search tables",
+    "searchPlaceholder": "Search by table name",
+    "noMatchesTitle": "No table matches",
+    "noMatchesDescription": "Try another term, or drop one of the criteria. Searching by a synonym also finds the tables labelled with the others."
   },
   "detail": {
     "requirements": "Requirements",
@@ -70,6 +75,15 @@
     "applyDialogTitle": "Apply to {{name}}",
     "applyDialogDescription": "Tell the master why you want to join (optional).",
     "applyDescriptionLabel": "Message for the master",
+    "applyFilesLabel": "Files",
+    "applyRemoveFile": "Remove the file",
+    "applyNext": "Next",
+    "applyBack": "Back",
+    "applyCancel": "Cancel",
+    "applyReviewDescription": "This is what is about to be sent. A sent application cannot be edited and no file can be taken off it afterwards: check it carefully.",
+    "applyReviewNoMessage": "No message",
+    "applyReviewNoFiles": "No files attached",
+    "applyFilesFailed": "Could not upload: {{names}}. The application was still sent with what did upload.",
     "notFoundTitle": "This table does not exist",
     "notFoundDescription": "It may no longer be available.",
     "permitted": "What is allowed",
@@ -86,6 +100,13 @@
     "title": "My tables",
     "emptyTitle": "You are not playing at any table yet",
     "emptyDescription": "Apply to an open table from the explorer."
+  },
+  "history": {
+    "title": "History",
+    "closedOn": "Closed on {{date}}",
+    "emptyTitle": "You have not finished a table yet",
+    "emptyDescription": "When a table you play at finishes or gets cancelled, it will show up here with your final attendance.",
+    "help": "Why did a table move here?"
   },
   "sessions": {
     "number": "Session {{number}}",
@@ -113,5 +134,11 @@
       "forPlayer": "Attendance for {{name}}",
       "save": "Save attendance"
     }
+  },
+  "search": {
+    "table_name": "name",
+    "table_system": "system",
+    "table_tag": "tag",
+    "table_platform": "platform"
   }
 }

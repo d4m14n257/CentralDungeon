@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
-import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { applyToTable } from './helpers/application'
+import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 /**
  * F1.5 end to end, against the real backend: the criterion of `fase-1-master.md` §4 — *a master
@@ -52,6 +53,8 @@ async function createTable(page: Page, name: string): Promise<string> {
 
   const id = page.url().split('/master/tables/')[1]
   expect(id).toBeTruthy()
+  // Born in Draft since #245: nothing an admin can approve until it is sent.
+  await submitForReview(page, id as string)
   return id as string
 }
 
@@ -67,8 +70,7 @@ async function approve(page: Page, name: string) {
 /** Applies and gets accepted, which is what turns somebody into a recipient of a `Players` request. */
 async function joinAsPlayer(playerPage: Page, masterPage: Page, tableId: string, playerDiscordId: string) {
   await playerPage.goto(`/player/tables/${tableId}`)
-  await playerPage.getByRole('button', { name: 'Postularme' }).click()
-  await playerPage.getByRole('dialog').getByRole('button', { name: 'Postularme' }).click()
+  await applyToTable(playerPage)
 
   await masterPage.goto(`/master/tables/${tableId}`)
   const candidate = masterPage.getByRole('listitem').filter({ hasText: playerDiscordId }).first()

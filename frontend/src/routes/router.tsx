@@ -37,6 +37,13 @@ export const router = createBrowserRouter([
           { path: 'applications', lazy: () => import('./player/MyApplicationsPage') },
           { path: 'my-tables', lazy: () => import('./player/MyTablesPage') },
           { path: 'my-tables/:id', lazy: () => import('./player/MyTableDetailPage') },
+          // Every table of theirs that stopped being active (#133): `my-tables` above now answers
+          // only for the live ones, and this is where the rest went.
+          { path: 'history', lazy: () => import('./player/PlayerHistoryPage') },
+          // The two profile screens of F2.3 (#248): the reader's own, and anybody else's, subject
+          // to the visibility rules of #41, #44 and #47.
+          { path: 'profile', lazy: () => import('./player/ProfilePage') },
+          { path: 'users/:id', lazy: () => import('./player/UserProfilePage') },
         ],
       },
       // The two transversal screens: they belong to no context and get the bare shell, without any

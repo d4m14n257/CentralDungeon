@@ -58,6 +58,7 @@ public class ScheduleConflictService {
      * neither does anything past the end of a table's life.
      */
     private static final List<GameTableStatus> COMMITTING_STATUSES = List.of(
+            GameTableStatus.Draft,
             GameTableStatus.Preparation,
             GameTableStatus.ChangesRequested,
             GameTableStatus.Opened,

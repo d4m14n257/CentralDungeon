@@ -1,13 +1,15 @@
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { useOutletContext } from 'react-router'
+import { Link, useOutletContext } from 'react-router'
 
 import { useConfirm } from '@/hooks/useConfirm'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { playerUserProfilePath } from '@/config/paths'
 import { useDisclosure } from '@/hooks/useDisclosure'
+import { FileList } from '@/features/files'
 import { useAcceptRegistration, useCandidates, RejectRegistrationDialog } from '@/features/registrations'
 import type { Registration } from '@/features/registrations'
 
@@ -57,18 +59,34 @@ function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
       </div>
       <ol className="divide-border divide-y rounded-lg border">
         {data.content.map((candidate, index) => (
-          <li key={candidate.id} className="flex items-center justify-between gap-4 px-4 py-3">
-            <span className="text-sm">
-              {index + 1}. {candidate.userName} · {candidate.userKarma}
-            </span>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => void handleAccept(candidate)}>
-                {t('candidates.accept')}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => rejectDialog.open(candidate)}>
-                {t('candidates.reject')}
-              </Button>
+          <li key={candidate.id} className="space-y-2 px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm">
+                {index + 1}.{' '}
+                {/* #41: whoever applies is opening themselves up to the master's evaluation, so the
+                    master can always see the candidate's profile from here on. */}
+                <Link to={playerUserProfilePath(candidate.userId)} className="hover:text-fg underline">
+                  {candidate.userName}
+                </Link>{' '}
+                · {candidate.userKarma}
+              </span>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => void handleAccept(candidate)}>
+                  {t('candidates.accept')}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => rejectDialog.open(candidate)}>
+                  {t('candidates.reject')}
+                </Button>
+              </div>
             </div>
+            {/* Only when there is something to show: an application with nothing attached carries no
+                empty section, the same convention the table's own read-only file list uses. */}
+            {candidate.attachedFiles.length > 0 && (
+              <div className="pl-5">
+                <p className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('candidates.filesTitle')}</p>
+                <FileList files={candidate.attachedFiles} />
+              </div>
+            )}
           </li>
         ))}
       </ol>

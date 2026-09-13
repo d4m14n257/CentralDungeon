@@ -1,4 +1,4 @@
-import { masterTableDetailPath, tableDetailPath } from '@/config/paths'
+import { masterTableDetailPath, myTableDetailPath, playerApplicationsPath, tableDetailPath } from '@/config/paths'
 
 import type { Notification } from '../types'
 
@@ -42,6 +42,19 @@ export function notificationTarget(notification: Notification): string | null {
     case 'TableApprovedWithChanges':
     case 'TableChangesRequested':
       return masterTableDetailPath(notification.relatedEntityId)
+    // R4's clash notice (#178) names the *other* table but asks for an action on neither: the
+    // fix is withdrawing one of the two pending applications, and that only happens from the
+    // applications list (#178 again) - opening either table's detail would show the clash without
+    // offering the one thing this notification is asking the reader to do about it.
+    case 'ScheduleConflict':
+      return playerApplicationsPath()
+    // Both reach only the people already signed up to play there (NotificationType.java): what
+    // changed is a date on their own calendar, not the table's standing. The player's own table
+    // screen is where the sessions and the reader's attendance live, already converted to their
+    // local time (#22) - the public detail has neither.
+    case 'SessionScheduled':
+    case 'SessionCanceled':
+      return myTableDetailPath(notification.relatedEntityId)
     default:
       return null
   }

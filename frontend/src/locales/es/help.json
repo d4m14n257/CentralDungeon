@@ -96,8 +96,12 @@
         "step1": "Desde el explorador, abrí la mesa que te interese y leé la descripción y los requisitos.",
         "step2": "Tocá «Postularme». Si el botón no está, en su lugar vas a leer el motivo.",
         "step3": "Escribí un mensaje para el master si querés contarle algo. Es opcional.",
-        "step4": "Enviá y seguí la postulación desde «Mis postulaciones»: ahí vas a ver cuando el master decida."
-      }
+        "step4": "Adjuntá tu hoja de personaje si hace falta. Podés subir una nueva o reusar una que ya tengas.",
+        "step5": "Revisá lo que vas a mandar y enviá. Después seguí la postulación desde «Mis postulaciones»."
+      },
+      "sheet": "Podés adjuntar la hoja de personaje, o lo que el master haya pedido. Es opcional.",
+      "review": "Antes de enviar ves un paso de revisión con todo lo que va a salir.",
+      "noEdit": "Una postulación enviada no se edita ni se le saca un archivo. Si te equivocaste, la retirás y te postulás de nuevo."
     },
     "applicationStatus": {
       "title": "En qué estado está tu postulación",
@@ -163,6 +167,24 @@
       "download": "Cada archivo tiene su botón de descarga. Al lado dice cuánto pesa, así sabés qué estás por bajar si estás con datos.",
       "private": "Si tu master guardó algo solo para quienes dirigen la mesa, no lo vas a ver acá. No es un error ni un permiso que te falte: esos archivos son sus notas.",
       "shared": "Un archivo que aparece hoy puede no estar mañana si el master lo quita de la mesa. Si lo necesitás, descargalo."
+    },
+    "profile": {
+      "title": "Perfiles",
+      "yours": "Tu perfil está en el menú de tu cuenta. Muestra tu nombre, tu país, tus roles y tu asistencia.",
+      "attendance": "La asistencia son tres números —presente, con aviso y ausente— y no un porcentaje: una falta avisada y un plantón no son lo mismo, y un promedio los mezclaría.",
+      "unregistered": "Las sesiones que el master todavía no registró no cuentan para ningún lado. Una mesa que arrancó ayer no te deja como ausente.",
+      "whoSeesYours": "Tu perfil no es público. Lo ve el master de una mesa desde que le llega tu postulación, y tus compañeros de mesa.",
+      "whoYouSee": "Vos podés ver el perfil de los masters de cualquier mesa abierta —antes de postularte, que es justo para lo que sirve— y el de tus compañeros.",
+      "expiry": "Dos semanas después de que una mesa termina o se cancela, dejan de verse los perfiles que esa mesa había abierto. El registro de con quién jugaste se conserva; lo que caduca es el acceso al perfil.",
+      "paused": "Si la mesa está pausada no corre ese plazo: una mesa pausada no terminó, así que siguen siendo tus compañeros.",
+      "karma": "El karma y los comentarios todavía no existen. Cuando lleguen, van a aparecer acá."
+    },
+    "history": {
+      "title": "Tu historial",
+      "what": "«Historial» guarda las mesas donde jugaste que ya terminaron o se cancelaron.",
+      "moves": "Una mesa se muda sola: mientras está viva la ves en «Mis mesas», y cuando cierra pasa acá. Nunca está en las dos.",
+      "paused": "Una mesa pausada sigue en «Mis mesas»: está congelada, no terminada.",
+      "attendance": "Cada mesa del historial lleva tu asistencia final, con los mismos tres números del perfil."
     }
   },
   "masters": {
