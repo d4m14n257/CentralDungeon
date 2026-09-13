@@ -151,7 +151,7 @@
     "upload": "Upload a file",
     "uploadClose": "Close",
     "searchLabel": "Search my files",
-    "searchPlaceholder": "Search by name",
+    "searchPlaceholder": "Search by name, or /type",
     "lastUsed": "Used {{when}}",
     "emptyTitle": "You have not uploaded anything yet",
     "emptyDescription": "Whatever you upload stays here and can be used again on any table, without uploading it twice.",
@@ -163,7 +163,8 @@
     "send_one": "Upload 1 file",
     "send_other": "Upload {{count}} files",
     "someFailed": "Could not upload: {{names}}. The rest are in. Try again with those.",
-    "reused": "You already had “{{names}}”: it was reused and takes no extra space."
+    "reused": "You already had “{{names}}”: it was reused and takes no extra space.",
+    "send_zero": "Upload"
   },
   "edit": {
     "title": "Edit file",

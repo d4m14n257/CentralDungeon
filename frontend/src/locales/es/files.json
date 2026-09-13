@@ -151,7 +151,7 @@
     "upload": "Subir archivo",
     "uploadClose": "Cerrar",
     "searchLabel": "Buscar entre mis archivos",
-    "searchPlaceholder": "Buscar por nombre",
+    "searchPlaceholder": "Buscar por nombre, o /tipo",
     "lastUsed": "Usado {{when}}",
     "emptyTitle": "Todavía no subiste nada",
     "emptyDescription": "Lo que subas queda acá y lo podés volver a usar en cualquier mesa, sin subirlo de nuevo.",
@@ -163,7 +163,8 @@
     "send_one": "Subir 1 archivo",
     "send_other": "Subir {{count}} archivos",
     "someFailed": "No se pudieron subir: {{names}}. Los demás ya están. Probá de nuevo con esos.",
-    "reused": "«{{names}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo."
+    "reused": "«{{names}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo.",
+    "send_zero": "Subir"
   },
   "edit": {
     "title": "Editar archivo",

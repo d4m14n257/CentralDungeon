@@ -9,8 +9,8 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { IconAction } from '@/components/IconAction'
 import { PaginationControls } from '@/components/PaginationControls'
+import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   EditFileDialog,
@@ -35,6 +35,7 @@ import {
 import { useDebounce } from '@/hooks/useDebounce'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { formatRelativeDate } from '@/lib/date'
+import { buildSearchQuery, parseSearchQuery, type SearchQueryValue } from '@/lib/searchQuery'
 
 /**
  * `/my/files` — everything this person has uploaded, and what each file is doing.
@@ -60,6 +61,9 @@ import { formatRelativeDate } from '@/lib/date'
  * **What was searched and which page are in the URL**, like /admin/files (#185): a tidying session
  * survives a refresh, and a filtered view can be linked to.
  */
+/** The fields this box accepts behind a `/`, mirroring what the backend resolves for your own files. */
+const SEARCH_FIELD_NAMES = ['name', 'type'] as const
+
 export function MyFilesPage() {
   const { t, i18n } = useTranslation('files')
   const [searchParams, setSearchParams] = useSearchParams()
@@ -68,8 +72,16 @@ export function MyFilesPage() {
   const page = Number(searchParams.get('page') ?? '0')
   const category = (searchParams.get('category') as FileCategory | null) ?? null
 
-  const [search, setSearch] = useState(() => searchParams.get('q') ?? '')
-  const debouncedSearch = useDebounce(search, 300)
+  // The search box holds a structured value, but what travels - to the URL and to the API - is the
+  // raw string of #164, the same way /admin/catalogs and /admin/files do it.
+  const [search, setSearch] = useState<SearchQueryValue>(() => ({
+    terms: parseSearchQuery(searchParams.get('q') ?? '', SEARCH_FIELD_NAMES),
+    activeField: null,
+    draft: '',
+    pendingConnector: 'and',
+  }))
+  const query = buildSearchQuery(search)
+  const debouncedSearch = useDebounce(query, 300)
 
   // isLoadingError, not isError: a background refetch that fails must not blank a list that already
   // loaded (#150).
@@ -213,78 +225,91 @@ export function MyFilesPage() {
         </div>
       )}
 
-      <div className="space-y-3">
-        <Input
-          type="search"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            updateParams({ q: event.target.value })
-          }}
-          placeholder={t('mine.searchPlaceholder')}
-          aria-label={t('mine.searchLabel')}
-        />
-        {/* Only the cajones that can hold something of theirs: a plain member never files table
-            material, and `Announcement` is nobody's — it lives in the platform's library (#237). */}
-        <FileCategoryFilter value={category} onChange={(next) => updateParams({ category: next ?? '' })} options={myCategories ?? []} />
-      </div>
-
-      {isPending && <Skeleton className="h-64 w-full" />}
-      {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && (
-        <EmptyState
-          title={isFiltered ? t('mine.noResultsTitle') : t('mine.emptyTitle')}
-          description={isFiltered ? t('mine.noResultsDescription') : t('mine.emptyDescription')}
-        />
-      )}
-      {data && data.content.length > 0 && (
+      {/* **The library is not shown while the upload panel is open.** Uploading and browsing are two
+          things somebody is doing one at a time, and leaving the whole library underneath the drop
+          zone puts a search box and thirty rows between the person and the button they came for. */}
+      {!uploadPanel.isOpen && (
         <>
-          <FileList
-            files={data.content.map((file) => ({ ...file, fileId: file.id }))}
-            renderMeta={(file) => (
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  {file.categories.map((category) => (
-                    <FileCategoryBadge key={category} category={category} />
-                  ))}
-                  <FileTypeBadge fileType={file.fileType} />
-                  {file.lastUsedAt && (
-                    <span className="text-fg-muted text-xs">
-                      {t('mine.lastUsed', { when: formatRelativeDate(file.lastUsedAt, i18n.language) })}
-                    </span>
-                  )}
-                </div>
-                <FileUsageChips usages={file.usages} />
-              </div>
-            )}
-            renderActions={(file) => (
-              <>
-                {/* A published file is the platform's: only an admin renames or removes it (#64). */}
-                {file.fileType !== 'Public' && (
+          <div className="space-y-3">
+            {/* The application's one search box (#164): free text searches the filename, and a
+                `/campo` searches that field. A plain `<input>` here was the only buscador in the app
+                that did not speak the shared language. */}
+            <SearchQueryInput
+              fields={[
+                { name: 'name', label: t('search.name') },
+                { name: 'type', label: t('search.type') },
+              ]}
+              value={search}
+              onChange={(value) => {
+                setSearch(value)
+                updateParams({ q: buildSearchQuery(value) })
+              }}
+              placeholder={t('mine.searchPlaceholder')}
+              label={t('mine.searchLabel')}
+            />
+            {/* Only the cajones that can hold something of theirs: a plain member never files table
+                material, and `Announcement` is nobody's — it lives in the platform's library (#237). */}
+            <FileCategoryFilter value={category} onChange={(next) => updateParams({ category: next ?? '' })} options={myCategories ?? []} />
+          </div>
+
+          {isPending && <Skeleton className="h-64 w-full" />}
+          {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
+          {data && data.content.length === 0 && (
+            <EmptyState
+              title={isFiltered ? t('mine.noResultsTitle') : t('mine.emptyTitle')}
+              description={isFiltered ? t('mine.noResultsDescription') : t('mine.emptyDescription')}
+            />
+          )}
+          {data && data.content.length > 0 && (
+            <>
+              <FileList
+                files={data.content.map((file) => ({ ...file, fileId: file.id }))}
+                renderMeta={(file) => (
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {file.categories.map((category) => (
+                        <FileCategoryBadge key={category} category={category} />
+                      ))}
+                      <FileTypeBadge fileType={file.fileType} />
+                      {file.lastUsedAt && (
+                        <span className="text-fg-muted text-xs">
+                          {t('mine.lastUsed', { when: formatRelativeDate(file.lastUsedAt, i18n.language) })}
+                        </span>
+                      )}
+                    </div>
+                    <FileUsageChips usages={file.usages} />
+                  </div>
+                )}
+                renderActions={(file) => (
                   <>
-                    <IconAction
-                      label={t('actions.edit')}
-                      icon={<PencilIcon className="size-4" />}
-                      disabled={update.isPending}
-                      onClick={() => editDialog.open(file)}
-                    />
-                    <IconAction
-                      label={t('actions.delete')}
-                      icon={<Trash2Icon className="size-4" />}
-                      disabled={remove.isPending}
-                      onClick={() => void handleDelete(file)}
-                    />
+                    {/* A published file is the platform's: only an admin renames or removes it (#64). */}
+                    {file.fileType !== 'Public' && (
+                      <>
+                        <IconAction
+                          label={t('actions.edit')}
+                          icon={<PencilIcon className="size-4" />}
+                          disabled={update.isPending}
+                          onClick={() => editDialog.open(file)}
+                        />
+                        <IconAction
+                          label={t('actions.delete')}
+                          icon={<Trash2Icon className="size-4" />}
+                          disabled={remove.isPending}
+                          onClick={() => void handleDelete(file)}
+                        />
+                      </>
+                    )}
                   </>
                 )}
-              </>
-            )}
-          />
-          <PaginationControls
-            page={data.page}
-            totalPages={data.totalPages}
-            totalElements={data.totalElements}
-            onPageChange={(next) => updateParams({ page: String(next) })}
-          />
+              />
+              <PaginationControls
+                page={data.page}
+                totalPages={data.totalPages}
+                totalElements={data.totalElements}
+                onPageChange={(next) => updateParams({ page: String(next) })}
+              />
+            </>
+          )}
         </>
       )}
 
