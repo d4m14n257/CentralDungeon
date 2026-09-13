@@ -223,7 +223,15 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
     }
   }
 
-  const showPendingConnector = value.terms.length > 0 && (hasOpenCriterion || value.pendingConnector === 'or')
+  /**
+   * The connector waiting to join whatever comes next.
+   *
+   * **Shown as soon as there is a criterion to join it to**, and not once somebody starts typing
+   * again. Waiting made choosing `/and` look like it had done nothing - the chip appeared later, out
+   * of nowhere - and it made `or` behave differently from `and` for no reason a reader could see.
+   * Showing it says what the next criterion will be joined with, and the chip is how that is changed.
+   */
+  const showPendingConnector = value.terms.length > 0
 
   return (
     <div className="space-y-1">

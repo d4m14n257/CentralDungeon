@@ -174,9 +174,36 @@ describe('SearchQueryInput', () => {
     render(<Harness />)
 
     await userEvent.type(searchBox(), 'juan{Enter}pablo{Enter}')
-    await userEvent.click(screen.getByRole('button', { name: 'y' }))
+    // The first «y» is the one joining the two criteria; the second is the one waiting for whatever
+    // comes next, which is a different connector and has its own chip.
+    await userEvent.click(screen.getAllByRole('button', { name: 'y' })[0]!)
 
     expect(query()).toHaveTextContent('juan /or pablo')
+  })
+
+  /**
+   * Choosing a connector shows its chip straight away.
+   *
+   * It used to wait until somebody typed again, so picking `/and` looked like it had done nothing
+   * and the chip appeared later out of nowhere — and `or` showed immediately while `and` did not,
+   * for no reason a reader could see.
+   */
+  it('shows the chosen connector as a chip before anything else is typed', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), 'juan{Enter}')
+    await userEvent.type(searchBox(), '/or{Enter}')
+
+    expect(screen.getByRole('button', { name: 'o' })).toBeInTheDocument()
+  })
+
+  /** And the one waiting is «y» by default, so the next criterion says how it will be joined. */
+  it('shows the waiting connector as soon as there is a criterion to join', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), 'juan{Enter}')
+
+    expect(screen.getByRole('button', { name: 'y' })).toBeInTheDocument()
   })
 
   it('removes a criterion through the chip X button', async () => {
