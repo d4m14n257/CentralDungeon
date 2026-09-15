@@ -9,9 +9,9 @@ interface TestLoginResponse {
  * Wraps /api/v1/auth/test-login (backend/auth/TestLoginController, @Profile("test")): a 404 means
  * the backend is not running with that profile, which is the sign that the panel can do nothing.
  */
-export async function testLoginAndReload(discordId: string, asMaster: boolean, asAdmin = false): Promise<void> {
+export async function testLoginAndReload(discordId: string, asMaster: boolean, asAdmin = false, asOwner = false): Promise<void> {
   const response = await api.post<TestLoginResponse>(
-    `/api/v1/auth/test-login?discordId=${encodeURIComponent(discordId)}&asMaster=${asMaster}&asAdmin=${asAdmin}`,
+    `/api/v1/auth/test-login?discordId=${encodeURIComponent(discordId)}&asMaster=${asMaster}&asAdmin=${asAdmin}&asOwner=${asOwner}`,
   )
   setAccessToken(response.accessToken)
   // location.href and not reload(): coming from /auth/callback?error=..., a reload replays that URL

@@ -111,6 +111,26 @@ export const queryKeys = {
     /** The picker's results. Keyed by scope too: the admin directory and a table's candidate
      *  search are different answers to the same words, and must not share a cache entry. */
     search: (query: string, tableId?: string) => ['users', 'search', tableId ?? 'all', query] as const,
+    /**
+     * The /admin/users table (F3.1). The same `admin` convention `tables`, `files` and `catalogs`
+     * already use, so every mutation on the screen invalidates the branch `['users', 'admin']` and
+     * nothing outside it - `me()` and `search()` answer different questions to different callers.
+     */
+    admin: (query?: string, page = 0) => ['users', 'admin', query ?? '', page] as const,
+    /**
+     * The whole admin branch - what the four mutators invalidate.
+     *
+     * It exists for the same reason `tables.lists()` and `catalogs.all()` do: a mutation never knows
+     * what the reader had typed or which page they were on, and one role change moves rows that are
+     * not on screen, so patching a single entry would leave the rest of the cache describing a state
+     * that no longer is.
+     */
+    adminAll: () => ['users', 'admin'] as const,
+    /** One account as an admin sees it - what the six mutators answer with, written back by id. */
+    adminDetail: (id: string) => ['users', 'admin', 'detail', id] as const,
+    /** What admins did to one account, and why (#84, #169). Invalidated by every one of the four
+     *  mutators: each of them is what adds a row to it. */
+    adminHistory: (id: string) => ['users', 'admin', 'history', id] as const,
   },
   /**
    * Profile screens (#248): `/player/profile` and `/player/users/:id`. Its own branch and not part

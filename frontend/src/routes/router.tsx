@@ -96,6 +96,10 @@ export const router = createBrowserRouter([
           { path: 'tables', lazy: () => import('./admin/AdminTablesPage') },
           { path: 'catalogs', lazy: () => import('./admin/AdminCatalogsPage') },
           { path: 'files', lazy: () => import('./admin/AdminFilesPage') },
+          // Accounts, their roles and their blocks (F3.1). **No role guard here**, deliberately
+          // (#103): the layouts never check roles either, so somebody who forces the route without
+          // the role gets a 403 from the backend and the screen paints ForbiddenState.
+          { path: 'users', lazy: () => import('./admin/AdminUsersPage') },
         ],
       },
       { path: '*', lazy: () => import('./NotFoundPage') },

@@ -40,6 +40,7 @@ El detalle y el razonamiento están en `decisiones.md`. Resumen de lo estructura
 | Archivos | `file_type` (`Public`/`Private`/`Single-use`) y `size_bytes`, que el código usaba y el DDL nunca tuvo. Más `content_hash`, `storage_key` y `last_used_at` | #60, #68, #75, #80 |
 | Aprobaciones | `requests` se absorbe en **`approval_requests`**, un solo mecanismo para todos los pedidos con aprobación | #42, #78 |
 | Moderación de mesa | Tabla nueva `table_status_changes` con la justificación de cada transición | #32 |
+| Moderación de personas | Tablas nuevas `user_role_changes` y `user_status_changes` (`V11`, F3.1), calcadas de `table_status_changes`, con **motivo obligatorio**. `audit_logs` es F6 y `approval_requests` es F3.2: hasta entonces cada entidad guarda su propio rastro en vez de inventar una tabla genérica que F6 va a reemplazar | #84, #169 |
 | Feedback del sistema | Tablas nuevas `system_feedback` y `feedback_quotas`. El tipo `General` sale de `comments` | #91, #93, #94 |
 | Bandeja de admins | `claimed_by` / `claimed_at` en `approval_requests`, `comments`, `system_feedback` y `game_tables` | #100 |
 | PK y tipos rotos | Se corrigen los PK inválidos de `Platforms`/`Tags`/`Systems`, se agregan PK a `registration_rejections` y `audit_logs`, y `Files.mine` pasa a `mime_type VARCHAR(128)` | — |
@@ -54,6 +55,11 @@ Para verlo por subsistema y con columnas: `diagramas/11` a `16`. Los ciclos de v
 erDiagram
     users ||--o{ users_roles : "tiene"
     roles ||--o{ users_roles : "asignado a"
+    users ||--o{ user_role_changes : "historial de roles"
+    roles ||--o{ user_role_changes : "otorgado o quitado"
+    users ||--o{ user_role_changes : "otorga o quita"
+    users ||--o{ user_status_changes : "historial de cuenta"
+    users ||--o{ user_status_changes : "bloquea o desbloquea"
 
     table_types  ||--o{ game_tables : "clasifica"
     game_tables  ||--o{ masters : "dirigida por"
@@ -159,6 +165,43 @@ CREATE TABLE users_roles (
     CONSTRAINT fk_users_roles_user FOREIGN KEY (user_id) REFERENCES users (id),
     CONSTRAINT fk_users_roles_role FOREIGN KEY (role_id) REFERENCES roles (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- V11 (F3.1): el rastro de quién movió los roles de quién, y por qué.
+-- `users_roles` dice qué tiene alguien AHORA; esto dice cómo llegó ahí. La exclusión de #169
+-- escribe DOS filas, no una: otorgar Admin a un owner es un alta de Admin y una baja de Owner.
+CREATE TABLE user_role_changes (
+    id            VARCHAR(64) NOT NULL,
+    user_id       VARCHAR(64) NOT NULL,
+    role_id       VARCHAR(64) NOT NULL,
+    action        VARCHAR(32) NOT NULL,   -- 'Granted' | 'Revoked'
+    changed_by    VARCHAR(64) NOT NULL,
+    justification LONGTEXT    NOT NULL,   -- siempre obligatoria (#169)
+    created_at    DATETIME    NOT NULL,
+    CONSTRAINT pk_user_role_changes PRIMARY KEY (id),
+    CONSTRAINT fk_urc_user       FOREIGN KEY (user_id)    REFERENCES users (id),
+    CONSTRAINT fk_urc_role       FOREIGN KEY (role_id)    REFERENCES roles (id),
+    CONSTRAINT fk_urc_changed_by FOREIGN KEY (changed_by) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX ix_urc_user ON user_role_changes (user_id, created_at);
+
+-- V11 (F3.1): bloqueos y desbloqueos de cuenta (#84).
+-- A diferencia de `table_status_changes`, acá la justificación es NOT NULL: el bloqueado no puede
+-- entrar a preguntar por qué, así que el motivo es el único registro que queda.
+CREATE TABLE user_status_changes (
+    id            VARCHAR(64) NOT NULL,
+    user_id       VARCHAR(64) NOT NULL,
+    from_status   VARCHAR(32) NOT NULL,
+    to_status     VARCHAR(32) NOT NULL,
+    changed_by    VARCHAR(64) NOT NULL,
+    justification LONGTEXT    NOT NULL,   -- siempre obligatoria (#84)
+    created_at    DATETIME    NOT NULL,
+    CONSTRAINT pk_user_status_changes PRIMARY KEY (id),
+    CONSTRAINT fk_usc_user       FOREIGN KEY (user_id)    REFERENCES users (id),
+    CONSTRAINT fk_usc_changed_by FOREIGN KEY (changed_by) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX ix_usc_user ON user_status_changes (user_id, created_at);
 
 -- ---------------------------------------------------------------- game table
 
@@ -734,9 +777,15 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Todo usuario nuevo se crea con rol `Player` | `UserRegistrationService` | #38 |
 | Los cuatro roles son acumulables. Única excepción: `Owner` puede todo lo que puede `Admin`. Se escribe `hasAnyRole('ADMIN','OWNER')` en cada endpoint, sin `RoleHierarchy` | `SecurityConfig` | #37, #67, #89 |
 | `Owner` y `Admin` **no** implican `Player` ni `Master`: para jugar o dirigir hay que tener ese rol | `SecurityConfig` | #89 |
-| **`Admin` y `Owner` son excluyentes**: nadie tiene los dos. Otorgar uno quita el otro — son el mismo rol con distinto alcance, y `Owner` está por encima | `UserRoleService` (llega con `/admin/users`) | #169 |
-| **`Admin` y `Owner` son excluyentes**: nadie tiene los dos. Otorgar uno quita el otro — son el mismo rol con distinto alcance, y `Owner` está por encima | `UserRoleService` (llega con `/admin/users`) | #169 |
+| **`Admin` y `Owner` son excluyentes**: nadie tiene los dos. Otorgar uno quita el otro — son el mismo rol con distinto alcance, y `Owner` está por encima. La quita deja **su propia fila** en `user_role_changes` | `UserRoleService` | #169 |
+| **`Admin` y `Owner` los otorga y los quita solo un `Owner`.** Un `Admin` mueve `Player` y `Master`. El intento de un admin es `403 ROLE_GRANT_FORBIDDEN`, no `400`: es quién sos, no qué mandaste | `UserRoleService` | #169, F3.1 |
+| **La plataforma nunca se queda sin `Owner`.** Quitarse el propio `Owner` es `409 CANNOT_REVOKE_OWN_OWNER`; quitárselo al último (o desplazarlo con la exclusión de #169) es `409 LAST_OWNER`. MySQL no lo puede expresar, así que es la única invariante global de roles que vive solo en el service | `UserRoleService` | #169, F3.1 |
+| Otorgar o quitar un rol es **idempotente**: repetirlo no escribe fila de auditoría. Restaurar un rol revocado **flipea `users_roles.status`**, nunca inserta una segunda fila — la PK es `(user_id, role_id)` | `UserRoleService` | #25 |
+| `users_roles.status` y `users_roles.deleted_at` se mueven **juntos**, vía `UserRole.revoke()` / `.restore()`: no hay setter que permita una fila `Deleted` sin fecha ni una viva con fecha. La columna existía desde el baseline y nada la escribía hasta F3.1 | `UserRole` (entidad) | #25 |
 | Salirse del servidor conserva los datos; el baneo lo marca un admin a mano | `UserService` | #84, M30 |
+| **Nadie con `Admin` u `Owner` puede ser bloqueado** — ni por un admin, ni por un owner, ni por sí mismo: `403 CANNOT_BLOCK_PRIVILEGED`. Entre pares no hay autoridad, y el bloqueo es irreversible desde el lado del bloqueado | `AdminUserService` | #84, #140a |
+| Bloquear **conserva los datos**: no borra mesas, postulaciones ni historial. `Deleted` no transiciona en F3.1 | `AdminUserService` | #84 |
+| **Todo cambio de rol o de estado invalida la caché `userAuth`** (`UserService.evictAuthCache`). El TTL de 60 s es la red de seguridad, no el mecanismo: un bloqueo que tarda un minuto en aplicar es un bloqueo que no bloquea | `UserRoleService`, `AdminUserService` | #122, #128 |
 | El owner puede migrar los datos de un usuario a una cuenta nueva | `UserService` | #83 |
 
 ### Solicitudes y aprobaciones

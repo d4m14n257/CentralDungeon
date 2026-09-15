@@ -43,6 +43,7 @@ export const paths = {
   adminTables: 'admin/tables',
   adminCatalogs: 'admin/catalogs',
   adminFiles: 'admin/files',
+  adminUsers: 'admin/users',
 } as const
 
 /**
@@ -192,6 +193,14 @@ export function adminCatalogsPath(): string {
 /** @returns the absolute path to the file administration screen (#64, #79) */
 export function adminFilesPath(): string {
   return '/admin/files'
+}
+
+/**
+ * @returns the absolute path to the account administration screen (F3.1) — roles, blocks, and the
+ *          only listing in the application that sees an account that is not `Allowed`
+ */
+export function adminUsersPath(): string {
+  return '/admin/users'
 }
 
 /**

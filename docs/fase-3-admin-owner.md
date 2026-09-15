@@ -109,6 +109,34 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 
 **Se prueba:** un owner asciende a alguien a admin; ese admin abre `/admin/users`, puede dar el rol de master y **no encuentra ninguna forma** de dar el de admin; el owner intenta quitarse su propio rol y recibe el `409`.
 
+#### ✅ Terminada
+
+Las tres decisiones de §3 quedaron implementadas **en el service y no en la puerta**, y la matriz tiene por fin lo que §7 exigía: una prueba que la recorre. `AdminUserApiIT.everyRouteAnswersTheSameToAnAdminAndToAnOwner` llama **las siete rutas con los dos rangos** y exige la misma respuesta, así que el `hasRole('ADMIN')` que deja al owner afuera ya no puede entrar sin romper algo.
+
+**Lo que la rebanada descubrió de sí misma**, y no sabía al empezar:
+
+- **La invariante del último owner se rompía de verdad.** Dos owners revocándose a la vez —o dos promociones a `Admin` simultáneas, por la exclusión de #169— dejaban la plataforma en **cero owners**. Ningún unitario podía verlo y en el código se lee bien; hizo falta concurrencia real contra MySQL. El arreglo son **dos** bloqueos y el segundo no es opcional: bajo `REPEATABLE READ` un `count(*)` plano responde desde el snapshot previo a la espera. Todo en **#252**.
+- **`PlatformRole` cruzaba HTTP sin `@JsonValue`**, así que todo grant y revoke desde la pantalla respondía `400` mientras la respuesta sí decía `"Player"`. Ningún test de ninguno de los dos lados podía encontrarlo. Arrastró un `500` que debía ser `400` para cualquier cuerpo malformado, en cualquier endpoint (**#253**).
+- **`TestDataService` no limpiaba las tablas nuevas**, y como la limpieza es una sola transacción, el choque de FK hacía rollback entero y la corrida siguiente arrancaba con la base llena (**#254**).
+
+**Suites al cerrar, salida real:** `./mvnw test` 409/409 · `./mvnw verify` 120 ITs en 16 clases, 0 fallos · `npx tsc -b` limpio · `npm run test` 315/315 · `npm run test:e2e` 54/54 · `npm run format` sin reescrituras. Cero regresiones en las 12 clases de IT preexistentes.
+
+> **Nota de entorno:** `./mvnw verify` **no corre de fábrica** en esta máquina. Testcontainers no descubre el socket de colima aunque `docker info` funcione, y las 16 clases fallan con «Could not find a valid Docker environment», que parece código roto. Hay que pasarle `DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"` y `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`.
+
+**Deuda de revisión — para F4** (punto 5 de `plan-desarrollo.md` §6, #250):
+
+| Sin verificar | Por qué queda |
+|---|---|
+| Los cuatro estados de cada pantalla nueva, y el layout de ficha en un viewport de 375 px | Es F4 por diseño (#250) |
+| El `<Dialog>` del historial en móvil, que según #138 debería ser sheet desde abajo | No se miró |
+| Contraste de los chips de rol (`text-brand-fg` sobre `bg-raised`) en los dos temas | No se pasó por el medidor de `design/build.py` |
+| La evicción de caché por la rama `afterCommit`, medida como caché | Se verificó su **efecto** por HTTP —un owner degradado es rechazado en el request inmediato— pero ningún test observa la caché misma |
+| Idempotencia de dos revocaciones simultáneas sobre la **misma** persona | Borde conocido y aceptado a propósito: responde `200` y `409`, no `200` y `200`. Documentado en `@implNote` y en **#252** |
+
+**Inventario de archivos** — 20 nuevos en `backend/` (`users/`: `AdminUserController`, `AdminUserService`, `UserRoleService`, `UserRoleChange`, `UserRoleChangeAction`, `UserRoleChangeRepository`, `UserRoleGrant`, `UserStatusChange`, `UserStatusChangeRepository`; `users/dto/`: los siete records; `db/migration/V11__user_admin_changes.sql`; tests: `UserRoleServiceTest`, `AdminUserServiceTest`, `PlatformRoleJsonTest`, `UserSearchFieldTest`, `UserRoleServiceIT`, `AdminUserApiIT`), 20 nuevos en `frontend/` (`features/users/`: `roles.ts`, `adminErrors.ts`, `api/adminUsersApi.ts` + siete hooks, `hooks/useUserAdminCapabilities.ts`, cinco componentes y sus tests; `routes/admin/AdminUsersPage.tsx` + test; `e2e/admin-users.spec.ts`), y los modificados que el commit de la rebanada lista.
+
+**Tres archivos de producción se tocaron por infraestructura de pruebas**, y se anota a propósito: `TestLoginController` (gana `asOwner` — sin eso el flujo de la rebanada no tenía actor), `TestDataService` y el `DevPanel` con su cuarta fila. Todo en **#254**.
+
 ---
 
 ### F3.2 — `approval_requests`: un mecanismo, cuatro pedidos

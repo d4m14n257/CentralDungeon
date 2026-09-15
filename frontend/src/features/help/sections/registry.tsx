@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { SearchField } from '@/lib/searchQuery'
 
 import { AccountHelp, ContextsHelp, NotificationsHelp, SearchHelp, TableStatusHelp } from './basics'
-import { AdminFilesHelp, AssignMastersHelp, CatalogsHelp, OwnerHelp, ReviewingHelp } from './admins'
+import { AdminFilesHelp, AssignMastersHelp, BlockingHelp, CatalogsHelp, OwnerHelp, ReviewingHelp, RolesHelp } from './admins'
 import {
   CandidatesHelp,
   CoMastersHelp,
@@ -101,6 +101,8 @@ export const HELP_SECTIONS = {
   'admins.catalogs': { titleKey: 'admins.catalogs.title', Body: CatalogsHelp },
   'admins.files': { titleKey: 'admins.files.title', Body: AdminFilesHelp },
   'admins.owner': { titleKey: 'admins.owner.title', Body: OwnerHelp },
+  'admins.roles': { titleKey: 'admins.roles.title', Body: RolesHelp },
+  'admins.blocking': { titleKey: 'admins.blocking.title', Body: BlockingHelp },
 } as const satisfies Record<string, HelpSectionDefinition>
 
 /**

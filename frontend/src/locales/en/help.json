@@ -412,7 +412,8 @@
       "title": "Owner",
       "same": "An owner can do everything an admin can: it is the same role with more reach.",
       "soon": "What is theirs alone — auditing, deleting files and migrating accounts — is still being built, and this help will explain it once it exists.",
-      "exclusive": "That is why nobody is an admin and an owner at once: you hold one of the two, and owner is the one above."
+      "exclusive": "That is why nobody is an admin and an owner at once: you hold one of the two, and owner is the one above.",
+      "grants": "The one thing only an owner can do today is give and take away the Admin and Owner roles. The rest of the administration they share."
     },
     "catalogs": {
       "title": "Catalogs: systems, tags and platforms",
@@ -448,6 +449,41 @@
         "step4": "The \"Tables\" column tells you how many are using it before you remove it."
       },
       "commands": "This screen's search understands “/file_name” (the name), “/file_owner” (who uploaded it), “/file_type” (the format) and “/file_categories” (the drawer). The last two are picked from a list. “/and” and “/or” are offered as soon as there is a criterion to join."
+    },
+    "roles": {
+      "title": "Roles: who grants what",
+      "what": "There are four roles — Player, Master, Admin and Owner — and they stack: somebody can be a Player and a Master at once. Every account is created with Player.",
+      "whoGrants": "An admin moves Player and Master, and nothing else. Admin and Owner are given and taken away by an owner only. If you are an admin and the dialog shows you just two roles, it is not a bug: those other two are not yours to give.",
+      "exclusive": "Admin and Owner are exclusive: giving one takes the other away, in the same act. They are one rank at two scopes, and holding both adds not a single permission — which is why promoting an admin to owner makes their Admin chip disappear.",
+      "lastOwner": "The platform is never left without an owner. You cannot take away your own Owner role, nor take it from the last one left: a system where nobody can grant Owner any more has no way to recover from the inside.",
+      "reason": "Every role change asks for a reason, and it is required. It is kept along with who made it and when.",
+      "history": "An account's history — every role given or taken, every block, each with its reason — is read from “History”, on that person's own row.",
+      "steps": {
+        "step1": "Switch to the Admin context and go to “Users”.",
+        "step2": "Find the person by their Discord or display name. You can narrow by role and by status from the same line.",
+        "step3": "On their row, press “Change roles”.",
+        "step4": "Pick the role. Each one tells you whether the person already has it: if they do you are taking it away, and if they do not you are giving it.",
+        "step5": "Write the reason. It is required and it is recorded.",
+        "step6": "Press “Give the role” or “Take the role away”. The change applies immediately."
+      }
+    },
+    "blocking": {
+      "title": "Blocking an account",
+      "what": "Blocking closes the account: the person does not get back into the platform.",
+      "keepsData": "Their data is kept. Their tables, their applications and their history stay exactly as they were: blocking is not deleting.",
+      "immediate": "It applies at once, not in a while: if the person had a session open, they stop getting in straight away.",
+      "noPeers": "An account holding Admin or Owner cannot be blocked, and neither can your own. Between peers there is no authority: an admin does not block an admin, nor an owner an owner.",
+      "noAppeal": "The other reason is that a block cannot be appealed from the blocked side: they cannot sign in to ask for it to be undone, so the decision has to hold up on this side.",
+      "reason": "Blocking and unblocking both ask for a required reason, and it is recorded along with who did it and when.",
+      "unblock": "Unblocking gives access back from that same row. A closed account is not touched here, in either direction.",
+      "steps": {
+        "step1": "In “Users”, find the account. You can narrow by status to see only the blocked ones.",
+        "step2": "On their row, press “Block”. If that button is not there, it is because the account holds Admin or Owner.",
+        "step3": "Read what the dialog says before you confirm: what the person loses and what is kept for them.",
+        "step4": "Write the reason. It is required.",
+        "step5": "Press “Block”. The closure applies immediately.",
+        "step6": "To give access back, that same row offers “Unblock”, which also asks for a reason."
+      }
     }
   },
   "stepsTitle": "How to do it"

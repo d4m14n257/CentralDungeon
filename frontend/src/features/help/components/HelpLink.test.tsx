@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
-import '@/providers/i18n'
+import i18n from '@/providers/i18n'
 import { HELP_SECTIONS } from '../sections/registry'
 import { HelpLink } from './HelpLink'
 
@@ -48,6 +48,20 @@ describe('the help registry', () => {
     for (const [id, section] of Object.entries(HELP_SECTIONS)) {
       expect(section.titleKey, id).toBeTruthy()
       expect(typeof section.Body, id).toBe('function')
+    }
+  })
+
+  /**
+   * A `titleKey` is a string, so a typo in one is not a compile error - it is a dialog whose heading
+   * reads `admins.roles.title` to whoever opened it. And the heading has to exist in **both**
+   * languages: `fallbackLng` is Spanish, so an untranslated English title fails silently by looking
+   * perfectly fine to a Spanish-speaking reviewer.
+   */
+  it.each(['es', 'en'])('resolves every section title in %s', (language) => {
+    const t = i18n.getFixedT(language, 'help')
+    for (const [id, section] of Object.entries(HELP_SECTIONS)) {
+      expect(i18n.exists(section.titleKey, { ns: 'help', lng: language }), `${id} in ${language}`).toBe(true)
+      expect(t(section.titleKey), id).not.toBe(section.titleKey)
     }
   })
 })

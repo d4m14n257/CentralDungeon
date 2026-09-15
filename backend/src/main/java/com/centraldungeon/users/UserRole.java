@@ -107,12 +107,39 @@ public class UserRole {
     }
 
     /**
-     * Revokes or restores the grant.
+     * Returns when the grant was revoked.
      *
-     * @param status the new status. Changing it has to evict the security cache, or the old roles
-     *               stay live for up to its TTL (#128)
+     * @return the timestamp, or null while the grant is live
      */
-    public void setStatus(UserRoleStatus status) {
-        this.status = status;
+    public @Nullable LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    /**
+     * Revokes the grant. The row stays; only its status and its timestamp move (#25).
+     *
+     * <p>One method for both fields rather than a {@code setStatus}, because they are one fact: a
+     * grant that is {@code Deleted} with no {@code deletedAt} - or live with one - is a row that
+     * contradicts itself, and nothing outside this class should be in a position to write it. That
+     * is not hypothetical: {@code deleted_at} existed in the baseline and was never written by
+     * anything until F3.1, because revoking used to be a bare status flip.
+     *
+     * <p>Whoever calls this has to evict the security cache, or the old roles stay live for up to
+     * its TTL (#128).
+     */
+    public void revoke() {
+        status = UserRoleStatus.Deleted;
+        deletedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Gives a revoked grant back, clearing the revocation timestamp.
+     *
+     * <p>Restoring flips this row instead of inserting a second one: {@code (user_id, role_id)} is
+     * the primary key, so there is only ever one row per pair.
+     */
+    public void restore() {
+        status = UserRoleStatus.Allowed;
+        deletedAt = null;
     }
 }

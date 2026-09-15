@@ -53,5 +53,30 @@ export function AdminFilesHelp() {
 
 /** What Owner can do that Admin cannot (#169). */
 export function OwnerHelp() {
-  return <ListAndSteps block="owner" keys={['same', 'exclusive', 'soon']} stepCount={0} />
+  return <ListAndSteps block="owner" keys={['same', 'exclusive', 'grants', 'soon']} stepCount={0} />
+}
+
+/**
+ * Who may hand out which role, and the two invariants around it (F3.1).
+ *
+ * **`whoGrants` is the reason this section exists.** An admin opens the role dialog and finds two of
+ * the four roles simply absent — that is principio 2 working as intended (a button that cannot be
+ * used is not shown), but from the reader's side an absence and a bug look identical until something
+ * says which it is. The rest of the list is what they will ask next: why the other chip vanished
+ * (#169), and why the platform refused to let them unmake the last owner.
+ */
+export function RolesHelp() {
+  return <ListAndSteps block="roles" keys={['what', 'whoGrants', 'exclusive', 'lastOwner', 'reason', 'history']} stepCount={6} />
+}
+
+/**
+ * What closing an account does, and who is out of reach of it (#84, §3).
+ *
+ * The two halves of `what` and `keepsData` are deliberately adjacent: "block" is a word people read
+ * as "delete", and learning the second half afterwards is learning it too late.
+ */
+export function BlockingHelp() {
+  return (
+    <ListAndSteps block="blocking" keys={['what', 'keepsData', 'immediate', 'noPeers', 'noAppeal', 'reason', 'unblock']} stepCount={6} />
+  )
 }

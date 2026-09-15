@@ -91,6 +91,8 @@ public class TestLoginController {
      *                  needs someone distinguishable
      * @param asMaster  whether the actor is a Master. Their only role, unless {@code asAdmin} too
      * @param asAdmin   whether the actor is an Admin. Their only role, unless {@code asMaster} too
+     * @param asOwner   whether the actor is the platform Owner. Never together with {@code asAdmin}:
+     *                  the two are one rank at two scopes and never coexist (#169), so Owner wins
      * @param response  the response the refresh cookie is written onto
      * @return the access token and its lifetime, exactly as a real login would answer
      */
@@ -100,9 +102,10 @@ public class TestLoginController {
             @RequestParam String discordId,
             @RequestParam(defaultValue = "false") boolean asMaster,
             @RequestParam(defaultValue = "false") boolean asAdmin,
+            @RequestParam(defaultValue = "false") boolean asOwner,
             HttpServletResponse response) {
         User user = userService.findOrCreateByDiscordId(discordId, discordId);
-        setRolesExactly(user, wantedRoles(asMaster, asAdmin));
+        setRolesExactly(user, wantedRoles(asMaster, asAdmin, asOwner));
 
         String accessToken = jwtService.issueAccessToken(user.getId());
         String refreshToken = jwtService.issueRefreshToken(user.getId());
@@ -110,13 +113,21 @@ public class TestLoginController {
         return new TokenResponse(accessToken, jwtService.accessTokenTtl().toSeconds());
     }
 
-    /** Player when nothing is asked for: the actor with no flags is a plain member of the community. */
-    private Set<PlatformRole> wantedRoles(boolean asMaster, boolean asAdmin) {
+    /**
+     * Player when nothing is asked for: the actor with no flags is a plain member of the community.
+     *
+     * <p><b>Owner excludes Admin, here as everywhere</b> (#169). The two are the same rank at two
+     * scopes, and a fixture that handed out both would be the one place in the application where they
+     * coexist - which is exactly the state F3.1's rules assume cannot happen.
+     */
+    private Set<PlatformRole> wantedRoles(boolean asMaster, boolean asAdmin, boolean asOwner) {
         Set<PlatformRole> wanted = EnumSet.noneOf(PlatformRole.class);
         if (asMaster) {
             wanted.add(PlatformRole.MASTER);
         }
-        if (asAdmin) {
+        if (asOwner) {
+            wanted.add(PlatformRole.OWNER);
+        } else if (asAdmin) {
             wanted.add(PlatformRole.ADMIN);
         }
         return wanted.isEmpty() ? EnumSet.of(PlatformRole.PLAYER) : wanted;
@@ -139,7 +150,11 @@ public class TestLoginController {
             String name = grant.getRole().getName();
             UserRoleStatus target = wantedNames.contains(name) ? UserRoleStatus.Allowed : UserRoleStatus.Deleted;
             if (grant.getStatus() != target) {
-                grant.setStatus(target);
+                if (target == UserRoleStatus.Allowed) {
+                    grant.restore();
+                } else {
+                    grant.revoke();
+                }
                 userRoleRepository.save(grant);
             }
             restored.add(name);

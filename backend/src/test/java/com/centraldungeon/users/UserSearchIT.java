@@ -3,9 +3,11 @@ package com.centraldungeon.users;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.users.dto.AdminUserSummaryResponse;
 import com.centraldungeon.users.dto.UserSummaryResponse;
 import java.util.List;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,15 +48,26 @@ class UserSearchIT {
     private UserService userService;
 
     @Autowired
+    private AdminUserService adminUserService;
+
+    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @BeforeEach
     void setUp() {
+        userRoleRepository.deleteAll();
         userRepository.deleteAll();
-        save("juanma", "Juan Manuel", UserStatus.Allowed);
+        User juanma = save("juanma", "Juan Manuel", UserStatus.Allowed);
         save("pablosan", "Pablo Ruiz", UserStatus.Allowed);
         save("elpablo", "Juan Ignacio", UserStatus.Allowed);
         save("bannedjuan", "Juan Blocked", UserStatus.Blocked);
+        grant(juanma, PlatformRole.MASTER);
     }
 
     @Test
@@ -90,9 +103,41 @@ class UserSearchIT {
         assertThat(discordNamesOf(userService.search("JUANMA", FIRST_PAGE))).containsExactly("juanma");
     }
 
+    /**
+     * The rule F3.1 could most easily have broken. {@code UserSearchSpecification} now serves two
+     * audiences, and the picker's one still forces {@code status = Allowed} - no flag, no query and
+     * no {@code /status} command can turn it off, because nobody blocked should ever be offered as a
+     * master or a player.
+     */
     @Test
     void neverOffersSomeoneWhoIsNotAllowed() {
         assertThat(discordNamesOf(userService.search("banned", FIRST_PAGE))).isEmpty();
+        assertThat(discordNamesOf(userService.search("/user_name Blocked", FIRST_PAGE))).isEmpty();
+        // /status is not part of the picker's vocabulary, so this is literal text - and finds nobody.
+        assertThat(discordNamesOf(userService.search("/status Blocked", FIRST_PAGE))).isEmpty();
+        assertThat(discordNamesOf(userService.search("  ", FIRST_PAGE))).doesNotContain("bannedjuan");
+    }
+
+    /** /admin/users is the other audience: an admin who cannot find the account they blocked cannot unblock it. */
+    @Test
+    void theAdminListingDoesSeeBlockedAccounts() {
+        assertThat(adminDiscordNamesOf("banned")).containsExactly("bannedjuan");
+        assertThat(adminDiscordNamesOf("/status Blocked")).containsExactly("bannedjuan");
+        assertThat(adminDiscordNamesOf(null))
+                .containsExactlyInAnyOrder("juanma", "pablosan", "elpablo", "bannedjuan");
+    }
+
+    @Test
+    void theAdminListingFiltersByLiveRole() {
+        assertThat(adminDiscordNamesOf("/role Master")).containsExactly("juanma");
+        assertThat(adminDiscordNamesOf("/role Owner")).isEmpty();
+    }
+
+    /** Un valor desconocido no es un 400: no matchea nada (§2.5). */
+    @Test
+    void anUnknownRoleOrStatusMatchesNothingInsteadOfFailing() {
+        assertThat(adminDiscordNamesOf("/role Wizard")).isEmpty();
+        assertThat(adminDiscordNamesOf("/status Exploded")).isEmpty();
     }
 
     @Test
@@ -110,10 +155,21 @@ class UserSearchIT {
         return page.content().stream().map(UserSummaryResponse::discordUsername).toList();
     }
 
-    private void save(String discordUsername, String name, UserStatus status) {
+    private List<String> adminDiscordNamesOf(@Nullable String query) {
+        return adminUserService.search(query, FIRST_PAGE).content().stream()
+                .map(AdminUserSummaryResponse::discordUsername)
+                .toList();
+    }
+
+    private User save(String discordUsername, String name, UserStatus status) {
         User user = new User(UUID.randomUUID().toString().replace("-", ""), discordUsername);
         user.setName(name);
         user.setStatus(status);
-        userRepository.save(user);
+        return userRepository.save(user);
+    }
+
+    private void grant(User user, PlatformRole role) {
+        Role entity = roleRepository.findByName(role.roleName()).orElseThrow();
+        userRoleRepository.save(new UserRole(user, entity));
     }
 }

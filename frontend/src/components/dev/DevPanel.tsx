@@ -20,13 +20,19 @@ import { testLoginAndReload } from './devApi'
 const DEFAULT_PLAYER_ID = 'jugador-1'
 const DEFAULT_MASTER_ID = 'master-1'
 const DEFAULT_ADMIN_ID = 'admin-1'
+// F3.1 needs an owner to verify by hand (fase-3-admin-owner.md §6, steps 1 and 2), and there is no
+// other way into that role: the seed grants nobody Owner, and only an Owner may hand it out.
+const DEFAULT_OWNER_ID = 'owner-1'
 
 /**
  * Only under `npm run dev` (import.meta.env.DEV, substituted at build time and dropped from the
  * production bundle) - it replaces the console `fetch()` calls of pruebas-e1.md with buttons. It
  * depends on the backend running with the `test` profile; without it, test-login answers 404 and the
- * global error toast (config/query.ts) says so. New roles (Admin, Owner) are added here once
- * test-login supports them - the shape is not anticipated yet.
+ * global error toast (config/query.ts) says so.
+ *
+ * The four roles are here because test-login now issues all four. **Owner is the one that could not
+ * be reached any other way**: the seed grants it to nobody and only an Owner may hand it out, so
+ * without this button the first two steps of fase-3-admin-owner.md §6 had no actor to run them as.
  */
 export function DevPanel() {
   if (!import.meta.env.DEV) {
@@ -46,6 +52,7 @@ function DevPanelContent() {
   const [playerDiscordId, setPlayerDiscordId] = useState(DEFAULT_PLAYER_ID)
   const [masterDiscordId, setMasterDiscordId] = useState(DEFAULT_MASTER_ID)
   const [adminDiscordId, setAdminDiscordId] = useState(DEFAULT_ADMIN_ID)
+  const [ownerDiscordId, setOwnerDiscordId] = useState(DEFAULT_OWNER_ID)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const createTable = useCreateTable()
 
@@ -64,6 +71,16 @@ function DevPanelContent() {
     setIsLoggingIn(true)
     try {
       await testLoginAndReload(adminDiscordId.trim() || DEFAULT_ADMIN_ID, false, true)
+    } catch {
+      toast.error(t('loginFailed'))
+      setIsLoggingIn(false)
+    }
+  }
+
+  async function loginAsOwner() {
+    setIsLoggingIn(true)
+    try {
+      await testLoginAndReload(ownerDiscordId.trim() || DEFAULT_OWNER_ID, false, false, true)
     } catch {
       toast.error(t('loginFailed'))
       setIsLoggingIn(false)
@@ -142,6 +159,21 @@ function DevPanelContent() {
               />
               <Button size="sm" variant="secondary" disabled={isLoggingIn} onClick={() => void loginAsAdmin()}>
                 {t('loginAsAdmin')}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="dev-panel-owner-id">{t('ownerDiscordIdLabel')}</Label>
+            <div className="flex gap-2">
+              <Input
+                id="dev-panel-owner-id"
+                value={ownerDiscordId}
+                onChange={(event) => setOwnerDiscordId(event.target.value)}
+                className="flex-1"
+              />
+              <Button size="sm" variant="secondary" disabled={isLoggingIn} onClick={() => void loginAsOwner()}>
+                {t('loginAsOwner')}
               </Button>
             </div>
           </div>

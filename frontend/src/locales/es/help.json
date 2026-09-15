@@ -412,7 +412,8 @@
       "title": "Owner",
       "same": "Un owner puede todo lo de un admin: es el mismo rol con más alcance.",
       "soon": "Lo suyo propio —auditoría, borrado de archivos y migración de cuentas— todavía se está construyendo, y esta ayuda lo va a explicar cuando exista.",
-      "exclusive": "Por eso nadie es admin y owner a la vez: se tiene uno de los dos, y owner está por encima."
+      "exclusive": "Por eso nadie es admin y owner a la vez: se tiene uno de los dos, y owner está por encima.",
+      "grants": "Lo único que hoy solo puede un owner es otorgar y quitar los roles de Admin y de Owner. Todo el resto de la administración lo comparten."
     },
     "catalogs": {
       "title": "Catálogos: sistemas, tags y plataformas",
@@ -448,6 +449,41 @@
         "step4": "La columna «Mesas» te dice en cuántas se está usando antes de que lo des de baja."
       },
       "commands": "El buscador de esta pantalla entiende «/file_name» (el nombre), «/file_owner» (quién lo subió), «/file_type» (el formato) y «/file_categories» (el cajón). Los dos últimos se eligen de una lista. «/and» y «/or» se ofrecen apenas hay un criterio que unir."
+    },
+    "roles": {
+      "title": "Roles: quién otorga qué",
+      "what": "Hay cuatro roles —Jugador, Master, Admin y Owner— y se acumulan: alguien puede ser Jugador y Master a la vez. Cada cuenta nace con Jugador.",
+      "whoGrants": "Un admin mueve Jugador y Master, y nada más. Admin y Owner los da y los quita solo un owner. Si sos admin y en el diálogo solo ves dos roles, no es un error: es que esos dos no son tuyos para dar.",
+      "exclusive": "Admin y Owner son excluyentes: al dar uno se quita el otro, en el mismo acto. Son el mismo rango con distinto alcance, y tenerlos juntos no suma un solo permiso — por eso al ascender a un admin a owner vas a ver desaparecer su chip de Admin.",
+      "lastOwner": "La plataforma nunca se queda sin owner. No podés quitarte tu propio rol de Owner ni quitárselo al último que queda: un sistema donde ya nadie puede otorgar Owner no tiene forma de recuperarse desde adentro.",
+      "reason": "Todo cambio de rol pide un motivo, y es obligatorio. Queda guardado con quién lo hizo y cuándo.",
+      "history": "El historial de una cuenta —cada rol que se dio o se quitó, cada bloqueo, con su motivo— se consulta desde «Historial», en la misma fila de la persona.",
+      "steps": {
+        "step1": "Cambiá al contexto Admin y entrá a «Usuarios».",
+        "step2": "Buscá a la persona por su nombre de Discord o del sistema. Podés acotar por rol y por estado desde la misma línea.",
+        "step3": "En su fila, tocá «Cambiar roles».",
+        "step4": "Elegí el rol. Cada uno te dice si la persona ya lo tiene: si lo tiene se lo vas a quitar, y si no se lo vas a dar.",
+        "step5": "Escribí el motivo. Es obligatorio y queda registrado.",
+        "step6": "Tocá «Dar el rol» o «Quitar el rol». El cambio se aplica al instante."
+      }
+    },
+    "blocking": {
+      "title": "Bloquear una cuenta",
+      "what": "Bloquear cierra la cuenta: la persona no vuelve a entrar a la plataforma.",
+      "keepsData": "Sus datos se conservan. Sus mesas, sus postulaciones y su historial quedan exactamente como estaban: bloquear no es borrar.",
+      "immediate": "Se aplica en el acto, no dentro de un rato: si la persona tenía la sesión abierta, deja de entrar enseguida.",
+      "noPeers": "No se puede bloquear a una cuenta que tenga Admin u Owner, y tampoco a la propia. Entre pares no hay autoridad: ni un admin bloquea a un admin, ni un owner a un owner.",
+      "noAppeal": "El otro motivo es que el bloqueo es irreversible desde el lado del bloqueado: no puede entrar a pedir que lo desbloqueen, así que la decisión tiene que quedar de este lado.",
+      "reason": "Bloquear y desbloquear piden un motivo obligatorio, y queda registrado con quién lo hizo y cuándo.",
+      "unblock": "Desbloquear devuelve el acceso desde la misma fila. Una cuenta dada de baja no se toca por acá, ni en un sentido ni en el otro.",
+      "steps": {
+        "step1": "En «Usuarios», buscá la cuenta. Podés acotar por estado para ver solo las bloqueadas.",
+        "step2": "En su fila, tocá «Bloquear». Si ese botón no está, es porque esa cuenta tiene Admin u Owner.",
+        "step3": "Leé lo que dice el diálogo antes de confirmar: qué pierde la persona y qué se le conserva.",
+        "step4": "Escribí el motivo. Es obligatorio.",
+        "step5": "Tocá «Bloquear». El cierre se aplica al instante.",
+        "step6": "Para devolverle el acceso, la misma fila ofrece «Desbloquear», que también pide motivo."
+      }
     }
   },
   "stepsTitle": "Cómo se hace"

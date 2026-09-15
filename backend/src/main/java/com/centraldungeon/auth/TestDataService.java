@@ -112,6 +112,15 @@ public class TestDataService {
         // full database, which is the failure mode #171 and #172 were about.
         delete("delete from FileCategoryLink fc where fc.id.fileId in (" + E2E_FILES + ")");
         delete("delete from StoredFile f2 where f2.userCreated.id in (" + E2E_USERS + ")");
+        // And the seventh, with F3.1's two audit trails. Each points at `users` twice - `user_id` and
+        // `changed_by` - so a spec that promotes an e2e account, or an e2e admin that blocks anybody,
+        // leaves rows the delete below cannot get past. Same shape as `TableStatusChange` above, and
+        // the same consequence for missing it: one foreign key rolls the whole transaction back and
+        // the next run starts on a full database (#84, #169, #171, #172).
+        delete("delete from UserRoleChange urc where urc.user.id in (" + E2E_USERS + ") or urc.changedBy.id in ("
+                + E2E_USERS + ")");
+        delete("delete from UserStatusChange usc where usc.user.id in (" + E2E_USERS + ") or usc.changedBy.id in ("
+                + E2E_USERS + ")");
         delete("delete from UserRole ur where ur.user.id in (" + E2E_USERS + ")");
         int users = delete("delete from User u2 where u2.discordId like :discordId");
 

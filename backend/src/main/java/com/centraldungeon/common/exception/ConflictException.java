@@ -41,6 +41,26 @@ public final class ConflictException extends ApiException {
     public static final String PARAM_OTHER_TABLE_NAME = "otherTableName";
 
     /**
+     * The operation would leave the platform with no active Owner. The one global invariant of roles
+     * (fase-3-admin-owner.md 3): a system where nobody can grant Owner has no way back from the
+     * inside, and MySQL cannot express the rule, so the service is the only place it can live.
+     */
+    public static final String LAST_OWNER = "LAST_OWNER";
+
+    /**
+     * An owner taking their own Owner role away. Separate from {@link #LAST_OWNER} on purpose: the
+     * two are different sentences even when they fire on the same person, and the more specific one
+     * is checked first so the reader is told what they actually did.
+     */
+    public static final String CANNOT_REVOKE_OWN_OWNER = "CANNOT_REVOKE_OWN_OWNER";
+
+    /** Blocking an account that cannot be blocked because it is not usable already (#84). */
+    public static final String USER_ALREADY_BLOCKED = "USER_ALREADY_BLOCKED";
+
+    /** Unblocking an account that is not blocked. A Deleted account answers this too: F3.1 never moves one back to Allowed. */
+    public static final String USER_NOT_BLOCKED = "USER_NOT_BLOCKED";
+
+    /**
      * @param message what state made the request impossible, in English and for a log (#197)
      */
     public ConflictException(String message) {

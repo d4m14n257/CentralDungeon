@@ -3,6 +3,7 @@ package com.centraldungeon.common.exception;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -88,6 +89,33 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, "Invalid value for '" + exception.getName() + "'");
+        problem.setProperty("errorCode", "VALIDATION_ERROR");
+        return problem;
+    }
+
+    /**
+     * A request body the message converter cannot turn into the DTO - malformed JSON, a string where
+     * a number goes, or a value outside an enum.
+     *
+     * <p>This is {@link #handleTypeMismatch}'s twin. That one closed the hole for a path variable or
+     * a query parameter; the body had the same hole and nobody had walked into it yet, because every
+     * enum in the application used to be spelled on the wire exactly as its constants are - so the
+     * only way to get a value Jackson rejected was to hand-write the request. {@code PlatformRole} is
+     * the first enum whose wire spelling differs ({@code "Admin"}, not {@code ADMIN}), which made the
+     * hole reachable: sending the wrong spelling answered <b>500</b>, telling whoever sent it that
+     * the server broke when what happened is that they mistyped a field.
+     *
+     * <p>{@code VALIDATION_ERROR}, the same code Jakarta validation raises, because from the
+     * frontend's side the two are the same event: the body was not acceptable. The detail stays
+     * generic on purpose - Jackson's message names classes and parser positions, which is internal
+     * shape that a 400 has no business publishing.
+     *
+     * @param exception what the converter refused. Logged, never echoed
+     * @return a 400 problem detail carrying {@code VALIDATION_ERROR}
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleUnreadableBody(HttpMessageNotReadableException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Malformed request body");
         problem.setProperty("errorCode", "VALIDATION_ERROR");
         return problem;
     }
