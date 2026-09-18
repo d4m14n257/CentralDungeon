@@ -407,14 +407,31 @@
   "admins": {
     "reviewing": {
       "title": "Reviewing tables",
-      "queue": "“Tables to review” collects the ones waiting on a decision: those in preparation and those without a master yet.",
+      "queue": "Tables are reviewed from “Tray”, together with everything else waiting on an action. Only the ones a master sent in for review are there: a table sent back with changes requested is in the master's hands, not yours.",
       "approve": "Approving publishes the table. Requesting changes sends it back to the master with the reason in writing.",
-      "gone": "Once approved, the table leaves the queue: the queue is what is pending, not a listing of everything.",
+      "gone": "Resolved either way, the table leaves the tray: the tray is what is pending, not a listing of everything.",
+      "listing": "“Tables” is a different thing: every table on the platform, with its status and a search box. It is for finding one, not for reviewing it.",
       "steps": {
-        "step1": "Switch to the Admin context and go to “Tables to review”.",
-        "step2": "Open the table you want to review and read what the master prepared.",
-        "step3": "Tap “Approve” to publish it, or “Request changes” and write what has to be fixed.",
-        "step4": "The table leaves the queue: the queue is what is pending, not a listing of everything."
+        "step1": "Switch to the Admin context. You land on “Tray”.",
+        "step2": "Find the table in the list. If you are going to read it carefully, tap “Take” so nobody else reviews it at the same time.",
+        "step3": "Read what the master prepared.",
+        "step4": "Tap “Approve” to publish it, or “Request changes” and write what has to be fixed. The table leaves the tray."
+      }
+    },
+    "claiming": {
+      "title": "Taking something from the tray",
+      "what": "The tray belongs to every admin. Taking an item says you are on it: the moment you take it, it disappears from everybody else's tray.",
+      "notRequired": "You do not have to take something to resolve it. Anything free can be approved, rejected or sent back directly, and doing so makes it yours alone.",
+      "whenToClaim": "Take it when you are going to be a while: reading a whole table takes time, and that is exactly the time another admin could spend reading the same one.",
+      "yours": "While it is yours it stays in your tray with your name on it and since when you have had it, so you know how long you have left.",
+      "timeout": "It is released on its own after {{minutes}} minutes. That is so nobody blocks a request by closing a tab, not a deadline to think in: if yours ran out, take it again.",
+      "release": "If you are not the right person for it, tap “Release” and it goes back to the tray immediately, without waiting the {{minutes}} minutes.",
+      "race": "The one thing you cannot do is work on something another admin took. If they beat you to it by a second, the screen tells you instead of applying your decision on top of theirs.",
+      "steps": {
+        "step1": "Go to “Tray”. Each row says whether it is free or who took it.",
+        "step2": "If you are going to read it carefully, tap “Take” so nobody else picks it up meanwhile.",
+        "step3": "Resolve it: approve, reject or request changes, whichever it is.",
+        "step4": "If you end up not resolving it, tap “Release” to hand it back."
       }
     },
     "assignMasters": {
@@ -424,7 +441,7 @@
       "order": "The first one you add is the master and the rest become co-masters. Tap a name to make them the master: the previous one becomes a co-master.",
       "opens": "On assigning, the table opens directly, without going through review.",
       "steps": {
-        "step1": "In “Tables to review”, tap “Create table without a master” and give it a name.",
+        "step1": "In “Tables”, tap “Create table without a master” and give it a name.",
         "step2": "On that table's row, tap “Assign masters”.",
         "step3": "Search for the person by Discord name or display name and tap their name in the list.",
         "step4": "Add the others the same way. The first is the master; the rest become co-masters.",
@@ -517,7 +534,7 @@
       "pendingFirst": "The screen opens filtered by “Pending”, which is what is waiting for an action. Remove that filter from the search box to see what has been resolved and with what answer.",
       "note": "Approving and rejecting both ask for a required note, and it reaches whoever asked. On a rejection it is the only thing they will receive, so it has to be enough for them to understand.",
       "masterGrant": "Approving a master role request gives the role by the same road as “Users”, with your note as the reason. There is no second way to grant it.",
-      "tableOpen": "Approving a new table request does not create the table. The request carries no name, system, seats or schedule: approving records that it stands, and you create the table afterwards from “Tables to review”.",
+      "tableOpen": "Approving a new table request does not create the table. The request carries no name, system, seats or schedule: approving records that it stands, and you create the table afterwards from “Tables”.",
       "general": "Approving a question changes nothing else on the platform: it is closed, and your answer reaches whoever asked.",
       "resolvedOnce": "A request is resolved once. If another admin got there first, the screen tells you instead of applying your decision on top.",
       "gone": "If what the request pointed at no longer exists, it cannot be resolved: the row outlives what it pointed at, but acting on something that was deleted would be acting on a ghost.",
@@ -526,7 +543,7 @@
         "step2": "Read the reason on the row. If you need to see all of it, “See details” opens it in full.",
         "step3": "Decide: “Approve” or “Reject”. Check what the dialog says approving that kind does, because it is not the same for all three.",
         "step4": "Write your answer. It is required and it reaches whoever asked.",
-        "step5": "If it was a new table request, remember the step that is left: create it from “Tables to review” and assign it a master."
+        "step5": "If it was a new table request, remember the step that is left: create it from “Tables” and assign it a master."
       }
     }
   },

@@ -17,7 +17,7 @@ export function useDeleteTable(tableId: string) {
       queryClient.removeQueries({ queryKey: queryKeys.tables.managedDetail(tableId) })
       queryClient.removeQueries({ queryKey: queryKeys.tables.detail(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managed() })
-      void queryClient.invalidateQueries({ queryKey: ['tables', 'admin'] })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
     },
   })
 }

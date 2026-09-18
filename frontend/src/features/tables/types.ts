@@ -362,5 +362,14 @@ export interface AdminTableSummary {
   maxPlayers: number | null
   playerCount: number
   primaryMasterName: string | null
+  /**
+   * Who has the table reserved in the shared admin tray, or null while nobody has (#100, F3.3).
+   *
+   * **The listing carries it so that a reserved table reads the same here as it does in the tray.**
+   * `/admin/tables` offers no action that needs the reservation any more — approving and requesting
+   * changes moved to `/admin/queue` (#176) — but an admin looking at the list still has to be able to
+   * tell that a colleague is in the middle of reviewing something, or they will go and open it.
+   */
+  claimedByName: string | null
   createdAt: string
 }

@@ -101,3 +101,8 @@ app:
     # How long a file survives unused before the purge marks it gone (#75). Marks only - freeing the
     # bytes is the platform owner's, from the administration menu, and that is F5 (#66).
     retention: P90D
+  admin-queue:
+    # How long an admin keeps an item of the shared tray before the release job hands it back (#100).
+    # Configurable from the start and starting at 15 minutes, which is what #100 asks for; F3.5 moves
+    # the value to system_settings so the owner edits it without a deploy (#141).
+    claim-timeout: PT15M

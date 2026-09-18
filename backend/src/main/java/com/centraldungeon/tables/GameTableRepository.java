@@ -1,6 +1,7 @@
 package com.centraldungeon.tables;
 
 import jakarta.persistence.LockModeType;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -52,14 +53,59 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
             @Param("userId") String userId, @Param("statuses") Collection<GameTableStatus> statuses);
 
     /**
-     * /admin/tables: management listing, unfiltered by pertenencia - the caller is already an admin.
+     * This source's contribution to the shared admin tray: the tables sitting in review that are
+     * either free or already the reader's (#100).
      *
-     * @param statuses the statuses to show; the controller defaults them to the ones waiting on an
-     *                 admin (#176)
-     * @param pageable page, size and sort
-     * @return one page of tables in those statuses
+     * <p>The twin of {@code ApprovalRequestRepository.findQueueItems}, and the reservation rule is
+     * the same one: {@code claimed_by is null or claimed_by = :actorId}, so a table another admin
+     * took is not in this reader's tray at all (modelo-datos.md §5).
+     *
+     * <p><b>One status and only one.</b> The caller passes {@code Preparation} - a table that was
+     * sent to review - and nothing else qualifies: {@code Draft} was never sent, {@code
+     * ChangesRequested} is back with its master, and {@code Unassigned} is waiting for a master
+     * rather than for a review (#245).
+     *
+     * @param status   the status that means "waiting on an admin", always {@code Preparation}
+     * @param actorId  the admin reading the tray, always from the token (#121)
+     * @param pageable the per-source ceiling; the tray pages after the merge
+     * @return the tables waiting for this admin, oldest first
      */
-    Page<GameTable> findByStatusIn(Collection<GameTableStatus> statuses, Pageable pageable);
+    @Query("""
+            select t from GameTable t
+            where t.status = :status
+              and (t.claimedBy is null or t.claimedBy.id = :actorId)
+            order by t.createdAt asc, t.id asc
+            """)
+    List<GameTable> findQueueItems(
+            @Param("status") GameTableStatus status, @Param("actorId") String actorId, Pageable pageable);
+
+    /**
+     * The reservations that went stale - what the release job hands back (#100).
+     *
+     * <p>Bounded to the tables still in review for the same reason its twin is: a table that was
+     * approved or sent back is in nobody's tray, and clearing its {@code claimed_by} would be a write
+     * with no reader.
+     *
+     * @param status   the status that means "still waiting", always {@code Preparation}
+     * @param cutoff   reservations taken before this instant are expired
+     * @param pageable the batch bound
+     * @return the expired reservations, oldest first
+     */
+    @Query("""
+            select t from GameTable t
+            where t.status = :status
+              and t.claimedAt is not null
+              and t.claimedAt < :cutoff
+            order by t.claimedAt asc
+            """)
+    List<GameTable> findExpiredClaims(
+            @Param("status") GameTableStatus status,
+            @Param("cutoff") LocalDateTime cutoff,
+            Pageable pageable);
+
+    // findByStatusIn used to back /admin/tables. It is gone since F3.3: that listing now accepts the
+    // ?q= of #164 as well as a status filter, so it goes through findAll(Specification, Pageable)
+    // like every other search in the application, and a derived query nobody calls is dead weight.
 
     /**
      * Locks the table aggregate root for the invariants MySQL cannot express as a constraint:

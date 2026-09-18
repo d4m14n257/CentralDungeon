@@ -234,6 +234,104 @@ class GameTableServiceTest {
         org.mockito.Mockito.verify(tableStatusChangeRepository).save(any(TableStatusChange.class));
     }
 
+    /**
+     * La regla de la bandeja, caso 1 de 3: <b>una mesa que nadie reservó se aprueba</b>.
+     *
+     * <p>Fue al revés durante un rato y rompió la aplicación real: con «resolver exige tenerlo
+     * reservado», toda resolución desde una pantalla sin botón de reservar respondía 409 por una
+     * reserva que la pantalla no podía ofrecer. Lo que #100 compra es «si lo toma uno, baja para
+     * todos», así que un ítem que no tiene dueño no es la situación que hay que impedir: resolverlo es
+     * una reserva implícita. Este test es el que se cae si alguien vuelve a apretar la regla.
+     */
+    @Test
+    void approvesATableNobodyClaimed() {
+        GameTable table = persistedTable("table-free", GameTableStatus.Preparation);
+        when(gameTableRepository.findByIdForUpdate("table-free")).thenReturn(Optional.of(table));
+        when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
+        when(masterService.findByGameTable("table-free")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-free", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.approve("table-free", "admin-1");
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Opened);
+    }
+
+    /** Caso 2 de 3: la mesa que el actor ya tiene reservada, que es el camino que baja de la bandeja. */
+    @Test
+    void approvesATableTheActorAlreadyClaimed() {
+        GameTable table = persistedTable("table-mine", GameTableStatus.Preparation);
+        User admin = persistedUser("admin-1");
+        claimedBy(table, admin);
+        when(gameTableRepository.findByIdForUpdate("table-mine")).thenReturn(Optional.of(table));
+        when(userService.getById("admin-1")).thenReturn(admin);
+        when(masterService.findByGameTable("table-mine")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-mine", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.approve("table-mine", "admin-1");
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Opened);
+    }
+
+    /**
+     * Caso 3 de 3, y el único que se rechaza: la mesa que tiene <b>otro</b> admin. Un link viejo, una
+     * segunda pestaña, una bandeja sin refrescar - las tres formas de pisarle el trabajo a un colega.
+     */
+    @Test
+    void cannotApproveATableAnotherAdminClaimed() {
+        GameTable table = persistedTable("table-taken", GameTableStatus.Preparation);
+        claimedBy(table, persistedUser("admin-2"));
+        when(gameTableRepository.findByIdForUpdate("table-taken")).thenReturn(Optional.of(table));
+
+        assertThatThrownBy(() -> gameTableService.approve("table-taken", "admin-1"))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode")
+                .isEqualTo(ConflictException.ITEM_ALREADY_CLAIMED);
+
+        // Y no dejó nada a medias: ni la transición, ni la fila de historial, ni la campana.
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Preparation);
+        verify(tableStatusChangeRepository, never()).save(any(TableStatusChange.class));
+        verify(notificationService, never()).notifyReviewOutcome(any(), any(), any());
+    }
+
+    /** Pedir cambios es la otra mitad del mismo acto, y la regla vale igual para las dos. */
+    @Test
+    void cannotRequestChangesOnATableAnotherAdminClaimed() {
+        GameTable table = persistedTable("table-taken-2", GameTableStatus.Preparation);
+        claimedBy(table, persistedUser("admin-2"));
+        when(gameTableRepository.findByIdForUpdate("table-taken-2")).thenReturn(Optional.of(table));
+
+        assertThatThrownBy(() -> gameTableService.requestChanges(
+                        "table-taken-2", "admin-1", new ChangeTableStatusRequest("Falta la agenda")))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode")
+                .isEqualTo(ConflictException.ITEM_ALREADY_CLAIMED);
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Preparation);
+    }
+
+    /**
+     * El orden de los dos 409: si la mesa ni siquiera está en revisión, eso es lo que hay que decir.
+     * Nombrar al colega que reservó una mesa que ya no necesita revisión sería mandar a preguntarle
+     * por nada.
+     */
+    @Test
+    void aTableOutOfReviewSaysSoBeforeNamingWhoeverHoldsIt() {
+        GameTable table = persistedTable("table-opened", GameTableStatus.Opened);
+        claimedBy(table, persistedUser("admin-2"));
+        when(gameTableRepository.findByIdForUpdate("table-opened")).thenReturn(Optional.of(table));
+
+        assertThatThrownBy(() -> gameTableService.approve("table-opened", "admin-1"))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode")
+                .isNotEqualTo(ConflictException.ITEM_ALREADY_CLAIMED);
+    }
+
     @Test
     void onlyThePrimaryMasterCanStartATable() {
         GameTable table = persistedTable("table-2", GameTableStatus.Opened);
@@ -928,6 +1026,16 @@ class GameTableServiceTest {
         User user = new User("discord-" + id, "name-" + id);
         ReflectionTestUtils.setField(user, "id", id);
         return user;
+    }
+
+    /**
+     * Puts the table in an admin's hands. In production this is written by {@code AdminQueueService}
+     * under the table's row lock; here it is the arrangement of the three tests that are about who
+     * holds what. Resolving does <b>not</b> require it - see {@link #approvesATableNobodyClaimed}.
+     */
+    private static GameTable claimedBy(GameTable table, User admin) {
+        table.claim(admin, LocalDateTime.now());
+        return table;
     }
 
     /**

@@ -625,17 +625,37 @@ class ApprovalRequestApiIT {
                 .andExpect(jsonPath("$.totalElements").value(7));
     }
 
-    /** {@code claimedByName} is null on every row: F3.2 leaves the two columns and no behaviour (#100). */
+    /**
+     * A request is born unreserved, and the shared tray is the only thing that reserves it (#100).
+     *
+     * <p>This used to assert that <em>nothing</em> ever claimed a request, which was true of F3.2 and
+     * is exactly the half F3.3 came to add. What is still true - and what it pins now - is that
+     * opening a request reserves nothing, and that the reservation appears only once somebody takes
+     * the item from the tray.
+     *
+     * <p>Note what this file does <b>not</b> do anywhere else: resolving a request here never claims
+     * it first, and that is deliberate. {@code /admin/requests} has Approve and Reject and no way to
+     * reserve anything, so resolving without a reservation is this screen's normal path - see
+     * {@code AdminQueueClaimRule}. Only a request another admin holds is refused.
+     */
     @Test
-    void nothingInThisSliceEverClaimsARequest() throws Exception {
-        openRequest(player, ApprovalRequestType.General, "sin reservar");
+    void aRequestIsBornUnreservedAndOnlyTheTrayReservesIt() throws Exception {
+        String request = openRequest(player, ApprovalRequestType.General, "sin reservar");
+
         as(get(ADMIN), admin)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].claimedByName").doesNotExist());
-        assertThat(approvalRequestRepository.findAll()).allSatisfy(request -> {
-            assertThat(request.getClaimedBy()).isNull();
-            assertThat(request.getClaimedAt()).isNull();
+        assertThat(approvalRequestRepository.findAll()).allSatisfy(row -> {
+            assertThat(row.getClaimedBy()).isNull();
+            assertThat(row.getClaimedAt()).isNull();
         });
+
+        mockMvc.perform(bearer(post("/api/v1/admin-queue/approval_request/" + request + "/claim"), admin))
+                .andExpect(status().isOk());
+
+        as(get(ADMIN), admin)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].claimedByName").value(admin.getName()));
     }
 
     // ---------------------------------------------------------------- helpers

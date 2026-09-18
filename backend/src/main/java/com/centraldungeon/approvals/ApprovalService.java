@@ -1,5 +1,6 @@
 package com.centraldungeon.approvals;
 
+import com.centraldungeon.adminqueue.AdminQueueClaimRule;
 import com.centraldungeon.approvals.dto.ApprovalRequestDetailResponse;
 import com.centraldungeon.approvals.dto.ApprovalRequestSummaryResponse;
 import com.centraldungeon.common.exception.ConflictException;
@@ -42,6 +43,11 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li><b>A resolution is never re-resolved.</b> The same shape the table's state machine has, and
  *       the reason two admins answering at once produce one answer and one 409 rather than two
  *       answers.</li>
+ *   <li><b>A request another admin reserved is not yours to answer</b> ({@link AdminQueueClaimRule},
+ *       #100). Arrived with F3.3. Note what it is <em>not</em>: it does not require having reserved
+ *       it, because this screen resolves without ever passing through the shared tray. Correctness
+ *       does not rest on it either - the pessimistic lock above is what makes two answers impossible.
+ *       This is about not taking work off a colleague's desk.</li>
  *   <li><b>Approving a {@code MasterGrant} grants the role through {@link UserRoleService}</b>
  *       (fase-3-admin-owner.md 4). Not a second path that writes the same row: who may move which
  *       rank, the exclusion of #169 and the owner invariant all live over there, and a copy here
@@ -271,8 +277,10 @@ public class ApprovalService {
      * @param actor          the admin, from the token (#121)
      * @return the request afterwards, so the screen does not have to re-fetch
      * @throws NotFoundException 404 when no request has that id
-     * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending, or
-     *                           {@code REQUEST_ENTITY_GONE} when what it points at no longer exists
+     * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending,
+     *                           {@code ITEM_ALREADY_CLAIMED} when <em>another</em> admin reserved it
+     *                           from the shared queue (#100), or {@code REQUEST_ENTITY_GONE} when
+     *                           what it points at no longer exists
      */
     @Transactional
     public ApprovalRequestDetailResponse approve(String requestId, String resolutionNote, CurrentUser actor) {
@@ -301,8 +309,10 @@ public class ApprovalService {
      * @param actor          the admin, from the token (#121)
      * @return the request afterwards
      * @throws NotFoundException 404 when no request has that id
-     * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending, or
-     *                           {@code REQUEST_ENTITY_GONE} when what it points at no longer exists
+     * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending,
+     *                           {@code ITEM_ALREADY_CLAIMED} when <em>another</em> admin reserved it
+     *                           from the shared queue (#100), or {@code REQUEST_ENTITY_GONE} when
+     *                           what it points at no longer exists
      */
     @Transactional
     public ApprovalRequestDetailResponse reject(String requestId, String resolutionNote, CurrentUser actor) {
@@ -338,6 +348,16 @@ public class ApprovalService {
                     "Request " + requestId + " is " + request.getStatus() + " and cannot be resolved again",
                     ConflictException.REQUEST_ALREADY_RESOLVED);
         }
+
+        // «Si lo toma uno, baja para todos» (#100): what is refused is answering a request another
+        // admin reserved - a stale link, a second tab, a tray that has not refreshed. An unreserved
+        // one is nobody's and answering it is an implicit claim, which is what keeps /admin/requests
+        // working: that screen has Approve and Reject and no way to reserve anything.
+        //
+        // Second and not first, because "somebody already answered this" is the truer sentence when
+        // both are true: naming a colleague who reserved a request that no longer needs answering
+        // would send the reader to ask them about nothing.
+        AdminQueueClaimRule.requireNotHeldByAnother(request.getClaimedBy(), actor.userId(), "request " + requestId);
 
         // The row outlives what it points at on purpose (#126) - but resolving it would be acting on
         // a ghost, so the reference is checked again here and not only at submit time.

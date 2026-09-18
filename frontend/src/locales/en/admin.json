@@ -1,11 +1,52 @@
 {
   "nav": {
     "label": "Administration sections",
+    "queue": "Tray",
     "tables": "Tables",
     "catalogs": "Catalogs",
     "files": "Files",
     "users": "Users",
     "requests": "Requests"
+  },
+  "queue": {
+    "title": "Tray",
+    "description": "Everything waiting on an admin, together in one place. Whatever has been waiting longest comes first.",
+    "helpLink": "How the tray works",
+    "claimHelpHint": "Taking an item says you are on it and drops it out of everybody else's tray. It is released on its own after {{minutes}} minutes.",
+    "claimHelpLink": "How it works",
+    "columns": {
+      "item": "What it is",
+      "kind": "Kind",
+      "requestedBy": "From",
+      "detail": "Reason",
+      "waitingSince": "Waiting",
+      "claim": "Reservation"
+    },
+    "kinds": {
+      "ApprovalRequest": "Request",
+      "TableWaitingReview": "Table to review"
+    },
+    "unclaimed": "Free",
+    "claimedBy": "Taken by {{name}}",
+    "claim": "Take",
+    "release": "Release",
+    "claimSuccess": "You took it: it is yours while you resolve it",
+    "releaseSuccess": "You released it: it goes back to the tray",
+    "askedBy": "From {{name}}",
+    "emptyTitle": "Nothing is waiting for an action",
+    "emptyDescription": "An empty tray is good news: no request is left unanswered and no table is left unreviewed.",
+    "approve": "Approve",
+    "approveConfirmTitle": "Approve this table",
+    "approveConfirmDescription": "The table will open so players can apply to it.",
+    "approveSuccess": "Table approved",
+    "requestChanges": "Request changes",
+    "requestChangesDialogTitle": "Request changes on {{name}}",
+    "requestChangesDialogDescription": "Tell the master what to fix before you approve it.",
+    "requestChangesSuccess": "Changes requested",
+    "errors": {
+      "ITEM_ALREADY_CLAIMED": "Another admin took it first and is resolving it. While they hold it, nobody else can work on this.",
+      "generic": "We could not complete the action. Try again."
+    }
   },
   "requests": {
     "title": "Requests",
@@ -50,7 +91,7 @@
     "rejectDialogDescription": "Write why. It is the only thing whoever asked will receive, so it has to be enough for them to understand.",
     "effect": {
       "MasterGrant": "On approval the person is given the master role by the same road as in “Users”, recorded with your note as the reason.",
-      "TableOpen": "On approval it is recorded that the request stands. The table is not created on its own: the request carries no name, system, seats or schedule, so you create it from “Tables to review”.",
+      "TableOpen": "On approval it is recorded that the request stands. The table is not created on its own: the request carries no name, system, seats or schedule, so you create it from “Tables”.",
       "General": "On approval the request is closed and your answer reaches whoever asked. Nothing else on the platform changes."
     },
     "resolutionNoteLabel": "Your answer",
@@ -200,18 +241,34 @@
     "blockHelpLink": "Why"
   },
   "tables": {
-    "title": "Tables to review",
-    "emptyTitle": "No tables waiting for review",
-    "emptyDescription": "New tables and the ones needing a decision will show up here.",
+    "title": "Tables",
+    "description": "Every table on the platform, with its status. Whatever is waiting on a review is resolved from the tray.",
+    "helpLink": "How a master is assigned",
+    "reviewHelpLink": "Where tables are reviewed",
+    "searchLabel": "Search tables",
+    "searchPlaceholder": "Name of the table",
+    "search": {
+      "table_name": "Name",
+      "table_status": "Status",
+      "table_master": "Master",
+      "table_system": "System",
+      "table_tag": "Tag",
+      "table_platform": "Platform"
+    },
+    "columns": {
+      "name": "Table",
+      "status": "Status",
+      "master": "Master",
+      "players": "Players",
+      "claim": "Reservation",
+      "createdAt": "Created"
+    },
+    "claimedBy": "{{name}} is reviewing it",
+    "emptyTitle": "No tables yet",
+    "emptyDescription": "Tables show up here as soon as a master creates one, or as soon as you create one without a master.",
+    "noResultsTitle": "No table matches that search",
+    "noResultsDescription": "Try another name, or narrow by status with /table_status and by master with /table_master.",
     "noPrimaryMaster": "Unassigned",
-    "approve": "Approve",
-    "approveConfirmTitle": "Approve this table",
-    "approveConfirmDescription": "The table will open so players can apply to it.",
-    "approveSuccess": "Table approved",
-    "requestChanges": "Request changes",
-    "requestChangesDialogTitle": "Request changes on {{name}}",
-    "requestChangesDialogDescription": "Tell the master what to fix before you approve it.",
-    "requestChangesSuccess": "Changes requested",
     "assignMasters": "Assign masters",
     "assignMastersDialogTitle": "Assign masters to {{name}}",
     "assignMastersDialogDescription": "The table opens as soon as it gets a master.",

@@ -14,10 +14,23 @@ function refusal(errorCode: string, status = 409) {
  * that field is English and written for a log.
  */
 describe('approvalErrorKey', () => {
-  it('maps each of the four refusals to a key of its own', () => {
-    for (const code of APPROVAL_ERROR_CODES) {
+  it('maps each of the feature’s own refusals to a key of its own', () => {
+    for (const code of APPROVAL_ERROR_CODES.filter((code) => code !== 'ITEM_ALREADY_CLAIMED')) {
       expect(approvalErrorKey(refusal(code))).toBe(`requests.errors.${code}`)
     }
+  })
+
+  /**
+   * **The one refusal whose sentence is not this feature's**, and deliberately so (F3.3).
+   *
+   * The reservation belongs to the shared tray: the very same fact — a colleague is working on this —
+   * reaches `/admin/queue` and `/admin/requests`, and writing it twice, once per screen, is how two
+   * sentences that mean one thing start to disagree (#176). So this points at the tray's key instead
+   * of copying its words. It is a key in the same `admin` namespace both screens translate against,
+   * not an import: `features/approvals` still imports nothing from `features/adminQueue` (§3.1.5).
+   */
+  it('borrows the tray’s sentence for the reservation rather than writing a second one', () => {
+    expect(approvalErrorKey(refusal('ITEM_ALREADY_CLAIMED'))).toBe('queue.errors.ITEM_ALREADY_CLAIMED')
   })
 
   /**

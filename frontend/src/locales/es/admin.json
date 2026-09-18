@@ -1,11 +1,52 @@
 {
   "nav": {
     "label": "Secciones de administración",
+    "queue": "Bandeja",
     "tables": "Mesas",
     "catalogs": "Catálogos",
     "files": "Archivos",
     "users": "Usuarios",
     "requests": "Pedidos"
+  },
+  "queue": {
+    "title": "Bandeja",
+    "description": "Todo lo que espera una acción de un admin, junto y en un solo lugar. Lo que hace más tiempo espera va primero.",
+    "helpLink": "Cómo funciona la bandeja",
+    "claimHelpHint": "Tomar un ítem avisa que estás con eso y lo saca de la bandeja de los demás. Se libera solo a los {{minutes}} minutos.",
+    "claimHelpLink": "Cómo funciona",
+    "columns": {
+      "item": "Qué es",
+      "kind": "Tipo",
+      "requestedBy": "De quién",
+      "detail": "Motivo",
+      "waitingSince": "Esperando",
+      "claim": "Reserva"
+    },
+    "kinds": {
+      "ApprovalRequest": "Pedido",
+      "TableWaitingReview": "Mesa por revisar"
+    },
+    "unclaimed": "Libre",
+    "claimedBy": "Lo tomó {{name}}",
+    "claim": "Tomar",
+    "release": "Soltar",
+    "claimSuccess": "Lo tomaste: es tuyo mientras lo resolvés",
+    "releaseSuccess": "Lo soltaste: vuelve a la bandeja",
+    "askedBy": "De {{name}}",
+    "emptyTitle": "No hay nada esperando una acción",
+    "emptyDescription": "La bandeja vacía es buena noticia: no quedó ningún pedido sin responder ni ninguna mesa sin revisar.",
+    "approve": "Aprobar",
+    "approveConfirmTitle": "Aprobar esta mesa",
+    "approveConfirmDescription": "La mesa va a quedar abierta para que los jugadores se postulen.",
+    "approveSuccess": "Mesa aprobada",
+    "requestChanges": "Pedir cambios",
+    "requestChangesDialogTitle": "Pedir cambios en {{name}}",
+    "requestChangesDialogDescription": "Contale al master qué tiene que corregir antes de aprobarla.",
+    "requestChangesSuccess": "Se pidieron cambios",
+    "errors": {
+      "ITEM_ALREADY_CLAIMED": "Otro admin lo tomó primero y lo está resolviendo. Mientras lo tenga, no se puede trabajar sobre esto.",
+      "generic": "No pudimos completar la acción. Probá de nuevo."
+    }
   },
   "requests": {
     "title": "Pedidos",
@@ -50,7 +91,7 @@
     "rejectDialogDescription": "Escribí por qué. Es lo único que va a recibir quien pidió, así que tiene que alcanzarle para entender.",
     "effect": {
       "MasterGrant": "Al aprobar, la persona recibe el rol de master por el mismo camino que en «Usuarios»: queda registrado con tu nota como motivo.",
-      "TableOpen": "Al aprobar, queda constancia de que el pedido corresponde. La mesa no se crea sola: el pedido no trae nombre, sistema, cupo ni horario, así que la creás desde «Mesas por revisar».",
+      "TableOpen": "Al aprobar, queda constancia de que el pedido corresponde. La mesa no se crea sola: el pedido no trae nombre, sistema, cupo ni horario, así que la creás desde «Mesas».",
       "General": "Al aprobar, el pedido queda resuelto y tu respuesta le llega a quien preguntó. No cambia nada más en la plataforma."
     },
     "resolutionNoteLabel": "Tu respuesta",
@@ -200,18 +241,34 @@
     "blockHelpLink": "Por qué"
   },
   "tables": {
-    "title": "Mesas por revisar",
-    "emptyTitle": "No hay mesas esperando revisión",
-    "emptyDescription": "Las mesas nuevas y las que necesitan una decisión van a aparecer acá.",
+    "title": "Mesas",
+    "description": "Todas las mesas de la plataforma, con su estado. Lo que espera una revisión se resuelve en la bandeja.",
+    "helpLink": "Cómo se asigna un master",
+    "reviewHelpLink": "Dónde se revisan las mesas",
+    "searchLabel": "Buscar mesas",
+    "searchPlaceholder": "Nombre de la mesa",
+    "search": {
+      "table_name": "Nombre",
+      "table_status": "Estado",
+      "table_master": "Master",
+      "table_system": "Sistema",
+      "table_tag": "Tag",
+      "table_platform": "Plataforma"
+    },
+    "columns": {
+      "name": "Mesa",
+      "status": "Estado",
+      "master": "Master",
+      "players": "Jugadores",
+      "claim": "Reserva",
+      "createdAt": "Creada"
+    },
+    "claimedBy": "La está revisando {{name}}",
+    "emptyTitle": "Todavía no hay mesas",
+    "emptyDescription": "Las mesas aparecen acá apenas un master crea una, o apenas creás una sin asignar.",
+    "noResultsTitle": "Ninguna mesa coincide con esa búsqueda",
+    "noResultsDescription": "Probá con otro nombre, o filtrá por estado con /table_status y por master con /table_master.",
     "noPrimaryMaster": "Sin asignar",
-    "approve": "Aprobar",
-    "approveConfirmTitle": "Aprobar esta mesa",
-    "approveConfirmDescription": "La mesa va a quedar abierta para que los jugadores se postulen.",
-    "approveSuccess": "Mesa aprobada",
-    "requestChanges": "Pedir cambios",
-    "requestChangesDialogTitle": "Pedir cambios en {{name}}",
-    "requestChangesDialogDescription": "Contale al master qué tiene que corregir antes de aprobarla.",
-    "requestChangesSuccess": "Se pidieron cambios",
     "assignMasters": "Asignar masters",
     "assignMastersDialogTitle": "Asignar masters a {{name}}",
     "assignMastersDialogDescription": "La mesa queda abierta apenas se le asigna un master.",

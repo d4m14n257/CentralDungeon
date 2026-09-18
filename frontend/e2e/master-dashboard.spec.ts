@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { requestChangesFromQueue } from './helpers/adminQueue'
 
 /**
  * F1.6 end to end: co-masters and the work tray.
@@ -127,13 +128,7 @@ test('a table sent back for changes shows on the tray until the master corrects 
 
     const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
     try {
-      await admin.page.goto('/admin/tables')
-      const row = admin.page.getByRole('listitem').filter({ hasText: tableName })
-      await row.getByRole('button', { name: 'Pedir cambios' }).click()
-      const dialog = admin.page.getByRole('dialog')
-      await dialog.getByRole('textbox').fill('Falta la agenda semanal.')
-      await dialog.getByRole('button', { name: 'Pedir cambios' }).click()
-      await expect(admin.page.getByText('Con cambios pedidos', { exact: true }).first()).toBeVisible()
+      await requestChangesFromQueue(admin.page, tableName, 'Falta la agenda semanal.')
     } finally {
       await admin.context.close()
     }

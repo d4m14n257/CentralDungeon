@@ -24,6 +24,7 @@ import com.centraldungeon.users.UserRoleRepository;
 import com.centraldungeon.users.UserRoleService;
 import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.UserStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -130,7 +131,7 @@ class ApprovalServiceTest {
         assertThat(response.entityId()).isEqualTo("user-1");
         assertThat(response.resolvedAt()).isNull();
         assertThat(response.resolutionNote()).isNull();
-        // #100: nothing writes the queue's two columns in F3.2.
+        // #100: a request is born unreserved. Only the shared tray writes those two columns.
         assertThat(response.claimedByName()).isNull();
     }
 
@@ -336,6 +337,8 @@ class ApprovalServiceTest {
     @Test
     void siLaEntidadReferenciadaDesaparecioNoSeResuelve() {
         ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
+        // Sin reservar, y ahora eso es exactamente el caso real: un pedido libre pasa el chequeo de la
+        // bandeja y llega al de la referencia, que es el que este test mira.
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
         when(entityResolver.exists("user", "user-1")).thenReturn(false);
 
@@ -365,6 +368,101 @@ class ApprovalServiceTest {
         when(approvalRequestRepository.findById("nope")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service().approve("nope", NOTE, ADMIN)).isInstanceOf(NotFoundException.class);
+    }
+
+    // ------------------------------------------------- la reserva de la bandeja compartida
+
+    /**
+     * Caso 1 de 3: <b>un pedido que nadie reservó se resuelve</b>, y este es el test que existe para
+     * que nadie vuelva a apretar la regla.
+     *
+     * <p>Estuvo al revés durante un rato -«resolver exige tenerlo reservado»- y dejó
+     * {@code /admin/requests} inutilizable en la aplicación real: esa pantalla trae Aprobar y Rechazar
+     * y <b>ninguna forma de reservar</b>, así que toda resolución respondía 409 por una reserva que no
+     * podía ofrecer. Chocaron dos diseños - #176 le da a los pedidos su pantalla propia, §5 de
+     * modelo-datos asumía que la bandeja era el único lugar donde algo se resuelve - y la regla
+     * estricta volvió la bandeja obligatoria para un flujo que nunca pasó por ella.
+     */
+    @Test
+    void seResuelveUnPedidoQueNadieReservo() {
+        ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
+        // A propósito sin reservar: es el camino de /admin/requests, que es el común.
+        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
+        when(entityResolver.exists(request.getEntityType(), request.getEntityId())).thenReturn(true);
+        when(userService.getById("admin-1")).thenReturn(user("admin-1", "damian"));
+
+        assertThat(service().approve("req-1", NOTE, ADMIN).status()).isEqualTo("Approved");
+
+        verify(userRoleService).grantRole("user-1", PlatformRole.MASTER, NOTE, ADMIN);
+    }
+
+    /** Caso 2 de 3: el pedido que el actor ya tiene reservado, que es el camino que baja de la bandeja. */
+    @Test
+    void seResuelveUnPedidoQueElActorYaTeniaReservado() {
+        ApprovalRequest request = pending(ApprovalRequestType.General);
+        User admin = resolvable(request);
+        request.claim(admin, LocalDateTime.now());
+
+        assertThat(service().approve("req-1", NOTE, ADMIN).status()).isEqualTo("Approved");
+    }
+
+    /**
+     * Caso 3 de 3, y el único que se rechaza: lo tiene <b>otro</b>. Un link viejo, una segunda
+     * pestaña, una bandeja sin refrescar - las tres formas de pisarle el trabajo a un colega, que es
+     * exactamente lo que #100 compra.
+     *
+     * <p>Y no es la regla que sostiene la consistencia: dos admins resolviendo la misma fila sin
+     * reservar se serializan con el lock pesimista (#256) y el segundo recibe «ya estaba resuelto».
+     * Esta es sobre cortesía entre colegas, no sobre corrección.
+     */
+    @Test
+    void noSePuedeAprobarUnPedidoQueTieneOtroAdmin() {
+        ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
+        request.claim(user("admin-2", "otra-admin"), LocalDateTime.now());
+        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
+
+        assertThatThrownBy(() -> service().approve("req-1", NOTE, ADMIN))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode")
+                .isEqualTo(ConflictException.ITEM_ALREADY_CLAIMED);
+
+        // Y no dejó nada a medias: ni el rol, ni la campana, ni la fila resuelta.
+        assertThat(request.getStatus()).isEqualTo(ApprovalStatus.Pending);
+        verifyNoInteractions(userRoleService);
+        verifyNoInteractions(notificationService);
+    }
+
+    /** Rechazar es la otra mitad del mismo acto: una regla que valiera para una sola sería una puerta abierta. */
+    @Test
+    void noSePuedeRechazarUnPedidoQueTieneOtroAdmin() {
+        ApprovalRequest request = pending(ApprovalRequestType.General);
+        request.claim(user("admin-2", "otra-admin"), LocalDateTime.now());
+        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
+
+        assertThatThrownBy(() -> service().reject("req-1", NOTE, ADMIN))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode")
+                .isEqualTo(ConflictException.ITEM_ALREADY_CLAIMED);
+
+        assertThat(request.getStatus()).isEqualTo(ApprovalStatus.Pending);
+    }
+
+    /**
+     * El orden de los dos 409 no es casual: cuando las dos cosas son ciertas, «alguien ya lo
+     * respondió» es la frase verdadera. Nombrar al colega que reservó un pedido que ya no necesita
+     * respuesta sería mandar a preguntarle por nada.
+     */
+    @Test
+    void siYaEstaResueltoLoDiceAntesDeNombrarAQuienLoTiene() {
+        ApprovalRequest request = pending(ApprovalRequestType.General);
+        request.claim(user("admin-2", "otra-admin"), LocalDateTime.now());
+        request.resolve(ApprovalStatus.Approved, user("admin-2", "otra-admin"), "ya estaba");
+        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
+
+        assertThatThrownBy(() -> service().approve("req-1", NOTE, ADMIN))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode")
+                .isEqualTo(ConflictException.REQUEST_ALREADY_RESOLVED);
     }
 
     // ------------------------------------------------------------ notificación
@@ -443,7 +541,13 @@ class ApprovalServiceTest {
         return requester;
     }
 
-    /** A request that can be resolved: it is found, its reference resolves, and the admin exists. */
+    /**
+     * A request that can be resolved: it is found, its reference resolves, and the admin exists.
+     *
+     * <p><b>Deliberately unreserved</b>, which is the common path and the one {@code /admin/requests}
+     * takes: that screen resolves without ever passing through the shared tray. The reservation only
+     * matters when <em>another</em> admin holds it, and that is pinned in its own tests above.
+     */
     private User resolvable(ApprovalRequest request) {
         User admin = user("admin-1", "damian");
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));

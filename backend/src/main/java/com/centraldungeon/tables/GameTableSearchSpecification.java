@@ -84,6 +84,38 @@ final class GameTableSearchSpecification {
     }
 
     /**
+     * {@code /admin/tables}: every table in the statuses the listing allows, narrowed by what the
+     * admin typed (#176).
+     *
+     * <p><b>The same builder as {@link #forExplorer}, and one difference that matters.</b>
+     * {@link #notMasteredBy} is <em>not</em> applied here: it belongs to the explorer, where the
+     * question is "which table could I apply to" and a master must not find their own. An admin's
+     * listing has no such notion - they are not applying to anything, and hiding the tables of
+     * whichever admin happens to be logged in would be a filter nobody asked for and nobody could
+     * explain.
+     *
+     * <p>What it does share is the shape: the statuses the listing allows and the typed criteria are
+     * joined with {@code and} and never folded into one expression, so a criterion can only ever
+     * narrow what the listing already showed - a soft-deleted table cannot be reached with any
+     * {@code ?q=} (#25).
+     *
+     * @param query            the parsed search box; an empty one matches every listable table
+     * @param catalogIdsByTerm the catalog ids each catalog criterion resolved to, keyed by the term.
+     *                         A term missing from the map, or mapped to an empty set, matches nothing
+     * @param statuses         the statuses this listing may show - everything but {@code Deleted},
+     *                         unless the caller narrowed it further
+     * @return the predicate
+     */
+    static Specification<GameTable> forAdmin(
+            SearchQuery query, Map<SearchTerm, Set<String>> catalogIdsByTerm, Collection<GameTableStatus> statuses) {
+        return (root, criteriaQuery, builder) -> {
+            Predicate listable = root.get("status").in(statuses);
+            Predicate matched = matching(root, criteriaQuery, builder, query, catalogIdsByTerm);
+            return matched == null ? listable : builder.and(listable, matched);
+        };
+    }
+
+    /**
      * «the actor does not run this table» (#154).
      *
      * <p>Deliberately blind to {@code MasterRowStatus}, which is what the JPQL it replaces did too:
@@ -170,10 +202,100 @@ final class GameTableSearchSpecification {
         }
         Predicate matched = null;
         for (String value : term.values()) {
-            Predicate current = contains(root, builder, field, value);
+            Predicate current = valuePredicate(root, criteriaQuery, builder, field, value);
             matched = matched == null ? current : builder.or(matched, current);
         }
         return matched;
+    }
+
+    /**
+     * One value of one non-catalog criterion.
+     *
+     * @param root          the table being queried
+     * @param criteriaQuery the query being built, which owns the subquery {@code /table_master} needs
+     * @param builder       the Criteria API builder
+     * @param field         the field to match against; never a catalog one, those never reach here
+     * @param value         the text the person typed
+     * @return the predicate for that one value
+     */
+    private static Predicate valuePredicate(
+            Root<GameTable> root,
+            CriteriaQuery<?> criteriaQuery,
+            CriteriaBuilder builder,
+            GameTableSearchField field,
+            String value) {
+        return switch (field) {
+            case STATUS -> hasStatus(builder, root, value);
+            case MASTER -> masteredByNamed(root, criteriaQuery, builder, value);
+            case NAME -> contains(root, builder, field, value);
+            // The catalog fields are resolved before they get here; reaching this arm means the enum
+            // grew a value and this switch did not, which is a bug and says so rather than guessing.
+            case SYSTEM, TAG, PLATFORM -> throw new IllegalStateException(
+                    "Field " + field + " is a catalog field and should have been resolved as one");
+        };
+    }
+
+    /**
+     * {@code /table_status Preparation}: an equality over the closed list, and an unknown state
+     * matches nothing rather than answering 400 (arquitectura.md §2.5).
+     *
+     * <p>The same shape {@code ApprovalSearchSpecification.hasStatus} has, and it has to be: two
+     * status commands that disagreed about what an unrecognized value means would be two different
+     * search languages wearing the same syntax.
+     *
+     * @param builder the Criteria API builder
+     * @param root    the table being queried
+     * @param value   what the person typed after the command
+     * @return the predicate
+     */
+    private static Predicate hasStatus(CriteriaBuilder builder, Root<GameTable> root, String value) {
+        return GameTableStatus.fromName(value)
+                .map(status -> builder.equal(root.get("status"), status))
+                .orElseGet(builder::disjunction);
+    }
+
+    /**
+     * {@code /table_master ana}: «somebody named like this runs this table».
+     *
+     * <p><b>A subquery and not a join, and that is the bug this shape exists to avoid</b> - the very
+     * same one {@link #linkedToAny} documents. A table with three masters would come back three times
+     * from a join, so a page of twenty rows would silently cover fewer than twenty tables and the
+     * total count would be wrong on top of it. {@code exists} asks the same question without
+     * multiplying rows.
+     *
+     * <p><b>By name and never by id</b>, like every other person criterion in the application, and
+     * over both names for the reason {@code ApprovalSearchSpecification.requesterNamed} gives:
+     * whoever is searching knows one of the two and not which one the system stores where.
+     *
+     * <p>Live rows only ({@code MasterRowStatus.Created}) - and note this is the opposite choice from
+     * {@link #notMasteredBy}, deliberately. There, a removed co-master must stop being excluded, so
+     * the table becomes one they could apply to. Here, a removed co-master does not run the table any
+     * more, so finding it by their name would be answering a question about the past.
+     *
+     * @param root          the table being queried
+     * @param criteriaQuery the query being built, which owns the subquery
+     * @param builder       the Criteria API builder
+     * @param value         the name, or part of it
+     * @return the predicate
+     */
+    private static Predicate masteredByNamed(
+            Root<GameTable> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, String value) {
+        Subquery<String> mastered = criteriaQuery.subquery(String.class);
+        Root<Master> master = mastered.from(Master.class);
+        mastered.select(master.get("gameTable").get("id"));
+        mastered.where(
+                builder.equal(master.get("gameTable").get("id"), root.get("id")),
+                builder.equal(master.get("status"), MasterRowStatus.Created),
+                builder.or(
+                        containsIn(builder, master.get("user").get("name"), value),
+                        containsIn(builder, master.get("user").get("discordUsername"), value)));
+        return builder.exists(mastered);
+    }
+
+    /** A case-insensitive "contains" over any string path, with the wildcards in the value escaped. */
+    private static Predicate containsIn(CriteriaBuilder builder, Path<String> column, String value) {
+        Expression<String> lowered = builder.lower(column);
+        return builder.like(lowered, "%" + escapeLikeWildcards(value.toLowerCase(Locale.ROOT)) + "%", LIKE_ESCAPE);
     }
 
     /**

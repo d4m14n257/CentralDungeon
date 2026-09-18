@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
  * F1.5 end to end, against the real backend: the criterion of `fase-1-master.md` §4 — *a master
@@ -58,13 +59,9 @@ async function createTable(page: Page, name: string): Promise<string> {
   return id as string
 }
 
-/** Approves the table from `/admin/tables`, which is what opens it to applications. */
+/** Approves the table from the shared admin tray (#176), which is what opens it to applications. */
 async function approve(page: Page, name: string) {
-  await page.goto('/admin/tables')
-  const row = page.getByRole('listitem').filter({ hasText: name })
-  await row.getByRole('button', { name: 'Aprobar' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-  await expect(row).toBeHidden()
+  await approveTableFromQueue(page, name)
 }
 
 /** Applies and gets accepted, which is what turns somebody into a recipient of a `Players` request. */

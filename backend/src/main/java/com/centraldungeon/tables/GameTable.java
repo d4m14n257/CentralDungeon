@@ -26,9 +26,11 @@ import org.jspecify.annotations.Nullable;
  * <b>not</b> a column here: it is a row in {@code masters} (#135), and who plays in it is a row in
  * {@code table_registrations}.
  *
- * <p>Only the columns the built flows need are mapped. {@code claimed_by} / {@code claimed_at}, the
- * admin queue's reservation (#100), land with F3 and need no migration to be added later
- * (modelo-datos.md 4).
+ * <p>{@code claimed_by} / {@code claimed_at} are the admin queue's reservation (#100). They arrived
+ * with F3.3 and needed <b>no migration</b>: {@code V1__baseline.sql} declared both columns and the
+ * foreign key from the start, exactly as the note that used to sit here promised (modelo-datos.md 4).
+ * Only {@link com.centraldungeon.adminqueue.AdminQueueService} moves them - a table is reserved from
+ * the shared tray and from nowhere else.
  */
 @Entity
 @Table(name = "game_tables")
@@ -105,6 +107,23 @@ public class GameTable extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
+
+    /**
+     * The admin who reserved this table's review from the shared tray (#100).
+     *
+     * <p>Null for every table nobody is looking at right now, which is the normal state. It is not
+     * part of the lifecycle: reserving a table changes who is working on it, never where it is.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "claimed_by")
+    private @Nullable User claimedBy;
+
+    /**
+     * When it was reserved. Released automatically after
+     * {@code app.admin-queue.claim-timeout} (#100).
+     */
+    @Column(name = "claimed_at")
+    private @Nullable LocalDateTime claimedAt;
 
     /** Required by JPA. */
     protected GameTable() {
@@ -340,5 +359,50 @@ public class GameTable extends BaseEntity {
      */
     public User getCreatedBy() {
         return createdBy;
+    }
+
+    /**
+     * Returns the admin who reserved this table's review (#100).
+     *
+     * @return the admin, or null when nobody has taken it
+     */
+    public @Nullable User getClaimedBy() {
+        return claimedBy;
+    }
+
+    /**
+     * Returns when the reservation was taken.
+     *
+     * @return the timestamp, or null when the table is not reserved
+     */
+    public @Nullable LocalDateTime getClaimedAt() {
+        return claimedAt;
+    }
+
+    /**
+     * Takes the reservation for an admin.
+     *
+     * <p>Two columns and one method, the same reasoning {@link com.centraldungeon.approvals
+     * .ApprovalRequest#resolve} gives for its four: a row that names an admin with no instant, or an
+     * instant with no admin, is a state nothing should be able to produce. Whether the reservation is
+     * allowed - free, or already this same admin's - is decided by
+     * {@link com.centraldungeon.adminqueue.AdminQueueService} under the table's row lock, because it
+     * is a rule about two admins racing and not about one row.
+     *
+     * @param admin     the admin taking it, always the actor from the token (#121)
+     * @param claimedAt when they took it
+     */
+    public void claim(User admin, LocalDateTime claimedAt) {
+        this.claimedBy = admin;
+        this.claimedAt = claimedAt;
+    }
+
+    /**
+     * Gives the reservation back: by the admin who had it, or by the job that expires it after
+     * {@code app.admin-queue.claim-timeout} (#100).
+     */
+    public void releaseClaim() {
+        this.claimedBy = null;
+        this.claimedAt = null;
     }
 }

@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
+import { CLAIM_TIMEOUT_MINUTES } from '@/config/adminQueue'
+
 import { HelpList, HelpSteps } from '../components/HelpBlocks'
 
 /**
@@ -8,26 +10,83 @@ import { HelpList, HelpSteps } from '../components/HelpBlocks'
  * Owner reads this rather than an audience of its own: it is an admin with more privileges (#169).
  */
 
-/** A section that is a list of facts plus its numbered steps. */
-function ListAndSteps({ block, keys, stepCount }: { block: string; keys: string[]; stepCount: number }) {
+/**
+ * A section that is a list of facts plus its numbered steps.
+ *
+ * @param props.block     the key under `admins` its text lives at
+ * @param props.keys      the facts to list, in order
+ * @param props.stepCount how many numbered steps follow, or zero for none
+ * @param props.values    what the text interpolates, when it states a number the platform owns. The
+ *                        reservation's timeout is the one case: the help promises "se libera a los 15
+ *                        minutos", and a sentence that hard-codes a number the platform can change is
+ *                        the one nobody remembers to update when it does
+ */
+function ListAndSteps({
+  block,
+  keys,
+  stepCount,
+  values,
+}: {
+  block: string
+  keys: string[]
+  stepCount: number
+  values?: Record<string, unknown>
+}) {
   const { t } = useTranslation('help')
 
   return (
     <>
-      <HelpList items={keys.map((key) => t(`admins.${block}.${key}`))} />
+      <HelpList items={keys.map((key) => t(`admins.${block}.${key}`, values ?? {}))} />
       {stepCount > 0 && (
         <HelpSteps
           title={t('stepsTitle')}
-          items={Array.from({ length: stepCount }, (_, index) => t(`admins.${block}.steps.step${index + 1}`))}
+          items={Array.from({ length: stepCount }, (_, index) => t(`admins.${block}.steps.step${index + 1}`, values ?? {}))}
         />
       )}
     </>
   )
 }
 
-/** The review queue and what each outcome does to the table. */
+/**
+ * Reviewing a table, and where that is done (#176, F3.3).
+ *
+ * **Its text moved with the actions.** Approving and requesting changes left `/admin/tables` for the
+ * shared tray, and an explanation that stayed behind would be a set of instructions pointing at
+ * buttons that are not there any more — which is worse than no explanation. `listing` is the new
+ * line: it says what `/admin/tables` is now, because somebody who learned the old screen will look
+ * for the buttons there first.
+ */
 export function ReviewingHelp() {
-  return <ListAndSteps block="reviewing" keys={['queue', 'approve', 'gone']} stepCount={4} />
+  return <ListAndSteps block="reviewing" keys={['queue', 'approve', 'gone', 'listing']} stepCount={4} />
+}
+
+/**
+ * The reservation: what taking an item means, and what happens if you walk away (#100).
+ *
+ * **It exists because a reservation nobody understands is a button nobody presses.** Taking an item
+ * is optional — anything in your tray can be resolved on the spot — so unless the help says what it
+ * is *for*, "Tomar" reads as a pointless extra step and the whole mechanism goes unused, which is
+ * exactly the two-admins-on-one-request problem #100 was built to prevent.
+ *
+ * **The section used to teach the opposite and that was worse than having none.** It said resolving
+ * required holding the item first, which was the rule as it was originally written and which made
+ * `/admin/requests` — a screen with no way to reserve anything — refuse every resolution. The rule
+ * was corrected to what it always meant: you cannot work on what somebody else took. An explanation
+ * that survives its own rule teaches people a ritual they will keep performing and blame themselves
+ * for when it stops matching the screen.
+ *
+ * `timeout` is the other half nobody would guess: a reservation with no visible end reads as a lock,
+ * and somebody who closed a tab by accident would assume they had broken something permanent.
+ */
+export function ClaimingHelp() {
+  return (
+    <ListAndSteps
+      block="claiming"
+      keys={['what', 'notRequired', 'whenToClaim', 'yours', 'timeout', 'release', 'race']}
+      stepCount={4}
+      values={{ minutes: CLAIM_TIMEOUT_MINUTES }}
+    />
+  )
 }
 
 /** How an unassigned table gets its masters. */

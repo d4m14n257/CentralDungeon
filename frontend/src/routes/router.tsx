@@ -95,6 +95,9 @@ export const router = createBrowserRouter([
         path: 'admin',
         Component: AdminLayout,
         children: [
+          // The shared tray (#100, F3.3) and the home of the context: everything waiting on an admin,
+          // whichever table it lives in, reserved one at a time. No role guard here either (#103).
+          { path: 'queue', lazy: () => import('./admin/AdminQueuePage') },
           { path: 'tables', lazy: () => import('./admin/AdminTablesPage') },
           { path: 'catalogs', lazy: () => import('./admin/AdminCatalogsPage') },
           { path: 'files', lazy: () => import('./admin/AdminFilesPage') },

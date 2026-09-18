@@ -28,14 +28,36 @@ export const APPROVAL_ERROR_CODES = [
   'REQUEST_ENTITY_GONE',
   /** Asking for the master role while already holding it. */
   'MASTER_ROLE_ALREADY_HELD',
+  /**
+   * Resolving a request another admin has taken from the shared tray (#100, F3.3).
+   *
+   * **This screen has no way to reserve anything and does not need one**: resolving something nobody
+   * holds reserves it implicitly, which is the whole of the correction F3.3 made to the rule. What is
+   * still refused is resolving what a colleague is already working on — and `/admin/requests` lists
+   * every request there is, including the ones somebody took, so unlike `/admin/queue` this screen
+   * really can show a row it cannot resolve.
+   */
+  'ITEM_ALREADY_CLAIMED',
 ] as const
 
 const KNOWN_CODES: ReadonlySet<string> = new Set(APPROVAL_ERROR_CODES)
 
 /**
+ * Where the reservation's own sentence lives.
+ *
+ * **Pointed at rather than copied.** `ITEM_ALREADY_CLAIMED` is not this feature's vocabulary — the
+ * reservation belongs to the shared tray, and the same refusal reaches `/admin/queue` and
+ * `/admin/requests` about the same fact. Writing it twice, once per screen, is how two sentences that
+ * mean one thing start to disagree (#176). It is a key in the same `admin` namespace both screens
+ * translate against, not an import: `features/approvals` still imports nothing from
+ * `features/adminQueue` (§3.1.5).
+ */
+const CLAIM_ERROR_KEY = 'queue.errors.ITEM_ALREADY_CLAIMED'
+
+/**
  * The translation key for whatever a request mutation failed with.
  *
- * Everything that is not one of the four — a `404`, a `500`, a backend that never answered — falls
+ * Everything that is not one of the five — a `404`, a `500`, a backend that never answered — falls
  * back to one generic sentence. Guessing at a message for a code nobody committed to is how an
  * interface ends up asserting something the server never said.
  *
@@ -44,6 +66,9 @@ const KNOWN_CODES: ReadonlySet<string> = new Set(APPROVAL_ERROR_CODES)
  */
 export function approvalErrorKey(error: unknown): string | null {
   if (error === null || error === undefined) return null
+  if (error instanceof ApiError && error.problem.errorCode === 'ITEM_ALREADY_CLAIMED') {
+    return CLAIM_ERROR_KEY
+  }
   if (error instanceof ApiError && KNOWN_CODES.has(error.problem.errorCode)) {
     return `requests.errors.${error.problem.errorCode}`
   }

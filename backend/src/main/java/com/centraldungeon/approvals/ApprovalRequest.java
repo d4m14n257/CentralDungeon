@@ -86,16 +86,19 @@ public class ApprovalRequest {
     /**
      * The admin who reserved this item from the shared queue (#100).
      *
-     * <p>Mapped, never written here. The queue is F3.3 and so are the two endpoints that move this
-     * column; F3.2 leaves it null and there is deliberately no method that sets it. It is mapped
-     * anyway because the listing publishes {@code claimedByName}, and so that F3.3 adds behaviour
-     * rather than a mapping.
+     * <p>F3.2 mapped the column and left it without behaviour, which is exactly what F3.3 came to
+     * add: {@link #claim} and {@link #releaseClaim} below, moved only by
+     * {@link com.centraldungeon.adminqueue.AdminQueueService}. Nothing else writes it - a request is
+     * reserved from the shared tray and from nowhere else.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "claimed_by")
     private @Nullable User claimedBy;
 
-    /** When it was reserved. Released automatically after a timeout - all of it F3.3 (#100). */
+    /**
+     * When it was reserved. Released automatically after
+     * {@code app.admin-queue.claim-timeout} (#100).
+     */
     @Column(name = "claimed_at")
     private @Nullable LocalDateTime claimedAt;
 
@@ -183,6 +186,31 @@ public class ApprovalRequest {
     }
 
     /**
+     * Takes the reservation for an admin (#100).
+     *
+     * <p>One method for the two columns, the same reasoning {@link #resolve} gives for its four. Who
+     * is allowed to take it - it is free, or already this same admin's - is decided by
+     * {@link com.centraldungeon.adminqueue.AdminQueueService} under this row's lock, because it is a
+     * rule about two admins racing rather than about one row.
+     *
+     * @param admin     the admin taking it, always the actor from the token (#121)
+     * @param claimedAt when they took it
+     */
+    public void claim(User admin, LocalDateTime claimedAt) {
+        this.claimedBy = admin;
+        this.claimedAt = claimedAt;
+    }
+
+    /**
+     * Gives the reservation back: by the admin who had it, or by the job that expires it after
+     * {@code app.admin-queue.claim-timeout} (#100).
+     */
+    public void releaseClaim() {
+        this.claimedBy = null;
+        this.claimedAt = null;
+    }
+
+    /**
      * Returns the request's id.
      *
      * @return the id
@@ -252,7 +280,7 @@ public class ApprovalRequest {
     /**
      * Returns the admin who reserved this item (#100).
      *
-     * @return the admin, or null - which is every row in F3.2, since nothing here writes it
+     * @return the admin, or null when nobody has taken it
      */
     public @Nullable User getClaimedBy() {
         return claimedBy;
@@ -261,7 +289,7 @@ public class ApprovalRequest {
     /**
      * Returns when it was reserved (#100).
      *
-     * @return the timestamp, or null - always null in F3.2
+     * @return the timestamp, or null when the request is not reserved
      */
     public @Nullable LocalDateTime getClaimedAt() {
         return claimedAt;

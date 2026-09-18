@@ -25,7 +25,25 @@ export const queryKeys = {
      */
     history: () => ['tables', 'history'] as const,
     managed: () => ['tables', 'managed'] as const,
-    admin: (statuses?: string[], page = 0) => ['tables', 'admin', statuses, page] as const,
+    /**
+     * The `/admin/tables` listing, keyed by what was searched, which statuses were asked for and
+     * which page - the same `admin` convention `files`, `catalogs`, `users` and `requests` follow,
+     * with `files.admin` as the exact shape.
+     *
+     * **It gained `query` with F3.3** (#176): the listing now shows every table there is and accepts
+     * the six search commands, so keying only by status would serve one search's answer to another.
+     */
+    admin: (query?: string, statuses?: string[], page = 0) => ['tables', 'admin', query, statuses, page] as const,
+    /**
+     * The whole admin branch - what approving, requesting changes, assigning masters, creating and
+     * deleting all invalidate.
+     *
+     * It exists for the same reason `users.adminAll()` and `requests.adminAll()` do: a mutation never
+     * knows what the reader had typed or which page they were on, and a resolution moves a table
+     * between statuses the current filter may or may not include, so patching one entry would leave
+     * the rest of the cache describing a state that no longer is.
+     */
+    adminAll: () => ['tables', 'admin'] as const,
     statusHistory: (id: string) => ['tables', 'status-history', id] as const,
     /** The platform's table types. One list for the whole app - admins change it rarely (#72). */
     types: () => ['tables', 'types'] as const,
@@ -44,6 +62,22 @@ export const queryKeys = {
      * a person across every table they run, and every mutation that resolves work invalidates it.
      */
     dashboard: () => ['master', 'dashboard'] as const,
+  },
+  /**
+   * The shared admin tray (#100, F3.3). Its own branch and not a corner of `tables` or `requests`:
+   * it is one answer merged out of several sources, and what takes a row out of it is a mutation on
+   * whichever aggregate the row came from - so every one of those invalidates `all()` as well as its
+   * own branch.
+   *
+   * **No `query` in the key, deliberately.** The tray has no search (§2 del contrato): a work list
+   * orders itself by age and empties, and a box over it would be solving the wrong problem.
+   * `/admin/tables` is the screen that searches.
+   */
+  adminQueue: {
+    /** One page of the tray, oldest first. */
+    list: (page = 0) => ['adminQueue', 'list', page] as const,
+    /** The whole tray - what claiming, releasing and every resolution invalidate. */
+    all: () => ['adminQueue'] as const,
   },
   sessions: {
     /** A table's calendar, as the people running it see it. The whole list, never paginated. */

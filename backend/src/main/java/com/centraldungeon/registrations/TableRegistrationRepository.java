@@ -171,6 +171,29 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
             @Param("gameTableIds") Collection<String> gameTableIds, @Param("status") TableRegistrationStatus status);
 
     /**
+     * How many people are accepted at each of a set of tables, in one query.
+     *
+     * <p>The other half of the N+1 the F3.3 contract §3.4 closes: the admin listing used to call
+     * {@link #countByGameTable_IdAndStatus} once per row while it built the page. One count per row
+     * was tolerable while that listing defaulted to the handful of tables waiting on an admin; it
+     * stopped being tolerable the moment the screen started listing every table there is (#176).
+     *
+     * @param gameTableIds the tables of the page. An empty collection is the caller's to avoid
+     * @param status       the status that means "accepted", always
+     *                     {@link TableRegistrationStatus#Player}
+     * @return one row per table that has at least one player
+     */
+    @Query("""
+            select new com.centraldungeon.registrations.TablePlayerCount(r.gameTable.id, count(r))
+            from TableRegistration r
+            where r.gameTable.id in :gameTableIds
+              and r.status = :status
+            group by r.gameTable.id
+            """)
+    List<TablePlayerCount> countPlayersByTables(
+            @Param("gameTableIds") Collection<String> gameTableIds, @Param("status") TableRegistrationStatus status);
+
+    /**
      * Whether the person holds an active application among a set of tables - the batched read behind
      * profile visibility's #41b (modelo-datos.md §5): checking a master's own tables against one
      * applicant is one query, not one per table they run.

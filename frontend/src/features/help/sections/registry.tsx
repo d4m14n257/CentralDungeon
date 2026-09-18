@@ -8,6 +8,7 @@ import {
   AssignMastersHelp,
   BlockingHelp,
   CatalogsHelp,
+  ClaimingHelp,
   OwnerHelp,
   RequestsAdminHelp,
   ReviewingHelp,
@@ -109,7 +110,12 @@ export const HELP_SECTIONS = {
   'masters.dashboard': { titleKey: 'masters.dashboard.title', Body: DashboardHelp },
   'masters.edit-table': { titleKey: 'masters.editTable.title', Body: EditTableHelp },
 
+  // What reviewing a table is and where it happens. Its text moved with the buttons when approving
+  // and requesting changes left `/admin/tables` for the tray (#176, F3.3).
   'admins.reviewing': { titleKey: 'admins.reviewing.title', Body: ReviewingHelp },
+  // The reservation of the shared tray (#100, F3.3): a rule that is invisible until it refuses
+  // something, which is the worst way to learn one.
+  'admins.claiming': { titleKey: 'admins.claiming.title', Body: ClaimingHelp },
   'admins.assign-masters': { titleKey: 'admins.assignMasters.title', Body: AssignMastersHelp },
   'admins.catalogs': { titleKey: 'admins.catalogs.title', Body: CatalogsHelp },
   'admins.files': { titleKey: 'admins.files.title', Body: AdminFilesHelp },

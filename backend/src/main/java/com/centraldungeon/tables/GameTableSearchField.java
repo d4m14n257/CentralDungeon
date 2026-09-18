@@ -19,7 +19,12 @@ import org.jspecify.annotations.Nullable;
  * table they saw last week. The other three are the reason the search language was designed at all:
  * #164 was written thinking of {@code /tag}, and until F2.1 the command existed in no box.
  *
- * <p><b>Three of the four are not columns</b>, and that is the whole difficulty of this enum. A
+ * <p><b>Six commands, and only two of them are plain columns.</b> {@code /table_name} and
+ * {@code /table_status} are; the three catalog ones are resolved through synonym groups, and
+ * {@code /table_master} is a subquery over {@code masters}. {@link #attribute()} being null is how
+ * the specification tells them apart, together with {@link #catalog()}.
+ *
+ * <p><b>Three of the six are not columns</b>, and that is the whole difficulty of this enum. A
  * table's systems, tags and platforms live in bridge tables, and the value they point at is the alias
  * its master chose rather than the group's canonical entry (#56). So the text is resolved to a set of
  * catalog ids first - {@code AbstractCatalogService.resolveGroupIdsByName} - and only then does the
@@ -43,7 +48,41 @@ public enum GameTableSearchField {
     TAG("table_tag", null, CatalogType.TAGS),
 
     /** Where the table is played, resolved through its synonym group. */
-    PLATFORM("table_platform", null, CatalogType.PLATFORMS);
+    PLATFORM("table_platform", null, CatalogType.PLATFORMS),
+
+    /**
+     * Where the table is in its lifecycle, matched whole: {@code Draft}, {@code Preparation},
+     * {@code Opened}… The one command of this search with a <b>closed list</b>, the same shape
+     * {@code ApprovalSearchField.STATUS} has - so the frontend declares it with {@code values:} and
+     * nobody has to remember the spelling.
+     *
+     * <p>Free text everywhere else in this enum is a decision about catalogs (#246), not a style: a
+     * catalog has hundreds of values that grow whenever a master proposes one, and the nine states of
+     * a table are neither. An unknown state still matches nothing rather than answering 400
+     * (arquitectura.md §2.5).
+     *
+     * <p>Useful on {@code /admin/tables}, where the listing spans every state (#176). The explorer
+     * accepts it too, because the search language belongs to the entity and not to the screen (#239),
+     * and <b>that opens no hole</b> - for a structural reason and not a hopeful one. The visible
+     * statuses are a top-level {@code AND} in {@code forExplorer} and are never folded into what the
+     * reader typed, so the worst a player can write is
+     * {@code /table_name x /or /table_status Draft}, which becomes
+     * {@code status IN (Opened, InProgress) AND (name LIKE '%x%' OR status = 'Draft')}. The second
+     * half of that can only ever be unsatisfiable where it matters: no row is both visible and a
+     * draft. Zero results, never somebody else's draft.
+     */
+    STATUS("table_status", "status", null),
+
+    /**
+     * Who runs the table, <b>by name and never by id</b>, like every other person criterion in the
+     * application ({@code /requested_by}, {@code /owner}). Substring, case-insensitive, over both the
+     * display name and the Discord handle, because whoever is searching knows one of the two and not
+     * which one the system keeps where.
+     *
+     * <p>Live master rows only: somebody removed as a co-master (#216) does not run the table any
+     * more, and finding it by their name would be answering a question about the past.
+     */
+    MASTER("table_master", null, null);
 
     /** What the person types after the slash, and what the chip shows. */
     private final String wireName;

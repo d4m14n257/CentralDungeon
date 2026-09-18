@@ -1,5 +1,9 @@
 package com.centraldungeon.tables;
 
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Optional;
+
 /**
  * The full 10-state machine (modelo-datos.md #27, #32, #72), plus Deleted. PauseRequested exists here
  * but no endpoint produces it yet - it is only reachable once approval_requests lands (F3,
@@ -59,5 +63,24 @@ public enum GameTableStatus {
     Canceled,
 
     /** Soft-delete marker, not a lifecycle state - see the class note above. */
-    Deleted
+    Deleted;
+
+    /**
+     * Looks a status up by name, forgivingly - this is the search box's door, not a body's.
+     *
+     * <p>Added with {@code /table_status} (F3.3). The same shape and the same contract
+     * {@code ApprovalStatus.fromName} has: a request body is parsed strictly by Jackson, a
+     * {@code ?q=} has to survive being typed into, so this one is case-insensitive and an unknown
+     * name is nobody rather than a 400 (arquitectura.md §2.5).
+     *
+     * @param name a status name, in any case
+     * @return the matching constant, or empty. Empty is a normal answer: an unknown state inside
+     *         {@code ?q=} matches no table rather than refusing the search
+     */
+    public static Optional<GameTableStatus> fromName(String name) {
+        String normalized = name.trim().toLowerCase(Locale.ROOT);
+        return Arrays.stream(values())
+                .filter(status -> status.name().toLowerCase(Locale.ROOT).equals(normalized))
+                .findFirst();
+    }
 }

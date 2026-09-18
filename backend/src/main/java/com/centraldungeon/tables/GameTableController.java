@@ -76,18 +76,28 @@ public class GameTableController {
     }
 
     /**
-     * /admin/tables - unfiltered by pertenencia, defaults to the statuses waiting on an admin.
+     * /admin/tables - the management listing, unfiltered by pertenencia.
      *
-     * @param status   which statuses to list, or null to fall back to the ones needing review (#176)
-     * @param pageable page, size and sort
+     * <p><b>Every table by default since F3.3</b>, not only the ones waiting on a review: reviewing
+     * moved to the shared tray of {@code /admin/queue} (#176, #100), and what this screen is for is
+     * finding a table and acting on it. {@code Deleted} is never listed, whatever is asked for (#25).
+     *
+     * @param q        the search box, in the language of #164. On top of the explorer's four commands
+     *                 it takes {@code /table_status} over the closed list of states and
+     *                 {@code /table_master} over the masters' names. Null or blank means no criteria
+     * @param status   which statuses to list, or null for all of them but {@code Deleted}. It stays
+     *                 alongside {@code ?q=} because it is how the frontend keeps the state in the URL
+     *                 (#185) for the filter that is a control and not a typed command
+     * @param pageable page, size and sort, with a tie-break by id (#171, #173)
      * @return 200 with one page of tables for the admin listing
      */
     @GetMapping("/admin")
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public PageResponse<AdminTableSummaryResponse> listForAdmin(
+            @RequestParam(required = false) @Nullable String q,
             @RequestParam(required = false) @Nullable List<GameTableStatus> status,
             @PageableDefault(sort = {"createdAt", "id"}) Pageable pageable) {
-        return gameTableService.listForAdmin(status, pageable);
+        return gameTableService.listForAdmin(q, status, pageable);
     }
 
     /**

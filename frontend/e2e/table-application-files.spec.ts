@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
  * F2.2 end to end: the character sheet that goes with an application (#60 uso 2).
@@ -80,11 +81,7 @@ async function createTable(page: Page, name: string, hourtime: string): Promise<
 /** Sends the table to review and approves it, which is what opens it to applications. */
 async function open(masterPage: Page, adminPage: Page, tableId: string, name: string) {
   await submitForReview(masterPage, tableId)
-  await adminPage.goto('/admin/tables')
-  const row = adminPage.getByRole('listitem').filter({ hasText: name })
-  await row.getByRole('button', { name: 'Aprobar' }).click()
-  await adminPage.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-  await expect(row).toBeHidden()
+  await approveTableFromQueue(adminPage, name)
 }
 
 /** A PDF small enough to be under the cap and real enough for the MIME whitelist to accept it. */

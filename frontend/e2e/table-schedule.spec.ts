@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
  * F1.2 end to end, against the real backend: the complete wizard with an agenda, and the two rules
@@ -159,11 +160,7 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
     }
 
     for (const name of [firstTable, secondTable]) {
-      await admin.page.goto('/admin/tables')
-      const row = admin.page.getByRole('listitem').filter({ hasText: name })
-      await row.getByRole('button', { name: 'Aprobar' }).click()
-      await admin.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-      await expect(row).toBeHidden()
+      await approveTableFromQueue(admin.page, name)
     }
 
     // The player opens the first one and applies; the master accepts them.

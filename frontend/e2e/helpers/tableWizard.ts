@@ -56,8 +56,8 @@ export async function addScheduleSlot(page: Page, hourtime: string, weekday = 'V
  *
  * **Every spec that approves a table needs this now.** A table is born in `Draft` — only its master
  * sees it, it appears in no listing and no admin is told about it — so the create-then-approve
- * sequence that worked for a year stopped working the day `Draft` arrived: `/admin/tables` has no
- * row to click, and the API answers the approval with a 409. Here for the same reason
+ * sequence that worked for a year stopped working the day `Draft` arrived: `/admin/queue` has no
+ * row to take, and the API answers the approval with a 409. Here for the same reason
  * {@link chooseRequiredCatalogs} is: nine specs had the same two lines and all nine broke at once.
  *
  * @param page    the master's page

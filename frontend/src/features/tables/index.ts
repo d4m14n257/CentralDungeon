@@ -6,7 +6,7 @@
  * per folder would reintroduce import cycles and draw no boundary at all (#3.1.3).
  */
 
-export { explorerSearchFields } from './searchFields'
+export { adminTableSearchFields, explorerSearchFields, tableStatusChoices } from './searchFields'
 export { AttendanceEditor } from './components/AttendanceEditor'
 export { CreateUnassignedTableDialog } from './components/CreateUnassignedTableDialog'
 export { GameTableCard } from './components/GameTableCard'
@@ -39,7 +39,7 @@ export { useRemoveMaster } from './api/useRemoveMaster'
 export { useRequestChanges } from './api/useRequestChanges'
 export { useResubmitTable } from './api/useResubmitTable'
 export { useSubmitTableForReview } from './api/useSubmitTableForReview'
-export { MASTER_EDITABLE_STATUSES, isMasterEditable } from './lifecycle'
+export { ALL_TABLE_STATUSES, MASTER_EDITABLE_STATUSES, isMasterEditable } from './lifecycle'
 export { useStartTable } from './api/useStartTable'
 export { useTableSessions } from './api/useTableSessions'
 export { useTableStatusHistory } from './api/useTableStatusHistory'

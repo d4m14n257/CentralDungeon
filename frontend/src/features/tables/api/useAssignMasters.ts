@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
+import { queryKeys } from '@/api/queryKeys'
+
 import { gameTablesApi } from './gameTablesApi'
 import type { AssignMastersRequest } from '../types'
 
@@ -14,7 +16,7 @@ export function useAssignMasters() {
   return useMutation({
     mutationFn: ({ tableId, request }: { tableId: string; request: AssignMastersRequest }) => gameTablesApi.assignMasters(tableId, request),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['tables', 'admin'] })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
     },
   })
 }

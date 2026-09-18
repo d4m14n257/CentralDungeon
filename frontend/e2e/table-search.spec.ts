@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 import { addScheduleSlot, chooseRequiredCatalogs } from './helpers/tableWizard'
+import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
  * F2.1 end to end: the explorer finds a table by a synonym of what it is labelled with.
@@ -89,11 +90,7 @@ async function open(masterPage: Page, adminPage: Page, tableId: string, name: st
   await confirm.getByRole('button', { name: 'Confirmar' }).click()
   await expect(confirm).toBeHidden()
 
-  await adminPage.goto('/admin/tables')
-  const row = adminPage.getByRole('listitem').filter({ hasText: name })
-  await row.getByRole('button', { name: 'Aprobar' }).click()
-  await adminPage.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-  await expect(row).toBeHidden()
+  await approveTableFromQueue(adminPage, name)
 }
 
 /** Types a criterion and closes it into a chip. Enter is the only thing that closes one (#240). */

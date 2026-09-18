@@ -15,6 +15,36 @@ export const staleTime = {
   files: 60_000,
   /** What a table asks and what came in: same shape as files — somebody publishes, somebody answers. */
   tasks: 60_000,
+  /**
+   * The shared admin tray (#100). Short on purpose: it is the one listing whose rows are taken away
+   * by **somebody else**, so anything an admin is about to press may already belong to a colleague.
+   */
+  adminQueue: 10_000,
+} as const
+
+/**
+ * The listings that refresh themselves, and how often (F3.3).
+ *
+ * **This is the only place in the application with a `refetchInterval` besides `useBackendStatus`,
+ * and it is here rather than in the hook for the same reason `staleTime` is**: "how live is this
+ * screen" is a decision about the data, not an implementation detail of one query.
+ *
+ * It exists because of one sentence in the acceptance of F3.3: an item another admin reserves has to
+ * disappear **without the reader reloading the page by hand**. Until now the frontend refreshed only
+ * on invalidation after its own mutation, which cannot see what somebody else did — so with what was
+ * there, the criterion was simply not met.
+ *
+ * **15 seconds, plus a refetch when the tab is focused again.** The interval is the floor; the focus
+ * refetch is what matters most, because an admin coming back to the tab after reading Discord is
+ * exactly the person about to act on a stale row.
+ *
+ * **F6 replaces this with the WebSocket** (#101, `docs/fase-3-admin-owner.md` §5). Polling is the
+ * honest stopgap: it is one request every fifteen seconds per admin looking at the tray, which for a
+ * handful of admins is nothing, and it is deleted in one line when the socket lands.
+ */
+export const live = {
+  /** The shared admin tray: rows leave it because a colleague took them (#100). */
+  adminQueue: { refetchInterval: 15_000, refetchOnWindowFocus: true },
 } as const
 
 /**

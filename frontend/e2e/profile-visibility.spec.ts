@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
  * F2.3 end to end: the profile, and the asymmetry that #41 is about.
@@ -89,11 +90,7 @@ async function createTable(page: Page, name: string, hourtime: string): Promise<
 /** Sends the table to review and approves it, which is what opens it to applications. */
 async function open(masterPage: Page, adminPage: Page, tableId: string, name: string) {
   await submitForReview(masterPage, tableId)
-  await adminPage.goto('/admin/tables')
-  const row = adminPage.getByRole('listitem').filter({ hasText: name })
-  await row.getByRole('button', { name: 'Aprobar' }).click()
-  await adminPage.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-  await expect(row).toBeHidden()
+  await approveTableFromQueue(adminPage, name)
 }
 
 /**

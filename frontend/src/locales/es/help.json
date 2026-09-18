@@ -407,14 +407,31 @@
   "admins": {
     "reviewing": {
       "title": "Revisar mesas",
-      "queue": "«Mesas por revisar» junta las que esperan una decisión: las que están en preparación y las que todavía no tienen master.",
+      "queue": "Las mesas se revisan desde «Bandeja», junto con todo lo demás que espera una acción. Entran solo las que el master envió a revisión: una mesa devuelta con cambios pedidos está en manos del master, no en las tuyas.",
       "approve": "Aprobar publica la mesa. Pedir cambios la devuelve al master con el motivo escrito.",
-      "gone": "Una vez aprobada, la mesa sale de la bandeja: la bandeja es lo pendiente, no un listado de todo.",
+      "gone": "Resuelta de cualquiera de las dos formas, la mesa sale de la bandeja: la bandeja es lo pendiente, no un listado de todo.",
+      "listing": "«Mesas» es otra cosa: están todas las mesas de la plataforma, con su estado y con buscador. Sirve para encontrar una, no para revisarla.",
       "steps": {
-        "step1": "Cambiá al contexto Admin y entrá a «Mesas por revisar».",
-        "step2": "Abrí la mesa que quieras revisar y leé lo que preparó el master.",
-        "step3": "Tocá «Aprobar» para publicarla, o «Pedir cambios» y escribí qué hay que corregir.",
-        "step4": "La mesa sale de la bandeja: la bandeja es lo pendiente, no un listado de todo."
+        "step1": "Cambiá al contexto Admin. Caés en «Bandeja».",
+        "step2": "Buscá la mesa en la lista. Si la vas a leer con calma, tocá «Tomar» para que no la revise otro al mismo tiempo.",
+        "step3": "Leé lo que preparó el master.",
+        "step4": "Tocá «Aprobar» para publicarla, o «Pedir cambios» y escribí qué hay que corregir. La mesa sale de la bandeja."
+      }
+    },
+    "claiming": {
+      "title": "Tomar algo de la bandeja",
+      "what": "La bandeja es de todos los admins. Tomar un ítem avisa que estás con eso: apenas lo tomás, desaparece de la bandeja de los demás.",
+      "notRequired": "No hace falta tomarlo para resolverlo. Lo que está libre lo podés aprobar, rechazar o devolver directamente, y al hacerlo queda tuyo solo.",
+      "whenToClaim": "Tomalo cuando vayas a tardar: leer una mesa entera lleva un rato, y es justo el rato en el que otro admin podría estar leyendo la misma.",
+      "yours": "Mientras es tuyo lo ves en tu bandeja con tu nombre y desde cuándo lo tenés, para que sepas cuánto te queda.",
+      "timeout": "Se libera solo a los {{minutes}} minutos. Es para que nadie bloquee un pedido por cerrar la pestaña, no un límite para pensar: si se te venció, lo tomás de nuevo.",
+      "release": "Si no sos la persona indicada, tocá «Soltar» y vuelve a la bandeja al instante, sin esperar los {{minutes}} minutos.",
+      "race": "Lo único que no podés hacer es trabajar sobre algo que tomó otro. Si se te adelantó por un segundo, la pantalla te lo dice en lugar de aplicar tu decisión encima de la suya.",
+      "steps": {
+        "step1": "Entrá a «Bandeja». Cada fila dice si está libre o quién la tomó.",
+        "step2": "Si vas a leerla con calma, tocá «Tomar» para que nadie más la agarre mientras tanto.",
+        "step3": "Resolvela: aprobar, rechazar o pedir cambios, según lo que sea.",
+        "step4": "Si al final no la vas a resolver, tocá «Soltar» para devolverla."
       }
     },
     "assignMasters": {
@@ -424,7 +441,7 @@
       "order": "El primero que agregás es el master y el resto quedan de co-masters. Tocá un nombre para hacerlo master: el que estaba pasa a co-master.",
       "opens": "Al asignar, la mesa queda abierta directamente, sin pasar por revisión.",
       "steps": {
-        "step1": "En «Mesas por revisar», tocá «Crear mesa sin master» y poné el nombre.",
+        "step1": "En «Mesas», tocá «Crear mesa sin master» y poné el nombre.",
         "step2": "En la fila de esa mesa, tocá «Asignar masters».",
         "step3": "Buscá a la persona por su nombre de Discord o del sistema y tocá su nombre en la lista.",
         "step4": "Sumá a los demás igual. El primero es el master; el resto quedan de co-masters.",
@@ -517,7 +534,7 @@
       "pendingFirst": "La pantalla abre filtrada por «Pendiente», que es lo que espera una acción. Sacá ese filtro del buscador para ver los que ya se resolvieron y con qué respuesta.",
       "note": "Aprobar y rechazar piden una nota obligatoria, y le llega a quien pidió. En el rechazo es lo único que va a recibir, así que tiene que alcanzarle para entender.",
       "masterGrant": "Aprobar un pedido de rol de master le da el rol por el mismo camino que «Usuarios», con tu nota como motivo. No hay una segunda forma de otorgarlo.",
-      "tableOpen": "Aprobar un pedido de mesa nueva no crea la mesa. El pedido no trae nombre, sistema, cupo ni horario: lo que hacés al aprobarlo es dejar constancia de que corresponde, y después la creás desde «Mesas por revisar».",
+      "tableOpen": "Aprobar un pedido de mesa nueva no crea la mesa. El pedido no trae nombre, sistema, cupo ni horario: lo que hacés al aprobarlo es dejar constancia de que corresponde, y después la creás desde «Mesas».",
       "general": "Aprobar una consulta no cambia nada más en la plataforma: queda resuelta y tu respuesta le llega a quien preguntó.",
       "resolvedOnce": "Un pedido se resuelve una sola vez. Si otro admin llegó primero, la pantalla te lo dice en lugar de aplicar tu decisión encima.",
       "gone": "Si lo que el pedido señalaba ya no existe, no se puede resolver: la fila sobrevive a lo que apuntaba, pero actuar sobre algo que se borró sería actuar sobre un fantasma.",
@@ -526,7 +543,7 @@
         "step2": "Leé el motivo en la fila. Si necesitás verlo entero, «Ver detalle» lo abre completo.",
         "step3": "Decidí: «Aprobar» o «Rechazar». Fijate en el diálogo qué hace aprobar ese tipo de pedido, porque no es lo mismo en los tres.",
         "step4": "Escribí tu respuesta. Es obligatoria y le llega a quien pidió.",
-        "step5": "Si era un pedido de mesa nueva, acordate del paso que falta: crearla desde «Mesas por revisar» y asignarle master."
+        "step5": "Si era un pedido de mesa nueva, acordate del paso que falta: crearla desde «Mesas» y asignarle master."
       }
     }
   },

@@ -1,10 +1,11 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
  * E2 sub-slice 1, end to end (decisiones.md #163): a master creates a table through the wizard ->
- * Preparation; an admin approves it from /admin/tables -> Opened; the Primary starts it ->
+ * Preparation; an admin takes it in /admin/queue and approves it -> Opened; the Primary starts it ->
  * InProgress; the Primary finishes it -> Finished. It covers the real state machine, not the
  * self-service E1 had.
  *
@@ -81,7 +82,8 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
     await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
 
-    const row = admin.page.getByRole('listitem').filter({ hasText: tableName })
+    // `/admin/tables` is one of the wide tables of frontend-diseno.md §5.b since F3.3: a `<tr>`.
+    const row = admin.page.getByRole('row').filter({ hasText: tableName })
     await expect(row).toBeVisible()
     await row.getByRole('button', { name: 'Asignar masters' }).click()
 
@@ -150,11 +152,7 @@ test('a master deletes a draft that never went public, and cannot delete it once
 
     const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
     try {
-      await admin.page.goto('/admin/tables')
-      const row = admin.page.getByRole('listitem').filter({ hasText: openedName })
-      await row.getByRole('button', { name: 'Aprobar' }).click()
-      await admin.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-      await expect(row).toBeHidden()
+      await approveTableFromQueue(admin.page, openedName)
     } finally {
       await admin.context.close()
     }
@@ -186,14 +184,9 @@ test('a master creates a table, an admin approves it, and the master runs it end
 
     const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
     try {
-      await admin.page.goto('/admin/tables')
-      const row = admin.page.getByRole('listitem').filter({ hasText: tableName })
-      await expect(row).toBeVisible()
-      await row.getByRole('button', { name: 'Aprobar' }).click()
-      await admin.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-      // /admin/tables only lists what is waiting on a review (Unassigned/Preparation/ChangesRequested):
-      // once Opened, the row leaves this queue rather than staying with an updated badge.
-      await expect(row).toBeHidden()
+      // Reviewing moved to the shared tray with F3.3 (#176): the admin takes the row and resolves
+      // it there, and `/admin/tables` is now the listing of every table and reviews nothing.
+      await approveTableFromQueue(admin.page, tableName)
     } finally {
       await admin.context.close()
     }

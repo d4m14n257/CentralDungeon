@@ -1,5 +1,6 @@
 package com.centraldungeon.tables;
 
+import com.centraldungeon.adminqueue.AdminQueueClaimRule;
 import com.centraldungeon.catalogs.CatalogType;
 import com.centraldungeon.catalogs.TableCatalogService;
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
@@ -15,6 +16,7 @@ import com.centraldungeon.common.search.SearchQueryParser;
 import com.centraldungeon.common.search.SearchTerm;
 import com.centraldungeon.common.text.RichTextSanitizer;
 import com.centraldungeon.files.TableFileService;
+import com.centraldungeon.registrations.TablePlayerCount;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
@@ -36,9 +38,11 @@ import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.dto.UserSummaryResponse;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -72,9 +76,19 @@ public class GameTableService {
     /** /my/tables/history: the two ways a run is over, and nothing else (#133a). */
     private static final List<GameTableStatus> HISTORY_STATUSES = List.of(GameTableStatus.Finished, GameTableStatus.Canceled);
 
-    /** The /admin/tables default until the queue screen exists: the tables waiting on an admin (#176, F3). */
-    private static final List<GameTableStatus> DEFAULT_ADMIN_REVIEW_STATUSES =
-            List.of(GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested);
+    /**
+     * /admin/tables: every status a table can actually be seen in - which is all of them but
+     * {@code Deleted} (#25, #176).
+     *
+     * <p>It replaces the three-status default that used to live here, whose own comment said «until
+     * the queue screen exists». The queue screen exists (F3.3), and with it the review work moved to
+     * {@code /admin/queue}: what is left of {@code /admin/tables} is the management listing, and a
+     * management listing that hides two thirds of the platform is not one. Narrowing is still
+     * available - {@code ?status=} and now {@code /table_status} inside {@code ?q=} - but it is the
+     * caller's to ask for, not a filter hidden in the endpoint.
+     */
+    private static final List<GameTableStatus> ADMIN_LISTABLE_STATUSES =
+            Arrays.stream(GameTableStatus.values()).filter(status -> status != GameTableStatus.Deleted).toList();
 
     /**
      * A table can be deleted only while it was never public (decisiones.md #175): nobody saw it, so
@@ -323,10 +337,20 @@ public class GameTableService {
      * no sessions rather than being refused (#196) - materializing is a consequence of opening, not a
      * precondition for it.
      *
+     * <p><b>It refuses a table another admin has reserved</b> since F3.3 ({@link AdminQueueClaimRule},
+     * #100). Not "reserved by the actor": an unreserved table is nobody's and approving it is an
+     * implicit claim - the screen that offers this moved to {@code /admin/queue}, but the endpoint
+     * stayed here because approving is an operation on the table aggregate and nowhere else (#176),
+     * and it has to keep working for whoever reaches it without passing through the tray. What the
+     * check buys is that a stale link or a second tab cannot take a review out from under the colleague
+     * who took it.
+     *
      * @param gameTableId the table to approve
      * @param actorId     the admin, from the token; recorded in the status history
      * @return the table, now Opened, with its sessions materialized
-     * @throws ConflictException if the table was not awaiting review
+     * @throws ConflictException if the table was not awaiting review, or 409
+     *                           {@code ITEM_ALREADY_CLAIMED} if another admin reserved it from the
+     *                           shared queue
      */
     @Transactional
     public GameTableDetailResponse approve(String gameTableId, String actorId) {
@@ -334,6 +358,10 @@ public class GameTableService {
         if (gameTable.getStatus() != GameTableStatus.Preparation) {
             throw new ConflictException("Cannot approve a table in status " + gameTable.getStatus());
         }
+        // After the status check: when both are wrong, "this table is not in review" is the truer
+        // sentence, and naming a colleague who reserved something that no longer needs reviewing
+        // would send the reader to ask them about nothing.
+        AdminQueueClaimRule.requireNotHeldByAnother(gameTable.getClaimedBy(), actorId, "table " + gameTableId);
         recordStatusChange(gameTable, GameTableStatus.Preparation, GameTableStatus.Opened, actorId, null);
         tableSessionService.materialize(gameTable);
         announceReviewOutcome(gameTable, NotificationType.TableApproved);
@@ -343,11 +371,17 @@ public class GameTableService {
     /**
      * An admin sending a draft back to its master, with a reason. Preparation to ChangesRequested.
      *
+     * <p>Same reservation check as {@link #approve} and for the same reason (#100): the two answers to
+     * a review are the same act seen from two sides, and a rule that held for one of them only would
+     * be a door left open.
+     *
      * @param gameTableId the table
      * @param actorId     the admin, from the token
      * @param request     the justification, which the master reads on the status tab
      * @return the table after the change
-     * @throws ConflictException if the table was not awaiting review
+     * @throws ConflictException if the table was not awaiting review, or 409
+     *                           {@code ITEM_ALREADY_CLAIMED} if another admin reserved it from the
+     *                           shared queue
      */
     @Transactional
     public GameTableDetailResponse requestChanges(String gameTableId, String actorId, ChangeTableStatusRequest request) {
@@ -355,6 +389,7 @@ public class GameTableService {
         if (gameTable.getStatus() != GameTableStatus.Preparation) {
             throw new ConflictException("Cannot request changes on a table in status " + gameTable.getStatus());
         }
+        AdminQueueClaimRule.requireNotHeldByAnother(gameTable.getClaimedBy(), actorId, "table " + gameTableId);
         recordStatusChange(gameTable, GameTableStatus.Preparation, GameTableStatus.ChangesRequested, actorId, request.justification());
         announceReviewOutcome(gameTable, NotificationType.TableChangesRequested);
         return toDetail(gameTable);
@@ -783,18 +818,43 @@ public class GameTableService {
     }
 
     /**
-     * /admin/tables: unfiltered by pertenencia, defaults to the statuses waiting on an admin.
-     * Unassigned tables have no Primary yet, so this uses toAdminSummary, never toSummary.
+     * /admin/tables: the management listing, unfiltered by pertenencia - the caller is already an
+     * admin (#176).
+     *
+     * <p><b>Every table, not only the ones waiting on a review.</b> That default moved out with F3.3:
+     * reviewing is the shared tray's job now ({@code /admin/queue}), and what this screen is for is
+     * finding a table - any table - and acting on it. {@code Deleted} is the one status that is never
+     * listed even when it is asked for, because the filter belongs to the listing and not to the
+     * caller (#25).
+     *
+     * <p><b>It takes the same {@code ?q=} the explorer does</b> (#164, arquitectura.md §2.5), with two
+     * commands the explorer has no use for: {@code /table_status} over the closed list of states, and
+     * {@code /table_master} over the masters' names. The catalog criteria are resolved to ids before
+     * the query is built, exactly as {@link #list} does and for the same reason (#54, #56, #246).
+     *
+     * <p><b>The page is built with three queries and not with three per row</b> (F3.3 contrato §3.4):
+     * one for the tables, one for their Primaries and one for their player counts. Asking per row was
+     * survivable while the default was a handful of tables in review; listing every table there is
+     * turned it into a query storm.
+     *
+     * @param rawQuery the search box, or null when it is empty. An unrecognized value matches nothing
+     *                 and is never a 400
+     * @param statuses which statuses to list, or null/empty for all of them but {@code Deleted}
+     * @param pageable page, size and sort, with a tie-break by id (#171, #173)
+     * @return one page of tables, as an admin sees them
      */
     @Transactional(readOnly = true)
-    public PageResponse<AdminTableSummaryResponse> listForAdmin(@Nullable List<GameTableStatus> statuses, Pageable pageable) {
-        // Deleted is never listed even when asked for: the filter belongs to the listing, not to the
-        // caller (#25).
+    public PageResponse<AdminTableSummaryResponse> listForAdmin(
+            @Nullable String rawQuery, @Nullable List<GameTableStatus> statuses, Pageable pageable) {
         List<GameTableStatus> effective = (statuses == null || statuses.isEmpty())
-                ? DEFAULT_ADMIN_REVIEW_STATUSES
+                ? ADMIN_LISTABLE_STATUSES
                 : statuses.stream().filter(status -> status != GameTableStatus.Deleted).toList();
-        Page<GameTable> page = gameTableRepository.findByStatusIn(effective, pageable);
-        return PageResponse.from(page.map(this::toAdminSummary));
+
+        SearchQuery parsed = SearchQueryParser.parse(rawQuery, GameTableSearchField.wireNames());
+        Map<SearchTerm, Set<String>> catalogIds = gameTableSearchResolver.resolveCatalogTerms(parsed);
+        Page<GameTable> page =
+                gameTableRepository.findAll(GameTableSearchSpecification.forAdmin(parsed, catalogIds, effective), pageable);
+        return toAdminSummaryPage(page);
     }
 
     /** Internal read used by other services (e.g. registrations) - never exposed raw over HTTP (arquitectura.md 2.2/2.3). */
@@ -934,8 +994,43 @@ public class GameTableService {
         }
     }
 
-    private AdminTableSummaryResponse toAdminSummary(GameTable gameTable) {
-        MasterSummaryResponse primaryMaster = findPrimaryMasterOrNull(gameTable.getId());
+    /**
+     * One page of the admin listing, with the two expensive per-row reads done once for the whole page.
+     *
+     * <p>This is the N+1 the F3.3 contract §3.4 names. The old {@code toAdminSummary} asked
+     * {@code findPrimaryMasterOrNull} and {@code countPlayers} <b>per row</b>: forty-one queries for a
+     * page of twenty, on a screen that had just stopped being limited to the tables in review. The
+     * shape of the fix is the one {@code listMineHistory} and {@code FileService.usagesByFileId}
+     * already use - resolve the whole page in one grouped read, then map from a map.
+     *
+     * <p><b>Two batched reads, not every association.</b> {@code tableType} and {@code claimedBy} are
+     * still {@code LAZY} and still resolved row by row, and that is left alone on purpose rather than
+     * overlooked: both are small closed sets - a handful of table types, a handful of admins - so the
+     * first-level cache answers the repeats within the page, and a {@code join fetch} would buy a
+     * query or two at the cost of widening every row. The two that were batched are the two where
+     * every row names something different, which is where the cache cannot help.
+     */
+    private PageResponse<AdminTableSummaryResponse> toAdminSummaryPage(Page<GameTable> page) {
+        List<String> ids = page.getContent().stream().map(GameTable::getId).toList();
+        Map<String, Master> primaries = masterService.findPrimariesByTables(ids);
+        Map<String, Long> playerCounts = ids.isEmpty()
+                ? Map.of()
+                : tableRegistrationRepository.countPlayersByTables(ids, TableRegistrationStatus.Player).stream()
+                        .collect(Collectors.toMap(TablePlayerCount::gameTableId, TablePlayerCount::players));
+
+        return PageResponse.from(page.map(gameTable -> toAdminSummary(
+                gameTable,
+                primaries.get(gameTable.getId()),
+                playerCounts.getOrDefault(gameTable.getId(), 0L).intValue())));
+    }
+
+    /**
+     * @param primary     the table's live Primary, or null for an {@code Unassigned} one (#72)
+     * @param playerCount how many people are accepted, already resolved for the whole page
+     */
+    private AdminTableSummaryResponse toAdminSummary(
+            GameTable gameTable, @Nullable Master primary, int playerCount) {
+        User claimedBy = gameTable.getClaimedBy();
         return new AdminTableSummaryResponse(
                 gameTable.getId(),
                 gameTable.getName(),
@@ -943,9 +1038,17 @@ public class GameTableService {
                 gameTable.getTableType() != null ? gameTable.getTableType().getName() : null,
                 gameTable.getTableType() != null ? gameTable.getTableType().getCode() : null,
                 gameTable.getMaxPlayers(),
-                countPlayers(gameTable.getId()),
-                primaryMaster != null ? primaryMaster.name() : null,
+                playerCount,
+                primary != null ? gameTableMapper.toMasterSummary(primary).name() : null,
+                // A reserved table reads the same way a reserved request does (#100), so an admin
+                // scanning this listing can see that somebody is already on it.
+                claimedBy != null ? displayNameOf(claimedBy) : null,
                 gameTable.getCreatedAt());
+    }
+
+    /** The screen shows a person, not an id - the same fallback every mapper of the project uses. */
+    private static String displayNameOf(User user) {
+        return user.getName() != null ? user.getName() : user.getDiscordUsername();
     }
 
     /** Every transition answers with the table; none of them is the read where the clash matters. */

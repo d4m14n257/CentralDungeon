@@ -1,6 +1,7 @@
 package com.centraldungeon.tables;
 
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -99,4 +100,37 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
      */
     @Query("select m from Master m join fetch m.gameTable where m.user.id = :userId")
     List<Master> findByUser_Id(@Param("userId") String userId);
+
+    /**
+     * Who runs each of a set of tables, in one query - the batched read behind the admin listing and
+     * the shared tray.
+     *
+     * <p><b>This is the N+1 fix of the F3.3 contract §3.4.</b> {@code /admin/tables} used to ask
+     * {@code findByGameTable_IdAndStatus} once per row while it built the page; harmless while the
+     * listing defaulted to the three statuses waiting on an admin, and a query per table the moment
+     * it started listing <em>every</em> table. Same shape and same reason as
+     * {@code countPendingByTables} and {@code CatalogUsageCount}: one grouped read for the page
+     * instead of one read per row.
+     *
+     * <p>The user is fetched along with the row, because the caller needs their display name and a
+     * lazy association resolved afterwards would put the N+1 back one layer down.
+     *
+     * @param gameTableIds the tables of the page. An empty collection is the caller's to avoid
+     * @param masterType   which master is wanted, always {@code Primary} in production code
+     * @param status       the row status to require, always {@code Created}: a removed co-master no
+     *                     longer runs the table (#216)
+     * @return the matching master rows, user included. A table with no live Primary - an
+     *         {@code Unassigned} one (#72) - is simply absent from the answer
+     */
+    @Query("""
+            select m from Master m
+            join fetch m.user
+            where m.gameTable.id in :gameTableIds
+              and m.masterType = :masterType
+              and m.status = :status
+            """)
+    List<Master> findByGameTablesAndType(
+            @Param("gameTableIds") Collection<String> gameTableIds,
+            @Param("masterType") MasterType masterType,
+            @Param("status") MasterRowStatus status);
 }

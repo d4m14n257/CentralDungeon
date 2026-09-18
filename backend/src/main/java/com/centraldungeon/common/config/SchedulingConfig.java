@@ -10,8 +10,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * disabling background work in an environment is deleting one file's worth of configuration rather
  * than editing the application's entry point.
  *
- * <p>Only one job exists so far: {@code FileRetentionService}, which marks the files nobody has used
- * in months (#75).
+ * <p>Three jobs exist: {@code FileRetentionService}, which marks the files nobody has used in months
+ * (#75); {@code ApprovalOrphanCheckService}, which reports the requests pointing at something that is
+ * gone (#78); and {@code AdminQueueClaimReleaseService}, which hands back the reservations of the
+ * shared tray that nobody finished (#100). The first two are daily crons staggered half an hour
+ * apart; the third is the only one on a short interval, because fifteen minutes is a promise a daily
+ * sweep could not keep.
  *
  * <p>⚠️ <b>The scheduler is per JVM.</b> With more than one instance every one of them runs the job,
  * which is the same limitation the Caffeine cache (#128) and the in-memory STOMP broker (#101) have

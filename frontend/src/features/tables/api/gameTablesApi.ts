@@ -39,8 +39,19 @@ export const gameTablesApi = {
    *  it for the same cache entry. */
   history: (page = 0, size = pageSize.list) => api.getPage<GameTableHistoryEntry>('/api/v1/game-tables/mine/history', { page, size }),
   managed: (page = 0, size = pageSize.list) => api.getPage<GameTableSummary>('/api/v1/game-tables/managed', { page, size }),
-  admin: (statuses?: GameTableStatus[], page = 0, size = pageSize.adminQueue) =>
-    api.getPage<AdminTableSummary>('/api/v1/game-tables/admin', { status: statuses?.join(','), page, size }),
+  /**
+   * `/admin/tables`: **every table there is** since F3.3 (#176), not the ones waiting on a review.
+   *
+   * The listing used to default to the review statuses, which made it a second tray with rules of its
+   * own; what waits on a review now belongs to `/admin/queue`, and this answers "which tables exist
+   * and what state is each one in" — a question that needs all of them and a search box.
+   *
+   * `q` is the search language of #164 with the four explorer commands plus `/table_status` and
+   * `/table_master`. `status` stays as a separate parameter: it is not something the reader types,
+   * it is a caller narrowing the listing programmatically.
+   */
+  admin: (query?: string, statuses?: GameTableStatus[], page = 0, size = pageSize.adminQueue) =>
+    api.getPage<AdminTableSummary>('/api/v1/game-tables/admin', { q: query, status: statuses?.join(','), page, size }),
   byId: (id: string) => api.get<GameTableDetail>(`/api/v1/game-tables/${id}`),
   /** Only a table that was never public; the backend refuses the rest (#175). */
   delete: (id: string) => api.delete(`/api/v1/game-tables/${id}`),

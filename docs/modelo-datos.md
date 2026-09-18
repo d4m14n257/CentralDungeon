@@ -69,6 +69,7 @@ erDiagram
     table_sessions ||--o{ session_attendance : "asistencia"
     users        ||--o{ session_attendance : "asiste"
     game_tables  ||--o{ table_status_changes : "historial de estado"
+    users        ||--o{ game_tables : "reserva la revisión (#100)"
 
     game_tables        ||--o{ table_registrations : "postulaciones"
     users              ||--o{ table_registrations : "se postula"
@@ -233,8 +234,8 @@ CREATE TABLE game_tables (
     max_players    INT           NULL,   -- player cap (#24)
     status         VARCHAR(32)   NOT NULL DEFAULT 'Draft',
     created_by     VARCHAR(64)   NOT NULL, -- master or admin (#72)
-    claimed_by     VARCHAR(64)   NULL,     -- admin who reserved the review (#100)
-    claimed_at     DATETIME      NULL,
+    claimed_by     VARCHAR(64)   NULL,     -- admin who reserved the review (#100). Mapped and written
+    claimed_at     DATETIME      NULL,     -- by AdminQueueService since F3.3; no migration was needed
     closed_at      DATETIME      NULL,   -- set when entering Finished or Canceled (#44)
     created_at     DATETIME      NOT NULL,
     updated_at     DATETIME      NULL,
@@ -691,9 +692,10 @@ CREATE TABLE approval_requests (
     requested_by    VARCHAR(64)  NOT NULL,
     justification   LONGTEXT     NOT NULL, -- required in the request and in the resolution (#42)
     status          VARCHAR(32)  NOT NULL DEFAULT 'Pending', -- Pending | Approved | Rejected
-    claimed_by      VARCHAR(64)  NULL,  -- admin who reserved this item (#100). Nothing writes it
-    claimed_at      DATETIME     NULL,  -- until F3.3: the two columns are in the baseline, the behaviour
-                                        -- (claim/release and its timeout) belongs to the queue
+    claimed_by      VARCHAR(64)  NULL,  -- admin who reserved this item (#100). Written only by
+    claimed_at      DATETIME     NULL,  -- AdminQueueService since F3.3 - claim, release, and the
+                                        -- timeout job. The columns were in the baseline from day one,
+                                        -- so the queue needed no migration to arrive
     resolved_by     VARCHAR(64)  NULL,
     resolution_note LONGTEXT     NULL,  -- mandatory when resolving, so NULL only while Pending (#42)
     resolved_at     DATETIME     NULL,
@@ -818,6 +820,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | **Aprobar un `MasterGrant` otorga el rol llamando a `UserRoleService.grantRole`**, con la nota de resolución como justificación. No hay una segunda ruta que escriba la misma fila | `ApprovalService` → `UserRoleService` | #42, F3.1 |
 | Pedir que se abra una mesa desemboca en #72: aprobar deja constancia de que el pedido procede, **no crea la mesa** —el pedido no trae nombre, sistema, cupo ni agenda—; un admin la crea en `Unassigned` y le asigna master | `ApprovalService` · `GameTableService` | #72, #90 |
 | **Un pedido no notifica a nadie**; la resolución notifica **al solicitante**, con `ApprovalRequestApproved` / `ApprovalRequestRejected`. Los ítems de trabajo de admin no se duplican como notificaciones | `ApprovalService` · `NotificationService` | #100, #197 |
+| **Aprobar y rechazar rechazan un pedido que tiene otro admin** (`409 ITEM_ALREADY_CLAIMED`); uno libre se resuelve, que es el camino normal de `/admin/requests` —esa pantalla no tiene forma de reservar— | `ApprovalService.approve` · `.reject` · `AdminQueueClaimRule` | #100, #176 |
 
 ### Mesa
 
@@ -845,6 +848,8 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Editar la agenda de una mesa ya poblada **avisa** al master a quiénes les genera choque; no expulsa a nadie | `TableScheduleService` | #70, #178 |
 | **Una mesa se borra solo si nunca fue pública** (`Draft`/`Unassigned`/`Preparation`/`ChangesRequested`) **y no tiene postulaciones activas**; lo demás se cancela. El borrado es lógico y arrastra `masters` y `table_registrations` con la misma marca de tiempo | `GameTableService.delete` | #25, #175 |
 | Una mesa `Deleted` no existe para ninguna lectura: detalle y listados responden `404` o la omiten | `GameTableService` | #25, #175 |
+| **Aprobar y pedir cambios rechazan una mesa que tiene otro admin** (`409 ITEM_ALREADY_CLAIMED`); una mesa libre se aprueba sin pasar por la bandeja. Los endpoints siguen siendo del agregado mesa; lo que se mudó a `/admin/queue` es la pantalla | `GameTableService.approve` · `.requestChanges` · `AdminQueueClaimRule` | #100, #176 |
+| `/admin/tables` lista **todos los estados menos `Deleted`** y acepta `?q=` con seis comandos. `/table_master` se resuelve con un `exists` sobre `masters` y **nunca con un join** —una mesa con tres masters se duplicaría y rompería el `count`— y filtra solo filas vivas | `GameTableService.listForAdmin` · `GameTableSearchSpecification.forAdmin` | #164, #176, #216 |
 
 ### Postulaciones
 
@@ -979,12 +984,17 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| La bandeja es un `UNION ALL` sobre `approval_requests` (`Pending`), `comments` (`Under review`), `system_feedback` (`New`) y `game_tables` (`Preparation`), normalizado a un DTO común. `Draft` nunca entra: nadie la envió todavía. `ChangesRequested` tampoco — la pelota está en el master | `AdminQueueService` | #100, #245 |
+| La bandeja une `approval_requests` (`Pending`), `comments` (`Under review`), `system_feedback` (`New`) y `game_tables` (`Preparation`), normalizado a un DTO común. **`Draft` nunca entra**: nadie la envió todavía. **`ChangesRequested` tampoco** — la pelota está en el master. **`Unassigned` tampoco**: le falta un master, no una revisión | `AdminQueueService` | #100, #245 |
+| El `UNION ALL` de #100 se construye como **una consulta por fuente y el merge en Java**, no como SQL nativo: no hay un solo `nativeQuery` en el proyecto, y el precedente propio del mismo problema es `MasterDashboardService`. Sumar la fuente de F5 es escribir un método privado más | `AdminQueueService` | #100, #11 |
+| Cada fuente trae como mucho **200 filas**, y tocar el techo se loguea en `WARN` con el nombre de la fuente: un merge sin tope es una carga de memoria que nadie declaró | `AdminQueueService` | #100 |
+| La bandeja se ordena por **el que espera hace más tiempo primero**, con desempate por id, y pagina con el total exacto — el merge ya está en memoria. **No lleva `?q=`**: la pantalla que busca es `/admin/tables` | `AdminQueueService` | #136, #171, #173, #176 |
 | Un ítem reservado desaparece de la bandeja del resto, pero sigue visible para quien lo reservó: el filtro es `claimed_by IS NULL OR claimed_by = :actual` | `AdminQueueService` | #100 |
-| Reservar es idempotente para el mismo admin; si ya lo tiene otro, responde `409` | `AdminQueueService` | #100 |
-| Resolver un ítem exige tenerlo reservado | `AdminQueueService` | #100 |
-| Un job libera las reservas con más de N minutos (configurable, arranca en 15) | `AdminQueueService` | #100 |
-| Todo cambio en la bandeja emite `admin-queue.changed` por WebSocket a los suscriptores con rol `Admin` u `Owner` | `NotificationService` | #101 |
+| Reservar es idempotente para el mismo admin —responde `200` y **no mueve `claimed_at`**— y si ya lo tiene otro responde `409 ITEM_ALREADY_CLAIMED`. Se toma bajo el lock de la fila: es un check-then-act y la carrera es real | `AdminQueueService` | #100, #252 |
+| Devolver lo propio es `204`; devolver algo sin reserva también (el estado pedido ya se cumple); devolver lo de otro es `409 ITEM_ALREADY_CLAIMED`. Devolver no le pregunta al estado del ítem: es el deshacer | `AdminQueueService` | #100 |
+| **Resolver un ítem que tiene otro admin se rechaza** con `409 ITEM_ALREADY_CLAIMED`; uno que no tiene nadie se resuelve, y resolverlo **es una reserva implícita**. Los cuatro caminos: `ApprovalService.approve` / `reject` y `GameTableService.approve` / `requestChanges`, con la regla en un solo lugar porque cuatro copias es cómo una se queda atrás. **No es «exige tenerlo reservado»**: ver la fila de abajo | `AdminQueueClaimRule` | #100 |
+| **Por qué la regla no es más estricta.** Esta tabla decía «resolver un ítem exige tenerlo reservado» y se implementó así en F3.3, y dejó `/admin/requests` inutilizable: esa pantalla —que #176 le dio a los pedidos— trae Aprobar y Rechazar y **ninguna forma de reservar**, así que toda resolución respondía `409` por una reserva que no podía ofrecer. Chocaron dos diseños: #176 le da a los pedidos pantalla propia, y esta sección asumía que la bandeja era el único lugar donde algo se resuelve. Lo que #100 compra es «si lo toma uno, baja para todos», y eso solo pide rechazar lo que tiene **otro**. **La consistencia nunca dependió de esto**: dos admins resolviendo la misma fila sin reservar se serializan con el lock pesimista y el segundo recibe «ya estaba resuelto» (#256) | `AdminQueueClaimRule` | #100, #176, #256 |
+| Un job libera cada minuto las reservas con más de N minutos (`app.admin-queue.claim-timeout`, arranca en `PT15M`; **F3.5 lo muda a `system_settings`**). Solo toca ítems que siguen esperando: uno ya resuelto conserva su `claimed_by` como registro | `AdminQueueClaimReleaseService` | #100, #141 |
+| Todo cambio en la bandeja emite `admin-queue.changed` por WebSocket a los suscriptores con rol `Admin` u `Owner`. **Hasta F6 lo reemplaza un `refetchInterval` de 15s en el frontend** | `NotificationService` | #101 |
 
 ### Notificaciones
 

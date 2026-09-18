@@ -18,9 +18,12 @@ import type { ResolveApprovalRequestInput } from '../types'
  * request stands, and the table is created by an admin from `/admin/tables` (#72). `General` has no
  * effect beyond being closed — that is its nature.
  *
- * Refused with `REQUEST_ALREADY_RESOLVED` when somebody else got there first, and with
- * `REQUEST_ENTITY_GONE` when what the request pointed at no longer exists (#78). The first is the
- * race a screen cannot prevent on its own, which is why the dialog shows the refusal inline.
+ * Refused with `REQUEST_ALREADY_RESOLVED` when somebody else got there first, with
+ * `REQUEST_ENTITY_GONE` when what the request pointed at no longer exists (#78), and since F3.3 with
+ * `ITEM_ALREADY_CLAIMED` when a colleague has taken it from the shared tray (#100). **No reservation
+ * is required to approve**: `/admin/requests` offers no way to make one, and resolving something
+ * nobody holds takes it implicitly. All three are races a screen cannot prevent on its own, which is
+ * why the dialog shows the refusal inline.
  *
  * @returns the mutation, taking the request and the note
  */
@@ -34,6 +37,8 @@ export function useApproveRequest() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.adminAll() })
       // A granted role lands on an account, and that account is listed somewhere else entirely.
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.adminAll() })
+      // And the row leaves the shared tray: resolved work is not work waiting on anybody (#100).
+      void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
     },
   })
 }

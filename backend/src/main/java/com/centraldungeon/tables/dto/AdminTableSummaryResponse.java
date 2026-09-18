@@ -19,6 +19,10 @@ import org.jspecify.annotations.Nullable;
  * @param playerCount       how many people are accepted right now
  * @param primaryMasterName who runs the table, as a display name. <b>Null for an Unassigned table</b>,
  *                          which is the whole reason this record exists
+ * @param claimedByName     the admin who reserved this table's review from the shared tray (#100), or
+ *                          null when nobody has. It is here so a reserved table reads the same way a
+ *                          reserved request does: an admin scanning this listing can see somebody is
+ *                          already on it instead of opening it to find out
  * @param createdAt         when the table was created, in UTC. It orders the admin's queue: the
  *                          oldest is the one that has been waiting longest
  */
@@ -31,5 +35,6 @@ public record AdminTableSummaryResponse(
         @Nullable Integer maxPlayers,
         int playerCount,
         @Nullable String primaryMasterName,
+        @Nullable String claimedByName,
         LocalDateTime createdAt) {
 }

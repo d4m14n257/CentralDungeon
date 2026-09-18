@@ -7,7 +7,10 @@ import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -201,6 +204,34 @@ public class MasterService {
     @Transactional(readOnly = true)
     public List<Master> findByGameTable(String gameTableId) {
         return masterRepository.findByGameTable_IdAndStatus(gameTableId, MasterRowStatus.Created);
+    }
+
+    /**
+     * Who runs each of a whole page of tables, in one query (F3.3 contrato §3.4).
+     *
+     * <p>The batched counterpart of {@link #findByGameTable}, and the reason it exists is a concrete
+     * N+1: the admin listing and the shared tray both need the Primary of every row they render, and
+     * asking per row was a query per table on a screen that now lists every table there is (#176).
+     *
+     * <p>Live rows only, and the {@code Primary} only - the same two filters {@link #findByGameTable}
+     * applies, so the batched answer and the single one cannot disagree.
+     *
+     * @param gameTableIds the tables of the page
+     * @return the live Primary of each, keyed by table id. A table with none - an {@code Unassigned}
+     *         one (#72) - is absent from the map rather than mapped to null, which is what lets the
+     *         caller write {@code get(id)} and get the nullable it already has to handle
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Master> findPrimariesByTables(Collection<String> gameTableIds) {
+        if (gameTableIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, Master> byTable = new HashMap<>();
+        for (Master master :
+                masterRepository.findByGameTablesAndType(gameTableIds, MasterType.Primary, MasterRowStatus.Created)) {
+            byTable.put(master.getGameTable().getId(), master);
+        }
+        return byTable;
     }
 
     /**

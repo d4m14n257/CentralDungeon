@@ -204,6 +204,32 @@ La cláusula que ninguna prueba de un solo lado puede ver —«el rol queda otor
 
 **Se prueba:** dos admins abren `/admin/queue`; uno reserva una mesa y al otro le desaparece de la lista sin recargar la página a mano; a los 15 minutos sin resolver, vuelve.
 
+#### ✅ Terminada
+
+**Cero migraciones**, y esta vez verificado antes de escribir: las cuatro columnas `claimed_by`/`claimed_at` ya estaban en `V1__baseline.sql` para las cuatro tablas, y `GameTable.java` lo decía por escrito. `V11` sigue siendo la última. Es la lección de #257 aplicada.
+
+**Lo que la rebanada descubrió de sí misma:**
+
+- **La regla «resolver exige tenerlo reservado» era incompatible con una pantalla ya entregada.** `/admin/requests` tiene Aprobar y Rechazar y ninguna forma de reservar, así que quedó inutilizable en la aplicación real. Chocaron #176 y la suposición de §5, y ninguno de los dos documentos está mal por separado. Corregida en **#258**, junto con la fila de `modelo-datos.md` §5 que la originó.
+- **Lo encontró Playwright, no los tests ni la revisión.** Los tres filtros anteriores verificaron que la regla estuviera bien *aplicada* — y lo estaba. Lo que estaba mal era la regla. Es el caso de manual de por qué A3 existe: no cruzó dos capas, cruzó **dos rebanadas**.
+- **Los dos fallos del job de liberación no eran del job.** El test envejecía la reserva con el reloj de MySQL mientras el job compara contra el de la JVM; como `claimed_at` es un `LocalDateTime` sin zona y todos los que la aplicación escribe vienen de Java, una reserva «de hace dieciséis minutos» caía horas en el futuro. **El código estaba bien y el test preguntaba en un reloj que producción nunca usa.**
+
+**Suites al cerrar, salida real:** `./mvnw test` 520/520 · `./mvnw verify` 520 + **165 ITs en 18 clases**, 0 fallos · `npx tsc -b` limpio · `npm run test` 426/426 en 49 archivos · `npm run test:e2e` **57/57** · `npm run format` sin reescrituras.
+
+**Deuda de revisión — para F4** (punto 5, #250):
+
+| Sin verificar | Por qué queda |
+|---|---|
+| Los cuatro estados de cada pantalla, el viewport de 375 px y el contraste | Es F4 por diseño (#250) |
+| El `@Scheduled` con `fixedDelay` en una JVM viva de producción | El IT lo ejercita en una JVM de test; el `releaseExpiredClaims()` está probado contra filas reales |
+| El inglés renderizado | Paridad de claves verificada; los tests corren en `es` |
+| `pageSize.adminQueue` ahora sirve a dos pantallas | El nombre quedó significando la otra. Cosmético |
+| `comments` y `system_feedback` como fuentes | **F5**. El merge está escrito para que sumarlas sea agregar un método privado |
+
+**Inventario** — 7 clases nuevas en `backend/.../adminqueue/` más su `dto/`, y `AdminQueueServiceIT` con la carrera, el job contra filas y el N+1 **medido** con `Statistics` de Hibernate; 11 archivos nuevos en `frontend/src/features/adminQueue/`, `AdminQueuePage.tsx`, `AdminTablesPage.tsx` reescrita, `config/adminQueue.ts`, y `e2e/helpers/adminQueue.ts`. **Ninguna migración.**
+
+**`/admin/queue` pasa a ser el hogar del contexto admin**, la misma mudanza que #220 hizo con `/master`: lo que espera una acción, no un listado.
+
 ---
 
 ### F3.4 — Pausa y veto

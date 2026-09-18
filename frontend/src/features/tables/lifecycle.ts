@@ -13,6 +13,31 @@ import type { GameTableStatus } from './types'
  */
 export const MASTER_EDITABLE_STATUSES: readonly GameTableStatus[] = ['Draft', 'ChangesRequested']
 
+/**
+ * Every status a table can be shown in, in the order of its life (#245).
+ *
+ * A written-out tuple rather than something derived from the union, for the same reason as
+ * `PLATFORM_ROLES`: a union of literals has no runtime value to iterate, and `satisfies` is what
+ * turns a typo here into a compile error.
+ *
+ * **`Deleted` is not one of them and never reaches this side.** The backend's enum has it, and a
+ * deleted table is gone for everybody (#175) — so the union does not carry it, `/admin/tables`
+ * excludes it by default, and `/table_status` cannot offer it. A command that offers a value no row
+ * can have is a filter that always answers nothing.
+ */
+export const ALL_TABLE_STATUSES = [
+  'Draft',
+  'Unassigned',
+  'Preparation',
+  'ChangesRequested',
+  'Opened',
+  'InProgress',
+  'PauseRequested',
+  'Pause',
+  'Finished',
+  'Canceled',
+] as const satisfies readonly GameTableStatus[]
+
 /** Whether this table's master may still rewrite it. */
 export function isMasterEditable(status: GameTableStatus): boolean {
   return MASTER_EDITABLE_STATUSES.includes(status)

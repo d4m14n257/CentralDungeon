@@ -99,6 +99,23 @@ public final class ConflictException extends ApiException {
     public static final String MASTER_ROLE_ALREADY_HELD = "MASTER_ROLE_ALREADY_HELD";
 
     /**
+     * Acting on an item of the shared admin tray that <b>another admin holds</b> (#100) - reserving
+     * it, giving it back, or resolving it.
+     *
+     * <p>Its own code because it is the one 409 here whose sentence names <b>somebody else</b>: the
+     * reader has to be told the item is taken, not that "a conflict occurred". It is also the answer
+     * to the race the reservation exists to stop, so the loser of two admins clicking at the same
+     * instant gets a sentence instead of a generic failure.
+     *
+     * <p>There is deliberately <b>no counterpart for "you have not reserved it"</b>. An unreserved
+     * item is nobody's, and resolving it is an implicit claim: {@code /admin/requests} resolves
+     * without ever passing through the tray, and a rule that refused that would make the tray
+     * mandatory for a flow that was never built to use it. See {@code AdminQueueClaimRule} for the
+     * whole reasoning.
+     */
+    public static final String ITEM_ALREADY_CLAIMED = "ITEM_ALREADY_CLAIMED";
+
+    /**
      * @param message what state made the request impossible, in English and for a log (#197)
      */
     public ConflictException(String message) {

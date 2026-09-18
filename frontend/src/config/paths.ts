@@ -40,6 +40,7 @@ export const paths = {
   masterTableTasks: 'master/tables/:id/tasks',
   masterTableFiles: 'master/tables/:id/files',
   masterTableStatus: 'master/tables/:id/status',
+  adminQueue: 'admin/queue',
   adminTables: 'admin/tables',
   adminCatalogs: 'admin/catalogs',
   adminFiles: 'admin/files',
@@ -181,7 +182,20 @@ export function myTableDetailPath(id: string): string {
   return `/player/my-tables/${id}`
 }
 
-/** @returns the absolute path to the admin's table list */
+/**
+ * @returns the absolute path to the shared admin tray (F3.3, #100) — the home of the Admin context.
+ *          Everything waiting on an admin, whatever table it lives in, oldest first, and reserved
+ *          one at a time so two admins never resolve the same thing
+ */
+export function adminQueuePath(): string {
+  return '/admin/queue'
+}
+
+/**
+ * @returns the absolute path to the admin's table list. **Every table there is** since F3.3 (#176),
+ *          not the ones waiting on a review: what waits on a review is the tray's, and a listing
+ *          that showed only a slice was a second tray with rules of its own
+ */
 export function adminTablesPath(): string {
   return '/admin/tables'
 }
@@ -258,7 +272,11 @@ export function contextOfPath(pathname: string): AppContext | null {
  */
 export function homePathFor(context: AppContext): string {
   if (context === 'master') return masterDashboardPath()
-  if (context === 'admin') return adminTablesPath()
+  // The tray and not the table listing (F3.3), the same move #220 made for `/master`: the home of a
+  // context is the screen that says what to do next, not one of its listings. `/admin/tables` shows
+  // every table there is (#176) and answers "what is there", which is a question somebody asks on
+  // purpose - never the thing to open with.
+  if (context === 'admin') return adminQueuePath()
   return playerHomePath()
 }
 

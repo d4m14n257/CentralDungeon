@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
  * F1.3 end to end, against the real backend: the calendar that gets materialized when the table
@@ -71,13 +72,9 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
   return id as string
 }
 
-/** Approves the table from `/admin/tables`, which is what triggers materialization. */
+/** Approves the table from the shared admin tray (#176), which is what triggers materialization. */
 async function approve(page: Page, name: string) {
-  await page.goto('/admin/tables')
-  const row = page.getByRole('listitem').filter({ hasText: name })
-  await row.getByRole('button', { name: 'Aprobar' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-  await expect(row).toBeHidden()
+  await approveTableFromQueue(page, name)
 }
 
 /**

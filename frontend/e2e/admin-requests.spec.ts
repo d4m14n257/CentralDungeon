@@ -100,34 +100,34 @@ async function ask(page: Page, buttonName: string, justification: string) {
 }
 
 /**
- * The ids of every table sitting in `Unassigned`, asked of the API rather than counted off a screen.
+ * The ids of the `Unassigned` tables **carrying this run's marker**, asked of the API rather than
+ * counted off a screen.
  *
- * No screen answers "did a table appear anywhere", which is exactly the question here: a table born
- * from an approval would be `Unassigned` (#72, the status a table with no master yet gets), and no
- * public listing shows those.
+ * No screen answers "did a table appear anywhere", which is exactly the question here: approving a
+ * `TableOpen` must create nothing, and a table born from an approval would land in `Unassigned` (#72,
+ * the status a table with no master yet gets) — which no public listing shows.
  *
- * The token is minted by signing the admin in again with the flags they already hold - test-login
- * sets the roles exactly, so for an account that is already an admin the call is a no-op that
- * returns a usable token. The application's own token lives in its memory and is not reachable from
- * here.
+ * **Scoped to the run, which is what F3.2 could not do.** The obvious assertion — total tables before
+ * equals total tables after — is not assertable with parallel workers: the suite runs six at a time
+ * and any other spec creating a table between the two reads fails this one for something it did not
+ * do. F3.2 narrowed to `Unassigned` and compared ids, which left a single spec able to interfere;
+ * F3.3 gives the admin listing `?q=` (#176), so the question can finally be asked the way it was
+ * always meant to be — *did a table belonging to **this run** appear* — and no other worker can
+ * answer it.
  *
- * <p>Approving a {@code TableOpen} must create nothing; the table is the admin's own next step
- * (#72), and one born from an approval would land here, which is the status #72 gives a table with
- * no master yet.
+ * It is also the round trip of the two commands F3.3 added: the query is written here, travels as
+ * `?q=`, and is read by `SearchQueryParser` and `GameTableSearchSpecification` on the other side. A
+ * `/table_status` that did not survive that trip would answer nothing and look like a pass, which is
+ * why the caller asserts the set is empty *before* the approval as well as after.
  *
- * <p><b>Why ids of one status and not the total count.</b> The obvious assertion - total tables
- * before equals total tables after - is not assertable with parallel workers: the suite runs six at
- * a time and any other spec creating a table between the two reads fails this one for something it
- * did not do. Narrowing to {@code Unassigned} leaves a single spec able to interfere instead of
- * fifteen, and comparing ids rather than counts means an interfering table shows up as a named
- * stranger rather than as an off-by-one.
- *
- * <p>The honest scoped version - asking the listing for this run's marker - needs {@code ?q=} on
- * {@code /game-tables/admin}, which **F3.3 adds** (#176). Tighten this then.
+ * The token is minted by signing the admin in again with the flags they already hold — test-login
+ * sets the roles exactly, so for an account that is already an admin the call is a no-op that returns
+ * a usable token. The application's own token lives in its memory and is not reachable from here.
  */
 async function unassignedTableIds(actor: Actor): Promise<Set<string>> {
   const accessToken = await testLogin(actor.context.request, actor.discordId, { asAdmin: true })
-  const tables = await actor.context.request.get(`${BACKEND_URL}/api/v1/game-tables/admin?status=Unassigned&size=100`, {
+  const query = encodeURIComponent(`/table_status Unassigned /and /table_name ${runId}`)
+  const tables = await actor.context.request.get(`${BACKEND_URL}/api/v1/game-tables/admin?q=${query}&size=100`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   expect(tables.ok()).toBeTruthy()
@@ -328,9 +328,10 @@ test('approving a request for a new table records the request and creates no tab
     await ask(player.page, 'Pedir que se abra una mesa', justification)
     await expect(player.page.getByText('Ya pediste que se abra una mesa y todavía no te respondieron.')).toBeVisible()
 
-    // Which tables are waiting for a master before the approval, so the assertion afterwards is
-    // about the approval and not about the fixture.
+    // Which of this run's tables are waiting for a master before the approval - none, unless
+    // something is very wrong - so the assertion afterwards is about the approval and nothing else.
     const unassignedBefore = await unassignedTableIds(admin)
+    expect([...unassignedBefore]).toEqual([])
 
     await admin.page.goto(`/admin/requests?q=${encodeURIComponent(`/status Pending /and /requested_by ${playerId}`)}`)
     const row = requestRow(admin.page, playerId)
