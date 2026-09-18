@@ -223,6 +223,44 @@ public class NotificationService {
     }
 
     /**
+     * Tells whoever asked that their request was answered (#42).
+     *
+     * <p><b>Nothing is sent when the request is made</b>, and that is a rule rather than an omission:
+     * admin work items are not duplicated as notifications (#100) - the shared queue is a view over
+     * the rows that already exist, and a bell per request would be the copy #100 removed. The
+     * resolution is the half nobody can see coming, and only the requester needs it.
+     *
+     * <p>The reason is <b>not</b> carried here. It is mandatory on the resolution and stored on the
+     * request, which is where it is read in full; a copy would be a second one free to disagree with
+     * the first (#197).
+     *
+     * <p><b>It carries no parameters at all</b>, which makes it the first notification that does not.
+     * A field naming the request type was written and then taken back out: the rendered sentences say
+     * "aprobaron tu pedido" without naming which, so the value would have been stored on every row
+     * and read by nobody - the same orphan this slice refused to create when it declared three
+     * request types instead of five. It goes back in the day a sentence asks for it.
+     *
+     * <p>Where it links is the request's own polymorphic reference, passed in by the caller. For the
+     * three types of F3.2 that is {@code user} and the requester themselves, so a click lands on
+     * their profile - deliberately <b>not</b> on {@code /admin/requests}, which the requester has no
+     * role to open.
+     *
+     * @param userId            the requester
+     * @param type              {@link NotificationType#ApprovalRequestApproved} or
+     *                          {@link NotificationType#ApprovalRequestRejected} - two outcomes, two
+     *                          pieces of news, the same shape {@link #notifyReviewOutcome} has
+     * @param relatedEntityType what the request is about, so the click knows where to go
+     * @param relatedEntityId   the id of that thing
+     */
+    @Transactional
+    public void notifyApprovalResolved(
+            String userId, NotificationType type, String relatedEntityType, String relatedEntityId) {
+        User recipient = userRepository.getReferenceById(userId);
+        notificationRepository.save(
+                new Notification(recipient, type, NotificationParams.none(), relatedEntityType, relatedEntityId));
+    }
+
+    /**
      * Somebody's inbox, newest first.
      *
      * @param userId   the recipient, always the actor from the token (#121)

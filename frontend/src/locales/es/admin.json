@@ -4,7 +4,117 @@
     "tables": "Mesas",
     "catalogs": "Catálogos",
     "files": "Archivos",
-    "users": "Usuarios"
+    "users": "Usuarios",
+    "requests": "Pedidos"
+  },
+  "requests": {
+    "title": "Pedidos",
+    "description": "Todo lo que alguien le pide a un admin: el rol de master, que se abra una mesa, o cualquier otra cosa. Abre mostrando lo que está esperando una respuesta.",
+    "helpLink": "Cómo se resuelve un pedido",
+    "searchLabel": "Buscar pedidos",
+    "searchPlaceholder": "Texto del motivo o nombre de quien pidió",
+    "search": {
+      "type": "Tipo",
+      "status": "Estado",
+      "requestedBy": "Quién pidió"
+    },
+    "types": {
+      "MasterGrant": "Rol de master",
+      "TableOpen": "Mesa nueva",
+      "General": "Consulta"
+    },
+    "status": {
+      "Pending": "Pendiente",
+      "Approved": "Aprobado",
+      "Rejected": "Rechazado"
+    },
+    "columns": {
+      "requestedBy": "Quién pidió",
+      "status": "Estado",
+      "type": "Tipo",
+      "justification": "Motivo",
+      "createdAt": "Pedido el"
+    },
+    "emptyPendingTitle": "No hay nada esperando una respuesta",
+    "emptyPendingDescription": "Cuando alguien pida algo, va a aparecer acá. Sacá el filtro de «Pendiente» para ver los que ya se resolvieron.",
+    "noResultsTitle": "Ningún pedido coincide con esa búsqueda",
+    "noResultsDescription": "Probá con otro texto, o filtrá por tipo con /request_type y por estado con /status.",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "detail": "Ver detalle",
+    "askedBy": "Pedido por {{name}}",
+    "resolvedBy": "Resuelto por {{name}}",
+    "approveDialogTitle": "Aprobar este pedido",
+    "approveDialogDescription": "Leé el motivo y escribí tu respuesta. Queda registrada y le llega a quien pidió.",
+    "rejectDialogTitle": "Rechazar este pedido",
+    "rejectDialogDescription": "Escribí por qué. Es lo único que va a recibir quien pidió, así que tiene que alcanzarle para entender.",
+    "effect": {
+      "MasterGrant": "Al aprobar, la persona recibe el rol de master por el mismo camino que en «Usuarios»: queda registrado con tu nota como motivo.",
+      "TableOpen": "Al aprobar, queda constancia de que el pedido corresponde. La mesa no se crea sola: el pedido no trae nombre, sistema, cupo ni horario, así que la creás desde «Mesas por revisar».",
+      "General": "Al aprobar, el pedido queda resuelto y tu respuesta le llega a quien preguntó. No cambia nada más en la plataforma."
+    },
+    "resolutionNoteLabel": "Tu respuesta",
+    "approveNotePlaceholder": "Por qué aprobás el pedido. Le llega a quien lo hizo.",
+    "rejectNotePlaceholder": "Por qué lo rechazás. Le llega a quien lo hizo.",
+    "approveSuccess": "Pedido aprobado",
+    "rejectSuccess": "Pedido rechazado",
+    "resolveHelpHint": "Aprobar no hace lo mismo con cada tipo de pedido.",
+    "resolveHelpLink": "Qué hace",
+    "detailDialogTitle": "Pedido de {{name}}",
+    "detailDialogDescription": "Lo que pidió, y cómo se resolvió.",
+    "detailStillPending": "Todavía no se resolvió.",
+    "errors": {
+      "REQUEST_ALREADY_PENDING": "Ya tenés un pedido de este tipo esperando respuesta. Hay que resolver ese antes de hacer otro.",
+      "REQUEST_ALREADY_RESOLVED": "Este pedido ya lo resolvió alguien. Actualizá la pantalla para ver cómo quedó.",
+      "REQUEST_ENTITY_GONE": "Lo que este pedido señalaba ya no existe, así que no se puede resolver.",
+      "MASTER_ROLE_ALREADY_HELD": "Ya tenés el rol de master.",
+      "generic": "No pudimos completar la acción. Probá de nuevo."
+    },
+    "submit": {
+      "success": "Tu pedido quedó registrado",
+      "flowReviewed": "Un admin lo va a leer y te va a responder con su propio motivo.",
+      "justificationLabel": "Motivo",
+      "action": "Enviar el pedido",
+      "MasterGrant": {
+        "title": "Pedir el rol de master",
+        "description": "Contale a un admin por qué querés dirigir mesas.",
+        "effect": "Si lo aprueban, vas a poder crear mesas y dirigirlas.",
+        "placeholder": "Qué querés dirigir, qué experiencia tenés, lo que creas que sirve."
+      },
+      "TableOpen": {
+        "title": "Pedir que se abra una mesa",
+        "description": "Contale a un admin qué mesa te gustaría que hubiera.",
+        "effect": "Si lo aprueban, un admin busca master y crea la mesa. No se crea sola.",
+        "placeholder": "Qué sistema, qué día, para cuánta gente. Cuanto más concreto, mejor."
+      },
+      "General": {
+        "title": "Preguntarle algo a un admin",
+        "description": "Para lo que la ayuda no contesta.",
+        "effect": "Si lo aprueban, te responden y el pedido queda cerrado. No cambia nada más.",
+        "placeholder": "Qué necesitás. Contá lo suficiente para que puedan responderte."
+      }
+    },
+    "ask": {
+      "MasterGrant": "Pedir el rol de master",
+      "TableOpen": "Pedir que se abra una mesa",
+      "General": "Escribirle a un admin"
+    },
+    "pending": {
+      "MasterGrant": "Ya pediste el rol de master y todavía no te respondieron.",
+      "TableOpen": "Ya pediste que se abra una mesa y todavía no te respondieron.",
+      "General": "Ya le escribiste a un admin y todavía no te respondieron."
+    },
+    "pendingSince": "Lo pediste el {{date}}.",
+    "submitHelpHint": "El motivo es obligatorio, y la respuesta también lo lleva.",
+    "submitHelpLink": "Cómo funciona",
+    "masterGrantPitchTitle": "¿Querés dirigir mesas?",
+    "masterGrantPitchDescription": "El rol de master lo da un admin. Pedíselo contando qué querés dirigir.",
+    "generalPitchTitle": "¿No encontraste tu respuesta?",
+    "generalPitchDescription": "Escribile a un admin. Te contesta por acá mismo, con una notificación.",
+    "supportTitle": "Ayuda",
+    "supportDescription": "Acá pedís ayuda cuando lo que leíste no alcanzó.",
+    "supportWhereHelpLives": "Las explicaciones están en cada pantalla, en el enlace de ayuda que hay al lado de lo que estés haciendo.",
+    "supportHelpLink": "Cómo funciona un pedido"
   },
   "users": {
     "title": "Usuarios",

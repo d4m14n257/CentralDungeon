@@ -73,7 +73,7 @@ test('la ayuda enseña con pasos, no solo describe', async ({ browser }) => {
   }
 })
 
-test('/help ya no es una pantalla: queda libre para soporte', async ({ browser }) => {
+test('/help ya no es la ayuda: es la pantalla de soporte que la reserva describía', async ({ browser }) => {
   const context = await browser.newContext()
   try {
     await testLogin(context.request, `e2e-help-gone-${runId}`, { asMaster: true })
@@ -81,9 +81,15 @@ test('/help ya no es una pantalla: queda libre para soporte', async ({ browser }
 
     await page.goto('/help')
 
-    // Not a redirect and not an empty page: nothing claims the path until the support screen does
-    // (#231). A route that resolved to nothing would be the dead end E1 already documented.
-    await expect(page.getByRole('heading', { name: '404' })).toBeVisible()
+    // **Hasta F3.2 esto era un 404 a propósito**: #231 sacó la pantalla de ayuda y dejó la ruta
+    // reservada con todas las letras para «pedir asistencia, reportar un bug», sin nada detrás. El
+    // pedido `General` de #42 es ese detrás, así que la reserva se cobró y la pantalla existe.
+    await expect(page.getByRole('heading', { name: 'Ayuda' })).toBeVisible()
+    // Y lo que hace es pedir, no volver a ser un índice: las explicaciones siguen siendo diálogos en
+    // la pantalla que las provoca (#231), y eso lo dice en voz alta en vez de dejar creer que
+    // la ayuda se perdió.
+    await expect(page.getByRole('button', { name: 'Escribirle a un admin' })).toBeVisible()
+    await expect(page.getByText('Las explicaciones están en cada pantalla')).toBeVisible()
   } finally {
     await context.close()
   }

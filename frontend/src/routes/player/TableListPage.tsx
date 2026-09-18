@@ -7,6 +7,8 @@ import { ErrorState } from '@/components/ErrorState'
 import { LoadMore } from '@/components/LoadMore'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SubmitRequestSection } from '@/features/approvals'
+import { HelpLink } from '@/features/help'
 import { useMyApplications } from '@/features/registrations'
 import { explorerSearchFields, GameTableCard, useGameTables } from '@/features/tables'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
@@ -30,9 +32,18 @@ import { useSearchQuery } from '@/hooks/useSearchQuery'
  * **What was searched lives in the URL** (#185): a filtered explorer can be linked to and survives a
  * refresh. The page number does not — this listing accumulates with "See more" (#173), so there is
  * no page number to keep.
+ *
+ * **Asking for a table to be opened happens from the empty explorer** and not from a screen for
+ * making requests (fase-3-admin-owner.md:126): this is the moment somebody looked for a table and
+ * found none, which is the whole of what a `TableOpen` request says. Approving it does not create
+ * the table — the request carries no name, no system, no seats and no agenda — it records that the
+ * request stands, and an admin opens one (#72).
  */
 export function TableListPage() {
   const { t } = useTranslation('tables')
+  // The request lives in the `admin` namespace with the rest of the mechanism (#42): one wording for
+  // what a request is, read by whoever makes one and by whoever resolves it.
+  const { t: tAdmin } = useTranslation('admin')
   const [searchParams, setSearchParams] = useSearchParams()
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
@@ -67,6 +78,20 @@ export function TableListPage() {
   const tables = data?.pages.flatMap((page) => page.content) ?? []
   const total = data?.pages[0]?.totalElements ?? 0
 
+  // Offered from both empty states and written once: "nothing is open yet" and "nothing matched what
+  // you typed" are two different facts, but the thing somebody can do about either of them is the
+  // same one. The help arrives as a node, because a feature never imports another one (§3.1.5).
+  const askForATable = (
+    <SubmitRequestSection
+      type="TableOpen"
+      help={
+        <p className="text-fg-subtle text-xs">
+          {tAdmin('requests.submitHelpHint')} <HelpLink section="basics.requests">{tAdmin('requests.submitHelpLink')}</HelpLink>
+        </p>
+      }
+    />
+  )
+
   return (
     <div className="space-y-4">
       <h1 className="font-serif text-2xl font-semibold">{t('explorer.title')}</h1>
@@ -90,10 +115,10 @@ export function TableListPage() {
           somebody who just searched that masters keep publishing would answer a question they did
           not ask. */}
       {data && tables.length === 0 && search.debouncedQuery.trim() && (
-        <EmptyState title={t('explorer.noMatchesTitle')} description={t('explorer.noMatchesDescription')} />
+        <EmptyState title={t('explorer.noMatchesTitle')} description={t('explorer.noMatchesDescription')} action={askForATable} />
       )}
       {data && tables.length === 0 && !search.debouncedQuery.trim() && (
-        <EmptyState title={t('explorer.emptyTitle')} description={t('explorer.emptyDescription')} />
+        <EmptyState title={t('explorer.emptyTitle')} description={t('explorer.emptyDescription')} action={askForATable} />
       )}
       {tables.length > 0 && (
         <>

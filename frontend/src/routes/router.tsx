@@ -59,9 +59,11 @@ export const router = createBrowserRouter([
           // The reader's own library (#65, #232). Transversal for the same reason: the sheet you
           // applied with and the map you attached to a table you run are one library, not two.
           { path: 'my/files', lazy: () => import('./my/MyFilesPage') },
-          // `/help` is not a route any more (#231): the explanations are dialogs raised from the
-          // screen that prompts the question. The path stays unclaimed for the support screen -
-          // asking for assistance, reporting a bug - which has no backend yet.
+          // The support screen `/help` was reserved for (#231): **not** the old help route coming
+          // back - the explanations are still dialogs raised from the screen that prompts the
+          // question. This is the "ask for assistance" half, which had no backend until the
+          // `General` request of F3.2 gave it one (#42).
+          { path: 'help', lazy: () => import('./SupportPage') },
         ],
       },
       {
@@ -100,6 +102,9 @@ export const router = createBrowserRouter([
           // (#103): the layouts never check roles either, so somebody who forces the route without
           // the role gets a 403 from the backend and the screen paints ForbiddenState.
           { path: 'users', lazy: () => import('./admin/AdminUsersPage') },
+          // Every request somebody made of an admin (#42, F3.2). No role guard here either, and for
+          // the same reason (#103): the backend answers 403 and the screen paints ForbiddenState.
+          { path: 'requests', lazy: () => import('./admin/AdminRequestsPage') },
         ],
       },
       { path: '*', lazy: () => import('./NotFoundPage') },

@@ -2,8 +2,17 @@ import type { ReactNode } from 'react'
 
 import type { SearchField } from '@/lib/searchQuery'
 
-import { AccountHelp, ContextsHelp, NotificationsHelp, SearchHelp, TableStatusHelp } from './basics'
-import { AdminFilesHelp, AssignMastersHelp, BlockingHelp, CatalogsHelp, OwnerHelp, ReviewingHelp, RolesHelp } from './admins'
+import { AccountHelp, ContextsHelp, NotificationsHelp, RequestsHelp, SearchHelp, TableStatusHelp } from './basics'
+import {
+  AdminFilesHelp,
+  AssignMastersHelp,
+  BlockingHelp,
+  CatalogsHelp,
+  OwnerHelp,
+  RequestsAdminHelp,
+  ReviewingHelp,
+  RolesHelp,
+} from './admins'
 import {
   CandidatesHelp,
   CoMastersHelp,
@@ -71,6 +80,10 @@ export const HELP_SECTIONS = {
   'basics.table-status': { titleKey: 'basics.tableStatus.title', Body: TableStatusHelp },
   'basics.account': { titleKey: 'basics.account.title', Body: AccountHelp },
   'basics.notifications': { titleKey: 'basics.notifications.title', Body: NotificationsHelp },
+  // Under `basics` and not under `players`, because the mechanism is one and the three screens that
+  // raise a request are not all a player's (#42): the same section is read from the profile, from
+  // the explorer and from the support screen.
+  'basics.requests': { titleKey: 'basics.requests.title', Body: RequestsHelp },
 
   'players.applying': { titleKey: 'players.applying.title', Body: ApplyingHelp },
   'players.application-status': { titleKey: 'players.applicationStatus.title', Body: ApplicationStatusHelp },
@@ -103,6 +116,9 @@ export const HELP_SECTIONS = {
   'admins.owner': { titleKey: 'admins.owner.title', Body: OwnerHelp },
   'admins.roles': { titleKey: 'admins.roles.title', Body: RolesHelp },
   'admins.blocking': { titleKey: 'admins.blocking.title', Body: BlockingHelp },
+  // The other end of `basics.requests`: what the tray is, and that approving is not one act but
+  // three different ones depending on what was asked for (F3.2).
+  'admins.requests': { titleKey: 'admins.requests.title', Body: RequestsAdminHelp },
 } as const satisfies Record<string, HelpSectionDefinition>
 
 /**

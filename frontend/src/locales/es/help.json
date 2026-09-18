@@ -71,6 +71,31 @@
       "click": "Al tocar una notificación vas a donde ocurrió, y si hace falta se cambia solo el contexto.",
       "history": "El historial completo está en la pantalla de notificaciones, y ahí se marcan como leídas."
     },
+    "requests": {
+      "title": "Pedirle algo a un admin",
+      "intro": "Hay cosas que no podés hacer vos y las decide un admin. Para todas se usa el mismo mecanismo: escribís un pedido con su motivo y te responden.",
+      "kindTitle": {
+        "MasterGrant": "Rol de master",
+        "TableOpen": "Mesa nueva",
+        "General": "Consulta"
+      },
+      "kind": {
+        "MasterGrant": "Se pide desde tu perfil, y solo aparece si todavía no sos master. Si te lo aprueban, podés crear y dirigir mesas.",
+        "TableOpen": "Se pide desde el explorador, cuando buscaste una mesa y no había ninguna. Aprobarlo no crea la mesa: un admin le busca master y la arma.",
+        "General": "Cualquier otra cosa. Se pide desde la pantalla de ayuda, para lo que las explicaciones no contestan."
+      },
+      "reason": "El motivo es obligatorio. Es todo lo que el admin va a leer: no hay nada más en el pedido que explique por qué corresponde.",
+      "onePending": "Podés tener un solo pedido de cada tipo esperando respuesta. Mientras uno esté pendiente, la pantalla te lo muestra en lugar del botón.",
+      "answer": "La respuesta también lleva motivo obligatorio, la aprueben o la rechacen. Un «no» sin explicación no te deja nada para hacer.",
+      "notified": "Te llega una notificación cuando lo resuelven, y al tocarla vas a donde se ve el resultado.",
+      "noQueue": "No hay una pantalla donde mirar tu pedido esperando: lo que ves es el aviso en la pantalla donde lo hiciste, con la fecha en que lo mandaste.",
+      "steps": {
+        "step1": "Entrá a la pantalla donde se pide: tu perfil para el rol de master, el explorador para una mesa, la ayuda para lo demás.",
+        "step2": "Tocá el botón de pedir. Si en su lugar ves un aviso, es porque ya hiciste ese pedido y todavía no te contestaron.",
+        "step3": "Escribí el motivo. Cuanto más concreto, menos vueltas: el admin decide con eso y nada más.",
+        "step4": "Enviá el pedido y esperá la notificación. No hace falta volver a pedirlo."
+      }
+    },
     "tableStatus": {
       "title": "Los estados de una mesa",
       "intro": "Casi todo lo que se puede hacer con una mesa depende del estado en el que está, y por eso siempre se muestra.",
@@ -483,6 +508,25 @@
         "step4": "Escribí el motivo. Es obligatorio.",
         "step5": "Tocá «Bloquear». El cierre se aplica al instante.",
         "step6": "Para devolverle el acceso, la misma fila ofrece «Desbloquear», que también pide motivo."
+      }
+    },
+    "requests": {
+      "title": "Resolver pedidos",
+      "what": "«Pedidos» junta todo lo que alguien le pide a un admin: el rol de master, que se abra una mesa, o una consulta suelta. Es un solo mecanismo para los tres.",
+      "tray": "Cada fila trae quién pidió, qué pidió y el motivo que escribió. Con eso se decide: el pedido no trae nada más.",
+      "pendingFirst": "La pantalla abre filtrada por «Pendiente», que es lo que espera una acción. Sacá ese filtro del buscador para ver los que ya se resolvieron y con qué respuesta.",
+      "note": "Aprobar y rechazar piden una nota obligatoria, y le llega a quien pidió. En el rechazo es lo único que va a recibir, así que tiene que alcanzarle para entender.",
+      "masterGrant": "Aprobar un pedido de rol de master le da el rol por el mismo camino que «Usuarios», con tu nota como motivo. No hay una segunda forma de otorgarlo.",
+      "tableOpen": "Aprobar un pedido de mesa nueva no crea la mesa. El pedido no trae nombre, sistema, cupo ni horario: lo que hacés al aprobarlo es dejar constancia de que corresponde, y después la creás desde «Mesas por revisar».",
+      "general": "Aprobar una consulta no cambia nada más en la plataforma: queda resuelta y tu respuesta le llega a quien preguntó.",
+      "resolvedOnce": "Un pedido se resuelve una sola vez. Si otro admin llegó primero, la pantalla te lo dice en lugar de aplicar tu decisión encima.",
+      "gone": "Si lo que el pedido señalaba ya no existe, no se puede resolver: la fila sobrevive a lo que apuntaba, pero actuar sobre algo que se borró sería actuar sobre un fantasma.",
+      "steps": {
+        "step1": "Cambiá al contexto Admin y entrá a «Pedidos». Abre mostrando lo que está pendiente.",
+        "step2": "Leé el motivo en la fila. Si necesitás verlo entero, «Ver detalle» lo abre completo.",
+        "step3": "Decidí: «Aprobar» o «Rechazar». Fijate en el diálogo qué hace aprobar ese tipo de pedido, porque no es lo mismo en los tres.",
+        "step4": "Escribí tu respuesta. Es obligatoria y le llega a quien pidió.",
+        "step5": "Si era un pedido de mesa nueva, acordate del paso que falta: crearla desde «Mesas por revisar» y asignarle master."
       }
     }
   },

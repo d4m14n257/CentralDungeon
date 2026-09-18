@@ -2,7 +2,7 @@ import { render, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import '@/providers/i18n'
-import { BlockingHelp, RolesHelp } from './admins'
+import { BlockingHelp, RequestsAdminHelp, RolesHelp } from './admins'
 
 /**
  * The help F3.1 owes (punto 8 de la definición de terminado, #231).
@@ -113,5 +113,59 @@ describe('BlockingHelp', () => {
     expect(within(steps as HTMLElement).getAllByRole('listitem')).toHaveLength(6)
     // Step 2 answers the question the missing button raises, at the moment it is missing.
     expect(document.body.textContent).toMatch(/Si ese botón no está/i)
+  })
+})
+
+/** The other half of F3.2's help: what the tray is, and what approving each kind actually does. */
+describe('RequestsAdminHelp', () => {
+  /**
+   * The reason this section exists. The two approvals look identical on screen and do completely
+   * different things — an admin who assumes a `TableOpen` builds the table will approve it, tell
+   * nobody, and leave whoever asked waiting for a table that is never coming.
+   */
+  it('says a master grant hands out the role and a table request creates nothing', () => {
+    render(<RequestsAdminHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/le da el rol por el mismo camino que «Usuarios»/i)
+    expect(body).toMatch(/no crea la mesa/i)
+    expect(body).toMatch(/no hay una segunda forma de otorgarlo/i)
+  })
+
+  /** #42: the note is required on both acts, and on a rejection it is all whoever asked receives. */
+  it('says both acts need a note and that it reaches whoever asked', () => {
+    render(<RequestsAdminHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/nota obligatoria/i)
+    expect(body).toMatch(/lo único que va a recibir/i)
+  })
+
+  /** #136: what the tray opens showing, and how to see the rest. */
+  it('explains that it opens filtered by what is pending, and how to see the rest', () => {
+    render(<RequestsAdminHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/abre filtrada por «Pendiente»/i)
+    expect(body).toMatch(/Sacá ese filtro/i)
+  })
+
+  /** The two refusals a screen cannot prevent on its own, explained before they are met. */
+  it('explains that a request is resolved once and that a dead reference cannot be acted on', () => {
+    render(<RequestsAdminHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/se resuelve una sola vez/i)
+    expect(body).toMatch(/fantasma/i)
+  })
+
+  /** #170: the doing, not only the rule - including the step approving a table request leaves behind. */
+  it('walks through resolving, step by step, ending with the table that still has to be created', () => {
+    const { container } = render(<RequestsAdminHelp />)
+
+    const steps = container.querySelector('ol')
+    expect(steps).not.toBeNull()
+    expect(within(steps as HTMLElement).getAllByRole('listitem')).toHaveLength(5)
+    expect(document.body.textContent).toMatch(/acordate del paso que falta/i)
   })
 })

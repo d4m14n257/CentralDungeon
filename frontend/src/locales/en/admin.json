@@ -4,7 +4,117 @@
     "tables": "Tables",
     "catalogs": "Catalogs",
     "files": "Files",
-    "users": "Users"
+    "users": "Users",
+    "requests": "Requests"
+  },
+  "requests": {
+    "title": "Requests",
+    "description": "Everything somebody asks an admin for: the master role, a table to be opened, or anything else. It opens showing what is still waiting for an answer.",
+    "helpLink": "How a request is resolved",
+    "searchLabel": "Search requests",
+    "searchPlaceholder": "Text of the reason, or the name of whoever asked",
+    "search": {
+      "type": "Kind",
+      "status": "Status",
+      "requestedBy": "Asked by"
+    },
+    "types": {
+      "MasterGrant": "Master role",
+      "TableOpen": "New table",
+      "General": "Question"
+    },
+    "status": {
+      "Pending": "Pending",
+      "Approved": "Approved",
+      "Rejected": "Rejected"
+    },
+    "columns": {
+      "requestedBy": "Asked by",
+      "status": "Status",
+      "type": "Kind",
+      "justification": "Reason",
+      "createdAt": "Asked on"
+    },
+    "emptyPendingTitle": "Nothing is waiting for an answer",
+    "emptyPendingDescription": "When somebody asks for something it will show up here. Remove the “Pending” filter to see what has already been resolved.",
+    "noResultsTitle": "No request matches that search",
+    "noResultsDescription": "Try other words, or narrow by kind with /request_type and by status with /status.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "detail": "See details",
+    "askedBy": "Asked by {{name}}",
+    "resolvedBy": "Resolved by {{name}}",
+    "approveDialogTitle": "Approve this request",
+    "approveDialogDescription": "Read the reason and write your answer. It is recorded and it reaches whoever asked.",
+    "rejectDialogTitle": "Reject this request",
+    "rejectDialogDescription": "Write why. It is the only thing whoever asked will receive, so it has to be enough for them to understand.",
+    "effect": {
+      "MasterGrant": "On approval the person is given the master role by the same road as in “Users”, recorded with your note as the reason.",
+      "TableOpen": "On approval it is recorded that the request stands. The table is not created on its own: the request carries no name, system, seats or schedule, so you create it from “Tables to review”.",
+      "General": "On approval the request is closed and your answer reaches whoever asked. Nothing else on the platform changes."
+    },
+    "resolutionNoteLabel": "Your answer",
+    "approveNotePlaceholder": "Why you are approving it. It reaches whoever asked.",
+    "rejectNotePlaceholder": "Why you are turning it down. It reaches whoever asked.",
+    "approveSuccess": "Request approved",
+    "rejectSuccess": "Request rejected",
+    "resolveHelpHint": "Approving does not do the same thing for every kind of request.",
+    "resolveHelpLink": "What it does",
+    "detailDialogTitle": "{{name}}’s request",
+    "detailDialogDescription": "What they asked for, and how it was resolved.",
+    "detailStillPending": "It has not been resolved yet.",
+    "errors": {
+      "REQUEST_ALREADY_PENDING": "You already have a request of this kind waiting for an answer. That one has to be resolved before you make another.",
+      "REQUEST_ALREADY_RESOLVED": "Somebody has already resolved this request. Refresh the screen to see how it went.",
+      "REQUEST_ENTITY_GONE": "What this request pointed at no longer exists, so it cannot be resolved.",
+      "MASTER_ROLE_ALREADY_HELD": "You already have the master role.",
+      "generic": "We could not complete the action. Try again."
+    },
+    "submit": {
+      "success": "Your request was recorded",
+      "flowReviewed": "An admin will read it and answer with a reason of their own.",
+      "justificationLabel": "Reason",
+      "action": "Send the request",
+      "MasterGrant": {
+        "title": "Ask for the master role",
+        "description": "Tell an admin why you want to run tables.",
+        "effect": "If it is approved, you will be able to create tables and run them.",
+        "placeholder": "What you want to run, what experience you have, whatever you think helps."
+      },
+      "TableOpen": {
+        "title": "Ask for a table to be opened",
+        "description": "Tell an admin what table you would like to exist.",
+        "effect": "If it is approved, an admin finds a master and creates the table. It is not created on its own.",
+        "placeholder": "Which system, which day, for how many people. The more concrete, the better."
+      },
+      "General": {
+        "title": "Ask an admin something",
+        "description": "For whatever the help does not answer.",
+        "effect": "If it is approved, they answer you and the request is closed. Nothing else changes.",
+        "placeholder": "What you need. Say enough for somebody to be able to answer."
+      }
+    },
+    "ask": {
+      "MasterGrant": "Ask for the master role",
+      "TableOpen": "Ask for a table to be opened",
+      "General": "Write to an admin"
+    },
+    "pending": {
+      "MasterGrant": "You already asked for the master role and have not been answered yet.",
+      "TableOpen": "You already asked for a table to be opened and have not been answered yet.",
+      "General": "You already wrote to an admin and have not been answered yet."
+    },
+    "pendingSince": "You asked on {{date}}.",
+    "submitHelpHint": "The reason is required, and so is the answer you get back.",
+    "submitHelpLink": "How it works",
+    "masterGrantPitchTitle": "Do you want to run tables?",
+    "masterGrantPitchDescription": "The master role is given by an admin. Ask for it, saying what you would like to run.",
+    "generalPitchTitle": "Did you not find your answer?",
+    "generalPitchDescription": "Write to an admin. They answer right here, with a notification.",
+    "supportTitle": "Help",
+    "supportDescription": "This is where you ask for help when what you read was not enough.",
+    "supportWhereHelpLives": "The explanations live on each screen, in the help link next to whatever you are doing.",
+    "supportHelpLink": "How a request works"
   },
   "users": {
     "title": "Users",

@@ -37,6 +37,16 @@ const TABLE_STATUSES: GameTableStatus[] = [
 const SEARCH_RULES = ['plain', 'field', 'enter', 'naming', 'choices', 'commas', 'connectors', 'onlySlash', 'order', 'chips', 'debounce']
 const CONTEXT_ROLES = ['player', 'master', 'admin', 'owner']
 
+/**
+ * The three things somebody can ask an admin for (#42, #90).
+ *
+ * Written out here rather than imported from `features/approvals`: a feature never imports another
+ * one (arquitectura.md §3.1.5), and the help is text about the mechanism rather than a second
+ * consumer of it. The ids are the ones the API spells, so the section and the badge cannot end up
+ * naming different things.
+ */
+const REQUEST_KINDS = ['MasterGrant', 'TableOpen', 'General']
+
 /** One worked query and what it finds. */
 interface SearchExample {
   query: string
@@ -198,6 +208,34 @@ export function AccountHelp() {
   const { t } = useTranslation('help')
 
   return <HelpList items={['login', 'onboarding', 'theme'].map((key) => t(`basics.account.${key}`))} />
+}
+
+/**
+ * What a request is, from the side of whoever makes one (#42, F3.2).
+ *
+ * **It exists because the mechanism is invisible from the outside.** Somebody presses "ask for the
+ * master role" and then nothing happens on their screen: no queue they can watch, no place the
+ * request went. What this says is the part they cannot see — an admin reads it, answers with a
+ * reason of their own, and the answer arrives as a notification — plus the two rules that otherwise
+ * surface only as a refusal: the reason is required, and one request of each kind at a time.
+ */
+export function RequestsHelp() {
+  const { t } = useTranslation('help')
+
+  return (
+    <>
+      <p className="text-fg-muted text-sm">{t('basics.requests.intro')}</p>
+      <HelpTerms
+        termWidth="w-36"
+        terms={REQUEST_KINDS.map((kind) => ({
+          term: t(`basics.requests.kindTitle.${kind}`),
+          description: t(`basics.requests.kind.${kind}`),
+        }))}
+      />
+      <HelpList items={['reason', 'onePending', 'answer', 'notified', 'noQueue'].map((key) => t(`basics.requests.${key}`))} />
+      <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`basics.requests.steps.step${n}`))} />
+    </>
+  )
 }
 
 /** What gets notified and where the history is. */

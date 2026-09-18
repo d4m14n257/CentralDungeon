@@ -71,6 +71,31 @@
       "click": "Tapping a notification takes you where it happened, switching context on its own if it has to.",
       "history": "The full history is on the notifications screen, and that is where they get marked as read."
     },
+    "requests": {
+      "title": "Asking an admin for something",
+      "intro": "Some things are not yours to do and an admin decides them. They all use the same mechanism: you write a request with its reason, and you get an answer.",
+      "kindTitle": {
+        "MasterGrant": "Master role",
+        "TableOpen": "New table",
+        "General": "Question"
+      },
+      "kind": {
+        "MasterGrant": "Asked for from your profile, and only offered if you are not a master yet. If it is approved you can create tables and run them.",
+        "TableOpen": "Asked for from the explorer, when you looked for a table and there was none. Approving it does not create the table: an admin finds a master and builds it.",
+        "General": "Anything else. Asked for from the help screen, for whatever the explanations do not answer."
+      },
+      "reason": "The reason is required. It is all the admin will read: there is nothing else in the request saying why it should be granted.",
+      "onePending": "You can have one request of each kind waiting at a time. While one is pending, the screen shows it to you instead of the button.",
+      "answer": "The answer carries a required reason too, whether it approves or turns you down. A “no” with no explanation leaves you nothing to act on.",
+      "notified": "A notification reaches you when it is resolved, and tapping it takes you where the outcome is visible.",
+      "noQueue": "There is no screen where you watch your request wait: what you see is the notice on the screen you asked from, with the date you sent it.",
+      "steps": {
+        "step1": "Go to the screen you ask from: your profile for the master role, the explorer for a table, the help screen for anything else.",
+        "step2": "Press the button to ask. If you see a notice instead, it is because you already made that request and have not been answered yet.",
+        "step3": "Write the reason. The more concrete it is, the fewer rounds it takes: the admin decides on that and nothing else.",
+        "step4": "Send the request and wait for the notification. There is no need to ask again."
+      }
+    },
     "tableStatus": {
       "title": "A table's statuses",
       "intro": "Almost everything you can do with a table depends on the status it is in, which is why it is always shown.",
@@ -483,6 +508,25 @@
         "step4": "Write the reason. It is required.",
         "step5": "Press “Block”. The closure applies immediately.",
         "step6": "To give access back, that same row offers “Unblock”, which also asks for a reason."
+      }
+    },
+    "requests": {
+      "title": "Resolving requests",
+      "what": "“Requests” collects everything somebody asks an admin for: the master role, a table to be opened, or a loose question. One mechanism for all three.",
+      "tray": "Each row carries who asked, what for, and the reason they wrote. That is what you decide on: the request carries nothing else.",
+      "pendingFirst": "The screen opens filtered by “Pending”, which is what is waiting for an action. Remove that filter from the search box to see what has been resolved and with what answer.",
+      "note": "Approving and rejecting both ask for a required note, and it reaches whoever asked. On a rejection it is the only thing they will receive, so it has to be enough for them to understand.",
+      "masterGrant": "Approving a master role request gives the role by the same road as “Users”, with your note as the reason. There is no second way to grant it.",
+      "tableOpen": "Approving a new table request does not create the table. The request carries no name, system, seats or schedule: approving records that it stands, and you create the table afterwards from “Tables to review”.",
+      "general": "Approving a question changes nothing else on the platform: it is closed, and your answer reaches whoever asked.",
+      "resolvedOnce": "A request is resolved once. If another admin got there first, the screen tells you instead of applying your decision on top.",
+      "gone": "If what the request pointed at no longer exists, it cannot be resolved: the row outlives what it pointed at, but acting on something that was deleted would be acting on a ghost.",
+      "steps": {
+        "step1": "Switch to the Admin context and go to “Requests”. It opens showing what is pending.",
+        "step2": "Read the reason on the row. If you need to see all of it, “See details” opens it in full.",
+        "step3": "Decide: “Approve” or “Reject”. Check what the dialog says approving that kind does, because it is not the same for all three.",
+        "step4": "Write your answer. It is required and it reaches whoever asked.",
+        "step5": "If it was a new table request, remember the step that is left: create it from “Tables to review” and assign it a master."
       }
     }
   },

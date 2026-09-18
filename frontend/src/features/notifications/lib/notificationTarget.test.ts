@@ -1,22 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import { notificationTarget } from './notificationTarget'
-import type { Notification } from '../types'
+import { NOTIFICATION_TYPES, type Notification } from '../types'
 
-/** Every type the backend can send today (`NotificationType.java`) - the regression test walks this list. */
-const ALL_TYPES = [
-  'RegistrationAccepted',
-  'RegistrationRejected',
-  'NewCandidate',
-  'ScheduleConflict',
-  'SessionScheduled',
-  'SessionCanceled',
-  'TaskPublished',
-  'MasterAssigned',
-  'TableApproved',
-  'TableApprovedWithChanges',
-  'TableChangesRequested',
-] as const
+/**
+ * Every type the backend can send today - the regression test walks this list.
+ *
+ * It is the mirror in `types.ts` and no longer a copy kept here: a second list free to fall behind
+ * the first is how a type gets added, given no destination, and caught by nobody.
+ */
+const ALL_TYPES = NOTIFICATION_TYPES
 
 function notification(overrides: Partial<Notification>): Notification {
   return {
@@ -52,6 +45,41 @@ describe('notificationTarget', () => {
     const changed = notification({ notificationType: type, relatedEntityId: 't7' })
 
     expect(notificationTarget(changed)).toBe('/player/my-tables/t7')
+  })
+
+  /**
+   * F3.2, and the guard that had to be rewritten for it: until then a single `if` cut everything
+   * that was not a `game_table`, which is exactly what would have made these two unclickable the day
+   * they arrived. A resolved `MasterGrant` or `General` points at the person who asked
+   * (`entityType = 'user'`), and their own profile is where a granted role becomes visible.
+   */
+  it.each(['ApprovalRequestApproved', 'ApprovalRequestRejected'] as const)('sends %s about a person to their own profile', (type) => {
+    const resolved = notification({ notificationType: type, relatedEntityType: 'user', relatedEntityId: 'user-1' })
+
+    expect(notificationTarget(resolved)).toBe('/player/profile')
+  })
+
+  /**
+   * A `TableOpen` whose table the admin already created points at the table instead, and then that
+   * is where it leads: the public detail, because whoever asked is a player there and not its master.
+   */
+  it('sends a resolved request about a table to the table', () => {
+    const resolved = notification({ notificationType: 'ApprovalRequestApproved', relatedEntityType: 'game_table', relatedEntityId: 't9' })
+
+    expect(notificationTarget(resolved)).toBe('/player/tables/t9')
+  })
+
+  /**
+   * **Never the tray.** Whoever asked is not an admin and cannot enter `/admin/requests`: sending
+   * them there would be a link to a `403`.
+   */
+  it('never sends whoever asked to the admin tray', () => {
+    for (const type of ['ApprovalRequestApproved', 'ApprovalRequestRejected']) {
+      for (const entityType of ['user', 'game_table']) {
+        const resolved = notification({ notificationType: type, relatedEntityType: entityType, relatedEntityId: 'x1' })
+        expect(notificationTarget(resolved)).not.toContain('/admin')
+      }
+    }
   })
 
   it('opens nothing for a notification with no related table', () => {

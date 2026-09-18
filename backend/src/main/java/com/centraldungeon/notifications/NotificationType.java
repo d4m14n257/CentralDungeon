@@ -87,5 +87,32 @@ public enum NotificationType {
      * lives in the status history, which is where the master reads it whole. Duplicating it into the
      * notification would be a second copy free to disagree with the first.
      */
-    TableChangesRequested
+    TableChangesRequested,
+
+    /**
+     * To whoever asked: an admin approved their request (#42).
+     *
+     * <p><b>The request itself notifies nobody</b> (#100, modelo-datos.md: «los ítems de trabajo de
+     * admin no se duplican como notificaciones»). The shared queue already shows what is waiting; a
+     * notification per request would be the copy #100 exists to avoid. What needs a bell is the
+     * <em>resolution</em>, and only for the person who asked: they are the one who cannot see the
+     * other side of the wait.
+     *
+     * <p>It links to the person's own profile, not to {@code /admin/requests} - the requester is not
+     * an admin and cannot open that screen.
+     */
+    ApprovalRequestApproved,
+
+    /**
+     * To whoever asked: an admin turned their request down (#42).
+     *
+     * <p>Separate from {@link #ApprovalRequestApproved} for the reason {@code TableApproved} and
+     * {@code TableChangesRequested} are separate: being told yes and being told no are different
+     * news, and one icon cannot carry both.
+     *
+     * <p>The reason is <b>not</b> copied in. It is already mandatory on the resolution and stored on
+     * the request, which is where the person reads it in full; a copy here would be a second one free
+     * to drift from the first (#197).
+     */
+    ApprovalRequestRejected
 }

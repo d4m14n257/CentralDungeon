@@ -1,6 +1,7 @@
 package com.centraldungeon.common.exception;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -117,6 +118,33 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleUnreadableBody(HttpMessageNotReadableException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Malformed request body");
         problem.setProperty("errorCode", "VALIDATION_ERROR");
+        return problem;
+    }
+
+    /**
+     * A write the database refused because it collided with something already there.
+     *
+     * <p>Two requests racing for the same row end with one of them losing, and the loser deserves an
+     * answer about the collision rather than about the server. Without this it falls through to
+     * {@code handleUnexpected} and becomes a 500 that leaks the offending INSERT - telling somebody
+     * whose only mistake was pressing at the same moment as someone else that the site is broken.
+     *
+     * <p><b>This is a backstop, not the rule.</b> Every race the application knows about is meant to
+     * be serialized before it reaches the database - the pessimistic locks of #252 in
+     * {@code UserRoleService}, and the ones in {@code ApprovalService}. When one of those is missing
+     * or a new path forgets it, the constraint still holds and this turns the breakage into a
+     * truthful 409 instead of an alarming 500. The same posture {@code handleUnreadableBody} has for
+     * a malformed body (#197): the detail stays English and for the log, and the frontend writes the
+     * sentence from the code.
+     *
+     * @param exception the constraint violation the persistence layer raised
+     * @return 409 carrying {@code CONFLICT}
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException exception) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "The request collided with existing data");
+        problem.setProperty("errorCode", "CONFLICT");
         return problem;
     }
 

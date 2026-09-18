@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import '@/providers/i18n'
 import type { SearchField } from '@/lib/searchQuery'
-import { SearchHelp } from './basics'
+import { RequestsHelp, SearchHelp } from './basics'
 
 const USER_FIELDS: SearchField[] = [
   { name: 'discord_name', label: 'Discord', examples: ['dami'] },
@@ -87,5 +87,62 @@ describe('SearchHelp', () => {
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
     expect(screen.getAllByRole('listitem').length).toBeGreaterThan(0)
+  })
+})
+
+/**
+ * The help F3.2 owes from the side of whoever asks (punto 8 de la definición de terminado, #231).
+ *
+ * These assert on the **substance** of the section rather than on whole sentences: the wording is
+ * free to improve, but a section that stopped saying the reason is required, or stopped explaining
+ * why the button disappears, has lost the reason it was written.
+ */
+describe('RequestsHelp', () => {
+  /** The mechanism is invisible from outside: nothing on the reader's screen says where it went. */
+  it('says an admin reads it and answers, and that the answer arrives as a notification', () => {
+    render(<RequestsHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/motivo es obligatorio/i)
+    expect(body).toMatch(/notificación/i)
+  })
+
+  /**
+   * The question the absent button raises, answered at the moment it is absent: until something says
+   * so, a button that is not there and a bug look identical.
+   */
+  it('explains that only one request of each kind can be waiting at a time', () => {
+    render(<RequestsHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/un solo pedido de cada tipo/i)
+    expect(body).toMatch(/en lugar del botón/i)
+  })
+
+  /** #42: the justification is required at **both** ends, and the second half is the one people miss. */
+  it('says the answer carries a required reason too', () => {
+    render(<RequestsHelp />)
+
+    expect(document.body.textContent).toMatch(/respuesta también lleva motivo obligatorio/i)
+  })
+
+  /** The three kinds, each said where it is asked for - and the one that surprises people. */
+  it('names the three kinds and warns that approving a table does not create it', () => {
+    render(<RequestsHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/Rol de master/)
+    expect(body).toMatch(/Mesa nueva/)
+    expect(body).toMatch(/Consulta/)
+    expect(body).toMatch(/no crea la mesa/i)
+  })
+
+  /** #170: the help teaches the doing and not only the rule. */
+  it('walks through making a request, step by step', () => {
+    const { container } = render(<RequestsHelp />)
+
+    const steps = container.querySelector('ol')
+    expect(steps).not.toBeNull()
+    expect(within(steps as HTMLElement).getAllByRole('listitem')).toHaveLength(4)
   })
 })

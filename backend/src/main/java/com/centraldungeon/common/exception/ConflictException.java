@@ -61,6 +61,44 @@ public final class ConflictException extends ApiException {
     public static final String USER_NOT_BLOCKED = "USER_NOT_BLOCKED";
 
     /**
+     * A second request of the same type from the same person while the first is still Pending (#42).
+     *
+     * <p>Its own code because the screen has something specific to do with it: stop offering the
+     * button and show the pending request instead. A button whose only possible answer is this 409
+     * is a button that should not be there (principio 2 de frontend-diseno.md 1) - which is also why
+     * {@code GET /requests/mine} exists.
+     */
+    public static final String REQUEST_ALREADY_PENDING = "REQUEST_ALREADY_PENDING";
+
+    /**
+     * Approving or rejecting a request that is no longer Pending. A resolution is not re-resolved,
+     * the same shape the table's state machine has.
+     *
+     * <p>The likeliest way to see it is two admins answering the same request at once, and the
+     * sentence the loser needs is "somebody already answered this", not a generic conflict.
+     */
+    public static final String REQUEST_ALREADY_RESOLVED = "REQUEST_ALREADY_RESOLVED";
+
+    /**
+     * The entity a request points at is gone (#78, #126).
+     *
+     * <p>The direct consequence of a polymorphic reference with no foreign key: the row outlives what
+     * it points at, which #126 accepts on purpose - «una solicitud sobre una mesa borrada sigue
+     * siendo un hecho» - but resolving it would be acting on a ghost. Its own code because it is the
+     * one 409 here that is nobody's fault and that no retry fixes.
+     */
+    public static final String REQUEST_ENTITY_GONE = "REQUEST_ENTITY_GONE";
+
+    /**
+     * Asking for the Master role while already holding it.
+     *
+     * <p>A 409 rather than a request an admin has to open, read and reject in order to discover it
+     * was unnecessary. Its own code so the screen can say the true thing - "you already have it" -
+     * instead of reporting a conflict the reader cannot interpret.
+     */
+    public static final String MASTER_ROLE_ALREADY_HELD = "MASTER_ROLE_ALREADY_HELD";
+
+    /**
      * @param message what state made the request impossible, in English and for a log (#197)
      */
     public ConflictException(String message) {

@@ -46,4 +46,19 @@ public record NotificationParams(
     public static NotificationParams ofTable(String tableName) {
         return new NotificationParams(tableName, null, null, null);
     }
+
+    /**
+     * A notification whose sentence needs no name filled in at all.
+     *
+     * <p>The two request outcomes of F3.2 are the first to use it. A fifth field naming the request
+     * type was written and then removed: the rendered sentences do not name it, so the column would
+     * have carried a value into every row that nothing ever read - which is the same orphan this
+     * slice refused to create when it declared three request types instead of five. It goes in the
+     * day a sentence asks for it, together with that sentence.
+     *
+     * @return the parameters, with nothing set
+     */
+    public static NotificationParams none() {
+        return new NotificationParams(null, null, null, null);
+    }
 }

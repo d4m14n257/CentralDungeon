@@ -1,0 +1,143 @@
+package com.centraldungeon.approvals;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.centraldungeon.common.search.SearchQuery;
+import com.centraldungeon.common.search.SearchQueryParser;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import org.junit.jupiter.api.Test;
+
+/**
+ * The one rule of this class that is a security property rather than a convenience: <b>{@code mine}
+ * scopes to the actor and nothing can turn that off</b>.
+ *
+ * <p>It is asserted here, against the Criteria API itself, rather than through the service, because
+ * "the service passed some specification to the repository" would keep passing if the filter were
+ * dropped. What has to be true is that the predicate that comes out names the id the caller was given
+ * and never one that arrived inside {@code ?q=} - which is the whole reason
+ * {@code GET /requests/mine} cannot be turned into a way of reading somebody else's requests (#121).
+ *
+ * <p>The builder is mocked rather than run against a database: what is being checked is which
+ * predicate gets composed, and that is a statement about this class, not about SQL.
+ */
+class ApprovalSearchSpecificationTest {
+
+    /** {@code /requests/mine} with an empty box: the actor's filter is the whole predicate. */
+    @Test
+    void misPedidosSeAcotanAlActorAunSinBusqueda() {
+        Criteria criteria = new Criteria();
+
+        ApprovalSearchSpecification.mine(SearchQuery.EMPTY, "user-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.requesterId, "user-1");
+    }
+
+    /**
+     * Y con búsqueda, el filtro del actor se combina con {@code AND}: lo que la caja diga acota más,
+     * nunca menos.
+     */
+    @Test
+    void laBusquedaAcotaMasNuncaMenos() {
+        Criteria criteria = new Criteria();
+        SearchQuery query = SearchQueryParser.parse("/status Pending", ApprovalSearchField.wireNames());
+
+        ApprovalSearchSpecification.mine(query, "user-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.requesterId, "user-1");
+        verify(criteria.builder).and(any(Predicate.class), any(Predicate.class));
+        verify(criteria.builder, never()).or(any(Predicate.class), any(Predicate.class));
+    }
+
+    /**
+     * El intento directo: nombrar a otra persona por la caja. {@code /requested_by} sigue funcionando
+     * -es el mismo lenguaje que habla el listado admin- pero se suma al filtro del actor en vez de
+     * reemplazarlo, así que lo único que puede lograr es encontrar menos.
+     */
+    @Test
+    void nombrarAOtraPersonaEnLaCajaNoEnsanchaElResultado() {
+        Criteria criteria = new Criteria();
+        SearchQuery query = SearchQueryParser.parse("/requested_by otra-persona", ApprovalSearchField.wireNames());
+
+        ApprovalSearchSpecification.mine(query, "user-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        // El id del actor sigue ahí, y es el del token: ningún string del request lo alcanza.
+        verify(criteria.builder).equal(criteria.requesterId, "user-1");
+        verify(criteria.builder, never()).equal(any(Expression.class), eq((Object) "otra-persona"));
+    }
+
+    /** {@code /admin/requests} no lleva filtro implícito: ver los pedidos de todos es la pantalla. */
+    @Test
+    void elListadoAdminNoAcotaANadie() {
+        Criteria criteria = new Criteria();
+
+        ApprovalSearchSpecification.forAdmin(SearchQuery.EMPTY)
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder, never()).equal(any(Expression.class), any(Object.class));
+        verify(criteria.builder).conjunction();
+    }
+
+    @Test
+    void unaBusquedaVaciaDelActorNoEsUnError() {
+        Criteria criteria = new Criteria();
+
+        assertThat(ApprovalSearchSpecification.mine(SearchQuery.EMPTY, "user-1")
+                        .toPredicate(criteria.root, criteria.query, criteria.builder))
+                .isNotNull();
+    }
+
+    /** The Criteria API, mocked down to the few calls these predicates make. */
+    @SuppressWarnings("unchecked")
+    private static final class Criteria {
+
+        private final Root<ApprovalRequest> root = mock(Root.class);
+
+        private final CriteriaQuery<?> query = mock(CriteriaQuery.class);
+
+        private final CriteriaBuilder builder = mock(CriteriaBuilder.class);
+
+        /** {@code requestedBy.id} - the path the forced filter has to land on. */
+        private final Path<Object> requesterId = mock(Path.class);
+
+        private Criteria() {
+            Path<Object> requestedBy = mock(Path.class);
+            when(root.get("requestedBy")).thenReturn(requestedBy);
+            when(requestedBy.get("id")).thenReturn(requesterId);
+            when(root.get(anyString())).thenReturn(mock(Path.class));
+            when(root.get("requestedBy")).thenReturn(requestedBy);
+
+            Join<Object, Object> join = mock(Join.class);
+            when(root.join("requestedBy", JoinType.INNER)).thenReturn(join);
+            when(join.get(anyString())).thenReturn(mock(Path.class));
+
+            when(builder.lower(any())).thenReturn(mock(Expression.class));
+            when(builder.like(any(), anyString(), any(Character.class))).thenReturn(mock(Predicate.class));
+            // any(Object.class) and not a bare any(): CriteriaBuilder overloads equal() on
+            // (Expression, Object) and (Expression, Expression), and an untyped matcher binds to the
+            // second - leaving every real call, which passes a String or an enum, unstubbed and
+            // answering null.
+            when(builder.equal(any(Expression.class), any(Object.class))).thenReturn(mock(Predicate.class));
+            when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(mock(Predicate.class));
+            when(builder.or(any(Predicate.class), any(Predicate.class))).thenReturn(mock(Predicate.class));
+            when(builder.conjunction()).thenReturn(mock(Predicate.class));
+            when(builder.disjunction()).thenReturn(mock(Predicate.class));
+        }
+    }
+}

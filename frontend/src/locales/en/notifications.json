@@ -25,7 +25,9 @@
     "MasterAssigned": "You are a master",
     "TableApproved": "Table approved",
     "TableApprovedWithChanges": "Approved with changes",
-    "TableChangesRequested": "Changes requested"
+    "TableChangesRequested": "Changes requested",
+    "ApprovalRequestApproved": "Request approved",
+    "ApprovalRequestRejected": "Request rejected"
   },
   "badge": {
     "accepted": "Accepted",
@@ -68,6 +70,14 @@
     },
     "TableChangesRequested": {
       "title": "Changes were requested on {{tableName}}"
+    },
+    "ApprovalRequestApproved": {
+      "title": "Your request was approved",
+      "message": "An admin reviewed it and wrote their answer. Open it to see how it stands."
+    },
+    "ApprovalRequestRejected": {
+      "title": "Your request was rejected",
+      "message": "An admin reviewed it and wrote why. You can ask again if something changes."
     }
   }
 }

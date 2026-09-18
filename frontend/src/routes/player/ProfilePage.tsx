@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SubmitRequestSection } from '@/features/approvals'
 import { HelpLink } from '@/features/help'
 import { ProfileCard, useMyProfile } from '@/features/users'
 
@@ -13,9 +14,17 @@ import { ProfileCard, useMyProfile } from '@/features/users'
  * exactly what tells this screen apart from {@link import('./UserProfilePage').UserProfilePage}.
  * The lower half of the wireframe, "Comentarios recibidos", is F5 and this screen never draws it
  * (§ ProfileCard).
+ *
+ * **Asking for the master role happens here** and not on a screen for making requests
+ * (fase-3-admin-owner.md:126): this is where somebody sees which roles they have, so it is where the
+ * absence of one is noticed. It is offered only to somebody who does not already hold it — the
+ * backend refuses the rest with `MASTER_ROLE_ALREADY_HELD`, and a button whose only outcome is a
+ * `409` is a button that should not be there (principio 2 de frontend-diseno.md §1). The same rule
+ * hides it while a request of the reader's own is still pending, which the section resolves itself.
  */
 export function ProfilePage() {
   const { t } = useTranslation('users')
+  const { t: tAdmin } = useTranslation('admin')
   const { data, isPending, isLoadingError, refetch } = useMyProfile()
 
   if (isPending) {
@@ -31,9 +40,28 @@ export function ProfilePage() {
     return <ErrorState message={t('profile.loadErrorDescription')} onRetry={() => void refetch()} />
   }
 
+  const isMaster = data.roles.includes('Master')
+
   return (
     <div className="space-y-3">
       <ProfileCard profile={data} />
+      {/* Nothing at all for somebody who already runs tables: the role is not something you can hold
+          twice, so there is no request to make and nothing to explain. */}
+      {!isMaster && (
+        <div className="border-border space-y-2 rounded-lg border border-dashed p-4">
+          <p className="text-sm font-medium">{tAdmin('requests.masterGrantPitchTitle')}</p>
+          <p className="text-fg-muted text-sm">{tAdmin('requests.masterGrantPitchDescription')}</p>
+          {/* The help arrives as a node, because a feature never imports another one (§3.1.5). */}
+          <SubmitRequestSection
+            type="MasterGrant"
+            help={
+              <p className="text-fg-subtle text-xs">
+                {tAdmin('requests.submitHelpHint')} <HelpLink section="basics.requests">{tAdmin('requests.submitHelpLink')}</HelpLink>
+              </p>
+            }
+          />
+        </div>
+      )}
       {/* «Quién ve esto» es la pregunta que provoca la pantalla y que la pantalla sola no contesta
           (#231): la caducidad de #44 no se adivina mirando un perfil que hoy se ve. */}
       <HelpLink section="players.profile" className="inline-block text-xs">

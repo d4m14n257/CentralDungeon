@@ -70,6 +70,26 @@ export function RolesHelp() {
 }
 
 /**
+ * The request tray and what approving each kind actually does (#42, F3.2).
+ *
+ * **`masterGrant` and `tableOpen` are the reason this section exists.** The two approvals look
+ * identical on screen — same button, same note — and do completely different things: one hands out a
+ * role through the very same road `/admin/users` uses, and the other grants nothing at all, because
+ * a request carries no name, no system, no seats and no agenda to build a table from. An admin who
+ * assumes the second creates the table will approve it, tell nobody, and leave whoever asked waiting
+ * for a table that is never coming.
+ */
+export function RequestsAdminHelp() {
+  return (
+    <ListAndSteps
+      block="requests"
+      keys={['what', 'tray', 'pendingFirst', 'note', 'masterGrant', 'tableOpen', 'general', 'resolvedOnce', 'gone']}
+      stepCount={5}
+    />
+  )
+}
+
+/**
  * What closing an account does, and who is out of reach of it (#84, §3).
  *
  * The two halves of `what` and `keepsData` are deliberately adjacent: "block" is a word people read

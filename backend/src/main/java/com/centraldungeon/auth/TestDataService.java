@@ -121,6 +121,13 @@ public class TestDataService {
                 + E2E_USERS + ")");
         delete("delete from UserStatusChange usc where usc.user.id in (" + E2E_USERS + ") or usc.changedBy.id in ("
                 + E2E_USERS + ")");
+        // And the eighth, with F3.2's requests. This one points at `users` three times - requested_by,
+        // claimed_by and resolved_by - so an e2e player asking for the master role, or an e2e admin
+        // answering anybody's request, leaves a row the delete below cannot get past. The reference to
+        // whatever the request is *about* needs nothing here: it has no foreign key on purpose (#78),
+        // which is the same reason nothing else in the database will complain about it either.
+        delete("delete from ApprovalRequest ar where ar.requestedBy.id in (" + E2E_USERS + ") or ar.claimedBy.id in ("
+                + E2E_USERS + ") or ar.resolvedBy.id in (" + E2E_USERS + ")");
         delete("delete from UserRole ur where ur.user.id in (" + E2E_USERS + ")");
         int users = delete("delete from User u2 where u2.discordId like :discordId");
 

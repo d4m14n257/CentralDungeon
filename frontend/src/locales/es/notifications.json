@@ -25,7 +25,9 @@
     "MasterAssigned": "Sos master de una mesa",
     "TableApproved": "Mesa aprobada",
     "TableApprovedWithChanges": "Mesa aprobada con cambios",
-    "TableChangesRequested": "Te piden cambios"
+    "TableChangesRequested": "Te piden cambios",
+    "ApprovalRequestApproved": "Pedido aprobado",
+    "ApprovalRequestRejected": "Pedido rechazado"
   },
   "badge": {
     "accepted": "Aceptada",
@@ -68,6 +70,14 @@
     },
     "TableChangesRequested": {
       "title": "Te piden cambios en {{tableName}}"
+    },
+    "ApprovalRequestApproved": {
+      "title": "Aprobaron tu pedido",
+      "message": "Un admin lo revisó y escribió su respuesta. Entrá para ver cómo quedó."
+    },
+    "ApprovalRequestRejected": {
+      "title": "Rechazaron tu pedido",
+      "message": "Un admin lo revisó y escribió por qué. Podés volver a pedirlo si algo cambia."
     }
   }
 }

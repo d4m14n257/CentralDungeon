@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router'
 
-import { adminCatalogsPath, adminFilesPath, adminTablesPath, adminUsersPath } from '@/config/paths'
+import { adminCatalogsPath, adminFilesPath, adminRequestsPath, adminTablesPath, adminUsersPath } from '@/config/paths'
 import { cn } from '@/lib/utils'
 
 /**
@@ -11,8 +11,9 @@ import { cn } from '@/lib/utils'
  * screen, so landing on it was enough. With a second one there has to be a way across, or
  * /admin/catalogs is a route only a typed URL can reach.
  *
- * It grows with the context: /admin/users joined it with F3.1, and /admin/queue and the rest of the
- * sitemap join this list as their screens land, not a different one somewhere else.
+ * It grows with the context: /admin/users joined it with F3.1, /admin/requests with F3.2, and
+ * /admin/queue and the rest of the sitemap join this list as their screens land, not a different one
+ * somewhere else.
  */
 export function AdminSectionNav() {
   const { t } = useTranslation('admin')
@@ -22,6 +23,7 @@ export function AdminSectionNav() {
     { to: adminCatalogsPath(), label: t('nav.catalogs') },
     { to: adminFilesPath(), label: t('nav.files') },
     { to: adminUsersPath(), label: t('nav.users') },
+    { to: adminRequestsPath(), label: t('nav.requests') },
   ]
 
   return (

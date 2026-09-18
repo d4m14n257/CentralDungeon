@@ -1,5 +1,6 @@
 package com.centraldungeon.common.config;
 
+import com.centraldungeon.approvals.ApprovalMapper;
 import com.centraldungeon.catalogs.CatalogMapper;
 import com.centraldungeon.files.FileMapper;
 import com.centraldungeon.notifications.NotificationMapper;
@@ -91,5 +92,15 @@ public class MapperConfig {
     @Bean
     public TaskMapper taskMapper() {
         return Mappers.getMapper(TaskMapper.class);
+    }
+
+    /**
+     * The mapper for the requests that need an approval (#42).
+     *
+     * @return the MapStruct-generated implementation
+     */
+    @Bean
+    public ApprovalMapper approvalMapper() {
+        return Mappers.getMapper(ApprovalMapper.class);
     }
 }

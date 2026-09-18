@@ -44,6 +44,7 @@ export const paths = {
   adminCatalogs: 'admin/catalogs',
   adminFiles: 'admin/files',
   adminUsers: 'admin/users',
+  adminRequests: 'admin/requests',
 } as const
 
 /**
@@ -201,6 +202,28 @@ export function adminFilesPath(): string {
  */
 export function adminUsersPath(): string {
   return '/admin/users'
+}
+
+/**
+ * @returns the absolute path to the request tray (F3.2) — every request somebody made of an admin
+ *          (#42), whatever its kind. It opens filtered by what is still waiting, because a tray that
+ *          opens showing what is already resolved is not a tray anybody can work from
+ */
+export function adminRequestsPath(): string {
+  return '/admin/requests'
+}
+
+/**
+ * @returns the absolute path to the support screen — where somebody who read the help and did not
+ *          find their answer asks an admin directly (F3.2)
+ * @remarks The path #231 left unclaimed when it turned the help into dialogs, reserved in so many
+ *          words for "asking for assistance, reporting a bug — which has no backend yet". The
+ *          `General` request is that backend, and this is the screen it was waiting for. It is not
+ *          the old `/help` route coming back: the explanations still live in the dialogs, raised
+ *          from the screens that prompt them
+ */
+export function helpPath(): string {
+  return '/help'
 }
 
 /**

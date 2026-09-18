@@ -155,6 +155,35 @@ Las tres decisiones de §3 quedaron implementadas **en el service y no en la pue
 
 **Se prueba:** un jugador pide el rol de master; el pedido aparece en `/admin/requests` con su motivo; un admin lo aprueba y el rol queda otorgado por el `UserRoleService` de F3.1, no por una segunda ruta que haga lo mismo.
 
+#### ✅ Terminada
+
+**El precio de #78 se pagó entero**, que era la condición de esta rebanada: el service valida la entidad **antes** de insertar —y el test prueba que *no se intentó* guardar, no que no quedó guardado—, `entity_type`/`entity_id` son columnas sueltas sin un solo `@ManyToOne`, y el barrido de huérfanas corre a diario, solo sobre `Pending`, y **no borra ni resuelve nada**.
+
+La cláusula que ninguna prueba de un solo lado puede ver —«el rol queda otorgado por el `UserRoleService`, no por una segunda ruta»— quedó probada por el rastro de auditoría: el e2e verifica que la fila de `user_role_changes` lleva la nota de resolución del admin. Una segunda ruta no podría falsificarla.
+
+**Lo que la rebanada descubrió de sí misma:**
+
+- **Las dos guardas de concurrencia no existían.** `REQUEST_ALREADY_PENDING` y `REQUEST_ALREADY_RESOLVED` eran check-then-act sin nada en el medio, y las dos se rompían contra MySQL real. El peor caso no es una nota pisada: aprobar y rechazar a la vez pasan los dos y la fila queda `Rejected` sobre alguien que ya es `Master`. Y el caso `MasterGrant` solo *parecía* protegido: lo salvaba una colisión accidental de clave primaria, que cubría uno de los tres tipos y respondía `500` al perdedor. Todo en **#256**.
+- **`approval_requests` ya estaba en `V1__baseline.sql:472`.** La migración que se escribió para crearla tiró abajo las diecisiete clases de IT a la vez — un síntoma que parece código roto y es una tabla duplicada (**#257**).
+- **Tres tipos y no cinco**, para no estrenar la fase creando el huérfano que la fase vino a cerrar (**#255**).
+
+**Suites al cerrar, salida real:** `./mvnw test` 459/459 · `./mvnw verify` 459 + **149 ITs en 17 clases**, 0 fallos · `npx tsc -b` limpio · `npm run test` 385/385 en 46 archivos · `npm run test:e2e` **57/57** · `npm run format` sin reescrituras.
+
+**Deuda de revisión — para F4** (punto 5, #250):
+
+| Sin verificar | Por qué queda |
+|---|---|
+| Los cuatro estados de cada pantalla nueva, el viewport de 375 px y el contraste | Es F4 por diseño (#250) |
+| `/admin/requests` pone su default `Pending` **en la caja y no en la URL** | Se aparta de #185, y un criterio tipeado *se suma* al chip en vez de reemplazarlo: ver los resueltos exige sacarlo a mano. Decisión de producto para F4 |
+| `claimed_by` / `claimed_at` | Existen sin nada que las escriba. Es F3.3 |
+| El cron real del barrido de huérfanas | Se prueba el método, no la expresión. Misma postura que `FileRetentionService` |
+| `REQUEST_ENTITY_GONE` en su caso natural | Hoy es inalcanzable: los tres tipos apuntan al solicitante y `requested_by` tiene FK real, así que la base se niega a borrar la fila que la referencia nombra. Empieza a dispararse en F3.4 |
+| El e2e de «aprobar `TableOpen` no crea mesa» está acotado a `Unassigned`, no al marcador de la corrida | El listado admin de mesas no acepta `?q=` hasta **F3.3** (#176). Apretarlo entonces |
+
+**Inventario** — 16 clases nuevas en `backend/.../approvals/` (entidad, dos enums, repository, resolver, service, mapper, dos de búsqueda, dos controllers, el job, y `dto/` con cuatro records) y seis clases de test; 24 archivos nuevos en `frontend/src/features/approvals/` más `routes/admin/AdminRequestsPage.tsx`, `routes/SupportPage.tsx` y `e2e/admin-requests.spec.ts`. **Ninguna migración**: la tabla ya existía (#257).
+
+**`/help` deja de estar reservada y pasa a existir**, que es lo que `frontend-diseno.md` §6 anticipaba: es donde vive el pedido `General`. No suma una entrada al sitemap — la cobra.
+
 ---
 
 ### F3.3 — La bandeja compartida, y `/admin/tables` completo

@@ -106,6 +106,36 @@ export const queryKeys = {
   notifications: {
     list: () => ['notifications', 'list'] as const,
   },
+  /**
+   * The request mechanism (#42): one branch for the four questions it answers.
+   *
+   * `mine` and `admin` are two different answers to two different audiences and never share an
+   * entry: what somebody asked for is theirs, and the tray is every request there is. The same
+   * `admin` convention `users`, `tables`, `files` and `catalogs` already use.
+   */
+  requests: {
+    /**
+     * What the reader asked for, and how each one went - what tells a screen not to offer the button
+     * again. Keyed by what was searched, like `admin` below: the sections ask for the pending ones
+     * alone, and a filtered answer must never be served as if it were the whole list.
+     */
+    mine: (query?: string, page = 0) => ['requests', 'mine', query ?? '', page] as const,
+    /** The whole of the reader's own branch - what submitting a request invalidates. */
+    mineAll: () => ['requests', 'mine'] as const,
+    /** The /admin/requests tray, keyed by what was searched and which page. */
+    admin: (query?: string, page = 0) => ['requests', 'admin', query ?? '', page] as const,
+    /**
+     * The whole admin branch - what approving and rejecting invalidate.
+     *
+     * It exists for the same reason `users.adminAll()` does: a mutation never knows what the reader
+     * had typed or which page they were on, and a resolution takes a row out of the pending filter
+     * entirely, so patching a single entry would leave the rest of the cache describing a state that
+     * no longer is.
+     */
+    adminAll: () => ['requests', 'admin'] as const,
+    /** One request in full - where the resolution is: who sealed it, when, and why. */
+    adminDetail: (id: string) => ['requests', 'admin', 'detail', id] as const,
+  },
   users: {
     me: () => ['users', 'me'] as const,
     /** The picker's results. Keyed by scope too: the admin directory and a table's candidate

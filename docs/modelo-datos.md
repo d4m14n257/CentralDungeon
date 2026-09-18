@@ -38,7 +38,7 @@ El detalle y el razonamiento están en `decisiones.md`. Resumen de lo estructura
 | Comentarios | **Se elimina `comments.user_created_id`**. El autor vive solo en `comment_drafts` y desaparece al confirmar. Cuota antispam como token opaco | #43, #49, #82 |
 | Catálogos | `parent_id` → **`canonical_id`**, profundidad 1. Son grupos de sinónimos, no jerarquía | #53, #59 |
 | Archivos | `file_type` (`Public`/`Private`/`Single-use`) y `size_bytes`, que el código usaba y el DDL nunca tuvo. Más `content_hash`, `storage_key` y `last_used_at` | #60, #68, #75, #80 |
-| Aprobaciones | `requests` se absorbe en **`approval_requests`**, un solo mecanismo para todos los pedidos con aprobación | #42, #78 |
+| Aprobaciones | `requests` se absorbe en **`approval_requests`**, un solo mecanismo para todos los pedidos con aprobación. **La tabla ya estaba en `V1__baseline.sql`**: F3.2 le puso el código, no el DDL, así que no hay migración propia y no puede haberla (regla dura 8). Nace con **tres** tipos —`MasterGrant`, `TableOpen`, `General`—, no con los cinco que enumera #90: `TablePause` y `PlayerBan` los agrega F3.4 **con su productor**, porque la columna es `VARCHAR(32)` y sumar un flujo es sumar un valor al enum, sin `ALTER TABLE` (#78). Declararlos antes solo crearía dos valores que nada emite, que es el huérfano que F1.7 le reprochó a `PauseRequested` | #42, #78, #90 |
 | Moderación de mesa | Tabla nueva `table_status_changes` con la justificación de cada transición | #32 |
 | Moderación de personas | Tablas nuevas `user_role_changes` y `user_status_changes` (`V11`, F3.1), calcadas de `table_status_changes`, con **motivo obligatorio**. `audit_logs` es F6 y `approval_requests` es F3.2: hasta entonces cada entidad guarda su propio rastro en vez de inventar una tabla genérica que F6 va a reemplazar | #84, #169 |
 | Feedback del sistema | Tablas nuevas `system_feedback` y `feedback_quotas`. El tipo `General` sale de `comments` | #91, #93, #94 |
@@ -101,6 +101,8 @@ erDiagram
     users ||--o{ comments : "modera"
     users ||--o{ comment_drafts : "escribe (solo mientras es borrador)"
     users ||--o{ approval_requests : "solicita"
+    users ||--o{ approval_requests : "reserva (#100)"
+    users ||--o{ approval_requests : "resuelve"
     users ||--o{ notifications : "recibe"
     users ||--o{ audit_logs : "genera"
     %% system_feedback y comment_quotas no tienen relaciones: son anonimos a proposito
@@ -668,24 +670,37 @@ CREATE INDEX ix_feedback_quotas_created ON feedback_quotas (created_at);
 
 -- ---------------------------------------------------------------- cross-cutting
 
--- Single mechanism for every request that needs approval (#42).
+-- Single mechanism for every request that needs approval (#42). **The table is part of
+-- V1__baseline.sql and has been since before there was a backend**: F3.2 gave it its code, not its
+-- DDL, so there is no migration of its own and there must not be one.
 -- Polymorphic reference with no FK: ApprovalService validates entity_id exists,
--- and that check ships with its unit test (#78, #126).
+-- and that check ships with its unit test (#78, #126). The price of #78 is three
+-- things and all three are in `approvals/`: the validation before the insert, the
+-- reference never mapped as a @ManyToOne, and ApprovalOrphanCheckService, which
+-- sweeps the unresolved rows on a schedule and logs what stopped resolving.
 CREATE TABLE approval_requests (
     id              VARCHAR(64)  NOT NULL,
-    request_type    VARCHAR(32)  NOT NULL, -- TablePause | PlayerBan | MasterGrant | TableOpen | General (#90)
+    request_type    VARCHAR(32)  NOT NULL, -- MasterGrant | TableOpen | General (#90)
+                                           -- TablePause and PlayerBan arrive with F3.4, which brings
+                                           -- the producer of each. The column is a VARCHAR, so that
+                                           -- is adding a value to an enum and never an ALTER TABLE (#78)
     entity_type     VARCHAR(32)  NOT NULL, -- game_table | table_registration | user
-    entity_id       VARCHAR(64)  NOT NULL,
+                                           -- the three types of F3.2 all point at `user`: the request
+                                           -- is about the person who made it
+    entity_id       VARCHAR(64)  NOT NULL, -- no FK: the reference is polymorphic (#78, #126)
     requested_by    VARCHAR(64)  NOT NULL,
-    justification   LONGTEXT     NOT NULL,
+    justification   LONGTEXT     NOT NULL, -- required in the request and in the resolution (#42)
     status          VARCHAR(32)  NOT NULL DEFAULT 'Pending', -- Pending | Approved | Rejected
-    claimed_by      VARCHAR(64)  NULL,  -- admin who reserved this item (#100)
-    claimed_at      DATETIME     NULL,  -- auto-released after a timeout (#100)
+    claimed_by      VARCHAR(64)  NULL,  -- admin who reserved this item (#100). Nothing writes it
+    claimed_at      DATETIME     NULL,  -- until F3.3: the two columns are in the baseline, the behaviour
+                                        -- (claim/release and its timeout) belongs to the queue
     resolved_by     VARCHAR(64)  NULL,
-    resolution_note LONGTEXT     NULL,
+    resolution_note LONGTEXT     NULL,  -- mandatory when resolving, so NULL only while Pending (#42)
     resolved_at     DATETIME     NULL,
     created_at      DATETIME     NOT NULL,
-    deleted_at      DATETIME     NULL,
+    deleted_at      DATETIME     NULL,  -- F3.2 does NOT soft-delete requests: nothing maps or writes
+                                        -- this column. A request is the record of something somebody
+                                        -- asked; it stops being pending by being resolved, not hidden
     CONSTRAINT pk_approval_requests PRIMARY KEY (id),
     CONSTRAINT fk_ar_claimed   FOREIGN KEY (claimed_by)   REFERENCES users (id),
     CONSTRAINT fk_ar_requested FOREIGN KEY (requested_by) REFERENCES users (id),
@@ -793,8 +808,16 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Regla | Dónde | Ref. |
 |---|---|---|
 | Un solo mecanismo para todo pedido con aprobación: pausar mesa, vetar jugador, pedir rol de master, pedir que se abra una mesa, peticiones generales | `ApprovalService` | #42, #90 |
-| La entidad afectada se referencia de forma polimórfica; **el service valida que exista**, porque la base no puede | `ApprovalService` | #78 |
-| Pedir que se abra una mesa desemboca en #72: un admin la crea en `Unassigned` y le asigna master | `ApprovalService` | #90 |
+| La entidad afectada se referencia de forma polimórfica; **el service valida que exista antes de insertar**, porque la base no puede. Nunca se mapea como `@ManyToOne` | `ApprovalService` · `ApprovalEntityResolver` | #78, #126 |
+| **Un job periódico recorre los pedidos sin resolver y registra en `WARN` los que apuntan a algo que ya no existe.** No borra y no resuelve: un borrado automático sobre datos que perdieron su ancla es cómo se pierde la evidencia. Es el tercio del precio de #78 que no tiene otro test detrás | `ApprovalOrphanCheckService` | #78 |
+| **Justificación obligatoria en las dos puntas**: en el pedido y en la resolución. Rechazar sin decir por qué es la mitad del mecanismo | `ApprovalService` | #42 |
+| **Un pedido `Pending` por tipo y por persona**: el segundo es `409 REQUEST_ALREADY_PENDING`. Sin esto, un botón apretado dos veces llena la bandeja de duplicados que alguien resuelve a mano | `ApprovalService` | #42, #100 |
+| Pedir el rol de `Master` teniéndolo ya es `409 MASTER_ROLE_ALREADY_HELD`, no un pedido que un admin tiene que leer para descubrir que no hacía falta | `ApprovalService` | #42 |
+| **Solo se resuelve desde `Pending`**: re-resolver es `409 REQUEST_ALREADY_RESOLVED`, la misma forma que la máquina de estados de la mesa | `ApprovalService` | #42 |
+| **Si la entidad referenciada desapareció entre el pedido y la resolución → `409 REQUEST_ENTITY_GONE`.** La fila sobrevive a lo que apunta a propósito —«una solicitud sobre una mesa borrada sigue siendo un hecho»— pero resolverla sería actuar sobre un fantasma | `ApprovalService` | #78, #126 |
+| **Aprobar un `MasterGrant` otorga el rol llamando a `UserRoleService.grantRole`**, con la nota de resolución como justificación. No hay una segunda ruta que escriba la misma fila | `ApprovalService` → `UserRoleService` | #42, F3.1 |
+| Pedir que se abra una mesa desemboca en #72: aprobar deja constancia de que el pedido procede, **no crea la mesa** —el pedido no trae nombre, sistema, cupo ni agenda—; un admin la crea en `Unassigned` y le asigna master | `ApprovalService` · `GameTableService` | #72, #90 |
+| **Un pedido no notifica a nadie**; la resolución notifica **al solicitante**, con `ApprovalRequestApproved` / `ApprovalRequestRejected`. Los ítems de trabajo de admin no se duplican como notificaciones | `ApprovalService` · `NotificationService` | #100, #197 |
 
 ### Mesa
 

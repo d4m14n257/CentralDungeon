@@ -1,4 +1,4 @@
-import { CalendarDays, CircleUser, FolderOpen, Languages, Moon, Sun } from 'lucide-react'
+import { CalendarDays, CircleUser, FolderOpen, Languages, LifeBuoy, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LANGUAGES } from '@/config/language'
-import { myFilesPath, mySchedulePath, paths, playerProfilePath } from '@/config/paths'
+import { helpPath, myFilesPath, mySchedulePath, paths, playerProfilePath } from '@/config/paths'
 import { useLogout } from '@/features/auth'
 import { useHasPersonalLibrary } from '@/hooks/useHasPersonalLibrary'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -96,6 +96,14 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
             {t('nav.myFiles')}
           </DropdownMenuItem>
         )}
+        {/* The support screen (F3.2): where somebody who did not find their answer asks an admin
+            directly. In the account menu because it belongs to the person and to no context — and
+            offered to everybody, since needing help is not a role. Without an entry here `/help`
+            would be a route only a typed URL could reach. */}
+        <DropdownMenuItem onSelect={() => void navigate(helpPath())}>
+          <LifeBuoy className="size-4" />
+          {t('nav.help')}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/* Each language names itself — "English", never "Inglés": somebody looking for their own
             language does not necessarily read the one currently on screen (#198). */}
