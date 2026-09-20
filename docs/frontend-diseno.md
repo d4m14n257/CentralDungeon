@@ -310,7 +310,9 @@ Al mirar el perfil de otra persona, la visibilidad caduca a las dos semanas del 
 
 Se generan en `components/ui/`. Antes de crear cualquiera se consulta el MCP `shadcn-ui` para usar la API real y no aproximarla.
 
-`button` · `card` · `dialog` · `dropdown-menu` · `form` · `input` · `textarea` · `select` · `combobox` · `badge` · `table` · `tabs` · `sheet` · `popover` · `tooltip` · `avatar` · `skeleton` · `sonner` · `alert` · `separator` · `pagination` · `calendar`
+**Construidas hoy, 21**: `alert` · `avatar` · `badge` · `button` · `card` · `checkbox` · `command` · `dialog` · `dropdown-menu` · `form` · `input` · `label` · `popover` · `select` · `separator` · `skeleton` · `sonner` · `table` · `tabs` · `textarea` · `tooltip`. Las que este documento previó y todavía no se necesitaron: `sheet`, `pagination`, `calendar` y `combobox` — el combobox se resolvió con `command` + `popover`, que es lo que shadcn genera para eso.
+
+**Son las únicas piezas del frontend sin JSDoc, y es la excepción declarada** en `CLAUDE.md` (*Documentación del código*): es código que escribe el CLI de shadcn y no se edita a mano, así que documentarlo sería documentar algo que la próxima regeneración pisa. Verificado y no asumido: los 21 archivos siguen tal como entraron en su commit, con comillas dobles y clases `bg-primary`/`text-primary-foreground` en vez de los tokens del `@theme` — ninguno pasó por una mano. Si alguno alguna vez se edita, deja de ser generado y entra en la regla dura 19 como cualquier otro archivo.
 
 #### Las tres que se apartan del default
 
@@ -328,7 +330,7 @@ Todo lo demás se usa tal como viene: los tokens del `@theme` ya lo tiñen solo.
 
 En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estaría mal ubicado (`arquitectura.md` §3.1.2).
 
-> Los 20 compuestos de esta sección están dibujados en `design/out/`: `components-dialogs.html` (ConfirmDialog, FormDialog), `components-data.html` (DataTable, CollapsibleSection, IconAction), `components-inputs.html` (FilePicker, RichText, ScheduleEditor), `components-shell.html` (NotificationBell, ContextSwitcher, UserMenu), `ui-states.html` (EmptyState, ErrorState, ForbiddenState) y `components.html` (badges, karma, GameTableCard). `SearchQueryInput` y `UserPicker` (#164, #165) todavía no tienen preview: se construyeron directo en la pantalla que los pedía.
+> Los compuestos de esta sección están dibujados en `design/out/`: `components-dialogs.html` (ConfirmDialog, FormDialog), `components-data.html` (DataTable, CollapsibleSection, IconAction), `components-inputs.html` (FilePicker, RichText, ScheduleEditor), `components-shell.html` (NotificationBell, ContextSwitcher, UserMenu), `ui-states.html` (EmptyState, ErrorState, ForbiddenState) y `components.html` (badges, karma, GameTableCard). `SearchQueryInput` y `UserPicker` (#164, #165) todavía no tienen preview: se construyeron directo en la pantalla que los pedía.
 
 | Componente | Para qué |
 |---|---|
@@ -345,6 +347,10 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `LoadMore` | Paginación de un listado de lectura: trae la página siguiente y siempre dice cuántos de cuántos se están viendo. Botón explícito, nunca scroll infinito (#173) |
 | `PaginationControls` | Paginación de una lista de trabajo: anterior/siguiente, página X de Y y el total (#173) |
 | `SearchQueryInput` | **Todo buscador de la app** (#164, #240). Texto suelto busca por el criterio básico; `/` abre la lista —comandos, y `/and`/`/or` cuando hay algo que unir— y **elegir de ahí escribe el comando en el texto, igual que tipearlo a mano**: hasta **Enter** todo es texto, y Enter es lo que lo cierra en chips. Un comando de opciones fijas ofrece sus valores en cuanto hay un espacio después de él, venga escrito o elegido; las comas separan alternativas y el chip del conector se toca para pasarlo de "y" a "o". Recibe los comandos que acepta, no los conoce, y con ellos arma además los ejemplos de su ayuda |
+| `WizardSteps` | El riel de pasos de un formulario largo, con el paso actual y los que ya se completaron. Hoy lo usa solo el wizard de crear mesa, que es el único formulario de varios pasos que existe |
+| `AttendanceSummaryView` | Los tres números de asistencia de #137 —presentes, ausentes, justificados— sin saber de qué mesa son. Lo usan la pestaña del master y la ficha del jugador |
+| `LanguageSwitch` | Elegir idioma, recordado sin ida al servidor (#198). Vive acá y no en `UserMenu` porque `/login` no tiene header y también lo necesita |
+| `BackendStatusIndicator` | Si el backend responde. En `RootLayout` para que se vea en toda pantalla, `/login` incluida |
 | `useSearchQuery` | El cableado alrededor de esa caja, escrito una vez (#240): estado, string canónico, debounce de 400 ms y escritura del `?q=`. Cada feature declara sus comandos en un `searchFields.ts` propio — `userSearchFields`, `myFileSearchFields`, `adminFileSearchFields` |
 
 ### Compuestos con dominio
@@ -364,12 +370,64 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `FileCard` — la fila de un archivo: icono por MIME, tamaño, categoría, último uso y dónde se usa | `features/files/` |
 | `FileCategoryFilter` — los cinco cajones como fila de toggles, no como `<Select>` (#233). **Solo en `/admin/files`**: en `/my/files` el cajón se narrowea desde el buscador con `/file_categories` (#242) | `features/files/` |
 | `FileUsageChips` — dónde se usa un archivo, o «sin usar», que es el aviso de la purga (#232, #75) | `features/files/` |
-| `KarmaBadge` — número + indicador cualitativo | `features/users/` |
+| `KarmaBadge` — número + indicador cualitativo. **Nunca se construyó**: el karma se pinta dentro de `ProfileCard` y como texto en las listas | `features/users/` |
 | `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (#164) | `features/users/` |
 | `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |
-| `ContextSwitcher` — el selector de rol de §2 | `app/components/` (es shell, no dominio) |
-| `UserMenu` — avatar, idioma, tema y cerrar sesión | `app/components/` |
+| `ContextSwitcher` — el selector de rol de §2 | `layouts/components/` (es shell, no dominio) |
+| `UserMenu` — avatar, idioma, tema y cerrar sesión | `layouts/components/` |
 | `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto. **Todavía no construido**: `features/feedback/` existe vacío y `system_feedback` es de F5 (#250) | `features/feedback/` |
+
+### Inventario completo, y lo que el inventario curado escondía
+
+La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen algo que explicar. No es el inventario, y durante varias fases se leyó como si lo fuera — con la consecuencia concreta que está más abajo. Lo que hay construido hoy, entero, es **63 compuestos con dominio en 10 features**, más 7 de shell:
+
+| Feature | Compuestos |
+|---|---|
+| `adminQueue` (2) | `ClaimBadge` · `QueueItemKindBadge` |
+| `approvals` (7) | `BanRequestsSection` · `RequestDetailPanel` · `RequestStatusBadge` · `RequestTypeBadge` · `ResolveRequestDialog` · `SubmitRequestDialog` · `SubmitRequestSection` |
+| `catalogs` (8) | `AcceptCatalogValueDialog` · `CanonicalPicker` · `CatalogChip` · `CatalogCombobox` · `CatalogPicker` · `CatalogStatusBadge` · `DisableCatalogValueDialog` · `MergeCatalogGroupsDialog` |
+| `files` (12) | `EditFileDialog` · `FileCard` · `FileCategoryBadge` · `FileCategoryChoice` · `FileCategoryFilter` · `FileDropzone` · `FileList` · `FilePicker` · `FileTypeBadge` · `FileUsageChips` · `PublishFileDialog` · `StagedFileList` |
+| `help` (3) | `HelpBlocks` · `HelpDialog` · `HelpLink` |
+| `notifications` (1) | `NotificationBell` |
+| `registrations` (4) | `ApplyToTableDialog` · `BlockPlayerDialog` · `RegistrationStatusBadge` · `RejectRegistrationDialog` |
+| `tables` (10) | `AttendanceEditor` · `CreateUnassignedTableDialog` · `GameTableCard` · `JustifiedTableActionDialog` · `MasterWorkItemList` · `ScheduleEditor` · `SessionList` · `SessionStatusBadge` · `TableStatusBadge` · `WeeklyScheduleGrid` |
+| `tasks` (9) | `ApplicableTaskList` · `MySubmissions` · `TableTasksSection` · `TaskAudienceBadge` · `TaskBoardList` · `TaskFormDialog` · `TaskStatusBadge` · `TaskSubmissionsPanel` · `TaskSubmitDialog` |
+| `users` (7) | `AdminUserRolesCell` · `BlockUserDialog` · `ProfileCard` · `RoleChangeDialog` · `UserAdminHistory` · `UserPicker` · `UserStatusBadge` |
+| shell (7) | `AdminSectionNav` · `AppHeader` · `BrandMark` · `ContextSwitcher` · `MasterSectionNav` · `PlayerSectionNav` · `UserMenu` — en `layouts/components/` |
+
+**Tres que este documento prometió y no existen**: `KarmaBadge` (el karma se pinta dentro de `ProfileCard` y como texto en las listas, nunca como badge propio), `SystemFeedbackDialog` (F5, ya anotado) y el hook `useTableSelection` (ninguna tabla pide selección múltiple todavía, ya anotado). `KarmaBadge` no estaba anotado y ahora lo está: un componente prometido que nadie construyó es una pieza que la próxima fase cree que puede reusar.
+
+#### El badge de estado está escrito nueve veces
+
+**Es el hallazgo que abrir el inventario completo produjo, y es un incumplimiento de `arquitectura.md` §3.1.2.** Esa regla fija el umbral en **dos** usos reales, más bajo que el del backend, y la razón que da es exacta: *«acá la alternativa a subir no es un poco de duplicación: es un import prohibido»*.
+
+Nueve compuestos renderizan **el mismo bloque, byte a byte**: `<span class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium">` con un punto `size-1.5 rounded-full` adentro y la etiqueta traducida al lado. Ocho de ellos además comparten la misma forma entera — un `Record<Estado, { badge, dot }>` con las clases escritas literales y un `t()` sobre el estado:
+
+| Componente | Feature | Namespace | Clave | Estados |
+|---|---|---|---|---|
+| `TableStatusBadge` | `tables` | `tables` | `status.${status}` | 10 |
+| `SessionStatusBadge` | `tables` | `tables` | `sessions.status.${status}` | 3 |
+| `RegistrationStatusBadge` | `registrations` | `registrations` | `status.${status}` | 4 |
+| `UserStatusBadge` | `users` | `admin` | `users.status.${status}` | 3 |
+| `RequestStatusBadge` | `approvals` | `admin` | `requests.status.${status}` | 3 |
+| `CatalogStatusBadge` | `catalogs` | `catalogs` | `status.${status}` | 4 |
+| `TaskStatusBadge` | `tasks` | `tasks` | `status.${status}` | 2 |
+| `FileTypeBadge` | `files` | `files` | `fileType.${fileType}` | 3 |
+| `ClaimBadge` | `adminQueue` | `admin` | — (dos ramas, no un `Record`) | — |
+
+**Difieren en tres cosas y en ninguna más**: el namespace de i18n, el prefijo de la clave, y el mapa de estado a token. Todo lo demás —el `cn()`, las clases del contenedor, el tamaño del punto, el orden de los dos hijos— es el mismo texto repetido ocho veces.
+
+Lo que corresponde según §3.1.2 es un `StatusBadge` en `components/` que reciba **la etiqueta ya traducida y el par de clases ya resueltas**, porque al subir se le quita el dominio: un componente de `components/` que sepa qué es `PauseRequested` está mal ubicado. Cada feature se queda con su `Record` y su `t()`, que es justamente la parte que sí le pertenece.
+
+**Por qué se sostuvo nueve veces sin que nadie lo viera**, que es la parte que importa más que el duplicado: la tabla curada de más arriba nombra **dos** de los nueve —`TableStatusBadge` y `RegistrationStatusBadge`— y no dice que los otros siete existen. Una fase que quiere un badge nuevo lee ese inventario, encuentra dos badges de dominio, concluye que un badge es cosa de cada feature, y escribe el noveno. El inventario incompleto no es un problema de prolijidad: es el mecanismo por el que el duplicado se reproduce.
+
+#### El diálogo con motivo obligatorio, siete veces — y por qué acá la regla dice lo contrario
+
+Siete diálogos en cinco features comparten el mismo esqueleto: `FormDialog` + `useForm` con `zodResolver` + un `Textarea` en un `FormField` + `FormMessage` + `form.reset` al cerrar. Son `ResolveRequestDialog`, `SubmitRequestDialog`, `BlockPlayerDialog`, `RejectRegistrationDialog`, `JustifiedTableActionDialog`, `BlockUserDialog` y `RoleChangeDialog`.
+
+**Y acá la conclusión es la opuesta, por el tercer punto de §3.1.2**: *«no sube lo que solo se parece. Dos formularios no comparten componente por ser dos formularios; comparten `FormDialog`, que es el envoltorio»*. Es exactamente este caso: **ya comparten lo que tenían que compartir**. Lo que queda distinto en cada uno es la mutación que dispara, qué hace al salir bien, y los campos que rodean al motivo —`RoleChangeDialog` elige un rol, `ApplyToTableDialog` tiene dos pasos y adjuntos, `BlockPlayerDialog` cambia de endpoint según si el lector es `Primary`—, y eso es lógica de la feature y no forma compartida.
+
+Queda escrito igual, con los nombres, por dos razones. Una: que la próxima fase que agregue un diálogo con motivo sepa que hay siete precedentes y de cuál copiar la forma. Dos: que si el número sigue creciendo, la decisión se revise **con esta lista a la vista** en vez de volver a contarla desde cero. `BlockPlayerDialog` ya dejó la pregunta abierta por escrito en su propio JSDoc —*«no es `JustifiedTableActionDialog`, que es la forma idéntica una feature más allá»*— y lo que faltaba era el recuento que la contesta.
 
 ### Hooks compartidos
 
@@ -442,7 +500,7 @@ Las 15 páginas del legacy quedan cubiertas: 4 se fusionan en el explorador, 3 e
 | `ListFilesTable`, `UploadButton` | `FilePicker` |
 | `ListCataloguesTable` | Combobox de catálogo con resolución por grupo |
 | `PreparationStatus` | `TableStatusBadge`, generalizado a los nueve estados |
-| `CardSettings` | `UserMenu` en `app/components/`, sobre `dropdown-menu`. El click-fuera escrito a mano con `window.addEventListener` desaparece: lo resuelve Radix |
+| `CardSettings` | `UserMenu` en `layouts/components/`, sobre `dropdown-menu`. El click-fuera escrito a mano con `window.addEventListener` desaparece: lo resuelve Radix |
 | `MenuItemComponent` | `ContextSwitcher`. Su cadena de ternarios para elegir el icono según el nombre del rol se vuelve un `Record<Role, LucideIcon>` |
 | `Span`, `forms/TextArea` | Desaparecen: eran estilo. `textarea` de shadcn/ui y clases de Tailwind |
 | `@tinymce/tinymce-react` | **TipTap** (`@tiptap/react` + `starter-kit`), elegido en F1.2: TinyMCE necesita API key para uso alojado. La barra ofrece exactamente lo que la lista blanca del backend conserva (#186) |
