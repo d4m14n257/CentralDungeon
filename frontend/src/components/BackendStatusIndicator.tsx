@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 /**
  * The global backend-connectivity indicator. It lives in RootLayout so it shows on every screen,
  * including /login, which has no header. It reuses the state tokens already measured for AA
- * (open=verde, canceled=rojo, frontend-diseno.md 3) en vez de inventar un color nuevo.
+ * (open=verde, canceled=rojo, frontend-diseno.md 3) rather than inventing a new colour.
  */
 export function BackendStatusIndicator() {
   const { t } = useTranslation('common')

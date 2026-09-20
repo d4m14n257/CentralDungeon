@@ -165,7 +165,7 @@ describe('AdminUsersPage', () => {
   })
 
   /**
-   * Punto 8 de la definición de terminado (#231): the help is raised from the screen that prompts
+   * Point 8 of plan-desarrollo.md §6 (#231): the help is raised from the screen that prompts
    * the question, and the search help documents **this** box's commands rather than a fixed list
    * (#240). `/role` and `/status` are written once, in `adminUserSearchFields`, and the box hands
    * them over - so this is what proves they reach the reader without being spelled out twice.

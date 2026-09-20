@@ -82,13 +82,13 @@ test('/help is no longer the help: it is the support screen the reservation desc
 
     await page.goto('/help')
 
-    // **Hasta F3.2 esto era un 404 a propósito**: #231 sacó la pantalla de ayuda y dejó la ruta
-    // reservada con todas las letras para «pedir asistencia, reportar un bug», sin nada detrás. El
-    // pedido `General` de #42 es ese detrás, así que la reserva se cobró y la pantalla existe.
+    // **Until F3.2 this was a 404 on purpose**: #231 took the help screen away and left the route
+    // reserved in so many words for «pedir asistencia, reportar un bug», with nothing behind it. The
+    // `General` request of #42 is that behind, so the reservation was cashed in and the screen exists.
     await expect(page.getByRole('heading', { name: 'Ayuda' })).toBeVisible()
-    // Y lo que hace es pedir, no volver a ser un índice: las explicaciones siguen siendo diálogos en
-    // la pantalla que las provoca (#231), y eso lo dice en voz alta en vez de dejar creer que
-    // la ayuda se perdió.
+    // And what it does is ask, not go back to being an index: the explanations are still dialogs on
+    // the screen that provokes them (#231), and it says so out loud rather than letting the reader
+    // believe the help was lost.
     await expect(page.getByRole('button', { name: 'Escribirle a un admin' })).toBeVisible()
     await expect(page.getByText('Las explicaciones están en cada pantalla')).toBeVisible()
   } finally {

@@ -378,7 +378,7 @@ describe('AdminQueuePage', () => {
     expect(toastError).not.toHaveBeenCalled()
   })
 
-  /** Punto 8 de la definición de terminado (#231): the help is raised from the screen that prompts it. */
+  /** Point 8 of plan-desarrollo.md §6 (#231): the help is raised from the screen that prompts it. */
   it('explains the reservation from the screen itself', async () => {
     list.mockResolvedValue(page([item()]))
 

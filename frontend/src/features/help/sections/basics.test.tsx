@@ -91,7 +91,7 @@ describe('SearchHelp', () => {
 })
 
 /**
- * The help F3.2 owes from the side of whoever asks (punto 8 de la definición de terminado, #231).
+ * The help F3.2 owes from the side of whoever asks (plan-desarrollo.md §6 point 8, #231).
  *
  * These assert on the **substance** of the section rather than on whole sentences: the wording is
  * free to improve, but a section that stopped saying the reason is required, or stopped explaining

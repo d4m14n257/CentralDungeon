@@ -35,9 +35,9 @@ export function FILE_TYPE_CHOICES(t: TFunction): { value: string; label: string 
  * What `/file_categories` offers: the cajones a file can belong to (#233, #239).
  *
  * **A different question from `/file_type`, and both are commands with fixed choices.** The type is
- * the format — PDF, PNG — and the cajón is the flow the file came out of: material de mesa, una
- * entrega, un anuncio. Somebody looking for "the sheet I handed in" is asking the second, and no
- * amount of searching filenames answers it.
+ * the format — PDF, PNG — and the cajón is the flow the file came out of: table material, something
+ * handed in, an announcement. Somebody looking for "the sheet I handed in" is asking the second, and
+ * no amount of searching filenames answers it.
  *
  * The caller passes which cajones to offer, because on somebody's own library that is only theirs
  * (#237) while an admin sees all five.

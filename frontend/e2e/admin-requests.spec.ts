@@ -173,7 +173,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     await expect(player.page.getByText('Ya pediste el rol de master y todavía no te respondieron.')).toBeVisible()
     await expect(player.page.getByRole('button', { name: 'Pedir el rol de master' })).toHaveCount(0)
 
-    // ---- 3. The request reaches /admin/requests, with its motivo.
+    // ---- 3. The request reaches /admin/requests, with its reason.
     // Through the URL and not by typing: the box opens holding the `Pending` chip, and a criterion
     // typed into it *joins* what is already there rather than replacing it (#240). A `?q=` in the
     // address is the screen's own state, and it is also what proves the string travels
@@ -185,7 +185,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     await expect(row).toBeVisible()
     await expect(row).toContainText('Rol de master')
     await expect(row).toContainText('Pendiente')
-    // With its motivo: the whole of what the admin has to decide on.
+    // With its reason: the whole of what the admin has to decide on.
     await expect(row).toContainText(justification)
 
     // ---- 4. The admin approves it, with a reason of their own - mandatory at both ends (#42).

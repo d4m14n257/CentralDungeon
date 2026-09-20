@@ -29,7 +29,7 @@ test('a member of the server signs in with Discord and stays signed in', async (
   await page.getByRole('link', { name: 'Entrar con Discord' }).click()
 
   // A new user: the callback sends them to complete the onboarding, not to the home.
-  // CardTitle de shadcn es un div, no un heading: por texto, no por rol.
+  // shadcn's CardTitle is a div and not a heading: found by text, not by role.
   await expect(page.getByText('Antes de empezar')).toBeVisible()
   await expect(page).toHaveURL(/\/onboarding$/)
 

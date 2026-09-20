@@ -8,7 +8,7 @@ import { BanningHelp, PauseRequestHelp } from './masters'
 import { HELP_SECTIONS } from './registry'
 
 /**
- * The help F3.4 owes (punto 8 de la definición de terminado, #231).
+ * The help F3.4 owes (plan-desarrollo.md §6 point 8, #231).
  *
  * These assert on the **substance** of each section rather than on whole sentences: the wording is
  * free to improve, but a section that stopped saying that asking is not pausing, or that a veto is

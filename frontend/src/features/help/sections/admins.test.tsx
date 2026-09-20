@@ -5,7 +5,7 @@ import '@/providers/i18n'
 import { BlockingHelp, RequestsAdminHelp, RolesHelp } from './admins'
 
 /**
- * The help F3.1 owes (punto 8 de la definición de terminado, #231).
+ * The help F3.1 owes (plan-desarrollo.md §6 point 8, #231).
  *
  * These assert on the **substance** of each section rather than on whole sentences: the wording is
  * free to improve, but a section that stopped saying who may grant what, or stopped warning that a

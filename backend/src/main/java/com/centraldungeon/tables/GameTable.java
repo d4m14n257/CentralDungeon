@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
  * file that maps an entity. Same reason {@code GameSystem} is not {@code System}.
  *
  * <p>Its lifecycle is a nine-state machine driven entirely by {@link GameTableService}, never by a
- * setter called from outside it (decisiones.md, ciclo de vida de la mesa). Who runs the table is
+ * setter called from outside it (decisiones.md, the table's life cycle). Who runs the table is
  * <b>not</b> a column here: it is a row in {@code masters} (#135), and who plays in it is a row in
  * {@code table_registrations}.
  *

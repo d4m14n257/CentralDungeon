@@ -249,7 +249,7 @@ describe('AdminRequestsPage', () => {
     expect(alert.textContent?.length ?? 0).toBeGreaterThan(10)
   })
 
-  /** Punto 8 de la definición de terminado (#231): the help is raised from the screen that prompts it. */
+  /** Point 8 of plan-desarrollo.md §6 (#231): the help is raised from the screen that prompts it. */
   it('offers the help of the tray from the screen itself', async () => {
     list.mockResolvedValue(page([request()]))
 
