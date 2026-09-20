@@ -29,22 +29,22 @@ class PlatformRoleJsonTest {
     private final JsonMapper json = JsonMapper.builder().build();
 
     @Test
-    void seSerializaComoLoEscribeLaTablaRolesYNoComoLaConstante() {
+    void itSerializesAsTheRolesTableSpellsItAndNotAsTheConstant() {
         assertThat(json.writeValueAsString(PlatformRole.PLAYER)).isEqualTo("\"Player\"");
         assertThat(json.writeValueAsString(PlatformRole.MASTER)).isEqualTo("\"Master\"");
         assertThat(json.writeValueAsString(PlatformRole.ADMIN)).isEqualTo("\"Admin\"");
         assertThat(json.writeValueAsString(PlatformRole.OWNER)).isEqualTo("\"Owner\"");
     }
 
-    /** Lo que la API publica es lo que la API acepta - si no, el frontend no puede devolver lo que leyó. */
+    /** What the API publishes is what the API accepts - otherwise the frontend cannot hand back what it read. */
     @Test
-    void seDeserializaElMismoValorQuePublicaLaRespuesta() {
+    void itDeserializesTheSameValueTheResponsePublishes() {
         assertThat(json.readValue("\"Player\"", PlatformRole.class)).isEqualTo(PlatformRole.PLAYER);
         assertThat(json.readValue("\"Owner\"", PlatformRole.class)).isEqualTo(PlatformRole.OWNER);
     }
 
     @Test
-    void elCuerpoDeGrantRoleEntraConElNombreDelRolTalCualLoManaElFrontend() {
+    void aGrantRoleBodyBindsWithTheRoleNameTheFrontendSends() {
         GrantRoleRequest request =
                 json.readValue("{\"role\":\"Admin\",\"justification\":\"confio\"}", GrantRoleRequest.class);
 
@@ -52,20 +52,20 @@ class PlatformRoleJsonTest {
         assertThat(request.justification()).isEqualTo("confio");
     }
 
-    /** Un rol que no existe sigue siendo un 400 de Jackson, que es correcto: no es un rol. */
+    /** A role that does not exist is still a 400 from Jackson, which is right: it is not a role. */
     @Test
-    void unRolInexistenteNoSeDeserializa() {
+    void aRoleThatDoesNotExistIsNotDeserialized() {
         assertThatThrownBy(() -> json.readValue("\"Wizard\"", PlatformRole.class)).isInstanceOf(Exception.class);
     }
 
     /**
-     * Las dos puertas, una al lado de la otra. El nombre de un rol entra por el body JSON de
-     * grant/revoke <em>y</em> por el texto del {@code ?q=} cuando alguien escribe {@code /role Admin}.
-     * Las dos tienen que aceptar lo mismo que la API publica, o el frontend no puede devolver lo que
-     * leyó — y la segunda falla más calladita: no da 400, matchea cero filas.
+     * The two doors, side by side. A role's name comes in through the JSON body of grant/revoke <em>and</em>
+     * through the text of a {@code ?q=} when somebody types {@code /role Admin}. Both have to accept what
+     * the API publishes, or the frontend cannot hand back what it
+     * read — and the second fails more quietly: it does not answer 400, it matches zero rows.
      */
     @Test
-    void lasDosPuertasAceptanElMismoNombreDeRol() {
+    void bothDoorsAcceptTheSameRoleName() {
         for (PlatformRole role : PlatformRole.values()) {
             String published = json.writeValueAsString(role).replace("\"", "");
 
@@ -75,11 +75,11 @@ class PlatformRoleJsonTest {
     }
 
     /**
-     * Y difieren a propósito en cuánto perdonan: un body es exacto, una caja de búsqueda sobrevive a
-     * que la escriban. Escrito acá para que sea una propiedad y no una deducción.
+     * And they differ on purpose in how much they forgive: a body is exact, a search box survives being
+     * typed into. Written here so it is a property and not an inference.
      */
     @Test
-    void elBodyEsExactoYLaCajaDeBusquedaPerdona() {
+    void theBodyIsExactAndTheSearchBoxForgives() {
         assertThatThrownBy(() -> json.readValue("\"ADMIN\"", PlatformRole.class)).isInstanceOf(Exception.class);
 
         assertThat(PlatformRole.fromRoleName("ADMIN")).contains(PlatformRole.ADMIN);

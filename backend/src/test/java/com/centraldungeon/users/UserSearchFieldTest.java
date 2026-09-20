@@ -18,22 +18,22 @@ import org.junit.jupiter.api.Test;
 class UserSearchFieldTest {
 
     @Test
-    void elBuscadorDelPickerSoloConoceLosDosNombres() {
+    void thePickersSearchKnowsOnlyTheTwoNames() {
         assertThat(UserSearchField.wireNames()).containsExactlyInAnyOrder("discord_name", "user_name");
     }
 
     @Test
-    void elBuscadorDeAdminSumaRolYEstado() {
+    void theAdminSearchAddsRoleAndStatus() {
         assertThat(UserSearchField.adminWireNames())
                 .containsExactlyInAnyOrder("discord_name", "user_name", "role", "status");
     }
 
     /**
-     * El picker no puede ni siquiera <em>expresar</em> un filtro por estado: {@code /status} no está
-     * en su vocabulario, así que el parser lo deja como texto literal (§2.5), nunca como criterio.
+     * The picker cannot even <em>express</em> a filter by status: {@code /status} is not in its vocabulary,
+     * so the parser leaves it as literal text (§2.5) and never as a criterion.
      */
     @Test
-    void elPickerBuscaSlashStatusComoTextoLiteralYNoComoCriterio() {
+    void thePickerSearchesSlashStatusAsLiteralTextAndNotAsACriterion() {
         SearchQuery query = SearchQueryParser.parse("/status Blocked", UserSearchField.wireNames());
 
         assertThat(query.terms()).singleElement().satisfies(term -> {
@@ -43,14 +43,14 @@ class UserSearchFieldTest {
     }
 
     @Test
-    void elBuscadorDeAdminSiLoParseaComoCriterio() {
+    void theAdminSearchDoesParseItAsACriterion() {
         SearchQuery query = SearchQueryParser.parse("/status Blocked", UserSearchField.adminWireNames());
 
         assertThat(query.terms()).singleElement().extracting(SearchTerm::field).isEqualTo("status");
     }
 
     @Test
-    void elBuscadorDeAdminReconoceElComandoDeRol() {
+    void theAdminSearchRecognisesTheRoleCommand() {
         SearchQuery query = SearchQueryParser.parse("/role Owner", UserSearchField.adminWireNames());
 
         assertThat(query.terms()).singleElement().satisfies(term -> {
@@ -61,13 +61,13 @@ class UserSearchFieldTest {
 
     /** Un rol que no existe no es un 400: no matchea nada (§2.5). */
     @Test
-    void unNombreDeRolDesconocidoNoResuelveANingunaConstante() {
+    void anUnknownRoleNameResolvesToNoConstant() {
         assertThat(PlatformRole.fromRoleName("Wizard")).isEmpty();
         assertThat(PlatformRole.fromRoleName("owner")).contains(PlatformRole.OWNER);
     }
 
     @Test
-    void elOrdenDeLosChipsEsElDeLaDeclaracionDeLosRoles() {
+    void theChipsAreOrderedAsTheRolesAreDeclared() {
         assertThat(PlatformRole.ordered(java.util.Set.of("Owner", "Player"))).containsExactly("Player", "Owner");
         assertThat(PlatformRole.ordered(java.util.List.of("Admin", "Master", "Player")))
                 .containsExactly("Player", "Master", "Admin");

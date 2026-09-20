@@ -45,7 +45,7 @@ class ApprovalOrphanCheckServiceTest {
     }
 
     @Test
-    void cuentaLosPedidosCuyaReferenciaYaNoResuelve() {
+    void itCountsTheRequestsWhoseReferenceNoLongerResolves() {
         ApprovalRequest live = request("req-1", "user-1");
         ApprovalRequest orphan = request("req-2", "user-borrado");
         when(approvalRequestRepository.findUnresolved(eq(ApprovalStatus.Pending), any())).thenReturn(List.of(live, orphan));
@@ -56,12 +56,12 @@ class ApprovalOrphanCheckServiceTest {
     }
 
     /**
-     * Solo las no resueltas. Si una aprobada de hace dos años apunta a algo borrado no hay nada que
-     * hacer al respecto; una abierta que apunta a la nada es un pedido que un admin no va a poder
+     * Pending ones only. If one approved two years ago points at something deleted there is nothing to
+     * be done about it; an open one pointing at nothing is a request an admin will not be able to
      * resolver — le responde {@code REQUEST_ENTITY_GONE}.
      */
     @Test
-    void recorreSoloLosPedidosSinResolver() {
+    void itSweepsOnlyTheUnresolvedRequests() {
         when(approvalRequestRepository.findUnresolved(any(), any())).thenReturn(List.of());
 
         checker().reportOrphans();
@@ -70,8 +70,8 @@ class ApprovalOrphanCheckServiceTest {
     }
 
     /**
-     * No borra y no resuelve. Un borrado automático sobre datos que ya perdieron su ancla es
-     * exactamente cómo se pierde la evidencia de qué apuntaba a qué (#25, #126).
+     * It neither deletes nor resolves. An automatic delete over data that has already lost its anchor is
+     * exactly how the evidence of what pointed at what gets lost (#25, #126).
      */
     @Test
     void reportaYNoTocaNada() {
@@ -88,12 +88,12 @@ class ApprovalOrphanCheckServiceTest {
     }
 
     /**
-     * Un tipo de entidad sin caso en el resolver es un bug del código, no una huérfana — y no puede
-     * costar el reporte de las demás. La pasada sobrevive, no lo cuenta como huérfana (no lo es:
-     * nadie sabe qué es) y sigue con las que quedan.
+     * An entity type with no case in the resolver is a bug in the code, not an orphan — and it must not
+     * cost the report on all the others. The pass survives, does not count it as an orphan (it is not
+     * one: nobody knows what it is) and carries on with the rest.
      */
     @Test
-    void unTipoDesconocidoNoMataLaPasadaNiCuentaComoHuerfana() {
+    void anUnknownTypeNeitherKillsThePassNorCountsAsAnOrphan() {
         ApprovalRequest desconocida = request("req-3", "mesa-1");
         ReflectionTestUtils.setField(desconocida, "entityType", "game_table");
         ApprovalRequest orphan = request("req-2", "user-borrado");
@@ -102,12 +102,12 @@ class ApprovalOrphanCheckServiceTest {
                 .thenThrow(new IllegalStateException("Unknown approval entity type: game_table"));
         when(entityResolver.exists("user", "user-borrado")).thenReturn(false);
 
-        // La fila de atrás sí se reporta, que es lo que el barrido existe para no perder.
+        // The row behind it is reported, which is what the sweep exists so as not to lose.
         assertThat(checker().reportOrphans()).isEqualTo(1);
     }
 
     @Test
-    void unaPasadaSinHuerfanasNoEncuentraNada() {
+    void aPassWithNoOrphansFindsNothing() {
         ApprovalRequest live = request("req-1", "user-1");
         when(approvalRequestRepository.findUnresolved(any(), any())).thenReturn(List.of(live));
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
@@ -116,8 +116,8 @@ class ApprovalOrphanCheckServiceTest {
     }
 
     /**
-     * El lote está acotado a propósito, igual que el de {@code FileRetentionService}: el trabajo es
-     * idempotente y de solo lectura, así que lo que sobra lo levanta la pasada siguiente.
+     * The batch is bounded on purpose, like {@code FileRetentionService}'s: the work is idempotent and
+     * read-only, so whatever is left over is picked up by the next pass.
      */
     @Test
     void tomaUnLoteAcotadoPorPasada() {
@@ -131,9 +131,9 @@ class ApprovalOrphanCheckServiceTest {
         assertThat(pageable.getValue().getPageNumber()).isZero();
     }
 
-    /** El método que corre el scheduler es el mismo trabajo, para que el cron no sea código sin probar. */
+    /** The method the scheduler calls is the same work, so the cron is not untested code. */
     @Test
-    void elMetodoAgendadoHaceLaMismaPasada() {
+    void theScheduledMethodRunsTheSamePass() {
         when(approvalRequestRepository.findUnresolved(any(), any())).thenReturn(List.of());
 
         checker().checkForOrphanedReferences();

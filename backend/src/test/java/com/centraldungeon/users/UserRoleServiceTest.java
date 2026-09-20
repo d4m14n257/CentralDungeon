@@ -69,7 +69,7 @@ class UserRoleServiceTest {
     // ---------------------------------------------------------------- rule 1: who moves which rank
 
     @Test
-    void unAdminNoPuedeOtorgarElRolAdmin() {
+    void anAdminCannotGrantTheAdminRole() {
         assertThatThrownBy(() -> userRoleService.grantRole("target", PlatformRole.ADMIN, "porque si", ADMIN_ACTOR))
                 .isInstanceOf(ForbiddenActionException.class)
                 .asInstanceOf(InstanceOfAssertFactories.type(ForbiddenActionException.class))
@@ -82,7 +82,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void unAdminNoPuedeOtorgarElRolOwner() {
+    void anAdminCannotGrantTheOwnerRole() {
         assertThatThrownBy(() -> userRoleService.grantRole("target", PlatformRole.OWNER, "porque si", ADMIN_ACTOR))
                 .isInstanceOf(ForbiddenActionException.class)
                 .asInstanceOf(InstanceOfAssertFactories.type(ForbiddenActionException.class))
@@ -91,7 +91,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void unAdminNoPuedeQuitarElRolAdmin() {
+    void anAdminCannotRevokeTheAdminRole() {
         assertThatThrownBy(() -> userRoleService.revokeRole("target", PlatformRole.ADMIN, "porque si", ADMIN_ACTOR))
                 .isInstanceOf(ForbiddenActionException.class)
                 .asInstanceOf(InstanceOfAssertFactories.type(ForbiddenActionException.class))
@@ -102,7 +102,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void unAdminNoPuedeQuitarElRolOwner() {
+    void anAdminCannotRevokeTheOwnerRole() {
         assertThatThrownBy(() -> userRoleService.revokeRole("target", PlatformRole.OWNER, "porque si", ADMIN_ACTOR))
                 .isInstanceOf(ForbiddenActionException.class)
                 .asInstanceOf(InstanceOfAssertFactories.type(ForbiddenActionException.class))
@@ -111,7 +111,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void unAdminSiPuedeOtorgarElRolMaster() {
+    void anAdminCanGrantTheMasterRole() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin"));
@@ -130,7 +130,7 @@ class UserRoleServiceTest {
     }
 
     @Test
-    void unOwnerSiPuedeOtorgarElRolAdmin() {
+    void anOwnerCanGrantTheAdminRole() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
@@ -238,8 +238,8 @@ class UserRoleServiceTest {
     }
 
     /**
-     * Una cuenta que no está {@code Allowed} no es uno de los owners que la invariante cuenta: no
-     * puede entrar a otorgarle el rol a nadie, así que quitárselo no deja a la plataforma sin nada.
+     * An account that is not {@code Allowed} is not one of the owners the invariant counts: it cannot sign
+     * in to grant the role to anybody, so revoking it leaves the platform without nothing.
      */
     @Test
     void quitarOwnerAUnaCuentaNoActivaNoCuentaComoElUltimoOwner() {
@@ -253,7 +253,7 @@ class UserRoleServiceTest {
         userRoleService.revokeRole("deleted-owner", PlatformRole.OWNER, "limpieza", OWNER_ACTOR);
 
         assertThat(grants.getFirst().getStatus()).isEqualTo(UserRoleStatus.Deleted);
-        // Ni siquiera pregunta cuántos owners hay: esta persona no es uno de ellos.
+        // It does not even ask how many owners there are: this person is not one of them.
         verify(userRoleRepository, never()).lockActiveHolders(any());
     }
 
@@ -276,7 +276,7 @@ class UserRoleServiceTest {
     // ---------------------------------------------------------------- rule 2 of revoke: stepping down
 
     @Test
-    void unOwnerNoPuedeQuitarseSuPropioOwner() {
+    void anOwnerCannotRevokeTheirOwnOwner() {
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
 
         assertThatThrownBy(() -> userRoleService.revokeRole("actor-owner", PlatformRole.OWNER, "me voy", OWNER_ACTOR))
@@ -395,9 +395,9 @@ class UserRoleServiceTest {
     // ---------------------------------------------------------------- fixtures
 
     /**
-     * La invariante del último owner se decide con una lectura con bloqueo, no con un conteo
-     * optimista: el mutex sobre la fila de `roles` primero, y después las filas de owner, frescas.
-     * El unitario fija que se consulten las dos y en ese orden; que de verdad serialicen es de
+     * The last-owner invariant is decided by a locking read and not by an optimistic count: the mutex on
+     * the `roles` row first, and then the owner rows, fresh.
+     * The unit test pins that both are queried and in that order; that they really serialize belongs to
      * {@code UserRoleServiceIT}, contra MySQL real.
      */
     private void stubOwnerCount(int owners) {

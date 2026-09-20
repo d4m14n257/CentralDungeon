@@ -17,7 +17,7 @@ async function testLogin(request: APIRequestContext, discordId: string, asMaster
   expect(response.ok()).toBeTruthy()
 }
 
-test('el chip dice el contexto de la URL, aunque no tengas ese rol', async ({ browser }) => {
+test('the chip names the context of the URL, even without holding that role', async ({ browser }) => {
   const context = await browser.newContext()
   try {
     // A master and nothing else, which is also what proves the roles do not stack on the way in.

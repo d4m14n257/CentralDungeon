@@ -28,15 +28,15 @@ class ApprovalRequestTypeJsonTest {
     private final JsonMapper json = JsonMapper.builder().build();
 
     @Test
-    void seSerializaConElNombreDeWireYNoConLaConstante() {
+    void itSerializesWithTheWireNameAndNotTheConstant() {
         assertThat(json.writeValueAsString(ApprovalRequestType.MasterGrant)).isEqualTo("\"MasterGrant\"");
         assertThat(json.writeValueAsString(ApprovalRequestType.TableOpen)).isEqualTo("\"TableOpen\"");
         assertThat(json.writeValueAsString(ApprovalRequestType.General)).isEqualTo("\"General\"");
     }
 
-    /** Lo que la API publica es lo que la API acepta - si no, el frontend no puede devolver lo que leyó. */
+    /** What the API publishes is what the API accepts - otherwise the frontend cannot hand back what it read. */
     @Test
-    void seDeserializaElMismoValorQuePublicaLaRespuesta() {
+    void itDeserializesTheSameValueTheResponsePublishes() {
         for (ApprovalRequestType type : ApprovalRequestType.values()) {
             String published = json.writeValueAsString(type).replace("\"", "");
 
@@ -45,7 +45,7 @@ class ApprovalRequestTypeJsonTest {
     }
 
     @Test
-    void elCuerpoDeUnPedidoEntraConElTipoTalCualLoMandaElFrontend() {
+    void aRequestBodyBindsWithTheTypeTheFrontendSends() {
         SubmitApprovalRequestRequest request = json.readValue(
                 "{\"type\":\"MasterGrant\",\"justification\":\"quiero dirigir\"}",
                 SubmitApprovalRequestRequest.class);
@@ -74,13 +74,13 @@ class ApprovalRequestTypeJsonTest {
     }
 
     /**
-     * Las dos puertas, una al lado de la otra: el body JSON y el texto del {@code ?q=} cuando alguien
-     * escribe {@code /request_type MasterGrant}. Difieren a propósito en cuánto perdonan - un body es
-     * exacto, una caja de búsqueda sobrevive a que la escriban - y la segunda falla más calladita: no
+     * The two doors, side by side: the JSON body and the text of a {@code ?q=} when somebody types
+     * {@code /request_type MasterGrant}. They differ on purpose in how much they forgive - a body is
+     * exact, a search box survives being typed into - and the second fails more quietly: it does not
      * da 400, matchea cero filas.
      */
     @Test
-    void elBodyEsExactoYLaCajaDeBusquedaPerdona() {
+    void theBodyIsExactAndTheSearchBoxForgives() {
         assertThatThrownBy(() -> json.readValue("\"mastergrant\"", ApprovalRequestType.class))
                 .isInstanceOf(Exception.class);
 
@@ -96,7 +96,7 @@ class ApprovalRequestTypeJsonTest {
      * case in {@link ApprovalEntityResolver}.
      */
     @Test
-    void cadaTipoDeclaraSuTipoDeEntidad() {
+    void everyTypeDeclaresItsEntityType() {
         assertThat(ApprovalRequestType.MasterGrant.entityType()).isEqualTo(ApprovalEntityResolver.USER);
         assertThat(ApprovalRequestType.TableOpen.entityType()).isEqualTo(ApprovalEntityResolver.USER);
         assertThat(ApprovalRequestType.General.entityType()).isEqualTo(ApprovalEntityResolver.USER);

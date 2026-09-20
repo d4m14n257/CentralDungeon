@@ -22,7 +22,7 @@ async function nextDiscordLogin(request: APIRequestContext, discordId: string, u
   expect(response.ok()).toBeTruthy()
 }
 
-test('un miembro del servidor entra con Discord y queda logueado', async ({ page, request }) => {
+test('a member of the server signs in with Discord and stays signed in', async ({ page, request }) => {
   await nextDiscordLogin(request, `e2e-discord-${runId}`, `Vecna ${runId}`, true)
 
   await page.goto('/login')
@@ -44,7 +44,7 @@ test('un miembro del servidor entra con Discord y queda logueado', async ({ page
   await expect(page).toHaveURL(/\/player$/)
 })
 
-test('quien no está en el servidor no entra y recibe la invitación', async ({ page, request }) => {
+test('somebody not in the server does not get in and is handed the invitation', async ({ page, request }) => {
   await nextDiscordLogin(request, `e2e-outsider-${runId}`, `Randolph ${runId}`, false)
 
   await page.goto('/login')

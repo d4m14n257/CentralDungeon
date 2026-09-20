@@ -30,19 +30,19 @@ class AdminQueueSourceTest {
     }
 
     @Test
-    void resuelveElSegmentoEnCualquierCaso() {
+    void itResolvesThePathSegmentInAnyCase() {
         assertThat(AdminQueueSource.require("game_table")).isEqualTo(AdminQueueSource.GAME_TABLE);
         assertThat(AdminQueueSource.require("  APPROVAL_REQUEST  ")).isEqualTo(AdminQueueSource.APPROVAL_REQUEST);
     }
 
     /**
      * <b>404 y no 400</b>: el segmento es parte del path, no de un body.
-     * {@code /admin-queue/cualquiera/abc/claim} nombra un recurso que no existe, que es la misma
-     * respuesta que recibe cualquier otro id que no está. Un 400 sería decirle a quien llama que su
-     * request está mal formado cuando lo que pidió simplemente no existe.
+     * {@code /admin-queue/anything/abc/claim} names a resource that does not exist, which is the same
+     * answer any other id that is not there receives. A 400 would be telling the caller their request is
+     * malformed when what they asked for simply does not exist.
      */
     @Test
-    void unTipoQueNoExisteEs404() {
+    void aKindThatDoesNotExistIs404() {
         assertThatThrownBy(() -> AdminQueueSource.require("comment"))
                 .isInstanceOf(NotFoundException.class)
                 .extracting("errorCode")
@@ -51,7 +51,7 @@ class AdminQueueSourceTest {
 
     /**
      * Dos fuentes vivas y no cuatro: {@code comments} y {@code system_feedback} llegan en F5 con la
-     * feature que las produce (modelo-datos.md §5).
+     * feature that produces them (modelo-datos.md §5).
      */
     @Test
     void entranDosFuentesYNoCuatro() {

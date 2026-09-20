@@ -30,15 +30,15 @@ class AdminQueueItemKindJsonTest {
     private final JsonMapper json = JsonMapper.builder().build();
 
     @Test
-    void seSerializaConElNombreDeWireYNoConLaConstante() {
+    void itSerializesWithTheWireNameAndNotTheConstant() {
         assertThat(json.writeValueAsString(AdminQueueItemKind.ApprovalRequest)).isEqualTo("\"ApprovalRequest\"");
         assertThat(json.writeValueAsString(AdminQueueItemKind.TableWaitingReview))
                 .isEqualTo("\"TableWaitingReview\"");
     }
 
-    /** Lo que la API publica es lo que la API acepta - si no, el frontend no puede devolver lo que leyó. */
+    /** What the API publishes is what the API accepts - otherwise the frontend cannot hand back what it read. */
     @Test
-    void seDeserializaElMismoValorQuePublicaLaRespuesta() {
+    void itDeserializesTheSameValueTheResponsePublishes() {
         for (AdminQueueItemKind kind : AdminQueueItemKind.values()) {
             String published = json.writeValueAsString(kind).replace("\"", "");
 
@@ -47,12 +47,12 @@ class AdminQueueItemKindJsonTest {
     }
 
     /**
-     * El {@code kind} viaja como string dentro del ítem, y el string es el mismo que el enum publica.
-     * Es la mitad que se rompe sin que nadie la vea: el DTO lo arma el service a mano, así que si el
-     * enum cambiara de ortografía el listado seguiría compilando y el frontend dejaría de reconocerlo.
+     * The {@code kind} travels as a string inside the item, and the string is the one the enum publishes.
+     * It is the half that breaks without anybody seeing it: the service builds the DTO by hand, so if the
+     * enum changed its spelling the listing would still compile and the frontend would stop recognising it.
      */
     @Test
-    void elItemPublicaElMismoStringQueElEnum() {
+    void theItemPublishesTheSameStringAsTheEnum() {
         AdminQueueItemResponse item = new AdminQueueItemResponse(
                 AdminQueueSource.GAME_TABLE.wireName(),
                 "table-1",
@@ -73,10 +73,10 @@ class AdminQueueItemKindJsonTest {
     }
 
     /**
-     * <b>Dos valores y no cuatro</b>, y es una decisión y no un olvido. {@code modelo-datos.md} §5
-     * enumera cuatro fuentes: las dos de acá, más {@code comments} en {@code Under review} y
-     * {@code system_feedback} en {@code New} - y esas dos llegan en F5 <em>con la feature que las
-     * produce</em>. Un valor de enum que nada emite es el huérfano que esta fase vino a cerrar.
+     * <b>Two values and not four</b>, and that is a decision and not an oversight. {@code modelo-datos.md}
+     * §5 lists four sources: the two here, plus {@code comments} in {@code Under review} and
+     * {@code system_feedback} in {@code New} - and those two arrive in F5 <em>with the feature that
+     * produces them</em>. An enum value nothing emits is the orphan this phase came to close.
      */
     @Test
     void entranDosClasesYNoCuatro() {
@@ -90,11 +90,11 @@ class AdminQueueItemKindJsonTest {
     }
 
     /**
-     * Las dos puertas, una al lado de la otra: el body JSON es exacto y la búsqueda por nombre
-     * perdona. Difieren a propósito, igual que en {@code ApprovalRequestType}.
+     * The two doors, side by side: the JSON body is exact and the search by name forgives. They differ on
+     * purpose, the same way they do in {@code ApprovalRequestType}.
      */
     @Test
-    void elBodyEsExactoYLaBusquedaPorNombrePerdona() {
+    void theBodyIsExactAndTheSearchByNameForgives() {
         assertThatThrownBy(() -> json.readValue("\"approvalrequest\"", AdminQueueItemKind.class))
                 .isInstanceOf(Exception.class);
 

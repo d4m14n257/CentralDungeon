@@ -86,33 +86,33 @@ class AdminQueueServiceTest {
 
     /**
      * «La bandeja es un UNION sobre {@code approval_requests} (Pending) y {@code game_tables}
-     * (Preparation)» - y nada más (modelo-datos.md §5, #245).
+     * (Preparation)» - and nothing else (modelo-datos.md §5, #245).
      *
-     * <p>Se afirma sobre los argumentos que llegan a cada consulta y no sobre lo que vuelve, porque lo
-     * que hay que fijar es <em>qué se pregunta</em>. Un test que armara filas de mentira y contara las
-     * de salida seguiría en verde el día que el filtro se ensanchara.
+     * <p>Asserted on the arguments each query receives rather than on what comes back, because what
+     * has to be pinned is <em>what is being asked</em>. A test that built fake rows and counted the
+     * ones that came out would stay green the day the filter widened.
      */
     @Test
-    void soloEntranPedidosPendientesYMesasEnPreparation() {
+    void onlyPendingRequestsAndTablesInPreparationGetIn() {
         noQueue();
 
         service().list(ACTOR, FIRST_PAGE);
 
         verify(approvalRequestRepository).findQueueItems(eq(ApprovalStatus.Pending), any(), eq(ACTOR), any());
         verify(gameTableRepository).findQueueItems(eq(GameTableStatus.Preparation), eq(ACTOR), any());
-        // Draft, ChangesRequested y Unassigned no entran: nadie las envió, la pelota está en el master,
-        // o les falta un master y no una revisión.
+        // Draft, ChangesRequested and Unassigned do not enter: nobody sent them, the ball is with the
+        // master, or what they are missing is a master and not a review.
         verify(gameTableRepository, never()).findQueueItems(eq(GameTableStatus.Draft), anyString(), any());
         verify(gameTableRepository, never()).findQueueItems(eq(GameTableStatus.ChangesRequested), anyString(), any());
         verify(gameTableRepository, never()).findQueueItems(eq(GameTableStatus.Unassigned), anyString(), any());
     }
 
     /**
-     * El actor entra en el WHERE de las dos fuentes (#121, #100): un ítem que tomó otro admin no está
-     * en esta respuesta, y uno que tomó este sí.
+     * The actor enters the WHERE of both sources (#121, #100): an item another admin took is not in
+     * this answer, and one this admin took is.
      */
     @Test
-    void elActorEntraEnLaConsultaDeCadaFuente() {
+    void theActorEntersEverySourcesQuery() {
         noQueue();
 
         service().list("admin-7", FIRST_PAGE);
@@ -122,11 +122,11 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * El techo por fuente del contrato §1.a. Un merge sin techo es una carga de memoria que nadie
-     * declaró, y «no puede crecer» es la frase bajo la que se escribió toda lectura sin límite.
+     * The per-source ceiling of §1.a of the contract. A merge with no ceiling is a memory load nobody
+     * declared, and «it cannot grow» is the sentence every unbounded read was ever written under.
      */
     @Test
-    void cadaFuenteTraeComoMuchoDoscientasFilas() {
+    void everySourceBringsAtMostTwoHundredRows() {
         noQueue();
 
         service().list(ACTOR, FIRST_PAGE);
@@ -138,12 +138,12 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * Y cuando lo toca, <b>lo dice, con el nombre de la fuente</b>. La mitad que importa: un techo que
-     * se alcanza en silencio es una bandeja que sub-reporta sin que nadie se entere, que es la forma
-     * exacta en que este límite se volvería un bug en vez de una protección.
+     * And when it hits it, <b>it says so, naming the source</b>. That is the half that matters: a
+     * ceiling reached in silence is a tray that under-reports without anybody noticing, which is exactly
+     * how this limit would turn from a protection into a bug.
      */
     @Test
-    void siUnaFuenteTocaElTechoLoLogueaConSuNombre() {
+    void aSourceThatHitsTheCeilingIsLoggedByName() {
         List<ApprovalRequest> lleno = new java.util.ArrayList<>();
         for (int i = 0; i < AdminQueueService.QUEUE_SOURCE_CAP; i++) {
             lleno.add(pendingRequest(String.format("req-%03d", i), "2026-09-01T09:00"));
@@ -155,15 +155,15 @@ class AdminQueueServiceTest {
         assertThat(warnings).anySatisfy(line -> assertThat(line).contains("approval_request"));
     }
 
-    // ------------------------------------------------------------------ el orden y la página
+    // ------------------------------------------------------------------ the order and the page
 
     /**
-     * «El que espera hace más tiempo va primero», igual que la bandeja del master (#136): la urgencia
-     * acá es tiempo y no volumen. Y el orden es <b>entre fuentes</b>, que es lo que hace que esto sea
-     * una bandeja y no dos listados pegados.
+     * «El que espera hace más tiempo va primero», the same as the master's tray (#136): urgency here is
+     * time and not volume. And the ordering is <b>across sources</b>, which is what makes this one tray
+     * rather than two listings stuck together.
      */
     @Test
-    void elQueEsperaHaceMasTiempoVaPrimero() {
+    void whateverHasWaitedLongestComesFirst() {
         ApprovalRequest viejo = pendingRequest("req-viejo", "2026-09-01T09:00");
         ApprovalRequest nuevo = pendingRequest("req-nuevo", "2026-09-03T09:00");
         GameTable mesa = tableInReview("table-1", "2026-09-02T09:00");
@@ -176,9 +176,9 @@ class AdminQueueServiceTest {
                 .containsExactly("req-viejo", "table-1", "req-nuevo");
     }
 
-    /** Desempate por id, para que la página 2 sea el resto y no una baraja nueva (#171). */
+    /** Tie-break by id, so page 2 is the remainder and not a fresh shuffle (#171). */
     @Test
-    void elEmpateSeRompePorIdParaQueLaPaginaDosSeaEstable() {
+    void theTieIsBrokenByIdSoThatPageTwoIsStable() {
         ApprovalRequest primero = pendingRequest("req-aaa", "2026-09-01T09:00");
         ApprovalRequest segundo = pendingRequest("req-bbb", "2026-09-01T09:00");
         queue(List.of(segundo, primero), List.of());
@@ -189,11 +189,11 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * El total es el de la bandeja entera y no el del recorte: el merge ya está en memoria, así que
-     * contarlo exacto sale gratis (#173).
+     * The total is the whole tray's and not the slice's: the merge is already in memory, so counting it
+     * exactly is free (#173).
      */
     @Test
-    void elTotalEsLaBandejaEnteraYLaPaginaEsElRecorte() {
+    void theTotalIsTheWholeTrayAndThePageIsTheSlice() {
         queue(
                 List.of(
                         pendingRequest("req-1", "2026-09-01T09:00"),
@@ -209,9 +209,9 @@ class AdminQueueServiceTest {
         assertThat(page.content()).extracting(AdminQueueItemResponse::id).containsExactly("req-3");
     }
 
-    /** Una página más allá del final es vacía, no una excepción: el frontend puede pedirla desde la URL (#185). */
+    /** A page beyond the end is empty, not an exception: the frontend can ask for it from the URL (#185). */
     @Test
-    void unaPaginaMasAllaDelFinalEsVacia() {
+    void aPageBeyondTheEndIsEmpty() {
         queue(List.of(pendingRequest("req-1", "2026-09-01T09:00")), List.of());
 
         PageResponse<AdminQueueItemResponse> page = service().list(ACTOR, PageRequest.of(5, 20));
@@ -220,9 +220,9 @@ class AdminQueueServiceTest {
         assertThat(page.totalElements()).isEqualTo(1);
     }
 
-    /** La bandeja vacía es una buena noticia y no una pantalla rota (#136). */
+    /** An empty tray is good news and not a broken screen (#136). */
     @Test
-    void laBandejaVaciaEsUnaRespuestaNormal() {
+    void anEmptyTrayIsAnOrdinaryAnswer() {
         noQueue();
 
         PageResponse<AdminQueueItemResponse> page = service().list(ACTOR, FIRST_PAGE);
@@ -231,10 +231,10 @@ class AdminQueueServiceTest {
         assertThat(page.totalElements()).isZero();
     }
 
-    // ------------------------------------------------------------------ la forma del ítem
+    // ------------------------------------------------------------------ the shape of an item
 
     @Test
-    void unPedidoSePublicaConSuTipoSuJustificacionYQuienLoPidio() {
+    void aRequestIsPublishedWithItsTypeItsReasonAndWhoAsked() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         queue(List.of(request), List.of());
 
@@ -250,11 +250,11 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * La mesa se publica con su nombre y con el master que la mandó, resuelto por lote. <b>Sin
-     * detalle</b>, y no es un olvido: la justificación de una mesa es la mesa, y se lee abriéndola.
+     * A table is published with its name and the master who sent it, resolved in one batch. <b>With no
+     * detail</b>, and that is no oversight: a table's justification is the table, read by opening it.
      */
     @Test
-    void unaMesaSePublicaConSuNombreYSuMasterYSinDetalle() {
+    void aTableIsPublishedWithItsNameAndItsMasterAndNoDetail() {
         GameTable table = tableInReview("table-1", "2026-09-01T09:00");
         User primary = user("master-1", "ana");
         queue(List.of(), List.of(table));
@@ -271,11 +271,11 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * Y si la mesa no tiene Primary vivo, cae en quien creó la fila: sigue siendo cierto, y la bandeja
-     * nunca imprime un id (#136).
+     * And if the table has no live Primary it falls back to whoever created the row: still true, and the
+     * tray never prints an id (#136).
      */
     @Test
-    void unaMesaSinPrimaryVivoNombraAQuienLaCreo() {
+    void aTableWithNoLivePrimaryNamesWhoeverCreatedIt() {
         GameTable table = tableInReview("table-1", "2026-09-01T09:00");
         queue(List.of(), List.of(table));
         when(masterService.findPrimariesByTables(List.of("table-1"))).thenReturn(Map.of());
@@ -285,9 +285,9 @@ class AdminQueueServiceTest {
         assertThat(item.requestedByName()).isEqualTo("quien-la-creo");
     }
 
-    /** Los masters de toda la página se resuelven en una consulta, no en una por fila (#136, contrato §3.4). */
+    /** The whole page's masters are resolved in one query, not one per row (#136, contract §3.4). */
     @Test
-    void losMastersDeLaPaginaSeResuelvenEnUnaSolaConsulta() {
+    void thePagesMastersAreResolvedInOneQuery() {
         queue(
                 List.of(),
                 List.of(tableInReview("table-1", "2026-09-01T09:00"), tableInReview("table-2", "2026-09-02T09:00")));
@@ -301,7 +301,7 @@ class AdminQueueServiceTest {
     // ------------------------------------------------------------------ reservar
 
     @Test
-    void reservarUnItemLibreLoDejaANombreDelAdmin() {
+    void claimingAFreeItemPutsItInTheAdminsName() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         User admin = user(ACTOR, "damian");
         when(userService.getById(ACTOR)).thenReturn(admin);
@@ -315,12 +315,12 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * Idempotente para el mismo admin, y <b>sin mover {@code claimed_at}</b>. Lo segundo es la mitad
-     * que se olvida: si cada clic refrescara el reloj, un admin clickeando cada catorce minutos se
-     * quedaría con el ítem para siempre y el job nunca lo alcanzaría.
+     * Idempotent for the same admin, and <b>without moving {@code claimed_at}</b>. The second half is
+     * the one that gets forgotten: if every click refreshed the clock, an admin clicking every fourteen
+     * minutes would keep the item for ever and the job would never reach it.
      */
     @Test
-    void reservarDosVecesElMismoAdminNoMueveElReloj() {
+    void claimingTwiceAsTheSameAdminDoesNotMoveTheClock() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         User admin = user(ACTOR, "damian");
         LocalDateTime original = LocalDateTime.parse("2026-09-01T10:00");
@@ -334,9 +334,9 @@ class AdminQueueServiceTest {
         assertThat(item.claimedByName()).isEqualTo("damian");
     }
 
-    /** Si lo tiene otro, 409 con el código que la pantalla necesita para escribir la frase (#197). */
+    /** If somebody else holds it, 409 with the code the screen needs to write the sentence (#197). */
     @Test
-    void reservarAlgoQueTieneOtroAdminEs409() {
+    void claimingWhatAnotherAdminHoldsIs409() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         request.claim(user("admin-2", "otra"), LocalDateTime.parse("2026-09-01T10:00"));
         when(userService.getById(ACTOR)).thenReturn(user(ACTOR, "damian"));
@@ -350,9 +350,9 @@ class AdminQueueServiceTest {
         assertThat(request.getClaimedBy().getId()).isEqualTo("admin-2");
     }
 
-    /** Se reserva bajo el lock de la fila, que es lo que hace que la carrera de dos admins tenga un ganador (#252, #256). */
+    /** The claim is taken under the row's lock, which is what gives the race between two admins one winner (#252, #256). */
     @Test
-    void laReservaSeTomaBajoElLockDeLaFila() {
+    void theClaimIsTakenUnderTheRowsLock() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         when(userService.getById(ACTOR)).thenReturn(user(ACTOR, "damian"));
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
@@ -363,9 +363,9 @@ class AdminQueueServiceTest {
         verify(approvalRequestRepository, never()).findById(anyString());
     }
 
-    /** Lo mismo del lado de las mesas: {@code findByIdForUpdate} y no {@code findById}. */
+    /** The same on the tables side: {@code findByIdForUpdate} and not {@code findById}. */
     @Test
-    void reservarUnaMesaTambienPasaPorElLock() {
+    void claimingATableGoesThroughTheLockToo() {
         GameTable table = tableInReview("table-1", "2026-09-01T09:00");
         when(userService.getById(ACTOR)).thenReturn(user(ACTOR, "damian"));
         when(gameTableRepository.findByIdForUpdate("table-1")).thenReturn(Optional.of(table));
@@ -377,9 +377,9 @@ class AdminQueueServiceTest {
         verify(gameTableRepository).findByIdForUpdate("table-1");
     }
 
-    /** Un ítem que ya no espera a nadie no se reserva: no está en la bandeja de nadie. */
+    /** An item nobody is waiting on is not claimed: it is in nobody's tray. */
     @Test
-    void noSeReservaUnPedidoQueYaFueResuelto() {
+    void anAlreadyResolvedRequestCannotBeClaimed() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         request.resolve(ApprovalStatus.Approved, user("admin-2", "otra"), "listo");
         when(userService.getById(ACTOR)).thenReturn(user(ACTOR, "damian"));
@@ -390,7 +390,7 @@ class AdminQueueServiceTest {
     }
 
     @Test
-    void noSeReservaUnaMesaQueYaNoEstaEnRevision() {
+    void aTableNoLongerUnderReviewCannotBeClaimed() {
         GameTable table = tableInReview("table-1", "2026-09-01T09:00");
         table.setStatus(GameTableStatus.Opened);
         when(userService.getById(ACTOR)).thenReturn(user(ACTOR, "damian"));
@@ -400,9 +400,9 @@ class AdminQueueServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** Una mesa borrada no existe acá tampoco (#25, #175): 404 y no 403 - «fue borrada» no se cuenta. */
+    /** A deleted table does not exist here either (#25, #175): 404 and not 403 - «fue borrada» is not told. */
     @Test
-    void unaMesaBorradaNoExisteParaLaBandeja() {
+    void aDeletedTableDoesNotExistForTheTray() {
         GameTable table = tableInReview("table-1", "2026-09-01T09:00");
         table.setStatus(GameTableStatus.Deleted);
         when(userService.getById(ACTOR)).thenReturn(user(ACTOR, "damian"));
@@ -413,12 +413,12 @@ class AdminQueueServiceTest {
     }
 
     @Test
-    void reservarUnTipoQueNoExisteEs404() {
+    void claimingAnUnknownKindIs404() {
         assertThatThrownBy(() -> service().claim("comment", "c-1", ACTOR)).isInstanceOf(NotFoundException.class);
     }
 
     @Test
-    void reservarAlgoQueNoExisteEs404() {
+    void claimingSomethingThatIsNotThereIs404() {
         when(userService.getById(ACTOR)).thenReturn(user(ACTOR, "damian"));
         when(approvalRequestRepository.lockById("nope")).thenReturn(Optional.empty());
 
@@ -429,7 +429,7 @@ class AdminQueueServiceTest {
     // ------------------------------------------------------------------ devolver
 
     @Test
-    void devolverLoPropioLoDejaLibre() {
+    void releasingYourOwnLeavesItFree() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         request.claim(user(ACTOR, "damian"), LocalDateTime.parse("2026-09-01T10:00"));
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
@@ -440,9 +440,9 @@ class AdminQueueServiceTest {
         assertThat(request.getClaimedAt()).isNull();
     }
 
-    /** Devolver algo que nadie tiene es idempotente: el estado que se pidió ya se cumple. */
+    /** Releasing something nobody holds is idempotent: the state that was asked for already holds. */
     @Test
-    void devolverAlgoSinReservaNoEsUnError() {
+    void releasingSomethingUnclaimedIsNotAnError() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
 
@@ -451,9 +451,9 @@ class AdminQueueServiceTest {
         assertThat(request.getClaimedBy()).isNull();
     }
 
-    /** Devolver lo de otro no: es la única forma en que un admin le sacaría el trabajo de la mesa a otro. */
+    /** Releasing somebody else's is not: it is the one way an admin would take work off another's desk. */
     @Test
-    void devolverLoDeOtroEs409() {
+    void releasingSomebodyElsesIs409() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
         User otra = user("admin-2", "otra");
         request.claim(otra, LocalDateTime.parse("2026-09-01T10:00"));
@@ -468,11 +468,11 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * Devolver no pregunta en qué estado está el ítem, a diferencia de reservar: devolver es el
-     * deshacer, y un deshacer que puede negarse deja a alguien trabado.
+     * Releasing does not ask what state the item is in, unlike claiming: releasing is the undo, and an
+     * undo that can refuse leaves somebody stuck.
      */
     @Test
-    void devolverNoLePreguntaAlEstadoDelItem() {
+    void releasingDoesNotAskAboutTheItemsState() {
         GameTable table = tableInReview("table-1", "2026-09-01T09:00");
         table.claim(user(ACTOR, "damian"), LocalDateTime.parse("2026-09-01T10:00"));
         table.setStatus(GameTableStatus.Opened);

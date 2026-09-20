@@ -82,7 +82,7 @@ class AdminUserServiceTest {
     // ---------------------------------------------------------------- rule 1: nobody blocks a peer
 
     @Test
-    void noSePuedeBloquearAQuienTieneAdmin() {
+    void somebodyHoldingAdminCannotBeBlocked() {
         User target = persistedUser("target", UserStatus.Allowed);
         when(userService.getById("target")).thenReturn(target);
         when(userRoleRepository.findActiveRoleNames("target")).thenReturn(Set.of("Player", "Admin"));
@@ -99,7 +99,7 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void noSePuedeBloquearAQuienTieneOwnerNiSiendoOwner() {
+    void somebodyHoldingOwnerCannotBeBlockedNotEvenByAnOwner() {
         User target = persistedUser("target", UserStatus.Allowed);
         when(userService.getById("target")).thenReturn(target);
         when(userRoleRepository.findActiveRoleNames("target")).thenReturn(Set.of("Owner"));
@@ -111,9 +111,9 @@ class AdminUserServiceTest {
                 .isEqualTo(ForbiddenActionException.CANNOT_BLOCK_PRIVILEGED);
     }
 
-    /** El autobloqueo sale gratis de la regla anterior - el actor siempre tiene uno de los dos roles. */
+    /** Blocking yourself falls out of the rule above for free - the actor always holds one of the two roles. */
     @Test
-    void unAdminNoPuedeBloquearseASiMismo() {
+    void anAdminCannotBlockThemselves() {
         User self = persistedUser("actor-admin", UserStatus.Allowed);
         when(userService.getById("actor-admin")).thenReturn(self);
         when(userRoleRepository.findActiveRoleNames("actor-admin")).thenReturn(Set.of("Admin"));
@@ -144,7 +144,7 @@ class AdminUserServiceTest {
         verify(userStatusChangeRepository, never()).save(any());
     }
 
-    /** F3.1 no toca Deleted: una cuenta borrada no se bloquea ni se desbloquea, se queda donde está. */
+    /** F3.1 does not touch Deleted: a deleted account is neither blocked nor unblocked, it stays put. */
     @Test
     void bloquearUnaCuentaDeletedEs409YNoLaMueve() {
         User target = persistedUser("target", UserStatus.Deleted);
@@ -190,7 +190,7 @@ class AdminUserServiceTest {
     // ---------------------------------------------------------------- the happy paths, with #84
 
     @Test
-    void bloquearConservaLosDatosYDejaFilaConMotivo() {
+    void blockingKeepsTheDataAndLeavesARowWithTheReason() {
         User target = persistedUser("target", UserStatus.Allowed);
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin", UserStatus.Allowed));
@@ -249,7 +249,7 @@ class AdminUserServiceTest {
     // ---------------------------------------------------------------- the history panel
 
     @Test
-    void elHistorialMezclaLasDosTablasEnUnaSolaLineaDeTiempo() {
+    void theHistoryMergesBothTablesIntoOneTimeline() {
         User target = persistedUser("target", UserStatus.Blocked);
         User actor = persistedUser("actor-admin", UserStatus.Allowed);
         actor.setName("La Admin");
@@ -266,12 +266,12 @@ class AdminUserServiceTest {
         assertThat(history.getFirst().fromStatus()).isNull();
         assertThat(history.getLast().fromStatus()).isEqualTo("Allowed");
         assertThat(history.getLast().toStatus()).isEqualTo("Blocked");
-        // El nombre resuelto, nunca el id - igual que TableStatusChangeResponse.
+        // The resolved name, never the id - the same as TableStatusChangeResponse.
         assertThat(history).allSatisfy(entry -> assertThat(entry.changedByName()).isEqualTo("La Admin"));
     }
 
     @Test
-    void elHistorialDeUnUsuarioInexistenteEs404() {
+    void theHistoryOfAUserThatDoesNotExistIs404() {
         when(userService.getById("missing")).thenThrow(new NotFoundException("User not found: missing"));
 
         assertThatThrownBy(() -> adminUserService.history("missing")).isInstanceOf(NotFoundException.class);
@@ -280,7 +280,7 @@ class AdminUserServiceTest {
     // ---------------------------------------------------------------- the listing
 
     @Test
-    void elListadoResuelveLosRolesDeTodaLaPaginaEnUnaSolaConsultaYEnOrden() {
+    void theListingResolvesTheWholePagesRolesInOneQueryAndInOrder() {
         User first = persistedUser("u1", UserStatus.Blocked);
         User second = persistedUser("u2", UserStatus.Allowed);
         when(userRepository.findAll(any(Specification.class), eq(FIRST_PAGE)))
@@ -291,15 +291,15 @@ class AdminUserServiceTest {
 
         PageResponse<AdminUserSummaryResponse> page = adminUserService.search("/status Blocked", FIRST_PAGE);
 
-        // El orden de los chips es el de PlatformRole, no el que devolvió la consulta.
+        // The chips are ordered by PlatformRole, not by whatever order the query returned.
         assertThat(page.content().getFirst().roles()).containsExactly("Player", "Admin");
         assertThat(page.content().getLast().roles()).containsExactly("Master");
-        // Una cuenta bloqueada SÍ aparece acá: un admin que no la encuentra no la puede desbloquear.
+        // A blocked account DOES appear here: an admin who cannot find it cannot unblock it.
         assertThat(page.content().getFirst().status()).isEqualTo("Blocked");
     }
 
     @Test
-    void unaPaginaVaciaNoConsultaLosRoles() {
+    void anEmptyPageDoesNotQueryTheRoles() {
         when(userRepository.findAll(any(Specification.class), eq(FIRST_PAGE)))
                 .thenReturn(new PageImpl<>(List.of(), FIRST_PAGE, 0));
 

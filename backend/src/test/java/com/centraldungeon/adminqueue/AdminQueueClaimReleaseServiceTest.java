@@ -54,7 +54,7 @@ class AdminQueueClaimReleaseServiceTest {
                 approvalRequestRepository, gameTableRepository, new AdminQueueProperties(timeout));
     }
 
-    /** Lo que el job hace, en una frase: lo que estaba reservado queda libre, en las dos fuentes. */
+    /** What the job does, in one sentence: what was claimed becomes free, in both sources. */
     @Test
     void devuelveLasReservasVencidasDeLasDosFuentes() {
         ApprovalRequest request = claimedRequest();
@@ -72,11 +72,11 @@ class AdminQueueClaimReleaseServiceTest {
 
     /**
      * El corte sale del timeout configurable (contrato §2, {@code app.admin-queue.claim-timeout}), y
-     * se le pasa a la consulta: es la diferencia entre un valor que se puede ajustar sin deploy y una
+     * is what the query is given: it is the difference between a value that can be adjusted without a
      * constante escondida. F3.5 lo muda a {@code system_settings} (#141) y este test no cambia.
      */
     @Test
-    void elCorteSaleDelTimeoutConfigurado() {
+    void theCutoffComesFromTheConfiguredTimeout() {
         expired(List.of(), List.of());
         LocalDateTime before = LocalDateTime.now();
 
@@ -88,19 +88,19 @@ class AdminQueueClaimReleaseServiceTest {
         assertThat(cutoff.getValue()).isAfter(before.minusMinutes(31));
     }
 
-    /** Y sin configuración, el valor con el que #100 dice que arranca: quince minutos. */
+    /** And with no configuration, the value #100 says it starts at: fifteen minutes. */
     @Test
     void sinConfiguracionElTimeoutArrancaEnQuinceMinutos() {
         assertThat(new AdminQueueProperties(null).claimTimeout()).isEqualTo(Duration.ofMinutes(15));
     }
 
     /**
-     * <b>Solo lo que sigue esperando a alguien.</b> Un pedido ya respondido, o una mesa ya aprobada,
-     * conserva su {@code claimed_by}: no está en la bandeja de nadie, así que limpiarlo sería una
-     * escritura sin lector que además borra quién lo estaba trabajando.
+     * <b>Only what is still waiting on somebody.</b> A request already answered, or a table already approved,
+     * keeps its {@code claimed_by}: it is in nobody's tray, so clearing it would be a write with no reader
+     * that also erases who was working on it.
      */
     @Test
-    void soloMiraLoQueTodaviaEstaEsperando() {
+    void itOnlyLooksAtWhatIsStillWaiting() {
         expired(List.of(), List.of());
 
         service(Duration.ofMinutes(15)).releaseExpiredClaims();
@@ -109,9 +109,9 @@ class AdminQueueClaimReleaseServiceTest {
         verify(gameTableRepository).findExpiredClaims(eq(GameTableStatus.Preparation), any(), any());
     }
 
-    /** Acotado como los otros dos jobs: lo que quede lo levanta la pasada siguiente, sesenta segundos después. */
+    /** Bounded like the other two jobs: whatever is left is picked up by the next pass, sixty seconds later. */
     @Test
-    void cadaPasadaEstaAcotada() {
+    void everyPassIsBounded() {
         expired(List.of(), List.of());
 
         service(Duration.ofMinutes(15)).releaseExpiredClaims();
@@ -122,7 +122,7 @@ class AdminQueueClaimReleaseServiceTest {
         assertThat(batch.getValue().getPageNumber()).isZero();
     }
 
-    /** Cero es la respuesta normal de una plataforma donde la gente termina lo que empieza. */
+    /** Zero is the ordinary answer on a platform where people finish what they start. */
     @Test
     void sinReservasVencidasNoDevuelveNada() {
         expired(List.of(), List.of());
@@ -131,13 +131,13 @@ class AdminQueueClaimReleaseServiceTest {
     }
 
     /**
-     * La puerta que va a llamar el scheduler corre la misma pasada. No hay más aserción que «termina
-     * y devuelve lo mismo»: lo que se está cuidando es que el punto de entrada no se separe del
-     * trabajo, que es justo lo que pasa cuando alguien mueve la lógica y deja el {@code @Scheduled}
+     * The door the scheduler will call runs the same pass. There is no assertion beyond «it completes and
+     * returns the same»: what is being guarded is that the entry point does not drift away from the work,
+     * which is exactly what happens when somebody moves the logic and leaves the {@code @Scheduled}
      * llamando a otra cosa.
      */
     @Test
-    void elPuntoDeEntradaDelSchedulerCorreLaMismaPasada() {
+    void theSchedulersEntryPointRunsTheSamePass() {
         ApprovalRequest request = claimedRequest();
         expired(List.of(request), List.of());
 

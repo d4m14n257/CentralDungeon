@@ -91,7 +91,7 @@ class UserSearchIT {
                 .containsExactly("elpablo");
     }
 
-    /** Las alternativas de un mismo criterio: cualquiera de ellas alcanza (decisiones.md #164). */
+    /** The alternatives of one criterion: any one of them is enough (decisiones.md #164). */
     @Test
     void commasSeparateAlternativesOfTheSameCriterion() {
         assertThat(discordNamesOf(userService.search("/discord_name juanma,pablosan", FIRST_PAGE)))

@@ -43,14 +43,14 @@ function renderDialog(overrides: Partial<ApplyToTableDialogProps> = {}) {
 
 describe('ApplyToTableDialog', () => {
   /** #238, #247: a sent application cannot be edited, so the send button lives only past the review. */
-  it('no ofrece un botón de enviar en el paso de escritura', () => {
+  it('offers no send button on the writing step', () => {
     renderDialog()
 
     expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Postularme' })).not.toBeInTheDocument()
   })
 
-  it('el paso de revisión muestra el mensaje y los archivos que se van a enviar', async () => {
+  it('the review step shows the message and the files that are about to be sent', async () => {
     renderDialog()
 
     await userEvent.type(screen.getByLabelText('Mensaje para el master'), 'Quiero jugar un mago')
@@ -63,7 +63,7 @@ describe('ApplyToTableDialog', () => {
     expect(screen.getByRole('button', { name: 'Postularme' })).toBeInTheDocument()
   })
 
-  it('vuelve del paso de revisión al de escritura sin perder lo escrito', async () => {
+  it('goes back from the review step to the writing one without losing what was written', async () => {
     renderDialog()
 
     await userEvent.type(screen.getByLabelText('Mensaje para el master'), 'Una nota para el master')
@@ -73,7 +73,7 @@ describe('ApplyToTableDialog', () => {
     expect(screen.getByLabelText('Mensaje para el master')).toHaveValue('Una nota para el master')
   })
 
-  it('permite postularse sin adjuntar ningún archivo', async () => {
+  it('allows applying without attaching any file', async () => {
     renderDialog()
 
     await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
@@ -82,7 +82,7 @@ describe('ApplyToTableDialog', () => {
     await waitFor(() => expect(mutate).toHaveBeenCalledWith({ description: null, fileIds: [] }, expect.anything()))
   })
 
-  it('sube lo adjuntado y envía la postulación con los ids que subieron', async () => {
+  it('uploads the attachments and sends the application with the ids that were uploaded', async () => {
     const commitStagedFiles = vi.fn().mockResolvedValue({ fileIds: ['file-1'], failed: [], reused: [] })
     renderDialog({ commitStagedFiles })
 

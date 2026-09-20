@@ -45,7 +45,7 @@ function renderDialog() {
 }
 
 describe('AssignMastersDialog', () => {
-  it('el primero que se agrega queda de Primary y el resto de Secondary', async () => {
+  it('the first one added becomes Primary and the rest Secondary', async () => {
     renderDialog()
 
     await userEvent.click(screen.getByRole('button', { name: 'Elegir juanma' }))
@@ -72,7 +72,7 @@ describe('AssignMastersDialog', () => {
     )
   })
 
-  it('el Primary no se ofrece para ascender: ya lo es', async () => {
+  it('the Primary is not offered for promotion: they already are one', async () => {
     renderDialog()
 
     await userEvent.click(screen.getByRole('button', { name: 'Elegir juanma' }))
@@ -80,7 +80,7 @@ describe('AssignMastersDialog', () => {
     expect(screen.queryByRole('button', { name: 'Hacer master a juanma' })).not.toBeInTheDocument()
   })
 
-  it('quitar el Primary asciende al que seguía', async () => {
+  it('removing the Primary promotes whoever came next', async () => {
     renderDialog()
 
     await userEvent.click(screen.getByRole('button', { name: 'Elegir juanma' }))
@@ -94,7 +94,7 @@ describe('AssignMastersDialog', () => {
     )
   })
 
-  it('no deja asignar sin nadie elegido', () => {
+  it('refuses to assign with nobody chosen', () => {
     renderDialog()
 
     expect(screen.getByRole('button', { name: 'Asignar masters' })).toBeDisabled()

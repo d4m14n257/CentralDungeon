@@ -19,7 +19,7 @@ async function testLogin(request: APIRequestContext, discordId: string) {
   expect(response.ok()).toBeTruthy()
 }
 
-test('salir del wizard a medio llenar pregunta, y quedarse conserva lo escrito', async ({ browser }) => {
+test('leaving the wizard half filled asks first, and staying keeps what was written', async ({ browser }) => {
   const context = await browser.newContext()
   try {
     await testLogin(context.request, `e2e-unsaved-${runId}`)
@@ -45,7 +45,7 @@ test('salir del wizard a medio llenar pregunta, y quedarse conserva lo escrito',
   }
 })
 
-test('confirmar deja salir, y un wizard intacto no pregunta nada', async ({ browser }) => {
+test('confirming lets you leave, and an untouched wizard asks nothing', async ({ browser }) => {
   const context = await browser.newContext()
   try {
     await testLogin(context.request, `e2e-unsaved-clean-${runId}`)

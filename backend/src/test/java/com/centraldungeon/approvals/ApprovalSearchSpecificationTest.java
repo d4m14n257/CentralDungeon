@@ -38,7 +38,7 @@ class ApprovalSearchSpecificationTest {
 
     /** {@code /requests/mine} with an empty box: the actor's filter is the whole predicate. */
     @Test
-    void misPedidosSeAcotanAlActorAunSinBusqueda() {
+    void myRequestsAreScopedToTheActorEvenWithNoSearch() {
         Criteria criteria = new Criteria();
 
         ApprovalSearchSpecification.mine(SearchQuery.EMPTY, "user-1")
@@ -48,11 +48,11 @@ class ApprovalSearchSpecificationTest {
     }
 
     /**
-     * Y con búsqueda, el filtro del actor se combina con {@code AND}: lo que la caja diga acota más,
+     * And with a search, the actor's filter is combined with {@code AND}: whatever the box says narrows
      * nunca menos.
      */
     @Test
-    void laBusquedaAcotaMasNuncaMenos() {
+    void theSearchNarrowsMoreAndNeverLess() {
         Criteria criteria = new Criteria();
         SearchQuery query = SearchQueryParser.parse("/status Pending", ApprovalSearchField.wireNames());
 
@@ -65,9 +65,9 @@ class ApprovalSearchSpecificationTest {
     }
 
     /**
-     * El intento directo: nombrar a otra persona por la caja. {@code /requested_by} sigue funcionando
-     * -es el mismo lenguaje que habla el listado admin- pero se suma al filtro del actor en vez de
-     * reemplazarlo, así que lo único que puede lograr es encontrar menos.
+     * The direct attempt: naming somebody else through the box. {@code /requested_by} still works -it is
+     * the same language the admin listing speaks- but it is added to the actor's filter instead of
+     * replacing it, so the only thing it can achieve is finding less.
      */
     @Test
     void nombrarAOtraPersonaEnLaCajaNoEnsanchaElResultado() {
@@ -77,14 +77,14 @@ class ApprovalSearchSpecificationTest {
         ApprovalSearchSpecification.mine(query, "user-1")
                 .toPredicate(criteria.root, criteria.query, criteria.builder);
 
-        // El id del actor sigue ahí, y es el del token: ningún string del request lo alcanza.
+        // The actor's id is still there, and it is the token's: no string from the request reaches it.
         verify(criteria.builder).equal(criteria.requesterId, "user-1");
         verify(criteria.builder, never()).equal(any(Expression.class), eq((Object) "otra-persona"));
     }
 
-    /** {@code /admin/requests} no lleva filtro implícito: ver los pedidos de todos es la pantalla. */
+    /** {@code /admin/requests} carries no implicit filter: seeing everybody's requests is the screen. */
     @Test
-    void elListadoAdminNoAcotaANadie() {
+    void theAdminListingScopesToNobody() {
         Criteria criteria = new Criteria();
 
         ApprovalSearchSpecification.forAdmin(SearchQuery.EMPTY)
@@ -113,7 +113,7 @@ class ApprovalSearchSpecificationTest {
     }
 
     @Test
-    void unaBusquedaVaciaDelActorNoEsUnError() {
+    void anEmptySearchByTheActorIsNotAnError() {
         Criteria criteria = new Criteria();
 
         assertThat(ApprovalSearchSpecification.mine(SearchQuery.EMPTY, "user-1")

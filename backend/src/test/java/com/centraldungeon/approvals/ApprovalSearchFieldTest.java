@@ -22,15 +22,15 @@ class ApprovalSearchFieldTest {
     }
 
     @Test
-    void cadaComandoSeResuelveDesdeSuNombreDeWire() {
+    void everyCommandResolvesFromItsWireName() {
         assertThat(ApprovalSearchField.fromWireName("request_type")).contains(ApprovalSearchField.REQUEST_TYPE);
         assertThat(ApprovalSearchField.fromWireName("STATUS")).contains(ApprovalSearchField.STATUS);
         assertThat(ApprovalSearchField.fromWireName("requested_by")).contains(ApprovalSearchField.REQUESTED_BY);
     }
 
-    /** Un {@code /campo} que este endpoint no declara se busca como texto literal, nunca es un 400. */
+    /** A {@code /command} this endpoint does not declare is searched as literal text, never a 400. */
     @Test
-    void unComandoDesconocidoQuedaComoTexto() {
+    void anUnknownCommandStaysAsText() {
         assertThat(ApprovalSearchField.fromWireName("resolved_by")).isEmpty();
 
         SearchQuery query = SearchQueryParser.parse("/resolved_by damian", ApprovalSearchField.wireNames());
@@ -41,7 +41,7 @@ class ApprovalSearchFieldTest {
     }
 
     @Test
-    void elParserReconoceLosComandosDeclarados() {
+    void theParserRecognisesTheDeclaredCommands() {
         SearchQuery query = SearchQueryParser.parse("/status Pending /and /request_type MasterGrant", ApprovalSearchField.wireNames());
 
         assertThat(query.terms()).hasSize(2);
@@ -52,11 +52,11 @@ class ApprovalSearchFieldTest {
     }
 
     /**
-     * Los dos comandos de opciones fijas aceptan exactamente lo que la API publica, y lo resuelven
-     * desde el enum y no desde una lista escrita aparte: una segunda lista es una que se desactualiza.
+     * The two fixed-option commands accept exactly what the API publishes, and resolve it from the enum
+     * rather than from a list written separately: a second list is a list that goes out of date.
      */
     @Test
-    void lasOpcionesFijasSalenDeLosEnums() {
+    void theFixedOptionsComeFromTheEnums() {
         for (ApprovalRequestType type : ApprovalRequestType.values()) {
             assertThat(ApprovalRequestType.fromWireName(type.wireName())).contains(type);
         }
@@ -67,7 +67,7 @@ class ApprovalSearchFieldTest {
 
     /** Un valor desconocido no es un 400: no matchea nada (arquitectura.md 2.5). */
     @Test
-    void unValorDesconocidoNoEsUnError() {
+    void anUnknownValueIsNotAnError() {
         assertThat(ApprovalRequestType.fromWireName("Quizas")).isEmpty();
         assertThat(ApprovalStatus.fromName("Maybe")).isEmpty();
     }

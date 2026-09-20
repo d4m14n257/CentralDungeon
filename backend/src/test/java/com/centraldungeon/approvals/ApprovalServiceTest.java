@@ -133,7 +133,7 @@ class ApprovalServiceTest {
     // ----------------------------------------------------------------- submit
 
     @Test
-    void abreElPedidoPendienteApuntandoAQuienLoPide() {
+    void itOpensThePendingRequestPointingAtWhoAsked() {
         User requester = allowedRequester();
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
         when(approvalRequestRepository.save(any())).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
@@ -156,7 +156,7 @@ class ApprovalServiceTest {
 
     /** The whole of #78 at the writing end: the reference is checked, and it is checked <em>first</em>. */
     @Test
-    void validaLaEntidadReferenciadaAntesDeInsertar() {
+    void itValidatesTheReferencedEntityBeforeInserting() {
         allowedRequester();
         when(entityResolver.exists("user", "user-1")).thenReturn(false);
 
@@ -167,20 +167,20 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void unPedidoNoNotificaANadie() {
+    void submittingNotifiesNobody() {
         allowedRequester();
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
         when(approvalRequestRepository.save(any())).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
 
         service().submit(ApprovalRequestType.General, WHY, REQUESTER);
 
-        // #100: los ítems de trabajo de admin no se duplican como notificaciones. La bandeja los
-        // muestra; una notificación por pedido sería la copia que #100 evitó.
+        // #100: admin work items are not duplicated as notifications. The tray shows them; one
+        // notification per request would be the copy #100 avoided.
         verifyNoInteractions(notificationService);
     }
 
     @Test
-    void elSegundoPedidoPendienteDelMismoTipoEsUnConflicto() {
+    void aSecondPendingRequestOfTheSameTypeIsAConflict() {
         allowedRequester();
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
         when(approvalRequestRepository.existsByRequestTypeAndRequestedBy_IdAndStatus(
@@ -195,9 +195,9 @@ class ApprovalServiceTest {
         verify(approvalRequestRepository, never()).save(any());
     }
 
-    /** Un pendiente por tipo, no uno por persona: pedir dos cosas distintas a la vez es legítimo. */
+    /** One pending per type, not one per person: asking for two different things at once is legitimate. */
     @Test
-    void unPendienteDeOtroTipoNoBloqueaElPedido() {
+    void aPendingRequestOfAnotherTypeDoesNotBlockIt() {
         allowedRequester();
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
         when(approvalRequestRepository.existsByRequestTypeAndRequestedBy_IdAndStatus(
@@ -212,7 +212,7 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void pedirElRolDeMasterTeniendoloYaEsUnConflicto() {
+    void askingForTheMasterRoleWhileHoldingItIsAConflict() {
         allowedRequester();
         when(userRoleRepository.findActiveRoleNames("user-1")).thenReturn(Set.of("Player", "Master"));
 
@@ -221,12 +221,12 @@ class ApprovalServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ConflictException.MASTER_ROLE_ALREADY_HELD);
 
-        // Y no como un pedido que un admin tiene que leer para descubrir que no hacía falta.
+        // And not as a request an admin has to read to discover it was never needed.
         verify(approvalRequestRepository, never()).save(any());
     }
 
     @Test
-    void pedirElRolDeMasterSinTenerloAbreElPedido() {
+    void askingForTheMasterRoleWithoutItOpensTheRequest() {
         allowedRequester();
         when(userRoleRepository.findActiveRoleNames("user-1")).thenReturn(Set.of("Player"));
         when(entityResolver.exists("user", "user-1")).thenReturn(true);
@@ -237,7 +237,7 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void unaCuentaBloqueadaNoAbrePedidos() {
+    void aBlockedAccountOpensNoRequests() {
         User blocked = allowedRequester();
         blocked.setStatus(UserStatus.Blocked);
 
@@ -254,7 +254,7 @@ class ApprovalServiceTest {
      * {@code UserRoleService} de F3.1, no por una segunda ruta que haga lo mismo».
      */
     @Test
-    void aprobarUnMasterGrantOtorgaElRolPorElUserRoleService() {
+    void approvingAMasterGrantGrantsTheRoleThroughUserRoleService() {
         ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
         resolvable(request);
 
@@ -263,9 +263,9 @@ class ApprovalServiceTest {
         verify(userRoleService).grantRole("user-1", PlatformRole.MASTER, NOTE, ADMIN);
     }
 
-    /** Y el motivo de la resolución es el motivo del otorgamiento: la fila de auditoría no nace vacía. */
+    /** And the resolution note is the reason the role was granted: the audit row is not born empty. */
     @Test
-    void elMotivoDeLaResolucionEsElMotivoDelOtorgamiento() {
+    void theResolutionNoteIsTheReasonTheRoleWasGranted() {
         ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
         resolvable(request);
 
@@ -278,10 +278,10 @@ class ApprovalServiceTest {
 
     /**
      * Aprobar un {@code TableOpen} no crea la mesa: el pedido no trae nombre, sistema, cupo ni agenda,
-     * así que crearla automáticamente no es una opción descartada sino una imposible (#72, #90).
+     * so creating it automatically is not a refused option but an impossible one (#72, #90).
      */
     @Test
-    void aprobarUnTableOpenNoCreaLaMesaNiOtorgaNingunRol() {
+    void approvingATableOpenCreatesNoTableAndGrantsNoRole() {
         ApprovalRequest request = pending(ApprovalRequestType.TableOpen);
         resolvable(request);
 
@@ -292,7 +292,7 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void aprobarUnGeneralNoTieneEfectoMasAlaDeQuedarResuelto() {
+    void approvingAGeneralHasNoEffectBeyondBeingResolved() {
         ApprovalRequest request = pending(ApprovalRequestType.General);
         resolvable(request);
 
@@ -301,7 +301,7 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void aprobarSellaQuienResolvioCuandoYPorQue() {
+    void approvingStampsWhoResolvedItWhenAndWhy() {
         ApprovalRequest request = pending(ApprovalRequestType.General);
         User admin = resolvable(request);
 
@@ -313,7 +313,7 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void rechazarSellaLoMismoYNoOtorgaNada() {
+    void rejectingStampsTheSameAndGrantsNothing() {
         ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
         resolvable(request);
 
@@ -325,7 +325,7 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void unPedidoYaResueltoNoSeVuelveAResolver() {
+    void anAlreadyResolvedRequestIsNotResolvedAgain() {
         ApprovalRequest request = pending(ApprovalRequestType.General);
         request.resolve(ApprovalStatus.Approved, user("admin-1", "otra-admin"), "ya estaba");
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
@@ -337,7 +337,7 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void rechazarAlgoYaResueltoTampocoSePuede() {
+    void rejectingSomethingAlreadyResolvedIsRefusedToo() {
         ApprovalRequest request = pending(ApprovalRequestType.General);
         request.resolve(ApprovalStatus.Rejected, user("admin-1", "otra-admin"), "ya estaba");
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
@@ -349,15 +349,15 @@ class ApprovalServiceTest {
     }
 
     /**
-     * La otra mitad de #78. La fila sobrevive a lo que apunta a propósito (#126) — «una solicitud
-     * sobre una mesa borrada sigue siendo un hecho» — pero resolverla igual sería actuar sobre un
+     * The other half of #78. The row outlives what it points at on purpose (#126) — «una solicitud
+     * sobre una mesa borrada sigue siendo un hecho» — but resolving it anyway would be acting on a
      * fantasma.
      */
     @Test
     void siLaEntidadReferenciadaDesaparecioNoSeResuelve() {
         ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
         // Sin reservar, y ahora eso es exactamente el caso real: un pedido libre pasa el chequeo de la
-        // bandeja y llega al de la referencia, que es el que este test mira.
+        // tray and reaches the reference check, which is the one this test is looking at.
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
         when(entityResolver.exists("user", "user-1")).thenReturn(false);
 
@@ -371,7 +371,7 @@ class ApprovalServiceTest {
     }
 
     @Test
-    void rechazarAlgoQueApuntaAUnFantasmaTampocoSePuede() {
+    void rejectingSomethingPointingAtAGhostIsRefusedToo() {
         ApprovalRequest request = pending(ApprovalRequestType.General);
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
         when(entityResolver.exists("user", "user-1")).thenReturn(false);
@@ -392,20 +392,20 @@ class ApprovalServiceTest {
     // ------------------------------------------------- la reserva de la bandeja compartida
 
     /**
-     * Caso 1 de 3: <b>un pedido que nadie reservó se resuelve</b>, y este es el test que existe para
-     * que nadie vuelva a apretar la regla.
+     * Case 1 of 3: <b>a request nobody claimed is resolved</b>, and this is the test that exists so
+     * nobody tightens the rule again.
      *
-     * <p>Estuvo al revés durante un rato -«resolver exige tenerlo reservado»- y dejó
-     * {@code /admin/requests} inutilizable en la aplicación real: esa pantalla trae Aprobar y Rechazar
-     * y <b>ninguna forma de reservar</b>, así que toda resolución respondía 409 por una reserva que no
-     * podía ofrecer. Chocaron dos diseños - #176 le da a los pedidos su pantalla propia, §5 de
-     * modelo-datos asumía que la bandeja era el único lugar donde algo se resuelve - y la regla
-     * estricta volvió la bandeja obligatoria para un flujo que nunca pasó por ella.
+     * <p>It was the other way round for a while -«resolver exige tenerlo reservado»- and it left
+     * {@code /admin/requests} unusable in the real application: that screen has Approve and Reject and
+     * <b>no way to claim anything</b>, so every resolution answered 409 over a reservation it could not
+     * offer. Two designs collided - #176 gives requests a screen of their own, §5 of modelo-datos
+     * assumed the tray was the only place anything is resolved - and the strict rule made the tray
+     * compulsory for a flow that never passed through it.
      */
     @Test
-    void seResuelveUnPedidoQueNadieReservo() {
+    void aRequestNobodyClaimedIsResolved() {
         ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
-        // A propósito sin reservar: es el camino de /admin/requests, que es el común.
+        // Deliberately unclaimed: it is the /admin/requests path, which is the common one.
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
         when(entityResolver.exists(request.getEntityType(), request.getEntityId())).thenReturn(true);
         when(userService.getById("admin-1")).thenReturn(user("admin-1", "damian"));
@@ -415,9 +415,9 @@ class ApprovalServiceTest {
         verify(userRoleService).grantRole("user-1", PlatformRole.MASTER, NOTE, ADMIN);
     }
 
-    /** Caso 2 de 3: el pedido que el actor ya tiene reservado, que es el camino que baja de la bandeja. */
+    /** Case 2 of 3: the request the actor already holds, which is the path down from the tray. */
     @Test
-    void seResuelveUnPedidoQueElActorYaTeniaReservado() {
+    void aRequestTheActorAlreadyHeldIsResolved() {
         ApprovalRequest request = pending(ApprovalRequestType.General);
         User admin = resolvable(request);
         request.claim(admin, LocalDateTime.now());
@@ -426,16 +426,16 @@ class ApprovalServiceTest {
     }
 
     /**
-     * Caso 3 de 3, y el único que se rechaza: lo tiene <b>otro</b>. Un link viejo, una segunda
-     * pestaña, una bandeja sin refrescar - las tres formas de pisarle el trabajo a un colega, que es
-     * exactamente lo que #100 compra.
+     * Case 3 of 3, and the only one refused: <b>somebody else</b> holds it. A stale link, a second tab,
+     * a tray that has not refreshed - the three ways of taking work off a colleague's desk, which is
+     * exactly what #100 buys.
      *
-     * <p>Y no es la regla que sostiene la consistencia: dos admins resolviendo la misma fila sin
-     * reservar se serializan con el lock pesimista (#256) y el segundo recibe «ya estaba resuelto».
-     * Esta es sobre cortesía entre colegas, no sobre corrección.
+     * <p>And it is not the rule consistency rests on: two admins resolving the same row unclaimed are
+     * serialized by the pessimistic lock (#256) and the second is told «it was already resolved». This
+     * one is about courtesy between colleagues, not about correctness.
      */
     @Test
-    void noSePuedeAprobarUnPedidoQueTieneOtroAdmin() {
+    void aRequestAnotherAdminHoldsCannotBeApproved() {
         ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
         request.claim(user("admin-2", "otra-admin"), LocalDateTime.now());
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
@@ -445,15 +445,15 @@ class ApprovalServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ConflictException.ITEM_ALREADY_CLAIMED);
 
-        // Y no dejó nada a medias: ni el rol, ni la campana, ni la fila resuelta.
+        // And it left nothing half done: not the role, not the bell, not the resolved row.
         assertThat(request.getStatus()).isEqualTo(ApprovalStatus.Pending);
         verifyNoInteractions(userRoleService);
         verifyNoInteractions(notificationService);
     }
 
-    /** Rechazar es la otra mitad del mismo acto: una regla que valiera para una sola sería una puerta abierta. */
+    /** Rejecting is the other half of the same act: a rule holding for only one would be an open door. */
     @Test
-    void noSePuedeRechazarUnPedidoQueTieneOtroAdmin() {
+    void aRequestAnotherAdminHoldsCannotBeRejected() {
         ApprovalRequest request = pending(ApprovalRequestType.General);
         request.claim(user("admin-2", "otra-admin"), LocalDateTime.now());
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
@@ -467,9 +467,9 @@ class ApprovalServiceTest {
     }
 
     /**
-     * El orden de los dos 409 no es casual: cuando las dos cosas son ciertas, «alguien ya lo
-     * respondió» es la frase verdadera. Nombrar al colega que reservó un pedido que ya no necesita
-     * respuesta sería mandar a preguntarle por nada.
+     * The order of the two 409s is not incidental: when both are true, «somebody already answered
+     * this» is the truer sentence. Naming the colleague who claimed a request that no longer needs
+     * answering would send the reader to ask them about nothing.
      */
     @Test
     void siYaEstaResueltoLoDiceAntesDeNombrarAQuienLoTiene() {
@@ -484,22 +484,22 @@ class ApprovalServiceTest {
                 .isEqualTo(ConflictException.REQUEST_ALREADY_RESOLVED);
     }
 
-    // ------------------------------------------------------------ notificación
+    // ------------------------------------------------------------ notification
 
     @Test
-    void aprobarNotificaAlSolicitanteYNoALosAdmins() {
+    void approvingNotifiesTheRequesterAndNotTheAdmins() {
         ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
         resolvable(request);
 
         service().approve("req-1", NOTE, ADMIN);
 
-        // Al solicitante, con destino a su propio perfil - nunca a /admin/requests, que no puede abrir.
+        // To the requester, pointed at their own profile - never at /admin/requests, which they cannot open.
         verify(notificationService)
                 .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestApproved, "user", "user-1");
     }
 
     @Test
-    void rechazarNotificaElOtroTipo() {
+    void rejectingNotifiesWithTheOtherType() {
         ApprovalRequest request = pending(ApprovalRequestType.General);
         resolvable(request);
 
@@ -512,13 +512,13 @@ class ApprovalServiceTest {
     // ----------------------------------------------------------------- lectura
 
     /**
-     * La pantalla que provoca el pedido pregunta «¿ya tengo uno de estos abierto?», y tiene que poder
-     * preguntarlo de verdad: leer la página uno de todo y deducirlo es cómo el botón vuelve a
-     * ofrecerse en cuanto un pendiente viejo queda debajo de veinte resueltos. El filtro entra por
-     * {@code ?q=} y no por un parámetro suelto (arquitectura.md 2.5).
+     * The screen that provokes the request asks «do I already have one of these open?», and it has to be
+     * able to really ask it: reading page one of everything and inferring it is how the button comes back
+     * as soon as an old pending one falls below twenty resolved ones. The filter goes through
+     * {@code ?q=} and not through a parameter of its own (arquitectura.md 2.5).
      */
     @Test
-    void misPedidosAceptanElMismoFiltroQueElListadoAdmin() {
+    void myRequestsAcceptTheSameFilterAsTheAdminListing() {
         when(approvalRequestRepository.findAll(ArgumentMatchers.<Specification<ApprovalRequest>>any(), eq(FIRST_PAGE)))
                 .thenReturn(new PageImpl<>(List.of()));
 
@@ -529,12 +529,12 @@ class ApprovalServiceTest {
     }
 
     /**
-     * Que el filtro del solicitante quede forzado y no se pueda ensanchar desde la caja se prueba
-     * sobre la specification misma, en {@code ApprovalSearchSpecificationTest}: es donde vive la
-     * regla. Acá alcanza con que la lectura pase por ella.
+     * That the requester's filter is forced and cannot be widened from the box is proven
+     * against the specification itself, in {@code ApprovalSearchSpecificationTest}: that is where the
+     * rule. Here it is enough that the read goes through it.
      */
     @Test
-    void elDetalleDeUnPedidoQueNoExisteEs404() {
+    void theDetailOfARequestThatDoesNotExistIs404() {
         when(approvalRequestRepository.findById("nope")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service().getDetail("nope"))

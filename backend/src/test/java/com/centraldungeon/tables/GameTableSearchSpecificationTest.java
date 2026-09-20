@@ -68,8 +68,8 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * Por nombre y nunca por id, como todos los precedentes - y por los dos nombres, porque quien
-     * busca conoce uno de los dos y no cuál guarda el sistema dónde.
+     * By name and never by id, like every precedent - and by both names, because whoever is searching
+     * knows one of the two and not which one the system keeps where.
      */
     @Test
     void tableMasterBuscaPorLosDosNombresDeLaPersona() {
@@ -85,11 +85,11 @@ class GameTableSearchSpecificationTest {
 
     /**
      * Solo masters vivos: a quien lo sacaron de co-master (#216) ya no dirige la mesa, y encontrarla
-     * por su nombre sería responder una pregunta sobre el pasado. Es la decisión <b>opuesta</b> a la
-     * de {@code notMasteredBy}, a propósito, y por eso se fija acá.
+     * by their name would be answering a question about the past. It is the <b>opposite</b> decision to
+     * {@code notMasteredBy}'s, on purpose, which is why it is pinned here.
      */
     @Test
-    void tableMasterSoloMiraLasFilasVivas() {
+    void tableMasterOnlyLooksAtLiveRows() {
         Criteria criteria = new Criteria();
         SearchQuery query = SearchQueryParser.parse("/table_master ana", GameTableSearchField.wireNames());
 
@@ -113,12 +113,12 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * Un estado que no existe matchea <b>nada</b>, y nunca responde 400 (arquitectura.md §2.5). La
-     * distinción que no se puede perder: «no hay ningún estado que se llame Abierta» no es «sin
-     * filtro» - leído del segundo modo, un typo listaría toda la plataforma.
+     * A status that does not exist matches <b>nothing</b>, and never answers 400 (arquitectura.md §2.5).
+     * The distinction that cannot be lost: «there is no status called Abierta» is not «no filter» - read
+     * the second way, a typo would list the whole platform.
      */
     @Test
-    void unEstadoQueNoExisteNoMatcheaNadaYNoEsUn400() {
+    void aStatusThatDoesNotExistMatchesNothingAndIsNotA400() {
         Criteria criteria = new Criteria();
         SearchQuery query = SearchQueryParser.parse("/table_status Abierta", GameTableSearchField.wireNames());
 
@@ -129,12 +129,12 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * {@code notMasteredBy} es del explorador y no va en el admin (contrato F3.3 §3.2): un admin no
-     * está postulándose a nada, y esconderle las mesas que dirige sería un filtro que nadie pidió y
-     * que nadie podría explicar.
+     * {@code notMasteredBy} belongs to the explorer and not to the admin listing (F3.3 contract §3.2): an
+     * admin is not applying to anything, and hiding the tables they run would be a filter nobody asked
+     * for and nobody could explain.
      */
     @Test
-    void elListadoAdminNoExcluyeLasMesasDeNadie() {
+    void theAdminListingExcludesNobodysTables() {
         Criteria criteria = new Criteria();
 
         GameTableSearchSpecification.forAdmin(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS)
@@ -145,11 +145,11 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * Y el filtro de estados siempre está: lo que se escriba en la caja acota lo que el listado ya
-     * mostraba, nunca lo ensancha - una mesa borrada no se alcanza con ningún {@code ?q=} (#25).
+     * And the status filter is always there: whatever is typed in the box narrows what the listing
+     * already showed and never widens it - no {@code ?q=} reaches a deleted table (#25).
      */
     @Test
-    void laCajaAcotaLoQueElListadoYaMostraba() {
+    void theBoxNarrowsWhatTheListingAlreadyShowed() {
         Criteria criteria = new Criteria();
         SearchQuery query = SearchQueryParser.parse("cripta", GameTableSearchField.wireNames());
 

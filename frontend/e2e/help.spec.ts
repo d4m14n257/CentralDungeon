@@ -33,7 +33,7 @@ async function openAssignMastersDialog(page: Page, label: string) {
   return page.getByRole('dialog')
 }
 
-test('la ayuda se lee sin salir de la pantalla, y la pantalla sigue ahí detrás', async ({ browser }) => {
+test('the help is read without leaving the screen, and the screen is still there behind it', async ({ browser }) => {
   const context = await browser.newContext()
   try {
     await testLogin(context.request, `e2e-help-${runId}`, { asAdmin: true })
@@ -55,7 +55,7 @@ test('la ayuda se lee sin salir de la pantalla, y la pantalla sigue ahí detrás
   }
 })
 
-test('la ayuda enseña con pasos, no solo describe', async ({ browser }) => {
+test('the help teaches with steps rather than only describing', async ({ browser }) => {
   const context = await browser.newContext()
   try {
     await testLogin(context.request, `e2e-help-steps-${runId}`, { asMaster: true })
@@ -74,7 +74,7 @@ test('la ayuda enseña con pasos, no solo describe', async ({ browser }) => {
   }
 })
 
-test('/help ya no es la ayuda: es la pantalla de soporte que la reserva describía', async ({ browser }) => {
+test('/help is no longer the help: it is the support screen the reservation described', async ({ browser }) => {
   const context = await browser.newContext()
   try {
     await testLogin(context.request, `e2e-help-gone-${runId}`, { asMaster: true })

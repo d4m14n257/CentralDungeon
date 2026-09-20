@@ -47,14 +47,14 @@ class ApprovalEntityResolverTest {
     }
 
     @Test
-    void unUsuarioQueExisteResuelve() {
+    void aUserThatExistsResolves() {
         when(userRepository.existsById("user-1")).thenReturn(true);
 
         assertThat(resolver().exists(ApprovalEntityResolver.USER, "user-1")).isTrue();
     }
 
     @Test
-    void unUsuarioBorradoNoResuelve() {
+    void aDeletedUserDoesNotResolve() {
         when(userRepository.existsById("user-borrado")).thenReturn(false);
 
         assertThat(resolver().exists(ApprovalEntityResolver.USER, "user-borrado")).isFalse();
@@ -66,7 +66,7 @@ class ApprovalEntityResolverTest {
      * with a type nobody emits, because what it protects is the next one.
      */
     @Test
-    void unTipoDeEntidadDesconocidoFallaDiciendoQueEsDesconocido() {
+    void anUnknownEntityTypeFailsSayingItIsUnknown() {
         assertThatThrownBy(() -> resolver().exists("comment", "comentario-1"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Unknown approval entity type")

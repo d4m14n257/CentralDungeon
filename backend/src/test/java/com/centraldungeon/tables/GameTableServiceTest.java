@@ -239,13 +239,13 @@ class GameTableServiceTest {
     }
 
     /**
-     * La regla de la bandeja, caso 1 de 3: <b>una mesa que nadie reservó se aprueba</b>.
+     * The tray's rule, case 1 of 3: <b>a table nobody claimed is approved</b>.
      *
-     * <p>Fue al revés durante un rato y rompió la aplicación real: con «resolver exige tenerlo
-     * reservado», toda resolución desde una pantalla sin botón de reservar respondía 409 por una
-     * reserva que la pantalla no podía ofrecer. Lo que #100 compra es «si lo toma uno, baja para
-     * todos», así que un ítem que no tiene dueño no es la situación que hay que impedir: resolverlo es
-     * una reserva implícita. Este test es el que se cae si alguien vuelve a apretar la regla.
+     * <p>It was the other way round for a while and it broke the real application: with «resolver exige
+     * tenerlo reservado», every resolution from a screen with no claim button answered 409 over a
+     * reservation the screen could not offer. What #100 buys is «si lo toma uno, baja para todos», so an
+     * item nobody owns is not the situation to prevent: resolving it is an implicit claim. This test is
+     * the one that fails if somebody tightens the rule again.
      */
     @Test
     void approvesATableNobodyClaimed() {
@@ -263,7 +263,7 @@ class GameTableServiceTest {
         assertThat(table.getStatus()).isEqualTo(GameTableStatus.Opened);
     }
 
-    /** Caso 2 de 3: la mesa que el actor ya tiene reservada, que es el camino que baja de la bandeja. */
+    /** Case 2 of 3: the table the actor already holds, which is the path down from the tray. */
     @Test
     void approvesATableTheActorAlreadyClaimed() {
         GameTable table = persistedTable("table-mine", GameTableStatus.Preparation);
@@ -283,8 +283,8 @@ class GameTableServiceTest {
     }
 
     /**
-     * Caso 3 de 3, y el único que se rechaza: la mesa que tiene <b>otro</b> admin. Un link viejo, una
-     * segunda pestaña, una bandeja sin refrescar - las tres formas de pisarle el trabajo a un colega.
+     * Case 3 of 3, and the only one refused: the table <b>another</b> admin holds. A stale link, a second
+     * tab, a tray that has not refreshed - the three ways of taking work off a colleague's desk.
      */
     @Test
     void cannotApproveATableAnotherAdminClaimed() {
@@ -297,13 +297,13 @@ class GameTableServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ConflictException.ITEM_ALREADY_CLAIMED);
 
-        // Y no dejó nada a medias: ni la transición, ni la fila de historial, ni la campana.
+        // And it left nothing half done: not the transition, not the history row, not the bell.
         assertThat(table.getStatus()).isEqualTo(GameTableStatus.Preparation);
         verify(tableStatusChangeRepository, never()).save(any(TableStatusChange.class));
         verify(notificationService, never()).notifyReviewOutcome(any(), any(), any());
     }
 
-    /** Pedir cambios es la otra mitad del mismo acto, y la regla vale igual para las dos. */
+    /** Requesting changes is the other half of the same act, and the rule holds for both alike. */
     @Test
     void cannotRequestChangesOnATableAnotherAdminClaimed() {
         GameTable table = persistedTable("table-taken-2", GameTableStatus.Preparation);
@@ -320,9 +320,9 @@ class GameTableServiceTest {
     }
 
     /**
-     * El orden de los dos 409: si la mesa ni siquiera está en revisión, eso es lo que hay que decir.
-     * Nombrar al colega que reservó una mesa que ya no necesita revisión sería mandar a preguntarle
-     * por nada.
+     * The order of the two 409s: if the table is not even under review, that is what has to be said.
+     * Naming the colleague who claimed a table that no longer needs reviewing would send the reader to
+     * ask them about nothing.
      */
     @Test
     void aTableOutOfReviewSaysSoBeforeNamingWhoeverHoldsIt() {
@@ -662,7 +662,7 @@ class GameTableServiceTest {
     // ------------------------------------------------------------- the requested pause (#32)
 
     /**
-     * {@code PauseRequested} stops being the orphan F1.7 relevó: this is its producer. <b>Any
+     * {@code PauseRequested} stops being the orphan F1.7 surveyed: this is its producer. <b>Any
      * master</b> may ask and not only the {@code Primary} - asking is not deciding, and a co-master who
      * cannot run next week's session is exactly the person with a reason to ask.
      */
