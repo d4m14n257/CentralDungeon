@@ -1,17 +1,21 @@
 import { useTranslation } from 'react-i18next'
 
-import { cn } from '@/lib/utils'
+import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 
 import type { RegistrationStatus } from '../types'
 
-const STATE_CLASSES: Record<RegistrationStatus, { badge: string; dot: string }> = {
-  Candidate: { badge: 'bg-state-pending-bg text-state-pending-fg', dot: 'bg-state-pending-dot' },
-  Player: { badge: 'bg-state-open-bg text-state-open-fg', dot: 'bg-state-open-dot' },
-  Rejected: { badge: 'bg-state-canceled-bg text-state-canceled-fg', dot: 'bg-state-canceled-dot' },
-  // Its own colour and not `canceled`'s, though both are refusals: they sit next to each other in
-  // the same list and mean different things - one is "you never got in", the other is "you were in
-  // and were removed". Two rows the reader tells apart at a glance cannot share a swatch.
-  Blocked: { badge: 'bg-state-blocked-bg text-state-blocked-fg', dot: 'bg-state-blocked-dot' },
+/**
+ * Which tone each status wears. **The map stays here and not in `StatusBadge`**: which of this
+ * feature's statuses counts as "open" is a decision about this domain (`arquitectura.md` §3.1.2).
+ */
+const STATE_TONES: Record<RegistrationStatus, StatusTone> = {
+  Candidate: 'pending',
+  Player: 'open',
+  Rejected: 'canceled',
+  // Its own tone and not `canceled`, though both are refusals: they sit next to each other in the
+  // same list and mean different things - one is "you never got in", the other is "you were in and
+  // were removed". Two rows the reader tells apart at a glance cannot share a swatch.
+  Blocked: 'blocked',
 }
 
 /**
@@ -22,12 +26,5 @@ const STATE_CLASSES: Record<RegistrationStatus, { badge: string; dot: string }> 
  */
 export function RegistrationStatusBadge({ status }: { status: RegistrationStatus }) {
   const { t } = useTranslation('registrations')
-  const classes = STATE_CLASSES[status]
-
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium', classes.badge)}>
-      <span className={cn('size-1.5 rounded-full', classes.dot)} />
-      {t(`status.${status}`)}
-    </span>
-  )
+  return <StatusBadge tone={STATE_TONES[status]} label={t(`status.${status}`)} />
 }

@@ -1,17 +1,17 @@
 import { useTranslation } from 'react-i18next'
 
-import { cn } from '@/lib/utils'
+import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 
 import type { TaskStatus } from '../types'
 
 /**
- * Colour is never the only carrier of information (`frontend-diseno.md` §3): always a dot plus a
- * label. The class names are complete and static on purpose — Tailwind 4 scans the source for
- * literals and cannot see a class name built out of a template string.
+ * Which tone each state wears. **The map stays here and not in `StatusBadge`**: which of this
+ * feature's states counts as "open" is a decision about this domain, and a shared component that knew
+ * it would be the wrong kind of shared (`arquitectura.md` §3.1.2).
  */
-const STATE_CLASSES: Record<TaskStatus, { badge: string; dot: string }> = {
-  Open: { badge: 'bg-state-open-bg text-state-open-fg', dot: 'bg-state-open-dot' },
-  Closed: { badge: 'bg-state-done-bg text-state-done-fg', dot: 'bg-state-done-dot' },
+const STATE_TONES: Record<TaskStatus, StatusTone> = {
+  Open: 'open',
+  Closed: 'done',
 }
 
 /**
@@ -25,12 +25,5 @@ const STATE_CLASSES: Record<TaskStatus, { badge: string; dot: string }> = {
  */
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
   const { t } = useTranslation('tasks')
-  const classes = STATE_CLASSES[status]
-
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium', classes.badge)}>
-      <span className={cn('size-1.5 rounded-full', classes.dot)} />
-      {t(`status.${status}`)}
-    </span>
-  )
+  return <StatusBadge tone={STATE_TONES[status]} label={t(`status.${status}`)} />
 }

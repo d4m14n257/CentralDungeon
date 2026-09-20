@@ -2,16 +2,26 @@ import { useTranslation } from 'react-i18next'
 
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
+import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { notificationText, useMarkAllAsRead, useNotificationClick, useNotifications } from '@/features/notifications'
 import { relativeTimeFrom } from '@/lib/relativeTime'
 import { cn } from '@/lib/utils'
 
-/** The badge's tone per type - only the ones that stand for a settled outcome (design/build.py sc_notifications). */
-const OUTCOME_TONE: Record<string, { badge: string; dot: string; labelKey: string }> = {
-  RegistrationAccepted: { badge: 'bg-state-open-bg text-state-open-fg', dot: 'bg-state-open-dot', labelKey: 'badge.accepted' },
-  RegistrationRejected: { badge: 'bg-state-canceled-bg text-state-canceled-fg', dot: 'bg-state-canceled-dot', labelKey: 'badge.rejected' },
+/**
+ * The badge's tone per type - only the ones that stand for a settled outcome (design/build.py
+ * sc_notifications).
+ *
+ * **The tenth copy of the badge, and the one that hid the longest** (#261). It was not in
+ * a feature's own `components/` folder like the other nine, so the first count of the duplication
+ * missed it: a screen is a place a component gets written too. Now it is the same `StatusBadge` as
+ * everywhere else, and what stays here is what belongs to notifications - which type counts as a
+ * settled outcome.
+ */
+const OUTCOME_TONE: Record<string, { tone: StatusTone; labelKey: string }> = {
+  RegistrationAccepted: { tone: 'open', labelKey: 'badge.accepted' },
+  RegistrationRejected: { tone: 'canceled', labelKey: 'badge.rejected' },
 }
 
 /**
@@ -57,7 +67,7 @@ export function NotificationsPage() {
         <ul className="divide-border divide-y rounded-lg border">
           {data.content.map((notification) => {
             const unread = notification.readStatus === 'Unread'
-            const tone = OUTCOME_TONE[notification.notificationType]
+            const outcome = OUTCOME_TONE[notification.notificationType]
             return (
               <li key={notification.id}>
                 <button
@@ -75,12 +85,7 @@ export function NotificationsPage() {
                   <span className={cn('flex-1 truncate text-sm', unread ? 'text-fg font-medium' : 'text-fg-muted')}>
                     {notificationText(notification, t).title}
                   </span>
-                  {tone && (
-                    <span className={cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium', tone.badge)}>
-                      <span className={cn('size-1.5 rounded-full', tone.dot)} />
-                      {t(tone.labelKey)}
-                    </span>
-                  )}
+                  {outcome && <StatusBadge tone={outcome.tone} label={t(outcome.labelKey)} />}
                   <span className="text-fg-subtle w-20 shrink-0 text-right text-xs">{timeAgoLabel(notification.createdAt)}</span>
                 </button>
               </li>

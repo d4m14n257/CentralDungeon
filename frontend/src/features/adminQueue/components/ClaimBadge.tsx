@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { StatusBadge } from '@/components/StatusBadge'
 import { formatRelativeDate } from '@/lib/date'
 
 import { isClaimedByReader, type AdminQueueItem } from '../types'
@@ -22,8 +23,11 @@ import { isClaimedByReader, type AdminQueueItem } from '../types'
  * is theirs and nothing else (#100) — so the chip says "lo tenés vos" and names them for the row's
  * sake rather than asserting something about a third party the tray cannot see.
  *
- * Colour is never the only carrier (frontend-diseno.md §3): a dot plus a label, always. The class
- * names are complete literals because Tailwind 4 scans the source and cannot see a template string.
+ * **Two branches and no `Record`**, which is why this one keeps a shape of its own while the other
+ * eight badges collapsed into `StatusBadge` (#261): what it shows is not a value of an enum but the
+ * answer to a yes-or-no question, and the "yes" carries a second thing to read. The markup it used to
+ * repeat is gone all the same - it is `StatusBadge` underneath, with the relative date as its trailing
+ * child.
  *
  * @param props.item the row
  */
@@ -31,19 +35,12 @@ export function ClaimBadge({ item }: { item: AdminQueueItem }) {
   const { t, i18n } = useTranslation('admin')
 
   if (!isClaimedByReader(item)) {
-    return (
-      <span className="bg-state-draft-bg text-state-draft-fg inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium">
-        <span className="bg-state-draft-dot size-1.5 rounded-full" />
-        {t('queue.unclaimed')}
-      </span>
-    )
+    return <StatusBadge tone="draft" label={t('queue.unclaimed')} />
   }
 
   return (
-    <span className="bg-state-active-bg text-state-active-fg inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium">
-      <span className="bg-state-active-dot size-1.5 rounded-full" />
-      {t('queue.claimedBy', { name: item.claimedByName })}
+    <StatusBadge tone="active" label={t('queue.claimedBy', { name: item.claimedByName })}>
       {item.claimedAt && <span className="opacity-80">{formatRelativeDate(item.claimedAt, i18n.language)}</span>}
-    </span>
+    </StatusBadge>
   )
 }

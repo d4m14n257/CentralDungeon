@@ -1,18 +1,17 @@
 import { useTranslation } from 'react-i18next'
 
-import { cn } from '@/lib/utils'
+import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 
 import type { AccountStatus } from '../types'
 
 /**
- * Colour is never the only carrier of meaning (frontend-diseno.md §3): always a dot **and** a label.
- * The classes are written out in full and statically — Tailwind 4 scans the source for literals and
- * cannot see a class name built from a template string.
+ * Which tone each status wears. **The map stays here and not in `StatusBadge`**: which of this
+ * feature's statuses counts as "open" is a decision about this domain (`arquitectura.md` §3.1.2).
  */
-const STATE_CLASSES: Record<AccountStatus, { badge: string; dot: string }> = {
-  Allowed: { badge: 'bg-state-open-bg text-state-open-fg', dot: 'bg-state-open-dot' },
-  Blocked: { badge: 'bg-state-blocked-bg text-state-blocked-fg', dot: 'bg-state-blocked-dot' },
-  Deleted: { badge: 'bg-state-draft-bg text-state-draft-fg', dot: 'bg-state-draft-dot' },
+const STATE_TONES: Record<AccountStatus, StatusTone> = {
+  Allowed: 'open',
+  Blocked: 'blocked',
+  Deleted: 'draft',
 }
 
 /**
@@ -29,12 +28,5 @@ const STATE_CLASSES: Record<AccountStatus, { badge: string; dot: string }> = {
  */
 export function UserStatusBadge({ status }: { status: AccountStatus }) {
   const { t } = useTranslation('admin')
-  const classes = STATE_CLASSES[status]
-
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium', classes.badge)}>
-      <span className={cn('size-1.5 rounded-full', classes.dot)} />
-      {t(`users.status.${status}`)}
-    </span>
-  )
+  return <StatusBadge tone={STATE_TONES[status]} label={t(`users.status.${status}`)} />
 }

@@ -1,25 +1,25 @@
 import { useTranslation } from 'react-i18next'
 
-import { cn } from '@/lib/utils'
+import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 
 import type { GameTableStatus } from '../types'
 
 /**
- * Colour is never the only carrier of information (frontend-diseno.md 3): always a dot plus a
- * label. The class names are complete and static on purpose - Tailwind 4 scans the source for
- * literals and cannot see a class name built out of a template string.
+ * Which tone each state wears. **The map stays here and not in `StatusBadge`**: which of this
+ * feature's states counts as "open" is a decision about this domain, and a shared component that knew
+ * it would be the wrong kind of shared (`arquitectura.md` §3.1.2).
  */
-const STATE_CLASSES: Record<GameTableStatus, { badge: string; dot: string }> = {
-  Draft: { badge: 'bg-state-draft-bg text-state-draft-fg', dot: 'bg-state-draft-dot' },
-  Unassigned: { badge: 'bg-state-draft-bg text-state-draft-fg', dot: 'bg-state-draft-dot' },
-  Preparation: { badge: 'bg-state-pending-bg text-state-pending-fg', dot: 'bg-state-pending-dot' },
-  ChangesRequested: { badge: 'bg-state-warning-bg text-state-warning-fg', dot: 'bg-state-warning-dot' },
-  Opened: { badge: 'bg-state-open-bg text-state-open-fg', dot: 'bg-state-open-dot' },
-  InProgress: { badge: 'bg-state-active-bg text-state-active-fg', dot: 'bg-state-active-dot' },
-  PauseRequested: { badge: 'bg-state-pending-bg text-state-pending-fg', dot: 'bg-state-pending-dot' },
-  Pause: { badge: 'bg-state-paused-bg text-state-paused-fg', dot: 'bg-state-paused-dot' },
-  Finished: { badge: 'bg-state-done-bg text-state-done-fg', dot: 'bg-state-done-dot' },
-  Canceled: { badge: 'bg-state-canceled-bg text-state-canceled-fg', dot: 'bg-state-canceled-dot' },
+const STATE_TONES: Record<GameTableStatus, StatusTone> = {
+  Draft: 'draft',
+  Unassigned: 'draft',
+  Preparation: 'pending',
+  ChangesRequested: 'warning',
+  Opened: 'open',
+  InProgress: 'active',
+  PauseRequested: 'pending',
+  Pause: 'paused',
+  Finished: 'done',
+  Canceled: 'canceled',
 }
 
 /**
@@ -30,12 +30,5 @@ const STATE_CLASSES: Record<GameTableStatus, { badge: string; dot: string }> = {
  */
 export function TableStatusBadge({ status }: { status: GameTableStatus }) {
   const { t } = useTranslation('tables')
-  const classes = STATE_CLASSES[status]
-
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium', classes.badge)}>
-      <span className={cn('size-1.5 rounded-full', classes.dot)} />
-      {t(`status.${status}`)}
-    </span>
-  )
+  return <StatusBadge tone={STATE_TONES[status]} label={t(`status.${status}`)} />
 }

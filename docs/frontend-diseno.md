@@ -347,6 +347,7 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `LoadMore` | Paginación de un listado de lectura: trae la página siguiente y siempre dice cuántos de cuántos se están viendo. Botón explícito, nunca scroll infinito (#173) |
 | `PaginationControls` | Paginación de una lista de trabajo: anterior/siguiente, página X de Y y el total (#173) |
 | `SearchQueryInput` | **Todo buscador de la app** (#164, #240). Texto suelto busca por el criterio básico; `/` abre la lista —comandos, y `/and`/`/or` cuando hay algo que unir— y **elegir de ahí escribe el comando en el texto, igual que tipearlo a mano**: hasta **Enter** todo es texto, y Enter es lo que lo cierra en chips. Un comando de opciones fijas ofrece sus valores en cuanto hay un espacio después de él, venga escrito o elegido; las comas separan alternativas y el chip del conector se toca para pasarlo de "y" a "o". Recibe los comandos que acepta, no los conoce, y con ellos arma además los ejemplos de su ayuda |
+| `StatusBadge` | **Todo badge de estado de la aplicación** (#261): punto de color + etiqueta. Recibe el `tone` —una de las nueve familias de §3— y la etiqueta **ya traducida**; el mapa de estado a tono y el `t()` quedan en cada feature, que es la parte que sí le pertenece. Las clases viven acá como literales completos porque Tailwind 4 no ve una clase armada con template string |
 | `WizardSteps` | El riel de pasos de un formulario largo, con el paso actual y los que ya se completaron. Hoy lo usa solo el wizard de crear mesa, que es el único formulario de varios pasos que existe |
 | `AttendanceSummaryView` | Los tres números de asistencia de #137 —presentes, ausentes, justificados— sin saber de qué mesa son. Lo usan la pestaña del master y la ficha del jugador |
 | `LanguageSwitch` | Elegir idioma, recordado sin ida al servidor (#198). Vive acá y no en `UserMenu` porque `/login` no tiene header y también lo necesita |
@@ -397,11 +398,15 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 
 **Tres que este documento prometió y no existen**: `KarmaBadge` (el karma se pinta dentro de `ProfileCard` y como texto en las listas, nunca como badge propio), `SystemFeedbackDialog` (F5, ya anotado) y el hook `useTableSelection` (ninguna tabla pide selección múltiple todavía, ya anotado). `KarmaBadge` no estaba anotado y ahora lo está: un componente prometido que nadie construyó es una pieza que la próxima fase cree que puede reusar.
 
-#### El badge de estado está escrito nueve veces
+#### El badge de estado estaba escrito diez veces — resuelto en #261
 
-**Es el hallazgo que abrir el inventario completo produjo, y es un incumplimiento de `arquitectura.md` §3.1.2.** Esa regla fija el umbral en **dos** usos reales, más bajo que el del backend, y la razón que da es exacta: *«acá la alternativa a subir no es un poco de duplicación: es un import prohibido»*.
+**Fue el hallazgo que abrir el inventario completo produjo**, y era un incumplimiento de `arquitectura.md` §3.1.2: esa regla fija el umbral en **dos** usos reales, más bajo que el del backend, y la razón que da es exacta — *«acá la alternativa a subir no es un poco de duplicación: es un import prohibido»*. Nueve no era un caso de borde.
 
-Nueve compuestos renderizan **el mismo bloque, byte a byte**: `<span class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium">` con un punto `size-1.5 rounded-full` adentro y la etiqueta traducida al lado. Ocho de ellos además comparten la misma forma entera — un `Record<Estado, { badge, dot }>` con las clases escritas literales y un `t()` sobre el estado:
+**Ya está subido**: `components/StatusBadge.tsx`, y los diez pasaron a usarlo. Queda escrito lo que había porque es lo que explica la forma del componente y lo que evita que el próximo se escriba de cero.
+
+**Eran diez y no nueve, y el décimo es el dato interesante**: `routes/NotificationsPage.tsx` tenía la copia completa —el mismo bloque y el mismo mapa `{ badge, dot }`— y el primer recuento no la vio porque solo miró `components/` y las carpetas `components/` de las features. Una pantalla también es un lugar donde alguien escribe un componente, y buscar duplicados solo donde los componentes *deberían* estar es cómo se cuenta uno de menos.
+
+Los diez renderizaban **el mismo bloque, byte a byte**: `<span class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium">` con un punto `size-1.5 rounded-full` adentro y la etiqueta traducida al lado. Ocho de ellos además comparten la misma forma entera — un `Record<Estado, { badge, dot }>` con las clases escritas literales y un `t()` sobre el estado:
 
 | Componente | Feature | Namespace | Clave | Estados |
 |---|---|---|---|---|
@@ -414,12 +419,21 @@ Nueve compuestos renderizan **el mismo bloque, byte a byte**: `<span class="inli
 | `TaskStatusBadge` | `tasks` | `tasks` | `status.${status}` | 2 |
 | `FileTypeBadge` | `files` | `files` | `fileType.${fileType}` | 3 |
 | `ClaimBadge` | `adminQueue` | `admin` | — (dos ramas, no un `Record`) | — |
+| el badge de resultado | `routes/NotificationsPage.tsx` | `notifications` | `badge.accepted` · `badge.rejected` | 2 |
 
 **Difieren en tres cosas y en ninguna más**: el namespace de i18n, el prefijo de la clave, y el mapa de estado a token. Todo lo demás —el `cn()`, las clases del contenedor, el tamaño del punto, el orden de los dos hijos— es el mismo texto repetido ocho veces.
 
-Lo que corresponde según §3.1.2 es un `StatusBadge` en `components/` que reciba **la etiqueta ya traducida y el par de clases ya resueltas**, porque al subir se le quita el dominio: un componente de `components/` que sepa qué es `PauseRequested` está mal ubicado. Cada feature se queda con su `Record` y su `t()`, que es justamente la parte que sí le pertenece.
+**Cómo quedó.** `StatusBadge` recibe un `tone` —una de las nueve familias de estado de §3— y la etiqueta ya traducida. El `tone` y no un par de clases, por dos razones: al subir se le quita el dominio, así que un componente de `components/` que sepa qué es `PauseRequested` estaría mal ubicado; y el mapa de clases literales, que existe porque Tailwind 4 no ve una clase armada con template string, pasa a estar en **un** archivo en vez de replicado en nueve. Cada feature conserva su `Record<Estado, StatusTone>` y su `t()`.
 
-**Por qué se sostuvo nueve veces sin que nadie lo viera**, que es la parte que importa más que el duplicado: la tabla curada de más arriba nombra **dos** de los nueve —`TableStatusBadge` y `RegistrationStatusBadge`— y no dice que los otros siete existen. Una fase que quiere un badge nuevo lee ese inventario, encuentra dos badges de dominio, concluye que un badge es cosa de cada feature, y escribe el noveno. El inventario incompleto no es un problema de prolijidad: es el mecanismo por el que el duplicado se reproduce.
+`ClaimBadge` es el único que mantuvo forma propia encima: no pinta el valor de un enum sino la respuesta a un sí-o-no, y el «sí» lleva además el «hace cuánto». Usa `StatusBadge` con ese dato como hijo.
+
+**Dos badges quedaron afuera a propósito**, y no son deuda: `FileCategoryBadge` es neutro con borde y un icono —está apagado a propósito para no competir con el `FileTypeBadge` que tiene al lado— y `TaskAudienceBadge` no tiene fondo, es texto atenuado con un punto `aria-hidden`. No comparten el bloque ni el contrato de accesibilidad, así que subirlos sería «abstraer lo que solo se parece», que es lo que §3.1.2 prohíbe en su tercer punto.
+
+**Salida real del refactor**: los diez badges perdieron 159 líneas y ganaron 108. `npx tsc -b` limpio, `npm run test` **488/488 en 55 archivos**, `npm run test:e2e` **59/59**, `npm run format` sin reescrituras.
+
+**Ningún test existente se tocó**, que era la condición: el de `TableStatusBadge` —el único que los nueve tenían— sigue verde sin una línea cambiada, porque afirma la *presencia* de la clase del punto y que la etiqueta esté junto a él, y eso es exactamente el contrato que `StatusBadge` preserva. Se sumó uno nuevo, `components/StatusBadge.test.tsx`: la invariante «el color nunca viaja solo» estaba fijada para mesas y confiada para las otras ocho, y ahora que hay un solo lugar se fija ahí para los nueve tonos a la vez.
+
+**Por qué se sostuvo diez veces sin que nadie lo viera**, que es la parte que importa más que el duplicado: la tabla curada de más arriba nombra **dos** de los diez —`TableStatusBadge` y `RegistrationStatusBadge`— y no dice que los otros ocho existen. Una fase que quiere un badge nuevo lee ese inventario, encuentra dos badges de dominio, concluye que un badge es cosa de cada feature, y escribe el siguiente. El inventario incompleto no es un problema de prolijidad: es el mecanismo por el que el duplicado se reproduce — y es por eso que este documento entrega ahora el inventario entero y no una selección.
 
 #### El diálogo con motivo obligatorio, siete veces — y por qué acá la regla dice lo contrario
 
