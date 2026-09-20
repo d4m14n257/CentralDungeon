@@ -34,6 +34,17 @@ import org.jspecify.annotations.Nullable;
  * @param attachedFiles          the character sheet, or anything else the applicant attached (#60
  *                               uso 2). They are linked, never copied (#65, #79). Empty when they
  *                               attached nothing - attaching was optional
+ * @param blockedByName          who vetoed this application, or null when it is not vetoed (#39).
+ *                               <b>A veto that disappears from the screen is not reversible in
+ *                               practice</b>, so the row stays and says who decided it - the master
+ *                               reading it has to be able to go and ask them
+ * @param blockedAt              when the veto was applied, or null when it is not vetoed. The other
+ *                               half of the same sentence: «hace seis meses» and «anteayer» are
+ *                               different arguments for lifting it
+ * @param blockJustification     the reason that was written down (#39), or null when it is not
+ *                               vetoed. <b>None of these three ever travels to the vetoed person</b>
+ *                               - every read of that table answers them 404 (#29), so the only
+ *                               readers are the table's masters
  */
 public record RegistrationResponse(
         String id,
@@ -47,5 +58,8 @@ public record RegistrationResponse(
         LocalDateTime createdAt,
         @Nullable String rejectionJustification,
         @Nullable String rejectionReasonCode,
-        List<RegistrationFileResponse> attachedFiles) {
+        List<RegistrationFileResponse> attachedFiles,
+        @Nullable String blockedByName,
+        @Nullable LocalDateTime blockedAt,
+        @Nullable String blockJustification) {
 }

@@ -13,11 +13,17 @@ import { ApiError } from '@/types/api'
 import { AdminTablesPage } from './AdminTablesPage'
 
 const admin = vi.hoisted(() => vi.fn())
+const pause = vi.hoisted(() => vi.fn())
+const resume = vi.hoisted(() => vi.fn())
+const toastError = vi.hoisted(() => vi.fn())
+
+// `sonner` renders outside this tree, so the only way to read what a failure said is to mock it.
+vi.mock('sonner', () => ({ toast: { error: toastError, success: vi.fn() } }))
 
 // The API module is mocked, not the hooks: that keeps the query keys, the `?q=` round trip and the
 // four states running for real, which is where this screen's behaviour actually lives.
 vi.mock('@/features/tables/api/gameTablesApi', () => ({
-  gameTablesApi: { admin, delete: vi.fn(), assignMasters: vi.fn(), createUnassigned: vi.fn() },
+  gameTablesApi: { admin, delete: vi.fn(), assignMasters: vi.fn(), createUnassigned: vi.fn(), pause, resume },
   tableTypesApi: { list: vi.fn() },
 }))
 
@@ -66,6 +72,9 @@ async function rowFor(name: string) {
 
 beforeEach(() => {
   admin.mockReset()
+  pause.mockReset()
+  resume.mockReset()
+  toastError.mockReset()
 })
 
 describe('AdminTablesPage', () => {
@@ -208,5 +217,103 @@ describe('AdminTablesPage', () => {
     expect(dialog.getByText('/table_name')).toBeInTheDocument()
     // And nothing from a box this screen is not.
     expect(dialog.queryByText(/discord_name/)).not.toBeInTheDocument()
+  })
+
+  /**
+   * #163, from the side that had been missing: `pause()` and `resume()` have had an endpoint since
+   * E2 and no button on any screen. Each is offered on exactly the status it applies to — pausing a
+   * running table, resuming a paused one — because principio 2 shows an action only where it works.
+   */
+  it('offers pausing on a running table and resuming on a paused one', async () => {
+    admin.mockResolvedValue(page([table({ status: 'InProgress' })]))
+
+    const { unmount } = renderPage()
+    const running = await rowFor('La maldición de Strahd')
+    expect(running.getByRole('button', { name: 'Pausar' })).toBeInTheDocument()
+    expect(running.queryByRole('button', { name: 'Reanudar' })).not.toBeInTheDocument()
+    unmount()
+
+    admin.mockResolvedValue(page([table({ status: 'Pause' })]))
+    renderPage()
+    const paused = await rowFor('La maldición de Strahd')
+    expect(paused.getByRole('button', { name: 'Reanudar' })).toBeInTheDocument()
+    expect(paused.queryByRole('button', { name: 'Pausar' })).not.toBeInTheDocument()
+  })
+
+  /** And neither on a table that is not in either state — an `Opened` one has nothing to pause yet. */
+  it('offers neither on a table that is not running or paused', async () => {
+    admin.mockResolvedValue(page([table({ status: 'Opened' })]))
+
+    renderPage()
+    const row = await rowFor('La maldición de Strahd')
+
+    expect(row.queryByRole('button', { name: 'Pausar' })).not.toBeInTheDocument()
+    expect(row.queryByRole('button', { name: 'Reanudar' })).not.toBeInTheDocument()
+  })
+
+  /** #32: `Pause` demands a justification, and it is the master who will read it. */
+  it('sends the pause with the reason that was written', async () => {
+    admin.mockResolvedValue(page([table({ status: 'InProgress' })]))
+    pause.mockResolvedValue(table({ status: 'Pause' }))
+    const user = userEvent.setup()
+
+    renderPage()
+    const row = await rowFor('La maldición de Strahd')
+    await user.click(row.getByRole('button', { name: 'Pausar' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+    await user.type(dialog.getByRole('textbox'), 'El master se fue de viaje')
+    await user.click(dialog.getByRole('button', { name: 'Pausar' }))
+
+    await waitFor(() => expect(pause).toHaveBeenCalledWith('table-1', { justification: 'El master se fue de viaje' }))
+  })
+
+  /**
+   * #193 and #197, which is the whole reason this refusal was worth building a message for.
+   *
+   * Resuming re-checks the master's agenda, because they may have taken another table while this one
+   * was frozen. The backend answers naming that table in `errorParams`, and the screen has to say
+   * **which** one: "no pudimos completar la acción" would throw away the single fact that makes the
+   * problem solvable.
+   */
+  it('names the table the agenda clashes with when resuming is refused', async () => {
+    admin.mockResolvedValue(page([table({ status: 'Pause' })]))
+    resume.mockRejectedValue(
+      new ApiError(409, {
+        title: 'Conflict',
+        status: 409,
+        detail: 'Cannot resume: agenda overlaps table Curse of Strahd',
+        errorCode: 'SCHEDULE_CONFLICT',
+        errorParams: { otherTableName: 'Las minas de Phandelver' },
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderPage()
+    const row = await rowFor('La maldición de Strahd')
+    await user.click(row.getByRole('button', { name: 'Reanudar' }))
+    await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1))
+    expect(toastError).toHaveBeenCalledWith(expect.stringContaining('Las minas de Phandelver'))
+    // And never the backend's own English, which is written for a log (#197).
+    expect(toastError).not.toHaveBeenCalledWith(expect.stringContaining('Cannot resume'))
+  })
+
+  /**
+   * And the same refusal without its parameter falls back to the generic sentence rather than
+   * rendering «se pisa con «»», which would say less than saying nothing specific at all.
+   */
+  it('falls back to the generic refusal when the clash carries no table name', async () => {
+    admin.mockResolvedValue(page([table({ status: 'Pause' })]))
+    resume.mockRejectedValue(new ApiError(409, { title: 'Conflict', status: 409, detail: 'Cannot resume', errorCode: 'SCHEDULE_CONFLICT' }))
+    const user = userEvent.setup()
+
+    renderPage()
+    const row = await rowFor('La maldición de Strahd')
+    await user.click(row.getByRole('button', { name: 'Reanudar' }))
+    await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith('No pudimos completar la acción. Probá de nuevo.'))
   })
 })

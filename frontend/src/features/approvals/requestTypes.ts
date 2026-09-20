@@ -1,17 +1,40 @@
 import { serializeSearchQuery } from '@/lib/searchQuery'
 
-import type { ApprovalRequestType, ApprovalStatus } from './types'
+import type { ApprovalRequestType, ApprovalStatus, SubmittableRequestType } from './types'
 
 /**
- * The three kinds of request F3.2 has, in the order they are offered and listed.
+ * Every kind of request there is, in the order they are offered and listed.
  *
  * A written-out tuple rather than something derived from the union, for the same reason as
  * `PLATFORM_ROLES`: a union of literals has no runtime value to iterate, and `satisfies` is what
  * turns a typo here into a compile error.
  *
- * `TablePause` and `PlayerBan` are deliberately absent — F3.4 adds them **with their producer**.
+ * **`TablePause` and `PlayerBan` joined in F3.4, with their producer** — which is the condition F3.2
+ * wrote into this very comment when it left them out. This is the list `/request_type` offers, so
+ * leaving them out now would mean the two kinds an admin most wants to find are the two they cannot
+ * filter by.
  */
-export const APPROVAL_REQUEST_TYPES = ['MasterGrant', 'TableOpen', 'General'] as const satisfies readonly ApprovalRequestType[]
+export const APPROVAL_REQUEST_TYPES = [
+  'MasterGrant',
+  'TableOpen',
+  'General',
+  'TablePause',
+  'PlayerBan',
+] as const satisfies readonly ApprovalRequestType[]
+
+/**
+ * The kinds somebody can raise from `POST /api/v1/requests`, which is not all of them.
+ *
+ * **A separate list because the endpoint takes no `entityId`**, deliberately, so that nobody can ask
+ * in another person's name (F3.2 §0d). The three below are *about whoever is asking*, and who that
+ * is comes from the token. The two F3.4 added are about something else — a table, an application —
+ * so each got a route of its own hanging off the entity, where "being the master of **this** table"
+ * can be checked against the thing in the path (#121).
+ *
+ * It is what the submit form validates against, so a screen cannot offer a kind whose only possible
+ * outcome is a refusal (principio 2).
+ */
+export const SUBMITTABLE_REQUEST_TYPES = ['MasterGrant', 'TableOpen', 'General'] as const satisfies readonly SubmittableRequestType[]
 
 /** Every state a request can be in, in the order of its life: asked, then resolved one way or the other. */
 export const APPROVAL_STATUSES = ['Pending', 'Approved', 'Rejected'] as const satisfies readonly ApprovalStatus[]

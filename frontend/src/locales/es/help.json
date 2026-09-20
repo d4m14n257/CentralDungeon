@@ -402,6 +402,39 @@
         "step3": "Guardá los cambios.",
         "step4": "Si un admin había pedido correcciones, andá a «Estado» y reenviá la mesa a revisión."
       }
+    },
+    "pause": {
+      "title": "Pedir una pausa",
+      "what": "Pausar una mesa lo decide un admin. El master la pide, el admin responde, y recién ahí la mesa entra en pausa.",
+      "who": "Lo puede pedir cualquiera que dirija la mesa: el master o un co-master.",
+      "notYet": "Pedir no es pausar. Mientras el pedido espera, la mesa sigue «En curso» y el calendario sigue prometiendo sus fechas: si dejás de aparecer antes de la respuesta, tus jugadores te esperan.",
+      "reason": "El motivo es obligatorio. Es lo que lee el admin para decidir, y queda en el historial de estados de la mesa.",
+      "freeze": "Con la mesa pausada, las sesiones pendientes se ocultan: la mesa deja de prometer fechas que no sabe si va a cumplir.",
+      "resume": "Al reanudarla, las sesiones pendientes se vuelven a agendar desde el día en que se retoma, conservando la numeración. No se pierde ninguna.",
+      "steps": {
+        "step1": "Abrí tu mesa y andá a la pestaña Estado. La mesa tiene que estar en curso.",
+        "step2": "Tocá «Pedir pausa» y escribí por qué. El motivo es obligatorio.",
+        "step3": "La mesa pasa a «Pausa solicitada» y el pedido le llega a los admins. Hasta que respondan, la mesa sigue jugándose normal.",
+        "step4": "Cuando un admin apruebe, la mesa queda pausada y el calendario se congela. Reanudarla también es de ellos."
+      }
+    },
+    "banning": {
+      "title": "Vetar a alguien de tu mesa",
+      "what": "Vetar saca a una persona de tu mesa: deja de verla en el explorador, no puede abrirla y no puede descargar sus archivos.",
+      "perTable": "Es por mesa, y solo por esa mesa. No pierde la cuenta, ni el karma, ni las otras mesas donde juega: lo que desaparece para esa persona es esta mesa y nada más.",
+      "who": "Lo aplica el master de la mesa. Un co-master no veta: lo pide.",
+      "coMaster": "El pedido de un co-master lo resuelve el master de la mesa, no un admin: quién se sienta a la mesa lo decide quien la dirige.",
+      "reason": "El motivo es obligatorio al vetar y al levantar el veto. Queda registrado con quién lo hizo y cuándo, que es lo que hace que la decisión se pueda revisar después.",
+      "invisible": "A la persona no se le avisa. La mesa simplemente deja de existir para ella, así que el motivo que escribas no lo lee: lo leen los masters de la mesa.",
+      "reversible": "Se puede levantar. Un veto no es una baja: es reversible, y por eso pide un motivo.",
+      "stays": "La fila de quien está vetado se sigue viendo en Jugadores, marcada, con quién lo vetó y cuándo. Es desde ahí que se levanta el veto.",
+      "steps": {
+        "step1": "Abrí tu mesa y andá a la pestaña Jugadores.",
+        "step2": "Buscá a la persona en la lista de jugadores.",
+        "step3": "Tocá «Vetar». Si sos co-master, el botón dice «Pedir que se lo vete», porque es lo que manda.",
+        "step4": "Escribí el motivo. Es obligatorio.",
+        "step5": "Para deshacerlo, la misma fila ofrece «Levantar el veto», que también pide motivo."
+      }
     }
   },
   "admins": {
@@ -544,6 +577,23 @@
         "step3": "Decidí: «Aprobar» o «Rechazar». Fijate en el diálogo qué hace aprobar ese tipo de pedido, porque no es lo mismo en los tres.",
         "step4": "Escribí tu respuesta. Es obligatoria y le llega a quien pidió.",
         "step5": "Si era un pedido de mesa nueva, acordate del paso que falta: crearla desde «Mesas» y asignarle master."
+      }
+    },
+    "pausing": {
+      "title": "Pausar y reanudar una mesa",
+      "what": "Pausar saca una mesa de circulación sin cerrarla: deja de prometer fechas y sus sesiones pendientes se ocultan.",
+      "requested": "El master no pausa su mesa: la pide. Ese pedido llega a la bandeja como cualquier otro, y aprobarlo es lo que la pausa.",
+      "freeze": "La pausa no borra ni cancela nada. Las sesiones siguen existiendo; simplemente no se muestran mientras la mesa esté pausada.",
+      "reason": "Pausar pide un motivo obligatorio. Lo lee el master, y queda en el historial de estados de la mesa.",
+      "resume": "Reanudar vuelve a agendar las sesiones pendientes desde hoy, conservando la numeración. A los jugadores les cambian las fechas.",
+      "clash": "Reanudar puede fallar, y es el único acto de esta pantalla que puede: mientras la mesa estuvo pausada, su master pudo comprometerse con otra. Si las agendas se pisan, la plataforma se niega y te dice con qué mesa choca.",
+      "notCancel": "Pausar no es cancelar. Una mesa pausada vuelve; una cancelada no, y eso se hace desde la mesa con «Cancelar».",
+      "steps": {
+        "step1": "Andá a «Mesas». Podés acotar con /table_status para ver solo las que están en curso o en pausa.",
+        "step2": "En la fila de la mesa, tocá «Pausar» y escribí el motivo.",
+        "step3": "Si lo que hay es un pedido del master, resolvelo desde la bandeja: aprobarlo es lo que la pausa.",
+        "step4": "Para devolverla al ruedo, la misma fila ofrece «Reanudar».",
+        "step5": "Confirmá: las sesiones pendientes se reagendan desde hoy. Si la agenda del master choca con otra mesa, la plataforma te dice con cuál."
       }
     }
   },

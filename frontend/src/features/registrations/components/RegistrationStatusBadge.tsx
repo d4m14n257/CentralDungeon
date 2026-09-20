@@ -8,6 +8,10 @@ const STATE_CLASSES: Record<RegistrationStatus, { badge: string; dot: string }> 
   Candidate: { badge: 'bg-state-pending-bg text-state-pending-fg', dot: 'bg-state-pending-dot' },
   Player: { badge: 'bg-state-open-bg text-state-open-fg', dot: 'bg-state-open-dot' },
   Rejected: { badge: 'bg-state-canceled-bg text-state-canceled-fg', dot: 'bg-state-canceled-dot' },
+  // Its own colour and not `canceled`'s, though both are refusals: they sit next to each other in
+  // the same list and mean different things - one is "you never got in", the other is "you were in
+  // and were removed". Two rows the reader tells apart at a glance cannot share a swatch.
+  Blocked: { badge: 'bg-state-blocked-bg text-state-blocked-fg', dot: 'bg-state-blocked-dot' },
 }
 
 /**

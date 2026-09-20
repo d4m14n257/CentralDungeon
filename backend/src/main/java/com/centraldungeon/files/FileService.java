@@ -20,6 +20,7 @@ import com.centraldungeon.registrations.RegistrationFileRepository;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
 import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.users.PlatformRole;
@@ -118,6 +119,16 @@ public class FileService {
     private final MasterService masterService;
 
     /**
+     * Answers the veto (#29, #39): whether the reader stopped being allowed to see the table an
+     * attachment hangs off.
+     *
+     * <p>The <b>same</b> service {@code GET /game-tables/{id}} goes through, deliberately. #206 had
+     * to fix the mirror image of this once already - a row listed on a screen and a 404 when it was
+     * opened - and two copies of «is this person vetoed here» is how that happens again.
+     */
+    private final TableVisibilityService tableVisibilityService;
+
+    /**
      * The actor's platform roles, for deciding which cajones are theirs to use (#237).
      *
      * <p>The one place in this class that asks about a <b>role</b> rather than about pertenencia, and
@@ -157,6 +168,8 @@ public class FileService {
      * @param storageService            where the bytes live (#15)
      * @param storageProperties         the cap, the whitelist and the retention window
      * @param masterService             answers pertenencia (#17, #121, #135)
+     * @param tableVisibilityService    answers the veto, so a shared attachment stops being readable
+     *                                  by somebody the table stopped existing for (#29, #206)
      * @param userRoleRepository        the actor's roles, for their own cajones (#237)
      * @param registrationRepository    who belongs to a table, for reading a request's blank
      * @param registrationFileRepository the files a candidate attached to their application, for the
@@ -173,6 +186,7 @@ public class FileService {
             StorageService storageService,
             StorageProperties storageProperties,
             MasterService masterService,
+            TableVisibilityService tableVisibilityService,
             UserRoleRepository userRoleRepository,
             TableRegistrationRepository registrationRepository,
             RegistrationFileRepository registrationFileRepository,
@@ -186,6 +200,7 @@ public class FileService {
         this.storageService = storageService;
         this.storageProperties = storageProperties;
         this.masterService = masterService;
+        this.tableVisibilityService = tableVisibilityService;
         this.userRoleRepository = userRoleRepository;
         this.registrationRepository = registrationRepository;
         this.registrationFileRepository = registrationFileRepository;
@@ -773,10 +788,20 @@ public class FileService {
      * who most needs to read those is somebody still deciding whether to apply (#60 uso 1). A private
      * attachment is the master's own notes and never gets here.
      *
-     * <p>⚠️ <b>When the veto lands (F3) it has to be honoured here.</b> Today
-     * {@code TableRegistrationStatus} has no {@code Blocked} value at all, so there is nobody to
-     * exclude; once there is, somebody vetoed on a table must stop reaching what it shares, the same
-     * way the table itself answers them 404 (#29, #39).
+     * <p><b>The veto landed, and it is honoured in the fourth way</b> (#29, #39, #206). This is the
+     * note that used to say «when the veto lands (F3) it has to be honoured here», and it is the
+     * hole {@code fase-3-admin-owner.md} §7 named in advance: «un vetado que no ve la mesa pero sí
+     * descarga su archivo es el bug que #206 anticipó por escrito». It was real - until F3.4 the
+     * condition was {@code !link.isPrivate()} alone, so <em>any</em> authenticated person reached a
+     * shared attachment, the vetoed included. The fourth way is now "a table shares it <b>and you
+     * are not vetoed on that table</b>", asked through {@code TableVisibilityService} so it is the
+     * same question {@code GET /game-tables/{id}} answers and not a second copy of it.
+     *
+     * <p>The other ways need no such clause and it would be noise to add one: the first is the
+     * file's owner, the second is a platform publication, the third, fifth and seventh ask for
+     * pertenencia of the table (#154 keeps a master out of its registrations), and the sixth asks
+     * for a live {@code Candidate} or {@code Player} row - which somebody moved to {@code Blocked}
+     * no longer has.
      *
      * <p>Anything else answers 404 rather than 403: confirming that a file exists to somebody with no
      * business knowing so is the kind of leak an opaque id is only defence in depth against (#9, #29).
@@ -788,7 +813,15 @@ public class FileService {
         }
         List<TableFile> links = tableFileRepository.findById_FileIdAndStatus(fileId, TableFileStatus.Current);
         for (TableFile link : links) {
-            if (!link.isPrivate() || masterService.isMasterOf(link.getId().gameTableId(), actorId)) {
+            String linkedTableId = link.getId().gameTableId();
+            // The third way, first because it is the widest: a master sees everything on their own
+            // table, private or shared, and is never the subject of a veto there (#135, #154).
+            if (masterService.isMasterOf(linkedTableId, actorId)) {
+                return file;
+            }
+            // The fourth, and the one #206 wrote this method's warning for: a shared attachment is
+            // read by whoever may see the table, and a vetoed person stopped being one of them (#29).
+            if (!link.isPrivate() && !tableVisibilityService.isVetoed(linkedTableId, actorId)) {
                 return file;
             }
         }

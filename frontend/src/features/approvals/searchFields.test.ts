@@ -20,22 +20,32 @@ describe('approvalRequestSearchFields', () => {
   it('declares fixed choices for the two closed sets and free text for the name', () => {
     const byName = Object.fromEntries(approvalRequestSearchFields(t).map((field) => [field.name, field]))
 
-    expect(byName.request_type?.values?.map((choice) => choice.value)).toEqual(['MasterGrant', 'TableOpen', 'General'])
+    expect(byName.request_type?.values?.map((choice) => choice.value)).toEqual([
+      'MasterGrant',
+      'TableOpen',
+      'General',
+      'TablePause',
+      'PlayerBan',
+    ])
     expect(byName.status?.values?.map((choice) => choice.value)).toEqual(['Pending', 'Approved', 'Rejected'])
     expect(byName.requested_by?.values).toBeUndefined()
   })
 
   /**
-   * Neither of the two kinds F3.4 owns is offered: nothing produces a `TablePause` or a `PlayerBan`
-   * yet, and a command that offers a value no row can have is a filter that always answers nothing.
+   * The two kinds F3.4 added **are** offered, and this assertion used to say the opposite.
+   *
+   * It was right when it was written: nothing produced a `TablePause` or a `PlayerBan`, and a command
+   * offering a value no row can have is a filter that always answers nothing. F3.4 built both
+   * producers — `POST /game-tables/{id}/request-pause` and `.../registrations/{id}/request-block` —
+   * so the condition the old test encoded is what changed, not the rule behind it. Leaving it
+   * inverted would now hide the two kinds an admin most wants to find behind a filter that refuses
+   * to name them.
    */
-  it('offers no kind that nothing can produce yet', () => {
-    const labels = approvalRequestSearchFields(t)
-      .find((field) => field.name === 'request_type')
-      ?.values?.map((choice) => choice.value)
+  it('offers the two kinds F3.4 gave a producer to', () => {
+    const values = approvalRequestSearchFields(t).find((field) => field.name === 'request_type')?.values
 
-    expect(labels).not.toContain('TablePause')
-    expect(labels).not.toContain('PlayerBan')
+    expect(values).toContainEqual({ value: 'TablePause', label: 'Pausa de mesa' })
+    expect(values).toContainEqual({ value: 'PlayerBan', label: 'Veto de jugador' })
   })
 
   /** The value is what travels to the backend; the label is what is typed and read (#240). */

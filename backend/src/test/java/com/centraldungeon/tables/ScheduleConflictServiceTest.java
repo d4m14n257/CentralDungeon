@@ -6,6 +6,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -235,6 +236,24 @@ class ScheduleConflictServiceTest {
     /** The week as the reader's own screen asks for it (#227) - the same commitments, read instead of enforced. */
     @Nested
     class MyWeek {
+
+        /**
+         * <b>A group B regression test.</b> {@code /users/me/schedule} was not touched by F3.4, and the
+         * only thing protecting it is the {@code r.status = Player} written inside
+         * {@code findTablesPlayedByUserInStatuses}: moving somebody to {@code Blocked} takes them out of
+         * that filter and the table leaves their week. This test pins that the query being used is that
+         * one and not one accepting any live registration.
+         */
+        @Test
+        @DisplayName("la semana solo cuenta las mesas donde se es Player: el veto la cierra sin tocarla")
+        void theWeekOnlyCountsTheTablesWhereYouArePlayer() {
+            when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of());
+            when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
+
+            assertThat(scheduleConflictService.weekOf("vetado")).isEmpty();
+
+            verify(registrationRepository).findTablesPlayedByUserInStatuses(eq("vetado"), any());
+        }
 
         @Test
         @DisplayName("la semana junta lo que dirigís y lo que jugás, y dice cuál es cuál")

@@ -57,6 +57,21 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     List<TableRegistration> findByGameTable_IdAndStatusOrderByCreatedAtAsc(String gameTableId, TableRegistrationStatus status);
 
     /**
+     * The same read over more than one status - the roster of a table since F3.4: its
+     * {@code Player} rows <b>and</b> its {@code Blocked} ones (#39).
+     *
+     * <p>The vetoed stay on the roster because that is the screen the veto is lifted from, and a
+     * veto that disappears from the interface is not reversible in practice. They are still
+     * unreachable as the target of a task: that check asks for {@code Player} specifically.
+     *
+     * @param gameTableId the table
+     * @param statuses    which rows count as roster - {@code Player} and {@code Blocked}
+     * @return the matching applications, oldest first
+     */
+    List<TableRegistration> findByGameTable_IdAndStatusInOrderByCreatedAtAsc(
+            String gameTableId, Collection<TableRegistrationStatus> statuses);
+
+    /**
      * Backs /my/applications: everything the actor ever applied to, whatever came of it.
      *
      * @param userId   the actor, from the token (#121)
@@ -76,6 +91,23 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
      * @return one page of their applications, the marked ones excluded
      */
     Page<TableRegistration> findByUser_IdAndStatusNot(String userId, TableRegistrationStatus status, Pageable pageable);
+
+    /**
+     * The same read, excluding more than one status - what {@code /registrations/mine} needs since
+     * F3.4 (#29).
+     *
+     * <p><b>{@code Blocked} is excluded alongside {@code Deleted}</b>, and that is a decision rather
+     * than tidiness: #29 says the vetoed person «no ve esa mesa», and this row carries
+     * {@code gameTableName}. Leaving it in the applicant's own list would be the one crack through
+     * which they keep seeing the table by name, right next to a status telling them why.
+     *
+     * @param userId   the applicant, always from the token (#121)
+     * @param statuses the statuses that must not come back - {@code Deleted} and {@code Blocked}
+     * @param pageable page, size and sort
+     * @return one page of their applications, minus those
+     */
+    Page<TableRegistration> findByUser_IdAndStatusNotIn(
+            String userId, Collection<TableRegistrationStatus> statuses, Pageable pageable);
 
     /**
      * Backs /my/tables: every game table where the actor holds an active Player registration.

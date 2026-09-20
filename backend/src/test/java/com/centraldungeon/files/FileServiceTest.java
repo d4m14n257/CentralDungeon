@@ -24,6 +24,7 @@ import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.registrations.RegistrationFileRepository;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
 import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.users.User;
@@ -90,6 +91,14 @@ class FileServiceTest {
     @Mock
     private MasterService masterService;
 
+    /**
+     * The veto gate (#29, #39). A mock and not the real one here: this class has no
+     * {@code GameTableRepository} to build it from, and what the read rule needs from it is one
+     * boolean - which defaults to «not vetoed» and is stubbed in the test that is about the veto.
+     */
+    @Mock
+    private TableVisibilityService tableVisibilityService;
+
     /** Who belongs to a table, for the sixth way a file is reachable (#63). */
     @Mock
     private TableRegistrationRepository registrationRepository;
@@ -118,6 +127,7 @@ class FileServiceTest {
                 storageService,
                 storageProperties,
                 masterService,
+                tableVisibilityService,
                 userRoleRepository,
                 registrationRepository,
                 registrationFileRepository,
@@ -437,6 +447,71 @@ class FileServiceTest {
         when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
                 .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, true)));
         assertThatThrownBy(() -> fileService().download("file-1", "reader-9")).isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * <b>Read paths 6 and 6b of F3.4</b>, and the bug #206 anticipated in writing: the vetoed person
+     * who cannot see the table but <em>does download its file</em>.
+     *
+     * <p>It was real. Until F3.4 the fourth way's condition was {@code !link.isPrivate()} alone, so a
+     * shared attachment was opened by <b>any authenticated person</b> - the vetoed included. The fourth
+     * way is now «a table shares it <b>and you are not vetoed on it</b>», asked through the same
+     * {@code TableVisibilityService} that answers {@code GET /game-tables/{id}} rather than through a
+     * second copy of the question.
+     *
+     * <p>And it answers 404, just like the table: the file stops existing for that person (#29).
+     */
+    @Test
+    void aVetoedPersonCannotDownloadWhatTheTableShares() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
+        when(masterService.isMasterOf("table-1", "vetado")).thenReturn(false);
+        when(tableVisibilityService.isVetoed("table-1", "vetado")).thenReturn(true);
+
+        assertThatThrownBy(() -> fileService().download("file-1", "vetado"))
+                .isInstanceOf(NotFoundException.class);
+        assertThatThrownBy(() -> fileService().findById("file-1", "vetado"))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * And the veto is <b>per table</b> and not per file: if another table the person is not vetoed on
+     * shares the same file, they keep reading it through that one. It is the difference between hiding
+     * a table and punishing somebody across the whole platform (#29).
+     */
+    @Test
+    void theVetoIsPerTableAndNotPerFile() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(
+                        new TableFile("table-veto", "file-1", TableFileType.Preparation, false),
+                        new TableFile("table-libre", "file-1", TableFileType.Preparation, false)));
+        when(masterService.isMasterOf(anyString(), eq("lector"))).thenReturn(false);
+        when(tableVisibilityService.isVetoed("table-veto", "lector")).thenReturn(true);
+        when(tableVisibilityService.isVetoed("table-libre", "lector")).thenReturn(false);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "lector")).isNotNull();
+    }
+
+    /**
+     * A master of the table reads it anyway, and is not even asked about the veto: pertenencia and
+     * having applied are disjoint sets (#154), so the question has no answer to give.
+     */
+    @Test
+    void aMasterIsNeverAskedAboutAVetoOnTheirOwnTable() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
+        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "master-1")).isNotNull();
+        verify(tableVisibilityService, never()).isVetoed(anyString(), anyString());
     }
 
     /** A published file is published: the audience decides where it is listed, not who may open it. */

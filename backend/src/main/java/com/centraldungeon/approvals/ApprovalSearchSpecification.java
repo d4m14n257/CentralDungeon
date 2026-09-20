@@ -42,6 +42,14 @@ final class ApprovalSearchSpecification {
      * {@code /admin/requests}: no implicit filter, because seeing everybody's requests is the entire
      * point of the screen.
      *
+     * <p><b>{@code PlayerBan} is listed here, and that is deliberate</b> - it is the one place it is.
+     * F3.4 took it out of {@code /admin/queue} because the tray is work waiting on <em>you</em> and a
+     * veto is the table's {@code Primary}'s to answer (#39). This screen is not a tray: it is the
+     * record of every request there is, and an admin being able to see that a veto is in progress on
+     * some table is exactly what a record is for. Seeing is not resolving -
+     * {@code ApprovalService.requireMayResolve} answers a {@code 403 NOT_PRIMARY_MASTER} to an admin
+     * who tries, which is the line between the two.
+     *
      * @param query the parsed search box; an empty one matches every request
      * @return the predicate
      */

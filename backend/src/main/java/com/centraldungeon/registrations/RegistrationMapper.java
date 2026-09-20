@@ -29,5 +29,11 @@ public interface RegistrationMapper {
     @Mapping(target = "rejectionJustification", ignore = true)
     @Mapping(target = "rejectionReasonCode", ignore = true)
     @Mapping(target = "attachedFiles", source = "attachedFiles")
+    // The veto's three fields are filled by the service when there is a veto to describe, the same
+    // way the two rejection fields are: the trail lives in `registration_status_changes` and a
+    // mapper never touches a repository (arquitectura.md 2.2).
+    @Mapping(target = "blockedByName", ignore = true)
+    @Mapping(target = "blockedAt", ignore = true)
+    @Mapping(target = "blockJustification", ignore = true)
     RegistrationResponse toResponse(TableRegistration registration, List<RegistrationFileResponse> attachedFiles);
 }

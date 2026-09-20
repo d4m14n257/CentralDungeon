@@ -68,6 +68,12 @@ public class TestDataService {
         // and makes the *next* run fail on pagination, which reads as a broken feature.
         delete("delete from RegistrationFile rf where rf.id.registrationId in (" + E2E_REGISTRATIONS
                 + ") or rf.id.fileId in (" + E2E_FILES + ")");
+        // The sixth time, and the lesson of #254 repeating exactly: F3.4 added `registration_status_changes`
+        // with foreign keys to the application and to whoever moved it, and the veto's e2e was the
+        // first run to write one. The trail hangs off the application, so it goes before it - and
+        // `changedBy` is covered too, because the master who vetoed is a test user as well.
+        delete("delete from RegistrationStatusChange rsc where rsc.registration.id in (" + E2E_REGISTRATIONS
+                + ") or rsc.changedBy.id in (" + E2E_USERS + ")");
         delete("delete from TableRegistration reg2 where reg2.gameTable.id in (" + E2E_TABLES + ") or reg2.user.id in (" + E2E_USERS + ")");
         delete("delete from Notification n where n.user.id in (" + E2E_USERS + ")");
         delete("delete from TableStatusChange c where c.gameTable.id in (" + E2E_TABLES + ") or c.changedBy.id in (" + E2E_USERS + ")");

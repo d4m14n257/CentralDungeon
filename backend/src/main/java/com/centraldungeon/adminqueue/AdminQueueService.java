@@ -3,6 +3,7 @@ package com.centraldungeon.adminqueue;
 import com.centraldungeon.adminqueue.dto.AdminQueueItemResponse;
 import com.centraldungeon.approvals.ApprovalRequest;
 import com.centraldungeon.approvals.ApprovalRequestRepository;
+import com.centraldungeon.approvals.ApprovalRequestType;
 import com.centraldungeon.approvals.ApprovalStatus;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.NotFoundException;
@@ -76,6 +77,23 @@ public class AdminQueueService {
 
     /** The ceiling, as the repositories want it. Page zero of size {@link #QUEUE_SOURCE_CAP}. */
     private static final Pageable SOURCE_CEILING = PageRequest.of(0, QUEUE_SOURCE_CAP);
+
+    /**
+     * The request types that are <b>not</b> the admins' to answer, and therefore never in the tray.
+     *
+     * <p>Today: {@code PlayerBan}. #39 puts a veto with the table's {@code Primary} - «un co-master
+     * necesita aprobación del {@code Primary}» - and the slice's own acceptance sentence says «un
+     * {@code Secondary} pide un veto y el {@code Primary} lo resuelve». It tensions with #90, which
+     * generically calls {@code approval_requests} «todo pedido dirigido a los admins», and the
+     * specific decision wins.
+     *
+     * <p><b>This list exists because new types join the tray for free.</b> The query never asked
+     * what type a row was, so {@code TablePause} needed nothing to appear here - and {@code
+     * PlayerBan} would have appeared too, putting a decision in front of admins that they get a 403
+     * for taking ({@code ApprovalService.requireMayResolve}). A tray full of unanswerable work is
+     * worse than one that under-reports.
+     */
+    private static final List<ApprovalRequestType> NOT_FOR_ADMINS = List.of(ApprovalRequestType.PlayerBan);
 
     /** The requests nobody has answered - one of the two live sources. */
     private final ApprovalRequestRepository approvalRequestRepository;
@@ -209,14 +227,15 @@ public class AdminQueueService {
     // ------------------------------------------------------------------ the sources
 
     /**
-     * {@code approval_requests} in {@code Pending} - the requests nobody has answered.
+     * {@code approval_requests} in {@code Pending} - the requests nobody has answered, <b>minus the
+     * ones that are not the admins' to answer</b> ({@link #NOT_FOR_ADMINS}).
      *
      * @param actorId the admin reading the tray
      * @return their lines of the tray, oldest first
      */
     private List<AdminQueueItemResponse> pendingApprovalRequests(String actorId) {
-        List<ApprovalRequest> rows =
-                approvalRequestRepository.findQueueItems(ApprovalStatus.Pending, actorId, SOURCE_CEILING);
+        List<ApprovalRequest> rows = approvalRequestRepository.findQueueItems(
+                ApprovalStatus.Pending, NOT_FOR_ADMINS, actorId, SOURCE_CEILING);
         warnIfCapped(AdminQueueSource.APPROVAL_REQUEST, rows.size());
         return rows.stream().map(AdminQueueService::toItem).toList();
     }

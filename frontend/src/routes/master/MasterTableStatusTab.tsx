@@ -9,11 +9,14 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { masterTablesPath } from '@/config/paths'
+import { HelpLink } from '@/features/help'
 import {
   JustifiedTableActionDialog,
   useCancelTable,
   useDeleteTable,
   useFinishTable,
+  pauseRequestErrorKey,
+  useRequestTablePause,
   useResubmitTable,
   useSubmitTableForReview,
   useStartTable,
@@ -21,7 +24,16 @@ import {
   type GameTableStatus,
 } from '@/features/tables'
 
-const CANCELABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested', 'Opened', 'InProgress', 'Pause']
+/**
+ * Mirror of `GameTableService.CANCELABLE_STATUSES`.
+ *
+ * **`PauseRequested` is on it since F3.4**, and it had to be: giving the status a producer meant a
+ * table could now sit in it, and without this entry a master who asked for a pause and then decided
+ * to close the table instead would find the button gone — with no way back except waiting for an
+ * admin to answer a request that no longer matters. A table waiting on an answer is still a table
+ * its master may end.
+ */
+const CANCELABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested', 'Opened', 'InProgress', 'PauseRequested', 'Pause']
 /** Only what was never public is deleted; everything else is cancelled and stays in the history (#175). */
 const DELETABLE_STATUSES: GameTableStatus[] = ['Draft', 'Preparation', 'ChangesRequested']
 
@@ -175,12 +187,82 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
   )
 }
 
+/**
+ * Asking an admin to pause the table (#32, F3.4).
+ *
+ * **Its own block, outside `StatusActions`, and that placement is the rule made visible.** Everything
+ * in `StatusActions` belongs to the `Primary` alone — starting, finishing, cancelling, deleting — so
+ * that component refuses to render for anybody else. Asking for a pause is not one of those: the
+ * backend takes it from **any** master of the table, because a co-master running the sessions is
+ * exactly the person who knows the table has to stop. Folding it into the Primary-only block would
+ * have hidden it from them for no reason anybody wrote down.
+ *
+ * **Asking is not pausing**, and the two states say so in different words: while the request waits,
+ * the table still promises its dates and the sessions still appear, because only an admin's answer
+ * freezes the agenda. A master who read "pausada" here and stopped turning up would be acting on a
+ * pause that had not happened.
+ */
+function PauseRequest({ tableId, status }: Pick<OutletContext, 'tableId' | 'status'>) {
+  const { t } = useTranslation('master')
+  const requestPause = useRequestTablePause(tableId)
+  const dialog = useDisclosure()
+
+  // Only from a table that is actually running: there is nothing to pause before it started, and
+  // `Pause`/`PauseRequested` are already on the other side of this act (principio 2).
+  if (status !== 'InProgress' && status !== 'PauseRequested') {
+    return null
+  }
+
+  if (status === 'PauseRequested') {
+    // No button, and the sentence that replaces it says what is missing and who owes it.
+    return <p className="text-fg-muted text-sm">{t('status.pauseRequestedHint')}</p>
+  }
+
+  // Which is exactly why the refusal below is reachable: this screen hides the button once the
+  // table is in `PauseRequested`, so the only press that can be refused comes from a stale tab.
+  const pauseError = pauseRequestErrorKey(requestPause.error)
+
+  return (
+    <div className="space-y-2">
+      <Button size="sm" variant="outline" onClick={() => dialog.open()} disabled={requestPause.isPending}>
+        {t('status.requestPause')}
+      </Button>
+      <JustifiedTableActionDialog
+        open={dialog.isOpen}
+        onOpenChange={dialog.close}
+        title={t('status.requestPauseDialogTitle')}
+        description={t('status.requestPauseDialogDescription')}
+        submitLabel={t('status.requestPause')}
+        isPending={requestPause.isPending}
+        errorMessage={pauseError === null ? null : t(pauseError)}
+        help={
+          <p className="text-fg-subtle text-xs">
+            {t('status.requestPauseHint')} <HelpLink section="masters.pause">{t('status.requestPauseHelpLink')}</HelpLink>
+          </p>
+        }
+        onConfirm={(justification) => {
+          requestPause.mutate(
+            { justification },
+            {
+              onSuccess: () => {
+                toast.success(t('status.requestPauseSuccess'))
+                dialog.close()
+              },
+            },
+          )
+        }}
+      />
+    </div>
+  )
+}
+
 function StatusPanel(context: OutletContext) {
   const { t } = useTranslation('master')
 
   return (
     <div className="space-y-4">
       <StatusActions {...context} />
+      <PauseRequest tableId={context.tableId} status={context.status} />
       {/* The two halves of the wait, said out loud: a draft nobody has seen yet, and one an admin is
           already reading — which is also why the Edit button is gone in the second (#245). */}
       {context.status === 'Draft' && <p className="text-fg-muted text-sm">{t('status.draftHint')}</p>}

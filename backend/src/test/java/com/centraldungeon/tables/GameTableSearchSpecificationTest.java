@@ -6,10 +6,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.search.SearchQuery;
+import com.centraldungeon.registrations.TableRegistration;
+import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.common.search.SearchQueryParser;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -158,6 +161,64 @@ class GameTableSearchSpecificationTest {
         verify(criteria.builder).and(any(Predicate.class), any(Predicate.class));
     }
 
+    // -------------------------------------------------- the veto in the WHERE (read path 1 of F3.4)
+
+    /**
+     * <b>Read path 1.</b> The explorer excludes the tables the actor holds a {@code Blocked}
+     * registration on, and it does so with a {@code NOT EXISTS} <b>in the {@code WHERE}</b>.
+     *
+     * <p>That it is in the {@code WHERE} and not a filter in memory over the page that came back is
+     * the whole point: dropping rows after the query returns a page of seventeen where twenty were
+     * asked for, with a {@code totalElements} counting the tables the reader has no right to know
+     * exist. That is a broken pager (#171, #173) and, on top of it, a leak of the very number the veto
+     * exists to hide.
+     */
+    @Test
+    void theExplorerExcludesVetoedTablesWithANotExistsInTheWhere() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS, "player-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        // Two negated subqueries: «no dirijo esta mesa» (#154) and «no estoy vetado en ella» (#29).
+        verify(criteria.query, times(2)).subquery(String.class);
+        verify(criteria.builder, times(2)).not(any(Predicate.class));
+        verify(criteria.builder, times(2)).exists(any(Subquery.class));
+        // And nothing is filtered in memory: the composed predicate is the only thing that leaves here.
+        verify(criteria.root, never()).join(anyString());
+    }
+
+    /**
+     * And it looks at {@code Blocked} <b>only</b>. A rejection is not a veto: #23 allows applying
+     * again, and a {@code Rejected} or {@code Deleted} registration leaves the table perfectly
+     * visible.
+     */
+    @Test
+    void onlyBlockedHidesTheTable() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS, "player-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.registrationStatus, TableRegistrationStatus.Blocked);
+        verify(criteria.builder, never()).equal(criteria.registrationStatus, TableRegistrationStatus.Rejected);
+        verify(criteria.builder, never()).equal(criteria.registrationStatus, TableRegistrationStatus.Deleted);
+    }
+
+    /**
+     * The actor enters the subquery from the token and never from the URL (#121): what is hidden are
+     * the tables <b>this</b> reader is vetoed on, not anybody else's.
+     */
+    @Test
+    void theVetoIsMeasuredAgainstTheActorFromTheToken() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS, "player-9")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.registrationUserId, "player-9");
+    }
+
     /** The Criteria API, mocked down to the few calls these predicates make. */
     @SuppressWarnings("unchecked")
     private static final class Criteria {
@@ -180,6 +241,12 @@ class GameTableSearchSpecificationTest {
         /** {@code masters.user} inside the subquery - where the two names are read from. */
         private final Path<Object> masterUser = mock(Path.class);
 
+        /** {@code table_registrations.status} inside the veto subquery (#29). */
+        private final Path<Object> registrationStatus = mock(Path.class);
+
+        /** {@code table_registrations.user.id} inside the veto subquery - the actor of the token (#121). */
+        private final Path<Object> registrationUserId = mock(Path.class);
+
         private Criteria() {
             statusPath = status;
             when(root.get("status")).thenReturn(status);
@@ -191,6 +258,17 @@ class GameTableSearchSpecificationTest {
             when(query.subquery(String.class)).thenReturn(subquery);
             Root<Master> master = mock(Root.class);
             when(subquery.from(Master.class)).thenReturn(master);
+
+            // The veto subquery of F3.4 (#29): the same Subquery mock, rooted at TableRegistration.
+            Root<TableRegistration> registration = mock(Root.class);
+            when(subquery.from(TableRegistration.class)).thenReturn(registration);
+            Path<Object> registrationTable = mock(Path.class);
+            when(registration.get("gameTable")).thenReturn(registrationTable);
+            when(registrationTable.get("id")).thenReturn(mock(Path.class));
+            Path<Object> registrationUser = mock(Path.class);
+            when(registration.get("user")).thenReturn(registrationUser);
+            when(registrationUser.get("id")).thenReturn(registrationUserId);
+            when(registration.get("status")).thenReturn(registrationStatus);
             Path<Object> gameTable = mock(Path.class);
             when(master.get("gameTable")).thenReturn(gameTable);
             when(gameTable.get("id")).thenReturn(mock(Path.class));

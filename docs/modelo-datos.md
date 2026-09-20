@@ -41,6 +41,7 @@ El detalle y el razonamiento están en `decisiones.md`. Resumen de lo estructura
 | Aprobaciones | `requests` se absorbe en **`approval_requests`**, un solo mecanismo para todos los pedidos con aprobación. **La tabla ya estaba en `V1__baseline.sql`**: F3.2 le puso el código, no el DDL, así que no hay migración propia y no puede haberla (regla dura 8). Nace con **tres** tipos —`MasterGrant`, `TableOpen`, `General`—, no con los cinco que enumera #90: `TablePause` y `PlayerBan` los agrega F3.4 **con su productor**, porque la columna es `VARCHAR(32)` y sumar un flujo es sumar un valor al enum, sin `ALTER TABLE` (#78). Declararlos antes solo crearía dos valores que nada emite, que es el huérfano que F1.7 le reprochó a `PauseRequested` | #42, #78, #90 |
 | Moderación de mesa | Tabla nueva `table_status_changes` con la justificación de cada transición | #32 |
 | Moderación de personas | Tablas nuevas `user_role_changes` y `user_status_changes` (`V11`, F3.1), calcadas de `table_status_changes`, con **motivo obligatorio**. `audit_logs` es F6 y `approval_requests` es F3.2: hasta entonces cada entidad guarda su propio rastro en vez de inventar una tabla genérica que F6 va a reemplazar | #84, #169 |
+| Moderación de mesa, por persona | Tabla nueva `registration_status_changes` (`V12`, F3.4), del mismo molde: el **veto y su levantamiento**, con motivo obligatorio. Lo que se guarda es el cambio y no el estado — una columna `blocked_reason` no puede contar que se levantó, ni cuántas veces | #29, #39 |
 | Feedback del sistema | Tablas nuevas `system_feedback` y `feedback_quotas`. El tipo `General` sale de `comments` | #91, #93, #94 |
 | Bandeja de admins | `claimed_by` / `claimed_at` en `approval_requests`, `comments`, `system_feedback` y `game_tables` | #100 |
 | PK y tipos rotos | Se corrigen los PK inválidos de `Platforms`/`Tags`/`Systems`, se agregan PK a `registration_rejections` y `audit_logs`, y `Files.mine` pasa a `mime_type VARCHAR(128)` | — |
@@ -74,6 +75,8 @@ erDiagram
     game_tables        ||--o{ table_registrations : "postulaciones"
     users              ||--o{ table_registrations : "se postula"
     table_registrations ||--o{ registration_rejections : "rechazos"
+    table_registrations ||--o{ registration_status_changes : "historial de veto (#39)"
+    users              ||--o{ registration_status_changes : "veta o levanta"
     table_registrations ||--o{ registration_files : "adjuntos"
 
     game_tables        ||--o{ table_tasks : "pide"
@@ -331,6 +334,9 @@ CREATE TABLE table_registrations (
     game_table_id VARCHAR(64) NOT NULL,
     user_id       VARCHAR(64) NOT NULL,
     status        VARCHAR(32) NOT NULL DEFAULT 'Candidate',
+                        -- Candidate | Player | Rejected | Blocked (#39, F3.4) | Deleted (#25).
+                        -- `Blocked` no necesitó ALTER: la columna ya es VARCHAR(32) y nunca el tipo
+                        -- ENUM de MySQL (§1), así que es un valor nuevo del enum de la aplicación.
     description   LONGTEXT    NULL,   -- rich text, optional (#62, #69)
     created_at    DATETIME    NOT NULL,
     updated_at    DATETIME    NULL,
@@ -345,6 +351,29 @@ CREATE TABLE table_registrations (
 -- RegistrationService, since MySQL has no partial unique indexes (#28).
 CREATE INDEX ix_table_registrations_status ON table_registrations (game_table_id, status);
 CREATE INDEX ix_table_registrations_user   ON table_registrations (user_id, status);
+
+-- F3.4: el veto y su levantamiento (#29, #39). Calcada de `table_status_changes` por vía de `V11`.
+--
+-- Por qué una tabla y no una columna, que es la tensión entre dos decisiones: #29 dice que `Blocked`
+-- «no necesita tabla propia» -cierto, es un **estado** de `table_registrations`- y #39 pide que «el
+-- veto y su levantamiento queden registrados». Lo que se guarda acá no es el veto sino el **cambio**:
+-- un `blocked_reason` no puede contar que se levantó, ni cuántas veces, ni quién. `from_status` es
+-- además lo que hace posible levantarlo: devuelve a la persona a donde estaba, no a `Player` por
+-- defecto. `registration_rejections` no sirve: está modelada como «un rechazo», sin from/to.
+CREATE TABLE registration_status_changes (
+    id              VARCHAR(64) NOT NULL,
+    registration_id VARCHAR(64) NOT NULL,
+    from_status     VARCHAR(32) NOT NULL,
+    to_status       VARCHAR(32) NOT NULL,
+    changed_by      VARCHAR(64) NOT NULL,
+    justification   LONGTEXT    NOT NULL,   -- always required (#39)
+    created_at      DATETIME    NOT NULL,
+    CONSTRAINT pk_registration_status_changes PRIMARY KEY (id),
+    CONSTRAINT fk_rsc_registration FOREIGN KEY (registration_id) REFERENCES table_registrations (id),
+    CONSTRAINT fk_rsc_changed_by   FOREIGN KEY (changed_by)      REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX ix_rsc_registration ON registration_status_changes (registration_id, created_at);
 
 CREATE TABLE registration_rejections (
     id              VARCHAR(64) NOT NULL,
@@ -833,7 +862,8 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Solo el `Primary` agrega, promueve y quita masters; **al `Primary` no se lo puede quitar** —primero se le pasa la mesa a otra persona—, y quitarlo marca la fila, nunca la borra | `MasterService.removeMaster` | #73, #175, #216 |
 | Volver a agregar a alguien que fue quitado **revive su fila** en vez de insertar una segunda: la clave primaria es `(game_table_id, user_id)` | `MasterService.addOrPromote` | #175, #190, #216 |
 | `Pause` y `Canceled` exigen justificación, que se registra en `table_status_changes` | `GameTableService` | #32 |
-| La pausa pedida por un master no aplica hasta que un admin la aprueba (`approval_requests`) | `GameTableService` | #32 |
+| La pausa pedida por un master no aplica hasta que un admin la aprueba (`approval_requests`). La pide **cualquier master** —pedir no es decidir—, mueve `InProgress → PauseRequested` y crea el pedido **en una transacción**; aprobar la lleva a `Pause` con la nota de resolución como justificación, y **rechazar la devuelve a `InProgress`** o queda varada | `ApprovalService.submitTablePause` · `GameTableService.markPauseRequested` · `.applyApprovedPause` · `.revertRequestedPause` | #32, #42 |
+| **`PauseRequested` sigue reservando horario**: nada se otorgó todavía, así que sus franjas cuentan como choque y la mesa sigue apareciendo en `/my/tables` | `ScheduleConflictService` · `GameTableService.LIVE_MINE_STATUSES` | #32, #178 |
 | `Pause` congela la agenda: las sesiones pendientes dejan de aparecer. Al retomar hay que reagendar | `TableSessionService` | #32, #33 |
 | **Reanudar vuelve a verificar el choque del `Primary`**: si la franja ya no está libre, responde `409` con el nombre de la otra mesa y no reanuda | `GameTableService.resume` | #178, #193 |
 | Al entrar en `Finished` o `Canceled` se sella `closed_at`, que arranca la ventana de visibilidad. **Se sella una sola vez**: si ya tiene fecha, ninguna transición posterior la mueve | `GameTableService` | #44, #180 |
@@ -861,9 +891,13 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Al aceptar al jugador que completa `max_players`, el resto de los `Candidate` pasa a `Rejected` con el código `TABLE_FULL`, y se notifica. **El motivo que escribe un master se muestra verbatim; el que escribe el sistema es un código y se traduce** — `rejected_by IS NULL` distingue los dos | `RegistrationService` | #34, #197 |
 | Todo `Rejected` genera su fila en `registration_rejections` | `RegistrationService` | #28 |
 | Un master solo puede postularse si además tiene el rol `Player` | `RegistrationService` | #73 |
-| El veto lo aplica el `Primary`; un `Secondary` lo pide vía `approval_requests` | `RegistrationService` | #39 |
-| El veto es reversible; veto y levantamiento quedan registrados | `RegistrationService` | #39 |
-| **Filtro de visibilidad**: toda lectura de mesas excluye aquellas donde el usuario tenga una postulación `Blocked`. El detalle por id responde `404`, no `403` | `GameTableService` | #29 |
+| El veto lo aplica el `Primary` —`isPrimaryOf`, no `isMasterOf`—; un `Secondary` lo pide vía `approval_requests` y **el `Primary` lo resuelve**, no un admin. Un `Secondary` que llama al endpoint directo recibe `403 NOT_PRIMARY_MASTER`: es quién sos, no qué mandaste | `RegistrationService.block` · `ApprovalService.requireMayResolve` | #39, #71 |
+| El veto es reversible; veto y levantamiento quedan registrados en `registration_status_changes` con motivo obligatorio. **Levantarlo devuelve a la persona a donde estaba**, leído del `from_status` del último cambio a `Blocked` — no a `Player` por defecto | `RegistrationService.block` · `.unblock` | #39 |
+| **`PlayerBan` no entra en `/admin/queue`** —la bandeja es trabajo del admin y un veto no lo es— pero **sí se ve en `/admin/requests`**, que es el registro de todos los pedidos. Ver no es resolver | `AdminQueueService.NOT_FOR_ADMINS` · `ApprovalSearchSpecification.forAdmin` | #39, #90, #100 |
+| **Filtro de visibilidad**: toda lectura de una mesa concreta pasa por **un solo punto** y excluye aquellas donde el usuario tenga una postulación `Blocked`. El detalle por id responde `404`, **nunca `403`** — un `403` confirma lo que el `404` niega. El explorador lo filtra con un `NOT EXISTS` **en el `WHERE`**, nunca descartando filas de la página | `TableVisibilityService.requireVisible` · `GameTableSearchSpecification.forExplorer` | #29 |
+| **Lo que una mesa comparte deja de leerse por quien está vetado en ella**, con el mismo `404`. Es el agujero que #206 dejó anotado: `!link.isPrivate()` a secas devolvía el archivo a cualquier autenticado | `FileService.requireReadable` | #29, #206 |
+| **Una fila `Blocked` se sigue viendo del lado del master**, con quién vetó, cuándo y por qué; no viaja nada de eso a la persona vetada, que ya no ve la mesa. `/registrations/mine` **excluye `Blocked`** igual que `Deleted`: esa fila lleva `gameTableName` | `RegistrationService.listPlayersForTable` · `.listMine` | #29, #39 |
+| **Volver a postularse a la misma mesa es imposible sin regla nueva**: `POST /game-tables/{id}/registrations` pasa por el mismo punto único y responde `404` | `RegistrationService.apply` | #29 |
 | Un usuario con `status = 'Blocked'` no puede postularse ni loguearse | `RegistrationService` | — |
 | **No se puede postular a una mesa que choca de horario con otra donde ya se es `Player`.** Dirigir y jugar cuentan igual: los compromisos de una persona son sus mesas como master y como jugador | `RegistrationService` | #178 |
 | **No se puede aceptar a un candidato que ya es `Player` en una mesa que choca.** Se verifica al aceptar y no solo al postularse: el estado puede haber cambiado entre las dos | `RegistrationService` | #178 |

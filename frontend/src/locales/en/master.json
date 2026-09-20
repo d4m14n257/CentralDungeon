@@ -94,7 +94,18 @@
     "submitConfirmTitle": "Send the table to review?",
     "submitConfirmDescription": "An admin will review it. In the meantime you will not be able to edit it — if something needs fixing, do it before sending.",
     "submitSuccess": "Table sent to review",
-    "draftHint": "This is a draft: only you can see it. Send it to review when it is ready."
+    "draftHint": "This is a draft: only you can see it. Send it to review when it is ready.",
+    "requestPause": "Ask for a pause",
+    "requestPauseDialogTitle": "Ask for this table to be paused",
+    "requestPauseDialogDescription": "Say why it has to stop. The admin who answers reads this, and it stays in the table’s history.",
+    "requestPauseHint": "Asking is not pausing: until an admin answers, the table is still running and the calendar still promises its dates.",
+    "requestPauseHelpLink": "How a pause works",
+    "requestPauseSuccess": "Pause request sent",
+    "pauseRequestedHint": "You have asked for this table to be paused and nobody has answered yet. Until then the table is still running: the sessions stand, and they are worth playing.",
+    "errors": {
+      "PAUSE_ALREADY_REQUESTED": "A pause request for this table is already waiting on an answer. Reload the screen to see it.",
+      "generic": "We could not send the request. Try again."
+    }
   },
   "schedule": {
     "weekdayLabel": "Day",
@@ -214,5 +225,32 @@
     "saving": "Saving…",
     "success": "Table updated",
     "lockedDescription": "This table can no longer be edited: either you do not run it, or it is past the point where its master could rewrite it."
+  },
+  "veto": {
+    "block": "Ban",
+    "request": "Ask for them to be banned",
+    "unblock": "Lift the ban",
+    "blockedBy": "Banned by {{name}} on {{date}}",
+    "quotedReason": "“{{reason}}”",
+    "hintPrimary": "Banning removes that person from this table, and only from this one: they stop seeing it. It can be lifted afterwards.",
+    "hintSecondary": "As a co-master you do not ban: what you send is a request, and the table’s master answers it.",
+    "helpLink": "How banning works"
+  },
+  "banRequests": {
+    "title": "Ban requests",
+    "descriptionPrimary": "A co-master asked for somebody to be banned from this table. You answer this, not an admin.",
+    "descriptionSecondary": "What you asked for is waiting on the table’s master.",
+    "askedBy": "Asked by {{name}}",
+    "approve": "Ban",
+    "reject": "Do not ban",
+    "approveDialogTitle": "Ban {{name}}",
+    "approveDialogDescription": "Read the reason and write your answer. The co-master who asked reads it.",
+    "approveEffect": "Granting it is not marking it as read: {{name}} is banned at once and stops seeing the table.",
+    "rejectDialogTitle": "Do not ban {{name}}",
+    "rejectDialogDescription": "Nobody is banned. Say why: it is all the person who asked receives.",
+    "resolutionNoteLabel": "Your answer",
+    "approveSuccess": "Ban applied",
+    "rejectSuccess": "Request turned down",
+    "about": "Ban {{name}}"
   }
 }

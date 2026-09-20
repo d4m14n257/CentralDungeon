@@ -2,6 +2,7 @@ package com.centraldungeon.approvals;
 
 import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
@@ -61,6 +62,42 @@ public interface ApprovalRequestRepository
             ApprovalRequestType requestType, String userId, ApprovalStatus status);
 
     /**
+     * Whether an open request of this type already exists <b>about this entity</b>.
+     *
+     * <p>The same guard as the one above, asked the other way round, and F3.4 needed both. For the
+     * three types of F3.2 the entity <em>is</em> the requester, so «one pending per type and per
+     * person» said everything there was to say. The two types F3.4 added are about something else,
+     * and asking by requester there refuses the second legitimate case: a master of two running
+     * tables asking to pause the second one, and a {@code Secondary} asking to veto a second person
+     * while the first request is still open. The duplicate worth stopping is «this table is already
+     * waiting» and «somebody already asked about this person», which is this query.
+     *
+     * @param requestType the kind of request
+     * @param entityId    what the request is about - a table, or an application
+     * @param status      the status to look for - always {@link ApprovalStatus#Pending}
+     * @return true when such a request is already open about that entity
+     */
+    boolean existsByRequestTypeAndEntityIdAndStatus(
+            ApprovalRequestType requestType, String entityId, ApprovalStatus status);
+
+    /**
+     * The open requests of one type about one entity - what a direct action has to close out.
+     *
+     * <p>When a {@code Primary} presses the veto button themselves, any {@code PlayerBan} a
+     * co-master had asked for on that same person has just been answered in fact, and leaving it
+     * {@code Pending} would strand it: approving it afterwards answers
+     * {@code REGISTRATION_ALREADY_BLOCKED} for ever, and the co-master who asked never learns what
+     * happened.
+     *
+     * @param requestType the kind of request
+     * @param entityId    what the requests are about
+     * @param status      always {@link ApprovalStatus#Pending}
+     * @return the open requests about that entity, oldest first
+     */
+    List<ApprovalRequest> findByRequestTypeAndEntityIdAndStatusOrderByCreatedAtAsc(
+            ApprovalRequestType requestType, String entityId, ApprovalStatus status);
+
+    /**
      * One bounded batch of requests nobody has answered yet, oldest first - what the orphan sweep
      * walks.
      *
@@ -103,8 +140,15 @@ public interface ApprovalRequestRepository
      * <p>{@code claimedBy} is a {@code left join} because the column is null on most rows - an inner
      * one would drop exactly the unreserved items, which are the bulk of the tray.
      *
-     * @param status   the status that means "waiting", always {@link ApprovalStatus#Pending}
-     * @param actorId  the admin reading the tray, always from the token (#121)
+     * <p><b>It filters by type since F3.4</b>, and that is the point rather than a refinement. New
+     * request types used to join the tray for free precisely because this query did not ask what
+     * type a row was - which is right for four of the five and wrong for {@code PlayerBan}, whose
+     * resolver is the table's {@code Primary} and not an admin (#39). A tray that listed it would
+     * put work in front of admins that they are not allowed to do.
+     *
+     * @param status        the status that means "waiting", always {@link ApprovalStatus#Pending}
+     * @param excludedTypes the types that are not the admins' to answer
+     * @param actorId       the admin reading the tray, always from the token (#121)
      * @param pageable the per-source ceiling, never a page of the answer - the tray pages after the
      *                 merge, because a page of the merge is not a page of any one source
      * @return the requests waiting for this admin, oldest first, with both people already loaded
@@ -114,11 +158,32 @@ public interface ApprovalRequestRepository
             join fetch ar.requestedBy
             left join fetch ar.claimedBy
             where ar.status = :status
+              and ar.requestType not in :excludedTypes
               and (ar.claimedBy is null or ar.claimedBy.id = :actorId)
             order by ar.createdAt asc, ar.id asc
             """)
     List<ApprovalRequest> findQueueItems(
-            @Param("status") ApprovalStatus status, @Param("actorId") String actorId, Pageable pageable);
+            @Param("status") ApprovalStatus status,
+            @Param("excludedTypes") Collection<ApprovalRequestType> excludedTypes,
+            @Param("actorId") String actorId,
+            Pageable pageable);
+
+    /**
+     * The requests of one type, in one status, about a known set of entities.
+     *
+     * <p>What {@code GET /game-tables/{id}/ban-requests} reads (#39). The entity ids are resolved
+     * first - the applications of that table - and handed in, because {@code entity_id} is a plain
+     * column with no foreign key behind it (#78) and therefore nothing to join through. It is the
+     * price of the polymorphic reference, paid where it is visible rather than hidden in a native
+     * query.
+     *
+     * @param requestType which type, always {@link ApprovalRequestType#PlayerBan} today
+     * @param status      which status, always {@link ApprovalStatus#Pending}
+     * @param entityIds   the entities in scope; never empty - the caller short-circuits on empty
+     * @return the matching requests, oldest first
+     */
+    List<ApprovalRequest> findByRequestTypeAndStatusAndEntityIdInOrderByCreatedAtAsc(
+            ApprovalRequestType requestType, ApprovalStatus status, Collection<String> entityIds);
 
     /**
      * The reservations that went stale - what the release job hands back (#100).

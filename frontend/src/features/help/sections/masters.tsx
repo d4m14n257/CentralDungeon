@@ -124,3 +124,38 @@ export function DashboardHelp() {
 export function EditTableHelp() {
   return <ListAndSteps block="editTable" keys={['when', 'who', 'replaces', 'sets', 'conflict', 'resubmit']} stepCount={4} />
 }
+
+/**
+ * Asking for a pause, and what asking is not (#32, F3.4).
+ *
+ * **`notYet` is the reason this section exists.** The table moves to "Pausa solicitada" the moment
+ * the button is pressed, and a status that reads like a pause is exactly what a master will act on:
+ * they stop turning up, and their players find the sessions still on the calendar because only an
+ * admin's answer freezes it. Everything else here is what they will ask next — why they cannot pause
+ * their own table, and what happens to the dates when the pause is eventually granted and lifted.
+ */
+export function PauseRequestHelp() {
+  return <ListAndSteps block="pause" keys={['what', 'who', 'notYet', 'reason', 'freeze', 'resume']} stepCount={4} />
+}
+
+/**
+ * The veto: throwing somebody out of one table, and taking that back (#29, #39, #71).
+ *
+ * **`perTable` and `reversible` are the two halves nobody would guess.** "Vetar" reads as a platform
+ * ban, and it is not one: the person keeps their account, their karma and every other table they
+ * play at. And it reads as final, which is worse — a master who believes it cannot be undone either
+ * never uses it or uses it as a last resort on somebody they would rather have warned.
+ *
+ * `invisible` is the half that surprises the *other* master: the vetoed person does not get told, the
+ * table simply stops existing for them. Somebody who expects a notification to go out will write the
+ * reason as if the person were going to read it.
+ */
+export function BanningHelp() {
+  return (
+    <ListAndSteps
+      block="banning"
+      keys={['what', 'perTable', 'who', 'coMaster', 'reason', 'invisible', 'reversible', 'stays']}
+      stepCount={5}
+    />
+  )
+}

@@ -8,11 +8,11 @@ import { browserTimeZone, formatDate } from '@/lib/date'
 import { useMyRequests } from '../api/useMyRequests'
 import { PENDING_REQUESTS_QUERY } from '../requestTypes'
 import { SubmitRequestDialog } from './SubmitRequestDialog'
-import type { ApprovalRequestType } from '../types'
+import type { SubmittableRequestType } from '../types'
 
 interface SubmitRequestSectionProps {
   /** What this particular screen lets somebody ask for. */
-  type: ApprovalRequestType
+  type: SubmittableRequestType
   /**
    * The explanation of how a request works, handed to the dialog.
    *

@@ -72,8 +72,15 @@ public class TableSessionService {
     /** The weekly agenda the calendar is laid out on. */
     private final TableScheduleService tableScheduleService;
 
-    /** Resolves the table a session hangs off, for the reads that start from a table id. */
-    private final GameTableRepository gameTableRepository;
+    /**
+     * Resolves the table a session hangs off, for the reads that start from a table id - and, since
+     * F3.4, decides whether the reader may see it at all.
+     *
+     * <p>It replaced a private {@code getTable} that was one of <b>three</b> copies of the same
+     * lookup. The veto of #29 has to be written once or it gets written twice and forgotten once
+     * (fase-3-admin-owner.md §7), so the copy is gone and this is the gate.
+     */
+    private final TableVisibilityService tableVisibilityService;
 
     /** The roster, and who gets told when a date moves. */
     private final TableRegistrationRepository registrationRepository;
@@ -91,7 +98,8 @@ public class TableSessionService {
      * @param sessionRepository      the {@code table_sessions} rows
      * @param attendanceRepository   the {@code session_attendance} rows, and the count of #137
      * @param tableScheduleService   the weekly agenda a calendar is laid out on
-     * @param gameTableRepository    resolves the table the reads start from
+     * @param tableVisibilityService resolves the table the reads start from, and whether the reader
+     *                               may see it - the one gate of #25 and #29
      * @param registrationRepository the table's players - the roster, and who is notified
      * @param masterService          answers pertenencia (#17, #121, #135)
      * @param notificationService    warns the players when a session moves or is called off
@@ -101,7 +109,7 @@ public class TableSessionService {
             TableSessionRepository sessionRepository,
             SessionAttendanceRepository attendanceRepository,
             TableScheduleService tableScheduleService,
-            GameTableRepository gameTableRepository,
+            TableVisibilityService tableVisibilityService,
             TableRegistrationRepository registrationRepository,
             MasterService masterService,
             NotificationService notificationService,
@@ -109,7 +117,7 @@ public class TableSessionService {
         this.sessionRepository = sessionRepository;
         this.attendanceRepository = attendanceRepository;
         this.tableScheduleService = tableScheduleService;
-        this.gameTableRepository = gameTableRepository;
+        this.tableVisibilityService = tableVisibilityService;
         this.registrationRepository = registrationRepository;
         this.masterService = masterService;
         this.notificationService = notificationService;
@@ -201,7 +209,9 @@ public class TableSessionService {
      */
     @Transactional(readOnly = true)
     public List<TableSessionResponse> listForTable(String gameTableId, String actorId) {
-        GameTable table = getTable(gameTableId);
+        // requireExisting and not requireVisible: the next line demands a row in `masters`, and the
+        // two sets are disjoint (#154) - a master of this table cannot be vetoed on it.
+        GameTable table = tableVisibilityService.requireExisting(gameTableId);
         requireMasterOf(gameTableId, actorId);
         return toResponses(table, visibleSessionsOf(table));
     }
@@ -238,7 +248,11 @@ public class TableSessionService {
      */
     @Transactional(readOnly = true)
     public MySessionsResponse listMine(String gameTableId, String actorId) {
-        GameTable table = getTable(gameTableId);
+        // The veto is checked here rather than left to the Player filter below, even though moving
+        // somebody to `Blocked` already takes them out of it: what a vetoed person must get is the
+        // 404 of #29, and «only a player can see their sessions» is a 403 that would confirm the
+        // table is still there.
+        GameTable table = tableVisibilityService.requireVisible(gameTableId, actorId);
         if (!registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
                 gameTableId, actorId, List.of(TableRegistrationStatus.Player))) {
             throw new ForbiddenActionException("Only a player of this table can see their sessions");
@@ -612,15 +626,6 @@ public class TableSessionService {
                 notificationService.notifySessionCanceled(userId, table);
             }
         }
-    }
-
-    private GameTable getTable(String gameTableId) {
-        GameTable table =
-                gameTableRepository.findById(gameTableId).orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
-        if (table.getStatus() == GameTableStatus.Deleted) {
-            throw new NotFoundException("Table not found: " + gameTableId);
-        }
-        return table;
     }
 
     private TableSession lockSession(String sessionId) {

@@ -34,6 +34,24 @@ public final class ForbiddenActionException extends ApiException {
     public static final String CANNOT_BLOCK_PRIVILEGED = "CANNOT_BLOCK_PRIVILEGED";
 
     /**
+     * A {@code Secondary} reaching for something only the table's {@code Primary} may do: vetoing
+     * somebody, lifting a veto, or answering a co-master's request for one (#39, #71).
+     *
+     * <p><b>403 and not 400</b>, the same shape F3.1 settled on: it is a question of who you are,
+     * not of what you sent. Nothing about the body would make it succeed.
+     *
+     * <p>Its own code because the screen has to explain it rather than report it. A {@code Secondary}
+     * genuinely co-runs the table and is being told that this one act is the {@code Primary}'s - and
+     * that there is a door for them, which is asking for it. A generic "no tenés permiso" reads as a
+     * bug to somebody who legitimately runs the table.
+     *
+     * <p>In practice the frontend should never provoke it: the screen knows whether the reader is
+     * the {@code Primary} and says, before the button is pressed, that what it sends is a request
+     * (fase-3-admin-owner.md §4). This is what answers the stale tab and the hand-written call.
+     */
+    public static final String NOT_PRIMARY_MASTER = "NOT_PRIMARY_MASTER";
+
+    /**
      * @param message what the actor is not allowed to do
      */
     public ForbiddenActionException(String message) {

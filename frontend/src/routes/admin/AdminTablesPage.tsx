@@ -14,10 +14,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { HelpLink } from '@/features/help'
 import {
   CreateUnassignedTableDialog,
+  JustifiedTableActionDialog,
   TableStatusBadge,
   adminTableSearchFields,
+  tableActionErrorMessage,
   useAdminTables,
   useDeleteTable,
+  usePauseTable,
+  useResumeTable,
   type AdminTableSummary,
 } from '@/features/tables'
 import { useConfirm } from '@/hooks/useConfirm'
@@ -44,7 +48,10 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
   const removeTable = useDeleteTable(table.id)
+  const pauseTable = usePauseTable()
+  const resumeTable = useResumeTable()
   const assignDialog = useDisclosure()
+  const pauseDialog = useDisclosure()
 
   // A table with no master was never public: it is deleted, not cancelled (decisiones.md #175).
   async function handleDelete() {
@@ -52,6 +59,36 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
     if (!confirmed) return
     removeTable.mutate(undefined, { onSuccess: () => toast.success(t('tables.deleteSuccess')) })
   }
+
+  /**
+   * Bringing a paused table back (#33, #163, #193).
+   *
+   * **A confirmation and not a form**, because resuming carries no justification: #32 asks for a
+   * reason when a table stops and resuming is the return to normal. What the confirmation is for is
+   * the consequence nobody would guess — the pending sessions are rescheduled from today, so every
+   * date the players had in their calendar moves.
+   *
+   * **And therefore the refusal is a toast**: the confirmation has already closed on the press and
+   * there is no form left to put a message over. It is written from the code, naming the table the
+   * agenda now collides with (#193, #197) — "no pudimos completar la acción" would throw away the
+   * one fact that makes it solvable.
+   */
+  async function handleResume() {
+    const confirmed = await confirm({
+      title: t('tables.resumeConfirmTitle', { name: table.name }),
+      description: t('tables.resumeConfirmDescription'),
+    })
+    if (!confirmed) return
+    resumeTable.mutate(table.id, {
+      onSuccess: () => toast.success(t('tables.resumeSuccess')),
+      onError: (failure) => {
+        const message = tableActionErrorMessage(failure)
+        if (message !== null) toast.error(t(message.key, message.params))
+      },
+    })
+  }
+
+  const pauseError = tableActionErrorMessage(pauseTable.error)
 
   return (
     <div className="flex flex-wrap justify-end gap-2">
@@ -67,7 +104,50 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
           </Button>
         </>
       )}
+      {/* The two halves of #163, which have had an endpoint since E2 and no screen at all until now.
+          They live here rather than in the tray because neither is work waiting on anybody: pausing
+          a running table is a decision an admin takes about a table they went looking for, and this
+          is the screen that lists every table there is (#176). What *does* wait on somebody — a
+          master's request for a pause — arrives in `/admin/queue` as a request, and approving it
+          there is what moves the table to `Pause`. */}
+      {table.status === 'InProgress' && (
+        <Button size="sm" variant="outline" onClick={() => pauseDialog.open()} disabled={pauseTable.isPending}>
+          {t('tables.pause')}
+        </Button>
+      )}
+      {table.status === 'Pause' && (
+        <Button size="sm" onClick={() => void handleResume()} disabled={resumeTable.isPending}>
+          {t('tables.resume')}
+        </Button>
+      )}
       <AssignMastersDialog tableId={table.id} tableName={table.name} open={assignDialog.isOpen} onOpenChange={assignDialog.close} />
+      {/* Pausing does carry a reason (#32), and it is the master who will read it: the table stops
+          promising dates to their players and they were not the ones who decided it. */}
+      <JustifiedTableActionDialog
+        open={pauseDialog.isOpen}
+        onOpenChange={(open) => !open && pauseDialog.close()}
+        title={t('tables.pauseDialogTitle', { name: table.name })}
+        description={t('tables.pauseDialogDescription')}
+        submitLabel={t('tables.pause')}
+        isPending={pauseTable.isPending}
+        errorMessage={pauseError === null ? null : t(pauseError.key, pauseError.params)}
+        help={
+          <p className="text-fg-subtle text-xs">
+            {t('tables.pauseHint')} <HelpLink section="admins.pausing">{t('tables.pauseHelpLink')}</HelpLink>
+          </p>
+        }
+        onConfirm={(justification) => {
+          pauseTable.mutate(
+            { tableId: table.id, request: { justification } },
+            {
+              onSuccess: () => {
+                toast.success(t('tables.pauseSuccess'))
+                pauseDialog.close()
+              },
+            },
+          )
+        }}
+      />
     </div>
   )
 }

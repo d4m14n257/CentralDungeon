@@ -263,13 +263,16 @@ class ApprovalRequestApiIT {
         submit(other, "master_grant", "the snake one")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
-        // The two F3.4 leaves out are not types yet, and the wire says so rather than accepting them.
-        submit(other, "TablePause", "not until F3.4")
+        // The two F3.4 added ARE types now, so they bind - and this endpoint still refuses them, with
+        // a code that says why instead of pretending they do not exist. Both are opened from the
+        // aggregate they are about, because here the entity is not the person asking (F3.2 §0d).
+        // 400 and not 403: the type travels in the body, and no change of actor would make it work.
+        submit(other, "TablePause", "opened from the table, not here")
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
-        submit(other, "PlayerBan", "not until F3.4")
+                .andExpect(jsonPath("$.errorCode").value("REQUEST_TYPE_NOT_ACCEPTED_HERE"));
+        submit(other, "PlayerBan", "opened from the roster, not here")
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.errorCode").value("REQUEST_TYPE_NOT_ACCEPTED_HERE"));
     }
 
     /** The justification is mandatory at both ends (#42), and a missing type is a 400 too. */

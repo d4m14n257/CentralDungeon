@@ -116,6 +116,35 @@ public final class ConflictException extends ApiException {
     public static final String ITEM_ALREADY_CLAIMED = "ITEM_ALREADY_CLAIMED";
 
     /**
+     * Vetoing somebody who is already vetoed on this table (#39).
+     *
+     * <p>Its own code because the screen has something to do with it: the row is already showing the
+     * veto and its reason, so the answer is "refresh, it is done", not a failure. The likeliest way
+     * to see it is two masters pressing at the same instant - the loser of that race should not be
+     * told something went wrong.
+     */
+    public static final String REGISTRATION_ALREADY_BLOCKED = "REGISTRATION_ALREADY_BLOCKED";
+
+    /**
+     * Lifting a veto on somebody who is not vetoed (#39).
+     *
+     * <p>The mirror of {@link #REGISTRATION_ALREADY_BLOCKED}, and it exists for the same reason a
+     * veto is reversible at all: the two buttons sit on the same row, and a screen that cannot tell
+     * these two 409s apart cannot say which of them the reader just hit.
+     */
+    public static final String REGISTRATION_NOT_BLOCKED = "REGISTRATION_NOT_BLOCKED";
+
+    /**
+     * Asking for a pause of a table that is already waiting on one (#32).
+     *
+     * <p>Its own code for the same reason as {@link #REQUEST_ALREADY_PENDING}, which it deliberately
+     * does not reuse: that one is about the person - «you already asked for this» - and this one is
+     * about the <b>table</b>. A co-master can hit it without ever having asked for anything, and
+     * being told they have a request open would simply be false.
+     */
+    public static final String PAUSE_ALREADY_REQUESTED = "PAUSE_ALREADY_REQUESTED";
+
+    /**
      * @param message what state made the request impossible, in English and for a log (#197)
      */
     public ConflictException(String message) {

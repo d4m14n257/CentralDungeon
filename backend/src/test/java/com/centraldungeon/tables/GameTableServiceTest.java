@@ -3,6 +3,7 @@ package com.centraldungeon.tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -110,7 +111,10 @@ class GameTableServiceTest {
                 gameTableRepository, tableTypeRepository, tableRegistrationRepository, tableStatusChangeRepository, masterService,
                 gameTableMapper, userService, tableScheduleService, scheduleConflictService, tableCatalogService,
                 tableSessionService, tableFileService, new RichTextSanitizer(), notificationService,
-                gameTableSearchResolver);
+                gameTableSearchResolver,
+                // The real one over the same mocked repositories: every read of a concrete table in
+                // these tests goes through it, and a mock would hide whether it does (#25, #29).
+                new TableVisibilityService(gameTableRepository, tableRegistrationRepository));
     }
 
     @Test
@@ -550,6 +554,208 @@ class GameTableServiceTest {
         when(gameTableRepository.findById("table-7e")).thenReturn(Optional.of(table));
 
         assertThatThrownBy(() -> gameTableService.getDetail("table-7e", "player-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    // ---------------------- group B: the reads that close themselves when Player -> Blocked happens
+
+    /**
+     * <b>A group B regression test.</b> {@code /my/tables} was not touched by F3.4, and the
+     * <b>only</b> thing protecting it is that it filters on {@code status = Player}: moving somebody to
+     * {@code Blocked} takes them out of that filter and the table leaves their listing. This test is
+     * what would speak up if that filter were ever loosened to «any live registration».
+     *
+     * <p>And {@code PauseRequested} does count as live: F3.4 added it to {@link
+     * GameTableService#LIVE_MINE_STATUSES} when it gave the state a producer - a table whose master has
+     * asked for a pause is still being played, and making it vanish while an admin thinks it over would
+     * be worse than the orphan the slice came to close.
+     */
+    @Test
+    void myTablesFilterByPlayerAndByLiveStatusIncludingPauseRequested() {
+        ArgumentCaptor<List<GameTableStatus>> statuses = ArgumentCaptor.captor();
+        when(tableRegistrationRepository.findByUser_IdAndStatusAndGameTable_StatusIn(
+                        eq("player-1"), eq(TableRegistrationStatus.Player), statuses.capture(), any()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+
+        gameTableService.listMine("player-1", PageRequest.of(0, 20));
+
+        assertThat(statuses.getValue())
+                .containsExactlyInAnyOrder(
+                        GameTableStatus.Opened, GameTableStatus.InProgress,
+                        GameTableStatus.PauseRequested, GameTableStatus.Pause);
+    }
+
+    /** The same for the history: {@code Player} and nothing else is what closes it. */
+    @Test
+    void myHistoryAlsoFiltersByPlayer() {
+        when(tableRegistrationRepository.findByUser_IdAndStatusAndGameTable_StatusIn(
+                        eq("player-1"), eq(TableRegistrationStatus.Player), any(), any()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+        when(tableSessionService.summarizeByTables(any(), eq("player-1"))).thenReturn(java.util.Map.of());
+
+        assertThat(gameTableService.listMineHistory("player-1", PageRequest.of(0, 20)).content()).isEmpty();
+
+        verify(tableRegistrationRepository)
+                .findByUser_IdAndStatusAndGameTable_StatusIn(
+                        eq("player-1"), eq(TableRegistrationStatus.Player), any(), any());
+    }
+
+    // ------------------------------------- the veto in the detail (read paths 2, 3 and 4 of F3.4)
+
+    /**
+     * <b>Read path 2.</b> The detail of a table the actor is vetoed on answers {@code 404},
+     * <b>never</b> {@code 403} (#29). A 403 confirms what the 404 denies.
+     */
+    @Test
+    void theDetailOfAVetoedTableIs404AndNeverA403() {
+        GameTable table = persistedTable("table-veto-1", GameTableStatus.Opened);
+        when(gameTableRepository.findById("table-veto-1")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-veto-1", "vetado", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.getDetail("table-veto-1", "vetado"))
+                .isInstanceOf(NotFoundException.class)
+                .isNotInstanceOf(ForbiddenActionException.class);
+    }
+
+    /**
+     * <b>Read paths 3 and 4.</b> The public sessions and the shared files travel <em>inside</em> the
+     * detail, so they inherit its answer - and what is pinned here is that the inheritance is real:
+     * with the reader vetoed, those two reads <b>do not happen</b>. If they ever stopped travelling
+     * inside the detail, two more checks would be needed, and this test is what would say so.
+     */
+    @Test
+    void theSessionsAndFilesAreNotEvenReadWhenTheReaderIsVetoed() {
+        GameTable table = persistedTable("table-veto-2", GameTableStatus.InProgress);
+        when(gameTableRepository.findById("table-veto-2")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-veto-2", "vetado", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.getDetail("table-veto-2", "vetado"))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(tableSessionService, never()).findPublicSessions(any());
+        verify(tableFileService, never()).sharedFilesOf(anyString());
+    }
+
+    /** And somebody who is not vetoed still sees the whole table, sessions and files included. */
+    @Test
+    void somebodyNotVetoedStillSeesTheWholeDetail() {
+        GameTable table = persistedTable("table-veto-3", GameTableStatus.Opened);
+        when(gameTableRepository.findById("table-veto-3")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-veto-3", "player-1", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(false);
+        when(masterService.findByGameTable("table-veto-3")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-veto-3", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        assertThat(gameTableService.getDetail("table-veto-3", "player-1")).isNotNull();
+
+        verify(tableSessionService).findPublicSessions(table);
+        verify(tableFileService).sharedFilesOf("table-veto-3");
+    }
+
+    // ------------------------------------------------------------- the requested pause (#32)
+
+    /**
+     * {@code PauseRequested} stops being the orphan F1.7 relevó: this is its producer. <b>Any
+     * master</b> may ask and not only the {@code Primary} - asking is not deciding, and a co-master who
+     * cannot run next week's session is exactly the person with a reason to ask.
+     */
+    @Test
+    void aMasterAsksForThePauseAndTheTableLandsInPauseRequested() {
+        GameTable table = persistedTable("table-pause-1", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-pause-1")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-pause-1", "secondary-1")).thenReturn(true);
+        when(userService.getById("secondary-1")).thenReturn(persistedUser("secondary-1"));
+        when(masterService.findByGameTable("table-pause-1")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-pause-1", "Test", null, null, null, null, null, "PauseRequested", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.markPauseRequested("table-pause-1", "secondary-1");
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.PauseRequested);
+        verify(tableStatusChangeRepository).save(any(TableStatusChange.class));
+    }
+
+    /** Somebody who does not run the table cannot ask for anything about it (#17, #121, #135). */
+    @Test
+    void anOutsiderCannotAskForThePause() {
+        GameTable table = persistedTable("table-pause-2", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-pause-2")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-pause-2", "stranger")).thenReturn(false);
+
+        assertThatThrownBy(() -> gameTableService.markPauseRequested("table-pause-2", "stranger"))
+                .isInstanceOf(ForbiddenActionException.class);
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.InProgress);
+    }
+
+    /** Asking twice is a 409 with a code of its own: it is about the table, not about who asked. */
+    @Test
+    void askingToPauseATableAlreadyWaitingIs409WithItsOwnCode() {
+        GameTable table = persistedTable("table-pause-3", GameTableStatus.PauseRequested);
+        when(gameTableRepository.findByIdForUpdate("table-pause-3")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-pause-3", "master-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.markPauseRequested("table-pause-3", "master-1"))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.PAUSE_ALREADY_REQUESTED);
+    }
+
+    /**
+     * Approving it takes the table to {@code Pause} and <b>the resolution note is the
+     * justification</b> (#32, modelo-datos.md:835): the admin already wrote why, and asking them for a
+     * second reason would leave two answers to one question.
+     */
+    @Test
+    void approvingThePauseAppliesItWithTheResolutionNoteAsTheJustification() {
+        GameTable table = persistedTable("table-pause-4", GameTableStatus.PauseRequested);
+        when(gameTableRepository.findByIdForUpdate("table-pause-4")).thenReturn(Optional.of(table));
+        when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
+        when(masterService.findByGameTable("table-pause-4")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-pause-4", "Test", null, null, null, null, null, "Pause", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.applyApprovedPause("table-pause-4", "admin-1", "The master is moving house");
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.Pause);
+        ArgumentCaptor<TableStatusChange> change = ArgumentCaptor.forClass(TableStatusChange.class);
+        verify(tableStatusChangeRepository).save(change.capture());
+        assertThat(change.getValue().getJustification()).isEqualTo("The master is moving house");
+        assertThat(change.getValue().getFromStatus()).isEqualTo(GameTableStatus.PauseRequested);
+    }
+
+    /**
+     * <b>And rejecting it has an effect</b>, which is what is new: until F3.4 no rejection did
+     * anything. Asking for the pause already moved the table, so saying no has to move it back -
+     * otherwise it is stranded in {@code PauseRequested} with no door out.
+     */
+    @Test
+    void rejectingThePausePutsTheTableBackInProgress() {
+        GameTable table = persistedTable("table-pause-5", GameTableStatus.PauseRequested);
+        when(gameTableRepository.findByIdForUpdate("table-pause-5")).thenReturn(Optional.of(table));
+        when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
+        when(masterService.findByGameTable("table-pause-5")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-pause-5", "Test", null, null, null, null, null, "InProgress", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        gameTableService.revertRequestedPause("table-pause-5", "admin-1", "The table has only just started");
+
+        assertThat(table.getStatus()).isEqualTo(GameTableStatus.InProgress);
+        ArgumentCaptor<TableStatusChange> change = ArgumentCaptor.forClass(TableStatusChange.class);
+        verify(tableStatusChangeRepository).save(change.capture());
+        assertThat(change.getValue().getToStatus()).isEqualTo(GameTableStatus.InProgress);
+        assertThat(change.getValue().getJustification()).isEqualTo("The table has only just started");
     }
 
     /**

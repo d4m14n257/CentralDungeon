@@ -169,6 +169,15 @@ export const queryKeys = {
     adminAll: () => ['requests', 'admin'] as const,
     /** One request in full - where the resolution is: who sealed it, when, and why. */
     adminDetail: (id: string) => ['requests', 'admin', 'detail', id] as const,
+    /**
+     * The veto requests pending on one table (F3.4, #39).
+     *
+     * **Its own branch, and deliberately outside `admin`**: a `PlayerBan` is not the platform's work
+     * but the table's, resolved by its `Primary` and excluded from the shared tray. Keying it under
+     * `admin` would put a master's list inside the branch every admin mutation invalidates, and the
+     * two audiences never read the same rows.
+     */
+    banRequests: (tableId: string) => ['requests', 'ban', tableId] as const,
   },
   users: {
     me: () => ['users', 'me'] as const,

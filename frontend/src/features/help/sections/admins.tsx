@@ -159,3 +159,19 @@ export function BlockingHelp() {
     <ListAndSteps block="blocking" keys={['what', 'keepsData', 'immediate', 'noPeers', 'noAppeal', 'reason', 'unblock']} stepCount={6} />
   )
 }
+
+/**
+ * Pausing a table and bringing it back (#32, #33, #163, #193).
+ *
+ * **It exists because the two buttons had no screen for two phases** (#163) and arrive with nothing
+ * around them: an admin meeting "Pausar" on a listing has no way to know whether it cancels the
+ * sessions, hides the table, or notifies anybody.
+ *
+ * `clash` is the half that turns a refusal into something actionable. Resuming re-checks the
+ * master's agenda, because they may have taken another table while this one was frozen — so the one
+ * act on this screen that can genuinely fail is the one that looks least likely to, and an admin who
+ * does not expect it will read the refusal as a broken button.
+ */
+export function PausingHelp() {
+  return <ListAndSteps block="pausing" keys={['what', 'requested', 'freeze', 'reason', 'resume', 'clash', 'notCancel']} stepCount={5} />
+}

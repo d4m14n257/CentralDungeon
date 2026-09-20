@@ -38,6 +38,16 @@ export const APPROVAL_ERROR_CODES = [
    * really can show a row it cannot resolve.
    */
   'ITEM_ALREADY_CLAIMED',
+  /**
+   * Resolving something only the table's `Primary` may resolve (#39, F3.4).
+   *
+   * **It is a `403` and not a `400`**: it is who you are, not what you sent. It reaches this screen
+   * two ways — a co-master whose promotion was undone between opening the dialog and pressing, and
+   * an admin who found a `PlayerBan` in `/admin/requests` and assumed the tray's rules applied to
+   * it. The second is the one worth a sentence: #39 hands that decision to whoever runs the table,
+   * and an admin has no way to guess that from a button that looks like every other one.
+   */
+  'NOT_PRIMARY_MASTER',
 ] as const
 
 const KNOWN_CODES: ReadonlySet<string> = new Set(APPROVAL_ERROR_CODES)

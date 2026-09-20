@@ -2,7 +2,8 @@
   "status": {
     "Candidate": "Applied",
     "Player": "Accepted",
-    "Rejected": "Rejected"
+    "Rejected": "Rejected",
+    "Blocked": "Banned"
   },
   "myApplications": {
     "title": "My applications",
@@ -35,5 +36,29 @@
   },
   "rejectionReason": {
     "TABLE_FULL": "The table filled up"
+  },
+  "veto": {
+    "reasonLabel": "Reason",
+    "blockDialogTitle": "Ban {{name}}",
+    "blockDialogDescription": "Say why. It is recorded, and it is what you will read if you ever lift the ban.",
+    "blockEffect": "They stop seeing this table: it leaves their explorer, they cannot open it and they cannot download its files. They keep their account and every other table they play at.",
+    "blockSubmit": "Ban",
+    "blockSuccess": "{{name}} is now banned from this table",
+    "requestDialogTitle": "Ask for {{name}} to be banned",
+    "requestDialogDescription": "As a co-master, what you send is a request. Say why: it is what the table’s master reads to decide.",
+    "requestEffect": "Nothing changes yet: the person keeps playing and keeps seeing the table until the master answers.",
+    "requestSubmit": "Send the request",
+    "requestSuccess": "Request sent: the table’s master answers it",
+    "unblockDialogTitle": "Lift {{name}}’s ban",
+    "unblockDialogDescription": "They see the table again and go back to where they stood before the ban. Say why you are lifting it: it is recorded just like the ban.",
+    "unblockEffect": "They get the table back as it was: it returns to their explorer, they can open it, download its files again, and they recover the place they held before the ban.",
+    "unblockSubmit": "Lift the ban",
+    "unblockSuccess": "{{name}}’s ban was lifted",
+    "errors": {
+      "NOT_PRIMARY_MASTER": "The table’s master decides this. As a co-master, what you can do is ask for it.",
+      "REGISTRATION_ALREADY_BLOCKED": "That person is already banned from this table. Refresh to see how it stands.",
+      "REGISTRATION_NOT_BLOCKED": "That person is not banned: somebody lifted it before you did.",
+      "generic": "We could not complete the action. Try again."
+    }
   }
 }

@@ -12,11 +12,17 @@ import { Textarea } from '@/components/ui/textarea'
 import { useSubmitRequest } from '../api/useSubmitRequest'
 import { approvalErrorKey } from '../approvalErrors'
 import { submitApprovalRequestSchema, type SubmitApprovalRequestForm } from '../schemas'
-import type { ApprovalRequestType } from '../types'
+import type { SubmittableRequestType } from '../types'
 
 interface SubmitRequestDialogProps {
-  /** What is being asked for. Fixed by the screen that raised the dialog, never chosen here. */
-  type: ApprovalRequestType
+  /**
+   * What is being asked for. Fixed by the screen that raised the dialog, never chosen here.
+   *
+   * **The submittable three and not all five** (F3.4): `TablePause` and `PlayerBan` are raised from
+   * their own entity's route, because `POST /requests` carries no `entityId` on purpose. Narrowing
+   * it here means a screen that tried to raise one of those from this dialog would not compile.
+   */
+  type: SubmittableRequestType
   open: boolean
   onOpenChange: (open: boolean) => void
   /**

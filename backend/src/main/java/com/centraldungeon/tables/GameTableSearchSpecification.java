@@ -8,6 +8,8 @@ import com.centraldungeon.catalogs.TableTag;
 import com.centraldungeon.common.search.SearchConnector;
 import com.centraldungeon.common.search.SearchQuery;
 import com.centraldungeon.common.search.SearchTerm;
+import com.centraldungeon.registrations.TableRegistration;
+import com.centraldungeon.registrations.TableRegistrationStatus;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
@@ -75,6 +77,7 @@ final class GameTableSearchSpecification {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(root.get("status").in(statuses));
             predicates.add(notMasteredBy(root, criteriaQuery, builder, actorId));
+            predicates.add(notVetoedOn(root, criteriaQuery, builder, actorId));
             Predicate matched = matching(root, criteriaQuery, builder, query, catalogIdsByTerm);
             if (matched != null) {
                 predicates.add(matched);
@@ -137,6 +140,38 @@ final class GameTableSearchSpecification {
                 builder.equal(master.get("gameTable").get("id"), root.get("id")),
                 builder.equal(master.get("user").get("id"), actorId));
         return builder.not(builder.exists(mastered));
+    }
+
+    /**
+     * «the actor is not vetoed on this table» (#29, #39).
+     *
+     * <p><b>A {@code NOT EXISTS} in the {@code WHERE} and never a filter over the page that came
+     * back.</b> Dropping rows in memory after the query is the shape that returns a page of
+     * seventeen where twenty were asked for, with a {@code totalElements} counting the tables the
+     * reader is not allowed to know about - which is both a broken pager (#171, #173) and a leak of
+     * the number the veto exists to hide. The same reasoning {@link #linkedToAny} gives for using a
+     * subquery instead of a join, one step further.
+     *
+     * <p>Only {@code Blocked} counts. Every other status of a registration - including
+     * {@code Rejected} and {@code Deleted} - leaves the table perfectly visible: being turned down
+     * once is not being vetoed, and #23 explicitly allows applying again.
+     *
+     * @param root          the table being queried
+     * @param criteriaQuery the query being built, which owns the subquery
+     * @param builder       the Criteria API builder
+     * @param actorId       the actor, from the token
+     * @return the predicate
+     */
+    private static Predicate notVetoedOn(
+            Root<GameTable> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, String actorId) {
+        Subquery<String> vetoed = criteriaQuery.subquery(String.class);
+        Root<TableRegistration> registration = vetoed.from(TableRegistration.class);
+        vetoed.select(registration.get("gameTable").get("id"));
+        vetoed.where(
+                builder.equal(registration.get("gameTable").get("id"), root.get("id")),
+                builder.equal(registration.get("user").get("id"), actorId),
+                builder.equal(registration.get("status"), TableRegistrationStatus.Blocked));
+        return builder.not(builder.exists(vetoed));
     }
 
     /**

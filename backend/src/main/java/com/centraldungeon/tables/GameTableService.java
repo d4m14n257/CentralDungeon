@@ -70,8 +70,14 @@ public class GameTableService {
      * not with {@link #HISTORY_STATUSES} - it is a table frozen, not one that ended (#32); the
      * player who plays there still needs to find it among "mine".
      */
-    private static final List<GameTableStatus> LIVE_MINE_STATUSES =
-            List.of(GameTableStatus.Opened, GameTableStatus.InProgress, GameTableStatus.Pause);
+    private static final List<GameTableStatus> LIVE_MINE_STATUSES = List.of(
+            GameTableStatus.Opened, GameTableStatus.InProgress,
+            // PauseRequested joined the list in F3.4, when it stopped being a state nothing could
+            // produce. A table whose master has asked for a pause is still being played - nothing has
+            // been decided yet - so dropping it from "mine" would make a player's table vanish while
+            // an admin thinks it over, and reappear either way.
+            GameTableStatus.PauseRequested,
+            GameTableStatus.Pause);
 
     /** /my/tables/history: the two ways a run is over, and nothing else (#133a). */
     private static final List<GameTableStatus> HISTORY_STATUSES = List.of(GameTableStatus.Finished, GameTableStatus.Canceled);
@@ -119,7 +125,11 @@ public class GameTableService {
     /** cancel() is the one transition with more than one valid "from" (docs/decisiones.md, the table's life cycle). */
     private static final Set<GameTableStatus> CANCELABLE_STATUSES = Set.of(
             GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested,
-            GameTableStatus.Opened, GameTableStatus.InProgress, GameTableStatus.Pause);
+            GameTableStatus.Opened, GameTableStatus.InProgress,
+            // Added with F3.4: until the state had a producer nothing could sit in it, and a table
+            // waiting on a pause it may never get is one its master has to be able to end.
+            GameTableStatus.PauseRequested,
+            GameTableStatus.Pause);
 
     private final GameTableRepository gameTableRepository;
     private final TableTypeRepository tableTypeRepository;
@@ -136,6 +146,7 @@ public class GameTableService {
     private final RichTextSanitizer richTextSanitizer;
     private final NotificationService notificationService;
     private final GameTableSearchResolver gameTableSearchResolver;
+    private final TableVisibilityService tableVisibilityService;
 
     /**
      * @param gameTableRepository        the {@code game_tables} table, and the row everything locks on
@@ -156,6 +167,8 @@ public class GameTableService {
      * @param notificationService        tells the masters how the review ended (#244)
      * @param gameTableSearchResolver    expands the explorer's catalog criteria into synonym groups
      *                                   before the query is built (#54, #56, #246)
+     * @param tableVisibilityService     the one gate every read of a concrete table goes through -
+     *                                   soft delete and veto, decided in one place (#25, #29)
      */
     public GameTableService(
             GameTableRepository gameTableRepository,
@@ -172,7 +185,8 @@ public class GameTableService {
             TableFileService tableFileService,
             RichTextSanitizer richTextSanitizer,
             NotificationService notificationService,
-            GameTableSearchResolver gameTableSearchResolver) {
+            GameTableSearchResolver gameTableSearchResolver,
+            TableVisibilityService tableVisibilityService) {
         this.gameTableRepository = gameTableRepository;
         this.tableTypeRepository = tableTypeRepository;
         this.tableRegistrationRepository = tableRegistrationRepository;
@@ -188,6 +202,7 @@ public class GameTableService {
         this.richTextSanitizer = richTextSanitizer;
         this.notificationService = notificationService;
         this.gameTableSearchResolver = gameTableSearchResolver;
+        this.tableVisibilityService = tableVisibilityService;
     }
 
     /**
@@ -563,6 +578,105 @@ public class GameTableService {
     }
 
     /**
+     * The master <em>asking</em> for a pause. InProgress to PauseRequested (#32).
+     *
+     * <p><b>This is the producer {@code PauseRequested} never had.</b> F1.7 relevó it as an orphan -
+     * a state declared in the enum that no endpoint could reach - and it stayed that way until
+     * {@code approval_requests} existed to carry the asking.
+     *
+     * <p>It only moves the table. The request itself is written by {@code ApprovalService}, in the
+     * same transaction and as the caller of this method, because the mechanism has to stay single
+     * (#42): a second place that created approval rows would be a second set of rules about them.
+     *
+     * <p><b>The table keeps its slot while it waits.</b> {@code ScheduleConflictService} counts
+     * {@code PauseRequested} among the committing statuses on purpose - nothing has been granted
+     * yet, and releasing the hours before the answer arrives would let a master take on something
+     * else and then be refused the resume.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token; has to run the table
+     * @return the table, now PauseRequested
+     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws ConflictException 409 {@code PAUSE_ALREADY_REQUESTED} when it is already waiting on
+     *                           one, or a plain conflict from any other status
+     */
+    @Transactional
+    public GameTableDetailResponse markPauseRequested(String gameTableId, String actorId) {
+        GameTable gameTable = lockTable(gameTableId);
+        // isMasterOf and not isPrimaryOf: asking is not deciding, and a co-master who cannot run
+        // next week's session is exactly the person with a reason to ask (#121, #135).
+        if (!masterService.isMasterOf(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table can ask for a pause");
+        }
+        if (gameTable.getStatus() == GameTableStatus.PauseRequested) {
+            throw new ConflictException(
+                    "Table " + gameTableId + " is already waiting on a pause",
+                    ConflictException.PAUSE_ALREADY_REQUESTED);
+        }
+        if (gameTable.getStatus() != GameTableStatus.InProgress) {
+            throw new ConflictException("Cannot ask to pause a table in status " + gameTable.getStatus());
+        }
+        recordStatusChange(gameTable, GameTableStatus.InProgress, GameTableStatus.PauseRequested, actorId, null);
+        return toDetail(gameTable);
+    }
+
+    /**
+     * An admin saying yes to a requested pause. PauseRequested to Pause (#32).
+     *
+     * <p>Called by {@code ApprovalService} when a {@code TablePause} request is approved. The
+     * resolution note becomes the justification, which is not bookkeeping: #32 makes a reason
+     * mandatory for {@code Pause}, and the reason an admin gave when they approved <em>is</em> that
+     * reason. Inventing a second one would leave two answers to the same question.
+     *
+     * <p>Freezing the agenda needs nothing here. It is derived on read
+     * ({@code TableSessionService.visibleSessionsOf}) and has to be, because the pause is reversible:
+     * a pause that deleted the pending sessions could not put them back.
+     *
+     * @param gameTableId    the table
+     * @param actorId        the admin, from the token
+     * @param resolutionNote why they approved it - recorded as the pause's justification
+     * @return the table, now Pause
+     * @throws ConflictException if the table was not waiting on a pause
+     */
+    @Transactional
+    public GameTableDetailResponse applyApprovedPause(String gameTableId, String actorId, String resolutionNote) {
+        GameTable gameTable = lockTable(gameTableId);
+        if (gameTable.getStatus() != GameTableStatus.PauseRequested) {
+            throw new ConflictException("Cannot grant a pause to a table in status " + gameTable.getStatus());
+        }
+        recordStatusChange(gameTable, GameTableStatus.PauseRequested, GameTableStatus.Pause, actorId, resolutionNote);
+        return toDetail(gameTable);
+    }
+
+    /**
+     * An admin saying no to a requested pause. PauseRequested back to InProgress (#32).
+     *
+     * <p><b>A rejection with an effect, which is new.</b> Until F3.4 no type of request did anything
+     * when it was rejected - that is what made {@code ApprovalService.reject} a method with no
+     * {@code switch}. A pause is different because asking for one already moved the table: leaving it
+     * in {@code PauseRequested} after being told no would strand it in a waiting room with no door
+     * out, and the master would have to ask again to get a second refusal.
+     *
+     * <p>The refusal's note goes on the transition for the same reason the approval's does: the
+     * master reads the status tab and «no» without a reason is the half of the mechanism worth having.
+     *
+     * @param gameTableId    the table
+     * @param actorId        the admin, from the token
+     * @param resolutionNote why they refused, recorded on the way back
+     * @return the table, back in InProgress
+     * @throws ConflictException if the table was not waiting on a pause
+     */
+    @Transactional
+    public GameTableDetailResponse revertRequestedPause(String gameTableId, String actorId, String resolutionNote) {
+        GameTable gameTable = lockTable(gameTableId);
+        if (gameTable.getStatus() != GameTableStatus.PauseRequested) {
+            throw new ConflictException("Cannot refuse a pause for a table in status " + gameTable.getStatus());
+        }
+        recordStatusChange(gameTable, GameTableStatus.PauseRequested, GameTableStatus.InProgress, actorId, resolutionNote);
+        return toDetail(gameTable);
+    }
+
+    /**
      * Bringing a paused table back. Pause to InProgress.
      *
      * <p>Two things happen here that do not happen anywhere else in the lifecycle.
@@ -727,14 +841,21 @@ public class GameTableService {
      * has to be able to say <em>why</em> it is disabled, and R2 is the one reason the reader can do
      * something about (principio 2 de frontend-diseno.md 1).
      *
+     * <p><b>The veto of #29 is applied here and nowhere below it.</b> The gate is
+     * {@link TableVisibilityService#requireVisible}, which answers {@code 404} - never {@code 403},
+     * because a 403 confirms exactly what the 404 denies. The public sessions and the shared files
+     * ride along inside this answer precisely so that they inherit the one decision instead of
+     * repeating it somewhere it could drift (see {@link #toDetail}).
+     *
      * @param gameTableId the table
      * @param actorId     the actor, from the token - never from the URL (#121)
      * @return its detail
-     * @throws com.centraldungeon.common.exception.NotFoundException if it does not exist
+     * @throws com.centraldungeon.common.exception.NotFoundException if it does not exist, was
+     *         deleted, or the actor is vetoed on it - the same 404 for all three (#25, #29, #175)
      */
     @Transactional(readOnly = true)
     public GameTableDetailResponse getDetail(String gameTableId, String actorId) {
-        return toDetail(getEntityById(gameTableId), actorId);
+        return toDetail(tableVisibilityService.requireVisible(gameTableId, actorId), actorId);
     }
 
     /**
@@ -857,20 +978,23 @@ public class GameTableService {
         return toAdminSummaryPage(page);
     }
 
-    /** Internal read used by other services (e.g. registrations) - never exposed raw over HTTP (arquitectura.md 2.2/2.3). */
-    @Transactional(readOnly = true)
     /**
-     * The single lookup every read goes through, so it is the single place where a soft-deleted
-     * table stops existing (#25, #175): 404 and not 403, because "it was deleted" is not something
-     * a caller is entitled to learn.
+     * The master-side lookup: a table that is there, for a read whose actor cannot be vetoed on it.
+     *
+     * <p><b>It used to claim to be «the single lookup every read goes through» and it was not</b> -
+     * {@code TableSessionService} and {@code TableTaskService} each had their own copy of the same
+     * four lines. F3.4 made the claim true by moving the lookup to
+     * {@link TableVisibilityService}, which is where the veto of #29 is now written once; this
+     * method is a name the callers inside this class already use, and nothing more.
+     *
+     * <p>Every caller left is a master's or an admin's operation on a table they run, where
+     * pertenencia is checked on the next line and being vetoed is not a question that can be asked
+     * (#154). The read a <em>player</em> performs is {@link #getDetail}, and it goes through
+     * {@link TableVisibilityService#requireVisible}.
      */
+    @Transactional(readOnly = true)
     public GameTable getEntityById(String gameTableId) {
-        GameTable gameTable =
-                gameTableRepository.findById(gameTableId).orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
-        if (gameTable.getStatus() == GameTableStatus.Deleted) {
-            throw new NotFoundException("Table not found: " + gameTableId);
-        }
-        return gameTable;
+        return tableVisibilityService.requireExisting(gameTableId);
     }
 
     private GameTable buildTable(CreateGameTableRequest request, User creator) {

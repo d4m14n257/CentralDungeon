@@ -1,8 +1,16 @@
 /**
- * Where an application stands. Only three: `Deleted` exists in the database as a soft-delete marker
- * but no response ever carries it, so the union deliberately does not mirror it.
+ * Where an application stands. Four of them: `Deleted` exists in the database as a soft-delete
+ * marker but no response ever carries it, so the union deliberately does not mirror it.
+ *
+ * **`Blocked` is the veto** (#29, #39, F3.4), and unlike `Deleted` it **does** travel — to the
+ * masters of the table, and to nobody else. Whoever is vetoed stops seeing the table at all: the
+ * explorer omits it, the detail answers `404` rather than `403`, and even the files they used to
+ * download do. A status they could read back would be the rendija that undoes all of it.
+ *
+ * Which is also why the master's roster keeps showing the row (see {@link TablePlayer}): the veto is
+ * reversible, and a veto that disappears from the screen is not reversible in practice.
  */
-export type RegistrationStatus = 'Candidate' | 'Player' | 'Rejected'
+export type RegistrationStatus = 'Candidate' | 'Player' | 'Rejected' | 'Blocked'
 
 /**
  * A file attached to an application — a character sheet, most commonly (#238).
@@ -46,16 +54,50 @@ export interface Registration {
    * #247): there is no `PUT` on a registration and no endpoint to detach one of its files.
    */
   attachedFiles: RegistrationFile[]
+  /**
+   * Who applied the veto, and when. Both null on every row that is not `Blocked` (#39).
+   *
+   * **They travel to the masters of the table and never to the person vetoed**, who by then does not
+   * see the table at all. What they are for is the other half of #39: a veto has to be reversible,
+   * and reversing one you cannot see the author of is a decision taken blind.
+   */
+  blockedByName: string | null
+  blockedAt: string | null
+  /**
+   * The reason that was written down when the veto was applied (#39), or null when the row is not
+   * vetoed.
+   *
+   * **It is the point of making the reason obligatory.** A veto is reversible, and reversing one
+   * means somebody later — often a different master — reading why it happened. Storing a reason
+   * nothing ever displays would be asking for it as a formality.
+   */
+  blockJustification: string | null
 }
 
 /**
- * Mirror of `TablePlayerResponse` — one player currently at a table.
+ * Mirror of `TablePlayerResponse` — one row of a table's roster, as its masters see it.
  *
- * Derived from {@link Registration} rather than declared again (regla dura 6): it is the same three
- * facts about the same person, minus everything that is about the application rather than about
- * them. A roster, not a queue.
+ * Derived from {@link Registration} rather than declared again (regla dura 6): it is the same facts
+ * about the same person, minus everything that is about the application rather than about them. A
+ * roster, not a queue.
+ *
+ * **It grew with F3.4, and the veto is why.** Until then a roster was three read-only facts; now it
+ * is the screen the veto is applied and lifted from, so it carries what those two acts need:
+ *
+ * - `registrationId`, because the veto acts on the **application** and not on the person — vetoing
+ *   is per table (#29), and the same account may be playing happily at four others.
+ * - `status`, because a vetoed row **stays in the list**. Dropping it would hide the one row with an
+ *   action left on it, and an irreversible veto is exactly what #39 refused to build.
+ * - `blockedByName`, `blockedAt` and `blockJustification`, which are what whoever is about to lift
+ *   one reads first: whose decision it was, how long ago, and why.
  */
-export type TablePlayer = Pick<Registration, 'userId' | 'userName' | 'userKarma'>
+export type TablePlayer = Pick<
+  Registration,
+  'userId' | 'userName' | 'userKarma' | 'status' | 'blockedByName' | 'blockedAt' | 'blockJustification'
+> & {
+  /** The application this row is: what the two acts of the veto address. */
+  registrationId: Registration['id']
+}
 
 /**
  * What applying sends. The table comes from the URL and the applicant from the session, so this is

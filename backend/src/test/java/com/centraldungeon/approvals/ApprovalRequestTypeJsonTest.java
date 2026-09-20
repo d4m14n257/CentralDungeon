@@ -55,21 +55,22 @@ class ApprovalRequestTypeJsonTest {
     }
 
     /**
-     * Los dos tipos que F3.4 trae con su productor <b>no existen todavía</b>, y eso es una decisión,
-     * no un olvido (contrato F3.2, 0.a): un valor de enum que nada produce es el huérfano que esta
-     * fase vino a cerrar. Si alguien los agrega, que sea con el flujo que los emite - y este test se
-     * cae primero.
+     * All five, <b>and each with its producer</b>. F3.2 declared three on purpose and this test used to
+     * say «tres y no cinco» so that adding the other two without the flow that emits them would fail
+     * here first - the orphan that phase came to close. F3.4 built both producers, so the assertion
+     * inverts: all five exist, and the two new ones travel over the wire.
      */
     @Test
-    void entranTresTiposYNoCinco() {
+    void entranLosCincoTiposConSuProductor() {
         assertThat(ApprovalRequestType.values())
                 .containsExactly(
-                        ApprovalRequestType.MasterGrant, ApprovalRequestType.TableOpen, ApprovalRequestType.General);
+                        ApprovalRequestType.MasterGrant, ApprovalRequestType.TableOpen, ApprovalRequestType.General,
+                        ApprovalRequestType.TablePause, ApprovalRequestType.PlayerBan);
 
-        assertThatThrownBy(() -> json.readValue("\"TablePause\"", ApprovalRequestType.class))
-                .isInstanceOf(Exception.class);
-        assertThatThrownBy(() -> json.readValue("\"PlayerBan\"", ApprovalRequestType.class))
-                .isInstanceOf(Exception.class);
+        assertThat(json.readValue("\"TablePause\"", ApprovalRequestType.class))
+                .isEqualTo(ApprovalRequestType.TablePause);
+        assertThat(json.readValue("\"PlayerBan\"", ApprovalRequestType.class))
+                .isEqualTo(ApprovalRequestType.PlayerBan);
     }
 
     /**
@@ -89,14 +90,17 @@ class ApprovalRequestTypeJsonTest {
     }
 
     /**
-     * Cada tipo declara de qué entidad habla, y en F3.2 los tres hablan de quien pide. Es lo que
-     * mantiene la invariante de #78 sin una columna nullable por flujo (#126) - y lo que F3.4 cambia
-     * al agregar un pedido sobre una mesa.
+     * Every type declares which kind of entity it is about. The three from F3.2 are about the person
+     * asking, which is what keeps the invariant of #78 without a nullable column per flow (#126); the
+     * two from F3.4 are the first that point at something else, and therefore the first that need a
+     * case in {@link ApprovalEntityResolver}.
      */
     @Test
     void cadaTipoDeclaraSuTipoDeEntidad() {
-        for (ApprovalRequestType type : ApprovalRequestType.values()) {
-            assertThat(type.entityType()).isEqualTo(ApprovalEntityResolver.USER);
-        }
+        assertThat(ApprovalRequestType.MasterGrant.entityType()).isEqualTo(ApprovalEntityResolver.USER);
+        assertThat(ApprovalRequestType.TableOpen.entityType()).isEqualTo(ApprovalEntityResolver.USER);
+        assertThat(ApprovalRequestType.General.entityType()).isEqualTo(ApprovalEntityResolver.USER);
+        assertThat(ApprovalRequestType.TablePause.entityType()).isEqualTo(ApprovalEntityResolver.GAME_TABLE);
+        assertThat(ApprovalRequestType.PlayerBan.entityType()).isEqualTo(ApprovalEntityResolver.TABLE_REGISTRATION);
     }
 }

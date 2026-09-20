@@ -279,8 +279,14 @@ class ApprovalServiceIT {
      * <b>The ERROR branch, from a real row.</b> An {@code entity_type} the resolver has no case for
      * throws - which is the right diagnosis for a flow added without teaching it - but a sweep is a
      * report over many rows, and one misconfigured row must not cost the report on every row behind
-     * it. The row written here is exactly what F3.4 produces the day it adds {@code game_table} and
-     * forgets the resolver.
+     * it. The row written here is exactly what the next phase produces the day it points a request at
+     * something new and forgets the resolver.
+     *
+     * <p>The sentinel <b>used to be {@code game_table}</b>, and F3.4 turning that into a case the
+     * resolver answers is what made this test start reporting two orphans instead of one: the fixture
+     * stopped being unknown and became a request pointing at a table that is not there. So the
+     * sentinel moved to a type nothing resolves - and the fact that it had to move is the point of the
+     * {@code default} branch being there at all.
      */
     @Test
     void anUnknownEntityTypeDoesNotStopThePassAndTheRowBehindItIsStillReported() {
@@ -289,7 +295,7 @@ class ApprovalServiceIT {
         // Oldest first is the sweep's order, so the unknown-type row has to be created first for the
         // orphan behind it to be the one that would have been lost.
         String unknown = submitAs(asker, ApprovalRequestType.MasterGrant, "tipo desconocido");
-        jdbcTemplate.update("update approval_requests set entity_type = 'game_table' where id = ?", unknown);
+        jdbcTemplate.update("update approval_requests set entity_type = 'table_session' where id = ?", unknown);
 
         String orphan = submitAs(asker, ApprovalRequestType.General, "detrás del desconocido");
         pointAtNothing(orphan);

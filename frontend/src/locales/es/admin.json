@@ -62,7 +62,9 @@
     "types": {
       "MasterGrant": "Rol de master",
       "TableOpen": "Mesa nueva",
-      "General": "Consulta"
+      "General": "Consulta",
+      "TablePause": "Pausa de mesa",
+      "PlayerBan": "Veto de jugador"
     },
     "status": {
       "Pending": "Pendiente",
@@ -92,7 +94,9 @@
     "effect": {
       "MasterGrant": "Al aprobar, la persona recibe el rol de master por el mismo camino que en «Usuarios»: queda registrado con tu nota como motivo.",
       "TableOpen": "Al aprobar, queda constancia de que el pedido corresponde. La mesa no se crea sola: el pedido no trae nombre, sistema, cupo ni horario, así que la creás desde «Mesas».",
-      "General": "Al aprobar, el pedido queda resuelto y tu respuesta le llega a quien preguntó. No cambia nada más en la plataforma."
+      "General": "Al aprobar, el pedido queda resuelto y tu respuesta le llega a quien preguntó. No cambia nada más en la plataforma.",
+      "TablePause": "Al aprobar, la mesa queda pausada: deja de prometer fechas y las sesiones pendientes se ocultan hasta que se reanude. Tu nota queda como motivo en su historial.",
+      "PlayerBan": "Este pedido no lo resolvés vos: un veto lo decide el master de la mesa, desde su pestaña Jugadores."
     },
     "resolutionNoteLabel": "Tu respuesta",
     "approveNotePlaceholder": "Por qué aprobás el pedido. Le llega a quien lo hizo.",
@@ -109,7 +113,8 @@
       "REQUEST_ALREADY_RESOLVED": "Este pedido ya lo resolvió alguien. Actualizá la pantalla para ver cómo quedó.",
       "REQUEST_ENTITY_GONE": "Lo que este pedido señalaba ya no existe, así que no se puede resolver.",
       "MASTER_ROLE_ALREADY_HELD": "Ya tenés el rol de master.",
-      "generic": "No pudimos completar la acción. Probá de nuevo."
+      "generic": "No pudimos completar la acción. Probá de nuevo.",
+      "NOT_PRIMARY_MASTER": "Esto lo resuelve el master de la mesa, no un admin. El pedido de veto se responde desde la mesa."
     },
     "submit": {
       "success": "Tu pedido quedó registrado",
@@ -288,6 +293,20 @@
     "delete": "Eliminar",
     "deleteConfirmTitle": "Eliminar esta mesa",
     "deleteConfirmDescription": "Nunca se publicó, así que se borra sin dejar rastro. No se puede deshacer.",
-    "deleteSuccess": "Mesa eliminada"
+    "deleteSuccess": "Mesa eliminada",
+    "pause": "Pausar",
+    "pauseDialogTitle": "Pausar «{{name}}»",
+    "pauseDialogDescription": "Contá por qué se pausa. Lo lee el master de la mesa, y queda en su historial de estados.",
+    "pauseHint": "Mientras esté en pausa, la mesa no promete fechas: las sesiones pendientes se ocultan.",
+    "pauseHelpLink": "Qué hace pausar",
+    "pauseSuccess": "Mesa pausada",
+    "resume": "Reanudar",
+    "resumeConfirmTitle": "¿Reanudar «{{name}}»?",
+    "resumeConfirmDescription": "Las sesiones pendientes se vuelven a agendar desde hoy, conservando la numeración. A los jugadores les cambian las fechas.",
+    "resumeSuccess": "Mesa reanudada",
+    "errors": {
+      "SCHEDULE_CONFLICT": "No se puede reanudar: la agenda se pisa con «{{otherTableName}}», donde el master de esta mesa ya está comprometido.",
+      "generic": "No pudimos completar la acción. Probá de nuevo."
+    }
   }
 }

@@ -98,7 +98,7 @@ class AdminQueueServiceTest {
 
         service().list(ACTOR, FIRST_PAGE);
 
-        verify(approvalRequestRepository).findQueueItems(eq(ApprovalStatus.Pending), eq(ACTOR), any());
+        verify(approvalRequestRepository).findQueueItems(eq(ApprovalStatus.Pending), any(), eq(ACTOR), any());
         verify(gameTableRepository).findQueueItems(eq(GameTableStatus.Preparation), eq(ACTOR), any());
         // Draft, ChangesRequested y Unassigned no entran: nadie las envió, la pelota está en el master,
         // o les falta un master y no una revisión.
@@ -117,7 +117,7 @@ class AdminQueueServiceTest {
 
         service().list("admin-7", FIRST_PAGE);
 
-        verify(approvalRequestRepository).findQueueItems(any(), eq("admin-7"), any());
+        verify(approvalRequestRepository).findQueueItems(any(), any(), eq("admin-7"), any());
         verify(gameTableRepository).findQueueItems(any(), eq("admin-7"), any());
     }
 
@@ -132,7 +132,7 @@ class AdminQueueServiceTest {
         service().list(ACTOR, FIRST_PAGE);
 
         ArgumentCaptor<Pageable> ceiling = ArgumentCaptor.forClass(Pageable.class);
-        verify(approvalRequestRepository).findQueueItems(any(), anyString(), ceiling.capture());
+        verify(approvalRequestRepository).findQueueItems(any(), any(), anyString(), ceiling.capture());
         assertThat(ceiling.getValue().getPageSize()).isEqualTo(AdminQueueService.QUEUE_SOURCE_CAP);
         assertThat(ceiling.getValue().getPageNumber()).isZero();
     }
@@ -516,8 +516,27 @@ class AdminQueueServiceTest {
                 .toList();
     }
 
+    /**
+     * <b>{@code PlayerBan} does not enter the tray</b> (#39 over #90), and that had to be <em>built</em>:
+     * the query never asked what type a row was, so new types joined for free. {@code TablePause} does
+     * enter - an admin resolves it - and a veto does not, because the table's {@code Primary} resolves
+     * it. A tray full of work the reader gets a 403 for taking is worse than one that under-reports.
+     */
+    @Test
+    void vetoRequestsAreNotInTheTrayAndPauseRequestsAre() {
+        noQueue();
+
+        service().list(ACTOR, FIRST_PAGE);
+
+        ArgumentCaptor<java.util.Collection<ApprovalRequestType>> excluded = ArgumentCaptor.captor();
+        verify(approvalRequestRepository).findQueueItems(any(), excluded.capture(), anyString(), any());
+
+        assertThat(excluded.getValue()).containsExactly(ApprovalRequestType.PlayerBan);
+        assertThat(excluded.getValue()).doesNotContain(ApprovalRequestType.TablePause);
+    }
+
     private void queue(List<ApprovalRequest> requests, List<GameTable> tables) {
-        when(approvalRequestRepository.findQueueItems(any(), anyString(), any())).thenReturn(requests);
+        when(approvalRequestRepository.findQueueItems(any(), any(), anyString(), any())).thenReturn(requests);
         when(gameTableRepository.findQueueItems(any(), anyString(), any())).thenReturn(tables);
         when(masterService.findPrimariesByTables(any())).thenReturn(Map.of());
     }

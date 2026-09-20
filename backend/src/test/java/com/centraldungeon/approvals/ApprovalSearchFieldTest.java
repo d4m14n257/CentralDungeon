@@ -68,7 +68,7 @@ class ApprovalSearchFieldTest {
     /** Un valor desconocido no es un 400: no matchea nada (arquitectura.md 2.5). */
     @Test
     void unValorDesconocidoNoEsUnError() {
-        assertThat(ApprovalRequestType.fromWireName("TablePause")).isEmpty();
+        assertThat(ApprovalRequestType.fromWireName("Quizas")).isEmpty();
         assertThat(ApprovalStatus.fromName("Maybe")).isEmpty();
     }
 }

@@ -94,6 +94,24 @@ class ApprovalSearchSpecificationTest {
         verify(criteria.builder).conjunction();
     }
 
+    /**
+     * <b>And it does not narrow by type either</b>: a {@code PlayerBan} <em>is</em> visible in
+     * {@code /admin/requests} even though it is not in {@code /admin/queue}. They are two different
+     * questions - the tray is work waiting on you, and this is the record of every request there is.
+     * Seeing is not resolving: an admin who tries to resolve one is answered
+     * {@code 403 NOT_PRIMARY_MASTER} by {@code ApprovalService} (#39).
+     */
+    @Test
+    void theAdminListingDoesNotNarrowByTypeEitherAndShowsVetoRequests() {
+        Criteria criteria = new Criteria();
+
+        ApprovalSearchSpecification.forAdmin(SearchQuery.EMPTY)
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.root, never()).get("requestType");
+        verify(criteria.builder, never()).not(any(Predicate.class));
+    }
+
     @Test
     void unaBusquedaVaciaDelActorNoEsUnError() {
         Criteria criteria = new Criteria();

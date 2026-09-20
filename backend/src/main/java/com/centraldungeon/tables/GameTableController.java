@@ -1,5 +1,6 @@
 package com.centraldungeon.tables;
 
+import com.centraldungeon.approvals.ApprovalService;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.tables.dto.AddMasterRequest;
@@ -41,14 +42,27 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/game-tables")
 public class GameTableController {
 
-    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    /** The service that owns the table's lifecycle - a controller never reaches a repository (regla dura 1). */
     private final GameTableService gameTableService;
 
     /**
-     * @param gameTableService the service that owns the table's lifecycle and its rules
+     * The one mechanism every request that needs an approval goes through (#42).
+     *
+     * <p>A second collaborator, and the only endpoint that uses it is {@link #requestPause}. It is
+     * here rather than folded into {@code GameTableService} because asking for a pause writes two
+     * things - the table's status and an {@code approval_requests} row - and the row has one owner.
+     * The alternative would be {@code GameTableService} creating approval requests, which is the
+     * second mechanism #42 exists to prevent.
      */
-    public GameTableController(GameTableService gameTableService) {
+    private final ApprovalService approvalService;
+
+    /**
+     * @param gameTableService the service that owns the table's lifecycle and its rules
+     * @param approvalService  the one mechanism behind a requested pause (#32, #42)
+     */
+    public GameTableController(GameTableService gameTableService, ApprovalService approvalService) {
         this.gameTableService = gameTableService;
+        this.approvalService = approvalService;
     }
 
     /**
@@ -374,8 +388,35 @@ public class GameTableController {
     }
 
     /**
-     * An admin pausing a table directly. A master <em>asking</em> for a pause is PauseRequested, and
-     * that needs {@code approval_requests} - F3.
+     * The master <em>asking</em> for a pause (#32). InProgress to PauseRequested, plus the request
+     * an admin will answer - one transaction, in {@code ApprovalService}.
+     *
+     * <p><b>Why the route is here and not {@code POST /api/v1/requests}.</b> That endpoint takes no
+     * {@code entityId} on purpose, so nobody can file a request in somebody else's name (F3.2 §0d),
+     * and here the entity is not the person asking. Putting the table in the path is what lets the
+     * authorization - running <em>this</em> table - be checked at all (§2.6, #121); the service does
+     * the checking, because no {@code @PreAuthorize} can see a row in {@code masters}.
+     *
+     * <p>{@code isAuthenticated()} and no role, like every other endpoint about a concrete table.
+     *
+     * @param id          the table
+     * @param request     the justification, required - it is what the admin reads in the tray
+     * @param currentUser the actor, from the token
+     * @return 200 with the table, now PauseRequested. 403 when the actor does not run it, 409
+     *         {@code PAUSE_ALREADY_REQUESTED} when it is already waiting on one
+     */
+    @PostMapping("/{id}/request-pause")
+    @PreAuthorize("isAuthenticated()")
+    public GameTableDetailResponse requestPause(
+            @PathVariable String id,
+            @Valid @RequestBody ChangeTableStatusRequest request,
+            @AuthenticationPrincipal CurrentUser currentUser) {
+        return approvalService.submitTablePause(id, request.justification(), currentUser);
+    }
+
+    /**
+     * An admin pausing a table directly. A master <em>asking</em> for a pause is
+     * {@link #requestPause}, which since F3.4 is the other road into {@code Pause}.
      *
      * @param id          the table
      * @param request     the justification, required

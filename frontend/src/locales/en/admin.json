@@ -62,7 +62,9 @@
     "types": {
       "MasterGrant": "Master role",
       "TableOpen": "New table",
-      "General": "Question"
+      "General": "Question",
+      "TablePause": "Table pause",
+      "PlayerBan": "Player ban"
     },
     "status": {
       "Pending": "Pending",
@@ -92,7 +94,9 @@
     "effect": {
       "MasterGrant": "On approval the person is given the master role by the same road as in “Users”, recorded with your note as the reason.",
       "TableOpen": "On approval it is recorded that the request stands. The table is not created on its own: the request carries no name, system, seats or schedule, so you create it from “Tables”.",
-      "General": "On approval the request is closed and your answer reaches whoever asked. Nothing else on the platform changes."
+      "General": "On approval the request is closed and your answer reaches whoever asked. Nothing else on the platform changes.",
+      "TablePause": "On approval the table is paused: it stops promising dates and its pending sessions are hidden until it is resumed. Your note becomes the reason in its history.",
+      "PlayerBan": "This one is not yours to resolve: a ban is decided by the table’s master, from its Players tab."
     },
     "resolutionNoteLabel": "Your answer",
     "approveNotePlaceholder": "Why you are approving it. It reaches whoever asked.",
@@ -109,7 +113,8 @@
       "REQUEST_ALREADY_RESOLVED": "Somebody has already resolved this request. Refresh the screen to see how it went.",
       "REQUEST_ENTITY_GONE": "What this request pointed at no longer exists, so it cannot be resolved.",
       "MASTER_ROLE_ALREADY_HELD": "You already have the master role.",
-      "generic": "We could not complete the action. Try again."
+      "generic": "We could not complete the action. Try again.",
+      "NOT_PRIMARY_MASTER": "The table’s master resolves this, not an admin. A ban request is answered from the table itself."
     },
     "submit": {
       "success": "Your request was recorded",
@@ -288,6 +293,20 @@
     "delete": "Delete",
     "deleteConfirmTitle": "Delete this table",
     "deleteConfirmDescription": "It was never published, so it is removed without a trace. This cannot be undone.",
-    "deleteSuccess": "Table deleted"
+    "deleteSuccess": "Table deleted",
+    "pause": "Pause",
+    "pauseDialogTitle": "Pause “{{name}}”",
+    "pauseDialogDescription": "Say why it is being paused. The table’s master reads this, and it stays in its status history.",
+    "pauseHint": "While it is paused the table promises no dates: its pending sessions are hidden.",
+    "pauseHelpLink": "What pausing does",
+    "pauseSuccess": "Table paused",
+    "resume": "Resume",
+    "resumeConfirmTitle": "Resume “{{name}}”?",
+    "resumeConfirmDescription": "The pending sessions are rescheduled from today, keeping their numbering. The players’ dates change.",
+    "resumeSuccess": "Table resumed",
+    "errors": {
+      "SCHEDULE_CONFLICT": "It cannot be resumed: the agenda clashes with “{{otherTableName}}”, which this table’s master is already committed to.",
+      "generic": "We could not complete the action. Try again."
+    }
   }
 }

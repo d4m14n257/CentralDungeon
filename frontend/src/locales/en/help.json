@@ -402,6 +402,39 @@
         "step3": "Save the changes.",
         "step4": "If an admin had asked for changes, go to “Status” and send the table back for review."
       }
+    },
+    "pause": {
+      "title": "Asking for a pause",
+      "what": "Pausing a table is an admin’s decision. The master asks, the admin answers, and only then does the table go into pause.",
+      "who": "Anybody who runs the table can ask: the master or a co-master.",
+      "notYet": "Asking is not pausing. While the request waits, the table is still “In progress” and the calendar still promises its dates: if you stop turning up before the answer comes, your players will be waiting for you.",
+      "reason": "The reason is required. It is what the admin reads to decide, and it stays in the table’s status history.",
+      "freeze": "Once the table is paused, its pending sessions are hidden: the table stops promising dates it does not know it can keep.",
+      "resume": "When it is resumed, the pending sessions are rescheduled from the day it comes back, keeping their numbering. None of them is lost.",
+      "steps": {
+        "step1": "Open your table and go to the Status tab. The table has to be in progress.",
+        "step2": "Press “Ask for a pause” and say why. The reason is required.",
+        "step3": "The table moves to “Pause requested” and the request reaches the admins. Until they answer, keep playing as usual.",
+        "step4": "When an admin approves it, the table is paused and the calendar freezes. Resuming is theirs too."
+      }
+    },
+    "banning": {
+      "title": "Banning somebody from your table",
+      "what": "Banning removes a person from your table: it leaves their explorer, they cannot open it and they cannot download its files.",
+      "perTable": "It is per table, and only that table. They keep their account, their karma and every other table they play at: what disappears for them is this table and nothing else.",
+      "who": "The table’s master applies it. A co-master does not ban: they ask.",
+      "coMaster": "A co-master’s request is answered by the table’s master, not by an admin: who sits at the table is decided by whoever runs it.",
+      "reason": "The reason is required both to ban and to lift it. It is recorded with who did it and when, which is what makes the decision reviewable afterwards.",
+      "invisible": "The person is not told. The table simply stops existing for them, so the reason you write is not read by them: it is read by the table’s masters.",
+      "reversible": "It can be lifted. A ban is not a closure: it is reversible, and that is why it asks for a reason.",
+      "stays": "A banned person’s row stays in Players, marked, showing who banned them and when. That is where the ban is lifted from.",
+      "steps": {
+        "step1": "Open your table and go to the Players tab.",
+        "step2": "Find the person in the list of players.",
+        "step3": "Press “Ban”. If you are a co-master the button says “Ask for them to be banned”, because that is what it sends.",
+        "step4": "Write the reason. It is required.",
+        "step5": "To undo it, the same row offers “Lift the ban”, which asks for a reason too."
+      }
     }
   },
   "admins": {
@@ -544,6 +577,23 @@
         "step3": "Decide: “Approve” or “Reject”. Check what the dialog says approving that kind does, because it is not the same for all three.",
         "step4": "Write your answer. It is required and it reaches whoever asked.",
         "step5": "If it was a new table request, remember the step that is left: create it from “Tables” and assign it a master."
+      }
+    },
+    "pausing": {
+      "title": "Pausing and resuming a table",
+      "what": "Pausing takes a table out of circulation without closing it: it stops promising dates and its pending sessions are hidden.",
+      "requested": "A master does not pause their own table: they ask for it. That request reaches the tray like any other, and approving it is what pauses the table.",
+      "freeze": "A pause deletes and cancels nothing. The sessions still exist; they are simply not shown while the table is paused.",
+      "reason": "Pausing requires a reason. The master reads it, and it stays in the table’s status history.",
+      "resume": "Resuming reschedules the pending sessions from today, keeping their numbering. The players’ dates change.",
+      "clash": "Resuming can fail, and it is the only act on this screen that can: while the table was paused its master may have committed to another one. If the agendas overlap, the platform refuses and tells you which table it clashes with.",
+      "notCancel": "Pausing is not cancelling. A paused table comes back; a cancelled one does not, and that is done from the table itself with “Cancel”.",
+      "steps": {
+        "step1": "Go to “Tables”. You can narrow it with /table_status to see only the ones in progress or paused.",
+        "step2": "On the table’s row, press “Pause” and write the reason.",
+        "step3": "If what you have is a master’s request, resolve it from the tray: approving it is what pauses the table.",
+        "step4": "To bring it back, the same row offers “Resume”.",
+        "step5": "Confirm: the pending sessions are rescheduled from today. If the master’s agenda clashes with another table, the platform tells you which."
       }
     }
   },

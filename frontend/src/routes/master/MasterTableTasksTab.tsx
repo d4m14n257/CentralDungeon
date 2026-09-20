@@ -59,6 +59,19 @@ export function MasterTableTasksTab() {
   const { data: players } = useTablePlayers(tableId)
   const { data: sessions } = useTableSessions(tableId)
 
+  /**
+   * Who a `Single` task can be addressed to: the people actually playing, and not the vetoed ones.
+   *
+   * **The roster stopped being only players in F3.4.** A vetoed row stays on the list — that is what
+   * makes the veto reversible — so `useTablePlayers` now answers `Player` **and** `Blocked`, and
+   * anything that treats the whole list as "who is at this table" quietly widened with it.
+   *
+   * Without this filter the picker offers somebody the backend refuses with `400`: an option whose
+   * only possible outcome is an error, which is principio 2 exactly backwards. And the person has
+   * stopped seeing the table at all (#29), so a request addressed to them could never be answered.
+   */
+  const addressablePlayers = (players ?? []).filter((player) => player.status === 'Player')
+
   const publish = usePublishTask(tableId)
   const update = useUpdateTask(tableId)
   const close = useCloseTask(tableId)
@@ -153,7 +166,7 @@ export function MasterTableTasksTab() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         task={editing}
-        players={players ?? []}
+        players={addressablePlayers}
         sessions={(sessions ?? []).map((session) => ({ id: session.id, sequenceNumber: session.sequenceNumber }))}
         isBusy={publish.isPending || update.isPending}
         renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="MasterRequest" />}

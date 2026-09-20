@@ -3,13 +3,26 @@ import type { StrictOmit } from '@/types/utils'
 /**
  * The kinds of request the platform knows (#42, #90).
  *
- * **Three and not five.** The baseline DDL comments `TablePause` and `PlayerBan` too, but nothing
- * produces either of them until F3.4 — and a value of an enum that nothing emits is the orphan this
- * slice was written to avoid. They arrive with their producer.
+ * **Five since F3.4, and the last two arrived with their producer** — which is the rule F3.2 set
+ * when it deliberately declared three: a value of an enum that nothing emits is an orphan, and this
+ * phase exists partly to close the ones F1.7 surveyed. `TablePause` is emitted by
+ * `POST /game-tables/{id}/request-pause` and `PlayerBan` by `.../registrations/{id}/request-block`.
+ *
+ * **Neither of the two new ones can be raised from `POST /api/v1/requests`** — see
+ * `SUBMITTABLE_REQUEST_TYPES` in `requestTypes.ts`. Both are *about* something other than the person
+ * asking, and that endpoint takes no `entityId` on purpose.
  *
  * A union of literals and not a TS `enum` (arquitectura.md §3.2): mirror of `ApprovalRequestType`.
  */
-export type ApprovalRequestType = 'MasterGrant' | 'TableOpen' | 'General'
+export type ApprovalRequestType = 'MasterGrant' | 'TableOpen' | 'General' | 'TablePause' | 'PlayerBan'
+
+/**
+ * The kinds `POST /api/v1/requests` accepts: the three that are *about whoever is asking*.
+ *
+ * Derived with `Extract` rather than written out a second time (regla dura 6), so that renaming one
+ * above stops compiling here instead of quietly shrinking what the form offers.
+ */
+export type SubmittableRequestType = Extract<ApprovalRequestType, 'MasterGrant' | 'TableOpen' | 'General'>
 
 /** Where a request stands. Mirror of `ApprovalStatus`: it is asked once and resolved once. */
 export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected'
@@ -60,6 +73,35 @@ export type ApprovalRequestSummary = StrictOmit<
 >
 
 /**
+ * Mirror of `BanRequestResponse` — one veto a co-master is asking for (#39, F3.4).
+ *
+ * **Its own shape and not {@link ApprovalRequestSummary}**, because of the one thing that summary
+ * cannot say: *who* is going to be vetoed. The shared row carries who asked and why, which is right
+ * for the admin tray — there the entity really is the requester — and leaves a `Primary` with two
+ * open requests on the same table able to tell them apart only by the wording of the reason. On a
+ * screen whose entire purpose is deciding about a person, naming them is not a nicety.
+ *
+ * **Every field is non-null, and that is the point.** The alternative was a nullable
+ * `targetUserName` on the shared summary, filled in for one type out of five — the record with half
+ * its fields null that R3 forbids, and one that would have made every other reader carry a field
+ * that is always null for them. Two questions, two shapes.
+ */
+export interface BanRequest {
+  /** The request, which is what approving or refusing addresses. */
+  requestId: string
+  /** The application the veto is about — what the roster row is keyed by, so the two line up. */
+  registrationId: string
+  targetUserId: string
+  /** The field this shape exists for: a decision about a person is made by name, not by id. */
+  targetUserName: string
+  /** The co-master who asked. They are the one the answer is written to (#42). */
+  requestedByName: string
+  /** Why they are asking, verbatim. It is the whole of what the `Primary` decides on. */
+  justification: string
+  createdAt: string
+}
+
+/**
  * What asking for something sends: which kind, and why (#42).
  *
  * **No `entityId`.** The three kinds of F3.2 are about whoever is asking, and who that is comes from
@@ -67,7 +109,7 @@ export type ApprovalRequestSummary = StrictOmit<
  * person's name.
  */
 export interface SubmitApprovalRequestInput {
-  type: ApprovalRequestType
+  type: SubmittableRequestType
   justification: string
 }
 

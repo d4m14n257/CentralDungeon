@@ -74,6 +74,47 @@ export const gameTablesApi = {
   finish: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/finish`),
   cancel: (id: string, request: ChangeTableStatusRequest) =>
     api.post<GameTableDetail, ChangeTableStatusRequest>(`/api/v1/game-tables/${id}/cancel`, request),
+  /**
+   * A master **asking** for a pause (#32, F3.4): `InProgress → PauseRequested`, plus the
+   * `TablePause` request an admin answers.
+   *
+   * **Its own route on the table and not `POST /api/v1/requests`**, deliberately: that endpoint takes
+   * no `entityId` so that nobody can ask in another person's name (F3.2), and here the entity is not
+   * the person asking. With the table in the path, "being the master of *this* table" is checked
+   * where it belongs (#121).
+   *
+   * Refused with `PAUSE_ALREADY_REQUESTED` when a pause is already waiting on an answer — which the
+   * screen does not offer, so it only surfaces for a second tab or another route in.
+   *
+   * @param id      the table
+   * @param request the reason, required (#32)
+   */
+  requestPause: (id: string, request: ChangeTableStatusRequest) =>
+    api.post<GameTableDetail, ChangeTableStatusRequest>(`/api/v1/game-tables/${id}/request-pause`, request),
+  /**
+   * An admin pausing a table outright, with the reason that goes on the record (#32).
+   *
+   * **The endpoint has existed since E2 and had no screen until F3.4** (#163). Pausing does not touch
+   * `table_sessions`: the freeze is derived on read, because a pause is reversible.
+   *
+   * @param id      the table
+   * @param request the reason, required
+   */
+  pause: (id: string, request: ChangeTableStatusRequest) =>
+    api.post<GameTableDetail, ChangeTableStatusRequest>(`/api/v1/game-tables/${id}/pause`, request),
+  /**
+   * Bringing a paused table back, rescheduling from today and keeping the numbering (#33, #193).
+   *
+   * **No justification, and that is not an oversight**: #32 demands one for `Pause` and `Canceled`,
+   * and resuming is the return to normal.
+   *
+   * **It can be refused with `409 SCHEDULE_CONFLICT`**, because the master may have committed to
+   * something else while the table was paused — and the refusal carries the other table's name in
+   * `errorParams.otherTableName`, which is what lets the screen say *which* one (#193, #197).
+   *
+   * @param id the table
+   */
+  resume: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/resume`),
   /** Adds a co-master or hands the table over; answers with the masters afterwards (#73). */
   addMaster: (id: string, request: AddMasterRequest) =>
     api.post<MasterSummary[], AddMasterRequest>(`/api/v1/game-tables/${id}/masters`, request),

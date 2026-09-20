@@ -12,7 +12,10 @@ import static org.mockito.Mockito.when;
 
 import com.centraldungeon.approvals.dto.ApprovalRequestDetailResponse;
 import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.registrations.TableRegistration;
+import com.centraldungeon.registrations.dto.BanRequestResponse;
 import com.centraldungeon.common.exception.ForbiddenActionException;
+import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.notifications.NotificationService;
@@ -26,6 +29,7 @@ import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.UserStatus;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -82,6 +86,18 @@ class ApprovalServiceTest {
     @Mock
     private ApprovalEntityResolver entityResolver;
 
+    /** The pause's effect, approved and rejected alike (#32) - never written in ApprovalService. */
+    @Mock
+    private com.centraldungeon.tables.GameTableService gameTableService;
+
+    /** The veto's effect (#39) - the one place `Blocked` is written. */
+    @Mock
+    private com.centraldungeon.registrations.RegistrationService registrationService;
+
+    /** Answers who is a table's Primary, for the one type an admin does not resolve (#39). */
+    @Mock
+    private com.centraldungeon.tables.MasterService masterService;
+
     @Mock
     private UserService userService;
 
@@ -108,6 +124,9 @@ class ApprovalServiceTest {
                 userRoleRepository,
                 userRoleService,
                 notificationService,
+                gameTableService,
+                registrationService,
+                masterService,
                 approvalMapper);
     }
 
@@ -548,12 +567,181 @@ class ApprovalServiceTest {
      * takes: that screen resolves without ever passing through the shared tray. The reservation only
      * matters when <em>another</em> admin holds it, and that is pinned in its own tests above.
      */
+    // ------------------------------------- the two types F3.4 brought along with their producer
+
+    /**
+     * Approving a {@code TablePause} applies it <b>through the {@code GameTableService}</b> and not by
+     * writing the status here - the same clause #42 demands for the role, applied to the lifecycle. And
+     * the resolution note is the pause's justification (#32, modelo-datos.md:835).
+     */
+    @Test
+    void approvingATablePauseAppliesItThroughTheGameTableService() {
+        ApprovalRequest request = pendingAbout(ApprovalRequestType.TablePause, "table-1");
+        resolvable(request);
+
+        service().approve("req-1", NOTE, ADMIN);
+
+        verify(gameTableService).applyApprovedPause("table-1", "admin-1", NOTE);
+    }
+
+    /**
+     * <b>And rejecting it has an effect, which is what did not exist before.</b> {@code reject} had no
+     * {@code switch} because until F3.4 a rejection did nothing; asking for the pause already moved the
+     * table, so saying no has to put it back in {@code InProgress} or it is stranded.
+     */
+    @Test
+    void rejectingATablePausePutsTheTableBack() {
+        ApprovalRequest request = pendingAbout(ApprovalRequestType.TablePause, "table-1");
+        resolvable(request);
+
+        service().reject("req-1", NOTE, ADMIN);
+
+        verify(gameTableService).revertRequestedPause("table-1", "admin-1", NOTE);
+    }
+
+    /** The older types still have no effect when rejected: that is what a rejection normally is. */
+    @Test
+    void rejectingTheOlderTypesStillHasNoEffect() {
+        ApprovalRequest request = pending(ApprovalRequestType.MasterGrant);
+        resolvable(request);
+
+        service().reject("req-1", NOTE, ADMIN);
+
+        verifyNoInteractions(userRoleService);
+        verifyNoInteractions(gameTableService);
+    }
+
+    /**
+     * <b>A {@code PlayerBan} is resolved by the table's {@code Primary}, and not by an admin</b> (#39
+     * over #90). It is the most delicate decision of the contract, and this is what makes it true: the
+     * admin passes the route's {@code @PreAuthorize} and is stopped by the rule, which is what an
+     * annotation could not express - being <em>this</em> table's {@code Primary} is a row in
+     * {@code masters}.
+     */
+    @Test
+    void anAdminCannotResolveAVetoRequest() {
+        ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
+        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
+        when(entityResolver.exists(request.getEntityType(), "reg-1")).thenReturn(true);
+        when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
+        when(masterService.isPrimaryOf("table-1", "admin-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> service().approve("req-1", NOTE, ADMIN))
+                .isInstanceOf(ForbiddenActionException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ForbiddenActionException.NOT_PRIMARY_MASTER);
+
+        verify(registrationService, never()).applyApprovedBlock(anyString(), anyString(), anyString());
+    }
+
+    /**
+     * And the {@code Primary} can, with the veto written <b>through the {@code RegistrationService}</b>:
+     * there is exactly one place that writes {@code Blocked}, the same way there is exactly one that
+     * grants a role.
+     */
+    @Test
+    void thePrimaryResolvesTheVetoRequestAndTheRegistrationServiceWritesTheVeto() {
+        ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
+        CurrentUser primary = new CurrentUser("primary-1", Set.of("Master"));
+        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
+        when(entityResolver.exists(request.getEntityType(), "reg-1")).thenReturn(true);
+        when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
+        when(masterService.isPrimaryOf("table-1", "primary-1")).thenReturn(true);
+        when(userService.getById("primary-1")).thenReturn(user("primary-1", "primary"));
+
+        service().approve("req-1", NOTE, primary);
+
+        verify(registrationService).applyApprovedBlock("reg-1", "primary-1", NOTE);
+    }
+
+    /** Rejecting a veto request moves nothing: nothing had moved when it was asked for. */
+    @Test
+    void rejectingAVetoRequestDoesNotMoveTheApplication() {
+        ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
+        CurrentUser primary = new CurrentUser("primary-1", Set.of("Master"));
+        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
+        when(entityResolver.exists(request.getEntityType(), "reg-1")).thenReturn(true);
+        when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
+        when(masterService.isPrimaryOf("table-1", "primary-1")).thenReturn(true);
+        when(userService.getById("primary-1")).thenReturn(user("primary-1", "primary"));
+
+        service().reject("req-1", NOTE, primary);
+
+        verify(registrationService, never()).applyApprovedBlock(anyString(), anyString(), anyString());
+    }
+
+    /**
+     * {@code POST /api/v1/requests} only ever opens a request about the person asking, and still takes
+     * no {@code entityId} (F3.2 §0d). The two types whose entity is something else have doors of their
+     * own on the aggregate they are about; reaching for them here invents no entity.
+     *
+     * <p><b>400 and not 403</b>, by the rule the project keeps repeating: 403 is who you are, 400 is
+     * what you sent. Anybody at all may open a request here - what cannot be opened here is a request
+     * <em>of this type</em>, and no change of actor would make it work. The type travels in the body.
+     */
+    @Test
+    void theGenericEndpointDoesNotOpenTheTypesThatAreAboutSomethingElse() {
+        allowedRequester();
+
+        assertThatThrownBy(() -> service().submit(ApprovalRequestType.TablePause, WHY, REQUESTER))
+                .isInstanceOf(InvalidRequestException.class);
+        verify(approvalRequestRepository, never()).save(any());
+    }
+
+    /**
+     * <b>The veto request listing names who is to be vetoed.</b> It is the hole the contract had:
+     * {@code ApprovalRequestSummaryResponse} says who asked and why, which is right for the shared tray
+     * - there the entity <em>is</em> the requester - and leaves a {@code Primary} with two open requests
+     * on their table telling them apart by the wording of the reason alone. A decision about a person is
+     * taken by their name.
+     */
+    @Test
+    void theVetoRequestListingNamesWhoIsToBeVetoed() {
+        TableRegistration target = registrationOf("reg-1", user("player-9", "morgana"));
+        ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
+        when(masterService.isMasterOf("table-1", "primary-1")).thenReturn(true);
+        when(registrationService.registrationsOf("table-1")).thenReturn(Map.of("reg-1", target));
+        when(approvalRequestRepository.findByRequestTypeAndStatusAndEntityIdInOrderByCreatedAtAsc(
+                        eq(ApprovalRequestType.PlayerBan), eq(ApprovalStatus.Pending), any()))
+                .thenReturn(List.of(request));
+
+        List<BanRequestResponse> pending = service().listBanRequests("table-1", "primary-1");
+
+        assertThat(pending).hasSize(1);
+        assertThat(pending.getFirst().requestId()).isEqualTo("req-1");
+        assertThat(pending.getFirst().registrationId()).isEqualTo("reg-1");
+        assertThat(pending.getFirst().targetUserId()).isEqualTo("player-9");
+        assertThat(pending.getFirst().targetUserName()).isEqualTo("morgana");
+        assertThat(pending.getFirst().requestedByName()).isEqualTo("carla");
+        assertThat(pending.getFirst().justification()).isEqualTo(WHY);
+    }
+
+    /** Somebody who does not run the table does not read its veto requests (#17, #121, #135). */
+    @Test
+    void anOutsiderCannotReadATablesVetoRequests() {
+        when(masterService.isMasterOf("table-1", "stranger")).thenReturn(false);
+
+        assertThatThrownBy(() -> service().listBanRequests("table-1", "stranger"))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** A registration as it comes back from the database, with the person it belongs to. */
+    private static TableRegistration registrationOf(String id, User applicant) {
+        TableRegistration registration = new TableRegistration(null, applicant, null);
+        ReflectionTestUtils.setField(registration, "id", id);
+        return registration;
+    }
+
     private User resolvable(ApprovalRequest request) {
         User admin = user("admin-1", "damian");
         when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
         when(entityResolver.exists(request.getEntityType(), request.getEntityId())).thenReturn(true);
         when(userService.getById("admin-1")).thenReturn(admin);
         return admin;
+    }
+
+    /** A pending request about something other than the requester - the two types F3.4 added. */
+    private static ApprovalRequest pendingAbout(ApprovalRequestType type, String entityId) {
+        return persisted(new ApprovalRequest(type, type.entityType(), entityId, user("user-1", "carla"), WHY));
     }
 
     private static ApprovalRequest pending(ApprovalRequestType type) {

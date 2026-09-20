@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { APPROVAL_REQUEST_TYPES } from './requestTypes'
+import { SUBMITTABLE_REQUEST_TYPES } from './requestTypes'
 import type { ResolveApprovalRequestInput, SubmitApprovalRequestInput } from './types'
 import type { Equals, Expect } from '@/types/utils'
 
@@ -16,7 +16,9 @@ import type { Equals, Expect } from '@/types/utils'
  * without it a four-megabyte body travels the whole way before being refused.
  */
 export const submitApprovalRequestSchema = z.object({
-  type: z.enum(APPROVAL_REQUEST_TYPES),
+  // The submittable three and not all five: the two F3.4 added are raised from their own entity's
+  // route, because `POST /requests` carries no `entityId` on purpose (F3.2 §0d).
+  type: z.enum(SUBMITTABLE_REQUEST_TYPES),
   justification: z.string().trim().min(1).max(4000),
 })
 

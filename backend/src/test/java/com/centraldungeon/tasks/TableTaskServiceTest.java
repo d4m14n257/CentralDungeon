@@ -89,7 +89,9 @@ class TableTaskServiceTest {
         return new TableTaskService(
                 taskRepository,
                 submissionRepository,
-                gameTableRepository,
+                // The real TableVisibilityService over the same mocked repositories - see
+                // TableSessionServiceTest for why it is not a mock.
+                new com.centraldungeon.tables.TableVisibilityService(gameTableRepository, registrationRepository),
                 sessionRepository,
                 registrationRepository,
                 masterService,
@@ -358,6 +360,29 @@ class TableTaskServiceTest {
 
         assertThat(applicable).hasSize(1);
         assertThat(applicable.getFirst().canSubmit()).isFalse();
+    }
+
+    /**
+     * <b>Read path 5 of F3.4.</b> {@code /tasks/applicable} is an endpoint of its own (#209), so it
+     * does <b>not</b> inherit the detail's answer the way the sessions and the shared files do: it has
+     * to be closed separately, and this pins that it is.
+     *
+     * <p>404 and not 403 (#29). And what leaked was no small thing: the title of every task tells
+     * somebody that the table is still there and what it is asking of them.
+     */
+    @Test
+    void theApplicableTasksOfAVetoedTableAre404() {
+        givenTable("table-veto");
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-veto", "vetado", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> service().listApplicable("table-veto", "vetado"))
+                .isInstanceOf(NotFoundException.class)
+                .isNotInstanceOf(ForbiddenActionException.class);
+
+        verify(taskRepository, never())
+                .findByGameTable_IdAndAudienceInAndStatusOrderByCreatedAtAsc(anyString(), any(), any());
     }
 
     /** A candidate sees the same task and may answer it: that is what the audience means. */

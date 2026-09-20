@@ -253,6 +253,35 @@ La cláusula que ninguna prueba de un solo lado puede ver —«el rol queda otor
 
 **Se prueba:** un master pide pausa y un admin la aprueba; el calendario del jugador se congela. Un `Primary` veta a alguien: esa persona deja de ver la mesa en el explorador, recibe `404` en el detalle y `404` en el archivo que antes descargaba.
 
+#### ✅ Terminada
+
+**El riesgo que §7 anunció se evitó construyendo el punto único, y el inventario de vías se escribió antes de tocar la primera** — que era la condición de esta rebanada. Había **tres copias** del mismo lookup: `GameTableService.getEntityById`, cuyo Javadoc afirmaba ser «the single lookup every read goes through» y no lo era, `TableSessionService.getTable` y `TableTaskService.requireLiveTable`. Las tres son ahora llamadas a `TableVisibilityService`, y el veto está escrito **una vez**. Las siete vías quedaron cerradas: explorador (`NOT EXISTS` en el `WHERE`, nunca descartando filas de la página), detalle por id, sesiones y archivos compartidos —que viajan *dentro* del detalle y heredan su respuesta—, `/tasks/applicable` —que es endpoint propio (#209) y **no** la hereda—, la descarga de archivos (#206) y volver a postularse, que se cerró sin ninguna regla nueva y es la prueba de que el punto único funciona.
+
+**Lo que la rebanada descubrió de sí misma**, y no sabía al empezar:
+
+- **El chequeo de veto delante del `SELECT ... FOR UPDATE` rompió la invariante de #28.** Poner `requireVisible` como primera línea de `apply` movió el snapshot de `REPEATABLE READ` hacia atrás: los diez hilos abrían su snapshot antes de hacer cola por el lock, y al despertar leían la guarda de «una sola postulación activa por par» desde un snapshot previo al commit del ganador. **Diez postulaciones concurrentes pasaban las diez.** Es la lección de **#252** repetida palabra por palabra —«la lectura con lock es lo primero que la transacción hace con esa fila»— y ningún unitario podía verla: hizo falta `RegistrationServiceIT` contra MySQL real. El arreglo es el orden, y va documentado en el Javadoc de `apply` para que no se vuelva a invertir.
+- **`TestDataService` volvió a quedarse corto, y es la sexta vez.** `registration_status_changes` tiene FK a la postulación y a quien la movió; el e2e del veto fue la primera corrida que escribió una fila, y la limpieza respondió `500`. Exactamente **#254**: la limpieza es una sola transacción, así que el choque de FK hace rollback entero y la corrida siguiente arranca con la base llena.
+- **La rebanada llegó a revisión sin una sola prueba de Playwright**, con 165 ITs verdes. Es el hueco que F3.3 ya había dejado escrito —«lo encontró Playwright, no los tests ni la revisión»— y el que ningún constructor puede cerrar solo: el veto es una regla con siete puertas y un unitario solo puede preguntar por una con las otras seis mockeadas. `table-veto-and-pause.spec.ts` recorre el explorador, el detalle y la descarga **con la misma persona, antes y después del veto**, que es el único orden en que una puerta abierta es una aserción que falla.
+- **Tres claves de i18n no existían en ninguno de los dos idiomas**: `master:veto.quotedReason` —el motivo del veto, que es justamente lo que lo hace reversible— y `master:status.errors.*`. La pantalla renderizaba la clave cruda. Lo encontró el test de `MasterTablePlayersTab`, que afirmaba el motivo; el de la pausa no podía verlo porque su `vi.mock` no exportaba `pauseRequestErrorKey`.
+- **El contrato y sus tests discrepaban en dos códigos de estado**, y en los dos casos el código de producción tenía razón: abrir un `TablePause` por `POST /api/v1/requests` es `400 REQUEST_TYPE_NOT_ACCEPTED_HERE` y no `403` —el tipo viaja en el cuerpo, así que es qué mandaste y no quién sos—, y el centinela «tipo de entidad desconocido» del barrido de huérfanas dejó de serlo el día que F3.4 le enseñó `game_table` al resolver.
+
+**Suites al cerrar, salida real:** `./mvnw test` 568/568 · `./mvnw verify` 568 + **165 ITs en 18 clases**, 0 fallos · `npx tsc -b` limpio · `npm run test` 477/477 en 54 archivos · `npm run test:e2e` **59/59** · `npm run format` sin reescrituras.
+
+**Deuda de revisión — para F4** (punto 5, #250):
+
+| Sin verificar | Por qué queda |
+|---|---|
+| Los cuatro estados de cada pantalla nueva, el viewport de 375 px y el contraste | Es F4 por diseño (#250) |
+| El badge `Vetado` **renderizado** en los dos temas | El token no es deuda: `state-blocked` ya estaba en `design/build.py` y mide 5.14:1 en claro y 8.71:1 en oscuro, las 30 parejas en verde. Lo que no se miró es el badge en pantalla, junto al de `Rechazado`, que es lo que la decisión de darle color propio afirma |
+| La pausa **reagendando** al reanudar, de punta a punta | El e2e prueba el congelamiento; que reanudar reagende desde la fecha de reanudación y vuelva a verificar el choque está construido desde F1.3 y probado en unitarios, no recorrido en Playwright |
+| El pedido de veto de un `Secondary` resuelto por el `Primary`, en el navegador | Cubierto en unitarios y en `ApprovalServiceTest`; el e2e recorre el veto directo. Es el paso 7 del camino manual de §6 |
+| `PlayerBan` visible en `/admin/requests` pero no resoluble ahí | La regla está probada (403 `NOT_PRIMARY_MASTER`); que la pantalla **no ofrezca** los botones a un admin para ese tipo no se miró |
+| Concurrencia del veto contra MySQL real | `block` toma el lock de la mesa y hay unitario del 409, pero no hay IT de dos masters vetando a la vez — a diferencia de la pausa, que hereda el lock de `lockTable` ya probado |
+
+**Inventario de archivos** — 9 nuevos en `backend/` (`tables/TableVisibilityService` y su test; `registrations/`: `RegistrationBanController`, `RegistrationStatusChange`, `RegistrationStatusChangeRepository`; `registrations/dto/`: `BanRequestResponse`, `BlockRegistrationRequest`, `UnblockRegistrationRequest`; `db/migration/V12__registration_status_changes.sql`), 19 nuevos en `frontend/` (`features/tables/`: `tableErrors.ts` + test, `api/usePauseTable`, `api/useResumeTable`, `api/useRequestTablePause`; `features/registrations/`: `vetoErrors.ts`, `api/useBlockPlayer`, `api/useUnblockPlayer`, `api/useRequestPlayerBlock`, `api/vetoInvalidation.ts`, `components/BlockPlayerDialog` + test; `features/approvals/`: `api/useTableBanRequests`, `api/useResolveBanRequest`, `components/BanRequestsSection` + test; `features/help/sections/f34.test.tsx`; `routes/master/MasterTableStatusTab.test.tsx`; `e2e/table-veto-and-pause.spec.ts`), y los modificados que el commit de la rebanada lista. **Una migración**, `V12`, y `modelo-datos.md` actualizada en el mismo commit.
+
+**`TestDataService` se tocó por infraestructura de pruebas**, igual que en F3.1 y por la misma razón: la tabla nueva necesita su borrado o la limpieza del e2e responde `500`.
+
 ---
 
 ### F3.5 — `system_settings`

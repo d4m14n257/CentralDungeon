@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.registrations.dto.TablePlayerResponse;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.files.FileCategory;
@@ -27,6 +28,7 @@ import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
 import com.centraldungeon.tables.CommittedTable;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tables.ScheduleConflictService;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserAuthSnapshot;
@@ -40,6 +42,9 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -52,6 +57,10 @@ class RegistrationServiceTest {
 
     @Mock
     private RegistrationRejectionRepository rejectionRepository;
+
+    /** The veto's trail (#39): every block and every lifting leaves a row. */
+    @Mock
+    private RegistrationStatusChangeRepository statusChangeRepository;
 
     @Mock
     private RegistrationFileRepository registrationFileRepository;
@@ -83,13 +92,17 @@ class RegistrationServiceTest {
     void setUp() {
         registrationService = new RegistrationService(
                 registrationRepository, rejectionRepository, registrationFileRepository, fileService, gameTableRepository, masterService,
-                userService, notificationService, scheduleConflictService, registrationMapper);
+                userService, notificationService, scheduleConflictService, statusChangeRepository,
+                // The real gate over the same mocked repositories: applying goes through it now, and
+                // that is exactly what stops a vetoed person re-applying (#29).
+                new TableVisibilityService(gameTableRepository, registrationRepository), registrationMapper);
     }
 
     @Test
     void rejectsApplicationsFromSomeoneWithoutThePlayerRole() {
         GameTable table = persistedTable("table-1", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-1")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-1")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("master-only")).thenReturn(new UserAuthSnapshot("master-only", UserStatus.Allowed, Set.of("Master")));
 
         assertThatThrownBy(() -> registrationService.apply("table-1", "master-only", new CreateRegistrationRequest(null, List.of())))
@@ -100,6 +113,7 @@ class RegistrationServiceTest {
     void rejectsApplicationsFromAMasterOfThatSameTable() {
         GameTable table = persistedTable("table-1b", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-1b")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-1b")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("master-player-1"))
                 .thenReturn(new UserAuthSnapshot("master-player-1", UserStatus.Allowed, Set.of("Player", "Master")));
         when(masterService.isMasterOf("table-1b", "master-player-1")).thenReturn(true);
@@ -112,6 +126,7 @@ class RegistrationServiceTest {
     void rejectsApplicationsToATableThatIsNotOpen() {
         GameTable table = persistedTable("table-2", GameTableStatus.Preparation, null);
         when(gameTableRepository.findByIdForUpdate("table-2")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-2")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
 
         assertThatThrownBy(() -> registrationService.apply("table-2", "player-1", new CreateRegistrationRequest(null, List.of())))
@@ -122,7 +137,13 @@ class RegistrationServiceTest {
     void rejectsASecondActiveApplicationForTheSamePair() {
         GameTable table = persistedTable("table-3", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-3")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-3")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
+        // The veto gate asks the same method with [Blocked] before anything else, so the stubbing
+        // has to say what that one answers too (#29).
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-3", "player-1", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(false);
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
                         "table-3", "player-1", List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player)))
                 .thenReturn(true);
@@ -135,12 +156,13 @@ class RegistrationServiceTest {
     void acceptsAValidApplication() {
         GameTable table = persistedTable("table-4", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-4")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-4")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
-                .thenReturn(new RegistrationResponse("reg-1", "table-4", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of()));
+                .thenReturn(new RegistrationResponse("reg-1", "table-4", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
 
         RegistrationResponse response = registrationService.apply("table-4", "player-1", new CreateRegistrationRequest("please", List.of()));
 
@@ -151,12 +173,13 @@ class RegistrationServiceTest {
     void applyNotifiesEveryMasterOfTheTable() {
         GameTable table = persistedTable("table-4b", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-4b")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-4b")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
-                .thenReturn(new RegistrationResponse("reg-1b", "table-4b", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of()));
+                .thenReturn(new RegistrationResponse("reg-1b", "table-4b", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
         com.centraldungeon.tables.Master primary =
                 new com.centraldungeon.tables.Master(table, persistedUser("master-1"), com.centraldungeon.tables.MasterType.Primary);
         com.centraldungeon.tables.Master secondary =
@@ -197,7 +220,7 @@ class RegistrationServiceTest {
         when(masterService.isMasterOf("table-7", "master-1")).thenReturn(true);
         when(registrationRepository.countByGameTable_IdAndStatus("table-7", TableRegistrationStatus.Player)).thenReturn(1L);
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-3", "table-7", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of()));
+                .thenReturn(new RegistrationResponse("reg-3", "table-7", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of(), null, null, null));
 
         registrationService.accept("reg-3", "master-1");
 
@@ -219,7 +242,7 @@ class RegistrationServiceTest {
         when(registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc("table-8", TableRegistrationStatus.Candidate))
                 .thenReturn(List.of(otherCandidate));
         when(registrationMapper.toResponse(eq(accepted), any()))
-                .thenReturn(new RegistrationResponse("reg-4", "table-8", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of()));
+                .thenReturn(new RegistrationResponse("reg-4", "table-8", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of(), null, null, null));
 
         registrationService.accept("reg-4", "master-1");
 
@@ -246,7 +269,7 @@ class RegistrationServiceTest {
         when(masterService.isMasterOf("table-10", "master-1")).thenReturn(true);
         when(userService.getById("master-1")).thenReturn(persistedUser("master-1"));
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-7", "table-10", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of()));
+                .thenReturn(new RegistrationResponse("reg-7", "table-10", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of(), null, null, null));
 
         registrationService.reject("reg-7", "master-1", new RejectRegistrationRequest("Not a fit"));
 
@@ -263,10 +286,13 @@ class RegistrationServiceTest {
     void listMineShowsAMasterJustificationVerbatim() {
         TableRegistration registration = persistedRegistration("reg-8", "table-12", TableRegistrationStatus.Rejected, null);
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 20);
-        when(registrationRepository.findByUser_IdAndStatusNot("player-1", TableRegistrationStatus.Deleted, pageable))
+        when(registrationRepository.findByUser_IdAndStatusNotIn(
+                        "player-1",
+                        List.of(TableRegistrationStatus.Deleted, TableRegistrationStatus.Blocked),
+                        pageable))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-8", "table-12", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of()));
+                .thenReturn(new RegistrationResponse("reg-8", "table-12", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of(), null, null, null));
         RegistrationRejection rejection = new RegistrationRejection(registration, "No encaja con el tono", persistedUser("master-9"));
         when(rejectionRepository.findByRegistration_IdIn(List.of("reg-8"))).thenReturn(List.of(rejection));
 
@@ -280,10 +306,13 @@ class RegistrationServiceTest {
     void listMineReportsAnAutomaticRejectionAsACodeAndNotAsText() {
         TableRegistration registration = persistedRegistration("reg-9", "table-13", TableRegistrationStatus.Rejected, null);
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 20);
-        when(registrationRepository.findByUser_IdAndStatusNot("player-1", TableRegistrationStatus.Deleted, pageable))
+        when(registrationRepository.findByUser_IdAndStatusNotIn(
+                        "player-1",
+                        List.of(TableRegistrationStatus.Deleted, TableRegistrationStatus.Blocked),
+                        pageable))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-9", "table-13", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of()));
+                .thenReturn(new RegistrationResponse("reg-9", "table-13", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of(), null, null, null));
         // rejected_by null is what marks the rejection as the system's own (#34).
         RegistrationRejection rejection = new RegistrationRejection(registration, "TABLE_FULL", null);
         when(rejectionRepository.findByRegistration_IdIn(List.of("reg-9"))).thenReturn(List.of(rejection));
@@ -305,6 +334,9 @@ class RegistrationServiceTest {
 
     @Test
     void applyThrowsWhenTheTableDoesNotExist() {
+        // The locking read is what answers here, because it is the first statement of the transaction
+        // and has to be (#252). It gives the same 404 the single gate would have - a missing table and
+        // a vetoed one are indistinguishable on purpose (#25, #29).
         when(gameTableRepository.findByIdForUpdate("missing")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> registrationService.apply("missing", "player-1", new CreateRegistrationRequest(null, List.of())))
@@ -316,6 +348,7 @@ class RegistrationServiceTest {
     void refusesAnApplicationThatClashesWithATableTheApplicantAlreadyPlaysAt() {
         GameTable table = persistedTable("table-r2", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-r2")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-r2")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(scheduleConflictService.findClashWith("player-1", table)).thenReturn(new CommittedTable("other", "La cripta"));
@@ -369,7 +402,7 @@ class RegistrationServiceTest {
                 .thenReturn(List.of(accepted, pendingElsewhere));
         when(scheduleConflictService.overlap(acceptedTable, pendingElsewhere.getGameTable())).thenReturn(true);
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
-                .thenReturn(new RegistrationResponse("reg-r4", "table-r4", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of()));
+                .thenReturn(new RegistrationResponse("reg-r4", "table-r4", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of(), null, null, null));
 
         registrationService.accept("reg-r4", "master-1");
 
@@ -427,6 +460,7 @@ class RegistrationServiceTest {
     void attachingOwnFileLinksItAndClassifiesItAsPlayerApplication() {
         GameTable table = persistedTable("table-f1", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-f1")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-f1")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
@@ -435,7 +469,7 @@ class RegistrationServiceTest {
         when(fileService.requireAttachable("file-1", "player-1")).thenReturn(file);
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
                 .thenReturn(new RegistrationResponse(
-                        "reg-f1", "table-f1", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of()));
+                        "reg-f1", "table-f1", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
 
         registrationService.apply("table-f1", "player-1", new CreateRegistrationRequest(null, List.of("file-1")));
 
@@ -452,6 +486,7 @@ class RegistrationServiceTest {
     void attachingAPublishedFileLinksItTheSameWay() {
         GameTable table = persistedTable("table-f2", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-f2")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-f2")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-2")).thenReturn(new UserAuthSnapshot("player-2", UserStatus.Allowed, Set.of("Player")));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(userService.getById("player-2")).thenReturn(persistedUser("player-2"));
@@ -461,7 +496,7 @@ class RegistrationServiceTest {
         when(fileService.requireAttachable("file-published", "player-2")).thenReturn(published);
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
                 .thenReturn(new RegistrationResponse(
-                        "reg-f2", "table-f2", "Test table", "player-2", "P2", 8000, "Candidate", null, null, null, null, List.of()));
+                        "reg-f2", "table-f2", "Test table", "player-2", "P2", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
 
         registrationService.apply("table-f2", "player-2", new CreateRegistrationRequest(null, List.of("file-published")));
 
@@ -474,6 +509,7 @@ class RegistrationServiceTest {
     void refusesAFileThatIsSomebodyElsesAndNotPublished() {
         GameTable table = persistedTable("table-f3", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-f3")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-f3")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-3")).thenReturn(new UserAuthSnapshot("player-3", UserStatus.Allowed, Set.of("Player")));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(userService.getById("player-3")).thenReturn(persistedUser("player-3"));
@@ -492,13 +528,14 @@ class RegistrationServiceTest {
     void applyingWithNoFilesIsValid() {
         GameTable table = persistedTable("table-f4", GameTableStatus.Opened, null);
         when(gameTableRepository.findByIdForUpdate("table-f4")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-f4")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-4")).thenReturn(new UserAuthSnapshot("player-4", UserStatus.Allowed, Set.of("Player")));
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any())).thenReturn(false);
         when(userService.getById("player-4")).thenReturn(persistedUser("player-4"));
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(persistRegistration("reg-f4"));
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
                 .thenReturn(new RegistrationResponse(
-                        "reg-f4", "table-f4", "Test table", "player-4", "P4", 8000, "Candidate", null, null, null, null, List.of()));
+                        "reg-f4", "table-f4", "Test table", "player-4", "P4", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
 
         RegistrationResponse response =
                 registrationService.apply("table-f4", "player-4", new CreateRegistrationRequest(null, List.of()));
@@ -522,6 +559,202 @@ class RegistrationServiceTest {
         ReflectionTestUtils.setField(file, "id", id);
         ReflectionTestUtils.setField(file, "createdAt", LocalDateTime.now());
         return file;
+    }
+
+    // ------------------------------------------------------------------ the veto (#39)
+
+    /** The {@code Primary} vetoes, the row moves to {@code Blocked}, and the trail keeps the reason. */
+    @Test
+    void thePrimaryVetoesAndTheTrailKeepsTheReason() {
+        TableRegistration registration = persistedRegistration("reg-b1", "table-b1", TableRegistrationStatus.Player, null);
+        when(registrationRepository.findById("reg-b1")).thenReturn(Optional.of(registration));
+        when(gameTableRepository.findByIdForUpdate("table-b1")).thenReturn(Optional.of(registration.getGameTable()));
+        when(masterService.isPrimaryOf("table-b1", "primary-1")).thenReturn(true);
+        when(userService.getById("primary-1")).thenReturn(persistedUser("primary-1"));
+        when(registrationMapper.toResponse(eq(registration), any()))
+                .thenReturn(new RegistrationResponse("reg-b1", "table-b1", "Test table", "player-1", "P1", 8000,
+                        "Blocked", null, null, null, null, List.of(), null, null, null));
+
+        RegistrationResponse response =
+                registrationService.block("table-b1", "reg-b1", "primary-1", "Missed three sessions without a word");
+
+        assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Blocked);
+        ArgumentCaptor<RegistrationStatusChange> change = ArgumentCaptor.forClass(RegistrationStatusChange.class);
+        verify(statusChangeRepository).save(change.capture());
+        assertThat(change.getValue().getFromStatus()).isEqualTo(TableRegistrationStatus.Player);
+        assertThat(change.getValue().getToStatus()).isEqualTo(TableRegistrationStatus.Blocked);
+        assertThat(change.getValue().getJustification()).isEqualTo("Missed three sessions without a word");
+        // And the master sees who vetoed and why: a veto that vanishes from the screen is not reversible.
+        assertThat(response.blockedByName()).isEqualTo("name-primary-1");
+        assertThat(response.blockJustification()).isEqualTo("Missed three sessions without a word");
+    }
+
+    /**
+     * <b>A {@code Secondary} gets a 403 with a code of its own, not a 400</b> (#39, #71): it is who
+     * you are, not what you sent. The same shape F3.1 settled on - and nothing is written.
+     */
+    @Test
+    void aSecondaryCannotVetoAndGets403WithItsOwnCode() {
+        TableRegistration registration = persistedRegistration("reg-b2", "table-b2", TableRegistrationStatus.Player, null);
+        when(registrationRepository.findById("reg-b2")).thenReturn(Optional.of(registration));
+        when(gameTableRepository.findByIdForUpdate("table-b2")).thenReturn(Optional.of(registration.getGameTable()));
+        when(masterService.isPrimaryOf("table-b2", "secondary-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> registrationService.block("table-b2", "reg-b2", "secondary-1", "just because"))
+                .isInstanceOf(ForbiddenActionException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ForbiddenActionException.NOT_PRIMARY_MASTER);
+
+        assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Player);
+        verify(statusChangeRepository, never()).save(any());
+    }
+
+    /** Vetoing somebody already vetoed is a 409 with its own code - two masters pressing at once. */
+    @Test
+    void vetoingSomebodyAlreadyVetoedIs409WithItsOwnCode() {
+        TableRegistration registration = persistedRegistration("reg-b3", "table-b3", TableRegistrationStatus.Blocked, null);
+        when(registrationRepository.findById("reg-b3")).thenReturn(Optional.of(registration));
+        when(gameTableRepository.findByIdForUpdate("table-b3")).thenReturn(Optional.of(registration.getGameTable()));
+        when(masterService.isPrimaryOf("table-b3", "primary-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> registrationService.block("table-b3", "reg-b3", "primary-1", "otra vez"))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.REGISTRATION_ALREADY_BLOCKED);
+    }
+
+    /**
+     * <b>Lifting the veto puts the person back where they were, read from the trail</b> - and not
+     * «back to {@code Player}» by default. Somebody vetoed while still a {@code Candidate} goes back to
+     * {@code Candidate}: it is the concrete thing a {@code blocked_reason} column could not have done,
+     * and the reason F3.4 added a table.
+     */
+    @Test
+    void liftingTheVetoPutsThePersonBackWhereTheyWere() {
+        TableRegistration registration = persistedRegistration("reg-b4", "table-b4", TableRegistrationStatus.Blocked, null);
+        when(registrationRepository.findById("reg-b4")).thenReturn(Optional.of(registration));
+        when(gameTableRepository.findByIdForUpdate("table-b4")).thenReturn(Optional.of(registration.getGameTable()));
+        when(masterService.isPrimaryOf("table-b4", "primary-1")).thenReturn(true);
+        when(userService.getById("primary-1")).thenReturn(persistedUser("primary-1"));
+        when(statusChangeRepository.findFirstByRegistration_IdAndToStatusOrderByCreatedAtDesc(
+                        "reg-b4", TableRegistrationStatus.Blocked))
+                .thenReturn(Optional.of(new RegistrationStatusChange(
+                        registration, TableRegistrationStatus.Candidate, TableRegistrationStatus.Blocked,
+                        persistedUser("primary-1"), "fue un malentendido")));
+        when(registrationMapper.toResponse(eq(registration), any()))
+                .thenReturn(new RegistrationResponse("reg-b4", "table-b4", "Test table", "player-1", "P1", 8000,
+                        "Candidate", null, null, null, null, List.of(), null, null, null));
+
+        registrationService.unblock("table-b4", "reg-b4", "primary-1", "We talked it through and it is settled");
+
+        assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Candidate);
+        ArgumentCaptor<RegistrationStatusChange> change = ArgumentCaptor.forClass(RegistrationStatusChange.class);
+        verify(statusChangeRepository).save(change.capture());
+        assertThat(change.getValue().getToStatus()).isEqualTo(TableRegistrationStatus.Candidate);
+        assertThat(change.getValue().getJustification()).isEqualTo("We talked it through and it is settled");
+    }
+
+    /** Lifting a veto that is not there is a 409 with its own code - the mirror of the one above. */
+    @Test
+    void liftingAVetoThatIsNotThereIs409WithItsOwnCode() {
+        TableRegistration registration = persistedRegistration("reg-b5", "table-b5", TableRegistrationStatus.Player, null);
+        when(registrationRepository.findById("reg-b5")).thenReturn(Optional.of(registration));
+        when(gameTableRepository.findByIdForUpdate("table-b5")).thenReturn(Optional.of(registration.getGameTable()));
+        when(masterService.isPrimaryOf("table-b5", "primary-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> registrationService.unblock("table-b5", "reg-b5", "primary-1", "por las dudas"))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.REGISTRATION_NOT_BLOCKED);
+    }
+
+    /**
+     * <b>Applying to the same table again is impossible without any rule of its own.</b> It is the
+     * proof the single point works: nobody had to remember this endpoint - it goes through
+     * {@code requireVisible} like everything else and answers 404 (#29).
+     */
+    @Test
+    void aVetoedPersonCannotApplyAgainAndGets404() {
+        GameTable table = persistedTable("table-b6", GameTableStatus.Opened, null);
+        // The table is there and its lock is taken: what refuses is the veto, not a 404 for a missing
+        // table. Both stubs have to be here or the test would pass for the wrong reason.
+        when(gameTableRepository.findByIdForUpdate("table-b6")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-b6")).thenReturn(Optional.of(table));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-b6", "vetado", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> registrationService.apply(
+                        "table-b6", "vetado", new CreateRegistrationRequest(null, List.of())))
+                .isInstanceOf(NotFoundException.class)
+                .isNotInstanceOf(ForbiddenActionException.class);
+
+        verify(registrationRepository, never()).save(any());
+    }
+
+    // -------------------------------------- the side leaks the contract decided about (§1.C)
+
+    /**
+     * <b>{@code /registrations/mine} excludes {@code Blocked} just like {@code Deleted}.</b> #29 says
+     * the vetoed person «no ve esa mesa», and this row carries {@code gameTableName}: leaving it in
+     * would be the one crack through which they keep seeing it, with the status beside it explaining
+     * why.
+     */
+    @Test
+    void myApplicationsDoNotShowTheVetoedOnes() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(registrationRepository.findByUser_IdAndStatusNotIn(
+                        "player-1",
+                        List.of(TableRegistrationStatus.Deleted, TableRegistrationStatus.Blocked),
+                        pageable))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of()));
+
+        assertThat(registrationService.listMine("player-1", pageable).content()).isEmpty();
+    }
+
+    /**
+     * <b>And the vetoed row does stay visible on the master's side</b>, with who vetoed it, when and
+     * why. It is what makes the veto reversible in practice: the button that lifts it has to live
+     * somewhere.
+     */
+    @Test
+    void theMasterStillSeesTheVetoedRowWithWhoVetoedItAndWhy() {
+        GameTable table = persistedTable("table-b7", GameTableStatus.InProgress, null);
+        TableRegistration player = new TableRegistration(table, persistedUser("player-1"), null);
+        ReflectionTestUtils.setField(player, "id", "reg-ok");
+        player.setStatus(TableRegistrationStatus.Player);
+        TableRegistration blocked = new TableRegistration(table, persistedUser("player-2"), null);
+        ReflectionTestUtils.setField(blocked, "id", "reg-veto");
+        blocked.setStatus(TableRegistrationStatus.Blocked);
+
+        when(masterService.isMasterOf("table-b7", "master-1")).thenReturn(true);
+        when(registrationRepository.findByGameTable_IdAndStatusInOrderByCreatedAtAsc(
+                        "table-b7", List.of(TableRegistrationStatus.Player, TableRegistrationStatus.Blocked)))
+                .thenReturn(List.of(player, blocked));
+        when(statusChangeRepository.findByRegistration_IdInAndToStatusOrderByCreatedAtAsc(
+                        List.of("reg-veto"), TableRegistrationStatus.Blocked))
+                .thenReturn(List.of(persistedChange(
+                        blocked, TableRegistrationStatus.Player, TableRegistrationStatus.Blocked, "Missed a session without a word")));
+
+        List<TablePlayerResponse> roster = registrationService.listPlayersForTable("table-b7", "master-1");
+
+        assertThat(roster).extracting(TablePlayerResponse::status).containsExactly("Player", "Blocked");
+        assertThat(roster.get(1).registrationId()).isEqualTo("reg-veto");
+        assertThat(roster.get(1).blockedByName()).isEqualTo("name-primary-1");
+        assertThat(roster.get(1).blockJustification()).isEqualTo("Missed a session without a word");
+        assertThat(roster.get(1).blockedAt()).isNotNull();
+        // And a row that is not vetoed invents nothing.
+        assertThat(roster.get(0).blockedByName()).isNull();
+    }
+
+    /** A trail row as it comes back from the database: with its id and its instant already stamped. */
+    private RegistrationStatusChange persistedChange(
+            TableRegistration registration,
+            TableRegistrationStatus from,
+            TableRegistrationStatus to,
+            String justification) {
+        RegistrationStatusChange change =
+                new RegistrationStatusChange(registration, from, to, persistedUser("primary-1"), justification);
+        ReflectionTestUtils.setField(change, "id", "rsc-" + registration.getId());
+        ReflectionTestUtils.setField(change, "createdAt", java.time.LocalDateTime.now());
+        return change;
     }
 
     private GameTable persistedTable(String id, GameTableStatus status, Integer maxPlayers) {

@@ -12,11 +12,10 @@ import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.GameTable;
-import com.centraldungeon.tables.GameTableRepository;
-import com.centraldungeon.tables.GameTableStatus;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tables.TableSession;
 import com.centraldungeon.tables.TableSessionRepository;
+import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tasks.dto.ApplicableTaskResponse;
 import com.centraldungeon.tasks.dto.CreateTaskRequest;
 import com.centraldungeon.tasks.dto.TaskFileResponse;
@@ -65,8 +64,16 @@ public class TableTaskService {
     /** The answers, for the counts every task row carries. */
     private final TaskSubmissionRepository submissionRepository;
 
-    /** Resolves the table the reads and writes start from. */
-    private final GameTableRepository gameTableRepository;
+    /**
+     * Resolves the table the reads and writes start from - and, since F3.4, whether the reader may
+     * see it at all.
+     *
+     * <p>It replaced a private {@code requireLiveTable} that was the third copy of the same lookup
+     * (fase-3-admin-owner.md §7). {@code /tasks/applicable} is the read that made the difference:
+     * it is an endpoint of its own (#209), so unlike the sessions and the shared files it does
+     * <b>not</b> inherit the table detail's answer and had to be closed here.
+     */
+    private final TableVisibilityService tableVisibilityService;
 
     /** Resolves the session a task can be tied to, and lets it be checked against the table. */
     private final TableSessionRepository sessionRepository;
@@ -101,7 +108,8 @@ public class TableTaskService {
     /**
      * @param taskRepository         the {@code table_tasks} rows
      * @param submissionRepository   the answers, for the counts a task row shows
-     * @param gameTableRepository    resolves the table every operation hangs off
+     * @param tableVisibilityService resolves the table every operation hangs off, and whether the
+     *                               reader may see it - the one gate of #25 and #29
      * @param sessionRepository      resolves the session a task may be tied to (#63)
      * @param registrationRepository turns an audience into people
      * @param masterService          answers pertenencia (#17, #121, #135)
@@ -115,7 +123,7 @@ public class TableTaskService {
     public TableTaskService(
             TableTaskRepository taskRepository,
             TaskSubmissionRepository submissionRepository,
-            GameTableRepository gameTableRepository,
+            TableVisibilityService tableVisibilityService,
             TableSessionRepository sessionRepository,
             TableRegistrationRepository registrationRepository,
             MasterService masterService,
@@ -127,7 +135,7 @@ public class TableTaskService {
             TaskMapper taskMapper) {
         this.taskRepository = taskRepository;
         this.submissionRepository = submissionRepository;
-        this.gameTableRepository = gameTableRepository;
+        this.tableVisibilityService = tableVisibilityService;
         this.sessionRepository = sessionRepository;
         this.registrationRepository = registrationRepository;
         this.masterService = masterService;
@@ -288,15 +296,22 @@ public class TableTaskService {
      * <p>The actor comes from the token and never from the URL (#121), so this cannot be pointed at
      * somebody else's list.
      *
+     * <p><b>The veto of #29 is applied here and not inherited</b>, which is the whole reason this
+     * line differs from {@link #publish}'s. The table's calendar and its shared files travel inside
+     * {@code GameTableDetailResponse} and take that read's answer with them; this one is an endpoint
+     * of its own (#209), so a vetoed reader who never asks for the detail would otherwise still be
+     * told what the table is asking of them - the table's name included, in the title of every task.
+     *
      * @param gameTableId the table
      * @param actorId     the actor, from the token
      * @return the tasks that apply to them, oldest first. Closed ones are left out: the reader's list
      *         is what is being asked of them <em>now</em>
-     * @throws NotFoundException if the table is not there or was marked gone
+     * @throws NotFoundException if the table is not there, was marked gone, or the actor is vetoed
+     *                           on it - the same 404 for all three (#25, #29)
      */
     @Transactional(readOnly = true)
     public List<ApplicableTaskResponse> listApplicable(String gameTableId, String actorId) {
-        requireLiveTable(gameTableId);
+        tableVisibilityService.requireVisible(gameTableId, actorId);
         boolean isPlayer = holdsStatus(gameTableId, actorId, TableRegistrationStatus.Player);
         boolean isCandidate = holdsStatus(gameTableId, actorId, TableRegistrationStatus.Candidate);
 
@@ -582,12 +597,9 @@ public class TableTaskService {
      * notifies nobody.
      */
     private GameTable requireLiveTable(String gameTableId) {
-        GameTable gameTable = gameTableRepository.findById(gameTableId)
-                .orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
-        if (gameTable.getStatus() == GameTableStatus.Deleted) {
-            throw new NotFoundException("Table not found: " + gameTableId);
-        }
-        return gameTable;
+        // The master-side door: publish() demands a row in `masters` on the very next line, and a
+        // master of a table cannot hold a registration on it (#154).
+        return tableVisibilityService.requireExisting(gameTableId);
     }
 
     /**

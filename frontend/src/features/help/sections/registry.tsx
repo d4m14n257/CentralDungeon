@@ -10,11 +10,13 @@ import {
   CatalogsHelp,
   ClaimingHelp,
   OwnerHelp,
+  PausingHelp,
   RequestsAdminHelp,
   ReviewingHelp,
   RolesHelp,
 } from './admins'
 import {
+  BanningHelp,
   CandidatesHelp,
   CoMastersHelp,
   CreatingHelp,
@@ -23,6 +25,7 @@ import {
   EditTableHelp,
   MasterFilesHelp,
   MasterTasksHelp,
+  PauseRequestHelp,
   ProposeCatalogHelp,
   ReviewHelp,
   RunningHelp,
@@ -109,6 +112,14 @@ export const HELP_SECTIONS = {
   'masters.co-masters': { titleKey: 'masters.coMasters.title', Body: CoMastersHelp },
   'masters.dashboard': { titleKey: 'masters.dashboard.title', Body: DashboardHelp },
   'masters.edit-table': { titleKey: 'masters.editTable.title', Body: EditTableHelp },
+  // Asking for a pause (#32, F3.4). Its own section and not a line inside `running`: the thing that
+  // has to be learned is that asking is not pausing, and a bullet inside another section is where
+  // that gets skimmed past.
+  'masters.pause': { titleKey: 'masters.pause.title', Body: PauseRequestHelp },
+  // The veto (#29, #39). Deliberately not near `admins.blocking`, which is about closing an account:
+  // the two share a verb in Spanish and nothing else, and a master looking for one must not land on
+  // the other.
+  'masters.banning': { titleKey: 'masters.banning.title', Body: BanningHelp },
 
   // What reviewing a table is and where it happens. Its text moved with the buttons when approving
   // and requesting changes left `/admin/tables` for the tray (#176, F3.3).
@@ -122,6 +133,8 @@ export const HELP_SECTIONS = {
   'admins.owner': { titleKey: 'admins.owner.title', Body: OwnerHelp },
   'admins.roles': { titleKey: 'admins.roles.title', Body: RolesHelp },
   'admins.blocking': { titleKey: 'admins.blocking.title', Body: BlockingHelp },
+  // The two buttons #163 left without a screen for two phases, and the clash that can refuse one.
+  'admins.pausing': { titleKey: 'admins.pausing.title', Body: PausingHelp },
   // The other end of `basics.requests`: what the tray is, and that approving is not one act but
   // three different ones depending on what was asked for (F3.2).
   'admins.requests': { titleKey: 'admins.requests.title', Body: RequestsAdminHelp },

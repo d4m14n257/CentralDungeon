@@ -73,8 +73,12 @@ class TableSessionServiceTest {
 
     private TableSessionService service() {
         if (service == null) {
+            // The real TableVisibilityService over the same mocked repositories, not a mock of it:
+            // the single lookup of F3.4 is what these tests reach the table through, and mocking it
+            // would test a stub instead of the gate (#25, #29).
             service = new TableSessionService(
-                    sessionRepository, attendanceRepository, tableScheduleService, gameTableRepository, registrationRepository,
+                    sessionRepository, attendanceRepository, tableScheduleService,
+                    new TableVisibilityService(gameTableRepository, registrationRepository), registrationRepository,
                     masterService, notificationService, gameTableMapper);
         }
         return service;
@@ -557,6 +561,9 @@ class TableSessionServiceTest {
         GameTable table = table("t28", LocalDate.parse("2026-09-08"), 2);
         TableSession first = session(table, "s21", 1, "2026-09-08T20:00", TableSessionStatus.Held);
         when(gameTableRepository.findById("t28")).thenReturn(Optional.of(table));
+        // The veto gate runs first: this player is not vetoed, so the calendar is theirs (#29).
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t28", "player-1", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(false);
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t28", "player-1", List.of(TableRegistrationStatus.Player)))
                 .thenReturn(true);
         when(sessionRepository.findByGameTable_IdOrderBySequenceNumberAsc("t28")).thenReturn(List.of(first));
@@ -578,6 +585,10 @@ class TableSessionServiceTest {
     void refusesTheOwnCalendarToSomebodyWhoDoesNotPlayAtTheTable() {
         GameTable table = table("t29", LocalDate.parse("2026-09-08"), 2);
         when(gameTableRepository.findById("t29")).thenReturn(Optional.of(table));
+        // The veto gate asks first, with [Blocked]: a stranger is not vetoed, they simply do not
+        // play here - which is the 403 below and not the 404 a vetoed person gets (#29).
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t29", "stranger", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(false);
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn("t29", "stranger", List.of(TableRegistrationStatus.Player)))
                 .thenReturn(false);
 

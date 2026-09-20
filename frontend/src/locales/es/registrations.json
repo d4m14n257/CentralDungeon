@@ -2,7 +2,8 @@
   "status": {
     "Candidate": "Postulado",
     "Player": "Aceptado",
-    "Rejected": "Rechazado"
+    "Rejected": "Rechazado",
+    "Blocked": "Vetado"
   },
   "myApplications": {
     "title": "Mis postulaciones",
@@ -35,5 +36,29 @@
   },
   "rejectionReason": {
     "TABLE_FULL": "La mesa se llenó"
+  },
+  "veto": {
+    "reasonLabel": "Motivo",
+    "blockDialogTitle": "Vetar a {{name}}",
+    "blockDialogDescription": "Contá por qué. Queda registrado, y es lo que vas a leer si algún día levantás el veto.",
+    "blockEffect": "Deja de ver esta mesa: no le aparece en el explorador, no puede abrirla y no puede descargar sus archivos. No pierde la cuenta ni las otras mesas donde juega.",
+    "blockSubmit": "Vetar",
+    "blockSuccess": "{{name}} quedó vetado en esta mesa",
+    "requestDialogTitle": "Pedir que se vete a {{name}}",
+    "requestDialogDescription": "Como co-master, lo que mandás es un pedido. Contá por qué: es lo que lee el master de la mesa para decidir.",
+    "requestEffect": "Todavía no cambia nada: la persona sigue jugando y sigue viendo la mesa hasta que el master responda.",
+    "requestSubmit": "Enviar el pedido",
+    "requestSuccess": "Pedido enviado: lo resuelve el master de la mesa",
+    "unblockDialogTitle": "Levantar el veto de {{name}}",
+    "unblockDialogDescription": "Vuelve a ver la mesa y queda como estaba antes del veto. Contá por qué lo levantás: queda registrado igual que el veto.",
+    "unblockEffect": "Recupera la mesa tal como estaba: la ve en el explorador, la puede abrir, vuelve a descargar sus archivos y recupera el lugar que tenía antes del veto.",
+    "unblockSubmit": "Levantar el veto",
+    "unblockSuccess": "Se levantó el veto de {{name}}",
+    "errors": {
+      "NOT_PRIMARY_MASTER": "Esto lo decide el master de la mesa. Si sos co-master, lo que podés hacer es pedirlo.",
+      "REGISTRATION_ALREADY_BLOCKED": "Esa persona ya está vetada en esta mesa. Actualizá la pantalla para ver cómo quedó.",
+      "REGISTRATION_NOT_BLOCKED": "Esa persona no está vetada: alguien levantó el veto antes que vos.",
+      "generic": "No pudimos completar la acción. Probá de nuevo."
+    }
   }
 }

@@ -4,6 +4,7 @@
  * Anything not listed here is private to it.
  */
 
+export { BanRequestsSection } from './components/BanRequestsSection'
 export { RequestDetailPanel } from './components/RequestDetailPanel'
 export { RequestStatusBadge } from './components/RequestStatusBadge'
 export { RequestTypeBadge } from './components/RequestTypeBadge'
@@ -16,9 +17,11 @@ export { useAdminRequests } from './api/useAdminRequests'
 export { useApproveRequest } from './api/useApproveRequest'
 export { useMyRequests } from './api/useMyRequests'
 export { useRejectRequest } from './api/useRejectRequest'
+export { useApproveBanRequest, useRejectBanRequest } from './api/useResolveBanRequest'
 export { useSubmitRequest } from './api/useSubmitRequest'
+export { useTableBanRequests } from './api/useTableBanRequests'
 export { approvalRequestSearchFields, requestStatusChoices, requestTypeChoices } from './searchFields'
-export { APPROVAL_REQUEST_TYPES, APPROVAL_STATUSES, PENDING_REQUESTS_QUERY } from './requestTypes'
+export { APPROVAL_REQUEST_TYPES, APPROVAL_STATUSES, PENDING_REQUESTS_QUERY, SUBMITTABLE_REQUEST_TYPES } from './requestTypes'
 export { APPROVAL_ERROR_CODES, approvalErrorKey } from './approvalErrors'
 export {
   resolveApprovalRequestSchema,
@@ -32,6 +35,8 @@ export type {
   ApprovalRequestSummary,
   ApprovalRequestType,
   ApprovalStatus,
+  BanRequest,
   ResolveApprovalRequestInput,
   SubmitApprovalRequestInput,
+  SubmittableRequestType,
 } from './types'
