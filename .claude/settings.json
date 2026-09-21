@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -Eq '(^|[;&|(])[[:space:]]*git[[:space:]]+(-[^[:space:]]+[[:space:]]+)*(checkout[[:space:]]+-[bB]([[:space:]]|$)|switch[[:space:]]+-[cC]([[:space:]]|$)|branch[[:space:]]+(-[mM][[:space:]]|[^-[:space:]])|worktree[[:space:]]+add)' && { echo \"Blocked by CLAUDE.md Git rule 3: this repository works on master only, with no branches and no pull requests. Commit to master and push. Listing branches and deleting them (git branch, -a, --list, -d, -D) stays allowed.\" >&2; exit 2; }; exit 0",
+            "statusMessage": "Checking for branch creation"
+          }
+        ]
+      }
+    ]
+  }
+}
