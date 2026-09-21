@@ -245,7 +245,7 @@ class ScheduleConflictServiceTest {
          * one and not one accepting any live registration.
          */
         @Test
-        @DisplayName("la semana solo cuenta las mesas donde se es Player: el veto la cierra sin tocarla")
+        @DisplayName("the week only counts tables where the actor is a Player: a veto closes it without touching it")
         void theWeekOnlyCountsTheTablesWhereYouArePlayer() {
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of());
             when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
@@ -256,7 +256,7 @@ class ScheduleConflictServiceTest {
         }
 
         @Test
-        @DisplayName("la semana junta lo que dirigís y lo que jugás, y dice cuál es cuál")
+        @DisplayName("the week merges what you run and what you play, and says which is which")
         void bringsTogetherWhatIsRunAndWhatIsPlayed() {
             GameTable mastered = table("mastered", GameTableStatus.InProgress);
             GameTable played = table("played", GameTableStatus.Opened);
@@ -277,7 +277,7 @@ class ScheduleConflictServiceTest {
         }
 
         @Test
-        @DisplayName("una mesa puede correr tres horas entre semana y seis el sábado (#228)")
+        @DisplayName("a table may run three hours on a weekday and six on Saturday (#228)")
         void eachSlotClaimsItsOwnLength() {
             GameTable table = table("mixed", GameTableStatus.InProgress);
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(table));
@@ -296,7 +296,7 @@ class ScheduleConflictServiceTest {
 
         /** Running wins: it is the stronger claim on the same evening, and the label has to pick one. */
         @Test
-        @DisplayName("quien dirige y además juega en la misma mesa se lee como que la dirige")
+        @DisplayName("somebody who both runs and plays the same table reads as running it")
         void runningWinsOverPlaying() {
             GameTable both = table("both", GameTableStatus.InProgress);
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(both));
@@ -314,7 +314,7 @@ class ScheduleConflictServiceTest {
          * reader has on - so it comes back with no blocks rather than disappearing.
          */
         @Test
-        @DisplayName("una mesa sin agenda viaja sin bloques, no se omite")
+        @DisplayName("a table with no schedule travels with no blocks, it is not omitted")
         void aTableWithNoAgendaTravelsWithoutBlocks() {
             GameTable draft = table("draft", GameTableStatus.Preparation);
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(draft));
@@ -333,7 +333,7 @@ class ScheduleConflictServiceTest {
         }
 
         @Test
-        @DisplayName("sin mesas, la semana está vacía y no se consulta ninguna agenda")
+        @DisplayName("with no tables the week is empty and no schedule is queried")
         void anEmptyWeekAsksForNoAgendas() {
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of());
             when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());

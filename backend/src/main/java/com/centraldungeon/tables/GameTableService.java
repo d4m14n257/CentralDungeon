@@ -580,7 +580,7 @@ public class GameTableService {
     /**
      * The master <em>asking</em> for a pause. InProgress to PauseRequested (#32).
      *
-     * <p><b>This is the producer {@code PauseRequested} never had.</b> F1.7 relevó it as an orphan -
+     * <p><b>This is the producer {@code PauseRequested} never had.</b> F1.7 surveyed it as an orphan -
      * a state declared in the enum that no endpoint could reach - and it stayed that way until
      * {@code approval_requests} existed to carry the asking.
      *

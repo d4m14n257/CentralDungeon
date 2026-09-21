@@ -150,7 +150,7 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("una mesa sin sistema no se crea: hay que decir qué se juega (#226)")
+    @DisplayName("a table with no system is not created: it has to say what is played (#226)")
     void rejectsCreationWithoutASystem() {
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Test", null, null, null, null, List.of(), List.of("tag-1"), List.of("platform-1"), null, null, null,
@@ -165,7 +165,7 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("una mesa sin plataforma no se crea: hay que decir dónde se juega (#226)")
+    @DisplayName("a table with no platform is not created: it has to say where it is played (#226)")
     void rejectsCreationWithoutAPlatform() {
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), null, null, null, null,
@@ -179,7 +179,7 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("una mesa sin agenda no se crea: hay que decir cuándo se juega (#226, lo que #196 dejó anotado)")
+    @DisplayName("a table with no schedule is not created: it has to say when it is played (#226, what #196 left written down)")
     void rejectsCreationWithoutASchedule() {
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, null, List.of());
@@ -192,7 +192,7 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("una mesa sin tags no se crea: hay que poder encontrarla por tema (#229, corrige #226)")
+    @DisplayName("a table with no tags is not created: it has to be findable by subject (#229, corrects #226)")
     void rejectsCreationWithoutATag() {
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Test", null, null, null, null, List.of("system-1"), List.of(), List.of("platform-1"), null, null, null,
@@ -867,7 +867,7 @@ class GameTableServiceTest {
 
     /** #32: a paused table is frozen, not over - it stays among "mine" and never moves to the history. */
     @Test
-    @DisplayName("/mine sí devuelve una mesa en Pause: está viva, solo congelada (#32)")
+    @DisplayName("/mine does return a table in Pause: it is alive, only frozen (#32)")
     void listMineIncludesPausedTables() {
         GameTable paused = persistedTable("table-paused", GameTableStatus.Pause);
         Pageable pageable = PageRequest.of(0, 20);
@@ -881,7 +881,7 @@ class GameTableServiceTest {
 
     /** The mirror of the two tests above: the history shows exactly the two endings, nothing else. */
     @Test
-    @DisplayName("el historial devuelve Finished y Canceled, y nada más (#133a)")
+    @DisplayName("the history returns Finished and Canceled, and nothing else (#133a)")
     void listMineHistoryReturnsOnlyTheTwoEndings() {
         GameTable opened = persistedTable("table-still-live", GameTableStatus.Opened);
         GameTable finished = persistedTable("table-done", GameTableStatus.Finished);
@@ -909,7 +909,7 @@ class GameTableServiceTest {
      * keeps it out everywhere else.
      */
     @Test
-    @DisplayName("el historial trae la asistencia de cada mesa en una sola consulta agrupada, sin Unknown en el denominador")
+    @DisplayName("the history brings each table's attendance in one grouped query, with no Unknown in the denominator")
     void listMineHistoryCarriesEachTablesOwnAttendanceFromOneGroupedRead() {
         GameTable tableOne = persistedTable("table-h1", GameTableStatus.Finished);
         GameTable tableTwo = persistedTable("table-h2", GameTableStatus.Canceled);
@@ -943,7 +943,7 @@ class GameTableServiceTest {
      * calls, never {@code Candidate}.
      */
     @Test
-    @DisplayName("un actor que fue Candidate y nunca Player no aparece en /mine ni en su historial")
+    @DisplayName("an actor who was a Candidate and never a Player appears neither in /mine nor in their history")
     void aCandidateWhoNeverBecamePlayerAppearsInNeitherListing() {
         Pageable pageable = PageRequest.of(0, 20);
         when(tableRegistrationRepository.findByUser_IdAndStatusAndGameTable_StatusIn(
@@ -1147,7 +1147,7 @@ class GameTableServiceTest {
      * how a reviewer approves something that no longer exists.
      */
     @Test
-    @DisplayName("una mesa enviada a revisión ya no la edita su master")
+    @DisplayName("a table sent to review is no longer edited by its master")
     void aTableAwaitingReviewIsNoLongerItsMastersToRewrite() {
         GameTable table = persistedTable("table-in-review", GameTableStatus.Preparation);
         when(gameTableRepository.findByIdForUpdate("table-in-review")).thenReturn(Optional.of(table));
@@ -1159,7 +1159,7 @@ class GameTableServiceTest {
 
     /** Sending it is the act that makes the table exist for anybody else (#245). */
     @Test
-    @DisplayName("enviar a revisión mueve el borrador a Preparation")
+    @DisplayName("sending to review moves the draft to Preparation")
     void submittingADraftSendsItToReview() {
         GameTable table = persistedTable("table-draft", GameTableStatus.Draft);
         when(gameTableRepository.findByIdForUpdate("table-draft")).thenReturn(Optional.of(table));
@@ -1188,7 +1188,7 @@ class GameTableServiceTest {
 
     /** Each slot carries its own length, so one table can run two different ones (#228). */
     @Test
-    @DisplayName("la agenda viaja entera y cada franja con su propia duración")
+    @DisplayName("the schedule travels whole, each slot with its own duration")
     void updateSendsEachSlotWithItsOwnDuration() {
         GameTable table = persistedTable("table-edit-4", GameTableStatus.Draft);
         when(gameTableRepository.findByIdForUpdate("table-edit-4")).thenReturn(Optional.of(table));

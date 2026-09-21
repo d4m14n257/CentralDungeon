@@ -17,11 +17,11 @@ spring:
             token-uri: http://localhost:8080/test-discord/oauth2/token
             user-info-uri: http://localhost:8080/test-discord/users/@me
 
-# Ojo con estos dos: si backend/.env define DISCORD_GUILD_ID o DISCORD_INVITE_URL, esos ganan.
-# Son variables de entorno y el binding relajado de Spring las mapea directo sobre discord.*,
-# por encima de cualquier archivo de configuración, perfil incluido. Los valores de acá solo
-# aplican en un clon sin .env — y alcanzan, porque el stub devuelve el guild-id que esté
-# configurado, sea cual sea. guilds-uri no tiene variable de entorno, así que nunca se pisa.
+# Careful with these two: if backend/.env defines DISCORD_GUILD_ID or DISCORD_INVITE_URL, those win.
+# They are environment variables, and Spring's relaxed binding maps them straight onto discord.*,
+# above any configuration file, profile included. The values here only apply in a clone with no
+# .env - and they suffice, because the stub returns whichever guild id is configured. guilds-uri
+# has no environment variable of its own, so nothing ever overrides it.
 discord:
   guild-id: test-guild
   invite-url: https://discord.gg/test-invite

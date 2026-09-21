@@ -55,7 +55,7 @@ public enum ApprovalRequestType {
      * <p>The first type whose entity is not the requester: it points at the {@code game_table},
      * because the request is about the table and a co-master reading the tray has to see which one.
      * Submitting it moves the table to {@code PauseRequested} in the same transaction - which is how
-     * a state that F1.7 relevó as an orphan finally gets a producer.
+     * a state that F1.7 surveyed as an orphan finally gets a producer.
      *
      * <p>Approving moves it to {@code Pause} with the resolution note as the justification
      * {@code table_status_changes} requires (#32). <b>Rejecting has an effect too</b>, which no type

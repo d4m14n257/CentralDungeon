@@ -32,7 +32,7 @@ class TableTypeServiceTest {
     private TableTypeService tableTypeService;
 
     @Test
-    @DisplayName("un tipo que trajo la aplicación viaja con su código, para que el frontend lo traduzca")
+    @DisplayName("a type the application shipped travels with its code, so the frontend can translate it")
     void seededTypeCarriesItsCode() {
         when(tableTypeRepository.findAll(any(Pageable.class))).thenReturn(page(tableType("tt-1", "PUBLIC", "Public")));
 
@@ -45,7 +45,7 @@ class TableTypeServiceTest {
     }
 
     @Test
-    @DisplayName("un tipo que creó una persona viaja sin código, y su nombre se lee tal cual")
+    @DisplayName("a type a person created travels with no code, and its name reads as written")
     void adminCreatedTypeHasNoCode() {
         when(tableTypeRepository.findAll(any(Pageable.class))).thenReturn(page(tableType("tt-9", null, "Mesa de campaña larga")));
 
