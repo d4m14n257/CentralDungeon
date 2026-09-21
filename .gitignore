@@ -18,6 +18,10 @@ backend/storage/
 design/out/
 docs/diagramas/*.png
 docs/diagramas/*.svg
+# Misma regla para los diagramas de Archify: se versiona el .architecture.json, nunca el HTML
+# generado (~800 KB de binario embebido) ni la evidencia de navegador que deja visual-check.
+docs/diagramas/*.html
+docs/diagramas/*.visual-check.json
 
 # Dependencias y builds
 node_modules/

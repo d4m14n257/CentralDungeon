@@ -1,6 +1,6 @@
 # Diagramas
 
-**Solo se versionan los `.mmd`.** Son la fuente de verdad y se leen bien en texto plano; los PNG se borraron por ser artefactos regenerables (2,6 MB de binario que no se puede diffear). Para verlos renderizados, el comando está al final.
+**Solo se versionan las fuentes.** Los `.mmd` se leen bien en texto plano; los PNG se borraron por ser artefactos regenerables (2,6 MB de binario que no se puede diffear). Desde F3 hay una segunda clase de fuente, los `.architecture.json` de **Archify**, que rinden a un HTML interactivo — misma regla: se versiona el JSON, nunca el HTML de ~800 KB ni las capturas que deja su verificación. Los dos comandos de regeneración están al final.
 
 Los diagramas del **modelo heredado** (`00`–`04`) ya cumplieron su función y se eliminaron. Lo que salió de revisarlos está en `../decisiones.md`.
 
@@ -23,7 +23,14 @@ Reflejan el schema de `../modelo-datos.md`, resultado de las decisiones #1–#95
 |---|---|
 | [`17-notificaciones.mmd`](17-notificaciones.mmd) | Motor de notificaciones: la personal como fila en `notifications`, la bandeja de admins como **vista** sobre el trabajo pendiente, el ciclo de reserva y el mensaje como señal de invalidación. |
 | [`19-choque-horarios.mmd`](19-choque-horarios.mmd) | Las cuatro reglas de #178: qué cuenta como choque —intervalo semiabierto en UTC, con envoltura semanal— y qué pasa en cada uno de los tres momentos (el master se compromete, el jugador se postula, el master acepta). **Dónde se bloquea y dónde solo se avisa.** |
-| [`18-navegacion.mmd`](18-navegacion.mmd) | Navegación real entre pantallas — de qué router.tsx/Link/navigate sale cada flecha, no el sitemap ideal. **Vivo, no un cierre de etapa**: se actualiza cuando una etapa nueva conecta o desconecta pantallas, para ver crecer las conexiones entre vista y vista de una etapa a la otra. Nació del artifact de revisión de E1, rescatado acá al cerrar esa etapa. |
+
+## Interactivos (Archify)
+
+Fuente `.architecture.json`, salida HTML autocontenida con temas claro/oscuro, zoom, búsqueda y exportación. La salida está en `.gitignore`.
+
+| Diagrama | Qué cubre |
+|---|---|
+| [`20-navegacion-f1-f3.architecture.json`](20-navegacion-f1-f3.architecture.json) | **Navegación real de la UI al cerrar F3.** Las cuatro regiones —público, Jugador, Master, Admin— y de qué sale cada flecha, leído del `router.tsx` y de cada `Link`/`NavLink`/`navigate` reales. Las tarjetas responden las tres preguntas que motivaron el diagrama: qué está conectado, **qué quedó flotando** y qué pantallas tienen una sola entrada. Fija el commit del que se leyó la evidencia, así que un diagrama viejo se delata solo. |
 
 ## Ciclos de vida
 
@@ -42,3 +49,18 @@ PUPPETEER_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google
 ```
 
 `PUPPETEER_EXECUTABLE_PATH` evita que mermaid-cli descargue su propio Chromium.
+
+Para los interactivos, con la skill `archify` instalada en `~/.claude/skills/`:
+
+```bash
+ARCHIFY=~/.claude/skills/archify
+node $ARCHIFY/bin/archify.mjs deliver architecture \
+  docs/diagramas/20-navegacion-f1-f3.architecture.json \
+  docs/diagramas/20-navegacion-f1-f3.html \
+  --quality showcase --repo-root .
+node $ARCHIFY/bin/archify.mjs visual-check docs/diagramas/20-navegacion-f1-f3.html --json
+```
+
+`--repo-root` es lo que hace que las citas `sources` de cada nodo se verifiquen contra los
+archivos reales: si una ruta deja de existir, la entrega falla en vez de publicar un diagrama que
+miente. `meta.repository.revision` deja fijado el commit del que se leyó esa evidencia.

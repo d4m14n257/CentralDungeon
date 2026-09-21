@@ -46,9 +46,9 @@ No es un MCP: es la herramienta `DesignSync`, integrada en Claude Code, así que
 | **Requiere** | Autorización única con `/design-login`, contra la cuenta de claude.ai. Funciona aunque la sesión se autentique con API key o token de proveedor |
 | **Decisión** | #130. La fuente de verdad de los tokens sigue siendo el diseño (#118); lo que cambió es dónde vive |
 
-## Skills (`.claude/skills/`)
+## Skills propias (`.claude/skills/`)
 
-Son skills propias, no de marketplaces de terceros, para que sigan exactamente las convenciones de `arquitectura.md`.
+Son skills propias, escritas acá, para que sigan exactamente las convenciones de `arquitectura.md`. **Se versionan con el repo.**
 
 | Skill | Cuándo se usa |
 |---|---|
@@ -56,3 +56,25 @@ Son skills propias, no de marketplaces de terceros, para que sigan exactamente l
 | `nuevo-componente-react` | Agregar un componente o página al frontend: shadcn/ui + Tailwind + hook de TanStack Query, dentro de `features/<dominio>/`. |
 | `tests-java` | Escribir o revisar tests del backend: JUnit 6 + Mockito para unitarios, Testcontainers para integración. |
 | `er-diagram-sync` | Después de tocar cualquier `@Entity`: actualizar `modelo-datos.md` (diagrama + DDL) y crear la migración Flyway correspondiente. |
+
+## Skills externas (globales, `~/.claude/skills/`)
+
+Instaladas **fuera del repo**, a nivel de usuario. No se versionan y no las cubre la regla de arriba: no siguen las convenciones de `arquitectura.md` porque no escriben código del proyecto — producen artefactos. Por eso viven en el directorio global y no en `.claude/skills/`, donde la frase «son skills propias» dejaría de ser cierta.
+
+| Skill | Origen | Para qué |
+|---|---|---|
+| `archify` | [`tt-a1i/archify`](https://github.com/tt-a1i/archify) (MIT) | Diagramas de arquitectura, flujo, secuencia, datos y ciclo de vida como HTML autocontenido e interactivo. Lo usa `docs/diagramas/` para los `.architecture.json` — ver su README. |
+
+Se instaló con el CLI `skills` de [vercel-labs](https://github.com/vercel-labs/skills):
+
+```bash
+npx -y skills@latest add tt-a1i/archify --skill archify --agent claude-code --global --copy --yes
+```
+
+Tres cosas que conviene tener escritas, porque no se ven después:
+
+- **`--skill archify` y no el repo entero.** El repositorio publica dos skills; la segunda, `archify-review`, es para mantener *ese* proyecto y no tiene nada que hacer acá.
+- **`--copy` y no el enlace simbólico por defecto**, que apuntaría a un caché que se puede limpiar. La skill ocupa 8,4 MB y no tiene dependencias de runtime: solo Node ≥ 18.
+- **El instalador manda telemetría de instalación** (su `--metadata` la documenta). Es el CLI, no la skill.
+
+Verificación: `node ~/.claude/skills/archify/bin/archify.mjs doctor`.

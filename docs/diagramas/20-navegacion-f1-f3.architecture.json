@@ -1,0 +1,438 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Navegación real de la UI — CentralDungeon F1 a F3",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/d4m14n257/CentralDungeon",
+      "provider": "github",
+      "revision": "5c066b447261394da55b628d10d3ba012437855b"
+    },
+    "viewBox": [
+      1245,
+      735
+    ]
+  },
+  "components": [
+    {
+      "id": "login",
+      "type": "frontend",
+      "label": "/login",
+      "sublabel": "LoginPage",
+      "tag": "sin header",
+      "pos": [
+        60,
+        60
+      ],
+      "size": [
+        140,
+        62
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/LoginPage.tsx",
+          "label": "entrada"
+        }
+      ]
+    },
+    {
+      "id": "discord",
+      "type": "external",
+      "label": "Discord OAuth2",
+      "sublabel": "fuera de la aplicación",
+      "pos": [
+        320,
+        60
+      ],
+      "size": [
+        150,
+        62
+      ]
+    },
+    {
+      "id": "callback",
+      "type": "frontend",
+      "label": "/auth/callback",
+      "sublabel": "OAuthCallbackPage",
+      "tag": "lee ?error= primero",
+      "pos": [
+        565,
+        60
+      ],
+      "size": [
+        180,
+        62
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/OAuthCallbackPage.tsx",
+          "label": "tres salidas"
+        }
+      ]
+    },
+    {
+      "id": "onboarding",
+      "type": "frontend",
+      "label": "/onboarding",
+      "sublabel": "OnboardingPage",
+      "tag": "paso bloqueante",
+      "pos": [
+        820,
+        60
+      ],
+      "size": [
+        170,
+        62
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/OnboardingPage.tsx",
+          "label": "nombre y país"
+        }
+      ]
+    },
+    {
+      "id": "root",
+      "type": "frontend",
+      "label": "/",
+      "sublabel": "RootRedirect — no es pantalla",
+      "pos": [
+        525,
+        180
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/RootRedirect.tsx",
+          "label": "homePathFor"
+        }
+      ]
+    },
+    {
+      "id": "shell",
+      "type": "frontend",
+      "label": "AppHeader",
+      "sublabel": "ContextSwitcher · UserMenu · campana",
+      "tag": "el riel de toda la app",
+      "pos": [
+        505,
+        300
+      ],
+      "size": [
+        300,
+        84
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/AppHeader.tsx",
+          "label": "shell común"
+        }
+      ]
+    },
+    {
+      "id": "transversal",
+      "type": "frontend",
+      "label": "Pantallas transversales",
+      "sublabel": "/notifications · /my/schedule\n/my/files · /help",
+      "tag": "de nadie y de todos",
+      "pos": [
+        60,
+        300
+      ],
+      "size": [
+        340,
+        100
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/UserMenu.tsx",
+          "label": "tres de las cuatro"
+        }
+      ]
+    },
+    {
+      "id": "player",
+      "type": "frontend",
+      "label": "/player",
+      "sublabel": "Explorador — hogar Jugador",
+      "pos": [
+        125,
+        450
+      ],
+      "size": [
+        240,
+        70
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/TableListPage.tsx",
+          "label": "explorador"
+        }
+      ]
+    },
+    {
+      "id": "master",
+      "type": "frontend",
+      "label": "/master",
+      "sublabel": "Bandeja — hogar Master",
+      "pos": [
+        535,
+        450
+      ],
+      "size": [
+        240,
+        70
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterDashboardPage.tsx",
+          "label": "qué falta hacer"
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "type": "frontend",
+      "label": "/admin/queue",
+      "sublabel": "Bandeja — hogar Admin",
+      "pos": [
+        915,
+        450
+      ],
+      "size": [
+        240,
+        70
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminQueuePage.tsx",
+          "label": "bandeja compartida"
+        }
+      ]
+    },
+    {
+      "id": "playerScreens",
+      "type": "frontend",
+      "label": "Pantallas del jugador",
+      "sublabel": "/applications · /history · /my-tables\n/tables/:id · /my-tables/:id · /users/:id",
+      "pos": [
+        45,
+        570
+      ],
+      "size": [
+        400,
+        130
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/PlayerSectionNav.tsx",
+          "label": "las tres secciones"
+        }
+      ]
+    },
+    {
+      "id": "masterScreens",
+      "type": "frontend",
+      "label": "Pantallas del master",
+      "sublabel": "/tables · /tables/new · /tables/:id/edit\n/tables/:id + 6 pestañas",
+      "pos": [
+        485,
+        570
+      ],
+      "size": [
+        340,
+        130
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableDetailPage.tsx",
+          "label": "NavLink relativos"
+        }
+      ]
+    },
+    {
+      "id": "adminScreens",
+      "type": "frontend",
+      "label": "Secciones de administración",
+      "sublabel": "/tables · /catalogs · /files\n/users · /requests · /settings",
+      "pos": [
+        865,
+        570
+      ],
+      "size": [
+        340,
+        130
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/AdminSectionNav.tsx",
+          "label": "única entrada"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Público — sin sesión",
+      "wraps": [
+        "login",
+        "discord",
+        "callback",
+        "onboarding"
+      ],
+      "pad": 12
+    },
+    {
+      "kind": "region",
+      "label": "Contexto Jugador",
+      "wraps": [
+        "player",
+        "playerScreens"
+      ],
+      "pad": 12
+    },
+    {
+      "kind": "region",
+      "label": "Contexto Master",
+      "wraps": [
+        "master",
+        "masterScreens"
+      ],
+      "pad": 12
+    },
+    {
+      "kind": "region",
+      "label": "Contexto Admin",
+      "wraps": [
+        "admin",
+        "adminScreens"
+      ],
+      "pad": 12
+    }
+  ],
+  "connections": [
+    {
+      "id": "login-discord",
+      "from": "login",
+      "to": "discord",
+      "label": "Entrar con Discord",
+      "variant": "emphasis"
+    },
+    {
+      "id": "discord-callback",
+      "from": "discord",
+      "to": "callback",
+      "label": "con el code",
+      "variant": "emphasis"
+    },
+    {
+      "id": "callback-onboarding",
+      "from": "callback",
+      "to": "onboarding",
+      "label": "cuenta nueva"
+    },
+    {
+      "id": "callback-root",
+      "from": "callback",
+      "to": "root",
+      "label": "sesión lista",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "id": "onboarding-root",
+      "from": "onboarding",
+      "to": "root",
+      "label": "nombre y país"
+    },
+    {
+      "id": "root-shell",
+      "from": "root",
+      "to": "shell",
+      "label": "abre el hogar del contexto",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "id": "shell-player",
+      "from": "shell",
+      "to": "player",
+      "label": "ContextSwitcher",
+      "variant": "dashed",
+      "labelDy": 30
+    },
+    {
+      "id": "shell-master",
+      "from": "shell",
+      "to": "master",
+      "variant": "dashed"
+    },
+    {
+      "id": "shell-admin",
+      "from": "shell",
+      "to": "admin",
+      "variant": "dashed"
+    },
+    {
+      "id": "shell-transversal",
+      "from": "shell",
+      "to": "transversal",
+      "label": "menú y campana"
+    },
+    {
+      "id": "player-screens",
+      "from": "player",
+      "to": "playerScreens",
+      "label": "nav de sección y fichas",
+      "labelDy": 24
+    },
+    {
+      "id": "master-screens",
+      "from": "master",
+      "to": "masterScreens",
+      "label": "nav y pendientes",
+      "labelDy": 24
+    },
+    {
+      "id": "admin-screens",
+      "from": "admin",
+      "to": "adminScreens",
+      "label": "nav de sección",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Conectado",
+      "items": [
+        "28 rutas en router.tsx, ninguna sin entrada",
+        "Cada contexto tiene prefijo y un hogar propio (#222)",
+        "Cerrar sesión y cualquier 401 vuelven a /login"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Flotando",
+      "items": [
+        "3 builders de paths.ts sin llamador: masterTablePlayers/Schedule/FilesPath",
+        "Esas pestañas existen: se alcanzan por NavLink relativo",
+        "El .mmd de navegación anterior lo reemplaza este (#266)"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Entrada única — mirar en F4",
+      "items": [
+        "Las 7 secciones de /admin: solo AdminSectionNav",
+        "/my/schedule, /my/files y /help: solo el UserMenu",
+        "/master/tables/new: solo el listado de mesas"
+      ]
+    }
+  ]
+}

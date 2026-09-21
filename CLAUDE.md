@@ -29,8 +29,8 @@ Sin redundancia entre ellos. Leer antes de trabajar en algo nuevo:
 |---|---|
 | `docs/arquitectura.md` | Estructura de carpetas, patrón por feature, reglas de cada capa, contrato de API, seguridad, testing, convenciones de nombres. **La referencia para escribir código.** |
 | `docs/modelo-datos.md` | Fuente de verdad del schema: convenciones, diagrama ER (Mermaid), DDL baseline, reglas de negocio que reemplazaron a los triggers, qué queda fuera de v1. |
-| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 265 decisiones cerradas y el rastro de los pendientes que se abrieron y resolvieron (M1–M32). |
-| `docs/diagramas/` | Fuentes Mermaid (`.mmd`), sin PNG versionados — se regeneran con el comando del README. ER del **modelo objetivo** por subsistema (11–16) y los ciclos de vida de mesa, postulación y comentario (05–07). |
+| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 266 decisiones cerradas y el rastro de los pendientes que se abrieron y resolvieron (M1–M32). |
+| `docs/diagramas/` | Fuentes Mermaid (`.mmd`) y de Archify (`.architecture.json`), sin salidas versionadas — se regeneran con los comandos del README. ER del **modelo objetivo** por subsistema (11–16), los ciclos de vida (05–07) y la **navegación real de la UI** al cerrar F3 (20). |
 | `docs/frontend-diseno.md` | Sitemap por contexto, navegación, sistema de diseño, wireframes e **inventario completo de componentes** (§5). **Se lee antes de crear cualquier pantalla o componente**: §5 dice qué existe ya, y es lo que evita escribir el décimo badge de estado (#261). |
 | `docs/plan-desarrollo.md` | Fases de construcción, qué se rescata del legacy, definición de terminado y el reparto en subagentes de cada rebanada. |
 | `docs/fase-1-master.md` | **Implementación de F1**: las siete rebanadas con su detalle de archivos, el punto de partida verificado y el camino de verificación. Se lee antes de tocar cualquier cosa de F1. |
@@ -137,7 +137,7 @@ El diseño **no** va por MCP: se usa `DesignSync` contra Claude Design, autoriza
 
 ## Skills
 
-En `.claude/skills/`. Son propias, para que sigan exactamente las convenciones de `docs/arquitectura.md`.
+En `.claude/skills/`. Son propias, para que sigan exactamente las convenciones de `docs/arquitectura.md`. Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` — no vive en el repo; el detalle está en `docs/mcp-y-skills.md`.
 
 | Skill | Cuándo |
 |---|---|
