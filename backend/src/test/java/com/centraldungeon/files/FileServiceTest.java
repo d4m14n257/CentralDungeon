@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.config.StorageProperties;
@@ -22,6 +23,7 @@ import com.centraldungeon.files.dto.PublishFileRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.registrations.RegistrationFileRepository;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tables.TableVisibilityService;
@@ -51,7 +53,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.util.unit.DataSize;
 
 /**
  * The file's own rules: what gets in, what gets stored once, and who is allowed to read it back.
@@ -113,10 +114,23 @@ class FileServiceTest {
 
     private final FileMapper fileMapper = org.mapstruct.factory.Mappers.getMapper(FileMapper.class);
 
-    private final StorageProperties storageProperties = new StorageProperties(
-            "target/test-storage", DataSize.ofMegabytes(2), Set.of("application/pdf", "image/png"), Duration.ofDays(90));
+    private final StorageProperties storageProperties =
+            new StorageProperties("target/test-storage", Set.of("application/pdf", "image/png"), Duration.ofDays(90));
+
+    /**
+     * The per-file cap, which stopped being configuration and became a setting in F3.5 (#141).
+     *
+     * <p>Stubbed to the same 2 MB the property used to carry, so every size assertion in this class
+     * keeps asserting the same rule against the same number - what moved is where the number comes
+     * from, not what the rule is.
+     */
+    @Mock
+    private SettingsService settingsService;
 
     private FileService fileService() {
+        // lenient: most tests here never upload anything, and a strict stub would fail them for not
+        // having asked the question. Two megabytes is what app.storage.max-file-size used to say.
+        lenient().when(settingsService.maxFileSizeBytes()).thenReturn(2L * 1024 * 1024);
         return new FileService(
                 fileRepository,
                 tableFileRepository,
@@ -126,6 +140,7 @@ class FileServiceTest {
                 userRepository,
                 storageService,
                 storageProperties,
+                settingsService,
                 masterService,
                 tableVisibilityService,
                 userRoleRepository,

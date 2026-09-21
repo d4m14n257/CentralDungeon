@@ -2,9 +2,10 @@ import { UploadCloudIcon } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useClientLimits } from '@/hooks/useClientLimits'
 import { cn } from '@/lib/utils'
 import { FILE_CATEGORIES } from '../categories'
-import { MAX_FILE_BYTES, rejectionOf } from '../limits'
+import { rejectionOf } from '../limits'
 import { FileCategoryChoice } from './FileCategoryChoice'
 import type { FileCategory, StagedFile } from '../types'
 
@@ -43,7 +44,9 @@ interface FileDropzoneProps {
  * that were missing rather than decoration:
  *
  * - **The limits are stated before they are broken.** A cap somebody only discovers by hitting it
- *   reads as a bug rather than a rule (principio 2 de frontend-diseno.md §1).
+ *   reads as a bug rather than a rule (principio 2 de frontend-diseno.md §1). Since F3.5 the cap is
+ *   asked for instead of hardcoded, because an admin can change it without a deploy (#141) and a
+ *   stale mirror would refuse files the server would have taken.
  * - **A failure is answered where the person is looking.** The error sits under the zone and stays
  *   there while they pick another file — a toast that vanishes in four seconds is the wrong place
  *   for "that type is not accepted". The mutation opts out of the global toast through
@@ -67,6 +70,10 @@ interface FileDropzoneProps {
  */
 export function FileDropzone({ onStaged, isBusy = false, askForCategory = false, categories = FILE_CATEGORIES }: FileDropzoneProps) {
   const { t } = useTranslation('files')
+  // The cap is a setting since F3.5 (#141), so it is asked for rather than assumed. The hook always
+  // answers - with the shipped default while the request is in flight - so the zone is never waiting
+  // on a fetch to be able to refuse something.
+  const { maxFileSizeBytes } = useClientLimits()
   const inputId = useId()
   const input = useRef<HTMLInputElement>(null)
 
@@ -87,9 +94,9 @@ export function FileDropzone({ onStaged, isBusy = false, askForCategory = false,
    * backend would have used - so a file refused now and one refused later read identically (#197).
    */
   function handleFile(file: File) {
-    const rejection = rejectionOf(file)
+    const rejection = rejectionOf(file, maxFileSizeBytes)
     if (rejection !== null) {
-      setError(t([`errors.${rejection}`, 'errors.uploadFailed'], { maxBytes: MAX_FILE_BYTES, sizeBytes: file.size }))
+      setError(t([`errors.${rejection}`, 'errors.uploadFailed'], { maxBytes: maxFileSizeBytes, sizeBytes: file.size }))
       return
     }
     setError(null)
@@ -137,7 +144,9 @@ export function FileDropzone({ onStaged, isBusy = false, askForCategory = false,
           <UploadCloudIcon className="size-6" />
         </span>
         <span className="text-sm font-medium">{t('dropzone.prompt')}</span>
-        <span className="text-fg-muted text-xs">{t('dropzone.limits')}</span>
+        {/* The cap is interpolated rather than written into the sentence: it is a setting now, and a
+            hardcoded "2 MB" in the copy would go on saying 2 the day an admin raises it (#141). */}
+        <span className="text-fg-muted text-xs">{t('dropzone.limits', { maxMb: Math.floor(maxFileSizeBytes / (1024 * 1024)) })}</span>
         <input
           ref={input}
           id={inputId}

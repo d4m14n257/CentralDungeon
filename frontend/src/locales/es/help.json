@@ -595,6 +595,22 @@
         "step4": "Para devolverla al ruedo, la misma fila ofrece «Reanudar».",
         "step5": "Confirmá: las sesiones pendientes se reagendan desde hoy. Si la agenda del master choca con otra mesa, la plataforma te dice con cuál."
       }
+    },
+    "settings": {
+      "title": "La configuración de la plataforma",
+      "what": "Son los valores que la comunidad puede ajustar sin esperar a un despliegue: cuánto pesa un archivo como máximo, cuánto dura una reserva de la bandeja, hasta cuántos jugadores entran en una mesa y cuánto tiempo se siguen viendo los perfiles después de que una mesa termina.",
+      "both": "Admin y Owner pueden editarlos por igual. Es una de las cosas donde los dos rangos hacen exactamente lo mismo.",
+      "default": "Cada valor muestra al lado con cuánto viene de fábrica. Es lo que te deja volver atrás sin tener que buscar el número en ningún lado.",
+      "range": "Cada valor tiene un rango propio y la pantalla te lo dice antes de guardar. No es una restricción caprichosa: un tope por archivo más alto de lo que el servidor acepta haría fallar todas las subidas con un error que la aplicación no puede explicar.",
+      "retroactive": "Hay uno que no es un ajuste cosmético y está marcado: la caducidad de la visibilidad de perfiles se evalúa en cada lectura, así que bajarla le saca la visibilidad a gente que la tiene en este momento y subirla se la devuelve a gente que ya la había perdido. No hay recálculo: cambia la respuesta y listo.",
+      "reason": "El motivo es obligatorio. Un cambio de configuración no manda ninguna notificación ni aparece en ningún lado, así que lo único que queda es ese motivo con tu nombre y la fecha.",
+      "history": "Cada valor tiene su historial: de cuánto a cuánto, quién lo hizo y por qué. Es donde se ve un número que se subió y se volvió a bajar, que es justo el patrón que interesa.",
+      "steps": {
+        "step1": "Entrá a Configuración desde el menú de administración.",
+        "step2": "Buscá el valor en su grupo —parámetros de negocio o límites y cuotas— y tocá «Cambiar».",
+        "step3": "Escribí el número nuevo, dentro del rango que dice la pantalla, y contá por qué lo cambiás.",
+        "step4": "Guardá. Se aplica en el pedido siguiente, sin reiniciar nada."
+      }
     }
   },
   "stepsTitle": "Cómo se hace"

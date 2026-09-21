@@ -15,6 +15,7 @@ export async function testLoginAndReload(discordId: string, asMaster: boolean, a
   )
   setAccessToken(response.accessToken)
   // location.href and not reload(): coming from /auth/callback?error=..., a reload replays that URL
-  // and puts the error on top of the session that was just created (pruebas-e1.md).
+  // and puts the error on top of the session that was just created - OAuthCallbackPage reads the
+  // `?error=` parameter before anything else, whether or not the session is valid.
   window.location.href = '/'
 }

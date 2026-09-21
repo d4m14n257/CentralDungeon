@@ -33,7 +33,9 @@
     "format": {
       "email": "That does not look like an email",
       "url": "That does not look like a web address"
-    }
+    },
+    "wholeNumber": "Type a whole number, with no separators",
+    "between": "It has to be between {{minValue}} and {{maxValue}}"
   },
   "notFound": {
     "backHome": "Back to home"

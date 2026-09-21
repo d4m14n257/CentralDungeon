@@ -108,6 +108,9 @@ export const router = createBrowserRouter([
           // Every request somebody made of an admin (#42, F3.2). No role guard here either, and for
           // the same reason (#103): the backend answers 403 and the screen paints ForbiddenState.
           { path: 'requests', lazy: () => import('./admin/AdminRequestsPage') },
+          // The editable configuration of #141 (F3.5). No role guard here either, and for the same
+          // reason (#103): the backend answers 403 and the screen paints ForbiddenState.
+          { path: 'settings', lazy: () => import('./admin/AdminSettingsPage') },
         ],
       },
       { path: '*', lazy: () => import('./NotFoundPage') },

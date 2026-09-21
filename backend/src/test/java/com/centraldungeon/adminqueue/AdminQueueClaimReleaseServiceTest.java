@@ -10,7 +10,8 @@ import com.centraldungeon.approvals.ApprovalRequest;
 import com.centraldungeon.approvals.ApprovalRequestRepository;
 import com.centraldungeon.approvals.ApprovalRequestType;
 import com.centraldungeon.approvals.ApprovalStatus;
-import com.centraldungeon.common.config.AdminQueueProperties;
+import com.centraldungeon.settings.SettingKey;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
@@ -49,9 +50,12 @@ class AdminQueueClaimReleaseServiceTest {
     @Mock
     private GameTableRepository gameTableRepository;
 
+    @Mock
+    private SettingsService settingsService;
+
     private AdminQueueClaimReleaseService service(Duration timeout) {
-        return new AdminQueueClaimReleaseService(
-                approvalRequestRepository, gameTableRepository, new AdminQueueProperties(timeout));
+        when(settingsService.claimTimeout()).thenReturn(timeout);
+        return new AdminQueueClaimReleaseService(approvalRequestRepository, gameTableRepository, settingsService);
     }
 
     /** What the job does, in one sentence: what was claimed becomes free, in both sources. */
@@ -88,10 +92,19 @@ class AdminQueueClaimReleaseServiceTest {
         assertThat(cutoff.getValue()).isAfter(before.minusMinutes(31));
     }
 
-    /** And with no configuration, the value #100 says it starts at: fifteen minutes. */
+    /**
+     * And with nothing configured, the value #100 says it starts at: fifteen minutes.
+     *
+     * <p>The default moved with the setting in F3.5 - it is {@code SettingKey}'s now, not a
+     * {@code @ConfigurationProperties} record's - so the assertion moved to where the default lives.
+     * {@code SettingsServiceTest} is what proves an unset setting answers with it; this one keeps the
+     * number written down beside the job that uses it, because fifteen minutes is #100's number and
+     * not an implementation detail of the settings table.
+     */
     @Test
     void sinConfiguracionElTimeoutArrancaEnQuinceMinutos() {
-        assertThat(new AdminQueueProperties(null).claimTimeout()).isEqualTo(Duration.ofMinutes(15));
+        assertThat(Duration.ofMinutes(SettingKey.ADMIN_QUEUE_CLAIM_TIMEOUT_MINUTES.defaultValue()))
+                .isEqualTo(Duration.ofMinutes(15));
     }
 
     /**

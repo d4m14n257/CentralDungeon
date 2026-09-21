@@ -68,11 +68,21 @@ erDiagram
 
     system_settings {
         varchar setting_key PK
-        varchar value
-        varchar value_type "Integer | Decimal | Duration | Text | Boolean"
-        varchar category "Business | Limits | Texts"
+        varchar value "solo overrides: no hay fila para lo que nadie toco"
+        varchar value_type "V1 nombra cinco; F3.5 construye Integer"
+        varchar category "V1 nombra tres; F3.5 construye Business y Limits"
         varchar updated_by FK
-        datetime updated_at
+        datetime updated_at "ultimo cambio, no el historial"
+    }
+
+    system_setting_changes {
+        varchar id PK
+        varchar setting_key "sin FK: es una constante del enum SettingKey"
+        varchar from_value "NULL = venia con el valor de fabrica"
+        varchar to_value
+        varchar changed_by FK
+        longtext justification "obligatoria"
+        datetime created_at
     }
 
     audit_logs {
@@ -97,3 +107,4 @@ erDiagram
     users ||--o{ impersonation_sessions : "es suplantado"
     impersonation_sessions ||--o{ audit_logs : "origina"
     users ||--o{ system_settings : "modifica"
+    users ||--o{ system_setting_changes : "cambia un ajuste"

@@ -2,12 +2,15 @@ package com.centraldungeon.profiles;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.settings.SettingKey;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
@@ -45,11 +48,22 @@ class ProfileVisibilityServiceTest {
     @Mock
     private UserRoleRepository userRoleRepository;
 
+    /**
+     * The visibility window, a setting since F3.5 (#44, #141) and a constant of the service before
+     * that. Stubbed to the same fourteen days, so every case below keeps asserting #44's rule
+     * against #44's number - what moved is where the number comes from.
+     */
+    @Mock
+    private SettingsService settingsService;
+
     private ProfileVisibilityService service;
 
     private ProfileVisibilityService service() {
         if (service == null) {
-            service = new ProfileVisibilityService(masterRepository, registrationRepository, gameTableRepository, userRoleRepository);
+            lenient().when(settingsService.profileVisibilityWindowDays())
+                    .thenReturn(SettingKey.PROFILES_VISIBILITY_WINDOW_DAYS.defaultValue());
+            service = new ProfileVisibilityService(
+                    masterRepository, registrationRepository, gameTableRepository, userRoleRepository, settingsService);
         }
         return service;
     }

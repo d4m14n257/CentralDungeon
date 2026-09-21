@@ -595,6 +595,22 @@
         "step4": "To bring it back, the same row offers “Resume”.",
         "step5": "Confirm: the pending sessions are rescheduled from today. If the master’s agenda clashes with another table, the platform tells you which."
       }
+    },
+    "settings": {
+      "title": "The platform's settings",
+      "what": "These are the values the community can adjust without waiting for a deploy: how big a file may be, how long a tray reservation lasts, how many players a table may take, and how long people keep seeing each other's profiles after a table ends.",
+      "both": "Admin and Owner edit them alike. It is one of the things the two ranks do exactly the same way.",
+      "default": "Every value shows what it ships as beside it. That is what lets you put something back without hunting for the number anywhere.",
+      "range": "Every value has a range of its own and the screen tells you before you save. It is not an arbitrary restriction: a per-file cap above what the server accepts would make every upload fail with an error the application cannot explain.",
+      "retroactive": "One of them is not a cosmetic adjustment and is marked as such: the profile visibility window is evaluated on every read, so lowering it takes visibility away from people who have it right now and raising it hands it back to people who had already lost it. Nothing is recomputed — the answer simply changes.",
+      "reason": "The reason is required. A settings change sends no notification and shows up nowhere, so all that is left is that reason with your name and the date on it.",
+      "history": "Every value has its own history: from what to what, by whom and why. It is where you see a number that was raised and put back, which is exactly the pattern worth seeing.",
+      "steps": {
+        "step1": "Open Settings from the administration menu.",
+        "step2": "Find the value in its group — business parameters, or limits and quotas — and press “Change”.",
+        "step3": "Type the new number, inside the range the screen states, and say why you are changing it.",
+        "step4": "Save. It applies on the very next request, with no restart."
+      }
     }
   },
   "stepsTitle": "How to do it"

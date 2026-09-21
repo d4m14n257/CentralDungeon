@@ -197,7 +197,6 @@ class LocalDiskStorageServiceTest {
     }
 
     private static StorageProperties properties(Path root) {
-        return new StorageProperties(root.toString(), org.springframework.util.unit.DataSize.ofMegabytes(2),
-                Set.of("application/pdf"), Duration.ofDays(90));
+        return new StorageProperties(root.toString(), Set.of("application/pdf"), Duration.ofDays(90));
     }
 }

@@ -14,6 +14,7 @@ import {
   RequestsAdminHelp,
   ReviewingHelp,
   RolesHelp,
+  SettingsHelp,
 } from './admins'
 import {
   BanningHelp,
@@ -138,6 +139,9 @@ export const HELP_SECTIONS = {
   // The other end of `basics.requests`: what the tray is, and that approving is not one act but
   // three different ones depending on what was asked for (F3.2).
   'admins.requests': { titleKey: 'admins.requests.title', Body: RequestsAdminHelp },
+  // The editable configuration of #141 (F3.5). Its own section: what has to be learned is not who
+  // may edit a setting but that two of them are not cosmetic adjustments.
+  'admins.settings': { titleKey: 'admins.settings.title', Body: SettingsHelp },
 } as const satisfies Record<string, HelpSectionDefinition>
 
 /**

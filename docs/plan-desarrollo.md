@@ -101,7 +101,7 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 |---|---|---|
 | **F1 — Master** | La mesa completa, de la creación al cierre | ✅ **Hecha, sin revisar** |
 | **F2 — Jugador** | Todo lo que el jugador hace con lo que el master publicó | ✅ **Hecha, sin revisar** |
-| **F3 — Admin y Owner** | La comunidad se administra, y la línea entre los dos roles queda escrita | ⏳ |
+| **F3 — Admin y Owner** | La comunidad se administra, y la línea entre los dos roles queda escrita | ✅ **Hecha, sin revisar** |
 | **F4 — Revisión** | Mapa de la interfaz, matriz de roles, integridad y seguridad — y la revisión del cliente | ⏳ |
 | **F5 — Comunidad** | Comentarios y karma, con anonimato real | ⏳ |
 | **F6 — Operación** | Tiempo real, auditoría y el panel exclusivo del owner | ⏳ |

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { CLAIM_TIMEOUT_MINUTES } from '@/config/adminQueue'
+import { useClientLimits } from '@/hooks/useClientLimits'
 
 import { HelpList, HelpSteps } from '../components/HelpBlocks'
 
@@ -79,12 +79,16 @@ export function ReviewingHelp() {
  * and somebody who closed a tab by accident would assume they had broken something permanent.
  */
 export function ClaimingHelp() {
+  // The timeout is a setting since F3.5 (#141), so the help asks for it instead of quoting a number
+  // that stopped being true the moment somebody changed it. The hook always answers.
+  const { claimTimeoutMinutes } = useClientLimits()
+
   return (
     <ListAndSteps
       block="claiming"
       keys={['what', 'notRequired', 'whenToClaim', 'yours', 'timeout', 'release', 'race']}
       stepCount={4}
-      values={{ minutes: CLAIM_TIMEOUT_MINUTES }}
+      values={{ minutes: claimTimeoutMinutes }}
     />
   )
 }
@@ -174,4 +178,17 @@ export function BlockingHelp() {
  */
 export function PausingHelp() {
   return <ListAndSteps block="pausing" keys={['what', 'requested', 'freeze', 'reason', 'resume', 'clash', 'notCancel']} stepCount={5} />
+}
+
+/**
+ * What the configuration screen is, and what changing one of its values actually does (F3.5, #141).
+ *
+ * **Its own section rather than a line inside `admins.owner`**, because the thing that has to be
+ * learned is not who may edit settings — `Admin` and `Owner` may both, which is one sentence — but
+ * that two of the values are not cosmetic: one of them changes who can see whom the instant it is
+ * saved, and none of them announces itself to anybody. A bullet inside another section is where that
+ * gets skimmed past.
+ */
+export function SettingsHelp() {
+  return <ListAndSteps block="settings" keys={['what', 'both', 'default', 'range', 'retroactive', 'reason', 'history']} stepCount={4} />
 }

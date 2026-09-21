@@ -1,6 +1,7 @@
 package com.centraldungeon.files;
 
 import com.centraldungeon.common.config.StorageProperties;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
@@ -112,8 +113,20 @@ public class FileService {
     /** Where the bytes actually live (#15). */
     private final StorageService storageService;
 
-    /** The cap, the whitelist and the retention window - all configuration, never constants. */
+    /** The whitelist and the retention window - deployment configuration, never constants. */
     private final StorageProperties storageProperties;
+
+    /**
+     * Where the per-file cap comes from since F3.5: {@code files.max_file_size_mb} in
+     * {@code system_settings} (#75, #141).
+     *
+     * <p>It used to be {@code app.storage.max-file-size}, beside the whitelist. The two look alike
+     * and are not: which MIME types the parser accepts is a decision of whoever deploys the
+     * application, and how big a file may be is a decision of whoever runs the community - #141 names
+     * «tope por archivo» among the values that must be adjustable without a deploy. Read per upload
+     * and not captured in a field, so raising the cap applies to the very next upload.
+     */
+    private final SettingsService settingsService;
 
     /** Answers pertenencia: a row in {@code masters}, never the platform role (#135). */
     private final MasterService masterService;
@@ -166,7 +179,8 @@ public class FileService {
      * @param submissionFileRepository  the answers a file was handed in with, for the same question
      * @param userRepository            resolves the uploader from the token
      * @param storageService            where the bytes live (#15)
-     * @param storageProperties         the cap, the whitelist and the retention window
+     * @param storageProperties         the whitelist and the retention window
+     * @param settingsService           the per-file cap, editable without a deploy (#141)
      * @param masterService             answers pertenencia (#17, #121, #135)
      * @param tableVisibilityService    answers the veto, so a shared attachment stops being readable
      *                                  by somebody the table stopped existing for (#29, #206)
@@ -185,6 +199,7 @@ public class FileService {
             UserRepository userRepository,
             StorageService storageService,
             StorageProperties storageProperties,
+            SettingsService settingsService,
             MasterService masterService,
             TableVisibilityService tableVisibilityService,
             UserRoleRepository userRoleRepository,
@@ -199,6 +214,7 @@ public class FileService {
         this.userRepository = userRepository;
         this.storageService = storageService;
         this.storageProperties = storageProperties;
+        this.settingsService = settingsService;
         this.masterService = masterService;
         this.tableVisibilityService = tableVisibilityService;
         this.userRoleRepository = userRoleRepository;
@@ -901,7 +917,7 @@ public class FileService {
      *                                 nobody what to do next
      */
     private void requireWithinSizeLimit(long sizeBytes) {
-        long limit = storageProperties.maxFileSize().toBytes();
+        long limit = settingsService.maxFileSizeBytes();
         if (sizeBytes > limit) {
             throw new InvalidRequestException(
                     "File of " + sizeBytes + " bytes is over the " + limit + " byte limit",

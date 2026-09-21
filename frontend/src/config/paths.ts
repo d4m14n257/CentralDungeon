@@ -46,6 +46,7 @@ export const paths = {
   adminFiles: 'admin/files',
   adminUsers: 'admin/users',
   adminRequests: 'admin/requests',
+  adminSettings: 'admin/settings',
 } as const
 
 /**
@@ -238,6 +239,15 @@ export function adminRequestsPath(): string {
  */
 export function helpPath(): string {
   return '/help'
+}
+
+/**
+ * @returns the absolute path to the configuration screen (F3.5) — the values the community changes
+ *          without a deploy (#141): business parameters and limits, each with the value in force,
+ *          what it ships as, and who last moved it
+ */
+export function adminSettingsPath(): string {
+  return '/admin/settings'
 }
 
 /**

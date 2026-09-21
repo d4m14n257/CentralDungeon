@@ -3,7 +3,7 @@ package com.centraldungeon.adminqueue;
 import com.centraldungeon.approvals.ApprovalRequest;
 import com.centraldungeon.approvals.ApprovalRequestRepository;
 import com.centraldungeon.approvals.ApprovalStatus;
-import com.centraldungeon.common.config.AdminQueueProperties;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
@@ -67,21 +67,33 @@ public class AdminQueueClaimReleaseService {
     /** The {@code game_tables} reservations. */
     private final GameTableRepository gameTableRepository;
 
-    /** Where the timeout comes from - configuration, so tightening it is not a deploy (#141 moves it to F3.5). */
-    private final AdminQueueProperties adminQueueProperties;
+    /**
+     * Where the timeout comes from: {@code admin_queue.claim_timeout_minutes} in
+     * {@code system_settings} (#100, #141).
+     *
+     * <p><b>It stopped being {@code app.admin-queue.claim-timeout} in F3.5</b>, which modelo-datos.md
+     * §5 named as this slice's job. The difference is not where the number is stored but who may
+     * change it: how long a review actually takes on this platform is an operational judgement the
+     * people running it make, and making them ask for a deploy to tighten it is what #141 removed.
+     *
+     * <p>Read on every pass rather than cached in a field: a job that captured the timeout at startup
+     * would go on using the old one until the process restarted, which is the exact thing the setting
+     * exists to avoid.
+     */
+    private final SettingsService settingsService;
 
     /**
      * @param approvalRequestRepository the {@code approval_requests} reservations
      * @param gameTableRepository       the {@code game_tables} reservations
-     * @param adminQueueProperties      the timeout, from {@code app.admin-queue.claim-timeout}
+     * @param settingsService           where the timeout comes from (#141)
      */
     public AdminQueueClaimReleaseService(
             ApprovalRequestRepository approvalRequestRepository,
             GameTableRepository gameTableRepository,
-            AdminQueueProperties adminQueueProperties) {
+            SettingsService settingsService) {
         this.approvalRequestRepository = approvalRequestRepository;
         this.gameTableRepository = gameTableRepository;
-        this.adminQueueProperties = adminQueueProperties;
+        this.settingsService = settingsService;
     }
 
     /**
@@ -99,7 +111,7 @@ public class AdminQueueClaimReleaseService {
             log.info(
                     "Admin queue released {} reservation(s) held longer than {}",
                     released,
-                    adminQueueProperties.claimTimeout());
+                    settingsService.claimTimeout());
         }
     }
 
@@ -122,7 +134,7 @@ public class AdminQueueClaimReleaseService {
      */
     @Transactional
     public int releaseExpiredClaims() {
-        LocalDateTime cutoff = LocalDateTime.now().minus(adminQueueProperties.claimTimeout());
+        LocalDateTime cutoff = LocalDateTime.now().minus(settingsService.claimTimeout());
 
         List<ApprovalRequest> requests =
                 approvalRequestRepository.findExpiredClaims(ApprovalStatus.Pending, cutoff, BATCH);

@@ -13,10 +13,10 @@ import { useAuth } from '@/providers/AuthProvider'
 
 import { testLoginAndReload } from './devApi'
 
-// The shared accounts from pruebas-e1.md, rather than an invented one: master-1 is already
-// Secondary of "La Cripta de Ondrak" and "Tumbas de Sal", with real applications - reusing them
-// keeps the panel connected to the data everything has been tested against, instead of starting
-// from an empty account.
+// The shared development accounts, rather than invented ones: master-1 is already Secondary of "La
+// Cripta de Ondrak" and "Tumbas de Sal", with real applications - reusing them keeps the panel
+// connected to the data everything has been tested against, instead of starting from an empty
+// account.
 const DEFAULT_PLAYER_ID = 'jugador-1'
 const DEFAULT_MASTER_ID = 'master-1'
 const DEFAULT_ADMIN_ID = 'admin-1'
@@ -26,9 +26,9 @@ const DEFAULT_OWNER_ID = 'owner-1'
 
 /**
  * Only under `npm run dev` (import.meta.env.DEV, substituted at build time and dropped from the
- * production bundle) - it replaces the console `fetch()` calls of pruebas-e1.md with buttons. It
- * depends on the backend running with the `test` profile; without it, test-login answers 404 and the
- * global error toast (config/query.ts) says so.
+ * production bundle) - it replaces the console `fetch()` calls manual testing used to need (#158)
+ * with buttons. It depends on the backend running with the `test` profile; without it, test-login
+ * answers 404 and the global error toast (config/query.ts) says so.
  *
  * The four roles are here because test-login now issues all four. **Owner is the one that could not
  * be reached any other way**: the seed grants it to nobody and only an Owner may hand it out, so

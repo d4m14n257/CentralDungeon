@@ -16,7 +16,8 @@ import { isClaimedByReader, type AdminQueueItem } from '../types'
  * **"Hace cuánto" and not the exact time**, which is `formatRelativeDate`'s own reason to exist
  * (#75): the question a person asks of `claimedAt` is "is this about to be taken back from me", and a
  * formatted timestamp makes them do the subtraction themselves. The release job takes a stale
- * reservation back after `CLAIM_TIMEOUT_MINUTES` (`config/adminQueue.ts`), so the distance *is* the
+ * reservation back after the tray's timeout (`useClientLimits`, a setting since F3.5), so the
+ * distance *is* the
  * meaning.
  *
  * **A name in `claimedByName` is always the reader's own** — the listing returns what is free or what

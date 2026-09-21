@@ -4,6 +4,7 @@ import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
@@ -43,8 +44,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProfileVisibilityService {
 
-    /** How long a closed table keeps a profile visible through it (#44). */
-    private static final long VISIBILITY_WINDOW_DAYS = 14;
 
     /**
      * States a table's own master row can never be seen through (#41a). Every other status - Opened,
@@ -74,20 +73,36 @@ public class ProfileVisibilityService {
     private final UserRoleRepository userRoleRepository;
 
     /**
+     * How long a closed table keeps a profile visible through it - {@code
+     * profiles.visibility_window_days} in {@code system_settings} (#44, #141).
+     *
+     * <p><b>It was a constant of this class until F3.5</b>, and it is the one setting of that slice
+     * whose change is retroactive: nothing is recomputed and nothing is stored, so lowering the
+     * number takes visibility away from people who have it at this instant and raising it hands it
+     * back to people who had already lost it. That is a property of #44 itself - the rule is
+     * evaluated against {@code closed_at} on every read - and it is why {@code /admin/settings} warns
+     * before saving this one and not the other three.
+     */
+    private final SettingsService settingsService;
+
+    /**
      * @param masterRepository       who runs which table (#41a, #41b)
      * @param registrationRepository who applied, and who plays (#41b, #47)
      * @param gameTableRepository    resolves the tables two players share (#47)
      * @param userRoleRepository     the actor's global roles, for #45
+     * @param settingsService        the visibility window, editable without a deploy (#44, #141)
      */
     public ProfileVisibilityService(
             MasterRepository masterRepository,
             TableRegistrationRepository registrationRepository,
             GameTableRepository gameTableRepository,
-            UserRoleRepository userRoleRepository) {
+            UserRoleRepository userRoleRepository,
+            SettingsService settingsService) {
         this.masterRepository = masterRepository;
         this.registrationRepository = registrationRepository;
         this.gameTableRepository = gameTableRepository;
         this.userRoleRepository = userRoleRepository;
+        this.settingsService = settingsService;
     }
 
     /**
@@ -208,11 +223,11 @@ public class ProfileVisibilityService {
      * {@code closed_at} is null exactly like a live table's, so the clock simply has not started, and
      * writing a case for it would only be restating that fact.
      */
-    private static boolean isLinkStillOpen(GameTable table, LocalDateTime now) {
+    private boolean isLinkStillOpen(GameTable table, LocalDateTime now) {
         if (NEVER_PUBLISHED.contains(table.getStatus())) {
             return false;
         }
         LocalDateTime closedAt = table.getClosedAt();
-        return closedAt == null || !closedAt.isBefore(now.minusDays(VISIBILITY_WINDOW_DAYS));
+        return closedAt == null || !closedAt.isBefore(now.minusDays(settingsService.profileVisibilityWindowDays()));
     }
 }

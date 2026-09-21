@@ -7,7 +7,7 @@ Reescritura en curso: **Express/TypeScript → Java/Spring Boot** y **Next.js/MU
 ## Estado del repositorio
 
 ```
-backend/            Java 25 + Spring Boot 4.1      ← F1, F2 y F3.1–F3.4 construidas
+backend/            Java 25 + Spring Boot 4.1      ← F1, F2 y F3 construidas
 frontend/           React 19 + Vite 8 + TypeScript ← idem; pantallas en src/routes/
 design/             Sistema de diseño — build.py genera tokens y previews
 legacy/backend-node/    Express + TS (2024)  — SOLO LECTURA, referencia funcional
@@ -29,13 +29,13 @@ Sin redundancia entre ellos. Leer antes de trabajar en algo nuevo:
 |---|---|
 | `docs/arquitectura.md` | Estructura de carpetas, patrón por feature, reglas de cada capa, contrato de API, seguridad, testing, convenciones de nombres. **La referencia para escribir código.** |
 | `docs/modelo-datos.md` | Fuente de verdad del schema: convenciones, diagrama ER (Mermaid), DDL baseline, reglas de negocio que reemplazaron a los triggers, qué queda fuera de v1. |
-| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 261 decisiones cerradas y el rastro de los pendientes que se abrieron y resolvieron (M1–M32). |
+| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 265 decisiones cerradas y el rastro de los pendientes que se abrieron y resolvieron (M1–M32). |
 | `docs/diagramas/` | Fuentes Mermaid (`.mmd`), sin PNG versionados — se regeneran con el comando del README. ER del **modelo objetivo** por subsistema (11–16) y los ciclos de vida de mesa, postulación y comentario (05–07). |
 | `docs/frontend-diseno.md` | Sitemap por contexto, navegación, sistema de diseño, wireframes e **inventario completo de componentes** (§5). **Se lee antes de crear cualquier pantalla o componente**: §5 dice qué existe ya, y es lo que evita escribir el décimo badge de estado (#261). |
 | `docs/plan-desarrollo.md` | Fases de construcción, qué se rescata del legacy, definición de terminado y el reparto en subagentes de cada rebanada. |
 | `docs/fase-1-master.md` | **Implementación de F1**: las siete rebanadas con su detalle de archivos, el punto de partida verificado y el camino de verificación. Se lee antes de tocar cualquier cosa de F1. |
 | `docs/fase-2-jugador.md` | **Implementación de F2**, la fase que le da al jugador todo lo que el master publicó en F1: las cinco rebanadas con sus archivos y su verificación. |
-| `docs/fase-3-admin-owner.md` | **Implementación de F3**: las cinco rebanadas, la matriz `Admin`/`Owner` —el entregable que ninguna otra fase tiene— y el camino de verificación. Documento vivo mientras F3 esté abierta. |
+| `docs/fase-3-admin-owner.md` | **Implementación de F3**: las cinco rebanadas, la matriz `Admin`/`Owner` —el entregable que ninguna otra fase tiene— y el camino de verificación. **F3 cerrada**: queda como registro y no se toca más. |
 | `docs/fase-4-revision.md` | **Cómo se revisa lo construido.** F4 no entrega producto: entrega saber qué hay, quién lo alcanza y qué está roto. No usa el reparto en subagentes de `plan-desarrollo.md` §7. |
 | `docs/mcp-y-skills.md` | MCP servers y skills configurados, y las variables de entorno que hay que exportar localmente. |
 

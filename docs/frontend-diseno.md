@@ -73,7 +73,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/admin/requests` | Solicitudes de rol, de mesa y generales |
 | | `/admin/feedback` | Feedback del sistema |
 | | `/admin/users` | Usuarios y bloqueos; desde acá se inicia **"ver como"** (#140) |
-| | `/admin/settings` | Configuración: parámetros de negocio, límites y textos (#141) |
+| | `/admin/settings` | Configuración: parámetros de negocio y límites (#141). **Sin «textos»**: desde #197 el backend no escribe ninguna frase que lea una persona, así que esa categoría no se construyó (#263) |
 | **Owner** | `/owner/audit` | Trazabilidad de cambios (#92) |
 | | `/owner/storage` | Borrado físico de archivos (#66) |
 | | `/owner/users/:id/migrate` | Migración de cuenta (#83) |
@@ -380,7 +380,7 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 
 ### Inventario completo, y lo que el inventario curado escondía
 
-La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen algo que explicar. No es el inventario, y durante varias fases se leyó como si lo fuera — con la consecuencia concreta que está más abajo. Lo que hay construido hoy, entero, es **63 compuestos con dominio en 10 features**, más 7 de shell:
+La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen algo que explicar. No es el inventario, y durante varias fases se leyó como si lo fuera — con la consecuencia concreta que está más abajo. Lo que hay construido hoy, entero, es **65 compuestos con dominio en 11 features**, más 7 de shell:
 
 | Feature | Compuestos |
 |---|---|
@@ -391,6 +391,7 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 | `help` (3) | `HelpBlocks` · `HelpDialog` · `HelpLink` |
 | `notifications` (1) | `NotificationBell` |
 | `registrations` (4) | `ApplyToTableDialog` · `BlockPlayerDialog` · `RegistrationStatusBadge` · `RejectRegistrationDialog` |
+| `settings` (2) | `SettingHistory` · `SettingValueDialog` — F3.5 (#141). La pantalla no usa `DataTable`: son cuatro filas que se leen enteras, no un listado que se recorre y se busca |
 | `tables` (10) | `AttendanceEditor` · `CreateUnassignedTableDialog` · `GameTableCard` · `JustifiedTableActionDialog` · `MasterWorkItemList` · `ScheduleEditor` · `SessionList` · `SessionStatusBadge` · `TableStatusBadge` · `WeeklyScheduleGrid` |
 | `tasks` (9) | `ApplicableTaskList` · `MySubmissions` · `TableTasksSection` · `TaskAudienceBadge` · `TaskBoardList` · `TaskFormDialog` · `TaskStatusBadge` · `TaskSubmissionsPanel` · `TaskSubmitDialog` |
 | `users` (7) | `AdminUserRolesCell` · `BlockUserDialog` · `ProfileCard` · `RoleChangeDialog` · `UserAdminHistory` · `UserPicker` · `UserStatusBadge` |
@@ -458,6 +459,7 @@ En `hooks/`:
 | `useUnsavedChanges` | Avisar antes de perder un formulario a medio llenar |
 | `useLanguage` | El idioma elegido, recordado sin ida al servidor (#198) |
 | `useBackendStatus` | Si el backend responde, para el indicador «En línea» |
+| `useClientLimits` | Los límites de plataforma que una pantalla enuncia antes de que alguien los rompa: el tope por archivo y el timeout de la reserva de la bandeja (#141, #264). Están en `hooks/` y no en una feature porque `features/files`, `features/help` y `/admin/queue` los leen y `features/settings` los edita — y una feature nunca importa otra. Nunca suspende ni rompe una pantalla: contesta con los defaults de `config/limits.ts` mientras viaja el pedido |
 | `useDisclosure<T>` | Abrir/cerrar modales y paneles, y guardar el ítem que los abrió (`open(row)`) — es lo que hacía `useModal` con su `dataModal` |
 
 ### Estados obligatorios

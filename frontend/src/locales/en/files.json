@@ -142,7 +142,7 @@
   },
   "dropzone": {
     "prompt": "Drag a file here, or click to pick one",
-    "limits": "Up to 2 MB per file. PDF, Word, PNG and JPG are accepted.",
+    "limits": "Up to {{maxMb}} MB per file. PDF, Word, PNG and JPG are accepted.",
     "categoryLabel": "Which drawer it goes in",
     "reused": "You already had “{{name}}”: it was reused and takes no extra space.",
     "categoryHint": "Only needed here: when you upload from a table or an answer, the drawer follows from where you uploaded it."

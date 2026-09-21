@@ -23,18 +23,22 @@ spring:
     locations: classpath:db/migration
   servlet:
     multipart:
-      # The container's own cap, which has to agree with app.storage.max-file-size below. This one
-      # is enforced before a single byte reaches a controller; the other produces the explained
-      # message (#197). Kept slightly higher so the application's rule is the one that normally
-      # answers, and this stays the backstop against a request that lies about its size.
-      max-file-size: 3MB
-      max-request-size: 4MB
+      # The container's own cap, and the backstop behind the editable one. Enforced before a single
+      # byte reaches a controller, where the application's rule produces the explained message
+      # (#197) - so it is kept strictly above the largest value files.max_file_size_mb can be raised
+      # to (25 MB, SettingKey), and SettingsService refuses to start if that ever stops being true.
+      # It answers only for a request that lies about its size.
+      max-file-size: 26MB
+      max-request-size: 32MB
   cache:
     type: caffeine
-    cache-names: userAuth
+    cache-names: userAuth,systemSettings
     caffeine:
       # TTL is the revocation window, not a performance number (arquitectura.md 2.6):
       # explicit @CacheEvict on block/role-change makes it immediate, this is the safety net.
+      # systemSettings (#141) works the same way: SettingsService clears it on afterCommit, so an
+      # edited limit applies to the next request, and this is what bounds a cache somebody's
+      # SQL client changed behind the application's back.
       spec: expireAfterWrite=60s,maximumSize=10000
   security:
     oauth2:
@@ -87,9 +91,6 @@ app:
     # Where the blobs live. Never inside the repository - the dev default is gitignored and prod
     # points this at a real volume.
     root: ${APP_STORAGE_ROOT:./storage}
-    # The one limit #75 kept when it repealed the per-user quota of #61. The levers that replaced
-    # it - reuse, compression and the unused-file purge - attack total volume instead of the user.
-    max-file-size: 2MB
     # The legacy's own whitelist (M21.4), which is the only part of its file handling worth keeping.
     # It had no size or count limit whatsoever, but it did check the type.
     allowed-mime-types:
@@ -101,8 +102,8 @@ app:
     # How long a file survives unused before the purge marks it gone (#75). Marks only - freeing the
     # bytes is the platform owner's, from the administration menu, and that is F5 (#66).
     retention: P90D
-  admin-queue:
-    # How long an admin keeps an item of the shared tray before the release job hands it back (#100).
-    # Configurable from the start and starting at 15 minutes, which is what #100 asks for; F3.5 moves
-    # the value to system_settings so the owner edits it without a deploy (#141).
-    claim-timeout: PT15M
+  # app.admin-queue.claim-timeout and app.storage.max-file-size both lived here until F3.5 and both
+  # moved to system_settings (#141): they are decisions of whoever runs the community, not of
+  # whoever deploys the application, and their defaults now live in SettingKey. What stays in this
+  # file is the second kind - where the blobs go, which MIME types the parser accepts, how long the
+  # purge waits.

@@ -142,7 +142,7 @@
   },
   "dropzone": {
     "prompt": "Arrastrá un archivo acá o hacé clic para elegirlo",
-    "limits": "Hasta 2 MB por archivo. Se aceptan PDF, Word, PNG y JPG.",
+    "limits": "Hasta {{maxMb}} MB por archivo. Se aceptan PDF, Word, PNG y JPG.",
     "categoryLabel": "En qué cajón va",
     "reused": "«{{name}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo.",
     "categoryHint": "Solo hace falta acá: cuando subís un archivo desde una mesa o una entrega, el cajón sale solo de dónde lo subiste."

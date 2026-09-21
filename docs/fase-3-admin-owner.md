@@ -4,7 +4,7 @@
 >
 > El *por qué* de cada decisión está en `decisiones.md`, las reglas de negocio en `modelo-datos.md` §5, las pantallas en `frontend-diseno.md` y el *cómo se escribe el código* en `arquitectura.md`.
 >
-> **Documento vivo mientras F3 esté abierta.** Cada rebanada se marca terminada acá al cerrarse, con su inventario. Cuando F3 cierre, este documento queda como registro y no se toca más.
+> **F3 está cerrada.** Las cinco rebanadas se marcaron terminadas acá al cerrarse, con su inventario y su deuda de revisión; este documento queda como registro y no se toca más. Lo que quedó sin verificar está en la tabla de deuda de cada rebanada, y lo verifica **F4** (#250).
 
 ## 1. Por qué existe este documento
 
@@ -296,6 +296,38 @@ La cláusula que ninguna prueba de un solo lado puede ver —«el rol queda otor
 **Frontend** — `routes/admin/AdminSettingsPage.tsx` (`/admin/settings`), agrupada por categoría, con el valor actual y el por defecto a la vista.
 
 **Se prueba:** un admin cambia el tope por archivo; la subida siguiente lo respeta sin reiniciar nada, y el cambio queda registrado con quién y cuándo.
+
+#### ✅ Terminada
+
+**La regla dura 3 se cumplió hacia adentro y no solo en la frontera**, que era la condición de esta rebanada: el almacenamiento es genérico —una tabla, cualquier clave— y **nada fuera de `SettingsService` lo ve**. Quien necesita el tope llama a `maxFileSizeBytes()` y recibe un `long` en bytes; nunca se entera de que el número está guardado en megabytes, como texto, en una fila que puede no existir. Los cuatro accesores tipados son toda la superficie interna, y el endpoint devuelve su `record` con nombre propio.
+
+**Cero migraciones sobre `system_settings`, verificado antes de escribir** —la tabla ya estaba en `V1__baseline.sql:552`, que es la lección de #257 aplicada por tercera vez—; la única migración es `V13`, para la tabla de auditoría que no existía.
+
+**Lo que la rebanada descubrió de sí misma**, y no sabía al empezar:
+
+- **El guard de arranque dependía de un bean que solo existe en contexto servlet, y tumbó diecisiete ITs ajenos.** La comprobación de que el tope por archivo no pueda superar el cap del contenedor es correcta y hace falta —sin ella un admin configura un límite que produce un error crudo donde el frontend espera el `FILE_TOO_LARGE` explicado (#197)—, pero inyectar `MultipartProperties` la hizo imposible: ese bean no existe cuando la aplicación arranca sin web, así que las diecisiete clases de IT que no tienen nada que ver con configuración fallaron con un «No qualifying bean» que se lee como código roto. **El valor es el mismo valor; de dónde se toma es lo que decide si la clase se puede construir.** Se lee del entorno con `@Value`, y ahí el guard corre en todos los contextos.
+- **«Cupo máximo» no era un valor que mudar: era un límite que no existía.** #141 lo enumera entre los ocho que la comunidad quiere ajustar sin desplegar, y al ir a buscarlo `maxPlayers` resultó ser `@Positive` y nada más — se podía crear una mesa para dos mil millones de personas. Un ajuste sobre un límite inexistente es una perilla desconectada, así que F3.5 construye el límite además del ajuste (**#265**).
+- **De los ocho valores de #141 se mudaron cuatro, y de las tres categorías se construyeron dos.** `Texts` se cae por #197, que es posterior: desde que el backend no escribe ninguna frase que lea una persona, un ajuste de tipo texto sería una frase guardada en un solo idioma y renderizada cruda — la regla dura 18 rota por diseño. Los otros tres valores son de subsistemas que construye F5, o dejaron de ser texto del backend el día de #197. Declararlos igual habría sido el huérfano que F3.2 se negó a crear (#255, ahora **#263**).
+- **El endpoint público no era opcional: sin él la rebanada no cumple lo que promete.** «La subida siguiente lo respeta sin reiniciar nada» es falso si el frontend sigue rechazando a los 2 MB con una constante propia — el archivo nunca llega al backend. `GET /settings/limits` y `hooks/useClientLimits` son lo que cierra esa costura, y de paso cobran la promesa que `config/adminQueue.ts` había dejado escrita para el timeout de la reserva (**#264**).
+- **`TestDataService` volvió a quedarse corto, y es la séptima vez.** Las dos tablas nuevas apuntan a `users` —`updated_by` y `changed_by`—, así que un e2e que edita un ajuste deja filas que el borrado de usuarios no puede pasar. Exactamente **#254**: la limpieza es una sola transacción, y un choque de FK hace rollback entero. El efecto secundario es bueno y está buscado: como la fila de override apunta a la cuenta `e2e-*` que la escribió, la limpieza **devuelve el ajuste a su valor de fábrica** aunque la corrida muera por la mitad.
+
+**Suites al cerrar, salida real:** `./mvnw test` 602/602 · `./mvnw verify` 602 + **177 ITs en 19 clases**, 0 fallos · `npx tsc -b` limpio · `npm run test` 509/509 en 57 archivos · `npm run test:e2e` **62/62** · `npm run format` sin reescrituras.
+
+**Deuda de revisión — para F4** (punto 5, #250):
+
+| Sin verificar | Por qué queda |
+|---|---|
+| Los cuatro estados de cada pantalla nueva, el viewport de 375 px y el contraste | Es F4 por diseño (#250) |
+| El aviso de retroactividad **renderizado** en los dos temas | Usa `state-paused-bg`/`state-paused-fg`, que ya están medidos en `design/build.py`; lo que no se miró es el bloque en pantalla, que es amarillo sobre una tarjeta y no sobre el fondo de página |
+| La caché `systemSettings` observada **como caché** | Se verificó su **efecto** de punta a punta —el IT cambia el tope y el accesor devuelve el valor nuevo en el request siguiente— pero ningún test mira la caché misma. Misma postura que F3.1 tomó con `userAuth` |
+| El `@PostConstruct` del guard de multipart en un arranque real de producción | Se ejercita como método en el unitario y se cumple en cada arranque de los 19 ITs; que un `application-prod.yml` mal configurado no arranque no se probó como despliegue |
+| Concurrencia de dos admins editando el **mismo** ajuste a la vez | Es un `last write wins` a propósito: los dos cambios quedan en `system_setting_changes` y el último gana, que es lo que un valor escalar puede prometer. No hay lock ni `@Version`, y no hay IT que lo recorra |
+| El inglés renderizado de la pantalla | Paridad de claves verificada en los tres namespaces tocados (`admin`, `common`, `help`); los tests corren en `es` |
+| `tables.max_players_cap` enunciado **antes** de romperlo | El servidor lo aplica y explica (#265), pero ninguna pantalla lo dice al escribir el cupo: el formulario de la mesa no lo pide a `useClientLimits`. Es una deuda de principio 2, anotada a propósito (#264) |
+
+**Inventario de archivos** — 13 nuevos en `backend/` (`settings/`: `SettingKey`, `SettingCategory`, `SettingValueType`, `SystemSetting`, `SystemSettingChange`, `SystemSettingRepository`, `SystemSettingChangeRepository`, `SettingsService`, `SettingsController`, `AdminSettingsController`; `settings/dto/`: `SystemSettingResponse`, `UpdateSettingRequest`, `SystemSettingChangeResponse`, `ClientLimitsResponse`; `db/migration/V13__system_setting_changes.sql`; tests: `SettingKeyTest`, `SettingsServiceTest`, `AdminSettingsApiIT`), **uno borrado** (`common/config/AdminQueueProperties.java`, cuyo único valor se mudó), 12 nuevos en `frontend/` (`features/settings/`: `types.ts`, `schemas.ts`, `settingErrors.ts`, `index.ts`, `api/settingsApi.ts` + tres hooks, `components/SettingValueDialog` + test, `components/SettingHistory`; `hooks/useClientLimits.ts`; `config/limits.ts`; `routes/admin/AdminSettingsPage.tsx` + test; `e2e/admin-settings.spec.ts`), **uno borrado** (`config/adminQueue.ts`, reemplazado por `config/limits.ts`), y los modificados que el commit de la rebanada lista. **Una migración**, `V13`, y `modelo-datos.md` actualizada en el mismo commit.
+
+**`TestDataService` se tocó por infraestructura de pruebas**, igual que en F3.1 y F3.4 y por la misma razón: las tablas nuevas necesitan su borrado o la limpieza del e2e responde `500`.
 
 ## 5. Lo que F3 explícitamente NO construye
 

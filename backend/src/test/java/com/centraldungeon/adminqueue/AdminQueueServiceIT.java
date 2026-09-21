@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.centraldungeon.adminqueue.dto.AdminQueueItemResponse;
 import com.centraldungeon.approvals.ApprovalRequestRepository;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.approvals.ApprovalRequestType;
 import com.centraldungeon.approvals.ApprovalService;
 import com.centraldungeon.approvals.ApprovalStatus;
-import com.centraldungeon.common.config.AdminQueueProperties;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
@@ -102,7 +102,7 @@ class AdminQueueServiceIT {
     private AdminQueueClaimReleaseService claimReleaseService;
 
     @Autowired
-    private AdminQueueProperties adminQueueProperties;
+    private SettingsService settingsService;
 
     @Autowired
     private ApprovalService approvalService;
@@ -404,15 +404,19 @@ class AdminQueueServiceIT {
     // ---------------------------------------------------------------- the job, against rows
 
     /**
-     * <b>The timeout comes from {@code application.yml} and the job uses it.</b> The binding had
-     * never been exercised: a {@code @ConfigurationProperties} record that is not on
-     * {@code @EnableConfigurationProperties} fails at injection, and one whose prefix is misspelled
-     * silently keeps its default. Both are invisible until a job runs in a real context.
+     * <b>The timeout comes from {@code system_settings} and the job uses it.</b>
+     *
+     * <p>It used to assert that {@code app.admin-queue.claim-timeout} bound from the yaml, and F3.5
+     * moved the value out of that file (#141). The thing worth testing did not change: whether the
+     * job reads the number from where the platform actually keeps it. With nothing overridden, that
+     * is {@code SettingKey}'s default, which is #100's fifteen minutes - and with the table empty,
+     * this also proves the "no row means the shipped default" contract holds against real MySQL and
+     * not only against a mock.
      */
     @Test
-    @DisplayName("app.admin-queue.claim-timeout binds from application.yml")
-    void theTimeoutIsBoundFromTheYaml() {
-        assertThat(adminQueueProperties.claimTimeout()).isEqualTo(Duration.ofMinutes(15));
+    @DisplayName("the claim timeout comes from system_settings, defaulting to the fifteen minutes of #100")
+    void theTimeoutComesFromTheSettings() {
+        assertThat(settingsService.claimTimeout()).isEqualTo(Duration.ofMinutes(15));
     }
 
     /**

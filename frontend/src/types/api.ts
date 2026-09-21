@@ -61,3 +61,22 @@ export class ApiError extends Error {
     this.problem = problem
   }
 }
+
+/**
+ * The platform limits the interface mirrors, so a rule is stated before it is broken (principio 2 de
+ * frontend-diseno.md §1). Mirror of `ClientLimitsResponse`.
+ *
+ * **Here and not in `features/settings`** (regla dura 16): `features/files` is what reads it and
+ * `features/settings` is what edits it, so the shared shape cannot live in either. It is not a domain
+ * entity at all — it is platform configuration, which is what this layer is for.
+ *
+ * **Never the authority.** The server applies the same cap on upload and answers `FILE_TOO_LARGE`
+ * with the real number (#197), and the release job is what actually hands a stale reservation back.
+ * These only make the rule sayable before it is met.
+ */
+export interface ClientLimits {
+  /** The per-file cap in bytes, so no client has to know which unit the setting is stored in. */
+  maxFileSizeBytes: number
+  /** How long a reservation of the shared admin tray lasts, in minutes (#100). */
+  claimTimeoutMinutes: number
+}

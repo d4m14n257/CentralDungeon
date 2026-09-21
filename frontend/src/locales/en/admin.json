@@ -6,7 +6,8 @@
     "catalogs": "Catalogs",
     "files": "Files",
     "users": "Users",
-    "requests": "Requests"
+    "requests": "Requests",
+    "settings": "Settings"
   },
   "queue": {
     "title": "Tray",
@@ -307,6 +308,66 @@
     "errors": {
       "SCHEDULE_CONFLICT": "It cannot be resumed: the agenda clashes with “{{otherTableName}}”, which this table’s master is already committed to.",
       "generic": "We could not complete the action. Try again."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "The values the community adjusts without a deploy. Each one shows what is in use, what it ships as, and the range it can move inside.",
+    "helpLink": "What are these values?",
+    "categories": {
+      "Business": "Business parameters",
+      "Limits": "Limits and quotas"
+    },
+    "keys": {
+      "profiles.visibility_window_days": {
+        "label": "Profile visibility window",
+        "description": "How long after a table finishes or is cancelled its members can still see each other's profile. While the table is paused the clock does not run.",
+        "unit": "days",
+        "retroactiveWarning": "Careful: this change does not wait. Lowering it takes visibility away from people who have it right now, and raising it hands it back to people who had already lost it."
+      },
+      "files.max_file_size_mb": {
+        "label": "Per-file size cap",
+        "description": "The most a file uploaded to the platform may weigh. Files already uploaded are left alone.",
+        "unit": "MB"
+      },
+      "tables.max_players_cap": {
+        "label": "Maximum table capacity",
+        "description": "The highest player cap a master may give a table. It does not shrink tables that already exist: it applies the next time somebody creates or edits one.",
+        "unit": "players"
+      },
+      "admin_queue.claim_timeout_minutes": {
+        "label": "Tray reservation timeout",
+        "description": "How long an admin keeps an item of the shared tray reserved before it becomes available to everybody else again.",
+        "unit": "minutes"
+      }
+    },
+    "valueWithUnit": "{{value}} {{unit}}",
+    "defaultHint": "Default: {{value}}",
+    "rangeHint": "Between {{min}} and {{max}}",
+    "setBy": "Set by {{name}} on {{when}}",
+    "neverChanged": "Never changed: still on the shipped default.",
+    "change": "Change",
+    "history": "History",
+    "save": "Save the change",
+    "valueLabel": "New value ({{unit}})",
+    "justificationLabel": "Reason",
+    "justificationPlaceholder": "Why this value is being changed",
+    "justificationHint": "Required: a settings change sends no notification and shows up nowhere, so the reason is the whole record it leaves behind.",
+    "updateSuccess": "“{{name}}” was updated.",
+    "changeHelpHint": "What does changing this affect?",
+    "changeHelpLink": "Read more",
+    "emptyTitle": "Nothing is configurable",
+    "emptyDescription": "The platform published no adjustable values. If that is not what you expected, tell whoever maintains the system.",
+    "historyDialogTitle": "History of “{{name}}”",
+    "historyDialogDescription": "Every change, with who made it and why.",
+    "historyEmptyTitle": "No changes",
+    "historyEmptyDescription": "Nobody has touched this value yet: it is still on the shipped default.",
+    "historyFirstChange": "Set to {{to}}, over the shipped default",
+    "historyChanged": "Went from {{from}} to {{to}}",
+    "historyChangedBy": "By {{name}}",
+    "errors": {
+      "SETTING_OUT_OF_RANGE": "That value is outside what this setting allows: it has to be between {{minValue}} and {{maxValue}}.",
+      "generic": "We could not save the change. Try again."
     }
   }
 }

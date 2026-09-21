@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.util.unit.DataSize;
 
 /**
  * The purge of #75, which is the lever that let the per-user quota of #61 be repealed: a quota limits
@@ -33,8 +32,8 @@ class FileRetentionServiceTest {
     @Mock
     private StoredFileRepository fileRepository;
 
-    private final StorageProperties storageProperties = new StorageProperties(
-            "target/test-storage", DataSize.ofMegabytes(2), Set.of("application/pdf"), Duration.ofDays(90));
+    private final StorageProperties storageProperties =
+            new StorageProperties("target/test-storage", Set.of("application/pdf"), Duration.ofDays(90));
 
     private FileRetentionService retentionService() {
         return new FileRetentionService(fileRepository, storageProperties);

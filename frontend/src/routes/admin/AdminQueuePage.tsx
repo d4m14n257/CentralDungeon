@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
-import { CLAIM_TIMEOUT_MINUTES } from '@/config/adminQueue'
+import { useClientLimits } from '@/hooks/useClientLimits'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
@@ -117,6 +117,9 @@ function resolutionErrorKey(error: unknown): string | null {
  */
 export function AdminQueuePage() {
   const { t, i18n } = useTranslation('admin')
+  // The reservation's timeout is a setting since F3.5 (#141): the hint says the number the
+  // platform is actually using, not one written into the copy.
+  const { claimTimeoutMinutes } = useClientLimits()
   const [searchParams, setSearchParams] = useSearchParams()
   const confirm = useConfirm()
 
@@ -358,7 +361,7 @@ export function AdminQueuePage() {
         }
         help={
           <p className="text-fg-subtle text-xs">
-            {t('queue.claimHelpHint', { minutes: CLAIM_TIMEOUT_MINUTES })}{' '}
+            {t('queue.claimHelpHint', { minutes: claimTimeoutMinutes })}{' '}
             <HelpLink section="admins.claiming">{t('queue.claimHelpLink')}</HelpLink>
           </p>
         }

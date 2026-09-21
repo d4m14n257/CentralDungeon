@@ -33,7 +33,9 @@
     "format": {
       "email": "Eso no parece un correo",
       "url": "Eso no parece una dirección web"
-    }
+    },
+    "wholeNumber": "Escribí un número entero, sin comas ni puntos",
+    "between": "Tiene que estar entre {{minValue}} y {{maxValue}}"
   },
   "notFound": {
     "backHome": "Volver al inicio"

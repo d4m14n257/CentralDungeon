@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.catalogs.TableCatalogService;
@@ -22,6 +23,8 @@ import com.centraldungeon.files.TableFileService;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.settings.SettingKey;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.tables.dto.AssignMastersRequest;
 import com.centraldungeon.tables.dto.AttendanceSummaryResponse;
 import com.centraldungeon.tables.dto.ChangeTableStatusRequest;
@@ -103,14 +106,23 @@ class GameTableServiceTest {
     @Mock
     private GameTableSearchResolver gameTableSearchResolver;
 
+    /**
+     * The platform-wide player cap, new in F3.5 (#24, #141). Stubbed generously on purpose: these
+     * tests are about creating and editing tables, not about the cap, and its own cases live in
+     * {@code SettingsServiceTest} and in the two written below.
+     */
+    @Mock
+    private SettingsService settingsService;
+
     private GameTableService gameTableService;
 
     @BeforeEach
     void setUp() {
+        lenient().when(settingsService.maxPlayersCap()).thenReturn(SettingKey.TABLES_MAX_PLAYERS_CAP.defaultValue());
         gameTableService = new GameTableService(
                 gameTableRepository, tableTypeRepository, tableRegistrationRepository, tableStatusChangeRepository, masterService,
                 gameTableMapper, userService, tableScheduleService, scheduleConflictService, tableCatalogService,
-                tableSessionService, tableFileService, new RichTextSanitizer(), notificationService,
+                tableSessionService, tableFileService, new RichTextSanitizer(), settingsService, notificationService,
                 gameTableSearchResolver,
                 // The real one over the same mocked repositories: every read of a concrete table in
                 // these tests goes through it, and a mock would hide whether it does (#25, #29).
@@ -210,6 +222,54 @@ class GameTableServiceTest {
         return new CreateGameTableRequest(
                 "Test", null, null, null, tableTypeId, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, null,
                 List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
+    }
+
+    private static CreateGameTableRequest requestAskingFor(@Nullable Integer maxPlayers) {
+        return new CreateGameTableRequest(
+                "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null,
+                maxPlayers, List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
+    }
+
+    /**
+     * <b>The platform-wide player cap</b> (#24, #141), which did not exist before F3.5: {@code
+     * maxPlayers} was only {@code @Positive}, so a table could be created for two billion people. The
+     * error carries the cap because "too many" without the number tells nobody what to type (#197).
+     */
+    @Test
+    @DisplayName("a table above the platform player cap is not created (#141)")
+    void rejectsCreationAboveThePlayerCap() {
+        CreateGameTableRequest request = requestAskingFor(500);
+
+        assertThatThrownBy(() -> gameTableService.create(request, "creator-1"))
+                .isInstanceOfSatisfying(InvalidRequestException.class, error -> {
+                    assertThat(error.getErrorCode()).isEqualTo("MAX_PLAYERS_ABOVE_CAP");
+                    assertThat(error.getErrorParams()).containsEntry("maxPlayersCap", "12");
+                });
+        // The check runs before the save, like every other draft rule here.
+        verify(gameTableRepository, never()).save(any(GameTable.class));
+    }
+
+    /**
+     * And a table with no cap at all stays legal: {@code null} means «sin tope» (#24), which is the
+     * absence of a number rather than a number above the ceiling.
+     */
+    @Test
+    @DisplayName("a table with no player cap is unaffected by the platform cap (#24)")
+    void acceptsCreationWithoutAPlayerCap() {
+        User creator = persistedUser("creator-1");
+        when(userService.getById("creator-1")).thenReturn(creator);
+        when(gameTableRepository.save(any(GameTable.class))).thenAnswer(invocation -> {
+            GameTable table = invocation.getArgument(0);
+            ReflectionTestUtils.setField(table, "id", "table-uncapped");
+            return table;
+        });
+        when(masterService.findByGameTable("table-uncapped")).thenReturn(List.of());
+        when(anyDetailMapping())
+                .thenReturn(new GameTableDetailResponse(
+                        "table-uncapped", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+
+        assertThat(gameTableService.create(requestAskingFor(null), "creator-1").id()).isEqualTo("table-uncapped");
     }
 
     @Test

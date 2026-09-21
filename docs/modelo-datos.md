@@ -41,6 +41,7 @@ El detalle y el razonamiento están en `decisiones.md`. Resumen de lo estructura
 | Aprobaciones | `requests` se absorbe en **`approval_requests`**, un solo mecanismo para todos los pedidos con aprobación. **La tabla ya estaba en `V1__baseline.sql`**: F3.2 le puso el código, no el DDL, así que no hay migración propia y no puede haberla (regla dura 8). Nace con **tres** tipos —`MasterGrant`, `TableOpen`, `General`—, no con los cinco que enumera #90: `TablePause` y `PlayerBan` los agrega F3.4 **con su productor**, porque la columna es `VARCHAR(32)` y sumar un flujo es sumar un valor al enum, sin `ALTER TABLE` (#78). Declararlos antes solo crearía dos valores que nada emite, que es el huérfano que F1.7 le reprochó a `PauseRequested` | #42, #78, #90 |
 | Moderación de mesa | Tabla nueva `table_status_changes` con la justificación de cada transición | #32 |
 | Moderación de personas | Tablas nuevas `user_role_changes` y `user_status_changes` (`V11`, F3.1), calcadas de `table_status_changes`, con **motivo obligatorio**. `audit_logs` es F6 y `approval_requests` es F3.2: hasta entonces cada entidad guarda su propio rastro en vez de inventar una tabla genérica que F6 va a reemplazar | #84, #169 |
+| Configuración | `system_settings` **ya estaba en `V1__baseline.sql`** y no tenía código: F3.5 le puso el mapeo, no el DDL. **Guarda solo overrides** —no hay fila para un ajuste que nadie tocó y no hay seed—, y el catálogo con los valores por defecto, los rangos y la marca de retroactivo vive en el `enum` `SettingKey` (#263). Tabla nueva `system_setting_changes` (`V13`, F3.5), del mismo molde que las de abajo: `setting_key` **sin FK**, porque apunta a una constante del código y porque la fila que nombra puede legítimamente no existir todavía | #141, #263 |
 | Moderación de mesa, por persona | Tabla nueva `registration_status_changes` (`V12`, F3.4), del mismo molde: el **veto y su levantamiento**, con motivo obligatorio. Lo que se guarda es el cambio y no el estado — una columna `blocked_reason` no puede contar que se levantó, ni cuántas veces | #29, #39 |
 | Feedback del sistema | Tablas nuevas `system_feedback` y `feedback_quotas`. El tipo `General` sale de `comments` | #91, #93, #94 |
 | Bandeja de admins | `claimed_by` / `claimed_at` en `approval_requests`, `comments`, `system_feedback` y `game_tables` | #100 |
@@ -61,6 +62,8 @@ erDiagram
     users ||--o{ user_role_changes : "otorga o quita"
     users ||--o{ user_status_changes : "historial de cuenta"
     users ||--o{ user_status_changes : "bloquea o desbloquea"
+    users ||--o{ system_settings : "configuró por última vez"
+    users ||--o{ system_setting_changes : "cambió un ajuste"
 
     table_types  ||--o{ game_tables : "clasifica"
     game_tables  ||--o{ masters : "dirigida por"
@@ -208,6 +211,29 @@ CREATE TABLE user_status_changes (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX ix_usc_user ON user_status_changes (user_id, created_at);
+
+-- V13 (F3.5): cada cambio de un ajuste de `system_settings`, con su motivo (#141).
+-- `system_settings` ya trae `updated_by`/`updated_at` y contestan otra pregunta: quién lo tiene así
+-- *ahora*. Un par de columnas que la próxima edición pisa no puede contar que un límite se subió el
+-- martes y se volvió a bajar el miércoles, que es justo el patrón que interesa ver.
+-- `setting_key` NO tiene FK, y esto no es #78 volviendo: apunta a una constante del enum `SettingKey`,
+-- resuelta en compilación y validada antes de escribir nada, así que no puede quedar colgada. La
+-- restricción falta por lo contrario: `system_settings` guarda solo overrides, así que el primer
+-- cambio de un ajuste registra legítimamente una clave que todavía no tiene fila (#263).
+-- `from_value` NULL significa "venía con el valor de fábrica", que es distinto de "ya era ese número".
+CREATE TABLE system_setting_changes (
+    id            VARCHAR(64)  NOT NULL,
+    setting_key   VARCHAR(64)  NOT NULL,
+    from_value    VARCHAR(512) NULL,       -- NULL = seguía con el valor de fábrica
+    to_value      VARCHAR(512) NOT NULL,
+    changed_by    VARCHAR(64)  NOT NULL,
+    justification LONGTEXT     NOT NULL,   -- siempre obligatoria (#141)
+    created_at    DATETIME     NOT NULL,
+    CONSTRAINT pk_system_setting_changes PRIMARY KEY (id),
+    CONSTRAINT fk_ssc_changed_by FOREIGN KEY (changed_by) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX ix_ssc_setting ON system_setting_changes (setting_key, created_at);
 
 -- ---------------------------------------------------------------- game table
 
@@ -855,6 +881,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 
 | Regla | Dónde | Ref. |
 |---|---|---|
+| **`max_players` tiene un tope de plataforma** desde F3.5: `tables.max_players_cap` en `system_settings`, arranca en 12, y por encima es `400 MAX_PLAYERS_ABOVE_CAP` con el tope en los parámetros. Antes no había ninguno —solo `@Positive`—, así que un ajuste sobre un límite inexistente no habría hecho nada. Gatea **lo que se escribe**, nunca lo guardado: bajarlo no achica una mesa existente, y lo que se rechaza es su próxima edición. Se aplica en un solo punto por el que pasan las tres puertas (`create`, `createUnassigned` y `update`) | `GameTableService` | #24, #141, #265 |
 | Máquina de estados: `Draft` → `Preparation` (la envía el master) o `Unassigned` (la crea un admin) → `ChangesRequested` → `Opened` → `InProgress` → `PauseRequested` → `Pause` → `Finished`/`Canceled`. Toda transición no declarada devuelve `409` | `GameTableService` | #27, #32, #72, #245 |
 | Una mesa creada por un admin nace `Unassigned` y, al asignarle masters, pasa directo a `Opened` sin revisión | `GameTableService` | #72 |
 | Exactamente un `Primary` vivo por mesa | `MasterService` | #71, #73 |
@@ -973,7 +1000,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | El perfil de un master es visible para cualquiera que mire su mesa | `UserService` | #41 |
 | El perfil de un jugador se abre para el master desde que recibe su postulación | `UserService` | #41 |
 | Los jugadores de una mesa ven los perfiles de sus compañeros | `UserService` | #47 |
-| La visibilidad caduca a las **dos semanas** de `closed_at`. En `Pause` el reloj no corre | `UserService` | #44 |
+| La visibilidad caduca a los N días de `closed_at`, con N en `system_settings` (`profiles.visibility_window_days`, arranca en 14). En `Pause` el reloj no corre. **El cambio es retroactivo y no hay recálculo**: la regla se evalúa en cada lectura, así que bajarlo le quita la visibilidad a quien la tiene en ese instante y subirlo se la devuelve a quien ya la había perdido — por eso la pantalla de configuración avisa antes de guardar | `ProfileVisibilityService` · `SettingsService` | #44, #141 |
 | El admin no tiene restricciones de visibilidad, salvo la autoría de los comentarios | `UserService` | #45 |
 
 ### Catálogos
@@ -1027,7 +1054,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 | Devolver lo propio es `204`; devolver algo sin reserva también (el estado pedido ya se cumple); devolver lo de otro es `409 ITEM_ALREADY_CLAIMED`. Devolver no le pregunta al estado del ítem: es el deshacer | `AdminQueueService` | #100 |
 | **Resolver un ítem que tiene otro admin se rechaza** con `409 ITEM_ALREADY_CLAIMED`; uno que no tiene nadie se resuelve, y resolverlo **es una reserva implícita**. Los cuatro caminos: `ApprovalService.approve` / `reject` y `GameTableService.approve` / `requestChanges`, con la regla en un solo lugar porque cuatro copias es cómo una se queda atrás. **No es «exige tenerlo reservado»**: ver la fila de abajo | `AdminQueueClaimRule` | #100 |
 | **Por qué la regla no es más estricta.** Esta tabla decía «resolver un ítem exige tenerlo reservado» y se implementó así en F3.3, y dejó `/admin/requests` inutilizable: esa pantalla —que #176 le dio a los pedidos— trae Aprobar y Rechazar y **ninguna forma de reservar**, así que toda resolución respondía `409` por una reserva que no podía ofrecer. Chocaron dos diseños: #176 le da a los pedidos pantalla propia, y esta sección asumía que la bandeja era el único lugar donde algo se resuelve. Lo que #100 compra es «si lo toma uno, baja para todos», y eso solo pide rechazar lo que tiene **otro**. **La consistencia nunca dependió de esto**: dos admins resolviendo la misma fila sin reservar se serializan con el lock pesimista y el segundo recibe «ya estaba resuelto» (#256) | `AdminQueueClaimRule` | #100, #176, #256 |
-| Un job libera cada minuto las reservas con más de N minutos (`app.admin-queue.claim-timeout`, arranca en `PT15M`; **F3.5 lo muda a `system_settings`**). Solo toca ítems que siguen esperando: uno ya resuelto conserva su `claimed_by` como registro | `AdminQueueClaimReleaseService` | #100, #141 |
+| Un job libera cada minuto las reservas con más de N minutos. **Desde F3.5 el número sale de `system_settings`** (`admin_queue.claim_timeout_minutes`, arranca en 15 y se mueve entre 1 y 1440); ya no es `app.admin-queue.claim-timeout`, que se borró. Se lee en cada pasada, nunca al arrancar. Solo toca ítems que siguen esperando: uno ya resuelto conserva su `claimed_by` como registro | `AdminQueueClaimReleaseService` · `SettingsService` | #100, #141 |
 | Todo cambio en la bandeja emite `admin-queue.changed` por WebSocket a los suscriptores con rol `Admin` u `Owner`. **Hasta F6 lo reemplaza un `refetchInterval` de 15s en el frontend** | `NotificationService` | #101 |
 
 ### Notificaciones
@@ -1040,6 +1067,20 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 | El mensaje que viaja es una **señal de invalidación**, no el contenido: el cliente refetchea con TanStack Query | `NotificationService` | #101 |
 | La suscripción a `/topic/admin-queue` se rechaza si el usuario no tiene `Admin` u `Owner` | `WebSocketConfig` | #101 |
 | Una notificación de comentario recibido **nunca** nombra a su autor | `NotificationService` | #43 |
+
+### Configuración
+
+| Regla | Dónde | Ref. |
+|---|---|---|
+| **El catálogo de ajustes es código, no datos**: `SettingKey` fija la clave, la categoría, el valor por defecto, el rango y si el cambio es retroactivo. `system_settings` guarda **solo overrides**, así que una base recién vaciada y una recién creada se comportan igual y cambiar un default no es una migración | `SettingKey` | #141, #263 |
+| **Lo dinámico no cruza la frontera HTTP** (regla dura 3): el almacenamiento es genérico y el service expone **accesores tipados** —`maxFileSizeBytes()`, `maxPlayersCap()`, `claimTimeout()`, `profileVisibilityWindowDays()`—, cada uno en la unidad que el llamador necesita. Nadie afuera sabe que el número está guardado en megabytes, como texto, en una fila que puede no existir | `SettingsService` | #141 |
+| Cada ajuste se valida contra **su propio rango** en el service y no con un `@Max` en el `record`: el límite pertenece a la clave, y la clave viaja en la URL. Fuera de rango es `400 SETTING_OUT_OF_RANGE` **con los dos números** en los parámetros | `SettingsService` | #141, #197 |
+| **Cada cambio deja su fila** en `system_setting_changes`, con motivo obligatorio. Un cambio de configuración no emite notificación ni se ve en ningún lado: el motivo es todo el registro que queda | `SettingsService` | #141 |
+| Los valores se cachean en Caffeine (`systemSettings`) y **la caché se limpia en `afterCommit`**, nunca dentro de la transacción: limpiarla antes abre la ventana en que otro request la repuebla con el valor viejo y lo deja vivo todo el TTL. Es la lección de #128 aplicada de nuevo | `SettingsService` | #128, #141 |
+| Una fila con un valor que no es número **cae al default en vez de tirar**: estos accesores están en el camino caliente —cada subida, cada lectura de perfil— y una fila editada a mano no puede voltear esos endpoints | `SettingsService` | #141 |
+| El techo de `files.max_file_size_mb` tiene que quedar **estrictamente por debajo** de `spring.servlet.multipart.max-file-size`, o el contenedor rechaza la subida antes de que la aplicación pueda explicarla (#197). La aplicación **no arranca** si dejan de estar en ese orden | `SettingsService` | #141, #197 |
+| **Ningún secreto vive acá**: el HMAC de #94 y las credenciales siguen en el entorno | — | #141 |
+| **Editar la configuración es una capacidad que `Admin` y `Owner` comparten**, como toda la superficie de administración de F1–F3 | `AdminSettingsController` | #169 |
 
 ### Auditoría
 

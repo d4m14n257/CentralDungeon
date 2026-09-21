@@ -5,6 +5,16 @@ import { describe, expect, it, vi } from 'vitest'
 import '@/providers/i18n'
 import { FileDropzone } from './FileDropzone'
 
+/**
+ * The cap is a setting since F3.5 (#141), so the zone asks the server for it. Mocked to the shipped
+ * default rather than wrapped in a `QueryClientProvider`: what these cases are about is the rule the
+ * dropzone applies, not where the number came from, and every assertion below is the same assertion
+ * against the same two megabytes it always was.
+ */
+vi.mock('@/hooks/useClientLimits', () => ({
+  useClientLimits: () => ({ maxFileSizeBytes: 2 * 1024 * 1024, claimTimeoutMinutes: 15 }),
+}))
+
 /** The input is `sr-only`, not absent: it is what makes the zone reachable by keyboard. */
 function fileInput(): HTMLInputElement {
   const input = document.querySelector('input[type="file"]')

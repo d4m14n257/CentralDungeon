@@ -222,5 +222,23 @@ export const queryKeys = {
   },
   system: {
     health: () => ['system', 'health'] as const,
+    /**
+     * The platform limits every client mirrors (F3.5, #141). Under `system` and not under a domain:
+     * the answer is about the platform, is the same for everybody, and is read by whichever screen
+     * is about to state a rule — which is why it is cached for an hour and invalidated by the one
+     * screen that can move it.
+     */
+    limits: () => ['system', 'limits'] as const,
+  },
+  /**
+   * The editable configuration of #141. Its own branch and not a corner of `system`: `system` holds
+   * answers anybody reads, and this is the administrative view — what is configured, by whom, and
+   * when — which only Admin and Owner can ask for.
+   */
+  settings: {
+    /** Every setting, override or default. What editing one invalidates. */
+    list: () => ['settings', 'list'] as const,
+    /** What was done to one setting, and why. Invalidated by the edit that adds a row to it. */
+    history: (key: string) => ['settings', 'history', key] as const,
   },
 } as const

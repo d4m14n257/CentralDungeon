@@ -31,6 +31,14 @@ function translated(key: string, values?: Record<string, unknown>): string | und
 export function installZodErrorMap(): void {
   z.config({
     customError: (issue) => {
+      // A `.refine()` that names its own key, which is the only way a rule zod has no code for can
+      // still speak the reader's language (#198). It came in with F3.5: `/admin/settings` validates
+      // against a range that is different for every setting, so the message has to carry the two
+      // numbers - and `validation.invalid` would tell somebody their input is wrong without saying
+      // what would be right. Everything in `params` is handed to `t()` as interpolation values.
+      if (issue.code === 'custom' && typeof issue.params?.['i18n'] === 'string') {
+        return translated(issue.params['i18n'], issue.params)
+      }
       switch (issue.code) {
         case 'invalid_type':
           // A required field left empty arrives here when the value is missing altogether.

@@ -134,6 +134,13 @@ public class TestDataService {
         // which is the same reason nothing else in the database will complain about it either.
         delete("delete from ApprovalRequest ar where ar.requestedBy.id in (" + E2E_USERS + ") or ar.claimedBy.id in ("
                 + E2E_USERS + ") or ar.resolvedBy.id in (" + E2E_USERS + ")");
+        // And the ninth, with F3.5's settings. Both of them point at `users` - `system_settings` once
+        // through `updated_by` and `system_setting_changes` once through `changed_by` - so an e2e
+        // admin who edits a limit leaves two rows the delete below cannot get past. The change goes
+        // first: nothing links the two tables, but the order keeps the pair reading the way every
+        // other audit trail here does, history before the thing it is about (#141).
+        delete("delete from SystemSettingChange ssc where ssc.changedBy.id in (" + E2E_USERS + ")");
+        delete("delete from SystemSetting ss where ss.updatedBy.id in (" + E2E_USERS + ")");
         delete("delete from UserRole ur where ur.user.id in (" + E2E_USERS + ")");
         int users = delete("delete from User u2 where u2.discordId like :discordId");
 

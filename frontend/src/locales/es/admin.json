@@ -6,7 +6,8 @@
     "catalogs": "Catálogos",
     "files": "Archivos",
     "users": "Usuarios",
-    "requests": "Pedidos"
+    "requests": "Pedidos",
+    "settings": "Configuración"
   },
   "queue": {
     "title": "Bandeja",
@@ -307,6 +308,66 @@
     "errors": {
       "SCHEDULE_CONFLICT": "No se puede reanudar: la agenda se pisa con «{{otherTableName}}», donde el master de esta mesa ya está comprometido.",
       "generic": "No pudimos completar la acción. Probá de nuevo."
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Los valores que la comunidad ajusta sin un despliegue. Cada uno muestra lo que está en uso, con cuánto viene de fábrica y entre qué límites se puede mover.",
+    "helpLink": "¿Qué son estos valores?",
+    "categories": {
+      "Business": "Parámetros de negocio",
+      "Limits": "Límites y cuotas"
+    },
+    "keys": {
+      "profiles.visibility_window_days": {
+        "label": "Caducidad de la visibilidad de perfiles",
+        "description": "Cuánto tiempo, después de que una mesa termina o se cancela, sus integrantes se siguen viendo el perfil entre ellos. Mientras la mesa está en pausa el reloj no corre.",
+        "unit": "días",
+        "retroactiveWarning": "Ojo: este cambio no espera. Bajarlo le saca la visibilidad a gente que la tiene en este momento, y subirlo se la devuelve a gente que ya la había perdido."
+      },
+      "files.max_file_size_mb": {
+        "label": "Tope por archivo",
+        "description": "Lo más grande que puede pesar un archivo subido a la plataforma. Los archivos que ya están subidos no se tocan.",
+        "unit": "MB"
+      },
+      "tables.max_players_cap": {
+        "label": "Cupo máximo por mesa",
+        "description": "El cupo más alto que un master puede ponerle a una mesa. No achica las mesas que ya existen: se aplica la próxima vez que alguien crea o edita una.",
+        "unit": "jugadores"
+      },
+      "admin_queue.claim_timeout_minutes": {
+        "label": "Tiempo de reserva en la bandeja",
+        "description": "Cuánto tiempo un admin conserva un ítem reservado de la bandeja antes de que vuelva a estar disponible para el resto.",
+        "unit": "minutos"
+      }
+    },
+    "valueWithUnit": "{{value}} {{unit}}",
+    "defaultHint": "Por defecto: {{value}}",
+    "rangeHint": "Entre {{min}} y {{max}}",
+    "setBy": "Lo cambió {{name}} el {{when}}",
+    "neverChanged": "Nunca se cambió: sigue con el valor de fábrica.",
+    "change": "Cambiar",
+    "history": "Historial",
+    "save": "Guardar el cambio",
+    "valueLabel": "Nuevo valor ({{unit}})",
+    "justificationLabel": "Motivo",
+    "justificationPlaceholder": "Por qué se cambia este valor",
+    "justificationHint": "Es obligatorio: un cambio de configuración no genera ninguna notificación ni queda a la vista en ningún lado, así que el motivo es todo el registro que queda.",
+    "updateSuccess": "Se actualizó «{{name}}».",
+    "changeHelpHint": "¿A qué afecta cambiar esto?",
+    "changeHelpLink": "Leer más",
+    "emptyTitle": "No hay nada configurable",
+    "emptyDescription": "La plataforma no publicó ningún valor ajustable. Si esto no es lo esperado, avisale a quien mantiene el sistema.",
+    "historyDialogTitle": "Historial de «{{name}}»",
+    "historyDialogDescription": "Cada cambio, con quién lo hizo y por qué.",
+    "historyEmptyTitle": "Sin cambios",
+    "historyEmptyDescription": "Nadie tocó este valor todavía: sigue con el de fábrica.",
+    "historyFirstChange": "Se fijó en {{to}}, sobre el valor de fábrica",
+    "historyChanged": "Pasó de {{from}} a {{to}}",
+    "historyChangedBy": "Lo hizo {{name}}",
+    "errors": {
+      "SETTING_OUT_OF_RANGE": "Ese valor está fuera de lo permitido para este ajuste: tiene que estar entre {{minValue}} y {{maxValue}}.",
+      "generic": "No pudimos guardar el cambio. Probá de nuevo."
     }
   }
 }

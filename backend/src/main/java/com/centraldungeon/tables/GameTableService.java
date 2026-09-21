@@ -20,6 +20,7 @@ import com.centraldungeon.registrations.TablePlayerCount;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.tables.dto.AddMasterRequest;
 import com.centraldungeon.tables.dto.AdminTableSummaryResponse;
 import com.centraldungeon.tables.dto.AssignMastersRequest;
@@ -144,6 +145,18 @@ public class GameTableService {
     private final TableSessionService tableSessionService;
     private final TableFileService tableFileService;
     private final RichTextSanitizer richTextSanitizer;
+
+    /**
+     * Where the largest allowed {@code max_players} comes from: {@code tables.max_players_cap} in
+     * {@code system_settings} (#24, #141).
+     *
+     * <p><b>Nothing capped it before F3.5.</b> {@code maxPlayers} was only {@code @Positive}, so a
+     * table could be created for two billion people; #141 names «cupo máximo» among the values the
+     * community adjusts without a deploy, and a limit that does not exist cannot be adjusted. The
+     * cap gates what is <em>written</em> and never what is already stored - lowering it does not
+     * shrink an existing table, and the next edit of a table already above it is what gets refused.
+     */
+    private final SettingsService settingsService;
     private final NotificationService notificationService;
     private final GameTableSearchResolver gameTableSearchResolver;
     private final TableVisibilityService tableVisibilityService;
@@ -164,6 +177,7 @@ public class GameTableService {
      * @param tableFileService           the files the table shares, which ride along with the detail
      *                                   for the same reason the calendar does (#29, #79)
      * @param richTextSanitizer          cleans the rich text on the way in and on the way out (#62)
+     * @param settingsService            the largest allowed player cap, editable without a deploy (#141)
      * @param notificationService        tells the masters how the review ended (#244)
      * @param gameTableSearchResolver    expands the explorer's catalog criteria into synonym groups
      *                                   before the query is built (#54, #56, #246)
@@ -184,6 +198,7 @@ public class GameTableService {
             TableSessionService tableSessionService,
             TableFileService tableFileService,
             RichTextSanitizer richTextSanitizer,
+            SettingsService settingsService,
             NotificationService notificationService,
             GameTableSearchResolver gameTableSearchResolver,
             TableVisibilityService tableVisibilityService) {
@@ -200,6 +215,7 @@ public class GameTableService {
         this.tableSessionService = tableSessionService;
         this.tableFileService = tableFileService;
         this.richTextSanitizer = richTextSanitizer;
+        this.settingsService = settingsService;
         this.notificationService = notificationService;
         this.gameTableSearchResolver = gameTableSearchResolver;
         this.tableVisibilityService = tableVisibilityService;
@@ -278,7 +294,7 @@ public class GameTableService {
         gameTable.setRequirements(richTextSanitizer.sanitize(request.requirements()));
         gameTable.setStartDate(request.startDate());
         gameTable.setTotalSessions(request.totalSessions());
-        gameTable.setMaxPlayers(request.maxPlayers());
+        gameTable.setMaxPlayers(requireWithinPlayerCap(request.maxPlayers()));
         gameTable.setTableType(resolveTableType(request.tableTypeId()));
 
         applyCatalogs(gameTableId, request.systemIds(), request.tagIds(), request.platformIds());
@@ -1004,9 +1020,39 @@ public class GameTableService {
         gameTable.setRequirements(richTextSanitizer.sanitize(request.requirements()));
         gameTable.setStartDate(request.startDate());
         gameTable.setTotalSessions(request.totalSessions());
-        gameTable.setMaxPlayers(request.maxPlayers());
+        gameTable.setMaxPlayers(requireWithinPlayerCap(request.maxPlayers()));
         gameTable.setTableType(resolveTableType(request.tableTypeId()));
         return gameTable;
+    }
+
+    /**
+     * The platform-wide ceiling on {@code max_players} (#24, #141).
+     *
+     * <p>Written here and not as a {@code @Max} on the two request records, for the reason #141 gives
+     * for the whole table: an annotation is a constant, and the number has to be changeable without a
+     * deploy. Both ways in pass through this - {@link #buildTable} covers {@code create} and
+     * {@code createUnassigned}, {@code update} calls it directly - so there is no third door.
+     *
+     * <p>A table with no cap at all stays legal: {@code null} means «sin tope» (#24) and is the
+     * absence of a number, not a number above the ceiling.
+     *
+     * @param maxPlayers what the request asked for, or null for no cap
+     * @return the same value, once it is known to be allowed
+     * @throws InvalidRequestException 400 {@code MAX_PLAYERS_ABOVE_CAP}, carrying the cap, because
+     *                                 "too many" without the number tells nobody what to type (#197)
+     */
+    private @Nullable Integer requireWithinPlayerCap(@Nullable Integer maxPlayers) {
+        if (maxPlayers == null) {
+            return null;
+        }
+        int cap = settingsService.maxPlayersCap();
+        if (maxPlayers > cap) {
+            throw new InvalidRequestException(
+                    "max_players of " + maxPlayers + " is above the platform cap of " + cap,
+                    "MAX_PLAYERS_ABOVE_CAP",
+                    Map.of("maxPlayersCap", String.valueOf(cap)));
+        }
+        return maxPlayers;
     }
 
     /** Resolves the type a draft names, or clears it when the draft names none. */
