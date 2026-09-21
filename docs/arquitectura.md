@@ -931,7 +931,7 @@ Spring Boot, a diferencia de Vite, no lee `.env` de forma nativa: `backend/pom.x
 
 **Perfil `prod`** (`application-prod.yml`): la misma variable `${DB_URL}` que ya usa `dev` (con su default a `localhost:3306` para no pedir nada en local), pero en `prod` **sin default** — si falta, el arranque falla en vez de conectarse silenciosamente a algo que no es. Mantiene agnóstico si MySQL termina corriendo en la misma instancia o en otro lado, y ambos perfiles comparten el mismo nombre de variable en vez de inventar uno distinto por entorno.
 
-**MySQL en producción**: `docker-compose.prod.yml`, mismo servicio que el de `dev` pero con contraseñas reales por variable de entorno (nunca `centraldungeon`/`centraldungeon`), `restart: always`, y el puerto 3306 pegado a `127.0.0.1` — la app le llega por localhost, nada de afuera lo necesita.
+**MySQL en producción**: **dónde corre no está decidido** — la misma instancia, un servicio administrado, o cualquier otra cosa. Por eso la aplicación no trae un compose de producción: el único `docker-compose.yml` del repo levanta la MySQL **de desarrollo**, con sus credenciales locales, y Docker no se usa para nada más. Lo que sí es fijo, venga de donde venga la base: contraseñas reales por variable de entorno, nunca `centraldungeon`/`centraldungeon`, y el puerto cerrado a todo lo que no la necesite.
 
 **Los secretos reales nunca son un archivo `.env` en el repo.** Un solo `backend/.env.example` documenta **las mismas variables** para los dos casos — `DB_URL` incluida, con default local en `application-dev.yml` y sin default en `application-prod.yml` — así que no hay dos listas que puedan desalinearse. El archivo real de producción vive **en el servidor**, fuera de este directorio de trabajo — por ejemplo `/etc/centraldungeon/prod.env` — y lo entrega el sistema operativo, no `spring-dotenv` (que solo mira `.env` en el directorio del proceso; por eso el archivo real ni se llama igual). Un ejemplo con `systemd`:
 
@@ -944,7 +944,7 @@ Restart=always
 User=centraldungeon
 ```
 
-El mismo `/etc/centraldungeon/prod.env` sirve dos veces: `systemd` lo convierte en variables de entorno reales antes de arrancar el jar, y `docker compose --env-file /etc/centraldungeon/prod.env -f docker-compose.prod.yml up -d` lo usa para las credenciales de MySQL — una sola fuente de verdad por secreto, no dos copias que puedan divergir.
+`/etc/centraldungeon/prod.env` es un ejemplo de cómo un entorno concreto puede entregar esas variables, no la forma en que se decidió desplegar: `systemd` lo convierte en variables de entorno reales antes de arrancar el jar. Otro entorno las entregará a su manera. Lo único que la aplicación exige es que lleguen como variables del sistema y que haya **una sola fuente de verdad por secreto**, no copias que puedan divergir.
 
 Delante de todo esto falta un reverse proxy (TLS, dominio) — no decidido todavía, y fuera del alcance de este repo: es configuración del servidor, no de la aplicación.
 
