@@ -2,9 +2,11 @@
 
 > **Cómo se revisa lo construido.** F4 no entrega producto: entrega **saber qué hay, quién lo alcanza y qué está roto**, con nombre y apellido.
 >
-> Nace de #250. `plan-desarrollo.md` §4 dice qué cubre; acá está el detalle de las cinco rebanadas y el instrumento de cada una.
+> Nace de #250. `plan-desarrollo.md` §4 dice qué cubre; acá está el detalle de las seis rebanadas y el instrumento de cada una.
 >
 > **Documento vivo mientras F4 esté abierta.** Cada rebanada se marca terminada acá con sus hallazgos y su triaje.
+>
+> **No confundir con F3.5**, que es la quinta rebanada de F3 —la configuración editable de #141 y #265— y está cerrada. La fase de revisión entre F3 y F5 es esta, F4.
 
 ## 1. Por qué existe esta fase
 
@@ -23,21 +25,59 @@ Y hay un recurso escaso que es **la atención del cliente**. Gastarla tres veces
 
 ## 2. Con qué empieza
 
-**No empieza en cero.** Cada fase cerró entregando su **deuda de revisión** —el punto 5 nuevo de `plan-desarrollo.md` §6—, así que F4 arranca con una lista escrita en vez de redescubriendo. Lo primero que hace F4.1 es juntar esas tres listas y confirmarlas contra el repositorio.
+**No empieza en cero.** Cada fase cerró entregando su **deuda de revisión** —el punto 5 nuevo de `plan-desarrollo.md` §6—, así que F4 arranca con una lista escrita en vez de redescubriendo. Los documentos de implementación de F1, F2 y F3 se borraron en F4.0 (git conserva la historia); **sus tres listas viven ahora acá**, juntas y ordenadas por la rebanada que las verifica.
 
-Lo que ya se sabe que la espera, relevado hasta hoy:
+### 2.1 La deuda heredada de F1, F2 y F3
 
-| Deuda | De dónde viene |
+| Deuda | De dónde viene | La verifica |
+|---|---|---|
+| Los cuatro estados de cada pantalla de F1, F2 y F3, el viewport de 375 px y el contraste de lo nuevo, verificados y no asumidos | punto 5 viejo de §6, que #250 movió acá; repetido en cada rebanada de F3 | F4.1 |
+| Que cada pantalla sea alcanzable **navegando**. F2 solo lo comprobó para `/player/history` | F1.7, F2 | F4.1 — resuelto como mapa en 21–24 (#267); falta el triaje |
+| El `<Dialog>` del historial de roles en móvil, que según #138 debería ser sheet desde abajo | F3.1 | F4.1 |
+| El badge `Vetado` y el aviso de retroactividad **renderizados** en los dos temas: los tokens están medidos, la pantalla no | F3.4, F3.5 | F4.1 |
+| El inglés renderizado: la paridad de claves está verificada, pero los tests corren en `es` | F3.3, F3.5 | F4.1 |
+| `/admin/requests` pone su default `Pending` en la caja y no en la URL: se aparta de #185, y un criterio tipeado se **suma** al chip | F3.2 | F4.1 — es decisión de producto |
+| `PlayerBan` visible en `/admin/requests` pero no resoluble ahí: que la pantalla **no ofrezca** los botones a un admin no se miró | F3.4 | F4.1 |
+| `tables.max_players_cap` no se enuncia al escribir el cupo: el formulario no lo pide a `useClientLimits` (principio 2, #264) | F3.5 | F4.1 |
+| `pageSize.adminQueue` sirve a dos pantallas y el nombre quedó significando la otra | F3.3 | F4.1 — cosmético |
+| `GET /api/v1/files/{fileId}` —solo se consume `/content`— y los hooks montados en cero lugares (`useCatalogValue`, `useUploadFile`) | F1.7, confirmado por el barrido de F4 | F4.1 |
+| La matriz de visibilidad de perfiles probada con `Player`, `Master` y `Admin`: falta `Owner` y falta el vetado | F2 | F4.2 |
+| Las tres cosas que se llaman «owner» | F3 §7 | F4.2 |
+| La evicción de las cachés `userAuth` y `systemSettings` observada **como caché**: se probó su efecto por HTTP, no la caché | F3.1, F3.5 | F4.2 / F4.4 |
+| Idempotencia de dos revocaciones simultáneas sobre la misma persona: responde `200` y `409`, aceptado a propósito (#252) | F3.1 | F4.2 — confirmar que sigue siendo lo querido |
+| `registration_files` frente al borrado lógico: #247 decidió que la fila sobreviva, y no se barrió qué otras lecturas podrían devolverla | F2 | F4.3 |
+| `TestDataService` se rompió por quinta vez. Corregido, pero la clase de error sigue viva | F1.2–F2.2 | F4.3 |
+| Concurrencia del veto contra MySQL real: hay unitario del `409`, no hay IT de dos masters vetando a la vez | F3.4 | F4.3 |
+| Dos admins editando el mismo ajuste: `last write wins` a propósito, sin IT que lo recorra | F3.5 | F4.3 |
+| El cron real del barrido de huérfanas, el `@Scheduled` de la bandeja en una JVM de producción y el guard de multipart en un arranque real: se prueban los métodos, no el despliegue | F3.2, F3.3, F3.5 | F4.3 |
+| La resolución de grupos de catálogo no está acotada | F2.1 | F4.3 |
+| `REQUEST_ENTITY_GONE` en su caso natural, que empezaba a dispararse en F3.4 | F3.2 | F4.4 |
+| Las siete vías de lectura de un archivo, juntas y contra el actor que no debería pasar | F2.2 | F4.4 |
+| La pausa reagendando al reanudar y el veto de un `Secondary` resuelto por el `Primary`, recorridos en el navegador | F3.4 | F4.5 |
+| El buscador de `/admin/tables`, si F3.3 no lo completó; el e2e de «aprobar `TableOpen` no crea mesa» acotado a `Unassigned` | F2.1, F3.2 | F4.5 |
+| Las dos fuentes de la bandeja que nacen vacías (`comments`, `system_feedback`) | F3.3 | **F5** — anotado a propósito |
+
+### 2.2 Lo que ya encontró el barrido de navegación
+
+Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, `NavLink`, `navigate` y `Navigate`, `config/paths.ts`, `notificationTarget.ts`, los 131 handlers del backend contra sus llamadores y los enums compartidos. **Son hallazgos sin triar**: F4.1 los clasifica en los tres de §3.
+
+| Hallazgo | Evidencia |
 |---|---|
-| Los cuatro estados de cada pantalla de F1, F2 y F3, verificados y no asumidos | punto 5 viejo de §6, que #250 movió acá |
-| El mapa de navegación completo y su inventario de huérfanos | F1.7 lo hizo para F1; falta el resto |
-| `GET /api/v1/files/{fileId}` — solo se consume `/content` | huérfano de F1.7 |
-| El buscador de `/admin/tables`, si F3.3 no lo completó | anotado al construir F2.1 |
-| La resolución de grupos de catálogo no está acotada | anotado en F2.1 |
-| Las dos fuentes de la bandeja que nacen vacías (`comments`, `system_feedback`) | anotado en F3.3 |
-| Las tres cosas que se llaman «owner» | anotado en F3 §7 |
+| **No hay guardia de onboarding.** Solo el callback manda a `/onboarding`; cualquier otra entrada lo salta. Y el JSDoc de `OnboardingPage` afirma que el redirect vive en la guardia de sesión | `RootLayout.tsx`, `OAuthCallbackPage.tsx` |
+| `/login` no redirige a quien ya tiene sesión | `LoginPage.tsx` |
+| `/admin` a secas pinta el layout con un `Outlet` vacío: ni índice, ni redirect, ni 404 | `router.tsx` |
+| `TableChangesRequested` y `TableApproved` caen en la pestaña Candidatos, aunque el comentario promete la de estado (#244) | `notificationTarget.ts` |
+| Un `PlayerBan` resuelto manda al co-master a `/player/profile`; un `TablePause` resuelto manda al master a la vista de jugador de su mesa | `notificationTarget.ts` |
+| Las pestañas del master enlazan a `/player/users/:id`, y el `UserMenu` manda a `/player/profile` a una cuenta que solo es admin: cruces de contexto | `MasterTableCandidatesTab`, `MasterTablePlayersTab`, `UserMenu` |
+| Ninguna de las siete pantallas de admin tiene un `Link`: un admin no puede abrir el detalle de una mesa, el perfil de un usuario ni la entidad de un pedido | `routes/admin/*` |
+| Las filas de `/player/history` no enlazan a la mesa terminada | `PlayerHistoryPage` |
+| `/my/files` se esconde sin biblioteca: una cuenta solo admin u owner no tiene puerta | `UserMenu` |
+| Tres builders de `paths.ts` sin llamador; las constantes de patrón que el router ignora aunque el JSDoc diga que son para él; `helpPlayers`/`helpMasters`/`helpAdmins` sin ruta; tres URL escritas a mano | `config/paths.ts`, `NotificationBell`, `api/client.ts`, `devApi.ts` |
+| Dos tipos del frontend que no coinciden con lo que devuelve el backend: `requestBlock` tipado `void` (devuelve `ApprovalRequestDetailResponse`) y `banRequestsApi.approve` tipado `UnreadBody` (devuelve `RegistrationResponse`) | `registrationsApi.ts`, `approvalsApi.ts` |
+| Valores de enum que ningún código produce: `TableApprovedWithChanges`, `SubmissionStatus.Pending`, `UserStatus.Deleted`, `RegistrationFileStatus.Removed`, `SubmissionFileStatus.Deleted` | los enums del backend y sus espejos |
+| **117 alertas de Dependabot** en la rama por defecto (6 críticas, 59 altas) | aviso de GitHub al hacer push |
 
-## 3. Las cinco rebanadas
+## 3. Las seis rebanadas
 
 F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porque no se construye producto—. Lo que sí conserva, y es lo que importa, es el corte: **una rebanada no arranca sin que la anterior tenga sus hallazgos escritos y triados.**
 
@@ -49,6 +89,21 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 
 ---
 
+### F4.0 — Documentación y conocimiento
+
+**Por qué primero:** las cinco que siguen revisan el código **contra los documentos**. Si el documento está vencido, repite lo que ya dice otro o se contradice con él, cada hallazgo se discute dos veces: ¿está mal el código o está mal el papel?
+
+**Qué se produce:**
+
+- **Se borra lo que ya cumplió su función.** Los documentos de implementación de F1, F2 y F3 (su deuda pasó a §2.1), los pendientes M1–M32 colapsados a un índice, lo histórico de `plan-desarrollo.md` y las secciones de `arquitectura.md` que repiten `CLAUDE.md`. Lo normativo que vivía ahí —la matriz `Admin`/`Owner` de F3— se rescata **antes** de borrar.
+- **Arquitectura y modelo de datos pasan a ser skills del repo**, con reglas operativas en `SKILL.md` y el detalle en `references/`. Lo que Claude sabía del proyecto solo por su memoria local —el entorno, los tropiezos de colima y de JDT— pasa a una skill versionada, donde no se pierde ni depende de una máquina.
+- **Ningún Javadoc o JSDoc miente.** El caso que abre la lista es el de `OnboardingPage`, que describe una guardia que no existe.
+- **Las citas a documentos van por `§` o por `#n`, nunca por número de línea.** Cualquier edición del documento las rompe en silencio, y al abrir F4 había ~15 archivos citando `fase-3-admin-owner.md:110` y similares.
+
+**Terminada cuando:** ninguna cita de código apunta a un documento borrado o a un número de línea, y las skills nuevas cargan sus `references/`.
+
+---
+
 ### F4.1 — El mapa de la interfaz
 
 **Por qué primero:** las cuatro que siguen preguntan «¿esto se alcanza?» y «¿desde dónde?». Sin el mapa, cada una lo redescubre por su cuenta.
@@ -57,16 +112,21 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 
 **Qué se produce:**
 
-- **El ledger de rutas**: cada ruta del sitemap de `frontend-diseno.md` §2 con cuatro columnas — su guard, **desde qué pantalla se llega navegando** (no escribiendo la URL), qué enlaces salen de ella, y si está construida.
-- **El mapa de navegación**, por contexto: Jugador, Master, Admin y las transversales. Dibujado, no listado: lo que se busca son los nodos sin arista de entrada.
+- **El ledger de rutas**: cada ruta del sitemap de `frontend-diseno.md` §2 con cinco columnas — su guard, **desde qué pantalla se llega navegando** (no escribiendo la URL), qué enlaces salen de ella, si está construida, y **qué e2e la visita**. Una ruta que ningún e2e recorre puede romperse sin que nadie se entere.
+- **El mapa de navegación**, por contexto: Jugador, Master, Admin y las transversales. Dibujado, no listado: lo que se busca son los nodos sin arista de entrada. **Ya existe**: los diagramas 21–24 de `docs/diagramas/` (#267), un nodo por ruta.
+- **Las guardias como objeto de revisión**, no como supuesto: la de sesión, la de onboarding, qué hace `/login` con sesión, y qué pinta un prefijo de contexto sin ruta índice.
 - **El inventario de lo que quedó flotando**, en las dos direcciones:
   - **Pantallas sin puerta**: alcanzables solo escribiendo la URL.
+  - **Callejones sin salida**: pantallas de las que no sale ningún enlace a otra, sobre todo cuando muestran una entidad que tiene su propia pantalla.
+  - **Cruces de contexto**: un enlace de un contexto que aterriza en el prefijo de otro que el lector puede no tener.
   - **Endpoints sin pantalla**: construidos, autorizados, y que ninguna interfaz llama.
   - **Hooks montados en cero lugares.**
   - **Valores de enum que ningún código produce.**
-  - **Tipos de notificación que no llevan a ningún lado** — el caso que F1.7 encontró y F2.4 cerró; se vuelve a barrer entero.
-  - **Textos de i18n sin usar**, y su inverso: claves usadas que no existen en `en`.
-- **Los cuatro estados obligatorios** de cada pantalla —cargando, vacío, error, sin permiso—, verificados uno por uno. Es el punto 5 viejo de §6, hecho de una vez sobre el producto entero.
+  - **Tipos de notificación que no llevan a ningún lado** — el caso que F1.7 encontró y F2.4 cerró; se vuelve a barrer entero. **Y ahora también los que llevan al lugar equivocado**: tener destino no alcanza, tiene que ser la pantalla o la pestaña que contiene lo que la notificación anuncia.
+  - **La coherencia de `config/paths.ts`**: builders sin llamador, constantes que nadie usa, URL escritas a mano que se saltan los builders.
+  - **Textos de i18n sin usar**, y su inverso: claves usadas que no existen en `en`. Incluye **cada código de error del backend** (#197): todo código que un endpoint puede devolver tiene su clave en `es` y en `en`, o el lector ve la clave cruda justo cuando algo salió mal.
+  - **Valores de estilo sueltos** fuera del `@theme` (regla dura 18).
+- **Los cuatro estados obligatorios** de cada pantalla —cargando, vacío, error, sin permiso—, verificados uno por uno, **en tema claro y oscuro y a 375 px de ancho**. Es el punto 5 viejo de §6, hecho de una vez sobre el producto entero.
 
 **El instrumento es un artifact**, como el de F1.7: el ledger es largo y se lee mejor como página que como tabla en markdown. El documento guarda el resumen y los hallazgos; el detalle vive ahí.
 
@@ -79,12 +139,13 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 **Lo que se verifica:** que «quién puede qué» sea lo que los documentos dicen, **probado y no leído de un `@PreAuthorize`**.
 
 - **La matriz completa**: cada endpoint × cada rol. Cuatro roles, más el actor sin sesión, más el actor bloqueado.
-- **La matriz de `fase-3-admin-owner.md` §3 termina en una prueba que la recorre.** Una tabla en un documento no impide que alguien escriba `hasRole('ADMIN')` y deje al owner afuera — y eso no se nota en desarrollo, donde el actor de prueba suele ser admin.
+- **La matriz `Admin`/`Owner` —la de F3, hoy en la skill `modelo-datos`, `references/roles-y-alcance.md`— termina en una prueba que la recorre.** Una tabla en un documento no impide que alguien escriba `hasRole('ADMIN')` y deje al owner afuera — y eso no se nota en desarrollo, donde el actor de prueba suele ser admin.
 - **Pertenencia, que es la otra mitad y la más fácil de olvidar** (#121): el rol correcto sobre el **recurso ajeno**. Un master legítimo pidiendo la mesa de otro master; un jugador pidiendo la postulación de otro; un admin leyendo lo que #45 le permite y lo que #43 no.
 - **Los tres contextos no son autorización** (#103, #222): `/player` no exige el rol `Player`, y eso es deliberado. La prueba fija que la interfaz no decide permisos y el backend sí.
-- **La exclusión `Admin`/`Owner`** de #169 y las tres invariantes de `fase-3-admin-owner.md` §3, incluida la que dice que la plataforma nunca se queda sin owner.
+- **La exclusión `Admin`/`Owner`** de #169 y sus tres invariantes —ahora en la skill `modelo-datos`, `references/roles-y-alcance.md`—, incluida la que dice que la plataforma nunca se queda sin owner.
+- **El contrato de las respuestas**: cada tipo de retorno de `features/*/api` contra el `record` que el backend devuelve de verdad. Un tipo del frontend que dice `void` donde llega un cuerpo no rompe nada hoy, y por eso nadie lo nota hasta que una pantalla necesita ese cuerpo.
 
-**Terminada cuando:** existe una suite que recorre la matriz, y cada celda que no coincide con la documentación quedó triada.
+**Terminada cuando:** existe una suite que recorre la matriz, cada celda que no coincide con la documentación quedó triada, y cada tipo de respuesta del frontend coincide con su `record`.
 
 ---
 
@@ -112,7 +173,8 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 - **El circuito de sesión** (#125, #127): el access token en memoria y nunca en `localStorage`, el refresh rotativo en cookie `httpOnly`, el CSRF activo solo en `/auth/refresh`, el reintento único ante `401`, y que el token de Discord se descarte al terminar el callback.
 - **Que el JWT no autorice** (#122): los roles se releen de la base en cada request, y un rol quitado deja de valer dentro de la ventana de la caché de #128 — que el bloqueo de F3.1 tiene que invalidar en el momento.
 - **Que ningún `Map<String, Object>` cruce HTTP** (regla dura 3) y que ningún endpoint devuelva más de lo que la pantalla necesita.
-- **El doble de login de pruebas** (`TestLoginController`, #143, #223) **no existe fuera del perfil `test`**. Es la verificación más barata de esta rebanada y la más cara de olvidar.
+- **El doble de login de pruebas** (`TestLoginController`, #143, #223) **no existe fuera del perfil `test`**. Es la verificación más barata de esta rebanada y la más cara de olvidar. Lo mismo para sus hermanos `TestDataController` y el Discord falso de `TestDiscordController`.
+- **Las dependencias.** Al abrir F4, GitHub reporta 117 alertas de Dependabot (6 críticas). Se separan las de `legacy/` —que se borra al alcanzar paridad y no se despliega— de las de `backend/` y `frontend/`, y cada una de estas se triaje como las demás: se sube la versión (una major es decisión, regla dura 15), se justifica que no aplica, o se anota.
 
 **Fuera de alcance, con su motivo:** el anonimato de los comentarios (#43, #45) no se puede verificar porque los comentarios son **F5**. Queda anotado como la primera línea de la revisión de esa fase.
 
@@ -151,6 +213,7 @@ Una fase de revisión que termina sin hallazgos no probó que el producto esté 
 1. **El inventario de huérfanos está vacío o justificado**, ítem por ítem. Cero ítems sin triaje.
 2. **La matriz de roles existe como suite y corre en verde**, y cada celda que no coincidía con los documentos terminó en una corrección o en una decisión.
 3. **Todo hallazgo corregido tiene su test de regresión.** Es la diferencia entre haber revisado y haber arreglado: sin el test, el mismo bug vuelve en F5.
+4. **La documentación que queda describe el código de hoy.** Ninguna cita rota, ningún bloque de Javadoc o JSDoc que afirme algo que el cuerpo no hace, y ninguna regla escrita en dos lugares.
 
 ## 6. Verificación
 

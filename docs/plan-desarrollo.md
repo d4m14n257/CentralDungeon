@@ -102,7 +102,7 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 | **F1 — Master** | La mesa completa, de la creación al cierre | ✅ **Hecha, sin revisar** |
 | **F2 — Jugador** | Todo lo que el jugador hace con lo que el master publicó | ✅ **Hecha, sin revisar** |
 | **F3 — Admin y Owner** | La comunidad se administra, y la línea entre los dos roles queda escrita | ✅ **Hecha, sin revisar** |
-| **F4 — Revisión** | Mapa de la interfaz, matriz de roles, integridad y seguridad — y la revisión del cliente | ⏳ |
+| **F4 — Revisión** | Documentación, mapa de la interfaz, matriz de roles, integridad y seguridad — y la revisión del cliente | ⏳ |
 | **F5 — Comunidad** | Comentarios y karma, con anonimato real | ⏳ |
 | **F6 — Operación** | Tiempo real, auditoría y el panel exclusivo del owner | ⏳ |
 
@@ -162,10 +162,11 @@ La bandeja funciona **por HTTP** en esta fase; el vivo es F6.
 
 **No construye producto. Verifica las tres fases anteriores juntas, y termina con la revisión del cliente.**
 
-> **El detalle está en [`fase-4-revision.md`](fase-4-revision.md)**: las cinco rebanadas y el instrumento de cada una.
+> **El detalle está en [`fase-4-revision.md`](fase-4-revision.md)**: las seis rebanadas y el instrumento de cada una.
 
 Nace de #250, que sacó la revisión del final de cada fase. El motivo, en una frase: **una costura no se puede mirar hasta que existen sus dos lados.** F1.7 revisó F1 contra F1 y encontró lo que podía; la matriz de roles, la seguridad entre actores y el mapa completo de la interfaz no tienen respuesta hasta que los cuatro roles están construidos.
 
+- **La documentación primero** (F4.0): se borra lo que ya cumplió su función, arquitectura y modelo de datos pasan a ser skills del repo, y ninguna cita del código apunta a un documento vencido.
 - **El mapa de la interfaz**, entero: cada ruta del sitemap con su guard, desde qué pantalla se llega y qué sale de ella — **y el inventario de lo que quedó flotando**: endpoints sin pantalla, hooks montados en cero lugares, valores de enum que nada produce, pantallas alcanzables solo escribiendo la URL.
 - **La matriz de roles**, verificada con tests y no leída de un `@PreAuthorize`, incluida la pertenencia: el rol correcto sobre el recurso ajeno.
 - **Integridad**: las invariantes que MySQL no sostiene, las referencias huérfanas que #78 obliga a vigilar, y la coherencia del borrado lógico en todos los caminos de lectura.
