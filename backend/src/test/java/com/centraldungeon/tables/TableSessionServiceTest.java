@@ -41,7 +41,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  *
  * <p>The weekly wrap of #22 has its own tests. The community plays at night in America, which is the
  * small hours of the next day in UTC, and getting that backwards is the most likely bug of the whole
- * phase (fase-1-master.md 7).
+ * phase, which is how F1 named it when it was planned.
  */
 @ExtendWith(MockitoExtension.class)
 class TableSessionServiceTest {

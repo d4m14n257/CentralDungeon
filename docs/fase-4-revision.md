@@ -76,6 +76,8 @@ Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, 
 | Dos tipos del frontend que no coinciden con lo que devuelve el backend: `requestBlock` tipado `void` (devuelve `ApprovalRequestDetailResponse`) y `banRequestsApi.approve` tipado `UnreadBody` (devuelve `RegistrationResponse`) | `registrationsApi.ts`, `approvalsApi.ts` |
 | Valores de enum que ningún código produce: `TableApprovedWithChanges`, `SubmissionStatus.Pending`, `UserStatus.Deleted`, `RegistrationFileStatus.Removed`, `SubmissionFileStatus.Deleted` | los enums del backend y sus espejos |
 | **117 alertas de Dependabot** en la rama por defecto (6 críticas, 59 altas) | aviso de GitHub al hacer push |
+| **Los diagramas ER quedaron atrás de las migraciones.** El de `modelo-datos.md` §3 no tiene `file_categories` ni `task_files` (V9), y los `.mmd` por subsistema no tienen `user_role_changes`, `user_status_changes` (V11) ni `registration_status_changes` (V12). La tabla de migraciones del DDL llegaba hasta V9; F4.0 la completó hasta V13 | `docs/modelo-datos.md`, `docs/diagramas/11`–`16` |
+| `er-diagram-sync` pedía que el DDL «refleje el estado final acumulado», pero el DDL es el `V1__baseline.sql` literal más una tabla de migraciones. Corregido en F4.0 | la skill |
 
 ## 3. Las seis rebanadas
 
@@ -101,6 +103,8 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 - **Las citas a documentos van por `§` o por `#n`, nunca por número de línea.** Cualquier edición del documento las rompe en silencio, y al abrir F4 había ~15 archivos citando `fase-3-admin-owner.md:110` y similares.
 
 **Terminada cuando:** ninguna cita de código apunta a un documento borrado o a un número de línea, y las skills nuevas cargan sus `references/`.
+
+**Avance.** Hecho: los documentos de F1–F3 borrados con lo normativo rescatado en `roles-y-alcance.md`; M1–M32 colapsados a un índice; §3 de `plan-desarrollo.md` resumida; las skills `arquitectura-backend`, `arquitectura-frontend`, `modelo-datos` y `entorno-local` creadas y las cuatro de procedimiento desduplicadas; ~320 citas del código reescritas a su sección nueva, sin ninguna por número de línea; la memoria local reducida a lo que no es del proyecto. **Falta**: el barrido de Javadoc/JSDoc que miente (el primero, `OnboardingPage`, está anotado en §2.2) y poner al día los diagramas ER.
 
 ---
 

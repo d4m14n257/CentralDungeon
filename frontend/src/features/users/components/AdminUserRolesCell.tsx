@@ -10,7 +10,7 @@ import type { PlatformRole } from '../types'
  * scans the source for literals and cannot see a class name built from a template string.
  *
  * A `Record` over `PlatformRole` rather than a lookup with a fallback, so a fifth role could not be
- * added without deciding how it looks (arquitectura.md §3.2, regla 9).
+ * added without deciding how it looks (arquitectura-frontend skill §3.2, regla 9).
  *
  * `Admin` and `Owner` read differently from the other two because they are a different kind of
  * thing: they are the rank (#169), and an admin scanning this column is looking for exactly them.

@@ -60,7 +60,7 @@ import org.springframework.transaction.annotation.Transactional;
  *       does not rest on it either - the pessimistic lock above is what makes two answers impossible.
  *       This is about not taking work off a colleague's desk.</li>
  *   <li><b>Approving a {@code MasterGrant} grants the role through {@link UserRoleService}</b>
- *       (fase-3-admin-owner.md 4). Not a second path that writes the same row: who may move which
+ *       (roles-y-alcance.md §4). Not a second path that writes the same row: who may move which
  *       rank, the exclusion of #169 and the owner invariant all live over there, and a copy here
  *       would be a copy of the rules or - worse - a version without them.</li>
  * </ul>
@@ -92,7 +92,7 @@ public class ApprovalService {
     /** Reads live grants, for the "you already are a master" check. */
     private final UserRoleRepository userRoleRepository;
 
-    /** The <b>only</b> way a role is ever granted (fase-3-admin-owner.md 4). */
+    /** The <b>only</b> way a role is ever granted (roles-y-alcance.md §4). */
     private final UserRoleService userRoleService;
 
     /** Tells the requester their request was answered. Nothing is sent when it is made (#100). */
@@ -171,7 +171,7 @@ public class ApprovalService {
      * @param type          what is being asked for
      * @param justification why, never blank - the request validates it
      * @param actor         the actor, from the token (#121). The request is always about them: the
-     *                      body carries no id and could not be trusted with one (arquitectura.md 2.6)
+     *                      body carries no id and could not be trusted with one (arquitectura-backend skill §2.6)
      * @return the request as it was opened
      * @throws NotFoundException        404 when the actor's account is gone - the #78 validation,
      *                                  run before the insert
@@ -201,7 +201,7 @@ public class ApprovalService {
         }
 
         // This endpoint only ever opens a request about the person asking, which is why it takes no
-        // entity id and could not be trusted with one (F3.2 §0d, arquitectura.md 2.6). The two types
+        // entity id and could not be trusted with one (F3.2 §0d, arquitectura-backend skill §2.6). The two types
         // whose entity is something else have doors of their own, on the aggregate they are about:
         // submitTablePause and submitPlayerBan.
         //
@@ -259,7 +259,7 @@ public class ApprovalService {
      * <p>The other half of the pair {@code RegistrationService.block} is: a {@code Primary} vetoes,
      * a {@code Secondary} asks. <b>Two endpoints and not one that behaves differently</b> - the
      * screen already knows which the reader is and says so before the button is pressed
-     * (fase-3-admin-owner.md §4), and one endpoint that sometimes vetoes and sometimes asks would
+     * (roles-y-alcance.md §4), and one endpoint that sometimes vetoes and sometimes asks would
      * answer with a record half of whose fields are null, which R3 forbids.
      *
      * <p>Refused for somebody the veto could no longer apply to, and <em>before</em> the row is
@@ -375,7 +375,7 @@ public class ApprovalService {
      * with twenty resolved {@code General} requests on top of it, falls off page one and the button
      * comes back - offering an action whose only possible answer is a 409. {@code /status Pending}
      * answers the question the screen is actually asking. It goes through {@code ?q=} rather than a
-     * parameter of its own because one search box per endpoint is the rule (arquitectura.md 2.5), and
+     * parameter of its own because one search box per endpoint is the rule (arquitectura-backend skill §2.5), and
      * because {@code /request_type} then works here for free.
      *
      * <p>The actor's own filter is <b>not</b> part of that language: it is forced inside
@@ -407,7 +407,7 @@ public class ApprovalService {
      *
      * @param rawQuery the search box: bare text matches the justification or the requester's name,
      *                 and {@code /request_type}, {@code /status} and {@code /requested_by} narrow it.
-     *                 An unrecognized value matches nothing and is never a 400 (arquitectura.md 2.5)
+     *                 An unrecognized value matches nothing and is never a 400 (arquitectura-backend skill §2.5)
      * @param pageable page, size and sort, with a tie-break by id (#171, #173)
      * @return one page of requests
      */
@@ -466,7 +466,7 @@ public class ApprovalService {
         switch (request.getRequestType()) {
             case MasterGrant -> userRoleService.grantRole(
                     request.getRequestedBy().getId(), PlatformRole.MASTER, resolutionNote, actor);
-            // The resolution note IS the pause's justification (#32, modelo-datos.md:835). Not a
+            // The resolution note IS the pause's justification (#32, modelo-datos skill §5). Not a
             // copy of it and not a second reason invented here: the admin already wrote why, and
             // asking them twice would produce two answers to one question.
             case TablePause -> gameTableService.applyApprovedPause(
@@ -733,7 +733,7 @@ public class ApprovalService {
      * decided by whoever runs it, not by the platform.
      *
      * <p><b>Only the exception is written here, and that is the point.</b> «Admin or owner» is
-     * exactly what {@code hasAnyRole('ADMIN','OWNER')} says, and fase-3-admin-owner.md §3 is explicit
+     * exactly what {@code hasAnyRole('ADMIN','OWNER')} says, and roles-y-alcance.md §3 is explicit
      * that each endpoint enumerates its roles in the annotation rather than in a configuration far
      * away (#37, #89, #123) - so {@code AdminApprovalRequestController} keeps that half. What an
      * annotation <em>cannot</em> say is «the Primary of the table this registration belongs to», and

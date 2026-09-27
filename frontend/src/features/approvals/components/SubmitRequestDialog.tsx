@@ -29,7 +29,7 @@ interface SubmitRequestDialogProps {
    * The explanation of how a request works, shown above the field.
    *
    * A node rather than a `HelpLink` raised here: `features/help` is another feature and a feature
-   * never imports one (arquitectura.md §3.1.5). The screen composes the two, which is how F3.1
+   * never imports one (arquitectura-frontend skill §3.1.5). The screen composes the two, which is how F3.1
    * resolved the same problem.
    */
   help?: ReactNode
@@ -41,7 +41,7 @@ interface SubmitRequestDialogProps {
  * **The kind of request is a prop and not a field.** The form lives on the screen that prompted the
  * question — the master role on your own profile, an open table in the explorer, anything else from
  * the help — so by the time this dialog is open, what is being asked for is already decided
- * (fase-3-admin-owner.md:126). A dropdown here would turn three specific acts into one generic
+ * (roles-y-alcance.md §4, F3.2). A dropdown here would turn three specific acts into one generic
  * "make a request" screen, which is exactly what that decision refused.
  *
  * **The justification is required, not offered.** It is the whole of what an admin will read: the

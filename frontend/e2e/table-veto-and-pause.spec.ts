@@ -6,7 +6,7 @@ import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './help
 
 /**
  * F3.4 end to end, against the real backend: the two "se prueba" sentences of
- * `fase-3-admin-owner.md` §4, which are the only place the slice can be proven at all.
+ * `roles-y-alcance.md` §4, which are the only place the slice can be proven at all.
  *
  * > *Un master pide pausa y un admin la aprueba; el calendario del jugador se congela. Un
  * > `Primary` veta a alguien: esa persona deja de ver la mesa en el explorador, recibe `404` en el
@@ -171,7 +171,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     await master.page.goto(`/master/tables/${tableId}/status`)
     await expect(master.page.getByText('Pausada', { exact: true })).toBeVisible()
     // The admin's reason is the pause's justification: they wrote why once and it is recorded once
-    // (#32, modelo-datos.md:835).
+    // (#32, modelo-datos skill §5).
     await expect(master.page.getByText('Aprobada: avisá cuando puedas retomar')).toBeVisible()
 
     // And this is the sentence the slice promised: the calendar froze. A paused table promises no

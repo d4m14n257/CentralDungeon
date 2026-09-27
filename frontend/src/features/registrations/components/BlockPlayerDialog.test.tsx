@@ -84,7 +84,7 @@ describe('BlockPlayerDialog', () => {
     expect(block).not.toHaveBeenCalled()
   })
 
-  /** `fase-3-admin-owner.md:169` again, inside the dialog: what this sends is said, not implied. */
+  /** `roles-y-alcance.md §4, F3.4` again, inside the dialog: what this sends is said, not implied. */
   it('says to a co-master that nothing changes until the master answers', () => {
     renderDialog({ isPrimary: false })
 

@@ -15,7 +15,7 @@ import org.mapstruct.Mapping;
  * common/config/MapperConfig.java, like every other mapper - see that class for why.
  *
  * <p>Five shapes and not one with nullable fields, because they have five different audiences and
- * each is allowed to see a different amount (arquitectura.md 2.3): the owner, an admin, the people
+ * each is allowed to see a different amount (arquitectura-backend skill §2.3): the owner, an admin, the people
  * running a table, the people playing at one, and anybody picking from what the platform published.
  *
  * <p>The enums leave as strings, which is what the API contract asks for and what the frontend
@@ -30,7 +30,7 @@ public interface FileMapper {
      * The owner's view of their own file.
      *
      * <p>{@code usages} arrives from the service for the same reason {@code uses} does below: it
-     * needs a query, and a mapper never touches a repository (arquitectura.md 2.2). Callers that
+     * needs a query, and a mapper never touches a repository (arquitectura-backend skill §2.2). Callers that
      * have no reason to pay for it - an upload, a single read - pass an empty list rather than null,
      * so the field is a list that happens to be empty and never a special case to check for.
      *
@@ -63,7 +63,7 @@ public interface FileMapper {
      * The /admin/files view.
      *
      * <p>{@code uses} is resolved by the service, not here: it needs a query, and a mapper never
-     * touches a repository (arquitectura.md 2.2).
+     * touches a repository (arquitectura-backend skill §2.2).
      *
      * @param file       the entity to describe
      * @param uses       how many tables hold a live link to it (#79)

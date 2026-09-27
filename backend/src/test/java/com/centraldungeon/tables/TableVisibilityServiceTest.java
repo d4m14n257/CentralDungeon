@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * The single point of F3.4, which is what the whole slice hangs off.
  *
- * <p>§7 of {@code fase-3-admin-owner.md} named the failure mode in advance: «el veto toca seis vías
+ * <p>§7 of {@code roles-y-alcance.md} named the failure mode in advance: «el veto toca seis vías
  * de lectura y <b>es fácil cerrar cinco</b>». It was easy because there were <b>three copies</b> of
  * the same lookup - {@code GameTableService.getEntityById}, whose Javadoc claimed to be «the single
  * lookup every read goes through» and was not, {@code TableSessionService.getTable} and

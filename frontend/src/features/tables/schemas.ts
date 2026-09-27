@@ -29,7 +29,7 @@ export type CreateGameTableForm = z.infer<typeof createGameTableSchema>
 
 /**
  * The wizard's five steps, in order: identity → catalogs → agenda → files → capacity and review.
- * One decision per step (`fase-1-master.md` F1.2), and the summary before sending.
+ * One decision per step (the rule F1.2 was built on), and the summary before sending.
  *
  * **Files earn a step of their own** (#228) rather than a section inside another: what the master
  * hands the players is its own decision, and folded into the review step it would be the thing

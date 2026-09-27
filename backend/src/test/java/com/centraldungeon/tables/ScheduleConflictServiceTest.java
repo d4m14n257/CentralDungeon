@@ -27,7 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The matrix #178 asks for, and the piece of F1 with the most edge cases - which is why it is tested
- * on its own, before being wired to anything (fase-1-master.md 7).
+ * on its own, before being wired to anything - F1 named it as a risk when it was planned.
  *
  * <p>Two levels, deliberately: the interval arithmetic is pure and tested without a repository in
  * sight, and only the questions that need to know who is committed to what use mocks.

@@ -10,7 +10,7 @@ package com.centraldungeon.registrations.dto;
  * {@code FileResponse} and {@code PublicFileResponse} carry {@code categories} and other
  * owner-or-admin fields nobody reading somebody else's application should get. {@code tasks}'
  * {@code SubmittedFileResponse} has the exact shape, but {@code registrations} may not depend on
- * {@code tasks} (arquitectura.md 2.1) - so this is that same shape, declared again in its own
+ * {@code tasks} (arquitectura-backend skill §2.1) - so this is that same shape, declared again in its own
  * feature rather than borrowed from one it cannot import.
  *
  * @param fileId    the file's identifier, which is what the download endpoint takes

@@ -76,7 +76,7 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
     List<Master> findLiveByUser(@Param("userId") String userId, @Param("status") MasterRowStatus status);
 
     /**
-     * Row-locked read used by MasterService before flipping who is Primary (modelo-datos.md #73):
+     * Row-locked read used by MasterService before flipping who is Primary (modelo-datos skill, #73):
      * concurrent requests on the same table serialize here instead of racing past each other.
      *
      * @param gameTableId the table whose master rows are being changed
@@ -91,7 +91,7 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
      * filters by status. Table already fetched.
      *
      * <p>Unlike {@link #findLiveByUser}, deliberately unfiltered: it backs the profile visibility
-     * check of modelo-datos.md §5 (#41a), where a deleted row has to be seen in order to be told apart
+     * check of modelo-datos skill §5 (#41a), where a deleted row has to be seen in order to be told apart
      * from one that counts (#216) - filtering it out in the query would leave nothing for that rule
      * to read.
      *

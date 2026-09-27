@@ -45,7 +45,7 @@ Contrato publicado en `http://localhost:8080/swagger-ui.html`.
 ./mvnw verify    # unitarios + integración (*IT, Testcontainers) — necesita colima arriba
 ```
 
-Los `*IT` usan Testcontainers 2.x contra una MySQL real, separada de la de `docker-compose` (arquitectura.md §2.7). Con **colima** (no Docker Desktop) hacen falta dos variables: una para que Testcontainers encuentre el socket, y otra para desactivar Ryuk — el contenedor de limpieza de Testcontainers falla al intentar montar el socket de colima dentro de sí mismo (`operation not supported`, error conocido de colima, no de este proyecto):
+Los `*IT` usan Testcontainers 2.x contra una MySQL real, separada de la de `docker-compose` (skill `arquitectura-backend` §2.7). Con **colima** (no Docker Desktop) hacen falta dos variables: una para que Testcontainers encuentre el socket, y otra para desactivar Ryuk — el contenedor de limpieza de Testcontainers falla al intentar montar el socket de colima dentro de sí mismo (`operation not supported`, error conocido de colima, no de este proyecto):
 
 ```bash
 export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
@@ -57,7 +57,7 @@ export TESTCONTAINERS_RYUK_DISABLED=true
 
 ## e2e (Playwright, desde `frontend/`)
 
-Los tests de `frontend/e2e/` corren contra el backend real, nunca contra mocks (`arquitectura.md` §3.4). Necesitan el perfil `test` activo además de `dev`:
+Los tests de `frontend/e2e/` corren contra el backend real, nunca contra mocks (skill `arquitectura-frontend` §3.4). Necesitan el perfil `test` activo además de `dev`:
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,test
@@ -80,4 +80,4 @@ Quién entra en el próximo login es estado del servidor, no un parámetro del l
 
 **Y un tercero, que aparece al agregar archivos nuevos**: si el índice del JDT todavía no los tiene, compila igual la clase que los usa, con la referencia sin resolver, y la deja escrita. La firma en ese caso no es la frase de ECJ sino un `ClassNotFoundException` con el **nombre simple, sin paquete** (`ClassNotFoundException: StubDiscordUserResponse`) — un nombre sin FQN en el constant pool es siempre una referencia que el compilador nunca resolvió. Se arregla igual (pausar el JDT + `./mvnw clean compile`); para que no vuelva, "Java: Clean Java Language Server Workspace" en VS Code lo obliga a reindexar. Se comprueba con `javap -classpath target/classes <FQN>`: si las firmas salen con el paquete completo, la clase está bien.
 
-Los 4 mappers de MapStruct (`GameTableMapper`, `RegistrationMapper`, `NotificationMapper`, `UserMapper`) igual quedan registrados como `@Bean` explícitos en `common/config/MapperConfig.java` en vez de con `componentModel = "spring"` — es una desviación deliberada de `arquitectura.md` §2.2 que ya estaba funcionando cuando apareció la causa real de arriba, y no hay motivo para tocarla ahora que sí se sabe qué la disparaba.
+Los 4 mappers de MapStruct (`GameTableMapper`, `RegistrationMapper`, `NotificationMapper`, `UserMapper`) igual quedan registrados como `@Bean` explícitos en `common/config/MapperConfig.java` en vez de con `componentModel = "spring"` — es una desviación deliberada de skill `arquitectura-backend` §2.2 que ya estaba funcionando cuando apareció la causa real de arriba, y no hay motivo para tocarla ahora que sí se sabe qué la disparaba.

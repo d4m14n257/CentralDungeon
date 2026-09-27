@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p><b>Admin and Owner are enumerated on every method.</b> There is no {@code RoleHierarchy} in this
  * project: an owner can do everything an admin can by being listed, never by inheriting (#37, #89,
  * #123), and the annotation goes on the concrete method rather than on the class, an interface or a
- * list of paths in {@code SecurityConfig}. The matrix of fase-3-admin-owner.md 3 does not separate
+ * list of paths in {@code SecurityConfig}. The matrix of roles-y-alcance.md §3 does not separate
  * the two ranks here - answering a request is something both do - so the guard is the whole of the
  * authorization story for this screen, which is why it must not be wrong: {@code hasRole('ADMIN')}
  * would lock the owner out and nobody would notice in development.

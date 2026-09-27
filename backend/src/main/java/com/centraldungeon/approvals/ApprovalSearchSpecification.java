@@ -18,7 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns a parsed search box into a predicate over {@code approval_requests}. Criteria API and not a
  * derived query, for the reason {@code UserSearchSpecification} gives: the shape is only known at
- * runtime - how many criteria, over which fields, joined by which connectors (arquitectura.md 2.2).
+ * runtime - how many criteria, over which fields, joined by which connectors (arquitectura-backend skill §2.2).
  *
  * <p>Connectors fold left to right with no precedence, so {@code a or b and c} is
  * {@code (a or b) and c} - which is how the chip row reads on screen (#164).
@@ -67,7 +67,7 @@ final class ApprovalSearchSpecification {
      * here rather than by translating some {@code /requested_by} into the actor, because a filter the
      * caller can express is a filter the caller can express differently: the whole reason this
      * endpoint cannot leak somebody else's requests is that no string arriving over HTTP reaches this
-     * predicate. The id comes from the token and from nowhere else (#121, arquitectura.md 2.6).
+     * predicate. The id comes from the token and from nowhere else (#121, arquitectura-backend skill §2.6).
      *
      * <p>The rest of the language works exactly as it does for an admin, which is the point of
      * routing it through the same builder. The screen needs {@code /status Pending} to be able to ask

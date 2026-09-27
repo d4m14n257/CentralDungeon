@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 /**
- * F3.2 end to end: the sentence `docs/fase-3-admin-owner.md:128` measures the slice by.
+ * F3.2 end to end: the sentence `roles-y-alcance.md §4, F3.2` measures the slice by.
  *
  * > un jugador pide el rol de master; el pedido aparece en `/admin/requests` con su motivo; un admin
  * > lo aprueba y **el rol queda otorgado por el `UserRoleService` de F3.1, no por una segunda ruta
@@ -153,7 +153,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
 
   try {
     // ---- 1. The request is raised from the screen that provokes it, not from a "make a request"
-    // screen (fase-3-admin-owner.md:126). For the master role that screen is the reader's own profile.
+    // screen (roles-y-alcance.md §4, F3.2). For the master role that screen is the reader's own profile.
     await player.page.goto('/player/profile')
     await expect(player.page.getByText('¿Querés dirigir mesas?')).toBeVisible()
     await ask(player.page, 'Pedir el rol de master', justification)
@@ -267,7 +267,7 @@ test('a rejected request notifies the person who asked, and the notice opens', a
 
   try {
     // The general request lives on the support screen, for whoever read the help and did not find
-    // their answer (fase-3-admin-owner.md:126).
+    // their answer (roles-y-alcance.md §4, F3.2).
     await player.page.goto('/help')
     await ask(player.page, 'Escribirle a un admin', justification)
     await expect(player.page.getByText('Ya le escribiste a un admin y todavía no te respondieron.')).toBeVisible()

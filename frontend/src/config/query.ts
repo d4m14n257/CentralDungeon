@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import i18n from '@/providers/i18n'
 import { ApiError } from '@/types/api'
 
-/** Per-data staleTime policy (arquitectura.md 3.3) - the default of 0 is what causes request goteo. */
+/** Per-data staleTime policy (arquitectura-frontend skill §3.3) - the default of 0 is what causes request goteo. */
 export const staleTime = {
   catalogs: 60 * 60 * 1000,
   tableList: 30_000,
@@ -38,7 +38,7 @@ export const staleTime = {
  * refetch is what matters most, because an admin coming back to the tab after reading Discord is
  * exactly the person about to act on a stale row.
  *
- * **F6 replaces this with the WebSocket** (#101, `docs/fase-3-admin-owner.md` §5). Polling is the
+ * **F6 replaces this with the WebSocket** (#101, `roles-y-alcance.md` §5). Polling is the
  * honest stopgap: it is one request every fifteen seconds per admin looking at the tray, which for a
  * handful of admins is nothing, and it is deleted in one line when the socket lands.
  */

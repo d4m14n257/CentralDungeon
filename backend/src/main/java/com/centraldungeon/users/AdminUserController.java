@@ -31,10 +31,10 @@ import org.springframework.web.bind.annotation.RestController;
  * this project: an Owner can do everything an Admin can by being listed, not by inheriting (#37,
  * #89, #123). And the annotation is where the guard <em>stops</em> - the line between the two roles
  * is a rule about what is being granted, so it lives in {@link UserRoleService} and in
- * {@link AdminUserService}, not up here (fase-3-admin-owner.md 4).
+ * {@link AdminUserService}, not up here (roles-y-alcance.md §4).
  *
  * <p>The actor always comes from {@code @AuthenticationPrincipal}, never from the path or the body
- * (arquitectura.md 2.6). The {@code {id}} in these routes is the <b>target</b>, and it is the only
+ * (arquitectura-backend skill §2.6). The {@code {id}} in these routes is the <b>target</b>, and it is the only
  * controller in the application where the two are different people on purpose.
  */
 @RestController

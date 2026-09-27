@@ -20,11 +20,11 @@ interface AssignMastersDialogProps {
 /**
  * It lives in `routes/` and not in `features/tables/` because it composes two domains — the people
  * search belongs to `users`, the assignment to `tables` — and a feature never imports from another
- * (arquitectura.md 3.1.5). It is the same reason `MasterTableStatusTab` sits next to it.
+ * (arquitectura-frontend skill §3.1.5). It is the same reason `MasterTableStatusTab` sits next to it.
  *
  * **The order is the role**: the first one added is the Primary and the rest are Secondary, and
  * tapping a chip promotes it (decisiones.md #165). A table has exactly one Primary
- * (modelo-datos.md #73), so promoting somebody demotes whoever held it — which is precisely what
+ * (modelo-datos skill, #73), so promoting somebody demotes whoever held it — which is precisely what
  * moving the chip to the front does. No form and no zod: there is no field to validate, only a list
  * with an order.
  */

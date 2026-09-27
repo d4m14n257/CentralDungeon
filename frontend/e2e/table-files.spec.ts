@@ -3,7 +3,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 
 /**
- * F1.4 end to end, against the real backend: the criterion of `fase-1-master.md` §4 — *a master
+ * F1.4 end to end, against the real backend: F1.4's acceptance criterion — *a master
  * uploads a character sheet, attaches it to two tables without duplicating it, and the player
  * downloads it from the public detail*.
  *

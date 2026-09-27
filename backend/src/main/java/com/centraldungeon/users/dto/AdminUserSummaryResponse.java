@@ -9,7 +9,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Richer than {@link UserSummaryResponse}, which is the picker's view and deliberately says
  * nothing about status or roles - administering people is the one screen where both are the point
- * (arquitectura.md 2.3).
+ * (arquitectura-backend skill §2.3).
  *
  * <p><b>No {@code discordId}</b>: it is not needed to administer anybody and it is a third party's
  * identifier. No karma either - that is the profile's business, not this screen's.

@@ -8,7 +8,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-/** Origin restricted per profile (arquitectura.md 2.6) - never "*". */
+/** Origin restricted per profile (arquitectura-backend skill §2.6) - never "*". */
 @Configuration
 public class CorsConfig {
 

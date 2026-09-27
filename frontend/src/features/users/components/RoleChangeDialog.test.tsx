@@ -114,7 +114,7 @@ describe('RoleChangeDialog', () => {
   })
 
   /**
-   * The invariante global of the phase (#3 of docs/fase-3-admin-owner.md §3), read back in the
+   * The invariante global of the phase (#3 of roles-y-alcance.md §3), read back in the
    * reader's own language from the code and not from the backend's English `detail` (#197).
    */
   it.each([

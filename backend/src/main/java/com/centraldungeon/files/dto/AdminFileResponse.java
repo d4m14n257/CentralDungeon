@@ -9,7 +9,7 @@ import org.jspecify.annotations.Nullable;
  * tables use it and whether it is still live.
  *
  * <p>A separate record rather than three nullable fields on {@link FileResponse}, because those
- * three are exactly what nobody but an admin should see (arquitectura.md 2.3): the owner's name on
+ * three are exactly what nobody but an admin should see (arquitectura-backend skill §2.3): the owner's name on
  * somebody else's upload, the usage count, and the fact that a file was marked gone.
  *
  * @param id             the file's identifier

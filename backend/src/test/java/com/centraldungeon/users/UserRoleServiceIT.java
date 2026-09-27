@@ -34,7 +34,7 @@ import org.testcontainers.mysql.MySQLContainer;
 
 /**
  * The one global invariant of F3.1: <b>the platform is never left without an Owner</b>
- * (fase-3-admin-owner.md 3). MySQL cannot express it - there is no constraint for "at least one row
+ * (roles-y-alcance.md §3). MySQL cannot express it - there is no constraint for "at least one row
  * of this shape has to survive" - so it is checked in {@link UserRoleService} and therefore has to
  * be proven against the real engine, exactly like the single live Primary of #73 in
  * {@code MasterServiceIT}.

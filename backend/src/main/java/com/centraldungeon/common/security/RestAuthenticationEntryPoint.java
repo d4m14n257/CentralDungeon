@@ -11,7 +11,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Every unauthenticated API call gets a ProblemDetail body (arquitectura.md 2.5), never a redirect to a login page. */
+/** Every unauthenticated API call gets a ProblemDetail body (arquitectura-backend skill §2.5), never a redirect to a login page. */
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 

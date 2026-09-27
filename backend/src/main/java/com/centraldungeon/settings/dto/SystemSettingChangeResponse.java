@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
  * One entry of a setting's history: what it went from, what it went to, who moved it and why (#141).
  *
  * <p>It exists for the same reason {@code UserAdminChangeResponse} does: without a read, the audit
- * table would be write-only and born orphaned, which is the failure fase-3-admin-owner.md §7 names.
+ * table would be write-only and born orphaned, which is the failure roles-y-alcance.md §7 names.
  *
  * @param id            the entry's identifier
  * @param key           which setting changed

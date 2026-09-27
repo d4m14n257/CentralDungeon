@@ -111,7 +111,7 @@ class FileIT {
     }
 
     /**
-     * The criterion of fase-1-master.md §4, end to end: a master uploads a character sheet, attaches
+     * F1.4's acceptance criterion, end to end: a master uploads a character sheet, attaches
      * it to two tables, and there is one file.
      */
     @Test

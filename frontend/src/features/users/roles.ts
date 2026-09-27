@@ -14,7 +14,7 @@ import type { AccountStatus, PlatformRole } from './types'
 export const PLATFORM_ROLES = ['Player', 'Master', 'Admin', 'Owner'] as const satisfies readonly PlatformRole[]
 
 /**
- * The two roles an `Admin` may grant and revoke (§3 of docs/fase-3-admin-owner.md).
+ * The two roles an `Admin` may grant and revoke (§3 of roles-y-alcance.md).
  *
  * **The whole difference between an admin and an owner in F3, in one line**: everything else on the
  * administration surface is shared, and what separates them is who may hand out the rank.

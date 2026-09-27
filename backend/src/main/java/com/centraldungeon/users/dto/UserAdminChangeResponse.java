@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  * {@code type} telling the screen which half of the fields to render.
  *
  * <p>It exists so the two audit tables are not write-only. Without it they would be born orphaned,
- * which is exactly the failure mode fase-3-admin-owner.md 7 warns about.
+ * which is exactly the failure mode roles-y-alcance.md §7 warns about.
  *
  * @param id            the entry's identifier
  * @param type          {@code RoleGranted}, {@code RoleRevoked} or {@code StatusChanged}

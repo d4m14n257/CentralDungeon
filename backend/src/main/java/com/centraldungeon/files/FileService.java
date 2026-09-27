@@ -670,7 +670,7 @@ public class FileService {
      * Resolves a file somebody is about to attach to a table, checking they are allowed to.
      *
      * <p>Called by {@link TableFileService}, which is why it hands back the entity: it stays inside
-     * the backend and never crosses HTTP (arquitectura.md 2.2). Two files qualify, and only two - the
+     * the backend and never crosses HTTP (arquitectura-backend skill §2.2). Two files qualify, and only two - the
      * actor's own, and one the platform published (#79). Somebody else's private upload never does,
      * which is the difference between reusing what the community offers and reading a stranger's
      * character sheet.
@@ -806,7 +806,7 @@ public class FileService {
      *
      * <p><b>The veto landed, and it is honoured in the fourth way</b> (#29, #39, #206). This is the
      * note that used to say «when the veto lands (F3) it has to be honoured here», and it is the
-     * hole {@code fase-3-admin-owner.md} §7 named in advance: «un vetado que no ve la mesa pero sí
+     * hole {@code roles-y-alcance.md} §7 named in advance: «un vetado que no ve la mesa pero sí
      * descarga su archivo es el bug que #206 anticipó por escrito». It was real - until F3.4 the
      * condition was {@code !link.isPrivate()} alone, so <em>any</em> authenticated person reached a
      * shared attachment, the vetoed included. The fourth way is now "a table shares it <b>and you

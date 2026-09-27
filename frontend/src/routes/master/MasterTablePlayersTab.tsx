@@ -135,7 +135,7 @@ function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
  * platform. So the row stays, marked, saying whose decision it was and when — which is also the
  * only place a master can see a colleague's veto at all.
  *
- * **The button says what it will do before it is pressed** (`fase-3-admin-owner.md:169`). A
+ * **The button says what it will do before it is pressed** (`roles-y-alcance.md §4, F3.4`). A
  * co-master gets the same action in the same place, labelled as the request it actually is; learning
  * that in the dialog afterwards is learning it after deciding.
  */
@@ -250,7 +250,7 @@ function PlayersSection({ tableId, isPrimary }: { tableId: string; isPrimary: bo
         {data && data.length > 0 && (
           <>
             {/* Said before anything is pressed, not inside the dialog that follows the press
-                (fase-3-admin-owner.md:169). The dialog repeats it; this is where it is learned. */}
+                (roles-y-alcance.md §4, F3.4). The dialog repeats it; this is where it is learned. */}
             <p className="text-fg-subtle text-xs">
               {t(isPrimary ? 'veto.hintPrimary' : 'veto.hintSecondary')} <HelpLink section="masters.banning">{t('veto.helpLink')}</HelpLink>
             </p>

@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 /**
- * F3.5 end to end: the sentence `docs/fase-3-admin-owner.md` measures the slice by.
+ * F3.5 end to end: the sentence `roles-y-alcance.md` measures the slice by.
  *
  * > un admin cambia el tope por archivo; la subida siguiente lo respeta sin reiniciar nada, y el
  * > cambio queda registrado con quién y cuándo.
@@ -167,7 +167,7 @@ test('an admin raises the file cap, the next upload screen respects it, and the 
 
 /**
  * The row of the matrix, in the browser: editing settings is a capability `Admin` and `Owner` share
- * (`fase-3-admin-owner.md` §3), so an owner finds the same screen with the same buttons.
+ * (`roles-y-alcance.md` §3), so an owner finds the same screen with the same buttons.
  *
  * It is the display half of what `AdminSettingsApiIT` asserts over HTTP. A `hasRole('ADMIN')` would
  * be caught there; what this catches is the other shape of the same bug - a screen that hides a

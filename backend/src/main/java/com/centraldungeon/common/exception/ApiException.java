@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
  * correctly.
  *
  * <p>Sealed: the five subclasses below are the whole vocabulary of intentional failure, and keeping
- * it closed is what lets a {@code switch} over them stay exhaustive (arquitectura.md 2.4). Anything
+ * it closed is what lets a {@code switch} over them stay exhaustive (arquitectura-backend skill §2.4). Anything
  * that is not one of these is a bug, and a bug answers 500.
  *
  * <p><b>The message is for whoever is reading a log, not for the person on the screen</b> (#197). It

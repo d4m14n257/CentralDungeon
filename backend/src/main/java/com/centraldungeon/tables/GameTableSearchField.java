@@ -59,7 +59,7 @@ public enum GameTableSearchField {
      * <p>Free text everywhere else in this enum is a decision about catalogs (#246), not a style: a
      * catalog has hundreds of values that grow whenever a master proposes one, and the nine states of
      * a table are neither. An unknown state still matches nothing rather than answering 400
-     * (arquitectura.md §2.5).
+     * (arquitectura-backend skill §2.5).
      *
      * <p>Useful on {@code /admin/tables}, where the listing spans every state (#176). The explorer
      * accepts it too, because the search language belongs to the entity and not to the screen (#239),

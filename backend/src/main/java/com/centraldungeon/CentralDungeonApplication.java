@@ -18,7 +18,7 @@ import org.springframework.cache.annotation.EnableCaching;
  * settings of #141 are not a table hit on every upload.
  *
  * <p>There were four records until F3.5. {@code AdminQueueProperties} is gone because its one value
- * moved to {@code system_settings}, which is what modelo-datos.md §5 said this slice would do: a
+ * moved to {@code system_settings}, which is what modelo-datos skill §5 said this slice would do: a
  * value the people running the platform adjust does not belong in a file only a deploy can change.
  */
 @SpringBootApplication

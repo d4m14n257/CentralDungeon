@@ -65,7 +65,7 @@ describe('ProfilePage', () => {
 
   /**
    * F3.2: the master role is asked for from here, because this is where somebody sees which roles
-   * they have and therefore where the absence of one is noticed (fase-3-admin-owner.md:126).
+   * they have and therefore where the absence of one is noticed (roles-y-alcance.md §4, F3.2).
    */
   it('offers the master role request to somebody who is not a master', async () => {
     queryResult = { data: { ...PROFILE, roles: ['Player'] }, isPending: false, isLoadingError: false, refetch: vi.fn() }

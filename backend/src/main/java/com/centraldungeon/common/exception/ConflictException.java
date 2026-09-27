@@ -42,7 +42,7 @@ public final class ConflictException extends ApiException {
 
     /**
      * The operation would leave the platform with no active Owner. The one global invariant of roles
-     * (fase-3-admin-owner.md 3): a system where nobody can grant Owner has no way back from the
+     * (roles-y-alcance.md §3): a system where nobody can grant Owner has no way back from the
      * inside, and MySQL cannot express the rule, so the service is the only place it can live.
      */
     public static final String LAST_OWNER = "LAST_OWNER";

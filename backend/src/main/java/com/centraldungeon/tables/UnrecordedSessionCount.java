@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * How many sessions of one table were due and never closed, and the date of the oldest.
  *
  * <p>An internal projection: the result of a grouped query that <b>never crosses HTTP</b>
- * (arquitectura.md 2.3) - the master dashboard turns it into a work item. Same shape and same
+ * (arquitectura-backend skill §2.3) - the master dashboard turns it into a work item. Same shape and same
  * reason as {@code AttendanceCount}: one query for every table somebody runs, instead of one count
  * per table.
  *

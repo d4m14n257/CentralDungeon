@@ -36,7 +36,7 @@ interface SubmitRequestSectionProps {
  * answered ones: reading a page of it would conclude there was none and offer the button straight
  * into the refusal. The filter is what turns "nothing on page one" into "nothing".
  *
- * It is written once and used from the three screens that prompt a request (fase-3-admin-owner.md:126)
+ * It is written once and used from the three screens that prompt a request (roles-y-alcance.md §4, F3.2)
  * rather than three times, because the rule — ask, or see that you already asked — is the same in all
  * three and three copies of it are how they start to disagree.
  *

@@ -65,7 +65,7 @@ class ApprovalSearchFieldTest {
         }
     }
 
-    /** Un valor desconocido no es un 400: no matchea nada (arquitectura.md 2.5). */
+    /** Un valor desconocido no es un 400: no matchea nada (arquitectura-backend skill §2.5). */
     @Test
     void anUnknownValueIsNotAnError() {
         assertThat(ApprovalRequestType.fromWireName("Quizas")).isEmpty();

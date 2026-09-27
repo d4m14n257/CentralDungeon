@@ -69,7 +69,7 @@ public class TableTaskService {
      * see it at all.
      *
      * <p>It replaced a private {@code requireLiveTable} that was the third copy of the same lookup
-     * (fase-3-admin-owner.md §7). {@code /tasks/applicable} is the read that made the difference:
+     * (roles-y-alcance.md §7). {@code /tasks/applicable} is the read that made the difference:
      * it is an endpoint of its own (#209), so unlike the sessions and the shared files it does
      * <b>not</b> inherit the table detail's answer and had to be closed here.
      */
@@ -351,7 +351,7 @@ public class TableTaskService {
      *
      * <p>Public because {@code TaskSubmissionService} needs the same entity under the same rule, and
      * a second copy of "and it must not be Deleted" is a second thing to remember. It is an internal
-     * read and never exposed raw over HTTP (arquitectura.md 2.2, 2.3).
+     * read and never exposed raw over HTTP (arquitectura-backend skill §2.2, 2.3).
      *
      * @param taskId the task
      * @return the live task

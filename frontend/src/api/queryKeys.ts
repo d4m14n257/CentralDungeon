@@ -1,4 +1,4 @@
-/** Central query key factory (arquitectura.md 3.3) - never a loose string literal in a component. */
+/** Central query key factory (arquitectura-frontend skill §3.3) - never a loose string literal in a component. */
 export const queryKeys = {
   tables: {
     list: (filters?: Record<string, unknown>) => ['tables', 'list', filters] as const,

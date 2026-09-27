@@ -63,7 +63,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  *   <li><b>Approving a MasterGrant goes through {@code UserRoleService}</b> and not through a second
  *       path writing the same row. Asserted as a call with the exact arguments, because "the person
  *       ends up with the role" would also pass if the service grew its own way of granting it - which
- *       is the failure fase-3-admin-owner.md 4 names outright.</li>
+ *       is the failure roles-y-alcance.md §4 names outright.</li>
  * </ul>
  */
 @ExtendWith(MockitoExtension.class)
@@ -515,7 +515,7 @@ class ApprovalServiceTest {
      * The screen that provokes the request asks «do I already have one of these open?», and it has to be
      * able to really ask it: reading page one of everything and inferring it is how the button comes back
      * as soon as an old pending one falls below twenty resolved ones. The filter goes through
-     * {@code ?q=} and not through a parameter of its own (arquitectura.md 2.5).
+     * {@code ?q=} and not through a parameter of its own (arquitectura-backend skill §2.5).
      */
     @Test
     void myRequestsAcceptTheSameFilterAsTheAdminListing() {
@@ -572,7 +572,7 @@ class ApprovalServiceTest {
     /**
      * Approving a {@code TablePause} applies it <b>through the {@code GameTableService}</b> and not by
      * writing the status here - the same clause #42 demands for the role, applied to the lifecycle. And
-     * the resolution note is the pause's justification (#32, modelo-datos.md:835).
+     * the resolution note is the pause's justification (#32, modelo-datos skill §5).
      */
     @Test
     void approvingATablePauseAppliesItThroughTheGameTableService() {

@@ -11,7 +11,7 @@ import type { SettingKey, SystemSetting, SystemSettingChange, UpdateSettingInput
  * around a list nobody scrolls.
  *
  * **The actor is never a parameter.** Who is changing a setting comes from the token, and an id in
- * the body would be a claim the caller makes about themselves (arquitectura.md §2.6) — which would
+ * the body would be a claim the caller makes about themselves (arquitectura-backend skill §2.6) — which would
  * make the audit row worth nothing.
  */
 export const settingsApi = {

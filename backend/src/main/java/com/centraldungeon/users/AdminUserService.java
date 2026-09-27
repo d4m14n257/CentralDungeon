@@ -33,7 +33,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  *
  * <ul>
  *   <li><b>Nobody with Admin or Owner can be blocked</b> - not by an admin, not by an owner, not by
- *       themselves (fase-3-admin-owner.md 3). Among peers there is no authority, and a block is
+ *       themselves (roles-y-alcance.md §3). Among peers there is no authority, and a block is
  *       irreversible from the blocked side: they cannot log in to ask about it (#84). Stated as one
  *       rule about the target rather than as a comparison between actor and target, it also covers
  *       blocking yourself for free - the actor of this screen always holds one of the two.</li>
@@ -181,7 +181,7 @@ public class AdminUserService {
      * same order {@code GameTableService.getStatusHistory} reads a table's history in.
      *
      * <p>It is what keeps the two audit tables from being write-only. Without it they would be born
-     * orphaned, which is the failure fase-3-admin-owner.md 7 names.
+     * orphaned, which is the failure roles-y-alcance.md §7 names.
      *
      * <p>Not paginated: an account's administrative history is a handful of rows read as a single
      * sequence, not a collection somebody scrolls.
@@ -207,7 +207,7 @@ public class AdminUserService {
 
     /**
      * The one rule that makes an admin panel safe to hand out: an account holding Admin or Owner is
-     * not blockable by anybody (fase-3-admin-owner.md 3).
+     * not blockable by anybody (roles-y-alcance.md §3).
      */
     private void requireNotPrivileged(User target, Set<String> roles) {
         if (roles.contains(PlatformRole.ADMIN.roleName()) || roles.contains(PlatformRole.OWNER.roleName())) {

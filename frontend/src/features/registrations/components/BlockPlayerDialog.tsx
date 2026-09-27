@@ -29,7 +29,7 @@ interface BlockPlayerDialogProps {
    *
    * **It changes what pressing the button does, not whether it is offered**: a `Primary` vetoes, a
    * `Secondary` files a request the `Primary` answers (#39). The dialog says which of the two is
-   * about to happen — before the press, which is what `fase-3-admin-owner.md:169` asks for.
+   * about to happen — before the press, which is what `roles-y-alcance.md §4, F3.4` asks for.
    */
   isPrimary: boolean
   open: boolean
@@ -38,7 +38,7 @@ interface BlockPlayerDialogProps {
    * The explanation of what this act does, shown above the note.
    *
    * A node rather than a `HelpLink` raised in here: `features/help` is another feature and a feature
-   * never imports one (arquitectura.md §3.1.5). The screen composes the two.
+   * never imports one (arquitectura-frontend skill §3.1.5). The screen composes the two.
    */
   help?: ReactNode
 }

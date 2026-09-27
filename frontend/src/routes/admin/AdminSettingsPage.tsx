@@ -42,7 +42,7 @@ const CATEGORY_ORDER: readonly SettingCategory[] = ['Business', 'Limits']
  * **No role guard in front of it** (#103), like every other admin screen: somebody who forces the
  * route without the rank gets a `403` from the backend and lands on `ForbiddenState`, which is an
  * explanation rather than a blank page. Editing settings is a row of the matrix where `Admin` and
- * `Owner` are the same (fase-3-admin-owner.md §3), so there is no capability question here at all —
+ * `Owner` are the same (roles-y-alcance.md §3), so there is no capability question here at all —
  * which is why, unlike `/admin/users`, no button is ever conditionally absent.
  */
 export function AdminSettingsPage() {

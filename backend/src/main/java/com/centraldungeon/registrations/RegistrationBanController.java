@@ -113,7 +113,7 @@ public class RegistrationBanController {
      *
      * <p><b>A second endpoint rather than the first one behaving differently.</b> The screen already
      * knows which of the two the reader is and says, before the button is pressed, that what it sends
-     * is a request (fase-3-admin-owner.md §4) - not afterwards. One endpoint that sometimes vetoes
+     * is a request (roles-y-alcance.md §4) - not afterwards. One endpoint that sometimes vetoes
      * and sometimes asks would have to answer with a record half of whose fields are null, which is
      * what R3 forbids; here the two answers are two types, and each is complete.
      *
@@ -169,7 +169,7 @@ public class RegistrationBanController {
      * <p>It goes through the same {@code ApprovalService.approve} an admin uses, which is why there
      * is no second way to write {@code Blocked}: the resolution is bookkept once, and the effect is
      * applied by {@code RegistrationService}. What decides that a {@code Primary} rather than an
-     * admin may call it is the request's <b>type</b>, checked in the service (fase-3-admin-owner.md
+     * admin may call it is the request's <b>type</b>, checked in the service (roles-y-alcance.md
      * §4: «el otorgamiento es la regla, no la puerta»).
      *
      * <p>The answer is the application, not the request: the screen that has this button is the

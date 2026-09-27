@@ -52,7 +52,7 @@ interface StatusBadgeProps {
 /**
  * A status as a badge: a coloured dot and a label, in the one shape the whole application uses.
  *
- * **It knows nothing about any domain, and it cannot** (`arquitectura.md` §3.1.2: «al subir se le
+ * **It knows nothing about any domain, and it cannot** (`arquitectura-frontend` skill §3.1.2: «al subir se le
  * quita el dominio»). It receives the tone already chosen and the label already translated, so the
  * two things that are genuinely each feature's — which of its states looks how, and what the state is
  * called in two languages — stay in the feature, next to the union they belong to.

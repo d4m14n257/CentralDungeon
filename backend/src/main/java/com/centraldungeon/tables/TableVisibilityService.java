@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  * TableTaskService.requireLiveTable}. Each of them answered the same question ("is this table there,
  * and is it gone?") with the same four lines, which is survivable while the only answer is
  * {@code Deleted}. The veto of #29 is the second answer, and a rule with three homes is a rule that
- * gets added to two of them. §7 of {@code fase-3-admin-owner.md} named that failure in advance: «el
+ * gets added to two of them. §7 of {@code roles-y-alcance.md} named that failure in advance: «el
  * veto toca seis vías de lectura y es fácil cerrar cinco».
  *
  * <p>So the three copies became calls to this class, and the veto is written here <b>once</b>.

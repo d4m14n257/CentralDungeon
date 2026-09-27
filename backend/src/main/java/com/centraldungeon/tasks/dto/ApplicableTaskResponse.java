@@ -16,7 +16,7 @@ import org.jspecify.annotations.Nullable;
  * (principio 2 de frontend-diseno.md 1).
  *
  * @param taskId                the task's identifier
- * @param audience              who is being asked, as a string (arquitectura.md 2.3). The screen uses
+ * @param audience              who is being asked, as a string (arquitectura-backend skill §2.3). The screen uses
  *                              it to say whether this is asked of candidates, of players, or of them
  *                              in particular
  * @param tableSessionId        the session this is tied to, or null for "at any point" (#63)

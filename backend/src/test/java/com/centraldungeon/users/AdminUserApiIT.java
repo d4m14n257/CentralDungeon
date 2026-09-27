@@ -26,7 +26,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * <b>The matrix of fase-3-admin-owner.md 3, walked rather than tabulated.</b> §7 of that document
+ * <b>The matrix of roles-y-alcance.md §3, walked rather than tabulated.</b> §7 of that document
  * names the risk this class exists to answer: {@code hasRole('ADMIN')} where
  * {@code hasAnyRole('ADMIN','OWNER')} was meant leaves the owner outside a screen and nobody
  * notices, because in development the test actor is usually an admin. So every one of the seven

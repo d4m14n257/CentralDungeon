@@ -23,7 +23,7 @@ beforeEach(() => {
 
 describe('useUserAdminCapabilities', () => {
   /**
-   * The one difference between an admin and an owner in F3 (§3 of docs/fase-3-admin-owner.md): who
+   * The one difference between an admin and an owner in F3 (§3 of roles-y-alcance.md): who
    * may hand out the rank. Everything the screen shows follows from this list, so this is the test
    * that keeps "an admin cannot make an admin" from becoming a comment nobody enforces.
    */

@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  *                       screen shows and the one the per-file cap applies to
  * @param fileType       whether the owner is keeping it ({@code Private}), it is tied to one context
  *                       ({@code SingleUse}) or the platform published it ({@code Public}) - the three
- *                       lifecycles of #68, as a string (arquitectura.md 2.3)
+ *                       lifecycles of #68, as a string (arquitectura-backend skill §2.3)
  * @param categories     the cajones the file belongs to (#233), as strings. Plural and cumulative:
  *                       a sheet uploaded on an application and later handed in to a request belongs
  *                       to both, and nothing ever takes a cajón away. <b>Empty on an upload and on a

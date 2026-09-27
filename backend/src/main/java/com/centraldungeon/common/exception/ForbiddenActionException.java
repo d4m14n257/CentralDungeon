@@ -16,7 +16,7 @@ public final class ForbiddenActionException extends ApiException {
 
     /**
      * An admin reaching for the Admin or Owner role, granting it or taking it away. Only an owner
-     * moves the rank (fase-3-admin-owner.md 3, #169).
+     * moves the rank (roles-y-alcance.md §3, #169).
      *
      * <p>It gets a code of its own because it is the one 403 the screen has to <b>explain</b>: the
      * reader is an admin who legitimately administers the platform and is being told that this one
@@ -47,7 +47,7 @@ public final class ForbiddenActionException extends ApiException {
      *
      * <p>In practice the frontend should never provoke it: the screen knows whether the reader is
      * the {@code Primary} and says, before the button is pressed, that what it sends is a request
-     * (fase-3-admin-owner.md §4). This is what answers the stale tab and the hand-written call.
+     * (roles-y-alcance.md §4). This is what answers the stale tab and the hand-written call.
      */
     public static final String NOT_PRIMARY_MASTER = "NOT_PRIMARY_MASTER";
 

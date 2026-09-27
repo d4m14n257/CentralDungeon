@@ -2,7 +2,7 @@
 
 > Define **qué pantallas existen, cómo se navega entre ellas y con qué piezas se construyen**. Se lee antes de crear cualquier componente.
 >
-> El *cómo se escribe el código* está en `arquitectura.md` §3. El *por qué* de cada decisión, en `decisiones.md`. Acá está el diseño.
+> El *cómo se escribe el código* está en skill `arquitectura-frontend` §3. El *por qué* de cada decisión, en `decisiones.md`. Acá está el diseño.
 >
 > El diseño visual —tokens y componentes— vive en el design system de **Claude Design** (`decisiones.md` #130). Acá están las pantallas, la navegación y el inventario de piezas; los valores concretos de color, tipografía y espaciado se deciden allá y se transcriben al `@theme` (#118).
 
@@ -328,7 +328,7 @@ Todo lo demás se usa tal como viene: los tokens del `@theme` ya lo tiñen solo.
 
 ### Compuestos sin dominio
 
-En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estaría mal ubicado (`arquitectura.md` §3.1.2).
+En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estaría mal ubicado (skill `arquitectura-frontend` §3.1.2).
 
 > Los compuestos de esta sección están dibujados en `design/out/`: `components-dialogs.html` (ConfirmDialog, FormDialog), `components-data.html` (DataTable, CollapsibleSection, IconAction), `components-inputs.html` (FilePicker, RichText, ScheduleEditor), `components-shell.html` (NotificationBell, ContextSwitcher, UserMenu), `ui-states.html` (EmptyState, ErrorState, ForbiddenState) y `components.html` (badges, karma, GameTableCard). `SearchQueryInput` y `UserPicker` (#164, #165) todavía no tienen preview: se construyeron directo en la pantalla que los pedía.
 
@@ -401,7 +401,7 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 
 #### El badge de estado estaba escrito diez veces — resuelto en #261
 
-**Fue el hallazgo que abrir el inventario completo produjo**, y era un incumplimiento de `arquitectura.md` §3.1.2: esa regla fija el umbral en **dos** usos reales, más bajo que el del backend, y la razón que da es exacta — *«acá la alternativa a subir no es un poco de duplicación: es un import prohibido»*. Nueve no era un caso de borde.
+**Fue el hallazgo que abrir el inventario completo produjo**, y era un incumplimiento de skill `arquitectura-frontend` §3.1.2: esa regla fija el umbral en **dos** usos reales, más bajo que el del backend, y la razón que da es exacta — *«acá la alternativa a subir no es un poco de duplicación: es un import prohibido»*. Nueve no era un caso de borde.
 
 **Ya está subido**: `components/StatusBadge.tsx`, y los diez pasaron a usarlo. Queda escrito lo que había porque es lo que explica la forma del componente y lo que evita que el próximo se escriba de cero.
 

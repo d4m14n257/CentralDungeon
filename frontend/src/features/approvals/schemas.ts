@@ -39,7 +39,7 @@ export const resolveApprovalRequestSchema = z.object({
 export type ResolveApprovalRequestForm = z.infer<typeof resolveApprovalRequestSchema>
 
 /**
- * Form and payload cannot drift apart (arquitectura.md §3.2, regla 7): if the API's input type gains
+ * Form and payload cannot drift apart (arquitectura-frontend skill §3.2, regla 7): if the API's input type gains
  * a field or renames one, these stop compiling instead of failing at runtime.
  */
 export type SubmitFormMatchesPayload = Expect<Equals<SubmitApprovalRequestForm, SubmitApprovalRequestInput>>

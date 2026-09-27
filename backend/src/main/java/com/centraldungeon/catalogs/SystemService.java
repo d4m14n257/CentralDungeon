@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 /**
  * Game systems. This is the one that was written whole first; {@link AbstractCatalogService} is what
  * was left after {@link TagService} and {@link PlatformService} came out identical to it
- * (arquitectura.md 2.4).
+ * (arquitectura-backend skill §2.4).
  */
 @Service
 public class SystemService extends AbstractCatalogService<GameSystem> {

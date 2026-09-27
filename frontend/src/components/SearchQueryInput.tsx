@@ -36,7 +36,7 @@ type Suggestion =
  * closed criterion becomes a chip so that what is being searched, and by which field, stays in view.
  *
  * It knows no domain, on purpose — it receives the fields it accepts rather than knowing them
- * (arquitectura.md 3.1.1). Everything that differs between the people search and the file searches
+ * (arquitectura-frontend skill §3.1.1). Everything that differs between the people search and the file searches
  * arrives as a prop; there is no second implementation of any of this.
  *
  * **The slash is the only separator, and Enter is the only thing that closes a criterion** (#240).

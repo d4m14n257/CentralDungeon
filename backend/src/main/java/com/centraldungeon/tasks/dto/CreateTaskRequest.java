@@ -16,7 +16,7 @@ import org.jspecify.annotations.Nullable;
  * told about cannot be answered.
  *
  * <p>Bean Validation covers what a single field can be wrong about; the relations between them live
- * in the service, where they belong (arquitectura.md 2.3) - that a {@code Single} task names a
+ * in the service, where they belong (arquitectura-backend skill §2.3) - that a {@code Single} task names a
  * target, that a task with both channels off is not a task, and that a session belongs to this table.
  *
  * @param title          the headline. Required: it is what the notification and the list show

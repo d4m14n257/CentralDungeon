@@ -44,7 +44,7 @@ export function requestStatusChoices(t: TFunction): SearchChoice[] {
  * whoever asked: the two things an admin reads a row for.
  *
  * An unknown value in `/request_type` or `/status` is **not** an error on either side: it simply
- * matches nothing, the same way a mistyped `/command` stays literal text (arquitectura.md §2.5).
+ * matches nothing, the same way a mistyped `/command` stays literal text (arquitectura-backend skill §2.5).
  *
  * @param t the translator of the `admin` namespace
  * @returns the commands, in the order they are offered

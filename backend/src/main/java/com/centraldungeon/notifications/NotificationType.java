@@ -92,7 +92,7 @@ public enum NotificationType {
     /**
      * To whoever asked: an admin approved their request (#42).
      *
-     * <p><b>The request itself notifies nobody</b> (#100, modelo-datos.md: «los ítems de trabajo de
+     * <p><b>The request itself notifies nobody</b> (#100, modelo-datos skill §5: «los ítems de trabajo de
      * admin no se duplican como notificaciones»). The shared queue already shows what is waiting; a
      * notification per request would be the copy #100 exists to avoid. What needs a bell is the
      * <em>resolution</em>, and only for the person who asked: they are the one who cannot see the

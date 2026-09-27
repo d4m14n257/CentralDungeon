@@ -25,9 +25,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Every rule of the three catalogs, written once (arquitectura.md 2.4, case 2). Systems, tags and
+ * Every rule of the three catalogs, written once (arquitectura-backend skill §2.4, case 2). Systems, tags and
  * platforms are the same row with a different table name: same columns, same lifecycle, same six
- * admin operations, and not one rule in modelo-datos.md 5 that applies to one of them and not to the
+ * admin operations, and not one rule in modelo-datos skill §5 that applies to one of them and not to the
  * other two. That is "equal by definition", not "similar today".
  *
  * <p>The extraction condition of 2.4 was met before this class existed: {@code SystemService} was
@@ -39,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
  * concrete controller method (#123, CVE-2025-41248) - putting a {@code @PreAuthorize} on a generic
  * base is exactly the shape that CVE describes.
  *
- * <p>The rules implemented, all from modelo-datos.md 5:
+ * <p>The rules implemented, all from modelo-datos skill §5:
  * <ul>
  *   <li>groups are flat, depth 1: an alias points at the canonical entry, never at another alias (#59)</li>
  *   <li>searching by any member resolves the whole group (#54, #56)</li>
@@ -59,7 +59,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     /** The catalog's own table. Protected so a subclass can add a read the base does not need. */
     protected final CatalogValueRepository<E> repository;
 
-    /** Turns entities into the two response shapes. Never sees a repository (arquitectura.md 2.2). */
+    /** Turns entities into the two response shapes. Never sees a repository (arquitectura-backend skill §2.2). */
     private final CatalogMapper catalogMapper;
 
     /**

@@ -12,7 +12,7 @@ import jakarta.persistence.Converter;
  * is declared here rather than bending either side to match the other.
  *
  * <p>Only the database sees the hyphen. What crosses HTTP is the constant's name
- * ({@code SingleUse}), which is what arquitectura.md 2.3 asks for and what the frontend models as a
+ * ({@code SingleUse}), which is what arquitectura-backend skill §2.3 asks for and what the frontend models as a
  * union of literals.
  */
 @Converter(autoApply = true)

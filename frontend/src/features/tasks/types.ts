@@ -1,7 +1,7 @@
 import type { StagedFile } from '@/types/file'
 /**
  * Who a task is addressed to (#63). A union of literals rather than a TypeScript `enum`
- * (arquitectura.md §3.2).
+ * (arquitectura-frontend skill §3.2).
  *
  * The three moments a table asks for something: before you are in, once you are in, and to you in
  * particular.

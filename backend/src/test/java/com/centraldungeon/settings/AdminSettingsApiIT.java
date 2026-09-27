@@ -37,7 +37,7 @@ import org.testcontainers.mysql.MySQLContainer;
 /**
  * {@code /admin/settings} over HTTP (#141), and the row of the matrix it belongs to.
  *
- * <p><b>Row "Editar {@code system_settings}: sí / sí".</b> fase-3-admin-owner.md §3 puts editing
+ * <p><b>Row "Editar {@code system_settings}: sí / sí".</b> roles-y-alcance.md §3 puts editing
  * settings among the capabilities the two ranks share, and §7 names the way that gets broken:
  * {@code hasRole('ADMIN')} written where {@code hasAnyRole('ADMIN','OWNER')} was meant leaves the
  * owner outside a screen and nobody notices, because the test actor in development is usually an
@@ -226,7 +226,7 @@ class AdminSettingsApiIT {
     /**
      * <b>«El cambio queda registrado con quién y cuándo».</b> A platform-wide change produces no
      * notification and no visible event, so the audit row is the only trace it leaves - and reading
-     * it back is what keeps the table from being write-only (fase-3-admin-owner.md §7).
+     * it back is what keeps the table from being write-only (roles-y-alcance.md §7).
      */
     @Test
     @DisplayName("every change leaves its row, with who, when and why")

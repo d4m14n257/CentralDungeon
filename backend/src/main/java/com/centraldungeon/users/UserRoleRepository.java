@@ -58,7 +58,7 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> 
      * How many people hold a role and can actually use it. <b>An observation, not a decision.</b>
      *
      * <p>"Can actually use it" is the whole point when the role is Owner: the platform is never left
-     * without one (fase-3-admin-owner.md 3), and an owner whose account is Blocked or Deleted cannot
+     * without one (roles-y-alcance.md §3), and an owner whose account is Blocked or Deleted cannot
      * log in to grant the role to anybody, so counting them would satisfy the invariant on paper
      * while breaking it in fact.
      *

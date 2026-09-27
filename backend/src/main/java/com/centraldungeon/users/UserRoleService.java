@@ -18,7 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 /**
  * Who holds which global role, and who is allowed to change that.
  *
- * <p><b>The granting is the rule, not the door</b> (fase-3-admin-owner.md 4). The controller's
+ * <p><b>The granting is the rule, not the door</b> (roles-y-alcance.md §4). The controller's
  * {@code @PreAuthorize} says {@code hasAnyRole('ADMIN','OWNER')} and stops there, because the line
  * between the two is not a role check: an admin may move Player and Master and nothing else, and
  * that sentence cannot be written in an annotation without either a {@code RoleHierarchy} - which
@@ -209,7 +209,7 @@ public class UserRoleService {
 
     /**
      * Who may move which rank. An admin moves Player and Master; Admin and Owner are an Owner's to
-     * give and to take (fase-3-admin-owner.md 3).
+     * give and to take (roles-y-alcance.md §3).
      *
      * <p>403 and not 400 on purpose: the request is perfectly well formed, and what makes it fail is
      * who sent it.

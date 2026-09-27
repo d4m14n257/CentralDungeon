@@ -9,7 +9,7 @@ import type { ResolveApprovalRequestInput } from '../types'
  * Approves a request, with the note that is required on both acts (#42).
  *
  * **Approving a `MasterGrant` grants the role through `UserRoleService`** — the same single road
- * `/admin/users` uses, and not a second one (fase-3-admin-owner.md:128). That is why this
+ * `/admin/users` uses, and not a second one (roles-y-alcance.md §4, F3.2). That is why this
  * invalidates the users branch as well: the role it just moved is on a screen this one knows nothing
  * about, and leaving that cache in place would show an account without a role it now holds.
  *

@@ -30,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The five rules of "Visibilidad de perfiles" (modelo-datos.md §5), one case per rule and its
+ * The five rules of "Visibilidad de perfiles" (modelo-datos skill §5), one case per rule and its
  * negative, plus the two-week window of #44 and the row-status guard of #216.
  */
 @ExtendWith(MockitoExtension.class)

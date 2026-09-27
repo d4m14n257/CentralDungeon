@@ -50,7 +50,7 @@ import org.testcontainers.mysql.MySQLContainer;
  * request body, the shape of the {@code ProblemDetail} the frontend branches on (#197) - the four
  * new codes included - and the {@code @PageableDefault}. The {@code Location} of the 201 is a fifth.
  *
- * <p><b>The matrix of fase-3-admin-owner.md 3, walked.</b> §7 of that document names the risk:
+ * <p><b>The matrix of roles-y-alcance.md §3, walked.</b> §7 of that document names the risk:
  * {@code hasRole('ADMIN')} where {@code hasAnyRole('ADMIN','OWNER')} was meant locks the owner out
  * of a screen and nobody notices, because in development the test actor is usually an admin. The
  * same shape {@code AdminUserApiIT.everyRouteAnswersTheSameToAnAdminAndToAnOwner} has, for the four
@@ -364,7 +364,7 @@ class ApprovalRequestApiIT {
     // ---------------------------------------------------------------- what approving does
 
     /**
-     * The sentence of fase-3-admin-owner.md:128, over HTTP: approving a {@code MasterGrant} grants
+     * The sentence of roles-y-alcance.md §4, F3.2, over HTTP: approving a {@code MasterGrant} grants
      * the role <b>through {@code UserRoleService}</b>, which is visible from outside precisely
      * because that service is what writes the audit row and evicts the snapshot. A second path that
      * wrote {@code users_roles} directly would leave the trail empty.
@@ -511,7 +511,7 @@ class ApprovalRequestApiIT {
         as(get(MINE + "/mine").param("q", "/status Pending /and /request_type General"), player)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1));
-        // A value outside the enum is empty, never a 400 (arquitectura.md 2.5).
+        // A value outside the enum is empty, never a 400 (arquitectura-backend skill §2.5).
         as(get(MINE + "/mine").param("q", "/status Maybe"), player)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
@@ -586,7 +586,7 @@ class ApprovalRequestApiIT {
         as(get(ADMIN).param("q", "terror /and /request_type TableOpen"), admin)
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].requestedByName").value(other.getName()));
-        // A value outside either enum matches nothing and is never a 400 (arquitectura.md 2.5).
+        // A value outside either enum matches nothing and is never a 400 (arquitectura-backend skill §2.5).
         as(get(ADMIN).param("q", "/request_type TablePause"), admin)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));

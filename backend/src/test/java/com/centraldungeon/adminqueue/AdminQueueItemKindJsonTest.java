@@ -73,7 +73,7 @@ class AdminQueueItemKindJsonTest {
     }
 
     /**
-     * <b>Two values and not four</b>, and that is a decision and not an oversight. {@code modelo-datos.md}
+     * <b>Two values and not four</b>, and that is a decision and not an oversight. the {@code modelo-datos} skill
      * §5 lists four sources: the two here, plus {@code comments} in {@code Under review} and
      * {@code system_feedback} in {@code New} - and those two arrive in F5 <em>with the feature that
      * produces them</em>. An enum value nothing emits is the orphan this phase came to close.

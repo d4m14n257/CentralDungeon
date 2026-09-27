@@ -25,7 +25,7 @@ interface BlockUserDialogProps {
    * consequences.
    *
    * A node rather than a `HelpLink` raised here, for the same reason as {@link RoleChangeDialog}:
-   * `features/help` is another feature and a feature never imports one (arquitectura.md §3.1.5).
+   * `features/help` is another feature and a feature never imports one (arquitectura-frontend skill §3.1.5).
    */
   help?: ReactNode
 }

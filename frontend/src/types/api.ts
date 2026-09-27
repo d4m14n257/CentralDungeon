@@ -10,7 +10,7 @@ export interface PageResponse<T> {
   totalPages: number
 }
 
-/** Mirrors the backend's RFC 9457 body (arquitectura.md 2.5) - never a bare string, never a 418. */
+/** Mirrors the backend's RFC 9457 body (arquitectura-backend skill §2.5) - never a bare string, never a 418. */
 export interface ProblemDetail {
   title: string
   status: number
@@ -33,7 +33,7 @@ export interface ProblemDetail {
  *
  * Lives here and not in `features/tables/types.ts` because a second feature needs the exact same
  * shape unchanged: `features/tables` uses it for one table's sessions, `features/users` for a
- * profile's aggregate across every table (arquitectura.md 3.1.2 - it moves up the moment a second
+ * profile's aggregate across every table (arquitectura-frontend skill §3.1.2 - it moves up the moment a second
  * real consumer needs it, and moving it up is what lets `AttendanceSummaryView` stay the one place
  * that renders it instead of being copied into a second feature).
  */

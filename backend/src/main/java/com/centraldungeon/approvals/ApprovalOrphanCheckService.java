@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Finds the requests that point at something which is no longer there (#78).
  *
  * <p><b>The third of the three things the polymorphic reference costs, and the one that is easiest to
- * skip.</b> {@code docs/fase-3-admin-owner.md} 7 says it outright: «dos cosas van con ella o no va: la
+ * skip.</b> {@code roles-y-alcance.md} §7 says it outright: «dos cosas van con ella o no va: la
  * validación en el service antes de insertar, y el chequeo periódico de huérfanas. Sin la segunda, el
  * problema aparece meses después y sin forma de reconstruir qué apuntaba a qué». The validation in
  * {@link ApprovalService#submit} only covers the moment of writing; what it cannot cover is the

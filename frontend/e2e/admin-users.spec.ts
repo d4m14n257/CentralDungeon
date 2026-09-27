@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 /**
- * F3.1 end to end: the sentence `docs/fase-3-admin-owner.md:110` measures the slice by.
+ * F3.1 end to end: the sentence `roles-y-alcance.md §4, F3.1` measures the slice by.
  *
  * > un owner asciende a alguien a admin; ese admin abre `/admin/users`, puede dar el rol de master y
  * > **no encuentra ninguna forma** de dar el de admin; el owner intenta quitarse su propio rol y

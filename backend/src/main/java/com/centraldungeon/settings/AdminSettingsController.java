@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Admin and Owner are enumerated on every method, as they are on every other administrative
  * endpoint: there is no {@code RoleHierarchy} in this project and an owner can do what an admin can
  * by being listed, not by inheriting (#37, #89, #123). <b>Editing settings is where the two roles
- * are the same</b> - the matrix of fase-3-admin-owner.md §3 says so in one line, and the only
+ * are the same</b> - the matrix of roles-y-alcance.md §3 says so in one line, and the only
  * difference F3 draws between them is who may grant the rank.
  *
  * <p>The actor always comes from {@code @AuthenticationPrincipal} and never from the body
- * (arquitectura.md §2.6): the audit row this writes is only worth anything if the name on it is not
+ * (arquitectura-backend skill §2.6): the audit row this writes is only worth anything if the name on it is not
  * one the caller chose.
  *
  * <p>No listing is paginated here. There are four settings and adding one is a line of an enum;

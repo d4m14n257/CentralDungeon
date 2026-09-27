@@ -4,7 +4,7 @@ import type { TableFileType } from '@/types/file'
  * Which lifecycle a file has (#68). Three, not two: what the platform published, what its owner
  * keeps to reuse (#65), and what was uploaded for one context and is transient.
  *
- * A union of literals rather than a TypeScript `enum` (arquitectura.md 3.2). Note that the wire
+ * A union of literals rather than a TypeScript `enum` (arquitectura-frontend skill §3.2). Note that the wire
  * value is the backend constant's name — `SingleUse` — and not the hyphenated `Single-use` the
  * column holds; that spelling stops at the backend's converter and never reaches here.
  */

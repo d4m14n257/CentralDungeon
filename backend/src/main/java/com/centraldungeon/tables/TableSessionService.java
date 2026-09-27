@@ -78,7 +78,7 @@ public class TableSessionService {
      *
      * <p>It replaced a private {@code getTable} that was one of <b>three</b> copies of the same
      * lookup. The veto of #29 has to be written once or it gets written twice and forgotten once
-     * (fase-3-admin-owner.md §7), so the copy is gone and this is the gate.
+     * (roles-y-alcance.md §7), so the copy is gone and this is the gate.
      */
     private final TableVisibilityService tableVisibilityService;
 
@@ -420,7 +420,7 @@ public class TableSessionService {
 
     /**
      * {@link #summarize}'s sibling with no game table to scope it to - the same three numbers of #137
-     * across every table the person has ever played, which is what a profile shows (modelo-datos.md
+     * across every table the person has ever played, which is what a profile shows (modelo-datos skill
      * §5). Never cached (#11), for the same reason the scoped version is not.
      *
      * @param userId the person whose profile is being read

@@ -25,7 +25,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * Exactly one live Primary per table (modelo-datos.md #73) - MySQL has no partial unique index for
+ * Exactly one live Primary per table (modelo-datos skill, #73) - MySQL has no partial unique index for
  * it, so MasterService's row lock on the table's masters is what has to hold under a race. Two
  * shapes of that race are covered: concurrent hand-offs from the same original Primary, where only
  * the one that grabs the lock first should still find the actor as Primary; and hand-offs racing

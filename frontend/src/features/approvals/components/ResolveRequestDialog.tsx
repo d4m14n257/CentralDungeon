@@ -29,7 +29,7 @@ interface ResolveRequestDialogProps {
    * The explanation of what approving each kind does, shown above the note.
    *
    * A node rather than a `HelpLink` raised here: `features/help` is another feature and a feature
-   * never imports one (arquitectura.md §3.1.5).
+   * never imports one (arquitectura-frontend skill §3.1.5).
    */
   help?: ReactNode
 }

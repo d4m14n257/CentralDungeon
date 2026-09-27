@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
  * Turns every exception that escapes a controller into an RFC 9457 {@code ProblemDetail}
- * (arquitectura.md 2.5). It is the reason a service can throw a {@link ApiException} without knowing
+ * (arquitectura-backend skill §2.5). It is the reason a service can throw a {@link ApiException} without knowing
  * anything about HTTP.
  *
  * <p>Two rules the old project broke and this class enforces: an error is never a bare string, and

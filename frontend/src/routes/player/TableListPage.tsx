@@ -34,7 +34,7 @@ import { useSearchQuery } from '@/hooks/useSearchQuery'
  * no page number to keep.
  *
  * **Asking for a table to be opened happens from the empty explorer** and not from a screen for
- * making requests (fase-3-admin-owner.md:126): this is the moment somebody looked for a table and
+ * making requests (roles-y-alcance.md §4, F3.2): this is the moment somebody looked for a table and
  * found none, which is the whole of what a `TableOpen` request says. Approving it does not create
  * the table — the request carries no name, no system, no seats and no agenda — it records that the
  * request stands, and an admin opens one (#72).

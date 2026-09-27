@@ -51,7 +51,7 @@ class AdminQueueSourceTest {
 
     /**
      * Dos fuentes vivas y no cuatro: {@code comments} y {@code system_feedback} llegan en F5 con la
-     * feature that produces them (modelo-datos.md §5).
+     * feature that produces them (modelo-datos skill §5).
      */
     @Test
     void entranDosFuentesYNoCuatro() {

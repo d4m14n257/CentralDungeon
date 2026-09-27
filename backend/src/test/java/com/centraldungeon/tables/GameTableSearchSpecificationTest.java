@@ -113,7 +113,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * A status that does not exist matches <b>nothing</b>, and never answers 400 (arquitectura.md §2.5).
+     * A status that does not exist matches <b>nothing</b>, and never answers 400 (arquitectura-backend skill §2.5).
      * The distinction that cannot be lost: «there is no status called Abierta» is not «no filter» - read
      * the second way, a typo would list the whole platform.
      */

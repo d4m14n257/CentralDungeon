@@ -19,7 +19,7 @@ import type {
  * same row the tray shows.
  *
  * **The actor is never a parameter.** Who is asking and who is resolving both come from the token,
- * and an id in the body would be a claim the caller makes about themselves (arquitectura.md §2.6).
+ * and an id in the body would be a claim the caller makes about themselves (arquitectura-backend skill §2.6).
  * It is also why {@link submit} sends no `entityId`: the three kinds of F3.2 are about the person
  * who asked.
  *
@@ -108,7 +108,7 @@ export const approvalsApi = {
  * endpoint answers with a full `RegistrationResponse`. What is true is that *this* feature cannot
  * model it — a registration is `features/registrations`' vocabulary and a feature never imports from
  * another (regla dura 16) — so the honest type is the project's own answer for what is not known
- * here (arquitectura.md §3.2: never `any`, `unknown` for the unknown). Callers re-read the lists
+ * here (arquitectura-frontend skill §3.2: never `any`, `unknown` for the unknown). Callers re-read the lists
  * they render rather than patching a row in from an answer they cannot type.
  */
 type UnreadBody = unknown

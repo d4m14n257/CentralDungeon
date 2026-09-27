@@ -76,7 +76,7 @@ export function tableStatusChoices(t: TFunction): SearchChoice[] {
  * put a command into a box where it can barely mean anything.
  *
  * An unknown value in `/table_status` is **not** an error on either side: it simply matches nothing,
- * the same way a mistyped `/command` stays literal text (arquitectura.md §2.5).
+ * the same way a mistyped `/command` stays literal text (arquitectura-backend skill §2.5).
  *
  * @param t       the translator of the `admin` namespace, for the command labels
  * @param tTables the translator of the `tables` namespace, for the ten status labels it already owns

@@ -20,7 +20,7 @@ import { testLoginAndReload } from './devApi'
 const DEFAULT_PLAYER_ID = 'jugador-1'
 const DEFAULT_MASTER_ID = 'master-1'
 const DEFAULT_ADMIN_ID = 'admin-1'
-// F3.1 needs an owner to verify by hand (fase-3-admin-owner.md §6, steps 1 and 2), and there is no
+// F3.1 needs an owner to verify by hand (roles-y-alcance.md §6, steps 1 and 2), and there is no
 // other way into that role: the seed grants nobody Owner, and only an Owner may hand it out.
 const DEFAULT_OWNER_ID = 'owner-1'
 
@@ -32,7 +32,7 @@ const DEFAULT_OWNER_ID = 'owner-1'
  *
  * The four roles are here because test-login now issues all four. **Owner is the one that could not
  * be reached any other way**: the seed grants it to nobody and only an Owner may hand it out, so
- * without this button the first two steps of fase-3-admin-owner.md §6 had no actor to run them as.
+ * without this button the first two steps of roles-y-alcance.md §6 had no actor to run them as.
  */
 export function DevPanel() {
   if (!import.meta.env.DEV) {

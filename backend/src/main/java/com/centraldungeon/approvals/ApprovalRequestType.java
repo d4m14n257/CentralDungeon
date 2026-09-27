@@ -33,7 +33,7 @@ public enum ApprovalRequestType {
 
     /**
      * "Make me a master." Approving it grants {@code PlatformRole.MASTER} through
-     * {@code UserRoleService}, the one place a role is ever written (fase-3-admin-owner.md 4).
+     * {@code UserRoleService}, the one place a role is ever written (roles-y-alcance.md §4).
      */
     MasterGrant(ApprovalEntityResolver.USER),
 
@@ -133,7 +133,7 @@ public enum ApprovalRequestType {
      * {@link #wireName()}'s {@code @JsonValue}, and as literal text inside {@code ?q=} when somebody
      * types {@code /request_type MasterGrant}. This one is the forgiving door - a search box has to
      * survive being typed into, so it matches case-insensitively and an unknown name is simply
-     * nobody rather than a 400 (arquitectura.md 2.5).
+     * nobody rather than a 400 (arquitectura-backend skill §2.5).
      *
      * @param wireName a type name, in any case
      * @return the matching constant, or empty when it is not one of the five

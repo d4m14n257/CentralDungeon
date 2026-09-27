@@ -16,7 +16,7 @@ Tres reglas que salen de ahí:
 
 Y tres cosas que no se negocian entre fases:
 
-- **Nada se da por terminado sin sus tests** (regla dura 7). Cada regla de `modelo-datos.md` §5 que entre en una fase llega con su test unitario.
+- **Nada se da por terminado sin sus tests** (regla dura 7). Cada regla de skill `modelo-datos` §5 que entre en una fase llega con su test unitario.
 - **Las invariantes que MySQL no puede garantizar necesitan test de integración**, no unitario: un solo `Primary` vivo por mesa (#73) y una sola postulación activa por par (#28). Son las dos que se rompen con concurrencia.
 - **La fase que estrena una entidad decide y construye su borrado** (#175). No se deja "para más adelante": una entidad que se puede crear y no se puede sacar de encima obliga a inventarle un final falso —cancelarla, vaciarla, renombrarla— y ese parche después es más caro que la decisión. Decidir el borrado incluye decidir **si lo hay**: para las mesas, borrar solo aplica a lo que nunca fue público, y lo demás se cancela a propósito.
 
@@ -40,58 +40,32 @@ Express + TypeScript, 6 routers, ~35 endpoints, 1735 líneas de handlers (`table
 
 **No se rescata código.** Dos cosas ya presentes sí son continuidad y no novedad: `react-hook-form` + `zod` (siguen) y `@tinymce/tinymce-react`, que confirma que el texto enriquecido de #62 ya estaba en camino aunque se cambie de editor.
 
-## 3. Lo ya construido
+## 3. Lo ya construido antes de las fases
 
-> **La numeración `E` es historia y no continúa** (#177). Estas cuatro etapas se construyeron con el plan anterior, que ordenaba por subsistema; se conservan porque son el registro de qué se entregó y cómo se cerró. Lo que sigue se planifica por fases (§4), y la tabla de equivalencia dice dónde fue a parar lo que las etapas `E3`–`E6` prometían.
+> **La numeración `E` es historia y no continúa** (#177). Estas cuatro etapas se construyeron con el plan anterior, que ordenaba por subsistema. El detalle de cada una —alcance, criterio de terminado y cómo se cerró— se colapsó en F4.0 a este resumen y queda completo en git.
 
-### E0 — Diseño del frontend
+| Etapa | Qué entregó |
+|---|---|
+| **E0** — Diseño del frontend | `frontend-diseno.md`: principios, navegación por contexto, sitemap, wireframes, inventario de componentes y mapeo legacy→nuevo. Sin código |
+| **E0.5** — Sistema de diseño | Los tokens en `design/build.py`, transcriptos al `@theme` (#118, #130, #131); las 28 rutas del sitemap diseñadas en los dos temas; el contraste medido en cada build (30 pares, WCAG AA) |
+| **E1** — Rebanada usable | Los dos scaffolds; **toda la seguridad** (OAuth2 con Discord y membresía al guild, access token corto + refresh rotativo en cookie `httpOnly`, CSRF solo en `/auth/refresh`, JWT que afirma identidad y no autorización, pertenencia en cada recurso — #121, #122, #125, #127, #128); y el primer flujo de punta a punta: entrar, ver mesas, postularse, ser aceptado o rechazado. **Estrenó el doble de login de pruebas** (`TestLoginController`, `TestDiscordController`, #143): no hay una aplicación de Discord registrada para desarrollo, y sin el doble no se puede probar nada autenticado |
+| **E2** — Ciclo de vida de la mesa (parcial) | La máquina de estados de la mesa con su historial, el wizard de creación y la pestaña de estado, y el lenguaje de búsqueda de toda la app (#164). El resto de lo que prometía se redistribuyó en las fases |
 
-Sin código. Produce `frontend-diseno.md`: principios, navegación por contexto, sitemap de ~25 rutas, tokens con los colores de los nueve estados, wireframes de las cinco pantallas que definen al resto, inventario de componentes y mapeo legacy→nuevo.
+### Dónde fue a parar lo que prometían las etapas viejas
 
-**Terminada cuando**: toda ruta del sitemap tiene su pantalla descrita y toda pantalla del legacy aparece en el mapeo, como equivalente o como descarte explícito.
 
-### E0.5 — Sistema de diseño
+Para leer las decisiones ya escritas, que citan la numeración anterior:
 
-El diseño visual, antes de escribir componentes. **La fuente de verdad de los tokens es el design system en Claude Design** (#118, #130): colores, tipografía, espaciados y radios se deciden ahí y se transcriben al bloque `@theme` de `globals.css`. Lo que no está en el tema no se usa en el JSX — un `bg-[#7c3aed]` suelto es la señal de que falta un token.
-
-La dirección está fijada en #131: fantasía sobria, oscuro por defecto, densidad media. Lo que E0.5 decide son los valores.
-
-Alcance: el sistema de tokens completo, las primitivas que se apartan del default de shadcn/ui, y las cinco pantallas de los wireframes de `frontend-diseno.md` §4 llevadas a diseño real. El resto de las pantallas se derivan de esas cinco al construirlas.
-
-**✅ Terminada.** El `@theme` está transcrito en `frontend/src/styles/globals.css` —27 tokens de estado y 6 de marca verificados en el CSS compilado, con el tema claro sobrescribiendo la capa semántica—, las **28 rutas** del sitemap están diseñadas en ambos temas, y el contraste está medido en cada build: **30 pares, 0 por debajo de AA**, con corte por código de salida. La transcripción no es manual recurrente: el comando está en `CLAUDE.md`.
-
-**Estaba terminada cuando**: el `@theme` transcrito cubre los nueve estados de mesa, los cinco de postulación y el karma; las cinco pantallas están diseñadas en los dos temas (claro y oscuro); y **el contraste de los catorce badges de estado está medido, no estimado a ojo** — el acento comparte familia con `state-active` y `state-paused` (#132), así que el choque se controla con números y con separación de roles, no a ojo.
-
-### E1 — Rebanada usable
-
-**Backend** — Scaffold Spring Boot 4.1.1 con Maven, Flyway `V1__baseline.sql` + `V2__seed.sql`, perfiles y `docker-compose` para MySQL. Entidades: `users`, `roles`, `users_roles`, `table_types`, `game_tables`, `masters`, `table_registrations`. Estados de mesa acotados a `Preparation → Opened → InProgress`. `RegistrationService` con cola FIFO, cupo, rechazo automático al llenarse y la invariante de una postulación activa (#28, #34). Emisión de filas en `notifications`, sin tiempo real todavía. springdoc publicando el esquema, que es el contrato para el frontend (#119).
-
-Toda la seguridad entra acá, porque es la etapa que la estrena:
-
-- OAuth2 con Discord, verificación de membresía al guild, los cuatro roles (#38, #67). El token de Discord **se descarta** al terminar el callback (#125).
-- **Access token corto + refresh rotativo** en cookie `httpOnly`; el refresh relee `status` y roles (#125). **CSRF activo solo en `/auth/refresh`** (#127).
-- **El JWT afirma identidad, no autorización**: `JwtAuthenticationFilter` carga el usuario y sus roles de la base en cada request (#122), cacheado con **Caffeine** a 60 s más `@CacheEvict` al bloquear o cambiar roles (#128).
-- **Verificación de pertenencia** en toda lectura y mutación de un recurso concreto (#121) — es la etapa donde nacen las primeras mutaciones de mesa, así que el patrón se establece acá o no se establece nunca.
-
-**Frontend** — Scaffold Vite 8 + React 19 + TypeScript strict + Tailwind 4 + shadcn/ui, con la estructura de `arquitectura.md` §3.1: `routes/` con `router.tsx` y las páginas, `layouts/`, `features/` con su `index.ts`, y las capas transversales. `client.ts` tipado con parseo de `ProblemDetail`, access token **en memoria** y reintento único ante `401` (#125); `queryKeys.ts` y `config/query.ts` con la política de `staleTime` (#116). **i18next desde el primer componente** (#117): ningún string en el JSX, ni siquiera en esta etapa.
-
-Pantallas: `/login`, `/auth/callback`, **`/onboarding`** (nombre y país, paso bloqueante — #134), `/`, `/tables/:id`, `/my/applications`, **`/my/tables`**, **`/notifications`**, `/master/tables`, `/master/tables/:id` con la pestaña de candidatos — las pestañas como rutas hijas, no como `useState` (§3.1.6).
-
-Las dos en negrita cierran un **callejón sin salida** que la etapa tenía: sin `/my/tables`, a un jugador lo aceptan y no tiene dónde ver la mesa a la que entró; y sin `/notifications`, la etapa **emite** filas en `notifications` que nadie puede leer. Es lectura por HTTP; el push llega en F5.
-
-**Entrega**: un jugador entra con Discord, ve las mesas, se postula; el master lo acepta o lo rechaza.
-
-**✅ Terminada.** El flujo completo se probó de punta a punta contra el backend y frontend reales, no solo contra los tests: login por Discord (real y con el doble simulado de `TestDiscordController`/`TestLoginController`, #143), onboarding, explorador, postulación, aceptar/rechazar con notificación, `/my/tables`, `/my/applications` y `/notifications`. La ronda de pruebas manuales que cerró la etapa encontró y corrigió una serie de vacíos reales entre lo diseñado y lo construido — el rastro completo, con la evidencia de cada verificación, está en `decisiones.md` #143 a #160. Los más importantes: la pertenencia de mesa se verifica en el backend antes de leer cualquier dato, nunca solo en el cliente (#151, #152); un actor no puede ser jugador y master de la misma mesa, en ninguna de las dos direcciones (#155); el master se entera de una postulación nueva (#153), y las notificaciones son clickeables y cambian de contexto solas si hace falta (#156); y el `ContextSwitcher` por fin cumple lo que #135 ya exigía desde antes de esta etapa. De regalo, un panel de desarrollo (#158) reemplaza los `fetch()` de consola para las pruebas de ahora en más.
-
-**Los siete puntos de la definición de terminado, verificados al cerrar, no asumidos**: `./mvnw test` (61 unitarios) y `./mvnw verify` (+ `MasterServiceIT`/`RegistrationServiceIT`, Testcontainers vía colima) en verde; `npx playwright test` (`registration-flow.spec.ts` + `discord-login.spec.ts`, los dos casos) en verde — y correr esta última suite al cerrar encontró un bug real más, ya corregido: el panel de desarrollo rompía `/login` con un bucle de reload por un `useMe()` sin gatear (#161), invisible en las pruebas manuales porque ahí siempre había sesión de por medio. `npx vitest run` (27) en verde. Los cuatro estados obligatorios están cubiertos pantalla por pantalla desde #150. Sin regla de `modelo-datos.md` §5 pendiente dentro del alcance de E1.
-
-### E2 — Ciclo de vida de la mesa (parcial)
-
-La etapa completa prometía además `approval_requests`, catálogos y `system_settings`. **Se construyó su primera sub-rebanada y lo que se le fue sumando encima**; el resto se redistribuyó en las fases de §4 y ya no se planifica como E2.
-
-**✅ Máquina de estados de mesa.** Los 9 estados, `table_status_changes` con su historial, `Unassigned`→`Opened` al asignar masters (#72), aprobar/pedir cambios/reenviar, iniciar/finalizar, cancelar (Primary o admin) y pausa/reanudación directa de un admin. Frontend: wizard `/master/tables/new`, pestaña Estado en `/master/tables/:id`, `/admin/tables` con Aprobar/Pedir cambios/Asignar masters, contexto Admin nuevo en el `ContextSwitcher`. Detalle y límites conocidos en `docs/decisiones.md` #163.
-
-**Lo que se sumó después, fuera del orden previsto**: el `AssignMastersDialog` pedía ids de usuario a mano —el límite que #163 documentó— y resolverlo trajo el **lenguaje de búsqueda de toda la app** (#164), con `GET /api/v1/users/search`, `common/search/` en el backend y `lib/searchQuery.ts` + `SearchQueryInput` en el frontend; el diálogo se mudó a `routes/admin/` con chips donde el orden es el rol (#165). `Primary`/`Secondary` dejaron de aparecer en pantalla: en la interfaz son **master** y **co-master** (#166). Entró **`/help`** (#167), partida por audiencia y enlazada por `#ref` (#168), que enseña con pasos, se ata al rol de quien lee y resalta la sección nombrada (#170) — y desde ahí **toda fase cierra con su ayuda escrita** (§6, punto 8). Entró el **borrado de una mesa que nunca fue pública** (#175) con su línea contra la cancelación, la **paginación** decidida y aplicada (#173), **prettier** con la configuración del repo (#174) y la **limpieza automática de los datos de e2e** (#172).
+| Etapa vieja | Dónde vive ahora |
+|---|---|
+| E2 sub-rebanada 2 — `approval_requests`, bandeja, veto | **F3** |
+| E2 sub-rebanada 3 — catálogos | **F1 completo**: consumo, propuesta y administración (#179) |
+| E2 sub-rebanada 4 — `system_settings` | **F3** |
+| E2 sub-rebanada 5 — `/admin/users`, `/master`, `/my/history`, `/admin/requests`, `/admin/tables` completo | `/master` en **F1**, `/my/history` en **F2**, el resto en **F3** |
+| E3 — sesiones y peticiones | Lo que publica el master en **F1**; lo que entrega el jugador en **F2** |
+| E4 — archivos | **F1** (subsistema, preparación, `/my/files`, cajones #232/#233, formularios del pedido #236) y **F2** (archivo de personaje en la postulación: `registration_files` es el cajón `PlayerApplication` y la cuarta fuente de usos) |
+| E5 — comentarios y karma | **F5** |
+| E6 — tiempo real, auditoría y owner | **F6** |
 
 ## 4. Fases
 
@@ -112,7 +86,7 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **La mesa completa, de la creación al cierre.** Es la fase que produce lo que todo lo demás consume.
 
-> **El detalle de implementación está en [`fase-1-master.md`](fase-1-master.md)**: las siete rebanadas, el punto de partida verificado y el camino de verificación. Acá está el alcance; allá, cómo se construye.
+> **El documento de implementación de F1 se borró en F4.0** (queda en git); su deuda de revisión pasó a `fase-4-revision.md` §2.1.
 
 **Backend** — Catálogos que la mesa usa: `systems`/`tags`/`platforms` con `canonical_id` y grupos de sinónimos de profundidad 1 (#59), lectura, **propuesta** al crear y **su administración completa** —aceptar, clasificar, fusionar, separar, dar de baja— que se adelantó desde F3 (#179). Un valor en `Created` no filtra ni se muestra a los jugadores (#57), y la mesa muestra siempre el alias que le puso su master (#58). `TableTypeController`, que falta: `V2__seed.sql` siembra los tipos y hoy no hay forma de listarlos. `table_schedules` con la agenda semanal y el **choque de horarios** (#178): un master no se compromete dos veces en la misma franja, nadie se postula ni es aceptado en una mesa que se pisa con otra donde ya juega, y las postulaciones sin resolver que chocan se avisan — lo que trae consigo el **retiro de una postulación**, adelantado desde F2. `table_sessions` materializadas al pasar a `Opened` a partir de `start_date` + agenda + `total_sessions` (#26, #33), con asistencia por sesión (#36). `closed_at` sellado al cerrar la mesa (#180), que E2 dejó sin implementar. `table_tasks` publicadas por el master, que notifican a sus destinatarios (#77), con entregas que se acumulan y no bloquean (#63, #70, #76). **Archivos**: `files` con nombre físico por id (#80), `content_hash` para deduplicar, `file_type`, `public_audience` (#64) y `last_used_at`; `StorageService` detrás de interfaz (#15), compresión al guardar y job de retención por desuso (#75); `table_files` sin duplicar el archivo (#79).
 
@@ -130,11 +104,11 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **Todo lo que el jugador hace con lo que el master publicó.**
 
-> **El detalle de implementación está en [`fase-2-jugador.md`](fase-2-jugador.md)**: las cinco rebanadas, el punto de partida verificado contra el repositorio y el camino de verificación. Acá está el alcance; allá, cómo se construye.
+> **El documento de implementación de F2 se borró en F4.0** (queda en git); su deuda de revisión pasó a `fase-4-revision.md` §2.1.
 
 **F1 se llevó por delante buena parte de lo que este párrafo prometía**, y lo que queda es lo que sobrevivió. Se adelantaron: entregar respuestas a las peticiones, entera y con archivos (#210); `/my/files`, que además creció con los cajones (#232, #233, #237, #241, #242); retirar una postulación, que el choque de horarios exigía (#178); y `/my/tables/:id` completo —agenda, sesiones, asistencia y peticiones—, que era el mínimo del jugador para poder probar F1.
 
-**Backend** — `registration_files` para el archivo de personaje en la postulación (#60 uso 2), con su cajón `PlayerApplication` y la cuarta consulta de usos (#232, #233). Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56) — el backend de F1.1 ya los resuelve y nada los consume. Las cinco reglas de **visibilidad de perfiles** de `modelo-datos.md` §5, ninguna implementada todavía (#41, #44, #45, #47), con la asistencia agregada sobre todas las mesas (#137).
+**Backend** — `registration_files` para el archivo de personaje en la postulación (#60 uso 2), con su cajón `PlayerApplication` y la cuarta consulta de usos (#232, #233). Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56) — el backend de F1.1 ya los resuelve y nada los consume. Las cinco reglas de **visibilidad de perfiles** de skill `modelo-datos` §5, ninguna implementada todavía (#41, #44, #45, #47), con la asistencia agregada sobre todas las mesas (#137).
 
 **Frontend** — Filtros del explorador por sistema, tag y plataforma: es donde el buscador estrena `/tag`, el caso que motivó el diseño de #164. Archivo de personaje al postularse, sobre el `FilePicker` y la subida diferida de F1 (#238), con el paso de revisión que una postulación no editable obliga. **`/player/profile`** y **`/player/users/:id`** con lo que exista; el karma llega en F4. **`/player/history`** (#133), y con él `/player/my-tables` acotada a lo vivo.
 
@@ -146,13 +120,13 @@ La etapa completa prometía además `approval_requests`, catálogos y `system_se
 
 **Revisión, moderación de flujo y administración — y la línea entre los dos roles que administran.**
 
-> **El detalle de implementación está en [`fase-3-admin-owner.md`](fase-3-admin-owner.md)**: las cinco rebanadas, la matriz de capacidades y el camino de verificación. Acá está el alcance; allá, cómo se construye.
+> **El documento de implementación de F3 se borró en F4.0** (queda en git); lo normativo —la matriz `Admin`/`Owner`, las reglas de cada rebanada y los riesgos— vive en la skill `modelo-datos`, `references/roles-y-alcance.md`, y su deuda de revisión en `fase-4-revision.md` §2.1.
 
 **Backend** — El service que otorga roles, con la exclusión `Admin`/`Owner` que #169 dejó pendiente, y el bloqueo de cuentas (#84). `approval_requests` como mecanismo único para todo pedido con aprobación, con reserva (#42, #78, #90, #100). Pausa pedida por un master (#32) y veto acotado a la mesa, aplicado por el `Primary` y pedible por un `Secondary` (#39, #71) — con la exclusión del vetado en la lectura de archivos que #206 dejó anotada para esta fase. **La administración de catálogos ya no está acá**: se adelantó a F1 (#179) — dejarla en esta fase le abría a F1 el hueco de proponer valores que nadie podía aceptar. `system_settings` (#141): la tabla clave-valor, el `SettingsService` con accesores tipados y la auditoría de cada cambio; los valores que hoy son constantes —karma inicial, justificación del rechazo automático (#34), ventana de visibilidad (#44)— pasan a leerse por el service.
 
 **Frontend** — **`/admin/users`**, con los roles y el bloqueo. **`/admin/queue`**, la bandeja compartida con reserva; al nacer, Aprobar y Pedir cambios **se mudan ahí** desde `/admin/tables` (#176). **`/admin/tables`** completo: todas las mesas, cualquier estado, filtros y `?q=` (#176), con los botones de pausa y reanudación que hoy tienen endpoint y ninguna pantalla (#163). **`/admin/settings`** y **`/admin/requests`** — `/admin/catalogs` llegó en F1 (#179).
 
-**La línea entre `Admin` y `Owner` se traza acá y queda escrita** (#67, #89, #169). En F3 la diferencia es **exactamente una**: quién puede otorgar el rol del otro. Todo lo demás que separa a un owner —auditoría, borrado físico, migración de cuenta, «ver como»— es **F6**, y hasta entonces un owner usa la superficie de admin completa y nada más (#169). La matriz vive en `fase-3-admin-owner.md` §3.
+**La línea entre `Admin` y `Owner` se traza acá y queda escrita** (#67, #89, #169). En F3 la diferencia es **exactamente una**: quién puede otorgar el rol del otro. Todo lo demás que separa a un owner —auditoría, borrado físico, migración de cuenta, «ver como»— es **F6**, y hasta entonces un owner usa la superficie de admin completa y nada más (#169). La matriz vive en `roles-y-alcance.md` §3, en la skill `modelo-datos`.
 
 La bandeja funciona **por HTTP** en esta fase; el vivo es F6.
 
@@ -201,21 +175,6 @@ Nace de #250, que sacó la revisión del final de cada fase. El motivo, en una f
 
 **Entrega**: plataforma operable.
 
-### Dónde fue a parar lo que prometían las etapas viejas
-
-Para leer las decisiones ya escritas, que citan la numeración anterior:
-
-| Etapa vieja | Dónde vive ahora |
-|---|---|
-| E2 sub-rebanada 2 — `approval_requests`, bandeja, veto | **F3** |
-| E2 sub-rebanada 3 — catálogos | **F1 completo**: consumo, propuesta y administración (#179) |
-| E2 sub-rebanada 4 — `system_settings` | **F3** |
-| E2 sub-rebanada 5 — `/admin/users`, `/master`, `/my/history`, `/admin/requests`, `/admin/tables` completo | `/master` en **F1**, `/my/history` en **F2**, el resto en **F3** |
-| E3 — sesiones y peticiones | Lo que publica el master en **F1**; lo que entrega el jugador en **F2** |
-| E4 — archivos | **F1** (subsistema, preparación, `/my/files`, cajones #232/#233, formularios del pedido #236) y **F2** (archivo de personaje en la postulación: `registration_files` es el cajón `PlayerApplication` y la cuarta fuente de usos) |
-| E5 — comentarios y karma | **F5** |
-| E6 — tiempo real, auditoría y owner | **F6** |
-
 ## 5. Motor de notificaciones
 
 Dos cosas distintas que conviene no confundir:
@@ -248,7 +207,7 @@ Idempotente para el mismo admin, `409` si ya lo tiene otro. Un job libera las re
 
 Una fase se cierra cuando cumple las ocho:
 
-1. Las reglas de `modelo-datos.md` §5 que caen en su alcance están implementadas.
+1. Las reglas de skill `modelo-datos` §5 que caen en su alcance están implementadas.
 2. Cada una tiene su test unitario, con los caminos de error y no solo el feliz.
 3. Las invariantes de concurrencia de su alcance tienen test de integración con Testcontainers.
 4. El flujo principal está cubierto en Playwright.
@@ -258,16 +217,6 @@ Una fase se cierra cuando cumple las ocho:
 8. **La ayuda de la fase está escrita** (#231): lo que la fase agregó se explica en `features/help/sections/` y se levanta con `<HelpLink>` desde la pantalla que provoca la pregunta. La documentación que se escribe "después" no se escribe.
 
 Los puntos 5, 6 y 7 son el corte entre fases: **no se arranca la siguiente sin ellos.**
-
-### Qué cambió con #250, y qué no
-
-**No cambió lo que sostiene la calidad del código**: toda regla de negocio sigue llegando con su test unitario escrito por quien la escribió, las invariantes de concurrencia siguen con su test de integración, y **una fase en rojo sigue sin cerrar**. Eso no se mueve y no se negocia.
-
-**Cambió quién mira el producto terminado.** Verificar los cuatro estados de cada pantalla, que cada ruta sea alcanzable navegando, que la matriz de roles diga lo que promete y que no haya endpoints sin puerta **dejó de ser el final de cada fase y pasó a ser F4**. El motivo está en #250: una costura entre actores no se puede revisar hasta que existen sus dos lados.
-
-**Y apareció una obligación nueva, el punto 5.** Una fase que no se revisa tiene que **decir qué dejó sin revisar**, en el momento, con nombre. Sin eso F4 empieza redescubriendo en vez de verificando, y la deuda deja de ser una decisión para volverse una sorpresa (§1).
-
-Al terminar F6 no puede quedar ninguna regla de §5 sin implementar ni ninguna ruta del sitemap sin construir.
 
 ## 7. Cómo se ejecuta cada rebanada
 
@@ -305,7 +254,7 @@ Lo que A3 aporta es el nivel que ningún constructor puede cubrir solo:
 
 ### El cuarto agente, en las rebanadas pesadas
 
-**A4 · Revisor**, entre los constructores y A3: lee el diff contra las reglas duras de `CLAUDE.md` y las de capa de `arquitectura.md` §2.2. Un controller que llama a un repository, un `Map<String, Object>` cruzando HTTP, un string en el JSX sin `t()` o un valor de color suelto se ven en el diff en un minuto y cuestan una tarde si los encuentra un test.
+**A4 · Revisor**, entre los constructores y A3: lee el diff contra las reglas duras de `CLAUDE.md` y las de capa de skill `arquitectura-backend` §2.2. Un controller que llama a un repository, un `Map<String, Object>` cruzando HTTP, un string en el JSX sin `t()` o un valor de color suelto se ven en el diff en un minuto y cuestan una tarde si los encuentra un test.
 
 Se usa donde la rebanada toca varios flujos a la vez o algo fuera del proceso —el sistema de archivos, un job—; en las livianas, A3 alcanza.
 
@@ -323,7 +272,7 @@ Nada de esto entra en F1–F6, y ninguna fase debe derivar hacia ellos sin decis
 
 | Tema | Estado |
 |---|---|
-| **Campañas** (`table_arcs`) y **Temporadas** (`publish_at` + job) | Fase 2. Diseño cerrado en #129; los tres puntos a resolver antes de construirlas están en `modelo-datos.md` §7.1 |
+| **Campañas** (`table_arcs`) y **Temporadas** (`publish_at` + job) | Fase 2. Diseño cerrado en #129; los tres puntos a resolver antes de construirlas están en skill `modelo-datos` §7.1 |
 | **Integración profunda con Discord** | Requiere bot con permisos; no aprobada (#88) |
 | **Personajes estructurados** | Siguen siendo archivo adjunto (#4) |
 | **Broker externo y caché compartida** | Van juntos: hoy el broker STOMP (#101) y la caché Caffeine (#128) viven en memoria del proceso y sirven para **una sola instancia**. El día que haya dos, hacen falta los dos |

@@ -45,7 +45,7 @@ import { ApiError } from '@/types/api'
  *
  * **Approving is not one act.** A `MasterGrant` hands the role out through the very same
  * `UserRoleService` that `/admin/users` uses — never a second road to the same grant
- * (fase-3-admin-owner.md:128) — while a `TableOpen` records that the request stands and creates
+ * (roles-y-alcance.md §4, F3.2) — while a `TableOpen` records that the request stands and creates
  * nothing: the request carries no name, no system, no seats and no agenda, so the table is created
  * afterwards from `/admin/tables` (#72). The dialog says which one is about to happen.
  *

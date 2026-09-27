@@ -71,7 +71,7 @@ public class AdminQueueClaimReleaseService {
      * Where the timeout comes from: {@code admin_queue.claim_timeout_minutes} in
      * {@code system_settings} (#100, #141).
      *
-     * <p><b>It stopped being {@code app.admin-queue.claim-timeout} in F3.5</b>, which modelo-datos.md
+     * <p><b>It stopped being {@code app.admin-queue.claim-timeout} in F3.5</b>, which modelo-datos skill
      * §5 named as this slice's job. The difference is not where the number is stored but who may
      * change it: how long a review actually takes on this platform is an operational judgement the
      * people running it make, and making them ask for a deploy to tighten it is what #141 removed.

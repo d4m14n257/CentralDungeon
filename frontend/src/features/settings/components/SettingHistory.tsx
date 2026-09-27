@@ -15,9 +15,9 @@ import type { SettingKey } from '../types'
  *
  * **It is what keeps `system_setting_changes` from being write-only.** A platform-wide change
  * produces no notification and no visible event, so the row is the only trace it leaves — and a
- * record nothing reads back is born orphaned, which is the failure `fase-3-admin-owner.md` §7 names.
+ * record nothing reads back is born orphaned, which is the failure `roles-y-alcance.md` §7 names.
  *
- * It takes a **key** and asks for its own data (arquitectura.md §3.1.5), so the row that opens it
+ * It takes a **key** and asks for its own data (arquitectura-frontend skill §3.1.5), so the row that opens it
  * passes an address rather than a whole setting.
  *
  * The four states are its own (#150): the listing around it has loaded by definition, and this is a

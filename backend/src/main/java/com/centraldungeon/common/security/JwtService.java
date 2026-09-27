@@ -17,7 +17,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 /**
- * Issues and verifies CentralDungeon's own access/refresh JWTs (arquitectura.md 2.6, decisiones.md #125).
+ * Issues and verifies CentralDungeon's own access/refresh JWTs (arquitectura-backend skill §2.6, decisiones.md #125).
  * The Discord access token is never persisted or reused here - it is discarded once
  * DiscordOAuth2UserService finishes the login callback.
  */

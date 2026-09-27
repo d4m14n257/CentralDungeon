@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  * in {@link AdminCatalogController}.
  *
  * <p>Concrete class with its own {@code @PreAuthorize} on every method, even though the logic comes
- * from a generic base (arquitectura.md 2.4, last line): reading this file has to answer who can call
+ * from a generic base (arquitectura-backend skill §2.4, last line): reading this file has to answer who can call
  * what, and an inherited annotation is the shape CVE-2025-41248 describes (#123).
  */
 @RestController

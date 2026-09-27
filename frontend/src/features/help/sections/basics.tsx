@@ -41,7 +41,7 @@ const CONTEXT_ROLES = ['player', 'master', 'admin', 'owner']
  * The three things somebody can ask an admin for (#42, #90).
  *
  * Written out here rather than imported from `features/approvals`: a feature never imports another
- * one (arquitectura.md §3.1.5), and the help is text about the mechanism rather than a second
+ * one (arquitectura-frontend skill §3.1.5), and the help is text about the mechanism rather than a second
  * consumer of it. The ids are the ones the API spells, so the section and the badge cannot end up
  * naming different things.
  */

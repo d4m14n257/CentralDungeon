@@ -34,5 +34,5 @@ CREATE TABLE registration_status_changes (
 CREATE INDEX ix_rsc_registration ON registration_status_changes (registration_id, created_at);
 
 -- No ALTER on table_registrations.status: it is already VARCHAR(32) and never MySQL's ENUM type
--- (modelo-datos.md §1), so `Blocked` is a new value of the application's enum and nothing else -
+-- (modelo-datos skill §1), so `Blocked` is a new value of the application's enum and nothing else -
 -- the same way adding an approval request type is a constant and never an ALTER (#78).

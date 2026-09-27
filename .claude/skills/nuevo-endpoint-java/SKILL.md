@@ -5,31 +5,18 @@ description: Scaffolds a new Spring Boot REST endpoint (controller, service, rep
 
 # Nuevo endpoint Java (Spring Boot)
 
-Sigue `docs/arquitectura.md` §2. Léelo si no lo tienes fresco en contexto.
-
-## Reglas fijas
-
-1. **El código se organiza por feature, no por capa.** Todo el endpoint nuevo vive en `com.centraldungeon.<feature>/` (`users`, `tables`, `registrations`, `catalogs`, `files`, `comments`, `requests`, `notifications`). Lo transversal va en `common/`.
-2. **El controller nunca llama a un repository.** Siempre pasa por un service, incluso para una lectura trivial.
-3. **Una `@Entity` nunca cruza la frontera HTTP.** Entrada y salida son `record` en `dto/`, con sufijo `Request` o `Response`. **Nada de tipos abiertos**: ni `Map<String, Object>`, ni `Object`, ni `ResponseEntity<?>`. Listado y detalle son DTOs distintos (`...SummaryResponse` / `...DetailResponse`). Reglas completas en `docs/arquitectura.md` §2.3.
-4. El service es dueño de la transacción (`@Transactional`, o `readOnly = true` en lectura) y de la lógica de negocio — incluida la que antes vivía en triggers (`docs/modelo-datos.md` §5).
-5. El repository es una interfaz `JpaRepository<Entity, String>` (los IDs son `String`). Sin lógica, sin `@Transactional`. Todo `@Query` con **parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales ni concatenación de strings (#124).
-6. Errores: excepciones de `common/exception`, nunca `null` para decir "no existe". El `GlobalExceptionHandler` las traduce a `ProblemDetail`.
-7. Colecciones siempre paginadas (`?page=&size=&sort=`), devolviendo `PageResponse`.
-8. El `user_id` del usuario autenticado sale del JWT vía `@AuthenticationPrincipal`, **nunca** de un parámetro de ruta.
-9. **El rol no es la pertenencia** (#121). `hasRole('MASTER')` no dice "de *esta* mesa". Todo acceso a un recurso concreto filtra por el actor: el actor entra en el `WHERE` (`findByIdAndOwnerId`) o el service verifica pertenencia **antes** de tocar nada y lanza si no corresponde. Nunca `findById(id)` seguido de `save()`.
-10. **No abstraigas por parecido** (§2.4): interfaz solo si hay más de una implementación real, clase abstracta genérica solo si la misma forma se repite idéntica en 3+ features y ya la viste repetida. **El controller es una clase concreta, sin interfaz de contrato** (#119). El `@PreAuthorize` va en el **método concreto**, nunca en una interfaz, una superclase genérica ni una lista de rutas en `SecurityConfig` (#123).
-11. **La respuesta exitosa es el DTO desnudo**, sin envoltura tipo `ResponseData<T>` (#120). El status vive en HTTP; los errores son `ProblemDetail`.
-12. Stack: Java 25 / Spring Boot 4.1 (§1.1). Jackson es **3** (`tools.jackson.*`), lo nullable se anota con **JSpecify**, y `RestTemplate` ya no se autoconfigura.
+**Las reglas no están acá**: son las «reglas fijas» de la skill `arquitectura-backend`, y se aplican todas. Esta skill es el procedimiento, en orden. Si la regla que hace falta no está en el resumen, se lee la sección de su referencia (`arquitectura-backend` §2.x).
 
 ## Pasos
 
-1. Confirmar contra `docs/modelo-datos.md` qué tablas toca el endpoint.
-2. Si el schema cambia: migración Flyway nueva en `db/migration/` + actualizar `docs/modelo-datos.md` (ver skill `er-diagram-sync`). Nunca editar una migración ya aplicada.
+1. **Confirmar qué tablas toca** contra la skill `modelo-datos`: el DDL (§4, más la tabla de migraciones posteriores) y la regla de negocio que corresponde (§5). Si el endpoint toca roles, bloqueo, pedidos, veto o ajustes, también `.claude/skills/modelo-datos/references/roles-y-alcance.md`.
+2. **Si el schema cambia**: skill `er-diagram-sync`. Migración Flyway nueva, nunca editar una aplicada.
 3. Crear o ajustar la `@Entity` en el paquete de la feature (`LAZY` por defecto, enums con `@Enumerated(EnumType.STRING)`).
-4. Crear el `JpaRepository`.
-5. Crear los DTO en `dto/` (request y response separados, validación Jakarta en el de entrada).
+4. Crear el `JpaRepository`, con `@Query` de parámetros nombrados y **el actor en el `WHERE`** cuando el recurso tiene dueño.
+5. Crear los DTO en `dto/`: request y response separados, `record`, validación Jakarta en el de entrada, y Javadoc con un `@param` por componente.
 6. Crear el mapper MapStruct si hace falta traducción no trivial.
-7. Implementar el método de negocio en el service.
-8. Crear el método del controller: ruta bajo `/api/v1`, recurso plural en kebab-case, status code explícito (`201` + `Location` al crear, `204` sin cuerpo), `@PreAuthorize` para el rol global.
-9. Escribir el test del service (skill `tests-java`) antes de dar el endpoint por terminado.
+7. Implementar el método de negocio en el service: transacción, verificación de pertenencia **antes** de tocar nada, y la excepción de `common/exception` con su código (#197) para cada negativa.
+8. Crear el método del controller: ruta bajo `/api/v1`, recurso plural en kebab-case, status explícito (`201` + `Location` al crear, `204` sin cuerpo), y `@PreAuthorize` en el método, enumerando sus roles.
+9. **Test del service** (skill `tests-java`) antes de dar el endpoint por terminado; IT si la regla depende del motor real.
+10. Si el código de error es nuevo, **su clave va en `es` y en `en`** del frontend en el mismo commit (#197, #198).
+11. Si un frontend lo va a llamar, su tipo en `features/<dominio>/types.ts` tiene que ser espejo exacto del `record` de respuesta (`arquitectura-frontend` §3.2).

@@ -169,7 +169,7 @@ describe('MasterTablePlayersTab', () => {
   })
 
   /**
-   * `fase-3-admin-owner.md:169`, the half that is easy to get wrong: a co-master sees the action in
+   * `roles-y-alcance.md §4, F3.4`, the half that is easy to get wrong: a co-master sees the action in
    * the same place, and **the button itself says it is a request**. Learning that inside the dialog
    * would be learning it after deciding — "antes de apretar, no después".
    */

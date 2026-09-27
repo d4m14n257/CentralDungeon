@@ -21,7 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 /**
  * The third thing the polymorphic reference of #78 costs, and the one with no other test behind it.
  *
- * <p>{@code docs/fase-3-admin-owner.md} 7: «dos cosas van con ella o no va: la validación en el
+ * <p>{@code roles-y-alcance.md} 7: «dos cosas van con ella o no va: la validación en el
  * service antes de insertar, y el chequeo periódico de huérfanas. Sin la segunda, el problema aparece
  * meses después y sin forma de reconstruir qué apuntaba a qué». A job nobody tests is a job nobody
  * knows runs - and this one produces no rows, no response and no side effect, so nothing else in the

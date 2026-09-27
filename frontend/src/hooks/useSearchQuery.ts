@@ -46,7 +46,7 @@ export interface UseSearchQueryResult {
  * one the box is given.
  *
  * It holds no domain and no endpoint: which commands exist and who answers them are the caller's,
- * exactly as in the box itself (arquitectura.md 3.1.1).
+ * exactly as in the box itself (arquitectura-frontend skill §3.1.1).
  */
 export function useSearchQuery({ fields, initialQuery = '', onQueryChange, delay = 400 }: UseSearchQueryOptions): UseSearchQueryResult {
   // Read once, on purpose: from here on the box owns the state, and re-reading the URL it is itself

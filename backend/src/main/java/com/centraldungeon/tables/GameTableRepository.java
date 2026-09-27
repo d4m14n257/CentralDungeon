@@ -18,7 +18,7 @@ import org.springframework.data.repository.query.Param;
  *
  * <p>{@code JpaSpecificationExecutor} is here for the explorer: it combines the visibility rules with
  * a search box whose shape - how many criteria, joined by which connectors - is only known at runtime
- * (arquitectura.md 2.2), the same reason the catalogs and the files needed it before.
+ * (arquitectura-backend skill §2.2), the same reason the catalogs and the files needed it before.
  */
 public interface GameTableRepository extends JpaRepository<GameTable, String>, JpaSpecificationExecutor<GameTable> {
 
@@ -58,7 +58,7 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
      *
      * <p>The twin of {@code ApprovalRequestRepository.findQueueItems}, and the reservation rule is
      * the same one: {@code claimed_by is null or claimed_by = :actorId}, so a table another admin
-     * took is not in this reader's tray at all (modelo-datos.md §5).
+     * took is not in this reader's tray at all (modelo-datos skill §5).
      *
      * <p><b>One status and only one.</b> The caller passes {@code Preparation} - a table that was
      * sent to review - and nothing else qualifies: {@code Draft} was never sent, {@code

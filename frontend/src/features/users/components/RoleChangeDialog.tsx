@@ -32,7 +32,7 @@ interface RoleChangeDialogProps {
    * The explanation of who may grant what, rendered under the role list.
    *
    * **It arrives as a node instead of the dialog raising it itself**, because `HelpLink` lives in
-   * `features/help` and a feature never imports another one (arquitectura.md §3.1.5) - the one
+   * `features/help` and a feature never imports another one (arquitectura-frontend skill §3.1.5) - the one
    * component that does is `SearchQueryInput`, and it is in the transversal `components/` layer, not
    * in a feature. The screen owns the composition, so the link still sits where the question is
    * born rather than in an index somewhere.
@@ -54,7 +54,7 @@ interface RoleChangeDialogProps {
  * the list (principio 2 de frontend-diseno.md §1). The server refuses it too, with
  * `ROLE_GRANT_FORBIDDEN`, which is what makes this a display decision rather than the security (#103).
  *
- * It owns the two mutations, as every `…Dialog` does (arquitectura.md §3.3, #110). The refusals it
+ * It owns the two mutations, as every `…Dialog` does (arquitectura-frontend skill §3.3, #110). The refusals it
  * can get are specific — the last owner, an owner unmaking themselves — so they are rendered inline,
  * above the button that was pressed, instead of as a toast.
  *

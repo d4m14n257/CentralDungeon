@@ -34,7 +34,7 @@ spring:
     type: caffeine
     cache-names: userAuth,systemSettings
     caffeine:
-      # TTL is the revocation window, not a performance number (arquitectura.md 2.6):
+      # TTL is the revocation window, not a performance number (arquitectura-backend skill §2.6):
       # explicit @CacheEvict on block/role-change makes it immediate, this is the safety net.
       # systemSettings (#141) works the same way: SettingsService clears it on afterCommit, so an
       # edited limit applies to the next request, and this is what bounds a cache somebody's

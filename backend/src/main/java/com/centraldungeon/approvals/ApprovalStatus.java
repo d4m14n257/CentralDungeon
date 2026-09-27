@@ -29,7 +29,7 @@ public enum ApprovalStatus {
      *
      * @param name a status name, in any case
      * @return the matching constant, or empty. Empty is a normal answer: {@code ?q=/status Maybe}
-     *         matches nothing rather than answering 400 (arquitectura.md 2.5)
+     *         matches nothing rather than answering 400 (arquitectura-backend skill §2.5)
      */
     public static Optional<ApprovalStatus> fromName(String name) {
         String normalized = name.toLowerCase(Locale.ROOT);

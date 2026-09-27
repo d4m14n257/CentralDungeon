@@ -22,8 +22,8 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns the parsed /admin/files search box into a predicate, the same shape
  * {@code CatalogSearchSpecification} has for the catalogs. Criteria API because what the query looks
- * like is only known at runtime: how many criteria and joined by which connectors (arquitectura.md
- * 2.2).
+ * like is only known at runtime: how many criteria and joined by which connectors (arquitectura-backend skill
+ * §2.2).
  *
  * <p>One entry point and not two, unlike the catalogs: files have no "proposed" state that has to be
  * hidden from everybody but an admin (#57). What is hidden here is what was marked gone, and that is

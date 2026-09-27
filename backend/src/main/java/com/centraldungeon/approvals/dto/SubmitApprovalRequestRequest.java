@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
  *
  * <p><b>There is no {@code entityId} here, on purpose.</b> The three request types of F3.2 are all
  * about the person asking, and that person comes from the token and never from the body
- * (arquitectura.md 2.6). Accepting an id would be accepting a request made on somebody else's
+ * (arquitectura-backend skill §2.6). Accepting an id would be accepting a request made on somebody else's
  * behalf - and the reference has no foreign key to catch it (#78).
  *
  * @param type          which request this is. A name outside the three is a 400 from Jackson, which

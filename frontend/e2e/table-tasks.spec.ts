@@ -5,7 +5,7 @@ import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './help
 import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
- * F1.5 end to end, against the real backend: the criterion of `fase-1-master.md` §4 — *a master
+ * F1.5 end to end, against the real backend: F1.5's acceptance criterion — *a master
  * publishes a request for their players, the notification reaches them, and they see it on their
  * table*.
  *

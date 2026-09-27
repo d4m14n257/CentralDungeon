@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Somebody's profile, assembled once {@link ProfileVisibilityService} has decided the actor may read
- * it (modelo-datos.md §5).
+ * it (modelo-datos skill §5).
  *
  * <p><b>Not in {@code users/}.</b> A profile has to read who runs a table, who applied to one and who
  * plays at it, and {@code users/} already sits underneath {@code tables/} the other way around -

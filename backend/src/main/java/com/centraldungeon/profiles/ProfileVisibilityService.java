@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The five rules of "Visibilidad de perfiles" (modelo-datos.md §5: #41, #44, #45, #47), written a
+ * The five rules of "Visibilidad de perfiles" (modelo-datos skill §5: #41, #44, #45, #47), written a
  * year ago and never implemented until now - in **one place**, {@link #requireVisible}, cheapest
  * check first.
  *

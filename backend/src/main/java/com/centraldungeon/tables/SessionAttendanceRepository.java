@@ -54,7 +54,7 @@ public interface SessionAttendanceRepository extends JpaRepository<SessionAttend
 
     /**
      * {@link #countByTableAndUser}'s sibling with no game table to scope it to - the aggregate
-     * attendance a profile shows (modelo-datos.md §5). Same grouped query, same reason {@code Unknown}
+     * attendance a profile shows (modelo-datos skill §5). Same grouped query, same reason {@code Unknown}
      * is left out, just asked across every table the person has ever played instead of one.
      *
      * @param userId the person, whoever's profile is being read

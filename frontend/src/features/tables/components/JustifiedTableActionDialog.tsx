@@ -37,7 +37,7 @@ interface JustifiedTableActionDialogProps {
    * The explanation of what this act does, shown above the note.
    *
    * A node rather than a `HelpLink` raised here: `features/help` is another feature and a feature
-   * never imports one (arquitectura.md §3.1.5). The screen composes the two.
+   * never imports one (arquitectura-frontend skill §3.1.5). The screen composes the two.
    */
   help?: ReactNode
   /**
@@ -53,7 +53,7 @@ interface JustifiedTableActionDialogProps {
 /**
  * Every transition that demands a justification (Request changes, Cancel, and since F3.3 resolving
  * from the shared admin tray) shares this shape - one screen, abstracted no further than it earns:
- * several real uses (arquitectura.md 2.4).
+ * several real uses (arquitectura-backend skill §2.4).
  */
 export function JustifiedTableActionDialog({
   open,

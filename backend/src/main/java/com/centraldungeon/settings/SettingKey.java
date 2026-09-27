@@ -32,7 +32,7 @@ public enum SettingKey {
     /**
      * How long an admin keeps an item of the shared tray before the release job hands it back (#100).
      *
-     * <p>Moved here from {@code app.admin-queue.claim-timeout}, which modelo-datos.md §5 named F3.5's
+     * <p>Moved here from {@code app.admin-queue.claim-timeout}, which modelo-datos skill §5 named F3.5's
      * job by name. The starting value is the fifteen minutes #100 asks for; the floor is one minute
      * because a timeout shorter than the round trip of resolving something would hand every item back
      * mid-review, and the ceiling is a day because a reservation nobody can outlive is the deadlock

@@ -16,7 +16,7 @@ import org.jspecify.annotations.Nullable;
  * publishes only when its master submits it for review. <b>Format is validated here; the business
  * rules are not</b> - which statuses allow what, whether the agenda clashes with another table
  * (#178), whether a catalog value may still be linked (#81) all live in the service
- * (arquitectura.md 2.3).
+ * (arquitectura-backend skill §2.3).
  *
  * @param name          the table's title. The one field a draft cannot do without
  * @param description   what the table is about, as rich text. Sanitized before it is stored (#62)
