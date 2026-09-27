@@ -1,0 +1,598 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Navegación general — del login a los tres contextos",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/d4m14n257/CentralDungeon",
+      "provider": "github",
+      "revision": "bc5fca57b17a3d198243eedd0cbba0688224e795"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Pantalla (ruta del router)"
+        },
+        "security": {
+          "label": "Guardia o redirección"
+        },
+        "external": {
+          "label": "Fuera de la aplicación"
+        }
+      }
+    },
+    "viewBox": [
+      1330,
+      730
+    ],
+    "views": [
+      {
+        "id": "sinPuerta",
+        "label": "Sin puerta",
+        "focus": [
+          "files",
+          "adminBare"
+        ]
+      },
+      {
+        "id": "unica",
+        "label": "Entrada única",
+        "focus": [
+          "onboarding",
+          "notifications",
+          "schedule",
+          "help"
+        ]
+      },
+      {
+        "id": "callejon",
+        "label": "Callejones",
+        "focus": [
+          "help"
+        ]
+      },
+      {
+        "id": "guardias",
+        "label": "Guardias y destinos",
+        "focus": [
+          "guard",
+          "login",
+          "adminBare"
+        ]
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "guard",
+      "type": "security",
+      "label": "RootLayout",
+      "sublabel": "no mira onboarding",
+      "tag": "sin sesión → /login",
+      "pos": [
+        30,
+        40
+      ],
+      "size": [
+        150,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/RootLayout.tsx",
+          "line": 30,
+          "label": "guardia de sesión"
+        }
+      ]
+    },
+    {
+      "id": "login",
+      "type": "frontend",
+      "label": "/login",
+      "sublabel": "con sesión no redirige",
+      "tag": "LoginPage",
+      "pos": [
+        250,
+        40
+      ],
+      "size": [
+        170,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/LoginPage.tsx",
+          "line": 30,
+          "label": "enlace a Discord"
+        },
+        {
+          "path": "frontend/src/api/client.ts",
+          "line": 114,
+          "label": "401 → /login a mano"
+        }
+      ]
+    },
+    {
+      "id": "discord",
+      "type": "external",
+      "label": "Discord OAuth2",
+      "sublabel": "backend + Discord",
+      "pos": [
+        540,
+        40
+      ],
+      "size": [
+        170,
+        66
+      ]
+    },
+    {
+      "id": "callback",
+      "type": "frontend",
+      "label": "/auth/callback",
+      "sublabel": "solo la alcanza el backend",
+      "tag": "OAuthCallbackPage",
+      "pos": [
+        800,
+        40
+      ],
+      "size": [
+        190,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/OAuthCallbackPage.tsx",
+          "line": 110,
+          "end_line": 117,
+          "label": "seis salidas"
+        }
+      ]
+    },
+    {
+      "id": "onboarding",
+      "type": "frontend",
+      "label": "/onboarding",
+      "sublabel": "entrada única",
+      "tag": "OnboardingPage",
+      "pos": [
+        1110,
+        40
+      ],
+      "size": [
+        190,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/OnboardingPage.tsx",
+          "line": 33,
+          "label": "→ / al terminar"
+        },
+        {
+          "path": "frontend/src/routes/OAuthCallbackPage.tsx",
+          "line": 114,
+          "label": "su única puerta"
+        }
+      ]
+    },
+    {
+      "id": "root",
+      "type": "security",
+      "label": "/",
+      "sublabel": "no es pantalla",
+      "tag": "RootRedirect · homePathFor",
+      "pos": [
+        780,
+        191
+      ],
+      "size": [
+        230,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/RootRedirect.tsx",
+          "line": 32,
+          "label": "hogar del contexto"
+        }
+      ]
+    },
+    {
+      "id": "notFound",
+      "type": "frontend",
+      "label": "* (404)",
+      "sublabel": "NotFoundPage",
+      "pos": [
+        520,
+        191
+      ],
+      "size": [
+        180,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/NotFoundPage.tsx",
+          "line": 21,
+          "label": "vuelve a /"
+        }
+      ]
+    },
+    {
+      "id": "shell",
+      "type": "frontend",
+      "label": "AppHeader",
+      "sublabel": "en todo layout con sesión",
+      "tag": "logo · ContextSwitcher · UserMenu · campana",
+      "pos": [
+        745,
+        334
+      ],
+      "size": [
+        300,
+        76
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/AppHeader.tsx",
+          "line": 43,
+          "label": "logo → hogar"
+        },
+        {
+          "path": "frontend/src/layouts/components/ContextSwitcher.tsx",
+          "line": 53,
+          "label": "cambio de contexto"
+        },
+        {
+          "path": "frontend/src/layouts/components/UserMenu.tsx",
+          "line": 76,
+          "end_line": 103,
+          "label": "menú de usuario"
+        }
+      ]
+    },
+    {
+      "id": "notifications",
+      "type": "frontend",
+      "label": "/notifications",
+      "sublabel": "entrada única · URL a mano",
+      "tag": "NotificationsPage",
+      "pos": [
+        30,
+        267
+      ],
+      "size": [
+        240,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/notifications/components/NotificationBell.tsx",
+          "line": 84,
+          "label": "Link literal"
+        }
+      ]
+    },
+    {
+      "id": "schedule",
+      "type": "frontend",
+      "label": "/my/schedule",
+      "sublabel": "entrada única",
+      "tag": "MySchedulePage",
+      "pos": [
+        30,
+        368
+      ],
+      "size": [
+        240,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/UserMenu.tsx",
+          "line": 82,
+          "label": "UserMenu"
+        }
+      ]
+    },
+    {
+      "id": "files",
+      "type": "frontend",
+      "label": "/my/files",
+      "sublabel": "sin puerta para admin/owner",
+      "tag": "MyFilesPage",
+      "pos": [
+        30,
+        468
+      ],
+      "size": [
+        240,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/UserMenu.tsx",
+          "line": 93,
+          "label": "solo con biblioteca"
+        }
+      ]
+    },
+    {
+      "id": "help",
+      "type": "frontend",
+      "label": "/help",
+      "sublabel": "entrada única · callejón",
+      "tag": "SupportPage",
+      "pos": [
+        30,
+        569
+      ],
+      "size": [
+        240,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/UserMenu.tsx",
+          "line": 103,
+          "label": "UserMenu"
+        }
+      ]
+    },
+    {
+      "id": "player",
+      "type": "frontend",
+      "label": "/player",
+      "sublabel": "hogar Jugador · ver 22",
+      "pos": [
+        525,
+        527
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/PlayerSectionNav.tsx",
+          "line": 25,
+          "label": "4 secciones"
+        }
+      ]
+    },
+    {
+      "id": "master",
+      "type": "frontend",
+      "label": "/master",
+      "sublabel": "hogar Master · ver 23",
+      "pos": [
+        795,
+        527
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/MasterSectionNav.tsx",
+          "line": 20,
+          "label": "2 secciones"
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "type": "frontend",
+      "label": "/admin/queue",
+      "sublabel": "hogar Admin · ver 24",
+      "pos": [
+        1065,
+        527
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/AdminSectionNav.tsx",
+          "line": 34,
+          "label": "7 secciones"
+        }
+      ]
+    },
+    {
+      "id": "adminBare",
+      "type": "frontend",
+      "label": "/admin",
+      "sublabel": "sin puerta · pantalla en blanco",
+      "tag": "AdminLayout, Outlet vacío",
+      "pos": [
+        1110,
+        334
+      ],
+      "size": [
+        190,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/router.tsx",
+          "line": 95,
+          "label": "sin ruta index"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Público — sin sesión",
+      "wraps": [
+        "login",
+        "discord",
+        "callback"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "Transversales — ShellLayout",
+      "wraps": [
+        "notifications",
+        "schedule",
+        "files",
+        "help"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "Los tres hogares",
+      "wraps": [
+        "player",
+        "master",
+        "admin"
+      ],
+      "pad": 14
+    }
+  ],
+  "connections": [
+    {
+      "id": "guard-login",
+      "from": "guard",
+      "to": "login",
+      "label": "sin sesión",
+      "variant": "security"
+    },
+    {
+      "id": "login-discord",
+      "from": "login",
+      "to": "discord",
+      "label": "Entrar con Discord",
+      "variant": "emphasis"
+    },
+    {
+      "id": "discord-callback",
+      "from": "discord",
+      "to": "callback",
+      "label": "con el code",
+      "variant": "emphasis"
+    },
+    {
+      "id": "callback-onboarding",
+      "from": "callback",
+      "to": "onboarding",
+      "label": "cuenta nueva"
+    },
+    {
+      "id": "callback-root",
+      "from": "callback",
+      "to": "root",
+      "label": "sesión lista",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "id": "onboarding-root",
+      "from": "onboarding",
+      "to": "root",
+      "label": "nombre y país"
+    },
+    {
+      "id": "notfound-root",
+      "from": "notFound",
+      "to": "root",
+      "label": "volver",
+      "variant": "dashed"
+    },
+    {
+      "id": "root-shell",
+      "from": "root",
+      "to": "shell",
+      "label": "homePathFor",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "id": "shell-player",
+      "from": "shell",
+      "to": "player",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "shell-master",
+      "from": "shell",
+      "to": "master",
+      "label": "logo · switcher",
+      "variant": "dashed",
+      "labelAt": [
+        895,
+        498
+      ]
+    },
+    {
+      "id": "shell-admin",
+      "from": "shell",
+      "to": "admin",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "shell-notifications",
+      "from": "shell",
+      "to": "notifications",
+      "label": "campana"
+    },
+    {
+      "id": "shell-schedule",
+      "from": "shell",
+      "to": "schedule"
+    },
+    {
+      "id": "shell-files",
+      "from": "shell",
+      "to": "files"
+    },
+    {
+      "id": "shell-help",
+      "from": "shell",
+      "to": "help"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Guardias que faltan",
+      "items": [
+        "Onboarding: solo lo impone el callback; el JSDoc dice que vive en la guardia",
+        "/login con sesión no redirige",
+        "/admin a secas: Outlet vacío"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Entrada única",
+      "items": [
+        "/onboarding: solo el callback",
+        "/notifications: solo la campana, URL a mano",
+        "/my/*, /help: solo el UserMenu; /my/files oculto sin biblioteca"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Salidas a /login",
+      "items": [
+        "Guardia sin sesión y cerrar sesión",
+        "401 sin refresh: window.location a mano",
+        "Los tres errores del callback"
+      ]
+    }
+  ]
+}

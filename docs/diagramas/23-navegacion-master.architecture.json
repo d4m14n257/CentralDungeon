@@ -1,0 +1,799 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Navegación del Master — /master y las 7 pestañas de una mesa",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/d4m14n257/CentralDungeon",
+      "provider": "github",
+      "revision": "bc5fca57b17a3d198243eedd0cbba0688224e795"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Pantalla o pestaña"
+        },
+        "security": {
+          "label": "Navegación de sección"
+        },
+        "messagebus": {
+          "label": "Notificación o pendiente de la bandeja"
+        },
+        "external": {
+          "label": "Destino repetido u otro contexto"
+        }
+      }
+    },
+    "viewBox": [
+      1340,
+      700
+    ],
+    "views": [
+      {
+        "id": "unica",
+        "label": "Entrada única",
+        "focus": [
+          "new",
+          "tPlayers",
+          "tSched",
+          "tFiles"
+        ]
+      },
+      {
+        "id": "callejon",
+        "label": "Callejones",
+        "focus": [
+          "tSess",
+          "tTasks",
+          "tFiles"
+        ]
+      },
+      {
+        "id": "cruce",
+        "label": "Cruces de contexto",
+        "focus": [
+          "users"
+        ]
+      },
+      {
+        "id": "guardias",
+        "label": "Guardias y destinos",
+        "focus": [
+          "nNotif"
+        ]
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "nav",
+      "type": "security",
+      "label": "MasterSectionNav",
+      "sublabel": "Pendientes · Mesas",
+      "pos": [
+        30,
+        40
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/MasterSectionNav.tsx",
+          "label": "dos entradas",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "new",
+      "type": "frontend",
+      "label": "…/tables/new",
+      "sublabel": "entrada única",
+      "pos": [
+        218,
+        40
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "MasterTableCreatePage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableCreatePage.tsx",
+          "label": "→ detalle al crear",
+          "line": 286
+        },
+        {
+          "path": "frontend/src/routes/master/MasterTablesPage.tsx",
+          "label": "su única puerta",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "id": "nNotif",
+      "type": "messagebus",
+      "label": "Notificación",
+      "sublabel": "rechazo → Candidatos",
+      "pos": [
+        406,
+        40
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "4 tipos → detalle",
+      "sources": [
+        {
+          "path": "frontend/src/features/notifications/lib/notificationTarget.ts",
+          "label": "destinos del master",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "id": "sched",
+      "type": "external",
+      "label": "/my/schedule",
+      "sublabel": "compromiso de master",
+      "pos": [
+        594,
+        40
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/my/MySchedulePage.tsx",
+          "label": "destinationOf",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "dash",
+      "type": "frontend",
+      "label": "/master",
+      "sublabel": "hogar · pendientes",
+      "pos": [
+        30,
+        170
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterDashboardPage.tsx",
+          "label": "vacío → mesas",
+          "line": 55
+        }
+      ]
+    },
+    {
+      "id": "list",
+      "type": "frontend",
+      "label": "/master/tables",
+      "sublabel": "MasterTablesPage",
+      "pos": [
+        218,
+        170
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTablesPage.tsx",
+          "label": "ficha → detalle",
+          "line": 49
+        }
+      ]
+    },
+    {
+      "id": "detail",
+      "type": "frontend",
+      "label": "/master/tables/:id",
+      "sublabel": "índice = Candidatos",
+      "pos": [
+        406,
+        170
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "cabecera + pestañas",
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableDetailPage.tsx",
+          "label": "NavLink relativos",
+          "line": 69
+        },
+        {
+          "path": "frontend/src/routes/master/MasterTableDetailPage.tsx",
+          "label": "cabecera → editar",
+          "line": 62
+        }
+      ]
+    },
+    {
+      "id": "edit",
+      "type": "frontend",
+      "label": "…/:id/edit",
+      "sublabel": "MasterTableEditPage",
+      "pos": [
+        594,
+        170
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableEditPage.tsx",
+          "label": "guardar → detalle",
+          "line": 229
+        },
+        {
+          "path": "frontend/src/routes/master/MasterTableEditPage.tsx",
+          "label": "cancelar → detalle",
+          "line": 436
+        }
+      ]
+    },
+    {
+      "id": "wEdit",
+      "type": "messagebus",
+      "label": "Bandeja",
+      "sublabel": "ChangesRequested",
+      "pos": [
+        782,
+        170
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/tables/components/MasterWorkItemList.tsx",
+          "label": "→ editar",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "id": "wCand",
+      "type": "messagebus",
+      "label": "Bandeja",
+      "sublabel": "CandidatesWaiting",
+      "pos": [
+        30,
+        540
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/tables/components/MasterWorkItemList.tsx",
+          "label": "→ detalle",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "wSess",
+      "type": "messagebus",
+      "label": "Bandeja",
+      "sublabel": "SessionToRecord",
+      "pos": [
+        594,
+        540
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/tables/components/MasterWorkItemList.tsx",
+          "label": "→ sesiones",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "id": "wTask",
+      "type": "messagebus",
+      "label": "Bandeja",
+      "sublabel": "OverdueTask",
+      "pos": [
+        782,
+        540
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/tables/components/MasterWorkItemList.tsx",
+          "label": "→ peticiones",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "id": "tCand",
+      "type": "frontend",
+      "label": "Candidatos",
+      "sublabel": "índice",
+      "pos": [
+        30,
+        400
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableCandidatesTab.tsx",
+          "label": "→ perfil ajeno",
+          "line": 68
+        }
+      ]
+    },
+    {
+      "id": "tPlayers",
+      "type": "frontend",
+      "label": "players",
+      "sublabel": "solo la pestaña",
+      "pos": [
+        218,
+        400
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "Jugadores",
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTablePlayersTab.tsx",
+          "label": "→ perfil ajeno",
+          "line": 88
+        }
+      ]
+    },
+    {
+      "id": "tSched",
+      "type": "frontend",
+      "label": "schedule",
+      "sublabel": "solo la pestaña",
+      "pos": [
+        406,
+        400
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "Horario",
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableScheduleTab.tsx",
+          "label": "→ editar",
+          "line": 72
+        }
+      ]
+    },
+    {
+      "id": "tSess",
+      "type": "frontend",
+      "label": "sessions",
+      "sublabel": "callejón",
+      "pos": [
+        594,
+        400
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "Sesiones",
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableSessionsTab.tsx",
+          "label": "sin enlaces"
+        }
+      ]
+    },
+    {
+      "id": "tTasks",
+      "type": "frontend",
+      "label": "tasks",
+      "sublabel": "callejón",
+      "pos": [
+        782,
+        400
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "Peticiones",
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableTasksTab.tsx",
+          "label": "sin enlaces"
+        }
+      ]
+    },
+    {
+      "id": "users",
+      "type": "external",
+      "label": "/player/users/:id",
+      "sublabel": "cruce de contexto",
+      "pos": [
+        218,
+        540
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "perfil de Jugador",
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/UserProfilePage.tsx",
+          "label": "pantalla de /player"
+        }
+      ]
+    },
+    {
+      "id": "tFiles",
+      "type": "frontend",
+      "label": "files",
+      "sublabel": "solo la pestaña · callejón",
+      "pos": [
+        970,
+        400
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "tag": "Archivos",
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableFilesTab.tsx",
+          "label": "sin enlaces"
+        }
+      ]
+    },
+    {
+      "id": "tStatus",
+      "type": "frontend",
+      "label": "status",
+      "sublabel": "Estado",
+      "pos": [
+        1158,
+        400
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableStatusTab.tsx",
+          "label": "borrar → listado",
+          "line": 129
+        }
+      ]
+    },
+    {
+      "id": "editChip",
+      "type": "external",
+      "label": "…/:id/edit",
+      "sublabel": "editar horario",
+      "pos": [
+        406,
+        540
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableScheduleTab.tsx",
+          "label": "canEdit",
+          "line": 72
+        }
+      ]
+    },
+    {
+      "id": "listChip",
+      "type": "external",
+      "label": "/master/tables",
+      "sublabel": "tras borrar",
+      "pos": [
+        1158,
+        540
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableStatusTab.tsx",
+          "label": "navigate",
+          "line": 129
+        }
+      ]
+    },
+    {
+      "id": "wStatus",
+      "type": "messagebus",
+      "label": "Bandeja",
+      "sublabel": "ReadyToStart",
+      "pos": [
+        970,
+        540
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/tables/components/MasterWorkItemList.tsx",
+          "label": "→ estado",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "tabBar",
+      "type": "security",
+      "label": "Barra de pestañas",
+      "sublabel": "NavLink relativos · 7 pestañas",
+      "pos": [
+        30,
+        300
+      ],
+      "size": [
+        1288,
+        46
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableDetailPage.tsx",
+          "line": 68,
+          "end_line": 90,
+          "label": "to=\".\" … to=\"status\""
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Pestañas de /master/tables/:id",
+      "wraps": [
+        "tabBar",
+        "tCand",
+        "tPlayers",
+        "tSched",
+        "tSess",
+        "tTasks",
+        "tFiles",
+        "tStatus"
+      ],
+      "pad": 14
+    }
+  ],
+  "connections": [
+    {
+      "id": "nav-dash",
+      "from": "nav",
+      "to": "dash"
+    },
+    {
+      "id": "nav-list",
+      "from": "nav",
+      "to": "list"
+    },
+    {
+      "id": "dash-list",
+      "from": "dash",
+      "to": "list",
+      "variant": "dashed"
+    },
+    {
+      "id": "list-new",
+      "from": "list",
+      "to": "new"
+    },
+    {
+      "id": "list-detail",
+      "from": "list",
+      "to": "detail",
+      "variant": "emphasis"
+    },
+    {
+      "id": "new-detail",
+      "from": "new",
+      "to": "detail"
+    },
+    {
+      "id": "nNotif-detail",
+      "from": "nNotif",
+      "to": "detail",
+      "variant": "dashed"
+    },
+    {
+      "id": "sched-detail",
+      "from": "sched",
+      "to": "detail",
+      "variant": "dashed"
+    },
+    {
+      "id": "detail-edit",
+      "from": "detail",
+      "to": "edit"
+    },
+    {
+      "id": "wEdit-edit",
+      "from": "wEdit",
+      "to": "edit",
+      "variant": "dashed"
+    },
+    {
+      "id": "wCand-tCand",
+      "from": "wCand",
+      "to": "tCand",
+      "variant": "dashed"
+    },
+    {
+      "id": "wSess-tSess",
+      "from": "wSess",
+      "to": "tSess",
+      "variant": "dashed"
+    },
+    {
+      "id": "wTask-tTasks",
+      "from": "wTask",
+      "to": "tTasks",
+      "variant": "dashed"
+    },
+    {
+      "id": "tCand-users",
+      "from": "tCand",
+      "to": "users",
+      "variant": "dashed"
+    },
+    {
+      "id": "tPlayers-users",
+      "from": "tPlayers",
+      "to": "users",
+      "variant": "dashed"
+    },
+    {
+      "id": "tSched-editChip",
+      "from": "tSched",
+      "to": "editChip"
+    },
+    {
+      "id": "tStatus-listChip",
+      "from": "tStatus",
+      "to": "listChip"
+    },
+    {
+      "id": "wStatus-tStatus",
+      "from": "wStatus",
+      "to": "tStatus",
+      "variant": "dashed"
+    },
+    {
+      "id": "detail-tabBar",
+      "from": "detail",
+      "to": "tabBar",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tabBar-tCand",
+      "from": "tabBar",
+      "to": "tCand",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tabBar-tPlayers",
+      "from": "tabBar",
+      "to": "tPlayers",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tabBar-tSched",
+      "from": "tabBar",
+      "to": "tSched",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tabBar-tSess",
+      "from": "tabBar",
+      "to": "tSess",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tabBar-tTasks",
+      "from": "tabBar",
+      "to": "tTasks",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tabBar-tFiles",
+      "from": "tabBar",
+      "to": "tFiles",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tabBar-tStatus",
+      "from": "tabBar",
+      "to": "tStatus",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Destino equivocado",
+      "items": [
+        "TableChangesRequested y TableApproved caen en Candidatos, no en Estado (#244)",
+        "TableApprovedWithChanges: ningún código la emite"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Solo por la pestaña",
+      "items": [
+        "players, schedule y files: solo el NavLink relativo",
+        "Sus tres builders de paths.ts no tienen llamador"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Cruces y callejones",
+      "items": [
+        "Candidatos y Jugadores → /player/users/:id",
+        "sessions, tasks y files no enlazan a nada"
+      ]
+    }
+  ]
+}

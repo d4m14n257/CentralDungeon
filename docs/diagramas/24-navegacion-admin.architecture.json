@@ -1,0 +1,393 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Navegación del Admin — las 7 secciones de /admin",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/d4m14n257/CentralDungeon",
+      "provider": "github",
+      "revision": "bc5fca57b17a3d198243eedd0cbba0688224e795"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Pantalla del contexto"
+        },
+        "security": {
+          "label": "Navegación o redirección"
+        }
+      }
+    },
+    "viewBox": [
+      1100,
+      590
+    ],
+    "views": [
+      {
+        "id": "sinPuerta",
+        "label": "Sin puerta",
+        "focus": [
+          "bare"
+        ]
+      },
+      {
+        "id": "unica",
+        "label": "Entrada única",
+        "focus": [
+          "tables",
+          "catalogs",
+          "files",
+          "users",
+          "requests",
+          "settings"
+        ]
+      },
+      {
+        "id": "callejon",
+        "label": "Callejones",
+        "focus": [
+          "tables",
+          "catalogs",
+          "files",
+          "users",
+          "requests",
+          "settings"
+        ]
+      },
+      {
+        "id": "guardias",
+        "label": "Guardias y destinos",
+        "focus": [
+          "bare"
+        ]
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "home",
+      "type": "security",
+      "label": "/ · logo · switcher",
+      "sublabel": "homePathFor('admin')",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/RootRedirect.tsx",
+          "label": "hogar del contexto",
+          "line": 32
+        },
+        {
+          "path": "frontend/src/layouts/components/ContextSwitcher.tsx",
+          "label": "cambio",
+          "line": 53
+        }
+      ]
+    },
+    {
+      "id": "bare",
+      "type": "frontend",
+      "label": "/admin",
+      "sublabel": "sin puerta · en blanco",
+      "pos": [
+        840,
+        40
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminLayout con Outlet vacío",
+      "sources": [
+        {
+          "path": "frontend/src/routes/router.tsx",
+          "label": "sin ruta index",
+          "line": 95
+        },
+        {
+          "path": "frontend/src/layouts/AdminLayout.tsx",
+          "label": "Outlet",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "nav",
+      "type": "security",
+      "label": "AdminSectionNav",
+      "sublabel": "7 secciones",
+      "pos": [
+        590,
+        150
+      ],
+      "size": [
+        160,
+        366
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/AdminSectionNav.tsx",
+          "label": "única puerta de 6",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "queue",
+      "type": "frontend",
+      "label": "/admin/queue",
+      "sublabel": "filas sin enlace",
+      "pos": [
+        300,
+        150
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminQueuePage · hogar",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminQueuePage.tsx",
+          "label": "bandeja compartida"
+        }
+      ]
+    },
+    {
+      "id": "tables",
+      "type": "frontend",
+      "label": "/admin/tables",
+      "sublabel": "entrada única · callejón",
+      "pos": [
+        300,
+        250
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminTablesPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminTablesPage.tsx",
+          "label": "sin detalle de mesa"
+        }
+      ]
+    },
+    {
+      "id": "catalogs",
+      "type": "frontend",
+      "label": "/admin/catalogs",
+      "sublabel": "entrada única · callejón",
+      "pos": [
+        300,
+        350
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminCatalogsPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminCatalogsPage.tsx",
+          "label": "diálogos"
+        }
+      ]
+    },
+    {
+      "id": "files",
+      "type": "frontend",
+      "label": "/admin/files",
+      "sublabel": "entrada única · callejón",
+      "pos": [
+        840,
+        150
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminFilesPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminFilesPage.tsx",
+          "label": "diálogos"
+        }
+      ]
+    },
+    {
+      "id": "users",
+      "type": "frontend",
+      "label": "/admin/users",
+      "sublabel": "entrada única · callejón",
+      "pos": [
+        840,
+        250
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminUsersPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminUsersPage.tsx",
+          "label": "sin perfil"
+        }
+      ]
+    },
+    {
+      "id": "requests",
+      "type": "frontend",
+      "label": "/admin/requests",
+      "sublabel": "entrada única · callejón",
+      "pos": [
+        840,
+        350
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminRequestsPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminRequestsPage.tsx",
+          "label": "sin la entidad"
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "type": "frontend",
+      "label": "/admin/settings",
+      "sublabel": "entrada única · callejón",
+      "pos": [
+        840,
+        450
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminSettingsPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminSettingsPage.tsx",
+          "label": "#141"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Contexto Admin — AdminLayout",
+      "wraps": [
+        "nav",
+        "queue",
+        "tables",
+        "catalogs",
+        "files",
+        "users",
+        "requests",
+        "settings"
+      ],
+      "pad": 14
+    }
+  ],
+  "connections": [
+    {
+      "id": "home-queue",
+      "from": "home",
+      "to": "queue",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "nav-queue",
+      "from": "nav",
+      "to": "queue",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "nav-tables",
+      "from": "nav",
+      "to": "tables",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "nav-catalogs",
+      "from": "nav",
+      "to": "catalogs",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "nav-files",
+      "from": "nav",
+      "to": "files",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "nav-users",
+      "from": "nav",
+      "to": "users",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "nav-requests",
+      "from": "nav",
+      "to": "requests",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "nav-settings",
+      "from": "nav",
+      "to": "settings",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "El admin no sale nunca",
+      "items": [
+        "Ninguna de las 7 pantallas tiene Link ni navigate",
+        "No abre mesa, perfil ni la entidad de un pedido"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Sin puerta o con una sola",
+      "items": [
+        "/admin a secas: sin ruta index",
+        "Las 6 secciones fuera de la bandeja: solo AdminSectionNav"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "El shell para un admin",
+      "items": [
+        "UserMenu → /player/profile sin rol Player",
+        "/my/files oculto sin biblioteca",
+        "Sin guardia de rol: 403 y ForbiddenState (#103)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,540 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Navegación del Jugador — las 8 rutas de /player",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/d4m14n257/CentralDungeon",
+      "provider": "github",
+      "revision": "bc5fca57b17a3d198243eedd0cbba0688224e795"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Pantalla del contexto"
+        },
+        "security": {
+          "label": "Navegación de sección"
+        },
+        "messagebus": {
+          "label": "Notificación (notificationTarget)"
+        },
+        "external": {
+          "label": "Entrada desde otra pantalla"
+        }
+      }
+    },
+    "viewBox": [
+      1340,
+      710
+    ],
+    "views": [
+      {
+        "id": "unica",
+        "label": "Entrada única",
+        "focus": [
+          "history",
+          "myTables"
+        ]
+      },
+      {
+        "id": "callejon",
+        "label": "Callejones",
+        "focus": [
+          "history",
+          "users",
+          "profile"
+        ]
+      },
+      {
+        "id": "cruce",
+        "label": "Cruces de contexto",
+        "focus": [
+          "masterTabs",
+          "profile",
+          "nOther"
+        ]
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "nav",
+      "type": "security",
+      "label": "PlayerSectionNav",
+      "sublabel": "4 secciones · NavLink",
+      "pos": [
+        550,
+        40
+      ],
+      "size": [
+        240,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/PlayerSectionNav.tsx",
+          "label": "cuatro entradas",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "type": "frontend",
+      "label": "/player/history",
+      "sublabel": "entrada única · callejón",
+      "pos": [
+        1110,
+        40
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "PlayerHistoryPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/PlayerHistoryPage.tsx",
+          "label": "filas sin enlace"
+        },
+        {
+          "path": "frontend/src/layouts/components/PlayerSectionNav.tsx",
+          "label": "única puerta",
+          "line": 28
+        }
+      ]
+    },
+    {
+      "id": "myTables",
+      "type": "frontend",
+      "label": "/player/my-tables",
+      "sublabel": "entrada única",
+      "pos": [
+        300,
+        170
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "MyTablesPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/MyTablesPage.tsx",
+          "label": "ficha → detalle",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "id": "explore",
+      "type": "frontend",
+      "label": "/player",
+      "sublabel": "TableListPage · hogar",
+      "pos": [
+        570,
+        170
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/TableListPage.tsx",
+          "label": "explorador"
+        },
+        {
+          "path": "frontend/src/features/tables/components/GameTableCard.tsx",
+          "label": "ficha por defecto",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "applications",
+      "type": "frontend",
+      "label": "/player/applications",
+      "sublabel": "MyApplicationsPage",
+      "pos": [
+        840,
+        170
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/MyApplicationsPage.tsx",
+          "label": "→ ficha de la mesa",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "id": "nConflict",
+      "type": "messagebus",
+      "label": "Notificación",
+      "sublabel": "ScheduleConflict",
+      "pos": [
+        1110,
+        170
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/notifications/lib/notificationTarget.ts",
+          "label": "choque de horario",
+          "line": 74
+        }
+      ]
+    },
+    {
+      "id": "nSession",
+      "type": "messagebus",
+      "label": "Notificación",
+      "sublabel": "SessionScheduled · Canceled",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/notifications/lib/notificationTarget.ts",
+          "label": "sesiones",
+          "line": 81
+        }
+      ]
+    },
+    {
+      "id": "myTableDetail",
+      "type": "frontend",
+      "label": "/player/my-tables/:id",
+      "sublabel": "MyTableDetailPage",
+      "pos": [
+        300,
+        300
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/MyTableDetailPage.tsx",
+          "label": "→ ficha pública",
+          "line": 104
+        }
+      ]
+    },
+    {
+      "id": "tableDetail",
+      "type": "frontend",
+      "label": "/player/tables/:id",
+      "sublabel": "la más enlazada",
+      "pos": [
+        570,
+        300
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "TableDetailPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/TableDetailPage.tsx",
+          "label": "→ perfil del master",
+          "line": 120
+        }
+      ]
+    },
+    {
+      "id": "users",
+      "type": "frontend",
+      "label": "/player/users/:id",
+      "sublabel": "callejón",
+      "pos": [
+        840,
+        300
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "UserProfilePage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/UserProfilePage.tsx",
+          "label": "perfil ajeno"
+        }
+      ]
+    },
+    {
+      "id": "masterTabs",
+      "type": "external",
+      "label": "Pestañas del master",
+      "sublabel": "cruce de contexto",
+      "pos": [
+        1110,
+        300
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "Candidatos · Jugadores",
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableCandidatesTab.tsx",
+          "label": "candidato",
+          "line": 68
+        },
+        {
+          "path": "frontend/src/routes/master/MasterTablePlayersTab.tsx",
+          "label": "master y jugador",
+          "line": 88
+        }
+      ]
+    },
+    {
+      "id": "schedule",
+      "type": "external",
+      "label": "/my/schedule",
+      "sublabel": "compromiso de jugador",
+      "pos": [
+        300,
+        430
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/my/MySchedulePage.tsx",
+          "label": "destinationOf",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "nTable",
+      "type": "messagebus",
+      "label": "Notificación",
+      "sublabel": "Registration* · TaskPublished",
+      "pos": [
+        555,
+        430
+      ],
+      "size": [
+        230,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/features/notifications/lib/notificationTarget.ts",
+          "label": "ficha de la mesa",
+          "line": 49
+        }
+      ],
+      "tag": "y pedido de mesa resuelto"
+    },
+    {
+      "id": "userMenu",
+      "type": "external",
+      "label": "UserMenu",
+      "sublabel": "Perfil",
+      "pos": [
+        840,
+        430
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/layouts/components/UserMenu.tsx",
+          "label": "para todo rol",
+          "line": 76
+        }
+      ]
+    },
+    {
+      "id": "profile",
+      "type": "frontend",
+      "label": "/player/profile",
+      "sublabel": "callejón · también para admin",
+      "pos": [
+        1110,
+        430
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "ProfilePage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/player/ProfilePage.tsx",
+          "label": "perfil propio"
+        }
+      ]
+    },
+    {
+      "id": "nOther",
+      "type": "messagebus",
+      "label": "Notificación",
+      "sublabel": "pedido resuelto, no de mesa",
+      "pos": [
+        1110,
+        560
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "incluye PlayerBan",
+      "sources": [
+        {
+          "path": "frontend/src/features/notifications/lib/notificationTarget.ts",
+          "label": "todo lo que no es mesa",
+          "line": 39
+        }
+      ]
+    }
+  ],
+  "boundaries": [],
+  "connections": [
+    {
+      "id": "nav-myTables",
+      "from": "nav",
+      "to": "myTables",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "nav-explore",
+      "from": "nav",
+      "to": "explore"
+    },
+    {
+      "id": "nav-applications",
+      "from": "nav",
+      "to": "applications",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "nav-history",
+      "from": "nav",
+      "to": "history"
+    },
+    {
+      "id": "explore-tableDetail",
+      "from": "explore",
+      "to": "tableDetail",
+      "variant": "emphasis"
+    },
+    {
+      "id": "applications-tableDetail",
+      "from": "applications",
+      "to": "tableDetail"
+    },
+    {
+      "id": "myTables-myTableDetail",
+      "from": "myTables",
+      "to": "myTableDetail",
+      "variant": "emphasis"
+    },
+    {
+      "id": "myTableDetail-tableDetail",
+      "from": "myTableDetail",
+      "to": "tableDetail"
+    },
+    {
+      "id": "tableDetail-users",
+      "from": "tableDetail",
+      "to": "users"
+    },
+    {
+      "id": "masterTabs-users",
+      "from": "masterTabs",
+      "to": "users",
+      "variant": "dashed"
+    },
+    {
+      "id": "nConflict-applications",
+      "from": "nConflict",
+      "to": "applications",
+      "variant": "dashed"
+    },
+    {
+      "id": "nSession-myTableDetail",
+      "from": "nSession",
+      "to": "myTableDetail",
+      "variant": "dashed"
+    },
+    {
+      "id": "schedule-myTableDetail",
+      "from": "schedule",
+      "to": "myTableDetail",
+      "variant": "dashed"
+    },
+    {
+      "id": "nTable-tableDetail",
+      "from": "nTable",
+      "to": "tableDetail",
+      "variant": "dashed"
+    },
+    {
+      "id": "userMenu-profile",
+      "from": "userMenu",
+      "to": "profile",
+      "variant": "dashed"
+    },
+    {
+      "id": "nOther-profile",
+      "from": "nOther",
+      "to": "profile",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Callejones",
+      "items": [
+        "/player/history: filas sin enlace a la mesa",
+        "/player/profile y /player/users/:id no llevan a nada"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Entrada única",
+      "items": [
+        "/player/my-tables y /player/history: solo la nav de sección"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Cruces de contexto",
+      "items": [
+        "Pestañas del master → /player/users/:id",
+        "UserMenu → /player/profile también para admin",
+        "PlayerBan resuelto → perfil del co-master"
+      ]
+    }
+  ]
+}

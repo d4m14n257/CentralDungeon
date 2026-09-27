@@ -28,9 +28,14 @@ Reflejan el schema de `../modelo-datos.md`, resultado de las decisiones #1–#95
 
 Fuente `.architecture.json`, salida HTML autocontenida con temas claro/oscuro, zoom, búsqueda y exportación. La salida está en `.gitignore`.
 
+Los cuatro de navegación (#267) tienen **un nodo por ruta del router** y marcan en el sublabel la clasificación de F4.1 —sin puerta, entrada única, callejón, cruce de contexto—, que además se puede recorrer como capítulos desde el visor. Fijan el commit del que se leyó la evidencia, así que un diagrama viejo se delata solo.
+
 | Diagrama | Qué cubre |
 |---|---|
-| [`20-navegacion-f1-f3.architecture.json`](20-navegacion-f1-f3.architecture.json) | **Navegación real de la UI al cerrar F3.** Las cuatro regiones —público, Jugador, Master, Admin— y de qué sale cada flecha, leído del `router.tsx` y de cada `Link`/`NavLink`/`navigate` reales. Las tarjetas responden las tres preguntas que motivaron el diagrama: qué está conectado, **qué quedó flotando** y qué pantallas tienen una sola entrada. Fija el commit del que se leyó la evidencia, así que un diagrama viejo se delata solo. |
+| [`21-navegacion-general.architecture.json`](21-navegacion-general.architecture.json) | **Del login a los tres contextos.** Guardia de sesión, `/login`, Discord, `/auth/callback` y sus salidas, `/onboarding`, `/` (`RootRedirect`), el `AppHeader` como riel común, las cuatro transversales, los tres hogares, el 404 y el `/admin` sin índice. |
+| [`22-navegacion-jugador.architecture.json`](22-navegacion-jugador.architecture.json) | Las 8 rutas de `/player`, una por nodo, con cada entrada de fuera del contexto —tipo de notificación, `/my/schedule`, pestañas del master, `UserMenu`— como ficha pegada a su destino. |
+| [`23-navegacion-master.architecture.json`](23-navegacion-master.architecture.json) | `/master`, el listado, crear, editar y las **siete pestañas** de `/master/tables/:id`, con los cinco destinos de la bandeja (`MasterWorkItemList`) y los de las notificaciones. |
+| [`24-navegacion-admin.architecture.json`](24-navegacion-admin.architecture.json) | Las siete secciones de `/admin` y su única puerta, `AdminSectionNav`. Se ve de un vistazo que ninguna sale a ningún lado. |
 
 ## Ciclos de vida
 
@@ -54,11 +59,12 @@ Para los interactivos, con la skill `archify` instalada en `~/.claude/skills/`:
 
 ```bash
 ARCHIFY=~/.claude/skills/archify
-node $ARCHIFY/bin/archify.mjs deliver architecture \
-  docs/diagramas/20-navegacion-f1-f3.architecture.json \
-  docs/diagramas/20-navegacion-f1-f3.html \
-  --quality showcase --repo-root .
-node $ARCHIFY/bin/archify.mjs visual-check docs/diagramas/20-navegacion-f1-f3.html --json
+for d in 21-navegacion-general 22-navegacion-jugador 23-navegacion-master 24-navegacion-admin; do
+  node $ARCHIFY/bin/archify.mjs deliver architecture \
+    docs/diagramas/$d.architecture.json docs/diagramas/$d.html \
+    --quality showcase --repo-root .
+  node $ARCHIFY/bin/archify.mjs visual-check docs/diagramas/$d.html --json
+done
 ```
 
 `--repo-root` es lo que hace que las citas `sources` de cada nodo se verifiquen contra los
