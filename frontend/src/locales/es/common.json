@@ -67,6 +67,7 @@
     "removeTerm": "Quitar criterio",
     "clearFilters": "Limpiar filtros",
     "pendingSearch": "Enter para buscar",
+    "confirm": "Buscar",
     "hint": "Escribí / para elegir un comando o unir criterios, las comas separan alternativas, Enter cierra el criterio en un chip y Enter otra vez busca.",
     "helpLink": "Cómo buscar"
   },

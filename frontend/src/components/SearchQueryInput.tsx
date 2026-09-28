@@ -1,7 +1,8 @@
 import { Fragment, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FilterX, X } from 'lucide-react'
+import { CornerDownLeft, FilterX, X } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
 import { HelpLink } from '@/features/help'
 import { cn } from '@/lib/utils'
 import {
@@ -185,8 +186,17 @@ export function SearchQueryInput({
   const defaultCanonical = buildSearchQuery(defaultValue)
   const canClear =
     extraFiltersActive || value.draft.trim() !== '' || buildSearchQuery(value) !== defaultCanonical || searchedQuery !== defaultCanonical
-  /** Chips on screen that the results do not answer yet: the second Enter has not been pressed. */
-  const hasPendingSearch = buildSearchQuery(value) !== searchedQuery
+  /**
+   * Chips on screen that the results do not answer yet, with nothing left to close: the second Enter
+   * is what is missing. While text is still typed, Enter closes it first, so the cue waits for that.
+   */
+  const hasPendingSearch = buildSearchQuery(value) !== searchedQuery && value.draft.trim() === ''
+
+  /** Sends the chips as the search: the second Enter, or its button. */
+  function confirmSearch() {
+    if (value.draft !== '') onChange({ ...value, draft: '' })
+    onSearch(buildSearchQuery(value))
+  }
 
   function clearFilters() {
     setHighlightStep(0)
@@ -278,8 +288,7 @@ export function SearchQueryInput({
         onChange(commitSearchDraft(value, fields))
         return
       }
-      if (value.draft !== '') onChange({ ...value, draft: '' })
-      onSearch(buildSearchQuery(value))
+      confirmSearch()
       return
     }
     if (event.key === 'Backspace' && value.draft === '') {
@@ -304,6 +313,8 @@ export function SearchQueryInput({
         className={cn(
           'border-input flex flex-wrap items-center gap-1.5 rounded-md border px-2 py-1.5',
           'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
+          // A search waiting for its Enter marks the whole box, not only a line under it (#268).
+          hasPendingSearch && 'border-brand-500 focus-within:border-brand-500',
         )}
       >
         {value.terms.map((term, index) => (
@@ -342,6 +353,13 @@ export function SearchQueryInput({
           onKeyDown={handleKeyDown}
           className="placeholder:text-fg-subtle min-w-32 flex-1 bg-transparent px-1 py-0.5 text-sm outline-none"
         />
+        {/* The second Enter, made visible: it says what is missing and does it for a mouse or a phone. */}
+        {hasPendingSearch && (
+          <Button type="button" size="xs" onClick={confirmSearch} title={t('search.pendingSearch')}>
+            <CornerDownLeft aria-hidden />
+            {t('search.confirm')}
+          </Button>
+        )}
       </div>
       {isChoosing && (
         <ul
@@ -389,8 +407,9 @@ export function SearchQueryInput({
           </HelpLink>
         </p>
         <div className="flex shrink-0 items-center gap-3">
-          <p aria-live="polite" className="text-fg-muted text-xs font-medium">
-            {hasPendingSearch && value.draft.trim() === '' ? t('search.pendingSearch') : null}
+          {/* Read out for screen readers; on screen, the box itself carries the cue. */}
+          <p aria-live="polite" className="sr-only">
+            {hasPendingSearch ? t('search.pendingSearch') : null}
           </p>
           {/* Only while there is something to clear: a button that does nothing is a question. */}
           {canClear && (

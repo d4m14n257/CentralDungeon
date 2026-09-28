@@ -94,6 +94,20 @@ describe('SearchQueryInput', () => {
     expect(screen.queryByText('Enter para buscar')).not.toBeInTheDocument()
   })
 
+  /** The pending search marks the box with a button that says what is missing, and does it. */
+  it('offers a Search button once a chip waits for its Enter, and clicking it searches', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), '/user_name juan')
+    expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument()
+
+    await userEvent.type(searchBox(), '{Enter}')
+    await userEvent.click(screen.getByRole('button', { name: 'Buscar' }))
+
+    expect(query()).toHaveTextContent('/user_name juan')
+    expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument()
+  })
+
   /** Enter inside the list picks from it: choosing a command is not a search either. */
   it('picking a command with Enter searches nothing', async () => {
     render(<Harness />)
@@ -153,7 +167,7 @@ describe('SearchQueryInput', () => {
 
   it('picking a command and typing it out by hand leave the box in the same state', async () => {
     const { unmount } = render(<Harness />)
-    await userEvent.type(searchBox(), '/us{Enter}damian{Enter}')
+    await userEvent.type(searchBox(), '/us{Enter}damian{Enter}{Enter}')
     const picked = searchBox().parentElement!.textContent
 
     unmount()

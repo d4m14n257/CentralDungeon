@@ -67,6 +67,7 @@
     "removeTerm": "Remove criterion",
     "clearFilters": "Clear filters",
     "pendingSearch": "Press Enter to search",
+    "confirm": "Search",
     "hint": "Type / to pick a command or join criteria, commas separate alternatives, Enter closes the criterion into a chip and Enter again searches.",
     "helpLink": "How to search"
   },
