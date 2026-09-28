@@ -32,6 +32,7 @@ El **porqué** de cada cosa está en `docs/decisiones.md`; acá está el **qué*
 - **Lo derivado no se guarda** (#11, #232): conteos de jugadores, asistencia agregada, usos de un archivo. Se calculan en la lectura.
 - **Las referencias polimórficas** (`approval_requests.entity_id`) no tienen FK: su integridad es del service y de la verificación periódica que exige #78.
 - **Todo cambio de schema es una migración Flyway nueva** (regla dura 9). Nunca se edita una aplicada ni se usa `ddl-auto: update`. El procedimiento está en la skill `er-diagram-sync`.
+- **Una migración aplicada no se toca ni en sus comentarios.** El checksum de Flyway cubre el archivo entero: cambiar una coma en un comentario SQL hace que la base existente rechace el arranque (`Migration checksum mismatch`). Toda búsqueda y reemplazo masivo sobre `backend/src` **excluye `db/migration/`**. Pasó en F4.0, y una cita vieja en el comentario de una migración se deja como está.
 - **Dos «owner» que no son lo mismo**: el rol de plataforma `Owner` y `masters.master_type = 'Primary'`. No se llaman igual en el código (#67, #71, #89). La línea entre `Admin` y `Owner` está en `references/roles-y-alcance.md` §3.
 - **Campañas y Temporadas están fuera de v1 a propósito** (regla dura 13, #7). Lo que falta resolver antes de construirlas, en `references/fuera-de-v1.md` §7.1.
 

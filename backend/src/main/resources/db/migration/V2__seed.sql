@@ -1,4 +1,4 @@
--- Minimum seed for the application to function (modelo-datos skill, #6).
+-- Minimum seed for the application to function (modelo-datos.md #6).
 -- Ids are fixed literals: this is reference data, not application-generated rows.
 
 INSERT INTO roles (id, name, description) VALUES
