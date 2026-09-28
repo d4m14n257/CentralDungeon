@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { WizardSteps } from '@/components/WizardSteps'
+import { PageHeader } from '@/components/PageHeader'
 import { masterDashboardPath, masterTableDetailPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { CatalogChip, CatalogPicker } from '@/features/catalogs'
@@ -293,10 +294,7 @@ export function MasterTableCreatePage() {
     // Centred rather than hugging the left: these two are forms, and a form read against one
     // edge of a wide screen is a column of text with a desert next to it (#228).
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="space-y-1">
-        <h1 className="font-serif text-2xl font-semibold">{t('create.title')}</h1>
-        <p className="text-fg-muted text-sm">{t('create.description')}</p>
-      </div>
+      <PageHeader title={t('create.title')} description={t('create.description')} />
 
       <WizardSteps
         steps={WIZARD_STEPS.map((name) => ({ id: name, label: t(`create.steps.${name}`) }))}
@@ -458,7 +456,7 @@ export function MasterTableCreatePage() {
                     (#227). Clicking a free hour claims it: the gap and taking it are one gesture. */}
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{tTables('schedule.inWizardTitle')}</h3>
+                    <h3 className="section-label">{tTables('schedule.inWizardTitle')}</h3>
                     <p className="text-fg-muted text-xs">{tTables('schedule.inWizardDescription')}</p>
                   </div>
                   {myWeek.isPending ? (
@@ -532,7 +530,7 @@ export function MasterTableCreatePage() {
               <Separator />
 
               <section className="space-y-3" aria-label={t('create.reviewTitle')}>
-                <h2 className="font-serif text-lg font-semibold">{t('create.reviewTitle')}</h2>
+                <h2 className="section-title">{t('create.reviewTitle')}</h2>
                 <SummaryRow label={t('create.nameLabel')} value={values.name} />
                 <SummaryRow label={t('create.tableTypeLabel')} value={selectedTableTypeLabel ?? t('create.reviewEmpty')} />
                 <SummaryChips label={t('create.systemsLabel')} values={systems} empty={t('create.reviewEmpty')} />
@@ -548,7 +546,7 @@ export function MasterTableCreatePage() {
                 />
                 {values.description && (
                   <div className="space-y-1">
-                    <p className="text-fg-subtle text-xs tracking-wide uppercase">{t('create.descriptionLabel')}</p>
+                    <p className="section-label">{t('create.descriptionLabel')}</p>
                     <RichTextView html={values.description} />
                   </div>
                 )}

@@ -45,7 +45,7 @@ export const changeUserStatusSchema = z.object({
 export type ChangeUserStatusForm = z.infer<typeof changeUserStatusSchema>
 
 /**
- * Form and payload cannot drift apart (arquitectura-frontend skill §3.2, regla 7): if the API's input type gains
+ * Form and payload cannot drift apart (arquitectura §3.2, regla 7): if the API's input type gains
  * a field or renames one, these stop compiling instead of failing at runtime.
  */
 export type RoleFormMatchesPayload = Expect<Equals<ChangeUserRoleForm, ChangeUserRoleInput>>

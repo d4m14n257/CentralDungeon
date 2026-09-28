@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  * the catalogs and the people who run it.
  *
  * <p>Separate from {@link GameTableSummaryResponse} because returning this for fifty rows of the
- * explorer would load fifty times the relations nobody is going to look at (arquitectura-backend skill §2.3).
+ * explorer would load fifty times the relations nobody is going to look at (arquitectura §2.3).
  *
  * @param id            the table's identifier
  * @param name          the table's title
@@ -23,7 +23,7 @@ import org.jspecify.annotations.Nullable;
  * @param tableTypeName how the table is run, resolved to its label. Null when none was chosen
  * @param tableTypeCode the identifier the frontend translates by, when the application shipped
  *                      that type. Null for one a person named, whose label is read verbatim (#225)
- * @param status        where the table is in its lifecycle, as a string (arquitectura-backend skill §2.3)
+ * @param status        where the table is in its lifecycle, as a string (arquitectura §2.3)
  * @param maxPlayers    the player cap (#24), or null for no cap
  * @param playerCount   how many people are accepted right now. Derived, never stored
  * @param startDate     the day the table starts running (#230). A plain date, shown as it is:

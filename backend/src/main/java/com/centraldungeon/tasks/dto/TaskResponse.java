@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
  * A task as the people running the table see it, on the Peticiones tab.
  *
  * <p>Separate from {@link ApplicableTaskResponse} because the two audiences are allowed to know
- * different things (arquitectura-backend skill §2.3): the master sees how many people have answered and how many
+ * different things (arquitectura §2.3): the master sees how many people have answered and how many
  * were asked, and a recipient has no business seeing either - who else handed in their character
  * sheet is not theirs to know.
  *
@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
  * @param tableSessionId        the session this is tied to, or null for "at any point" (#63)
  * @param sessionSequenceNumber which session of the run that is, from 1, so the screen can say
  *                              "session 4" without a second request. Null together with the id above
- * @param audience              who is being asked, as a string (arquitectura-backend skill §2.3)
+ * @param audience              who is being asked, as a string (arquitectura §2.3)
  * @param targetUserId          the one person addressed, or null on any audience but {@code Single}
  * @param targetUserName        how to name that person on screen. Null together with the id above
  * @param title                 the headline

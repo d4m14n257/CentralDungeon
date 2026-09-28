@@ -17,7 +17,7 @@ interface CollapsibleSectionProps {
 
 /**
  * A collapsible block with a title, a summary and actions in its header
- * (`frontend-diseno.md` §5) — the pattern the legacy repeated in `CardComponent` and `ListComponent`.
+ * (skill `diseno` §5) — the pattern the legacy repeated in `CardComponent` and `ListComponent`.
  *
  * **The collapse control is a button and the actions live outside it.** Nesting a button inside
  * another is invalid HTML and, worse, makes it unpredictable what a tap does: somebody cancelling a
@@ -51,7 +51,7 @@ export function CollapsibleSection({ title, summary, actions, defaultOpen = fals
           <span className="truncate text-sm font-medium">{title}</span>
           {summary && <span className="text-fg-muted truncate text-xs">{summary}</span>}
         </button>
-        {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
+        {actions && <div className="row-actions shrink-0">{actions}</div>}
       </div>
       {open && (
         <div id={contentId} className="border-border border-t px-3 py-3">

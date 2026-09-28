@@ -1,6 +1,6 @@
 # 2.6 Seguridad
 
-> Parte de la skill `arquitectura-backend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 Flujo: el frontend inicia el login OAuth2 de Discord → Spring Security completa el intercambio → `DiscordOAuth2UserService` verifica membresía al guild, crea el usuario si no existe (con rol `Player`), rechaza si `status = 'Blocked'` → el backend emite un JWT propio → el frontend lo usa como `Authorization: Bearer` en todas las llamadas.

@@ -171,7 +171,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     await master.page.goto(`/master/tables/${tableId}/status`)
     await expect(master.page.getByText('Pausada', { exact: true })).toBeVisible()
     // The admin's reason is the pause's justification: they wrote why once and it is recorded once
-    // (#32, modelo-datos skill §5).
+    // (#32, arquitectura §4.5).
     await expect(master.page.getByText('Aprobada: avisá cuando puedas retomar')).toBeVisible()
 
     // And this is the sentence the slice promised: the calendar froze. A paused table promises no

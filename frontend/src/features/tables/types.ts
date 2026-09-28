@@ -341,7 +341,7 @@ export interface MasterWorkItem {
 
 /**
  * Mirror of MasterDashboardResponse. An empty `items` is a success, not a failure: every table is
- * up to date, and the screen has to say so in those words (frontend-diseno.md §5).
+ * up to date, and the screen has to say so in those words (skill `diseno` §5).
  */
 export interface MasterDashboard {
   items: MasterWorkItem[]

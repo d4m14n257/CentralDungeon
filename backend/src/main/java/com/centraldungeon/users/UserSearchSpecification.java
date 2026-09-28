@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns a parsed search box into a predicate. Criteria API and not a derived query or a fixed
  * {@code @Query} because the shape is only known at runtime: how many terms, over which fields,
- * joined by which connectors (arquitectura-backend skill §2.2).
+ * joined by which connectors (arquitectura §2.2).
  *
  * <p>Connectors are folded left to right, no precedence - {@code a or b and c} is {@code (a or b) and c},
  * which is what the chip row reads like on screen (decisiones.md #164).
@@ -123,7 +123,7 @@ final class UserSearchSpecification {
      * rows for anyone holding two roles.
      *
      * <p>A role name outside the four matches nothing rather than answering 400: an unknown value is
-     * a search that finds nobody, which is what a search box being typed into needs (arquitectura-backend skill
+     * a search that finds nobody, which is what a search box being typed into needs (arquitectura skill
      * §2.5).
      */
     private static Predicate holdsRole(

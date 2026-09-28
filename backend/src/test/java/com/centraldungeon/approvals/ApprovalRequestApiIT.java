@@ -511,7 +511,7 @@ class ApprovalRequestApiIT {
         as(get(MINE + "/mine").param("q", "/status Pending /and /request_type General"), player)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1));
-        // A value outside the enum is empty, never a 400 (arquitectura-backend skill §2.5).
+        // A value outside the enum is empty, never a 400 (arquitectura §2.5).
         as(get(MINE + "/mine").param("q", "/status Maybe"), player)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
@@ -586,7 +586,7 @@ class ApprovalRequestApiIT {
         as(get(ADMIN).param("q", "terror /and /request_type TableOpen"), admin)
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].requestedByName").value(other.getName()));
-        // A value outside either enum matches nothing and is never a 400 (arquitectura-backend skill §2.5).
+        // A value outside either enum matches nothing and is never a 400 (arquitectura §2.5).
         as(get(ADMIN).param("q", "/request_type TablePause"), admin)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));

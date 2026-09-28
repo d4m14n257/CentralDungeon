@@ -39,7 +39,7 @@ export function SessionList({ sessions, timeZone = browserTimeZone() }: SessionL
 
   return (
     <div className="space-y-2">
-      <ol className="divide-border divide-y rounded-lg border">
+      <ol className="list-divided">
         {sessions.map((session) => (
           <li key={session.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
             <div className="min-w-0">

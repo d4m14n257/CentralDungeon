@@ -5,7 +5,7 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Somebody's public profile, as read under the five visibility rules of modelo-datos skill §5
+ * Somebody's public profile, as read under the five visibility rules of arquitectura §4.5
  * ("Visibilidad de perfiles": #41, #44, #45, #47).
  *
  * <p><b>No {@code karma}, no {@code comments} - not even {@code null}</b> (decisiones.md #248): both

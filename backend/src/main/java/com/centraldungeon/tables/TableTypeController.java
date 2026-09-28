@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  * The gap F1 opened with: V2__seed.sql has been seeding table types since E1 and nothing could list
  * them, so the wizard had no way to offer the field.
  *
- * <p>Paginated like every other collection (arquitectura-backend skill §2.5), even though there are two rows
+ * <p>Paginated like every other collection (arquitectura §2.5), even though there are two rows
  * today: it is reference data an admin will eventually extend, and an endpoint that answers with a
  * bare list is one that has to change shape the day it grows.
  */

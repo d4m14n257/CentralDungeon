@@ -200,7 +200,7 @@ export function TaskFormDialog({ open, onOpenChange, task, players, sessions, is
           <p className="text-sm font-medium">{t('form.blanksLabel')}</p>
           <p className="text-fg-muted text-xs">{t('form.blanksHint')}</p>
           {blanks.length > 0 && (
-            <ul className="divide-border divide-y rounded-lg border">
+            <ul className="list-divided">
               {blanks.map((blank) => (
                 <li key={stagedKey(blank)} className="flex items-center gap-3 px-3 py-2">
                   <span className="min-w-0 flex-1 truncate text-sm">{blank.name}</span>

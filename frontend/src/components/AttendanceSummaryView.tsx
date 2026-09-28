@@ -20,7 +20,7 @@ interface AttendanceSummaryViewProps {
  * yesterday has eleven unrecorded ones, and counting those would make everybody read as a chronic
  * absentee.
  *
- * Transversal and not owned by `features/tables` (arquitectura-frontend skill §3.1.2): it renders no domain
+ * Transversal and not owned by `features/tables` (arquitectura §3.1.2): it renders no domain
  * entity, only four numbers, and a second feature — `features/users`, for the profile card of F2.3 —
  * needs the identical rendering for the identical shape. `features/tables` still owns the raw type's
  * mirror duty on the wire (`AttendanceSummary` lives in `types/api.ts`); this component owns showing

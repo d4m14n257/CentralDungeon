@@ -13,6 +13,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { HelpLink } from '@/features/help'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -97,7 +98,7 @@ function CatalogRowActions({ kind, value }: { kind: CatalogKind; value: AdminCat
   const isCanonical = value.canonicalId === null
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-1">
+    <>
       {(isPending || isRejected) && (
         <IconAction icon={<Check className="size-4" />} label={t('admin.accept')} onClick={() => acceptDialog.open()} />
       )}
@@ -141,7 +142,7 @@ function CatalogRowActions({ kind, value }: { kind: CatalogKind; value: AdminCat
       <AcceptCatalogValueDialog kind={kind} value={value} open={acceptDialog.isOpen} onOpenChange={acceptDialog.close} />
       <MergeCatalogGroupsDialog kind={kind} source={value} open={mergeDialog.isOpen} onOpenChange={mergeDialog.close} />
       <DisableCatalogValueDialog kind={kind} value={value} open={disableDialog.isOpen} onOpenChange={disableDialog.close} />
-    </div>
+    </>
   )
 }
 
@@ -157,7 +158,7 @@ function CatalogRowActions({ kind, value }: { kind: CatalogKind; value: AdminCat
  * something an admin sends to another admin, and state that only lives in `useState` cannot be
  * linked to.
  *
- * One of the wide tables of frontend-diseno.md 5.b: below `md` it stops being a table and each row
+ * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card. `DataTable` handles that, from the same column definitions - never horizontal
  * scroll.
  */
@@ -214,12 +215,16 @@ export function AdminCatalogsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{t('admin.title')}</h1>
-        <HelpLink section="admins.catalogs" className="text-sm">
-          {t('admin.helpLink')}
-        </HelpLink>
-      </div>
+      <PageHeader
+        title={t('admin.title')}
+        actions={
+          <>
+            <HelpLink section="admins.catalogs" className="text-sm">
+              {t('admin.helpLink')}
+            </HelpLink>
+          </>
+        }
+      />
 
       <Tabs value={kind} onValueChange={(value) => updateParams({ kind: value })}>
         <TabsList>

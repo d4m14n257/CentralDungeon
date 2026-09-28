@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  *
  * <p>Two of the three take fixed options - {@code /request_type} and {@code /status} - which is what
  * lets the frontend offer them rather than making somebody remember the spelling. The third is free
- * text. None of them ever answers 400: an unrecognized value matches nothing (arquitectura-backend skill §2.5).
+ * text. None of them ever answers 400: an unrecognized value matches nothing (arquitectura §2.5).
  */
 public enum ApprovalSearchField {
 

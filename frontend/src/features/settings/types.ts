@@ -1,6 +1,6 @@
 /**
  * Every setting the platform has, spelled the way the API spells them — a union of literals and not
- * a TS `enum` (arquitectura-frontend skill §3.2). Mirror of `SettingKey.wireName()`.
+ * a TS `enum` (arquitectura §3.2). Mirror of `SettingKey.wireName()`.
  *
  * The key is the contract: it addresses the setting in the URL, and it is what the screen builds the
  * label, the description and the unit from, in the reader's language (#197). A key the backend

@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * What every entity with its own identity shares: a string id and the two timestamps
- * (arquitectura-backend skill §2.2).
+ * (arquitectura §2.2).
  *
  * <p>Bridge tables with a composite key do <b>not</b> extend this - they have no id of their own and
  * no {@code updated_at} column.

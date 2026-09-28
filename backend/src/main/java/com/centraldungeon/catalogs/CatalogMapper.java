@@ -29,7 +29,7 @@ public interface CatalogMapper {
      * The admin view of a value.
      *
      * <p>{@code canonicalName} and {@code uses} are resolved by the service, not here: both need a
-     * lookup, and a mapper never touches a repository (arquitectura-backend skill §2.2).
+     * lookup, and a mapper never touches a repository (arquitectura §2.2).
      *
      * @param value         the entity to describe
      * @param canonicalName the name of the group it belongs to, or null when it is the group's

@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Not {@link UserDetailResponse}: that one is the caller's own view of themselves and carries
  * karma and {@code needsOnboarding}, which are answers to questions only the person themselves asks
- * (arquitectura-backend skill §2.3). This one describes somebody else, and says only what administering them
+ * (arquitectura §2.3). This one describes somebody else, and says only what administering them
  * needs.
  *
  * @param id              the person's identifier

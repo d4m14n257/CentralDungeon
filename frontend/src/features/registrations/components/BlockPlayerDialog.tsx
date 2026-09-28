@@ -38,7 +38,7 @@ interface BlockPlayerDialogProps {
    * The explanation of what this act does, shown above the note.
    *
    * A node rather than a `HelpLink` raised in here: `features/help` is another feature and a feature
-   * never imports one (arquitectura-frontend skill §3.1.5). The screen composes the two.
+   * never imports one (arquitectura §3.1.5). The screen composes the two.
    */
   help?: ReactNode
 }
@@ -143,7 +143,7 @@ export function BlockPlayerDialog({
             )}
           />
           {errorKey !== null && (
-            <p role="alert" className="bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm">
+            <p role="alert" className="inline-error">
               {t(errorKey)}
             </p>
           )}

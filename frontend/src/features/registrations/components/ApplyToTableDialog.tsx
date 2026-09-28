@@ -173,7 +173,7 @@ export function ApplyToTableDialog({
               <div className="space-y-2">
                 <p className="text-sm font-medium">{t('detail.applyFilesLabel')}</p>
                 {files.length > 0 && (
-                  <ul className="divide-border divide-y">
+                  <ul className="list-divided-bare">
                     {files.map((file) => (
                       <li key={stagedKey(file)} className="flex items-center justify-between gap-2 py-2 text-sm">
                         <span className="truncate">{file.name}</span>
@@ -206,14 +206,14 @@ export function ApplyToTableDialog({
             <>
               <section className="space-y-3">
                 <div className="space-y-1">
-                  <p className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.applyDescriptionLabel')}</p>
+                  <p className="section-label">{t('detail.applyDescriptionLabel')}</p>
                   <p className="text-sm whitespace-pre-wrap">{written ? written : t('detail.applyReviewNoMessage')}</p>
                 </div>
 
                 <Separator />
 
                 <div className="space-y-1">
-                  <p className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.applyFilesLabel')}</p>
+                  <p className="section-label">{t('detail.applyFilesLabel')}</p>
                   {files.length === 0 ? (
                     <p className="text-sm">{t('detail.applyReviewNoFiles')}</p>
                   ) : (

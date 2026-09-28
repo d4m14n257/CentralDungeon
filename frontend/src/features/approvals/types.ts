@@ -12,7 +12,7 @@ import type { StrictOmit } from '@/types/utils'
  * `SUBMITTABLE_REQUEST_TYPES` in `requestTypes.ts`. Both are *about* something other than the person
  * asking, and that endpoint takes no `entityId` on purpose.
  *
- * A union of literals and not a TS `enum` (arquitectura-frontend skill §3.2): mirror of `ApprovalRequestType`.
+ * A union of literals and not a TS `enum` (arquitectura §3.2): mirror of `ApprovalRequestType`.
  */
 export type ApprovalRequestType = 'MasterGrant' | 'TableOpen' | 'General' | 'TablePause' | 'PlayerBan'
 
@@ -31,7 +31,7 @@ export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected'
  * Mirror of `ApprovalRequestDetailResponse` — one request in full, as `/admin/requests/{id}` answers
  * and as the two resolvers answer back.
  *
- * **The base type, with the listing's row derived from it below** (arquitectura-frontend skill §3.2): the detail
+ * **The base type, with the listing's row derived from it below** (arquitectura §3.2): the detail
  * is what a resolution comes back as, so it is the shape the screen writes into its cache.
  *
  * `entityType`/`entityId` are a loose pair and not a reference to an entity, because that is the
@@ -105,7 +105,7 @@ export interface BanRequest {
  * What asking for something sends: which kind, and why (#42).
  *
  * **No `entityId`.** The three kinds of F3.2 are about whoever is asking, and who that is comes from
- * the token (arquitectura-backend skill §2.6) — taking it from the body would let somebody ask in another
+ * the token (arquitectura §2.6) — taking it from the body would let somebody ask in another
  * person's name.
  */
 export interface SubmitApprovalRequestInput {

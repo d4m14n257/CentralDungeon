@@ -3,7 +3,7 @@ package com.centraldungeon.common.storage;
 /**
  * Where the bytes of an uploaded file live, behind one seam.
  *
- * <p><b>This is the interface that earns being an interface</b> (arquitectura-backend skill §2.4, #15). Today
+ * <p><b>This is the interface that earns being an interface</b> (arquitectura §2.4, #15). Today
  * the only implementation writes to local disk; the plan is that it can write to S3 later without
  * the rest of the backend noticing. It is not an {@code Impl} pair created out of habit.
  *

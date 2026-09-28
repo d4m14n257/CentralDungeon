@@ -58,7 +58,7 @@ function StatusTimeline({ tableId }: { tableId: string }) {
   }
 
   return (
-    <ol className="divide-border divide-y rounded-lg border">
+    <ol className="list-divided">
       {data.map((change) => (
         <li key={change.id} className="space-y-1 px-4 py-3 text-sm">
           <div className="flex items-center justify-between gap-4">

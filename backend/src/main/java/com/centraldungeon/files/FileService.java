@@ -670,7 +670,7 @@ public class FileService {
      * Resolves a file somebody is about to attach to a table, checking they are allowed to.
      *
      * <p>Called by {@link TableFileService}, which is why it hands back the entity: it stays inside
-     * the backend and never crosses HTTP (arquitectura-backend skill §2.2). Two files qualify, and only two - the
+     * the backend and never crosses HTTP (arquitectura §2.2). Two files qualify, and only two - the
      * actor's own, and one the platform published (#79). Somebody else's private upload never does,
      * which is the difference between reusing what the community offers and reading a stranger's
      * character sheet.

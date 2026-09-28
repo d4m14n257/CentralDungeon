@@ -12,6 +12,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import {
   ADMIN_QUEUE_ERROR_CODES,
@@ -110,7 +111,7 @@ function resolutionErrorKey(error: unknown): string | null {
  * **Which page is in the URL** (#185), like every other admin screen: a tray is something one admin
  * points another at.
  *
- * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
+ * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
  * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
@@ -232,7 +233,7 @@ export function AdminQueuePage() {
     { id: 'item', header: t('queue.columns.item'), role: 'title', cell: (item) => itemTitle(item, t) },
     { id: 'kind', header: t('queue.columns.kind'), role: 'badge', cell: (item) => <QueueItemKindBadge kind={item.kind} /> },
     // The reservation is the one thing on this row that changes under the reader's feet, so it is
-    // what gets the colour (frontend-diseno.md §3: a dot and a label, never colour alone).
+    // what gets the colour (skill `diseno` §3: a dot and a label, never colour alone).
     { id: 'claim', header: t('queue.columns.claim'), role: 'badge', cell: (item) => <ClaimBadge item={item} /> },
     { id: 'requestedBy', header: t('queue.columns.requestedBy'), cell: (item) => item.requestedByName },
     {
@@ -263,13 +264,17 @@ export function AdminQueuePage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{t('queue.title')}</h1>
-        <HelpLink section="admins.claiming" className="text-sm">
-          {t('queue.helpLink')}
-        </HelpLink>
-      </div>
-      <p className="text-fg-muted text-sm">{t('queue.description')}</p>
+      <PageHeader
+        title={t('queue.title')}
+        description={t('queue.description')}
+        actions={
+          <>
+            <HelpLink section="admins.claiming" className="text-sm">
+              {t('queue.helpLink')}
+            </HelpLink>
+          </>
+        }
+      />
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
@@ -284,7 +289,7 @@ export function AdminQueuePage() {
             rows={data.content}
             getRowId={(item) => `${item.type}:${item.id}`}
             renderActions={(item) => (
-              <div className="flex flex-wrap items-center justify-end gap-1">
+              <>
                 {/* Offered on every row, free or already taken. Principio 2 is what *allows* this
                     rather than what forbade it: a free row can be resolved — doing so reserves it —
                     so hiding the button would hide an action that works. What the reader cannot
@@ -325,7 +330,7 @@ export function AdminQueuePage() {
                   onClick={() => claimOrRelease(item)}
                   disabled={claimItem.isPending || releaseItem.isPending}
                 />
-              </div>
+              </>
             )}
           />
           <PaginationControls

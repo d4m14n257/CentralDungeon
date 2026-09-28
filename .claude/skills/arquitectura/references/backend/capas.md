@@ -1,6 +1,6 @@
 # 2.2 Reglas por capa
 
-> Parte de la skill `arquitectura-backend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 **Controller** (`*Controller.java`)
@@ -13,13 +13,13 @@
 
 **Service** (`*Service.java`)
 - Dueño de la transacción: `@Transactional` en escritura, `@Transactional(readOnly = true)` en lectura.
-- Dueño de la lógica de negocio, incluida toda la que antes vivía en triggers de MySQL (skill `modelo-datos` §5).
+- Dueño de la lógica de negocio, incluida toda la que antes vivía en triggers de MySQL (skill `arquitectura` §4.5).
 - Lanza excepciones de `common/exception`, nunca devuelve `null` para señalar "no existe".
 - Puede llamar a otros services; **no puede llamar a un controller**.
 - Es la única capa que se testea obligatoriamente con unitarios.
 
 **Repository** (`*Repository.java`)
-- Interfaz `JpaRepository<Entity, String>` (los IDs son `String`, ver skill `modelo-datos` §1).
+- Interfaz `JpaRepository<Entity, String>` (los IDs son `String`, ver skill `arquitectura` §4.1).
 - Query methods derivados por defecto; `@Query` (JPQL) solo cuando el derivado no alcanza. SQL nativo solo si JPQL no puede expresarlo, y con un comentario que diga por qué.
 - **Todo `@Query` usa parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales y **nunca concatenación de strings** (#124). Los posicionales fueron una fuente real de bugs en el intento previo: una consulta pasaba cinco argumentos para seis placeholders y todos quedaban corridos una posición, sin que nada lo detectara.
 - Sin lógica. Sin `@Transactional`.

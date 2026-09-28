@@ -40,7 +40,7 @@ function MySessionsSection({ tableId }: { tableId: string }) {
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('sessions.myAttendanceTitle')}</h2>
+        <h2 className="section-label">{t('sessions.myAttendanceTitle')}</h2>
         <AttendanceSummaryView summary={mine.summary} />
         {/* The three numbers are explained in the help, under its stable #ref (#137, #167, #168). */}
         <HelpLink section="players.my-sessions" className="inline-block text-xs">
@@ -49,7 +49,7 @@ function MySessionsSection({ tableId }: { tableId: string }) {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('sessions.myCalendarTitle')}</h2>
+        <h2 className="section-label">{t('sessions.myCalendarTitle')}</h2>
         {mine.sessions.length === 0 ? (
           <EmptyState title={t('sessions.myCalendarEmptyTitle')} description={t('sessions.myCalendarEmptyDescription')} />
         ) : (
@@ -100,7 +100,7 @@ export function MyTableDetailPage() {
     <div className="border-border-strong bg-surface space-y-6 rounded-xl border p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-semibold">{table.name}</h1>
+          <h1 className="page-title">{table.name}</h1>
           <Link to={tableDetailPath(table.id)} className="text-fg-muted text-sm underline">
             {t('sessions.seePublicDetail')}
           </Link>
@@ -110,7 +110,7 @@ export function MyTableDetailPage() {
 
       {localSchedule.length > 0 && (
         <section className="border-border border-t pt-4">
-          <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.schedule')}</h2>
+          <h2 className="section-label">{t('detail.schedule')}</h2>
           <ul className="mt-1.5 space-y-0.5 text-sm">
             {localSchedule.map((slot) => (
               <li key={`${slot.weekday}-${slot.hourtime}`}>{formatSlot(slot, i18n.language, slot.duration)}</li>
@@ -123,7 +123,7 @@ export function MyTableDetailPage() {
       {/* What the table shares (#79). Private attachments never arrive here — the server leaves them
           out of the detail, so the screen has nothing to hide. */}
       <section className="border-border border-t pt-4">
-        <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{tFiles('table.readOnlyTitle')}</h2>
+        <h2 className="section-label">{tFiles('table.readOnlyTitle')}</h2>
         <div className="mt-1.5">
           {table.files.length === 0 ? (
             <EmptyState title={tFiles('table.readOnlyEmptyTitle')} description={tFiles('table.readOnlyEmptyDescription')} />

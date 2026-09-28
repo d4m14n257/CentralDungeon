@@ -139,7 +139,7 @@ export function MasterTableTasksTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('board.title')}</h2>
+        <h2 className="section-label">{t('board.title')}</h2>
         <Button type="button" size="sm" onClick={openPublish}>
           {t('board.publish')}
         </Button>

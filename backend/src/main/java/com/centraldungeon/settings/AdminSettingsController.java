@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * difference F3 draws between them is who may grant the rank.
  *
  * <p>The actor always comes from {@code @AuthenticationPrincipal} and never from the body
- * (arquitectura-backend skill §2.6): the audit row this writes is only worth anything if the name on it is not
+ * (arquitectura §2.6): the audit row this writes is only worth anything if the name on it is not
  * one the caller chose.
  *
  * <p>No listing is paginated here. There are four settings and adding one is a line of an enum;

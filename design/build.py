@@ -1678,7 +1678,36 @@ def sc_comp_data(t):
                  "el patron que el legacy repetia en <code>CardComponent</code> y <code>ListComponent</code>.",
                  coll)
           + demo(t, "IconAction", "Boton de icono con tooltip para las acciones de una fila o una ficha. "
-                 "El tooltip no es decorativo: sin el, cuatro iconos seguidos son una adivinanza.", icons))
+                 "El tooltip no es decorativo: sin el, cuatro iconos seguidos son una adivinanza.", icons)
+          + demo(t, "Clases de patron (#273)",
+                 "Cada papel de diseno tiene un nombre y se define una vez, en <code>styles/base.css</code>: "
+                 "una pantalla escribe <code>page-title</code>, nunca sus utilidades. Catalogo en la skill "
+                 "<code>diseno</code> &sect;5.c.", patterns(t)))
+
+def patterns(t):
+    """The pattern classes of #273, each drawn with the tokens its @apply uses, next to its name."""
+    def item(name, sample):
+        return (f'<div style="display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:center;'
+                f'padding:10px 0;border-bottom:1px solid {t["border"]}">'
+                f'<code style="font-size:12px;color:{acc_text(t)}">{name}</code><div>{sample}</div></div>')
+    canceled = t["state"]["canceled"]
+    rows = (f'<div style="padding:8px 12px;font-size:13px">Primera fila</div>'
+            f'<div style="padding:8px 12px;font-size:13px;border-top:1px solid {t["border"]}">Segunda fila</div>')
+    return (
+        item(".page-title", '<span style="font-family:Spectral,serif;font-size:24px;font-weight:600">Usuarios</span>')
+        + item(".section-title", '<span style="font-family:Spectral,serif;font-size:18px;font-weight:600">Identidad de la mesa</span>')
+        + item(".section-label", f'<span style="color:{t["fg-subtle"]};font-size:12px;font-weight:500;'
+               'letter-spacing:.025em;text-transform:uppercase">Requisitos</span>')
+        + item(".row-actions", f'<span style="display:flex;justify-content:flex-end;gap:4px;color:{t["fg-muted"]}">'
+               f'<span>&#10003;</span><span style="color:{canceled["dot"]}">&#10005;</span><span>&#9673;</span></span>')
+        + item(".list-divided", f'<div style="border:1px solid {t["border"]};border-radius:8px">'
+               + rows + '</div>')
+        + item(".inline-error", f'<div style="background:{canceled["bg"]};color:{canceled["fg"]};border-radius:6px;'
+               'padding:8px 12px;font-size:13px">El motivo tiene que tener al menos 10 caracteres.</div>')
+        + item("PageHeader", f'<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">'
+               f'<div><div style="font-family:Spectral,serif;font-size:24px;font-weight:600">Archivos</div>'
+               f'<div style="color:{t["fg-muted"]};font-size:13px">La biblioteca de la plataforma.</div></div>'
+               f'{btn(t, "Subir", small=True)}</div>'))
 
 def sc_comp_inputs(t):
     picker = f"""<div style="width:430px;background:{t['surface']};border:1px solid {t['border-strong']};

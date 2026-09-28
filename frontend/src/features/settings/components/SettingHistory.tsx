@@ -17,7 +17,7 @@ import type { SettingKey } from '../types'
  * produces no notification and no visible event, so the row is the only trace it leaves — and a
  * record nothing reads back is born orphaned, which is the failure `roles-y-alcance.md` §7 names.
  *
- * It takes a **key** and asks for its own data (arquitectura-frontend skill §3.1.5), so the row that opens it
+ * It takes a **key** and asks for its own data (arquitectura §3.1.5), so the row that opens it
  * passes an address rather than a whole setting.
  *
  * The four states are its own (#150): the listing around it has loaded by definition, and this is a
@@ -49,7 +49,7 @@ export function SettingHistory({ settingKey }: { settingKey: SettingKey }) {
   }
 
   return (
-    <ol className="divide-border divide-y rounded-lg border">
+    <ol className="list-divided">
       {history.data.map((change) => (
         <li key={change.id} className="space-y-1 px-4 py-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">

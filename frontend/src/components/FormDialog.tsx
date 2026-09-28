@@ -22,7 +22,7 @@ interface FormDialogProps {
 
 /**
  * A dialog holding a form. **It knows nothing about any domain**: it takes children and nothing else
- * (arquitectura-frontend skill §3.3, #110).
+ * (arquitectura §3.3, #110).
  *
  * **A tall form scrolls inside the dialog rather than off the screen.** `DialogContent` centres
  * itself with `top-50% translate-y-[-50%]` and caps neither its height nor its overflow, so a form

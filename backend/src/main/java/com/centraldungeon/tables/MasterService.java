@@ -65,7 +65,7 @@ public class MasterService {
     }
 
     /**
-     * Only the current Primary may add a Secondary or hand off Primary itself (modelo-datos skill, #73).
+     * Only the current Primary may add a Secondary or hand off Primary itself (arquitectura §4, #73).
      * The row lock on the table's existing masters serializes concurrent calls so exactly one
      * Primary survives even under a race - the invariant MySQL cannot enforce with a partial
      * unique index.
@@ -158,7 +158,7 @@ public class MasterService {
     }
 
     /**
-     * Bootstraps the very first masters of a table an admin created Unassigned (modelo-datos skill, #72).
+     * Bootstraps the very first masters of a table an admin created Unassigned (arquitectura §4, #72).
      * Cannot reuse addOrPromote: that method assumes a Primary already exists to authorize the
      * caller, which is exactly what is missing on an Unassigned table.
      */

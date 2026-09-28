@@ -8,7 +8,7 @@ import { approveTableFromQueue } from './helpers/adminQueue'
  * F2.3 end to end: the profile, and the asymmetry that #41 is about.
  *
  * **The claim worth making here is the negative one.** The five visibility rules of
- * `modelo-datos` skill §5 had been written for a year with nothing implementing them, so what has to be
+ * `arquitectura` §4.5 had been written for a year with nothing implementing them, so what has to be
  * proven is not that a profile renders — it is that somebody with no relationship to another person
  * cannot reach theirs, and that the refusal reads as «ya no podés ver este perfil» rather than
  * confirming the person exists (#249).

@@ -30,7 +30,7 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns the parsed explorer search box into a predicate, the same shape
  * {@code FileSearchSpecification} has for the files. Criteria API because what the query looks like
- * is only known at runtime: how many criteria and joined by which connectors (arquitectura-backend skill §2.2).
+ * is only known at runtime: how many criteria and joined by which connectors (arquitectura §2.2).
  *
  * <p><b>The catalog criteria arrive already resolved.</b> Expanding {@code D&D} into its synonym
  * group needs the catalog tables, and a specification is built inside the query it belongs to - it
@@ -272,7 +272,7 @@ final class GameTableSearchSpecification {
 
     /**
      * {@code /table_status Preparation}: an equality over the closed list, and an unknown state
-     * matches nothing rather than answering 400 (arquitectura-backend skill §2.5).
+     * matches nothing rather than answering 400 (arquitectura §2.5).
      *
      * <p>The same shape {@code ApprovalSearchSpecification.hasStatus} has, and it has to be: two
      * status commands that disagreed about what an unrecognized value means would be two different

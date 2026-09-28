@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
  *
  * <p><b>A record of its own rather than reusing {@link BlockRegistrationRequest}</b>, even though
  * the two carry one identical field. They are different acts and the shapes are free to diverge -
- * the same reasoning that keeps a summary DTO and a detail DTO apart (arquitectura-backend skill §2.3). Folding
+ * the same reasoning that keeps a summary DTO and a detail DTO apart (arquitectura §2.3). Folding
  * them together would also make the endpoint pair read as one operation with a flag, which is the
  * shape #39's reversibility is specifically not.
  *

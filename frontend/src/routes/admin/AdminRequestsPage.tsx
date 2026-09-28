@@ -12,6 +12,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import {
   PENDING_REQUESTS_QUERY,
@@ -55,7 +56,7 @@ import { ApiError } from '@/types/api'
  * row is something one admin sends to another, and state that only lives in `useState` cannot be
  * linked to.
  *
- * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
+ * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
  * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
@@ -130,13 +131,17 @@ export function AdminRequestsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{t('requests.title')}</h1>
-        <HelpLink section="admins.requests" className="text-sm">
-          {t('requests.helpLink')}
-        </HelpLink>
-      </div>
-      <p className="text-fg-muted text-sm">{t('requests.description')}</p>
+      <PageHeader
+        title={t('requests.title')}
+        description={t('requests.description')}
+        actions={
+          <>
+            <HelpLink section="admins.requests" className="text-sm">
+              {t('requests.helpLink')}
+            </HelpLink>
+          </>
+        }
+      />
 
       <SearchQueryInput
         fields={search.fields}
@@ -167,7 +172,7 @@ export function AdminRequestsPage() {
             rows={data.content}
             getRowId={(request) => request.id}
             renderActions={(request) => (
-              <div className="flex flex-wrap items-center justify-end gap-1">
+              <>
                 {/* Absent on anything already resolved, never greyed out: a resolution is not
                     re-resolved, and a button that can only answer `REQUEST_ALREADY_RESOLVED` is a
                     button that should not be there (principio 2). */}
@@ -189,7 +194,7 @@ export function AdminRequestsPage() {
                 {/* Reading the record is not an action on the request, so it is offered on every row
                     - and on a resolved one it is the only place the reason was written. */}
                 <IconAction icon={<Eye className="size-4" />} label={t('requests.detail')} onClick={() => detailDialog.open(request)} />
-              </div>
+              </>
             )}
           />
           <PaginationControls

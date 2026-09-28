@@ -5,7 +5,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * The full 10-state machine (modelo-datos skill, #27, #32, #72), plus Deleted. PauseRequested exists here
+ * The full 10-state machine (arquitectura §4, #27, #32, #72), plus Deleted. PauseRequested exists here
  * but no endpoint produces it yet - it is only reachable once approval_requests lands (F3,
  * plan-desarrollo.md) and a master can ask for a pause instead of an admin pausing directly.
  *
@@ -71,7 +71,7 @@ public enum GameTableStatus {
      * <p>Added with {@code /table_status} (F3.3). The same shape and the same contract
      * {@code ApprovalStatus.fromName} has: a request body is parsed strictly by Jackson, a
      * {@code ?q=} has to survive being typed into, so this one is case-insensitive and an unknown
-     * name is nobody rather than a 400 (arquitectura-backend skill §2.5).
+     * name is nobody rather than a 400 (arquitectura §2.5).
      *
      * @param name a status name, in any case
      * @return the matching constant, or empty. Empty is a normal answer: an unknown state inside

@@ -33,7 +33,7 @@ export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTa
   return (
     <Link to={linkTo ?? tableDetailPath(table.id)} className="group block h-full">
       <Card className="border-border-strong group-hover:border-brand-fg h-full gap-2.5 p-5 transition-colors">
-        <h2 className="font-serif text-lg leading-6 font-semibold">{table.name}</h2>
+        <h2 className="section-title leading-6">{table.name}</h2>
         <div className="flex flex-wrap items-center gap-1.5">
           <TableStatusBadge status={table.status} />
           {alreadyApplied && (

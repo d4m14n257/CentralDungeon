@@ -117,7 +117,7 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
         {history.isPending ? (
           <Skeleton className="h-24 w-full" />
         ) : history.data && history.data.content.length > 0 ? (
-          <ul className="divide-border divide-y">
+          <ul className="list-divided-bare">
             {history.data.content.map((file) => (
               <li key={file.id}>
                 <FileCard
@@ -164,7 +164,7 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
           {published.isPending ? (
             <Skeleton className="h-24 w-full" />
           ) : published.data && published.data.content.length > 0 ? (
-            <ul className="divide-border divide-y">
+            <ul className="list-divided-bare">
               {published.data.content.map((file) => (
                 <li key={file.id}>
                   <FileCard

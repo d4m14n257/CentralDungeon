@@ -15,7 +15,7 @@ import { expect, type Page } from '@playwright/test'
  * walks: open the tray, press the button. Reserving first is a separate behaviour and belongs in a
  * spec about reserving, not baked into every table that needs approving to reach the next assertion.
  *
- * The row is a `<tr>`: `/admin/queue` is one of the wide tables of `frontend-diseno.md` §5.b, and the
+ * The row is a `<tr>`: `/admin/queue` is one of the wide tables of skill `diseno` §5.b, and the
  * card layout it falls back to below `md` is `display:none` at Playwright's viewport, so it is not in
  * the accessibility tree at all.
  */

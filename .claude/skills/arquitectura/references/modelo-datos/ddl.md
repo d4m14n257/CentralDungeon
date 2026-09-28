@@ -1,6 +1,6 @@
-# 4. DDL baseline
+# 4.4 DDL baseline
 
-> Parte de la skill `modelo-datos`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274), sección 4 — el modelo de datos. Se movió desde `docs/` en F4.0; su número original lleva ahora el prefijo `4.` (el viejo §5 es §4.5).
 
 Contenido literal de `backend/src/main/resources/db/migration/V1__baseline.sql`.
 
@@ -724,7 +724,7 @@ CREATE TABLE system_settings (
 CREATE INDEX ix_audit_logs_entity ON audit_logs (entity_type, entity_id);
 ```
 
-## 6. Seed mínimo
+## 4.6 Seed mínimo
 
 Va en `V2__seed.sql`. Sin esto la aplicación no funciona.
 

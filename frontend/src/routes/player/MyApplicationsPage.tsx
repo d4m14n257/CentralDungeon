@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { tableDetailPath } from '@/config/paths'
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { RegistrationStatusBadge, useMyApplications, useWithdrawApplication } from '@/features/registrations'
@@ -46,7 +47,7 @@ export function MyApplicationsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-serif text-2xl font-semibold">{t('myApplications.title')}</h1>
+      <PageHeader title={t('myApplications.title')} />
       {isPending && (
         <div className="space-y-2">
           {Array.from({ length: 3 }, (_, index) => (
@@ -59,7 +60,7 @@ export function MyApplicationsPage() {
         <EmptyState title={t('myApplications.emptyTitle')} description={t('myApplications.emptyDescription')} />
       )}
       {data && data.content.length > 0 && (
-        <ul className="divide-border divide-y rounded-lg border">
+        <ul className="list-divided">
           {data.content.map((registration) => (
             <li key={registration.id} className="flex items-center justify-between gap-4 px-4 py-3">
               <div className="space-y-1">

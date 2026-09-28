@@ -37,7 +37,7 @@ describe('CatalogChip', () => {
 
   /**
    * Being pending is carried by the label, not only by the styling - the same rule the state badges
-   * follow (frontend-diseno.md 3). The dimming is a second signal, never the only one.
+   * follow (skill `diseno` §3). The dimming is a second signal, never the only one.
    */
   it('pairs the dimming with a readable label', () => {
     const { container } = render(<CatalogChip value={value({ status: 'Created' })} />)

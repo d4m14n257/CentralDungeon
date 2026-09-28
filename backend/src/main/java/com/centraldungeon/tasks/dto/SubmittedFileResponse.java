@@ -6,7 +6,7 @@ package com.centraldungeon.tasks.dto;
  * <p>Its own record rather than {@code SharedFileResponse}, which is the shape a table's attachments
  * use: that one carries {@code tableFileType} - prepared beforehand, or produced at a session - and
  * a submitted file has no such thing. A field that is meaningless in half its uses is how a shared
- * DTO starts drifting (arquitectura-backend skill §2.3).
+ * DTO starts drifting (arquitectura §2.3).
  *
  * @param fileId    the file's identifier, which is what the download endpoint takes
  * @param name      the original filename, which is what the reader recognises it by (#80)

@@ -6,6 +6,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { masterTablesPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { MasterWorkItemList, useMasterDashboard } from '@/features/tables'
@@ -19,7 +20,7 @@ import { ApiError } from '@/types/api'
  * that leaves the reader with the same question they arrived with.
  *
  * **The empty state is good news.** "Nothing is waiting for you" is the answer, not a failure, and
- * `frontend-diseno.md` §5 names this screen as the one where that is easiest to get wrong.
+ * skill `diseno` §5 names this screen as the one where that is easiest to get wrong.
  */
 export function MasterDashboardPage() {
   const { t } = useTranslation('master')
@@ -41,10 +42,7 @@ export function MasterDashboardPage() {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <h1 className="font-serif text-2xl font-semibold">{t('dashboard.title')}</h1>
-        <p className="text-fg-muted text-sm">{t('dashboard.subtitle')}</p>
-      </div>
+      <PageHeader title={t('dashboard.title')} description={t('dashboard.subtitle')} />
 
       {data.items.length === 0 ? (
         <EmptyState

@@ -770,7 +770,7 @@ class GameTableServiceTest {
 
     /**
      * Approving it takes the table to {@code Pause} and <b>the resolution note is the
-     * justification</b> (#32, modelo-datos skill §5): the admin already wrote why, and asking them for a
+     * justification</b> (#32, arquitectura §4.5): the admin already wrote why, and asking them for a
      * second reason would leave two answers to one question.
      */
     @Test

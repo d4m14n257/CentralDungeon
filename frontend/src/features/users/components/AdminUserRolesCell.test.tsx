@@ -25,7 +25,7 @@ describe('AdminUserRolesCell', () => {
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 
-  /** The colour is never the only carrier: the rank is named, not just tinted (frontend-diseno.md §3). */
+  /** The colour is never the only carrier: the rank is named, not just tinted (skill `diseno` §3). */
   it('names Admin and Owner rather than only colouring them', () => {
     render(<AdminUserRolesCell roles={['Admin']} />)
 

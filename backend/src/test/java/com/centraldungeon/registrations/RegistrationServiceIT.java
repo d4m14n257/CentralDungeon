@@ -33,7 +33,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * At most one active registration per pair (modelo-datos skill, #28) is an invariant MySQL cannot
+ * At most one active registration per pair (arquitectura §4, #28) is an invariant MySQL cannot
  * express (no partial unique index) - it only holds if RegistrationService's row lock on the
  * table actually serializes concurrent applications. This proves it under a real race, against a
  * real MySQL, with Flyway's real migrations applied.

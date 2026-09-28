@@ -49,8 +49,8 @@ export function MySubmissions({ taskId, renderFiles }: MySubmissionsProps) {
 
   return (
     <section className="space-y-2">
-      <h4 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('applicable.mineTitle')}</h4>
-      <ul className="divide-border divide-y">
+      <h4 className="section-label">{t('applicable.mineTitle')}</h4>
+      <ul className="list-divided-bare">
         {data.map((submission) => (
           <li key={submission.submissionId} className="space-y-2 py-2">
             {submission.submittedAt && (

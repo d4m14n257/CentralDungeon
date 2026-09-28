@@ -22,7 +22,7 @@ interface FileCategoryFilterProps {
  *
  * **A row of toggles and not a `<Select>`**, because the whole set is five short values and the
  * point is to see what is on offer without opening anything — the same reason a filter bar beats a
- * dropdown whenever the options fit on one line (`frontend-diseno.md` §5.b).
+ * dropdown whenever the options fit on one line (skill `diseno` §5.b).
  *
  * Selecting the active one clears it, so there is no separate "all" button competing with the five
  * real answers, and no state the person can get stuck in.

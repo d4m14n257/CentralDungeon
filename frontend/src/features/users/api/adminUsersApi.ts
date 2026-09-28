@@ -16,7 +16,7 @@ import type { AdminUserDetail, AdminUserSummary, ChangeUserRoleInput, ChangeUser
  * screen never asked about, and the listing has no way to know which rows those were.
  *
  * **The actor is never a parameter.** Who is acting comes from the token, and an id in the body
- * would be a claim the caller makes about themselves (arquitectura-backend skill §2.6).
+ * would be a claim the caller makes about themselves (arquitectura §2.6).
  *
  * The two role sub-routes are `grant-role` and `revoke-role`, flat, and not `roles/grant`: that is
  * what `AdminUserController` registers, and it is the style `GameTableController` already uses for

@@ -14,6 +14,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
@@ -53,7 +54,7 @@ import { ApiError } from '@/types/api'
  * **What was searched and which page are in the URL**, like /admin/catalogs (#185): a row is
  * something one admin sends to another, and state that only lives in `useState` cannot be linked to.
  *
- * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
+ * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, from the same column definitions — never horizontal scroll.
  */
 export function AdminFilesPage() {
@@ -206,18 +207,20 @@ export function AdminFilesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{t('admin.title')}</h1>
-        <div className="flex items-center gap-3">
-          <HelpLink section="admins.files" className="text-sm">
-            {t('table.helpLink')}
-          </HelpLink>
-          <Button type="button" onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}>
-            {uploadPanel.isOpen ? t('admin.uploadClose') : t('admin.upload')}
-          </Button>
-        </div>
-      </div>
-      <p className="text-fg-muted text-sm">{t('admin.description')}</p>
+      <PageHeader
+        title={t('admin.title')}
+        description={t('admin.description')}
+        actions={
+          <>
+            <HelpLink section="admins.files" className="text-sm">
+              {t('table.helpLink')}
+            </HelpLink>
+            <Button type="button" onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}>
+              {uploadPanel.isOpen ? t('admin.uploadClose') : t('admin.upload')}
+            </Button>
+          </>
+        }
+      />
 
       {/* **The admin's own upload box** (#237). Until this existed, the only way to get a file into
           the platform's library was to attach it to a table first and publish it from there - so the
@@ -267,7 +270,7 @@ export function AdminFilesPage() {
             rows={data.content}
             getRowId={(file) => file.id}
             renderActions={(file) => (
-              <div className="flex flex-wrap items-center justify-end gap-1">
+              <>
                 {/* An action a row's state would make the server refuse is absent, never greyed out:
                     a disabled button that does not say why is worse than no button (principio 2). */}
                 {file.status === 'Current' && file.fileType !== 'Public' && (
@@ -290,7 +293,7 @@ export function AdminFilesPage() {
                     className="text-destructive hover:text-destructive"
                   />
                 )}
-              </div>
+              </>
             )}
           />
           <PaginationControls

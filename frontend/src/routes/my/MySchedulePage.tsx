@@ -5,6 +5,7 @@ import { Link } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { masterTableDetailPath, myTableDetailPath } from '@/config/paths'
 import { TableStatusBadge, WeeklyScheduleGrid, useMySchedule } from '@/features/tables'
 import type { WeeklyCommitment } from '@/features/tables'
@@ -57,10 +58,7 @@ export function MySchedulePage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="font-serif text-2xl font-semibold">{t('schedule.title')}</h1>
-        <p className="text-fg-muted text-sm">{t('schedule.subtitle', { timeZone })}</p>
-      </div>
+      <PageHeader title={t('schedule.title')} description={t('schedule.subtitle', { timeZone })} />
 
       {data.length === 0 ? (
         <EmptyState title={t('schedule.emptyTitle')} description={t('schedule.emptyDescription')} />
@@ -81,8 +79,8 @@ export function MySchedulePage() {
           </div>
 
           <section className="space-y-2">
-            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('schedule.tablesTitle')}</h2>
-            <ul className="divide-border divide-y rounded-lg border">
+            <h2 className="section-label">{t('schedule.tablesTitle')}</h2>
+            <ul className="list-divided">
               {data.map((commitment) => (
                 <li key={commitment.tableId} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
                   <Link to={destinationOf(commitment)} className="min-w-0 flex-1 truncate hover:underline">

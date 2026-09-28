@@ -171,7 +171,7 @@ public class ApprovalService {
      * @param type          what is being asked for
      * @param justification why, never blank - the request validates it
      * @param actor         the actor, from the token (#121). The request is always about them: the
-     *                      body carries no id and could not be trusted with one (arquitectura-backend skill §2.6)
+     *                      body carries no id and could not be trusted with one (arquitectura §2.6)
      * @return the request as it was opened
      * @throws NotFoundException        404 when the actor's account is gone - the #78 validation,
      *                                  run before the insert
@@ -201,7 +201,7 @@ public class ApprovalService {
         }
 
         // This endpoint only ever opens a request about the person asking, which is why it takes no
-        // entity id and could not be trusted with one (F3.2 §0d, arquitectura-backend skill §2.6). The two types
+        // entity id and could not be trusted with one (F3.2 §0d, arquitectura §2.6). The two types
         // whose entity is something else have doors of their own, on the aggregate they are about:
         // submitTablePause and submitPlayerBan.
         //
@@ -375,7 +375,7 @@ public class ApprovalService {
      * with twenty resolved {@code General} requests on top of it, falls off page one and the button
      * comes back - offering an action whose only possible answer is a 409. {@code /status Pending}
      * answers the question the screen is actually asking. It goes through {@code ?q=} rather than a
-     * parameter of its own because one search box per endpoint is the rule (arquitectura-backend skill §2.5), and
+     * parameter of its own because one search box per endpoint is the rule (arquitectura §2.5), and
      * because {@code /request_type} then works here for free.
      *
      * <p>The actor's own filter is <b>not</b> part of that language: it is forced inside
@@ -407,7 +407,7 @@ public class ApprovalService {
      *
      * @param rawQuery the search box: bare text matches the justification or the requester's name,
      *                 and {@code /request_type}, {@code /status} and {@code /requested_by} narrow it.
-     *                 An unrecognized value matches nothing and is never a 400 (arquitectura-backend skill §2.5)
+     *                 An unrecognized value matches nothing and is never a 400 (arquitectura §2.5)
      * @param pageable page, size and sort, with a tie-break by id (#171, #173)
      * @return one page of requests
      */
@@ -466,7 +466,7 @@ public class ApprovalService {
         switch (request.getRequestType()) {
             case MasterGrant -> userRoleService.grantRole(
                     request.getRequestedBy().getId(), PlatformRole.MASTER, resolutionNote, actor);
-            // The resolution note IS the pause's justification (#32, modelo-datos skill §5). Not a
+            // The resolution note IS the pause's justification (#32, arquitectura §4.5). Not a
             // copy of it and not a second reason invented here: the admin already wrote why, and
             // asking them twice would produce two answers to one question.
             case TablePause -> gameTableService.applyApprovedPause(

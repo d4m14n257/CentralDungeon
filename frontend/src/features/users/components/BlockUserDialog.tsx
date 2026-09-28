@@ -25,7 +25,7 @@ interface BlockUserDialogProps {
    * consequences.
    *
    * A node rather than a `HelpLink` raised here, for the same reason as {@link RoleChangeDialog}:
-   * `features/help` is another feature and a feature never imports one (arquitectura-frontend skill §3.1.5).
+   * `features/help` is another feature and a feature never imports one (arquitectura §3.1.5).
    */
   help?: ReactNode
 }
@@ -128,7 +128,7 @@ export function BlockUserDialog({ user, open, onOpenChange, help }: BlockUserDia
           />
 
           {errorKey && (
-            <p role="alert" className="bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm">
+            <p role="alert" className="inline-error">
               {t(errorKey)}
             </p>
           )}

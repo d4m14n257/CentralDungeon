@@ -13,7 +13,7 @@ import java.util.Optional;
  * writes the phrase in the reader's language, exactly as {@code MasterWorkItemKind} does for the
  * master's tray.
  *
- * <p><b>Two values, not four.</b> the {@code modelo-datos} skill §5 lists four sources - the two here,
+ * <p><b>Two values, not four.</b> the {@code arquitectura} skill §4.5 lists four sources - the two here,
  * plus {@code comments} in {@code Under review} and {@code system_feedback} in {@code New} - and the
  * last two land in F5 <em>with the features that produce them</em>. Declaring them today would create
  * two constants nothing can emit, which is the orphan this phase already paid for once
@@ -30,7 +30,7 @@ public enum AdminQueueItemKind {
      *
      * <p>Not {@code Draft}, which nobody has sent; not {@code ChangesRequested}, where the ball is
      * back with the master; not {@code Unassigned}, which is waiting for a master rather than for a
-     * review (modelo-datos skill §5, #245). A tray that listed those would be showing an admin work that
+     * review (arquitectura §4.5, #245). A tray that listed those would be showing an admin work that
      * is not theirs to do.
      */
     TableWaitingReview;

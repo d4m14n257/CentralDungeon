@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * record and not a reuse of {@link CreateGameTableRequest} because the two differ in what they are
  * allowed to say: creating decides nothing about who runs the table, editing cannot change it
  * either, and keeping them apart is what stops a field added to one from silently appearing in the
- * other (arquitectura-backend skill §2.3).
+ * other (arquitectura §2.3).
  *
  * @param name          the table's title
  * @param description   what the table is about, as rich text. Re-sanitized on every save (#62)

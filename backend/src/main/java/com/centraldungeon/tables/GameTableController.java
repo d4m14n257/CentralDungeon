@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Covers the game table aggregate: the table itself, its masters and its status history (arquitectura-backend skill §2.2). */
+/** Covers the game table aggregate: the table itself, its masters and its status history (arquitectura §2.2). */
 @RestController
 @RequestMapping("/api/v1/game-tables")
 public class GameTableController {

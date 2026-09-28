@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { masterTableDetailPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { CatalogPicker } from '@/features/catalogs'
@@ -236,15 +237,12 @@ export function MasterTableEditPage() {
     // Centred rather than hugging the left: these two are forms, and a form read against one
     // edge of a wide screen is a column of text with a desert next to it (#228).
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="space-y-1">
-        <h1 className="font-serif text-2xl font-semibold">{t('edit.title', { name: table.name })}</h1>
-        <p className="text-fg-muted text-sm">{t('edit.description')}</p>
-      </div>
+      <PageHeader title={t('edit.title', { name: table.name })} description={t('edit.description')} />
 
       <Form {...form}>
         <form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)} className="space-y-6">
           <section className="space-y-5" aria-label={t('edit.identitySection')}>
-            <h2 className="font-serif text-lg font-semibold">{t('edit.identitySection')}</h2>
+            <h2 className="section-title">{t('edit.identitySection')}</h2>
             <FormField
               control={form.control}
               name="name"
@@ -336,7 +334,7 @@ export function MasterTableEditPage() {
           <Separator />
 
           <section className="space-y-4" aria-label={t('edit.catalogsSection')}>
-            <h2 className="font-serif text-lg font-semibold">{t('edit.catalogsSection')}</h2>
+            <h2 className="section-title">{t('edit.catalogsSection')}</h2>
             <CatalogPicker kind="systems" label={t('create.systemsLabel')} selected={systems} onChange={setSystems} />
             <CatalogPicker kind="tags" label={t('create.tagsLabel')} selected={tags} onChange={setTags} />
             <CatalogPicker kind="platforms" label={t('create.platformsLabel')} selected={platforms} onChange={setPlatforms} />
@@ -345,7 +343,7 @@ export function MasterTableEditPage() {
           <Separator />
 
           <section className="space-y-4" aria-label={t('edit.scheduleSection')}>
-            <h2 className="font-serif text-lg font-semibold">{t('edit.scheduleSection')}</h2>
+            <h2 className="section-title">{t('edit.scheduleSection')}</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -376,7 +374,7 @@ export function MasterTableEditPage() {
                   to see what else they gave away just as much as the one building it does. */}
               <div className="space-y-2 pt-2">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{tTables('schedule.inWizardTitle')}</h3>
+                  <h3 className="section-label">{tTables('schedule.inWizardTitle')}</h3>
                   <p className="text-fg-muted text-xs">{tTables('schedule.inWizardDescription')}</p>
                 </div>
                 {myWeek.isPending ? (
@@ -396,7 +394,7 @@ export function MasterTableEditPage() {
           <Separator />
 
           <section className="space-y-4" aria-label={t('edit.capacitySection')}>
-            <h2 className="font-serif text-lg font-semibold">{t('edit.capacitySection')}</h2>
+            <h2 className="section-title">{t('edit.capacitySection')}</h2>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

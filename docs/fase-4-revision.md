@@ -85,10 +85,12 @@ Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, 
 
 | Cambio | Triaje | Dónde quedó |
 |---|---|---|
-| **Cada contexto se cierra a quien no lo tiene y lo devuelve a su home**, sin mostrar un 403: un Player que escribe `/admin/users` o `/master` vuelve a `/player`; una cuenta solo-master que escribe `/player` vuelve a `/master`. `/master/tables/new` sin el rol `Master` vuelve a `/master`. Sin ningún contexto, `/` explica en vez de hacer bucle | Decisión nueva: **#269**, corrige #103 y #222 | `RequireContext` en los tres layouts; `frontend-diseno.md` §2; skill `arquitectura-frontend` §3.1.6 |
+| **Cada contexto se cierra a quien no lo tiene y lo devuelve a su home**, sin mostrar un 403: un Player que escribe `/admin/users` o `/master` vuelve a `/player`; una cuenta solo-master que escribe `/player` vuelve a `/master`. `/master/tables/new` sin el rol `Master` vuelve a `/master`. Sin ningún contexto, `/` explica en vez de hacer bucle | Decisión nueva: **#269**, corrige #103 y #222 | `RequireContext` en los tres layouts; `frontend-diseno.md` §2; skill `arquitectura` §3.1.6 |
 | **`/admin` es la home de Admin**: bienvenida sin métricas, donde cae un admin al entrar, primer ítem «Inicio» de la nav | Decisión nueva: **#270**, corrige la home de F3.3 | `AdminHomePage`; sitemap de `frontend-diseno.md` §2; diagrama 24 |
-| **Paginación de las tablas de trabajo**: tira numerada compacta, «Ir a…» para saltar de la 1 a la 900, y «Por página» con 10 · 25 · 50 · 100 en `?size=` | Decisión nueva: **#271**, precisa #173 | `PaginationControls`; `frontend-diseno.md` §5 «Listas de trabajo»; `design/build.py` |
-| **Acciones de fila como íconos con tooltip** en las seis tablas de admin, con un vocabulario de íconos fijo | Decisión nueva: **#272** | `IconAction` en cada `renderActions`; `frontend-diseno.md` §5 «Listas de trabajo»; `design/build.py` |
+| **Paginación de las tablas de trabajo**: tira numerada compacta, «Ir a…» para saltar de la 1 a la 900, y «Por página» con 10 · 25 · 50 · 100 en `?size=` | Decisión nueva: **#271**, precisa #173 | `PaginationControls`; skill `diseno` §5 «Listas de trabajo»; `design/build.py` |
+| **Acciones de fila como íconos con tooltip** en las seis tablas de admin, con un vocabulario de íconos fijo | Decisión nueva: **#272** | `IconAction` en cada `renderActions`; skill `diseno` §5 «Listas de trabajo»; `design/build.py` |
+| **Las acciones de fila van en una línea, sin wrap, y un patrón de estilo tiene nombre**: cambiar el contenedor de `/admin/users` no cambiaba las otras tablas porque cada pantalla escribía el suyo. Se nombraron `.row-actions` (que ponen `DataTable`, `CollapsibleSection` y `FileCard`), `.page-title`, `.section-title`, `.section-label`, `.list-divided`, `.list-divided-bare`, `.inline-error` y `PageHeader`, y se barrió todo el frontend | Decisión nueva: **#273** | `styles/base.css`, `components/PageHeader.tsx`; skill nueva `diseno` §5.c; `design/build.py` |
+| **La arquitectura es una sola skill**, que incluye el modelo de datos, el testing, la documentación con Javadoc/JSDoc y los procedimientos | Decisión nueva: **#274** | skill `arquitectura`; `CLAUDE.md`, `mcp-y-skills.md` |
 
 **Consecuencias de #269, para triar en F4.1** — dos cruces de contexto de §2.2 que antes llevaban a una pantalla del prefijo ajeno y ahora **redirigen**:
 
@@ -96,6 +98,8 @@ Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, 
 - Las pestañas Candidatos y Jugadores del master enlazan a `/player/users/:id`: un master sin `Player` que abre un perfil vuelve a `/master`. **Esto rompe #41b para ese master** —ver el perfil de quien se postuló a su mesa— y lo fija en rojo el e2e `profile-visibility.spec.ts` (el paso del master que abre al candidato), que se deja sin tocar a propósito hasta decidir dónde vive el perfil.
 
 Las dos piden lo mismo —que el perfil deje de colgar del contexto Jugador o que cada contexto tenga el suyo— y es una decisión, no un bug.
+
+**Deuda de estilo que dejó a la vista #273, para triar en F4.1**: `text-[11px]` en `NotificationBell` y `WizardSteps` es un valor suelto fuera del `@theme` (regla dura 18) — o se agrega el tamaño a `design/build.py`, o se usa `text-xs`.
 
 ## 3. Las seis rebanadas
 
@@ -161,10 +165,10 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 **Lo que se verifica:** que «quién puede qué» sea lo que los documentos dicen, **probado y no leído de un `@PreAuthorize`**.
 
 - **La matriz completa**: cada endpoint × cada rol. Cuatro roles, más el actor sin sesión, más el actor bloqueado.
-- **La matriz `Admin`/`Owner` —la de F3, hoy en la skill `modelo-datos`, `references/roles-y-alcance.md`— termina en una prueba que la recorre.** Una tabla en un documento no impide que alguien escriba `hasRole('ADMIN')` y deje al owner afuera — y eso no se nota en desarrollo, donde el actor de prueba suele ser admin.
+- **La matriz `Admin`/`Owner` —la de F3, hoy en la skill `arquitectura`, `references/modelo-datos/roles-y-alcance.md`— termina en una prueba que la recorre.** Una tabla en un documento no impide que alguien escriba `hasRole('ADMIN')` y deje al owner afuera — y eso no se nota en desarrollo, donde el actor de prueba suele ser admin.
 - **Pertenencia, que es la otra mitad y la más fácil de olvidar** (#121): el rol correcto sobre el **recurso ajeno**. Un master legítimo pidiendo la mesa de otro master; un jugador pidiendo la postulación de otro; un admin leyendo lo que #45 le permite y lo que #43 no.
-- **Los tres contextos no son autorización** (#103, #222): `/player` no exige el rol `Player`, y eso es deliberado. La prueba fija que la interfaz no decide permisos y el backend sí.
-- **La exclusión `Admin`/`Owner`** de #169 y sus tres invariantes —ahora en la skill `modelo-datos`, `references/roles-y-alcance.md`—, incluida la que dice que la plataforma nunca se queda sin owner.
+- **Los tres contextos se cierran pero no son la autorización** (#103, #269): cada layout redirige a quien no tiene el contexto, y el backend responde `403` igual a quien llama el endpoint directo. La prueba fija las dos mitades: que la interfaz no muestra lo ajeno y que el backend no depende de eso.
+- **La exclusión `Admin`/`Owner`** de #169 y sus tres invariantes —ahora en la skill `arquitectura`, `references/modelo-datos/roles-y-alcance.md`—, incluida la que dice que la plataforma nunca se queda sin owner.
 - **El contrato de las respuestas**: cada tipo de retorno de `features/*/api` contra el `record` que el backend devuelve de verdad. Un tipo del frontend que dice `void` donde llega un cuerpo no rompe nada hoy, y por eso nadie lo nota hasta que una pantalla necesita ese cuerpo.
 
 **Terminada cuando:** existe una suite que recorre la matriz, cada celda que no coincide con la documentación quedó triada, y cada tipo de respuesta del frontend coincide con su `record`.

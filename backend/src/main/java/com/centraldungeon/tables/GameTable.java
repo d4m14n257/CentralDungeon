@@ -28,7 +28,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>{@code claimed_by} / {@code claimed_at} are the admin queue's reservation (#100). They arrived
  * with F3.3 and needed <b>no migration</b>: {@code V1__baseline.sql} declared both columns and the
- * foreign key from the start, exactly as the note that used to sit here promised (modelo-datos skill §4).
+ * foreign key from the start, exactly as the note that used to sit here promised (arquitectura §4.4).
  * Only {@link com.centraldungeon.adminqueue.AdminQueueService} moves them - a table is reserved from
  * the shared tray and from nowhere else.
  */

@@ -12,7 +12,7 @@ interface IconActionProps extends Omit<ComponentProps<typeof Button>, 'children'
 
 /**
  * An icon button with its tooltip, for the actions of a row or a card
- * (`frontend-diseno.md` §5) — the replacement for the legacy `ActionButtonDefault`.
+ * (skill `diseno` §5) — the replacement for the legacy `ActionButtonDefault`.
  *
  * **The text is not decoration**: it travels as `aria-label` as well as a tooltip, because an icon
  * with no accessible name is a button that does not exist for anyone who cannot see it. And the

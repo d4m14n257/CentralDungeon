@@ -70,7 +70,7 @@ export function TableTasksSection({ tableId, renderHelpLink, renderFiles, render
 
   return (
     <section className="space-y-2">
-      <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('applicable.title')}</h2>
+      <h2 className="section-label">{t('applicable.title')}</h2>
 
       {isPending ? (
         <Skeleton className="h-24 w-full" />

@@ -7,7 +7,7 @@ import { StatusBadge, type StatusTone } from './StatusBadge'
  * The invariant that used to be asserted in one of nine places, now that there is one place (#261).
  *
  * `TableStatusBadge` was the only one of the nine badges with a test, so the rule «colour is never the
- * only carrier of meaning» (`frontend-diseno.md` §3) was pinned for tables and taken on trust for the
+ * only carrier of meaning» (skill `diseno` §3) was pinned for tables and taken on trust for the
  * other eight. It holds here for all of them at once.
  */
 describe('StatusBadge', () => {

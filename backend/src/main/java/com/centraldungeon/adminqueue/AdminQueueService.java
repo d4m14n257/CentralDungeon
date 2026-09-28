@@ -241,7 +241,7 @@ public class AdminQueueService {
     }
 
     /**
-     * {@code game_tables} in {@code Preparation}, <b>and nothing else</b> (modelo-datos skill §5, #245).
+     * {@code game_tables} in {@code Preparation}, <b>and nothing else</b> (arquitectura §4.5, #245).
      *
      * <p>This is the part of the tray that a loose reading of #176 gets wrong. {@code Draft} does not
      * enter: nobody sent it, and putting half-written drafts in front of a reviewer is exactly what

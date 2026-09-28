@@ -7,7 +7,7 @@ import type { FileType } from '../types'
 /**
  * Which tone each state wears. **The map stays here and not in `StatusBadge`**: which of this
  * feature's states counts as "open" is a decision about this domain, and a shared component that knew
- * it would be the wrong kind of shared (`arquitectura-frontend` skill §3.1.2).
+ * it would be the wrong kind of shared (`arquitectura` §3.1.2).
  */
 const STATE_TONES: Record<FileType, StatusTone> = {
   Public: 'open',

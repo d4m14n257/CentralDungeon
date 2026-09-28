@@ -1,6 +1,6 @@
 # Roles y alcance — lo normativo de F3
 
-> Parte de la skill `modelo-datos`. Rescatado en F4.0 de `docs/fase-3-admin-owner.md` antes de borrarlo: la línea entre `Admin` y `Owner` (§3), las reglas de diseño de cada rebanada de F3 (§4, sin sus inventarios de cierre), lo que F3 no construyó (§5), el camino de verificación manual (§6) y los riesgos que el código cita (§7). **Conserva la numeración original**, que es la que citan el código y `decisiones.md`. El registro completo de la fase, con sus inventarios, queda en git.
+> Parte de la skill `arquitectura` (#274), sección 4 — el modelo de datos. Rescatado en F4.0 de `docs/fase-3-admin-owner.md` antes de borrarlo: la línea entre `Admin` y `Owner` (§3), las reglas de diseño de cada rebanada de F3 (§4, sin sus inventarios de cierre), lo que F3 no construyó (§5), el camino de verificación manual (§6) y los riesgos que el código cita (§7). **Conserva la numeración original**, que es la que citan el código y `decisiones.md`. El registro completo de la fase, con sus inventarios, queda en git.
 
 ## 3. La línea entre `Admin` y `Owner`
 
@@ -65,7 +65,7 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 
 **Frontend** — `routes/admin/AdminUsersPage.tsx`:
 
-- La tabla ancha de `frontend-diseno.md` §5.b: en móvil deja de ser tabla.
+- La tabla ancha de skill `diseno` §5.b: en móvil deja de ser tabla.
 - Los roles como chips, con el orden que #165 fijó. **Los botones que un admin no puede usar no se muestran** — principio 2 de `frontend-diseno.md` §1 — y el owner ve los cuatro.
 - Bloquear pide motivo, y el diálogo dice qué implica: la persona no entra más, y sus datos se conservan (#84).
 
@@ -184,4 +184,4 @@ cd frontend && npm run format      # prettier del repo (#174)
 - **La referencia polimórfica de #78 es la pieza que la base no puede cuidar.** Dos cosas van con ella o no va: la validación en el service antes de insertar, y el chequeo periódico de huérfanas. Sin la segunda, el problema aparece meses después y sin forma de reconstruir qué apuntaba a qué.
 - **El veto toca seis vías de lectura y es fácil cerrar cinco.** Un vetado que no ve la mesa pero sí descarga su archivo es el bug que #206 anticipó por escrito. El inventario de vías se escribe antes de tocar la primera, y cada una lleva su test.
 - **`hasRole('ADMIN')` en vez de `hasAnyRole('ADMIN','OWNER')` deja al owner afuera y nadie lo nota**, porque en desarrollo el actor de prueba suele ser admin. La matriz de §3 tiene que terminar en una prueba que la recorra, no solo en esta tabla.
-- **Tres cosas se llaman «owner» en este proyecto** y F3 las toca a todas: el rol de plataforma `PlatformRole.OWNER` (#67), el dueño de una mesa que #71 renombró a `Primary`, y «el owner» de #66 que es el dueño de la plataforma. #39 sigue escrita con el nombre viejo —dice que el veto lo aplica «el `Owner`» y quiere decir el `Primary`—; skill `modelo-datos` §5 ya está corregida y es la que manda.
+- **Tres cosas se llaman «owner» en este proyecto** y F3 las toca a todas: el rol de plataforma `PlatformRole.OWNER` (#67), el dueño de una mesa que #71 renombró a `Primary`, y «el owner» de #66 que es el dueño de la plataforma. #39 sigue escrita con el nombre viejo —dice que el veto lo aplica «el `Owner`» y quiere decir el `Primary`—; skill `arquitectura` §4.5 ya está corregida y es la que manda.

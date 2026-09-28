@@ -10,7 +10,7 @@ import type { CatalogKind } from '../types'
  * The accepted values a combobox offers, narrowed by whatever the person typed.
  *
  * `staleTime` is an hour: only an admin changes a catalog, from /admin/catalogs, so re-asking on
- * every mount would be pure noise (arquitectura-frontend skill §3.3).
+ * every mount would be pure noise (arquitectura §3.3).
  *
  * @param kind  which catalog to read
  * @param query the search box; the caller debounces it before it gets here

@@ -48,7 +48,7 @@ export interface UseSearchQueryResult {
  * empty text, after the Enter that closed the chips — or clears the filters. One request per intention.
  *
  * It holds no domain and no endpoint: which commands exist and who answers them are the caller's,
- * exactly as in the box itself (arquitectura-frontend skill §3.1.1).
+ * exactly as in the box itself (arquitectura §3.1.1).
  */
 export function useSearchQuery({ fields, initialQuery = '', onQueryChange }: UseSearchQueryOptions): UseSearchQueryResult {
   // Read once, on purpose: from here on the box owns the state, and re-reading the URL it is itself

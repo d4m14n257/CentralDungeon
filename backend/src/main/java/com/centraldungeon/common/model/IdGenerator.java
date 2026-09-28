@@ -3,7 +3,7 @@ package com.centraldungeon.common.model;
 import java.security.SecureRandom;
 import java.util.UUID;
 
-/** UUID v7 (RFC 9562): 48-bit millisecond timestamp + random bits, sortable by creation order (modelo-datos skill, #9). */
+/** UUID v7 (RFC 9562): 48-bit millisecond timestamp + random bits, sortable by creation order (arquitectura §4, #9). */
 public final class IdGenerator {
 
     /** Source of the 74 random bits. Cryptographic, so ids cannot be guessed from one another. */
@@ -16,7 +16,7 @@ public final class IdGenerator {
     /**
      * Generates one id.
      *
-     * <p>Ids being unpredictable is <b>defence in depth, never authorization</b> (arquitectura-backend skill
+     * <p>Ids being unpredictable is <b>defence in depth, never authorization</b> (arquitectura skill
      * §2.6): knowing an id must never be the only thing standing between someone and a resource.
      *
      * @return a UUID v7 in its canonical 36-character form, sortable by creation time

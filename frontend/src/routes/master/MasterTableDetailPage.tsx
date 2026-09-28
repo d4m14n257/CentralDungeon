@@ -5,6 +5,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { masterTableEditPath } from '@/config/paths'
 import { cn } from '@/lib/utils'
 import { MASTER_EDITABLE_STATUSES, TableStatusBadge, useManagedTable } from '@/features/tables'
@@ -54,17 +55,19 @@ export function MasterTableDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{table.name}</h1>
-        <div className="flex shrink-0 items-center gap-3">
-          {canEdit && (
-            <Button asChild size="sm" variant="secondary">
-              <Link to={masterTableEditPath(tableId)}>{t('detail.edit')}</Link>
-            </Button>
-          )}
-          <TableStatusBadge status={table.status} />
-        </div>
-      </div>
+      <PageHeader
+        title={table.name}
+        actions={
+          <>
+            {canEdit && (
+              <Button asChild size="sm" variant="secondary">
+                <Link to={masterTableEditPath(tableId)}>{t('detail.edit')}</Link>
+              </Button>
+            )}
+            <TableStatusBadge status={table.status} />
+          </>
+        }
+      />
       <nav className="border-border-strong flex flex-wrap gap-4 border-b">
         <NavLink to="." end className={TAB_LINK_CLASSES}>
           {t('detail.tabs.candidates')}

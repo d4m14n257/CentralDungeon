@@ -1,6 +1,6 @@
 # 2.5 Contrato de la API
 
-> Parte de la skill `arquitectura-backend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 - Base: `/api/v1`. Recursos en plural y kebab-case: `/api/v1/game-tables/{id}/registrations`.

@@ -55,7 +55,7 @@ export function FileList<T extends FileListItem>({ files, renderMeta, renderActi
   const busyFileId = download.isPending ? download.variables?.fileId : undefined
 
   return (
-    <ul className="divide-border divide-y">
+    <ul className="list-divided-bare">
       {files.map((file) => (
         <li key={file.fileId}>
           <FileCard

@@ -1,6 +1,6 @@
 # 2.3 DTOs: tipado explícito de todo lo que cruza HTTP
 
-> Parte de la skill `arquitectura-backend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 Regla base: **ningún endpoint devuelve un tipo inferido, genérico o abierto.** Nada de `Map<String, Object>`, nada de `Object`, nada de `ResponseEntity<?>`, nada de `@Entity` serializada. Todo lo que entra o sale por HTTP tiene un `record` con nombre propio en el `dto/` de su feature.

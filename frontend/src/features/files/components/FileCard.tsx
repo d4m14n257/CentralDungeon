@@ -59,7 +59,7 @@ export function FileCard({ name, mimeType, sizeBytes, meta, actions }: FileCardP
         {meta}
       </div>
 
-      {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
+      {actions && <div className="row-actions shrink-0">{actions}</div>}
     </div>
   )
 }

@@ -85,7 +85,7 @@ export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFileP
           <div className="space-y-2">
             <p className="text-sm font-medium">{t('submit.filesLabel')}</p>
             {files.length > 0 && (
-              <ul className="divide-border divide-y">
+              <ul className="list-divided-bare">
                 {files.map((file) => (
                   <li key={stagedKey(file)} className="flex items-center justify-between gap-2 py-2 text-sm">
                     <span className="truncate">{file.name}</span>

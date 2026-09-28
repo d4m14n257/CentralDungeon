@@ -7,7 +7,7 @@ import type { AdminQueueItem, AdminQueueItemType } from '../types'
  * The three calls of the shared admin tray (#100, F3.3).
  *
  * **The actor is never a parameter.** Who is reading the tray, who reserves and who releases all come
- * from the token (arquitectura-backend skill §2.6); an id in the path would be a claim the caller makes about
+ * from the token (arquitectura §2.6); an id in the path would be a claim the caller makes about
  * themselves, and here it would be a claim about *somebody else's* reservation.
  *
  * **There is no `q`, and that is a decision and not an omission** (§2 del contrato). A tray sorts

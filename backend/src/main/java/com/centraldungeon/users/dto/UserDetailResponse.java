@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
  * whole frontend shell is built from.
  *
  * <p>Richer than the summary because this one only ever describes the caller to themselves. Nothing
- * here is exposed about somebody else (arquitectura-backend skill §2.3).
+ * here is exposed about somebody else (arquitectura §2.3).
  *
  * @param id                the person's identifier
  * @param name              their display name, or null while onboarding is incomplete

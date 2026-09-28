@@ -36,7 +36,11 @@ export interface DataTableProps<T> {
   rows: T[]
   /** Stable identity for a row - its React key. */
   getRowId: (row: T) => string
-  /** Optional per-row actions. Rendered in a last column, and at the foot of each card. */
+  /**
+   * Optional per-row actions, as a fragment of `IconAction`s (#272). The table wraps them in
+   * `.row-actions` itself - one line, never wrapping - in the last column and at the foot of each
+   * card, so no screen writes that container and every table lines its icons up the same way (#273).
+   */
   renderActions?: (row: T) => ReactNode
   /** Accessible name for the table, since these screens rarely have a visible caption per table. */
   label: string
@@ -45,7 +49,7 @@ export interface DataTableProps<T> {
 /**
  * A wide table that **stops being a table** when the screen is narrow.
  *
- * This is the expensive case of the responsive rules (frontend-diseno.md 5.b): /admin/catalogs,
+ * This is the expensive case of the responsive rules (skill `diseno` §5.b): /admin/catalogs,
  * /admin/users and /owner/audit all have five or more columns. Below `md` each row becomes a card -
  * identity and state at the top, the rest as labelled lines, actions at the foot - and **there is
  * never horizontal scroll**. A table you have to drag sideways on a phone is a table nobody reads.
@@ -90,7 +94,11 @@ export function DataTable<T>({ columns, rows, getRowId, renderActions, label }: 
                 {columns.map((column) => (
                   <TableCell key={column.id}>{column.cell(row)}</TableCell>
                 ))}
-                {renderActions && <TableCell className="text-right whitespace-nowrap">{renderActions(row)}</TableCell>}
+                {renderActions && (
+                  <TableCell>
+                    <div className="row-actions">{renderActions(row)}</div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -115,7 +123,7 @@ export function DataTable<T>({ columns, rows, getRowId, renderActions, label }: 
                 </div>
               ))}
             </dl>
-            {renderActions && <div className="flex flex-wrap justify-end gap-2 pt-1">{renderActions(row)}</div>}
+            {renderActions && <div className="row-actions pt-1">{renderActions(row)}</div>}
           </li>
         ))}
       </ul>

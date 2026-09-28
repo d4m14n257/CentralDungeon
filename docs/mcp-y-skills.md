@@ -6,7 +6,7 @@ Ninguno tiene secretos literales: todos usan `${VAR}` (variables de entorno) o a
 
 | Server | Paquete | Para qué | Requiere |
 |---|---|---|---|
-| `mysql` | `@benborla29/mcp-server-mysql` | Introspección del schema real y queries de solo lectura contra la BD local — validar la skill `modelo-datos` contra datos reales antes de escribir entidades JPA | `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASS`, `MYSQL_DB`. Insert/Update/Delete están deshabilitados en la config a propósito. |
+| `mysql` | `@benborla29/mcp-server-mysql` | Introspección del schema real y queries de solo lectura contra la BD local — validar el modelo de la skill `arquitectura` (§4) contra datos reales antes de escribir entidades JPA | `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASS`, `MYSQL_DB`. Insert/Update/Delete están deshabilitados en la config a propósito. |
 | `context7` | `@upstash/context7-mcp` | Documentación versionada de Spring Boot, React, shadcn/ui, Tailwind — evita APIs desactualizadas o inventadas | Opcional: `CONTEXT7_API_KEY` (sin ella funciona con rate limit anónimo) |
 | `playwright` | `@playwright/mcp` | Generar y ejecutar los e2e navegando el frontend real | Nada |
 | `shadcn-ui` | `@jpisnice/shadcn-ui-mcp-server` | Código fuente real de cada componente shadcn/ui (props, estructura, bloques) | Opcional: `GITHUB_PERSONAL_ACCESS_TOKEN` (sube el límite de 60 a 5000 req/hora) |
@@ -48,25 +48,19 @@ No es un MCP: es la herramienta `DesignSync`, integrada en Claude Code, así que
 
 ## Skills propias (`.claude/skills/`)
 
-Son skills propias, escritas acá, y **se versionan con el repo**. Hay dos clases:
+Son skills propias, escritas acá, y **se versionan con el repo**. Guardan cómo es el proyecto y son la **fuente** de sus reglas: desde F4.0 las reglas viven acá y no en `docs/`, y lo que Claude sabía solo por su memoria local de la máquina —el entorno y sus trampas— también. El código las cita por sección (`arquitectura §2.3`, `diseno §5.c`). Cada una tiene un `SKILL.md` con las reglas que se aplican siempre y una carpeta `references/` con el detalle, que se lee solo cuando hace falta.
 
-- **De conocimiento**: guardan cómo es el proyecto y son la **fuente** de sus reglas. Desde F4.0, las reglas de arquitectura y el modelo de datos viven acá y no en `docs/`, y lo que Claude sabía solo por su memoria local de la máquina —el entorno y sus trampas— también. El código las cita por sección (`arquitectura-backend §2.3`, `modelo-datos` skill §5), con la misma numeración que tenían como documentos. Cada una tiene un `SKILL.md` corto con las reglas que se aplican siempre y una carpeta `references/` con el detalle, que se lee solo cuando hace falta.
-- **De procedimiento**: los pasos, en orden, para una tarea que se repite. No repiten las reglas: invocan las de conocimiento.
+**Son tres, a propósito** (#274). Hasta F4 eran nueve —tres de conocimiento de arquitectura y modelo, cuatro de procedimiento, más el entorno—, y ninguna se entendía sin las otras: el procedimiento de un endpoint no servía sin las reglas de capas, ni el test sin la regla que probaba. Se juntaron por lo que cubren, conservando la numeración vieja para que ninguna cita quedara huérfana.
 
-| Skill | Clase | Cuándo se usa |
-|---|---|---|
-| `arquitectura-backend` | Conocimiento | Antes de escribir o revisar código Java: paquetes por feature, reglas por capa, DTOs, contrato de la API, seguridad y pertenencia, testing y Javadoc (§2.1–§2.8). |
-| `arquitectura-frontend` | Conocimiento | Antes de escribir o revisar código del frontend: dónde va cada archivo, feature ≠ pantalla, ruteo, modelo de tipos, estado, i18n, formularios, fechas y estilos (§3.1–§3.4). |
-| `modelo-datos` | Conocimiento | Antes de tocar una `@Entity`, una migración, una query o una regla de negocio: convenciones (§1), DDL y migraciones (§4, §6), reglas de negocio (§5), fuera de v1 (§7) y `roles-y-alcance.md`, lo normativo de F3. |
-| `entorno-local` | Conocimiento | Antes de correr o verificar algo contra el backend, el frontend, Playwright o Testcontainers: el backend del usuario y no uno paralelo, nunca `mvn clean` con la JVM viva, el autobuild de JDT, las variables de colima. |
-| `nuevo-endpoint-java` | Procedimiento | Agregar un endpoint al backend: controller + service + repository + DTO + mapper dentro del paquete de la feature. |
-| `nuevo-componente-react` | Procedimiento | Agregar un componente o página al frontend, con su puerta de entrada si es pantalla. |
-| `tests-java` | Procedimiento | Escribir o revisar tests del backend: JUnit 6 + Mockito para unitarios, Testcontainers para integración. |
-| `er-diagram-sync` | Procedimiento | Después de tocar cualquier `@Entity`: migración Flyway, fila en la tabla de migraciones de `modelo-datos` y diagramas ER. |
+| Skill | Cuándo se usa |
+|---|---|
+| `arquitectura` | Antes de escribir o revisar cualquier código, de tocar una `@Entity`, una migración o una regla de negocio, y de escribir tests. Backend (§2), frontend (§3), modelo de datos (§4), testing (§5), documentación del código con Javadoc y JSDoc (§6) y los procedimientos: nuevo endpoint, nuevo componente o pantalla, cambio de schema (§7). |
+| `diseno` | Antes de escribir el JSX de una pantalla o componente, o de agregar un estilo: de dónde sale cada valor, **las clases y componentes de patrón** que una pantalla no vuelve a escribir (§5.c, #273), el inventario, las listas de trabajo, los cuatro estados y el responsive (§3, §5, §5.b). |
+| `entorno-local` | Antes de correr o verificar algo contra el backend, el frontend, Playwright o Testcontainers: el backend del usuario y no uno paralelo, nunca `mvn clean` con la JVM viva, el autobuild de JDT, las variables de colima. |
 
 ## Skills externas (globales, `~/.claude/skills/`)
 
-Instaladas **fuera del repo**, a nivel de usuario. No se versionan y no las cubre la regla de arriba: no siguen las reglas de `arquitectura-backend` ni `arquitectura-frontend` porque no escriben código del proyecto — producen artefactos. Por eso viven en el directorio global y no en `.claude/skills/`, donde la frase «son skills propias» dejaría de ser cierta.
+Instaladas **fuera del repo**, a nivel de usuario. No se versionan y no las cubre la regla de arriba: no siguen las reglas de `arquitectura` porque no escriben código del proyecto — producen artefactos. Por eso viven en el directorio global y no en `.claude/skills/`, donde la frase «son skills propias» dejaría de ser cierta.
 
 | Skill | Origen | Para qué |
 |---|---|---|

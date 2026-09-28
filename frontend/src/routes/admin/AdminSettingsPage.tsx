@@ -6,6 +6,7 @@ import { ForbiddenState } from '@/components/ForbiddenState'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { HelpLink } from '@/features/help'
 import { SettingHistory, SettingValueDialog, useSystemSettings, type SettingCategory, type SystemSetting } from '@/features/settings'
 import { useDisclosure } from '@/hooks/useDisclosure'
@@ -30,7 +31,7 @@ const CATEGORY_ORDER: readonly SettingCategory[] = ['Business', 'Limits']
  * no other way to tell whether somebody set it there or whether it has always been that, and no way
  * to put it back without finding the number in the source.
  *
- * **Cards and not a `DataTable`.** The wide-table pattern of frontend-diseno.md §5.b is for listings
+ * **Cards and not a `DataTable`.** The wide-table pattern of skill `diseno` §5.b is for listings
  * that are read a row at a time and searched; this is four rows that are *read whole* — each one is a
  * label, an explanation, a number, its default, its range and who last touched it. A table would put
  * the explanation in a column nobody sizes correctly and turn into cards below `md` anyway.
@@ -60,13 +61,17 @@ export function AdminSettingsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{t('settings.title')}</h1>
-        <HelpLink section="admins.settings" className="text-sm">
-          {t('settings.helpLink')}
-        </HelpLink>
-      </div>
-      <p className="text-fg-muted text-sm">{t('settings.description')}</p>
+      <PageHeader
+        title={t('settings.title')}
+        description={t('settings.description')}
+        actions={
+          <>
+            <HelpLink section="admins.settings" className="text-sm">
+              {t('settings.helpLink')}
+            </HelpLink>
+          </>
+        }
+      />
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a screen that is
@@ -83,7 +88,7 @@ export function AdminSettingsPage() {
           if (rows.length === 0) return null
           return (
             <section key={category} className="space-y-3">
-              <h2 className="text-fg-muted text-sm font-medium tracking-wide uppercase">{t(`settings.categories.${category}`)}</h2>
+              <h2 className="section-label">{t(`settings.categories.${category}`)}</h2>
               <ul className="space-y-3">
                 {rows.map((setting) => (
                   <li key={setting.key} className="border-border bg-raised space-y-2 rounded-lg border p-4">

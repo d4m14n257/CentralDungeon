@@ -62,7 +62,7 @@ export function ApplicableTaskList({ tasks, onAnswer, renderFiles }: ApplicableT
                   needs it before they open the dialog to reply. */}
               {task.files.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('list.blanks')}</p>
+                  <p className="section-label">{t('list.blanks')}</p>
                   {renderFiles(task.files)}
                 </div>
               )}

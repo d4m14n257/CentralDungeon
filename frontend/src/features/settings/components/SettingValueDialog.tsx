@@ -25,7 +25,7 @@ interface SettingValueDialogProps {
    * The explanation of what settings are, rendered under the field.
    *
    * **A node instead of the dialog raising it itself**, because `HelpLink` lives in `features/help`
-   * and a feature never imports another one (arquitectura-frontend skill §3.1.5). The screen owns the
+   * and a feature never imports another one (arquitectura §3.1.5). The screen owns the
    * composition, so the link still sits where the question is born.
    */
   help?: ReactNode
@@ -48,7 +48,7 @@ interface SettingValueDialogProps {
  *   who had already lost it. #141 says in so many words that «ninguno de los dos es un ajuste
  *   cosmético y la pantalla tiene que decirlo», and after the fact is not saying it.
  *
- * It owns the mutation, as every `…Dialog` does (arquitectura-frontend skill §3.3, #110), and renders its
+ * It owns the mutation, as every `…Dialog` does (arquitectura §3.3, #110), and renders its
  * refusal inline above the button rather than as a toast that disappears while the form is still
  * open.
  *
@@ -158,7 +158,7 @@ export function SettingValueDialog({ setting, open, onOpenChange, help }: Settin
           />
 
           {failure && (
-            <p role="alert" className="bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm">
+            <p role="alert" className="inline-error">
               {t(failure.key, failure.params)}
             </p>
           )}

@@ -7,7 +7,7 @@ import type { AdminQueueItemKind, AdminQueueItemType } from './types'
  * `PLATFORM_ROLES` and `APPROVAL_REQUEST_TYPES`: a union of literals has no runtime value to
  * iterate, and `satisfies` is what turns a typo here into a compile error.
  *
- * **`CommentUnderReview` and `FeedbackNew` are deliberately absent.** `modelo-datos` skill §5
+ * **`CommentUnderReview` and `FeedbackNew` are deliberately absent.** `arquitectura` §4.5
  * names four sources and F5 brings the other two **with the query that produces them** — a kind the
  * backend cannot emit is a badge that never renders and a `Record` case nobody can test.
  */

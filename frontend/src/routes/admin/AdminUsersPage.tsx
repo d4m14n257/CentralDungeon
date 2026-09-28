@@ -12,6 +12,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { HelpLink } from '@/features/help'
 import {
@@ -49,7 +50,7 @@ import { ApiError } from '@/types/api'
  * `/admin/files`: a row is something one admin sends to another, and state that only lives in
  * `useState` cannot be linked to.
  *
- * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
+ * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
  * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
@@ -97,7 +98,7 @@ export function AdminUsersPage() {
     { id: 'discordUsername', header: t('users.columns.discordUsername'), role: 'title', cell: (user) => user.discordUsername },
     { id: 'status', header: t('users.columns.status'), role: 'badge', cell: (user) => <UserStatusBadge status={user.status} /> },
     // No fallback text for a missing name or country: somebody who never set one is not an error,
-    // and "no country" is not information anybody asked for (frontend-diseno.md §5).
+    // and "no country" is not information anybody asked for (skill `diseno` §5).
     { id: 'name', header: t('users.columns.name'), cell: (user) => user.name ?? '' },
     { id: 'country', header: t('users.columns.country'), cell: (user) => user.country ?? '' },
     { id: 'roles', header: t('users.columns.roles'), cell: (user) => <AdminUserRolesCell roles={user.roles} /> },
@@ -113,13 +114,17 @@ export function AdminUsersPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{t('users.title')}</h1>
-        <HelpLink section="admins.roles" className="text-sm">
-          {t('users.helpLink')}
-        </HelpLink>
-      </div>
-      <p className="text-fg-muted text-sm">{t('users.description')}</p>
+      <PageHeader
+        title={t('users.title')}
+        description={t('users.description')}
+        actions={
+          <>
+            <HelpLink section="admins.roles" className="text-sm">
+              {t('users.helpLink')}
+            </HelpLink>
+          </>
+        }
+      />
 
       <SearchQueryInput
         fields={search.fields}
@@ -149,7 +154,7 @@ export function AdminUsersPage() {
             rows={data.content}
             getRowId={(user) => user.id}
             renderActions={(user) => (
-              <div className="flex flex-wrap items-center justify-end gap-1">
+              <>
                 {/* Absent, never greyed out: an admin has no role to hand out that this account can
                     take, so there is nothing to press. */}
                 {grantableRoles.length > 0 && (
@@ -166,7 +171,7 @@ export function AdminUsersPage() {
                 {/* Reading the record is not an action on the account, so it is offered on every row
                     - including the ones nobody may touch. */}
                 <IconAction icon={<History className="size-4" />} label={t('users.history')} onClick={() => historyDialog.open(user)} />
-              </div>
+              </>
             )}
           />
           <PaginationControls

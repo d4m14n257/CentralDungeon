@@ -77,7 +77,7 @@ export function DisableCatalogValueDialog({ kind, value, open, onOpenChange }: D
         {!isPending && needsSuccessor && (
           <>
             <p className="text-sm">{t('admin.disableNeedsSuccessor', { count: liveAliases.length })}</p>
-            <ul className="border-border divide-border divide-y rounded-md border">
+            <ul className="list-divided">
               {liveAliases.map((alias) => (
                 <li key={alias.id}>
                   <button

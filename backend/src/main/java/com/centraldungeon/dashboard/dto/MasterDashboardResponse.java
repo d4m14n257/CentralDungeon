@@ -10,7 +10,7 @@ import java.util.List;
  *
  * <p><b>An empty list is a success, not an absence.</b> It means every table is up to date, and the
  * screen says so in those words - a tray that reads as broken when there is no work is the trap
- * frontend-diseno.md 5 warns about by name.
+ * skill `diseno` §5 warns about by name.
  *
  * @param items what is waiting, longest wait first. Empty when nothing is
  */

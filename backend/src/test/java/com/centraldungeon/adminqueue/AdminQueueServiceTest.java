@@ -47,7 +47,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * quietly:
  *
  * <ul>
- *   <li><b>What enters is taxative</b> (modelo-datos skill §5): {@code Pending} requests and tables in
+ *   <li><b>What enters is taxative</b> (arquitectura §4.5): {@code Pending} requests and tables in
  *       {@code Preparation}, <em>and nothing else</em>. A loose reading of #176 would also list
  *       {@code Draft}, {@code ChangesRequested} and {@code Unassigned}, and each of those is work that
  *       is not an admin's to do right now.</li>
@@ -86,7 +86,7 @@ class AdminQueueServiceTest {
 
     /**
      * «La bandeja es un UNION sobre {@code approval_requests} (Pending) y {@code game_tables}
-     * (Preparation)» - and nothing else (modelo-datos skill §5, #245).
+     * (Preparation)» - and nothing else (arquitectura §4.5, #245).
      *
      * <p>Asserted on the arguments each query receives rather than on what comes back, because what
      * has to be pinned is <em>what is being asked</em>. A test that built fake rows and counted the

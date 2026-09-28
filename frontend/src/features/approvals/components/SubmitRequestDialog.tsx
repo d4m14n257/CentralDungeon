@@ -29,7 +29,7 @@ interface SubmitRequestDialogProps {
    * The explanation of how a request works, shown above the field.
    *
    * A node rather than a `HelpLink` raised here: `features/help` is another feature and a feature
-   * never imports one (arquitectura-frontend skill §3.1.5). The screen composes the two, which is how F3.1
+   * never imports one (arquitectura §3.1.5). The screen composes the two, which is how F3.1
    * resolved the same problem.
    */
   help?: ReactNode
@@ -120,7 +120,7 @@ export function SubmitRequestDialog({ type, open, onOpenChange, help }: SubmitRe
           />
 
           {errorKey && (
-            <p role="alert" className="bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm">
+            <p role="alert" className="inline-error">
               {t(errorKey)}
             </p>
           )}

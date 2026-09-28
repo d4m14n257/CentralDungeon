@@ -118,7 +118,7 @@ public interface ApprovalRequestRepository
      * either free or already the reader's (#100).
      *
      * <p><b>{@code claimed_by is null or claimed_by = :actorId} is the whole reservation rule seen
-     * from the reading end</b> (modelo-datos skill §5): an item somebody took disappears from everybody
+     * from the reading end</b> (arquitectura §4.5): an item somebody took disappears from everybody
      * else's tray and stays in theirs, so two admins never start on the same thing. It is written in
      * the {@code WHERE} and not filtered afterwards, both because the index
      * {@code ix_ar_pending (status, claimed_by, created_at)} exists for exactly this question and

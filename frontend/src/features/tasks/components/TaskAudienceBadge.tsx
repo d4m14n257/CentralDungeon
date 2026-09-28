@@ -7,7 +7,7 @@ import type { TaskAudience } from '../types'
 /**
  * Which of the three groups a task is addressed to (#63), as one dot and one label.
  *
- * **The colour is never the only carrier of the information** (`frontend-diseno.md` §3): dot plus
+ * **The colour is never the only carrier of the information** (skill `diseno` §3): dot plus
  * label, always. The classes are written out in full and statically, because Tailwind 4 scans the
  * source and never sees a class it had to concatenate to exist — the same reason `TableStatusBadge`
  * spells its own out.

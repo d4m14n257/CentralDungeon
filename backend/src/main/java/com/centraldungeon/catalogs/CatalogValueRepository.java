@@ -13,7 +13,7 @@ import org.springframework.data.repository.NoRepositoryBean;
  * {@link PlatformRepository}.
  *
  * <p>{@code JpaSpecificationExecutor} is here because /admin/catalogs combines a free-text query
- * with a status filter, and the shape is only known at runtime (arquitectura-backend skill §2.2).
+ * with a status filter, and the shape is only known at runtime (arquitectura §2.2).
  *
  * @param <E> the catalog entity this repository reads - {@code GameSystem}, {@code Tag} or
  *            {@code Platform}

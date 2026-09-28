@@ -57,7 +57,7 @@ function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
         <h2 className="text-sm font-medium">{t('candidates.title')}</h2>
         <p className="text-muted-foreground text-xs">{t('candidates.order')}</p>
       </div>
-      <ol className="divide-border divide-y rounded-lg border">
+      <ol className="list-divided">
         {data.content.map((candidate, index) => (
           <li key={candidate.id} className="space-y-2 px-4 py-3">
             <div className="flex items-center justify-between gap-4">
@@ -83,7 +83,7 @@ function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
                 empty section, the same convention the table's own read-only file list uses. */}
             {candidate.attachedFiles.length > 0 && (
               <div className="pl-5">
-                <p className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('candidates.filesTitle')}</p>
+                <p className="section-label">{t('candidates.filesTitle')}</p>
                 <FileList files={candidate.attachedFiles} />
               </div>
             )}

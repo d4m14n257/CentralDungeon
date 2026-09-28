@@ -16,7 +16,7 @@ Tres reglas que salen de ahí:
 
 Y tres cosas que no se negocian entre fases:
 
-- **Nada se da por terminado sin sus tests** (regla dura 7). Cada regla de skill `modelo-datos` §5 que entre en una fase llega con su test unitario.
+- **Nada se da por terminado sin sus tests** (regla dura 7). Cada regla de skill `arquitectura` §4.5 que entre en una fase llega con su test unitario.
 - **Las invariantes que MySQL no puede garantizar necesitan test de integración**, no unitario: un solo `Primary` vivo por mesa (#73) y una sola postulación activa por par (#28). Son las dos que se rompen con concurrencia.
 - **La fase que estrena una entidad decide y construye su borrado** (#175). No se deja "para más adelante": una entidad que se puede crear y no se puede sacar de encima obliga a inventarle un final falso —cancelarla, vaciarla, renombrarla— y ese parche después es más caro que la decisión. Decidir el borrado incluye decidir **si lo hay**: para las mesas, borrar solo aplica a lo que nunca fue público, y lo demás se cancela a propósito.
 
@@ -108,7 +108,7 @@ Para leer las decisiones ya escritas, que citan la numeración anterior:
 
 **F1 se llevó por delante buena parte de lo que este párrafo prometía**, y lo que queda es lo que sobrevivió. Se adelantaron: entregar respuestas a las peticiones, entera y con archivos (#210); `/my/files`, que además creció con los cajones (#232, #233, #237, #241, #242); retirar una postulación, que el choque de horarios exigía (#178); y `/my/tables/:id` completo —agenda, sesiones, asistencia y peticiones—, que era el mínimo del jugador para poder probar F1.
 
-**Backend** — `registration_files` para el archivo de personaje en la postulación (#60 uso 2), con su cajón `PlayerApplication` y la cuarta consulta de usos (#232, #233). Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56) — el backend de F1.1 ya los resuelve y nada los consume. Las cinco reglas de **visibilidad de perfiles** de skill `modelo-datos` §5, ninguna implementada todavía (#41, #44, #45, #47), con la asistencia agregada sobre todas las mesas (#137).
+**Backend** — `registration_files` para el archivo de personaje en la postulación (#60 uso 2), con su cajón `PlayerApplication` y la cuarta consulta de usos (#232, #233). Búsqueda del explorador resolviendo grupos de sinónimos (#54, #56) — el backend de F1.1 ya los resuelve y nada los consume. Las cinco reglas de **visibilidad de perfiles** de skill `arquitectura` §4.5, ninguna implementada todavía (#41, #44, #45, #47), con la asistencia agregada sobre todas las mesas (#137).
 
 **Frontend** — Filtros del explorador por sistema, tag y plataforma: es donde el buscador estrena `/tag`, el caso que motivó el diseño de #164. Archivo de personaje al postularse, sobre el `FilePicker` y la subida diferida de F1 (#238), con el paso de revisión que una postulación no editable obliga. **`/player/profile`** y **`/player/users/:id`** con lo que exista; el karma llega en F4. **`/player/history`** (#133), y con él `/player/my-tables` acotada a lo vivo.
 
@@ -120,13 +120,13 @@ Para leer las decisiones ya escritas, que citan la numeración anterior:
 
 **Revisión, moderación de flujo y administración — y la línea entre los dos roles que administran.**
 
-> **El documento de implementación de F3 se borró en F4.0** (queda en git); lo normativo —la matriz `Admin`/`Owner`, las reglas de cada rebanada y los riesgos— vive en la skill `modelo-datos`, `references/roles-y-alcance.md`, y su deuda de revisión en `fase-4-revision.md` §2.1.
+> **El documento de implementación de F3 se borró en F4.0** (queda en git); lo normativo —la matriz `Admin`/`Owner`, las reglas de cada rebanada y los riesgos— vive en la skill `arquitectura`, `references/modelo-datos/roles-y-alcance.md`, y su deuda de revisión en `fase-4-revision.md` §2.1.
 
 **Backend** — El service que otorga roles, con la exclusión `Admin`/`Owner` que #169 dejó pendiente, y el bloqueo de cuentas (#84). `approval_requests` como mecanismo único para todo pedido con aprobación, con reserva (#42, #78, #90, #100). Pausa pedida por un master (#32) y veto acotado a la mesa, aplicado por el `Primary` y pedible por un `Secondary` (#39, #71) — con la exclusión del vetado en la lectura de archivos que #206 dejó anotada para esta fase. **La administración de catálogos ya no está acá**: se adelantó a F1 (#179) — dejarla en esta fase le abría a F1 el hueco de proponer valores que nadie podía aceptar. `system_settings` (#141): la tabla clave-valor, el `SettingsService` con accesores tipados y la auditoría de cada cambio; los valores que hoy son constantes —karma inicial, justificación del rechazo automático (#34), ventana de visibilidad (#44)— pasan a leerse por el service.
 
 **Frontend** — **`/admin/users`**, con los roles y el bloqueo. **`/admin/queue`**, la bandeja compartida con reserva; al nacer, Aprobar y Pedir cambios **se mudan ahí** desde `/admin/tables` (#176). **`/admin/tables`** completo: todas las mesas, cualquier estado, filtros y `?q=` (#176), con los botones de pausa y reanudación que hoy tienen endpoint y ninguna pantalla (#163). **`/admin/settings`** y **`/admin/requests`** — `/admin/catalogs` llegó en F1 (#179).
 
-**La línea entre `Admin` y `Owner` se traza acá y queda escrita** (#67, #89, #169). En F3 la diferencia es **exactamente una**: quién puede otorgar el rol del otro. Todo lo demás que separa a un owner —auditoría, borrado físico, migración de cuenta, «ver como»— es **F6**, y hasta entonces un owner usa la superficie de admin completa y nada más (#169). La matriz vive en `roles-y-alcance.md` §3, en la skill `modelo-datos`.
+**La línea entre `Admin` y `Owner` se traza acá y queda escrita** (#67, #89, #169). En F3 la diferencia es **exactamente una**: quién puede otorgar el rol del otro. Todo lo demás que separa a un owner —auditoría, borrado físico, migración de cuenta, «ver como»— es **F6**, y hasta entonces un owner usa la superficie de admin completa y nada más (#169). La matriz vive en `roles-y-alcance.md` §3, en la skill `arquitectura`.
 
 La bandeja funciona **por HTTP** en esta fase; el vivo es F6.
 
@@ -207,7 +207,7 @@ Idempotente para el mismo admin, `409` si ya lo tiene otro. Un job libera las re
 
 Una fase se cierra cuando cumple las ocho:
 
-1. Las reglas de skill `modelo-datos` §5 que caen en su alcance están implementadas.
+1. Las reglas de skill `arquitectura` §4.5 que caen en su alcance están implementadas.
 2. Cada una tiene su test unitario, con los caminos de error y no solo el feliz.
 3. Las invariantes de concurrencia de su alcance tienen test de integración con Testcontainers.
 4. El flujo principal está cubierto en Playwright.
@@ -232,9 +232,9 @@ Sin esto los dos constructores divergen y el trabajo de uno se tira: el frontend
 
 | Agente | Alcance de archivos | Qué entrega | Skills |
 |---|---|---|---|
-| **A1 · Backend** | solo `backend/` | `@Entity`, migración Flyway, repository, service, DTO, mapper, controller — **y el test unitario de cada regla de negocio que escribe** | `nuevo-endpoint-java`, `er-diagram-sync`, `tests-java` |
-| **A2 · Frontend** | solo `frontend/` | tipos derivados del contrato, `features/<dominio>/`, componentes, pantallas, i18n — **y sus tests de Vitest** | `nuevo-componente-react` |
-| **A3 · Verificación** | transversal, lectura + tests | corre las cuatro suites, escribe lo que ningún constructor cubre, recorre el camino manual | `tests-java` |
+| **A1 · Backend** | solo `backend/` | `@Entity`, migración Flyway, repository, service, DTO, mapper, controller — **y el test unitario de cada regla de negocio que escribe** | `arquitectura` §7.1, §7.3, §5.1 |
+| **A2 · Frontend** | solo `frontend/` | tipos derivados del contrato, `features/<dominio>/`, componentes, pantallas, i18n — **y sus tests de Vitest** | `arquitectura` §7.2, `diseno` |
+| **A3 · Verificación** | transversal, lectura + tests | corre las cuatro suites, escribe lo que ningún constructor cubre, recorre el camino manual | `arquitectura` §5 |
 
 **A1 y A2 corren en paralelo** una vez que existe el contrato: tocan directorios disjuntos, así que comparten el árbol de trabajo y no hace falta un worktree aparte. **A3 arranca cuando los dos terminaron.**
 
@@ -254,7 +254,7 @@ Lo que A3 aporta es el nivel que ningún constructor puede cubrir solo:
 
 ### El cuarto agente, en las rebanadas pesadas
 
-**A4 · Revisor**, entre los constructores y A3: lee el diff contra las reglas duras de `CLAUDE.md` y las de capa de skill `arquitectura-backend` §2.2. Un controller que llama a un repository, un `Map<String, Object>` cruzando HTTP, un string en el JSX sin `t()` o un valor de color suelto se ven en el diff en un minuto y cuestan una tarde si los encuentra un test.
+**A4 · Revisor**, entre los constructores y A3: lee el diff contra las reglas duras de `CLAUDE.md` y las de capa de skill `arquitectura` §2.2. Un controller que llama a un repository, un `Map<String, Object>` cruzando HTTP, un string en el JSX sin `t()` o un valor de color suelto se ven en el diff en un minuto y cuestan una tarde si los encuentra un test.
 
 Se usa donde la rebanada toca varios flujos a la vez o algo fuera del proceso —el sistema de archivos, un job—; en las livianas, A3 alcanza.
 
@@ -272,7 +272,7 @@ Nada de esto entra en F1–F6, y ninguna fase debe derivar hacia ellos sin decis
 
 | Tema | Estado |
 |---|---|
-| **Campañas** (`table_arcs`) y **Temporadas** (`publish_at` + job) | Fase 2. Diseño cerrado en #129; los tres puntos a resolver antes de construirlas están en skill `modelo-datos` §7.1 |
+| **Campañas** (`table_arcs`) y **Temporadas** (`publish_at` + job) | Fase 2. Diseño cerrado en #129; los tres puntos a resolver antes de construirlas están en skill `arquitectura` §4.7.1 |
 | **Integración profunda con Discord** | Requiere bot con permisos; no aprobada (#88) |
 | **Personajes estructurados** | Siguen siendo archivo adjunto (#4) |
 | **Broker externo y caché compartida** | Van juntos: hoy el broker STOMP (#101) y la caché Caffeine (#128) viven en memoria del proceso y sirven para **una sola instancia**. El día que haya dos, hacen falta los dos |

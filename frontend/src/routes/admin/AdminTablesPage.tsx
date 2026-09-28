@@ -13,6 +13,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { HelpLink } from '@/features/help'
 import {
@@ -94,7 +95,7 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
   const pauseError = tableActionErrorMessage(pauseTable.error)
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-1">
+    <>
       {/* Only on a table with no master: everything else already has one, and the two acts are about
           giving it one or admitting it will never have one (principio 2). */}
       {table.status === 'Unassigned' && (
@@ -159,7 +160,7 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
           )
         }}
       />
-    </div>
+    </>
   )
 }
 
@@ -188,7 +189,7 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
  *
  * A work list, so it pages by number with the total in view instead of "load more" (#173).
  *
- * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
+ * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, from the same column definitions — never horizontal scroll.
  *
  * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
@@ -266,25 +267,27 @@ export function AdminTablesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{t('tables.title')}</h1>
-        <div className="flex flex-wrap items-center gap-4">
-          {/* The screen that lost the review is where somebody will look for it: an admin who
-              learned the old `/admin/tables` comes here for "Aprobar", finds a listing, and has no
-              way to discover the buttons moved. `admins.reviewing` is the section whose text moved
-              with them, and its `listing` line says what this screen is now (#176). */}
-          <HelpLink section="admins.reviewing" className="text-sm">
-            {t('tables.reviewHelpLink')}
-          </HelpLink>
-          <HelpLink section="admins.assign-masters" className="text-sm">
-            {t('tables.helpLink')}
-          </HelpLink>
-          <Button size="sm" variant="outline" onClick={() => createDialog.open()}>
-            {t('tables.createUnassigned')}
-          </Button>
-        </div>
-      </div>
-      <p className="text-fg-muted text-sm">{t('tables.description')}</p>
+      <PageHeader
+        title={t('tables.title')}
+        description={t('tables.description')}
+        actions={
+          <>
+            {/* The screen that lost the review is where somebody will look for it: an admin who
+                learned the old `/admin/tables` comes here for "Aprobar", finds a listing, and has no
+                way to discover the buttons moved. `admins.reviewing` is the section whose text moved
+                with them, and its `listing` line says what this screen is now (#176). */}
+            <HelpLink section="admins.reviewing" className="text-sm">
+              {t('tables.reviewHelpLink')}
+            </HelpLink>
+            <HelpLink section="admins.assign-masters" className="text-sm">
+              {t('tables.helpLink')}
+            </HelpLink>
+            <Button size="sm" variant="outline" onClick={() => createDialog.open()}>
+              {t('tables.createUnassigned')}
+            </Button>
+          </>
+        }
+      />
 
       <SearchQueryInput
         fields={search.fields}

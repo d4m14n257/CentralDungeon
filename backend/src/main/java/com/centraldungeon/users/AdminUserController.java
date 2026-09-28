@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * {@link AdminUserService}, not up here (roles-y-alcance.md §4).
  *
  * <p>The actor always comes from {@code @AuthenticationPrincipal}, never from the path or the body
- * (arquitectura-backend skill §2.6). The {@code {id}} in these routes is the <b>target</b>, and it is the only
+ * (arquitectura §2.6). The {@code {id}} in these routes is the <b>target</b>, and it is the only
  * controller in the application where the two are different people on purpose.
  */
 @RestController

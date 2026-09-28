@@ -1,6 +1,6 @@
 # 2.4 Interfaces y clases abstractas: qué se comparte y qué no
 
-> Parte de la skill `arquitectura-backend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 Hay tres formas de tratar código parecido entre features, y elegir mal cuesta caro en las dos direcciones — duplicar una regla de negocio genera bugs divergentes, y abstraer dos cosas que solo se parecían acopla dominios que después hay que separar a la fuerza.

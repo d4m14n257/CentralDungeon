@@ -11,7 +11,7 @@ import java.util.Optional;
  * <p>One admin controller with a typed path variable, instead of three near-identical controllers:
  * the six admin operations (accept, reject, merge, split, disable, restore) are the same operation
  * on the same shape, and duplicating them three times would mean fixing every bug three times. The
- * authorization is still declared on each concrete method (arquitectura-backend skill §2.4, last line).
+ * authorization is still declared on each concrete method (arquitectura §2.4, last line).
  */
 public enum CatalogType {
 

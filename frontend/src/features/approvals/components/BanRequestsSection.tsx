@@ -122,7 +122,7 @@ function ResolveBanRequestDialog({
             )}
           />
           {errorKey !== null && (
-            <p role="alert" className="bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm">
+            <p role="alert" className="inline-error">
               {/* The sentences live in the `admin` namespace, where the mechanism's vocabulary
                   already is: one place where a refusal of a request has a wording (#176). */}
               {t(errorKey, { ns: 'admin' })}
@@ -187,7 +187,7 @@ export function BanRequestsSection({ tableId, isPrimary, help }: BanRequestsSect
         <p className="text-fg-muted text-xs">{t(isPrimary ? 'banRequests.descriptionPrimary' : 'banRequests.descriptionSecondary')}</p>
       </div>
 
-      <ul className="divide-border divide-y">
+      <ul className="list-divided-bare">
         {data.map((request) => (
           <li key={request.requestId} className="space-y-2 py-3 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">

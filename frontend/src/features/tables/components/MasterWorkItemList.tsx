@@ -47,7 +47,7 @@ export function MasterWorkItemList({ items }: MasterWorkItemListProps) {
   const timeZone = useMemo(() => browserTimeZone(), [])
 
   return (
-    <ul className="divide-border divide-y rounded-lg border">
+    <ul className="list-divided">
       {items.map((item) => (
         <li key={`${item.tableId}-${item.kind}-${item.subject ?? ''}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
           <span className="min-w-0 flex-1">

@@ -29,7 +29,7 @@ interface ResolveRequestDialogProps {
    * The explanation of what approving each kind does, shown above the note.
    *
    * A node rather than a `HelpLink` raised here: `features/help` is another feature and a feature
-   * never imports one (arquitectura-frontend skill §3.1.5).
+   * never imports one (arquitectura §3.1.5).
    */
   help?: ReactNode
 }
@@ -139,7 +139,7 @@ export function ResolveRequestDialog({ request, action, open, onOpenChange, help
           />
 
           {errorKey && (
-            <p role="alert" className="bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm">
+            <p role="alert" className="inline-error">
               {t(errorKey)}
             </p>
           )}

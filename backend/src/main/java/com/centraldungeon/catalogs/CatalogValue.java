@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The shape the three catalogs share by definition, not by coincidence: systems, tags and platforms
- * are the same row with a different table name (arquitectura-backend skill §2.4, case 2).
+ * are the same row with a different table name (arquitectura §2.4, case 2).
  *
  * <p><b>{@code canonicalId} is flat and always depth 1</b> (decisiones.md #59): an alias points
  * straight at its group's canonical entry, and a canonical entry has it {@code NULL}. There is no

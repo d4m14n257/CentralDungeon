@@ -44,7 +44,7 @@ export function AttendanceEditor({ roster, isSaving, onSave }: AttendanceEditorP
 
   return (
     <div className="space-y-3">
-      <ul className="divide-border divide-y">
+      <ul className="list-divided-bare">
         {roster.map((line) => (
           <li key={line.userId} className="flex items-center justify-between gap-4 py-2">
             <span className="truncate text-sm">{line.userName}</span>

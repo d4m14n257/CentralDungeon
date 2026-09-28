@@ -5,7 +5,7 @@ import com.centraldungeon.users.User;
 import org.jspecify.annotations.Nullable;
 
 /**
- * «Un ítem que tiene otro admin no es tuyo para resolver» - the {@code modelo-datos} skill §5, in one
+ * «Un ítem que tiene otro admin no es tuyo para resolver» - the {@code arquitectura} skill §4.5, in one
  * place.
  *
  * <p>That section used to read «resolver un ítem exige tenerlo reservado», and it was implemented

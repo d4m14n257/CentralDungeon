@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import i18n from '@/providers/i18n'
 import { ApiError } from '@/types/api'
 
-/** Per-data staleTime policy (arquitectura-frontend skill §3.3) - the default of 0 is what causes request goteo. */
+/** Per-data staleTime policy (arquitectura §3.3) - the default of 0 is what causes request goteo. */
 export const staleTime = {
   catalogs: 60 * 60 * 1000,
   tableList: 30_000,
@@ -89,7 +89,7 @@ const EXPLAINED_ERROR_CODES = new Set([
  * The safety net for every mutation that does not bring its own `onError`, which today is all of
  * them: a write that fails - backend down, a 500, whatever it is - used to say nothing at all. The
  * button simply stopped being "pending" and that was the end of it, with whoever pressed it none the
- * wiser. Queries do not come through here: their four mandatory states (frontend-diseno.md 5)
+ * wiser. Queries do not come through here: their four mandatory states (skill `diseno` §5)
  * already show the error on the screen itself, and repeating it here would be the same notice twice.
  *
  * A particular mutation that needs a more specific message adds its own `onError` on the

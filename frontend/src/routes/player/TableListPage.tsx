@@ -7,6 +7,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { LoadMore } from '@/components/LoadMore'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { SubmitRequestSection } from '@/features/approvals'
 import { HelpLink } from '@/features/help'
 import { useMyApplications } from '@/features/registrations'
@@ -94,7 +95,7 @@ export function TableListPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-serif text-2xl font-semibold">{t('explorer.title')}</h1>
+      <PageHeader title={t('explorer.title')} />
       <SearchQueryInput
         fields={search.fields}
         value={search.value}

@@ -76,7 +76,7 @@ function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
   return (
     <CollapsibleSection title={t('masters.title')} summary={t('masters.summary', { count: masters.length })} defaultOpen>
       <div className="space-y-4">
-        <ul className="divide-border divide-y">
+        <ul className="list-divided-bare">
           {masters.map((master) => (
             <li key={master.userId} className="flex items-center gap-3 py-2">
               <Crown
@@ -254,7 +254,7 @@ function PlayersSection({ tableId, isPrimary }: { tableId: string; isPrimary: bo
             <p className="text-fg-subtle text-xs">
               {t(isPrimary ? 'veto.hintPrimary' : 'veto.hintSecondary')} <HelpLink section="masters.banning">{t('veto.helpLink')}</HelpLink>
             </p>
-            <ul className="divide-border divide-y">
+            <ul className="list-divided-bare">
               {data.map((player) => (
                 <PlayerRow
                   key={player.registrationId}

@@ -27,7 +27,7 @@ async function openAssignMastersDialog(page: Page, label: string) {
   await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
   await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
 
-  // `/admin/tables` is one of the wide tables of frontend-diseno.md §5.b since F3.3: a `<tr>`.
+  // `/admin/tables` is one of the wide tables of skill `diseno` §5.b since F3.3: a `<tr>`.
   const row = page.getByRole('row').filter({ hasText: tableName })
   await row.getByRole('button', { name: 'Asignar masters' }).click()
   return page.getByRole('dialog')

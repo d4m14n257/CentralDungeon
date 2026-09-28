@@ -7,7 +7,7 @@ interface EmptyStateProps {
 }
 
 /**
- * One of the four states every screen has to cover (frontend-diseno.md 5): there is nothing to show,
+ * One of the four states every screen has to cover (skill `diseno` §5): there is nothing to show,
  * and that is fine.
  *
  * It has to read as an answer, not as a failure - an empty inbox says nothing is waiting, it does

@@ -6,7 +6,7 @@
  * (`/admin-queue/{type}/{id}/claim`), so a spelling of its own would be a second name for a thing
  * that already has one.
  *
- * A union of literals and not a TS `enum` (arquitectura-frontend skill §3.2).
+ * A union of literals and not a TS `enum` (arquitectura §3.2).
  */
 export type AdminQueueItemType = 'approval_request' | 'game_table'
 

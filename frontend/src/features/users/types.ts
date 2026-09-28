@@ -15,7 +15,7 @@ export interface User {
 /**
  * Mirror of UserSummaryResponse: how a person looks in a listing or in a picker. It is not derived
  * from `User` with a utility type because it is not a narrower view of the same thing — it carries
- * `discordUsername`, which `/users/me` does not return (arquitectura-backend skill §2.3, 3.2).
+ * `discordUsername`, which `/users/me` does not return (arquitectura §2.3, 3.2).
  */
 export interface UserSummary {
   id: string
@@ -34,7 +34,7 @@ export interface CompleteOnboardingInput {
  * `/player/users/:id` (decisiones.md #248). Not derived from `User` with a utility type even though
  * `id`/`name`/`country`/`roles` line up: the two are answers to different questions with different
  * visibility rules (#41, #44, #47, #249) and `User` is only ever the caller describing themselves
- * (arquitectura-backend skill §2.3) — a `Pick<User, …>` here would quietly imply this shape is also
+ * (arquitectura §2.3) — a `Pick<User, …>` here would quietly imply this shape is also
  * self-only, which is exactly wrong for the id-keyed half of this type's job.
  *
  * **No `karma`, no `comments` — not even as `null`** (#248): those are F5, behind `KarmaService`,
@@ -51,7 +51,7 @@ export interface Profile {
 
 /**
  * The four platform roles, spelled as the API spells them — a union of literals and not a TS `enum`
- * (arquitectura-frontend skill §3.2). Mirror of `PlatformRole.roleName()`.
+ * (arquitectura §3.2). Mirror of `PlatformRole.roleName()`.
  *
  * They stack and there is no hierarchy among them (#37, #89), with one exception written in the
  * service and not here: `Admin` and `Owner` never coexist, because they are one rank at two scopes
@@ -71,7 +71,7 @@ export type AccountStatus = 'Allowed' | 'Blocked' | 'Deleted'
  *
  * **The base type of the admin listing**, with the summary derived from it below rather than the
  * other way round: the detail is what the six mutators answer with, so it is the shape the screen
- * writes back into its cache (arquitectura-frontend skill §3.2, regla dura 12).
+ * writes back into its cache (arquitectura §3.2, regla dura 12).
  *
  * **No `discordId`** — administering somebody never needs it, and it is a third party's identifier.
  */

@@ -57,11 +57,11 @@ export function TaskSubmissionsPanel({ taskId, renderFiles }: TaskSubmissionsPan
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <h4 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('submissions.title')}</h4>
+        <h4 className="section-label">{t('submissions.title')}</h4>
         {data.submissions.length === 0 ? (
           <EmptyState title={t('submissions.emptyTitle')} description={t('submissions.emptyDescription')} />
         ) : (
-          <ul className="divide-border divide-y">
+          <ul className="list-divided-bare">
             {data.submissions.map((submission) => (
               <li key={submission.submissionId} className="space-y-2 py-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -79,9 +79,7 @@ export function TaskSubmissionsPanel({ taskId, renderFiles }: TaskSubmissionsPan
       </section>
 
       <section className="space-y-2">
-        <h4 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">
-          {t('submissions.missingTitle', { missing: data.missing.length, total: data.recipientCount })}
-        </h4>
+        <h4 className="section-label">{t('submissions.missingTitle', { missing: data.missing.length, total: data.recipientCount })}</h4>
         {data.missing.length === 0 ? (
           <p className="text-fg-muted text-sm">{t('submissions.nobodyMissing')}</p>
         ) : (

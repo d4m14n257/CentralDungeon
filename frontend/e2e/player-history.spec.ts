@@ -144,7 +144,7 @@ test('the history is reachable from the player navigation, not only by URL', asy
     await player.page.getByRole('link', { name: 'Historial' }).click()
 
     await expect(player.page).toHaveURL(/\/player\/history$/)
-    // Nothing played yet reads as neutral news, never as a broken screen (frontend-diseno.md §5).
+    // Nothing played yet reads as neutral news, never as a broken screen (skill `diseno` §5).
     await expect(player.page.getByText('Todavía no terminaste ninguna mesa')).toBeVisible()
   } finally {
     await player.context.close()

@@ -6,7 +6,7 @@ import type { RegistrationStatus } from '../types'
 
 /**
  * Which tone each status wears. **The map stays here and not in `StatusBadge`**: which of this
- * feature's statuses counts as "open" is a decision about this domain (`arquitectura-frontend` skill §3.1.2).
+ * feature's statuses counts as "open" is a decision about this domain (`arquitectura` §3.1.2).
  */
 const STATE_TONES: Record<RegistrationStatus, StatusTone> = {
   Candidate: 'pending',

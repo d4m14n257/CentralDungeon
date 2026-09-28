@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
+import { PageHeader } from '@/components/PageHeader'
+
 /**
  * `/admin` — the home of the Admin context (#270), and where an administrator lands on entering.
  *
@@ -17,8 +19,7 @@ export function AdminHomePage() {
 
   return (
     <div className="space-y-2">
-      <h1 className="font-serif text-2xl font-semibold">{t('home.title')}</h1>
-      <p className="text-fg-muted text-sm">{t('home.description')}</p>
+      <PageHeader title={t('home.title')} description={t('home.description')} />
     </div>
   )
 }

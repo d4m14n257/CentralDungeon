@@ -15,7 +15,7 @@ interface PendingConfirm {
  * (frontend-diseno.md principio 3).
  *
  * **Only components are exported from here**; `useConfirm` and its Context live in `hooks/`, which is
- * where a hook belongs (arquitectura-frontend skill §3.1) and which is also what keeps fast refresh working — a
+ * where a hook belongs (arquitectura §3.1) and which is also what keeps fast refresh working — a
  * module exporting a component *and* a hook loses it.
  */
 export function ConfirmDialogProvider({ children }: { children: ReactNode }) {

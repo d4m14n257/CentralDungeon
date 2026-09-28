@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadMore } from '@/components/LoadMore'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { HelpLink } from '@/features/help'
 import { TableStatusBadge, useTableHistory } from '@/features/tables'
@@ -31,7 +32,7 @@ export function PlayerHistoryPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-serif text-2xl font-semibold">{t('history.title')}</h1>
+      <PageHeader title={t('history.title')} />
       {/* Una mesa que ya no está en «Mis mesas» parece perdida hasta que alguien explica que se mudó
           sola (#133a). */}
       <HelpLink section="players.history" className="inline-block text-xs">
@@ -48,7 +49,7 @@ export function PlayerHistoryPage() {
       {data && entries.length === 0 && <EmptyState title={t('history.emptyTitle')} description={t('history.emptyDescription')} />}
       {entries.length > 0 && (
         <>
-          <ul className="divide-border divide-y rounded-lg border">
+          <ul className="list-divided">
             {entries.map((entry) => (
               <li key={entry.id} className="flex flex-wrap items-start justify-between gap-4 px-4 py-3">
                 <div className="min-w-0 space-y-1">

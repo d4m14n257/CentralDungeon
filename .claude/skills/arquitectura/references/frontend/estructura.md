@@ -1,6 +1,6 @@
 # 3.1 Patrón: features de dominio, con capas transversales en la raíz
 
-> Parte de la skill `arquitectura-frontend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 El dominio manda, igual que en el backend. Una feature es autocontenida —sus llamadas a la API, sus hooks, sus componentes, sus tipos— y **nunca importa de otra feature**: solo depende de las capas transversales de la raíz de `src/`.
@@ -228,4 +228,4 @@ export { TableDetailPage as Component };   // lo que consume router.tsx
 
 **Guards: en el layout, no por ruta.** `RootLayout` redirige a `/login` si no hay sesión, y con eso cubre todo lo que cuelga de él. Cada layout de contexto (`PlayerLayout`, `MasterLayout`, `AdminLayout`) se envuelve en **`RequireContext`** (#269): quien no tiene ese contexto —misma regla que `useAvailableContexts`— es redirigido a `/`, que lo despacha a su home; nunca ve la nav ajena ni un 403. Una pantalla **no** repite ese chequeo. ⚠️ Sigue sin ser la seguridad: el backend autoriza endpoint por endpoint (#103), y `ForbiddenState` queda para el `403` por pertenencia a un recurso concreto (#121).
 
-**No se usan los `loader` de React Router** (#115). La recomendación general del ecosistema es combinarlos con TanStack Query para adelantar el fetch, y es buena con SSR; acá no hay SSR, la app está detrás de login y cada pantalla ya define su skeleton (`frontend-diseno.md` §5). Adoptarlos obligaría a inyectar el `queryClient` en el router y a declarar cada query en dos lugares. Si algún día se mide un waterfall real, se agrega el loader en esa pantalla concreta sin tocar el resto.
+**No se usan los `loader` de React Router** (#115). La recomendación general del ecosistema es combinarlos con TanStack Query para adelantar el fetch, y es buena con SSR; acá no hay SSR, la app está detrás de login y cada pantalla ya define su skeleton (skill `diseno` §5). Adoptarlos obligaría a inyectar el `queryClient` en el router y a declarar cada query en dos lugares. Si algún día se mide un waterfall real, se agrega el loader en esa pantalla concreta sin tocar el resto.

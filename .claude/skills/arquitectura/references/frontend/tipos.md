@@ -1,6 +1,6 @@
 # 3.2 Modelo de tipos: un tipo base por entidad, el resto derivado
 
-> Parte de la skill `arquitectura-frontend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 Esta sección es la contraparte frontend de §2.3 y la razón principal por la que se conserva TypeScript al migrar de Next.js a React puro.

@@ -53,7 +53,7 @@ export function ScheduleEditor({ value, onChange, timeZone }: ScheduleEditorProp
   }
 
   return (
-    <ul className="divide-border divide-y rounded-lg border">
+    <ul className="list-divided">
       {value.map((entry, index) => {
         const local = utcSlotToLocal({ weekday: entry.weekday, hourtime: entry.hourtime }, timeZone)
         return (

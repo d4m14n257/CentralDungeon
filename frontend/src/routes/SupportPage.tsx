@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { PageHeader } from '@/components/PageHeader'
 import { SubmitRequestSection } from '@/features/approvals'
 import { HelpLink } from '@/features/help'
 
@@ -27,8 +28,7 @@ export function SupportPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-serif text-2xl font-semibold">{t('requests.supportTitle')}</h1>
-      <p className="text-fg-muted text-sm">{t('requests.supportDescription')}</p>
+      <PageHeader title={t('requests.supportTitle')} description={t('requests.supportDescription')} />
 
       <div className="border-border space-y-3 rounded-lg border p-4">
         <p className="text-sm font-medium">{t('requests.generalPitchTitle')}</p>

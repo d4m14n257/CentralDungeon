@@ -22,7 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns the parsed /admin/files search box into a predicate, the same shape
  * {@code CatalogSearchSpecification} has for the catalogs. Criteria API because what the query looks
- * like is only known at runtime: how many criteria and joined by which connectors (arquitectura-backend skill
+ * like is only known at runtime: how many criteria and joined by which connectors (arquitectura skill
  * §2.2).
  *
  * <p>One entry point and not two, unlike the catalogs: files have no "proposed" state that has to be

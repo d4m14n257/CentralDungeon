@@ -31,7 +31,7 @@ function CallbackCard({ tone, title, children }: { tone?: 'pending' | 'canceled'
           {title}
         </span>
       ) : (
-        <h1 className="font-serif text-lg font-semibold">{title}</h1>
+        <h1 className="section-title">{title}</h1>
       )}
       {children && <div className="mt-4 space-y-3">{children}</div>}
     </div>

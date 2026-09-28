@@ -1,3 +1,5 @@
+@reference "./globals.css";
+
 /* Estilos base de la app, no tokens.
    Van acá y no en globals.css porque ese archivo se sobrescribe entero cada vez que se
    transcribe el tema desde el design system (#118, #130) — lo que se escriba ahí se pierde.
@@ -31,6 +33,48 @@
      app los catorce colores de estado necesitan un fondo que no les compita. */
   .bg-brand-gradient {
     background-image: var(--gradient-brand);
+  }
+
+  /* Pattern classes (#273, skill `diseno` §5.c). A combination of utilities that plays one design
+     role is named once, here, and never spelled out in a screen - so changing the role changes
+     every screen that has it. Utilities written next to one of these still win (the utilities
+     layer comes later), which is how a one-off adjustment stays one-off. Each class has its entry
+     in the catalogue of the skill and its drawing in design/build.py. */
+
+  /* The icon actions of a row or a card (#272): one line, right-aligned, never wrapping - a
+     second line of icons reads as a second row. DataTable applies it itself. */
+  .row-actions {
+    @apply flex flex-row flex-nowrap items-center justify-end gap-1;
+  }
+
+  /* The h1 of a screen. Serif, like every heading (#131). */
+  .page-title {
+    @apply font-serif text-2xl font-semibold;
+  }
+
+  /* The heading of a block inside a screen: a form section, a card, a step's summary. */
+  .section-title {
+    @apply font-serif text-lg font-semibold;
+  }
+
+  /* The small uppercase label above a group: a section, a field of a detail, a column of a card. */
+  .section-label {
+    @apply text-fg-subtle text-xs font-medium tracking-wide uppercase;
+  }
+
+  /* A framed list whose rows are separated by a line. */
+  .list-divided {
+    @apply divide-border divide-y rounded-lg border;
+  }
+
+  /* The same separated rows, without the frame - for a list already inside a card or a dialog. */
+  .list-divided-bare {
+    @apply divide-border divide-y;
+  }
+
+  /* An error said inside a form or a dialog, next to what caused it - not a toast. */
+  .inline-error {
+    @apply bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm;
   }
 }
 

@@ -18,7 +18,7 @@ package com.centraldungeon.files.dto;
  * @param sizeBytes     the size as it was uploaded, before compression (#75). Shown because somebody
  *                      on a phone deserves to know what a tap is about to cost them
  * @param tableFileType what the file is doing on the table - prepared beforehand, or produced at a
- *                      session - as a string (arquitectura-backend skill §2.3)
+ *                      session - as a string (arquitectura §2.3)
  */
 public record SharedFileResponse(String fileId, String name, String mimeType, long sizeBytes, String tableFileType) {
 }

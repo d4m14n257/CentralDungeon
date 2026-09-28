@@ -964,7 +964,7 @@ public class GameTableService {
      * listed even when it is asked for, because the filter belongs to the listing and not to the
      * caller (#25).
      *
-     * <p><b>It takes the same {@code ?q=} the explorer does</b> (#164, arquitectura-backend skill §2.5), with two
+     * <p><b>It takes the same {@code ?q=} the explorer does</b> (#164, arquitectura §2.5), with two
      * commands the explorer has no use for: {@code /table_status} over the closed list of states, and
      * {@code /table_master} over the masters' names. The catalog criteria are resolved to ids before
      * the query is built, exactly as {@link #list} does and for the same reason (#54, #56, #246).

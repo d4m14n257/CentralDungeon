@@ -17,7 +17,7 @@ interface ProfileCardProps {
  *
  * **The "Comentarios recibidos" heading of the wireframe is never drawn** (decisiones.md #248): it
  * belongs to F5, and a section titled that way with nothing underneath would read as a broken page
- * rather than as "nobody has commented on you yet" (frontend-diseno.md §5) — the same trap the
+ * rather than as "nobody has commented on you yet" (skill `diseno` §5) — the same trap the
  * master dashboard's empty state already sidesteps. There is no placeholder, no "coming soon": the
  * card simply ends after attendance.
  *
@@ -49,10 +49,10 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           <AvatarFallback className="text-lg font-semibold">{initials}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1 space-y-1.5">
-          <h1 className="font-serif text-2xl font-semibold">{label}</h1>
+          <h1 className="page-title">{label}</h1>
           <div className="text-fg-muted flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
             {/* No fallback text for a missing country: a person who never set one is not an error,
-                and "no country" is not information anybody asked for (frontend-diseno.md §5). */}
+                and "no country" is not information anybody asked for (skill `diseno` §5). */}
             {profile.country && <span>{profile.country}</span>}
             {profile.roles.length > 0 && (
               <span className="flex flex-wrap gap-1">
@@ -68,7 +68,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
       </div>
 
       <div className="border-border mt-4 border-t pt-4">
-        <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('profile.attendanceTitle')}</h2>
+        <h2 className="section-label">{t('profile.attendanceTitle')}</h2>
         <div className="mt-1.5">
           <AttendanceSummaryView summary={profile.attendance} />
         </div>

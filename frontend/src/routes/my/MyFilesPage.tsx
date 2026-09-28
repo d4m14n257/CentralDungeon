@@ -12,6 +12,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import {
   EditFileDialog,
   FileCategoryBadge,
@@ -203,9 +204,7 @@ export function MyFilesPage() {
   if (!libraryAccess.isPending && !libraryAccess.hasPersonalLibrary) {
     return (
       <div className="space-y-6">
-        <div className="space-y-1">
-          <h1 className="font-serif text-2xl font-semibold">{t('mine.title')}</h1>
-        </div>
+        <PageHeader title={t('mine.title')} />
         <EmptyState title={t('mine.noLibraryTitle')} description={t('mine.noLibraryDescription')} />
       </div>
     )
@@ -213,21 +212,21 @@ export function MyFilesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="font-serif text-2xl font-semibold">{t('mine.title')}</h1>
-          <p className="text-fg-muted text-sm">{t('mine.description')}</p>
-        </div>
-        {/* Disabled rather than gone while the cajones are still loading, so it does not appear and
-            jump. With none of them the screen never gets this far: it says so above (#241). */}
-        <Button
-          type="button"
-          disabled={myCategories === undefined}
-          onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}
-        >
-          {uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('mine.title')}
+        description={t('mine.description')}
+        // Disabled rather than gone while the cajones are still loading, so it does not appear and
+        // jump. With none of them the screen never gets this far: it says so above (#241).
+        actions={
+          <Button
+            type="button"
+            disabled={myCategories === undefined}
+            onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}
+          >
+            {uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload')}
+          </Button>
+        }
+      />
 
       {/* **The panel stays open after an upload**, and no toast fires. Closing it on success would
           unmount the zone along with the one thing it had to say — that the file was recognised

@@ -2,7 +2,7 @@ package com.centraldungeon.catalogs;
 
 /**
  * Lifecycle of one catalog value. The baseline defaults the column to {@code Created} for the three
- * catalog tables (modelo-datos skill §4); the rest of the vocabulary is defined here.
+ * catalog tables (arquitectura §4.4); the rest of the vocabulary is defined here.
  *
  * <p>Only {@link #Accepted} values are offered to players, shown to them or usable as a filter
  * (decisiones.md #57, #81). The other three are invisible outside /admin/catalogs, each for its own

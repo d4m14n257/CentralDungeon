@@ -16,7 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 /**
  * Turns a parsed catalog search box into a predicate, the same way
  * {@code UserSearchSpecification} does for people. Criteria API because the shape is only known at
- * runtime: how many terms and joined by which connectors (arquitectura-backend skill §2.2).
+ * runtime: how many terms and joined by which connectors (arquitectura §2.2).
  *
  * <p>Two audiences, two entry points, and the difference between them is the whole point of #57:
  * {@link #accepted(SearchQuery)} is what a master's combobox and a player's filter see, and it never

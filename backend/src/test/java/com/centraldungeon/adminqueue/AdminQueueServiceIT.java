@@ -345,7 +345,7 @@ class AdminQueueServiceIT {
     }
 
     /**
-     * {@code Preparation} and nothing else (modelo-datos skill §5, #245). The four statuses excluded
+     * {@code Preparation} and nothing else (arquitectura §4.5, #245). The four statuses excluded
      * here are the ones a loose reading of #176 would have let in, and each of them would be showing
      * an admin work that is not theirs to do.
      */

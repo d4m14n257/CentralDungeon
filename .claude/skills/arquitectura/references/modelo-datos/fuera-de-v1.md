@@ -1,6 +1,6 @@
-# 7. Fuera de alcance de v1 (decidido, no olvidado)
+# 4.7 Fuera de alcance de v1 (decidido, no olvidado)
 
-> Parte de la skill `modelo-datos`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274), sección 4 — el modelo de datos. Se movió desde `docs/` en F4.0; su número original lleva ahora el prefijo `4.` (el viejo §5 es §4.5).
 
 
 | Tema | Estado |
@@ -11,7 +11,7 @@
 | **Detección automática de baneos de Discord** | En v1 un admin marca el baneo a mano (#86). Automatizarlo requiere el bot, y va en el mismo lote que el resto de la integración (#88). |
 | **i18n** | **La aplicación habla español e inglés desde #198**, pero el modelo sigue sin columna de idioma y es deliberado: la elección vive en `localStorage`, igual que el tema. Lo que sí cambió el modelo es #197 — `notifications.params` guarda los nombres que la frase necesita en vez de la frase, y `title` pasa a ser nulable. |
 
-### 7.1 Campañas y Temporadas: qué queda por resolver al construirlas
+### 4.7.1 Campañas y Temporadas: qué queda por resolver al construirlas
 
 El diseño está cerrado (#129), pero tres puntos chocan con decisiones ya tomadas y hay que resolverlos **antes** de escribir la migración, no durante:
 

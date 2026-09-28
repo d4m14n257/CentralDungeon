@@ -21,7 +21,7 @@ import { useLanguage } from '@/hooks/useLanguage'
 import { useAuth } from '@/providers/AuthProvider'
 
 /**
- * Avatar, language, theme and sign out (frontend-diseno.md §5, inventario de compuestos).
+ * Avatar, language, theme and sign out (skill `diseno` §5, inventario de compuestos).
  *
  * Language sits next to theme because it is the same kind of thing (#198): a preference of the
  * person and not of the account, chosen once and remembered, with no server round trip.

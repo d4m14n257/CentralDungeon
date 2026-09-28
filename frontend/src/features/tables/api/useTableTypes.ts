@@ -8,7 +8,7 @@ import { tableTypesApi } from './gameTablesApi'
  * The table types the wizard's selector offers.
  *
  * Read from the API rather than written into the code: `V2__seed.sql` ships two of them and admins
- * add the rest from the application (modelo-datos skill §6), so a hard-coded list would go stale the
+ * add the rest from the application (arquitectura §4.6), so a hard-coded list would go stale the
  * first time somebody used the feature it belongs to.
  *
  * @returns the query, holding one page of every type

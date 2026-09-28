@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * How many people are waiting for an answer on one table, and since when.
  *
  * <p>An internal projection: the result of a grouped query that <b>never crosses HTTP</b>
- * (arquitectura-backend skill §2.3) - the master dashboard turns it into a work item. Same shape and same
+ * (arquitectura §2.3) - the master dashboard turns it into a work item. Same shape and same
  * reason as {@code TaskSubmissionCount} and {@code CatalogUsageCount}: one query for every table
  * somebody runs, instead of one count per table.
  *

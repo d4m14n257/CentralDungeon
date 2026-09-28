@@ -58,7 +58,7 @@ export function MasterTableScheduleTab() {
       {schedule.length === 0 ? (
         <EmptyState title={t('schedule.emptyTitle')} description={t('schedule.emptyDescription')} />
       ) : (
-        <ul className="divide-border divide-y rounded-lg border">
+        <ul className="list-divided">
           {schedule.map((entry) => (
             <li key={`${entry.weekday}-${entry.hourtime}`} className="px-4 py-2 text-sm">
               {formatSlot(utcSlotToLocal({ weekday: entry.weekday, hourtime: entry.hourtime }, timeZone), i18n.language, duration)}

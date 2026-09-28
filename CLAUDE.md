@@ -27,11 +27,11 @@ Sin redundancia entre ellos. Leer antes de trabajar en algo nuevo:
 
 | Documento | Qué contiene |
 |---|---|
-| `docs/arquitectura.md` | El stack con sus versiones fijadas (§1), la deuda del proyecto viejo que las reglas evitan (§5) y el arranque y despliegue (§6). **Las reglas para escribir código ya no están acá**: son las skills `arquitectura-backend` y `arquitectura-frontend`. |
-| `docs/modelo-datos.md` | Qué cambió respecto del schema heredado y el diagrama entidad-relación (Mermaid). **La fuente de verdad del schema es la skill `modelo-datos`**: convenciones, DDL y migraciones, reglas de negocio que reemplazaron a los triggers, la línea `Admin`/`Owner` y qué queda fuera de v1. |
-| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 272 decisiones cerradas y el índice de los pendientes del modelo que se abrieron y cerraron (M1–M32). |
+| `docs/arquitectura.md` | El stack con sus versiones fijadas (§1), la deuda del proyecto viejo que las reglas evitan (§5) y el arranque y despliegue (§6). **Las reglas para escribir código ya no están acá**: son la skill `arquitectura`. |
+| `docs/modelo-datos.md` | Qué cambió respecto del schema heredado y el diagrama entidad-relación (Mermaid). **La fuente de verdad del schema es la skill `arquitectura` §4**: convenciones, DDL y migraciones, reglas de negocio que reemplazaron a los triggers, la línea `Admin`/`Owner` y qué queda fuera de v1. |
+| `docs/decisiones.md` | Qué se decidió y por qué. Se consulta cuando algo parece arbitrario, y se actualiza cuando una decisión cambia. 274 decisiones cerradas y el índice de los pendientes del modelo que se abrieron y cerraron (M1–M32). |
 | `docs/diagramas/` | Fuentes Mermaid (`.mmd`) y de Archify (`.architecture.json`), sin salidas versionadas — se regeneran con los comandos del README. ER del **modelo objetivo** por subsistema (11–16), los ciclos de vida (05–07) y la **navegación real de la UI**, un nodo por ruta: general, Jugador, Master y Admin (21–24). |
-| `docs/frontend-diseno.md` | Sitemap por contexto, navegación, sistema de diseño, wireframes e **inventario completo de componentes** (§5). **Se lee antes de crear cualquier pantalla o componente**: §5 dice qué existe ya, y es lo que evita escribir el décimo badge de estado (#261). |
+| `docs/frontend-diseno.md` | Principios, sitemap por contexto, navegación y wireframes. **El sistema visual —tokens, inventario de componentes y clases de patrón— se mudó a la skill `diseno`** (#273), que se lee antes de crear cualquier pantalla o componente. |
 | `docs/plan-desarrollo.md` | Fases de construcción, qué se rescata del legacy, definición de terminado y el reparto en subagentes de cada rebanada. |
 | `docs/fase-4-revision.md` | **La fase en curso: cómo se revisa lo construido.** F4 no entrega producto: entrega saber qué hay, quién lo alcanza y qué está roto. Tiene la deuda de revisión que dejaron F1, F2 y F3, cuyos documentos de implementación se borraron (quedan en git). No usa el reparto en subagentes de `plan-desarrollo.md` §7. |
 | `docs/mcp-y-skills.md` | MCP servers y skills configurados, y las variables de entorno que hay que exportar localmente. |
@@ -46,30 +46,30 @@ Ojo con Boot 4 al leer material escrito para Boot 3: **Jackson 3** (`tools.jacks
 
 **Frontend** — TypeScript 5.9 (`strict`), Vite 8, React 19.2, React Router 8 (paquete `react-router`), shadcn/ui + Tailwind 4 (config en CSS, **no** hay `tailwind.config.ts`), TanStack Query 5 (estado de servidor), Zustand 5 (estado de UI global), react-hook-form 7 + zod 4, i18next (todo texto visible pasa por `t()` desde el día uno; **español e inglés**, #198). Tests: Vitest + React Testing Library, Playwright para e2e. Node 24 LTS.
 
-Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<feature>/` y `src/features/<dominio>/`). En el backend, las capas van adentro de la feature más un `common/` transversal; en el frontend, las **pantallas viven fuera** de las features en `src/routes/`, y lo sin dominio en capas de la raíz (`components/`, `hooks/`, `lib/`, `api/`, `types/`, `config/`). Detalle en las skills `arquitectura-backend` §2.1 y `arquitectura-frontend` §3.1.
+Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<feature>/` y `src/features/<dominio>/`). En el backend, las capas van adentro de la feature más un `common/` transversal; en el frontend, las **pantallas viven fuera** de las features en `src/routes/`, y lo sin dominio en capas de la raíz (`components/`, `hooks/`, `lib/`, `api/`, `types/`, `config/`). Detalle en las skills `arquitectura` §2.1 y `arquitectura` §3.1.
 
 ## Reglas duras
 
 1. Un controller nunca llama a un repository — siempre pasa por un service, incluso para una lectura trivial.
 2. Una `@Entity` nunca cruza la frontera HTTP: entrada y salida son DTOs (`record`).
-3. Ningún endpoint devuelve un tipo inferido o abierto: nada de `Map<String, Object>`, `Object` ni `ResponseEntity<?>`. Todo lo que cruza HTTP tiene su `record` con nombre propio (skill `arquitectura-backend` §2.3).
+3. Ningún endpoint devuelve un tipo inferido o abierto: nada de `Map<String, Object>`, `Object` ni `ResponseEntity<?>`. Todo lo que cruza HTTP tiene su `record` con nombre propio (skill `arquitectura` §2.3).
 4. No se abstrae por parecido: interfaz solo si hay más de una implementación real, clase abstracta solo si la misma forma se repite idéntica en 3+ features y ya se vio repetida (§2.4). **Los controllers son clases concretas, sin interfaz de contrato** (#119): el contrato lo publica OpenAPI. La autorización nunca se hereda ni vive en una lista de rutas: cada controller concreto declara su `@PreAuthorize` en el método (#123, CVE-2025-41248).
 5. **Cuatro roles, acumulables salvo una pareja**: `Player`, `Master`, `Admin`, `Owner`. `Player` y `Master` se suman con cualquiera; **`Admin` y `Owner` son el mismo rol con distinto alcance y no se acumulan** — nadie tiene los dos, y `Owner` puede todo lo de `Admin` (#169). **No se registra un `RoleHierarchy`**: cada endpoint enumera sus roles (`hasAnyRole('ADMIN','OWNER')`). Y ojo con los dos `Owner`: el rol de plataforma y `masters.master_type = 'Primary'` no son lo mismo y no se llaman igual (`docs/decisiones.md` #67, #71, #89).
 6. En el frontend, **un tipo base por entidad**; las variantes se derivan con utility types (`Pick`, `Omit`, `Partial`, `Record`…), nunca se re-declaran a mano (§3.2). Nunca `any`.
 7. Toda regla de negocio nueva llega con su test unitario. No hay tests en ninguno de los dos repos viejos; ese patrón no se repite.
 8. Nada de lógica de negocio en la base de datos: ni triggers ni stored procedures. Lo que era trigger vive ahora en el service layer.
 9. Todo cambio de schema es una migración Flyway nueva. Nunca se edita una migración aplicada, nunca `ddl-auto: update`.
-10. Un cambio en una `@Entity` actualiza la skill `modelo-datos` y el diagrama ER de `docs/modelo-datos.md` en el mismo commit (skill `er-diagram-sync`).
+10. Un cambio en una `@Entity` actualiza el modelo de la skill `arquitectura` (§4) y el diagrama ER de `docs/modelo-datos.md` en el mismo commit (procedimiento en `arquitectura` §7.3).
 11. En el frontend, datos de servidor solo con TanStack Query. Nada de `useEffect` + `fetch`, nada de respuestas de API en Context o Zustand.
 12. `legacy/` es de solo lectura.
-13. **Campañas y Temporadas están fuera de la v1 a propósito** — no las agregues al modelo ni al código sin decisión explícita (#7). Su **diseño** ya está cerrado (#129) y los tres puntos a resolver antes de construirlas, en skill `modelo-datos` §7.1.
+13. **Campañas y Temporadas están fuera de la v1 a propósito** — no las agregues al modelo ni al código sin decisión explícita (#7). Su **diseño** ya está cerrado (#129) y los tres puntos a resolver antes de construirlas, en skill `arquitectura` §4.7.1.
 14. Nada de código copiado literal de `CentralDungeonBackend`.
 15. Subir una major del stack es una decisión: se registra en `docs/decisiones.md` y se actualiza `docs/arquitectura.md` §1 en el mismo commit.
 16. En el frontend, **una feature nunca importa de otra**. Las pantallas van en `src/routes/` y son el único lugar que compone dominios; cada bloque de una pantalla compuesta recibe un **id**, no una entidad (§3.1.5). Cada feature expone su superficie en `features/<dominio>/index.ts`.
 17. **El rol no es la pertenencia**, y en las mesas la pertenencia manda: dirigir una mesa concreta se autoriza **solo por la fila en `masters`**, sin exigir el rol `Master` — que significa "puedo crear mesas propias" y nada más (#135). Toda lectura o mutación de un recurso concreto filtra por el actor —el actor en el `WHERE`, o verificación explícita en el service antes de tocar nada— y el actor sale siempre del token, nunca de la URL (#121). El JWT afirma **identidad, no autorización**: roles y `status` se leen de la base en cada request (#122).
-18. Ningún string visible se escribe en el JSX: todo pasa por `t('espacio.clave')` con el JSON en `src/locales/<idioma>/` (#117). **Toda clave nueva se agrega en `es` y en `en`, en el mismo commit** (#198): un idioma a medias muestra la clave cruda. Y ningún valor de estilo suelto: los tokens salen del `@theme`, que se transcribe desde el design system en Claude Design (#118, #130).
+18. Ningún string visible se escribe en el JSX: todo pasa por `t('espacio.clave')` con el JSON en `src/locales/<idioma>/` (#117). **Toda clave nueva se agrega en `es` y en `en`, en el mismo commit** (#198): un idioma a medias muestra la clave cruda. Y ningún valor de estilo suelto: los tokens salen del `@theme`, que se transcribe desde el design system en Claude Design (#118, #130). **Un patrón de estilo tiene nombre** (#273): una combinación de utilidades que cumple un papel de diseño —título de página, acciones de fila, lista con divisores— no se escribe literal en una pantalla; es una clase de `styles/base.css` o un componente de `components/`, catalogado en la skill `diseno` §5.c.
     **Tampoco el backend escribe frases que lea una persona** (#197): manda un código y sus parámetros, y el frontend las arma. Lo único verbatim es lo que escribió otra persona.
-19. **Todo lleva su bloque de documentación, sin excepciones**: Javadoc en el backend, JSDoc en el frontend, siempre en inglés. Ver *Documentación del código*, abajo. Código nuevo sin documentar no está terminado; una modificación que deja el bloque desactualizado es un bug.
+19. **Todo lleva su bloque de documentación, sin excepciones**: Javadoc en el backend, JSDoc en el frontend, siempre en inglés. Ver *Documentación del código*, abajo, y el detalle en la skill `arquitectura` §6. Código nuevo sin documentar no está terminado; una modificación que deja el bloque desactualizado es un bug.
 
 ## Documentación del código
 
@@ -134,18 +134,13 @@ El diseño **no** va por MCP: se usa `DesignSync` contra Claude Design, autoriza
 
 ## Skills
 
-En `.claude/skills/`, versionadas con el repo. **Son la forma en que se guarda cómo se hace cada cosa**: lo que un documento explicaba y lo que Claude sabía solo por su memoria local pasó a una skill, donde no se pierde ni depende de una máquina. Las tres de conocimiento —arquitectura y modelo de datos— son la fuente de sus reglas, y el código las cita por sección (`arquitectura-backend §2.3`). Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` — no vive en el repo; el detalle está en `docs/mcp-y-skills.md`.
+En `.claude/skills/`, versionadas con el repo. **Son la forma en que se guarda cómo se hace cada cosa**: lo que un documento explicaba y lo que Claude sabía solo por su memoria local pasó a una skill, donde no se pierde ni depende de una máquina. Son tres, a propósito (#274): `arquitectura` junta backend, frontend, modelo de datos, testing, documentación del código y los procedimientos, que antes eran siete skills que no se entendían sin las otras; `diseno` es la fuente de lo visual; `entorno-local`, del entorno. Son la fuente de sus reglas, y el código las cita por sección (`arquitectura §2.3`, `diseno §5.c`). Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` — no vive en el repo; el detalle está en `docs/mcp-y-skills.md`.
 
 | Skill | Cuándo |
 |---|---|
-| `arquitectura-backend` | Antes de escribir o revisar código Java: paquetes, capas, DTOs, contrato de la API, seguridad y pertenencia, testing, Javadoc (§2.1–§2.8) |
-| `arquitectura-frontend` | Antes de escribir o revisar código del frontend: estructura y ruteo, modelo de tipos, estado, i18n, formularios, fechas y estilos (§3.1–§3.4) |
-| `modelo-datos` | Antes de tocar una `@Entity`, una migración, una query o una regla de negocio: convenciones, DDL y migraciones, reglas de negocio, roles y alcance, fuera de v1 |
+| `arquitectura` | Antes de escribir o revisar cualquier código, de tocar una `@Entity`, una migración o una regla de negocio, o de escribir tests. Backend (§2), frontend (§3), modelo de datos (§4), testing (§5), Javadoc y JSDoc (§6), y los procedimientos: nuevo endpoint, nuevo componente o pantalla, cambio de schema (§7) |
+| `diseno` | Antes de escribir el JSX de una pantalla o componente, o de agregar un estilo: de dónde sale cada valor (§3), el inventario de componentes (§5), el responsive (§5.b) y **las clases y componentes de patrón** que una pantalla no vuelve a escribir (§5.c, #273) |
 | `entorno-local` | Antes de correr, reiniciar o verificar algo contra el backend, el frontend, Playwright o Testcontainers — y antes de culpar al código por una suite entera en rojo |
-| `nuevo-endpoint-java` | Agregar un endpoint: controller + service + repository + DTO + mapper en el paquete de su feature |
-| `nuevo-componente-react` | Agregar un componente o página: shadcn/ui + Tailwind + hook de TanStack Query en `features/<dominio>/` |
-| `tests-java` | Escribir o revisar tests del backend (JUnit 6, Mockito, Testcontainers 2.x) |
-| `er-diagram-sync` | Después de tocar cualquier `@Entity`: migración Flyway + la skill `modelo-datos` + los diagramas ER |
 
 ## Git
 

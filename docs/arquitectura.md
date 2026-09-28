@@ -1,8 +1,8 @@
 # Arquitectura
 
-> **Qué queda acá y qué se mudó.** Desde F4.0, las reglas de cómo se escribe el código viven en **skills del repo**, que Claude carga al trabajar y cualquiera lee en `.claude/skills/`: `arquitectura-backend` (§2) y `arquitectura-frontend` (§3). Conservan la numeración que tenían acá, que es la que citan el código y `decisiones.md`. Las reglas duras están en `CLAUDE.md`.
+> **Qué queda acá y qué se mudó.** Desde F4.0, las reglas de cómo se escribe el código viven en **skills del repo**, que Claude carga al trabajar y cualquiera lee en `.claude/skills/`: `arquitectura` (§2 el backend, §3 el frontend) y, para lo visual, `diseno`. Conserva la numeración que tenían acá, que es la que citan el código y `decisiones.md`. Las reglas duras están en `CLAUDE.md`.
 >
-> Este documento conserva lo que no es una regla de escritura: el stack con sus versiones fijadas (§1), la deuda del proyecto viejo que las reglas evitan (§5) y el arranque y despliegue (§6). El modelo de datos es la skill `modelo-datos`; el razonamiento detrás de cada decisión, `decisiones.md`.
+> Este documento conserva lo que no es una regla de escritura: el stack con sus versiones fijadas (§1), la deuda del proyecto viejo que las reglas evitan (§5) y el arranque y despliegue (§6). El modelo de datos es la skill `arquitectura` §4; el razonamiento detrás de cada decisión, `decisiones.md`.
 
 ## 1. Stack y versiones
 
@@ -37,7 +37,7 @@ Consecuencias de Boot 4 que este documento da por sentadas, y que conviene tener
 - **JUnit 6**: JUnit 4 y el motor Vintage quedan fuera. Ningún test lleva `@RunWith` ni `SpringRunner`.
 - **Testcontainers 2.x**: módulos con prefijo `testcontainers-` y clases reubicadas por módulo (`org.testcontainers.mysql.MySQLContainer`).
 - **`RestTemplate` ya no se autoconfigura**. Para llamadas salientes (la API de Discord) se usa `RestClient` o una interfaz `@HttpExchange`.
-- **Versionado de API nativo**: Framework 7 trae versionado de API de primera clase (path, header, query, media type). Acá **no se usa por ahora**: la versión va en el path (`arquitectura-backend` §2.5) y mientras exista una sola versión viva no se agrega maquinaria. Si algún día hay v2, se usa ese soporte nativo, no controllers duplicados.
+- **Versionado de API nativo**: Framework 7 trae versionado de API de primera clase (path, header, query, media type). Acá **no se usa por ahora**: la versión va en el path (`arquitectura` §2.5) y mientras exista una sola versión viva no se agrega maquinaria. Si algún día hay v2, se usa ese soporte nativo, no controllers duplicados.
 - **`spring-boot-starter-classic`** (el shim que restituye starters removidos) **no se usa**: el proyecto es nuevo, no tiene nada que restituir.
 
 ### 1.2 Frontend
@@ -53,7 +53,7 @@ TypeScript **se introduce** en el frontend: `legacy/frontend-next/` era JavaScri
 | Ruteo | React Router (data router, `createBrowserRouter`) | **8.x** — paquete `react-router`, **no** `react-router-dom` (quedó como alias de compatibilidad) |
 | Componentes | shadcn/ui sobre Radix + Tailwind CSS | Tailwind **4.3.x** vía `@tailwindcss/vite` |
 | Estado de servidor | TanStack Query | 5.10x |
-| Estado de UI | Zustand global, Context por subárbol, `useState` local — criterio en `arquitectura-frontend` §3.3 | 5.x |
+| Estado de UI | Zustand global, Context por subárbol, `useState` local — criterio en `arquitectura` §3.3 | 5.x |
 | Formularios | react-hook-form + zod + `@hookform/resolvers` | RHF 7.8x (la 8 está en beta), zod 4.x, resolvers 5.x |
 | HTTP | `fetch` envuelto en un cliente propio tipado | — |
 | Fechas y horas | `Intl.DateTimeFormat` nativo, sin librería (#111) | — |
@@ -80,14 +80,16 @@ Consecuencias de estas versiones:
 
 | § | Dónde vive ahora |
 |---|---|
-| 2.1 – 2.8 | Skill `arquitectura-backend`: paquetes, capas, DTOs, abstracción, contrato de la API, seguridad, testing, Javadoc |
-| 3.1 – 3.4 | Skill `arquitectura-frontend`: estructura y ruteo, modelo de tipos, reglas de datos, estado, i18n, formularios, fechas y estilos, testing |
+| 2.1 – 2.6 | Skill `arquitectura` §2: paquetes, capas, DTOs, abstracción, contrato de la API, seguridad |
+| 3.1 – 3.3 | Skill `arquitectura` §3: estructura y ruteo, modelo de tipos, reglas de datos, estado, i18n, formularios, fechas y estilos |
+| 2.7, 3.4 → 5 | Skill `arquitectura` §5: testing de los dos lados |
+| 2.8 → 6 | Skill `arquitectura` §6: Javadoc y JSDoc |
 
 El §4 de este documento repetía las reglas duras de `CLAUDE.md` y se borró: dos copias de la misma lista terminan diciendo cosas distintas.
 
 ## 5. Deuda del proyecto viejo que no se repite
 
-Lista corta, tomada del inventario del código legacy. Es el contrapunto concreto de las reglas de las skills `arquitectura-backend` y `arquitectura-frontend`:
+Lista corta, tomada del inventario del código legacy. Es el contrapunto concreto de las reglas de la skill `arquitectura`:
 
 - Backend sin autenticación: el `user_id` llegaba por URL y se confiaba en él.
 - IDs generados por un stored procedure (`generate_base64_id`) que nunca estuvo versionado — la app dependía de un objeto de BD inexistente en el `database.sql`.

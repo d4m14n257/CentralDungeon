@@ -1,6 +1,6 @@
 # 3.3 Reglas
 
-> Parte de la skill `arquitectura-frontend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 **Datos de servidor**: exclusivamente TanStack Query. Prohibido `useEffect` + `fetch` para cargar datos, y prohibido guardar respuestas de la API en Context o Zustand — es lo que hacía el frontend viejo y por eso no tenía caché ni invalidación.
@@ -116,7 +116,7 @@ export function EditGameTableDialog({ table, open, onOpenChange }: EditGameTable
 
 **Tipos**: un tipo base por entidad y derivados con utility types (§3.2). Ningún componente declara a mano una variante de un tipo que ya existe.
 
-**Documentación**: la contraparte exacta de §2.8, con JSDoc. **Todo `export` lleva su bloque** — componentes, hooks, funciones, tipos, interfaces, constantes y esquemas zod —, y los `props` de un componente se documentan campo por campo en su `interface` o `type`. En inglés, diciendo qué hace y por qué existe, citando la decisión `#n` que lo justifica cuando la hay. La única excepción del proyecto es `components/ui/`: lo genera el CLI de shadcn y no se edita a mano.
+**Documentación**: JSDoc en todo `export`, con los `props` campo por campo. El detalle, junto con el Javadoc del backend, está en §6.2.
 
 **Ubicación y nombres**: dónde va cada archivo, cuándo sube a la raíz y qué sufijo lleva está en §3.1.1–§3.1.3, y el ruteo en §3.1.6.
 
@@ -137,3 +137,5 @@ const badge = cva('inline-flex items-center rounded-md px-2 py-1 text-xs font-me
 ```
 
 **Nada de CSS-in-JS, archivos CSS por componente ni objetos de estilo en JavaScript** — el frontend viejo tenía los estilos en `styles/*.js` y cuatro motores conviviendo. Estilos inline solo para valores calculados en runtime.
+
+**Un patrón de estilo tiene nombre** (#273). Una combinación de utilidades que cumple un papel de diseño —título de página, etiqueta de sección, acciones de fila, lista con divisores, error en un diálogo— no se escribe literal en una pantalla: es una clase de `styles/base.css` (`@layer components`, con `@apply`) o un componente de `components/` (`PageHeader`). Cuál existe ya, cuándo se crea uno nuevo y cómo, está en la skill `diseno` §5.c; se lee antes de escribir el JSX de una pantalla.

@@ -111,7 +111,7 @@ export function TableDetailPage() {
     <div className="border-border-strong bg-surface rounded-xl border p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-semibold">{table.name}</h1>
+          <h1 className="page-title">{table.name}</h1>
           {primaryMaster && (
             <p className="text-fg-muted mt-1 flex flex-wrap items-center gap-x-1 text-sm">
               <span>{t('detail.masterLabel')}:</span>
@@ -155,21 +155,21 @@ export function TableDetailPage() {
 
         {table.permitted && (
           <section>
-            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.permitted')}</h2>
+            <h2 className="section-label">{t('detail.permitted')}</h2>
             <RichTextView html={table.permitted} className="mt-1.5" />
           </section>
         )}
 
         {table.requirements && (
           <section>
-            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.requirements')}</h2>
+            <h2 className="section-label">{t('detail.requirements')}</h2>
             <RichTextView html={table.requirements} className="mt-1.5" />
           </section>
         )}
 
         {localSchedule.length > 0 && (
           <section>
-            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.schedule')}</h2>
+            <h2 className="section-label">{t('detail.schedule')}</h2>
             <ul className="mt-1.5 space-y-0.5 text-sm">
               {localSchedule.map((slot) => (
                 <li key={`${slot.weekday}-${slot.hourtime}`}>{formatSlot(slot, i18n.language, slot.duration)}</li>
@@ -184,7 +184,7 @@ export function TableDetailPage() {
             stop matching, and the dates are what somebody deciding whether to apply needs (#26, #33). */}
         {table.sessions.length > 0 && (
           <section>
-            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('sessions.calendarTitle')}</h2>
+            <h2 className="section-label">{t('sessions.calendarTitle')}</h2>
             <div className="mt-1.5">
               <SessionList sessions={table.sessions} />
             </div>
@@ -195,7 +195,7 @@ export function TableDetailPage() {
             the master kept private is absent from the response, not hidden by the screen. */}
         {table.files.length > 0 && (
           <section>
-            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{tFiles('table.readOnlyTitle')}</h2>
+            <h2 className="section-label">{tFiles('table.readOnlyTitle')}</h2>
             <div className="mt-1.5">
               <FileList
                 files={table.files}
@@ -225,7 +225,7 @@ export function TableDetailPage() {
 
         {table.startDate && (
           <section>
-            <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.startDate')}</h2>
+            <h2 className="section-label">{t('detail.startDate')}</h2>
             <p className="mt-1.5 text-sm">{formatPlainDate(table.startDate, i18n.language)}</p>
             {table.totalSessions != null && (
               <p className="text-fg-subtle mt-1 text-xs">{t('detail.totalSessions', { count: table.totalSessions })}</p>
@@ -234,7 +234,7 @@ export function TableDetailPage() {
         )}
 
         <div>
-          <h2 className="text-fg-subtle text-xs font-medium tracking-wide uppercase">{t('detail.capacity')}</h2>
+          <h2 className="section-label">{t('detail.capacity')}</h2>
           <p className="mt-1.5 text-sm">
             {table.maxPlayers != null
               ? t('explorer.players', { current: table.playerCount, max: table.maxPlayers })

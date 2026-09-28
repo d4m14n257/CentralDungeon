@@ -8,8 +8,8 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * The four global roles (modelo-datos skill, #37, #67). They stack, and there is no hierarchy among
- * them: no RoleHierarchy is registered anywhere (arquitectura-backend skill §2.6). Values mirror
+ * The four global roles (arquitectura §4, #37, #67). They stack, and there is no hierarchy among
+ * them: no RoleHierarchy is registered anywhere (arquitectura §2.6). Values mirror
  * {@code roles.name}.
  *
  * Not to be confused with {@code masters.master_type} (Primary/Secondary), a different
@@ -83,7 +83,7 @@ public enum PlatformRole {
      * @param roleName a value of {@code roles.name}, in any case
      * @return the matching constant, or empty when the name is not one of the four. Empty is a
      *         normal answer and not an error: {@code /admin/users?q=/role Wizard} has to match
-     *         nothing, not answer 400 (arquitectura-backend skill §2.5)
+     *         nothing, not answer 400 (arquitectura §2.5)
      */
     public static Optional<PlatformRole> fromRoleName(String roleName) {
         String normalized = roleName.toLowerCase(Locale.ROOT);

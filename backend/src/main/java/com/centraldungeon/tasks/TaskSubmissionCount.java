@@ -4,7 +4,7 @@ package com.centraldungeon.tasks;
  * How many answers one task has, and from how many different people.
  *
  * <p>An internal projection: it is the result of a grouped query and <b>never crosses HTTP</b>
- * (arquitectura-backend skill §2.3) - the master's row shows {@code submittedCount} out of the roster, and this
+ * (arquitectura §2.3) - the master's row shows {@code submittedCount} out of the roster, and this
  * is where the first half of that comes from. Same shape and same reason as {@code AttendanceCount}
  * and {@code FileUsageCount}.
  *

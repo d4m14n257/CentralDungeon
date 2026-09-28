@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * of #42 a door rather than a privilege.
  *
  * <p>Every endpoint here is scoped to the actor from the token. There is no user id in any path and
- * none in any body, so there is no way to ask on somebody else's behalf (#121, arquitectura-backend skill §2.6) -
+ * none in any body, so there is no way to ask on somebody else's behalf (#121, arquitectura §2.6) -
  * and the polymorphic reference has no foreign key that would catch it if there were (#78).
  *
  * <p>The form that produces one of these lives on the screen that provokes it - the profile, the

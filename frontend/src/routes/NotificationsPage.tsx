@@ -5,6 +5,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { notificationText, useMarkAllAsRead, useNotificationClick, useNotifications } from '@/features/notifications'
 import { relativeTimeFrom } from '@/lib/relativeTime'
 import { cn } from '@/lib/utils'
@@ -46,14 +47,18 @@ export function NotificationsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="font-serif text-2xl font-semibold">{t('title')}</h1>
-        {unreadCount > 0 && (
-          <Button variant="ghost" size="sm" className="text-brand-fg" onClick={() => markAllAsRead.mutate()}>
-            {t('markAllAsRead')}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title={t('title')}
+        actions={
+          <>
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" className="text-brand-fg" onClick={() => markAllAsRead.mutate()}>
+                {t('markAllAsRead')}
+              </Button>
+            )}
+          </>
+        }
+      />
       {isPending && (
         <div className="space-y-2">
           {Array.from({ length: 4 }, (_, index) => (
@@ -64,7 +69,7 @@ export function NotificationsPage() {
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && <EmptyState title={t('emptyTitle')} description={t('emptyDescription')} />}
       {data && data.content.length > 0 && (
-        <ul className="divide-border divide-y rounded-lg border">
+        <ul className="list-divided">
           {data.content.map((notification) => {
             const unread = notification.readStatus === 'Unread'
             const outcome = OUTCOME_TONE[notification.notificationType]

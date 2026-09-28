@@ -82,7 +82,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
     await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
 
-    // `/admin/tables` is one of the wide tables of frontend-diseno.md §5.b since F3.3: a `<tr>`.
+    // `/admin/tables` is one of the wide tables of skill `diseno` §5.b since F3.3: a `<tr>`.
     const row = admin.page.getByRole('row').filter({ hasText: tableName })
     await expect(row).toBeVisible()
     await row.getByRole('button', { name: 'Asignar masters' }).click()

@@ -351,7 +351,7 @@ public class TableTaskService {
      *
      * <p>Public because {@code TaskSubmissionService} needs the same entity under the same rule, and
      * a second copy of "and it must not be Deleted" is a second thing to remember. It is an internal
-     * read and never exposed raw over HTTP (arquitectura-backend skill §2.2, 2.3).
+     * read and never exposed raw over HTTP (arquitectura §2.2, 2.3).
      *
      * @param taskId the task
      * @return the live task

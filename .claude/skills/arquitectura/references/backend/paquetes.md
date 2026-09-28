@@ -1,6 +1,6 @@
 # 2.1 Patrón: paquete por feature, capas adentro
 
-> Parte de la skill `arquitectura-backend`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
 El árbol se organiza **por dominio de negocio primero, por capa técnica después**. Un `com.centraldungeon.controller` con 9 controllers de dominios distintos obliga a saltar entre 6 carpetas para tocar una sola funcionalidad; con paquete por feature, agregar o borrar una feature es agregar o borrar una carpeta.
@@ -91,6 +91,6 @@ application.yml              config base
 application-dev.yml          perfil local
 application-test.yml         perfil de tests
 db/migration/
-├── V1__baseline.sql         schema completo (ver skill `modelo-datos` §4)
+├── V1__baseline.sql         schema completo (ver skill `arquitectura` §4.4)
 └── V2__seed.sql             roles + table_types iniciales
 ```

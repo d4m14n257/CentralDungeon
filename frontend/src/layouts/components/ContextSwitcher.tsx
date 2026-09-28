@@ -56,7 +56,7 @@ export function ContextSwitcher({ availableContexts, activeContext }: ContextSwi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {/* A chip and not a button: the solid fill is reserved for the accent (frontend-diseno.md 3). */}
+        {/* A chip and not a button: the solid fill is reserved for the accent (skill `diseno` §3). */}
         <Button variant="ghost" className={`${CHIP_CLASSES} hover:text-fg`}>
           {t(`nav.${activeContext}`)}
           <ChevronDown className="size-3.5" />

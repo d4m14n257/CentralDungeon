@@ -51,7 +51,7 @@ describe('DataTable', () => {
   })
 
   /**
-   * The expensive responsive case (frontend-diseno.md 5.b): both layouts exist in the DOM and CSS
+   * The expensive responsive case (skill `diseno` §5.b): both layouts exist in the DOM and CSS
    * decides which one is shown, so the same data is reachable either way - and neither is a table
    * that has to be dragged sideways.
    */
@@ -67,7 +67,7 @@ describe('DataTable', () => {
 
   /**
    * The rule is about the narrow screen: a table nobody can read without dragging it sideways
-   * (frontend-diseno.md 5.b). The card list is what a phone gets, and it must not scroll - the
+   * (skill `diseno` §5.b). The card list is what a phone gets, and it must not scroll - the
    * `overflow-x-auto` shadcn puts around the table itself is on the layout a phone never sees.
    */
   it('never puts the card list in a horizontally scrolling container', () => {

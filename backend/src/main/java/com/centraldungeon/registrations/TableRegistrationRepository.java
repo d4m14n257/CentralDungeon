@@ -47,7 +47,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * A table's registrations in the order they arrived. FIFO is not negotiable
-     * (modelo-datos skill, #28): callers never re-sort this, because it is what decides who gets
+     * (arquitectura §4, #28): callers never re-sort this, because it is what decides who gets
      * auto-rejected when the table fills up (#34).
      *
      * @param gameTableId the table
@@ -227,7 +227,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * Whether the person holds an active application among a set of tables - the batched read behind
-     * profile visibility's #41b (modelo-datos skill §5): checking a master's own tables against one
+     * profile visibility's #41b (arquitectura §4.5): checking a master's own tables against one
      * applicant is one query, not one per table they run.
      *
      * @param gameTableIds the tables to check, in practice the ones the actor runs

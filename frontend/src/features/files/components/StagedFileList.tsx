@@ -34,7 +34,7 @@ export function StagedFileList({ files, onRemove }: StagedFileListProps) {
   }
 
   return (
-    <ul className="divide-border divide-y rounded-lg border">
+    <ul className="list-divided">
       {files.map((staged) => {
         const key = staged.kind === 'new' ? staged.localId : staged.fileId
         return (

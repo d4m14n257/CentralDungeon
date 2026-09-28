@@ -1,6 +1,6 @@
-# 5. Reglas de negocio (viven en el service layer)
+# 4.5 Reglas de negocio (viven en el service layer)
 
-> Parte de la skill `modelo-datos`. Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274), sección 4 — el modelo de datos. Se movió desde `docs/` en F4.0; su número original lleva ahora el prefijo `4.` (el viejo §5 es §4.5).
 
 
 Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una llega con su test unitario.

@@ -21,7 +21,7 @@ import type { UserAdminChange } from '../types'
  * `user_status_changes` exist because `audit_logs` is F6 and a role change with no record is a
  * change nobody can review; a record nothing reads back would have been the same gap one layer down.
  *
- * It takes an **id** and asks for its own data (arquitectura-frontend skill §3.1.5), which is what lets the row
+ * It takes an **id** and asks for its own data (arquitectura §3.1.5), which is what lets the row
  * that opens it pass a key rather than the whole account — and what makes the header here the
  * account's *current* state rather than a snapshot of whatever page the reader was on.
  *
@@ -68,7 +68,7 @@ export function UserAdminHistory({ userId }: { userId: string }) {
       {history.isPending && <Skeleton className="h-32 w-full" />}
       {history.data?.length === 0 && <EmptyState title={t('users.historyEmptyTitle')} description={t('users.historyEmptyDescription')} />}
       {history.data && history.data.length > 0 && (
-        <ol className="divide-border divide-y rounded-lg border">
+        <ol className="list-divided">
           {history.data.map((change) => (
             <li key={change.id} className="space-y-1 px-4 py-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">

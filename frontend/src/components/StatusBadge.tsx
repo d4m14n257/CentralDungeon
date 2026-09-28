@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
- * The state tones of the design system (`frontend-diseno.md` §3), which is what a badge picks from.
+ * The state tones of the design system (skill `diseno` §3), which is what a badge picks from.
  *
  * These are **not** domain statuses and that is the whole point of naming them separately: `open`
  * means "the colour family for something that is open", and eight different features decide on their
@@ -39,7 +39,7 @@ interface StatusBadgeProps {
    * The label, **already translated**.
    *
    * A `ReactNode` and not a `string` so a feature can interpolate — `ClaimBadge` says who holds a row
-   * — but it is never optional: colour is never the only carrier of meaning (`frontend-diseno.md` §3),
+   * — but it is never optional: colour is never the only carrier of meaning (skill `diseno` §3),
    * and a badge with a dot and nothing to read is exactly that.
    */
   label: ReactNode
@@ -52,7 +52,7 @@ interface StatusBadgeProps {
 /**
  * A status as a badge: a coloured dot and a label, in the one shape the whole application uses.
  *
- * **It knows nothing about any domain, and it cannot** (`arquitectura-frontend` skill §3.1.2: «al subir se le
+ * **It knows nothing about any domain, and it cannot** (`arquitectura` §3.1.2: «al subir se le
  * quita el dominio»). It receives the tone already chosen and the label already translated, so the
  * two things that are genuinely each feature's — which of its states looks how, and what the state is
  * called in two languages — stay in the feature, next to the union they belong to.

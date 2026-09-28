@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Public profiles: the caller's own, and everybody else's under the five rules of modelo-datos skill §5
+ * Public profiles: the caller's own, and everybody else's under the five rules of arquitectura §4.5
  * ("Visibilidad de perfiles": #41, #44, #45, #47).
  */
 @RestController

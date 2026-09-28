@@ -1,8 +1,8 @@
 # Modelo de datos — v1
 
-> **La fuente de verdad del schema es la skill `modelo-datos`** (`.claude/skills/modelo-datos/`) desde F4.0: convenciones (§1), el DDL baseline y las migraciones posteriores (§4, §6), las reglas de negocio que reemplazaron a los triggers (§5), lo que queda fuera de v1 (§7) y la línea entre `Admin` y `Owner`. Conservan la numeración que tenían acá, que es la que citan el código y `decisiones.md`.
+> **La fuente de verdad del schema es la skill `arquitectura` §4** (`.claude/skills/arquitectura/`) desde F4.0, y dentro de ella desde #274: convenciones (§4.1), el DDL baseline y las migraciones posteriores (§4.4, §4.6), las reglas de negocio que reemplazaron a los triggers (§4.5), lo que queda fuera de v1 (§4.7) y la línea entre `Admin` y `Owner`. Los números son los que tenían acá con el prefijo `4.`.
 >
-> Este documento conserva lo que se lee para entender el modelo y no se aplica al escribirlo: qué cambió respecto del schema heredado (§2) y el diagrama entidad-relación (§3), que se actualiza en el mismo cambio que la `@Entity` (skill `er-diagram-sync`).
+> Este documento conserva lo que se lee para entender el modelo y no se aplica al escribirlo: qué cambió respecto del schema heredado (§2) y el diagrama entidad-relación (§3), que se actualiza en el mismo cambio que la `@Entity` (skill `arquitectura` §7.3).
 >
 > El **porqué** de cada cosa está en `decisiones.md`. **Alcance v1**: el schema heredado consolidado, corregido y ampliado. **Campañas y Temporadas quedan fuera a propósito** (`decisiones.md` #7), igual que la integración profunda con Discord.
 
@@ -34,7 +34,7 @@ El detalle y el razonamiento están en `decisiones.md`. Resumen de lo estructura
 
 ## 3. Diagrama entidad-relación
 
-Vista general, sin columnas — están en el DDL de la skill `modelo-datos` (§4).
+Vista general, sin columnas — están en el DDL de la skill `arquitectura` (§4.4).
 
 Para verlo por subsistema y con columnas: `diagramas/11` a `16`. Los ciclos de vida (mesa, postulación, comentario) están en `diagramas/05`, `06` y `07`.
 
@@ -103,11 +103,11 @@ erDiagram
 `comment_quotas`, `feedback_quotas` y `system_feedback` no aparecen: no tienen relación con ninguna tabla, a propósito — son las piezas anónimas del modelo (#82, #93, #94).
 
 
-## 1, 4, 5, 6 y 7 — en la skill `modelo-datos`
+## 1, 4, 5, 6 y 7 — en la skill `arquitectura` §4
 
 | § | Qué es | Dónde |
 |---|---|---|
-| 1 | Convenciones | `SKILL.md` |
-| 4 y 6 | DDL de `V1__baseline.sql`, tabla de migraciones posteriores y seed | `references/ddl.md` |
-| 5 | Reglas de negocio por subsistema | `references/reglas-negocio.md` |
-| 7 | Fuera de alcance de v1, y §7.1 Campañas y Temporadas | `references/fuera-de-v1.md` |
+| 4.1 | Convenciones | `SKILL.md` |
+| 4.4 y 4.6 | DDL de `V1__baseline.sql`, tabla de migraciones posteriores y seed | `references/modelo-datos/ddl.md` |
+| 4.5 | Reglas de negocio por subsistema | `references/modelo-datos/reglas-negocio.md` |
+| 4.7 | Fuera de alcance de v1, y §4.7.1 Campañas y Temporadas | `references/modelo-datos/fuera-de-v1.md` |
