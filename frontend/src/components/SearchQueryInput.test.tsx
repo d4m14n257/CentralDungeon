@@ -6,7 +6,7 @@ import { MemoryRouter } from 'react-router'
 
 import '@/providers/i18n'
 import { SearchQueryInput } from './SearchQueryInput'
-import { buildSearchQuery, emptySearchQuery, type SearchQueryValue } from '@/lib/searchQuery'
+import { buildSearchQuery, emptySearchQuery, searchQueryOf, type SearchQueryValue } from '@/lib/searchQuery'
 
 const FIELDS = [
   { name: 'discord_name', label: 'Discord' },
@@ -34,7 +34,7 @@ function ChoiceHarness() {
   return (
     <MemoryRouter>
       <SearchQueryInput fields={CHOICE_FIELDS} value={value} onChange={setValue} label="Buscar archivos" />
-      <output>{buildSearchQuery(value, CHOICE_FIELDS)}</output>
+      <output>{buildSearchQuery(value)}</output>
     </MemoryRouter>
   )
 }
@@ -44,12 +44,12 @@ function choiceBox() {
 }
 
 /** A controlled wrapper: the component keeps no state, so the test plays the owner. */
-function Harness() {
-  const [value, setValue] = useState<SearchQueryValue>(emptySearchQuery)
+function Harness({ defaultQuery = '' }: { defaultQuery?: string }) {
+  const [value, setValue] = useState<SearchQueryValue>(() => searchQueryOf(defaultQuery, FIELDS))
   return (
     <MemoryRouter>
-      <SearchQueryInput fields={FIELDS} value={value} onChange={setValue} label="Buscar personas" />
-      <output>{buildSearchQuery(value, FIELDS)}</output>
+      <SearchQueryInput fields={FIELDS} value={value} onChange={setValue} label="Buscar personas" defaultQuery={defaultQuery} />
+      <output>{buildSearchQuery(value)}</output>
     </MemoryRouter>
   )
 }
@@ -63,12 +63,56 @@ function query() {
 }
 
 describe('SearchQueryInput', () => {
-  it('searches what is typed without having to close a chip first', async () => {
+  /**
+   * Only closed criteria are searched (#268). It used to search the text as it was typed, so every
+   * half-thought — `/user_name d`, `/user_name da` — went to the server before its owner had decided.
+   */
+  it('searches nothing until Enter', async () => {
     render(<Harness />)
 
-    await userEvent.type(searchBox(), 'juan')
+    await userEvent.type(searchBox(), '/user_name juan')
+    expect(query()).toBeEmptyDOMElement()
 
-    expect(query()).toHaveTextContent('juan')
+    await userEvent.type(searchBox(), '{Enter}')
+    expect(query()).toHaveTextContent('/user_name juan')
+  })
+
+  /** Enter inside the list picks from it: choosing a command is not a search either. */
+  it('picking a command with Enter searches nothing', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), 'juan{Enter}/us{Enter}')
+
+    expect(searchBox()).toHaveValue('/user_name ')
+    expect(query()).toHaveTextContent(/^juan$/)
+  })
+
+  it('offers no way to clear while the box is at its default', () => {
+    render(<Harness />)
+
+    expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).not.toBeInTheDocument()
+  })
+
+  it('clearing drops the chips and what is typed at once', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), 'juan{Enter}/us{Enter}pab')
+    await userEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+
+    expect(query()).toBeEmptyDOMElement()
+    expect(searchBox()).toHaveValue('')
+    expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).not.toBeInTheDocument()
+  })
+
+  /** A screen that opens on something — the requests tray opens on what is pending — goes back to it. */
+  it("clearing goes back to the screen's default search, not to an empty one", async () => {
+    render(<Harness defaultQuery="/user_name juan" />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar criterio: juan' }))
+    await userEvent.type(searchBox(), 'pablo{Enter}')
+    await userEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+
+    expect(query()).toHaveTextContent('/user_name juan')
   })
 
   /**
@@ -104,7 +148,7 @@ describe('SearchQueryInput', () => {
   it('with a field open, everything typed is its value, spaces included', async () => {
     render(<Harness />)
 
-    await userEvent.type(searchBox(), '/us{Enter}juan pablo')
+    await userEvent.type(searchBox(), '/us{Enter}juan pablo{Enter}')
 
     expect(query()).toHaveTextContent('/user_name juan pablo')
   })
@@ -112,7 +156,7 @@ describe('SearchQueryInput', () => {
   it('commas separate alternatives of the same criterion', async () => {
     render(<Harness />)
 
-    await userEvent.type(searchBox(), '/us{Enter}damian,carlos,daniel')
+    await userEvent.type(searchBox(), '/us{Enter}damian,carlos,daniel{Enter}')
 
     expect(query()).toHaveTextContent('/user_name damian,carlos,daniel')
   })
@@ -138,7 +182,7 @@ describe('SearchQueryInput', () => {
   it('another slash closes the open criterion and starts the next one', async () => {
     render(<Harness />)
 
-    await userEvent.type(searchBox(), '/us{Enter}juan /dis{Enter}pablo')
+    await userEvent.type(searchBox(), '/us{Enter}juan /dis{Enter}pablo{Enter}')
 
     expect(query()).toHaveTextContent('/user_name juan /and /discord_name pablo')
   })
@@ -148,7 +192,7 @@ describe('SearchQueryInput', () => {
 
     await userEvent.type(searchBox(), 'juan{Enter}pablo /o')
     await userEvent.click(screen.getByRole('option', { name: /Unir/ }))
-    await userEvent.type(searchBox(), 'pedro')
+    await userEvent.type(searchBox(), 'pedro{Enter}')
 
     expect(query()).toHaveTextContent('juan /and pablo /or pedro')
   })
@@ -158,7 +202,7 @@ describe('SearchQueryInput', () => {
 
     await userEvent.type(searchBox(), 'juan /o')
     await userEvent.click(screen.getByRole('option', { name: /Unir/ }))
-    await userEvent.type(searchBox(), 'pablo')
+    await userEvent.type(searchBox(), 'pablo{Enter}')
 
     expect(query()).toHaveTextContent('juan /or pablo')
   })
@@ -175,7 +219,7 @@ describe('SearchQueryInput', () => {
   it('a bare or is part of the value, not a connector', async () => {
     render(<Harness />)
 
-    await userEvent.type(searchBox(), '/us{Enter}juan or pablo')
+    await userEvent.type(searchBox(), '/us{Enter}juan or pablo{Enter}')
 
     expect(query()).toHaveTextContent('/user_name juan or pablo')
   })
@@ -232,7 +276,7 @@ describe('SearchQueryInput', () => {
     await userEvent.type(searchBox(), '/us{Enter}juan{Enter}')
     await userEvent.click(screen.getByRole('button', { name: 'Quitar criterio: juan' }))
 
-    expect(query()).toHaveTextContent('')
+    expect(query()).toBeEmptyDOMElement()
   })
 
   /** Nothing is pinned any more, so Backspace has one job: undo the last chip (#240). */

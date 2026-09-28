@@ -1,13 +1,16 @@
 import { Fragment, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X } from 'lucide-react'
+import { FilterX, X } from 'lucide-react'
 
 import { HelpLink } from '@/features/help'
 import { cn } from '@/lib/utils'
 import {
   OPEN_FIELD_PREFIX,
+  commitSearchDraft,
   leadingConnector,
   openValueOf,
+  searchQueryOf,
+  serializeSearchQuery,
   toTerms,
   type SearchConnector,
   type SearchField,
@@ -18,11 +21,29 @@ import {
 interface SearchQueryInputProps {
   /** The fields this box accepts behind a `/`. Their order is the order of the suggestions. */
   fields: readonly SearchField[]
+  /** The box's state; it keeps none of its own, so the screen owns it (normally via `useSearchQuery`). */
   value: SearchQueryValue
+  /** Called with every change, typed or clicked. Only the closed criteria are a search (#268). */
   onChange: (value: SearchQueryValue) => void
+  /** Shown while the box is empty. */
   placeholder?: string
+  /** The accessible name of the box and of its suggestion list. */
   label: string
+  /** Whether the box takes focus when it mounts, as it does inside a picker dialog. */
   autoFocus?: boolean
+  /**
+   * The canonical query the screen shows when nobody has searched anything, and what «clear filters»
+   * goes back to (#268). Empty for most screens; the admin requests tray opens on what is pending.
+   */
+  defaultQuery?: string
+  /**
+   * Whether the screen has filters of its own beside the box that are away from their default, so
+   * «clear filters» is offered even when the box itself is untouched — the category of `/admin/files`
+   * (#233).
+   */
+  extraFiltersActive?: boolean
+  /** Puts those filters beside the box back to their default. Called together with the box's own reset. */
+  onClearExtraFilters?: () => void
 }
 
 type Suggestion =
@@ -52,11 +73,27 @@ type Suggestion =
  * is open now, not a pinned chip, so `/file_type ` typed by hand opens the same list as picking it.
  * What goes into the box is the label; the value that travels is resolved on the way out.
  *
+ * **And only the chips are searched** (#268). What is being typed is somebody still deciding — picking
+ * a command, half-way through a value — so Enter is also what sends the search, and Enter inside the
+ * suggestion list only picks from it. «Clear filters» goes back to the screen's default search in one
+ * click, whatever was closed or typed.
+ *
  * Keyboard: the arrows move through the suggestions and Enter or Tab confirm; Enter with no list
- * open closes what is typed into chips; Escape closes the list without taking down the dialog hosting
- * it; Backspace on empty text hands the last chip back to the cursor as text, ready to be edited.
+ * open closes what is typed into chips and searches; Escape closes the list without taking down the
+ * dialog hosting it; Backspace on empty text hands the last chip back to the cursor as text, ready to
+ * be edited.
  */
-export function SearchQueryInput({ fields, value, onChange, placeholder, label, autoFocus }: SearchQueryInputProps) {
+export function SearchQueryInput({
+  fields,
+  value,
+  onChange,
+  placeholder,
+  label,
+  autoFocus,
+  defaultQuery = '',
+  extraFiltersActive = false,
+  onClearExtraFilters,
+}: SearchQueryInputProps) {
   const { t } = useTranslation('common')
   const inputRef = useRef<HTMLInputElement>(null)
   const listboxId = useId()
@@ -130,17 +167,16 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
     return options.filter((option) => option.name.startsWith(prefix.toLowerCase()))
   }
 
-  /**
-   * Closes what is typed into chips. The text is parsed, which is the only rule there is: pasting
-   * `/field value`, typing it, or picking it from the list all arrive here as the same string and
-   * therefore as the same chips.
-   */
-  function commitDraft(): SearchQueryValue {
-    const closed = toTerms(rest, fields).map((term, index) => (index === 0 ? { ...term, connector: pendingConnector } : term))
-    if (closed.length === 0) {
-      return { ...value, draft: '' }
-    }
-    return { terms: [...value.terms, ...closed], draft: '', pendingConnector: 'and' }
+  /** The box as the screen first shows it; compared canonically, so chip order and spelling agree. */
+  const defaultValue = searchQueryOf(defaultQuery, fields)
+  const canClear =
+    extraFiltersActive || value.draft.trim() !== '' || serializeSearchQuery(value.terms) !== serializeSearchQuery(defaultValue.terms)
+
+  function clearFilters() {
+    setHighlightStep(0)
+    onChange(defaultValue)
+    onClearExtraFilters?.()
+    inputRef.current?.focus()
   }
 
   /** Writes a `/command` where the half-typed one was, with the cursor left on its value. */
@@ -220,7 +256,7 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
     }
     if (event.key === 'Enter') {
       event.preventDefault()
-      onChange(commitDraft())
+      onChange(commitSearchDraft(value, fields))
       return
     }
     if (event.key === 'Backspace' && value.draft === '') {
@@ -320,14 +356,27 @@ export function SearchQueryInput({ fields, value, onChange, placeholder, label, 
           ))}
         </ul>
       )}
-      <p className="text-fg-subtle text-xs">
-        {t('search.hint')}{' '}
-        {/* The help is the box's own: it lists **these** commands, because a list of somebody else's
-            is a list of things that do not work here (#240). */}
-        <HelpLink section="basics.search" searchFields={fields}>
-          {t('search.helpLink')}
-        </HelpLink>
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+        <p className="text-fg-subtle text-xs">
+          {t('search.hint')}{' '}
+          {/* The help is the box's own: it lists **these** commands, because a list of somebody else's
+              is a list of things that do not work here (#240). */}
+          <HelpLink section="basics.search" searchFields={fields}>
+            {t('search.helpLink')}
+          </HelpLink>
+        </p>
+        {/* Only while there is something to clear: a button that does nothing is a question. */}
+        {canClear && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="text-fg-muted hover:text-fg flex shrink-0 items-center gap-1 text-xs underline-offset-2 hover:underline"
+          >
+            <FilterX className="size-3" aria-hidden />
+            {t('search.clearFilters')}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

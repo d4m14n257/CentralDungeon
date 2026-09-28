@@ -70,7 +70,7 @@ describe('PENDING_REQUESTS_QUERY', () => {
     const fields = approvalRequestSearchFields(t)
     const restored = searchQueryOf(PENDING_REQUESTS_QUERY, fields)
 
-    expect(buildSearchQuery(restored, fields)).toBe(PENDING_REQUESTS_QUERY)
+    expect(buildSearchQuery(restored)).toBe(PENDING_REQUESTS_QUERY)
   })
 
   /**

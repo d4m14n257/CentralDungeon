@@ -32,7 +32,7 @@ describe('explorerSearchFields', () => {
     const fields = explorerSearchFields(t)
     const value = searchQueryOf('/table_tag Principiantes', fields)
 
-    expect(buildSearchQuery(value, fields)).toBe('/table_tag Principiantes')
+    expect(buildSearchQuery(value)).toBe('/table_tag Principiantes')
   })
 
   /** A term typed with no command is the table's name, which is what the placeholder promises. */
@@ -40,7 +40,7 @@ describe('explorerSearchFields', () => {
     const fields = explorerSearchFields(t)
     const value = searchQueryOf('strahd', fields)
 
-    expect(buildSearchQuery(value, fields)).toBe('strahd')
+    expect(buildSearchQuery(value)).toBe('strahd')
   })
 })
 
@@ -113,7 +113,7 @@ describe('adminTableSearchFields', () => {
     const fields = adminTableSearchFields(tAdmin, tTables)
     const value = searchQueryOf('/table_status Preparation', fields)
 
-    expect(buildSearchQuery(value, fields)).toBe('/table_status Preparation')
+    expect(buildSearchQuery(value)).toBe('/table_status Preparation')
   })
 
   /** A master is searched by name, never by id, like every other person command on the platform. */
@@ -121,6 +121,6 @@ describe('adminTableSearchFields', () => {
     const fields = adminTableSearchFields(tAdmin, tTables)
     const value = searchQueryOf('/table_master damian', fields)
 
-    expect(buildSearchQuery(value, fields)).toBe('/table_master damian')
+    expect(buildSearchQuery(value)).toBe('/table_master damian')
   })
 })

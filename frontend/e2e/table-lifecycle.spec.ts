@@ -105,6 +105,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     // Removing the chip returns the search to the basic criterion: the Discord name or the system one.
     await dialog.getByRole('button', { name: `Quitar criterio: ${firstCandidate}` }).click()
     await search.fill(secondCandidate)
+    await search.press('Enter')
     await result(secondCandidate).click()
 
     // The first one came in as Primary; promoting the second demotes the first.

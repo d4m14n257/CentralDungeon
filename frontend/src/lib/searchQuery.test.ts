@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildSearchQuery,
+  commitSearchDraft,
   emptySearchQuery,
   leadingConnector,
   openValueOf,
@@ -10,6 +11,7 @@ import {
   serializeSearchQuery,
   toTerms,
   type SearchField,
+  type SearchQueryValue,
   type SearchTerm,
 } from './searchQuery'
 
@@ -199,34 +201,37 @@ describe('leadingConnector', () => {
   })
 })
 
-describe('buildSearchQuery', () => {
+describe('commitSearchDraft', () => {
+  const committed = (value: SearchQueryValue) => buildSearchQuery(commitSearchDraft(value, SEARCH_FIELDS))
+
   it('appends what is being typed behind its connector', () => {
     const terms: SearchTerm[] = [{ field: 'user_name', values: ['juan'], connector: 'and' }]
 
-    expect(buildSearchQuery({ terms, draft: 'pab', pendingConnector: 'or' }, SEARCH_FIELDS)).toBe('/user_name juan /or pab')
+    expect(committed({ terms, draft: 'pab', pendingConnector: 'or' })).toBe('/user_name juan /or pab')
   })
 
-  it('what is being typed searches by its command, without waiting for Enter', () => {
-    expect(buildSearchQuery({ ...emptySearchQuery, draft: '/discord_name pab' }, SEARCH_FIELDS)).toBe('/discord_name pab')
+  it('closes what is being typed by its command', () => {
+    expect(committed({ ...emptySearchQuery, draft: '/discord_name pab' })).toBe('/discord_name pab')
   })
 
-  it('the commas of what is being typed are already alternatives', () => {
-    expect(buildSearchQuery({ ...emptySearchQuery, draft: '/user_name damian,carlos' }, SEARCH_FIELDS)).toBe('/user_name damian,carlos')
+  it('the commas of what is being typed are alternatives', () => {
+    expect(committed({ ...emptySearchQuery, draft: '/user_name damian,carlos' })).toBe('/user_name damian,carlos')
   })
 
-  it('a half-typed command searches for nothing', () => {
-    expect(buildSearchQuery({ ...emptySearchQuery, draft: '/dis' }, SEARCH_FIELDS)).toBe('')
-    expect(buildSearchQuery({ ...emptySearchQuery, draft: 'juan /dis' }, SEARCH_FIELDS)).toBe('juan')
+  it('a half-typed command closes nothing', () => {
+    expect(committed({ ...emptySearchQuery, draft: '/dis' })).toBe('')
+    expect(committed({ ...emptySearchQuery, draft: 'juan /dis' })).toBe('juan')
   })
 
-  it('a command with no value searches for nothing', () => {
-    expect(buildSearchQuery({ ...emptySearchQuery, draft: '/discord_name   ' }, SEARCH_FIELDS)).toBe('')
+  it('a command with no value closes nothing', () => {
+    expect(committed({ ...emptySearchQuery, draft: '/discord_name   ' })).toBe('')
   })
 
-  it('with no draft, the query is only the chips', () => {
-    const terms: SearchTerm[] = [{ field: 'tag', values: ['terror'], connector: 'and' }]
+  it('leaves an empty draft and resets the waiting connector', () => {
+    const next = commitSearchDraft({ ...emptySearchQuery, draft: 'juan', pendingConnector: 'or' }, SEARCH_FIELDS)
 
-    expect(buildSearchQuery({ terms, draft: '  ', pendingConnector: 'and' }, SEARCH_FIELDS)).toBe('/tag terror')
+    expect(next.draft).toBe('')
+    expect(next.pendingConnector).toBe('and')
   })
 
   /**
@@ -236,11 +241,27 @@ describe('buildSearchQuery', () => {
   it('a connector at the head of what is being typed joins it to the chips', () => {
     const terms: SearchTerm[] = [{ field: 'user_name', values: ['juan'], connector: 'and' }]
 
-    expect(buildSearchQuery({ terms, draft: '/or pablo', pendingConnector: 'and' }, SEARCH_FIELDS)).toBe('/user_name juan /or pablo')
+    expect(committed({ terms, draft: '/or pablo', pendingConnector: 'and' })).toBe('/user_name juan /or pablo')
   })
 
-  it('sends the value that travels, not the label that was typed', () => {
-    expect(buildSearchQuery({ ...emptySearchQuery, draft: '/file_type PDF' }, SEARCH_FIELDS)).toBe('/file_type application/pdf')
+  it('closes the value that travels, not the label that was typed', () => {
+    expect(committed({ ...emptySearchQuery, draft: '/file_type PDF' })).toBe('/file_type application/pdf')
+  })
+})
+
+/** Only closed criteria are a search (#268): what is half-written is somebody still deciding. */
+describe('buildSearchQuery', () => {
+  it('is only the chips', () => {
+    const terms: SearchTerm[] = [{ field: 'tag', values: ['terror'], connector: 'and' }]
+
+    expect(buildSearchQuery({ terms, draft: '  ', pendingConnector: 'and' })).toBe('/tag terror')
+  })
+
+  it('does not search what is still being typed', () => {
+    const terms: SearchTerm[] = [{ field: 'user_name', values: ['juan'], connector: 'and' }]
+
+    expect(buildSearchQuery({ ...emptySearchQuery, draft: '/user_name da' })).toBe('')
+    expect(buildSearchQuery({ terms, draft: '/or pab', pendingConnector: 'and' })).toBe('/user_name juan')
   })
 })
 
@@ -260,6 +281,6 @@ describe('searchQueryOf', () => {
   it('round trip: what a restored box builds is the query it was restored from', () => {
     const raw = '/user_name juan,ana /or /file_type application/pdf'
 
-    expect(buildSearchQuery(searchQueryOf(raw, SEARCH_FIELDS), SEARCH_FIELDS)).toBe(raw)
+    expect(buildSearchQuery(searchQueryOf(raw, SEARCH_FIELDS))).toBe(raw)
   })
 })

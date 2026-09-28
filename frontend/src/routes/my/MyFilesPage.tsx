@@ -103,7 +103,7 @@ export function MyFilesPage() {
   // loaded (#150).
   // No `category`: the cajón is one more criterion of the search now, and it travels inside `?q=`
   // like the rest of them (#242).
-  const { data, isPending, isLoadingError, refetch } = useMyFiles(search.debouncedQuery || undefined, undefined, page)
+  const { data, isPending, isLoadingError, refetch } = useMyFiles(search.query || undefined, undefined, page)
   const update = useUpdateFile()
   const remove = useDeleteFile()
   const editDialog = useDisclosure<StoredFile>()
@@ -184,7 +184,7 @@ export function MyFilesPage() {
     remove.mutate(file.id)
   }
 
-  const isFiltered = search.debouncedQuery !== ''
+  const isFiltered = search.query !== ''
 
   /**
    * **The screen is for players and masters** (#241).

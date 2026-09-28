@@ -32,14 +32,14 @@ interface UserPickerProps {
 export function UserPicker({ onSelect, excludedIds = [], tableId }: UserPickerProps) {
   const { t } = useTranslation('users')
 
-  // The commands, the state and the 400 ms debounce, wired the same way as every other box (#240).
+  // The commands and the state, wired the same way as every other box (#240): it searches on Enter (#268).
   const fields = useMemo(() => userSearchFields(t), [t])
   const search = useSearchQuery({ fields })
 
-  const hasQuery = search.debouncedQuery.trim().length > 0
-  const { data, isFetching, isLoadingError, refetch } = useUserSearch(search.debouncedQuery, hasQuery, tableId)
-  /** While the debounce runs, what is on screen is the previous search: it is dimmed so it does not lie. */
-  const isStale = isFetching || search.isStale
+  const hasQuery = search.query.trim().length > 0
+  const { data, isFetching, isLoadingError, refetch } = useUserSearch(search.query, hasQuery, tableId)
+  /** While the next search travels, what is on screen is the previous one: it is dimmed so it does not lie. */
+  const isStale = isFetching
 
   const results = (data?.content ?? []).filter((user) => !excludedIds.includes(user.id))
 

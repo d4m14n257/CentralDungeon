@@ -64,7 +64,7 @@ export function TableListPage() {
   // loaded fine - TanStack Query sets isError to true anyway, without dropping the cached data
   // (docs/decisiones.md #150). The global connection indicator already says something is wrong.
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useGameTables(
-    search.debouncedQuery || undefined,
+    search.query || undefined,
   )
   // A crossing of domains: the screen composes them, GameTableCard does not import from
   // features/registrations (regla dura 16). "Rejected" does not count as applied - applying again is
@@ -114,10 +114,10 @@ export function TableListPage() {
           news about the platform; "nothing matched" is news about what was typed, and telling
           somebody who just searched that masters keep publishing would answer a question they did
           not ask. */}
-      {data && tables.length === 0 && search.debouncedQuery.trim() && (
+      {data && tables.length === 0 && search.query.trim() && (
         <EmptyState title={t('explorer.noMatchesTitle')} description={t('explorer.noMatchesDescription')} action={askForATable} />
       )}
-      {data && tables.length === 0 && !search.debouncedQuery.trim() && (
+      {data && tables.length === 0 && !search.query.trim() && (
         <EmptyState title={t('explorer.emptyTitle')} description={t('explorer.emptyDescription')} action={askForATable} />
       )}
       {tables.length > 0 && (

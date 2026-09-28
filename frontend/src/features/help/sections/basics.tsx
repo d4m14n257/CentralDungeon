@@ -34,7 +34,20 @@ const TABLE_STATUSES: GameTableStatus[] = [
  * moment they first press `/`: what closes a criterion (#240), what the commands are called, and that
  * some of them are picked from a list instead of typed.
  */
-const SEARCH_RULES = ['plain', 'field', 'enter', 'naming', 'choices', 'commas', 'connectors', 'onlySlash', 'order', 'chips', 'debounce']
+const SEARCH_RULES = [
+  'plain',
+  'field',
+  'enter',
+  'naming',
+  'choices',
+  'commas',
+  'connectors',
+  'onlySlash',
+  'order',
+  'chips',
+  'searchOnEnter',
+  'clear',
+]
 const CONTEXT_ROLES = ['player', 'master', 'admin', 'owner']
 
 /**

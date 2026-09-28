@@ -67,7 +67,7 @@ export function AdminUsersPage() {
   const fields = useMemo(() => adminUserSearchFields(t), [t])
   const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
-  const { data, isPending, isLoadingError, error, refetch } = useAdminUsers(search.debouncedQuery, page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminUsers(search.query, page)
   const { grantableRoles, canChangeStatus } = useUserAdminCapabilities()
 
   const roleDialog = useDisclosure<AdminUserSummary>()

@@ -81,6 +81,7 @@ test('a master adds a co-master, who sees the table, and loses it when removed',
     await master.page.getByRole('link', { name: 'Jugadores' }).click()
     const search = master.page.getByRole('combobox', { name: 'Buscar personas' })
     await search.fill(coMasterDiscordId)
+    await search.press('Enter')
     await master.page.getByRole('button', { name: new RegExp(`^${coMasterDiscordId}\\b`) }).click()
     await expect(master.page.getByText('Co-master', { exact: true })).toBeVisible()
 

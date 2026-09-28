@@ -12,7 +12,8 @@
  *
  * **And the text is all there is until Enter** (#240): picking a command from the list writes the
  * same string spelling it by hand would, so one query cannot reach two states depending on how it
- * was entered. Enter is what turns the text into criteria.
+ * was entered. Enter is what turns the text into criteria — **and only criteria are searched** (#268):
+ * a half-written `/user_name da` is somebody still deciding, not a question for the server.
  *
  * It is an exact mirror of `common/search/SearchQueryParser.java`: the backend is what decides what
  * a query returns, and this copy exists to draw the chips while somebody types. The rules are
@@ -224,20 +225,36 @@ export function serializeSearchQuery(terms: readonly SearchTerm[]): string {
 }
 
 /**
- * What is being typed is searched too, without waiting for Enter: it is parsed as one more stretch
- * of criteria and joined behind the pending connector.
+ * Closes what is typed into criteria: what Enter does (#240). The text is parsed, which is the only
+ * rule there is — pasting `/field value`, typing it, or picking it from the list all arrive here as
+ * the same string and therefore as the same criteria.
  *
- * A half-typed `/comm` at the end is dropped rather than searched: a command nobody finished spelling
- * is not text somebody is looking for.
+ * A half-typed `/comm` at the end is dropped rather than closed: a command nobody finished spelling
+ * is not text somebody is looking for. The draft's own leading `/or` wins over the waiting connector:
+ * it is the more recent thing that was said, and the parser drops it as leading when read on its own
+ * — there is nothing to its left *inside the text*, but there are chips to its left on the screen.
  */
-export function buildSearchQuery({ terms, draft, pendingConnector }: SearchQueryValue, fields: readonly SearchField[]): string {
-  const rest = draft.replace(OPEN_FIELD_PREFIX, '')
-  // The draft's own `/or` wins over the chip: it is the more recent thing that was said, and the
-  // parser drops it as leading when read on its own — there is nothing to its left *inside the text*,
-  // but there are chips to its left on the screen.
-  const connector = leadingConnector(rest) ?? pendingConnector
-  const open = toTerms(rest, fields).map((term, index) => (index === 0 ? { ...term, connector } : term))
-  return serializeSearchQuery([...terms, ...open])
+export function commitSearchDraft(value: SearchQueryValue, fields: readonly SearchField[]): SearchQueryValue {
+  const rest = value.draft.replace(OPEN_FIELD_PREFIX, '')
+  const connector = leadingConnector(rest) ?? value.pendingConnector
+  const closed = toTerms(rest, fields).map((term, index) => (index === 0 ? { ...term, connector } : term))
+  if (closed.length === 0) {
+    return { ...value, draft: '' }
+  }
+  return { terms: [...value.terms, ...closed], draft: '', pendingConnector: 'and' }
+}
+
+/**
+ * The canonical query a box is searching: **its closed criteria and nothing else** (#268).
+ *
+ * What is still being typed is left out on purpose. It used to be searched as it was written, behind
+ * a debounce, and that asked the server about every half-thought — `/user_name d`, `/user_name da` —
+ * while somebody was still picking a command or spelling a value. The search now goes out when Enter
+ * closes the text into chips, or when a chip is removed, toggled or cleared: always something
+ * somebody did on purpose.
+ */
+export function buildSearchQuery({ terms }: SearchQueryValue): string {
+  return serializeSearchQuery(terms)
 }
 
 /** An empty box holding the criteria a canonical query means: how a screen restores `?q=` (#185). */

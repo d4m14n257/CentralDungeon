@@ -18,16 +18,17 @@
       "onlySlash": "La barra es el único separador. Un «and» o un «or» escritos sin barra son parte de lo que estás buscando, no una instrucción.",
       "order": "Los criterios se aplican en el orden en que están, de izquierda a derecha, sin reglas escondidas de precedencia.",
       "chips": "Cada chip se quita con su ×. Con el texto vacío, Backspace devuelve el último chip al cursor, escrito tal como lo generaría de nuevo, para corregirlo.",
-      "debounce": "No hace falta apretar nada: la búsqueda sale sola cuando dejás de escribir.",
+      "searchOnEnter": "La búsqueda sale cuando apretás Enter, no mientras escribís: lo que está a medio escribir no se busca, así podés elegir el comando y escribir el valor con calma. Quitar un chip o cambiar su conector también vuelve a buscar.",
+      "clear": "«Limpiar filtros», debajo del buscador, borra todo lo escrito y los chips de una vez y vuelve a lo que la pantalla muestra al entrar.",
       "examplesTitle": "Ejemplos",
       "exampleQuery": "Si escribís",
       "exampleMeaning": "Encontrás",
       "steps": {
-        "step1": "Escribí lo que buscás y esperá un segundo: la lista se actualiza sola, sin apretar nada.",
+        "step1": "Escribí lo que buscás y apretá Enter: la lista se actualiza con eso.",
         "step2": "Si hay demasiados resultados, escribí / y elegí el comando con las flechas. Queda escrito en el texto, y todo lo que sigas escribiendo es su valor.",
         "step3": "Si te sirve cualquiera de varias opciones del mismo comando, separalas con comas: una coma y seguís con la siguiente.",
         "step4": "Si querés sumar otro criterio, escribí /or o /and, elegilo de la lista, y seguí con el siguiente.",
-        "step5": "Apretá Enter para cerrar lo escrito en chips. Para corregir: tocá la × de un chip, tocá el chip del conector para cambiar «y» por «o», o borrá con Backspace el texto vacío."
+        "step5": "Apretá Enter para cerrar lo escrito en chips y buscar. Para corregir: tocá la × de un chip, tocá el chip del conector para cambiar «y» por «o», borrá con Backspace el texto vacío, o empezá de nuevo con «Limpiar filtros»."
       },
       "naming": "Los comandos están siempre en inglés y llevan adelante la entidad a la que se refieren, separada por un guión bajo. Así el mismo comando busca lo mismo en cualquier pantalla, y no hay dos «/name» distintos según dónde estés.",
       "choices": "Hay dos clases de comando. Los de texto libre esperan que escribas —un nombre, por ejemplo—. Los de opciones fijas te muestran la lista apenas dejás un espacio después del comando: no hace falta que sepas cómo se escribe cada valor, lo elegís de ahí y en el texto queda su nombre.",

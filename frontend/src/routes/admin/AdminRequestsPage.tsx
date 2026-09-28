@@ -77,7 +77,7 @@ export function AdminRequestsPage() {
     onQueryChange: (query) => updateParams({ q: query }),
   })
 
-  const { data, isPending, isLoadingError, error, refetch } = useAdminRequests(search.debouncedQuery, page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminRequests(search.query, page)
 
   const resolveDialog = useDisclosure<{ request: ApprovalRequestSummary; action: ResolveAction }>()
   const detailDialog = useDisclosure<ApprovalRequestSummary>()
@@ -99,7 +99,7 @@ export function AdminRequestsPage() {
 
   // Whether the reader is looking at the tray as it opens - what is waiting - or at something they
   // narrowed themselves. The two have different empty states because they are different facts.
-  const showsWhatIsWaiting = search.debouncedQuery.trim() === PENDING_REQUESTS_QUERY
+  const showsWhatIsWaiting = search.query.trim() === PENDING_REQUESTS_QUERY
 
   const columns: DataTableColumn<ApprovalRequestSummary>[] = [
     { id: 'requestedBy', header: t('requests.columns.requestedBy'), role: 'title', cell: (request) => request.requestedByName },
@@ -140,6 +140,7 @@ export function AdminRequestsPage() {
         onChange={search.onChange}
         placeholder={t('requests.searchPlaceholder')}
         label={t('requests.searchLabel')}
+        defaultQuery={PENDING_REQUESTS_QUERY}
       />
 
       {isPending && <Skeleton className="h-64 w-full" />}

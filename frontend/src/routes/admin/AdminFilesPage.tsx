@@ -72,13 +72,7 @@ export function AdminFilesPage() {
   // The category is a filter and not a search term (#233): five known values are chosen from, never
   // typed at, so offering "contains" over them would let one letter match four categories.
   const category = (searchParams.get('category') as FileCategory | null) ?? null
-  const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(
-    search.debouncedQuery,
-    undefined,
-    undefined,
-    category ?? undefined,
-    page,
-  )
+  const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(search.query, undefined, undefined, category ?? undefined, page)
   const publish = usePublishFile()
   const unpublish = useUnpublishFile()
   const remove = useDeleteFileAsAdmin()
@@ -111,15 +105,26 @@ export function AdminFilesPage() {
     )
   }
 
-  /** Writes the screen's state into the URL, resetting the page whenever the search changes. */
+  /**
+   * Writes the screen's state into the URL, resetting the page whenever the search changes.
+   *
+   * It builds on the **previous** params rather than the ones this render read: «clear filters» writes
+   * the query and the category in the same click, and the second write would otherwise start from a
+   * copy that does not have the first one yet (#268).
+   */
   function updateParams(changes: Record<string, string>) {
-    const next = new URLSearchParams(searchParams)
-    for (const [key, value] of Object.entries(changes)) {
-      if (value === '') next.delete(key)
-      else next.set(key, value)
-    }
-    if (!('page' in changes)) next.delete('page')
-    setSearchParams(next, { replace: true })
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous)
+        for (const [key, value] of Object.entries(changes)) {
+          if (value === '') next.delete(key)
+          else next.set(key, value)
+        }
+        if (!('page' in changes)) next.delete('page')
+        return next
+      },
+      { replace: true },
+    )
   }
 
   function handlePublish(categories: FileCategory[]) {
@@ -226,6 +231,8 @@ export function AdminFilesPage() {
         onChange={search.onChange}
         placeholder={t('admin.searchPlaceholder')}
         label={t('admin.searchLabel')}
+        extraFiltersActive={category !== null}
+        onClearExtraFilters={() => updateParams({ category: '' })}
       />
 
       <FileCategoryFilter value={category} onChange={(next) => updateParams({ category: next ?? '' })} />

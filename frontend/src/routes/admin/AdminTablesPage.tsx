@@ -203,7 +203,7 @@ export function AdminTablesPage() {
   })
 
   // isLoadingError, not isError: see docs/decisiones.md #150.
-  const { data, isPending, isLoadingError, error, refetch } = useAdminTables(search.debouncedQuery, undefined, page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminTables(search.query, undefined, page)
 
   /** Writes the screen's state into the URL, resetting the page whenever the search changes. */
   function updateParams(changes: Record<string, string>) {
@@ -223,7 +223,7 @@ export function AdminTablesPage() {
   // Whether the reader is looking at the whole platform or at something they narrowed themselves.
   // The two have different empty states because they are different facts: "there are no tables" is
   // about the platform, "nothing matched" is about what was typed.
-  const showsEverything = search.debouncedQuery.trim() === ''
+  const showsEverything = search.query.trim() === ''
 
   const columns: DataTableColumn<AdminTableSummary>[] = [
     { id: 'name', header: t('tables.columns.name'), role: 'title', cell: (table) => table.name },

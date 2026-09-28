@@ -4,7 +4,7 @@
     "placeholder": "Discord name or display name",
     "discordName": "Discord",
     "userName": "Name",
-    "startTyping": "Type to search.",
+    "startTyping": "Type and press Enter to search.",
     "empty": "Nobody matches that search.",
     "noName": "No display name set"
   },

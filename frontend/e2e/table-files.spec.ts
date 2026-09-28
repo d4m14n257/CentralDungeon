@@ -123,6 +123,7 @@ test('a file attached to two tables is stored once, and the player downloads it'
     // One row, two tables. This is the assertion the whole slice exists for (#79).
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-e2e')
+    await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
     const row = admin.page.getByRole('row', { name: /ficha-e2e\.pdf/ })
     await expect(row).toHaveCount(1)
     await expect(row).toContainText('2 mesas')
@@ -226,6 +227,7 @@ test('a master attaches a file the platform published without copying it', async
     await expect(admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })).toBeVisible()
 
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')
+    await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
     const row = admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })
     await row.getByRole('button', { name: 'Publicar' }).click()
     // At least one cajón is required and nothing is preselected, so a file cannot be published to
@@ -247,6 +249,7 @@ test('a master attaches a file the platform published without copying it', async
     // Still one file, still the admin's: attaching linked it, it did not copy it (#79).
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')
+    await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
     await expect(admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })).toHaveCount(1)
   } finally {
     await master.context.close()
