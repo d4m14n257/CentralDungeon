@@ -229,6 +229,8 @@ export function AdminFilesPage() {
         fields={search.fields}
         value={search.value}
         onChange={search.onChange}
+        searchedQuery={search.query}
+        onSearch={search.onSearch}
         placeholder={t('admin.searchPlaceholder')}
         label={t('admin.searchLabel')}
         extraFiltersActive={category !== null}

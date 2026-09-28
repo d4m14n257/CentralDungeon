@@ -138,6 +138,8 @@ export function AdminRequestsPage() {
         fields={search.fields}
         value={search.value}
         onChange={search.onChange}
+        searchedQuery={search.query}
+        onSearch={search.onSearch}
         placeholder={t('requests.searchPlaceholder')}
         label={t('requests.searchLabel')}
         defaultQuery={PENDING_REQUESTS_QUERY}

@@ -92,12 +92,14 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     // Anchored at the start: the bare name also shows in the chip's X and in the master's.
     const result = (discordId: string) => dialog.getByRole('button', { name: new RegExp(`^${discordId}\\b`) })
 
-    // With a prefix: Enter closes the criterion into a chip, which narrows the search to one field.
+    // With a prefix: Enter closes the criterion into a chip, which narrows the search to one field, and
+    // a second Enter on the empty text searches it (#268).
     // The input is always filled while empty - Enter and the chip's X clear it on their own. Typing
     // over existing text was deliberately left out of the case: in an earlier run of this suite the
     // `fill` over an already-loaded input ended with the input blank, and key handling is already
     // covered by SearchQueryInput.test.tsx, which does not depend on the browser.
     await search.fill(`/discord_name ${firstCandidate}`)
+    await search.press('Enter')
     await search.press('Enter')
     await expect(dialog.getByText('Discord:')).toBeVisible()
     await result(firstCandidate).click()
@@ -105,6 +107,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     // Removing the chip returns the search to the basic criterion: the Discord name or the system one.
     await dialog.getByRole('button', { name: `Quitar criterio: ${firstCandidate}` }).click()
     await search.fill(secondCandidate)
+    await search.press('Enter')
     await search.press('Enter')
     await result(secondCandidate).click()
 

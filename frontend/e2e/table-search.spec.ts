@@ -93,11 +93,15 @@ async function open(masterPage: Page, adminPage: Page, tableId: string, name: st
   await approveTableFromQueue(adminPage, name)
 }
 
-/** Types a criterion and closes it into a chip. Enter is the only thing that closes one (#240). */
+/**
+ * Types a criterion, closes it into a chip and searches it: the first Enter closes one (#240), the
+ * second, on the empty text, is what searches (#268).
+ */
 async function search(page: Page, criterion: string) {
   const box = page.getByRole('combobox', { name: 'Buscar mesas' })
   await box.click()
   await box.fill(criterion)
+  await box.press('Enter')
   await box.press('Enter')
 }
 

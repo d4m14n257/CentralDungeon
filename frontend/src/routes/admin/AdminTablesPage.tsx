@@ -276,6 +276,8 @@ export function AdminTablesPage() {
         fields={search.fields}
         value={search.value}
         onChange={search.onChange}
+        searchedQuery={search.query}
+        onSearch={search.onSearch}
         placeholder={t('tables.searchPlaceholder')}
         label={t('tables.searchLabel')}
       />

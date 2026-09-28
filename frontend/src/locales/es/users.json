@@ -4,7 +4,7 @@
     "placeholder": "Nombre de Discord o del sistema",
     "discordName": "Discord",
     "userName": "Nombre",
-    "startTyping": "Escribí y apretá Enter para buscar.",
+    "startTyping": "Escribí y apretá Enter dos veces para buscar.",
     "empty": "Nadie coincide con esa búsqueda.",
     "noName": "Sin nombre en el sistema"
   },

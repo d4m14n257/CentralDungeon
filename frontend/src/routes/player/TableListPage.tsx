@@ -99,6 +99,8 @@ export function TableListPage() {
         fields={search.fields}
         value={search.value}
         onChange={search.onChange}
+        searchedQuery={search.query}
+        onSearch={search.onSearch}
         placeholder={t('explorer.searchPlaceholder')}
         label={t('explorer.searchLabel')}
       />

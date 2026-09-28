@@ -66,7 +66,8 @@
     "toggleConnector": "Switch and / or",
     "removeTerm": "Remove criterion",
     "clearFilters": "Clear filters",
-    "hint": "Type / to pick a command or join criteria, commas separate alternatives, and Enter closes the criterion into a chip and searches.",
+    "pendingSearch": "Press Enter to search",
+    "hint": "Type / to pick a command or join criteria, commas separate alternatives, Enter closes the criterion into a chip and Enter again searches.",
     "helpLink": "How to search"
   },
   "connection": {

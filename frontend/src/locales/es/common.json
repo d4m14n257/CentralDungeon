@@ -66,7 +66,8 @@
     "toggleConnector": "Cambiar y / o",
     "removeTerm": "Quitar criterio",
     "clearFilters": "Limpiar filtros",
-    "hint": "Escribí / para elegir un comando o unir criterios, las comas separan alternativas, y Enter cierra el criterio en un chip y busca.",
+    "pendingSearch": "Enter para buscar",
+    "hint": "Escribí / para elegir un comando o unir criterios, las comas separan alternativas, Enter cierra el criterio en un chip y Enter otra vez busca.",
     "helpLink": "Cómo buscar"
   },
   "connection": {

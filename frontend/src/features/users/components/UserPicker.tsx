@@ -49,6 +49,8 @@ export function UserPicker({ onSelect, excludedIds = [], tableId }: UserPickerPr
         fields={search.fields}
         value={search.value}
         onChange={search.onChange}
+        searchedQuery={search.query}
+        onSearch={search.onSearch}
         label={t('search.label')}
         placeholder={t('search.placeholder')}
       />

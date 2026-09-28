@@ -278,6 +278,8 @@ export function MyFilesPage() {
             fields={search.fields}
             value={search.value}
             onChange={search.onChange}
+            searchedQuery={search.query}
+            onSearch={search.onSearch}
             placeholder={t('mine.searchPlaceholder')}
             label={t('mine.searchLabel')}
           />

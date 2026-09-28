@@ -121,6 +121,8 @@ export function AdminUsersPage() {
         fields={search.fields}
         value={search.value}
         onChange={search.onChange}
+        searchedQuery={search.query}
+        onSearch={search.onSearch}
         placeholder={t('users.searchPlaceholder')}
         label={t('users.searchLabel')}
       />

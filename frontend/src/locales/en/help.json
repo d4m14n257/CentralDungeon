@@ -18,17 +18,17 @@
       "onlySlash": "The slash is the only separator. An “and” or an “or” typed without one is part of what you are searching for, not an instruction.",
       "order": "Criteria apply in the order they appear, left to right, with no hidden precedence rules.",
       "chips": "Each chip is removed with its ×. With the text empty, Backspace hands the last chip back to the cursor, written the way it would produce it again, so you can edit it.",
-      "searchOnEnter": "The search runs when you press Enter, not while you type: what is half-written is not searched, so you can pick the command and type the value at your own pace. Removing a chip or switching its connector searches again too.",
-      "clear": "“Clear filters”, below the search box, wipes everything typed and every chip at once and goes back to what the screen shows when you arrive.",
+      "searchOnEnter": "Searching takes two Enters. The first closes what you typed into a chip and searches nothing; the second, on the empty text, searches the chips. While you build the search —picking the command, typing the value, removing a chip or switching its connector— nothing goes out, and the box tells you “Press Enter to search” when there are changes not searched yet.",
+      "clear": "“Clear filters”, below the search box, wipes everything typed and every chip at once, goes back to what the screen shows when you arrive and searches it.",
       "examplesTitle": "Examples",
       "exampleQuery": "If you type",
       "exampleMeaning": "You find",
       "steps": {
-        "step1": "Type what you are looking for and press Enter: the list updates with it.",
+        "step1": "Type what you are looking for and press Enter twice: the first closes it into a chip, the second searches.",
         "step2": "If there are too many results, type / and pick the command with the arrows. It is written into the text, and everything you keep typing is its value.",
         "step3": "If any of several options of the same command will do, separate them with commas: one comma and you carry on with the next.",
         "step4": "To add another criterion, type /or or /and, pick it from the list, and carry on with the next one.",
-        "step5": "Press Enter to close what you typed into chips and search. To fix things: tap a chip's ×, tap the connector chip to swap “and” for “or”, press Backspace on the empty text, or start over with “Clear filters”."
+        "step5": "Press Enter to close what you typed into chips, and Enter again to search. To fix things: tap a chip's ×, tap the connector chip to swap “and” for “or”, press Backspace on the empty text, or start over with “Clear filters”."
       },
       "naming": "Commands are always in English and carry the thing they refer to in front, separated by an underscore. That way the same command searches the same thing on any screen, and there are never two different “/name” depending on where you are.",
       "choices": "There are two kinds of command. Free-text ones wait for you to type — a name, for instance. Ones with fixed choices show you the list as soon as you leave a space after the command: you do not need to know how each value is spelled, you choose it from there and its name is what goes into the text.",

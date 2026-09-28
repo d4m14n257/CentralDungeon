@@ -73,11 +73,15 @@ async function newActor(
   return { context, page, discordId }
 }
 
-/** Types a criterion into a search box and closes it into a chip. Enter is what closes one (#240). */
+/**
+ * Types a criterion, closes it into a chip and searches it: the first Enter closes one (#240), the
+ * second, on the empty text, is what searches (#268).
+ */
 async function search(page: Page, label: string, criterion: string) {
   const box = page.getByRole('combobox', { name: label })
   await box.click()
   await box.fill(criterion)
+  await box.press('Enter')
   await box.press('Enter')
 }
 

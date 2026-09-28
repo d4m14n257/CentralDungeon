@@ -12,8 +12,9 @@
  *
  * **And the text is all there is until Enter** (#240): picking a command from the list writes the
  * same string spelling it by hand would, so one query cannot reach two states depending on how it
- * was entered. Enter is what turns the text into criteria — **and only criteria are searched** (#268):
- * a half-written `/user_name da` is somebody still deciding, not a question for the server.
+ * was entered. Enter is what turns the text into criteria, and a second Enter on the empty text is
+ * what searches them (#268): a half-written `/user_name da` is somebody still deciding, not a question
+ * for the server.
  *
  * It is an exact mirror of `common/search/SearchQueryParser.java`: the backend is what decides what
  * a query returns, and this copy exists to draw the chips while somebody types. The rules are
@@ -245,13 +246,13 @@ export function commitSearchDraft(value: SearchQueryValue, fields: readonly Sear
 }
 
 /**
- * The canonical query a box is searching: **its closed criteria and nothing else** (#268).
+ * The canonical query of a box's chips: **its closed criteria and nothing else** (#268). It is what
+ * the second Enter confirms as a search, and what is compared with the confirmed one to tell the
+ * reader a search is pending.
  *
  * What is still being typed is left out on purpose. It used to be searched as it was written, behind
  * a debounce, and that asked the server about every half-thought — `/user_name d`, `/user_name da` —
- * while somebody was still picking a command or spelling a value. The search now goes out when Enter
- * closes the text into chips, or when a chip is removed, toggled or cleared: always something
- * somebody did on purpose.
+ * while somebody was still picking a command or spelling a value.
  */
 export function buildSearchQuery({ terms }: SearchQueryValue): string {
   return serializeSearchQuery(terms)

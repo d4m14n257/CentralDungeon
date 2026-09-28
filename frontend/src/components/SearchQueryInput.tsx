@@ -6,11 +6,11 @@ import { HelpLink } from '@/features/help'
 import { cn } from '@/lib/utils'
 import {
   OPEN_FIELD_PREFIX,
+  buildSearchQuery,
   commitSearchDraft,
   leadingConnector,
   openValueOf,
   searchQueryOf,
-  serializeSearchQuery,
   toTerms,
   type SearchConnector,
   type SearchField,
@@ -23,8 +23,18 @@ interface SearchQueryInputProps {
   fields: readonly SearchField[]
   /** The box's state; it keeps none of its own, so the screen owns it (normally via `useSearchQuery`). */
   value: SearchQueryValue
-  /** Called with every change, typed or clicked. Only the closed criteria are a search (#268). */
+  /** Called with every change, typed or clicked. None of them is a search: that is {@link onSearch} (#268). */
   onChange: (value: SearchQueryValue) => void
+  /**
+   * The canonical query the screen's results currently answer. Compared with the chips on screen to
+   * tell the reader there is an edit that has not been searched yet.
+   */
+  searchedQuery: string
+  /**
+   * Asks the screen to search the given canonical query: Enter on an empty text, or «clear filters».
+   * The only way a search leaves the box (#268).
+   */
+  onSearch: (query: string) => void
   /** Shown while the box is empty. */
   placeholder?: string
   /** The accessible name of the box and of its suggestion list. */
@@ -73,13 +83,14 @@ type Suggestion =
  * is open now, not a pinned chip, so `/file_type ` typed by hand opens the same list as picking it.
  * What goes into the box is the label; the value that travels is resolved on the way out.
  *
- * **And only the chips are searched** (#268). What is being typed is somebody still deciding — picking
- * a command, half-way through a value — so Enter is also what sends the search, and Enter inside the
- * suggestion list only picks from it. «Clear filters» goes back to the screen's default search in one
- * click, whatever was closed or typed.
+ * **And a search is a second Enter** (#268). The first Enter closes what is typed into a chip and
+ * searches nothing; Enter again, with the text empty, sends the chips. Composing a query — picking a
+ * command, spelling its value, removing or toggling a chip — is somebody still deciding, and none of it
+ * reaches the server. While the chips differ from what the results answer, the box says Enter is
+ * pending. «Clear filters» goes back to the screen's default search in one click and searches it.
  *
  * Keyboard: the arrows move through the suggestions and Enter or Tab confirm; Enter with no list
- * open closes what is typed into chips and searches; Escape closes the list without taking down the
+ * open closes what is typed into chips, or searches the chips when nothing is typed; Escape closes the list without taking down the
  * dialog hosting it; Backspace on empty text hands the last chip back to the cursor as text, ready to
  * be edited.
  */
@@ -87,6 +98,8 @@ export function SearchQueryInput({
   fields,
   value,
   onChange,
+  searchedQuery,
+  onSearch,
   placeholder,
   label,
   autoFocus,
@@ -169,12 +182,16 @@ export function SearchQueryInput({
 
   /** The box as the screen first shows it; compared canonically, so chip order and spelling agree. */
   const defaultValue = searchQueryOf(defaultQuery, fields)
+  const defaultCanonical = buildSearchQuery(defaultValue)
   const canClear =
-    extraFiltersActive || value.draft.trim() !== '' || serializeSearchQuery(value.terms) !== serializeSearchQuery(defaultValue.terms)
+    extraFiltersActive || value.draft.trim() !== '' || buildSearchQuery(value) !== defaultCanonical || searchedQuery !== defaultCanonical
+  /** Chips on screen that the results do not answer yet: the second Enter has not been pressed. */
+  const hasPendingSearch = buildSearchQuery(value) !== searchedQuery
 
   function clearFilters() {
     setHighlightStep(0)
     onChange(defaultValue)
+    onSearch(defaultCanonical)
     onClearExtraFilters?.()
     inputRef.current?.focus()
   }
@@ -256,7 +273,13 @@ export function SearchQueryInput({
     }
     if (event.key === 'Enter') {
       event.preventDefault()
-      onChange(commitSearchDraft(value, fields))
+      // First Enter closes the text into chips; Enter on empty text is the one that searches (#268).
+      if (value.draft.trim() !== '') {
+        onChange(commitSearchDraft(value, fields))
+        return
+      }
+      if (value.draft !== '') onChange({ ...value, draft: '' })
+      onSearch(buildSearchQuery(value))
       return
     }
     if (event.key === 'Backspace' && value.draft === '') {
@@ -365,17 +388,22 @@ export function SearchQueryInput({
             {t('search.helpLink')}
           </HelpLink>
         </p>
-        {/* Only while there is something to clear: a button that does nothing is a question. */}
-        {canClear && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="text-fg-muted hover:text-fg flex shrink-0 items-center gap-1 text-xs underline-offset-2 hover:underline"
-          >
-            <FilterX className="size-3" aria-hidden />
-            {t('search.clearFilters')}
-          </button>
-        )}
+        <div className="flex shrink-0 items-center gap-3">
+          <p aria-live="polite" className="text-fg-muted text-xs font-medium">
+            {hasPendingSearch && value.draft.trim() === '' ? t('search.pendingSearch') : null}
+          </p>
+          {/* Only while there is something to clear: a button that does nothing is a question. */}
+          {canClear && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-fg-muted hover:text-fg flex shrink-0 items-center gap-1 text-xs underline-offset-2 hover:underline"
+            >
+              <FilterX className="size-3" aria-hidden />
+              {t('search.clearFilters')}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
