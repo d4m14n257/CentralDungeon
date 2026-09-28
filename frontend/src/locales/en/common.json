@@ -15,7 +15,9 @@
     "errorTitle": "Something went wrong",
     "errorDescription": "We could not load this. Try again.",
     "forbiddenTitle": "You do not have access",
-    "forbiddenDescription": "Your account cannot see this section."
+    "forbiddenDescription": "Your account cannot see this section.",
+    "noContextTitle": "Your account has no section",
+    "noContextDescription": "None of your roles opens a part of the platform. If you think this is a mistake, talk to an admin on Discord."
   },
   "validation": {
     "required": "This is required",
@@ -98,7 +100,11 @@
     "page": "Page {{page}} of {{pages}}",
     "total": "{{total}} in total",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "pageSize": "Per page",
+    "pageNumber": "Page {{page}}",
+    "goTo": "Go to…",
+    "goToLabel": "Go to page (1 to {{pages}})"
   },
   "richText": {
     "bold": "Bold",

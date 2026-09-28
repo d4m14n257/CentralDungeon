@@ -37,7 +37,8 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 - **El chip dice dónde estás, no qué elegiste** (#222). Cada contexto es dueño de un prefijo —`/player`, `/master`, `/admin`—, así que el contexto sale de la URL. Un master que abre `/player` lee «Jugador», porque ahí es donde está. Las pantallas transversales (`/notifications`, `/my/schedule`) no son de ningún contexto y conservan el que traía quien las abrió.
 - El contexto se recuerda en Zustand + `localStorage`, pero **solo como respaldo** para esas transversales y para elegir a dónde despacha `/`. Solo se recuerda un contexto que la cuenta tenga: por defecto `Jugador` si lo tiene, si no el primero disponible.
 - **Al entrar siempre se cae en la home del contexto propio** (#222). `/` no tiene pantalla: mira los contextos de la cuenta y reenvía. El retorno del OAuth, el onboarding y el 404 apuntan ahí y no recalculan el destino cada uno.
-- **El contexto es organización de UI, no seguridad.** Estar "en contexto Admin" no habilita nada: el backend autoriza endpoint por endpoint (#103). Si alguien fuerza la ruta `/admin/queue` sin el rol, el backend responde `403` y la pantalla muestra el error — no se confía en el selector para nada.
+- **Cada contexto se cierra a quien no lo tiene, y se lo devuelve a su home** (#269). `/player/*` pide el rol `Player`; `/master/*`, el rol `Master` o una fila viva en `masters` (#135); `/admin/*`, `Admin` u `Owner`. Quien fuerza la ruta de un contexto ajeno **no ve ni su nav ni un «sin permiso»**: el layout lo manda a `/` y `/` lo despacha a lo suyo. La regla es la misma que decide qué contextos lista el chip, así que el chip y la puerta nunca discrepan. Las transversales no son de ningún contexto y no se cierran.
+- **Aun así, el contexto no es la seguridad.** El backend sigue autorizando endpoint por endpoint y responde `403` igual (#103, #121): la puerta del frontend decide qué se muestra, no qué se permite. `ForbiddenState` queda para el otro rechazo — un recurso concreto, dentro de un contexto que sí tenés, que no es tuyo.
 - Las notificaciones y el avatar son globales: no dependen del contexto.
 - **El feedback del sistema también es global y vive en el layout, no en una ruta** (#133). No tiene pantalla propia porque no tiene contenido que mostrar: es una acción. Se abre desde el shell, en cualquier contexto, y manda a `system_feedback` — anónima (#93), una cada 24 h (#94), directo a la bandeja de admins sin moderación (#95). Como el límite es del servidor, la interfaz **no lo predice**: ofrece el botón siempre y explica el `429` si toca.
 
@@ -65,7 +66,8 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/master/tables` | Mis mesas como master |
 | | `/master/tables/new` | Wizard de creación — **solo con el rol `Master`** (#135) |
 | | `/master/tables/:id` | Gestión, con pestañas: candidatos · jugadores · agenda · sesiones · peticiones · archivos · estado |
-| **Admin** | `/admin/queue` | Bandeja compartida con reserva (#100): **solo lo que pide una acción**, no un listado de consulta (#176) |
+| **Admin** | `/admin` | **Home del contexto** (#270): una bienvenida, sin métricas hasta que se decida cuáles le sirven a un admin. Es donde cae un admin al entrar y el primer ítem de la nav («Inicio») |
+| | `/admin/queue` | Bandeja compartida con reserva (#100): **solo lo que pide una acción**, no un listado de consulta (#176) |
 | | `/admin/tables` | **Todas** las mesas, en cualquier estado, con filtros y buscador: el listado de administración, no una cola (#176). **Hoy** muestra solo las que esperan revisión porque `/admin/queue` todavía no existe; al llegar la bandeja (F3), las acciones de revisión se mudan ahí |
 | | `/admin/catalogs` | Sistemas, tags y plataformas; fusionar y separar grupos |
 | | `/admin/files` | **La biblioteca de la plataforma**, no la personal (#237): el admin **sube acá** y publica diciendo en qué cajones se ofrece el archivo (#233, reemplaza la audiencia de #64). Además, todo lo que subió la comunidad con su dueño y en cuántas mesas se usa, despublicar y dar de baja. **No es `/owner/storage`**: acá solo se marca, los bytes los libera el owner y eso es F6 (#66, #207, #250) |
@@ -338,14 +340,14 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `ConfirmDialog` | Toda acción irreversible (principio 3), detrás de `useConfirm` |
 | `DataTable` | Listados paginados con orden, sobre `PageResponse<T>` |
 | `CollapsibleSection` | Bloque plegable con título y acciones en la cabecera — el patrón que el legacy repetía en `CardComponent` y `ListComponent` |
-| `IconAction` | Botón de icono con tooltip para las acciones de una fila o una ficha |
+| `IconAction` | Botón de icono con tooltip para las acciones de una fila o una ficha. **Es la forma de toda acción de fila en una tabla** (#272): ver «Listas de trabajo», abajo |
 | `EmptyState` | Listas vacías, con la acción que corresponde |
 | `ErrorState` | Error de carga: mensaje del `ProblemDetail` y botón de reintento |
 | `ForbiddenState` | El `403` explicado (el `404` por veto se ve como "no existe", que es intencional) |
 | `RichTextEditor` | Texto enriquecido (#62), sanitizado al enviar y al mostrar |
 | `RichTextView` | Render sanitizado de lo guardado |
 | `LoadMore` | Paginación de un listado de lectura: trae la página siguiente y siempre dice cuántos de cuántos se están viendo. Botón explícito, nunca scroll infinito (#173) |
-| `PaginationControls` | Paginación de una lista de trabajo: anterior/siguiente, página X de Y y el total (#173) |
+| `PaginationControls` | Paginación de una lista de trabajo (#173, #271): página X de Y y el total, anterior/siguiente, tira numerada compacta (`1 … 899 900 901 … 1000`), salto directo con «Ir a…» y, si la pantalla lo pide, el selector «Por página» (10 · 25 · 50 · 100) |
 | `SearchQueryInput` | **Todo buscador de la app** (#164, #240). Texto suelto busca por el criterio básico; `/` abre la lista —comandos, y `/and`/`/or` cuando hay algo que unir— y **elegir de ahí escribe el comando en el texto, igual que tipearlo a mano**: hasta **Enter** todo es texto, y Enter es lo que lo cierra en chips. **Buscar son dos Enter** (#268): el primero cierra lo escrito en chips, el segundo —con el texto vacío— busca, y mientras los chips difieran de lo buscado la caja se marca con borde de marca y un botón «↵ Buscar» que confirma igual que Enter. Recibe `searchedQuery` y `onSearch`. «Limpiar filtros» aparece cuando hay algo que limpiar y vuelve a la búsqueda por defecto de la pantalla (`defaultQuery`), incluidos los filtros que viven al lado de la caja (`extraFiltersActive`, `onClearExtraFilters`). Un comando de opciones fijas ofrece sus valores en cuanto hay un espacio después de él, venga escrito o elegido; las comas separan alternativas y el chip del conector se toca para pasarlo de "y" a "o". Recibe los comandos que acepta, no los conoce, y con ellos arma además los ejemplos de su ayuda |
 | `StatusBadge` | **Todo badge de estado de la aplicación** (#261): punto de color + etiqueta. Recibe el `tone` —una de las nueve familias de §3— y la etiqueta **ya traducida**; el mapa de estado a tono y el `t()` quedan en cada feature, que es la parte que sí le pertenece. Las clases viven acá como literales completos porque Tailwind 4 no ve una clase armada con template string |
 | `WizardSteps` | El riel de pasos de un formulario largo, con el paso actual y los que ya se completaron. Hoy lo usa solo el wizard de crear mesa, que es el único formulario de varios pasos que existe |
@@ -443,6 +445,17 @@ Siete diálogos en cinco features comparten el mismo esqueleto: `FormDialog` + `
 **Y acá la conclusión es la opuesta, por el tercer punto de §3.1.2**: *«no sube lo que solo se parece. Dos formularios no comparten componente por ser dos formularios; comparten `FormDialog`, que es el envoltorio»*. Es exactamente este caso: **ya comparten lo que tenían que compartir**. Lo que queda distinto en cada uno es la mutación que dispara, qué hace al salir bien, y los campos que rodean al motivo —`RoleChangeDialog` elige un rol, `ApplyToTableDialog` tiene dos pasos y adjuntos, `BlockPlayerDialog` cambia de endpoint según si el lector es `Primary`—, y eso es lógica de la feature y no forma compartida.
 
 Queda escrito igual, con los nombres, por dos razones. Una: que la próxima fase que agregue un diálogo con motivo sepa que hay siete precedentes y de cuál copiar la forma. Dos: que si el número sigue creciendo, la decisión se revise **con esta lista a la vista** en vez de volver a contarla desde cero. `BlockPlayerDialog` ya dejó la pregunta abierta por escrito en su propio JSDoc —*«no es `JustifiedTableActionDialog`, que es la forma idéntica una feature más allá»*— y lo que faltaba era el recuento que la contesta.
+
+### Listas de trabajo — cómo se ve una tabla de admin
+
+Lo que el usuario fijó en la revisión de F4 para toda tabla que se **trabaja** —las seis de `/admin`— y que vale para las que vengan (`/admin/moderation`, `/admin/feedback`, `/owner/audit`):
+
+- **Las acciones de una fila son íconos, con tooltip** (#272). Cada una es un `IconAction`: el ícono en la última columna, el nombre de la acción en un tooltip al pasar el cursor y como `aria-label` —en un teléfono no hay hover—. Las destructivas llevan `text-destructive`. Botones con texto solo para lo que no es de una fila («Subir», «Crear mesa sin master»). Lo que la fila no permite **no aparece** (principio 2): ni gris ni deshabilitado.
+- **El vocabulario de íconos se repite, no se inventa por pantalla**: aprobar/aceptar `Check` · rechazar `X` · borrar `Trash2` · detalle `Eye` · historial `History` · roles `UserCog` · bloquear `Ban` · desbloquear `LockOpen` · publicar `Globe` · despublicar `EyeOff` · asignar masters `UserPlus` · pausar `Pause` · reanudar `Play` · fusionar `Merge` · separar `Split` · restaurar `RotateCcw` · reservar/liberar `Bookmark`/`BookmarkX` · pedir cambios `MessageSquareWarning`. Una acción nueva que ya tiene su gemela en esta lista usa el mismo ícono.
+- **La paginación llega a cualquier página en un paso** (#271): tira numerada con la primera, la última y las vecinas de la actual; «Ir a…» para el resto; y el selector «Por página» con 10 · 25 · 50 · 100, que vive en `?size=` como la página y el buscador (#185). Por debajo de `sm` la tira se esconde y quedan las flechas, «X de Y» y el salto.
+- **A 375 px la tabla deja de ser tabla** (§5.b, `DataTable`): cada fila es una ficha y los íconos van al pie.
+
+Dibujado en `design/out/components-data.html`.
 
 ### Hooks compartidos
 

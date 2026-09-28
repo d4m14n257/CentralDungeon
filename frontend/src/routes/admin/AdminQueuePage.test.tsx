@@ -166,7 +166,7 @@ describe('AdminQueuePage', () => {
 
     renderPage('/admin/queue?page=2')
 
-    await waitFor(() => expect(list).toHaveBeenCalledWith(2))
+    await waitFor(() => expect(list).toHaveBeenCalledWith(2, 25))
   })
 
   /**

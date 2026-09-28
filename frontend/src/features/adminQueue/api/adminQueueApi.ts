@@ -26,8 +26,9 @@ export const adminQueueApi = {
    * is stable (#171).
    *
    * @param page zero-based page number
+   * @param size rows per page, one of `adminPageSizeOptions` (#271)
    */
-  list: (page = 0) => api.getPage<AdminQueueItem>('/api/v1/admin-queue', { page, size: pageSize.adminQueue }),
+  list: (page = 0, size: number = pageSize.admin) => api.getPage<AdminQueueItem>('/api/v1/admin-queue', { page, size }),
 
   /**
    * Takes an item for the reader, which is what resolving it afterwards requires (#100).

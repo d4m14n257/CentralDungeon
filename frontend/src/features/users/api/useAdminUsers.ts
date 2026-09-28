@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
+import { pageSize } from '@/config/pagination'
 import { staleTime } from '@/config/query'
 
 import { adminUsersApi } from './adminUsersApi'
@@ -15,12 +16,13 @@ import { adminUsersApi } from './adminUsersApi'
  *
  * @param query the search box, already debounced
  * @param page  zero-based page number
+ * @param size  rows per page, one of `adminPageSizeOptions` (#271)
  * @returns the query for that page
  */
-export function useAdminUsers(query: string, page: number) {
+export function useAdminUsers(query: string, page: number, size: number = pageSize.admin) {
   return useQuery({
-    queryKey: queryKeys.users.admin(query, page),
-    queryFn: () => adminUsersApi.list(query || undefined, page),
+    queryKey: queryKeys.users.admin(query, page, size),
+    queryFn: () => adminUsersApi.list(query || undefined, page, size),
     staleTime: staleTime.profile,
     placeholderData: keepPreviousData,
   })

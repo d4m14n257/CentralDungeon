@@ -88,7 +88,7 @@ describe('AdminTablesPage', () => {
 
     renderPage()
 
-    await waitFor(() => expect(admin).toHaveBeenCalledWith(undefined, undefined, 0))
+    await waitFor(() => expect(admin).toHaveBeenCalledWith(undefined, undefined, 0, 25))
   })
 
   /** #185: what was searched and which page are in the URL, not in `useState`. */
@@ -97,7 +97,20 @@ describe('AdminTablesPage', () => {
 
     renderPage('/admin/tables?q=%2Ftable_status%20Preparation&page=2')
 
-    await waitFor(() => expect(admin).toHaveBeenCalledWith('/table_status Preparation', undefined, 2))
+    await waitFor(() => expect(admin).toHaveBeenCalledWith('/table_status Preparation', undefined, 2, 25))
+  })
+
+  /** #271: the rows per page travel in the URL too, and only an offered size reaches the API. */
+  it('asks for the page size the URL names, and ignores one it does not offer', async () => {
+    admin.mockResolvedValue(page([]))
+
+    const { unmount } = renderPage('/admin/tables?size=50')
+    await waitFor(() => expect(admin).toHaveBeenCalledWith(undefined, undefined, 0, 50))
+    unmount()
+
+    admin.mockClear()
+    renderPage('/admin/tables?size=100000')
+    await waitFor(() => expect(admin).toHaveBeenCalledWith(undefined, undefined, 0, 25))
   })
 
   /**

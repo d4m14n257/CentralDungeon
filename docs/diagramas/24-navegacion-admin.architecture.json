@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Navegación del Admin — las 7 secciones de /admin",
+    "title": "Navegación del Admin — /admin y sus 7 secciones",
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/d4m14n257/CentralDungeon",
@@ -25,8 +25,8 @@
     ],
     "views": [
       {
-        "id": "sinPuerta",
-        "label": "Sin puerta",
+        "id": "home",
+        "label": "Home",
         "focus": [
           "bare"
         ]
@@ -59,6 +59,7 @@
         "id": "guardias",
         "label": "Guardias y destinos",
         "focus": [
+          "home",
           "bare"
         ]
       }
@@ -81,7 +82,7 @@
       "sources": [
         {
           "path": "frontend/src/routes/RootRedirect.tsx",
-          "label": "hogar del contexto",
+          "label": "hogar del contexto → /admin",
           "line": 32
         },
         {
@@ -95,26 +96,21 @@
       "id": "bare",
       "type": "frontend",
       "label": "/admin",
-      "sublabel": "sin puerta · en blanco",
+      "sublabel": "Inicio · bienvenida (#270)",
       "pos": [
-        840,
+        570,
         40
       ],
       "size": [
         200,
         66
       ],
-      "tag": "AdminLayout con Outlet vacío",
+      "tag": "AdminHomePage · hogar",
       "sources": [
         {
           "path": "frontend/src/routes/router.tsx",
-          "label": "sin ruta index",
+          "label": "prefijo /admin",
           "line": 95
-        },
-        {
-          "path": "frontend/src/layouts/AdminLayout.tsx",
-          "label": "Outlet",
-          "line": 18
         }
       ]
     },
@@ -122,7 +118,7 @@
       "id": "nav",
       "type": "security",
       "label": "AdminSectionNav",
-      "sublabel": "7 secciones",
+      "sublabel": "Inicio + 7 secciones",
       "pos": [
         590,
         150
@@ -152,7 +148,7 @@
         200,
         66
       ],
-      "tag": "AdminQueuePage · hogar",
+      "tag": "AdminQueuePage",
       "sources": [
         {
           "path": "frontend/src/routes/admin/AdminQueuePage.tsx",
@@ -290,8 +286,9 @@
   "boundaries": [
     {
       "kind": "region",
-      "label": "Contexto Admin — AdminLayout",
+      "label": "Contexto Admin — AdminLayout · RequireContext: Admin u Owner (#269)",
       "wraps": [
+        "bare",
         "nav",
         "queue",
         "tables",
@@ -306,12 +303,19 @@
   ],
   "connections": [
     {
-      "id": "home-queue",
+      "id": "home-bare",
       "from": "home",
-      "to": "queue",
+      "to": "bare",
       "variant": "emphasis",
-      "fromSide": "bottom",
-      "toSide": "top"
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "nav-bare",
+      "from": "nav",
+      "to": "bare",
+      "fromSide": "top",
+      "toSide": "bottom"
     },
     {
       "id": "nav-queue",
@@ -374,19 +378,19 @@
     },
     {
       "dot": "amber",
-      "title": "Sin puerta o con una sola",
+      "title": "Entrada única",
       "items": [
-        "/admin a secas: sin ruta index",
-        "Las 6 secciones fuera de la bandeja: solo AdminSectionNav"
+        "/admin es la home y el primer ítem de la nav (#270)",
+        "Las secciones de trabajo: solo AdminSectionNav"
       ]
     },
     {
       "dot": "violet",
       "title": "El shell para un admin",
       "items": [
-        "UserMenu → /player/profile sin rol Player",
-        "/my/files oculto sin biblioteca",
-        "Sin guardia de rol: 403 y ForbiddenState (#103)"
+        "Sin Admin u Owner: redirige a / (#269), sin 403",
+        "UserMenu → /player/profile sin rol Player: ahora redirige",
+        "/my/files oculto sin biblioteca"
       ]
     }
   ]

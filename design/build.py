@@ -1597,6 +1597,14 @@ def sc_comp_data(t):
                 ("Eva Lorca", "EL", "8 000", "hace 4 horas", "pending", "Candidate"),
                 ("Bruno Paz", "BP", "7 250", "hace 2 horas", "canceled", "Rejected")]):
             on = selected and i in (1, 2)
+            # Row actions are IconActions (#272): a glyph per action, the name in a tooltip and as
+            # aria-label, destructive ones in the danger colour. A resolved row keeps only "detail".
+            acts = "".join(
+                f'<span title="{tip}" style="width:28px;height:28px;border-radius:6px;display:inline-flex;'
+                f'align-items:center;justify-content:center;font-size:13px;'
+                f'color:{t["state"]["canceled"]["dot"] if danger else t["fg-muted"]}">{g}</span>'
+                for g, tip, danger in ([("&#10003;", "Aceptar", False), ("&#10005;", "Rechazar", True)]
+                                       if st == "pending" else []) + [("&#9673;", "Ver detalle", False)])
             box = (f'<span style="width:14px;height:14px;border-radius:4px;display:inline-block;'
                    f'background:{acc_solid(t) if on else "transparent"};'
                    f'border:1px solid {acc_solid(t) if on else t["border-strong"]};'
@@ -1611,20 +1619,31 @@ def sc_comp_data(t):
                      f'<td style="border-color:{t["border"]};padding:8px 10px;font-size:12px;'
                      f'color:{t["fg-muted"]}">{when}</td>'
                      f'<td style="border-color:{t["border"]};padding:8px 10px">{badge(t, st, lb)}</td>'
-                     f'<td style="border-color:{t["border"]};padding:8px 10px;font-size:13px;'
-                     f'color:{t["fg-subtle"]}">&#8942;</td></tr>')
+                     f'<td style="border-color:{t["border"]};padding:8px 10px;white-space:nowrap;text-align:right">'
+                     f'{acts}</td></tr>')
         bar = (f'<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;'
                f'background:{t["raised"]};border-radius:8px;margin-bottom:10px">'
                f'<span style="font-size:13px">2 seleccionados</span>'
                f'{btn(t, "Rechazar los 2", "secondary", small=True)}'
                f'<span style="font-size:11px;color:{t["fg-subtle"]}">Shift para rango</span></div>'
                if selected else "")
-        pag = (f'<div style="display:flex;justify-content:space-between;align-items:center;'
-               f'padding-top:12px;font-size:12px;color:{t["fg-subtle"]}">'
-               f'<span>4 de 37</span><span class="row" style="gap:6px">'
-               f'{btn(t, "Anterior", "secondary", small=True)}'
-               f'<span style="color:{t["fg"]}">1</span><span>2</span><span>3</span>'
-               f'{btn(t, "Siguiente", "secondary", small=True)}</span></div>')
+        # The pager of a working list (#271): where you are and how much there is, the size picker,
+        # then previous/next around a compact strip and the "go to" box for any page in one step.
+        def pg(label, current=False):
+            return (f'<span style="min-width:28px;height:28px;border-radius:6px;display:inline-flex;'
+                    f'align-items:center;justify-content:center;font-size:12px;'
+                    + (f'background:{acc_solid(t)};color:{on_acc(t)};font-weight:600' if current
+                       else f'color:{t["fg"]}') + f'">{label}</span>')
+        box = (f'<span style="height:28px;border-radius:6px;border:1px solid {t["border-strong"]};'
+               f'display:inline-flex;align-items:center;padding:0 8px;font-size:12px;color:{t["fg-subtle"]}">')
+        pag = (f'<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;'
+               f'align-items:center;padding-top:12px;font-size:12px;color:{t["fg-subtle"]}">'
+               f'<span class="row" style="gap:14px"><span>Pagina 20 de 40 &middot; 1000 en total</span>'
+               f'<span class="row" style="gap:6px">Por pagina {box}25 &#9662;</span></span></span>'
+               f'<span class="row" style="gap:4px">{box}&#8249;</span>'
+               f'{pg("1")}<span>&hellip;</span>{pg("19")}{pg("20", True)}{pg("21")}<span>&hellip;</span>{pg("40")}'
+               f'{box}&#8250;</span>'
+               f'<span style="margin-left:6px">{box}Ir a&hellip;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></span></div>')
         return (f'<div>{bar}<table><thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table>{pag}</div>')
 
     coll = f"""<div style="border:1px solid {t['border-strong']};border-radius:10px;overflow:hidden">
@@ -1646,8 +1665,10 @@ def sc_comp_data(t):
       <div style="margin-left:10px;background:{t['raised']};border:1px solid {t['border-strong']};
            border-radius:6px;padding:5px 9px;font-size:12px">Editar la mesa</div></div>"""
 
-    return (demo(t, "DataTable — orden, seleccion con Shift y paginacion",
-              "Sobre <code>PageResponse&lt;T&gt;</code>. La seleccion multiple con Shift se monta como "
+    return (demo(t, "DataTable — orden, seleccion con Shift, acciones con icono y paginacion",
+              "Sobre <code>PageResponse&lt;T&gt;</code>. Las acciones de fila son <code>IconAction</code> "
+              "con tooltip (#272); la paginacion llega a cualquier pagina en un paso y deja elegir "
+              "10 &middot; 25 &middot; 50 &middot; 100 por pagina (#271). La seleccion multiple con Shift se monta como "
               "Context <strong>alrededor de esta tabla</strong>, no global (#105). La tabla "
               "<strong>emite la accion</strong>; la mutacion es de quien la monta — el borrado que "
               "<code>TableComponent</code> hacia adentro llamando a <code>deleter</code> no vuelve.",

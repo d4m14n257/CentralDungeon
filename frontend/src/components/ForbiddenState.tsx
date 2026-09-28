@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next'
 /**
  * What a screen paints on a 403.
  *
- * It exists because the context layouts do **not** check roles (#103): the navigation is UI
- * organisation, the backend is the authorization, and someone who forces a route they cannot use
- * has to land on an explanation rather than on a blank page.
+ * A context the reader does not have never gets this far - its layout sends them home first (#269).
+ * What is left is the other refusal: a concrete resource, inside a context they do have, that is not
+ * theirs (#121). The backend is the authorization, and that answer has to land on an explanation
+ * rather than on a blank page.
  *
  * @param props.description optional override of the default explanation
  */

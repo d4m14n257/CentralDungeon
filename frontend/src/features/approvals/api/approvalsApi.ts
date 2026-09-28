@@ -66,9 +66,10 @@ export const approvalsApi = {
    *
    * @param query the search box, already debounced, in the language of `lib/searchQuery.ts`
    * @param page  zero-based page number
+   * @param size  rows per page, one of `adminPageSizeOptions` (#271)
    */
-  list: (query: string | undefined, page = 0) =>
-    api.getPage<ApprovalRequestSummary>('/api/v1/admin/requests', { q: query, page, size: pageSize.adminQueue }),
+  list: (query: string | undefined, page = 0, size: number = pageSize.admin) =>
+    api.getPage<ApprovalRequestSummary>('/api/v1/admin/requests', { q: query, page, size }),
 
   /**
    * One request, in full — which is where the resolution is: who sealed it, when, and the note they

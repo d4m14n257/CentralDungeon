@@ -50,7 +50,7 @@ export const gameTablesApi = {
    * `/table_master`. `status` stays as a separate parameter: it is not something the reader types,
    * it is a caller narrowing the listing programmatically.
    */
-  admin: (query?: string, statuses?: GameTableStatus[], page = 0, size = pageSize.adminQueue) =>
+  admin: (query?: string, statuses?: GameTableStatus[], page = 0, size: number = pageSize.admin) =>
     api.getPage<AdminTableSummary>('/api/v1/game-tables/admin', { q: query, status: statuses?.join(','), page, size }),
   byId: (id: string) => api.get<GameTableDetail>(`/api/v1/game-tables/${id}`),
   /** Only a table that was never public; the backend refuses the rest (#175). */

@@ -1,6 +1,7 @@
 {
   "nav": {
     "label": "Administration sections",
+    "home": "Home",
     "queue": "Tray",
     "tables": "Tables",
     "catalogs": "Catalogs",
@@ -369,5 +370,9 @@
       "SETTING_OUT_OF_RANGE": "That value is outside what this setting allows: it has to be between {{minValue}} and {{maxValue}}.",
       "generic": "We could not save the change. Try again."
     }
+  },
+  "home": {
+    "title": "Welcome to administration",
+    "description": "The sections above are where you resolve what waits in the tray and manage tables, catalogs, files, users, requests and settings."
   }
 }

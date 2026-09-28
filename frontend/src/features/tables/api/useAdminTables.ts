@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
+import { pageSize } from '@/config/pagination'
 import { staleTime } from '@/config/query'
 
 import { gameTablesApi } from './gameTablesApi'
@@ -20,12 +21,13 @@ import type { GameTableStatus } from '../types'
  * @param query    the search box, already debounced, in the language of `lib/searchQuery.ts`
  * @param statuses the statuses to narrow to, when the caller and not the reader is narrowing
  * @param page     zero-based page number
+ * @param size     rows per page, one of `adminPageSizeOptions` (#271)
  * @returns the query for that page
  */
-export function useAdminTables(query?: string, statuses?: GameTableStatus[], page = 0) {
+export function useAdminTables(query?: string, statuses?: GameTableStatus[], page = 0, size: number = pageSize.admin) {
   return useQuery({
-    queryKey: queryKeys.tables.admin(query, statuses, page),
-    queryFn: () => gameTablesApi.admin(query || undefined, statuses, page),
+    queryKey: queryKeys.tables.admin(query, statuses, page, size),
+    queryFn: () => gameTablesApi.admin(query || undefined, statuses, page, size),
     staleTime: staleTime.tableList,
     placeholderData: keepPreviousData,
   })

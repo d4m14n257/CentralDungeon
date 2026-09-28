@@ -40,6 +40,7 @@ export const paths = {
   masterTableTasks: 'master/tables/:id/tasks',
   masterTableFiles: 'master/tables/:id/files',
   masterTableStatus: 'master/tables/:id/status',
+  adminHome: 'admin',
   adminQueue: 'admin/queue',
   adminTables: 'admin/tables',
   adminCatalogs: 'admin/catalogs',
@@ -184,8 +185,15 @@ export function myTableDetailPath(id: string): string {
 }
 
 /**
- * @returns the absolute path to the shared admin tray (F3.3, #100) — the home of the Admin context.
- *          Everything waiting on an admin, whatever table it lives in, oldest first, and reserved
+ * @returns the absolute path to the home of the Admin context (#270): a welcome, with nothing to
+ *          work on yet - it exists so that `/admin` is a screen and not an empty shell
+ */
+export function adminHomePath(): string {
+  return '/admin'
+}
+
+/**
+ * @returns the absolute path to the shared admin tray (F3.3, #100). Everything waiting on an admin, whatever table it lives in, oldest first, and reserved
  *          one at a time so two admins never resolve the same thing
  */
 export function adminQueuePath(): string {
@@ -282,11 +290,10 @@ export function contextOfPath(pathname: string): AppContext | null {
  */
 export function homePathFor(context: AppContext): string {
   if (context === 'master') return masterDashboardPath()
-  // The tray and not the table listing (F3.3), the same move #220 made for `/master`: the home of a
-  // context is the screen that says what to do next, not one of its listings. `/admin/tables` shows
-  // every table there is (#176) and answers "what is there", which is a question somebody asks on
-  // purpose - never the thing to open with.
-  if (context === 'admin') return adminQueuePath()
+  // `/admin` itself (#270), not the tray F3.3 put here: the prefix was an empty shell anybody could
+  // open, and the context's home should be the context's own address. It is a welcome for now; the
+  // tray is one click away, first in the section nav after it.
+  if (context === 'admin') return adminHomePath()
   return playerHomePath()
 }
 

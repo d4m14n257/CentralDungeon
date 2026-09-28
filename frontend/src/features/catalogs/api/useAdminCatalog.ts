@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
+import { pageSize } from '@/config/pagination'
 import { staleTime } from '@/config/query'
 
 import { catalogsApi } from './catalogsApi'
@@ -17,12 +18,19 @@ import type { CatalogKind, CatalogStatus } from '../types'
  * @param query    the search box, already debounced
  * @param statuses the statuses to keep, or undefined for all of them
  * @param page     zero-based page number
+ * @param size     rows per page, one of `adminPageSizeOptions` (#271)
  * @returns the query for that page
  */
-export function useAdminCatalog(kind: CatalogKind, query: string, statuses: CatalogStatus[] | undefined, page: number) {
+export function useAdminCatalog(
+  kind: CatalogKind,
+  query: string,
+  statuses: CatalogStatus[] | undefined,
+  page: number,
+  size: number = pageSize.admin,
+) {
   return useQuery({
-    queryKey: queryKeys.catalogs.admin(kind, query, statuses, page),
-    queryFn: () => catalogsApi.adminList(kind, query || undefined, statuses, page),
+    queryKey: queryKeys.catalogs.admin(kind, query, statuses, page, size),
+    queryFn: () => catalogsApi.adminList(kind, query || undefined, statuses, page, size),
     staleTime: staleTime.catalogs,
     placeholderData: keepPreviousData,
   })

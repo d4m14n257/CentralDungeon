@@ -15,7 +15,9 @@
     "errorTitle": "Algo salió mal",
     "errorDescription": "No pudimos cargar esto. Probá de nuevo.",
     "forbiddenTitle": "No tenés permiso",
-    "forbiddenDescription": "Tu cuenta no puede ver esta sección."
+    "forbiddenDescription": "Tu cuenta no puede ver esta sección.",
+    "noContextTitle": "Tu cuenta no tiene ninguna sección",
+    "noContextDescription": "Ninguno de tus roles abre una parte de la plataforma. Si creés que es un error, hablá con un admin en Discord."
   },
   "validation": {
     "required": "Esto es obligatorio",
@@ -98,7 +100,11 @@
     "page": "Página {{page}} de {{pages}}",
     "total": "{{total}} en total",
     "previous": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "pageSize": "Por página",
+    "pageNumber": "Página {{page}}",
+    "goTo": "Ir a…",
+    "goToLabel": "Ir a la página (de 1 a {{pages}})"
   },
   "richText": {
     "bold": "Negrita",

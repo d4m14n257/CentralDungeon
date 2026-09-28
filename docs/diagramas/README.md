@@ -32,10 +32,10 @@ Los cuatro de navegación (#267) tienen **un nodo por ruta del router** y marcan
 
 | Diagrama | Qué cubre |
 |---|---|
-| [`21-navegacion-general.architecture.json`](21-navegacion-general.architecture.json) | **Del login a los tres contextos.** Guardia de sesión, `/login`, Discord, `/auth/callback` y sus salidas, `/onboarding`, `/` (`RootRedirect`), el `AppHeader` como riel común, las cuatro transversales, los tres hogares, el 404 y el `/admin` sin índice. |
+| [`21-navegacion-general.architecture.json`](21-navegacion-general.architecture.json) | **Del login a los tres contextos.** Guardia de sesión, `/login`, Discord, `/auth/callback` y sus salidas, `/onboarding`, `/` (`RootRedirect`), el `AppHeader` como riel común, las cuatro transversales, los tres hogares, el 404 y las guardias de contexto (#269). |
 | [`22-navegacion-jugador.architecture.json`](22-navegacion-jugador.architecture.json) | Las 8 rutas de `/player`, una por nodo, con cada entrada de fuera del contexto —tipo de notificación, `/my/schedule`, pestañas del master, `UserMenu`— como ficha pegada a su destino. |
 | [`23-navegacion-master.architecture.json`](23-navegacion-master.architecture.json) | `/master`, el listado, crear, editar y las **siete pestañas** de `/master/tables/:id`, con los cinco destinos de la bandeja (`MasterWorkItemList`) y los de las notificaciones. |
-| [`24-navegacion-admin.architecture.json`](24-navegacion-admin.architecture.json) | Las siete secciones de `/admin` y su única puerta, `AdminSectionNav`. Se ve de un vistazo que ninguna sale a ningún lado. |
+| [`24-navegacion-admin.architecture.json`](24-navegacion-admin.architecture.json) | La home `/admin` (#270), las siete secciones y su única puerta, `AdminSectionNav`, detrás de la guardia Admin u Owner (#269). Se ve de un vistazo que ninguna sale a ningún lado. |
 
 ## Ciclos de vida
 

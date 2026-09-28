@@ -57,13 +57,14 @@ export const catalogsApi = {
    * @param statuses the statuses to keep, or undefined for no filter - which is the default,
    *                 because reviewing what was proposed is the point of the screen
    * @param page     zero-based page number
+   * @param size     rows per page, one of `adminPageSizeOptions` (#271)
    */
-  adminList: (kind: CatalogKind, query?: string, statuses?: CatalogStatus[], page = 0) =>
+  adminList: (kind: CatalogKind, query?: string, statuses?: CatalogStatus[], page = 0, size: number = pageSize.admin) =>
     api.getPage<AdminCatalogValue>(`/api/v1/admin/catalogs/${kind}`, {
       q: query,
       status: statuses?.join(','),
       page,
-      size: pageSize.adminQueue,
+      size,
     }),
 
   /**

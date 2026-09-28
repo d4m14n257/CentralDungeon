@@ -1,16 +1,18 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Check, Eye, X } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 
+import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
-import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import {
   PENDING_REQUESTS_QUERY,
   RequestDetailPanel,
@@ -56,9 +58,9 @@ import { ApiError } from '@/types/api'
  * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **No role guard in front of it** (#103): somebody who forces the route without the role gets a
- * `403` from the backend and lands on `ForbiddenState`, which is an explanation rather than a blank
- * page.
+ * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
+ * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
+ * backend authorizes on its own (#103) and the page must not go blank if it refuses.
  */
 export function AdminRequestsPage() {
   const { t, i18n } = useTranslation('admin')
@@ -66,6 +68,8 @@ export function AdminRequestsPage() {
   const timeZone = browserTimeZone()
 
   const page = Number(searchParams.get('page') ?? '0')
+  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
   // of #164. With no `?q=` to restore, the tray starts on what is waiting: the URL says nothing and
@@ -77,7 +81,7 @@ export function AdminRequestsPage() {
     onQueryChange: (query) => updateParams({ q: query }),
   })
 
-  const { data, isPending, isLoadingError, error, refetch } = useAdminRequests(search.query, page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminRequests(search.query, page, size)
 
   const resolveDialog = useDisclosure<{ request: ApprovalRequestSummary; action: ResolveAction }>()
   const detailDialog = useDisclosure<ApprovalRequestSummary>()
@@ -163,25 +167,28 @@ export function AdminRequestsPage() {
             rows={data.content}
             getRowId={(request) => request.id}
             renderActions={(request) => (
-              <div className="flex flex-wrap justify-end gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-1">
                 {/* Absent on anything already resolved, never greyed out: a resolution is not
                     re-resolved, and a button that can only answer `REQUEST_ALREADY_RESOLVED` is a
                     button that should not be there (principio 2). */}
                 {request.status === 'Pending' && (
                   <>
-                    <Button size="sm" onClick={() => resolveDialog.open({ request, action: 'approve' })}>
-                      {t('requests.approve')}
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => resolveDialog.open({ request, action: 'reject' })}>
-                      {t('requests.reject')}
-                    </Button>
+                    <IconAction
+                      icon={<Check className="size-4" />}
+                      label={t('requests.approve')}
+                      onClick={() => resolveDialog.open({ request, action: 'approve' })}
+                    />
+                    <IconAction
+                      icon={<X className="size-4" />}
+                      label={t('requests.reject')}
+                      onClick={() => resolveDialog.open({ request, action: 'reject' })}
+                      className="text-destructive hover:text-destructive"
+                    />
                   </>
                 )}
                 {/* Reading the record is not an action on the request, so it is offered on every row
                     - and on a resolved one it is the only place the reason was written. */}
-                <Button size="sm" variant="ghost" onClick={() => detailDialog.open(request)}>
-                  {t('requests.detail')}
-                </Button>
+                <IconAction icon={<Eye className="size-4" />} label={t('requests.detail')} onClick={() => detailDialog.open(request)} />
               </div>
             )}
           />
@@ -190,6 +197,10 @@ export function AdminRequestsPage() {
             totalPages={data.totalPages}
             totalElements={data.totalElements}
             onPageChange={(next) => updateParams({ page: String(next) })}
+            pageSize={size}
+            // The default leaves the URL, like an empty search does; any change of size starts over
+            // at the first page, which `updateParams` does for every change that is not the page.
+            onPageSizeChange={(next) => updateParams({ size: next === pageSize.admin ? '' : String(next) })}
           />
         </>
       )}

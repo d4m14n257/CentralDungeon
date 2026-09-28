@@ -1,8 +1,10 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Pause, Play, Trash2, UserPlus } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
+import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
@@ -11,6 +13,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { HelpLink } from '@/features/help'
 import {
   CreateUnassignedTableDialog,
@@ -91,17 +94,19 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
   const pauseError = tableActionErrorMessage(pauseTable.error)
 
   return (
-    <div className="flex flex-wrap justify-end gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-1">
       {/* Only on a table with no master: everything else already has one, and the two acts are about
           giving it one or admitting it will never have one (principio 2). */}
       {table.status === 'Unassigned' && (
         <>
-          <Button size="sm" onClick={() => assignDialog.open()}>
-            {t('tables.assignMasters')}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => void handleDelete()} disabled={removeTable.isPending}>
-            {t('tables.delete')}
-          </Button>
+          <IconAction icon={<UserPlus className="size-4" />} label={t('tables.assignMasters')} onClick={() => assignDialog.open()} />
+          <IconAction
+            icon={<Trash2 className="size-4" />}
+            label={t('tables.delete')}
+            onClick={() => void handleDelete()}
+            disabled={removeTable.isPending}
+            className="text-destructive hover:text-destructive"
+          />
         </>
       )}
       {/* The two halves of #163, which have had an endpoint since E2 and no screen at all until now.
@@ -111,14 +116,20 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
           master's request for a pause — arrives in `/admin/queue` as a request, and approving it
           there is what moves the table to `Pause`. */}
       {table.status === 'InProgress' && (
-        <Button size="sm" variant="outline" onClick={() => pauseDialog.open()} disabled={pauseTable.isPending}>
-          {t('tables.pause')}
-        </Button>
+        <IconAction
+          icon={<Pause className="size-4" />}
+          label={t('tables.pause')}
+          onClick={() => pauseDialog.open()}
+          disabled={pauseTable.isPending}
+        />
       )}
       {table.status === 'Pause' && (
-        <Button size="sm" onClick={() => void handleResume()} disabled={resumeTable.isPending}>
-          {t('tables.resume')}
-        </Button>
+        <IconAction
+          icon={<Play className="size-4" />}
+          label={t('tables.resume')}
+          onClick={() => void handleResume()}
+          disabled={resumeTable.isPending}
+        />
       )}
       <AssignMastersDialog tableId={table.id} tableName={table.name} open={assignDialog.isOpen} onOpenChange={assignDialog.close} />
       {/* Pausing does carry a reason (#32), and it is the master who will read it: the table stops
@@ -180,8 +191,9 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
  * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
  * becomes a card, from the same column definitions — never horizontal scroll.
  *
- * **No role guard in front of it** (#103): the backend answers `403` and the screen paints
- * `ForbiddenState`, which is an explanation rather than a blank page.
+ * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
+ * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
+ * backend authorizes on its own (#103) and the page must not go blank if it refuses.
  */
 export function AdminTablesPage() {
   const { t, i18n } = useTranslation('admin')
@@ -191,6 +203,8 @@ export function AdminTablesPage() {
   const timeZone = browserTimeZone()
 
   const page = Number(searchParams.get('page') ?? '0')
+  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
   // of #164. Nothing is filtered by default: this screen answers "which tables exist", and a listing
@@ -203,7 +217,7 @@ export function AdminTablesPage() {
   })
 
   // isLoadingError, not isError: see docs/decisiones.md #150.
-  const { data, isPending, isLoadingError, error, refetch } = useAdminTables(search.query, undefined, page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminTables(search.query, undefined, page, size)
 
   /** Writes the screen's state into the URL, resetting the page whenever the search changes. */
   function updateParams(changes: Record<string, string>) {
@@ -304,6 +318,10 @@ export function AdminTablesPage() {
             totalPages={data.totalPages}
             totalElements={data.totalElements}
             onPageChange={(next) => updateParams({ page: String(next) })}
+            pageSize={size}
+            // The default leaves the URL, like an empty search does; any change of size starts over
+            // at the first page, which `updateParams` does for every change that is not the page.
+            onPageSizeChange={(next) => updateParams({ size: next === pageSize.admin ? '' : String(next) })}
           />
         </>
       )}

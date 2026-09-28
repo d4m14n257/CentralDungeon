@@ -1,16 +1,18 @@
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
+import { Bookmark, BookmarkX, Check, MessageSquareWarning, X } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
+import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { useClientLimits } from '@/hooks/useClientLimits'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import {
   ADMIN_QUEUE_ERROR_CODES,
   ClaimBadge,
@@ -111,9 +113,9 @@ function resolutionErrorKey(error: unknown): string | null {
  * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **No role guard in front of it** (#103): somebody who forces the route without the role gets a
- * `403` from the backend and lands on `ForbiddenState`, which is an explanation rather than a blank
- * page.
+ * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
+ * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
+ * backend authorizes on its own (#103) and the page must not go blank if it refuses.
  */
 export function AdminQueuePage() {
   const { t, i18n } = useTranslation('admin')
@@ -124,8 +126,10 @@ export function AdminQueuePage() {
   const confirm = useConfirm()
 
   const page = Number(searchParams.get('page') ?? '0')
+  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  const size = adminPageSizeFrom(searchParams.get('size'))
 
-  const { data, isPending, isLoadingError, error, refetch } = useAdminQueue(page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminQueue(page, size)
 
   const claimItem = useClaimItem()
   const releaseItem = useReleaseItem()
@@ -136,13 +140,14 @@ export function AdminQueuePage() {
 
   const actionDialog = useDisclosure<{ item: AdminQueueItem; action: QueueAction }>()
 
-  /** Writes the screen's state into the URL. The tray has one piece of it: which page. */
+  /** Writes the screen's state into the URL - which page and how many rows - resetting the page when the size changes. */
   function updateParams(changes: Record<string, string>) {
     const next = new URLSearchParams(searchParams)
     for (const [key, value] of Object.entries(changes)) {
       if (value === '') next.delete(key)
       else next.set(key, value)
     }
+    if (!('page' in changes)) next.delete('page')
     setSearchParams(next, { replace: true })
   }
 
@@ -279,39 +284,47 @@ export function AdminQueuePage() {
             rows={data.content}
             getRowId={(item) => `${item.type}:${item.id}`}
             renderActions={(item) => (
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-1">
                 {/* Offered on every row, free or already taken. Principio 2 is what *allows* this
                     rather than what forbade it: a free row can be resolved — doing so reserves it —
                     so hiding the button would hide an action that works. What the reader cannot
                     resolve is a colleague's row, and such a row is not in this listing at all. */}
                 {item.kind === 'TableWaitingReview' && (
                   <>
-                    <Button size="sm" onClick={() => void approveTableRow(item)} disabled={approveTable.isPending}>
-                      {t('queue.approve')}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => actionDialog.open({ item, action: 'requestChanges' })}>
-                      {t('queue.requestChanges')}
-                    </Button>
+                    <IconAction
+                      icon={<Check className="size-4" />}
+                      label={t('queue.approve')}
+                      onClick={() => void approveTableRow(item)}
+                      disabled={approveTable.isPending}
+                    />
+                    <IconAction
+                      icon={<MessageSquareWarning className="size-4" />}
+                      label={t('queue.requestChanges')}
+                      onClick={() => actionDialog.open({ item, action: 'requestChanges' })}
+                    />
                   </>
                 )}
                 {item.kind === 'ApprovalRequest' && (
                   <>
-                    <Button size="sm" onClick={() => actionDialog.open({ item, action: 'approveRequest' })}>
-                      {t('requests.approve')}
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => actionDialog.open({ item, action: 'rejectRequest' })}>
-                      {t('requests.reject')}
-                    </Button>
+                    <IconAction
+                      icon={<Check className="size-4" />}
+                      label={t('requests.approve')}
+                      onClick={() => actionDialog.open({ item, action: 'approveRequest' })}
+                    />
+                    <IconAction
+                      icon={<X className="size-4" />}
+                      label={t('requests.reject')}
+                      onClick={() => actionDialog.open({ item, action: 'rejectRequest' })}
+                      className="text-destructive hover:text-destructive"
+                    />
                   </>
                 )}
-                <Button
-                  size="sm"
-                  variant="ghost"
+                <IconAction
+                  icon={isClaimedByReader(item) ? <BookmarkX className="size-4" /> : <Bookmark className="size-4" />}
+                  label={t(isClaimedByReader(item) ? 'queue.release' : 'queue.claim')}
                   onClick={() => claimOrRelease(item)}
                   disabled={claimItem.isPending || releaseItem.isPending}
-                >
-                  {t(isClaimedByReader(item) ? 'queue.release' : 'queue.claim')}
-                </Button>
+                />
               </div>
             )}
           />
@@ -320,6 +333,10 @@ export function AdminQueuePage() {
             totalPages={data.totalPages}
             totalElements={data.totalElements}
             onPageChange={(next) => updateParams({ page: String(next) })}
+            pageSize={size}
+            // The default leaves the URL, like an empty search does; any change of size starts over
+            // at the first page, which `updateParams` does for every change that is not the page.
+            onPageSizeChange={(next) => updateParams({ size: next === pageSize.admin ? '' : String(next) })}
           />
         </>
       )}

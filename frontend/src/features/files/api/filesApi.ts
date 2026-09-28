@@ -132,8 +132,16 @@ export const filesApi = {
    * @param fileTypes  the lifecycles to keep (#68), or undefined for all of them
    * @param category   the cajón to keep (#233), or undefined for all of them
    * @param page       zero-based page number
+   * @param size       rows per page, one of `adminPageSizeOptions` (#271)
    */
-  listForAdmin: (query?: string, statuses?: string[], fileTypes?: string[], category?: FileCategory, page = 0) => {
+  listForAdmin: (
+    query?: string,
+    statuses?: string[],
+    fileTypes?: string[],
+    category?: FileCategory,
+    page = 0,
+    size: number = pageSize.admin,
+  ) => {
     const params = new URLSearchParams()
     if (query) {
       params.set('q', query)
@@ -148,7 +156,7 @@ export const filesApi = {
       params.set('category', category)
     }
     params.set('page', String(page))
-    params.set('size', String(pageSize.adminQueue))
+    params.set('size', String(size))
     return api.getPage<AdminFile>(`/api/v1/admin/files?${params.toString()}`)
   },
 

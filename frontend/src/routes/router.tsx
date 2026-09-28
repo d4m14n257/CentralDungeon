@@ -95,21 +95,21 @@ export const router = createBrowserRouter([
         path: 'admin',
         Component: AdminLayout,
         children: [
-          // The shared tray (#100, F3.3) and the home of the context: everything waiting on an admin,
-          // whichever table it lives in, reserved one at a time. No role guard here either (#103).
+          // The home of the context (#270): a welcome and nothing else yet - there are no metrics
+          // worth a dashboard. Every admin screen sits behind AdminLayout's guard: an account
+          // without Admin or Owner is sent home before any of them paints (#269).
+          { index: true, lazy: () => import('./admin/AdminHomePage') },
+          // The shared tray (#100, F3.3): everything waiting on an admin, whichever table it lives
+          // in, reserved one at a time.
           { path: 'queue', lazy: () => import('./admin/AdminQueuePage') },
           { path: 'tables', lazy: () => import('./admin/AdminTablesPage') },
           { path: 'catalogs', lazy: () => import('./admin/AdminCatalogsPage') },
           { path: 'files', lazy: () => import('./admin/AdminFilesPage') },
-          // Accounts, their roles and their blocks (F3.1). **No role guard here**, deliberately
-          // (#103): the layouts never check roles either, so somebody who forces the route without
-          // the role gets a 403 from the backend and the screen paints ForbiddenState.
+          // Accounts, their roles and their blocks (F3.1).
           { path: 'users', lazy: () => import('./admin/AdminUsersPage') },
-          // Every request somebody made of an admin (#42, F3.2). No role guard here either, and for
-          // the same reason (#103): the backend answers 403 and the screen paints ForbiddenState.
+          // Every request somebody made of an admin (#42, F3.2).
           { path: 'requests', lazy: () => import('./admin/AdminRequestsPage') },
-          // The editable configuration of #141 (F3.5). No role guard here either, and for the same
-          // reason (#103): the backend answers 403 and the screen paints ForbiddenState.
+          // The editable configuration of #141 (F3.5).
           { path: 'settings', lazy: () => import('./admin/AdminSettingsPage') },
         ],
       },

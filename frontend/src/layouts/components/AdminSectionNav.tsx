@@ -4,6 +4,7 @@ import { NavLink } from 'react-router'
 import {
   adminCatalogsPath,
   adminFilesPath,
+  adminHomePath,
   adminQueuePath,
   adminRequestsPath,
   adminSettingsPath,
@@ -23,14 +24,16 @@ import { cn } from '@/lib/utils'
  * /admin/queue with F3.3, /admin/settings with F3.5, and the rest of the sitemap joins this list as
  * its screens land, not a different one somewhere else.
  *
- * **The tray goes first, and it is also where the context starts** (`homePathFor`): the first entry
- * of a context's nav is what somebody lands on and what they read as "here is where I begin", so a
- * listing sitting there would say the context is about browsing. It is about resolving.
+ * **The home goes first, and it is where the context starts** (`homePathFor`, #270). It matches only
+ * `/admin` itself (`end`), or it would stay underlined on every admin screen. **The tray comes right
+ * after it**: of the working screens it is the one that says what to do next, so a listing sitting
+ * there would say the context is about browsing. It is about resolving.
  */
 export function AdminSectionNav() {
   const { t } = useTranslation('admin')
 
   const sections = [
+    { to: adminHomePath(), label: t('nav.home'), end: true },
     { to: adminQueuePath(), label: t('nav.queue') },
     { to: adminTablesPath(), label: t('nav.tables') },
     { to: adminCatalogsPath(), label: t('nav.catalogs') },
@@ -48,6 +51,7 @@ export function AdminSectionNav() {
         <NavLink
           key={section.to}
           to={section.to}
+          end={section.end ?? false}
           className={({ isActive }) =>
             cn(
               'border-b-2 px-3 py-2 text-sm transition-colors',

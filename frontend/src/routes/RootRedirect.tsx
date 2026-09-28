@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router'
 
+import { EmptyState } from '@/components/EmptyState'
 import { homePathFor } from '@/config/paths'
 import { useAvailableContexts } from '@/hooks/useAvailableContexts'
 
@@ -16,15 +17,28 @@ import { useAvailableContexts } from '@/hooks/useAvailableContexts'
  * the player home, because that is the fallback while `/users/me` is still in flight - and a master
  * who has no Player role would land in a context they do not have, which is the exact crossing this
  * dispatcher exists to prevent.
+ *
+ * It is also the one place an account with **no** context lands, since every context guard sends
+ * what it refuses here (#269) - so that case is answered on screen instead of redirected.
  */
 export function RootRedirect() {
   const { t } = useTranslation('common')
-  const { preferredContext, isPending } = useAvailableContexts()
+  const { contexts, preferredContext, isPending } = useAvailableContexts()
 
   if (isPending) {
     return (
       <div className="flex min-h-svh items-center justify-center">
         <span className="text-fg-muted text-sm">{t('states.loading')}</span>
+      </div>
+    )
+  }
+
+  // An account with no context at all - every role revoked (#241) - has no home to go to. Navigating
+  // anyway would send it to `/player`, whose guard sends it back here (#269): a loop, not an answer.
+  if (contexts.length === 0) {
+    return (
+      <div className="flex min-h-svh items-center justify-center px-4">
+        <EmptyState title={t('states.noContextTitle')} description={t('states.noContextDescription')} />
       </div>
     )
   }

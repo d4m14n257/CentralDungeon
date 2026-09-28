@@ -1,16 +1,18 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Ban, History, LockOpen, UserCog } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 
+import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
-import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { HelpLink } from '@/features/help'
 import {
   AdminUserRolesCell,
@@ -50,9 +52,9 @@ import { ApiError } from '@/types/api'
  * One of the wide tables of frontend-diseno.md §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **No role guard in front of it** (#103): somebody who forces the route without the role gets a
- * `403` from the backend and lands on `ForbiddenState`, which is an explanation rather than a blank
- * page.
+ * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
+ * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
+ * backend authorizes on its own (#103) and the page must not go blank if it refuses.
  */
 export function AdminUsersPage() {
   const { t, i18n } = useTranslation('admin')
@@ -60,6 +62,8 @@ export function AdminUsersPage() {
   const timeZone = browserTimeZone()
 
   const page = Number(searchParams.get('page') ?? '0')
+  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
   // of #164. Hydrating from `?q=` on mount is what makes a filtered view linkable (#185). One list
@@ -67,7 +71,7 @@ export function AdminUsersPage() {
   const fields = useMemo(() => adminUserSearchFields(t), [t])
   const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
-  const { data, isPending, isLoadingError, error, refetch } = useAdminUsers(search.query, page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminUsers(search.query, page, size)
   const { grantableRoles, canChangeStatus } = useUserAdminCapabilities()
 
   const roleDialog = useDisclosure<AdminUserSummary>()
@@ -145,24 +149,23 @@ export function AdminUsersPage() {
             rows={data.content}
             getRowId={(user) => user.id}
             renderActions={(user) => (
-              <div className="flex flex-wrap justify-end gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-1">
                 {/* Absent, never greyed out: an admin has no role to hand out that this account can
                     take, so there is nothing to press. */}
                 {grantableRoles.length > 0 && (
-                  <Button size="sm" variant="outline" onClick={() => roleDialog.open(user)}>
-                    {t('users.changeRoles')}
-                  </Button>
+                  <IconAction icon={<UserCog className="size-4" />} label={t('users.changeRoles')} onClick={() => roleDialog.open(user)} />
                 )}
                 {canChangeStatus(user) && (
-                  <Button size="sm" variant={user.status === 'Blocked' ? 'outline' : 'destructive'} onClick={() => statusDialog.open(user)}>
-                    {user.status === 'Blocked' ? t('users.unblock') : t('users.block')}
-                  </Button>
+                  <IconAction
+                    icon={user.status === 'Blocked' ? <LockOpen className="size-4" /> : <Ban className="size-4" />}
+                    label={user.status === 'Blocked' ? t('users.unblock') : t('users.block')}
+                    onClick={() => statusDialog.open(user)}
+                    className={user.status === 'Blocked' ? undefined : 'text-destructive hover:text-destructive'}
+                  />
                 )}
                 {/* Reading the record is not an action on the account, so it is offered on every row
                     - including the ones nobody may touch. */}
-                <Button size="sm" variant="ghost" onClick={() => historyDialog.open(user)}>
-                  {t('users.history')}
-                </Button>
+                <IconAction icon={<History className="size-4" />} label={t('users.history')} onClick={() => historyDialog.open(user)} />
               </div>
             )}
           />
@@ -171,6 +174,10 @@ export function AdminUsersPage() {
             totalPages={data.totalPages}
             totalElements={data.totalElements}
             onPageChange={(next) => updateParams({ page: String(next) })}
+            pageSize={size}
+            // The default leaves the URL, like an empty search does; any change of size starts over
+            // at the first page, which `updateParams` does for every change that is not the page.
+            onPageSizeChange={(next) => updateParams({ size: next === pageSize.admin ? '' : String(next) })}
           />
         </>
       )}

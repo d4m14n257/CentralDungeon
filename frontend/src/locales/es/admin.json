@@ -1,6 +1,7 @@
 {
   "nav": {
     "label": "Secciones de administración",
+    "home": "Inicio",
     "queue": "Bandeja",
     "tables": "Mesas",
     "catalogs": "Catálogos",
@@ -369,5 +370,9 @@
       "SETTING_OUT_OF_RANGE": "Ese valor está fuera de lo permitido para este ajuste: tiene que estar entre {{minValue}} y {{maxValue}}.",
       "generic": "No pudimos guardar el cambio. Probá de nuevo."
     }
+  },
+  "home": {
+    "title": "Te damos la bienvenida a la administración",
+    "description": "Desde las secciones de arriba se resuelve lo que espera en la bandeja y se administran mesas, catálogos, archivos, usuarios, pedidos y la configuración."
   }
 }

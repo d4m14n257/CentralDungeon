@@ -2,10 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { Navigate, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
-import { ForbiddenState } from '@/components/ForbiddenState'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { RichTextView } from '@/components/RichTextView'
 import { Button } from '@/components/ui/button'
@@ -15,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { WizardSteps } from '@/components/WizardSteps'
-import { masterTableDetailPath } from '@/config/paths'
+import { masterDashboardPath, masterTableDetailPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { CatalogChip, CatalogPicker } from '@/features/catalogs'
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChanges'
@@ -122,10 +121,11 @@ export function MasterTableCreatePage() {
   const { allowNextNavigation } = useUnsavedChangesGuard(hasProgress)
 
   // Creating requires the Master platform role, not merely membership (#135) - the backend already
-  // refuses with a 403, but showing a form that is always going to fail would be worse than showing
-  // nothing.
+  // refuses with a 403. Somebody who runs a table without the role and forces this URL goes back to
+  // the context they do have, like any other door that is not theirs (#269), instead of reading a
+  // refusal.
   if (me && !me.roles.includes('Master')) {
-    return <ForbiddenState />
+    return <Navigate to={masterDashboardPath()} replace />
   }
 
   const stepIndex = WIZARD_STEPS.indexOf(step)

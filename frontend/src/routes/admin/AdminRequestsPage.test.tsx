@@ -79,7 +79,7 @@ describe('AdminRequestsPage', () => {
 
     renderPage()
 
-    await waitFor(() => expect(list).toHaveBeenCalledWith('/status Pending', 0))
+    await waitFor(() => expect(list).toHaveBeenCalledWith('/status Pending', 0, 25))
   })
 
   /** And the filter is visible and removable, not hidden in the hook: it is a chip like any other. */
@@ -101,7 +101,7 @@ describe('AdminRequestsPage', () => {
 
     renderPage('/admin/requests?q=%2Fstatus%20Rejected')
 
-    await waitFor(() => expect(list).toHaveBeenCalledWith('/status Rejected', 0))
+    await waitFor(() => expect(list).toHaveBeenCalledWith('/status Rejected', 0, 25))
   })
 
   /**

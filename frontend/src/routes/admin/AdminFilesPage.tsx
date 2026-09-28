@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { EyeOff, Globe, Trash2 } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
+import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
@@ -12,6 +14,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
@@ -59,6 +62,8 @@ export function AdminFilesPage() {
   const confirm = useConfirm()
 
   const page = Number(searchParams.get('page') ?? '0')
+  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  const size = adminPageSizeFrom(searchParams.get('size'))
   const timeZone = browserTimeZone()
 
   // The search box holds a structured value, but what travels - to the URL and to the API - is the
@@ -72,7 +77,14 @@ export function AdminFilesPage() {
   // The category is a filter and not a search term (#233): five known values are chosen from, never
   // typed at, so offering "contains" over them would let one letter match four categories.
   const category = (searchParams.get('category') as FileCategory | null) ?? null
-  const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(search.query, undefined, undefined, category ?? undefined, page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(
+    search.query,
+    undefined,
+    undefined,
+    category ?? undefined,
+    page,
+    size,
+  )
   const publish = usePublishFile()
   const unpublish = useUnpublishFile()
   const remove = useDeleteFileAsAdmin()
@@ -255,23 +267,28 @@ export function AdminFilesPage() {
             rows={data.content}
             getRowId={(file) => file.id}
             renderActions={(file) => (
-              <div className="flex flex-wrap justify-end gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-1">
                 {/* An action a row's state would make the server refuse is absent, never greyed out:
                     a disabled button that does not say why is worse than no button (principio 2). */}
                 {file.status === 'Current' && file.fileType !== 'Public' && (
-                  <Button size="sm" onClick={() => publishDialog.open(file)}>
-                    {t('actions.publish')}
-                  </Button>
+                  <IconAction icon={<Globe className="size-4" />} label={t('actions.publish')} onClick={() => publishDialog.open(file)} />
                 )}
                 {file.status === 'Current' && file.fileType === 'Public' && (
-                  <Button size="sm" variant="outline" disabled={unpublish.isPending} onClick={() => void handleUnpublish(file)}>
-                    {t('actions.unpublish')}
-                  </Button>
+                  <IconAction
+                    icon={<EyeOff className="size-4" />}
+                    label={t('actions.unpublish')}
+                    disabled={unpublish.isPending}
+                    onClick={() => void handleUnpublish(file)}
+                  />
                 )}
                 {file.status === 'Current' && (
-                  <Button size="sm" variant="outline" disabled={remove.isPending} onClick={() => void handleDelete(file)}>
-                    {t('actions.delete')}
-                  </Button>
+                  <IconAction
+                    icon={<Trash2 className="size-4" />}
+                    label={t('actions.delete')}
+                    disabled={remove.isPending}
+                    onClick={() => void handleDelete(file)}
+                    className="text-destructive hover:text-destructive"
+                  />
                 )}
               </div>
             )}
@@ -281,6 +298,10 @@ export function AdminFilesPage() {
             totalPages={data.totalPages}
             totalElements={data.totalElements}
             onPageChange={(next) => updateParams({ page: String(next) })}
+            pageSize={size}
+            // The default leaves the URL, like an empty search does; any change of size starts over
+            // at the first page, which `updateParams` does for every change that is not the page.
+            onPageSizeChange={(next) => updateParams({ size: next === pageSize.admin ? '' : String(next) })}
           />
         </>
       )}

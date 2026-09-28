@@ -8,7 +8,7 @@ import { useAuth } from '@/providers/AuthProvider'
 
 const PUBLIC_PATHS: string[] = [paths.login, paths.authCallback]
 
-/** Session guard only - context layouts never check role (#103), that is the backend's job. */
+/** Session guard only. Which context an account may enter is each context layout's guard (#269); authorization stays the backend's (#103). */
 export function RootLayout() {
   const { t } = useTranslation('common')
   const { isBootstrapping, isAuthenticated } = useAuth()

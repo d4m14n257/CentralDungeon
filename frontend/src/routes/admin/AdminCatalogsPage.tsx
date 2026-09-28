@@ -1,17 +1,19 @@
 import { useTranslation } from 'react-i18next'
+import { Ban, Check, Merge, RotateCcw, Split, X } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
+import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { HelpLink } from '@/features/help'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useDisclosure } from '@/hooks/useDisclosure'
@@ -95,41 +97,45 @@ function CatalogRowActions({ kind, value }: { kind: CatalogKind; value: AdminCat
   const isCanonical = value.canonicalId === null
 
   return (
-    <div className="flex flex-wrap justify-end gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-1">
       {(isPending || isRejected) && (
-        <Button size="sm" onClick={() => acceptDialog.open()}>
-          {t('admin.accept')}
-        </Button>
+        <IconAction icon={<Check className="size-4" />} label={t('admin.accept')} onClick={() => acceptDialog.open()} />
       )}
       {isPending && (
-        <Button size="sm" variant="outline" onClick={() => void handleReject()} disabled={reject.isPending}>
-          {t('admin.reject')}
-        </Button>
+        <IconAction
+          icon={<X className="size-4" />}
+          label={t('admin.reject')}
+          onClick={() => void handleReject()}
+          disabled={reject.isPending}
+          className="text-destructive hover:text-destructive"
+        />
       )}
       {isAccepted && isCanonical && (
-        <Button size="sm" variant="outline" onClick={() => mergeDialog.open()}>
-          {t('admin.merge')}
-        </Button>
+        <IconAction icon={<Merge className="size-4" />} label={t('admin.merge')} onClick={() => mergeDialog.open()} />
       )}
       {isAccepted && !isCanonical && (
-        <Button size="sm" variant="outline" onClick={() => void handleSplit()} disabled={split.isPending}>
-          {t('admin.split')}
-        </Button>
+        <IconAction
+          icon={<Split className="size-4" />}
+          label={t('admin.split')}
+          onClick={() => void handleSplit()}
+          disabled={split.isPending}
+        />
       )}
       {isAccepted && (
-        <Button size="sm" variant="outline" onClick={() => disableDialog.open()}>
-          {t('admin.disable')}
-        </Button>
+        <IconAction
+          icon={<Ban className="size-4" />}
+          label={t('admin.disable')}
+          onClick={() => disableDialog.open()}
+          className="text-destructive hover:text-destructive"
+        />
       )}
       {isDisabled && (
-        <Button
-          size="sm"
-          variant="outline"
+        <IconAction
+          icon={<RotateCcw className="size-4" />}
+          label={t('admin.restore')}
           onClick={() => restore.mutate(value.id, { onSuccess: () => toast.success(t('admin.restoreSuccess', { name: value.name })) })}
           disabled={restore.isPending}
-        >
-          {t('admin.restore')}
-        </Button>
+        />
       )}
 
       <AcceptCatalogValueDialog kind={kind} value={value} open={acceptDialog.isOpen} onOpenChange={acceptDialog.close} />
@@ -162,10 +168,12 @@ export function AdminCatalogsPage() {
   const kind = toKind(searchParams.get('kind'))
   const query = searchParams.get('q') ?? ''
   const page = Number(searchParams.get('page') ?? '0')
+  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  const size = adminPageSizeFrom(searchParams.get('size'))
   const debouncedQuery = useDebounce(query, 300)
 
   // isLoadingError, not isError: see docs/decisiones.md #150.
-  const { data, isPending, isLoadingError, error, refetch } = useAdminCatalog(kind, debouncedQuery, undefined, page)
+  const { data, isPending, isLoadingError, error, refetch } = useAdminCatalog(kind, debouncedQuery, undefined, page, size)
 
   /**
    * Writes the screen's state back into the URL, resetting the page whenever the thing being paged
@@ -249,6 +257,10 @@ export function AdminCatalogsPage() {
             totalPages={data.totalPages}
             totalElements={data.totalElements}
             onPageChange={(next) => updateParams({ page: String(next) })}
+            pageSize={size}
+            // The default leaves the URL, like an empty search does; any change of size starts over
+            // at the first page, which `updateParams` does for every change that is not the page.
+            onPageSizeChange={(next) => updateParams({ size: next === pageSize.admin ? '' : String(next) })}
           />
         </>
       )}

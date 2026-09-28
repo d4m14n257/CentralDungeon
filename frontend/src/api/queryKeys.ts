@@ -33,7 +33,7 @@ export const queryKeys = {
      * **It gained `query` with F3.3** (#176): the listing now shows every table there is and accepts
      * the six search commands, so keying only by status would serve one search's answer to another.
      */
-    admin: (query?: string, statuses?: string[], page = 0) => ['tables', 'admin', query, statuses, page] as const,
+    admin: (query?: string, statuses?: string[], page = 0, size?: number) => ['tables', 'admin', query, statuses, page, size] as const,
     /**
      * The whole admin branch - what approving, requesting changes, assigning masters, creating and
      * deleting all invalidate.
@@ -75,7 +75,7 @@ export const queryKeys = {
    */
   adminQueue: {
     /** One page of the tray, oldest first. */
-    list: (page = 0) => ['adminQueue', 'list', page] as const,
+    list: (page = 0, size?: number) => ['adminQueue', 'list', page, size] as const,
     /** The whole tray - what claiming, releasing and every resolution invalidate. */
     all: () => ['adminQueue'] as const,
   },
@@ -100,8 +100,8 @@ export const queryKeys = {
      */
     table: (tableId: string) => ['files', 'table', tableId] as const,
     /** The /admin/files table. Every admin mutation invalidates this branch and nothing else. */
-    admin: (query?: string, statuses?: string[], fileTypes?: string[], category?: string, page = 0) =>
-      ['files', 'admin', query, statuses, fileTypes, category, page] as const,
+    admin: (query?: string, statuses?: string[], fileTypes?: string[], category?: string, page = 0, size?: number) =>
+      ['files', 'admin', query, statuses, fileTypes, category, page, size] as const,
   },
   tasks: {
     /** One table's board, as the people running it see it. The whole list, never paginated. */
@@ -129,7 +129,8 @@ export const queryKeys = {
     /** One value's whole synonym group - what the merge and disable dialogs are built on. */
     group: (kind: string, id: string) => ['catalogs', 'group', kind, id] as const,
     /** The /admin/catalogs table. Every admin mutation invalidates this branch and nothing else. */
-    admin: (kind: string, query?: string, statuses?: string[], page = 0) => ['catalogs', 'admin', kind, query, statuses, page] as const,
+    admin: (kind: string, query?: string, statuses?: string[], page = 0, size?: number) =>
+      ['catalogs', 'admin', kind, query, statuses, page, size] as const,
   },
   registrations: {
     candidates: (tableId: string) => ['registrations', 'candidates', tableId] as const,
@@ -157,7 +158,7 @@ export const queryKeys = {
     /** The whole of the reader's own branch - what submitting a request invalidates. */
     mineAll: () => ['requests', 'mine'] as const,
     /** The /admin/requests tray, keyed by what was searched and which page. */
-    admin: (query?: string, page = 0) => ['requests', 'admin', query ?? '', page] as const,
+    admin: (query?: string, page = 0, size?: number) => ['requests', 'admin', query ?? '', page, size] as const,
     /**
      * The whole admin branch - what approving and rejecting invalidate.
      *
@@ -189,7 +190,7 @@ export const queryKeys = {
      * already use, so every mutation on the screen invalidates the branch `['users', 'admin']` and
      * nothing outside it - `me()` and `search()` answer different questions to different callers.
      */
-    admin: (query?: string, page = 0) => ['users', 'admin', query ?? '', page] as const,
+    admin: (query?: string, page = 0, size?: number) => ['users', 'admin', query ?? '', page, size] as const,
     /**
      * The whole admin branch - what the four mutators invalidate.
      *

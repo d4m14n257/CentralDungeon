@@ -5,7 +5,7 @@
 
 **Datos de servidor**: exclusivamente TanStack Query. Prohibido `useEffect` + `fetch` para cargar datos, y prohibido guardar respuestas de la API en Context o Zustand — es lo que hacía el frontend viejo y por eso no tenía caché ni invalidación.
 
-**Paginación** (#173): los listados de lectura traen más con `useInfiniteQuery` y un botón **"Ver más"**; las listas de trabajo de admin usan **página numerada** con `keepPreviousData` para que no parpadeen al cambiar de página. Los tamaños salen de `config/pagination.ts`, nunca de un número suelto en el hook.
+**Paginación** (#173): los listados de lectura traen más con `useInfiniteQuery` y un botón **"Ver más"**; las listas de trabajo de admin usan **página numerada** (`PaginationControls`: tira, «Ir a…» y selector 10 · 25 · 50 · 100, #271) con `keepPreviousData` para que no parpadeen al cambiar de página. Página y tamaño viven en la URL (`?page=`, `?size=`, #185) y el tamaño se lee con `adminPageSizeFrom`. Los tamaños salen de `config/pagination.ts`, nunca de un número suelto en el hook.
 
 **Query keys**: centralizadas en `api/queryKeys.ts` como fábrica (`queryKeys.tables.detail(id)`), nunca strings sueltos en los componentes. Sin esto la invalidación se vuelve adivinanza.
 

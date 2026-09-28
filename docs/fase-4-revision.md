@@ -39,7 +39,7 @@ Y hay un recurso escaso que es **la atención del cliente**. Gastarla tres veces
 | `/admin/requests` pone su default `Pending` en la caja y no en la URL: se aparta de #185, y un criterio tipeado se **suma** al chip | F3.2 | F4.1 — es decisión de producto |
 | `PlayerBan` visible en `/admin/requests` pero no resoluble ahí: que la pantalla **no ofrezca** los botones a un admin no se miró | F3.4 | F4.1 |
 | `tables.max_players_cap` no se enuncia al escribir el cupo: el formulario no lo pide a `useClientLimits` (principio 2, #264) | F3.5 | F4.1 |
-| `pageSize.adminQueue` sirve a dos pantallas y el nombre quedó significando la otra | F3.3 | F4.1 — cosmético |
+| ~~`pageSize.adminQueue` sirve a dos pantallas y el nombre quedó significando la otra~~ — **resuelto en §2.3**: ahora es `pageSize.admin` y sirve a las seis (#271) | F3.3 | F4.1 — cosmético |
 | `GET /api/v1/files/{fileId}` —solo se consume `/content`— y los hooks montados en cero lugares (`useCatalogValue`, `useUploadFile`) | F1.7, confirmado por el barrido de F4 | F4.1 |
 | La matriz de visibilidad de perfiles probada con `Player`, `Master` y `Admin`: falta `Owner` y falta el vetado | F2 | F4.2 |
 | Las tres cosas que se llaman «owner» | F3 §7 | F4.2 |
@@ -65,7 +65,7 @@ Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, 
 |---|---|
 | **No hay guardia de onboarding.** Solo el callback manda a `/onboarding`; cualquier otra entrada lo salta. Y el JSDoc de `OnboardingPage` afirma que el redirect vive en la guardia de sesión | `RootLayout.tsx`, `OAuthCallbackPage.tsx` |
 | `/login` no redirige a quien ya tiene sesión | `LoginPage.tsx` |
-| `/admin` a secas pinta el layout con un `Outlet` vacío: ni índice, ni redirect, ni 404 | `router.tsx` |
+| ~~`/admin` a secas pinta el layout con un `Outlet` vacío: ni índice, ni redirect, ni 404~~ — **resuelto en §2.3** (#269, #270) | `router.tsx` |
 | `TableChangesRequested` y `TableApproved` caen en la pestaña Candidatos, aunque el comentario promete la de estado (#244) | `notificationTarget.ts` |
 | Un `PlayerBan` resuelto manda al co-master a `/player/profile`; un `TablePause` resuelto manda al master a la vista de jugador de su mesa | `notificationTarget.ts` |
 | Las pestañas del master enlazan a `/player/users/:id`, y el `UserMenu` manda a `/player/profile` a una cuenta que solo es admin: cruces de contexto | `MasterTableCandidatesTab`, `MasterTablePlayersTab`, `UserMenu` |
@@ -78,6 +78,24 @@ Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, 
 | **117 alertas de Dependabot** en la rama por defecto (6 críticas, 59 altas) | aviso de GitHub al hacer push |
 | **Los diagramas ER quedaron atrás de las migraciones.** El de `modelo-datos.md` §3 no tiene `file_categories` ni `task_files` (V9), y los `.mmd` por subsistema no tienen `user_role_changes`, `user_status_changes` (V11) ni `registration_status_changes` (V12). La tabla de migraciones del DDL llegaba hasta V9; F4.0 la completó hasta V13 | `docs/modelo-datos.md`, `docs/diagramas/11`–`16` |
 | `er-diagram-sync` pedía que el DDL «refleje el estado final acumulado», pero el DDL es el `V1__baseline.sql` literal más una tabla de migraciones. Corregido en F4.0 | la skill |
+
+### 2.3 Cambios de la revisión mano a mano
+
+**Registro vivo** de lo que el usuario cambia mientras recorre las pantallas. Cada fila ya viene triada —casi siempre como **decisión nueva**, porque lo que se corrige es una regla que nadie había cuestionado— y lo estético queda además en `frontend-diseno.md`, donde se lee antes de construir la próxima pantalla. Una fila nueva por cambio; lo que cambia de nuevo se tacha y se agrega, no se reescribe.
+
+| Cambio | Triaje | Dónde quedó |
+|---|---|---|
+| **Cada contexto se cierra a quien no lo tiene y lo devuelve a su home**, sin mostrar un 403: un Player que escribe `/admin/users` o `/master` vuelve a `/player`; una cuenta solo-master que escribe `/player` vuelve a `/master`. `/master/tables/new` sin el rol `Master` vuelve a `/master`. Sin ningún contexto, `/` explica en vez de hacer bucle | Decisión nueva: **#269**, corrige #103 y #222 | `RequireContext` en los tres layouts; `frontend-diseno.md` §2; skill `arquitectura-frontend` §3.1.6 |
+| **`/admin` es la home de Admin**: bienvenida sin métricas, donde cae un admin al entrar, primer ítem «Inicio» de la nav | Decisión nueva: **#270**, corrige la home de F3.3 | `AdminHomePage`; sitemap de `frontend-diseno.md` §2; diagrama 24 |
+| **Paginación de las tablas de trabajo**: tira numerada compacta, «Ir a…» para saltar de la 1 a la 900, y «Por página» con 10 · 25 · 50 · 100 en `?size=` | Decisión nueva: **#271**, precisa #173 | `PaginationControls`; `frontend-diseno.md` §5 «Listas de trabajo»; `design/build.py` |
+| **Acciones de fila como íconos con tooltip** en las seis tablas de admin, con un vocabulario de íconos fijo | Decisión nueva: **#272** | `IconAction` en cada `renderActions`; `frontend-diseno.md` §5 «Listas de trabajo»; `design/build.py` |
+
+**Consecuencias de #269, para triar en F4.1** — dos cruces de contexto de §2.2 que antes llevaban a una pantalla del prefijo ajeno y ahora **redirigen**:
+
+- El `UserMenu` manda a `/player/profile` también a una cuenta sin `Player` (solo admin, solo master): el perfil propio queda inalcanzable para ella.
+- Las pestañas Candidatos y Jugadores del master enlazan a `/player/users/:id`: un master sin `Player` que abre un perfil vuelve a `/master`. **Esto rompe #41b para ese master** —ver el perfil de quien se postuló a su mesa— y lo fija en rojo el e2e `profile-visibility.spec.ts` (el paso del master que abre al candidato), que se deja sin tocar a propósito hasta decidir dónde vive el perfil.
+
+Las dos piden lo mismo —que el perfil deje de colgar del contexto Jugador o que cada contexto tenga el suyo— y es una decisión, no un bug.
 
 ## 3. Las seis rebanadas
 

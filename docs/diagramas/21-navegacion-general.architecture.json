@@ -31,8 +31,7 @@
         "id": "sinPuerta",
         "label": "Sin puerta",
         "focus": [
-          "files",
-          "adminBare"
+          "files"
         ]
       },
       {
@@ -57,8 +56,7 @@
         "label": "Guardias y destinos",
         "focus": [
           "guard",
-          "login",
-          "adminBare"
+          "login"
         ]
       }
     ]
@@ -386,7 +384,7 @@
     {
       "id": "admin",
       "type": "frontend",
-      "label": "/admin/queue",
+      "label": "/admin",
       "sublabel": "hogar Admin · ver 24",
       "pos": [
         1065,
@@ -401,28 +399,6 @@
           "path": "frontend/src/layouts/components/AdminSectionNav.tsx",
           "line": 34,
           "label": "7 secciones"
-        }
-      ]
-    },
-    {
-      "id": "adminBare",
-      "type": "frontend",
-      "label": "/admin",
-      "sublabel": "sin puerta · pantalla en blanco",
-      "tag": "AdminLayout, Outlet vacío",
-      "pos": [
-        1110,
-        334
-      ],
-      "size": [
-        190,
-        66
-      ],
-      "sources": [
-        {
-          "path": "frontend/src/routes/router.tsx",
-          "line": 95,
-          "label": "sin ruta index"
         }
       ]
     }
@@ -572,8 +548,7 @@
       "title": "Guardias que faltan",
       "items": [
         "Onboarding: solo lo impone el callback; el JSDoc dice que vive en la guardia",
-        "/login con sesión no redirige",
-        "/admin a secas: Outlet vacío"
+        "/login con sesión no redirige"
       ]
     },
     {
@@ -592,6 +567,14 @@
         "Guardia sin sesión y cerrar sesión",
         "401 sin refresh: window.location a mano",
         "Los tres errores del callback"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Guardias de contexto (#269)",
+      "items": [
+        "/player, /master y /admin se cierran a quien no tiene el contexto",
+        "Redirigen a / sin 403; / despacha al hogar propio"
       ]
     }
   ]

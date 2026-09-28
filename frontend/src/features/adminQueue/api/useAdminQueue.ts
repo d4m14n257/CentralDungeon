@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
+import { pageSize } from '@/config/pagination'
 import { live, staleTime } from '@/config/query'
 
 import { adminQueueApi } from './adminQueueApi'
@@ -19,12 +20,13 @@ import { adminQueueApi } from './adminQueueApi'
  * replaces both with the WebSocket** (#101).
  *
  * @param page zero-based page number
+ * @param size rows per page, one of `adminPageSizeOptions` (#271)
  * @returns the query for that page
  */
-export function useAdminQueue(page: number) {
+export function useAdminQueue(page: number, size: number = pageSize.admin) {
   return useQuery({
-    queryKey: queryKeys.adminQueue.list(page),
-    queryFn: () => adminQueueApi.list(page),
+    queryKey: queryKeys.adminQueue.list(page, size),
+    queryFn: () => adminQueueApi.list(page, size),
     staleTime: staleTime.adminQueue,
     placeholderData: keepPreviousData,
     ...live.adminQueue,
