@@ -4,6 +4,7 @@ import com.centraldungeon.catalogs.dto.AcceptCatalogValueRequest;
 import com.centraldungeon.catalogs.dto.AdminCatalogValueResponse;
 import com.centraldungeon.catalogs.dto.DisableCatalogValueRequest;
 import com.centraldungeon.catalogs.dto.MergeCatalogGroupsRequest;
+import com.centraldungeon.catalogs.dto.ReassignCatalogValueRequest;
 import com.centraldungeon.catalogs.dto.SplitCatalogGroupRequest;
 import com.centraldungeon.common.model.PageResponse;
 import jakarta.validation.Valid;
@@ -21,7 +22,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * /admin/catalogs: the six operations that make the synonym groups an admin's job (#55, #179).
+ * /admin/catalogs: the eight operations that make the synonym groups an admin's job (#55, #179,
+ * #276).
  *
  * <p>One controller for the three catalogs, with the catalog as a typed path variable, because the
  * operations are identical on all three and writing them out three times would mean fixing every bug
@@ -48,12 +50,15 @@ public class AdminCatalogController {
     /**
      * Everything, whatever its status - reviewing what was proposed is the point of this screen.
      * {@code ?status=} narrows it; with nothing, the admin sees the whole catalog.
+     * {@code ?groupsOnly=true} is what the screen's table asks for (#275): one row per group, found
+     * by the name of any of its members.
      *
-     * @param type     which catalog, from the path
-     * @param query    the search box, or null for everything
-     * @param statuses the statuses to keep, or null for no status filter
-     * @param pageable page, size and sort; by name, with a tie-break by id (#171)
-     * @return 200 with one page of values, each with its group and its usage count
+     * @param type       which catalog, from the path
+     * @param query      the search box, or null for everything
+     * @param statuses   the statuses to keep, or null for no status filter
+     * @param groupsOnly true for only the rows that head a group; false, the default, for every row
+     * @param pageable   page, size and sort; by name, with a tie-break by id (#171)
+     * @return 200 with one page of values, each with its group, its usage count and its alias count
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
@@ -61,8 +66,9 @@ public class AdminCatalogController {
             @PathVariable CatalogType type,
             @RequestParam(name = "q", required = false) @Nullable String query,
             @RequestParam(name = "status", required = false) @Nullable List<CatalogStatus> statuses,
+            @RequestParam(name = "groupsOnly", defaultValue = "false") boolean groupsOnly,
             @PageableDefault(size = 20, sort = {"name", "id"}) Pageable pageable) {
-        return catalogServices.of(type).adminSearch(query, statuses == null ? List.of() : statuses, pageable);
+        return catalogServices.of(type).adminSearch(query, statuses == null ? List.of() : statuses, groupsOnly, pageable);
     }
 
     /**
@@ -137,6 +143,35 @@ public class AdminCatalogController {
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public AdminCatalogValueResponse split(@PathVariable CatalogType type, @Valid @RequestBody SplitCatalogGroupRequest request) {
         return catalogServices.of(type).split(request.memberId());
+    }
+
+    /**
+     * Move an alias to another group in one step (#276).
+     *
+     * @param type    which catalog, from the path
+     * @param id      the alias that moves
+     * @param request the group it moves to
+     * @return 200 with the moved value. 409 if it is a canonical entry - that is {@link #merge} - if
+     *         it is already in that group, or if the target is not an accepted canonical entry
+     */
+    @PostMapping("/{id}/reassign")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public AdminCatalogValueResponse reassign(
+            @PathVariable CatalogType type, @PathVariable String id, @Valid @RequestBody ReassignCatalogValueRequest request) {
+        return catalogServices.of(type).reassign(id, request.canonicalId());
+    }
+
+    /**
+     * Make an alias the head of its own group; every member stays (#276).
+     *
+     * @param type which catalog, from the path
+     * @param id   the alias that becomes the canonical entry
+     * @return 200 with the promoted value. 409 if it already heads its group or is not accepted
+     */
+    @PostMapping("/{id}/promote")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public AdminCatalogValueResponse promote(@PathVariable CatalogType type, @PathVariable String id) {
+        return catalogServices.of(type).promote(id);
     }
 
     /**

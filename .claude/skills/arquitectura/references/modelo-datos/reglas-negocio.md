@@ -181,6 +181,9 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Dar de baja un valor no rompe vínculos: las lecturas lo saltan por estado y restaurarlo devuelve todo | `CatalogService` | #81 |
 | Dar de baja el canónico de un grupo con alias vivos **es** cambiar el canónico: exige sucesor, y lo elige el admin | `CatalogService` | #55, #59, #81 |
 | Una mesa puede vincular un valor en `Created` —su master lo acaba de proponer— pero no uno `Rejected` ni `Disabled`. Dar de baja un valor **no** rompe los vínculos que ya tenía | `TableCatalogService` | #57, #81 |
+| **Mover un alias de grupo es una sola operación** (`reassign`): solo mueve un alias —un canónico arrastra su grupo y eso es `merge`—, y el destino tiene que ser un canónico `Accepted` distinto del grupo actual | `AbstractCatalogService.reassign` | #59, #276 |
+| **Hacer principal a un alias da vuelta el grupo sin sacar a nadie** (`promote`): el alias queda canónico y el canónico anterior y los demás alias pasan a apuntarle, en una transacción. Solo un alias `Accepted`; a diferencia de dar de baja el canónico (#183), nada sale de circulación | `AbstractCatalogService.promote` | #59, #276 |
+| El listado de admin por grupos (`?groupsOnly=true`) trae solo cabezas de grupo —canónicos y propuestas sin clasificar— y encuentra un grupo por el nombre de **cualquiera** de sus miembros, en SQL para que la paginación siga en la base | `CatalogSearchSpecification.groupsForAdmin` | #54, #275 |
 
 ### Archivos
 

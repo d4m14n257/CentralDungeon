@@ -98,9 +98,11 @@ export function AssignMastersHelp() {
   return <ListAndSteps block="assignMasters" keys={['create', 'search', 'order', 'opens', 'delete']} stepCount={6} />
 }
 
-/** Accepting, grouping, merging and retiring catalog values (#57, #58, #59). */
+/** Accepting, grouping, merging and retiring catalog values, and the canvas it is done on (#57, #58, #59, #275). */
 export function CatalogsHelp() {
-  return <ListAndSteps block="catalogs" keys={['what', 'pending', 'groups', 'alias', 'merge', 'disable', 'successor']} stepCount={6} />
+  return (
+    <ListAndSteps block="catalogs" keys={['what', 'canvas', 'pending', 'groups', 'alias', 'merge', 'disable', 'successor']} stepCount={6} />
+  )
 }
 
 /** Publishing files to the community and what unpublishing does not undo. */

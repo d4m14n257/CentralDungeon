@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Every rule of the three catalogs, written once (arquitectura §2.4, case 2). Systems, tags and
- * platforms are the same row with a different table name: same columns, same lifecycle, same six
+ * platforms are the same row with a different table name: same columns, same lifecycle, same eight
  * admin operations, and not one rule in arquitectura §4.5 that applies to one of them and not to the
  * other two. That is "equal by definition", not "similar today".
  *
@@ -131,22 +131,30 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      * /admin/catalogs: everything, whatever its status, plus what the admin needs to decide on it.
      *
      * @param query    the search box, same language as {@link #search}, or null for everything
-     * @param statuses the statuses to keep. Empty means no status filter at all - which is the
-     *                 default, because reviewing what was proposed is the point of the screen
-     * @param pageable page, size and sort
-     * @return one page of values with their group and their usage count
+     * @param statuses   the statuses to keep. Empty means no status filter at all - which is the
+     *                   default, because reviewing what was proposed is the point of the screen
+     * @param groupsOnly true to list only the rows that head a group - canonical entries and
+     *                   proposals nobody has classified yet - and find each one by any of its
+     *                   members' names (#275); false for every row, aliases included
+     * @param pageable   page, size and sort
+     * @return one page of values with their group, their usage count and their alias count
      */
     @Transactional(readOnly = true)
     public PageResponse<AdminCatalogValueResponse> adminSearch(
-            @Nullable String query, List<CatalogStatus> statuses, Pageable pageable) {
+            @Nullable String query, List<CatalogStatus> statuses, boolean groupsOnly, Pageable pageable) {
         SearchQuery parsed = SearchQueryParser.parse(query, CatalogSearchField.wireNames());
-        Page<E> page = repository.findAll(CatalogSearchSpecification.forAdmin(parsed, statuses), pageable);
+        Page<E> page = repository.findAll(
+                groupsOnly
+                        ? CatalogSearchSpecification.groupsForAdmin(parsed, statuses)
+                        : CatalogSearchSpecification.forAdmin(parsed, statuses),
+                pageable);
 
         List<E> values = page.getContent();
         Map<String, String> canonicalNames = canonicalNamesOf(values);
         Map<String, Long> uses = usesOf(values);
+        Map<String, Long> aliasCounts = aliasCountsOf(values);
 
-        return PageResponse.from(page.map(value -> toAdminResponse(value, canonicalNames, uses)));
+        return PageResponse.from(page.map(value -> toAdminResponse(value, canonicalNames, uses, aliasCounts)));
     }
 
     /**
@@ -171,9 +179,10 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
         List<E> members = repository.findByIdOrCanonicalId(rootId, rootId);
         Map<String, String> canonicalNames = canonicalNamesOf(members);
         Map<String, Long> uses = usesOf(members);
+        Map<String, Long> aliasCounts = aliasCountsOf(members);
         return members.stream()
                 .sorted(Comparator.comparing((E member) -> !member.isCanonical()).thenComparing(CatalogValue::getName))
-                .map(member -> toAdminResponse(member, canonicalNames, uses))
+                .map(member -> toAdminResponse(member, canonicalNames, uses, aliasCounts))
                 .toList();
     }
 
@@ -391,6 +400,80 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
+     * Move one alias from its group to another, in one step (#276).
+     *
+     * <p>What dragging an alias onto another group does on the catalog canvas (#275). Before this
+     * existed it took a {@link #split} and then a {@link #merge}, two requests with a moment in
+     * between where the alias was a group of its own - and a failure in the second left it there.
+     *
+     * <p>Only an alias moves this way. A canonical entry carries its whole group with it, and that is
+     * {@link #merge}, whose name says so; moving a head alone would leave its aliases pointing at a
+     * value that is no longer a head, which is the second level #59 forbids.
+     *
+     * @param memberId    the alias that moves
+     * @param canonicalId the group it moves to
+     * @return the moved value, with its new group resolved
+     * @throws com.centraldungeon.common.exception.NotFoundException if the value or the target does
+     *                                                              not exist
+     * @throws com.centraldungeon.common.exception.ConflictException if the value is a canonical
+     *                                                              entry, if it is already in that
+     *                                                              group, or if the target is an
+     *                                                              alias or is not accepted
+     */
+    @Transactional
+    public AdminCatalogValueResponse reassign(String memberId, String canonicalId) {
+        E member = getById(memberId);
+        if (member.isCanonical()) {
+            throw new ConflictException(
+                    type().singular() + " '" + member.getName() + "' is a canonical entry - merge its group instead of moving it");
+        }
+        if (canonicalId.equals(member.getCanonicalId())) {
+            throw new ConflictException(type().singular() + " '" + member.getName() + "' is already in that group");
+        }
+        member.setCanonicalId(validatedCanonicalTarget(member, canonicalId).getId());
+        return toAdminResponse(repository.save(member));
+    }
+
+    /**
+     * Make an alias the canonical entry of its own group (#276): the group keeps every member, and
+     * only which one heads it changes.
+     *
+     * <p>The group is turned around in one transaction: the promoted alias stops pointing anywhere,
+     * and the old head and every other alias point at it. Depth stays 1 (#59) the whole time, and no
+     * link table is touched, because a table keeps the alias its master picked (#56, #58).
+     *
+     * <p>Before this, the only way to change a group's head was to disable it and pick a successor
+     * (#183) - which also took the old head out of circulation, and that is not always what is meant.
+     *
+     * @param memberId the alias that becomes the group's canonical entry
+     * @return the promoted value, now canonical
+     * @throws com.centraldungeon.common.exception.NotFoundException if no value has that id
+     * @throws com.centraldungeon.common.exception.ConflictException if it already heads its group,
+     *                                                              or if it is not accepted
+     */
+    @Transactional
+    public AdminCatalogValueResponse promote(String memberId) {
+        E member = getById(memberId);
+        if (member.isCanonical()) {
+            throw new ConflictException(
+                    type().singular() + " '" + member.getName() + "' is already the canonical entry of its group");
+        }
+        requireAccepted(member);
+        E formerHead = getById(requireNonNullCanonical(member));
+
+        List<E> siblings = repository.findByCanonicalId(formerHead.getId()).stream()
+                .filter(sibling -> !sibling.getId().equals(member.getId()))
+                .toList();
+        siblings.forEach(sibling -> sibling.setCanonicalId(member.getId()));
+        formerHead.setCanonicalId(member.getId());
+        member.setCanonicalId(null);
+
+        repository.saveAll(siblings);
+        repository.save(formerHead);
+        return toAdminResponse(repository.save(member));
+    }
+
+    /**
      * Take a value out of circulation (#81). Logical, never physical: the links that point at it
      * keep their rows, so {@link #restore} puts everything back with no migration.
      *
@@ -575,7 +658,8 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      * @return the admin view of it, with its canonical name and usage count resolved
      */
     private AdminCatalogValueResponse toAdminResponse(E value) {
-        return toAdminResponse(value, canonicalNamesOf(List.of(value)), usesOf(List.of(value)));
+        List<E> single = List.of(value);
+        return toAdminResponse(value, canonicalNamesOf(single), usesOf(single), aliasCountsOf(single));
     }
 
     /**
@@ -584,12 +668,33 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
      * @param value          the value to describe
      * @param canonicalNames canonical id to name, for the page
      * @param uses           value id to usage count, for the page. A missing entry means zero
+     * @param aliasCounts    canonical id to how many aliases point at it. A missing entry means zero
      * @return the admin view of the value
      */
-    private AdminCatalogValueResponse toAdminResponse(E value, Map<String, String> canonicalNames, Map<String, Long> uses) {
+    private AdminCatalogValueResponse toAdminResponse(
+            E value, Map<String, String> canonicalNames, Map<String, Long> uses, Map<String, Long> aliasCounts) {
         String canonicalId = value.getCanonicalId();
         return catalogMapper.toAdminResponse(
-                value, canonicalId == null ? null : canonicalNames.get(canonicalId), uses.getOrDefault(value.getId(), 0L));
+                value,
+                canonicalId == null ? null : canonicalNames.get(canonicalId),
+                uses.getOrDefault(value.getId(), 0L),
+                aliasCounts.getOrDefault(value.getId(), 0L));
+    }
+
+    /**
+     * Counts, for a whole page, how many aliases each canonical entry on it has. One query instead
+     * of one per row; aliases on the page are skipped, since nothing points at an alias (#59).
+     *
+     * @param values the page's values
+     * @return canonical id to alias count. A value with no aliases is absent, and reads as zero
+     */
+    private Map<String, Long> aliasCountsOf(List<E> values) {
+        List<String> heads = values.stream().filter(CatalogValue::isCanonical).map(CatalogValue::getId).toList();
+        if (heads.isEmpty()) {
+            return Map.of();
+        }
+        return repository.findByCanonicalIdIn(heads).stream()
+                .collect(Collectors.groupingBy(alias -> requireNonNullCanonical(alias), Collectors.counting()));
     }
 
     /**

@@ -49,6 +49,11 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `AttendanceSummaryView` | Los tres números de asistencia de #137 —presentes, ausentes, justificados— sin saber de qué mesa son. Lo usan la pestaña del master y la ficha del jugador |
 | `LanguageSwitch` | Elegir idioma, recordado sin ida al servidor (#198). Vive acá y no en `UserMenu` porque `/login` no tiene header y también lo necesita |
 | `BackendStatusIndicator` | Si el backend responde. En `RootLayout` para que se vea en toda pantalla, `/login` incluida |
+| `GraphCanvas` | **El lienzo de nodos** (#275), en `components/graph/`: React Flow con el marco `.graph-canvas`, fondo de puntos, controles de zoom con sus `aria-label` por `t()`, y la arista `straight-center` registrada. Es el único archivo que importa la hoja de React Flow. Ver «Lienzo de nodos», abajo |
+| `GraphNode` | El nodo base del lienzo: nombre, `StatusBadge`, una línea opcional y el menú de acciones, con el handle de entrada a la izquierda y el de salida a la derecha. Tres papeles —`head`, `member`, `floating`— que cambian el marco, nunca el color |
+| `GraphStraightEdge` | La arista del lienzo: recta de centro a centro, dibujada debajo de los nodos, para que en una estrella cada miembro sea un rayo a su cabeza sin importar de qué lado esté |
+| `GraphTray` | El panel lateral del lienzo (`.graph-tray`): lo que el lienzo necesita al lado y no puede dibujar como nodo — traer otro grupo, la guía de gestos |
+| `radialLayout` · `radiusFor` | El layout de una estrella de profundidad 1: los miembros repartidos en círculo alrededor de la cabeza, con un radio que crece con la cantidad. Funciones puras, con test |
 | `useSearchQuery` | El cableado alrededor de esa caja, escrito una vez (#240): estado de los chips, la última consulta confirmada (`query`, `onSearch`) y escritura del `?q=` cuando una búsqueda la cambia — sin debounce desde #268. Cada feature declara sus comandos en un `searchFields.ts` propio — `userSearchFields`, `myFileSearchFields`, `adminFileSearchFields` |
 
 ### Compuestos con dominio
@@ -71,6 +76,8 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `KarmaBadge` — número + indicador cualitativo. **Nunca se construyó**: el karma se pinta dentro de `ProfileCard` y como texto en las listas | `features/users/` |
 | `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (#164) | `features/users/` |
 | `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |
+| `CatalogGraph` — el lienzo de un catálogo (#275): los grupos abiertos como estrellas y las propuestas flotando a la izquierda. Conectar es clasificar; debajo de `md` es una lista con el mismo menú | `features/catalogs/` |
+| `CatalogValueActions` — el menú «…» de un valor del catálogo: el equivalente de teclado de cada gesto del lienzo, más lo que no es gesto (hacer principal, dar de baja, restaurar) | `features/catalogs/` |
 | `ContextSwitcher` — el selector de rol de §2 | `layouts/components/` (es shell, no dominio) |
 | `UserMenu` — avatar, idioma, tema y cerrar sesión | `layouts/components/` |
 | `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto. **Todavía no construido**: `features/feedback/` existe vacío y `system_feedback` es de F5 (#250) | `features/feedback/` |
@@ -146,11 +153,34 @@ Queda escrito igual, con los nombres, por dos razones. Una: que la próxima fase
 Lo que el usuario fijó en la revisión de F4 para toda tabla que se **trabaja** —las seis de `/admin`— y que vale para las que vengan (`/admin/moderation`, `/admin/feedback`, `/owner/audit`):
 
 - **Las acciones de una fila son íconos, con tooltip** (#272). Cada una es un `IconAction`: el ícono en la última columna, el nombre de la acción en un tooltip al pasar el cursor y como `aria-label` —en un teléfono no hay hover—. **Van en una sola línea, sin wrap** (`.row-actions`, que pone `DataTable` y no la pantalla, #273): una segunda línea de íconos se lee como otra fila. Las destructivas llevan `text-destructive`. Botones con texto solo para lo que no es de una fila («Subir», «Crear mesa sin master»). Lo que la fila no permite **no aparece** (principio 2): ni gris ni deshabilitado.
-- **El vocabulario de íconos se repite, no se inventa por pantalla**: aprobar/aceptar `Check` · rechazar `X` · borrar `Trash2` · detalle `Eye` · historial `History` · roles `UserCog` · bloquear `Ban` · desbloquear `LockOpen` · publicar `Globe` · despublicar `EyeOff` · asignar masters `UserPlus` · pausar `Pause` · reanudar `Play` · fusionar `Merge` · separar `Split` · restaurar `RotateCcw` · reservar/liberar `Bookmark`/`BookmarkX` · pedir cambios `MessageSquareWarning`. Una acción nueva que ya tiene su gemela en esta lista usa el mismo ícono.
+- **El vocabulario de íconos se repite, no se inventa por pantalla**: aprobar/aceptar `Check` · rechazar `X` · borrar `Trash2` · detalle `Eye` · historial `History` · roles `UserCog` · bloquear `Ban` · desbloquear `LockOpen` · publicar `Globe` · despublicar `EyeOff` · asignar masters `UserPlus` · pausar `Pause` · reanudar `Play` · fusionar `Merge` · separar `Split` · restaurar `RotateCcw` · reservar/liberar `Bookmark`/`BookmarkX` · pedir cambios `MessageSquareWarning` · abrir un lienzo de nodos `Network` · más acciones (el menú de un nodo) `Ellipsis` · hacer principal `Crown` · mover a otro grupo `ArrowRightLeft` · aceptar dentro de un grupo `FolderInput`. Una acción nueva que ya tiene su gemela en esta lista usa el mismo ícono.
 - **La paginación llega a cualquier página en un paso** (#271): tira numerada con la primera, la última y las vecinas de la actual; «Ir a…» para el resto; y el selector «Por página» con 10 · 25 · 50 · 100, que vive en `?size=` como la página y el buscador (#185). Por debajo de `sm` la tira se esconde y quedan las flechas, «X de Y» y el salto.
 - **A 375 px la tabla deja de ser tabla** (§5.b, `DataTable`): cada fila es una ficha y los íconos van al pie.
 
 Dibujado en `design/out/components-data.html`.
+
+### Lienzo de nodos — cuando lo que se edita son relaciones
+
+La otra forma de trabajar una lista, además de la tabla (#275). Nació en `/admin/catalogs`, pero es un patrón del sistema y no de catálogos: las piezas están en `components/graph/`, sin dominio, y una feature aporta solo sus tipos de nodo, qué significa conectar y las mutaciones.
+
+**Cuándo sí.** Cuando lo que se edita es **cómo se relacionan** las entidades —agrupar, conectar, mover algo de un grupo a otro, cambiar quién encabeza— y no los datos de cada una. Una tabla con diálogos obliga a reconstruir esas relaciones leyendo una columna fila por fila, y cada movimiento es un diálogo que nombra por texto dos cosas que el lienzo muestra una al lado de la otra.
+
+**Cuándo no.** Para una lista de trabajo —revisar, aprobar, paginar—, para datos tabulares y para formularios sigue siendo la tabla. **El lienzo no reemplaza al listado: se entra desde él.** La tabla muestra solo las cabezas (los padres, los grupos) y cada fila abre su lienzo. Tampoco sirve para un grafo que no se pueda acotar: el lienzo muestra lo que se abrió, no todo el catálogo.
+
+**Reglas del patrón:**
+
+- **Conectar es la acción.** Se arrastra del handle derecho de un nodo al izquierdo de otro, y lo que eso significa lo decide una función pura de la feature (`connectionIntent` en catálogos). `isValidConnection` la usa para **no dejar dibujar** lo que el servidor rechazaría, que es el principio 2 aplicado a un gesto; el backend sigue siendo la autoridad.
+- **Nada se dibuja por adelantado.** El gesto dispara la mutación, se invalida la caché y el lienzo se redibuja con lo que respondió el servidor. Un lienzo nunca muestra un estado que el servidor no aceptó.
+- **Lo irreversible o masivo se confirma** (principio 3). Mover un grupo entero —fusionar— pregunta antes; quitar una arista también.
+- **Todo gesto tiene su equivalente en el menú del nodo** (`Ellipsis`), accesible por teclado. Sin eso, el lienzo es una capacidad que solo tiene quien usa mouse.
+- **Debajo de `md` no hay lienzo**: la misma información es una lista `.list-divided` con el mismo menú por fila. Arrastrar una conexión con el pulgar no es algo que alguien termine.
+- **El estado del lienzo vive en la URL** (#185): qué se abrió (`?with=`), para que un lienzo se pueda mandar como un link.
+- **Los cuatro estados obligatorios** (§«Estados obligatorios»), en lugar del lienzo.
+- **El color de un nodo es su `StatusBadge`**; el papel del nodo cambia el marco (cabeza con borde de marca, flotante con borde punteado), nunca el color.
+- **Se carga con `lazy()` en su ruta**, así React Flow no entra al bundle de quien nunca abre un lienzo.
+- **Datos que se sincronizan al lienzo, estables.** Los nodos se controlan con `useNodesState` y se reinician desde los datos en un efecto; si varias queries alimentan el lienzo, se juntan con `useQueries({ combine })` y un `combine` a nivel de módulo, o el array nuevo de cada render dispara un bucle de actualizaciones.
+
+Dibujado en `design/out/components-data.html`, sección «Lienzo de nodos».
 
 ### Hooks compartidos
 
@@ -187,6 +217,8 @@ Lo único que cada pantalla define por su cuenta es **el texto del vacío y qué
 | *(sin prefijo)* | ≥ 375 px | Una columna. Los filtros se van a un `sheet`. Los modales son *sheet* desde abajo |
 | `md` | ≥ 768 px | Dos columnas. Los filtros vuelven a la barra |
 | `lg` | ≥ 1024 px | Tres columnas. Barra lateral donde la haya |
+
+**La regla del lienzo** (#275): debajo de `md` un lienzo de nodos se vuelve la lista de lo mismo, con el mismo menú por fila; nunca un lienzo diminuto con zoom.
 
 **La regla de la tabla ancha**, que es el caso caro: `/admin/catalogs`, `/admin/files`, `/admin/users` y `/owner/audit` tienen cinco o más columnas. En móvil **dejan de ser tablas** — cada fila se vuelve una ficha con identidad y estado arriba, el resto como texto y la acción al pie. **Nunca scroll horizontal.**
 

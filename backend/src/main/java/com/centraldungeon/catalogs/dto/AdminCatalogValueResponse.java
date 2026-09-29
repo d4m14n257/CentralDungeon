@@ -19,6 +19,9 @@ import org.jspecify.annotations.Nullable;
  *                      without a second request per row. Null exactly when {@code canonicalId} is
  * @param uses          how many tables currently link to <em>this</em> value, not to its group -
  *                      disabling a value is decided on what it holds by itself (#81)
+ * @param aliasCount    how many values point at this one as their canonical entry, whatever their
+ *                      status. Always 0 for an alias, since depth is 1 (#59). It is what lets the
+ *                      groups-only listing say how big each group is without reading it (#275)
  * @param createdAt     when the value was proposed, in UTC. It is what orders a review queue: the
  *                      oldest proposal is the one that has been waiting longest
  */
@@ -29,5 +32,6 @@ public record AdminCatalogValueResponse(
         @Nullable String canonicalId,
         @Nullable String canonicalName,
         long uses,
+        long aliasCount,
         LocalDateTime createdAt) {
 }

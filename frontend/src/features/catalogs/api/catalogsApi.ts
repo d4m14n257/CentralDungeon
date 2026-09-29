@@ -10,12 +10,13 @@ import type {
   DisableCatalogValueInput,
   MergeCatalogGroupsInput,
   ProposeCatalogValueInput,
+  ReassignCatalogValueInput,
   SplitCatalogGroupInput,
 } from '../types'
 
 /**
  * Every call about the three catalogs, split the way the backend splits them: what anyone may do
- * lives under `/api/v1/{kind}`, and the six admin operations under `/api/v1/admin/catalogs/{kind}`.
+ * lives under `/api/v1/{kind}`, and the eight admin operations under `/api/v1/admin/catalogs/{kind}`.
  *
  * The kind is a parameter rather than three copies of each function, for the same reason it is a
  * path variable on the server: systems, tags and platforms are the same shape, and writing this out
@@ -56,13 +57,16 @@ export const catalogsApi = {
    * @param query    the search box, or undefined for everything
    * @param statuses the statuses to keep, or undefined for no filter - which is the default,
    *                 because reviewing what was proposed is the point of the screen
-   * @param page     zero-based page number
-   * @param size     rows per page, one of `adminPageSizeOptions` (#271)
+   * @param page       zero-based page number
+   * @param size       rows per page, one of `adminPageSizeOptions` (#271)
+   * @param groupsOnly true for one row per group - canonical entries and unclassified proposals,
+   *                   each found by the name of any of its members (#275)
    */
-  adminList: (kind: CatalogKind, query?: string, statuses?: CatalogStatus[], page = 0, size: number = pageSize.admin) =>
+  adminList: (kind: CatalogKind, query?: string, statuses?: CatalogStatus[], page = 0, size: number = pageSize.admin, groupsOnly = false) =>
     api.getPage<AdminCatalogValue>(`/api/v1/admin/catalogs/${kind}`, {
       q: query,
       status: statuses?.join(','),
+      groupsOnly: groupsOnly || undefined,
       page,
       size,
     }),
@@ -114,6 +118,24 @@ export const catalogsApi = {
    */
   split: (kind: CatalogKind, input: SplitCatalogGroupInput) =>
     api.post<AdminCatalogValue, SplitCatalogGroupInput>(`/api/v1/admin/catalogs/${kind}/split`, input),
+
+  /**
+   * Moves an alias to another group in one step (#276) - what dragging it onto that group does.
+   *
+   * @param kind  which catalog
+   * @param id    the alias that moves
+   * @param input the group it lands in
+   */
+  reassign: (kind: CatalogKind, id: string, input: ReassignCatalogValueInput) =>
+    api.post<AdminCatalogValue, ReassignCatalogValueInput>(`/api/v1/admin/catalogs/${kind}/${id}/reassign`, input),
+
+  /**
+   * Makes an alias the canonical entry of its own group; every member stays (#276).
+   *
+   * @param kind which catalog
+   * @param id   the alias that becomes the group's head
+   */
+  promote: (kind: CatalogKind, id: string) => api.post<AdminCatalogValue>(`/api/v1/admin/catalogs/${kind}/${id}/promote`),
 
   /**
    * Takes a value out of circulation without breaking a single link (#81).

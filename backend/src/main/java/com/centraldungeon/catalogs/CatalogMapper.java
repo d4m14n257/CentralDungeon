@@ -28,13 +28,14 @@ public interface CatalogMapper {
     /**
      * The admin view of a value.
      *
-     * <p>{@code canonicalName} and {@code uses} are resolved by the service, not here: both need a
-     * lookup, and a mapper never touches a repository (arquitectura §2.2).
+     * <p>{@code canonicalName}, {@code uses} and {@code aliasCount} are resolved by the service, not
+     * here: all three need a lookup, and a mapper never touches a repository (arquitectura §2.2).
      *
      * @param value         the entity to describe
      * @param canonicalName the name of the group it belongs to, or null when it is the group's
      *                      canonical entry
      * @param uses          how many tables link to this value
+     * @param aliasCount    how many values point at this one as their canonical entry
      * @return the value as /admin/catalogs sees it
      */
     @Mapping(target = "id", source = "value.id")
@@ -42,5 +43,5 @@ public interface CatalogMapper {
     @Mapping(target = "canonicalId", source = "value.canonicalId")
     @Mapping(target = "createdAt", source = "value.createdAt")
     @Mapping(target = "status", expression = "java(value.getStatus().name())")
-    AdminCatalogValueResponse toAdminResponse(CatalogValue value, @Nullable String canonicalName, long uses);
+    AdminCatalogValueResponse toAdminResponse(CatalogValue value, @Nullable String canonicalName, long uses, long aliasCount);
 }

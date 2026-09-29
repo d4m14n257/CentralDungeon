@@ -494,19 +494,20 @@
     "catalogs": {
       "title": "Catálogos: sistemas, tags y plataformas",
       "what": "Un catálogo es la lista de valores que los masters pueden elegir al armar una mesa. Los masters también pueden proponer uno nuevo, y ahí es donde entrás vos.",
+      "canvas": "La tabla muestra un grupo por fila. Al abrirlo lo ves como un lienzo: el principal al centro, sus equivalentes alrededor y, a la izquierda, las propuestas que todavía nadie clasificó, flotando hasta que las conectes.",
       "pending": "Un valor propuesto queda pendiente: el master ya puede usarlo en su mesa, pero los jugadores no lo ven ni pueden filtrar por él hasta que lo aceptes.",
       "groups": "Al aceptarlo decidís si es un valor nuevo o si es otra forma de escribir uno que ya existe. Lo segundo arma un grupo: «DANDD» y «D&D 5e» pasan a ser el mismo valor a la hora de buscar.",
       "alias": "Cada mesa sigue mostrando el nombre que eligió su master. La equivalencia funciona en la búsqueda, no en la pantalla.",
-      "merge": "Fusionar une dos grupos; separar saca un valor de su grupo. Ninguna de las dos toca las mesas: lo que ya estaba etiquetado se sigue encontrando igual.",
+      "merge": "En el lienzo, arrastrar un valor hasta el principal de un grupo lo clasifica: una propuesta se acepta en ese grupo, un equivalente se muda y un principal fusiona su grupo entero. Quitar una conexión separa ese valor. Nada de eso toca las mesas: lo que ya estaba etiquetado se sigue encontrando igual.",
       "disable": "Dar de baja saca un valor de circulación sin romper nada. Las mesas que lo usan lo conservan y restaurarlo devuelve todo como estaba.",
-      "successor": "Si das de baja el valor principal de un grupo, elegís vos cuál de sus equivalentes queda como principal. El sistema no lo decide solo.",
+      "successor": "Podés cambiar el principal de un grupo sin sacar a nadie con «Hacer principal». Si en cambio das de baja al principal, elegís vos cuál de sus equivalentes lo reemplaza: el sistema no lo decide solo.",
       "steps": {
         "step1": "Cambiá al contexto Admin y entrá a «Catálogos».",
-        "step2": "Elegí la pestaña del catálogo que querés revisar: sistemas, tags o plataformas.",
-        "step3": "Buscá por nombre si la lista es larga.",
-        "step4": "En un valor pendiente, tocá «Aceptar» y decidí si es nuevo o si va a un grupo existente.",
-        "step5": "Para unir dos grupos, tocá «Fusionar» en el que quieras que deje de existir y elegí el que queda.",
-        "step6": "Para sacar un valor de circulación, tocá «Dar de baja». Si es el principal de un grupo, elegí quién lo reemplaza."
+        "step2": "Elegí la pestaña del catálogo: sistemas, tags o plataformas. Si la lista es larga, buscá: un equivalente también encuentra a su grupo.",
+        "step3": "Una propuesta nueva aparece como un grupo propio. Aprobala desde la fila si es un valor nuevo, o rechazala.",
+        "step4": "Tocá el nombre de un grupo para abrir su lienzo. Para mover o fusionar, traé el otro grupo desde el panel de la derecha.",
+        "step5": "Arrastrá desde el punto derecho de un valor hasta el punto izquierdo de un principal. Para separar, seleccioná la conexión y apretá Supr.",
+        "step6": "Todo lo que se hace arrastrando también está en el menú «…» de cada valor, junto con «Hacer principal», «Dar de baja» y «Restaurar»."
       }
     },
     "files": {

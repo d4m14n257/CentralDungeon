@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Navegación del Admin — /admin y sus 7 secciones",
+    "title": "Navegación del Admin — /admin, 7 secciones y un lienzo",
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/d4m14n257/CentralDungeon",
@@ -61,6 +61,14 @@
         "focus": [
           "home",
           "bare"
+        ]
+      },
+      {
+        "id": "lienzo",
+        "label": "Lienzo de catálogos",
+        "focus": [
+          "catalogs",
+          "catalogGroup"
         ]
       }
     ]
@@ -181,7 +189,7 @@
       "id": "catalogs",
       "type": "frontend",
       "label": "/admin/catalogs",
-      "sublabel": "entrada única · callejón",
+      "sublabel": "tabla de grupos · abre su lienzo",
       "pos": [
         300,
         350
@@ -194,7 +202,8 @@
       "sources": [
         {
           "path": "frontend/src/routes/admin/AdminCatalogsPage.tsx",
-          "label": "diálogos"
+          "label": "fila → lienzo (#275)",
+          "line": 117
         }
       ]
     },
@@ -281,6 +290,28 @@
           "label": "#141"
         }
       ]
+    },
+    {
+      "id": "catalogGroup",
+      "type": "frontend",
+      "label": "/admin/catalogs/:kind/:id",
+      "sublabel": "lienzo de nodos (#275)",
+      "pos": [
+        40,
+        450
+      ],
+      "size": [
+        220,
+        66
+      ],
+      "tag": "AdminCatalogGroupPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/router.tsx",
+          "label": "ruta lazy",
+          "line": 109
+        }
+      ]
     }
   ],
   "boundaries": [
@@ -296,7 +327,8 @@
         "files",
         "users",
         "requests",
-        "settings"
+        "settings",
+        "catalogGroup"
       ],
       "pad": 14
     }
@@ -365,14 +397,21 @@
       "to": "settings",
       "fromSide": "right",
       "toSide": "left"
+    },
+    {
+      "id": "catalogs-group",
+      "from": "catalogs",
+      "to": "catalogGroup",
+      "fromSide": "bottom",
+      "toSide": "top"
     }
   ],
   "cards": [
     {
       "dot": "rose",
-      "title": "El admin no sale nunca",
+      "title": "El admin casi no sale",
       "items": [
-        "Ninguna de las 7 pantallas tiene Link ni navigate",
+        "Solo catálogos abre algo: un lienzo (#275)",
         "No abre mesa, perfil ni la entidad de un pedido"
       ]
     },

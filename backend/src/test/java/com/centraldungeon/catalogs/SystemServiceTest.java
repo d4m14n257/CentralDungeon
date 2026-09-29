@@ -326,6 +326,100 @@ class SystemServiceTest {
         assertThatThrownBy(() -> systemService.restore("s-1")).isInstanceOf(ConflictException.class);
     }
 
+    // ------------------------------------------------------------- reassigning
+
+    /** #276: one step, no moment in between where the alias is a group of its own. */
+    @Test
+    void movesAnAliasToAnotherGroupInOneStep() {
+        GameSystem alias = value("s-2", "DND", "s-1", CatalogStatus.Accepted);
+        GameSystem otherGroup = value("s-3", "Pathfinder 2e", null, CatalogStatus.Accepted);
+        when(systemRepository.findById("s-2")).thenReturn(Optional.of(alias));
+        when(systemRepository.findById("s-3")).thenReturn(Optional.of(otherGroup));
+
+        AdminCatalogValueResponse response = systemService.reassign("s-2", "s-3");
+
+        assertThat(response.canonicalId()).isEqualTo("s-3");
+        assertThat(alias.getCanonicalId()).isEqualTo("s-3");
+    }
+
+    /** A head carries its group with it; moving it alone would leave its aliases one level too deep (#59). */
+    @Test
+    void refusesToReassignACanonicalEntry() {
+        when(systemRepository.findById("s-1")).thenReturn(Optional.of(value("s-1", "D&D 5e", null, CatalogStatus.Accepted)));
+
+        assertThatThrownBy(() -> systemService.reassign("s-1", "s-3"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("merge");
+        verify(systemRepository, never()).save(any());
+    }
+
+    @Test
+    void refusesToReassignAnAliasIntoTheGroupItIsAlreadyIn() {
+        when(systemRepository.findById("s-2")).thenReturn(Optional.of(value("s-2", "DND", "s-1", CatalogStatus.Accepted)));
+
+        assertThatThrownBy(() -> systemService.reassign("s-2", "s-1"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("already in that group");
+    }
+
+    @Test
+    void refusesToReassignOntoAnAlias() {
+        when(systemRepository.findById("s-2")).thenReturn(Optional.of(value("s-2", "DND", "s-1", CatalogStatus.Accepted)));
+        when(systemRepository.findById("s-4")).thenReturn(Optional.of(value("s-4", "PF2", "s-3", CatalogStatus.Accepted)));
+
+        assertThatThrownBy(() -> systemService.reassign("s-2", "s-4"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("one level deep");
+    }
+
+    @Test
+    void refusesToReassignOntoAGroupThatIsNotAccepted() {
+        when(systemRepository.findById("s-2")).thenReturn(Optional.of(value("s-2", "DND", "s-1", CatalogStatus.Accepted)));
+        when(systemRepository.findById("s-5")).thenReturn(Optional.of(value("s-5", "Mothership", null, CatalogStatus.Created)));
+
+        assertThatThrownBy(() -> systemService.reassign("s-2", "s-5"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("not an accepted value");
+    }
+
+    // --------------------------------------------------------------- promoting
+
+    /** #276: the group keeps every member; only its head changes, and depth stays 1 (#59). */
+    @Test
+    void promotingAnAliasTurnsTheWholeGroupAroundIt() {
+        GameSystem head = value("s-1", "D&D 5e", null, CatalogStatus.Accepted);
+        GameSystem promoted = value("s-2", "Dungeons & Dragons", "s-1", CatalogStatus.Accepted);
+        GameSystem sibling = value("s-3", "DND", "s-1", CatalogStatus.Accepted);
+        when(systemRepository.findById("s-2")).thenReturn(Optional.of(promoted));
+        when(systemRepository.findById("s-1")).thenReturn(Optional.of(head));
+        when(systemRepository.findByCanonicalId("s-1")).thenReturn(List.of(promoted, sibling));
+
+        AdminCatalogValueResponse response = systemService.promote("s-2");
+
+        assertThat(response.canonicalId()).isNull();
+        assertThat(promoted.getCanonicalId()).isNull();
+        assertThat(head.getCanonicalId()).isEqualTo("s-2");
+        assertThat(sibling.getCanonicalId()).isEqualTo("s-2");
+    }
+
+    @Test
+    void refusesToPromoteWhatAlreadyHeadsItsGroup() {
+        when(systemRepository.findById("s-1")).thenReturn(Optional.of(value("s-1", "D&D 5e", null, CatalogStatus.Accepted)));
+
+        assertThatThrownBy(() -> systemService.promote("s-1"))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("already the canonical entry");
+    }
+
+    /** A disabled alias is out of circulation (#81); heading a group would put it back in by the side door. */
+    @Test
+    void refusesToPromoteADisabledAlias() {
+        when(systemRepository.findById("s-2")).thenReturn(Optional.of(value("s-2", "DND", "s-1", CatalogStatus.Disabled)));
+
+        assertThatThrownBy(() -> systemService.promote("s-2")).isInstanceOf(ConflictException.class);
+        verify(systemRepository, never()).save(any());
+    }
+
     // --------------------------------------------------------- group resolution
 
     /** #54, #56: searching by any member has to return the whole group, from either direction. */

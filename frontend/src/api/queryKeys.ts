@@ -128,9 +128,9 @@ export const queryKeys = {
     detail: (kind: string, id: string) => ['catalogs', 'detail', kind, id] as const,
     /** One value's whole synonym group - what the merge and disable dialogs are built on. */
     group: (kind: string, id: string) => ['catalogs', 'group', kind, id] as const,
-    /** The /admin/catalogs table. Every admin mutation invalidates this branch and nothing else. */
-    admin: (kind: string, query?: string, statuses?: string[], page = 0, size?: number) =>
-      ['catalogs', 'admin', kind, query, statuses, page, size] as const,
+    /** The /admin/catalogs table, by value or by group (#275). Every admin mutation invalidates the whole branch. */
+    admin: (kind: string, query?: string, statuses?: string[], page = 0, size?: number, groupsOnly = false) =>
+      ['catalogs', 'admin', kind, query, statuses, page, size, groupsOnly] as const,
   },
   registrations: {
     candidates: (tableId: string) => ['registrations', 'candidates', tableId] as const,

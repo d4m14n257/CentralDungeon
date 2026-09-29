@@ -24,6 +24,8 @@ export interface AdminCatalogValue extends CatalogValue {
   canonicalName: string | null
   /** How many tables link to this value - not to its group. What a disable decision rests on (#81). */
   uses: number
+  /** How many values point at this one as their canonical entry. Always 0 for an alias (#59). */
+  aliasCount: number
   /** ISO-8601 UTC. The conversion to the reader's zone is the frontend's (#22, #111). */
   createdAt: string
 }
@@ -46,6 +48,14 @@ export interface MergeCatalogGroupsInput {
   sourceCanonicalId: string
   /** The group that survives, and keeps its name. */
   targetCanonicalId: string
+}
+
+/**
+ * What moving an alias to another group sends (#276): the group it lands in. Never null - an alias
+ * that leaves for no group is a split, not a move.
+ */
+export interface ReassignCatalogValueInput {
+  canonicalId: NonNullable<AdminCatalogValue['canonicalId']>
 }
 
 /** What splitting sends: the alias that leaves its group and becomes canonical on its own (#55). */

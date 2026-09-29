@@ -104,6 +104,9 @@ export const router = createBrowserRouter([
           { path: 'queue', lazy: () => import('./admin/AdminQueuePage') },
           { path: 'tables', lazy: () => import('./admin/AdminTablesPage') },
           { path: 'catalogs', lazy: () => import('./admin/AdminCatalogsPage') },
+          // One group as a canvas of nodes (#275). Its own route and its own chunk, so React Flow
+          // only loads for an admin who opens a group.
+          { path: 'catalogs/:kind/:id', lazy: () => import('./admin/AdminCatalogGroupPage') },
           { path: 'files', lazy: () => import('./admin/AdminFilesPage') },
           // Accounts, their roles and their blocks (F3.1).
           { path: 'users', lazy: () => import('./admin/AdminUsersPage') },

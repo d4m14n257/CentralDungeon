@@ -69,7 +69,7 @@ Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, 
 | `TableChangesRequested` y `TableApproved` caen en la pestaña Candidatos, aunque el comentario promete la de estado (#244) | `notificationTarget.ts` |
 | Un `PlayerBan` resuelto manda al co-master a `/player/profile`; un `TablePause` resuelto manda al master a la vista de jugador de su mesa | `notificationTarget.ts` |
 | Las pestañas del master enlazan a `/player/users/:id`, y el `UserMenu` manda a `/player/profile` a una cuenta que solo es admin: cruces de contexto | `MasterTableCandidatesTab`, `MasterTablePlayersTab`, `UserMenu` |
-| Ninguna de las siete pantallas de admin tiene un `Link`: un admin no puede abrir el detalle de una mesa, el perfil de un usuario ni la entidad de un pedido | `routes/admin/*` |
+| Ninguna de las siete pantallas de admin tiene un `Link` hacia afuera: un admin no puede abrir el detalle de una mesa, el perfil de un usuario ni la entidad de un pedido. La única salida es de `/admin/catalogs` a su propio lienzo de grupo (#275), que no cierra este hallazgo | `routes/admin/*` |
 | Las filas de `/player/history` no enlazan a la mesa terminada | `PlayerHistoryPage` |
 | `/my/files` se esconde sin biblioteca: una cuenta solo admin u owner no tiene puerta | `UserMenu` |
 | Tres builders de `paths.ts` sin llamador; las constantes de patrón que el router ignora aunque el JSDoc diga que son para él; `helpPlayers`/`helpMasters`/`helpAdmins` sin ruta; tres URL escritas a mano | `config/paths.ts`, `NotificationBell`, `api/client.ts`, `devApi.ts` |

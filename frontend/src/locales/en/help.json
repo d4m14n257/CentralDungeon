@@ -494,19 +494,20 @@
     "catalogs": {
       "title": "Catalogs: systems, tags and platforms",
       "what": "A catalog is the list of values masters can pick from when putting a table together. Masters can also propose a new one, and that is where you come in.",
+      "canvas": "The table shows one group per row. Opening it shows it as a canvas: the main value in the centre, its synonyms around it and, to the left, the proposals nobody has classified yet, floating until you connect them.",
       "pending": "A proposed value stays pending: the master can already use it on their table, but players neither see it nor can filter by it until you accept it.",
       "groups": "When you accept it you decide whether it is a new value or another way of writing one that already exists. The second builds a group: “DANDD” and “D&D 5e” become the same value as far as searching goes.",
       "alias": "Each table still shows the name its own master picked. The equivalence works in the search, not on the screen.",
-      "merge": "Merging joins two groups; splitting takes a value out of its group. Neither touches the tables: whatever was already tagged is still found the same way.",
+      "merge": "On the canvas, dragging a value onto a group's main value classifies it: a proposal is accepted into that group, a synonym moves, and a main value merges its whole group. Removing a connection splits that value out. None of it touches the tables: whatever was already tagged is still found the same way.",
       "disable": "Disabling takes a value out of circulation without breaking anything. The tables using it keep it, and restoring it brings everything back as it was.",
-      "successor": "If you disable the main value of a group, you pick which of its equivalents becomes the main one. The system does not decide it on its own.",
+      "successor": "You can change a group's main value without anyone leaving with “Make it the main one”. If you disable the main value instead, you pick which of its synonyms replaces it: the system does not decide it on its own.",
       "steps": {
         "step1": "Switch to the Admin context and go to “Catalogs”.",
-        "step2": "Pick the tab of the catalog you want to review: systems, tags or platforms.",
-        "step3": "Search by name if the list is long.",
-        "step4": "On a pending value, tap “Accept” and decide whether it is new or belongs to an existing group.",
-        "step5": "To join two groups, tap “Merge” on the one you want to stop existing and pick the one that stays.",
-        "step6": "To take a value out of circulation, tap “Disable”. If it is a group's main one, pick who replaces it."
+        "step2": "Pick the catalog's tab: systems, tags or platforms. If the list is long, search: a synonym finds its group too.",
+        "step3": "A new proposal shows up as a group of its own. Approve it from the row if it is a new value, or reject it.",
+        "step4": "Tap a group's name to open its canvas. To move or merge, bring the other group in from the panel on the right.",
+        "step5": "Drag from a value's right dot onto a main value's left dot. To split, select the connection and press Delete.",
+        "step6": "Everything done by dragging is also in each value's “…” menu, along with “Make it the main one”, “Disable” and “Restore”."
       }
     },
     "files": {

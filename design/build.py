@@ -509,12 +509,25 @@ lines.append(f"  --color-destructive-foreground: {on_solid(light_destructive)};"
 lines.append("}")
 open(f"{OUT}/theme.css", "w").write("\n".join(lines) + "\n")
 
+# ---------- non-text contrast (WCAG 1.4.11): the node canvas's graphics, 3:1 (#275) ----------
+# What carries meaning on the canvas without being text: the spoke that says "this belongs to that",
+# the dot a connection is dragged from, and the frame that marks a group's head. Text on a node is
+# `fg` on `surface` and the state badges, which the pairs above already measure.
+graphics = []
+for theme_name, t_, brand in (("dark", DARK, ACCENTS["violet"]["500"]), ("light", LIGHT, ACCENTS["violet"]["600"])):
+    graphics += [(f"graph edge (fg-subtle) on canvas / {theme_name}", r2(t_["fg-subtle"], t_["canvas"])),
+                 (f"graph handle and head frame (brand) on surface / {theme_name}", r2(brand, t_["surface"])),
+                 (f"graph handle (brand) on canvas / {theme_name}", r2(brand, t_["canvas"]))]
+
 # ---------- contrast report; non-zero exit if anything drops below AA ----------
-fails = [(n, v) for n, v in report if v < 4.5]
+fails = [(n, v) for n, v in report if v < 4.5] + [(n, v) for n, v in graphics if v < 3]
 print(f"\nMeasured contrast pairs: {len(report)}   |   below AA (4.5:1): {len(fails)}\n")
 for n, v in sorted(report, key=lambda x: x[1]):
     flag = "OK " if v >= 4.5 else ("!! " if v >= 3 else "XX ")
     print(f"  {flag}{v:5.2f}:1  {n}")
+print(f"\nNon-text graphics (3:1): {len(graphics)}\n")
+for n, v in sorted(graphics, key=lambda x: x[1]):
+    print(f"  {'OK ' if v >= 3 else 'XX '}{v:5.2f}:1  {n}")
 
 
 # ============ 7. screens (frontend-diseno.md section 4) ============
@@ -1682,7 +1695,46 @@ def sc_comp_data(t):
           + demo(t, "Clases de patron (#273)",
                  "Cada papel de diseno tiene un nombre y se define una vez, en <code>styles/base.css</code>: "
                  "una pantalla escribe <code>page-title</code>, nunca sus utilidades. Catalogo en la skill "
-                 "<code>diseno</code> &sect;5.c.", patterns(t)))
+                 "<code>diseno</code> &sect;5.c.", patterns(t))
+          + demo(t, "Lienzo de nodos (#275)",
+                 "Para editar <strong>relaciones</strong> — agrupar, conectar, mover entre grupos — y no los datos "
+                 "de cada fila. Un grupo de profundidad 1 es una estrella: la cabeza con borde de marca, los "
+                 "miembros alrededor con una arista recta a ella, y a la izquierda lo que flota sin conectar, "
+                 "con borde punteado. El color de cada nodo es su badge; el papel solo cambia el marco. "
+                 "Se entra desde una tabla que muestra solo las cabezas, y debajo de <code>md</code> es una lista.",
+                 graph_canvas(t)))
+
+def graph_canvas(t):
+    """The node canvas of #275: a star with its head, three members, their spokes and one floating proposal."""
+    brand = acc_solid(t)
+
+    def node(x, y, name, state, label, meta, role="member"):
+        border = (f"2px solid {brand}" if role == "head"
+                  else f"1px dashed {t['border-strong']}" if role == "floating"
+                  else f"1px solid {t['border-strong']}")
+        handle = (f'<span style="position:absolute;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:9999px;'
+                  f'background:{brand};border:1px solid {t["surface"]};{{side}}:-6px"></span>')
+        return (f'<div style="position:absolute;left:{x}px;top:{y}px;width:176px;background:{t["surface"]};'
+                f'border:{border};border-radius:8px;padding:8px 10px;box-shadow:0 1px 2px rgba(0,0,0,.25)">'
+                + handle.format(side="left") + handle.format(side="right")
+                + f'<div style="font-size:13px;font-weight:{600 if role == "head" else 500}">{name}</div>'
+                f'<div style="margin-top:4px">{badge(t, state, label)}</div>'
+                f'<div style="font-size:11px;color:{t["fg-subtle"]};margin-top:3px">{meta}</div></div>')
+
+    # Centres of each node (left + 88, top + 34): the spokes run centre to centre, under the nodes.
+    head, members = (400, 150), [(400, 40), (620, 150), (400, 270)]
+    spokes = "".join(f'<line x1="{head[0]}" y1="{head[1]}" x2="{x}" y2="{y}" stroke="{t["fg-subtle"]}" stroke-width="1"/>'
+                     for x, y in members)
+    return (f'<div style="position:relative;height:340px;background:{t["canvas"]};border:1px solid {t["border"]};'
+            f'border-radius:8px;overflow:hidden;background-image:radial-gradient({t["border-strong"]} 1px, transparent 1px);'
+            f'background-size:24px 24px">'
+            f'<svg width="100%" height="100%" style="position:absolute;inset:0">{spokes}</svg>'
+            + node(20, 116, "Mothership", "pending", "Pendiente", "Conectalo a un grupo", role="floating")
+            + node(312, 116, "D&amp;D 5e", "open", "Aceptado", "3 equivalentes", role="head")
+            + node(312, 6, "DANDD", "open", "Aceptado", "2 mesas")
+            + node(532, 116, "DND", "open", "Aceptado", "0 mesas")
+            + node(312, 236, "D&amp;D", "draft", "Dado de baja", "1 mesa")
+            + '</div>')
 
 def patterns(t):
     """The pattern classes of #273, each drawn with the tokens its @apply uses, next to its name."""

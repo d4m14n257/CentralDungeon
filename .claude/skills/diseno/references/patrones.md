@@ -40,6 +40,10 @@
 | `.list-divided-bare` | Las mismas filas separadas, sin marco: para una lista que ya está dentro de una card o un diálogo | `divide-border divide-y` |
 | `.inline-error` | Un error dicho dentro de un formulario o un diálogo, al lado de lo que lo causó. No es un toast | `bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm` |
 | `.bg-brand-gradient` | El gradiente de la comunidad (#132), solo en `/login` | `background-image: var(--gradient-brand)` |
+| `.graph-canvas` | El marco de un lienzo de nodos (#275). **Además apunta cada variable `--xy-*` de React Flow a un token**, así el lienzo sigue a los dos temas y no trae un color propio. La pone `GraphCanvas` | `bg-canvas border-border h-160 w-full overflow-hidden rounded-lg border` + las `--xy-*` |
+| `.graph-tray` | El panel lateral de un lienzo. La pone `GraphTray` | `bg-surface border-border space-y-4 self-start rounded-lg border p-4` |
+| `.graph-node` | Un nodo del lienzo. La pone `GraphNode` | `bg-surface text-fg border-border-strong flex w-56 items-center gap-2 rounded-lg border px-3 py-2 shadow-sm` |
+| `.graph-node-head` · `.graph-node-floating` · `.graph-node-selected` | El papel del nodo, que cambia el marco y nunca el color: cabeza de la estrella, suelto esperando conexión, seleccionado | `border-brand-500 border-2` · `border-dashed` · `ring-ring ring-2` |
 
 ### Componentes (`components/`)
 
@@ -50,7 +54,10 @@
 | `CollapsibleSection`, `FileCard` | Sus ranuras `actions` también se pintan con `.row-actions` | Pestañas del master, bibliotecas de archivos |
 | `IconAction` | Una acción de ícono con su tooltip y su `aria-label` | Toda acción de fila o de ficha |
 | `PaginationControls` | La paginación de una lista de trabajo (#271) | Las seis tablas de admin y `/my/files` |
+| `GraphCanvas`, `GraphNode`, `GraphTray` | El lienzo de nodos y sus piezas (#275): ponen `.graph-canvas`, `.graph-node*` y `.graph-tray` ellos mismos | `/admin/catalogs/:kind/:id` |
 
 ## Deuda conocida
+
+- El handle de React Flow mide 6 px y lo dibuja su propia hoja **sin capa**, que le gana a todo `@layer`. Por eso su tamaño (`calc(var(--spacing) * 3)`) es una regla sin capa en `base.css`, junto a las correcciones de shadcn: no es deuda, pero es la única excepción del lienzo a «todo en `@layer components`».
 
 - `NotificationBell` y `WizardSteps` usan `text-[11px]`, un valor suelto fuera del `@theme` (regla dura 18). Está anotado en `fase-4-revision.md` §2.3 para triar en F4.1.

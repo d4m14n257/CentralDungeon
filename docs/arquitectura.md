@@ -58,6 +58,7 @@ TypeScript **se introduce** en el frontend: `legacy/frontend-next/` era JavaScri
 | HTTP | `fetch` envuelto en un cliente propio tipado | — |
 | Fechas y horas | `Intl.DateTimeFormat` nativo, sin librería (#111) | — |
 | Internacionalización | `i18next` + `react-i18next`, JSON por espacio de nombres (#107, #117) | 25.x / 16.x |
+| Lienzo de nodos | React Flow (`@xyflow/react`), MIT — solo para el patrón de lienzo de la skill `diseno` §5 (#275), cargado con `lazy` en su ruta | **12.12.0** |
 | Tests | Vitest + React Testing Library, Playwright para e2e | Vitest **4.x**, RTL 16.x, Playwright 1.6x |
 
 Consecuencias de estas versiones:
@@ -66,6 +67,7 @@ Consecuencias de estas versiones:
 - **React Router 8 es ESM-only** y asume React 19 y Node 22+. Los `future.v8_*` flags ya no existen: su comportamiento es el default.
 - **Vite 8 usa Rolldown**. Antes de agregar un plugin que dependa de internals de Rollup, verificar que esté portado. **Ya mordió una vez**: Vitest 3 declara peer `vite ^5–^7`, así que npm le instala **su propio Vite** anidado y `defineConfig` de `vitest/config` deja de tipar contra el Vite del proyecto — el error habla de `rolldownVersion` faltante en `PluginContextMeta`. Se resuelve con **Vitest 4**, que sí declara `vite ^8`. Si aparece un `node_modules/vitest/node_modules/vite`, es este problema.
 - **`npm create vite` instala TypeScript 6**, y el stack está fijado en **5.9.x**. Al scaffoldear se bajó a `~5.9.3` a propósito: subir una major es una decisión (regla dura 15), no algo que decida una plantilla. No lo "arregles" subiéndolo.
+- **React Flow trae su propia hoja de estilos**, y `globals.css` se reescribe entero al transcribir el tema (#118, #130): por eso se importa desde `components/graph/GraphCanvas.tsx` y sus colores son variables `--xy-*` apuntadas a tokens en `.graph-canvas` (`styles/base.css`). Sin motor de layout (dagre, ELK): un grupo de profundidad 1 es una estrella y se ubica con `radialLayout` (#275).
 - **El template trae `oxlint`**, no ESLint. No estaba fijado en ningún lado, así que se conserva; si se cambia, es una decisión.
 
 ### 1.3 Política de versiones

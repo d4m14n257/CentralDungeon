@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { pageSize } from '@/config/pagination'
 import { useDebounce } from '@/hooks/useDebounce'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +26,7 @@ export interface CanonicalPickerProps {
 /**
  * Picks a **canonical entry** - a synonym group - out of a catalog.
  *
- * It exists because three of the six admin operations take a group rather than a value, and a group
+ * It exists because four of the eight admin operations take a group rather than a value, and a group
  * is exactly a canonical entry (#59). Offering aliases here would let an admin build the second
  * level the flat model forbids: the server would answer 409, but a control that offers a choice it
  * knows will be refused is the grey button that does not say why it is grey
@@ -45,7 +46,9 @@ export function CanonicalPicker({ kind, selectedId, onSelect, excludeId, noneLab
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 250)
 
-  const { data, isPending } = useAdminCatalog(kind, debouncedSearch, ['Accepted'], 0)
+  // groupsOnly (#275): the server answers with group heads only, so a group whose name sorts after
+  // the first page of aliases is still offered, and searching an alias finds its group.
+  const { data, isPending } = useAdminCatalog(kind, debouncedSearch, ['Accepted'], 0, pageSize.admin, { groupsOnly: true })
 
   const groups = (data?.content ?? []).filter((value) => value.canonicalId === null && value.id !== excludeId)
 

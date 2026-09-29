@@ -73,7 +73,7 @@ class CatalogGroupIT {
 
     @Test
     void showsEverythingToAnAdminWhoseJobIsToReviewIt() {
-        PageResponse<AdminCatalogValueResponse> page = tagService.adminSearch(null, List.of(), FIRST_PAGE);
+        PageResponse<AdminCatalogValueResponse> page = tagService.adminSearch(null, List.of(), false, FIRST_PAGE);
 
         assertThat(page.content()).extracting(AdminCatalogValueResponse::name)
                 .containsExactlyInAnyOrder("D&D 5e", "DANDD", "Todavía sin revisar", "Fuera de circulación");
@@ -82,9 +82,60 @@ class CatalogGroupIT {
     @Test
     void narrowsTheAdminListToOneStatus() {
         PageResponse<AdminCatalogValueResponse> page =
-                tagService.adminSearch(null, List.of(CatalogStatus.Created), FIRST_PAGE);
+                tagService.adminSearch(null, List.of(CatalogStatus.Created), false, FIRST_PAGE);
 
         assertThat(page.content()).extracting(AdminCatalogValueResponse::name).containsExactly("Todavía sin revisar");
+    }
+
+    /** #275: one row per group - canonical entries and unclassified proposals, never an alias - with its size. */
+    @Test
+    void listsOnlyGroupHeadsWithHowManyAliasesEachHas() {
+        accepted("DND", dnd);
+        accepted("Dungeons & Dragons", dnd);
+
+        PageResponse<AdminCatalogValueResponse> page = tagService.adminSearch(null, List.of(), true, FIRST_PAGE);
+
+        assertThat(page.content()).extracting(AdminCatalogValueResponse::name)
+                .containsExactlyInAnyOrder("D&D 5e", "DANDD", "Todavía sin revisar", "Fuera de circulación");
+        assertThat(page.content()).filteredOn(row -> row.id().equals(dnd))
+                .singleElement().extracting(AdminCatalogValueResponse::aliasCount).isEqualTo(2L);
+    }
+
+    /** #54 carried to the listing: searching an alias's name brings up the group it belongs to. */
+    @Test
+    void findsAGroupByTheNameOfOneOfItsAliases() {
+        accepted("Dungeons & Dragons", dnd);
+
+        PageResponse<AdminCatalogValueResponse> page = tagService.adminSearch("dungeons", List.of(), true, FIRST_PAGE);
+
+        assertThat(page.content()).extracting(AdminCatalogValueResponse::name).containsExactly("D&D 5e");
+    }
+
+    /** #276 against the real FK: the alias lands in the other group and nothing is left one level too deep. */
+    @Test
+    void reassigningMovesAnAliasBetweenGroups() {
+        String alias = accepted("DND", dnd);
+
+        tagService.reassign(alias, dandd);
+
+        assertThat(canonicalIdOf(alias)).isEqualTo(dandd);
+        assertThat(tagService.resolveGroupIds(dnd)).containsExactly(dnd);
+        assertThat(tagService.resolveGroupIds(dandd)).containsExactlyInAnyOrder(dandd, alias);
+    }
+
+    /** #276: promoting keeps the whole group, and it is still found from every member. */
+    @Test
+    void promotingAnAliasKeepsTheGroupAndChangesItsHead() {
+        String alias = accepted("DND", dnd);
+        String other = accepted("Dungeons & Dragons", dnd);
+
+        tagService.promote(alias);
+
+        assertThat(canonicalIdOf(alias)).isNull();
+        assertThat(canonicalIdOf(dnd)).isEqualTo(alias);
+        assertThat(canonicalIdOf(other)).isEqualTo(alias);
+        assertThat(tagService.group(dnd)).extracting(AdminCatalogValueResponse::name)
+                .containsExactly("DND", "D&D 5e", "Dungeons & Dragons");
     }
 
     /** Free text matches the name, case-insensitively, and the search box never blows up on a typo. */

@@ -133,5 +133,16 @@
     "Absent": "Absent",
     "registered": "Sessions recorded",
     "nothingRecorded": "No attendance recorded yet."
+  },
+  "graph": {
+    "controls": "Canvas controls",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fitView": "Fit everything",
+    "interactive": "Lock the canvas",
+    "handle": "Connection point",
+    "nodeDescription": "Enter or space to select it, arrow keys to move it, Delete to remove its connection.",
+    "nodeDescriptionKeyboardDisabled": "Enter or space to select it.",
+    "edgeDescription": "Delete to remove this connection."
   }
 }

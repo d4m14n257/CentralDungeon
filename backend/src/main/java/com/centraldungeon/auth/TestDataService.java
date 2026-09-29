@@ -28,6 +28,8 @@ public class TestDataService {
 
     private static final String TABLE_NAME_PATTERN = "%E2E%";
     private static final String DISCORD_ID_PREFIX = "e2e-%";
+    /** Tags the catalog canvas spec proposes (#275). A prefix, not a substring: "E2E" inside a real tag's name is not ours. */
+    private static final String TAG_NAME_PREFIX = "E2E %";
 
     private static final String E2E_USERS = "select u.id from User u where u.discordId like :discordId";
     private static final String E2E_TABLES =
@@ -90,6 +92,14 @@ public class TestDataService {
         delete("delete from TableSystem ts where ts.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TableTag tt where tt.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TablePlatform tp where tp.id.gameTableId in (" + E2E_TABLES + ")");
+        // The tenth: the catalog canvas spec proposes a tag to float and connect (#275), and a
+        // proposal can only be rejected or disabled, never deleted - so without this every run left
+        // one more row in the review queue. canonical_id is a self-referencing foreign key, so
+        // whatever still points at one of these tags is let go first, then any link to them, then
+        // the tags themselves.
+        update("update Tag tg set tg.canonicalId = null where tg.canonicalId in (select e.id from Tag e where e.name like :tagName)");
+        delete("delete from TableTag ttg where ttg.id.tagId in (select e.id from Tag e where e.name like :tagName)");
+        delete("delete from Tag tg2 where tg2.name like :tagName");
         // Attachments before tables, and before the files themselves: table_files points at both, so
         // it has to go first in each direction. Third time this foreign key shape has had to be
         // remembered here - the agenda in F1.2 and the calendar in F1.3 were the other two (#171, #172).
@@ -147,14 +157,37 @@ public class TestDataService {
         return new TestCleanupResponse(gameTables, users);
     }
 
-    /** Only binds what the statement actually names: JPA rejects a parameter the query does not declare. */
+    /**
+     * A bulk update. Its own name only so a statement that is not a delete does not read as one.
+     *
+     * @param jpql the statement
+     * @return how many rows it changed
+     */
+    private int update(String jpql) {
+        return execute(jpql);
+    }
+
+    /**
+     * A bulk delete.
+     *
+     * @param jpql the statement
+     * @return how many rows it removed
+     */
     private int delete(String jpql) {
+        return execute(jpql);
+    }
+
+    /** Only binds what the statement actually names: JPA rejects a parameter the query does not declare. */
+    private int execute(String jpql) {
         var query = entityManager.createQuery(jpql);
         if (jpql.contains(":tableName")) {
             query.setParameter("tableName", TABLE_NAME_PATTERN);
         }
         if (jpql.contains(":discordId")) {
             query.setParameter("discordId", DISCORD_ID_PREFIX);
+        }
+        if (jpql.contains(":tagName")) {
+            query.setParameter("tagName", TAG_NAME_PREFIX);
         }
         return query.executeUpdate();
     }

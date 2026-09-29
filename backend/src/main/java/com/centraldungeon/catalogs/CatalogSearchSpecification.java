@@ -7,6 +7,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -63,6 +64,39 @@ final class CatalogSearchSpecification {
             }
             Predicate byStatus = root.get("status").in(statuses);
             return matched == null ? byStatus : builder.and(byStatus, matched);
+        };
+    }
+
+    /**
+     * /admin/catalogs as a list of groups (#275): only the rows that head a group - a canonical entry,
+     * or a proposal nobody has classified yet, which is a group of one until somebody does.
+     *
+     * <p>A search still finds a group by <b>any</b> of its members: a row matches when its own name
+     * matches or when one of its aliases does. That is the symmetry of #54 carried to the listing -
+     * typing "DANDD" has to bring up the "D&amp;D 5e" group it belongs to, not an empty table. It is
+     * a correlated subquery rather than a second round trip so that the pagination stays in SQL.
+     *
+     * @param query    the parsed search box; an empty one matches every group
+     * @param statuses the statuses the group's head has to be in, or empty for no status filter
+     * @param <E>      the catalog entity being queried
+     * @return the predicate over group heads only
+     */
+    static <E extends CatalogValue> Specification<E> groupsForAdmin(SearchQuery query, List<CatalogStatus> statuses) {
+        return (root, criteriaQuery, builder) -> {
+            Predicate head = builder.isNull(root.get("canonicalId"));
+            if (!statuses.isEmpty()) {
+                head = builder.and(head, root.get("status").in(statuses));
+            }
+            Predicate ownName = matching(root, builder, query);
+            if (ownName == null || criteriaQuery == null) {
+                return head;
+            }
+            Subquery<String> aliases = criteriaQuery.subquery(String.class);
+            Root<? extends CatalogValue> alias = aliases.from(root.getJavaType());
+            Predicate aliasName = matching(alias, builder, query);
+            aliases.select(alias.get("id"))
+                    .where(builder.and(builder.equal(alias.get("canonicalId"), root.get("id")), aliasName));
+            return builder.and(head, builder.or(ownName, builder.exists(aliases)));
         };
     }
 

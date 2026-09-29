@@ -1,6 +1,6 @@
 ---
 name: diseno
-description: CentralDungeon's visual system — where every design value comes from (design/build.py → @theme), the named pattern classes and components a screen must use instead of spelling utilities out (page-title, section-label, row-actions, PageHeader…), the component inventory, work lists with icon actions and pagination, the four mandatory states and the responsive rules. Use before writing the JSX of any screen or component in frontend/, before adding a style, a color or a class, and whenever code or decisiones.md cites "diseno §n".
+description: CentralDungeon's visual system — where every design value comes from (design/build.py → @theme), the named pattern classes and components a screen must use instead of spelling utilities out (page-title, section-label, row-actions, PageHeader…), the component inventory, work lists with icon actions and pagination, the node canvas (React Flow) for editing relationships — grouping, connecting, moving between groups —, the four mandatory states and the responsive rules. Use before writing the JSX of any screen or component in frontend/, before adding a style, a color or a class, when a screen edits how entities relate to each other rather than their data, and whenever code or decisiones.md cites "diseno §n".
 ---
 
 # Diseño
@@ -21,13 +21,14 @@ El sistema visual de CentralDungeon. **Es la fuente de todo lo visual** desde #2
 10. **El color nunca es el único portador de información**: un estado es punto + etiqueta (`StatusBadge`, #261). Los catorce colores de estado se reparten en nueve familias. → §3
 11. **Ningún texto se escribe en el JSX**: todo pasa por `t()`, en `es` y en `en` (#117, #198).
 12. **Todo cambio visual se ve en los dos temas** —claro y oscuro— antes de darlo por terminado. → §3
+13. **Si lo que se edita son relaciones, hay un lienzo de nodos** (#275): `components/graph/` sobre React Flow, para agrupar, conectar o mover entre grupos. Se entra desde una tabla que muestra solo las cabezas, conectar dispara la mutación, todo gesto tiene su entrada en el menú del nodo, y debajo de `md` es una lista. No reemplaza a la tabla para revisar o paginar. → §5, «Lienzo de nodos»
 
 ## El detalle, por sección
 
 | § | Qué cubre | Archivo |
 |---|---|---|
 | 3 | Dirección visual, cómo se trabaja la paleta y su contraste, tema claro y oscuro, idioma, colores de estado, karma | [`references/sistema.md`](references/sistema.md) |
-| 5 | Primitivas shadcn y las tres que se apartan del default, compuestos con y sin dominio, inventario completo, **listas de trabajo**, hooks compartidos, estados obligatorios | [`references/componentes.md`](references/componentes.md) |
+| 5 | Primitivas shadcn y las tres que se apartan del default, compuestos con y sin dominio, inventario completo, **listas de trabajo**, **lienzo de nodos**, hooks compartidos, estados obligatorios | [`references/componentes.md`](references/componentes.md) |
 | 5.b | Responsive: cortes, la regla de la tabla ancha | [`references/componentes.md`](references/componentes.md) |
 | 5.c | **Clases y componentes de patrón**: la regla, clase o componente, cuándo se crea uno, el catálogo | [`references/patrones.md`](references/patrones.md) |
 

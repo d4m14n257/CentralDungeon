@@ -76,6 +76,54 @@
   .inline-error {
     @apply bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm;
   }
+
+  /* The node canvas (#275): the frame of a React Flow graph, and every one of the library's
+     --xy-* colours pointed at a token, so the canvas follows the light and dark themes and brings
+     no colour of its own. GraphCanvas applies it itself. */
+  .graph-canvas {
+    @apply bg-canvas border-border h-160 w-full overflow-hidden rounded-lg border;
+    --xy-background-color: var(--color-canvas);
+    --xy-background-pattern-dots-color: var(--color-border-strong);
+    --xy-edge-stroke: var(--color-fg-subtle);
+    --xy-edge-stroke-selected: var(--color-brand-500);
+    --xy-connectionline-stroke: var(--color-brand-500);
+    --xy-handle-background-color: var(--color-brand-500);
+    --xy-handle-border-color: var(--color-surface);
+    --xy-selection-background-color: var(--color-raised);
+    --xy-selection-border: 1px dashed var(--color-brand-500);
+    --xy-controls-box-shadow: none;
+    --xy-controls-button-background-color: var(--color-raised);
+    --xy-controls-button-background-color-hover: var(--color-border-strong);
+    --xy-controls-button-color: var(--color-fg);
+    --xy-controls-button-color-hover: var(--color-fg);
+    --xy-controls-button-border-color: var(--color-border);
+    --xy-attribution-background-color: transparent;
+  }
+
+  /* The side panel of a node canvas: what the canvas needs next to it and cannot draw as a node. */
+  .graph-tray {
+    @apply bg-surface border-border space-y-4 self-start rounded-lg border p-4;
+  }
+
+  /* A node of the canvas. Its role changes the frame, never the colour - the state's colour is
+     the StatusBadge inside it (#261). */
+  .graph-node {
+    @apply bg-surface text-fg border-border-strong flex w-56 items-center gap-2 rounded-lg border px-3 py-2 shadow-sm;
+  }
+
+  /* The head of a star: the value the others hang from. */
+  .graph-node-head {
+    @apply border-brand-500 border-2;
+  }
+
+  /* Connected to nothing yet: a proposal waiting for somebody to decide where it goes. */
+  .graph-node-floating {
+    @apply border-dashed;
+  }
+
+  .graph-node-selected {
+    @apply ring-ring ring-2;
+  }
 }
 
 /* Correcciones a lo que trae shadcn de fábrica, sobre sus propios `data-slot`.
@@ -102,4 +150,12 @@
    Sobre una superficie elevada la línea es `border-strong`, que es el escalón siguiente. */
 [data-slot='dropdown-menu-separator'] {
   background-color: var(--color-border-strong);
+}
+
+/* React Flow's handle is 6px, drawn by its own unlayered stylesheet - which beats anything inside a
+   @layer, so this rule goes unlayered too. 6px is a target nobody hits with a finger; the handle is
+   where a connection starts, so it gets the size of a small control. */
+.graph-canvas .react-flow__handle {
+  width: calc(var(--spacing) * 3);
+  height: calc(var(--spacing) * 3);
 }

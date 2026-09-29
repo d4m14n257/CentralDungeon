@@ -52,6 +52,18 @@ public interface CatalogValueRepository<E extends CatalogValue> extends JpaRepos
     List<E> findByCanonicalId(String canonicalId);
 
     /**
+     * The aliases of several groups at once, whatever their status.
+     *
+     * <p>What the groups-only listing counts to say how big each group is (#275). Depth is 1 (#59)
+     * and a group is bounded by how many synonyms a community writes for one thing, so reading the
+     * rows is cheaper to reason about than a grouped count per catalog table.
+     *
+     * @param canonicalIds the canonical entries whose aliases are wanted
+     * @return the aliases pointing at any of them, never null and possibly empty
+     */
+    List<E> findByCanonicalIdIn(Collection<String> canonicalIds);
+
+    /**
      * The canonical entries of several groups at once, in one status.
      *
      * <p>Half of what {@link AbstractCatalogService#resolveGroupIdsByName} needs: given the roots a

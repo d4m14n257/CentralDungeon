@@ -44,6 +44,7 @@ export const paths = {
   adminQueue: 'admin/queue',
   adminTables: 'admin/tables',
   adminCatalogs: 'admin/catalogs',
+  adminCatalogGroup: 'admin/catalogs/:kind/:id',
   adminFiles: 'admin/files',
   adminUsers: 'admin/users',
   adminRequests: 'admin/requests',
@@ -212,6 +213,16 @@ export function adminTablesPath(): string {
 /** @returns the absolute path to the catalog administration screen */
 export function adminCatalogsPath(): string {
   return '/admin/catalogs'
+}
+
+/**
+ * @param kind which catalog: `systems`, `tags` or `platforms`
+ * @param id   any member of the group to open
+ * @returns the absolute path to that group's canvas (#275): the group drawn as a star, with the
+ *          proposals nobody classified yet floating next to it
+ */
+export function adminCatalogGroupPath(kind: string, id: string): string {
+  return `/admin/catalogs/${kind}/${id}`
 }
 
 /** @returns the absolute path to the file administration screen (#64, #79) */

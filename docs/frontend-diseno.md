@@ -69,7 +69,8 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | **Admin** | `/admin` | **Home del contexto** (#270): una bienvenida, sin métricas hasta que se decida cuáles le sirven a un admin. Es donde cae un admin al entrar y el primer ítem de la nav («Inicio») |
 | | `/admin/queue` | Bandeja compartida con reserva (#100): **solo lo que pide una acción**, no un listado de consulta (#176) |
 | | `/admin/tables` | **Todas** las mesas, en cualquier estado, con filtros y buscador: el listado de administración, no una cola (#176). **Hoy** muestra solo las que esperan revisión porque `/admin/queue` todavía no existe; al llegar la bandeja (F3), las acciones de revisión se mudan ahí |
-| | `/admin/catalogs` | Sistemas, tags y plataformas; fusionar y separar grupos |
+| | `/admin/catalogs` | Sistemas, tags y plataformas, **un grupo por fila** (#275): el principal o una propuesta sin clasificar, que se aprueba o rechaza desde la fila. Buscar un equivalente encuentra su grupo |
+| | `/admin/catalogs/:kind/:id` | **El lienzo de un grupo** (#275): el principal al centro, sus equivalentes alrededor y las propuestas flotando hasta que se conectan. Conectar acepta, mueve (#276) o fusiona; quitar una conexión separa. Otros grupos se traen al lienzo y quedan en `?with=`. Debajo de `md`, una lista con el mismo menú |
 | | `/admin/files` | **La biblioteca de la plataforma**, no la personal (#237): el admin **sube acá** y publica diciendo en qué cajones se ofrece el archivo (#233, reemplaza la audiencia de #64). Además, todo lo que subió la comunidad con su dueño y en cuántas mesas se usa, despublicar y dar de baja. **No es `/owner/storage`**: acá solo se marca, los bytes los libera el owner y eso es F6 (#66, #207, #250) |
 | | `/admin/moderation` | Comentarios por moderar |
 | | `/admin/requests` | Solicitudes de rol, de mesa y generales |
@@ -86,7 +87,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 
 ## 4. Wireframes
 
-> Los de abajo son los cinco que definieron el resto y se conservan como referencia rápida en texto. **Las 28 rutas del sitemap están dibujadas** en `design/out/screen-*.html`, en tema claro y oscuro — se regeneran con `python3 design/build.py`. La excepción es **`/admin/files`** (#207), que llegó con F1.4 y todavía no tiene preview: se construyó directo sobre `DataTable`, con la misma forma que `/admin/catalogs`, igual que `SearchQueryInput` y `UserPicker`.
+> Los de abajo son los cinco que definieron el resto y se conservan como referencia rápida en texto. **Las 28 rutas del sitemap están dibujadas** en `design/out/screen-*.html`, en tema claro y oscuro — se regeneran con `python3 design/build.py`. La excepción es **`/admin/files`** (#207), que llegó con F1.4 y todavía no tiene preview: se construyó directo sobre `DataTable`, con la misma forma que `/admin/catalogs`, igual que `SearchQueryInput` y `UserPicker`. **`/admin/catalogs/:kind/:id`** (#275) tampoco tiene preview de pantalla: lo que se dibuja es el patrón, el lienzo de nodos, en `components-data.html`, porque la pantalla es ese lienzo más su panel.
 
 ### Explorar mesas — `/`
 

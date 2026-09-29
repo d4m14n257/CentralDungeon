@@ -133,5 +133,16 @@
     "Absent": "Ausente",
     "registered": "Sesiones registradas",
     "nothingRecorded": "Todavía no hay asistencia registrada."
+  },
+  "graph": {
+    "controls": "Controles del lienzo",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "fitView": "Ver todo",
+    "interactive": "Bloquear el lienzo",
+    "handle": "Punto de conexión",
+    "nodeDescription": "Enter o espacio para seleccionarlo, flechas para moverlo, Supr para quitar su conexión.",
+    "nodeDescriptionKeyboardDisabled": "Enter o espacio para seleccionarlo.",
+    "edgeDescription": "Supr para quitar esta conexión."
   }
 }
