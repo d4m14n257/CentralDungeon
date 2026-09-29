@@ -54,6 +54,7 @@
 | `CollapsibleSection`, `FileCard` | Sus ranuras `actions` también se pintan con `.row-actions` | Pestañas del master, bibliotecas de archivos |
 | `IconAction` | Una acción de ícono con su tooltip y su `aria-label` | Toda acción de fila o de ficha |
 | `PaginationControls` | La paginación de una lista de trabajo (#271) | Las seis tablas de admin y `/my/files` |
+| `SectionNav` | La navegación de secciones de un contexto (#277): escrita tres veces igual, una por contexto, hasta que se nombró | `PlayerSectionNav`, `MasterSectionNav`, `AdminSectionNav` |
 | `GraphCanvas`, `GraphNode`, `GraphTray` | El lienzo de nodos y sus piezas (#275): ponen `.graph-canvas`, `.graph-node*` y `.graph-tray` ellos mismos | `/admin/catalogs/:kind/:id` |
 
 ## Deuda conocida

@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router'
 
 import { masterDashboardPath, masterTablesPath } from '@/config/paths'
-import { cn } from '@/lib/utils'
+import { SectionNav, type SectionNavItem } from '@/components/SectionNav'
 
 /**
  * The sections of the master context, as links. Same shape and same reason as `AdminSectionNav`.
@@ -16,28 +15,10 @@ import { cn } from '@/lib/utils'
 export function MasterSectionNav() {
   const { t } = useTranslation('master')
 
-  const sections = [
+  const sections: SectionNavItem[] = [
     { to: masterDashboardPath(), label: t('nav.dashboard'), end: true },
     { to: masterTablesPath(), label: t('nav.tables'), end: false },
   ]
 
-  return (
-    <nav aria-label={t('nav.label')} className="border-border flex gap-1 border-b">
-      {sections.map((section) => (
-        <NavLink
-          key={section.to}
-          to={section.to}
-          end={section.end}
-          className={({ isActive }) =>
-            cn(
-              'border-b-2 px-3 py-2 text-sm transition-colors',
-              isActive ? 'border-brand-400 text-fg font-medium' : 'text-fg-muted hover:text-fg border-transparent',
-            )
-          }
-        >
-          {section.label}
-        </NavLink>
-      ))}
-    </nav>
-  )
+  return <SectionNav label={t('nav.label')} sections={sections} />
 }

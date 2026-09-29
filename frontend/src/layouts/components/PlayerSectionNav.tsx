@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router'
 
 import { playerApplicationsPath, playerHistoryPath, playerHomePath, playerMyTablesPath } from '@/config/paths'
-import { cn } from '@/lib/utils'
+import { SectionNav, type SectionNavItem } from '@/components/SectionNav'
 
 /**
  * The sections of the player context, as links. Same shape and same reason as `AdminSectionNav` and
@@ -21,30 +20,12 @@ import { cn } from '@/lib/utils'
 export function PlayerSectionNav() {
   const { t } = useTranslation('tables')
 
-  const sections = [
+  const sections: SectionNavItem[] = [
     { to: playerHomePath(), label: t('nav.explore'), end: true },
     { to: playerApplicationsPath(), label: t('nav.applications'), end: false },
     { to: playerMyTablesPath(), label: t('nav.myTables'), end: false },
     { to: playerHistoryPath(), label: t('nav.history'), end: false },
   ]
 
-  return (
-    <nav aria-label={t('nav.label')} className="border-border flex gap-1 border-b">
-      {sections.map((section) => (
-        <NavLink
-          key={section.to}
-          to={section.to}
-          end={section.end}
-          className={({ isActive }) =>
-            cn(
-              'border-b-2 px-3 py-2 text-sm transition-colors',
-              isActive ? 'border-brand-400 text-fg font-medium' : 'text-fg-muted hover:text-fg border-transparent',
-            )
-          }
-        >
-          {section.label}
-        </NavLink>
-      ))}
-    </nav>
-  )
+  return <SectionNav label={t('nav.label')} sections={sections} />
 }

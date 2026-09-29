@@ -15,6 +15,11 @@ import { UserMenu } from './UserMenu'
  * The shell's bar (frontend-diseno.md 2): wordmark, context, notifications and avatar.
  * It sits on `surface` rather than on the canvas — that is what separates it from the content
  * without a shadow.
+ *
+ * **It never pushes the page sideways** (skill `diseno` §5.b). Below `sm` the gaps and the wordmark
+ * get smaller, and if even that does not fit - a 320 px phone with a long context name - the wordmark
+ * is what gives way (`min-w-0` + `truncate`): the switcher, the bell and the avatar are the controls,
+ * and none of them can be the one that ends up off screen.
  */
 export function AppHeader() {
   const { data: me } = useMe()
@@ -38,10 +43,10 @@ export function AppHeader() {
 
   return (
     <header className="border-border bg-surface sticky top-0 z-10 border-b">
-      <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-3 sm:gap-4">
         {/* The logo goes back to the home of the context on screen, the same place the switcher lands. */}
-        <Link to={homePathFor(activeContext)}>
-          <BrandMark />
+        <Link to={homePathFor(activeContext)} className="min-w-0 truncate">
+          <BrandMark className="text-sm sm:text-base" />
         </Link>
         <ContextSwitcher availableContexts={contexts} activeContext={activeContext} />
         <span className="flex-1" />

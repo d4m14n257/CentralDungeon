@@ -17,7 +17,7 @@ El sistema visual de CentralDungeon. **Es la fuente de todo lo visual** desde #2
 6. **Una lista de trabajo pagina con `PaginationControls`** (#271): tira numerada, «Ir a…» y tamaño 10 · 25 · 50 · 100 en `?size=`. Una lista de lectura trae más con `LoadMore` (#173). Nunca scroll infinito. → §5
 7. **Lo que no se puede hacer no aparece** (principio 2): ni gris ni deshabilitado sin decir por qué. **Lo irreversible se confirma** nombrando su consecuencia (principio 3). → `docs/frontend-diseno.md` §1
 8. **Toda pantalla que lee datos cubre los cuatro estados**: cargando (skeleton), vacío (`EmptyState`), error (`ErrorState`, con reintento) y sin permiso (`ForbiddenState`, solo para un recurso concreto: un contexto ajeno redirige, #269). → §5
-9. **Funciona a 375 px**, diseñado de menor a mayor con los cortes de Tailwind. Una tabla ancha **deja de ser tabla** en móvil y nunca scrollea en horizontal. → §5.b
+9. **Funciona a 375 px**, diseñado de menor a mayor con los cortes de Tailwind. Una tabla ancha **deja de ser tabla** en móvil y nunca scrollea en horizontal. **La página no se sale de la pantalla en ningún ancho, de 320 px a un ultrawide** (#277): el contenido y el header se acotan a `max-w-5xl`, la navegación de secciones baja de línea (`SectionNav`) y el header cede el logo antes que un control. → §5.b
 10. **El color nunca es el único portador de información**: un estado es punto + etiqueta (`StatusBadge`, #261). Los catorce colores de estado se reparten en nueve familias. → §3
 11. **Ningún texto se escribe en el JSX**: todo pasa por `t()`, en `es` y en `en` (#117, #198).
 12. **Todo cambio visual se ve en los dos temas** —claro y oscuro— antes de darlo por terminado. → §3

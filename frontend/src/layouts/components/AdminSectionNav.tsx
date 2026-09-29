@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router'
 
 import {
   adminCatalogsPath,
@@ -11,7 +10,7 @@ import {
   adminTablesPath,
   adminUsersPath,
 } from '@/config/paths'
-import { cn } from '@/lib/utils'
+import { SectionNav, type SectionNavItem } from '@/components/SectionNav'
 
 /**
  * The sections of the admin context, as links.
@@ -32,7 +31,7 @@ import { cn } from '@/lib/utils'
 export function AdminSectionNav() {
   const { t } = useTranslation('admin')
 
-  const sections = [
+  const sections: SectionNavItem[] = [
     { to: adminHomePath(), label: t('nav.home'), end: true },
     { to: adminQueuePath(), label: t('nav.queue') },
     { to: adminTablesPath(), label: t('nav.tables') },
@@ -45,23 +44,5 @@ export function AdminSectionNav() {
     { to: adminSettingsPath(), label: t('nav.settings') },
   ]
 
-  return (
-    <nav aria-label={t('nav.label')} className="border-border flex gap-1 border-b">
-      {sections.map((section) => (
-        <NavLink
-          key={section.to}
-          to={section.to}
-          end={section.end ?? false}
-          className={({ isActive }) =>
-            cn(
-              'border-b-2 px-3 py-2 text-sm transition-colors',
-              isActive ? 'border-brand-400 text-fg font-medium' : 'text-fg-muted hover:text-fg border-transparent',
-            )
-          }
-        >
-          {section.label}
-        </NavLink>
-      ))}
-    </nav>
-  )
+  return <SectionNav label={t('nav.label')} sections={sections} />
 }

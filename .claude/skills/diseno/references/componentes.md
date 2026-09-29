@@ -48,6 +48,7 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `WizardSteps` | El riel de pasos de un formulario largo, con el paso actual y los que ya se completaron. Hoy lo usa solo el wizard de crear mesa, que es el único formulario de varios pasos que existe |
 | `AttendanceSummaryView` | Los tres números de asistencia de #137 —presentes, ausentes, justificados— sin saber de qué mesa son. Lo usan la pestaña del master y la ficha del jugador |
 | `LanguageSwitch` | Elegir idioma, recordado sin ida al servidor (#198). Vive acá y no en `UserMenu` porque `/login` no tiene header y también lo necesita |
+| `SectionNav` | **La fila de secciones de un contexto** (Player, Master, Admin), con la actual subrayada (#277). Cuando no entran —las ocho de admin en un teléfono— **bajan de línea**, nunca empujan la página ni se esconden en un scroll interno. Los tres `*SectionNav` de `layouts/components/` solo le pasan su lista |
 | `BackendStatusIndicator` | Si el backend responde. En `RootLayout` para que se vea en toda pantalla, `/login` incluida |
 | `GraphCanvas` | **El lienzo de nodos** (#275), en `components/graph/`: React Flow con el marco `.graph-canvas`, fondo de puntos, controles de zoom con sus `aria-label` por `t()`, y la arista `straight-center` registrada. Es el único archivo que importa la hoja de React Flow. Ver «Lienzo de nodos», abajo |
 | `GraphNode` | El nodo base del lienzo: nombre, `StatusBadge`, una línea opcional y el menú de acciones, con el handle de entrada a la izquierda y el de salida a la derecha. Tres papeles —`head`, `member`, `floating`— que cambian el marco, nunca el color |
@@ -217,6 +218,8 @@ Lo único que cada pantalla define por su cuenta es **el texto del vacío y qué
 | *(sin prefijo)* | ≥ 375 px | Una columna. Los filtros se van a un `sheet`. Los modales son *sheet* desde abajo |
 | `md` | ≥ 768 px | Dos columnas. Los filtros vuelven a la barra |
 | `lg` | ≥ 1024 px | Tres columnas. Barra lateral donde la haya |
+
+**Ningún ancho saca la página de la pantalla** (#277), ni por abajo ni por arriba. Por arriba, el header y el `main` de cada layout se acotan a `max-w-5xl` (1024 px): en un ultrawide la app queda centrada y no se estira. Por abajo, hasta 320 px: la navegación de secciones baja de línea (`SectionNav`), el header achica espacios y logo debajo de `sm` y, si aun así no entra, **cede el logo** (`min-w-0 truncate`), nunca un control. Un hijo de grid o de flex que lleva texto largo necesita `min-w-0`, o su contenido empuja la columna. Se verifica midiendo `scrollWidth` contra `innerWidth` en todas las rutas.
 
 **La regla del lienzo** (#275): debajo de `md` un lienzo de nodos se vuelve la lista de lo mismo, con el mismo menú por fila; nunca un lienzo diminuto con zoom.
 

@@ -14,7 +14,7 @@ import {
 import { homePathFor } from '@/config/paths'
 import type { AppContext } from '@/stores/contextStore'
 
-const CHIP_CLASSES = 'border-border-strong text-fg-muted h-auto gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-normal'
+const CHIP_CLASSES = 'border-border-strong text-fg-muted h-auto gap-1.5 rounded-lg border px-2 py-1.5 text-sm font-normal sm:px-3'
 
 /** What the chip shows and what the menu offers. */
 interface ContextSwitcherProps {
