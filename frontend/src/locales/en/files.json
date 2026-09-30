@@ -41,15 +41,6 @@
     "noResultsTitle": "No results",
     "noResultsDescription": "None of your files match the search."
   },
-  "publish": {
-    "categoriesLabel": "Where it will be offered",
-    "categoriesHint": "You can pick more than one: the same blank sheet serves when a table is being set up and when something is asked mid-season.",
-    "hint": {
-      "TableMaterial": "Shows up when a master sets up their table or recruits.",
-      "MasterRequest": "Shows up when a master asks for something on a table already running.",
-      "Announcement": "The community's rules and announcements. It comes from no table."
-    }
-  },
   "table": {
     "title": "Table files",
     "attach": "Add a file",
@@ -75,7 +66,7 @@
   },
   "admin": {
     "title": "Files",
-    "description": "The community's library: what is published for every table. When uploading you choose where it is offered, and it is published.",
+    "description": "The community's library: what is published for every table.",
     "searchLabel": "Search files",
     "searchPlaceholder": "Search by name",
     "columns": {
@@ -99,14 +90,7 @@
     "unpublishTitle": "Stop publishing it?",
     "unpublishDescription": "It leaves the library and goes back to being its uploader's file. Tables that already added it keep it. To publish it again, upload it again.",
     "unpublishConfirm": "Unpublish",
-    "upload": "Publish a file",
-    "uploadClose": "Close",
-    "send_one": "Publish 1 file",
-    "send_other": "Publish {{count}} files",
-    "someFailed": "Could not upload: {{names}}. The rest are in.",
-    "published_one": "File published",
-    "published_other": "{{count}} files published",
-    "reused": "You had already uploaded {{names}}: that same copy was published."
+    "upload": "Upload files"
   },
   "search": {
     "file_name": "name",
@@ -139,10 +123,12 @@
   },
   "dropzone": {
     "prompt": "Drag a file here, or click to pick one",
+    "promptMultiple": "Drag the files here, or click to pick them",
     "limits": "Up to {{maxMb}} MB per file. PDF, Word, PNG and JPG are accepted.",
     "categoryLabel": "Which drawer it goes in",
     "reused": "You already had “{{name}}”: it was reused and takes no extra space.",
-    "categoryHint": "Only needed here: when you upload from a table or an answer, the drawer follows from where you uploaded it."
+    "categoryHint": "Only needed here: when you upload from a table or an answer, the drawer follows from where you uploaded it.",
+    "refusedFile": "“{{name}}”: {{reason}}"
   },
   "errors": {
     "uploadFailed": "The file could not be uploaded. Try again.",
@@ -186,5 +172,21 @@
   },
   "staged": {
     "remove": "Remove “{{name}}”"
+  },
+  "upload": {
+    "title": "Upload files",
+    "description": "What you upload here is published for the whole community. Choose what each file is: that decides where masters see it.",
+    "back": "Back to files",
+    "categoryLabel": "What “{{name}}” is",
+    "categoryPlaceholder": "What is it?",
+    "missingCategory_one": "1 file still needs to say what it is.",
+    "missingCategory_other": "{{count}} files still need to say what they are.",
+    "cancel": "Cancel",
+    "send_one": "Upload 1 file",
+    "send_other": "Upload {{count}} files",
+    "published_one": "File published",
+    "published_other": "{{count}} files published",
+    "reused": "You had already uploaded {{names}}: that same copy was published.",
+    "someFailed": "Could not upload: {{names}}. The rest are in."
   }
 }

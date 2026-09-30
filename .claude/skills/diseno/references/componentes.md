@@ -68,12 +68,12 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `GameTableCard` — la ficha del explorador | `features/tables/` |
 | `RegistrationStatusBadge` — los cinco de postulación | `features/registrations/` |
 | `FilePicker` — subir **o** reutilizar del historial (#65) o de lo publicado (#79). Recibe el **cajón en el que está parado** y la pestaña Publicados pide justo lo que la comunidad publicó para ese momento (#233) | `features/files/` |
-| `FileDropzone` — arrastrar y soltar, con los límites dichos antes de romperlos y el error **inline** bajo la zona. **No sube: acumula** (#238) | `features/files/` |
-| `StagedFileList` — lo que está por subirse, con su botón de quitar. Sin subida inmediata, es la única señal de que el archivo se tomó (#238) | `features/files/` |
+| `FileDropzone` — arrastrar y soltar, con los límites dichos antes de romperlos y el error **inline** bajo la zona. **No sube: acumula** (#238). Con `multiple` toma varios de una vez, cada uno por separado, y un rechazo nombra su archivo — solo en `/admin/files/upload` (#279) | `features/files/` |
+| `StagedFileList` — lo que está por subirse, con su botón de quitar. Sin subida inmediata, es la única señal de que el archivo se tomó (#238). `renderControls` le suma algo a cada fila —el `PublishCategorySelect` de `/admin/files/upload`— y entonces, debajo de `sm`, el nombre va en su línea y los controles debajo (#279) | `features/files/` |
 | `FileCategoryChoice` — el cajón como chips, no como `<Select>`: es una decisión previa al envío y verla entera es lo que deja tomarla (#233) | `features/files/` |
 | `FileCard` — la fila de un archivo: icono por MIME, tamaño, categoría, último uso y dónde se usa | `features/files/` |
 | `FileCategoryFilter` — los cajones como fila de toggles, no como `<Select>` (#233). **Solo en `/admin/files`**, y ahí con los tres publicables (#278): en `/my/files` el cajón se narrowea desde el buscador con `/file_categories` (#242) | `features/files/` |
-| `PublishCategoriesField` — los tres cajones publicables como checkboxes, **arriba** de la zona de subida de `/admin/files`: subir es publicar, así que se eligen antes (#278). Checkboxes y no chips porque son varios a la vez; nada preseleccionado (M24.1) | `features/files/` |
+| `PublishCategorySelect` — qué es **un** archivo, como `<Select>` de los tres cajones publicables, **en su fila** de la lista de subida de `/admin/files/upload` (#279). Nada preseleccionado (M24.1); sin elegir, «Subir» no manda nada y lo dice | `features/files/` |
 | `FileUsageChips` — dónde se usa un archivo, o «sin usar», que es el aviso de la purga (#232, #75) | `features/files/` |
 | `KarmaBadge` — número + indicador cualitativo. **Nunca se construyó**: el karma se pinta dentro de `ProfileCard` y como texto en las listas | `features/users/` |
 | `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (#164) | `features/users/` |
@@ -93,7 +93,7 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 | `adminQueue` (2) | `ClaimBadge` · `QueueItemKindBadge` |
 | `approvals` (7) | `BanRequestsSection` · `RequestDetailPanel` · `RequestStatusBadge` · `RequestTypeBadge` · `ResolveRequestDialog` · `SubmitRequestDialog` · `SubmitRequestSection` |
 | `catalogs` (8) | `AcceptCatalogValueDialog` · `CanonicalPicker` · `CatalogChip` · `CatalogCombobox` · `CatalogPicker` · `CatalogStatusBadge` · `DisableCatalogValueDialog` · `MergeCatalogGroupsDialog` |
-| `files` (12) | `EditFileDialog` · `FileCard` · `FileCategoryBadge` · `FileCategoryChoice` · `FileCategoryFilter` · `FileDropzone` · `FileList` · `FilePicker` · `FileTypeBadge` · `FileUsageChips` · `PublishCategoriesField` · `StagedFileList` |
+| `files` (12) | `EditFileDialog` · `FileCard` · `FileCategoryBadge` · `FileCategoryChoice` · `FileCategoryFilter` · `FileDropzone` · `FileList` · `FilePicker` · `FileTypeBadge` · `FileUsageChips` · `PublishCategorySelect` · `StagedFileList` |
 | `help` (3) | `HelpBlocks` · `HelpDialog` · `HelpLink` |
 | `notifications` (1) | `NotificationBell` |
 | `registrations` (4) | `ApplyToTableDialog` · `BlockPlayerDialog` · `RegistrationStatusBadge` · `RejectRegistrationDialog` |

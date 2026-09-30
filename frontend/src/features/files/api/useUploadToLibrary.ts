@@ -3,6 +3,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { filesApi } from './filesApi'
 import type { FileCategory, StagedFile } from '../types'
 
+/** One file to send into the platform's library, with what it is. */
+export interface LibraryUpload {
+  /** The file as it was staged. Only `new` entries are sent: the library's dropzone stages nothing else. */
+  staged: StagedFile
+  /** The cajón it is published into, chosen on its own row (#278). */
+  category: FileCategory
+}
+
 /** What sending the staged files into the platform's library came to. */
 export interface LibraryUploadResult {
   /** The names that were published, in the order they were picked. */
@@ -14,20 +22,17 @@ export interface LibraryUploadResult {
 }
 
 /**
- * Sends what is staged on /admin/files into the platform's library, published into the cajones the
- * admin chose beforehand (#233, #238, #278).
+ * Sends what is staged on /admin/files/upload into the platform's library, each file published into
+ * the cajón chosen on its row (#233, #238, #278).
  *
- * **Uploading is publishing here**, so every file goes up with the same cajones and comes back
- * `Public` — there is no step in between where it sits in the library saying nothing.
+ * **Uploading is publishing there**: every file comes back `Public`, with no step in between where it
+ * sits in the library saying nothing.
  *
- * **A failure does not undo the rest**, the same rule as `useCommitStagedFiles`: each file is sent
- * on its own and the names that failed come back in the result, so the screen can keep them listed
- * and let the admin try again — which is free, because the server recognises content it already has.
+ * **A failure does not undo the rest**, the same rule as `useCommitStagedFiles`: each file is sent on
+ * its own and the names that failed come back in the result, so the screen keeps them listed and the
+ * admin can try again — which is free, because the server recognises content it already has.
  *
- * Only `new` entries are sent: the dropzone of the library stages nothing else, and a file that is
- * already somebody's is not something an admin publishes from here (#278).
- *
- * @returns the mutation, taking the staged list and the cajones to publish into
+ * @returns the mutation, taking the files with their cajones
  */
 export function useUploadToLibrary() {
   const queryClient = useQueryClient()
@@ -35,20 +40,20 @@ export function useUploadToLibrary() {
     // It reports its own failures in the result, so the global toast would be a second, vaguer
     // message about something the screen already names precisely.
     meta: { showsItsOwnError: true },
-    mutationFn: async ({ staged, categories }: { staged: StagedFile[]; categories: FileCategory[] }): Promise<LibraryUploadResult> => {
+    mutationFn: async (uploads: LibraryUpload[]): Promise<LibraryUploadResult> => {
       const published: string[] = []
       const failed: string[] = []
       const reused: string[] = []
-      for (const entry of staged) {
-        if (entry.kind !== 'new') continue
+      for (const { staged, category } of uploads) {
+        if (staged.kind !== 'new') continue
         try {
-          const uploaded = await filesApi.uploadToLibrary(entry.file, { categories })
-          published.push(entry.name)
+          const uploaded = await filesApi.uploadToLibrary(staged.file, { categories: [category] })
+          published.push(staged.name)
           if (uploaded.deduplicated) {
-            reused.push(entry.name)
+            reused.push(staged.name)
           }
         } catch {
-          failed.push(entry.name)
+          failed.push(staged.name)
         }
       }
       return { published, failed, reused }

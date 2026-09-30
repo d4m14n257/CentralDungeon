@@ -218,7 +218,7 @@ test('a private attachment never reaches the public detail', async ({ browser })
 
 /**
  * #79 from the platform's side: an admin uploads a file into the library — which publishes it, into
- * the cajones chosen first (#278) — and a master who never uploaded it attaches it: linked, not
+ * the cajón chosen on its row (#278) — and a master who never uploaded it attaches it: linked, not
  * copied, which is why it still shows a single row in /admin/files.
  */
 test('a master attaches a file the platform published without copying it', async ({ browser }) => {
@@ -228,19 +228,24 @@ test('a master attaches a file the platform published without copying it', async
   const master = await newAuthenticatedPage(browser, `e2e-pub-master-${runId}`, true, false)
 
   try {
-    // The admin uploads straight into the platform's library, and uploading is publishing (#278):
-    // the cajones come first, and the button refuses until one is chosen — nothing is preselected,
-    // so a file cannot land in the wrong flow by omission (M24.1, #233).
+    // The admin uploads on the library's own page, and uploading is publishing (#278): each file in
+    // the upload list says what it is, and nothing is sent while one does not — nothing is
+    // preselected, so a file cannot land in the wrong flow by omission (M24.1, #233).
     await admin.page.goto('/admin/files')
-    await admin.page.getByRole('button', { name: 'Publicar archivo' }).click()
-    // Only the three a file can be published into: the player-side ones hold people's answers.
-    await expect(admin.page.getByRole('checkbox', { name: 'Solicitud de jugador' })).toHaveCount(0)
-    await expect(admin.page.getByRole('checkbox', { name: 'Entrega del jugador' })).toHaveCount(0)
+    await admin.page.getByRole('link', { name: 'Subir archivos' }).click()
+    await expect(admin.page).toHaveURL(/\/admin\/files\/upload$/)
     await admin.page.locator('input[type="file"]').setInputFiles(pdf('ficha-comunidad-e2e.pdf', runId))
-    const send = admin.page.getByRole('button', { name: /Publicar \d+ archivos?/ })
-    await expect(send).toBeDisabled()
-    await admin.page.getByRole('checkbox', { name: 'De mesa' }).click()
-    await send.click()
+    await admin.page.getByRole('button', { name: 'Subir 1 archivo' }).click()
+    await expect(admin.page.getByText('Falta elegir qué es 1 archivo.')).toBeVisible()
+
+    await admin.page.getByRole('combobox', { name: 'Qué es «ficha-comunidad-e2e.pdf»' }).click()
+    // Only the three a file can be published into: the player-side ones hold people's answers.
+    await expect(admin.page.getByRole('option')).toHaveCount(3)
+    await expect(admin.page.getByRole('option', { name: 'Solicitud de jugador' })).toHaveCount(0)
+    await admin.page.getByRole('option', { name: 'De mesa' }).click()
+    await admin.page.getByRole('button', { name: 'Subir 1 archivo' }).click()
+    // Everything went up, so the page hands back to the library.
+    await expect(admin.page).toHaveURL(/\/admin\/files$/)
 
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')

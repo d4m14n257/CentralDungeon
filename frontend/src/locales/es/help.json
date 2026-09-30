@@ -514,7 +514,7 @@
       "title": "Archivos",
       "what": "/admin/files es la biblioteca de la comunidad: solo lo publicado, con quién lo subió y en cuántas mesas se usa.",
       "publish": "Subir un archivo acá es publicarlo: queda a disposición de todas las mesas. Es la forma de tener una ficha por defecto: cada master la agrega a su mesa en vez de subir su propia copia.",
-      "categories": "Antes de subir elegís dónde se ofrece: «De mesa» (cuando un master arma su mesa o busca candidatos), «Petición del master» (cuando pide algo en una mesa que ya corre) o «Anuncios de la comunidad». Podés elegir más de uno.",
+      "categories": "Al subir elegís qué es cada archivo: «De mesa» (aparece cuando un master arma su mesa o busca candidatos), «Petición del master» (cuando pide algo en una mesa que ya corre) o «Anuncios de la comunidad».",
       "playerSide": "«Solicitud de jugador» y «Entrega del jugador» no aparecen acá a propósito: guardan lo que cada jugador respondió, con las hojas que le dio su master. No hay nada que la comunidad publique ahí.",
       "private": "Los archivos privados de las personas no se ven ni se dan de baja desde esta pantalla: son suyos, no de la biblioteca.",
       "notALock": "El cajón no es un permiso. Define en qué listados aparece el archivo, no quién puede abrirlo: un archivo publicado es público.",
@@ -523,8 +523,8 @@
       "purge": "Los archivos que nadie usa ni tiene agregado a una mesa se dan de baja solos a los tres meses. Los publicados no: son de la plataforma y no caducan.",
       "steps": {
         "step1": "Entrá a /admin/files desde la navegación del contexto Admin.",
-        "step2": "Tocá «Publicar archivo» y elegí dónde se va a ofrecer.",
-        "step3": "Soltá los archivos y tocá «Publicar».",
+        "step2": "Tocá «Subir archivos».",
+        "step3": "Soltá los archivos y, en cada uno, elegí qué es; después «Subir».",
         "step4": "La columna «Mesas» te dice en cuántas se está usando antes de que lo des de baja."
       },
       "commands": "El buscador de esta pantalla entiende «/file_name» (el nombre), «/file_owner» (quién lo subió), «/file_type» (el formato) y «/file_categories» (el cajón). Los dos últimos se eligen de una lista. «/and» y «/or» se ofrecen apenas hay un criterio que unir."

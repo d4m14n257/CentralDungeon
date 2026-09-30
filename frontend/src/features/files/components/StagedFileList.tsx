@@ -1,7 +1,9 @@
 import { XIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { IconAction } from '@/components/IconAction'
+import { cn } from '@/lib/utils'
 
 import type { StagedFile } from '../types'
 
@@ -10,6 +12,11 @@ interface StagedFileListProps {
   files: StagedFile[]
   /** Called with the entry to drop. Keyed by `localId` for new files and `fileId` for existing ones. */
   onRemove: (key: string) => void
+  /**
+   * What else a row carries, between the name and the remove button — on /admin/files/upload, the
+   * select that says what each file is (#278). Undefined everywhere a flow already knows.
+   */
+  renderControls?: (staged: StagedFile) => ReactNode
 }
 
 /**
@@ -23,10 +30,11 @@ interface StagedFileListProps {
  * two are the same decision (#65) — the difference is only what the confirm has to do about each,
  * and that is `useCommitStagedFiles`'s business.
  *
- * @param props.files    what is waiting to be sent
- * @param props.onRemove called with the key of the entry to drop
+ * @param props.files          what is waiting to be sent
+ * @param props.onRemove       called with the key of the entry to drop
+ * @param props.renderControls what else each row carries, or undefined for just the name
  */
-export function StagedFileList({ files, onRemove }: StagedFileListProps) {
+export function StagedFileList({ files, onRemove, renderControls }: StagedFileListProps) {
   const { t } = useTranslation('files')
 
   if (files.length === 0) {
@@ -38,8 +46,11 @@ export function StagedFileList({ files, onRemove }: StagedFileListProps) {
       {files.map((staged) => {
         const key = staged.kind === 'new' ? staged.localId : staged.fileId
         return (
-          <li key={key} className="flex items-center gap-3 px-3 py-2">
-            <span className="min-w-0 flex-1 truncate text-sm">{staged.name}</span>
+          // With controls, below `sm` the name takes its own line and the controls go under it: a
+          // filename cut to six characters no longer says which file the select is about.
+          <li key={key} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2">
+            <span className={cn('min-w-0 flex-1 truncate text-sm', renderControls && 'basis-full sm:basis-0')}>{staged.name}</span>
+            {renderControls?.(staged)}
             <IconAction
               icon={<XIcon className="size-4" />}
               label={t('staged.remove', { name: staged.name })}

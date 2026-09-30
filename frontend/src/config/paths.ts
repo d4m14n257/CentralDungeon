@@ -46,6 +46,7 @@ export const paths = {
   adminCatalogs: 'admin/catalogs',
   adminCatalogGroup: 'admin/catalogs/:kind/:id',
   adminFiles: 'admin/files',
+  adminFileUpload: 'admin/files/upload',
   adminUsers: 'admin/users',
   adminRequests: 'admin/requests',
   adminSettings: 'admin/settings',
@@ -225,9 +226,14 @@ export function adminCatalogGroupPath(kind: string, id: string): string {
   return `/admin/catalogs/${kind}/${id}`
 }
 
-/** @returns the absolute path to the file administration screen (#64, #79) */
+/** @returns the absolute path to the platform's library of published files (#64, #79, #278) */
 export function adminFilesPath(): string {
   return '/admin/files'
+}
+
+/** @returns the absolute path to the page that uploads files into the platform's library (#278) */
+export function adminFileUploadPath(): string {
+  return '/admin/files/upload'
 }
 
 /**

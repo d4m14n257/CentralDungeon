@@ -35,6 +35,12 @@ interface FileDropzoneProps {
    * `Announcement` is nobody's — it lives only in the platform's library.
    */
   categories?: readonly FileCategory[]
+  /**
+   * Whether several files can be dropped or picked at once, each staged on its own (#278). Only where
+   * the caller's list gives each file what it needs — /admin/files/upload, where every row says what
+   * its file is. False keeps the one-at-a-time zone every flow was built around.
+   */
+  multiple?: boolean
 }
 
 /**
@@ -67,8 +73,15 @@ interface FileDropzoneProps {
  * @param props.isBusy         true while the caller is acting on the result
  * @param props.askForCategory whether to ask which cajón it goes in — only where there is no flow
  * @param props.categories     which cajones to offer when it asks; only the actor's own (#237)
+ * @param props.multiple       whether several files can be taken at once, each staged on its own
  */
-export function FileDropzone({ onStaged, isBusy = false, askForCategory = false, categories = FILE_CATEGORIES }: FileDropzoneProps) {
+export function FileDropzone({
+  onStaged,
+  isBusy = false,
+  askForCategory = false,
+  categories = FILE_CATEGORIES,
+  multiple = false,
+}: FileDropzoneProps) {
   const { t } = useTranslation('files')
   // The cap is a setting since F3.5 (#141), so it is asked for rather than assumed. The hook always
   // answers - with the shipped default while the request is in flight - so the zone is never waiting
@@ -93,14 +106,19 @@ export function FileDropzone({ onStaged, isBusy = false, askForCategory = false,
    * the same rule and the message is the same message - `rejectionOf` returns the error code the
    * backend would have used - so a file refused now and one refused later read identically (#197).
    */
-  function handleFile(file: File) {
-    const rejection = rejectionOf(file, maxFileSizeBytes)
-    if (rejection !== null) {
-      setError(t([`errors.${rejection}`, 'errors.uploadFailed'], { maxBytes: maxFileSizeBytes, sizeBytes: file.size }))
-      return
+  function handleFiles(files: File[]) {
+    const refusals: string[] = []
+    for (const file of multiple ? files : files.slice(0, 1)) {
+      const rejection = rejectionOf(file, maxFileSizeBytes)
+      if (rejection !== null) {
+        const reason = t([`errors.${rejection}`, 'errors.uploadFailed'], { maxBytes: maxFileSizeBytes, sizeBytes: file.size })
+        // Several at once: a refusal has to say which file it is about, or it names nothing.
+        refusals.push(multiple ? t('dropzone.refusedFile', { name: file.name, reason }) : reason)
+        continue
+      }
+      onStaged({ kind: 'new', localId: crypto.randomUUID(), name: file.name, file })
     }
-    setError(null)
-    onStaged({ kind: 'new', localId: crypto.randomUUID(), name: file.name, file })
+    setError(refusals.length > 0 ? refusals.join(' ') : null)
   }
 
   return (
@@ -129,9 +147,8 @@ export function FileDropzone({ onStaged, isBusy = false, askForCategory = false,
         onDrop={(event) => {
           event.preventDefault()
           setIsOver(false)
-          const dropped = event.dataTransfer.files[0]
-          if (dropped && !isPending) {
-            handleFile(dropped)
+          if (!isPending) {
+            handleFiles(Array.from(event.dataTransfer.files))
           }
         }}
         className={cn(
@@ -143,7 +160,7 @@ export function FileDropzone({ onStaged, isBusy = false, askForCategory = false,
         <span aria-hidden="true" className="text-fg-muted">
           <UploadCloudIcon className="size-6" />
         </span>
-        <span className="text-sm font-medium">{t('dropzone.prompt')}</span>
+        <span className="text-sm font-medium">{t(multiple ? 'dropzone.promptMultiple' : 'dropzone.prompt')}</span>
         {/* The cap is interpolated rather than written into the sentence: it is a setting now, and a
             hardcoded "2 MB" in the copy would go on saying 2 the day an admin raises it (#141). */}
         <span className="text-fg-muted text-xs">{t('dropzone.limits', { maxMb: Math.floor(maxFileSizeBytes / (1024 * 1024)) })}</span>
@@ -152,12 +169,10 @@ export function FileDropzone({ onStaged, isBusy = false, askForCategory = false,
           id={inputId}
           type="file"
           className="sr-only"
+          multiple={multiple}
           disabled={isPending}
           onChange={(event) => {
-            const picked = event.target.files?.[0]
-            if (picked) {
-              handleFile(picked)
-            }
+            handleFiles(Array.from(event.target.files ?? []))
             // Cleared immediately: nothing is in flight, and keeping the value would stop the same
             // file from firing a change event again after being removed from the list.
             event.target.value = ''

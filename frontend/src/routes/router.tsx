@@ -108,6 +108,8 @@ export const router = createBrowserRouter([
           // only loads for an admin who opens a group.
           { path: 'catalogs/:kind/:id', lazy: () => import('./admin/AdminCatalogGroupPage') },
           { path: 'files', lazy: () => import('./admin/AdminFilesPage') },
+          // Uploading into the library is its own page, not a panel over the list (#278).
+          { path: 'files/upload', lazy: () => import('./admin/AdminFileUploadPage') },
           // Accounts, their roles and their blocks (F3.1).
           { path: 'users', lazy: () => import('./admin/AdminUsersPage') },
           // Every request somebody made of an admin (#42, F3.2).

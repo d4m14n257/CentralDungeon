@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EyeOff, Trash2 } from 'lucide-react'
-import { useSearchParams } from 'react-router'
-import { toast } from 'sonner'
+import { Link, useSearchParams } from 'react-router'
 
 import { useConfirm } from '@/hooks/useConfirm'
 import { IconAction } from '@/components/IconAction'
@@ -16,24 +15,18 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
+import { adminFileUploadPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
-import { useDisclosure } from '@/hooks/useDisclosure'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
 import {
   FileCategoryBadge,
   FileCategoryFilter,
-  FileDropzone,
   PUBLISHABLE_CATEGORIES,
-  PublishCategoriesField,
-  StagedFileList,
   formatFileSize,
   useAdminFiles,
   useDeleteFileAsAdmin,
   useUnpublishFile,
-  useUploadToLibrary,
   type AdminFile,
-  type FileCategory,
-  type StagedFile,
   adminFileSearchFields,
 } from '@/features/files'
 import { browserTimeZone, formatDate } from '@/lib/date'
@@ -48,8 +41,8 @@ import { ApiError } from '@/types/api'
  * their own copy, so correcting it corrects every table at once and the same bytes are stored once
  * rather than once per master. Without this screen, #79 would be a rule nothing could exercise.
  *
- * **Only what is published, and uploading is publishing** (#278). The cajones are chosen before the
- * file is sent, so nothing sits here without saying which flow it is for; and somebody's private file
+ * **Only what is published, and uploading is publishing** (#278). Uploading happens on its own page,
+ * /admin/files/upload, where each file gets the cajón it goes into; and somebody's private file
  * — what a player applied with or handed in — never shows up, because it is theirs and not the
  * library's. That is also why the screen speaks of three cajones and not five: the two player-side
  * ones hold people's answers, and nothing is ever published into them (#233).
@@ -89,45 +82,6 @@ export function AdminFilesPage() {
   const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(search.query, undefined, category ?? undefined, page, size)
   const unpublish = useUnpublishFile()
   const remove = useDeleteFileAsAdmin()
-  const uploadPanel = useDisclosure()
-
-  // Staged in the browser until the button below is pressed (#238), and published into the cajones
-  // chosen above the dropzone — before anything is sent, never afterwards (#278).
-  const [staged, setStaged] = useState<StagedFile[]>([])
-  const [categories, setCategories] = useState<FileCategory[]>([])
-  const commit = useUploadToLibrary()
-
-  function removeStaged(key: string) {
-    setStaged((current) => current.filter((entry) => (entry.kind === 'new' ? entry.localId : entry.fileId) !== key))
-  }
-
-  /**
-   * Publishes what is staged into the chosen cajones. What failed stays listed, to try again; the
-   * cajones stay chosen with it, so retrying is one click.
-   */
-  function send() {
-    commit.mutate(
-      { staged, categories },
-      {
-        onSuccess: ({ published, failed, reused }) => {
-          setStaged(staged.filter((entry) => entry.kind === 'new' && failed.includes(entry.name)))
-          if (published.length > 0) {
-            toast.success(t('admin.published', { count: published.length }))
-          }
-          // Reuse is worth saying (#234): the admin already had that content, so no second copy exists.
-          if (reused.length > 0) {
-            toast.info(t('admin.reused', { names: reused.join(', ') }))
-          }
-          if (failed.length > 0) {
-            toast.error(t('admin.someFailed', { names: failed.join(', ') }))
-            return
-          }
-          setCategories([])
-          uploadPanel.close()
-        },
-      },
-    )
-  }
 
   /**
    * Writes the screen's state into the URL, resetting the page whenever the search changes.
@@ -211,29 +165,12 @@ export function AdminFilesPage() {
             <HelpLink section="admins.files" className="text-sm">
               {t('table.helpLink')}
             </HelpLink>
-            <Button type="button" onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}>
-              {uploadPanel.isOpen ? t('admin.uploadClose') : t('admin.upload')}
+            <Button asChild>
+              <Link to={adminFileUploadPath()}>{t('admin.upload')}</Link>
             </Button>
           </>
         }
       />
-
-      {/* **The library's upload box** (#237, #278). The cajones come first, above the dropzone,
-          because here uploading is publishing: the file goes up already saying which flows it is
-          for, and the button refuses until at least one is chosen. */}
-      {uploadPanel.isOpen && (
-        <div className="border-border space-y-3 rounded-lg border p-4">
-          <PublishCategoriesField value={categories} onChange={setCategories} disabled={commit.isPending} />
-          {/* Staged until the button below (#238). */}
-          <FileDropzone onStaged={(file) => setStaged((current) => [...current, file])} isBusy={commit.isPending} />
-          <StagedFileList files={staged} onRemove={removeStaged} />
-          <div className="flex justify-end">
-            <Button type="button" disabled={staged.length === 0 || categories.length === 0 || commit.isPending} onClick={send}>
-              {t('admin.send', { count: staged.length })}
-            </Button>
-          </div>
-        </div>
-      )}
 
       <SearchQueryInput
         fields={search.fields}

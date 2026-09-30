@@ -41,15 +41,6 @@
     "noResultsTitle": "Sin resultados",
     "noResultsDescription": "Ningún archivo tuyo coincide con la búsqueda."
   },
-  "publish": {
-    "categoriesLabel": "Dónde se va a ofrecer",
-    "categoriesHint": "Podés elegir más de uno: la misma hoja en blanco sirve al armar la mesa y al pedir algo a mitad de temporada.",
-    "hint": {
-      "TableMaterial": "Aparece cuando un master arma su mesa o busca candidatos.",
-      "MasterRequest": "Aparece cuando un master pide algo en una mesa que ya está corriendo.",
-      "Announcement": "El reglamento y los avisos de la comunidad. No sale de ninguna mesa."
-    }
-  },
   "table": {
     "title": "Archivos de la mesa",
     "attach": "Agregar un archivo",
@@ -75,7 +66,7 @@
   },
   "admin": {
     "title": "Archivos",
-    "description": "La biblioteca de la comunidad: lo que se publica para todas las mesas. Al subir elegís dónde se ofrece, y queda publicado.",
+    "description": "La biblioteca de la comunidad: lo que se publica para todas las mesas.",
     "searchLabel": "Buscar archivos",
     "searchPlaceholder": "Buscar por nombre",
     "columns": {
@@ -99,14 +90,7 @@
     "unpublishTitle": "¿Dejar de publicarlo?",
     "unpublishDescription": "Sale de la biblioteca y vuelve a ser un archivo de quien lo subió. Las mesas que ya lo tienen agregado lo conservan. Para volver a publicarlo, se sube de nuevo.",
     "unpublishConfirm": "Dejar de publicar",
-    "upload": "Publicar archivo",
-    "uploadClose": "Cerrar",
-    "send_one": "Publicar 1 archivo",
-    "send_other": "Publicar {{count}} archivos",
-    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están.",
-    "published_one": "Archivo publicado",
-    "published_other": "{{count}} archivos publicados",
-    "reused": "Ya tenías subido {{names}}: se publicó esa misma copia."
+    "upload": "Subir archivos"
   },
   "search": {
     "file_name": "nombre",
@@ -139,10 +123,12 @@
   },
   "dropzone": {
     "prompt": "Arrastrá un archivo acá o hacé clic para elegirlo",
+    "promptMultiple": "Arrastrá los archivos acá o hacé clic para elegirlos",
     "limits": "Hasta {{maxMb}} MB por archivo. Se aceptan PDF, Word, PNG y JPG.",
     "categoryLabel": "En qué cajón va",
     "reused": "«{{name}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo.",
-    "categoryHint": "Solo hace falta acá: cuando subís un archivo desde una mesa o una entrega, el cajón sale solo de dónde lo subiste."
+    "categoryHint": "Solo hace falta acá: cuando subís un archivo desde una mesa o una entrega, el cajón sale solo de dónde lo subiste.",
+    "refusedFile": "«{{name}}»: {{reason}}"
   },
   "errors": {
     "uploadFailed": "No se pudo subir el archivo. Probá de nuevo.",
@@ -186,5 +172,21 @@
   },
   "staged": {
     "remove": "Quitar «{{name}}»"
+  },
+  "upload": {
+    "title": "Subir archivos",
+    "description": "Lo que subas acá queda publicado para toda la comunidad. Elegí qué es cada archivo: eso decide dónde lo ven los masters.",
+    "back": "Volver a archivos",
+    "categoryLabel": "Qué es «{{name}}»",
+    "categoryPlaceholder": "¿Qué es?",
+    "missingCategory_one": "Falta elegir qué es 1 archivo.",
+    "missingCategory_other": "Falta elegir qué son {{count}} archivos.",
+    "cancel": "Cancelar",
+    "send_one": "Subir 1 archivo",
+    "send_other": "Subir {{count}} archivos",
+    "published_one": "Archivo publicado",
+    "published_other": "{{count}} archivos publicados",
+    "reused": "Ya tenías subido {{names}}: se publicó esa misma copia.",
+    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están."
   }
 }

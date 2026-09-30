@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Navegación del Admin — /admin, 7 secciones y un lienzo",
+    "title": "Navegación del Admin — /admin, 7 secciones, un lienzo y una subida",
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/d4m14n257/CentralDungeon",
@@ -20,7 +20,7 @@
       }
     },
     "viewBox": [
-      1100,
+      1340,
       590
     ],
     "views": [
@@ -211,7 +211,7 @@
       "id": "files",
       "type": "frontend",
       "label": "/admin/files",
-      "sublabel": "entrada única · callejón",
+      "sublabel": "biblioteca publicada · abre la subida",
       "pos": [
         840,
         150
@@ -224,7 +224,7 @@
       "sources": [
         {
           "path": "frontend/src/routes/admin/AdminFilesPage.tsx",
-          "label": "diálogos"
+          "label": "cabecera → subir (#278)"
         }
       ]
     },
@@ -310,6 +310,27 @@
           "path": "frontend/src/routes/router.tsx",
           "label": "ruta lazy",
           "line": 109
+        }
+      ]
+    },
+    {
+      "id": "fileUpload",
+      "type": "frontend",
+      "label": "/admin/files/upload",
+      "sublabel": "subir y publicar (#278)",
+      "pos": [
+        1100,
+        150
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminFileUploadPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/router.tsx",
+          "label": "ruta lazy"
         }
       ]
     }
@@ -404,6 +425,13 @@
       "to": "catalogGroup",
       "fromSide": "bottom",
       "toSide": "top"
+    },
+    {
+      "id": "files-upload",
+      "from": "files",
+      "to": "fileUpload",
+      "fromSide": "right",
+      "toSide": "left"
     }
   ],
   "cards": [
@@ -411,7 +439,7 @@
       "dot": "rose",
       "title": "El admin casi no sale",
       "items": [
-        "Solo catálogos abre algo: un lienzo (#275)",
+        "Catálogos abre un lienzo (#275); archivos, su subida (#278)",
         "No abre mesa, perfil ni la entidad de un pedido"
       ]
     },
