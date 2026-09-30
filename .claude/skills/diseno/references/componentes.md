@@ -51,7 +51,7 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `SectionNav` | **La fila de secciones de un contexto** (Player, Master, Admin), con la actual subrayada (#277). Cuando no entran —las ocho de admin en un teléfono— **bajan de línea**, nunca empujan la página ni se esconden en un scroll interno. Los tres `*SectionNav` de `layouts/components/` solo le pasan su lista |
 | `BackendStatusIndicator` | Si el backend responde. En `RootLayout` para que se vea en toda pantalla, `/login` incluida |
 | `GraphCanvas` | **El lienzo de nodos** (#275), en `components/graph/`: React Flow con el marco `.graph-canvas`, fondo de puntos, controles de zoom con sus `aria-label` por `t()`, y la arista `straight-center` registrada. Es el único archivo que importa la hoja de React Flow. Ver «Lienzo de nodos», abajo |
-| `GraphNode` | El nodo base del lienzo: nombre, `StatusBadge`, una línea opcional y el menú de acciones, con el handle de entrada a la izquierda y el de salida a la derecha. Tres papeles —`head`, `member`, `floating`— que cambian el marco, nunca el color |
+| `GraphNode` | El nodo base del lienzo: nombre, `StatusBadge`, una línea opcional y el menú de acciones, con el handle de entrada a la izquierda y el de salida a la derecha. Tres papeles —`head`, `member`, `floating`— que cambian el marco, nunca el color. **La cabeza se dice, no solo se enmarca**: arriba del nombre lleva una corona (`Crown`) y `headLabel` —«Principal» en catálogos—, y un fondo `raised` |
 | `GraphStraightEdge` | La arista del lienzo: recta de centro a centro, dibujada debajo de los nodos, para que en una estrella cada miembro sea un rayo a su cabeza sin importar de qué lado esté |
 | `GraphTray` | El panel lateral del lienzo (`.graph-tray`): lo que el lienzo necesita al lado y no puede dibujar como nodo — traer otro grupo, la guía de gestos |
 | `radialLayout` · `radiusFor` | El layout de una estrella de profundidad 1: los miembros repartidos en círculo alrededor de la cabeza, con un radio que crece con la cantidad. Funciones puras, con test |
@@ -177,7 +177,8 @@ La otra forma de trabajar una lista, además de la tabla (#275). Nació en `/adm
 - **Debajo de `md` no hay lienzo**: la misma información es una lista `.list-divided` con el mismo menú por fila. Arrastrar una conexión con el pulgar no es algo que alguien termine.
 - **El estado del lienzo vive en la URL** (#185): qué se abrió (`?with=`), para que un lienzo se pueda mandar como un link.
 - **Los cuatro estados obligatorios** (§«Estados obligatorios»), en lugar del lienzo.
-- **El color de un nodo es su `StatusBadge`**; el papel del nodo cambia el marco (cabeza con borde de marca, flotante con borde punteado), nunca el color.
+- **El color de un nodo es su `StatusBadge`**; el papel del nodo cambia el marco (cabeza con borde de marca y fondo `raised`, flotante con borde punteado), nunca el color.
+- **Quién es la cabeza se lee sin mirar el borde**: corona y la palabra del dominio («Principal») arriba del nombre, en el nodo y en la lista móvil. Es el mismo ícono que «Hacer principal» en el vocabulario.
 - **Se carga con `lazy()` en su ruta**, así React Flow no entra al bundle de quien nunca abre un lienzo.
 - **Datos que se sincronizan al lienzo, estables.** Los nodos se controlan con `useNodesState` y se reinician desde los datos en un efecto; si varias queries alimentan el lienzo, se juntan con `useQueries({ combine })` y un `combine` a nivel de módulo, o el array nuevo de cada render dispara un bucle de actualizaciones.
 

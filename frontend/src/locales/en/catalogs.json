@@ -119,6 +119,7 @@
     "gestureReassign": "Drag a synonym onto another main value to move it.",
     "gestureMerge": "Drag a main value onto another to merge the two groups.",
     "gestureSplit": "Select a connection and press Delete to split that synonym out.",
-    "gestureMenu": "All of this is also in each value's “…” menu."
+    "gestureMenu": "All of this is also in each value's “…” menu.",
+    "headLabel": "Main"
   }
 }

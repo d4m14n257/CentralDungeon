@@ -42,6 +42,7 @@ export function CatalogGraphNode({ data, selected }: NodeProps<CatalogFlowNode>)
       connectableFrom={role !== 'head' || value.status === 'Accepted'}
       connectableTo={isAcceptedHead}
       meta={meta}
+      headLabel={t('admin.headLabel')}
       actions={<CatalogValueActions kind={kind} value={value} onBecameGroup={onBecameGroup} />}
     />
   )

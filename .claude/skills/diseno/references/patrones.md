@@ -43,7 +43,8 @@
 | `.graph-canvas` | El marco de un lienzo de nodos (#275). **Además apunta cada variable `--xy-*` de React Flow a un token**, así el lienzo sigue a los dos temas y no trae un color propio. La pone `GraphCanvas` | `bg-canvas border-border h-160 w-full overflow-hidden rounded-lg border` + las `--xy-*` |
 | `.graph-tray` | El panel lateral de un lienzo. La pone `GraphTray` | `bg-surface border-border space-y-4 self-start rounded-lg border p-4` |
 | `.graph-node` | Un nodo del lienzo. La pone `GraphNode` | `bg-surface text-fg border-border-strong flex w-56 items-center gap-2 rounded-lg border px-3 py-2 shadow-sm` |
-| `.graph-node-head` · `.graph-node-floating` · `.graph-node-selected` | El papel del nodo, que cambia el marco y nunca el color: cabeza de la estrella, suelto esperando conexión, seleccionado | `border-brand-500 border-2` · `border-dashed` · `ring-ring ring-2` |
+| `.graph-node-head` · `.graph-node-floating` · `.graph-node-selected` | El papel del nodo, que cambia el marco y nunca el color: cabeza de la estrella, suelto esperando conexión, seleccionado | `border-brand-500 bg-raised border-2` · `border-dashed` · `ring-ring ring-2` |
+| `.graph-node-head-marker` | La corona y la palabra sobre el nombre de una cabeza («Principal»): la cabeza se dice, no solo se enmarca. También en la lista que reemplaza al lienzo debajo de `md` | `text-brand-fg flex items-center gap-1 text-xs font-semibold tracking-wide uppercase` |
 
 ### Componentes (`components/`)
 

@@ -111,9 +111,15 @@
     @apply bg-surface text-fg border-border-strong flex w-56 items-center gap-2 rounded-lg border px-3 py-2 shadow-sm;
   }
 
-  /* The head of a star: the value the others hang from. */
+  /* The head of a star: the value the others hang from. A thicker brand frame and a raised fill, so
+     it stands out before its crown marker is even read. */
   .graph-node-head {
-    @apply border-brand-500 border-2;
+    @apply border-brand-500 bg-raised border-2;
+  }
+
+  /* The crown and the word above a head's name ("Principal"): the head is said, not only framed. */
+  .graph-node-head-marker {
+    @apply text-brand-fg flex items-center gap-1 text-xs font-semibold tracking-wide uppercase;
   }
 
   /* Connected to nothing yet: a proposal waiting for somebody to decide where it goes. */

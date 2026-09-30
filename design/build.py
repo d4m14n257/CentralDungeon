@@ -1698,7 +1698,7 @@ def sc_comp_data(t):
                  "<code>diseno</code> &sect;5.c.", patterns(t))
           + demo(t, "Lienzo de nodos (#275)",
                  "Para editar <strong>relaciones</strong> — agrupar, conectar, mover entre grupos — y no los datos "
-                 "de cada fila. Un grupo de profundidad 1 es una estrella: la cabeza con borde de marca, los "
+                 "de cada fila. Un grupo de profundidad 1 es una estrella: la cabeza con corona, la palabra &laquo;Principal&raquo; y borde de marca, los "
                  "miembros alrededor con una arista recta a ella, y a la izquierda lo que flota sin conectar, "
                  "con borde punteado. El color de cada nodo es su badge; el papel solo cambia el marco. "
                  "Se entra desde una tabla que muestra solo las cabezas, y debajo de <code>md</code> es una lista.",
@@ -1714,9 +1714,12 @@ def graph_canvas(t):
                   else f"1px solid {t['border-strong']}")
         handle = (f'<span style="position:absolute;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:9999px;'
                   f'background:{brand};border:1px solid {t["surface"]};{{side}}:-6px"></span>')
-        return (f'<div style="position:absolute;left:{x}px;top:{y}px;width:176px;background:{t["surface"]};'
+        marker = (f'<div style="font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;'
+                  f'color:{acc_text(t)};margin-bottom:2px">&#9813; Principal</div>' if role == "head" else "")
+        return (f'<div style="position:absolute;left:{x}px;top:{y}px;width:176px;'
+                f'background:{t["raised"] if role == "head" else t["surface"]};'
                 f'border:{border};border-radius:8px;padding:8px 10px;box-shadow:0 1px 2px rgba(0,0,0,.25)">'
-                + handle.format(side="left") + handle.format(side="right")
+                + handle.format(side="left") + handle.format(side="right") + marker
                 + f'<div style="font-size:13px;font-weight:{600 if role == "head" else 500}">{name}</div>'
                 f'<div style="margin-top:4px">{badge(t, state, label)}</div>'
                 f'<div style="font-size:11px;color:{t["fg-subtle"]};margin-top:3px">{meta}</div></div>')

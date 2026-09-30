@@ -119,6 +119,7 @@
     "gestureReassign": "Arrastrá un equivalente hasta otro principal para moverlo de grupo.",
     "gestureMerge": "Arrastrá un principal hasta otro para fusionar los dos grupos.",
     "gestureSplit": "Seleccioná una conexión y apretá Supr para separar ese equivalente.",
-    "gestureMenu": "Todo esto también está en el menú «…» de cada valor."
+    "gestureMenu": "Todo esto también está en el menú «…» de cada valor.",
+    "headLabel": "Principal"
   }
 }

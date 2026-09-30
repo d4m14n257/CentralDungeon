@@ -1,3 +1,4 @@
+import { Crown } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -191,8 +192,8 @@ export function CatalogGraph({ kind, groupIds, onBecameGroup }: CatalogGraphProp
           <section key={group[0]?.id} className="space-y-2">
             <h2 className="section-label">{t('admin.groupOf', { name: group[0]?.name ?? '' })}</h2>
             <ul className="list-divided">
-              {group.map((member) => (
-                <GraphListRow key={member.id} kind={kind} value={member} onBecameGroup={onBecameGroup} />
+              {group.map((member, index) => (
+                <GraphListRow key={member.id} kind={kind} value={member} isHead={index === 0} onBecameGroup={onBecameGroup} />
               ))}
             </ul>
           </section>
@@ -218,20 +219,32 @@ export function CatalogGraph({ kind, groupIds, onBecameGroup }: CatalogGraphProp
  *
  * @param props.kind          which catalog
  * @param props.value         the value
+ * @param props.isHead        whether it heads its group - said with the same crown a head node wears
  * @param props.onBecameGroup called when the value becomes a group of its own
  */
 function GraphListRow({
   kind,
   value,
+  isHead = false,
   onBecameGroup,
 }: {
   kind: CatalogKind
   value: AdminCatalogValue
+  isHead?: boolean
   onBecameGroup: (id: string) => void
 }) {
+  const { t } = useTranslation('catalogs')
   return (
     <li className="flex items-center gap-3 px-3 py-2">
-      <span className={value.canonicalId === null ? 'min-w-0 flex-1 truncate font-semibold' : 'min-w-0 flex-1 truncate'}>{value.name}</span>
+      <div className="min-w-0 flex-1">
+        {isHead && (
+          <p className="graph-node-head-marker">
+            <Crown className="size-3.5" aria-hidden="true" />
+            {t('admin.headLabel')}
+          </p>
+        )}
+        <p className={isHead ? 'truncate font-semibold' : 'truncate'}>{value.name}</p>
+      </div>
       <CatalogStatusBadge status={value.status} />
       <div className="row-actions">
         <CatalogValueActions kind={kind} value={value} onBecameGroup={onBecameGroup} />

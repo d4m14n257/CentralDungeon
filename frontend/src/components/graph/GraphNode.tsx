@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Handle, Position } from '@xyflow/react'
+import { Crown } from 'lucide-react'
 
 import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 import { cn } from '@/lib/utils'
@@ -33,6 +34,11 @@ export interface GraphNodeProps {
   actions?: ReactNode
   /** A secondary line under the name: a count, a hint. */
   meta?: ReactNode
+  /**
+   * What the head of a star is called in this domain - "Principal", "Main" - already passed through
+   * `t()`. Shown with a crown above the name of a `head` node, and ignored for the other roles.
+   */
+  headLabel?: string
 }
 
 /**
@@ -56,6 +62,7 @@ export interface GraphNodeProps {
  * @param props.connectableTo   whether a connection can end here
  * @param props.actions         the node's actions menu
  * @param props.meta            a secondary line under the name
+ * @param props.headLabel       what a head is called, shown with a crown on `head` nodes
  */
 export function GraphNode({
   label,
@@ -67,11 +74,20 @@ export function GraphNode({
   connectableTo = true,
   actions,
   meta,
+  headLabel,
 }: GraphNodeProps) {
   return (
     <div className={cn('graph-node', `graph-node-${role}`, selected && 'graph-node-selected')}>
       <Handle type="target" position={Position.Left} isConnectable={connectableTo} className="graph-handle" />
       <div className="min-w-0 flex-1 space-y-1">
+        {/* The head is said, not only framed: a crown and its name, so which node the others hang
+            from reads at a glance and to a screen reader, never by the border colour alone (#261). */}
+        {role === 'head' && headLabel && (
+          <p className="graph-node-head-marker">
+            <Crown className="size-3.5" aria-hidden="true" />
+            {headLabel}
+          </p>
+        )}
         <p className={cn('truncate text-sm', role === 'head' ? 'font-semibold' : 'font-medium')}>{label}</p>
         <StatusBadge tone={tone} label={statusLabel} />
         {meta && <p className="text-fg-subtle text-xs">{meta}</p>}
