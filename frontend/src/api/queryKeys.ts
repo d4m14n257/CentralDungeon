@@ -100,8 +100,8 @@ export const queryKeys = {
      */
     table: (tableId: string) => ['files', 'table', tableId] as const,
     /** The /admin/files table. Every admin mutation invalidates this branch and nothing else. */
-    admin: (query?: string, statuses?: string[], fileTypes?: string[], category?: string, page = 0, size?: number) =>
-      ['files', 'admin', query, statuses, fileTypes, category, page, size] as const,
+    admin: (query?: string, statuses?: string[], category?: string, page = 0, size?: number) =>
+      ['files', 'admin', query, statuses, category, page, size] as const,
   },
   tasks: {
     /** One table's board, as the people running it see it. The whole list, never paginated. */

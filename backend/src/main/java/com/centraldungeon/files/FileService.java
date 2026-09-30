@@ -549,61 +549,101 @@ public class FileService {
     }
 
     /**
-     * /admin/files: everything, searchable, with the usage count that makes #79 visible.
+     * /admin/files: the platform's library - what it publishes, searchable, with the usage count that
+     * makes #79 visible (#278).
+     *
+     * <p><b>Only what is published</b>, and that is a predicate in the query rather than a filter the
+     * screen may drop. Somebody's private upload - the sheet a player applied with, what they handed
+     * in - is theirs and not the platform's, and seeing or removing it is not this screen's job: that
+     * belongs to acting as that person, not to administering the library (#278).
      *
      * <p>The count comes from one grouped query for the whole page rather than one per row, the same
      * shape /admin/catalogs uses.
      *
      * @param query      the search box, in the language of #164. Null or blank matches everything
      * @param statuses   the statuses to keep, or empty for all of them
-     * @param fileTypes  the lifecycles to keep (#68), or empty for all of them
      * @param category   the cajón to keep (#233), or null for all of them
      * @param pageable   the page and its order
-     * @return the files an admin sees, page by page
+     * @return the published files, page by page
+     * @throws InvalidRequestException if the cajón is one nothing can be published into - asking the
+     *                                 platform's library for a player's answers is asking for a shelf
+     *                                 it does not have
      */
     @Transactional(readOnly = true)
     public PageResponse<AdminFileResponse> listForAdmin(
             @Nullable String query,
             List<FileStatus> statuses,
-            List<FileType> fileTypes,
             @Nullable FileCategory category,
             Pageable pageable) {
+        if (category != null) {
+            requirePublishable(List.of(category));
+        }
         SearchQuery parsed = SearchQueryParser.parse(query, FileSearchField.wireNames());
         Page<StoredFile> page = fileRepository.findAll(
-                FileSearchSpecification.forAdmin(parsed, statuses, fileTypes, category), pageable);
+                FileSearchSpecification.forAdmin(parsed, statuses, category), pageable);
         Map<String, Long> uses = usesByFileId(page.getContent());
         Map<String, List<String>> cajones = categoriesByFileId(page.getContent());
         return PageResponse.from(page.map(file -> fileMapper.toAdminResponse(
-                file, uses.getOrDefault(file.getId(), 0L), cajones.getOrDefault(file.getId(), List.of()))));
+                file,
+                uses.getOrDefault(file.getId(), 0L),
+                publishableOnly(cajones.getOrDefault(file.getId(), List.of())))));
     }
 
     /**
-     * An admin publishing a file for the whole platform, with its audience (#64).
+     * An admin uploading a file straight into the platform's library, already published into the
+     * cajones it is offered in (#278).
      *
-     * <p>This is what makes #79 possible: once the community's default character sheet is published,
-     * every master attaches <em>that</em> file instead of uploading a copy, and correcting it corrects
-     * it everywhere at once.
+     * <p><b>Uploading and publishing are one act here</b>, and the cajones are chosen before a byte
+     * is sent. They used to be two: the upload asked nothing and publishing came afterwards, so every
+     * file spent a while in the admin's library as a {@code Private} with no cajón at all - a state
+     * that meant nothing, in a library (their own) where #237 says admin work never goes.
      *
-     * <p>Publishing does not change whose file it is. The uploader stays the uploader - what changes
-     * is what the file is for, which is why they can no longer rename or delete it.
+     * <p>This is what makes #79 work: once the community's default character sheet is here, every
+     * master attaches <em>that</em> file instead of uploading a copy, and correcting it corrects it
+     * everywhere at once.
      *
-     * <p><b>It takes cajones, plural</b> (#233), and that is the case the relation exists for: the
-     * community's blank sheet is asked for both while a table recruits and once it is running, so it
-     * is published into {@code TableMaterial} and {@code MasterRequest} at once - one file, one blob,
-     * two rows. A column would have forced a choice and broken the other flow.
+     * <p><b>It takes cajones, plural</b> (#233): the community's blank sheet is asked for both while
+     * a table recruits and once it is running, so it goes into {@code TableMaterial} and
+     * {@code MasterRequest} at once - one file, one blob, two rows.
      *
-     * @param fileId  the file to publish
-     * @param request the cajones it is offered in (#233)
-     * @return the file after publishing
-     * @throws NotFoundException       if the file is not there or was marked gone
-     * @throws InvalidRequestException if a cajón is one nobody may publish into - the two player-side
-     *                                 ones hold what individual people answered with, and a blank
-     *                                 offered to everybody is not an answer
+     * <p>Deduplication (#75) applies as on any upload: content this admin already uploaded comes back
+     * as the row they had, now published and with the new cajones <em>added</em> - which is also how
+     * a file that was unpublished comes back to the library.
+     *
+     * @param upload  the multipart part: the bytes and the name the browser sent
+     * @param request the cajones it is offered in (#233), at least one
+     * @param actorId the admin uploading, from the token (#121). Publishing never changes whose a
+     *                file is, so they stay its uploader
+     * @return the published file, plus whether it was recognised rather than written (#234)
+     * @throws InvalidRequestException if a cajón is one nobody may publish into, or the part is
+     *                                 empty, off the whitelist or over the cap
+     * @throws NotFoundException       if the token names somebody who is not there
      */
     @Transactional
-    public AdminFileResponse publish(String fileId, PublishFileRequest request) {
+    public PublishedUpload uploadPublished(MultipartFile upload, PublishFileRequest request, String actorId) {
+        // Before the bytes: a refused cajón should cost nothing, not a stored file rolled back.
+        requirePublishable(request.categories());
+        UploadResult stored = upload(upload, new UploadFileRequest(FileType.Private, null), actorId);
+        String fileId = stored.file().id();
         StoredFile file = requireLive(fileId);
+        file.setFileType(FileType.Public);
+        file.setLastUsedAt(LocalDateTime.now());
         for (FileCategory category : request.categories()) {
+            classify(fileId, category);
+        }
+        AdminFileResponse response =
+                fileMapper.toAdminResponse(file, usesOf(fileId), publishableOnly(categoriesOf(fileId)));
+        return new PublishedUpload(response, stored.deduplicated());
+    }
+
+    /**
+     * Refuses the cajones nothing can be published into (#233).
+     *
+     * <p>The two player-side ones hold what individual people answered with; a blank offered to the
+     * whole community is not an answer, and it belongs in the master-side cajón the request came from.
+     */
+    private static void requirePublishable(List<FileCategory> categories) {
+        for (FileCategory category : categories) {
             if (!category.isPublishable()) {
                 throw new InvalidRequestException(
                         "Cannot publish into " + category + ": it holds what individual people answered with",
@@ -611,12 +651,19 @@ public class FileService {
                         Map.of("category", category.name()));
             }
         }
-        file.setFileType(FileType.Public);
-        file.setLastUsedAt(LocalDateTime.now());
-        for (FileCategory category : request.categories()) {
-            classify(fileId, category);
-        }
-        return fileMapper.toAdminResponse(file, usesOf(fileId), categoriesOf(fileId));
+    }
+
+    /**
+     * The cajones the platform's library speaks of (#278).
+     *
+     * <p>A published file can still carry a player-side membership from before it was published -
+     * memberships are never revoked (#233) - but that is its history as somebody's answer, not a shelf
+     * the library offers it on, so the admin's screen does not show it.
+     */
+    private static List<String> publishableOnly(List<String> categories) {
+        return categories.stream()
+                .filter(category -> FileCategory.valueOf(category).isPublishable())
+                .toList();
     }
 
     /** The cajones one file belongs to, as strings. */
@@ -627,12 +674,13 @@ public class FileService {
     }
 
     /**
-     * Taking a file back out of the platform's published set.
+     * Taking a file back out of the platform's library.
      *
-     * <p>It returns to its uploader as something they are keeping, not as a {@code Single-use}: it has
-     * been public and attached to tables, and dropping it straight into the purge's path would be a
-     * surprise rather than a decision. Tables that already attached it keep it - unpublishing is not
-     * a delete (#79).
+     * <p>It leaves the library and returns to its uploader as something they are keeping, not as a
+     * {@code Single-use}: it has been public and attached to tables, and dropping it straight into the
+     * purge's path would be a surprise rather than a decision. Tables that already attached it keep it
+     * - unpublishing is not a delete (#79). Bringing it back is uploading it again, which costs nothing
+     * because the content is recognised (#75).
      *
      * @param fileId the file to unpublish
      * @return the file after unpublishing
@@ -649,21 +697,26 @@ public class FileService {
         // The cajones stay. Unpublishing says the platform no longer offers the file, not that it was
         // never a blank for those flows - and every table that already attached it keeps it (#79,
         // #233).
-        return fileMapper.toAdminResponse(file, usesOf(fileId), categoriesOf(fileId));
+        return fileMapper.toAdminResponse(file, usesOf(fileId), publishableOnly(categoriesOf(fileId)));
     }
 
     /**
-     * An admin removing any file, including one somebody else uploaded.
+     * An admin removing a file from the platform's library.
      *
-     * <p>Still a mark and not an erase (#25, #66) - an admin has more reach than an owner, not a
-     * different kind of delete.
+     * <p><b>Only a published one</b> (#278). Somebody's private file is theirs: an admin reaches it by
+     * acting as that person, never from the library, so from here it is simply not there. Still a mark
+     * and not an erase (#25, #66).
      *
      * @param fileId the file
-     * @throws NotFoundException if the file is not there or was already marked gone
+     * @throws NotFoundException if the file is not there, was already marked gone, or is not published
      */
     @Transactional
     public void deleteAsAdmin(String fileId) {
-        markDeleted(requireLive(fileId));
+        StoredFile file = requireLive(fileId);
+        if (file.getFileType() != FileType.Public) {
+            throw new NotFoundException("File " + fileId + " is not in the platform's library");
+        }
+        markDeleted(file);
     }
 
     /**

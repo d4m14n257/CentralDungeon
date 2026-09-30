@@ -294,16 +294,16 @@ class FileIT {
     @Test
     void thePublishedSetCanBeNarrowedToOneKindOfDocument() {
         User admin = userRepository.save(new User(randomDiscordId(), "Library Admin"));
-        FileResponse sheet = fileService
-                .upload(pdf("ficha-comunidad.pdf", "la de todos"), new UploadFileRequest(FileType.Private, null), admin.getId())
-                .file();
-        FileResponse rules = fileService
-                .upload(pdf("reglamento.pdf", "las normas"), new UploadFileRequest(FileType.Private, null), admin.getId())
-                .file();
         // The sheet goes into both master-side cajones at once: it is asked for while the table
         // recruits *and* once it is running. That is the case a single column could not express.
-        fileService.publish(sheet.id(), new PublishFileRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest)));
-        fileService.publish(rules.id(), new PublishFileRequest(List.of(FileCategory.Announcement)));
+        AdminFileResponse sheet = fileService
+                .uploadPublished(
+                        pdf("ficha-comunidad.pdf", "la de todos"),
+                        new PublishFileRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest)),
+                        admin.getId())
+                .file();
+        fileService.uploadPublished(
+                pdf("reglamento.pdf", "las normas"), new PublishFileRequest(List.of(FileCategory.Announcement)), admin.getId());
 
         PageResponse<PublicFileResponse> forRequests =
                 fileService.listPublic(FileCategory.MasterRequest, PageRequest.of(0, 20));
@@ -324,10 +324,10 @@ class FileIT {
      */
     @Test
     void refusesToPublishIntoACajonThatHoldsPeoplesAnswers() {
-        FileResponse file = upload("ficha.pdf", "la de todos");
-
-        assertThatThrownBy(() ->
-                        fileService.publish(file.id(), new PublishFileRequest(List.of(FileCategory.PlayerApplication))))
+        assertThatThrownBy(() -> fileService.uploadPublished(
+                        pdf("ficha.pdf", "la de todos"),
+                        new PublishFileRequest(List.of(FileCategory.PlayerApplication)),
+                        master.getId()))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -393,12 +393,11 @@ class FileIT {
     @Test
     void aPublishedFileIsAttachedRatherThanCopied() {
         User admin = userRepository.save(new User(randomDiscordId(), "File Admin"));
-        FileResponse defaultSheet = fileService.upload(
+        AdminFileResponse defaultSheet = fileService.uploadPublished(
                         pdf("ficha-por-defecto.pdf", "la de la comunidad"),
-                        new UploadFileRequest(FileType.Private, null),
+                        new PublishFileRequest(List.of(FileCategory.TableMaterial)),
                         admin.getId())
                 .file();
-        fileService.publish(defaultSheet.id(), new PublishFileRequest(List.of(FileCategory.TableMaterial)));
 
         attach(firstTable, defaultSheet.id(), false);
 
@@ -432,9 +431,13 @@ class FileIT {
     void thePurgeSkipsAttachedFilesAndPublishedOnesAndTakesTheRest() {
         FileResponse stale = upload("viejo.pdf", "nadie lo abre");
         FileResponse attached = upload("en-uso.pdf", "una mesa lo muestra");
-        FileResponse published = upload("reglas.pdf", "las reglas");
+        AdminFileResponse published = fileService
+                .uploadPublished(
+                        pdf("reglas.pdf", "las reglas"),
+                        new PublishFileRequest(List.of(FileCategory.Announcement)),
+                        master.getId())
+                .file();
         attach(firstTable, attached.id(), false);
-        fileService.publish(published.id(), new PublishFileRequest(List.of(FileCategory.Announcement)));
         ageOut(stale.id(), attached.id(), published.id());
 
         fileRetentionService.markUnusedFiles();
@@ -465,12 +468,14 @@ class FileIT {
     /** /admin/files shows the usage count, which is what makes #79 visible instead of merely true. */
     @Test
     void theAdminListingCountsHowManyTablesUseEachFile() {
-        FileResponse sheet = upload("ficha.pdf", "hoja");
+        AdminFileResponse sheet = fileService
+                .uploadPublished(
+                        pdf("ficha.pdf", "hoja"), new PublishFileRequest(List.of(FileCategory.TableMaterial)), master.getId())
+                .file();
         attach(firstTable, sheet.id(), false);
         attach(secondTable, sheet.id(), false);
 
-        PageResponse<AdminFileResponse> page =
-                fileService.listForAdmin("ficha", List.of(), List.of(), null, PageRequest.of(0, 10));
+        PageResponse<AdminFileResponse> page = fileService.listForAdmin("ficha", List.of(), null, PageRequest.of(0, 10));
 
         assertThat(page.content())
                 .filteredOn(file -> file.id().equals(sheet.id()))
@@ -479,6 +484,28 @@ class FileIT {
                     assertThat(file.uses()).isEqualTo(2L);
                     assertThat(file.ownerName()).isEqualTo("File Master");
                 });
+    }
+
+    /**
+     * /admin/files is the platform's library and nothing else (#278): somebody's private upload never
+     * shows up in it, however well it matches the search - against real SQL, because "published" is
+     * a predicate of the query and not a filter the screen could forget.
+     */
+    @Test
+    void theAdminListingHoldsOnlyWhatIsPublished() {
+        FileResponse privateSheet = upload("ficha-privada.pdf", "la mía");
+        AdminFileResponse publicSheet = fileService
+                .uploadPublished(
+                        pdf("ficha-publica.pdf", "la de todos"),
+                        new PublishFileRequest(List.of(FileCategory.TableMaterial)),
+                        master.getId())
+                .file();
+
+        PageResponse<AdminFileResponse> page = fileService.listForAdmin("ficha", List.of(), null, PageRequest.of(0, 50));
+
+        assertThat(page.content()).extracting(AdminFileResponse::id)
+                .contains(publicSheet.id())
+                .doesNotContain(privateSheet.id());
     }
 
     // ---------------------------------------------------------------- fixtures

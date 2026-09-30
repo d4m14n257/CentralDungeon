@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next'
 
 import type { SearchField } from '@/lib/searchQuery'
 
-import { FILE_CATEGORIES } from './categories'
+import { PUBLISHABLE_CATEGORIES } from './categories'
 import type { FileCategory } from './types'
 
 /**
@@ -40,7 +40,7 @@ export function FILE_TYPE_CHOICES(t: TFunction): { value: string; label: string 
  * no amount of searching filenames answers it.
  *
  * The caller passes which cajones to offer, because on somebody's own library that is only theirs
- * (#237) while an admin sees all five.
+ * (#237) while the platform's library offers the three publishable ones (#278).
  *
  * @param t          the translator of the `files` namespace
  * @param categories the cajones to offer
@@ -80,9 +80,10 @@ export function myFileSearchFields(t: TFunction, categories: readonly FileCatego
 /**
  * The commands `/admin/files` accepts (#164, #237, #240).
  *
- * Two differences from a person's own library, and both come from what the screen is: it holds the
- * platform's files, so `/file_owner` exists — somebody else uploaded them — and **all five** cajones
- * are offered, announcements included.
+ * Two differences from a person's own library, and both come from what the screen is — the platform's
+ * library (#278): `/file_owner` exists, because another admin may have uploaded it, and the cajones
+ * offered are **the three a file can be published into**, announcements included. The two player-side
+ * ones would be a search that can never match: nothing is published there (#233).
  *
  * @param t the translator of the `files` namespace
  * @returns the commands, in the order they are offered
@@ -92,6 +93,6 @@ export function adminFileSearchFields(t: TFunction): SearchField[] {
     { name: 'file_name', label: t('search.file_name'), examples: ['ficha', 'mapa', 'inventario'] },
     { name: 'file_owner', label: t('search.file_owner'), examples: ['damian', 'carlos'] },
     { name: 'file_type', label: t('search.file_type'), values: FILE_TYPE_CHOICES(t) },
-    { name: 'file_categories', label: t('search.file_categories'), values: fileCategoryChoices(t, FILE_CATEGORIES) },
+    { name: 'file_categories', label: t('search.file_categories'), values: fileCategoryChoices(t, PUBLISHABLE_CATEGORIES) },
   ]
 }

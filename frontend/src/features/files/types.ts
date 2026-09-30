@@ -160,10 +160,21 @@ export type LinkTableFileInput = Pick<TableFile, 'fileId' | 'tableFileType' | 'i
 export type UpdateTableFileInput = Pick<TableFile, 'tableFileType' | 'isPrivate'>
 
 /**
- * What publishing sends: the cajones the file is offered in (#233).
+ * What an admin's upload into the platform's library sends with the bytes: the cajones the file is
+ * published into, chosen before it is sent (#233, #278).
  *
  * **Plural, and that is the point.** The community's blank sheet is asked for while a table recruits
  * *and* once it is running, so it is published into `TableMaterial` and `MasterRequest` at once — one
  * file, two rows. It replaced the audience of #64 outright: a flow already says who a document is for.
  */
 export type PublishFileInput = Pick<AdminFile, 'categories'>
+
+/**
+ * What an admin's upload into the platform's library produced (#278): the published row, and whether
+ * the admin already had that content (#75, #234).
+ */
+export interface AdminUploadedFile {
+  file: AdminFile
+  /** True when the content was recognised and the admin's existing row came back published. */
+  deduplicated: boolean
+}

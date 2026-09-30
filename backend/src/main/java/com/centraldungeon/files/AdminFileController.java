@@ -1,9 +1,11 @@
 package com.centraldungeon.files;
 
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.files.dto.AdminFileResponse;
 import com.centraldungeon.files.dto.PublishFileRequest;
 import jakarta.validation.Valid;
+import java.net.URI;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,10 +21,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
- * /admin/files: every file the platform holds, and the power to publish one for everybody (#64).
+ * /admin/files: the platform's library - what the community publishes for everybody (#64, #278).
+ *
+ * <p><b>Only the published files, and nothing else.</b> Somebody's private upload - the sheet a
+ * player applied with, what they handed in - is theirs; an admin reaches it by acting as that person,
+ * never from here (#278). That is also why the library speaks of three cajones and not five: the two
+ * player-side ones hold people's answers, and nothing is ever published into them (#233).
  *
  * <p>Publishing is what makes #79 work. Once the community's default character sheet exists here,
  * every master attaches <em>that</em> file instead of uploading their own copy - so correcting it
@@ -50,52 +60,68 @@ public class AdminFileController {
     }
 
     /**
-     * Every file, searchable, with the usage count that makes "linking is not copying" visible (#79).
+     * Every published file, searchable, with the usage count that makes "linking is not copying"
+     * visible (#79).
      *
      * @param query     the search box in the language of #164 - by name, by uploader or by type - or
      *                  null for everything
      * @param statuses   the statuses to keep, or null for all of them, marked-gone files included
-     * @param fileTypes  the lifecycles to keep (#68), or null for all of them
      * @param category   the cajón to keep (#233), or null for all of them. A filter and not a search
-     *                   term, because five known values are chosen from and not typed at
+     *                   term, because three known values are chosen from and not typed at
      * @param pageable   page, size and sort; <b>newest first</b>, with a tie-break by id (#171). The
      *                   direction is spelled out because the default is ascending: what an admin opens
      *                   this screen for is what just arrived, not the oldest thing on the platform
-     * @return 200 with one page of files
+     * @return 200 with one page of files. 400 when the cajón is one of the two nothing is ever
+     *         published into
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public PageResponse<AdminFileResponse> list(
             @RequestParam(name = "q", required = false) @Nullable String query,
             @RequestParam(name = "status", required = false) @Nullable List<FileStatus> statuses,
-            @RequestParam(name = "fileType", required = false) @Nullable List<FileType> fileTypes,
             @RequestParam(name = "category", required = false) @Nullable FileCategory category,
             @PageableDefault(size = 20, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable) {
         return fileService.listForAdmin(
                 query,
                 statuses == null ? List.of() : statuses,
-                fileTypes == null ? List.of() : fileTypes,
                 category,
                 pageable);
     }
 
     /**
-     * Publishing a file for the whole platform, into the cajones it is offered in (#233).
+     * Uploading a file straight into the platform's library, published into the cajones it is
+     * offered in (#233, #278).
+     *
+     * <p><b>Uploading is publishing here</b>: the cajones are chosen before the file is sent, so no
+     * file ever sits in the library without saying which flow it is for. They used to be two steps,
+     * and in between the file was the admin's own {@code Private} with no cajón at all.
      *
      * <p>The cajones are not optional, and that is M24.1's fix carried across from the audience they
      * replaced: the legacy returned every public file everywhere, so a document written for masters
      * turned up in front of a player. They are plural because the same blank serves more than one
      * flow (#233).
      *
-     * @param fileId  the file to publish
-     * @param request the cajones it is offered in (#233), at least one
-     * @return 200 with the file after publishing. 400 when a cajón is one nobody may publish into,
-     *         404 when the file is not there or was marked gone
+     * <p>Two parts, like every upload: {@code file} with the content and {@code data} with the
+     * cajones, the latter as {@code application/json}.
+     *
+     * @param file        the content and the name the browser sent
+     * @param request     the cajones it is offered in (#233), at least one
+     * @param currentUser the admin uploading, from the token - they stay its uploader
+     * @return 201 with the published file when the content was written; 200 when this admin had
+     *         already uploaded it and that row came back published (#75, #234). 400 when a cajón is
+     *         one nobody may publish into, or the part is empty, off the whitelist or over the cap
      */
-    @PostMapping("/{fileId}/publish")
+    @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
-    public AdminFileResponse publish(@PathVariable String fileId, @Valid @RequestBody PublishFileRequest request) {
-        return fileService.publish(fileId, request);
+    public ResponseEntity<AdminFileResponse> upload(
+            @RequestPart("file") MultipartFile file,
+            @Valid @RequestPart("data") PublishFileRequest request,
+            @AuthenticationPrincipal CurrentUser currentUser) {
+        PublishedUpload result = fileService.uploadPublished(file, request, currentUser.userId());
+        if (result.deduplicated()) {
+            return ResponseEntity.ok(result.file());
+        }
+        return ResponseEntity.created(URI.create("/api/v1/admin/files/" + result.file().id())).body(result.file());
     }
 
     /**
@@ -112,10 +138,12 @@ public class AdminFileController {
     }
 
     /**
-     * Removing any file, including one somebody else uploaded. Still a mark, never an erase (#25, #66).
+     * Removing a file from the platform's library. Still a mark, never an erase (#25, #66).
+     *
+     * <p>Only a published one: somebody's private file is not the library's to remove (#278).
      *
      * @param fileId the file
-     * @return 204. 404 when it is not there or was already marked gone
+     * @return 204. 404 when it is not there, was already marked gone, or is not published
      */
     @DeleteMapping("/{fileId}")
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")

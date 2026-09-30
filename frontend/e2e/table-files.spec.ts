@@ -10,7 +10,8 @@ import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './help
  * What no unit test proves and this does: that **one upload attached to two tables is still one
  * file** (#79) — which a mock can only assert about a call, not about a row — that a private
  * attachment is genuinely **absent** from what a player receives rather than hidden by the screen,
- * and that publishing from /admin/files lets a master use the community's sheet without copying it.
+ * and that publishing from /admin/files lets a master use the community's sheet without copying it —
+ * while a master's own private file never shows up in that library at all (#278).
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
@@ -120,14 +121,21 @@ test('a file attached to two tables is stored once, and the player downloads it'
     })
     await expect(master.page.getByText('ficha-e2e.pdf')).toBeVisible()
 
-    // One row, two tables. This is the assertion the whole slice exists for (#79).
+    // One file, two tables. This is the assertion the whole slice exists for (#79): the master's own
+    // library shows a single entry, used on both.
+    await master.page.goto('/my/files')
+    const entry = master.page.getByRole('listitem').filter({ hasText: 'ficha-e2e.pdf' })
+    await expect(entry).toHaveCount(1)
+    await expect(entry.getByText(firstName)).toBeVisible()
+    await expect(entry.getByText(secondName)).toBeVisible()
+
+    // And it is the master's, not the platform's: the library holds only what is published (#278).
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-e2e')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
-    const row = admin.page.getByRole('row', { name: /ficha-e2e\.pdf/ })
-    await expect(row).toHaveCount(1)
-    await expect(row).toContainText('2 mesas')
+    await expect(admin.page.getByText('Sin resultados')).toBeVisible()
+    await expect(admin.page.getByRole('row', { name: /ficha-e2e\.pdf/ })).toHaveCount(0)
 
     // The player reads it from the public detail, without belonging to the table.
     await player.page.goto(`/player/tables/${firstId}`)
@@ -209,8 +217,9 @@ test('a private attachment never reaches the public detail', async ({ browser })
 })
 
 /**
- * #79 from the platform's side: an admin publishes a file and a master who never uploaded it attaches
- * it — linked, not copied, which is why it still shows a single owner in /admin/files.
+ * #79 from the platform's side: an admin uploads a file into the library — which publishes it, into
+ * the cajones chosen first (#278) — and a master who never uploaded it attaches it: linked, not
+ * copied, which is why it still shows a single row in /admin/files.
  */
 test('a master attaches a file the platform published without copying it', async ({ browser }) => {
   const tableName = `Mesa Publicada E2E ${runId}`
@@ -219,26 +228,24 @@ test('a master attaches a file the platform published without copying it', async
   const master = await newAuthenticatedPage(browser, `e2e-pub-master-${runId}`, true, false)
 
   try {
-    // The admin uploads straight into the platform's library (#237). It used to take a table to get
-    // at an upload box at all, so the file arrived carrying a cajón it got by accident.
+    // The admin uploads straight into the platform's library, and uploading is publishing (#278):
+    // the cajones come first, and the button refuses until one is chosen — nothing is preselected,
+    // so a file cannot land in the wrong flow by omission (M24.1, #233).
     await admin.page.goto('/admin/files')
-    await admin.page.getByRole('button', { name: 'Subir archivo' }).click()
+    await admin.page.getByRole('button', { name: 'Publicar archivo' }).click()
+    // Only the three a file can be published into: the player-side ones hold people's answers.
+    await expect(admin.page.getByRole('checkbox', { name: 'Solicitud de jugador' })).toHaveCount(0)
+    await expect(admin.page.getByRole('checkbox', { name: 'Entrega del jugador' })).toHaveCount(0)
     await admin.page.locator('input[type="file"]').setInputFiles(pdf('ficha-comunidad-e2e.pdf', runId))
-    await admin.page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
-    await expect(admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })).toBeVisible()
+    const send = admin.page.getByRole('button', { name: /Publicar \d+ archivos?/ })
+    await expect(send).toBeDisabled()
+    await admin.page.getByRole('checkbox', { name: 'De mesa' }).click()
+    await send.click()
 
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
-    const row = admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })
-    await row.getByRole('button', { name: 'Publicar' }).click()
-    // At least one cajón is required and nothing is preselected, so a file cannot be published to
-    // the wrong moment by omission — M24.1's fix, carried across from the audience it replaced (#233).
-    const publishDialog = admin.page.getByRole('dialog')
-    await expect(publishDialog.getByRole('button', { name: 'Publicar' })).toBeDisabled()
-    await publishDialog.getByRole('checkbox', { name: 'De mesa' }).click()
-    await publishDialog.getByRole('button', { name: 'Publicar' }).click()
-    await expect(row).toContainText('Publicado')
+    await expect(admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })).toContainText('De mesa')
 
     const tableId = await createTable(master.page, tableName)
     await master.page.goto(`/master/tables/${tableId}/files`)

@@ -39,24 +39,28 @@ final class FileSearchSpecification {
     }
 
     /**
-     * /admin/files: the search box, plus the filters the screen sets explicitly.
+     * /admin/files: the platform's library - only what is published - narrowed by the search box and
+     * the filters the screen sets explicitly (#278).
+     *
+     * <p><b>Published is a predicate and not a filter</b>: there is no shape of this query that
+     * returns somebody's private upload. A player's application sheet is theirs, and the library is
+     * not where an admin reaches it.
      *
      * <p><b>The cajón is a filter and not a search field</b> (#233), unlike name, owner and MIME
      * type. Those are free text somebody half-remembers, so they are matched with a {@code LIKE};
-     * a cajón is one of five known values, and offering "contains" over a closed enum would mean
-     * {@code /category:e} quietly matching four of them. Same shape as {@code status} and
-     * {@code fileType}, which are closed for the same reason.
+     * a cajón is one of a few known values, and offering "contains" over a closed enum would mean
+     * {@code /category:e} quietly matching several of them. Same shape as {@code status}, which is
+     * closed for the same reason.
      *
      * @param query     the parsed search box; an empty one matches everything
      * @param statuses  the statuses to keep, or empty for no status filter at all
-     * @param fileTypes the lifecycles to keep (#68), or empty for no type filter at all
      * @param category  the cajón to keep (#233), or null for no cajón filter at all
      * @return the predicate
      */
-    static Specification<StoredFile> forAdmin(
-            SearchQuery query, List<FileStatus> statuses, List<FileType> fileTypes, @Nullable FileCategory category) {
+    static Specification<StoredFile> forAdmin(SearchQuery query, List<FileStatus> statuses, @Nullable FileCategory category) {
         return (root, criteriaQuery, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
+            predicates.add(builder.equal(root.get("fileType"), FileType.Public));
             Predicate matched = matching(root, criteriaQuery, builder, query);
             if (matched != null) {
                 predicates.add(matched);
@@ -64,14 +68,11 @@ final class FileSearchSpecification {
             if (!statuses.isEmpty()) {
                 predicates.add(root.get("status").in(statuses));
             }
-            if (!fileTypes.isEmpty()) {
-                predicates.add(root.get("fileType").in(fileTypes));
-            }
             Predicate inCajon = inCategory(root, criteriaQuery, builder, category);
             if (inCajon != null) {
                 predicates.add(inCajon);
             }
-            return predicates.isEmpty() ? builder.conjunction() : builder.and(predicates.toArray(new Predicate[0]));
+            return builder.and(predicates.toArray(new Predicate[0]));
         };
     }
 

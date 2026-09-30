@@ -5,7 +5,11 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 /**
- * Publishing a file for the whole platform, into the cajones it is offered in (#233).
+ * The metadata half of an admin's upload into the platform's library: the cajones it is published
+ * into (#233, #278). The bytes and the filename come from the multipart part itself.
+ *
+ * <p><b>Chosen before the upload, not after it</b> (#278): uploading into the library is publishing,
+ * so a file never sits there without saying which flow it is for.
  *
  * <p>Only an admin sends this, and the list cannot be empty. That is M24.1's fix carried across from
  * the audience it replaced: the legacy returned every public file everywhere, so a document written

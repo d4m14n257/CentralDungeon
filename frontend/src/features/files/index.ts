@@ -15,7 +15,7 @@ export { FileCategoryFilter } from './components/FileCategoryFilter'
 export { FileCategoryChoice } from './components/FileCategoryChoice'
 export { StagedFileList } from './components/StagedFileList'
 export { FileUsageChips } from './components/FileUsageChips'
-export { PublishFileDialog } from './components/PublishFileDialog'
+export { PublishCategoriesField } from './components/PublishCategoriesField'
 export { EditFileDialog } from './components/EditFileDialog'
 
 export { useMyFiles } from './api/useMyFiles'
@@ -32,7 +32,7 @@ export { useAttachTableFile } from './api/useAttachTableFile'
 export { useAttachFilesToTable } from './api/useAttachFilesToTable'
 export { useUpdateTableFile } from './api/useUpdateTableFile'
 export { useDetachTableFile } from './api/useDetachTableFile'
-export { usePublishFile } from './api/usePublishFile'
+export { useUploadToLibrary, type LibraryUploadResult } from './api/useUploadToLibrary'
 export { useUnpublishFile } from './api/useUnpublishFile'
 export { useDeleteFileAsAdmin } from './api/useDeleteFileAsAdmin'
 
@@ -44,6 +44,7 @@ export { stagedKey } from '@/types/file'
 
 export type {
   AdminFile,
+  AdminUploadedFile,
   CommitResult,
   FileCategory,
   FileStatus,

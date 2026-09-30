@@ -22,7 +22,6 @@
     "detach": "Remove from table",
     "share": "Share with the table",
     "unshare": "Keep it to the masters",
-    "publish": "Publish",
     "unpublish": "Unpublish",
     "delete": "Remove",
     "edit": "Edit"
@@ -43,17 +42,13 @@
     "noResultsDescription": "None of your files match the search."
   },
   "publish": {
-    "title": "Publish file",
-    "description": "“{{name}}” will be available to the whole community.",
-    "categoriesLabel": "Where it is offered",
+    "categoriesLabel": "Where it will be offered",
     "categoriesHint": "You can pick more than one: the same blank sheet serves when a table is being set up and when something is asked mid-season.",
     "hint": {
       "TableMaterial": "Shows up when a master sets up their table or recruits.",
       "MasterRequest": "Shows up when a master asks for something on a table already running.",
       "Announcement": "The community's rules and announcements. It comes from no table."
-    },
-    "cancel": "Cancel",
-    "confirm": "Publish"
+    }
   },
   "table": {
     "title": "Table files",
@@ -80,36 +75,38 @@
   },
   "admin": {
     "title": "Files",
-    "description": "Everything the community has uploaded. Publishing a file makes it available to every table without anyone having to copy it.",
+    "description": "The community's library: what is published for every table. When uploading you choose where it is offered, and it is published.",
     "searchLabel": "Search files",
     "searchPlaceholder": "Search by name",
     "columns": {
       "name": "File",
-      "type": "Kind",
       "owner": "Uploaded by",
       "uses": "Tables",
       "size": "Size",
       "status": "Status",
       "createdAt": "Uploaded",
-      "category": "Kind"
+      "category": "Offered in"
     },
     "usesValue_one": "{{count}} table",
     "usesValue_other": "{{count}} tables",
-    "emptyTitle": "No files",
-    "emptyDescription": "Once the community starts uploading table material, it will show up here.",
+    "emptyTitle": "Nothing published",
+    "emptyDescription": "Once you publish the community's blank sheet or its rules, they will show up here.",
     "noResultsTitle": "No results",
     "noResultsDescription": "No file matches that search.",
     "deleteTitle": "Remove the file?",
     "deleteDescription": "It stops showing on every table using it. It is not erased from disk: that is the owner's, from their maintenance menu.",
     "deleteConfirm": "Remove",
     "unpublishTitle": "Stop publishing it?",
-    "unpublishDescription": "It leaves the published list and goes back to being its uploader's file. Tables that already added it keep it.",
+    "unpublishDescription": "It leaves the library and goes back to being its uploader's file. Tables that already added it keep it. To publish it again, upload it again.",
     "unpublishConfirm": "Unpublish",
-    "upload": "Upload a file",
+    "upload": "Publish a file",
     "uploadClose": "Close",
-    "send_one": "Upload 1 file",
-    "send_other": "Upload {{count}} files",
-    "someFailed": "Could not upload: {{names}}. The rest are in."
+    "send_one": "Publish 1 file",
+    "send_other": "Publish {{count}} files",
+    "someFailed": "Could not upload: {{names}}. The rest are in.",
+    "published_one": "File published",
+    "published_other": "{{count}} files published",
+    "reused": "You had already uploaded {{names}}: that same copy was published."
   },
   "search": {
     "file_name": "name",

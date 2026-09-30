@@ -512,18 +512,20 @@
     },
     "files": {
       "title": "Files",
-      "what": "/admin/files holds everything the community has uploaded, with who uploaded it and how many tables use it.",
-      "publish": "Publishing a file makes it available to every table. It is how a default character sheet works: each master adds that one instead of uploading their own copy.",
-      "audience": "When you publish, you choose who it is for: masters, players or everyone. That decides where the file is offered.",
-      "notALock": "The audience is not a permission. It decides which listings the file appears in, not who may open it: a published file is public.",
-      "unpublish": "Unpublishing takes it out of the list, but tables that already added it keep it. It stops being the platform's and goes back to its uploader.",
+      "what": "/admin/files is the community's library: only what is published, with who uploaded it and how many tables use it.",
+      "publish": "Uploading a file here publishes it: it becomes available to every table. It is how a default character sheet works: each master adds that one instead of uploading their own copy.",
+      "categories": "Before uploading you choose where it is offered: “Table material” (when a master sets up their table or recruits), “Master's request” (when they ask for something on a running table) or “Community announcements”. You can pick more than one.",
+      "playerSide": "“Player application” and “Player submission” are not here on purpose: they hold what each player answered with, using the sheets their master gave them. There is nothing for the community to publish there.",
+      "private": "People's private files are neither shown nor removed from this screen: they are theirs, not the library's.",
+      "notALock": "The drawer is not a permission. It decides which listings the file appears in, not who may open it: a published file is public.",
+      "unpublish": "Unpublishing takes it out of the library, but tables that already added it keep it. To publish it again, upload it again: the system recognises the content and stores no second copy.",
       "remove": "Removing a file takes it off every table using it. It does not erase the file from disk: that is the owner's, from their maintenance menu.",
       "purge": "Files nobody uses and no table has added are removed automatically after three months. Published ones are not: they belong to the platform and do not expire.",
       "steps": {
         "step1": "Go to /admin/files from the Admin context navigation.",
-        "step2": "Find the file by name, or narrow it down with /uploaded by and /kind.",
-        "step3": "Hit \"Publish\" and choose the audience.",
-        "step4": "The \"Tables\" column tells you how many are using it before you remove it."
+        "step2": "Hit “Publish a file” and choose where it will be offered.",
+        "step3": "Drop the files and hit “Publish”.",
+        "step4": "The “Tables” column tells you how many are using it before you remove it."
       },
       "commands": "This screen's search understands “/file_name” (the name), “/file_owner” (who uploaded it), “/file_type” (the format) and “/file_categories” (the drawer). The last two are picked from a list. “/and” and “/or” are offered as soon as there is a criterion to join."
     },

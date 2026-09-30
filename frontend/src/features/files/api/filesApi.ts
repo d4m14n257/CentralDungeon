@@ -3,6 +3,7 @@ import { pageSize } from '@/config/pagination'
 
 import type {
   AdminFile,
+  AdminUploadedFile,
   FileCategory,
   LinkTableFileInput,
   PublicFile,
@@ -125,32 +126,22 @@ export const filesApi = {
   detach: (tableId: string, fileId: string) => api.delete(`/api/v1/game-tables/${tableId}/files/${fileId}`),
 
   /**
-   * /admin/files: everything, searchable, with the usage count that makes #79 visible.
+   * /admin/files: the platform's library — only what it published — searchable, with the usage
+   * count that makes #79 visible (#278).
    *
    * @param query     the search box in the language of #164, or undefined for everything
    * @param statuses  the statuses to keep, or undefined for all of them
-   * @param fileTypes  the lifecycles to keep (#68), or undefined for all of them
    * @param category   the cajón to keep (#233), or undefined for all of them
    * @param page       zero-based page number
    * @param size       rows per page, one of `adminPageSizeOptions` (#271)
    */
-  listForAdmin: (
-    query?: string,
-    statuses?: string[],
-    fileTypes?: string[],
-    category?: FileCategory,
-    page = 0,
-    size: number = pageSize.admin,
-  ) => {
+  listForAdmin: (query?: string, statuses?: string[], category?: FileCategory, page = 0, size: number = pageSize.admin) => {
     const params = new URLSearchParams()
     if (query) {
       params.set('q', query)
     }
     for (const status of statuses ?? []) {
       params.append('status', status)
-    }
-    for (const fileType of fileTypes ?? []) {
-      params.append('fileType', fileType)
     }
     if (category) {
       params.set('category', category)
@@ -161,13 +152,20 @@ export const filesApi = {
   },
 
   /**
-   * Publishes a file for the whole platform, with its audience (#64).
+   * Uploads a file straight into the platform's library, published into the cajones chosen
+   * beforehand (#233, #278). Uploading is publishing there: no file sits in the library without
+   * saying which flow it is for.
    *
-   * @param fileId the file
-   * @param input  who it is for
+   * Reads the status like `upload` does (#234): 200 means this admin already had the content and
+   * that row came back published — which is also how an unpublished file returns.
+   *
+   * @param file  the content the admin picked
+   * @param input the cajones it is offered in, at least one
    */
-  publish: (fileId: string, input: PublishFileInput) =>
-    api.post<AdminFile, PublishFileInput>(`/api/v1/admin/files/${fileId}/publish`, input),
+  uploadToLibrary: async (file: File, input: PublishFileInput): Promise<AdminUploadedFile> => {
+    const { data, status } = await api.uploadWithStatus<AdminFile>('/api/v1/admin/files', [file], input)
+    return { file: data, deduplicated: status === 200 }
+  },
 
   /**
    * Takes a file back out of the published set. Tables that attached it keep it (#79).
@@ -177,7 +175,8 @@ export const filesApi = {
   unpublish: (fileId: string) => api.post<AdminFile>(`/api/v1/admin/files/${fileId}/unpublish`),
 
   /**
-   * An admin removing any file, including one somebody else uploaded. Still a mark (#25, #66).
+   * An admin removing a file from the platform's library. Only a published one: somebody's private
+   * file is not the library's to remove (#278). Still a mark (#25, #66).
    *
    * @param fileId the file
    */

@@ -105,12 +105,12 @@ export function CatalogsHelp() {
   )
 }
 
-/** Publishing files to the community and what unpublishing does not undo. */
+/** The platform's library: uploading is publishing, into three cajones, and what unpublishing does not undo (#278). */
 export function AdminFilesHelp() {
   return (
     <ListAndSteps
       block="files"
-      keys={['what', 'publish', 'audience', 'notALock', 'unpublish', 'remove', 'purge', 'commands']}
+      keys={['what', 'publish', 'categories', 'playerSide', 'private', 'notALock', 'unpublish', 'remove', 'purge', 'commands']}
       stepCount={4}
     />
   )

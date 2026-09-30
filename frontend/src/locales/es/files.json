@@ -22,7 +22,6 @@
     "detach": "Quitar de la mesa",
     "share": "Compartir con la mesa",
     "unshare": "Dejar solo para masters",
-    "publish": "Publicar",
     "unpublish": "Dejar de publicar",
     "delete": "Dar de baja",
     "edit": "Editar"
@@ -43,17 +42,13 @@
     "noResultsDescription": "Ningún archivo tuyo coincide con la búsqueda."
   },
   "publish": {
-    "title": "Publicar archivo",
-    "description": "«{{name}}» va a quedar disponible para toda la comunidad.",
-    "categoriesLabel": "Dónde se ofrece",
+    "categoriesLabel": "Dónde se va a ofrecer",
     "categoriesHint": "Podés elegir más de uno: la misma hoja en blanco sirve al armar la mesa y al pedir algo a mitad de temporada.",
     "hint": {
       "TableMaterial": "Aparece cuando un master arma su mesa o busca candidatos.",
       "MasterRequest": "Aparece cuando un master pide algo en una mesa que ya está corriendo.",
       "Announcement": "El reglamento y los avisos de la comunidad. No sale de ninguna mesa."
-    },
-    "cancel": "Cancelar",
-    "confirm": "Publicar"
+    }
   },
   "table": {
     "title": "Archivos de la mesa",
@@ -80,36 +75,38 @@
   },
   "admin": {
     "title": "Archivos",
-    "description": "Todo lo que subió la comunidad. Publicar un archivo lo pone a disposición de todas las mesas sin que nadie tenga que copiarlo.",
+    "description": "La biblioteca de la comunidad: lo que se publica para todas las mesas. Al subir elegís dónde se ofrece, y queda publicado.",
     "searchLabel": "Buscar archivos",
     "searchPlaceholder": "Buscar por nombre",
     "columns": {
       "name": "Archivo",
-      "type": "Tipo",
       "owner": "Subido por",
       "uses": "Mesas",
       "size": "Tamaño",
       "status": "Estado",
       "createdAt": "Subido",
-      "category": "Tipo de documento"
+      "category": "Dónde se ofrece"
     },
     "usesValue_one": "{{count}} mesa",
     "usesValue_other": "{{count}} mesas",
-    "emptyTitle": "No hay archivos",
-    "emptyDescription": "Cuando la comunidad empiece a subir material de mesa, va a aparecer acá.",
+    "emptyTitle": "No hay nada publicado",
+    "emptyDescription": "Cuando publiques la hoja en blanco de la comunidad o el reglamento, va a aparecer acá.",
     "noResultsTitle": "Sin resultados",
     "noResultsDescription": "Ningún archivo coincide con la búsqueda.",
     "deleteTitle": "¿Dar de baja el archivo?",
     "deleteDescription": "Deja de verse en todas las mesas que lo usan. No se borra del disco: eso lo hace el owner desde su menú de mantenimiento.",
     "deleteConfirm": "Dar de baja",
     "unpublishTitle": "¿Dejar de publicarlo?",
-    "unpublishDescription": "Sale del listado de publicados y vuelve a ser un archivo de quien lo subió. Las mesas que ya lo tienen agregado lo conservan.",
+    "unpublishDescription": "Sale de la biblioteca y vuelve a ser un archivo de quien lo subió. Las mesas que ya lo tienen agregado lo conservan. Para volver a publicarlo, se sube de nuevo.",
     "unpublishConfirm": "Dejar de publicar",
-    "upload": "Subir archivo",
+    "upload": "Publicar archivo",
     "uploadClose": "Cerrar",
-    "send_one": "Subir 1 archivo",
-    "send_other": "Subir {{count}} archivos",
-    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están."
+    "send_one": "Publicar 1 archivo",
+    "send_other": "Publicar {{count}} archivos",
+    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están.",
+    "published_one": "Archivo publicado",
+    "published_other": "{{count}} archivos publicados",
+    "reused": "Ya tenías subido {{names}}: se publicó esa misma copia."
   },
   "search": {
     "file_name": "nombre",

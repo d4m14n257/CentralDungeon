@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -611,20 +612,54 @@ class FileServiceTest {
 
     // ---------------------------------------------------------------- publishing
 
+    /**
+     * Uploading into the platform's library is publishing (#278): the file comes out {@code Public},
+     * in the cajones asked for, and still the uploader's. Content the admin already had comes back as
+     * that row - which is also how an unpublished file returns to the library.
+     */
     @Test
-    void publishingKeepsTheUploaderAndRecordsTheCajones() {
-        User uploader = persistedUser("admin-1");
-        StoredFile file = persistedFile("file-1", uploader, FileType.Private);
-        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+    void anAdminUploadIsPublishedIntoTheCajonesChosenBeforehand() {
+        User admin = persistedUser("admin-1");
+        StoredFile existing = persistedFile("file-1", admin, FileType.Private);
+        when(userRepository.findById("admin-1")).thenReturn(Optional.of(admin));
+        when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
+                        eq("admin-1"), anyString(), eq(FileStatus.Current)))
+                .thenReturn(Optional.of(existing));
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(existing));
         when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
 
-        var response = fileService().publish("file-1", new PublishFileRequest(List.of(FileCategory.TableMaterial)));
+        PublishedUpload result = fileService().uploadPublished(
+                pdf("ficha.pdf", "hoja"),
+                new PublishFileRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest)),
+                "admin-1");
 
-        assertThat(file.getFileType()).isEqualTo(FileType.Public);
-        assertThat(response.ownerId()).isEqualTo("admin-1");
-        verify(categoryRepository).save(any(FileCategoryLink.class));
+        assertThat(existing.getFileType()).isEqualTo(FileType.Public);
+        assertThat(result.file().ownerId()).isEqualTo("admin-1");
+        assertThat(result.deduplicated()).isTrue();
+        verify(categoryRepository, times(2)).save(any(FileCategoryLink.class));
     }
 
+    /**
+     * The two player-side cajones are refused before a byte is stored (#233, #278): they hold people's
+     * answers, and a blank offered to everybody is not one.
+     */
+    @Test
+    void refusesToUploadIntoAPlayerSideCajonAndStoresNothing() {
+        assertThatThrownBy(() -> fileService().uploadPublished(
+                        pdf("ficha.pdf", "hoja"), new PublishFileRequest(List.of(FileCategory.PlayerSubmission)), "admin-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
+                        .isEqualTo("FILE_CATEGORY_NOT_PUBLISHABLE"));
+        verify(storageService, never()).store(anyString(), any());
+    }
+
+    /** The library has no player-side shelf, so asking it for one is a bad request, not an empty page. */
+    @Test
+    void theLibraryRefusesToBeFilteredByAPlayerSideCajon() {
+        assertThatThrownBy(() -> fileService()
+                        .listForAdmin(null, List.of(), FileCategory.PlayerApplication, PageRequest.of(0, 20)))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
     @Test
     void unpublishingReturnsTheFileToItsOwnerAsSomethingTheyKeep() {
@@ -646,6 +681,31 @@ class FileServiceTest {
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
 
         assertThatThrownBy(() -> fileService().unpublish("file-1")).isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /**
+     * Somebody's private file is not the library's to remove (#278): an admin reaches it by acting as
+     * that person, so from here it is simply not there.
+     */
+    @Test
+    void anAdminCannotRemoveSomebodysPrivateFileFromTheLibrary() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().deleteAsAdmin("file-1")).isInstanceOf(NotFoundException.class);
+        assertThat(file.getStatus()).isEqualTo(FileStatus.Current);
+    }
+
+    /** A published file is the library's, and removing it is still a mark (#25, #66). */
+    @Test
+    void anAdminRemovesAPublishedFileByMarkingIt() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        fileService().deleteAsAdmin("file-1");
+
+        assertThat(file.getStatus()).isEqualTo(FileStatus.Deleted);
+        verify(storageService, never()).delete(anyString());
     }
 
     // ---------------------------------------------------------------- attaching
