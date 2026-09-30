@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, Outlet, useParams } from 'react-router'
+import { NavLink, Outlet, useParams } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { masterTableEditPath } from '@/config/paths'
@@ -57,16 +56,8 @@ export function MasterTableDetailPage() {
     <div className="space-y-6">
       <PageHeader
         title={table.name}
-        actions={
-          <>
-            {canEdit && (
-              <Button asChild size="sm" variant="secondary">
-                <Link to={masterTableEditPath(tableId)}>{t('detail.edit')}</Link>
-              </Button>
-            )}
-            <TableStatusBadge status={table.status} />
-          </>
-        }
+        badge={<TableStatusBadge status={table.status} />}
+        action={canEdit ? { label: t('detail.edit'), to: masterTableEditPath(tableId) } : undefined}
       />
       <nav className="border-border-strong flex flex-wrap gap-4 border-b">
         <NavLink to="." end className={TAB_LINK_CLASSES}>

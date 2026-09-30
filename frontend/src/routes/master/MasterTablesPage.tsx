@@ -1,9 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { masterTableDetailPath, masterTableNewPath } from '@/config/paths'
@@ -29,15 +27,8 @@ export function MasterTablesPage() {
     <div className="space-y-4">
       <PageHeader
         title={t('myTables.title')}
-        actions={
-          <>
-            {canCreate && (
-              <Button asChild size="sm">
-                <Link to={masterTableNewPath()}>{t('myTables.createNew')}</Link>
-              </Button>
-            )}
-          </>
-        }
+        help="masters.creating"
+        action={canCreate ? { label: t('myTables.createNew'), to: masterTableNewPath() } : undefined}
       />
       {isPending && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

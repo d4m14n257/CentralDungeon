@@ -61,17 +61,7 @@ export function AdminSettingsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title={t('settings.title')}
-        description={t('settings.description')}
-        actions={
-          <>
-            <HelpLink section="admins.settings" className="text-sm">
-              {t('settings.helpLink')}
-            </HelpLink>
-          </>
-        }
-      />
+      <PageHeader title={t('settings.title')} description={t('settings.description')} help="admins.settings" />
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a screen that is

@@ -105,8 +105,7 @@
     "title": "History",
     "closedOn": "Closed on {{date}}",
     "emptyTitle": "You have not finished a table yet",
-    "emptyDescription": "When a table you play at finishes or gets cancelled, it will show up here with your final attendance.",
-    "help": "Why did a table move here?"
+    "emptyDescription": "When a table you play at finishes or gets cancelled, it will show up here with your final attendance."
   },
   "sessions": {
     "number": "Session {{number}}",
@@ -116,7 +115,6 @@
     "myCalendarEmptyTitle": "No sessions yet",
     "myCalendarEmptyDescription": "They appear as soon as the table opens with its agenda filled in. While the table is paused, the pending ones are hidden until it resumes.",
     "myAttendanceTitle": "My attendance",
-    "myAttendanceHelp": "How attendance is counted",
     "seePublicDetail": "See the table's public page",
     "status": {
       "Scheduled": "Scheduled",

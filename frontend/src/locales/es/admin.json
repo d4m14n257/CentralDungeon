@@ -13,7 +13,6 @@
   "queue": {
     "title": "Bandeja",
     "description": "Todo lo que espera una acción de un admin, junto y en un solo lugar. Lo que hace más tiempo espera va primero.",
-    "helpLink": "Cómo funciona la bandeja",
     "claimHelpHint": "Tomar un ítem avisa que estás con eso y lo saca de la bandeja de los demás. Se libera solo a los {{minutes}} minutos.",
     "claimHelpLink": "Cómo funciona",
     "columns": {
@@ -53,7 +52,6 @@
   "requests": {
     "title": "Pedidos",
     "description": "Todo lo que alguien le pide a un admin: el rol de master, que se abra una mesa, o cualquier otra cosa. Abre mostrando lo que está esperando una respuesta.",
-    "helpLink": "Cómo se resuelve un pedido",
     "searchLabel": "Buscar pedidos",
     "searchPlaceholder": "Texto del motivo o nombre de quien pidió",
     "search": {
@@ -241,7 +239,6 @@
       "USER_NOT_BLOCKED": "Esta cuenta no está bloqueada.",
       "generic": "No pudimos aplicar el cambio. Probá de nuevo."
     },
-    "helpLink": "Cómo funcionan los roles",
     "roleHelpHint": "Un admin mueve Jugador y Master; Admin y Owner los mueve solo un owner.",
     "roleHelpLink": "Por qué",
     "blockHelpHint": "No se puede bloquear a una cuenta con Admin u Owner, ni a la propia.",
@@ -250,8 +247,6 @@
   "tables": {
     "title": "Mesas",
     "description": "Todas las mesas de la plataforma, con su estado. Lo que espera una revisión se resuelve en la bandeja.",
-    "helpLink": "Cómo se asigna un master",
-    "reviewHelpLink": "Dónde se revisan las mesas",
     "searchLabel": "Buscar mesas",
     "searchPlaceholder": "Nombre de la mesa",
     "search": {
@@ -314,7 +309,6 @@
   "settings": {
     "title": "Configuración",
     "description": "Los valores que la comunidad ajusta sin un despliegue. Cada uno muestra lo que está en uso, con cuánto viene de fábrica y entre qué límites se puede mover.",
-    "helpLink": "¿Qué son estos valores?",
     "categories": {
       "Business": "Parámetros de negocio",
       "Limits": "Límites y cuotas"

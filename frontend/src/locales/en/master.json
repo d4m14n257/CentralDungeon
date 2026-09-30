@@ -49,7 +49,8 @@
     "filesTitle": "Files",
     "filesHint": "What you hand the table: maps, sheets, house rules. Players download them from the table.",
     "missingTag": "Pick at least one tag: it is what makes the table findable.",
-    "filesFailed": "The table was created, but these could not be uploaded: {{names}}. Add them from the Archivos tab."
+    "filesFailed": "The table was created, but these could not be uploaded: {{names}}. Add them from the Archivos tab.",
+    "backToTables": "Back to my tables"
   },
   "detail": {
     "tabs": {
@@ -128,7 +129,6 @@
   "sessions": {
     "title_one": "Calendar · {{count}} session",
     "title_other": "Calendar · {{count}} sessions",
-    "help": "How sessions work",
     "emptyTitle": "No sessions yet",
     "emptyDescription": "They are created on their own when an admin approves the table, out of the start date, the weekly agenda and the number of sessions. If any of the three is missing, the table opens without a calendar and it appears as soon as you fill it in.",
     "pausedTitle": "The table is paused",
@@ -170,7 +170,6 @@
     "emptyDescription": "Every one of your tables is up to date.",
     "emptyAction": "See my tables",
     "noReservationHint": "Nobody competes with you for this work: each table has one owner.",
-    "helpLink": "How to read this list",
     "item": {
       "CandidatesWaiting_one": "{{count}} person waiting for an answer",
       "CandidatesWaiting_other": "{{count}} people waiting for an answer",
@@ -224,7 +223,8 @@
     "save": "Save changes",
     "saving": "Saving…",
     "success": "Table updated",
-    "lockedDescription": "This table can no longer be edited: either you do not run it, or it is past the point where its master could rewrite it."
+    "lockedDescription": "This table can no longer be edited: either you do not run it, or it is past the point where its master could rewrite it.",
+    "back": "Back to the table"
   },
   "veto": {
     "block": "Ban",

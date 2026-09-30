@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator'
 import { WizardSteps } from '@/components/WizardSteps'
 import { PageHeader } from '@/components/PageHeader'
-import { masterDashboardPath, masterTableDetailPath } from '@/config/paths'
+import { masterDashboardPath, masterTableDetailPath, masterTablesPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { CatalogChip, CatalogPicker } from '@/features/catalogs'
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChanges'
@@ -294,7 +294,12 @@ export function MasterTableCreatePage() {
     // Centred rather than hugging the left: these two are forms, and a form read against one
     // edge of a wide screen is a column of text with a desert next to it (#228).
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title={t('create.title')} description={t('create.description')} />
+      <PageHeader
+        title={t('create.title')}
+        description={t('create.description')}
+        back={{ to: masterTablesPath(), label: t('create.backToTables') }}
+        help="masters.creating"
+      />
 
       <WizardSteps
         steps={WIZARD_STEPS.map((name) => ({ id: name, label: t(`create.steps.${name}`) }))}

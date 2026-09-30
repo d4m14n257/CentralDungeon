@@ -13,7 +13,6 @@
   "queue": {
     "title": "Tray",
     "description": "Everything waiting on an admin, together in one place. Whatever has been waiting longest comes first.",
-    "helpLink": "How the tray works",
     "claimHelpHint": "Taking an item says you are on it and drops it out of everybody else's tray. It is released on its own after {{minutes}} minutes.",
     "claimHelpLink": "How it works",
     "columns": {
@@ -53,7 +52,6 @@
   "requests": {
     "title": "Requests",
     "description": "Everything somebody asks an admin for: the master role, a table to be opened, or anything else. It opens showing what is still waiting for an answer.",
-    "helpLink": "How a request is resolved",
     "searchLabel": "Search requests",
     "searchPlaceholder": "Text of the reason, or the name of whoever asked",
     "search": {
@@ -241,7 +239,6 @@
       "USER_NOT_BLOCKED": "This account is not blocked.",
       "generic": "We could not apply the change. Try again."
     },
-    "helpLink": "How roles work",
     "roleHelpHint": "An admin moves Player and Master; Admin and Owner are moved by an owner only.",
     "roleHelpLink": "Why",
     "blockHelpHint": "An account holding Admin or Owner cannot be blocked, and neither can your own.",
@@ -250,8 +247,6 @@
   "tables": {
     "title": "Tables",
     "description": "Every table on the platform, with its status. Whatever is waiting on a review is resolved from the tray.",
-    "helpLink": "How a master is assigned",
-    "reviewHelpLink": "Where tables are reviewed",
     "searchLabel": "Search tables",
     "searchPlaceholder": "Name of the table",
     "search": {
@@ -314,7 +309,6 @@
   "settings": {
     "title": "Settings",
     "description": "The values the community adjusts without a deploy. Each one shows what is in use, what it ships as, and the range it can move inside.",
-    "helpLink": "What are these values?",
     "categories": {
       "Business": "Business parameters",
       "Limits": "Limits and quotas"

@@ -7,7 +7,7 @@ import { RichTextView } from '@/components/RichTextView'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { playerUserProfilePath } from '@/config/paths'
-import { HelpLink } from '@/features/help'
+import { HelpButton, HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
 import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
@@ -70,7 +70,6 @@ export function TableDetailPage() {
   // A second namespace rather than copying the file labels into `tables`: the words belong to the
   // files domain and are the same ones the master's tab shows (regla dura 18).
   const { t: tFiles } = useTranslation('files')
-  const { t: tTasks } = useTranslation('tasks')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   // isLoadingError, not isError: once the table has loaded, a background refetch that fails must not
@@ -211,11 +210,7 @@ export function TableDetailPage() {
             that belong to the files domain (§3.1.5, regla dura 16). */}
         <TableTasksSection
           tableId={table.id}
-          renderHelpLink={() => (
-            <HelpLink section="players.tasks" className="inline-block text-xs">
-              {tTasks('applicable.helpLink')}
-            </HelpLink>
-          )}
+          renderHelp={() => <HelpButton section="players.tasks" size="sm" />}
           renderFiles={(files) => <FileList files={files} />}
           renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerSubmission" />}
           // Uploading happens here and not in the picker (#238): this screen owns the send, so it is

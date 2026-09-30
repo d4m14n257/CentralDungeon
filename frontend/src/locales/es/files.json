@@ -59,7 +59,6 @@
     "readOnlyTitle": "Archivos",
     "readOnlyEmptyTitle": "Sin archivos",
     "readOnlyEmptyDescription": "Todavía no hay nada compartido en esta mesa.",
-    "helpLink": "Cómo funcionan los archivos",
     "attachConfirm_one": "Agregar 1 archivo",
     "attachConfirm_other": "Agregar {{count}} archivos",
     "someFailed": "No se pudieron subir: {{names}}. Los demás quedaron agregados."

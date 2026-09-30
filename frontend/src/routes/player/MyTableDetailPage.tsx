@@ -7,7 +7,8 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { tableDetailPath } from '@/config/paths'
-import { HelpLink } from '@/features/help'
+import { HelpButton } from '@/features/help'
+import { SectionHeader } from '@/components/SectionHeader'
 import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
 import { SessionList, TableStatusBadge, useGameTable, useMySessions, type MySessions } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
@@ -40,12 +41,9 @@ function MySessionsSection({ tableId }: { tableId: string }) {
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <h2 className="section-label">{t('sessions.myAttendanceTitle')}</h2>
-        <AttendanceSummaryView summary={mine.summary} />
         {/* The three numbers are explained in the help, under its stable #ref (#137, #167, #168). */}
-        <HelpLink section="players.my-sessions" className="inline-block text-xs">
-          {t('sessions.myAttendanceHelp')}
-        </HelpLink>
+        <SectionHeader title={t('sessions.myAttendanceTitle')} help="players.my-sessions" />
+        <AttendanceSummaryView summary={mine.summary} />
       </section>
 
       <section className="space-y-2">
@@ -74,7 +72,6 @@ export function MyTableDetailPage() {
   // A second namespace rather than copying the file labels into `tables`: the words belong to the
   // files domain and are the same ones the master's tab shows (regla dura 18).
   const { t: tFiles } = useTranslation('files')
-  const { t: tTasks } = useTranslation('tasks')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   const { data: table, isPending, isLoadingError } = useGameTable(tableId)
@@ -123,7 +120,7 @@ export function MyTableDetailPage() {
       {/* What the table shares (#79). Private attachments never arrive here — the server leaves them
           out of the detail, so the screen has nothing to hide. */}
       <section className="border-border border-t pt-4">
-        <h2 className="section-label">{tFiles('table.readOnlyTitle')}</h2>
+        <SectionHeader title={tFiles('table.readOnlyTitle')} help="players.files" />
         <div className="mt-1.5">
           {table.files.length === 0 ? (
             <EmptyState title={tFiles('table.readOnlyEmptyTitle')} description={tFiles('table.readOnlyEmptyDescription')} />
@@ -134,9 +131,6 @@ export function MyTableDetailPage() {
             />
           )}
         </div>
-        <HelpLink section="players.files" className="mt-2 inline-block text-xs">
-          {tFiles('table.helpLink')}
-        </HelpLink>
       </section>
 
       {/* What the table asks of its players, and of me in particular (#63, #76). The block owns its
@@ -145,11 +139,7 @@ export function MyTableDetailPage() {
       <div className="border-border border-t pt-4">
         <TableTasksSection
           tableId={tableId}
-          renderHelpLink={() => (
-            <HelpLink section="players.tasks" className="inline-block text-xs">
-              {tTasks('applicable.helpLink')}
-            </HelpLink>
-          )}
+          renderHelp={() => <HelpButton section="players.tasks" size="sm" />}
           renderFiles={(files) => <FileList files={files} />}
           renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerSubmission" />}
           // Uploading happens here and not in the picker (#238): this screen owns the send, so it is

@@ -11,7 +11,6 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
@@ -270,23 +269,8 @@ export function AdminTablesPage() {
       <PageHeader
         title={t('tables.title')}
         description={t('tables.description')}
-        actions={
-          <>
-            {/* The screen that lost the review is where somebody will look for it: an admin who
-                learned the old `/admin/tables` comes here for "Aprobar", finds a listing, and has no
-                way to discover the buttons moved. `admins.reviewing` is the section whose text moved
-                with them, and its `listing` line says what this screen is now (#176). */}
-            <HelpLink section="admins.reviewing" className="text-sm">
-              {t('tables.reviewHelpLink')}
-            </HelpLink>
-            <HelpLink section="admins.assign-masters" className="text-sm">
-              {t('tables.helpLink')}
-            </HelpLink>
-            <Button size="sm" variant="outline" onClick={() => createDialog.open()}>
-              {t('tables.createUnassigned')}
-            </Button>
-          </>
-        }
+        help="admins.reviewing"
+        action={{ label: t('tables.createUnassigned'), onClick: () => createDialog.open() }}
       />
 
       <SearchQueryInput

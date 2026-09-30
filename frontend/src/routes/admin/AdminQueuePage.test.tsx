@@ -383,7 +383,7 @@ describe('AdminQueuePage', () => {
     list.mockResolvedValue(page([item()]))
 
     renderPage()
-    await userEvent.click(await screen.findByRole('button', { name: 'Cómo funciona la bandeja' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Cómo funciona' }))
 
     const dialog = within(await screen.findByRole('dialog'))
     expect(dialog.getByText(/Se libera solo a los 15 minutos/)).toBeInTheDocument()

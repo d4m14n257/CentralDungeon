@@ -32,7 +32,8 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 |---|---|
 | `FormDialog` | Envoltorio de todo formulario en modal: título, descripción y confirmación al cerrar con cambios sin guardar (#110) |
 | `ConfirmDialog` | Toda acción irreversible (principio 3), detrás de `useConfirm` |
-| `PageHeader` | **La cabecera de toda pantalla** (#273): título (`h1` con `.page-title`), una línea de propósito y, enfrente, la ayuda o el botón principal. Las pantallas de detalle cuya cabecera tiene otra forma usan la clase `.page-title` sola (§5.c) |
+| `PageHeader` | **La cabecera de toda pantalla** (#273, #280): «Volver» arriba, título y propósito a la izquierda, y a la derecha «Cómo funciona» y **la** acción principal, siempre en ese orden y en ese lugar. Una pantalla con más de una acción pone las demás en su contenido, junto a lo que tocan. Las de detalle cuya cabecera tiene otra forma usan `.page-title` sola (§5.c) |
+| `SectionHeader` | La misma forma para una sección o pestaña (#280): etiqueta, «Cómo funciona» chico y sus acciones a la derecha |
 | `DataTable` | Listados paginados con orden, sobre `PageResponse<T>`. **Es dueño del contenedor de acciones**: envuelve `renderActions` en `.row-actions`, así ninguna pantalla lo escribe (#273) |
 | `CollapsibleSection` | Bloque plegable con título y acciones en la cabecera — el patrón que el legacy repetía en `CardComponent` y `ListComponent` |
 | `IconAction` | Botón de icono con tooltip para las acciones de una fila o una ficha. **Es la forma de toda acción de fila en una tabla** (#272): ver «Listas de trabajo», abajo |
@@ -94,7 +95,7 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 | `approvals` (7) | `BanRequestsSection` · `RequestDetailPanel` · `RequestStatusBadge` · `RequestTypeBadge` · `ResolveRequestDialog` · `SubmitRequestDialog` · `SubmitRequestSection` |
 | `catalogs` (8) | `AcceptCatalogValueDialog` · `CanonicalPicker` · `CatalogChip` · `CatalogCombobox` · `CatalogPicker` · `CatalogStatusBadge` · `DisableCatalogValueDialog` · `MergeCatalogGroupsDialog` |
 | `files` (12) | `EditFileDialog` · `FileCard` · `FileCategoryBadge` · `FileCategoryChoice` · `FileCategoryFilter` · `FileDropzone` · `FileList` · `FilePicker` · `FileTypeBadge` · `FileUsageChips` · `PublishCategorySelect` · `StagedFileList` |
-| `help` (3) | `HelpBlocks` · `HelpDialog` · `HelpLink` |
+| `help` (4) | `HelpBlocks` · `HelpButton` · `HelpDialog` · `HelpLink` |
 | `notifications` (1) | `NotificationBell` |
 | `registrations` (4) | `ApplyToTableDialog` · `BlockPlayerDialog` · `RegistrationStatusBadge` · `RejectRegistrationDialog` |
 | `settings` (2) | `SettingHistory` · `SettingValueDialog` — F3.5 (#141). La pantalla no usa `DataTable`: son cuatro filas que se leen enteras, no un listado que se recorre y se busca |

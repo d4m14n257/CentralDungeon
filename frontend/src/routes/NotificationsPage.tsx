@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { notificationText, useMarkAllAsRead, useNotificationClick, useNotifications } from '@/features/notifications'
@@ -49,15 +48,8 @@ export function NotificationsPage() {
     <div className="space-y-4">
       <PageHeader
         title={t('title')}
-        actions={
-          <>
-            {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" className="text-brand-fg" onClick={() => markAllAsRead.mutate()}>
-                {t('markAllAsRead')}
-              </Button>
-            )}
-          </>
-        }
+        help="basics.notifications"
+        action={unreadCount > 0 ? { label: t('markAllAsRead'), onClick: () => markAllAsRead.mutate() } : undefined}
       />
       {isPending && (
         <div className="space-y-2">

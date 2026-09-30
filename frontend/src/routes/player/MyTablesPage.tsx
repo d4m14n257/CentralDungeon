@@ -21,7 +21,7 @@ export function MyTablesPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('myTables.title')} />
+      <PageHeader title={t('myTables.title')} help="players.my-tables" />
       {isPending && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }, (_, index) => (

@@ -131,17 +131,7 @@ export function AdminRequestsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title={t('requests.title')}
-        description={t('requests.description')}
-        actions={
-          <>
-            <HelpLink section="admins.requests" className="text-sm">
-              {t('requests.helpLink')}
-            </HelpLink>
-          </>
-        }
-      />
+      <PageHeader title={t('requests.title')} description={t('requests.description')} help="admins.requests" />
 
       <SearchQueryInput
         fields={search.fields}

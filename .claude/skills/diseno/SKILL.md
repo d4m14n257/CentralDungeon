@@ -22,6 +22,7 @@ El sistema visual de CentralDungeon. **Es la fuente de todo lo visual** desde #2
 11. **Ningún texto se escribe en el JSX**: todo pasa por `t()`, en `es` y en `en` (#117, #198).
 12. **Todo cambio visual se ve en los dos temas** —claro y oscuro— antes de darlo por terminado. → §3
 13. **Si lo que se edita son relaciones, hay un lienzo de nodos** (#275): `components/graph/` sobre React Flow, para agrupar, conectar o mover entre grupos. Se entra desde una tabla que muestra solo las cabezas, conectar dispara la mutación, todo gesto tiene su entrada en el menú del nodo, y debajo de `md` es una lista. No reemplaza a la tabla para revisar o paginar. → §5, «Lienzo de nodos»
+14. **La cabecera tiene un solo lugar para cada cosa** (#280): «Volver» arriba del título; «Cómo funciona» y la acción principal a la derecha, en ese orden, la acción violeta y de tamaño normal. Es `PageHeader` en una pantalla y `SectionHeader` en una sección o pestaña, y **no aceptan botones sueltos**. La ayuda de una pantalla va ahí —nunca al pie ni debajo del título—; la que va dentro de una frase junto a un control es `HelpLink` y se queda en su lugar. → §5.c
 
 ## El detalle, por sección
 

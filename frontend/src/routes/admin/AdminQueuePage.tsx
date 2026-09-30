@@ -264,17 +264,7 @@ export function AdminQueuePage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title={t('queue.title')}
-        description={t('queue.description')}
-        actions={
-          <>
-            <HelpLink section="admins.claiming" className="text-sm">
-              {t('queue.helpLink')}
-            </HelpLink>
-          </>
-        }
-      />
+      <PageHeader title={t('queue.title')} description={t('queue.description')} help="admins.claiming" />
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is

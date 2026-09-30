@@ -114,17 +114,7 @@ export function AdminUsersPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title={t('users.title')}
-        description={t('users.description')}
-        actions={
-          <>
-            <HelpLink section="admins.roles" className="text-sm">
-              {t('users.helpLink')}
-            </HelpLink>
-          </>
-        }
-      />
+      <PageHeader title={t('users.title')} description={t('users.description')} help="admins.roles" />
 
       <SearchQueryInput
         fields={search.fields}

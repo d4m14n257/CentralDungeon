@@ -51,6 +51,16 @@ export const catalogsApi = {
     api.post<CatalogValue, ProposeCatalogValueInput>(`/api/v1/${kind}`, input),
 
   /**
+   * An admin adds a value straight into the catalog, already `Accepted` as a group of its own (#280).
+   * Not `propose`: the admin is the one who accepts, so there is nothing to wait for.
+   *
+   * @param kind  which catalog
+   * @param input the name to add
+   */
+  create: (kind: CatalogKind, input: ProposeCatalogValueInput) =>
+    api.post<AdminCatalogValue, ProposeCatalogValueInput>(`/api/v1/admin/catalogs/${kind}`, input),
+
+  /**
    * /admin/catalogs: everything, whatever its status, with each value's group and usage count.
    *
    * @param kind     which catalog

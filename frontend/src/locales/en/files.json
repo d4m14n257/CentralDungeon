@@ -59,7 +59,6 @@
     "readOnlyTitle": "Files",
     "readOnlyEmptyTitle": "No files",
     "readOnlyEmptyDescription": "Nothing has been shared on this table yet.",
-    "helpLink": "How files work",
     "attachConfirm_one": "Add 1 file",
     "attachConfirm_other": "Add {{count}} files",
     "someFailed": "Could not upload: {{names}}. The rest were added."

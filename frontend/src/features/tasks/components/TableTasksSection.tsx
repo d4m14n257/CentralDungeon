@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ApplicableTaskList } from './ApplicableTaskList'
 import { TaskSubmitDialog } from './TaskSubmitDialog'
 import type { CommitStagedFiles, StagedFile } from '@/types/file'
+import { SectionHeader } from '@/components/SectionHeader'
 import { useApplicableTasks } from '../api/useApplicableTasks'
 import { useSubmitTask } from '../api/useSubmitTask'
 import type { ApplicableTask, SubmittedFile } from '../types'
@@ -20,12 +21,13 @@ export interface TableTasksSectionProps {
    */
   tableId: string
   /**
-   * The "how this works" link, rendered by the screen.
+   * The section's «Cómo funciona», rendered by the screen and placed at the right end of the
+   * section's header, where every section puts it (#280).
    *
    * A render prop for the same reason `renderFiles` is one: the help lives in `features/help` and a
    * feature never imports from another (regla dura 16, §3.1.5). The screen names the section.
    */
-  renderHelpLink: () => ReactNode
+  renderHelp: () => ReactNode
   /**
    * How to render the files of an answer, and how to render the file picker.
    *
@@ -57,11 +59,11 @@ export interface TableTasksSectionProps {
  * player sees what is asked of players and whatever was addressed to them in particular (#76).
  *
  * @param props.tableId          the table
- * @param props.helpAudience     which help page to link to
+ * @param props.renderHelp       the section's «Cómo funciona», for the right end of its header
  * @param props.renderFiles      how to render the files of an answer
  * @param props.renderFilePicker how to render the file picker inside the answer dialog
  */
-export function TableTasksSection({ tableId, renderHelpLink, renderFiles, renderFilePicker, commitFiles }: TableTasksSectionProps) {
+export function TableTasksSection({ tableId, renderHelp, renderFiles, renderFilePicker, commitFiles }: TableTasksSectionProps) {
   const { t } = useTranslation('tasks')
   // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data: tasks, isPending, isLoadingError, refetch } = useApplicableTasks(tableId)
@@ -70,7 +72,7 @@ export function TableTasksSection({ tableId, renderHelpLink, renderFiles, render
 
   return (
     <section className="space-y-2">
-      <h2 className="section-label">{t('applicable.title')}</h2>
+      <SectionHeader title={t('applicable.title')} actions={renderHelp()} />
 
       {isPending ? (
         <Skeleton className="h-24 w-full" />
@@ -81,8 +83,6 @@ export function TableTasksSection({ tableId, renderHelpLink, renderFiles, render
       ) : (
         <ApplicableTaskList tasks={tasks} onAnswer={setAnswering} renderFiles={renderFiles} />
       )}
-
-      {renderHelpLink()}
 
       {answering && (
         <TaskSubmitDialog

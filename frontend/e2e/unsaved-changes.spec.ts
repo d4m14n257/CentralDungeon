@@ -30,7 +30,7 @@ test('leaving the wizard half filled asks first, and staying keeps what was writ
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await chooseRequiredCatalogs(page)
 
-    await page.getByRole('link', { name: 'Mis mesas' }).click()
+    await page.getByRole('link', { name: 'Mis mesas', exact: true }).click()
 
     await expect(page.getByRole('heading', { name: '¿Salir sin guardar?' })).toBeVisible()
 
@@ -54,12 +54,12 @@ test('confirming lets you leave, and an untouched wizard asks nothing', async ({
     // Nothing typed: leaving is not losing anything, and a question that always appears stops
     // being read.
     await page.goto('/master/tables/new')
-    await page.getByRole('link', { name: 'Mis mesas' }).click()
+    await page.getByRole('link', { name: 'Mis mesas', exact: true }).click()
     await expect(page).toHaveURL(/\/master\/tables$/)
 
     await page.goto('/master/tables/new')
     await page.getByRole('textbox', { name: 'Nombre' }).fill(`Mesa descartada ${runId}`)
-    await page.getByRole('link', { name: 'Mis mesas' }).click()
+    await page.getByRole('link', { name: 'Mis mesas', exact: true }).click()
     await page.getByRole('button', { name: 'Salir y perder lo hecho' }).click()
 
     await expect(page).toHaveURL(/\/master\/tables$/)

@@ -88,6 +88,28 @@ class SystemServiceTest {
         assertThat(systemService.propose("  Fate Core  ").name()).isEqualTo("Fate Core");
     }
 
+    // ------------------------------------------------------ an admin creating
+
+    /** #280: the admin is the one who accepts, so their value skips the review and heads its own group. */
+    @Test
+    void anAdminCreatesAValueAlreadyAcceptedAsItsOwnGroup() {
+        when(systemRepository.findByNameIgnoreCase("Fate Core")).thenReturn(Optional.empty());
+
+        AdminCatalogValueResponse response = systemService.create("  Fate Core  ");
+
+        assertThat(response.name()).isEqualTo("Fate Core");
+        assertThat(response.status()).isEqualTo(CatalogStatus.Accepted.name());
+        assertThat(response.canonicalId()).isNull();
+    }
+
+    @Test
+    void anAdminCannotCreateANameThatAlreadyExists() {
+        when(systemRepository.findByNameIgnoreCase("d&d 5e")).thenReturn(Optional.of(value("s-1", "D&D 5e", null, CatalogStatus.Created)));
+
+        assertThatThrownBy(() -> systemService.create("d&d 5e")).isInstanceOf(ConflictException.class);
+        verify(systemRepository, never()).save(any());
+    }
+
     // -------------------------------------------------------------- accepting
 
     @Test

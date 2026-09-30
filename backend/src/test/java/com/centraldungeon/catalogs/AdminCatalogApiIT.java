@@ -156,6 +156,26 @@ class AdminCatalogApiIT {
                 .andExpect(jsonPath("$.content[?(@.name == 'One-shot')].aliasCount").value(1));
     }
 
+    /**
+     * #280: an admin's new value is born accepted, as a group of its own; a player is refused, and a
+     * name already taken is a conflict rather than a duplicate.
+     */
+    @Test
+    void anAdminCreatesAValueAlreadyAcceptedAndAPlayerCannot() throws Exception {
+        create(admin, "Sandbox").andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("Accepted"))
+                .andExpect(jsonPath("$.canonicalId").doesNotExist());
+        create(owner, "Horror").andExpect(status().isCreated());
+        create(plainPlayer, "Mystery").andExpect(status().isForbidden());
+        create(admin, "one-shot").andExpect(status().isConflict());
+    }
+
+    private ResultActions create(User actor, String name) throws Exception {
+        return mockMvc.perform(bearer(post(BASE), actor)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"" + name + "\"}"));
+    }
+
     private ResultActions reassign(User actor, String id, String canonicalId) throws Exception {
         return mockMvc.perform(bearer(post(BASE + "/" + id + "/reassign"), actor)
                 .contentType(MediaType.APPLICATION_JSON)

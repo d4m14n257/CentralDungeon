@@ -18,7 +18,6 @@
       "Owner": "Owner"
     },
     "loadErrorDescription": "We could not load this profile. Try again.",
-    "expiredDescription": "You can no longer view this profile.",
-    "help": "Who can see my profile?"
+    "expiredDescription": "You can no longer view this profile."
   }
 }

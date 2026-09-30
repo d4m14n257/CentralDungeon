@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EyeOff, Trash2 } from 'lucide-react'
-import { Link, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 
 import { useConfirm } from '@/hooks/useConfirm'
 import { IconAction } from '@/components/IconAction'
@@ -11,12 +11,10 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { adminFileUploadPath } from '@/config/paths'
-import { HelpLink } from '@/features/help'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
 import {
   FileCategoryBadge,
@@ -160,16 +158,8 @@ export function AdminFilesPage() {
       <PageHeader
         title={t('admin.title')}
         description={t('admin.description')}
-        actions={
-          <>
-            <HelpLink section="admins.files" className="text-sm">
-              {t('table.helpLink')}
-            </HelpLink>
-            <Button asChild>
-              <Link to={adminFileUploadPath()}>{t('admin.upload')}</Link>
-            </Button>
-          </>
-        }
+        help="admins.files"
+        action={{ label: t('admin.upload'), to: adminFileUploadPath() }}
       />
 
       <SearchQueryInput

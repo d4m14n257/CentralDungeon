@@ -27,8 +27,7 @@
       "both": "texto y archivos",
       "text": "solo texto",
       "files": "solo archivos"
-    },
-    "helpLink": "Cómo funcionan las peticiones"
+    }
   },
   "form": {
     "publishTitle": "Publicar una petición",
@@ -86,8 +85,7 @@
     "answer": "Entregar",
     "answerAgain": "Entregar de nuevo",
     "cannotAnswer": "Vas a poder responder esto cuando te postules a la mesa.",
-    "mineTitle": "Lo que entregué",
-    "helpLink": "Cómo funcionan las peticiones"
+    "mineTitle": "Lo que entregué"
   },
   "submit": {
     "title": "Entregar: {{title}}",

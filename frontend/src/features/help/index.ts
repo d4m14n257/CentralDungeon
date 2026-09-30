@@ -6,9 +6,11 @@
  */
 export { HelpDialog } from './components/HelpDialog'
 export { HelpLink } from './components/HelpLink'
+export { HelpButton } from './components/HelpButton'
 export { HelpList, HelpSteps, HelpTerms } from './components/HelpBlocks'
 export { HELP_SECTIONS } from './sections/registry'
 
 export type { HelpDialogProps } from './components/HelpDialog'
 export type { HelpLinkProps } from './components/HelpLink'
+export type { HelpButtonProps } from './components/HelpButton'
 export type { HelpSectionDefinition, HelpSectionId } from './sections/registry'

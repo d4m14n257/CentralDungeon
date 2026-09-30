@@ -28,7 +28,7 @@ export function SupportPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('requests.supportTitle')} description={t('requests.supportDescription')} />
+      <PageHeader title={t('requests.supportTitle')} description={t('requests.supportDescription')} help="basics.requests" />
 
       <div className="border-border space-y-3 rounded-lg border p-4">
         <p className="text-sm font-medium">{t('requests.generalPitchTitle')}</p>

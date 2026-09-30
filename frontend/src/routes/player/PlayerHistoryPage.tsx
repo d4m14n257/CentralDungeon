@@ -7,7 +7,6 @@ import { LoadMore } from '@/components/LoadMore'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { browserTimeZone, formatDate } from '@/lib/date'
-import { HelpLink } from '@/features/help'
 import { TableStatusBadge, useTableHistory } from '@/features/tables'
 
 /**
@@ -32,12 +31,9 @@ export function PlayerHistoryPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('history.title')} />
-      {/* Una mesa que ya no está en «Mis mesas» parece perdida hasta que alguien explica que se mudó
-          sola (#133a). */}
-      <HelpLink section="players.history" className="inline-block text-xs">
-        {t('history.help')}
-      </HelpLink>
+      {/* A table no longer in «Mis mesas» looks lost until somebody explains it moved on its own
+          (#133a): that is what the help of this screen says. */}
+      <PageHeader title={t('history.title')} help="players.history" />
       {isPending && (
         <div className="space-y-2">
           {Array.from({ length: 3 }, (_, index) => (

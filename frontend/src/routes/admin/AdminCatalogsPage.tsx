@@ -16,10 +16,11 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { adminCatalogGroupPath } from '@/config/paths'
-import { HelpLink } from '@/features/help'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useDisclosure } from '@/hooks/useDisclosure'
 import {
   CatalogStatusBadge,
+  CreateCatalogValueDialog,
   useAcceptCatalogValue,
   useAdminCatalog,
   useRejectCatalogValue,
@@ -151,6 +152,7 @@ export function AdminCatalogsPage() {
   // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
   const debouncedQuery = useDebounce(query, 300)
+  const createDialog = useDisclosure()
 
   // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, error, refetch } = useAdminCatalog(kind, debouncedQuery, undefined, page, size, {
@@ -196,13 +198,15 @@ export function AdminCatalogsPage() {
     <div className="space-y-4">
       <PageHeader
         title={t('admin.title')}
-        actions={
-          <>
-            <HelpLink section="admins.catalogs" className="text-sm">
-              {t('admin.helpLink')}
-            </HelpLink>
-          </>
-        }
+        description={t('admin.description')}
+        help="admins.catalogs"
+        action={{ label: t('admin.create'), onClick: () => createDialog.open() }}
+      />
+
+      <CreateCatalogValueDialog
+        kind={kind}
+        open={createDialog.isOpen}
+        onOpenChange={(open) => (open ? createDialog.open() : createDialog.close())}
       />
 
       <Tabs value={kind} onValueChange={(value) => updateParams({ kind: value })}>

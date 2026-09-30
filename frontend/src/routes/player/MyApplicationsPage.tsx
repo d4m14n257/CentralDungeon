@@ -47,7 +47,7 @@ export function MyApplicationsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('myApplications.title')} />
+      <PageHeader title={t('myApplications.title')} help="players.application-status" />
       {isPending && (
         <div className="space-y-2">
           {Array.from({ length: 3 }, (_, index) => (

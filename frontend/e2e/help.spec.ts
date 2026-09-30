@@ -62,7 +62,7 @@ test('the help teaches with steps rather than only describing', async ({ browser
     const page = await context.newPage()
 
     await page.goto('/master')
-    await page.getByRole('button', { name: 'Cómo se lee esta lista' }).click()
+    await page.getByRole('button', { name: 'Cómo funciona' }).click()
 
     const helpDialog = page.getByRole('dialog')
     // The steps are an ordered list: that is what separates "teaching how to use it" from

@@ -217,15 +217,12 @@ export function MyFilesPage() {
         description={t('mine.description')}
         // Disabled rather than gone while the cajones are still loading, so it does not appear and
         // jump. With none of them the screen never gets this far: it says so above (#241).
-        actions={
-          <Button
-            type="button"
-            disabled={myCategories === undefined}
-            onClick={() => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open())}
-          >
-            {uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload')}
-          </Button>
-        }
+        action={{
+          label: uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload'),
+          onClick: () => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open()),
+          // Disabled while the cajones are still loading, so it does not appear and jump (#241).
+          disabled: myCategories === undefined,
+        }}
       />
 
       {/* **The panel stays open after an upload**, and no toast fires. Closing it on success would

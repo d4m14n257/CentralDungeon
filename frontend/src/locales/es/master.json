@@ -49,7 +49,8 @@
     "filesTitle": "Archivos",
     "filesHint": "Lo que le das a la mesa: mapas, fichas, reglas de la casa. Los jugadores los descargan desde la mesa.",
     "missingTag": "Elegí al menos un tag: es lo que hace que la mesa se encuentre.",
-    "filesFailed": "La mesa se creó, pero no se pudieron subir: {{names}}. Agregalos desde la pestaña Archivos."
+    "filesFailed": "La mesa se creó, pero no se pudieron subir: {{names}}. Agregalos desde la pestaña Archivos.",
+    "backToTables": "Volver a mis mesas"
   },
   "detail": {
     "tabs": {
@@ -128,7 +129,6 @@
   "sessions": {
     "title_one": "Calendario · {{count}} sesión",
     "title_other": "Calendario · {{count}} sesiones",
-    "help": "Cómo funcionan las sesiones",
     "emptyTitle": "Todavía no hay sesiones",
     "emptyDescription": "Se crean solas cuando un admin aprueba la mesa, a partir de la fecha de inicio, la agenda semanal y la cantidad de sesiones. Si falta alguno de los tres, la mesa abre sin calendario y aparece en cuanto lo completes.",
     "pausedTitle": "La mesa está en pausa",
@@ -170,7 +170,6 @@
     "emptyDescription": "Todas tus mesas están al día.",
     "emptyAction": "Ver mis mesas",
     "noReservationHint": "Nadie te disputa este trabajo: cada mesa tiene un solo dueño.",
-    "helpLink": "Cómo se lee esta lista",
     "item": {
       "CandidatesWaiting_one": "{{count}} persona esperando respuesta",
       "CandidatesWaiting_other": "{{count}} personas esperando respuesta",
@@ -224,7 +223,8 @@
     "save": "Guardar cambios",
     "saving": "Guardando…",
     "success": "Mesa actualizada",
-    "lockedDescription": "Esta mesa ya no se puede editar: o no sos su master, o pasó el punto en que su master podía reescribirla."
+    "lockedDescription": "Esta mesa ya no se puede editar: o no sos su master, o pasó el punto en que su master podía reescribirla.",
+    "back": "Volver a la mesa"
   },
   "veto": {
     "block": "Vetar",

@@ -105,8 +105,7 @@
     "title": "Historial",
     "closedOn": "Cerrada el {{date}}",
     "emptyTitle": "Todavía no terminaste ninguna mesa",
-    "emptyDescription": "Cuando una mesa donde jugás termine o se cancele, va a aparecer acá con tu asistencia final.",
-    "help": "¿Por qué se mudó una mesa?"
+    "emptyDescription": "Cuando una mesa donde jugás termine o se cancele, va a aparecer acá con tu asistencia final."
   },
   "sessions": {
     "number": "Sesión {{number}}",
@@ -116,7 +115,6 @@
     "myCalendarEmptyTitle": "Todavía no hay sesiones",
     "myCalendarEmptyDescription": "Aparecen en cuanto la mesa abre con su agenda cargada. Si la mesa está en pausa, las pendientes se ocultan hasta que se retome.",
     "myAttendanceTitle": "Mi asistencia",
-    "myAttendanceHelp": "Cómo se cuenta la asistencia",
     "seePublicDetail": "Ver la ficha pública de la mesa",
     "status": {
       "Scheduled": "Programada",

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
@@ -83,14 +82,8 @@ export function AdminFileUploadPage() {
       <PageHeader
         title={t('upload.title')}
         description={t('upload.description')}
-        actions={
-          <Button variant="outline" asChild>
-            <Link to={adminFilesPath()}>
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              {t('upload.back')}
-            </Link>
-          </Button>
-        }
+        back={{ to: adminFilesPath(), label: t('upload.back') }}
+        help="admins.files"
       />
 
       <FileDropzone multiple onStaged={(file) => setStaged((current) => [...current, file])} isBusy={upload.isPending} />

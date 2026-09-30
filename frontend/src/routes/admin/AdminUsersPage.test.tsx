@@ -194,7 +194,7 @@ describe('AdminUsersPage', () => {
     list.mockResolvedValue(page([account()]))
 
     renderPage()
-    await userEvent.click(await screen.findByRole('button', { name: 'Cómo funcionan los roles' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Cómo funciona' }))
 
     const dialog = within(await screen.findByRole('dialog'))
     expect(dialog.getByText(/admin mueve Jugador y Master/i)).toBeInTheDocument()

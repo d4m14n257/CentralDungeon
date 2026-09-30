@@ -1,4 +1,4 @@
-import { CalendarClock, CircleCheck, CircleX } from 'lucide-react'
+import { CircleCheck, CircleX } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useOutletContext } from 'react-router'
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { HelpLink } from '@/features/help'
+import { SectionHeader } from '@/components/SectionHeader'
 import {
   AttendanceEditor,
   SessionStatusBadge,
@@ -192,15 +192,7 @@ function SessionsPanel({ tableId, status }: OutletContext) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <CalendarClock aria-hidden="true" className="text-fg-muted size-4" />
-          <h2 className="text-sm font-medium">{t('sessions.title', { count: data.length })}</h2>
-        </div>
-        <HelpLink section="masters.sessions" className="text-xs">
-          {t('sessions.help')}
-        </HelpLink>
-      </div>
+      <SectionHeader title={t('sessions.title', { count: data.length })} help="masters.sessions" />
       {status === 'Pause' && <p className="text-fg-muted text-sm">{t('sessions.pausedDescription')}</p>}
       <div className="space-y-2">
         {data.map((session) => (

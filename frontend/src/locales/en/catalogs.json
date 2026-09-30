@@ -39,7 +39,7 @@
   },
   "admin": {
     "title": "Catalogs",
-    "helpLink": "How groups work",
+    "description": "Systems, tags and platforms that describe the tables. Each group gathers the names that mean the same thing.",
     "searchLabel": "Search the catalog",
     "searchPlaceholder": "Search by name…",
     "tableLabel": "Catalog {{kind}}",
@@ -120,6 +120,16 @@
     "gestureMerge": "Drag a main value onto another to merge the two groups.",
     "gestureSplit": "Select a connection and press Delete to split that synonym out.",
     "gestureMenu": "All of this is also in each value's “…” menu.",
-    "headLabel": "Main"
+    "headLabel": "Main",
+    "create": "Create value",
+    "createTitle": {
+      "systems": "New system",
+      "tags": "New tag",
+      "platforms": "New platform"
+    },
+    "createDescription": "It is born accepted, as a group of its own. If it is a synonym of another one, join them afterwards from the group's canvas.",
+    "createNameLabel": "Name",
+    "createConfirm": "Create",
+    "createSuccess": "“{{name}}” added"
   }
 }

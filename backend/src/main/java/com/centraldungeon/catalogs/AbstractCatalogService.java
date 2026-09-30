@@ -286,6 +286,30 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     // -------------------------------------------------- the admin operations
 
     /**
+     * An admin adds a value straight into the catalog, already accepted as a group of its own (#280).
+     *
+     * <p>Not a proposal: the admin is the one who accepts, so a {@code Created} row waiting for the
+     * same person to accept it would be a step with nobody on the other side. It is born canonical,
+     * and joining it to a group afterwards is the canvas's job (#275), like any other value.
+     *
+     * @param rawName the name as it was typed; surrounding whitespace is stripped here
+     * @return the created value, in {@code Accepted}, heading its own group
+     * @throws com.centraldungeon.common.exception.ConflictException if the name is already taken,
+     *                                                              ignoring case
+     */
+    @Transactional
+    public AdminCatalogValueResponse create(String rawName) {
+        String name = rawName.strip();
+        repository.findByNameIgnoreCase(name).ifPresent(existing -> {
+            throw new ConflictException(type().singular() + " '" + existing.getName() + "' already exists");
+        });
+        E value = newValue(name);
+        value.setStatus(CatalogStatus.Accepted);
+        return toAdminResponse(repository.save(value));
+    }
+
+
+    /**
      * Accept a proposal and classify it in the same step (#55): either it is a canonical entry of
      * its own, or it joins an existing group as an alias.
      *

@@ -18,7 +18,6 @@
       "Owner": "Owner"
     },
     "loadErrorDescription": "No pudimos cargar este perfil. Probá de nuevo.",
-    "expiredDescription": "Ya no podés ver este perfil.",
-    "help": "¿Quién ve mi perfil?"
+    "expiredDescription": "Ya no podés ver este perfil."
   }
 }

@@ -95,7 +95,7 @@ export function TableListPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('explorer.title')} />
+      <PageHeader title={t('explorer.title')} help="players.applying" />
       <SearchQueryInput
         fields={search.fields}
         value={search.value}

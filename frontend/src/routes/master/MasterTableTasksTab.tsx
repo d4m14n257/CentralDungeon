@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { HelpLink } from '@/features/help'
+import { SectionHeader } from '@/components/SectionHeader'
 import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
 import { useTablePlayers } from '@/features/registrations'
 import { useTableSessions } from '@/features/tables'
@@ -138,12 +138,15 @@ export function MasterTableTasksTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="section-label">{t('board.title')}</h2>
-        <Button type="button" size="sm" onClick={openPublish}>
-          {t('board.publish')}
-        </Button>
-      </div>
+      <SectionHeader
+        title={t('board.title')}
+        help="masters.tasks"
+        actions={
+          <Button type="button" size="sm" onClick={openPublish}>
+            {t('board.publish')}
+          </Button>
+        }
+      />
 
       {tasks.length === 0 ? (
         <EmptyState title={t('board.emptyTitle')} description={t('board.emptyDescription')} />
@@ -157,10 +160,6 @@ export function MasterTableTasksTab() {
           renderFiles={(files) => <FileList files={files} />}
         />
       )}
-
-      <HelpLink section="masters.tasks" className="inline-block text-xs">
-        {t('board.helpLink')}
-      </HelpLink>
 
       <TaskFormDialog
         open={isFormOpen}

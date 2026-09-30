@@ -176,6 +176,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | **Un criterio que no resolvió a ningún valor aceptado no coincide con nada**, nunca con todo: leerlo como «sin filtro» convierte un error de tipeo en el listado completo de la plataforma | `GameTableSearchSpecification` | #246 |
 | **El buscador solo acota lo que el lector ya podía ver**: las reglas de visibilidad y los criterios se unen con `and` y nunca se pliegan en la misma expresión, así que un `/or` entre dos criterios no puede cruzar el filtro | `GameTableSearchSpecification.forExplorer` | #121, #154, #246 |
 | Masters y admins proponen valores; solo un admin acepta y clasifica | `CatalogService` | #55 |
+| **Un admin que crea un valor desde `/admin/catalogs` no propone: el valor nace `Accepted` y canónico**, como grupo propio. Un nombre ya tomado, sin importar mayúsculas, es 409 | `AbstractCatalogService.create` | #280 |
 | Un valor en `Created` no filtra ni se muestra a los jugadores; al aceptarse, sí | `CatalogService` | #57 |
 | La mesa muestra siempre el alias que le puso su master | `CatalogService` | #58 |
 | Dar de baja un valor no rompe vínculos: las lecturas lo saltan por estado y restaurarlo devuelve todo | `CatalogService` | #81 |

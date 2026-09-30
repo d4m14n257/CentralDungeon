@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { masterTablesPath } from '@/config/paths'
-import { HelpLink } from '@/features/help'
 import { MasterWorkItemList, useMasterDashboard } from '@/features/tables'
 import { ApiError } from '@/types/api'
 
@@ -42,7 +41,7 @@ export function MasterDashboardPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('dashboard.title')} description={t('dashboard.subtitle')} />
+      <PageHeader title={t('dashboard.title')} description={t('dashboard.subtitle')} help="masters.dashboard" />
 
       {data.items.length === 0 ? (
         <EmptyState
@@ -58,11 +57,7 @@ export function MasterDashboardPage() {
         <MasterWorkItemList items={data.items} />
       )}
 
-      <p className="text-fg-subtle text-xs">
-        {t('dashboard.noReservationHint')}{' '}
-        {/* To the exact #ref and not to the whole help page: that is what makes opening it worth it (#168). */}
-        <HelpLink section="masters.dashboard">{t('dashboard.helpLink')}</HelpLink>
-      </p>
+      <p className="text-fg-subtle text-xs">{t('dashboard.noReservationHint')}</p>
     </div>
   )
 }

@@ -237,7 +237,12 @@ export function MasterTableEditPage() {
     // Centred rather than hugging the left: these two are forms, and a form read against one
     // edge of a wide screen is a column of text with a desert next to it (#228).
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title={t('edit.title', { name: table.name })} description={t('edit.description')} />
+      <PageHeader
+        title={t('edit.title', { name: table.name })}
+        description={t('edit.description')}
+        back={{ to: masterTableDetailPath(tableId), label: t('edit.back') }}
+        help="masters.edit-table"
+      />
 
       <Form {...form}>
         <form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)} className="space-y-6">

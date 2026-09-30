@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { HelpLink } from '@/features/help'
+import { SectionHeader } from '@/components/SectionHeader'
 import {
   FileList,
   FilePicker,
@@ -113,12 +113,15 @@ export function MasterTableFilesTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="section-label">{t('table.title')}</h2>
-        <Button type="button" size="sm" onClick={() => setIsAttaching(true)}>
-          {t('table.attach')}
-        </Button>
-      </div>
+      <SectionHeader
+        title={t('table.title')}
+        help="masters.files"
+        actions={
+          <Button type="button" size="sm" onClick={() => setIsAttaching(true)}>
+            {t('table.attach')}
+          </Button>
+        }
+      />
 
       {files.length === 0 ? (
         <EmptyState title={t('table.emptyTitle')} description={t('table.emptyDescription')} />
@@ -150,10 +153,6 @@ export function MasterTableFilesTab() {
           )}
         />
       )}
-
-      <HelpLink section="masters.files" className="inline-block text-xs">
-        {t('table.helpLink')}
-      </HelpLink>
 
       <FormDialog
         isDirty={kind !== 'Preparation' || isPrivate}

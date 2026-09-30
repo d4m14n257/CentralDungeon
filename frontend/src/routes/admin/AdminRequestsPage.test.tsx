@@ -254,7 +254,7 @@ describe('AdminRequestsPage', () => {
     list.mockResolvedValue(page([request()]))
 
     renderPage()
-    await userEvent.click(await screen.findByRole('button', { name: 'Cómo se resuelve un pedido' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Cómo funciona' }))
 
     const dialog = within(await screen.findByRole('dialog'))
     expect(dialog.getByText(/no crea la mesa/i)).toBeInTheDocument()

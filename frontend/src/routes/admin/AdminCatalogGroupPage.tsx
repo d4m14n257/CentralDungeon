@@ -1,11 +1,10 @@
-import { ArrowLeft, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link, Navigate, useParams, useSearchParams } from 'react-router'
+import { Navigate, useParams, useSearchParams } from 'react-router'
 
 import { GraphTray } from '@/components/graph/GraphTray'
 import { IconAction } from '@/components/IconAction'
 import { PageHeader } from '@/components/PageHeader'
-import { Button } from '@/components/ui/button'
 import { adminCatalogsPath } from '@/config/paths'
 import { CanonicalPicker, CatalogGraph, useCatalogGroup, type CatalogKind } from '@/features/catalogs'
 
@@ -83,14 +82,8 @@ export function AdminCatalogGroupPage() {
       <PageHeader
         title={head ? t('admin.groupOf', { name: head.name }) : t('admin.groupTitle')}
         description={t('admin.groupDescription')}
-        actions={
-          <Button variant="outline" asChild>
-            <Link to={`${adminCatalogsPath()}?kind=${kind}`}>
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              {t('admin.backToCatalogs')}
-            </Link>
-          </Button>
-        }
+        back={{ to: `${adminCatalogsPath()}?kind=${kind}`, label: t('admin.backToCatalogs') }}
+        help="admins.catalogs"
       />
 
       <div className="grid gap-4 lg:grid-cols-4">

@@ -27,8 +27,7 @@
       "both": "text and files",
       "text": "text only",
       "files": "files only"
-    },
-    "helpLink": "How requests work"
+    }
   },
   "form": {
     "publishTitle": "Publish a request",
@@ -86,8 +85,7 @@
     "answer": "Answer",
     "answerAgain": "Answer again",
     "cannotAnswer": "You will be able to answer this once you apply to the table.",
-    "mineTitle": "What I sent",
-    "helpLink": "How requests work"
+    "mineTitle": "What I sent"
   },
   "submit": {
     "title": "Answer: {{title}}",

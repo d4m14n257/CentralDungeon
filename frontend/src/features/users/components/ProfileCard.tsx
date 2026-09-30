@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AttendanceSummaryView } from '@/components/AttendanceSummaryView'
@@ -9,6 +10,8 @@ import type { Profile } from '../types'
 interface ProfileCardProps {
   /** The profile to show. */
   profile: Profile
+  /** What sits at the right end of the card's header — on one's own profile, its «Cómo funciona» (#280). */
+  actions?: ReactNode
 }
 
 /**
@@ -31,7 +34,7 @@ interface ProfileCardProps {
  *
  * @param props.profile the profile to show
  */
-export function ProfileCard({ profile }: ProfileCardProps) {
+export function ProfileCard({ profile, actions }: ProfileCardProps) {
   const { t } = useTranslation('users')
   const label = profile.name ?? t('profile.noName')
   const initials = label
@@ -65,6 +68,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             )}
           </div>
         </div>
+        {actions && <div className="shrink-0">{actions}</div>}
       </div>
 
       <div className="border-border mt-4 border-t pt-4">

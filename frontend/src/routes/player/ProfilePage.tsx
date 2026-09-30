@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SubmitRequestSection } from '@/features/approvals'
-import { HelpLink } from '@/features/help'
+import { HelpButton, HelpLink } from '@/features/help'
 import { ProfileCard, useMyProfile } from '@/features/users'
 
 /**
@@ -44,7 +44,9 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-3">
-      <ProfileCard profile={data} />
+      {/* «Quién ve esto» is the question the screen raises and cannot answer alone (#231): the expiry
+          of #44 is not something anybody guesses by looking at a profile they can see today. */}
+      <ProfileCard profile={data} actions={<HelpButton section="players.profile" />} />
       {/* Nothing at all for somebody who already runs tables: the role is not something you can hold
           twice, so there is no request to make and nothing to explain. */}
       {!isMaster && (
@@ -62,11 +64,6 @@ export function ProfilePage() {
           />
         </div>
       )}
-      {/* «Quién ve esto» es la pregunta que provoca la pantalla y que la pantalla sola no contesta
-          (#231): la caducidad de #44 no se adivina mirando un perfil que hoy se ve. */}
-      <HelpLink section="players.profile" className="inline-block text-xs">
-        {t('profile.help')}
-      </HelpLink>
     </div>
   )
 }
