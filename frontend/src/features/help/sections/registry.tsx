@@ -2,7 +2,16 @@ import type { ReactNode } from 'react'
 
 import type { SearchField } from '@/lib/searchQuery'
 
-import { AccountHelp, ContextsHelp, NotificationsHelp, RequestsHelp, SearchHelp, TableStatusHelp } from './basics'
+import {
+  AccountHelp,
+  ContextsHelp,
+  MyFilesHelp,
+  MyScheduleHelp,
+  NotificationsHelp,
+  RequestsHelp,
+  SearchHelp,
+  TableStatusHelp,
+} from './basics'
 import {
   AdminFilesHelp,
   AssignMastersHelp,
@@ -85,6 +94,9 @@ export const HELP_SECTIONS = {
   'basics.table-status': { titleKey: 'basics.tableStatus.title', Body: TableStatusHelp },
   'basics.account': { titleKey: 'basics.account.title', Body: AccountHelp },
   'basics.notifications': { titleKey: 'basics.notifications.title', Body: NotificationsHelp },
+  // The two screens of the account menu (#280): a player's and a master's alike, so under `basics`.
+  'basics.my-files': { titleKey: 'basics.myFiles.title', Body: MyFilesHelp },
+  'basics.my-schedule': { titleKey: 'basics.mySchedule.title', Body: MyScheduleHelp },
   // Under `basics` and not under `players`, because the mechanism is one and the three screens that
   // raise a request are not all a player's (#42): the same section is read from the profile, from
   // the explorer and from the support screen.

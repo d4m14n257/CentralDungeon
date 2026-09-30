@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
+import { PageHeader } from '@/components/PageHeader'
 import { RichTextView } from '@/components/RichTextView'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { playerUserProfilePath } from '@/config/paths'
+import { playerHomePath, playerUserProfilePath } from '@/config/paths'
 import { HelpButton, HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
@@ -61,6 +61,13 @@ function primaryMasterOf(masters: MasterSummary[]) {
 /**
  * A table's public detail, /player/tables/:id - what a prospective player reads before applying.
  *
+ * **The standard header** (#280): the status next to the name, the masters as the line under it,
+ * «Volver a explorar» above, and on the right «Cómo funciona» and **«Postularme»** — which used to sit
+ * at the foot of the card, after everything, where the one thing this screen is for was the last
+ * thing on it. Its label is also its reason when it cannot run (principio 2), so a disabled button
+ * still says why; the schedule clash, the one refusal the reader can fix, is explained right under
+ * the header, next to the button it blocks.
+ *
  * It composes: the page owns only the table query, and each block is a section that fetches its own
  * data from an id (#3.1.5). That is what keeps a feature from ever importing another.
  */
@@ -107,12 +114,16 @@ export function TableDetailPage() {
   const coMasters = table.masters.filter((master) => master.userId !== primaryMaster?.userId)
 
   return (
-    <div className="border-border-strong bg-surface rounded-xl border p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="page-title">{table.name}</h1>
-          {primaryMaster && (
-            <p className="text-fg-muted mt-1 flex flex-wrap items-center gap-x-1 text-sm">
+    <div className="space-y-4">
+      <PageHeader
+        title={table.name}
+        badge={<TableStatusBadge status={table.status} />}
+        back={{ to: playerHomePath(), label: t('detail.backToExplorer') }}
+        help="players.applying"
+        action={{ label: state.label, onClick: () => applyDialog.open(), disabled: state.disabled }}
+        description={
+          primaryMaster && (
+            <span className="flex flex-wrap items-center gap-x-1">
               <span>{t('detail.masterLabel')}:</span>
               {/* #41: a master's profile is visible to anyone looking at their table, no
                   application required — the asymmetry that makes this link always safe to show. */}
@@ -135,13 +146,23 @@ export function TableDetailPage() {
                   ))}
                 </>
               )}
-            </p>
-          )}
-        </div>
-        <TableStatusBadge status={table.status} />
-      </div>
+            </span>
+          )
+        }
+      />
 
-      <div className="border-border mt-4 flex flex-col gap-4 border-t pt-4">
+      {/* R2 explained rather than hinted at: the block says what it clashes with and what can be done (#178). */}
+      {hasScheduleConflict && (
+        <p className="text-state-canceled-fg flex items-start gap-1.5 text-xs">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+          <span>
+            {t('detail.scheduleConflictExplained')} {/* To the full explanation, under its stable #ref (#167, #168). */}
+            <HelpLink section="players.schedule-conflicts">{t('detail.scheduleConflictHelp')}</HelpLink>
+          </span>
+        </p>
+      )}
+
+      <div className="border-border-strong bg-surface flex flex-col gap-4 rounded-xl border p-6">
         {(table.systems.length > 0 || table.tags.length > 0 || table.platforms.length > 0) && (
           <div className="flex flex-wrap gap-1.5">
             {[...table.systems, ...table.tags, ...table.platforms].map((value: CatalogValue) => (
@@ -236,22 +257,6 @@ export function TableDetailPage() {
               : t('explorer.playersUnlimited', { current: table.playerCount })}
           </p>
         </div>
-      </div>
-
-      <div className="border-border mt-4 flex flex-col items-end gap-2 border-t pt-4">
-        {/* R2 explained rather than hinted at: the block says what it clashes with and what can be done (#178). */}
-        {hasScheduleConflict && (
-          <p className="text-state-canceled-fg flex items-start gap-1.5 text-xs">
-            <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-            <span>
-              {t('detail.scheduleConflictExplained')} {/* El aviso lleva a la explicación completa, con su #ref estable (#167, #168). */}
-              <HelpLink section="players.schedule-conflicts">{t('detail.scheduleConflictHelp')}</HelpLink>
-            </span>
-          </p>
-        )}
-        <Button disabled={state.disabled} onClick={() => applyDialog.open()}>
-          {state.label}
-        </Button>
       </div>
 
       <ApplyToTableDialog

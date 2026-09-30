@@ -73,6 +73,30 @@
       "click": "Al tocar una notificación vas a donde ocurrió, y si hace falta se cambia solo el contexto.",
       "history": "El historial completo está en la pantalla de notificaciones, y ahí se marcan como leídas."
     },
+    "myFiles": {
+      "title": "Mis archivos",
+      "what": "Mis archivos junta todo lo que subiste: fichas, material de mesa, entregas. Al adjuntar algo en una mesa, una postulación o una entrega podés elegir uno de acá en vez de subirlo otra vez.",
+      "cajon": "Al subir desde acá elegís en qué cajón va, y solo ves los tuyos: los de jugador (solicitud y entrega) si jugás, y los de master (de mesa y petición) si dirigís alguna mesa. Cuando subís desde una mesa o una entrega no se pregunta: el cajón sale de dónde lo subiste.",
+      "usages": "Cada archivo dice dónde se está usando. «Sin usar» avisa que nada lo tiene adjunto.",
+      "reuse": "Si subís algo que ya tenías, se reconoce y no se guarda dos veces: se usa el que ya estaba y te lo avisa.",
+      "purge": "Un archivo que ninguna mesa tiene agregado y que nadie usó en tres meses se da de baja solo.",
+      "remove": "Dar de baja un archivo lo saca de tu lista y de las mesas que lo usan. No se borra del disco en el momento: eso lo hace el owner desde su menú de mantenimiento.",
+      "steps": {
+        "step1": "Tocá «Subir archivo».",
+        "step2": "Soltá el archivo y elegí en qué cajón va.",
+        "step3": "Tocá «Subir».",
+        "step4": "Para cambiarle el nombre, usá el lápiz de su fila."
+      }
+    },
+    "mySchedule": {
+      "title": "Mi horario",
+      "what": "Mi horario muestra tu semana entera: las mesas que dirigís y las que jugás, en la misma grilla.",
+      "colors": "El color dice el rol: uno para las mesas que dirigís y otro para las que jugás. La leyenda está debajo de la grilla.",
+      "click": "Cada bloque lleva a su mesa: si la dirigís, a su pantalla de master; si la jugás, a tu vista de jugador.",
+      "timeZone": "Todo está en tu zona horaria, la que dice el subtítulo.",
+      "room": "Un hueco en la grilla es un hueco que el sistema acepta: sirve para buscar lugar antes de crear una mesa o de postularte, porque dos compromisos que se pisan se rechazan.",
+      "list": "Debajo está la lista de tus mesas de la semana, incluidas las que todavía no tienen horario."
+    },
     "requests": {
       "title": "Pedirle algo a un admin",
       "intro": "Hay cosas que no podés hacer vos y las decide un admin. Para todas se usa el mismo mecanismo: escribís un pedido con su motivo y te responden.",

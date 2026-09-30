@@ -58,7 +58,7 @@ export function MySchedulePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('schedule.title')} description={t('schedule.subtitle', { timeZone })} />
+      <PageHeader title={t('schedule.title')} description={t('schedule.subtitle', { timeZone })} help="basics.my-schedule" />
 
       {data.length === 0 ? (
         <EmptyState title={t('schedule.emptyTitle')} description={t('schedule.emptyDescription')} />

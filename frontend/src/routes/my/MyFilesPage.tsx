@@ -215,6 +215,7 @@ export function MyFilesPage() {
       <PageHeader
         title={t('mine.title')}
         description={t('mine.description')}
+        help="basics.my-files"
         // Disabled rather than gone while the cajones are still loading, so it does not appear and
         // jump. With none of them the screen never gets this far: it says so above (#241).
         action={{

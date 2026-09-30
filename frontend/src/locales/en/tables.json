@@ -94,7 +94,9 @@
     "scheduleConflictHelp": "How clashes work",
     "startDate": "Starts",
     "totalSessions_one": "{{count}} session planned",
-    "totalSessions_other": "{{count}} sessions planned"
+    "totalSessions_other": "{{count}} sessions planned",
+    "backToExplorer": "Back to explore",
+    "backToMyTables": "Back to my tables"
   },
   "myTables": {
     "title": "My tables",

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import '@/providers/i18n'
 import type { SearchField } from '@/lib/searchQuery'
-import { RequestsHelp, SearchHelp } from './basics'
+import { MyFilesHelp, MyScheduleHelp, RequestsHelp, SearchHelp } from './basics'
 
 const USER_FIELDS: SearchField[] = [
   { name: 'discord_name', label: 'Discord', examples: ['dami'] },
@@ -144,5 +144,26 @@ describe('RequestsHelp', () => {
     const steps = container.querySelector('ol')
     expect(steps).not.toBeNull()
     expect(within(steps as HTMLElement).getAllByRole('listitem')).toHaveLength(4)
+  })
+})
+
+/**
+ * #280: the two screens of the account menu got their «Cómo funciona». A key missing from the JSON
+ * would print itself raw, so every line is checked to be real text.
+ */
+describe('MyFilesHelp and MyScheduleHelp', () => {
+  it('says what the library does, including when a file goes away on its own', () => {
+    render(<MyFilesHelp />)
+
+    expect(screen.getByText(/se da de baja solo/)).toBeInTheDocument()
+    expect(screen.getAllByRole('listitem').length).toBeGreaterThan(6)
+    expect(screen.queryByText(/basics\.myFiles/)).not.toBeInTheDocument()
+  })
+
+  it('says a gap in the week is a gap the server accepts', () => {
+    render(<MyScheduleHelp />)
+
+    expect(screen.getByText(/Un hueco en la grilla es un hueco que el sistema acepta/)).toBeInTheDocument()
+    expect(screen.queryByText(/basics\.mySchedule/)).not.toBeInTheDocument()
   })
 })

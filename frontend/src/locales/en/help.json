@@ -73,6 +73,30 @@
       "click": "Tapping a notification takes you where it happened, switching context on its own if it has to.",
       "history": "The full history is on the notifications screen, and that is where they get marked as read."
     },
+    "myFiles": {
+      "title": "My files",
+      "what": "My files gathers everything you uploaded: sheets, table material, answers. When you attach something to a table, an application or an answer, you can pick one from here instead of uploading it again.",
+      "cajon": "When uploading from here you choose which drawer it goes in, and you only see your own: the player ones (application and submission) if you play, and the master ones (table material and request) if you run a table. When you upload from a table or an answer nothing is asked: the drawer follows from where you uploaded it.",
+      "usages": "Each file says where it is being used. “Unused” warns that nothing has it attached.",
+      "reuse": "If you upload something you already had, it is recognised and not stored twice: the one you had is used, and you are told.",
+      "purge": "A file no table has added and nobody used for three months is removed automatically.",
+      "remove": "Removing a file takes it out of your list and off the tables using it. It is not erased from disk right away: that is the owner's, from their maintenance menu.",
+      "steps": {
+        "step1": "Hit “Upload file”.",
+        "step2": "Drop the file and choose which drawer it goes in.",
+        "step3": "Hit “Upload”.",
+        "step4": "To rename it, use the pencil on its row."
+      }
+    },
+    "mySchedule": {
+      "title": "My schedule",
+      "what": "My schedule shows your whole week: the tables you run and the ones you play, on the same grid.",
+      "colors": "The colour says the role: one for the tables you run and another for the ones you play. The legend is under the grid.",
+      "click": "Each block leads to its table: if you run it, to its master screen; if you play it, to your player view.",
+      "timeZone": "Everything is in your time zone, the one the subtitle names.",
+      "room": "A gap in the grid is a gap the system accepts: use it to find room before creating a table or applying, because two commitments that overlap are refused.",
+      "list": "Below is the list of your tables this week, including the ones with no schedule yet."
+    },
     "requests": {
       "title": "Asking an admin for something",
       "intro": "Some things are not yours to do and an admin decides them. They all use the same mechanism: you write a request with its reason, and you get an answer.",

@@ -51,10 +51,10 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/onboarding` | **Solo la primera vez**: nombre a mostrar y país. Bloquea hasta completarse (#134) |
 | | `/` | **No es una pantalla**: despacha a la home del contexto de quien entra (#222) |
 | **Jugador** | `/player` | Explorar mesas. **Home del contexto**. **El buscador es su único filtro** (#242, misma lectura que `/my/files`): los filtros por sistema, tag y plataforma que esta fila describía son los comandos `/table_system`, `/table_tag` y `/table_platform`, que acotan desde la misma línea y se combinan entre sí — y un término sin comando busca el nombre de la mesa. **Los tres son texto libre** (#246): el backend resuelve el grupo de sinónimos, así que buscar por uno encuentra las mesas etiquetadas con cualquier otro (#54, #56). Lo buscado vive en `?q=` (#185); la página no, porque el listado se acumula con «Ver más» (#173) |
-| | `/player/tables/:id` | Detalle de una mesa y postulación |
+| | `/player/tables/:id` | Detalle de una mesa y postulación. Cabecera estándar (#281): estado junto al nombre, masters como descripción, «Volver a explorar», y **«Postularme» a la derecha** —antes al pie de la tarjeta—; el choque de horario se explica justo debajo |
 | | `/player/applications` | Mis postulaciones y en qué estado están |
 | | `/player/my-tables` | Mesas donde soy jugador — **solo las vivas** |
-| | `/player/my-tables/:id` | Mi mesa: agenda, sesiones, peticiones pendientes |
+| | `/player/my-tables/:id` | Mi mesa: agenda, sesiones, peticiones pendientes. Cabecera estándar (#281): estado junto al nombre, «Volver a mis mesas», el enlace a la ficha pública como descripción |
 | | `/player/history` | Mesas terminadas y canceladas, con la asistencia final (#133) |
 | | `/my/files` | Mis archivos: a qué flujos pertenece cada uno (#233) y dónde se usa hoy (#232), reutilizables al adjuntar (#65). **Es el único lugar que pregunta el cajón**, porque es el único sin flujo del que deducirlo — y solo ofrece los que son tuyos (#237): los de jugador a cualquiera, los de master a quien dirija mesas, y nunca los anuncios. **Transversal, no del contexto Jugador** — lo que alguien subió como jugador y como master es una sola biblioteca (#222). **Es de players y masters** (#241): quien no tenga ninguno de los dos roles no la ve en el menú y la pantalla le dice por qué. **El buscador es su único filtro** (#242), y la lista va paginada de a 20 con divider entre filas |
 | | `/player/profile` | Mi karma y los comentarios que recibí |

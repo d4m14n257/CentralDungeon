@@ -94,7 +94,9 @@
     "scheduleConflictHelp": "Cómo funcionan los choques",
     "startDate": "Comienza",
     "totalSessions_one": "{{count}} sesión planeada",
-    "totalSessions_other": "{{count}} sesiones planeadas"
+    "totalSessions_other": "{{count}} sesiones planeadas",
+    "backToExplorer": "Volver a explorar",
+    "backToMyTables": "Volver a mis mesas"
   },
   "myTables": {
     "title": "Mis mesas",

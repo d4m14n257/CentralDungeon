@@ -257,3 +257,36 @@ export function NotificationsHelp() {
 
   return <HelpList items={['what', 'click', 'history'].map((key) => t(`basics.notifications.${key}`))} />
 }
+
+/**
+ * `/my/files`, the person's own library (#237, #280).
+ *
+ * Under `basics` because the library is both a player's and a master's: the same screen, with the
+ * cajones each role fills. What it says is what the screen cannot show by itself — that reusing costs
+ * nothing, where the cajón comes from when it is not asked, and when a file goes away on its own. The
+ * purge line says what the backend does (#75): a file no table holds, unused for three months, is
+ * marked gone, and only published files are exempt.
+ */
+export function MyFilesHelp() {
+  const { t } = useTranslation('help')
+
+  return (
+    <>
+      <HelpList items={['what', 'cajon', 'usages', 'reuse', 'purge', 'remove'].map((key) => t(`basics.myFiles.${key}`))} />
+      <HelpSteps title={t('stepsTitle')} items={[1, 2, 3, 4].map((n) => t(`basics.myFiles.steps.step${n}`))} />
+    </>
+  )
+}
+
+/**
+ * `/my/schedule`, the person's whole week (#227, #280).
+ *
+ * The screen is a grid, and a grid does not say what its colours mean for, where a block leads, or
+ * that a gap in it is a gap the server accepts (#178) — which is the reason to open it before
+ * applying to a table or creating one.
+ */
+export function MyScheduleHelp() {
+  const { t } = useTranslation('help')
+
+  return <HelpList items={['what', 'colors', 'click', 'timeZone', 'room', 'list'].map((key) => t(`basics.mySchedule.${key}`))} />
+}
