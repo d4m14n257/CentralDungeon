@@ -32,7 +32,9 @@
     "acceptConfirmDefault": "Do you confirm this candidate joins the table?",
     "acceptConfirmFillsTable": "This acceptance fills the last seat: every remaining candidate will be rejected automatically.",
     "acceptSuccess": "Candidate accepted",
-    "rejectSuccess": "Candidate rejected"
+    "rejectSuccess": "Candidate rejected",
+    "rejectConfirmTitle": "Reject {{name}}?",
+    "rejectConfirmDescription": "They get the rejection with your reason and stop being one of the table's candidates."
   },
   "rejectionReason": {
     "TABLE_FULL": "The table filled up"
@@ -59,6 +61,12 @@
       "REGISTRATION_ALREADY_BLOCKED": "That person is already banned from this table. Refresh to see how it stands.",
       "REGISTRATION_NOT_BLOCKED": "That person is not banned: somebody lifted it before you did.",
       "generic": "We could not complete the action. Try again."
-    }
+    },
+    "blockConfirmTitle": "Veto {{name}}?",
+    "blockConfirmDescription": "They stop seeing the table, its detail and its files. It is recorded with your reason.",
+    "requestConfirmTitle": "Ask to veto {{name}}?",
+    "requestConfirmDescription": "The primary master decides. Until then they stay at the table.",
+    "unblockConfirmTitle": "Lift the veto on {{name}}?",
+    "unblockConfirmDescription": "They can see the table again. It is recorded with your reason."
   }
 }

@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Browser } from '@playwright/test'
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { acceptReview } from './helpers/review'
 
 const BACKEND_URL = process.env.E2E_BACKEND_URL ?? 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
@@ -37,6 +38,7 @@ test('a master sees the week they have committed, and takes a free hour from the
     // The files step (#228): nothing is required there.
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await page.getByRole('button', { name: 'Crear mesa' }).click()
+    await acceptReview(page)
     await expect(page.getByRole('heading', { name: firstName })).toBeVisible()
 
     // It shows on the person's own week, which belongs to no context (#222).

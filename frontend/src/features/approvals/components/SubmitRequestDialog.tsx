@@ -13,6 +13,7 @@ import { useSubmitRequest } from '../api/useSubmitRequest'
 import { approvalErrorKey } from '../approvalErrors'
 import { submitApprovalRequestSchema, type SubmitApprovalRequestForm } from '../schemas'
 import type { SubmittableRequestType } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface SubmitRequestDialogProps {
   /**
@@ -60,6 +61,7 @@ interface SubmitRequestDialogProps {
  */
 export function SubmitRequestDialog({ type, open, onOpenChange, help }: SubmitRequestDialogProps) {
   const { t } = useTranslation('admin')
+  const confirm = useConfirm()
   const submit = useSubmitRequest()
   const errorKey = approvalErrorKey(submit.error)
 
@@ -76,7 +78,14 @@ export function SubmitRequestDialog({ type, open, onOpenChange, help }: SubmitRe
     onOpenChange(next)
   }
 
-  function onSubmit(values: SubmitApprovalRequestForm) {
+  async function onSubmit(values: SubmitApprovalRequestForm) {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('requests.submit.confirmTitle'),
+      description: t('requests.submit.confirmDescription'),
+      confirmLabel: t('requests.submit.confirmLabel'),
+    })
+    if (!confirmed) return
     submit.mutate(values, {
       onSuccess: () => {
         toast.success(t('requests.submit.success'))

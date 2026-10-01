@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
+import { acceptReview } from './helpers/review'
 
 /**
  * Catalog administration against the real backend and the real seed: the table of groups and the
@@ -140,6 +141,7 @@ test('connecting a floating proposal to a group accepts it into that group', asy
   await expect(floating).toContainText('Conectalo a un grupo')
 
   await floating.locator('.react-flow__handle-right').dragTo(graphNode(page, 'One-shot').locator('.react-flow__handle-left'))
+  await acceptReview(page)
 
   await expect(page.getByText(`«${name}» ahora es equivalente a «One-shot»`)).toBeVisible()
   await expect(graphNode(page, name)).toContainText('Aceptado')
@@ -163,6 +165,7 @@ test('an admin disables a catalog value from its node and restores it', async ({
   await page.getByRole('menuitem', { name: 'Dar de baja' }).click()
   await expect(page.getByText('Las mesas que lo usan lo conservan')).toBeVisible()
   await page.getByRole('dialog').getByRole('button', { name: 'Dar de baja' }).click()
+  await acceptReview(page)
 
   await expect(page.getByText('Se dio de baja «Homebrew»')).toBeVisible()
   await expect(node).toContainText('Dado de baja')
@@ -170,6 +173,7 @@ test('an admin disables a catalog value from its node and restores it', async ({
   // And it comes back: the value is still there for the admin, which is the difference between disabling and deleting.
   await page.getByRole('button', { name: 'Acciones de «Homebrew»' }).click()
   await page.getByRole('menuitem', { name: 'Restaurar' }).click()
+  await acceptReview(page)
   await expect(page.getByText('Se restauró «Homebrew»')).toBeVisible()
   await expect(node).toContainText('Aceptado')
 

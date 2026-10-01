@@ -7,6 +7,7 @@ import '@/providers/i18n'
 import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
 import type { UserSummary } from '@/features/users'
 import { AssignMastersDialog } from './AssignMastersDialog'
+import { acceptReview } from '@/test/review'
 
 const PEOPLE: UserSummary[] = [
   { id: 'user-1', discordUsername: 'juanma', name: 'Juan Manuel' },
@@ -51,6 +52,7 @@ describe('AssignMastersDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Elegir juanma' }))
     await userEvent.click(screen.getByRole('button', { name: 'Elegir pablosan' }))
     await userEvent.click(screen.getByRole('button', { name: 'Asignar masters' }))
+    await acceptReview()
 
     expect(mutate).toHaveBeenCalledWith(
       { tableId: 'table-1', request: { primaryUserId: 'user-1', secondaryUserIds: ['user-2'] } },
@@ -65,6 +67,7 @@ describe('AssignMastersDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Elegir pablosan' }))
     await userEvent.click(screen.getByRole('button', { name: 'Hacer master a pablosan' }))
     await userEvent.click(screen.getByRole('button', { name: 'Asignar masters' }))
+    await acceptReview()
 
     expect(mutate).toHaveBeenLastCalledWith(
       { tableId: 'table-1', request: { primaryUserId: 'user-2', secondaryUserIds: ['user-1'] } },
@@ -87,6 +90,7 @@ describe('AssignMastersDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Elegir pablosan' }))
     await userEvent.click(screen.getByRole('button', { name: 'Quitar a juanma' }))
     await userEvent.click(screen.getByRole('button', { name: 'Asignar masters' }))
+    await acceptReview()
 
     expect(mutate).toHaveBeenLastCalledWith(
       { tableId: 'table-1', request: { primaryUserId: 'user-2', secondaryUserIds: [] } },

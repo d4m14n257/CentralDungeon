@@ -47,7 +47,9 @@
     "errors": {
       "ITEM_ALREADY_CLAIMED": "Otro admin lo tomó primero y lo está resolviendo. Mientras lo tenga, no se puede trabajar sobre esto.",
       "generic": "No pudimos completar la acción. Probá de nuevo."
-    }
+    },
+    "requestChangesConfirmTitle": "¿Pedir cambios en «{{name}}»?",
+    "requestChangesConfirmDescription": "La mesa vuelve a su master con tu nota para que la corrija, y no se abre hasta que la reenvíe y se apruebe."
   },
   "requests": {
     "title": "Pedidos",
@@ -138,7 +140,10 @@
         "description": "Para lo que la ayuda no contesta.",
         "effect": "Si lo aprueban, te responden y el pedido queda cerrado. No cambia nada más.",
         "placeholder": "Qué necesitás. Contá lo suficiente para que puedan responderte."
-      }
+      },
+      "confirmTitle": "¿Enviar el pedido?",
+      "confirmDescription": "Lo lee un admin y te responde con una notificación. Mientras esté pendiente no podés enviar otro del mismo tipo.",
+      "confirmLabel": "Enviar"
     },
     "ask": {
       "MasterGrant": "Pedir el rol de master",
@@ -160,7 +165,11 @@
     "supportTitle": "Ayuda",
     "supportDescription": "Acá pedís ayuda cuando lo que leíste no alcanzó.",
     "supportWhereHelpLives": "Las explicaciones están en cada pantalla, en el enlace de ayuda que hay al lado de lo que estés haciendo.",
-    "supportHelpLink": "Cómo funciona un pedido"
+    "supportHelpLink": "Cómo funciona un pedido",
+    "confirmApproveTitle": "¿Aprobar el pedido?",
+    "confirmApproveDescription": "La persona recibe la aprobación con tu motivo, y queda registrado quién lo resolvió.",
+    "confirmRejectTitle": "¿Rechazar el pedido?",
+    "confirmRejectDescription": "La persona recibe el rechazo con tu motivo, y queda registrado quién lo resolvió."
   },
   "users": {
     "title": "Usuarios",
@@ -242,7 +251,16 @@
     "roleHelpHint": "Un admin mueve Jugador y Master; Admin y Owner los mueve solo un owner.",
     "roleHelpLink": "Por qué",
     "blockHelpHint": "No se puede bloquear a una cuenta con Admin u Owner, ni a la propia.",
-    "blockHelpLink": "Por qué"
+    "blockHelpLink": "Por qué",
+    "confirmBlockTitle": "¿Bloquear a {{name}}?",
+    "confirmBlockDescription": "No va a poder entrar a la plataforma hasta que alguien lo desbloquee. Queda registrado con tu motivo.",
+    "confirmBlockLabel": "Bloquear",
+    "confirmUnblockTitle": "¿Desbloquear a {{name}}?",
+    "confirmUnblockDescription": "Vuelve a poder entrar a la plataforma. Queda registrado con tu motivo.",
+    "confirmUnblockLabel": "Desbloquear",
+    "confirmGrantTitle": "¿Darle {{role}} a {{name}}?",
+    "confirmRevokeTitle": "¿Quitarle {{role}} a {{name}}?",
+    "confirmRoleDescription": "El cambio rige desde ya y queda registrado con tu motivo en el historial de la cuenta."
   },
   "tables": {
     "title": "Mesas",
@@ -304,7 +322,13 @@
     "errors": {
       "SCHEDULE_CONFLICT": "No se puede reanudar: la agenda se pisa con «{{otherTableName}}», donde el master de esta mesa ya está comprometido.",
       "generic": "No pudimos completar la acción. Probá de nuevo."
-    }
+    },
+    "confirmCreateUnassignedTitle": "¿Crear la mesa «{{name}}»?",
+    "confirmCreateUnassignedDescription": "Nace sin master: no se abre hasta que le asignes uno.",
+    "pauseConfirmTitle": "¿Pausar «{{name}}»?",
+    "pauseConfirmDescription": "La mesa queda en pausa hasta que se reanude, y queda registrado con tu motivo.",
+    "assignConfirmTitle": "¿Asignar los masters de «{{name}}»?",
+    "assignConfirmDescription": "{{primary}} queda como master principal, y la mesa pasa a sus masters para que la preparen."
   },
   "settings": {
     "title": "Configuración",
@@ -363,7 +387,10 @@
     "errors": {
       "SETTING_OUT_OF_RANGE": "Ese valor está fuera de lo permitido para este ajuste: tiene que estar entre {{minValue}} y {{maxValue}}.",
       "generic": "No pudimos guardar el cambio. Probá de nuevo."
-    }
+    },
+    "confirmTitle": "¿Cambiar «{{label}}» a {{value}}?",
+    "confirmDescription": "Rige desde ya para toda la plataforma y queda registrado con tu motivo.",
+    "confirmRetroactiveDescription": "Rige desde ya para toda la plataforma, y este ajuste es retroactivo: cambia también la respuesta para lo que ya existe. Queda registrado con tu motivo."
   },
   "home": {
     "title": "Te damos la bienvenida a la administración",

@@ -14,6 +14,7 @@ import { useRejectRequest } from '../api/useRejectRequest'
 import { approvalErrorKey } from '../approvalErrors'
 import { resolveApprovalRequestSchema, type ResolveApprovalRequestForm } from '../schemas'
 import type { ApprovalRequestSummary } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** Which of the two acts the dialog is performing. There is no third thing it could be asked to do. */
 export type ResolveAction = 'approve' | 'reject'
@@ -59,6 +60,7 @@ interface ResolveRequestDialogProps {
  */
 export function ResolveRequestDialog({ request, action, open, onOpenChange, help }: ResolveRequestDialogProps) {
   const { t } = useTranslation('admin')
+  const confirm = useConfirm()
   const approve = useApproveRequest()
   const reject = useRejectRequest()
 
@@ -80,8 +82,23 @@ export function ResolveRequestDialog({ request, action, open, onOpenChange, help
     onOpenChange(next)
   }
 
-  function onSubmit(values: ResolveApprovalRequestForm) {
+  async function onSubmit(values: ResolveApprovalRequestForm) {
     if (!request) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm(
+      isApproving
+        ? {
+            title: t('requests.confirmApproveTitle'),
+            description: t('requests.confirmApproveDescription'),
+            confirmLabel: t('requests.approve'),
+          }
+        : {
+            title: t('requests.confirmRejectTitle'),
+            description: t('requests.confirmRejectDescription'),
+            confirmLabel: t('requests.reject'),
+          },
+    )
+    if (!confirmed) return
     const mutation = isApproving ? approve : reject
     mutation.mutate(
       { requestId: request.id, input: values },

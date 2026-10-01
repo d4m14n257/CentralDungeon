@@ -15,6 +15,7 @@ import { useRevokeRole } from '../api/useRevokeRole'
 import { userAdminErrorKey } from '../adminErrors'
 import { changeUserRoleSchema, type ChangeUserRoleForm } from '../schemas'
 import type { AdminUserSummary, PlatformRole } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface RoleChangeDialogProps {
   /** The account being changed, or null when the dialog is closed. */
@@ -66,6 +67,7 @@ interface RoleChangeDialogProps {
  */
 export function RoleChangeDialog({ user, grantableRoles, open, onOpenChange, help }: RoleChangeDialogProps) {
   const { t } = useTranslation('admin')
+  const confirm = useConfirm()
   const grant = useGrantRole()
   const revoke = useRevokeRole()
 
@@ -92,8 +94,17 @@ export function RoleChangeDialog({ user, grantableRoles, open, onOpenChange, hel
     onOpenChange(next)
   }
 
-  function onSubmit(values: ChangeUserRoleForm) {
+  async function onSubmit(values: ChangeUserRoleForm) {
     if (!user) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t(isHeld(values.role) ? 'users.confirmRevokeTitle' : 'users.confirmGrantTitle', {
+        role: t(`users.roles.${values.role}`),
+        name: user.discordUsername,
+      }),
+      description: t('users.confirmRoleDescription'),
+    })
+    if (!confirmed) return
     const mutation = isHeld(values.role) ? revoke : grant
     const successKey = isHeld(values.role) ? 'users.revokeSuccess' : 'users.grantSuccess'
     mutation.mutate(

@@ -9,6 +9,7 @@ import { HelpLink } from '@/features/help'
 import { cn } from '@/lib/utils'
 import { useAssignMasters } from '@/features/tables'
 import { UserPicker, type UserSummary } from '@/features/users'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface AssignMastersDialogProps {
   tableId: string
@@ -30,6 +31,7 @@ interface AssignMastersDialogProps {
  */
 export function AssignMastersDialog({ tableId, tableName, open, onOpenChange }: AssignMastersDialogProps) {
   const { t } = useTranslation('admin')
+  const confirm = useConfirm()
   const assignMasters = useAssignMasters()
   const [selected, setSelected] = useState<UserSummary[]>([])
 
@@ -55,8 +57,14 @@ export function AssignMastersDialog({ tableId, tableName, open, onOpenChange }: 
     })
   }
 
-  function submit() {
+  async function submit() {
     if (!primary) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('tables.assignConfirmTitle', { name: tableName }),
+      description: t('tables.assignConfirmDescription', { primary: primary.name ?? primary.discordUsername }),
+    })
+    if (!confirmed) return
     assignMasters.mutate(
       { tableId, request: { primaryUserId: primary.id, secondaryUserIds: secondaries.map((user) => user.id) } },
       {
@@ -107,7 +115,7 @@ export function AssignMastersDialog({ tableId, tableName, open, onOpenChange }: 
 
         <UserPicker onSelect={add} excludedIds={selected.map((user) => user.id)} />
 
-        <Button type="button" onClick={submit} disabled={!primary || assignMasters.isPending} className="w-full">
+        <Button type="button" onClick={() => void submit()} disabled={!primary || assignMasters.isPending} className="w-full">
           {t('tables.assignMasters')}
         </Button>
       </div>

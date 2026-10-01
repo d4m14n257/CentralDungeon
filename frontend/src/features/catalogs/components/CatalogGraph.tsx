@@ -97,18 +97,34 @@ export function CatalogGraph({ kind, groupIds, onBecameGroup }: CatalogGraphProp
     if (!source || !target) return
 
     switch (connectionIntent(source, target)) {
-      case 'accept':
+      // Every connection is confirmed before it is written (#283): a drag that lands on the wrong
+      // node is the easiest mistake on this screen.
+      case 'accept': {
+        const confirmed = await confirm({
+          title: t('admin.acceptIntoConfirmTitle', { name: source.name, target: target.name }),
+          description: t('admin.acceptIntoConfirmDescription'),
+          confirmLabel: t('admin.accept'),
+        })
+        if (!confirmed) return
         accept.mutate(
           { id: source.id, canonicalId: target.id },
           { onSuccess: () => toast.success(t('admin.acceptIntoSuccess', { name: source.name, target: target.name })) },
         )
         return
-      case 'reassign':
+      }
+      case 'reassign': {
+        const confirmed = await confirm({
+          title: t('admin.reassignConfirmTitle', { name: source.name, target: target.name }),
+          description: t('admin.reassignConfirmDescription'),
+          confirmLabel: t('admin.reassign'),
+        })
+        if (!confirmed) return
         reassign.mutate(
           { id: source.id, canonicalId: target.id },
           { onSuccess: () => toast.success(t('admin.reassignSuccess', { name: source.name, target: target.name })) },
         )
         return
+      }
       case 'merge': {
         const confirmed = await confirm({
           title: t('admin.mergeConfirmTitle', { source: source.name, target: target.name }),

@@ -64,7 +64,11 @@
     "readOnlyEmptyDescription": "Todavía no hay nada compartido en esta mesa.",
     "attachConfirm_one": "Agregar 1 archivo",
     "attachConfirm_other": "Agregar {{count}} archivos",
-    "someFailed": "No se pudieron subir: {{names}}. Los demás quedaron agregados."
+    "someFailed": "No se pudieron subir: {{names}}. Los demás quedaron agregados.",
+    "attachConfirmTitle_one": "¿Agregar 1 archivo a la mesa?",
+    "attachConfirmTitle_other": "¿Agregar {{count}} archivos a la mesa?",
+    "attachConfirmShared": "Los jugadores de la mesa lo van a poder ver y descargar.",
+    "attachConfirmPrivate": "Solo lo ven quienes dirigen la mesa."
   },
   "admin": {
     "title": "Archivos",
@@ -163,7 +167,10 @@
     "reused": "«{{names}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo.",
     "send_zero": "Subir",
     "noLibraryTitle": "Tu cuenta no tiene biblioteca propia",
-    "noLibraryDescription": "Los archivos propios se suben desde los flujos de jugador y de master: una postulación, una entrega, el material de una mesa. Los archivos que la plataforma publica para la comunidad están en Administración → Archivos."
+    "noLibraryDescription": "Los archivos propios se suben desde los flujos de jugador y de master: una postulación, una entrega, el material de una mesa. Los archivos que la plataforma publica para la comunidad están en Administración → Archivos.",
+    "sendConfirmTitle_one": "¿Subir 1 archivo a tu biblioteca?",
+    "sendConfirmTitle_other": "¿Subir {{count}} archivos a tu biblioteca?",
+    "sendConfirmDescription": "Quedan en Mis archivos como «{{category}}», para reusar sin volver a subirlos."
   },
   "edit": {
     "title": "Editar archivo",
@@ -174,7 +181,9 @@
     "keepHint": "Sin marcar, queda atado a donde lo usaste y se libera cuando pase mucho tiempo sin uso.",
     "cancel": "Cancelar",
     "confirm": "Guardar",
-    "saved": "Archivo actualizado"
+    "saved": "Archivo actualizado",
+    "confirmTitle": "¿Guardar los cambios de «{{name}}»?",
+    "confirmDescription": "Cambia el nombre y si lo conservás; el contenido no se toca."
   },
   "staged": {
     "remove": "Quitar «{{name}}»"
@@ -217,6 +226,8 @@
     "categoryLabel": "Qué es",
     "cancel": "Cancelar",
     "confirm": "Guardar",
-    "saved": "Cajón actualizado"
+    "saved": "Cajón actualizado",
+    "confirmTitle": "¿Cambiar qué es «{{name}}»?",
+    "confirmDescription": "Pasa a ser «{{category}}», y así se va a ofrecer cuando lo publiques."
   }
 }

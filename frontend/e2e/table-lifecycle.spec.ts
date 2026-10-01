@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { approveTableFromQueue } from './helpers/adminQueue'
+import { acceptReview } from './helpers/review'
 
 /**
  * E2 sub-slice 1, end to end (decisiones.md #163): a master creates a table through the wizard ->
@@ -53,6 +54,7 @@ async function createTableThroughWizard(page: Page, name: string) {
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
 }
 
@@ -81,6 +83,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     const createDialog = admin.page.getByRole('dialog')
     await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
     await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
+    await acceptReview(admin.page)
 
     // `/admin/tables` is one of the wide tables of skill `diseno` §5.b since F3.3: a `<tr>`.
     const row = admin.page.getByRole('row').filter({ hasText: tableName })
@@ -116,6 +119,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     await expect(dialog.getByRole('button', { name: `Hacer master a ${firstCandidate}` })).toBeVisible()
 
     await dialog.getByRole('button', { name: 'Asignar masters' }).click()
+    await acceptReview(admin.page)
     await expect(row).toBeHidden()
   } finally {
     await admin.context.close()

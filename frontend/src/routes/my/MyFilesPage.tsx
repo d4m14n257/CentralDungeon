@@ -126,9 +126,15 @@ export function MyFilesPage() {
    * the person is told which one to try again — retrying costs nothing, because the server
    * recognises content it already has (#75, #238).
    */
-  function send() {
+  async function send() {
     const chosen = cajon ?? myCategories?.[0]
     if (chosen === undefined) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('mine.sendConfirmTitle', { count: staged.length }),
+      description: t('mine.sendConfirmDescription', { category: t(`category.${chosen}`) }),
+    })
+    if (!confirmed) return
     commit.mutate(
       { staged, fileCategory: chosen },
       {
@@ -158,9 +164,12 @@ export function MyFilesPage() {
     setSearchParams(next, { replace: true })
   }
 
-  function handleEdit(input: UpdateFileInput) {
+  async function handleEdit(input: UpdateFileInput) {
     const file = editDialog.item
     if (!file) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({ title: t('edit.confirmTitle', { name: file.name }), description: t('edit.confirmDescription') })
+    if (!confirmed) return
     update.mutate(
       { fileId: file.id, input },
       {
@@ -251,7 +260,7 @@ export function MyFilesPage() {
             <p className="text-fg-muted text-xs">{t('dropzone.categoryHint')}</p>
           </div>
           <div className="flex justify-end">
-            <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={send}>
+            <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={() => void send()}>
               {t('mine.send', { count: staged.length })}
             </Button>
           </div>

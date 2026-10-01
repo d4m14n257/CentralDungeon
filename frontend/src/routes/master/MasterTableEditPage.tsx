@@ -36,6 +36,7 @@ import { useMe } from '@/features/users'
 import { WEEKDAYS, browserTimeZone, formatMinutes, minutesOfDay } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 import { ApiError } from '@/types/api'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** The two states where the backend still accepts a rewrite of the table (#189). */
 
@@ -56,6 +57,7 @@ import { ApiError } from '@/types/api'
  */
 export function MasterTableEditPage() {
   const { t } = useTranslation('master')
+  const confirm = useConfirm()
   // The type's and the week's words belong to the tables domain (regla dura 18).
   const { t: tTables } = useTranslation('tables')
   const navigate = useNavigate()
@@ -206,7 +208,14 @@ export function MasterTableEditPage() {
     return <ForbiddenState description={t('edit.lockedDescription')} />
   }
 
-  function onSubmit(values: CreateGameTableForm) {
+  async function onSubmit(values: CreateGameTableForm) {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('edit.confirmTitle', { name: values.name }),
+      description: t('edit.confirmDescription'),
+      confirmLabel: t('edit.save'),
+    })
+    if (!confirmed) return
     updateTable.mutate(
       {
         name: values.name,

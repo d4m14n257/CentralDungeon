@@ -3,6 +3,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { approveTableFromQueue } from './helpers/adminQueue'
+import { acceptReview } from './helpers/review'
 
 /**
  * F2.3 end to end: the profile, and the asymmetry that #41 is about.
@@ -80,6 +81,7 @@ async function createTable(page: Page, name: string, hourtime: string): Promise<
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
 
   const id = page.url().split('/master/tables/')[1]

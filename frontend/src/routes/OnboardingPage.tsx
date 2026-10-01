@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { paths } from '@/config/paths'
 import { completeOnboardingSchema, useCompleteOnboarding, type CompleteOnboardingForm } from '@/features/users'
 import { countriesIn } from '@/lib/countries'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /**
  * The blocking first step: display name and country (#134). Nothing else in the app is reachable
@@ -19,6 +20,7 @@ import { countriesIn } from '@/lib/countries'
  */
 export function OnboardingPage() {
   const { t, i18n } = useTranslation('onboarding')
+  const confirm = useConfirm()
   // Named and sorted in the reader's language: the alphabet changes with it (#198).
   const countries = useMemo(() => countriesIn(i18n.language), [i18n.language])
   const navigate = useNavigate()
@@ -28,7 +30,10 @@ export function OnboardingPage() {
     defaultValues: { name: '', country: '' },
   })
 
-  function onSubmit(values: CompleteOnboardingForm) {
+  async function onSubmit(values: CompleteOnboardingForm) {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({ title: t('confirmTitle', { name: values.name }), description: t('confirmDescription') })
+    if (!confirmed) return
     completeOnboarding.mutate(values, {
       onSuccess: () => navigate(paths.root),
     })

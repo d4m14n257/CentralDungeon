@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { approveTableFromQueue } from './helpers/adminQueue'
+import { acceptReview } from './helpers/review'
 
 /**
  * F2.2 end to end: the character sheet that goes with an application (#60 uso 2).
@@ -71,6 +72,7 @@ async function createTable(page: Page, name: string, hourtime: string): Promise<
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
 
   const id = page.url().split('/master/tables/')[1]

@@ -5,5 +5,7 @@
   "namePlaceholder": "Como te conocen en la mesa",
   "countryLabel": "País",
   "countryPlaceholder": "Selecciona tu país",
-  "submit": "Continuar"
+  "submit": "Continuar",
+  "confirmTitle": "¿Guardar tu perfil como «{{name}}»?",
+  "confirmDescription": "Así te va a ver el resto de la comunidad."
 }

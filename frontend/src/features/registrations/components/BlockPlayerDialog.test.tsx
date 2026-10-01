@@ -9,6 +9,7 @@ import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
 import { ApiError } from '@/types/api'
 
 import { BlockPlayerDialog } from './BlockPlayerDialog'
+import { acceptReview } from '@/test/review'
 
 const block = vi.hoisted(() => vi.fn())
 const unblock = vi.hoisted(() => vi.fn())
@@ -63,6 +64,7 @@ describe('BlockPlayerDialog', () => {
 
     await user.type(screen.getByRole('textbox'), 'Falta sin avisar hace un mes')
     await user.click(screen.getByRole('button', { name: 'Vetar' }))
+    await acceptReview()
 
     await waitFor(() => expect(block).toHaveBeenCalledWith('table-1', 'reg-9', 'Falta sin avisar hace un mes'))
     expect(requestBlock).not.toHaveBeenCalled()
@@ -79,6 +81,7 @@ describe('BlockPlayerDialog', () => {
 
     await user.type(screen.getByRole('textbox'), 'Falta sin avisar hace un mes')
     await user.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+    await acceptReview()
 
     await waitFor(() => expect(requestBlock).toHaveBeenCalledWith('table-1', 'reg-9', 'Falta sin avisar hace un mes'))
     expect(block).not.toHaveBeenCalled()
@@ -108,6 +111,7 @@ describe('BlockPlayerDialog', () => {
 
     await user.type(screen.getByRole('textbox'), 'Hablamos y lo arreglamos')
     await user.click(screen.getByRole('button', { name: 'Levantar el veto' }))
+    await acceptReview()
 
     await waitFor(() => expect(unblock).toHaveBeenCalledWith('table-1', 'reg-9', 'Hablamos y lo arreglamos'))
   })
@@ -155,6 +159,7 @@ describe('BlockPlayerDialog', () => {
 
     await user.type(screen.getByRole('textbox'), 'Falta sin avisar')
     await user.click(screen.getByRole('button', { name: 'Vetar' }))
+    await acceptReview()
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Esa persona ya está vetada en esta mesa. Actualizá la pantalla para ver cómo quedó.')
@@ -171,6 +176,7 @@ describe('BlockPlayerDialog', () => {
 
     await user.type(screen.getByRole('textbox'), 'Falta sin avisar')
     await user.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+    await acceptReview()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/lo que podés hacer es pedirlo/)
   })

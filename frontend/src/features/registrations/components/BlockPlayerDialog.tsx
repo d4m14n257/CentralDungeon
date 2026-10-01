@@ -14,6 +14,7 @@ import { useRequestPlayerBlock } from '../api/useRequestPlayerBlock'
 import { useUnblockPlayer } from '../api/useUnblockPlayer'
 import { blockRegistrationSchema, type BlockRegistrationForm } from '../schemas'
 import { vetoErrorKey } from '../vetoErrors'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** Which of the two directions the veto is being moved in. Who the reader is decides the rest. */
 export type VetoAction = 'block' | 'unblock'
@@ -79,6 +80,7 @@ export function BlockPlayerDialog({
   help,
 }: BlockPlayerDialogProps) {
   const { t } = useTranslation('registrations')
+  const confirm = useConfirm()
   const block = useBlockPlayer(tableId)
   const requestBlock = useRequestPlayerBlock(tableId)
   const unblock = useUnblockPlayer(tableId)
@@ -99,7 +101,13 @@ export function BlockPlayerDialog({
     onOpenChange(next)
   }
 
-  function onSubmit(values: BlockRegistrationForm) {
+  async function onSubmit(values: BlockRegistrationForm) {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t(`veto.${variant}ConfirmTitle`, { name: playerName }),
+      description: t(`veto.${variant}ConfirmDescription`),
+    })
+    if (!confirmed) return
     mutation.mutate(
       { registrationId, justification: values.justification },
       {

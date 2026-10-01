@@ -13,6 +13,7 @@ import { SectionHeader } from '@/components/SectionHeader'
 import { useApplicableTasks } from '../api/useApplicableTasks'
 import { useSubmitTask } from '../api/useSubmitTask'
 import type { ApplicableTask, SubmittedFile } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 export interface TableTasksSectionProps {
   /**
@@ -65,6 +66,7 @@ export interface TableTasksSectionProps {
  */
 export function TableTasksSection({ tableId, renderHelp, renderFiles, renderFilePicker, commitFiles }: TableTasksSectionProps) {
   const { t } = useTranslation('tasks')
+  const confirm = useConfirm()
   // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data: tasks, isPending, isLoadingError, refetch } = useApplicableTasks(tableId)
   const submit = useSubmitTask(tableId)
@@ -92,6 +94,13 @@ export function TableTasksSection({ tableId, renderHelp, renderFiles, renderFile
           isBusy={submit.isPending}
           renderFilePicker={renderFilePicker}
           onSubmit={async (draft) => {
+            // A review before anything is written or uploaded (#283).
+            const confirmed = await confirm({
+              title: t('submit.confirmTitle'),
+              description: t('submit.confirmDescription'),
+              confirmLabel: t('submit.confirmLabel'),
+            })
+            if (!confirmed) return
             // Upload first, send second (#238). A file that failed does not hold the answer back:
             // answers accumulate (#76), so completing it is sending another one - and the person is
             // told which file to try again with.

@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { acceptReview } from './helpers/review'
 
 /**
  * F1.4 end to end, against the real backend: F1.4's acceptance criterion — *a master
@@ -60,6 +61,7 @@ async function createTable(page: Page, name: string, weekday = 'Viernes'): Promi
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
 
   const id = page.url().split('/master/tables/')[1]
@@ -90,6 +92,7 @@ async function attach(page: Page, isPrivate: boolean, pick: (dialog: ReturnType<
   await pick(dialog)
   // Picking only stages it (#238): nothing has reached the server until this button is pressed.
   await dialog.getByRole('button', { name: /Agregar \d+ archivos?/ }).click()
+  await acceptReview(page)
   await expect(dialog).toBeHidden()
 }
 

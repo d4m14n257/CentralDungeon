@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { useChangeLibraryCategory } from '../api/useChangeLibraryCategory'
 import type { AdminFile, FileCategory } from '../types'
 import { PublishCategorySelect } from './PublishCategorySelect'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** What the dialog needs. */
 export interface EditLibraryCategoryDialogProps {
@@ -30,14 +31,22 @@ export interface EditLibraryCategoryDialogProps {
  */
 export function EditLibraryCategoryDialog({ file, onOpenChange }: EditLibraryCategoryDialogProps) {
   const { t } = useTranslation('files')
+  const confirm = useConfirm()
   const change = useChangeLibraryCategory()
   // Keyed by the file, so opening it on another row starts from that row's cajón.
   const [chosen, setChosen] = useState<{ fileId: string; category: FileCategory } | null>(null)
   const current = (file?.categories[0] as FileCategory | undefined) ?? null
   const value = chosen !== null && chosen.fileId === file?.id ? chosen.category : current
 
-  function save() {
+  async function save() {
     if (!file || value === null) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('libraryEdit.confirmTitle', { name: file.name }),
+      description: t('libraryEdit.confirmDescription', { category: t(`category.${value}`) }),
+      confirmLabel: t('libraryEdit.confirm'),
+    })
+    if (!confirmed) return
     change.mutate(
       { fileId: file.id, input: { category: value } },
       {
@@ -73,7 +82,7 @@ export function EditLibraryCategoryDialog({ file, onOpenChange }: EditLibraryCat
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             {t('libraryEdit.cancel')}
           </Button>
-          <Button type="button" disabled={value === null || value === current || change.isPending} onClick={save}>
+          <Button type="button" disabled={value === null || value === current || change.isPending} onClick={() => void save()}>
             {t('libraryEdit.confirm')}
           </Button>
         </div>

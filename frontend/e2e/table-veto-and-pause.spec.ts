@@ -3,6 +3,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 import { applyToTable } from './helpers/application'
 import { approveTableFromQueue } from './helpers/adminQueue'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { acceptReview } from './helpers/review'
 
 /**
  * F3.4 end to end, against the real backend: the two "se prueba" sentences of
@@ -77,6 +78,7 @@ async function createTableWithCalendar(page: Page, name: string, weekday = 'Vier
 
   await page.getByLabel('Sesiones planeadas').fill('4')
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
 
   const id = page.url().split('/master/tables/')[1]
@@ -143,6 +145,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     const pauseDialog = master.page.getByRole('dialog')
     await pauseDialog.getByRole('textbox').fill('Me operan y no puedo dirigir por un mes')
     await pauseDialog.getByRole('button', { name: 'Pedir pausa' }).click()
+    await acceptReview(master.page)
     await expect(pauseDialog).toBeHidden()
 
     // Asking is not pausing, and the screen says which of the two happened.
@@ -164,6 +167,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     const resolveDialog = admin.page.getByRole('dialog')
     await resolveDialog.getByRole('textbox').fill('Aprobada: avisá cuando puedas retomar')
     await resolveDialog.getByRole('button', { name: 'Aprobar' }).click()
+    await acceptReview(admin.page)
     await expect(resolveDialog).toBeHidden()
     // Resolved work is not work waiting on anybody.
     await expect(pauseRow).toBeHidden()
@@ -216,6 +220,7 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
       .locator('input[type="file"]')
       .setInputFiles({ name: 'mapa-e2e.pdf', mimeType: 'application/pdf', buffer: Buffer.from(`%PDF-1.4 ${runId}`) })
     await fileDialog.getByRole('button', { name: /Agregar \d+ archivos?/ }).click()
+    await acceptReview(master.page)
     await expect(fileDialog).toBeHidden()
     await expect(master.page.getByText('mapa-e2e.pdf')).toBeVisible()
 
@@ -246,6 +251,7 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
     await expect(vetoDialog.getByText(/no le aparece en el explorador/)).toBeVisible()
     await vetoDialog.getByRole('textbox').fill('Faltó a tres sesiones sin avisar')
     await vetoDialog.getByRole('button', { name: 'Vetar' }).click()
+    await acceptReview(master.page)
     await expect(vetoDialog).toBeHidden()
 
     // ------------------------------------------------------- the same three doors, now all closed
@@ -278,6 +284,7 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
     const liftDialog = master.page.getByRole('dialog')
     await liftDialog.getByRole('textbox').fill('Hablamos y quedó claro')
     await liftDialog.getByRole('button', { name: 'Levantar el veto' }).click()
+    await acceptReview(master.page)
     await expect(liftDialog).toBeHidden()
 
     // Back where they were - `Player`, read from the trail and not assumed.

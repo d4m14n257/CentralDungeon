@@ -97,6 +97,13 @@ export function MasterTableTasksTab() {
    * more edit rather than writing it again.
    */
   async function handleSubmit(draft: TaskDraft) {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm(
+      editing
+        ? { title: t('board.editConfirmTitle'), description: t('board.editConfirmDescription') }
+        : { title: t('board.publishConfirmTitle'), description: t('board.publishConfirmDescription'), confirmLabel: t('board.publish') },
+    )
+    if (!confirmed) return
     const { fileIds, failed } = await commit.mutateAsync({ staged: draft.staged, fileCategory: 'MasterRequest' })
     if (failed.length > 0) {
       toast.error(t('form.blanksFailed', { names: failed.join(', ') }))

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { useCatalogValues } from '../api/useCatalogValues'
 import { useProposeCatalogValue } from '../api/useProposeCatalogValue'
 import type { CatalogKind, CatalogValue } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** What the combobox needs to know. */
 export interface CatalogComboboxProps {
@@ -43,6 +44,7 @@ export interface CatalogComboboxProps {
  */
 export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }: CatalogComboboxProps) {
   const { t } = useTranslation('catalogs')
+  const confirm = useConfirm()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 250)
@@ -65,7 +67,13 @@ export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }
     setOpen(false)
   }
 
-  function handlePropose() {
+  async function handlePropose() {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('admin.proposeConfirmTitle', { name: trimmed }),
+      description: t('admin.proposeConfirmDescription'),
+    })
+    if (!confirmed) return
     propose.mutate(trimmed, { onSuccess: handleSelect })
   }
 
@@ -96,7 +104,7 @@ export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }
             )}
             {showPropose && (
               <CommandGroup>
-                <CommandItem value={`propose-${trimmed}`} onSelect={handlePropose} disabled={propose.isPending}>
+                <CommandItem value={`propose-${trimmed}`} onSelect={() => void handlePropose()} disabled={propose.isPending}>
                   <PlusIcon className="mr-2 size-4" aria-hidden="true" />
                   {t('combobox.propose', { name: trimmed })}
                 </CommandItem>

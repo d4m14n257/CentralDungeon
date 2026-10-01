@@ -11,6 +11,7 @@ import type { AdminTableSummary } from '@/features/tables'
 import { ApiError } from '@/types/api'
 
 import { AdminTablesPage } from './AdminTablesPage'
+import { acceptReview } from '@/test/review'
 
 const admin = vi.hoisted(() => vi.fn())
 const pause = vi.hoisted(() => vi.fn())
@@ -277,6 +278,7 @@ describe('AdminTablesPage', () => {
     const dialog = within(await screen.findByRole('dialog'))
     await user.type(dialog.getByRole('textbox'), 'El master se fue de viaje')
     await user.click(dialog.getByRole('button', { name: 'Pausar' }))
+    await acceptReview()
 
     await waitFor(() => expect(pause).toHaveBeenCalledWith('table-1', { justification: 'El master se fue de viaje' }))
   })

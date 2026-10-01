@@ -11,6 +11,7 @@ import { APPROVAL_ERROR_CODES, type ApprovalRequestSummary } from '@/features/ap
 import { ApiError } from '@/types/api'
 
 import { AdminRequestsPage } from './AdminRequestsPage'
+import { acceptReview } from '@/test/review'
 
 const list = vi.hoisted(() => vi.fn())
 const byId = vi.hoisted(() => vi.fn())
@@ -221,6 +222,7 @@ describe('AdminRequestsPage', () => {
     const dialog = within(await screen.findByRole('dialog'))
     await userEvent.type(dialog.getByRole('textbox'), 'Dirigiste en otra comunidad, adelante')
     await userEvent.click(dialog.getByRole('button', { name: 'Aprobar' }))
+    await acceptReview()
 
     await waitFor(() => expect(approve).toHaveBeenCalledWith('req-1', { resolutionNote: 'Dirigiste en otra comunidad, adelante' }))
   })
@@ -242,6 +244,7 @@ describe('AdminRequestsPage', () => {
     const dialog = within(await screen.findByRole('dialog'))
     await userEvent.type(dialog.getByRole('textbox'), 'Va')
     await userEvent.click(dialog.getByRole('button', { name: 'Aprobar' }))
+    await acceptReview()
 
     const alert = await screen.findByRole('alert')
     // The reader's language, never the backend's `detail`.

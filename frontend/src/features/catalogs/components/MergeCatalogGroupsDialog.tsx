@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useMergeCatalogGroups } from '../api/useMergeCatalogGroups'
 import type { AdminCatalogValue, CatalogKind } from '../types'
 import { CanonicalPicker } from './CanonicalPicker'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** What the dialog needs. */
 export interface MergeCatalogGroupsDialogProps {
@@ -40,11 +41,19 @@ export interface MergeCatalogGroupsDialogProps {
  */
 export function MergeCatalogGroupsDialog({ kind, source, open, onOpenChange }: MergeCatalogGroupsDialogProps) {
   const { t } = useTranslation('catalogs')
+  const confirm = useConfirm()
   const merge = useMergeCatalogGroups(kind)
   const [target, setTarget] = useState<AdminCatalogValue | null>(null)
 
-  function handleMerge() {
+  async function handleMerge() {
     if (!target) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('admin.mergeReviewTitle', { source: source.name, target: target.name }),
+      description: t('admin.mergeReviewDescription', { source: source.name }),
+      confirmLabel: t('admin.merge'),
+    })
+    if (!confirmed) return
     merge.mutate(
       { sourceCanonicalId: source.id, targetCanonicalId: target.id },
       {
@@ -76,7 +85,7 @@ export function MergeCatalogGroupsDialog({ kind, source, open, onOpenChange }: M
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('admin.cancel')}
           </Button>
-          <Button onClick={handleMerge} disabled={!target || merge.isPending}>
+          <Button onClick={() => void handleMerge()} disabled={!target || merge.isPending}>
             {t('admin.merge')}
           </Button>
         </div>

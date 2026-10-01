@@ -12,6 +12,7 @@ import { ADMIN_QUEUE_ERROR_CODES, type AdminQueueItem } from '@/features/adminQu
 import { ApiError } from '@/types/api'
 
 import { AdminQueuePage } from './AdminQueuePage'
+import { acceptReview } from '@/test/review'
 
 const list = vi.hoisted(() => vi.fn())
 const claim = vi.hoisted(() => vi.fn())
@@ -277,6 +278,7 @@ describe('AdminQueuePage', () => {
     expect(dialog.getByText('Quiero dirigir una mesa de terror')).toBeInTheDocument()
     await userEvent.type(dialog.getByRole('textbox'), 'Dirigiste en otra comunidad, adelante')
     await userEvent.click(dialog.getByRole('button', { name: 'Aprobar' }))
+    await acceptReview()
 
     await waitFor(() => expect(approveRequest).toHaveBeenCalledWith('req-1', { resolutionNote: 'Dirigiste en otra comunidad, adelante' }))
   })
@@ -295,6 +297,7 @@ describe('AdminQueuePage', () => {
     const dialog = within(await screen.findByRole('dialog'))
     await userEvent.type(dialog.getByRole('textbox'), 'Falta el horario')
     await userEvent.click(dialog.getByRole('button', { name: 'Pedir cambios' }))
+    await acceptReview()
 
     await waitFor(() => expect(requestChanges).toHaveBeenCalledWith('table-1', { justification: 'Falta el horario' }))
   })
@@ -318,6 +321,7 @@ describe('AdminQueuePage', () => {
     const dialog = within(await screen.findByRole('dialog'))
     await userEvent.type(dialog.getByRole('textbox'), 'Va')
     await userEvent.click(dialog.getByRole('button', { name: 'Aprobar' }))
+    await acceptReview()
 
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).not.toContain('in English, for a log')
@@ -372,6 +376,7 @@ describe('AdminQueuePage', () => {
     const dialog = within(await screen.findByRole('dialog'))
     await userEvent.type(dialog.getByRole('textbox'), 'Falta el horario')
     await userEvent.click(dialog.getByRole('button', { name: 'Pedir cambios' }))
+    await acceptReview()
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent(i18n.t('admin:queue.errors.ITEM_ALREADY_CLAIMED'))

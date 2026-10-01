@@ -15,6 +15,7 @@ import { useUpdateSetting } from '../api/useUpdateSetting'
 import { settingErrorKey } from '../settingErrors'
 import { updateSettingSchema, type UpdateSettingForm } from '../schemas'
 import type { SystemSetting } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface SettingValueDialogProps {
   /** The setting being edited, or null when the dialog is closed. */
@@ -59,6 +60,7 @@ interface SettingValueDialogProps {
  */
 export function SettingValueDialog({ setting, open, onOpenChange, help }: SettingValueDialogProps) {
   const { t } = useTranslation('admin')
+  const confirm = useConfirm()
   const update = useUpdateSetting()
 
   // Built from this setting's own bounds, so the form refuses exactly what the API would refuse.
@@ -85,8 +87,14 @@ export function SettingValueDialog({ setting, open, onOpenChange, help }: Settin
     onOpenChange(next)
   }
 
-  function onSubmit(values: UpdateSettingForm) {
+  async function onSubmit(values: UpdateSettingForm) {
     if (!setting) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('settings.confirmTitle', { label: t(`settings.keys.${setting.key}.label`), value: values.value.trim() }),
+      description: t(setting.retroactive ? 'settings.confirmRetroactiveDescription' : 'settings.confirmDescription'),
+    })
+    if (!confirmed) return
     update.mutate(
       { key: setting.key, input: { value: Number(values.value.trim()), justification: values.justification } },
       {

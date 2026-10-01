@@ -32,7 +32,9 @@
     "acceptConfirmDefault": "¿Confirmás que aceptás a este candidato en la mesa?",
     "acceptConfirmFillsTable": "Esta aceptación completa el cupo: el resto de los candidatos se va a rechazar automáticamente.",
     "acceptSuccess": "Candidato aceptado",
-    "rejectSuccess": "Candidato rechazado"
+    "rejectSuccess": "Candidato rechazado",
+    "rejectConfirmTitle": "¿Rechazar a {{name}}?",
+    "rejectConfirmDescription": "Recibe el rechazo con tu motivo y deja de estar entre los candidatos de la mesa."
   },
   "rejectionReason": {
     "TABLE_FULL": "La mesa se llenó"
@@ -59,6 +61,12 @@
       "REGISTRATION_ALREADY_BLOCKED": "Esa persona ya está vetada en esta mesa. Actualizá la pantalla para ver cómo quedó.",
       "REGISTRATION_NOT_BLOCKED": "Esa persona no está vetada: alguien levantó el veto antes que vos.",
       "generic": "No pudimos completar la acción. Probá de nuevo."
-    }
+    },
+    "blockConfirmTitle": "¿Vetar a {{name}}?",
+    "blockConfirmDescription": "Deja de ver la mesa, su detalle y sus archivos. Queda registrado con tu motivo.",
+    "requestConfirmTitle": "¿Pedir el veto de {{name}}?",
+    "requestConfirmDescription": "Lo decide el master principal. Hasta entonces sigue en la mesa.",
+    "unblockConfirmTitle": "¿Levantar el veto de {{name}}?",
+    "unblockConfirmDescription": "Vuelve a poder ver la mesa. Queda registrado con tu motivo."
   }
 }

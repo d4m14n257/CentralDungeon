@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 import { useRejectRegistration } from '../api/useRejectRegistration'
 import { rejectRegistrationSchema, type RejectRegistrationForm } from '../schemas'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface RejectRegistrationDialogProps {
   tableId: string
@@ -30,13 +31,20 @@ interface RejectRegistrationDialogProps {
  */
 export function RejectRegistrationDialog({ tableId, registrationId, candidateName, open, onOpenChange }: RejectRegistrationDialogProps) {
   const { t } = useTranslation('registrations')
+  const confirm = useConfirm()
   const rejectRegistration = useRejectRegistration(tableId)
   const form = useForm<RejectRegistrationForm>({
     resolver: zodResolver(rejectRegistrationSchema),
     defaultValues: { justification: '' },
   })
 
-  function onSubmit(values: RejectRegistrationForm) {
+  async function onSubmit(values: RejectRegistrationForm) {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('candidates.rejectConfirmTitle', { name: candidateName }),
+      description: t('candidates.rejectConfirmDescription'),
+    })
+    if (!confirmed) return
     rejectRegistration.mutate(
       { registrationId, justification: values.justification },
       {

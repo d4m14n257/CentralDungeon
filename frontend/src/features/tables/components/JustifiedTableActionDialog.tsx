@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import { FormDialog } from '@/components/FormDialog'
+import { useConfirm } from '@/hooks/useConfirm'
 
 import { changeTableStatusSchema, type ChangeTableStatusForm } from '../schemas'
 
@@ -48,6 +49,13 @@ interface JustifiedTableActionDialogProps {
    * out — are exactly what lands here.
    */
   errorMessage?: string | null
+  /**
+   * The review shown before anything is written (#283): what is about to happen and what follows,
+   * with `submitLabel` as its button. **Required**, so no act that goes through this dialog can skip
+   * it — the note makes the act deliberate, the review is what catches the wrong row or the wrong
+   * button.
+   */
+  review: { title: string; description: string }
 }
 
 /**
@@ -68,8 +76,10 @@ export function JustifiedTableActionDialog({
   context,
   help,
   errorMessage,
+  review,
 }: JustifiedTableActionDialogProps) {
   const { t } = useTranslation('master')
+  const confirm = useConfirm()
   const form = useForm<ChangeTableStatusForm>({
     resolver: zodResolver(changeTableStatusSchema),
     defaultValues: { justification: '' },
@@ -80,7 +90,9 @@ export function JustifiedTableActionDialog({
     onOpenChange(next)
   }
 
-  function onSubmit(values: ChangeTableStatusForm) {
+  async function onSubmit(values: ChangeTableStatusForm) {
+    const confirmed = await confirm({ title: review.title, description: review.description, confirmLabel: submitLabel })
+    if (!confirmed) return
     onConfirm(values.justification)
     form.reset()
   }

@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { useCatalogGroup } from '../api/useCatalogGroup'
 import { useDisableCatalogValue } from '../api/useDisableCatalogValue'
 import type { AdminCatalogValue, CatalogKind } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** What the dialog needs. */
 export interface DisableCatalogValueDialogProps {
@@ -43,6 +44,7 @@ export interface DisableCatalogValueDialogProps {
  */
 export function DisableCatalogValueDialog({ kind, value, open, onOpenChange }: DisableCatalogValueDialogProps) {
   const { t } = useTranslation('catalogs')
+  const confirm = useConfirm()
   const disable = useDisableCatalogValue(kind)
   const { data: group, isPending } = useCatalogGroup(kind, open ? value.id : null)
   const [successorId, setSuccessorId] = useState<string | null>(null)
@@ -52,7 +54,14 @@ export function DisableCatalogValueDialog({ kind, value, open, onOpenChange }: D
   const liveAliases = (group ?? []).filter((member) => member.id !== value.id && member.status === 'Accepted')
   const needsSuccessor = value.canonicalId === null && liveAliases.length > 0
 
-  function handleDisable() {
+  async function handleDisable() {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('admin.disableConfirmTitle', { name: value.name }),
+      description: t('admin.disableConfirmDescription'),
+      confirmLabel: t('admin.disable'),
+    })
+    if (!confirmed) return
     disable.mutate(
       { id: value.id, newCanonicalId: needsSuccessor ? successorId : null },
       {
@@ -102,7 +111,7 @@ export function DisableCatalogValueDialog({ kind, value, open, onOpenChange }: D
           </Button>
           <Button
             variant="destructive"
-            onClick={handleDisable}
+            onClick={() => void handleDisable()}
             disabled={disable.isPending || isPending || (needsSuccessor && successorId === null)}
           >
             {t('admin.disable')}

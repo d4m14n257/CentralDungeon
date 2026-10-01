@@ -43,7 +43,13 @@ function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
   const addMaster = useAddMaster(tableId)
   const removeMaster = useRemoveMaster(tableId)
 
-  function handleAdd(user: UserSummary) {
+  async function handleAdd(user: UserSummary) {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('masters.addConfirmTitle', { name: user.name ?? user.discordUsername }),
+      description: t('masters.addConfirmDescription'),
+    })
+    if (!confirmed) return
     addMaster.mutate(
       { userId: user.id, masterType: 'Secondary' },
       { onSuccess: () => toast.success(t('masters.addSuccess', { name: user.discordUsername })) },
@@ -114,7 +120,7 @@ function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
         {isPrimary && (
           <div className="space-y-2">
             <p className="text-sm font-medium">{t('masters.addLabel')}</p>
-            <UserPicker onSelect={handleAdd} excludedIds={masters.map((master) => master.userId)} tableId={tableId} />
+            <UserPicker onSelect={(user) => void handleAdd(user)} excludedIds={masters.map((master) => master.userId)} tableId={tableId} />
             <p className="text-fg-subtle text-xs">
               {t('masters.hint')} {/* To the exact #ref and not the whole page: that is what makes it worth opening (#168). */}
               <HelpLink section="masters.co-masters">{t('masters.helpLink')}</HelpLink>

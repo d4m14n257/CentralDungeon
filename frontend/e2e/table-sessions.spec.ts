@@ -3,6 +3,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { approveTableFromQueue } from './helpers/adminQueue'
+import { acceptReview } from './helpers/review'
 
 /**
  * F1.3 end to end, against the real backend: the calendar that gets materialized when the table
@@ -63,6 +64,7 @@ async function createTableWithCalendar(page: Page, name: string): Promise<string
 
   await page.getByLabel('Sesiones planeadas').fill(TOTAL_SESSIONS)
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
 
   const id = page.url().split('/master/tables/')[1]

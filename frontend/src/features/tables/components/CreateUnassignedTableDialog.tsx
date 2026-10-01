@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { FormDialog } from '@/components/FormDialog'
 
 import { useCreateUnassignedTable } from '../api/useCreateUnassignedTable'
+import { useConfirm } from '@/hooks/useConfirm'
 
 const createUnassignedTableSchema = z.object({ name: z.string().min(1).max(128) })
 type CreateUnassignedTableForm = z.infer<typeof createUnassignedTableSchema>
@@ -22,13 +23,20 @@ interface CreateUnassignedTableDialogProps {
 /** An admin can create a table without running it (#72) - assignMasters is what opens it afterwards. */
 export function CreateUnassignedTableDialog({ open, onOpenChange }: CreateUnassignedTableDialogProps) {
   const { t } = useTranslation('admin')
+  const confirm = useConfirm()
   const createUnassignedTable = useCreateUnassignedTable()
   const form = useForm<CreateUnassignedTableForm>({
     resolver: zodResolver(createUnassignedTableSchema),
     defaultValues: { name: '' },
   })
 
-  function onSubmit(values: CreateUnassignedTableForm) {
+  async function onSubmit(values: CreateUnassignedTableForm) {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('tables.confirmCreateUnassignedTitle', { name: values.name }),
+      description: t('tables.confirmCreateUnassignedDescription'),
+    })
+    if (!confirmed) return
     createUnassignedTable.mutate(
       { name: values.name },
       {

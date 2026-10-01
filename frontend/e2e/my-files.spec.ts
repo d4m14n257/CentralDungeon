@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser } from '@playwright/test'
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
+import { acceptReview } from './helpers/review'
 
 /**
  * `/my/files` end to end, against the real backend.
@@ -55,6 +56,7 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await page.getByRole('button', { name: 'Crear mesa' }).click()
+    await acceptReview(page)
     await expect(page.getByRole('heading', { name: tableName })).toBeVisible()
     const tableId = page.url().split('/master/tables/')[1] as string
 
@@ -66,6 +68,7 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     // Chips, not a select: the cajón is a decision made before sending, so every option is visible.
     await page.getByRole('radio', { name: 'De mesa' }).click()
     await page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
+    await acceptReview(page)
 
     const row = page.getByRole('listitem').filter({ hasText: `ficha-${runId}.pdf` })
     await expect(row).toBeVisible()
@@ -86,6 +89,7 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     // Reusing stages it too (#238): it already has an id, so there is nothing to upload for it - but
     // the attach still waits for the confirm, like everything else in this dialog.
     await dialog.getByRole('button', { name: /Agregar \d+ archivos?/ }).click()
+    await acceptReview(page)
     await expect(dialog).toBeHidden()
 
     // The use now shows, resolved from the link and not remembered by the screen. Attaching it put
@@ -100,6 +104,7 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     await page.getByRole('button', { name: 'Subir archivo' }).click()
     await page.locator('input[type="file"]').setInputFiles(pdf(`otra-copia-${runId}.pdf`, runId))
     await page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
+    await acceptReview(page)
     // The server recognised the bytes, and now it says so at the confirm rather than at the pick,
     // because that is where the upload happens (#234, #238).
     await expect(page.getByText(/ya lo tenías subido/)).toBeVisible()
@@ -161,6 +166,7 @@ test('a file can be renamed and let go of', async ({ browser }) => {
     await page.getByRole('button', { name: 'Subir archivo' }).click()
     await page.locator('input[type="file"]').setInputFiles(pdf(`mapa-${runId}.pdf`, `mapa ${runId}`))
     await page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
+    await acceptReview(page)
     await expect(page.getByRole('listitem').filter({ hasText: `mapa-${runId}.pdf` })).toBeVisible()
 
     // Renaming touches metadata only — the content lives under a generated key (#80). There is no
@@ -174,6 +180,7 @@ test('a file can be renamed and let go of', async ({ browser }) => {
     await dialog.getByRole('textbox', { name: 'Nombre' }).fill(`El pantano ${runId}.pdf`)
     await expect(dialog.getByRole('combobox')).toHaveCount(0)
     await dialog.getByRole('button', { name: 'Guardar' }).click()
+    await acceptReview(page)
 
     const renamed = page.getByRole('listitem').filter({ hasText: `El pantano ${runId}.pdf` })
     await expect(renamed).toBeVisible()

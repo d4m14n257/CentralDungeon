@@ -50,7 +50,10 @@
     "filesHint": "Lo que le das a la mesa: mapas, fichas, reglas de la casa. Los jugadores los descargan desde la mesa.",
     "missingTag": "Elegí al menos un tag: es lo que hace que la mesa se encuentre.",
     "filesFailed": "La mesa se creó, pero no se pudieron subir: {{names}}. Agregalos desde la pestaña Archivos.",
-    "backToTables": "Volver a mis mesas"
+    "backToTables": "Volver a mis mesas",
+    "confirmTitle": "¿Crear la mesa «{{name}}»?",
+    "confirmDescription": "Nace en borrador: nadie más la ve hasta que la mandes a revisión.",
+    "confirmLabel": "Crear mesa"
   },
   "detail": {
     "tabs": {
@@ -106,7 +109,11 @@
     "errors": {
       "PAUSE_ALREADY_REQUESTED": "Ya hay un pedido de pausa esperando respuesta para esta mesa. Actualizá la pantalla para verlo.",
       "generic": "No pudimos enviar el pedido. Probá de nuevo."
-    }
+    },
+    "cancelConfirmTitle": "¿Cancelar la mesa?",
+    "cancelConfirmDescription": "No tiene vuelta atrás: la mesa termina acá y queda registrado con tu motivo.",
+    "requestPauseConfirmTitle": "¿Pedir la pausa de la mesa?",
+    "requestPauseConfirmDescription": "Lo decide un admin, que lee tu motivo. Hasta que responda, la mesa sigue como está."
   },
   "schedule": {
     "weekdayLabel": "Día",
@@ -154,7 +161,9 @@
     },
     "attendanceTitle": "Asistencia",
     "attendanceNotForCancelled": "Una sesión cancelada no tiene asistencia: no ocurrió.",
-    "attendanceSuccess": "Asistencia registrada"
+    "attendanceSuccess": "Asistencia registrada",
+    "saveConfirmTitle": "¿Guardar los cambios de la sesión?",
+    "saveConfirmDescription": "Cambian la fecha y las notas de esta sesión."
   },
   "nav": {
     "label": "Secciones de master",
@@ -200,7 +209,9 @@
     "removeConfirmDescription": "Deja de ver y de gestionar esta mesa de inmediato. Queda registrado que la dirigió, y podés volver a agregarlo cuando quieras.",
     "removeSuccess": "{{name}} ya no dirige esta mesa",
     "hint": "Un co-master gestiona la mesa pero no puede cerrarla, cancelarla ni tocar quién la dirige.",
-    "helpLink": "Qué puede un co-master"
+    "helpLink": "Qué puede un co-master",
+    "addConfirmTitle": "¿Sumar a {{name}} como co-master?",
+    "addConfirmDescription": "Va a ver la mesa y la va a poder dirigir con vos."
   },
   "players": {
     "title": "Jugadores",
@@ -224,7 +235,9 @@
     "saving": "Guardando…",
     "success": "Mesa actualizada",
     "lockedDescription": "Esta mesa ya no se puede editar: o no sos su master, o pasó el punto en que su master podía reescribirla.",
-    "back": "Volver a la mesa"
+    "back": "Volver a la mesa",
+    "confirmTitle": "¿Guardar los cambios de «{{name}}»?",
+    "confirmDescription": "Lo que escribiste reemplaza lo que la mesa decía."
   },
   "veto": {
     "block": "Vetar",
@@ -251,6 +264,10 @@
     "resolutionNoteLabel": "Tu respuesta",
     "approveSuccess": "Veto aplicado",
     "rejectSuccess": "Pedido rechazado",
-    "about": "Vetar a {{name}}"
+    "about": "Vetar a {{name}}",
+    "confirmApproveTitle": "¿Aprobar el veto de {{name}}?",
+    "confirmApproveDescription": "Deja de ver la mesa, su detalle y sus archivos. Queda registrado con tu motivo.",
+    "confirmRejectTitle": "¿Rechazar el pedido de veto de {{name}}?",
+    "confirmRejectDescription": "Sigue en la mesa como hasta ahora. Queda registrado con tu motivo."
   }
 }

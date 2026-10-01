@@ -53,7 +53,10 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
   const [notes, setNotes] = useState(session.notes ?? '')
   const isScheduled = session.status === 'Scheduled'
 
-  function handleSaveDetails() {
+  async function handleSaveDetails() {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({ title: t('sessions.saveConfirmTitle'), description: t('sessions.saveConfirmDescription') })
+    if (!confirmed) return
     updateSession.mutate(
       { sessionId: session.id, request: { scheduledAt: localInputToUtcIso(scheduledAt, timeZone), notes: notes || null } },
       { onSuccess: () => toast.success(t('sessions.updateSuccess')) },
@@ -135,7 +138,7 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
 
         {isScheduled ? (
           <div className="flex justify-end">
-            <Button size="sm" variant="outline" disabled={updateSession.isPending} onClick={handleSaveDetails}>
+            <Button size="sm" variant="outline" disabled={updateSession.isPending} onClick={() => void handleSaveDetails()}>
               {t('sessions.saveDetails')}
             </Button>
           </div>

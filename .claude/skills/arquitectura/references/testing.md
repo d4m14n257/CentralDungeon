@@ -45,6 +45,7 @@ Versiones fijadas en `docs/arquitectura.md` §1.1: **JUnit 6** (Jupiter) y **Tes
 - Los tests viven junto al archivo que prueban: `Foo.tsx` → `Foo.test.tsx`.
 - **Corren en `es`**, así que un texto se busca por su traducción en español. Por eso el inglés renderizado es deuda propia de F4 (`fase-4-revision.md` §2.1).
 - Lo que no es el sujeto del test se mockea en el límite del módulo (`vi.mock('@/hooks/useAvailableContexts', …)`), no por dentro: la guardia se prueba con la respuesta del hook, y el hook tiene su propio test.
+- **Toda escritura pasa por una revisión** (#283), así que un test que envía un formulario la acepta con `acceptReview()` de `src/test/review.ts` —busca el diálogo cuyo título pregunta, «¿…?», y aprieta el botón que no es «Cancelar»— dentro de un `ConfirmDialogProvider`. Un test de validación, donde el formulario no llega a enviarse, **no** la espera: la revisión solo se abre para algo que se puede escribir.
 - Una pantalla que lee la URL (#185) se monta dentro de `MemoryRouter` con la URL de entrada. Una que hace queries, dentro de un `QueryClient` nuevo con `retry: false` para cada test.
 
 ## 5.3 E2E
@@ -53,4 +54,5 @@ Versiones fijadas en `docs/arquitectura.md` §1.1: **JUnit 6** (Jupiter) y **Tes
 
 - Cubre los flujos críticos: login con Discord, crear una mesa (master), postularse a una mesa (jugador), subir un archivo. Además, cada cruce de roles o de actores que ningún unitario puede ver por su cuenta.
 - Cada actor se crea con `test-login`, que le deja **exactamente** los roles que se piden. Un actor sin `asMaster` pierde el `Master` que le haya dado un paso anterior.
+- Después de cada envío que escribe, `acceptReview(page)` de `e2e/helpers/review.ts` acepta la revisión (#283), con la misma regla que en Vitest: no se espera donde el formulario se rechaza solo.
 - Toda pantalla nueva que alguien alcanza navegando necesita un e2e que la visite; si no, puede romperse sin que nadie se entere (F4.1).

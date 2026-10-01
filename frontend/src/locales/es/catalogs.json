@@ -130,6 +130,22 @@
     "createDescription": "Nace aceptado y como grupo propio. Si es sinónimo de otro, lo unís después desde el lienzo del grupo.",
     "createNameLabel": "Nombre",
     "createConfirm": "Crear",
-    "createSuccess": "«{{name}}» agregado"
+    "createSuccess": "«{{name}}» agregado",
+    "acceptConfirmTitle": "¿Aceptar «{{name}}»?",
+    "acceptConfirmDescription": "Pasa a mostrarse a los jugadores y a filtrar mesas.",
+    "createConfirmTitle": "¿Crear «{{name}}»?",
+    "createConfirmDescription": "Nace aceptado, como grupo propio: se muestra y filtra mesas desde ya.",
+    "disableConfirmTitle": "¿Dar de baja «{{name}}»?",
+    "disableConfirmDescription": "Sale de circulación sin romper ningún vínculo: las mesas que lo usan lo conservan, y se puede restaurar.",
+    "mergeReviewTitle": "¿Fusionar «{{source}}» con «{{target}}»?",
+    "mergeReviewDescription": "Todo el grupo de «{{source}}» pasa a ser equivalente del otro, y deja de tener principal propio.",
+    "reassignConfirmTitle": "¿Mover «{{name}}» al grupo de «{{target}}»?",
+    "reassignConfirmDescription": "Deja su grupo actual y pasa a ser equivalente del nuevo. Las mesas que lo usan no se tocan.",
+    "restoreConfirmTitle": "¿Restaurar «{{name}}»?",
+    "restoreConfirmDescription": "Vuelve a circulación con todo lo que tenía: se muestra y filtra mesas otra vez.",
+    "acceptIntoConfirmTitle": "¿Aceptar «{{name}}» como equivalente de «{{target}}»?",
+    "acceptIntoConfirmDescription": "Pasa a mostrarse y a filtrar, y buscar cualquiera de los dos encuentra las mesas de ambos.",
+    "proposeConfirmTitle": "¿Proponer «{{name}}»?",
+    "proposeConfirmDescription": "Lo revisa un admin. Mientras tanto tu mesa lo puede usar, pero no se muestra a los jugadores ni filtra."
   }
 }

@@ -76,6 +76,17 @@ function CatalogRowActions({ kind, value }: { kind: CatalogKind; value: AdminCat
     reject.mutate(value.id, { onSuccess: () => toast.success(t('admin.rejectSuccess', { name: value.name })) })
   }
 
+  async function handleRestore() {
+    // A review before anything is written (#283).
+    const confirmed = await confirm({
+      title: t('admin.restoreConfirmTitle', { name: value.name }),
+      description: t('admin.restoreConfirmDescription'),
+      confirmLabel: t('admin.restore'),
+    })
+    if (!confirmed) return
+    restore.mutate(value.id, { onSuccess: () => toast.success(t('admin.restoreSuccess', { name: value.name })) })
+  }
+
   const isPending = value.status === 'Created'
   const isRejected = value.status === 'Rejected'
   const isDisabled = value.status === 'Disabled'
@@ -108,7 +119,7 @@ function CatalogRowActions({ kind, value }: { kind: CatalogKind; value: AdminCat
         <IconAction
           icon={<RotateCcw className="size-4" />}
           label={t('admin.restore')}
-          onClick={() => restore.mutate(value.id, { onSuccess: () => toast.success(t('admin.restoreSuccess', { name: value.name })) })}
+          onClick={() => void handleRestore()}
           disabled={restore.isPending}
         />
       )}

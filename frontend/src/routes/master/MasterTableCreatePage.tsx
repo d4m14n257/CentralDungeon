@@ -36,6 +36,7 @@ import type { CreateGameTableForm, TableScheduleEntry, WizardStep } from '@/feat
 import { useMe } from '@/features/users'
 import { WEEKDAYS, browserTimeZone, formatMinutes, formatSlot, minutesOfDay, utcSlotToLocal } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /**
  * The create-table wizard, `/master/tables/new` (frontend-diseno.md sitemap).
@@ -54,6 +55,7 @@ import type { CatalogValue } from '@/types/catalog'
  */
 export function MasterTableCreatePage() {
   const { t, i18n } = useTranslation('master')
+  const confirm = useConfirm()
   // A second namespace rather than copying the labels into `master`: the words belong to the
   // tables domain and are the same ones the explorer's card shows (regla dura 18).
   const { t: tTables } = useTranslation('tables')
@@ -226,7 +228,7 @@ export function MasterTableCreatePage() {
     }
   }
 
-  function onSubmit(formValues: CreateGameTableForm) {
+  async function onSubmit(formValues: CreateGameTableForm) {
     // A wizard is not submitted from any step: Enter in a text field fires the form's native submit,
     // and without this guard it would create the table while somebody is still typing the name. The
     // submit button only exists on the last step; this covers the keyboard.
@@ -240,6 +242,13 @@ export function MasterTableCreatePage() {
       setStepError(missing)
       return
     }
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('create.confirmTitle', { name: formValues.name }),
+      description: t('create.confirmDescription'),
+      confirmLabel: t('create.confirmLabel'),
+    })
+    if (!confirmed) return
     createTable.mutate(
       {
         name: formValues.name,

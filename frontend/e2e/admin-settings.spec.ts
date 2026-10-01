@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
+import { acceptReview } from './helpers/review'
 
 /**
  * F3.5 end to end: the sentence `roles-y-alcance.md` measures the slice by.
@@ -78,6 +79,7 @@ async function changeSetting(page: Page, label: string, value: string, reason: s
   await dialog.getByLabel(/Nuevo valor/).fill(value)
   await dialog.getByLabel('Motivo').fill(reason)
   await dialog.getByRole('button', { name: 'Guardar el cambio' }).click()
+  await acceptReview(page)
   return dialog
 }
 
@@ -113,6 +115,8 @@ test('an admin raises the file cap, the next upload screen respects it, and the 
     await refusing.getByLabel(/Nuevo valor/).fill('500')
     await refusing.getByLabel('Motivo').fill('Fuera de rango a propósito')
     await refusing.getByRole('button', { name: 'Guardar el cambio' }).click()
+    // Refused by the form itself, so there is nothing to review: the review only opens for a change
+    // that could be written (#283).
     await expect(refusing.getByText('Tiene que estar entre 1 y 25')).toBeVisible()
     // Closing a half-filled form asks first (#110), which is `FormDialog` doing its job and not
     // something this dialog had to remember. Confirming the discard is part of the path.

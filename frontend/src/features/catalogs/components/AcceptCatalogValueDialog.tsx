@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useAcceptCatalogValue } from '../api/useAcceptCatalogValue'
 import type { AdminCatalogValue, CatalogKind } from '../types'
 import { CanonicalPicker } from './CanonicalPicker'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** What the dialog needs. */
 export interface AcceptCatalogValueDialogProps {
@@ -36,10 +37,18 @@ export interface AcceptCatalogValueDialogProps {
  */
 export function AcceptCatalogValueDialog({ kind, value, open, onOpenChange }: AcceptCatalogValueDialogProps) {
   const { t } = useTranslation('catalogs')
+  const confirm = useConfirm()
   const accept = useAcceptCatalogValue(kind)
   const [canonicalId, setCanonicalId] = useState<string | null>(null)
 
-  function handleAccept() {
+  async function handleAccept() {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('admin.acceptConfirmTitle', { name: value.name }),
+      description: t('admin.acceptConfirmDescription'),
+      confirmLabel: t('admin.accept'),
+    })
+    if (!confirmed) return
     accept.mutate(
       { id: value.id, canonicalId },
       {
@@ -74,7 +83,7 @@ export function AcceptCatalogValueDialog({ kind, value, open, onOpenChange }: Ac
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('admin.cancel')}
           </Button>
-          <Button onClick={handleAccept} disabled={accept.isPending}>
+          <Button onClick={() => void handleAccept()} disabled={accept.isPending}>
             {t('admin.accept')}
           </Button>
         </div>

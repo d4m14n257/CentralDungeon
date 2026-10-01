@@ -74,7 +74,15 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
   const isDisabled = value.status === 'Disabled'
   const isHead = value.canonicalId === null
 
-  function handleAcceptAsGroup() {
+  async function handleAcceptAsGroup() {
+    // A review before anything is written (#283), like the dialogs: one click on a menu item is
+    // exactly the kind that goes wrong by accident.
+    const confirmed = await confirm({
+      title: t('admin.acceptConfirmTitle', { name: value.name }),
+      description: t('admin.acceptConfirmDescription'),
+      confirmLabel: t('admin.accept'),
+    })
+    if (!confirmed) return
     accept.mutate(
       { id: value.id, canonicalId: null },
       {
@@ -84,6 +92,16 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
         },
       },
     )
+  }
+
+  async function handleRestore() {
+    const confirmed = await confirm({
+      title: t('admin.restoreConfirmTitle', { name: value.name }),
+      description: t('admin.restoreConfirmDescription'),
+      confirmLabel: t('admin.restore'),
+    })
+    if (!confirmed) return
+    restore.mutate(value.id, { onSuccess: () => toast.success(t('admin.restoreSuccess', { name: value.name })) })
   }
 
   async function handleReject() {
@@ -134,7 +152,7 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
         <DropdownMenuContent align="end">
           {isPending && (
             <>
-              <DropdownMenuItem onSelect={handleAcceptAsGroup} disabled={accept.isPending}>
+              <DropdownMenuItem onSelect={() => void handleAcceptAsGroup()} disabled={accept.isPending}>
                 <Check className="size-4" aria-hidden="true" />
                 {t('admin.acceptAsGroup')}
               </DropdownMenuItem>
@@ -181,10 +199,7 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
             </>
           )}
           {isDisabled && (
-            <DropdownMenuItem
-              onSelect={() => restore.mutate(value.id, { onSuccess: () => toast.success(t('admin.restoreSuccess', { name: value.name })) })}
-              disabled={restore.isPending}
-            >
+            <DropdownMenuItem onSelect={() => void handleRestore()} disabled={restore.isPending}>
               <RotateCcw className="size-4" aria-hidden="true" />
               {t('admin.restore')}
             </DropdownMenuItem>

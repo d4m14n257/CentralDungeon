@@ -14,6 +14,7 @@ import { useUnblockUser } from '../api/useUnblockUser'
 import { userAdminErrorKey } from '../adminErrors'
 import { changeUserStatusSchema, type ChangeUserStatusForm } from '../schemas'
 import type { AdminUserSummary } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface BlockUserDialogProps {
   /** The account whose status is being changed, or null when the dialog is closed. */
@@ -55,6 +56,7 @@ interface BlockUserDialogProps {
  */
 export function BlockUserDialog({ user, open, onOpenChange, help }: BlockUserDialogProps) {
   const { t } = useTranslation('admin')
+  const confirm = useConfirm()
   const block = useBlockUser()
   const unblock = useUnblockUser()
 
@@ -76,8 +78,15 @@ export function BlockUserDialog({ user, open, onOpenChange, help }: BlockUserDia
     onOpenChange(next)
   }
 
-  function onSubmit(values: ChangeUserStatusForm) {
+  async function onSubmit(values: ChangeUserStatusForm) {
     if (!user) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t(isUnblocking ? 'users.confirmUnblockTitle' : 'users.confirmBlockTitle', { name: user.discordUsername }),
+      description: t(isUnblocking ? 'users.confirmUnblockDescription' : 'users.confirmBlockDescription'),
+      confirmLabel: t(isUnblocking ? 'users.confirmUnblockLabel' : 'users.confirmBlockLabel'),
+    })
+    if (!confirmed) return
     const mutation = isUnblocking ? unblock : block
     mutation.mutate(
       { userId: user.id, input: values },

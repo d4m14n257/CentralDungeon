@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
+import { acceptReview } from './helpers/review'
 
 /**
  * The front door, end to end: the login button, the OAuth2 handshake, the guild check, the refresh
@@ -38,6 +39,7 @@ test('a member of the server signs in with Discord and stays signed in', async (
   await page.getByRole('combobox', { name: 'País' }).click()
   await page.getByRole('option', { name: 'Argentina' }).click()
   await page.getByRole('button', { name: 'Continuar' }).click()
+  await acceptReview(page)
 
   // The onboarding lands on `/`, which is a dispatcher and not a screen: it forwards to the home of
   // the context this account has, which for a fresh Player account is the explorer (#222).

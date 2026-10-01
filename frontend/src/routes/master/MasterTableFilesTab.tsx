@@ -70,7 +70,13 @@ export function MasterTableFilesTab() {
    * fails leaves the others attached and stays listed to try again - the table is the master's and
    * editable, so there is nothing to roll back.
    */
-  function attachStaged() {
+  async function attachStaged() {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('table.attachConfirmTitle', { count: staged.length }),
+      description: t(isPrivate ? 'table.attachConfirmPrivate' : 'table.attachConfirmShared'),
+    })
+    if (!confirmed) return
     commit.mutate(
       { staged },
       {
@@ -200,7 +206,7 @@ export function MasterTableFilesTab() {
             }
           />
           <div className="flex justify-end">
-            <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={attachStaged}>
+            <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={() => void attachStaged()}>
               {t('table.attachConfirm', { count: staged.length })}
             </Button>
           </div>

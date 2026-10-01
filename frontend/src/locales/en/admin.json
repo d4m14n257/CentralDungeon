@@ -47,7 +47,9 @@
     "errors": {
       "ITEM_ALREADY_CLAIMED": "Another admin took it first and is resolving it. While they hold it, nobody else can work on this.",
       "generic": "We could not complete the action. Try again."
-    }
+    },
+    "requestChangesConfirmTitle": "Ask for changes on “{{name}}”?",
+    "requestChangesConfirmDescription": "The table goes back to its master with your note to fix it, and does not open until it is resent and approved."
   },
   "requests": {
     "title": "Requests",
@@ -138,7 +140,10 @@
         "description": "For whatever the help does not answer.",
         "effect": "If it is approved, they answer you and the request is closed. Nothing else changes.",
         "placeholder": "What you need. Say enough for somebody to be able to answer."
-      }
+      },
+      "confirmTitle": "Send the request?",
+      "confirmDescription": "An admin reads it and answers with a notification. While it is pending you cannot send another of the same kind.",
+      "confirmLabel": "Send"
     },
     "ask": {
       "MasterGrant": "Ask for the master role",
@@ -160,7 +165,11 @@
     "supportTitle": "Help",
     "supportDescription": "This is where you ask for help when what you read was not enough.",
     "supportWhereHelpLives": "The explanations live on each screen, in the help link next to whatever you are doing.",
-    "supportHelpLink": "How a request works"
+    "supportHelpLink": "How a request works",
+    "confirmApproveTitle": "Approve the request?",
+    "confirmApproveDescription": "The person gets the approval with your reason, and who resolved it is recorded.",
+    "confirmRejectTitle": "Reject the request?",
+    "confirmRejectDescription": "The person gets the rejection with your reason, and who resolved it is recorded."
   },
   "users": {
     "title": "Users",
@@ -242,7 +251,16 @@
     "roleHelpHint": "An admin moves Player and Master; Admin and Owner are moved by an owner only.",
     "roleHelpLink": "Why",
     "blockHelpHint": "An account holding Admin or Owner cannot be blocked, and neither can your own.",
-    "blockHelpLink": "Why"
+    "blockHelpLink": "Why",
+    "confirmBlockTitle": "Block {{name}}?",
+    "confirmBlockDescription": "They will not be able to sign in until someone unblocks them. It is recorded with your reason.",
+    "confirmBlockLabel": "Block",
+    "confirmUnblockTitle": "Unblock {{name}}?",
+    "confirmUnblockDescription": "They can sign in again. It is recorded with your reason.",
+    "confirmUnblockLabel": "Unblock",
+    "confirmGrantTitle": "Grant {{role}} to {{name}}?",
+    "confirmRevokeTitle": "Revoke {{role}} from {{name}}?",
+    "confirmRoleDescription": "The change applies right away and is recorded with your reason in the account history."
   },
   "tables": {
     "title": "Tables",
@@ -304,7 +322,13 @@
     "errors": {
       "SCHEDULE_CONFLICT": "It cannot be resumed: the agenda clashes with “{{otherTableName}}”, which this table’s master is already committed to.",
       "generic": "We could not complete the action. Try again."
-    }
+    },
+    "confirmCreateUnassignedTitle": "Create the table “{{name}}”?",
+    "confirmCreateUnassignedDescription": "It is born without a master: it does not open until you assign one.",
+    "pauseConfirmTitle": "Pause “{{name}}”?",
+    "pauseConfirmDescription": "The table stays paused until it is resumed, and it is recorded with your reason.",
+    "assignConfirmTitle": "Assign the masters of “{{name}}”?",
+    "assignConfirmDescription": "{{primary}} becomes the primary master, and the table passes to its masters to prepare it."
   },
   "settings": {
     "title": "Settings",
@@ -363,7 +387,10 @@
     "errors": {
       "SETTING_OUT_OF_RANGE": "That value is outside what this setting allows: it has to be between {{minValue}} and {{maxValue}}.",
       "generic": "We could not save the change. Try again."
-    }
+    },
+    "confirmTitle": "Change “{{label}}” to {{value}}?",
+    "confirmDescription": "It applies right away for the whole platform and is recorded with your reason.",
+    "confirmRetroactiveDescription": "It applies right away for the whole platform, and this setting is retroactive: it also changes the answer for what already exists. It is recorded with your reason."
   },
   "home": {
     "title": "Welcome to administration",

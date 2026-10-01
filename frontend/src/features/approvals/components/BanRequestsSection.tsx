@@ -18,6 +18,7 @@ import { useTableBanRequests } from '../api/useTableBanRequests'
 import { approvalErrorKey } from '../approvalErrors'
 import { resolveApprovalRequestSchema, type ResolveApprovalRequestForm } from '../schemas'
 import type { BanRequest } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** Granting the veto or refusing it. There is no third answer. */
 type BanResolution = 'approve' | 'reject'
@@ -45,6 +46,7 @@ function ResolveBanRequestDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const { t } = useTranslation('master')
+  const confirm = useConfirm()
   const approve = useApproveBanRequest(tableId)
   const reject = useRejectBanRequest(tableId)
 
@@ -66,8 +68,16 @@ function ResolveBanRequestDialog({
     onOpenChange(next)
   }
 
-  function onSubmit(values: ResolveApprovalRequestForm) {
+  async function onSubmit(values: ResolveApprovalRequestForm) {
     if (!request) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t(isApproving ? 'banRequests.confirmApproveTitle' : 'banRequests.confirmRejectTitle', {
+        name: request.targetUserName,
+      }),
+      description: t(isApproving ? 'banRequests.confirmApproveDescription' : 'banRequests.confirmRejectDescription'),
+    })
+    if (!confirmed) return
     mutation.mutate(
       { requestId: request.requestId, input: values },
       {

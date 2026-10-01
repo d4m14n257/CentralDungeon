@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { acceptReview } from './review'
 
 /**
  * Reviewing a table, from where F3.3 moved it to (#176, #100).
@@ -74,5 +75,6 @@ export async function requestChangesFromQueue(page: Page, name: string, justific
   const dialog = page.getByRole('dialog')
   await dialog.getByRole('textbox').fill(justification)
   await dialog.getByRole('button', { name: 'Pedir cambios' }).click()
+  await acceptReview(page)
   await expect(dialog).toBeHidden()
 }

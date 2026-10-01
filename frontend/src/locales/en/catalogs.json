@@ -130,6 +130,22 @@
     "createDescription": "It is born accepted, as a group of its own. If it is a synonym of another one, join them afterwards from the group's canvas.",
     "createNameLabel": "Name",
     "createConfirm": "Create",
-    "createSuccess": "“{{name}}” added"
+    "createSuccess": "“{{name}}” added",
+    "acceptConfirmTitle": "Accept “{{name}}”?",
+    "acceptConfirmDescription": "It starts showing to players and filtering tables.",
+    "createConfirmTitle": "Create “{{name}}”?",
+    "createConfirmDescription": "It is born accepted, as a group of its own: it shows and filters tables right away.",
+    "disableConfirmTitle": "Retire “{{name}}”?",
+    "disableConfirmDescription": "It leaves circulation without breaking any link: tables using it keep it, and it can be restored.",
+    "mergeReviewTitle": "Merge “{{source}}” into “{{target}}”?",
+    "mergeReviewDescription": "The whole group of the first becomes equivalent to the other, and stops having a principal of its own.",
+    "reassignConfirmTitle": "Move “{{name}}” to the group of “{{target}}”?",
+    "reassignConfirmDescription": "It leaves its current group and becomes equivalent to the new one. Tables using it are not touched.",
+    "restoreConfirmTitle": "Restore “{{name}}”?",
+    "restoreConfirmDescription": "It comes back into circulation with everything it had: it shows and filters tables again.",
+    "acceptIntoConfirmTitle": "Accept “{{name}}” as equivalent to “{{target}}”?",
+    "acceptIntoConfirmDescription": "It starts showing and filtering, and searching either one finds the tables of both.",
+    "proposeConfirmTitle": "Propose “{{name}}”?",
+    "proposeConfirmDescription": "An admin reviews it. Meanwhile your table can use it, but it does not show to players or filter."
   }
 }

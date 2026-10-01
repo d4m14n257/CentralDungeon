@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -10,6 +10,7 @@ import { ApiError } from '@/types/api'
 
 import { BlockUserDialog } from './BlockUserDialog'
 import type { AdminUserSummary } from '../types'
+import { acceptReview } from '@/test/review'
 
 const block = vi.hoisted(() => vi.fn())
 const unblock = vi.hoisted(() => vi.fn())
@@ -75,8 +76,25 @@ describe('BlockUserDialog', () => {
 
     await userEvent.type(screen.getByLabelText('Motivo'), 'Acoso reiterado en tres mesas')
     await userEvent.click(screen.getByRole('button', { name: 'Bloquear' }))
+    await acceptReview()
 
     await waitFor(() => expect(block).toHaveBeenCalledWith('user-1', { justification: 'Acoso reiterado en tres mesas' }))
+  })
+
+  /**
+   * #283: the review names who is affected and what follows, and backing out of it writes nothing -
+   * the form stays as it was, ready to send or to close.
+   */
+  it('names the account in the review, and cancelling it blocks nobody', async () => {
+    renderDialog(ALLOWED)
+
+    await userEvent.type(screen.getByLabelText('Motivo'), 'Acoso reiterado en tres mesas')
+    await userEvent.click(screen.getByRole('button', { name: 'Bloquear' }))
+    const review = within((await screen.findByRole('heading', { name: '¿Bloquear a dami?' })).closest('[role="dialog"]') as HTMLElement)
+    await userEvent.click(review.getByRole('button', { name: 'Cancelar' }))
+
+    expect(block).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('Motivo')).toHaveValue('Acoso reiterado en tres mesas')
   })
 
   /** Which of the two acts it is comes from the account's own status - there is no third choice. */
@@ -90,6 +108,7 @@ describe('BlockUserDialog', () => {
 
     await userEvent.type(screen.getByLabelText('Motivo'), 'Se resolvió el reporte')
     await userEvent.click(screen.getByRole('button', { name: 'Desbloquear' }))
+    await acceptReview()
 
     await waitFor(() => expect(unblock).toHaveBeenCalledWith('user-1', { justification: 'Se resolvió el reporte' }))
     expect(block).not.toHaveBeenCalled()
@@ -113,6 +132,7 @@ describe('BlockUserDialog', () => {
 
     await userEvent.type(screen.getByLabelText('Motivo'), 'Da igual')
     await userEvent.click(screen.getByRole('button', { name: 'Bloquear' }))
+    await acceptReview()
 
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent('No se puede bloquear a una cuenta con rol de Admin o de Owner.'),
@@ -127,6 +147,7 @@ describe('BlockUserDialog', () => {
 
     await userEvent.type(screen.getByLabelText('Motivo'), 'Se resolvió el reporte')
     await userEvent.click(screen.getByRole('button', { name: 'Desbloquear' }))
+    await acceptReview()
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('No pudimos aplicar el cambio. Probá de nuevo.'))
   })

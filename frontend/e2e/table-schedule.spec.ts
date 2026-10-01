@@ -3,6 +3,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { approveTableFromQueue } from './helpers/adminQueue'
+import { acceptReview } from './helpers/review'
 
 /**
  * F1.2 end to end, against the real backend: the complete wizard with an agenda, and the two rules
@@ -56,6 +57,7 @@ async function fillWizard(page: Page, name: string, hourtime: string) {
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
 }
 
 /**
@@ -88,6 +90,7 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
     await expect(master.page.getByText(new RegExp(`Viernes ${FRIDAY_EVENING}`))).toBeVisible()
 
     await master.page.getByRole('button', { name: 'Crear mesa' }).click()
+    await acceptReview(master.page)
     await expect(master.page.getByRole('heading', { name: tableName })).toBeVisible()
   } finally {
     await master.context.close()

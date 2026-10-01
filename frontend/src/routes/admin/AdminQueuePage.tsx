@@ -357,6 +357,16 @@ export function AdminQueuePage() {
             ? t('queue.requestChanges')
             : t(dialogAction === 'approveRequest' ? 'requests.approve' : 'requests.reject')
         }
+        review={
+          dialogAction === 'requestChanges'
+            ? {
+                title: t('queue.requestChangesConfirmTitle', { name: actionDialog.item?.item.title ?? '' }),
+                description: t('queue.requestChangesConfirmDescription'),
+              }
+            : dialogAction === 'approveRequest'
+              ? { title: t('requests.confirmApproveTitle'), description: t('requests.confirmApproveDescription') }
+              : { title: t('requests.confirmRejectTitle'), description: t('requests.confirmRejectDescription') }
+        }
         justificationLabel={isRequestAction ? t('requests.resolutionNoteLabel') : undefined}
         destructive={dialogAction === 'rejectRequest'}
         isPending={requestChanges.isPending || approveRequest.isPending || rejectRequest.isPending}

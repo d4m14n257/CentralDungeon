@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 
 import { useCreateCatalogValue } from '../api/useCreateCatalogValue'
 import type { CatalogKind } from '../types'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** The column is 128 characters wide; the backend refuses anything longer. */
 const MAX_NAME_LENGTH = 128
@@ -40,6 +41,7 @@ export interface CreateCatalogValueDialogProps {
  */
 export function CreateCatalogValueDialog({ kind, open, onOpenChange }: CreateCatalogValueDialogProps) {
   const { t } = useTranslation('catalogs')
+  const confirm = useConfirm()
   const create = useCreateCatalogValue(kind)
   const [name, setName] = useState('')
   const trimmed = name.trim()
@@ -49,7 +51,14 @@ export function CreateCatalogValueDialog({ kind, open, onOpenChange }: CreateCat
     onOpenChange(next)
   }
 
-  function handleCreate() {
+  async function handleCreate() {
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('admin.createConfirmTitle', { name: trimmed }),
+      description: t('admin.createConfirmDescription'),
+      confirmLabel: t('admin.createConfirm'),
+    })
+    if (!confirmed) return
     create.mutate(
       { name: trimmed },
       {
@@ -73,7 +82,7 @@ export function CreateCatalogValueDialog({ kind, open, onOpenChange }: CreateCat
         className="space-y-4"
         onSubmit={(event) => {
           event.preventDefault()
-          if (trimmed.length > 0) handleCreate()
+          if (trimmed.length > 0) void handleCreate()
         }}
       >
         <div className="space-y-2">

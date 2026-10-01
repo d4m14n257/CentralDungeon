@@ -27,7 +27,11 @@
       "both": "texto y archivos",
       "text": "solo texto",
       "files": "solo archivos"
-    }
+    },
+    "publishConfirmTitle": "¿Publicar la petición?",
+    "publishConfirmDescription": "Se notifica al instante a quienes la reciben, y pueden empezar a responder.",
+    "editConfirmTitle": "¿Guardar los cambios de la petición?",
+    "editConfirmDescription": "Quienes la reciben ven la versión corregida."
   },
   "form": {
     "publishTitle": "Publicar una petición",
@@ -96,7 +100,10 @@
     "accumulatesHint": "Cada entrega se guarda aparte. Si ya entregaste algo, sigue estando.",
     "send": "Entregar",
     "sentToast": "Entregado.",
-    "someFilesFailed": "No se pudieron subir: {{names}}. Lo demás se envió; mandá otra entrega con esos."
+    "someFilesFailed": "No se pudieron subir: {{names}}. Lo demás se envió; mandá otra entrega con esos.",
+    "confirmTitle": "¿Enviar tu respuesta?",
+    "confirmDescription": "El master la ve al instante. Si te equivocaste, podés mandar otra: las respuestas se suman, no se reemplazan.",
+    "confirmLabel": "Enviar"
   },
   "list": {
     "blanks": "Para completar"

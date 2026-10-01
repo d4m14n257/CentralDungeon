@@ -9,6 +9,7 @@ import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
 
 import { SubmitRequestSection } from './SubmitRequestSection'
 import type { ApprovalRequestSummary } from '../types'
+import { acceptReview } from '@/test/review'
 
 const mine = vi.hoisted(() => vi.fn())
 const submit = vi.hoisted(() => vi.fn())
@@ -152,6 +153,7 @@ describe('SubmitRequestSection', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Pedir que se abra una mesa' }))
     await userEvent.type(await screen.findByRole('textbox'), 'Quiero una mesa de terror los jueves')
     await userEvent.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+    await acceptReview()
 
     await waitFor(() => expect(submit).toHaveBeenCalledWith({ type: 'TableOpen', justification: 'Quiero una mesa de terror los jueves' }))
   })

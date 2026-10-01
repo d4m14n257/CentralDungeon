@@ -169,6 +169,7 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
         title={t('status.cancelDialogTitle')}
         description={t('status.cancelDialogDescription')}
         submitLabel={t('status.cancel')}
+        review={{ title: t('status.cancelConfirmTitle'), description: t('status.cancelConfirmDescription') }}
         destructive
         isPending={cancel.isPending}
         onConfirm={(justification) => {
@@ -233,6 +234,7 @@ function PauseRequest({ tableId, status }: Pick<OutletContext, 'tableId' | 'stat
         title={t('status.requestPauseDialogTitle')}
         description={t('status.requestPauseDialogDescription')}
         submitLabel={t('status.requestPause')}
+        review={{ title: t('status.requestPauseConfirmTitle'), description: t('status.requestPauseConfirmDescription') }}
         isPending={requestPause.isPending}
         errorMessage={pauseError === null ? null : t(pauseError)}
         help={

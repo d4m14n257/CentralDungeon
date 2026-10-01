@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useReassignCatalogValue } from '../api/useReassignCatalogValue'
 import type { AdminCatalogValue, CatalogKind } from '../types'
 import { CanonicalPicker } from './CanonicalPicker'
+import { useConfirm } from '@/hooks/useConfirm'
 
 /** What the dialog needs. */
 export interface ReassignCatalogValueDialogProps {
@@ -40,11 +41,19 @@ export interface ReassignCatalogValueDialogProps {
  */
 export function ReassignCatalogValueDialog({ kind, value, open, onOpenChange }: ReassignCatalogValueDialogProps) {
   const { t } = useTranslation('catalogs')
+  const confirm = useConfirm()
   const reassign = useReassignCatalogValue(kind)
   const [target, setTarget] = useState<AdminCatalogValue | null>(null)
 
-  function handleReassign() {
+  async function handleReassign() {
     if (!target) return
+    // A review before anything is written (#283): what is about to change, and what follows.
+    const confirmed = await confirm({
+      title: t('admin.reassignConfirmTitle', { name: value.name, target: target.name }),
+      description: t('admin.reassignConfirmDescription'),
+      confirmLabel: t('admin.reassign'),
+    })
+    if (!confirmed) return
     reassign.mutate(
       { id: value.id, canonicalId: target.id },
       {
@@ -80,7 +89,7 @@ export function ReassignCatalogValueDialog({ kind, value, open, onOpenChange }: 
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('admin.cancel')}
           </Button>
-          <Button onClick={handleReassign} disabled={!target || reassign.isPending}>
+          <Button onClick={() => void handleReassign()} disabled={!target || reassign.isPending}>
             {t('admin.reassign')}
           </Button>
         </div>

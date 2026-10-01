@@ -50,7 +50,10 @@
     "filesHint": "What you hand the table: maps, sheets, house rules. Players download them from the table.",
     "missingTag": "Pick at least one tag: it is what makes the table findable.",
     "filesFailed": "The table was created, but these could not be uploaded: {{names}}. Add them from the Archivos tab.",
-    "backToTables": "Back to my tables"
+    "backToTables": "Back to my tables",
+    "confirmTitle": "Create the table “{{name}}”?",
+    "confirmDescription": "It is born as a draft: nobody else sees it until you send it for review.",
+    "confirmLabel": "Create table"
   },
   "detail": {
     "tabs": {
@@ -106,7 +109,11 @@
     "errors": {
       "PAUSE_ALREADY_REQUESTED": "A pause request for this table is already waiting on an answer. Reload the screen to see it.",
       "generic": "We could not send the request. Try again."
-    }
+    },
+    "cancelConfirmTitle": "Cancel the table?",
+    "cancelConfirmDescription": "There is no going back: the table ends here, and it is recorded with your reason.",
+    "requestPauseConfirmTitle": "Ask to pause the table?",
+    "requestPauseConfirmDescription": "An admin decides, reading your reason. Until they answer, the table carries on as it is."
   },
   "schedule": {
     "weekdayLabel": "Day",
@@ -154,7 +161,9 @@
     },
     "attendanceTitle": "Attendance",
     "attendanceNotForCancelled": "A cancelled session has no attendance: it did not happen.",
-    "attendanceSuccess": "Attendance recorded"
+    "attendanceSuccess": "Attendance recorded",
+    "saveConfirmTitle": "Save the session changes?",
+    "saveConfirmDescription": "This session's date and notes change."
   },
   "nav": {
     "label": "Master sections",
@@ -200,7 +209,9 @@
     "removeConfirmDescription": "They stop seeing and managing this table right away. The record that they ran it stays, and you can add them back whenever you want.",
     "removeSuccess": "{{name}} no longer runs this table",
     "hint": "A co-master manages the table but cannot close it, cancel it, or change who runs it.",
-    "helpLink": "What a co-master can do"
+    "helpLink": "What a co-master can do",
+    "addConfirmTitle": "Add {{name}} as co-master?",
+    "addConfirmDescription": "They will see the table and be able to run it with you."
   },
   "players": {
     "title": "Players",
@@ -224,7 +235,9 @@
     "saving": "Saving…",
     "success": "Table updated",
     "lockedDescription": "This table can no longer be edited: either you do not run it, or it is past the point where its master could rewrite it.",
-    "back": "Back to the table"
+    "back": "Back to the table",
+    "confirmTitle": "Save the changes to “{{name}}”?",
+    "confirmDescription": "What you wrote replaces what the table said."
   },
   "veto": {
     "block": "Ban",
@@ -251,6 +264,10 @@
     "resolutionNoteLabel": "Your answer",
     "approveSuccess": "Ban applied",
     "rejectSuccess": "Request turned down",
-    "about": "Ban {{name}}"
+    "about": "Ban {{name}}",
+    "confirmApproveTitle": "Approve the veto on {{name}}?",
+    "confirmApproveDescription": "They stop seeing the table, its detail and its files. It is recorded with your reason.",
+    "confirmRejectTitle": "Reject the veto request on {{name}}?",
+    "confirmRejectDescription": "They stay at the table as before. It is recorded with your reason."
   }
 }

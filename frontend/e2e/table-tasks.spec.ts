@@ -3,6 +3,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { approveTableFromQueue } from './helpers/adminQueue'
+import { acceptReview } from './helpers/review'
 
 /**
  * F1.5 end to end, against the real backend: F1.5's acceptance criterion — *a master
@@ -50,6 +51,7 @@ async function createTable(page: Page, name: string): Promise<string> {
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
 
   const id = page.url().split('/master/tables/')[1]
@@ -91,6 +93,7 @@ async function publishTask(page: Page, tableId: string, title: string, audience:
   await dialog.getByLabel('A quién se lo pedís').click()
   await page.getByRole('option', { name: audience }).click()
   await dialog.getByRole('button', { name: 'Publicar y avisar' }).click()
+  await acceptReview(page)
   await expect(dialog).toBeHidden()
   await expect(page.getByRole('button', { name: new RegExp(title) })).toBeVisible()
 }
@@ -148,6 +151,7 @@ test('a request reaches the players, and what they hand in reaches the master', 
     await submitDialog.locator('input[type="file"]').setInputFiles(pdf('ficha-tarea-e2e.pdf', runId))
     await expect(submitDialog.getByText('ficha-tarea-e2e.pdf')).toBeVisible()
     await submitDialog.getByRole('button', { name: 'Entregar' }).click()
+    await acceptReview(player.page)
     await expect(submitDialog).toBeHidden()
 
     // The master sees the answer, and can open a file that belongs to somebody else - the fifth way
@@ -191,12 +195,14 @@ test('a second answer is added and never replaces the first', async ({ browser }
     await player.page.getByRole('button', { name: 'Entregar', exact: true }).click()
     await writeAnswer(player.page, 'Primera version')
     await player.page.getByRole('dialog').getByRole('button', { name: 'Entregar' }).click()
+    await acceptReview(player.page)
     await expect(player.page.getByRole('dialog')).toBeHidden()
 
     // The button itself says what happens next: answering again, not correcting.
     await player.page.getByRole('button', { name: 'Entregar de nuevo' }).click()
     await writeAnswer(player.page, 'Segunda version')
     await player.page.getByRole('dialog').getByRole('button', { name: 'Entregar' }).click()
+    await acceptReview(player.page)
     await expect(player.page.getByRole('dialog')).toBeHidden()
 
     await expect(player.page.getByText('Primera version')).toBeVisible()
@@ -265,6 +271,7 @@ test('closing a request stops new answers and keeps the ones already in', async 
     await player.page.getByRole('button', { name: 'Entregar', exact: true }).click()
     await writeAnswer(player.page, 'Ahi va el mapa')
     await player.page.getByRole('dialog').getByRole('button', { name: 'Entregar' }).click()
+    await acceptReview(player.page)
     await expect(player.page.getByRole('dialog')).toBeHidden()
 
     await master.page.goto(`/master/tables/${tableId}/tasks`)

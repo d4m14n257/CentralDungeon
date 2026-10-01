@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
+import { acceptReview } from './helpers/review'
 
 /**
  * The help as dialogs raised in place (decisiones.md #231), which replaced the `/help` routes of
@@ -26,6 +27,7 @@ async function openAssignMastersDialog(page: Page, label: string) {
   const createDialog = page.getByRole('dialog')
   await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
   await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
+  await acceptReview(page)
 
   // `/admin/tables` is one of the wide tables of skill `diseno` §5.b since F3.3: a `<tr>`.
   const row = page.getByRole('row').filter({ hasText: tableName })

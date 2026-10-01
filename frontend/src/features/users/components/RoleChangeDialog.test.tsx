@@ -11,6 +11,7 @@ import { ApiError } from '@/types/api'
 import { RoleChangeDialog } from './RoleChangeDialog'
 import { ADMIN_GRANTABLE_ROLES, PLATFORM_ROLES } from '../roles'
 import type { AdminUserSummary, PlatformRole } from '../types'
+import { acceptReview } from '@/test/review'
 
 const grantRole = vi.hoisted(() => vi.fn())
 const revokeRole = vi.hoisted(() => vi.fn())
@@ -77,6 +78,7 @@ describe('RoleChangeDialog', () => {
 
     await userEvent.type(screen.getByLabelText('Motivo'), 'Va a dirigir la campaña de los martes')
     await userEvent.click(screen.getByRole('button', { name: 'Dar el rol' }))
+    await acceptReview()
 
     await waitFor(() =>
       expect(grantRole).toHaveBeenCalledWith('user-1', { role: 'Master', justification: 'Va a dirigir la campaña de los martes' }),
@@ -94,6 +96,7 @@ describe('RoleChangeDialog', () => {
 
     await userEvent.type(screen.getByLabelText('Motivo'), 'Lo pidió la persona')
     await userEvent.click(screen.getByRole('button', { name: 'Quitar el rol' }))
+    await acceptReview()
 
     await waitFor(() => expect(revokeRole).toHaveBeenCalledWith('user-1', { role: 'Player', justification: 'Lo pidió la persona' }))
     expect(grantRole).not.toHaveBeenCalled()
@@ -128,6 +131,7 @@ describe('RoleChangeDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: /Owner/ }))
     await userEvent.type(screen.getByLabelText('Motivo'), 'Se va del proyecto')
     await userEvent.click(screen.getByRole('button', { name: 'Quitar el rol' }))
+    await acceptReview()
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(sentence))
     expect(screen.queryByText('English, for the log')).not.toBeInTheDocument()

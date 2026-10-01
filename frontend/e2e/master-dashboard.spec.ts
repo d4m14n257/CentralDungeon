@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { requestChangesFromQueue } from './helpers/adminQueue'
+import { acceptReview } from './helpers/review'
 
 /**
  * F1.6 end to end: co-masters and the work tray.
@@ -48,6 +49,7 @@ async function createTableThroughWizard(page: Page, name: string) {
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
+  await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
   const id = page.url().split('/master/tables/')[1] as string
   // Born in Draft since #245: a draft reaches no tray and no admin, so it is sent right away.
@@ -84,6 +86,7 @@ test('a master adds a co-master, who sees the table, and loses it when removed',
     await search.press('Enter')
     await search.press('Enter')
     await master.page.getByRole('button', { name: new RegExp(`^${coMasterDiscordId}\\b`) }).click()
+    await acceptReview(master.page)
     await expect(master.page.getByText('Co-master', { exact: true })).toBeVisible()
 
     // Membership and not the platform role: somebody with no Master role runs this table and sees it.
@@ -144,6 +147,7 @@ test('a table sent back for changes shows on the tray until the master corrects 
     await expect(master.page).toHaveURL(new RegExp(`/master/tables/${tableId}/edit$`))
     await master.page.getByRole('textbox', { name: 'Nombre' }).fill(correctedName)
     await master.page.getByRole('button', { name: 'Guardar cambios' }).click()
+    await acceptReview(master.page)
     await expect(master.page.getByRole('heading', { name: correctedName })).toBeVisible()
 
     await master.page.goto(`/master/tables/${tableId}/status`)

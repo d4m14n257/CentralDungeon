@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
+import { acceptReview } from './helpers/review'
 
 /**
  * F3.2 end to end: the sentence `roles-y-alcance.md §4, F3.2` measures the slice by.
@@ -100,6 +101,7 @@ async function ask(page: Page, buttonName: string, justification: string) {
   await expect(dialog).toBeVisible()
   await dialog.getByLabel('Motivo').fill(justification)
   await dialog.getByRole('button', { name: 'Enviar el pedido' }).click()
+  await acceptReview(page)
   await expect(dialog).toBeHidden()
 }
 
@@ -201,6 +203,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     await expect(approveDialog).toContainText('recibe el rol de master por el mismo camino')
     await approveDialog.getByLabel('Tu respuesta').fill(resolutionNote)
     await approveDialog.getByRole('button', { name: 'Aprobar' }).click()
+    await acceptReview(admin.page)
     await expect(approveDialog).toBeHidden()
 
     // The row leaves the Pending listing, which is the queue doing its job - and the whole of the
@@ -286,6 +289,7 @@ test('a rejected request notifies the person who asked, and the notice opens', a
     await expect(rejectDialog).toContainText('Es lo único que va a recibir quien pidió')
     await rejectDialog.getByLabel('Tu respuesta').fill(resolutionNote)
     await rejectDialog.getByRole('button', { name: 'Rechazar' }).click()
+    await acceptReview(admin.page)
     await expect(rejectDialog).toBeHidden()
     await expect(requestRow(admin.page, playerId)).toHaveCount(0, { timeout: 15_000 })
 
@@ -347,6 +351,7 @@ test('approving a request for a new table records the request and creates no tab
     await expect(approveDialog).toContainText('La mesa no se crea sola')
     await approveDialog.getByLabel('Tu respuesta').fill(`Buscamos master (E2E ${runId})`)
     await approveDialog.getByRole('button', { name: 'Aprobar' }).click()
+    await acceptReview(admin.page)
     await expect(approveDialog).toBeHidden()
     await expect(requestRow(admin.page, playerId)).toHaveCount(0, { timeout: 15_000 })
 

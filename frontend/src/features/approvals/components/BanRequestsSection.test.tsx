@@ -9,6 +9,7 @@ import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
 
 import { BanRequestsSection } from './BanRequestsSection'
 import type { BanRequest } from '../types'
+import { acceptReview } from '@/test/review'
 
 const list = vi.hoisted(() => vi.fn())
 const approve = vi.hoisted(() => vi.fn())
@@ -128,6 +129,7 @@ describe('BanRequestsSection', () => {
     expect(dialog.getByRole('heading', { name: 'Vetar a Diego' })).toBeInTheDocument()
     await user.type(dialog.getByRole('textbox'), 'De acuerdo, hace meses que no aparece')
     await user.click(dialog.getByRole('button', { name: 'Vetar' }))
+    await acceptReview()
 
     await waitFor(() =>
       expect(approve).toHaveBeenCalledWith('table-1', 'req-1', { resolutionNote: 'De acuerdo, hace meses que no aparece' }),
@@ -159,6 +161,7 @@ describe('BanRequestsSection', () => {
     const dialog = within(await screen.findByRole('dialog'))
     await user.type(dialog.getByRole('textbox'), 'Hablé con él, lo dejamos pasar')
     await user.click(dialog.getByRole('button', { name: 'No vetar' }))
+    await acceptReview()
 
     await waitFor(() => expect(reject).toHaveBeenCalledWith('table-1', 'req-1', { resolutionNote: 'Hablé con él, lo dejamos pasar' }))
     expect(approve).not.toHaveBeenCalled()

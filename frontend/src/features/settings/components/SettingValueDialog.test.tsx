@@ -10,6 +10,7 @@ import { ApiError } from '@/types/api'
 
 import { SettingValueDialog } from './SettingValueDialog'
 import type { SystemSetting } from '../types'
+import { acceptReview } from '@/test/review'
 
 const update = vi.hoisted(() => vi.fn())
 
@@ -168,6 +169,7 @@ describe('SettingValueDialog', () => {
     await userEvent.type(screen.getByLabelText(/Nuevo valor/), '5')
     await fillReason('los mapas pesan más de lo que pensábamos')
     await userEvent.click(screen.getByRole('button', { name: 'Guardar el cambio' }))
+    await acceptReview()
 
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith('files.max_file_size_mb', {
@@ -198,6 +200,7 @@ describe('SettingValueDialog', () => {
     await userEvent.type(screen.getByLabelText(/Nuevo valor/), '5')
     await fillReason()
     await userEvent.click(screen.getByRole('button', { name: 'Guardar el cambio' }))
+    await acceptReview()
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('tiene que estar entre 1 y 25')

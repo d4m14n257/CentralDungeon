@@ -64,7 +64,11 @@
     "readOnlyEmptyDescription": "Nothing has been shared on this table yet.",
     "attachConfirm_one": "Add 1 file",
     "attachConfirm_other": "Add {{count}} files",
-    "someFailed": "Could not upload: {{names}}. The rest were added."
+    "someFailed": "Could not upload: {{names}}. The rest were added.",
+    "attachConfirmTitle_one": "Add 1 file to the table?",
+    "attachConfirmTitle_other": "Add {{count}} files to the table?",
+    "attachConfirmShared": "The table's players will be able to see and download it.",
+    "attachConfirmPrivate": "Only the people running the table see it."
   },
   "admin": {
     "title": "Files",
@@ -163,7 +167,10 @@
     "reused": "You already had “{{names}}”: it was reused and takes no extra space.",
     "send_zero": "Upload",
     "noLibraryTitle": "Your account has no library of its own",
-    "noLibraryDescription": "Personal files are uploaded from the player and master flows: an application, a submission, a table’s material. The files the platform publishes for the community are in Administration → Files."
+    "noLibraryDescription": "Personal files are uploaded from the player and master flows: an application, a submission, a table’s material. The files the platform publishes for the community are in Administration → Files.",
+    "sendConfirmTitle_one": "Upload 1 file to your library?",
+    "sendConfirmTitle_other": "Upload {{count}} files to your library?",
+    "sendConfirmDescription": "They stay in My files as “{{category}}”, to reuse without uploading again."
   },
   "edit": {
     "title": "Edit file",
@@ -174,7 +181,9 @@
     "keepHint": "Unchecked, it stays tied to where you used it and is released after a long time unused.",
     "cancel": "Cancel",
     "confirm": "Save",
-    "saved": "File updated"
+    "saved": "File updated",
+    "confirmTitle": "Save the changes to “{{name}}”?",
+    "confirmDescription": "Its name and whether you keep it change; the content is not touched."
   },
   "staged": {
     "remove": "Remove “{{name}}”"
@@ -217,6 +226,8 @@
     "categoryLabel": "What it is",
     "cancel": "Cancel",
     "confirm": "Save",
-    "saved": "Drawer updated"
+    "saved": "Drawer updated",
+    "confirmTitle": "Change what “{{name}}” is?",
+    "confirmDescription": "It becomes “{{category}}”, and that is how it will be offered when you publish it."
   }
 }

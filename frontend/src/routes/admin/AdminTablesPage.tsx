@@ -140,6 +140,7 @@ function AdminTableRowActions({ table }: { table: AdminTableSummary }) {
         title={t('tables.pauseDialogTitle', { name: table.name })}
         description={t('tables.pauseDialogDescription')}
         submitLabel={t('tables.pause')}
+        review={{ title: t('tables.pauseConfirmTitle', { name: table.name }), description: t('tables.pauseConfirmDescription') }}
         isPending={pauseTable.isPending}
         errorMessage={pauseError === null ? null : t(pauseError.key, pauseError.params)}
         help={

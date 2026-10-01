@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
+import { acceptReview } from './helpers/review'
 
 /**
  * F3.1 end to end: the sentence `roles-y-alcance.md §4, F3.1` measures the slice by.
@@ -115,6 +116,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await dialog.getByRole('button', { name: /^Admin\b/ }).click()
     await dialog.getByLabel('Motivo').fill('Promoción de prueba E2E de F3.1')
     await dialog.getByRole('button', { name: 'Dar el rol' }).click()
+    await acceptReview(owner.page)
     await expect(dialog).toBeHidden()
 
     // Longer than the default: what is being asserted is that the listing refreshes itself after a
@@ -149,6 +151,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await adminDialog.getByRole('button', { name: /^Master\b/ }).click()
     await adminDialog.getByLabel('Motivo').fill('Va a dirigir una mesa')
     await adminDialog.getByRole('button', { name: 'Dar el rol' }).click()
+    await acceptReview(futureAdmin.page)
     await expect(adminDialog).toBeHidden()
     await expect(rowOf(futureAdmin.page, playerId)).toContainText('Master', { timeout: 15_000 })
 
@@ -161,6 +164,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await expect(ownOwnDialog).toContainText('Se le va a quitar el rol Owner')
     await ownOwnDialog.getByLabel('Motivo').fill('Intento de renuncia')
     await ownOwnDialog.getByRole('button', { name: 'Quitar el rol' }).click()
+    await acceptReview(owner.page)
 
     // The refusal is rendered from the error code, not from the backend's English detail (#197).
     await expect(ownOwnDialog.getByRole('alert')).toContainText('No podés quitarte tu propio rol de Owner')
@@ -264,6 +268,7 @@ test('an account can be blocked and let back in, and one holding a rank is never
     await expect(blockDialog).toContainText('Sus datos se conservan')
     await blockDialog.getByLabel('Motivo').fill('Prueba E2E de bloqueo')
     await blockDialog.getByRole('button', { name: 'Bloquear' }).click()
+    await acceptReview(owner.page)
     await expect(blockDialog).toBeHidden()
 
     await expect(rowOf(owner.page, victimId)).toContainText('Bloqueada', { timeout: 15_000 })
@@ -281,6 +286,7 @@ test('an account can be blocked and let back in, and one holding a rank is never
     const unblockDialog = owner.page.getByRole('dialog')
     await unblockDialog.getByLabel('Motivo').fill('Se aclaró el malentendido')
     await unblockDialog.getByRole('button', { name: 'Desbloquear' }).click()
+    await acceptReview(owner.page)
     await expect(unblockDialog).toBeHidden()
     await expect(rowOf(owner.page, victimId)).toContainText('Activa', { timeout: 15_000 })
   } finally {

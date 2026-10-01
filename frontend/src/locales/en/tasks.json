@@ -27,7 +27,11 @@
       "both": "text and files",
       "text": "text only",
       "files": "files only"
-    }
+    },
+    "publishConfirmTitle": "Publish the request?",
+    "publishConfirmDescription": "The people it is for are notified right away and can start answering.",
+    "editConfirmTitle": "Save the changes to the request?",
+    "editConfirmDescription": "The people it is for see the corrected version."
   },
   "form": {
     "publishTitle": "Publish a request",
@@ -96,7 +100,10 @@
     "accumulatesHint": "Each answer is kept separately. If you already sent something, it stays.",
     "send": "Send",
     "sentToast": "Sent.",
-    "someFilesFailed": "Could not upload: {{names}}. The rest was sent; send another answer with those."
+    "someFilesFailed": "Could not upload: {{names}}. The rest was sent; send another answer with those.",
+    "confirmTitle": "Send your answer?",
+    "confirmDescription": "The master sees it right away. If you made a mistake, you can send another: answers add up, they do not replace each other.",
+    "confirmLabel": "Send"
   },
   "list": {
     "blanks": "To fill in"

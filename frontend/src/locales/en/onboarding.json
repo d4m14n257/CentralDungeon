@@ -5,5 +5,7 @@
   "namePlaceholder": "What they call you at the table",
   "countryLabel": "Country",
   "countryPlaceholder": "Select your country",
-  "submit": "Continue"
+  "submit": "Continue",
+  "confirmTitle": "Save your profile as “{{name}}”?",
+  "confirmDescription": "This is how the rest of the community will see you."
 }
