@@ -34,7 +34,8 @@
     "acceptSuccess": "Candidate accepted",
     "rejectSuccess": "Candidate rejected",
     "rejectConfirmTitle": "Reject {{name}}?",
-    "rejectConfirmDescription": "They get the rejection with your reason and stop being one of the table's candidates."
+    "rejectConfirmDescription": "They get the rejection with your reason and stop being one of the table's candidates.",
+    "viewRecord": "View {{name}}'s card"
   },
   "rejectionReason": {
     "TABLE_FULL": "The table filled up"

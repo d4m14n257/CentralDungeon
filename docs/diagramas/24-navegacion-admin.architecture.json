@@ -79,6 +79,15 @@
           "tableDetail",
           "tableEdit"
         ]
+      },
+      {
+        "id": "ficha",
+        "label": "Ficha de persona",
+        "focus": [
+          "users",
+          "userDetail",
+          "tableDetail"
+        ]
       }
     ]
   },
@@ -241,7 +250,7 @@
       "id": "users",
       "type": "frontend",
       "label": "/admin/users",
-      "sublabel": "entrada única · callejón",
+      "sublabel": "cuentas · abre cada ficha",
       "pos": [
         840,
         250
@@ -384,6 +393,27 @@
           "label": "el formulario del master en modo admin"
         }
       ]
+    },
+    {
+      "id": "userDetail",
+      "type": "frontend",
+      "label": "/admin/users/:id",
+      "sublabel": "la ficha de la persona (#285)",
+      "pos": [
+        1100,
+        250
+      ],
+      "size": [
+        200,
+        66
+      ],
+      "tag": "AdminUserDetailPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminUserDetailPage.tsx",
+          "label": "datos, roles, estado, mesas, historial"
+        }
+      ]
     }
   ],
   "boundaries": [
@@ -402,7 +432,8 @@
         "settings",
         "catalogGroup",
         "tableDetail",
-        "tableEdit"
+        "tableEdit",
+        "userDetail"
       ],
       "pad": 14
     }
@@ -499,6 +530,20 @@
       "to": "tableEdit",
       "fromSide": "top",
       "toSide": "bottom"
+    },
+    {
+      "id": "users-detail",
+      "from": "users",
+      "to": "userDetail",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "tabledetail-user",
+      "from": "tableDetail",
+      "to": "userDetail",
+      "fromSide": "bottom",
+      "toSide": "bottom"
     }
   ],
   "cards": [
@@ -506,8 +551,8 @@
       "dot": "rose",
       "title": "El admin casi no sale",
       "items": [
-        "Catálogos abre un lienzo (#275); archivos, su subida (#278); mesas, su detalle (#284)",
-        "No abre perfiles ni la entidad de un pedido"
+        "Catálogos abre un lienzo (#275); archivos, su subida (#278); mesas, su detalle (#284); usuarios, su ficha (#285)",
+        "Una persona de una mesa abre su ficha; la entidad de un pedido no se abre"
       ]
     },
     {

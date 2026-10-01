@@ -220,6 +220,8 @@ export const queryKeys = {
     /** Somebody else's profile, keyed by id - visibility can change per viewer, so two people
      *  looking at the same id must not share a cache entry either (#121). */
     detail: (id: string) => ['profiles', 'detail', id] as const,
+    /** The tables a person is linked to, on an admin's view of their record (#284), by page. */
+    tables: (id: string, page: number) => ['profiles', 'tables', id, page] as const,
   },
   system: {
     health: () => ['system', 'health'] as const,

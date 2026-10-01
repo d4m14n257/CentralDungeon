@@ -238,4 +238,28 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
      */
     List<TableRegistration> findByGameTable_IdInAndUser_IdAndStatusIn(
             Collection<String> gameTableIds, String userId, Collection<TableRegistrationStatus> statuses);
+
+    /**
+     * How many tables somebody played to the end: accepted as a {@code Player} at a table that is now
+     * {@code Finished} (#284). What a master reads on a candidate's card - a run they saw through, not
+     * one they joined.
+     *
+     * @param userId      the person
+     * @param status      always {@code Player} in production code
+     * @param tableStatus always {@code Finished} in production code
+     * @return the count
+     */
+    long countByUser_IdAndStatusAndGameTable_Status(String userId, TableRegistrationStatus status, GameTableStatus tableStatus);
+
+    /**
+     * Every registration a person has in the given statuses, with its table already fetched - the
+     * player half of an admin's view of that person's tables (#284).
+     *
+     * @param userId   the person
+     * @param statuses the registration statuses to include
+     * @return their registrations, unordered - the caller merges them with the master rows and sorts
+     */
+    @Query("select r from TableRegistration r join fetch r.gameTable where r.user.id = :userId and r.status in :statuses")
+    List<TableRegistration> findWithTableByUserAndStatusIn(
+            @Param("userId") String userId, @Param("statuses") Collection<TableRegistrationStatus> statuses);
 }

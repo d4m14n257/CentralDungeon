@@ -1,6 +1,6 @@
 import { api } from '@/api/client'
 
-import type { CompleteOnboardingInput, Profile, User, UserSummary } from '../types'
+import type { CompleteOnboardingInput, Profile, User, UserSummary, UserTable } from '../types'
 
 /** The calls about people: the caller's own profile, the picker search, onboarding, and F2.3's profile screens. */
 export const usersApi = {
@@ -18,6 +18,14 @@ export const usersApi = {
    * @param id the profile to read
    */
   profile: (id: string) => api.get<Profile>(`/api/v1/users/${id}/profile`),
+  /**
+   * Every table a person runs, plays at or applied to - admins only (#284), for their record on
+   * /admin/users/:id. Newest table first; paged like every list (#173).
+   *
+   * @param id   whose tables
+   * @param page zero-based page
+   */
+  tables: (id: string, page = 0) => api.getPage<UserTable>(`/api/v1/users/${id}/tables`, { page, size: 10 }),
   /**
    * The same search, scoped to one table: who could be made a master of it.
    *

@@ -18,6 +18,16 @@
       "Owner": "Owner"
     },
     "loadErrorDescription": "We could not load this profile. Try again.",
-    "expiredDescription": "You can no longer view this profile."
+    "expiredDescription": "You can no longer view this profile.",
+    "discordHandle": "Discord: {{handle}}"
+  },
+  "summary": {
+    "title": "Card",
+    "description": "Who they are on the server and how many tables they finished.",
+    "discord": "Discord user",
+    "name": "Name",
+    "finishedTables": "Finished tables",
+    "finishedTablesValue_one": "{{count}} finished table",
+    "finishedTablesValue_other": "{{count}} finished tables"
   }
 }

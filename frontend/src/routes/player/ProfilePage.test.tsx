@@ -10,10 +10,12 @@ import { ProfilePage } from './ProfilePage'
 
 const PROFILE: Profile = {
   id: 'user-1',
+  discordUsername: 'elara.discord',
   name: 'Ana Valdez',
   country: 'AR',
   roles: ['Player', 'Master'],
   attendance: { present: 8, excused: 2, absent: 1, registered: 11 },
+  finishedTables: 2,
 }
 
 let queryResult: { data: Profile | undefined; isPending: boolean; isLoadingError: boolean; refetch: () => void } = {
@@ -96,6 +98,7 @@ describe('ProfilePage', () => {
       content: [
         {
           id: 'req-1',
+          discordUsername: 'elara.discord',
           type: 'MasterGrant',
           status: 'Pending',
           requestedByName: 'Ana Valdez',

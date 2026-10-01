@@ -73,6 +73,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | `/admin/tables` lista **todos los estados menos `Deleted`** y acepta `?q=` con seis comandos. `/table_master` se resuelve con un `exists` sobre `masters` y **nunca con un join** —una mesa con tres masters se duplicaría y rompería el `count`— y filtra solo filas vivas | `GameTableService.listForAdmin` · `GameTableSearchSpecification.forAdmin` | #164, #176, #216 |
 | **Un admin lee todo lo de gestión de cualquier mesa** —detalle, candidatos, jugadores, sesiones, peticiones y entregas, archivos y pedidos de veto— y abre cualquier archivo ligado a una mesa. **Solo lecturas**: las escrituras siguen exigiendo `isMasterOf` | `MasterService.canOversee`, preguntado por cada lectura · `FileService.requireReadable` | #45, #135, #284 |
 | **Un admin edita una mesa ajena** en cualquier estado salvo `Finished`, `Canceled` y `Deleted`, por su propia ruta (`PUT …/admin-edit`). En `Preparation`, no si otro admin la reservó. El choque de agenda (R1) se mide contra el **Primary**; **el cupo no baja de los jugadores aceptados** (`409 CAPACITY_BELOW_PLAYERS`) | `GameTableService.adminUpdate` · `.rewrite` | #100, #152, #178, #284 |
+| **Las mesas de una persona** (`GET /users/{id}/tables`, solo admin): sus filas de `masters` vivas y sus postulaciones `Candidate`, `Player`, `Rejected` y `Blocked`, sin mesas dadas de baja (#25). Mezcladas y paginadas **en memoria**, la más nueva primero con desempate por id | `ProfileService.listTablesForAdmin` | #100, #173, #285 |
 
 ### Postulaciones
 
@@ -168,6 +169,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Los jugadores de una mesa ven los perfiles de sus compañeros | `UserService` | #47 |
 | La visibilidad caduca a los N días de `closed_at`, con N en `system_settings` (`profiles.visibility_window_days`, arranca en 14). En `Pause` el reloj no corre. **El cambio es retroactivo y no hay recálculo**: la regla se evalúa en cada lectura, así que bajarlo le quita la visibilidad a quien la tiene en ese instante y subirlo se la devuelve a quien ya la había perdido — por eso la pantalla de configuración avisa antes de guardar | `ProfileVisibilityService` · `SettingsService` | #44, #141 |
 | El admin no tiene restricciones de visibilidad, salvo la autoría de los comentarios | `UserService` | #45 |
+| El perfil lleva **usuario de Discord** y **mesas terminadas** (mesas `Finished` donde fue `Player`), bajo estas mismas reglas; **ni karma ni comentarios** hasta F5. El master lo lee como una ficha corta; el admin, dentro de la ficha completa de `/admin/users/:id` | `ProfileService.getProfile` | #248, #285 |
 
 ### Catálogos
 

@@ -81,14 +81,13 @@ describe('UserAdminHistory', () => {
     expect(screen.getByText('"Acoso reiterado"')).toBeInTheDocument()
   })
 
-  /** The header is the account as it is *now*, which is why the panel takes an id and asks. */
-  it('shows where the account stands today, above how it got there', async () => {
+  /** An account nobody touched says so, rather than drawing an empty list (skill `diseno` §5). */
+  it('says so when nobody has changed the account yet', async () => {
     byId.mockResolvedValue(DETAIL)
     history.mockResolvedValue([])
     renderPanel()
 
-    expect(await screen.findByText('Bloqueada')).toBeInTheDocument()
-    expect(screen.getByText('Sin cambios registrados')).toBeInTheDocument()
+    expect(await screen.findByText('Sin cambios registrados')).toBeInTheDocument()
   })
 
   /** Its own four states (#150): the listing around it loaded, this is a second question. */

@@ -34,7 +34,8 @@
     "acceptSuccess": "Candidato aceptado",
     "rejectSuccess": "Candidato rechazado",
     "rejectConfirmTitle": "¿Rechazar a {{name}}?",
-    "rejectConfirmDescription": "Recibe el rechazo con tu motivo y deja de estar entre los candidatos de la mesa."
+    "rejectConfirmDescription": "Recibe el rechazo con tu motivo y deja de estar entre los candidatos de la mesa.",
+    "viewRecord": "Ver la ficha de {{name}}"
   },
   "rejectionReason": {
     "TABLE_FULL": "La mesa se llenó"

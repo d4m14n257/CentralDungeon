@@ -1,7 +1,11 @@
 package com.centraldungeon.profiles;
 
+import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.profiles.dto.ProfileResponse;
+import com.centraldungeon.profiles.dto.UserTableResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,5 +61,19 @@ public class ProfileController {
     @PreAuthorize("isAuthenticated()")
     public ProfileResponse profileOf(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
         return profileService.getProfile(id, currentUser.userId());
+    }
+
+    /**
+     * Every table a person runs, plays at or applied to, for an admin reading their record (#284).
+     *
+     * @param id       whose tables these are
+     * @param pageable page and size; newest table first, always
+     * @return 200 with one page of their tables. 403 when the actor is not an admin, 404 when nobody
+     *         has that id
+     */
+    @GetMapping("/{id}/tables")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public PageResponse<UserTableResponse> tablesOf(@PathVariable String id, @PageableDefault(size = 20) Pageable pageable) {
+        return profileService.listTablesForAdmin(id, pageable);
     }
 }

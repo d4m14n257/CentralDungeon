@@ -33,7 +33,13 @@ function player(overrides: Partial<TablePlayer> = {}): TablePlayer {
 const addMaster = vi.fn()
 const removeMaster = vi.fn()
 const confirm = vi.fn().mockResolvedValue(true)
-let outletContext: { tableId: string; isPrimary: boolean; masters: MasterSummary[]; readOnly?: boolean } = {
+let outletContext: {
+  tableId: string
+  isPrimary: boolean
+  masters: MasterSummary[]
+  readOnly?: boolean
+  onOpenPerson?: (userId: string) => void
+} = {
   tableId: 'table-1',
   isPrimary: true,
   masters: MASTERS,
@@ -120,6 +126,20 @@ describe('MasterTablePlayersTab', () => {
     expect(rowFor('Diego').queryByRole('button')).not.toBeInTheDocument()
     expect(rowFor('Eva').queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Quitar a Beto' })).not.toBeInTheDocument()
+  })
+
+  /** #284: the tab does not decide what a person's card is - the screen that mounts it does. */
+  it('opens the card the screen handed down, for a master and for a player alike', async () => {
+    const onOpenPerson = vi.fn()
+    outletContext = { tableId: 'table-1', isPrimary: true, masters: MASTERS, onOpenPerson }
+    const user = userEvent.setup()
+    renderTab()
+
+    await user.click(screen.getByRole('button', { name: 'Ver la ficha de Beto' }))
+    await user.click(screen.getByRole('button', { name: 'Ver la ficha de Diego' }))
+
+    expect(onOpenPerson).toHaveBeenNthCalledWith(1, 'user-2')
+    expect(onOpenPerson).toHaveBeenNthCalledWith(2, 'user-9')
   })
 
   /** On screen these are "master" and "co-master" — the wire words never reach a reader (#166). */

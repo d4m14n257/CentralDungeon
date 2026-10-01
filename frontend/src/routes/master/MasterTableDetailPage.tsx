@@ -8,7 +8,8 @@ import { PageHeader } from '@/components/PageHeader'
 import { TabNav } from '@/components/TabNav'
 import { masterTableEditPath } from '@/config/paths'
 import { MASTER_EDITABLE_STATUSES, TableStatusBadge, useManagedTable } from '@/features/tables'
-import { useMe } from '@/features/users'
+import { PersonSummaryDialog, useMe } from '@/features/users'
+import { useDisclosure } from '@/hooks/useDisclosure'
 import { ApiError } from '@/types/api'
 
 /** The two states where the backend still accepts a rewrite of the table (#189). */
@@ -28,6 +29,7 @@ export function MasterTableDetailPage() {
   // detail any player reads on /player/tables/:id (decisiones.md #152).
   const { data: table, isPending, error, isLoadingError } = useManagedTable(tableId)
   const { data: me } = useMe()
+  const personDialog = useDisclosure<string>()
 
   if (isPending) {
     return <Skeleton className="h-32 w-full" />
@@ -76,7 +78,15 @@ export function MasterTableDetailPage() {
           schedule: table.schedule,
           startDate: table.startDate,
           totalSessions: table.totalSessions,
+          // The master's card of a person is the short one (#284): who they are on the server and
+          // how many tables they saw through. The full record is the admin's.
+          onOpenPerson: (userId: string) => personDialog.open(userId),
         }}
+      />
+      <PersonSummaryDialog
+        userId={personDialog.item ?? null}
+        open={personDialog.isOpen}
+        onOpenChange={(open) => !open && personDialog.close()}
       />
     </div>
   )

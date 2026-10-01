@@ -15,8 +15,8 @@ interface ProfileCardProps {
 }
 
 /**
- * A profile's upper half (frontend-diseno.md §4): initials, name, country, roles and aggregate
- * attendance. `/player/profile` and `/player/users/:id` both mount this and nothing else yet.
+ * A profile's upper half (frontend-diseno.md §4): initials, name, Discord handle, country, roles,
+ * aggregate attendance and how many tables they played to the end (#284). `/player/profile` and `/player/users/:id` both mount this and nothing else yet.
  *
  * **The "Comentarios recibidos" heading of the wireframe is never drawn** (decisiones.md #248): it
  * belongs to F5, and a section titled that way with nothing underneath would read as a broken page
@@ -54,6 +54,8 @@ export function ProfileCard({ profile, actions }: ProfileCardProps) {
         <div className="min-w-0 flex-1 space-y-1.5">
           <h1 className="page-title">{label}</h1>
           <div className="text-fg-muted flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            {/* How the community finds them on the server (#284). */}
+            <span>{t('profile.discordHandle', { handle: profile.discordUsername })}</span>
             {/* No fallback text for a missing country: a person who never set one is not an error,
                 and "no country" is not information anybody asked for (skill `diseno` §5). */}
             {profile.country && <span>{profile.country}</span>}
@@ -76,6 +78,7 @@ export function ProfileCard({ profile, actions }: ProfileCardProps) {
         <div className="mt-1.5">
           <AttendanceSummaryView summary={profile.attendance} />
         </div>
+        <p className="text-fg-muted mt-2 text-sm">{t('summary.finishedTablesValue', { count: profile.finishedTables })}</p>
       </div>
     </div>
   )

@@ -133,15 +133,18 @@ describe('AdminUsersPage', () => {
     expect(row.queryByRole('button', { name: 'Bloquear' })).not.toBeInTheDocument()
   })
 
-  /** Reading the record is not an action on the account, so it survives on a row nobody may touch. */
-  it('offers the history on every row, even the untouchable ones', async () => {
+  /**
+   * Reading the record is not an action on the account, so it survives on a row nobody may touch.
+   * Since #284 it opens the whole record, where the history now lives.
+   */
+  it('offers the record on every row, even the untouchable ones', async () => {
     signedInAs('Admin')
     list.mockResolvedValue(page([account({ roles: ['Owner'] })]))
 
     renderPage()
     const row = await rowFor('dami')
 
-    expect(row.getByRole('button', { name: 'Historial' })).toBeInTheDocument()
+    expect(row.getByRole('button', { name: 'Ver ficha' })).toBeInTheDocument()
   })
 
   /** #103: no guard in the router, so the 403 has to land somewhere that explains itself. */

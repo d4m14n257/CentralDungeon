@@ -65,7 +65,7 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | **Master** | `/master` | Dashboard: qué necesita tu atención hoy, en todas tus mesas (#136) |
 | | `/master/tables` | Mis mesas como master |
 | | `/master/tables/new` | Wizard de creación — **solo con el rol `Master`** (#135) |
-| | `/master/tables/:id` | Gestión, con pestañas: candidatos · jugadores · agenda · sesiones · peticiones · archivos · estado |
+| | `/master/tables/:id` | Gestión, con pestañas: candidatos · jugadores · agenda · sesiones · peticiones · archivos · estado. Cada persona tiene «Ver ficha»: un modal corto con usuario de Discord, nombre y mesas terminadas (#285) |
 | **Admin** | `/admin` | **Home del contexto** (#270): una bienvenida, sin métricas hasta que se decida cuáles le sirven a un admin. Es donde cae un admin al entrar y el primer ítem de la nav («Inicio») |
 | | `/admin/queue` | Bandeja compartida con reserva (#100): **solo lo que pide una acción**, no un listado de consulta (#176) |
 | | `/admin/tables` | **Todas** las mesas, en cualquier estado, con filtros y buscador: el listado de administración, no una cola (#176). La revisión vive en la bandeja. Cada fila abre su mesa por el nombre y por el ícono del ojo (#284) |
@@ -78,7 +78,8 @@ Los roles son acumulables y sin jerarquía (#37, #89): alguien puede ser `Player
 | | `/admin/moderation` | Comentarios por moderar |
 | | `/admin/requests` | Solicitudes de rol, de mesa y generales |
 | | `/admin/feedback` | Feedback del sistema |
-| | `/admin/users` | Usuarios y bloqueos; desde acá se inicia **"ver como"** (#140) |
+| | `/admin/users` | Usuarios y bloqueos; desde acá se inicia **"ver como"** (#140). Cada fila abre la ficha de la persona por su usuario de Discord y por un ícono (#285) |
+| | `/admin/users/:id` | **La ficha de una persona** (#285): datos, roles y estado con sus acciones (cambiar roles, bloquear), asistencia, todas sus mesas con su relación —cada una abre su detalle— y el historial de lo que hicieron los admins. Se abre también desde cualquier persona de una mesa |
 | | `/admin/settings` | Configuración: parámetros de negocio y límites (#141). **Sin «textos»**: desde #197 el backend no escribe ninguna frase que lea una persona, así que esa categoría no se construyó (#263) |
 | **Owner** | `/owner/audit` | Trazabilidad de cambios (#92) |
 | | `/owner/storage` | Borrado físico de archivos (#66) |

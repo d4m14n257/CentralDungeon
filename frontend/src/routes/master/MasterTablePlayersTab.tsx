@@ -1,6 +1,6 @@
-import { Crown, X } from 'lucide-react'
+import { Crown, IdCard, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link, useOutletContext } from 'react-router'
+import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { CollapsibleSection } from '@/components/CollapsibleSection'
@@ -11,7 +11,6 @@ import { ErrorState } from '@/components/ErrorState'
 import { IconAction } from '@/components/IconAction'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { playerUserProfilePath } from '@/config/paths'
 import { BanRequestsSection } from '@/features/approvals'
 import { HelpLink } from '@/features/help'
 import { useAddMaster, useRemoveMaster } from '@/features/tables'
@@ -28,6 +27,11 @@ interface OutletContext {
   masters: MasterSummary[]
   /** Set by /admin/tables/:id (#284): the admin reads who is at the table and changes none of it here. */
   readOnly?: boolean
+  /**
+   * Opens a person's card (#284). The screen that mounts the tab decides what that is - the master's
+   * short card, or the admin's full record - so the tab never needs to know who is reading it.
+   */
+  onOpenPerson?: (userId: string) => void
 }
 
 /**
@@ -39,7 +43,7 @@ interface OutletContext {
  * Only the current master gets the controls, because the backend only accepts them from that person
  * (#73). Everybody else reads the list, which is information they legitimately have.
  */
-function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
+function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletContext) {
   const { t } = useTranslation('master')
   const confirm = useConfirm()
   const addMaster = useAddMaster(tableId)
@@ -91,14 +95,19 @@ function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
                 aria-hidden="true"
                 className={cn('size-4 shrink-0', master.masterType === 'Primary' ? 'text-state-active-fg' : 'text-fg-subtle')}
               />
-              {/* #41: a master's profile is visible to anyone looking at their table — the co-master
-                  reading this list included. */}
-              <Link to={playerUserProfilePath(master.userId)} className="min-w-0 flex-1 truncate text-sm hover:underline">
-                {master.name}
-              </Link>
+              <span className="min-w-0 flex-1 truncate text-sm">{master.name}</span>
               <span className="text-fg-muted shrink-0 text-xs">
                 {t(master.masterType === 'Primary' ? 'masters.roleMaster' : 'masters.roleCoMaster')}
               </span>
+              {/* #41: a master's profile is visible to anyone looking at their table — the co-master
+                  reading this list included. */}
+              {onOpenPerson && (
+                <IconAction
+                  icon={<IdCard className="size-4" />}
+                  label={t('people.viewRecord', { name: master.name })}
+                  onClick={() => onOpenPerson(master.userId)}
+                />
+              )}
               {isPrimary && master.masterType === 'Secondary' && (
                 <>
                   <IconAction
@@ -152,11 +161,13 @@ function PlayerRow({
   isPrimary,
   readOnly,
   onVeto,
+  onOpenPerson,
 }: {
   player: TablePlayer
   isPrimary: boolean
   readOnly: boolean
   onVeto: (player: TablePlayer, action: VetoAction) => void
+  onOpenPerson: ((userId: string) => void) | undefined
 }) {
   const { t, i18n } = useTranslation('master')
   const isBlocked = player.status === 'Blocked'
@@ -167,13 +178,18 @@ function PlayerRow({
         <div className="flex min-w-0 items-center gap-2">
           {/* #47: a master already sees the roster to run the table, and #41's asymmetry does
               not apply between a master and a player who is sitting at their own table. */}
-          <Link to={playerUserProfilePath(player.userId)} className="min-w-0 truncate hover:underline">
-            {player.userName}
-          </Link>
+          <span className="min-w-0 truncate">{player.userName}</span>
           {isBlocked && <RegistrationStatusBadge status={player.status} />}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <span className="text-fg-muted text-xs">{t('players.karma', { karma: player.userKarma })}</span>
+          {onOpenPerson && (
+            <IconAction
+              icon={<IdCard className="size-4" />}
+              label={t('people.viewRecord', { name: player.userName })}
+              onClick={() => onOpenPerson(player.userId)}
+            />
+          )}
           {readOnly ? null : isBlocked ? (
             // Lifting is the Primary's alone, like applying it. A co-master asking for a veto to be
             // lifted is not a mechanism that exists, and offering the button would promise one.
@@ -221,7 +237,17 @@ function PlayerRow({
  * @param props.isPrimary whether the reader runs it or co-runs it — what the veto button does (#71)
  * @param props.readOnly  an admin reading it from /admin/tables/:id: the roster and its vetoes, no button (#284)
  */
-function PlayersSection({ tableId, isPrimary, readOnly }: { tableId: string; isPrimary: boolean; readOnly: boolean }) {
+function PlayersSection({
+  tableId,
+  isPrimary,
+  readOnly,
+  onOpenPerson,
+}: {
+  tableId: string
+  isPrimary: boolean
+  readOnly: boolean
+  onOpenPerson: ((userId: string) => void) | undefined
+}) {
   const { t } = useTranslation('master')
   // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (#150).
   const { data, isPending, isLoadingError, refetch } = useTablePlayers(tableId)
@@ -276,6 +302,7 @@ function PlayersSection({ tableId, isPrimary, readOnly }: { tableId: string; isP
                   player={player}
                   isPrimary={isPrimary}
                   readOnly={readOnly}
+                  onOpenPerson={onOpenPerson}
                   onVeto={(target, action) => vetoDialog.open({ player: target, action })}
                 />
               ))}
@@ -323,7 +350,12 @@ export function MasterTablePlayersTab() {
   return (
     <div className="space-y-4">
       <MastersSection {...context} />
-      <PlayersSection tableId={context.tableId} isPrimary={context.isPrimary} readOnly={context.readOnly ?? false} />
+      <PlayersSection
+        tableId={context.tableId}
+        isPrimary={context.isPrimary}
+        readOnly={context.readOnly ?? false}
+        onOpenPerson={context.onOpenPerson}
+      />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Ban, History, LockOpen, UserCog } from 'lucide-react'
-import { useSearchParams } from 'react-router'
+import { Ban, IdCard, LockOpen, UserCog } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
@@ -10,16 +10,15 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
+import { adminUserDetailPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import {
   AdminUserRolesCell,
   BlockUserDialog,
   RoleChangeDialog,
-  UserAdminHistory,
   UserStatusBadge,
   adminUserSearchFields,
   useAdminUsers,
@@ -77,7 +76,7 @@ export function AdminUsersPage() {
 
   const roleDialog = useDisclosure<AdminUserSummary>()
   const statusDialog = useDisclosure<AdminUserSummary>()
-  const historyDialog = useDisclosure<AdminUserSummary>()
+  const navigate = useNavigate()
 
   /** Writes the screen's state into the URL, resetting the page whenever the search changes. */
   function updateParams(changes: Record<string, string>) {
@@ -95,7 +94,17 @@ export function AdminUsersPage() {
   }
 
   const columns: DataTableColumn<AdminUserSummary>[] = [
-    { id: 'discordUsername', header: t('users.columns.discordUsername'), role: 'title', cell: (user) => user.discordUsername },
+    // The handle opens the account (#284): the row is where an admin finds somebody, the record is where they read them.
+    {
+      id: 'discordUsername',
+      header: t('users.columns.discordUsername'),
+      role: 'title',
+      cell: (user) => (
+        <Link to={adminUserDetailPath(user.id)} className="hover:underline">
+          {user.discordUsername}
+        </Link>
+      ),
+    },
     { id: 'status', header: t('users.columns.status'), role: 'badge', cell: (user) => <UserStatusBadge status={user.status} /> },
     // No fallback text for a missing name or country: somebody who never set one is not an error,
     // and "no country" is not information anybody asked for (skill `diseno` §5).
@@ -159,8 +168,13 @@ export function AdminUsersPage() {
                   />
                 )}
                 {/* Reading the record is not an action on the account, so it is offered on every row
-                    - including the ones nobody may touch. */}
-                <IconAction icon={<History className="size-4" />} label={t('users.history')} onClick={() => historyDialog.open(user)} />
+                    - including the ones nobody may touch. It used to open the history alone; the
+                    history now lives on the record with everything else (#284). */}
+                <IconAction
+                  icon={<IdCard className="size-4" />}
+                  label={t('users.viewRecord')}
+                  onClick={() => void navigate(adminUserDetailPath(user.id))}
+                />
               </>
             )}
           />
@@ -202,18 +216,6 @@ export function AdminUsersPage() {
           </p>
         }
       />
-
-      <Dialog open={historyDialog.isOpen} onOpenChange={(open) => !open && historyDialog.close()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('users.historyDialogTitle', { name: historyDialog.item?.discordUsername ?? '' })}</DialogTitle>
-            <DialogDescription>{t('users.historyDialogDescription')}</DialogDescription>
-          </DialogHeader>
-          {/* An id and not the row (§3.1.5): the panel asks for its own data, so the header it draws
-              is the account as it is now rather than as the page last saw it. */}
-          {historyDialog.item && <UserAdminHistory userId={historyDialog.item.id} />}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

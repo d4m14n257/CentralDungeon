@@ -209,7 +209,6 @@
     "changeRoles": "Cambiar roles",
     "block": "Bloquear",
     "unblock": "Desbloquear",
-    "history": "Historial",
     "justificationLabel": "Motivo",
     "justificationPlaceholder": "Por qué hacés este cambio. Queda registrado.",
     "roleDialogTitle": "Roles de {{name}}",
@@ -231,8 +230,6 @@
     "unblockDialogTitle": "Desbloquear a {{name}}",
     "unblockDialogDescription": "La persona va a poder volver a entrar. El motivo queda registrado.",
     "unblockSuccess": "{{name}} puede volver a entrar",
-    "historyDialogTitle": "Historial de {{name}}",
-    "historyDialogDescription": "Cada cambio de rol y cada bloqueo, con quién lo hizo y por qué.",
     "historyEmptyTitle": "Sin cambios registrados",
     "historyEmptyDescription": "Todavía nadie cambió los roles ni el estado de esta cuenta.",
     "historyChangedBy": "Por {{name}}",
@@ -260,7 +257,30 @@
     "confirmUnblockLabel": "Desbloquear",
     "confirmGrantTitle": "¿Darle {{role}} a {{name}}?",
     "confirmRevokeTitle": "¿Quitarle {{role}} a {{name}}?",
-    "confirmRoleDescription": "El cambio rige desde ya y queda registrado con tu motivo en el historial de la cuenta."
+    "confirmRoleDescription": "El cambio rige desde ya y queda registrado con tu motivo en el historial de la cuenta.",
+    "viewRecord": "Ver ficha",
+    "detail": {
+      "back": "Volver a usuarios",
+      "discord": "Usuario de Discord",
+      "country": "País",
+      "memberSince": "Miembro desde",
+      "finishedTables": "Mesas terminadas",
+      "notSet": "Sin definir",
+      "standingTitle": "Roles y estado",
+      "attendanceTitle": "Asistencia",
+      "tablesTitle": "Mesas",
+      "tablesEmptyTitle": "No está en ninguna mesa",
+      "tablesEmptyDescription": "No dirige ninguna mesa ni se postuló a ninguna.",
+      "historyTitle": "Lo que hicieron los admins con esta cuenta",
+      "relation": {
+        "Primary": "Master",
+        "Secondary": "Co-master",
+        "Player": "Jugador",
+        "Candidate": "Candidato",
+        "Rejected": "Rechazado",
+        "Blocked": "Vetado"
+      }
+    }
   },
   "tables": {
     "title": "Mesas",
@@ -332,7 +352,6 @@
     "view": "Ver la mesa",
     "detail": {
       "back": "Volver a las mesas",
-      "ranBy": "Master: {{name}}",
       "edit": "Editar mesa",
       "tabs": {
         "details": "Detalles"
@@ -344,7 +363,8 @@
       "actionsTitle": "Acciones de admin",
       "noActions": "En este estado no hay acciones de admin sobre la mesa. Si hay que corregir algo, usá «Editar mesa».",
       "reviewInQueue": "Esta mesa espera revisión. Se aprueba o se le piden cambios desde la bandeja.",
-      "goToQueue": "Ir a la bandeja"
+      "goToQueue": "Ir a la bandeja",
+      "ranByLabel": "Master:"
     }
   },
   "settings": {

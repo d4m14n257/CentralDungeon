@@ -9,10 +9,12 @@ import { UserProfilePage } from './UserProfilePage'
 
 const PROFILE: Profile = {
   id: 'user-9',
+  discordUsername: 'elara.discord',
   name: 'Diego',
   country: 'AR',
   roles: ['Player'],
   attendance: { present: 3, excused: 0, absent: 0, registered: 3 },
+  finishedTables: 2,
 }
 
 let queryResult: {

@@ -275,5 +275,8 @@
     "confirmRejectTitle": "Reject the veto request on {{name}}?",
     "confirmRejectDescription": "They stay at the table as before. It is recorded with your reason.",
     "descriptionObserver": "A co-master asked for somebody to be vetoed from this table. The table's main master decides."
+  },
+  "people": {
+    "viewRecord": "View {{name}}'s card"
   }
 }

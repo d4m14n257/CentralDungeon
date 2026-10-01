@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { Outlet, useParams } from 'react-router'
+import { Link, Outlet, useNavigate, useParams } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PageHeader } from '@/components/PageHeader'
 import { TabNav } from '@/components/TabNav'
 import { Skeleton } from '@/components/ui/skeleton'
-import { adminTableEditPath, adminTablesPath } from '@/config/paths'
+import { adminTableEditPath, adminTablesPath, adminUserDetailPath } from '@/config/paths'
 import { ADMIN_EDITABLE_STATUSES, TableStatusBadge, useManagedTable } from '@/features/tables'
 import { ApiError } from '@/types/api'
 
@@ -31,6 +31,7 @@ import { ApiError } from '@/types/api'
 export function AdminTableDetailPage() {
   const { t } = useTranslation('admin')
   const { t: tMaster } = useTranslation('master')
+  const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   // The management read, not the public one: it carries what only the people running a table see,
@@ -60,7 +61,18 @@ export function AdminTableDetailPage() {
         badge={<TableStatusBadge status={table.status} />}
         back={{ to: adminTablesPath(), label: t('tables.detail.back') }}
         help="admins.table-detail"
-        description={primary ? t('tables.detail.ranBy', { name: primary.name }) : t('tables.noPrimaryMaster')}
+        description={
+          primary ? (
+            <span>
+              {t('tables.detail.ranByLabel')}{' '}
+              <Link to={adminUserDetailPath(primary.userId)} className="hover:text-fg underline">
+                {primary.name}
+              </Link>
+            </span>
+          ) : (
+            t('tables.noPrimaryMaster')
+          )
+        }
         action={canEdit ? { label: t('tables.detail.edit'), to: adminTableEditPath(tableId) } : undefined}
       />
       <TabNav
@@ -91,6 +103,9 @@ export function AdminTableDetailPage() {
           startDate: table.startDate,
           totalSessions: table.totalSessions,
           readOnly: true,
+          // A person on a table opens their whole record (#284): the admin is the one who reads
+          // everything about an account and acts on it.
+          onOpenPerson: (userId: string) => void navigate(adminUserDetailPath(userId)),
         }}
       />
     </div>

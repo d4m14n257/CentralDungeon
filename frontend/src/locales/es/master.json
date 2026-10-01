@@ -275,5 +275,8 @@
     "confirmRejectTitle": "¿Rechazar el pedido de veto de {{name}}?",
     "confirmRejectDescription": "Sigue en la mesa como hasta ahora. Queda registrado con tu motivo.",
     "descriptionObserver": "Un co-master pidió vetar a alguien de esta mesa. Lo resuelve el master principal."
+  },
+  "people": {
+    "viewRecord": "Ver la ficha de {{name}}"
   }
 }

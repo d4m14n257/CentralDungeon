@@ -18,6 +18,16 @@
       "Owner": "Owner"
     },
     "loadErrorDescription": "No pudimos cargar este perfil. Probá de nuevo.",
-    "expiredDescription": "Ya no podés ver este perfil."
+    "expiredDescription": "Ya no podés ver este perfil.",
+    "discordHandle": "Discord: {{handle}}"
+  },
+  "summary": {
+    "title": "Ficha",
+    "description": "Quién es en el servidor y cuántas mesas terminó.",
+    "discord": "Usuario de Discord",
+    "name": "Nombre",
+    "finishedTables": "Mesas terminadas",
+    "finishedTablesValue_one": "{{count}} mesa terminada",
+    "finishedTablesValue_other": "{{count}} mesas terminadas"
   }
 }

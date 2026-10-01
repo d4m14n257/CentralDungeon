@@ -129,6 +129,8 @@ export const router = createBrowserRouter([
           { path: 'files/upload', lazy: () => import('./admin/AdminFileUploadPage') },
           // Accounts, their roles and their blocks (F3.1).
           { path: 'users', lazy: () => import('./admin/AdminUsersPage') },
+          // One account, whole (#284): opened from the list and from any person on a table.
+          { path: 'users/:id', lazy: () => import('./admin/AdminUserDetailPage') },
           // Every request somebody made of an admin (#42, F3.2).
           { path: 'requests', lazy: () => import('./admin/AdminRequestsPage') },
           // The editable configuration of #141 (F3.5).

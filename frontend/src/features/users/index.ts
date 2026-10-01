@@ -22,6 +22,8 @@ export { useMyProfile } from './api/useMyProfile'
 export { useRevokeRole } from './api/useRevokeRole'
 export { useUnblockUser } from './api/useUnblockUser'
 export { useUserProfile } from './api/useUserProfile'
+export { useUserTables } from './api/useUserTables'
+export { PersonSummaryDialog } from './components/PersonSummaryDialog'
 export { useUserSearch } from './api/useUserSearch'
 /** Who may do what on /admin/users - the rule of §3, so no screen holds a loose `if` about roles. */
 export { useUserAdminCapabilities, type UserAdminCapabilities } from './hooks/useUserAdminCapabilities'
@@ -50,4 +52,6 @@ export type {
   UserAdminChange,
   UserAdminChangeType,
   UserSummary,
+  UserTable,
+  UserTableRelation,
 } from './types'

@@ -7,10 +7,12 @@ import { ProfileCard } from './ProfileCard'
 
 const BASE_PROFILE: Profile = {
   id: 'user-1',
+  discordUsername: 'elara.discord',
   name: 'Ana Valdez',
   country: 'AR',
   roles: ['Player', 'Master'],
   attendance: { present: 8, excused: 2, absent: 1, registered: 11 },
+  finishedTables: 2,
 }
 
 describe('ProfileCard', () => {
@@ -46,10 +48,12 @@ describe('ProfileCard', () => {
   it('looks right when there is no country and no attendance recorded', () => {
     const sparse: Profile = {
       id: 'user-2',
+      discordUsername: 'elara.discord',
       name: 'Beto',
       country: null,
       roles: [],
       attendance: { present: 0, excused: 0, absent: 0, registered: 0 },
+      finishedTables: 2,
     }
     const { container } = render(<ProfileCard profile={sparse} />)
 
@@ -62,10 +66,12 @@ describe('ProfileCard', () => {
   it('falls back to a generic label when there is no name', () => {
     const noName: Profile = {
       id: 'user-3',
+      discordUsername: 'elara.discord',
       name: null,
       country: null,
       roles: [],
       attendance: { present: 0, excused: 0, absent: 0, registered: 0 },
+      finishedTables: 2,
     }
     render(<ProfileCard profile={noName} />)
 

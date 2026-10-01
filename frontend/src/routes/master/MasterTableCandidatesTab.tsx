@@ -1,13 +1,14 @@
+import { IdCard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Link, useOutletContext } from 'react-router'
+import { useOutletContext } from 'react-router'
 
+import { IconAction } from '@/components/IconAction'
 import { useConfirm } from '@/hooks/useConfirm'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { playerUserProfilePath } from '@/config/paths'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { FileList } from '@/features/files'
 import { useAcceptRegistration, useCandidates, RejectRegistrationDialog } from '@/features/registrations'
@@ -19,9 +20,11 @@ interface OutletContext {
   playerCount: number
   /** Set by /admin/tables/:id (#284): the admin reads the queue and does not accept or reject for the master. */
   readOnly?: boolean
+  /** Opens a person's card; the screen mounting the tab decides which one (#284). */
+  onOpenPerson?: (userId: string) => void
 }
 
-function CandidatesList({ tableId, maxPlayers, playerCount, readOnly }: OutletContext) {
+function CandidatesList({ tableId, maxPlayers, playerCount, readOnly, onOpenPerson }: OutletContext) {
   const { t } = useTranslation('registrations')
   // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, refetch } = useCandidates(tableId)
@@ -64,24 +67,29 @@ function CandidatesList({ tableId, maxPlayers, playerCount, readOnly }: OutletCo
           <li key={candidate.id} className="space-y-2 px-4 py-3">
             <div className="flex items-center justify-between gap-4">
               <span className="text-sm">
-                {index + 1}.{' '}
-                {/* #41: whoever applies is opening themselves up to the master's evaluation, so the
-                    master can always see the candidate's profile from here on. */}
-                <Link to={playerUserProfilePath(candidate.userId)} className="hover:text-fg underline">
-                  {candidate.userName}
-                </Link>{' '}
-                · {candidate.userKarma}
+                {index + 1}. {candidate.userName} · {candidate.userKarma}
               </span>
-              {!readOnly && (
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => void handleAccept(candidate)}>
-                    {t('candidates.accept')}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => rejectDialog.open(candidate)}>
-                    {t('candidates.reject')}
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {/* #41: whoever applies is opening themselves up to the master's evaluation, so the
+                    master can always open the candidate's card from here on. */}
+                {onOpenPerson && (
+                  <IconAction
+                    icon={<IdCard className="size-4" />}
+                    label={t('candidates.viewRecord', { name: candidate.userName })}
+                    onClick={() => onOpenPerson(candidate.userId)}
+                  />
+                )}
+                {!readOnly && (
+                  <>
+                    <Button size="sm" onClick={() => void handleAccept(candidate)}>
+                      {t('candidates.accept')}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => rejectDialog.open(candidate)}>
+                      {t('candidates.reject')}
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
             {/* Only when there is something to show: an application with nothing attached carries no
                 empty section, the same convention the table's own read-only file list uses. */}

@@ -43,10 +43,31 @@ export interface CompleteOnboardingInput {
  */
 export interface Profile {
   id: string
+  /** Their Discord handle: how the community finds them on the server (#284). */
+  discordUsername: string
   name: string | null
   country: string | null
   roles: string[]
   attendance: AttendanceSummary
+  /** How many tables they played to the end, as a player (#284). Their track record without karma (#248). */
+  finishedTables: number
+}
+
+/** What a person is to a table, as an admin reads it on their record (#284). Mirror of `UserTableResponse.relation`. */
+export type UserTableRelation = 'Primary' | 'Secondary' | 'Player' | 'Candidate' | 'Rejected' | 'Blocked'
+
+/**
+ * Mirror of `UserTableResponse`: one table a person is linked to, on an admin's view of their record
+ * (#284). One row per table - nobody runs and plays the same one (#155).
+ */
+export interface UserTable {
+  tableId: string
+  tableName: string
+  /** The table's status, as the backend names it; the screen badges it with the tables feature's words. */
+  tableStatus: string
+  relation: UserTableRelation
+  /** When the table was created: the list comes newest first. */
+  tableCreatedAt: string
 }
 
 /**

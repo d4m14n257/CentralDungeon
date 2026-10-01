@@ -50,6 +50,7 @@ export const paths = {
   adminFiles: 'admin/files',
   adminFileUpload: 'admin/files/upload',
   adminUsers: 'admin/users',
+  adminUserDetail: 'admin/users/:id',
   adminRequests: 'admin/requests',
   adminSettings: 'admin/settings',
 } as const
@@ -262,6 +263,15 @@ export function adminFileUploadPath(): string {
  */
 export function adminUsersPath(): string {
   return '/admin/users'
+}
+
+/**
+ * @param id the person
+ * @returns the absolute path to an admin's view of one account (#284): everything about the person -
+ *          profile, standing, roles, every table, what admins did to it - and the actions on it
+ */
+export function adminUserDetailPath(id: string): string {
+  return `/admin/users/${id}`
 }
 
 /**
