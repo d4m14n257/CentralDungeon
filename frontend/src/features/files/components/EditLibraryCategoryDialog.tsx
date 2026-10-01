@@ -67,8 +67,10 @@ export function EditLibraryCategoryDialog({ file, onOpenChange }: EditLibraryCat
       description={t('libraryEdit.description', { name: file?.name ?? '' })}
     >
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label>{t('libraryEdit.categoryLabel')}</Label>
+        {/* One field, so its label sits beside it rather than above: two lines for a single choice
+            made the dialog read like a form. */}
+        <div className="flex items-center gap-3">
+          <Label className="shrink-0">{t('libraryEdit.categoryLabel')}</Label>
           {file && (
             <PublishCategorySelect
               value={value}
