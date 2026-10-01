@@ -32,6 +32,7 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 |---|---|
 | `FormDialog` | Envoltorio de todo formulario en modal: título, descripción y confirmación al cerrar con cambios sin guardar (#110) |
 | `ConfirmDialog` | Toda acción irreversible (principio 3), detrás de `useConfirm` |
+| `AppToaster` | La única salida de toasts, montada una vez en `main.tsx`. Envuelve el `sonner` generado y le pasa los tokens del tema: el generado apunta a `--popover`/`--border`/`--radius`, que este tema no define, y el toast quedaba sin fondo. Cada tipo toma los colores de su estado (error = `canceled`, éxito = `open`, aviso = `pending`, info = `active`). **Nunca se monta el `Toaster` de `components/ui` directo** |
 | `PageHeader` | **La cabecera de toda pantalla** (#273, #280): «Volver» arriba, título y propósito a la izquierda, y a la derecha «Cómo funciona» y **la** acción principal, siempre en ese orden y en ese lugar. Una pantalla con más de una acción pone las demás en su contenido, junto a lo que tocan. Las de detalle cuya cabecera tiene otra forma usan `.page-title` sola (§5.c) |
 | `SectionHeader` | La misma forma para una sección o pestaña (#280): etiqueta, «Cómo funciona» chico y sus acciones a la derecha |
 | `DataTable` | Listados paginados con orden, sobre `PageResponse<T>`. **Es dueño del contenedor de acciones**: envuelve `renderActions` en `.row-actions`, así ninguna pantalla lo escribe (#273) |

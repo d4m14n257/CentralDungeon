@@ -83,6 +83,10 @@ const EXPLAINED_ERROR_CODES = new Set([
   // worst possible answer to somebody who just wrote one: retrying will not help, and what they need
   // to know is that the intake ended — which is a fact about the table, not about their connection.
   'TASK_CLOSED',
+  // Publishing a library file nobody has said what it is (#282). The admin can fix it in one step -
+  // "Change what it is" on the same row - so naming that step is the whole answer; "could not
+  // complete the action" left them guessing at something the server knew exactly.
+  'FILE_NEEDS_CATEGORY',
 ])
 
 /**

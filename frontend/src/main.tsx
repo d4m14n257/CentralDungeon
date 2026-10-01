@@ -9,8 +9,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
 
+import { AppToaster } from '@/components/AppToaster'
 import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
-import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { I18nProvider } from '@/providers/I18nProvider'
 import { QueryProvider } from '@/providers/QueryProvider'
@@ -35,7 +35,7 @@ createRoot(root).render(
           <AuthProvider>
             <ConfirmDialogProvider>
               <RouterProvider router={router} />
-              <Toaster />
+              <AppToaster />
             </ConfirmDialogProvider>
           </AuthProvider>
         </QueryProvider>
