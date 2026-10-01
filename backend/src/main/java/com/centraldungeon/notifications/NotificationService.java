@@ -141,6 +141,29 @@ public class NotificationService {
     }
 
     /**
+     * Tells a master that an admin changed their table (#284): rewrote it, paused it, resumed it,
+     * cancelled it or removed it.
+     *
+     * <p>One method for the five because they are the same message with a different verb: who acted
+     * is "an admin", never named, the way #140 shows any change an admin makes on somebody else's
+     * behalf. What the admin wrote as a reason is not copied in - it is already kept with the status
+     * change, which is where the master reads it in full (#197).
+     *
+     * @param userId one master of the table; the caller loops over all of them
+     * @param table  the table the admin acted on
+     * @param type   what the admin did. {@link NotificationType#TableDeletedByAdmin} links nowhere,
+     *               since a removed table cannot be opened (#25); the rest link to the table
+     */
+    @Transactional
+    public void notifyAdminActedOnTable(String userId, GameTable table, NotificationType type) {
+        User recipient = userRepository.getReferenceById(userId);
+        boolean removed = type == NotificationType.TableDeletedByAdmin;
+        notificationRepository.save(new Notification(
+                recipient, type, NotificationParams.ofTable(table.getName()),
+                removed ? null : "game_table", removed ? null : table.getId()));
+    }
+
+    /**
      * Tells somebody that two of their tables now fall at the same time (#178).
      *
      * <p>It carries no action of its own on purpose: the notification names both tables and stops

@@ -32,7 +32,9 @@
     "inWizardTitle": "Tu semana",
     "inWizardDescription": "Hacé clic en una hora libre para agregarla a la agenda de esta mesa.",
     "tablesTitle": "Tus mesas esta semana",
-    "withoutAgenda": "sin horario"
+    "withoutAgenda": "sin horario",
+    "adminGridTitle": "La semana",
+    "adminGridDescription": "Hacé clic en una hora para agregarla a la agenda. Si choca con otra mesa del master, al guardar se avisa con cuál."
   },
   "status": {
     "Draft": "Borrador",

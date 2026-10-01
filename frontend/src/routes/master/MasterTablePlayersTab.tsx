@@ -26,6 +26,8 @@ interface OutletContext {
   tableId: string
   isPrimary: boolean
   masters: MasterSummary[]
+  /** Set by /admin/tables/:id (#284): the admin reads who is at the table and changes none of it here. */
+  readOnly?: boolean
 }
 
 /**
@@ -148,10 +150,12 @@ function MastersSection({ tableId, isPrimary, masters }: OutletContext) {
 function PlayerRow({
   player,
   isPrimary,
+  readOnly,
   onVeto,
 }: {
   player: TablePlayer
   isPrimary: boolean
+  readOnly: boolean
   onVeto: (player: TablePlayer, action: VetoAction) => void
 }) {
   const { t, i18n } = useTranslation('master')
@@ -170,7 +174,7 @@ function PlayerRow({
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <span className="text-fg-muted text-xs">{t('players.karma', { karma: player.userKarma })}</span>
-          {isBlocked ? (
+          {readOnly ? null : isBlocked ? (
             // Lifting is the Primary's alone, like applying it. A co-master asking for a veto to be
             // lifted is not a mechanism that exists, and offering the button would promise one.
             isPrimary && (
@@ -215,8 +219,9 @@ function PlayerRow({
  *
  * @param props.tableId   the table
  * @param props.isPrimary whether the reader runs it or co-runs it — what the veto button does (#71)
+ * @param props.readOnly  an admin reading it from /admin/tables/:id: the roster and its vetoes, no button (#284)
  */
-function PlayersSection({ tableId, isPrimary }: { tableId: string; isPrimary: boolean }) {
+function PlayersSection({ tableId, isPrimary, readOnly }: { tableId: string; isPrimary: boolean; readOnly: boolean }) {
   const { t } = useTranslation('master')
   // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (#150).
   const { data, isPending, isLoadingError, refetch } = useTablePlayers(tableId)
@@ -243,6 +248,7 @@ function PlayersSection({ tableId, isPrimary }: { tableId: string; isPrimary: bo
         <BanRequestsSection
           tableId={tableId}
           isPrimary={isPrimary}
+          observer={readOnly}
           help={
             <p className="text-fg-subtle text-xs">
               <HelpLink section="masters.banning">{t('veto.helpLink')}</HelpLink>
@@ -257,15 +263,19 @@ function PlayersSection({ tableId, isPrimary }: { tableId: string; isPrimary: bo
           <>
             {/* Said before anything is pressed, not inside the dialog that follows the press
                 (roles-y-alcance.md §4, F3.4). The dialog repeats it; this is where it is learned. */}
-            <p className="text-fg-subtle text-xs">
-              {t(isPrimary ? 'veto.hintPrimary' : 'veto.hintSecondary')} <HelpLink section="masters.banning">{t('veto.helpLink')}</HelpLink>
-            </p>
+            {!readOnly && (
+              <p className="text-fg-subtle text-xs">
+                {t(isPrimary ? 'veto.hintPrimary' : 'veto.hintSecondary')}{' '}
+                <HelpLink section="masters.banning">{t('veto.helpLink')}</HelpLink>
+              </p>
+            )}
             <ul className="list-divided-bare">
               {data.map((player) => (
                 <PlayerRow
                   key={player.registrationId}
                   player={player}
                   isPrimary={isPrimary}
+                  readOnly={readOnly}
                   onVeto={(target, action) => vetoDialog.open({ player: target, action })}
                 />
               ))}
@@ -303,13 +313,17 @@ function PlayersSection({ tableId, isPrimary }: { tableId: string; isPrimary: bo
  * It lives in `routes/` and not in a feature because it composes three domains — masters and the
  * roster from `tables` and `registrations`, the people search from `users` — and a feature never
  * imports from another (regla dura 16).
+ *
+ * Mounted under /admin/tables/:id too (#284), where the context arrives with `isPrimary` false and
+ * `readOnly` set: the masters, the roster, the vetoes and the pending veto requests, and none of the
+ * buttons that act on them.
  */
 export function MasterTablePlayersTab() {
   const context = useOutletContext<OutletContext>()
   return (
     <div className="space-y-4">
       <MastersSection {...context} />
-      <PlayersSection tableId={context.tableId} isPrimary={context.isPrimary} />
+      <PlayersSection tableId={context.tableId} isPrimary={context.isPrimary} readOnly={context.readOnly ?? false} />
     </div>
   )
 }

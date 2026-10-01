@@ -27,7 +27,12 @@
     "TableApprovedWithChanges": "Approved with changes",
     "TableChangesRequested": "Changes requested",
     "ApprovalRequestApproved": "Request approved",
-    "ApprovalRequestRejected": "Request rejected"
+    "ApprovalRequestRejected": "Request rejected",
+    "TableEditedByAdmin": "Table edited by an admin",
+    "TablePausedByAdmin": "Table paused by an admin",
+    "TableResumedByAdmin": "Table resumed",
+    "TableCanceledByAdmin": "Table cancelled by an admin",
+    "TableDeletedByAdmin": "Table removed"
   },
   "badge": {
     "accepted": "Accepted",
@@ -78,6 +83,25 @@
     "ApprovalRequestRejected": {
       "title": "Your request was rejected",
       "message": "An admin reviewed it and wrote why. You can ask again if something changes."
+    },
+    "TableEditedByAdmin": {
+      "title": "An admin edited your table {{tableName}}",
+      "message": "Open it to see how it looks now."
+    },
+    "TablePausedByAdmin": {
+      "title": "An admin paused your table {{tableName}}",
+      "message": "The reason is in the table's history."
+    },
+    "TableResumedByAdmin": {
+      "title": "An admin resumed your table {{tableName}}",
+      "message": "The pending sessions were rescheduled from today."
+    },
+    "TableCanceledByAdmin": {
+      "title": "An admin cancelled your table {{tableName}}",
+      "message": "The reason is in the table's history."
+    },
+    "TableDeletedByAdmin": {
+      "title": "An admin removed your table {{tableName}}"
     }
   }
 }

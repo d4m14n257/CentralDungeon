@@ -116,6 +116,17 @@ export function AdminFilesHelp() {
   )
 }
 
+/**
+ * One table seen whole by an admin, and the admin's own edit of it (#284).
+ *
+ * **`notify` is the reason this section exists.** An admin who rewrites a table, pauses it or cancels
+ * it is changing something that belongs to somebody else, and the master finds out through the bell.
+ * Knowing that before pressing is what makes the reason worth writing well.
+ */
+export function TableDetailHelp() {
+  return <ListAndSteps block="tableDetail" keys={['what', 'readOnly', 'edit', 'notify', 'closed']} stepCount={3} />
+}
+
 /** What Owner can do that Admin cannot (#169). */
 export function OwnerHelp() {
   return <ListAndSteps block="owner" keys={['same', 'exclusive', 'grants', 'soon']} stepCount={0} />

@@ -205,14 +205,17 @@ public class TableSessionService {
      * @param actorId     the actor, from the token (#121)
      * @return its sessions, first to last. While the table is paused the pending ones are not in it
      * @throws NotFoundException        if the table does not exist
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
      */
     @Transactional(readOnly = true)
     public List<TableSessionResponse> listForTable(String gameTableId, String actorId) {
-        // requireExisting and not requireVisible: the next line demands a row in `masters`, and the
-        // two sets are disjoint (#154) - a master of this table cannot be vetoed on it.
+        // requireExisting and not requireVisible: the next line demands a row in `masters` or the admin
+        // rank, and neither can be vetoed on the table (#154) - a veto is a player's, not theirs.
         GameTable table = tableVisibilityService.requireExisting(gameTableId);
-        requireMasterOf(gameTableId, actorId);
+        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        if (!masterService.canOversee(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can view its sessions");
+        }
         return toResponses(table, visibleSessionsOf(table));
     }
 

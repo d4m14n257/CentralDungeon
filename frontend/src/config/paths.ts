@@ -43,6 +43,8 @@ export const paths = {
   adminHome: 'admin',
   adminQueue: 'admin/queue',
   adminTables: 'admin/tables',
+  adminTableDetail: 'admin/tables/:id',
+  adminTableEdit: 'admin/tables/:id/edit',
   adminCatalogs: 'admin/catalogs',
   adminCatalogGroup: 'admin/catalogs/:kind/:id',
   adminFiles: 'admin/files',
@@ -209,6 +211,24 @@ export function adminQueuePath(): string {
  */
 export function adminTablesPath(): string {
   return '/admin/tables'
+}
+
+/**
+ * @param id the table
+ * @returns the absolute path to the admin's view of one table (#284): the same tabs its master sees,
+ *          read-only, plus the admin's own actions. The admin has no visibility limits (#45)
+ */
+export function adminTableDetailPath(id: string): string {
+  return `/admin/tables/${id}`
+}
+
+/**
+ * @param id the table
+ * @returns the absolute path to the form an admin rewrites somebody else's table with (#284). Its
+ *          masters are told when it is saved
+ */
+export function adminTableEditPath(id: string): string {
+  return `/admin/tables/${id}/edit`
 }
 
 /** @returns the absolute path to the catalog administration screen */

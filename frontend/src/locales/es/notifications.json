@@ -27,7 +27,12 @@
     "TableApprovedWithChanges": "Mesa aprobada con cambios",
     "TableChangesRequested": "Te piden cambios",
     "ApprovalRequestApproved": "Pedido aprobado",
-    "ApprovalRequestRejected": "Pedido rechazado"
+    "ApprovalRequestRejected": "Pedido rechazado",
+    "TableEditedByAdmin": "Mesa editada por un admin",
+    "TablePausedByAdmin": "Mesa pausada por un admin",
+    "TableResumedByAdmin": "Mesa reanudada",
+    "TableCanceledByAdmin": "Mesa cancelada por un admin",
+    "TableDeletedByAdmin": "Mesa dada de baja"
   },
   "badge": {
     "accepted": "Aceptada",
@@ -78,6 +83,25 @@
     "ApprovalRequestRejected": {
       "title": "Rechazaron tu pedido",
       "message": "Un admin lo revisó y escribió por qué. Podés volver a pedirlo si algo cambia."
+    },
+    "TableEditedByAdmin": {
+      "title": "Un admin editó tu mesa {{tableName}}",
+      "message": "Entrá para ver cómo quedó."
+    },
+    "TablePausedByAdmin": {
+      "title": "Un admin pausó tu mesa {{tableName}}",
+      "message": "El motivo está en el historial de la mesa."
+    },
+    "TableResumedByAdmin": {
+      "title": "Un admin reanudó tu mesa {{tableName}}",
+      "message": "Las sesiones pendientes se volvieron a programar desde hoy."
+    },
+    "TableCanceledByAdmin": {
+      "title": "Un admin canceló tu mesa {{tableName}}",
+      "message": "El motivo está en el historial de la mesa."
+    },
+    "TableDeletedByAdmin": {
+      "title": "Un admin dio de baja tu mesa {{tableName}}"
     }
   }
 }

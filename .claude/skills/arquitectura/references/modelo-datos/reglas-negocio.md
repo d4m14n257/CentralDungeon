@@ -71,6 +71,8 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Una mesa `Deleted` no existe para ninguna lectura: detalle y listados responden `404` o la omiten | `GameTableService` | #25, #175 |
 | **Aprobar y pedir cambios rechazan una mesa que tiene otro admin** (`409 ITEM_ALREADY_CLAIMED`); una mesa libre se aprueba sin pasar por la bandeja. Los endpoints siguen siendo del agregado mesa; lo que se mudó a `/admin/queue` es la pantalla | `GameTableService.approve` · `.requestChanges` · `AdminQueueClaimRule` | #100, #176 |
 | `/admin/tables` lista **todos los estados menos `Deleted`** y acepta `?q=` con seis comandos. `/table_master` se resuelve con un `exists` sobre `masters` y **nunca con un join** —una mesa con tres masters se duplicaría y rompería el `count`— y filtra solo filas vivas | `GameTableService.listForAdmin` · `GameTableSearchSpecification.forAdmin` | #164, #176, #216 |
+| **Un admin lee todo lo de gestión de cualquier mesa** —detalle, candidatos, jugadores, sesiones, peticiones y entregas, archivos y pedidos de veto— y abre cualquier archivo ligado a una mesa. **Solo lecturas**: las escrituras siguen exigiendo `isMasterOf` | `MasterService.canOversee`, preguntado por cada lectura · `FileService.requireReadable` | #45, #135, #284 |
+| **Un admin edita una mesa ajena** en cualquier estado salvo `Finished`, `Canceled` y `Deleted`, por su propia ruta (`PUT …/admin-edit`). En `Preparation`, no si otro admin la reservó. El choque de agenda (R1) se mide contra el **Primary**; **el cupo no baja de los jugadores aceptados** (`409 CAPACITY_BELOW_PLAYERS`) | `GameTableService.adminUpdate` · `.rewrite` | #100, #152, #178, #284 |
 
 ### Postulaciones
 
@@ -238,6 +240,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 | El mensaje que viaja es una **señal de invalidación**, no el contenido: el cliente refetchea con TanStack Query | `NotificationService` | #101 |
 | La suscripción a `/topic/admin-queue` se rechaza si el usuario no tiene `Admin` u `Owner` | `WebSocketConfig` | #101 |
 | Una notificación de comentario recibido **nunca** nombra a su autor | `NotificationService` | #43 |
+| **Todo lo que un admin cambia de una mesa ajena se le avisa a sus masters**: editarla, pausarla directo, reanudarla, cancelarla y darla de baja (`Table…ByAdmin`). No nombra al admin ni copia el motivo, que está en el historial; la baja no enlaza. **No se avisa si el admin también dirige esa mesa** | `GameTableService.announceAdminAction` · `NotificationService.notifyAdminActedOnTable` | #140, #197, #284 |
 
 ### Configuración
 

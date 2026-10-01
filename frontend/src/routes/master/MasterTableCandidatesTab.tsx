@@ -17,9 +17,11 @@ interface OutletContext {
   tableId: string
   maxPlayers: number | null
   playerCount: number
+  /** Set by /admin/tables/:id (#284): the admin reads the queue and does not accept or reject for the master. */
+  readOnly?: boolean
 }
 
-function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
+function CandidatesList({ tableId, maxPlayers, playerCount, readOnly }: OutletContext) {
   const { t } = useTranslation('registrations')
   // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, refetch } = useCandidates(tableId)
@@ -70,14 +72,16 @@ function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
                 </Link>{' '}
                 · {candidate.userKarma}
               </span>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => void handleAccept(candidate)}>
-                  {t('candidates.accept')}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => rejectDialog.open(candidate)}>
-                  {t('candidates.reject')}
-                </Button>
-              </div>
+              {!readOnly && (
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => void handleAccept(candidate)}>
+                    {t('candidates.accept')}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => rejectDialog.open(candidate)}>
+                    {t('candidates.reject')}
+                  </Button>
+                </div>
+              )}
             </div>
             {/* Only when there is something to show: an application with nothing attached carries no
                 empty section, the same convention the table's own read-only file list uses. */}
@@ -105,6 +109,9 @@ function CandidatesList({ tableId, maxPlayers, playerCount }: OutletContext) {
 
 /**
  * The candidates tab: who applied, in the order they did, and the accept/reject actions.
+ *
+ * Mounted under /admin/tables/:id too, read-only (#284): the admin sees the same queue the master
+ * answers, without the two buttons that are the master's to press.
  *
  * FIFO is the backend's order and this screen never re-sorts it - it is what decides who gets
  * auto-rejected when the last seat goes (#28, #34).

@@ -440,7 +440,7 @@ class FileServiceTest {
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
         when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
                 .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, true)));
-        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(masterService.canOversee("table-1", "master-1")).thenReturn(true);
         when(storageService.read(anyString())).thenReturn(new byte[] {1});
 
         assertThat(fileService().download("file-1", "master-1")).isNotNull();
@@ -525,7 +525,7 @@ class FileServiceTest {
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
         when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
                 .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
-        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(masterService.canOversee("table-1", "master-1")).thenReturn(true);
         when(storageService.read(anyString())).thenReturn(new byte[] {1});
 
         assertThat(fileService().download("file-1", "master-1")).isNotNull();

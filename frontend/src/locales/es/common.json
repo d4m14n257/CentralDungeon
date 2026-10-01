@@ -91,7 +91,8 @@
       "TABLE_NEEDS_SCHEDULE": "La mesa tiene que decir cuándo se juega. Agregá al menos un día y horario.",
       "TABLE_NEEDS_TAG": "La mesa tiene que llevar al menos un tag. Elegí uno o proponé el tuyo.",
       "FILE_NEEDS_CATEGORY": "Antes de publicarlo, elegí qué es el archivo con «Cambiar qué es». Así los masters saben dónde encontrarlo.",
-      "TASK_CLOSED": "Este pedido ya se cerró y el master no recibe más respuestas."
+      "TASK_CLOSED": "Este pedido ya se cerró y el master no recibe más respuestas.",
+      "CAPACITY_BELOW_PLAYERS": "El cupo no puede quedar por debajo de los {{playerCount}} jugadores que ya tiene la mesa."
     }
   },
   "pagination": {

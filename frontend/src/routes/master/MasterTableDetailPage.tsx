@@ -1,21 +1,15 @@
 import { useTranslation } from 'react-i18next'
-import { NavLink, Outlet, useParams } from 'react-router'
+import { Outlet, useParams } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
+import { TabNav } from '@/components/TabNav'
 import { masterTableEditPath } from '@/config/paths'
-import { cn } from '@/lib/utils'
 import { MASTER_EDITABLE_STATUSES, TableStatusBadge, useManagedTable } from '@/features/tables'
 import { useMe } from '@/features/users'
 import { ApiError } from '@/types/api'
-
-const TAB_LINK_CLASSES = ({ isActive }: { isActive: boolean }) =>
-  cn(
-    '-mb-px border-b-2 px-1 pb-2 text-sm font-medium',
-    isActive ? 'border-brand-fg text-fg' : 'border-transparent text-fg-muted hover:text-fg',
-  )
 
 /** The two states where the backend still accepts a rewrite of the table (#189). */
 
@@ -59,29 +53,18 @@ export function MasterTableDetailPage() {
         badge={<TableStatusBadge status={table.status} />}
         action={canEdit ? { label: t('detail.edit'), to: masterTableEditPath(tableId) } : undefined}
       />
-      <nav className="border-border-strong flex flex-wrap gap-4 border-b">
-        <NavLink to="." end className={TAB_LINK_CLASSES}>
-          {t('detail.tabs.candidates')}
-        </NavLink>
-        <NavLink to="players" className={TAB_LINK_CLASSES}>
-          {t('detail.tabs.players')}
-        </NavLink>
-        <NavLink to="schedule" className={TAB_LINK_CLASSES}>
-          {t('detail.tabs.schedule')}
-        </NavLink>
-        <NavLink to="sessions" className={TAB_LINK_CLASSES}>
-          {t('detail.tabs.sessions')}
-        </NavLink>
-        <NavLink to="tasks" className={TAB_LINK_CLASSES}>
-          {t('detail.tabs.tasks')}
-        </NavLink>
-        <NavLink to="files" className={TAB_LINK_CLASSES}>
-          {t('detail.tabs.files')}
-        </NavLink>
-        <NavLink to="status" className={TAB_LINK_CLASSES}>
-          {t('detail.tabs.status')}
-        </NavLink>
-      </nav>
+      <TabNav
+        label={t('detail.tabs.label')}
+        items={[
+          { to: '.', label: t('detail.tabs.candidates'), end: true },
+          { to: 'players', label: t('detail.tabs.players') },
+          { to: 'schedule', label: t('detail.tabs.schedule') },
+          { to: 'sessions', label: t('detail.tabs.sessions') },
+          { to: 'tasks', label: t('detail.tabs.tasks') },
+          { to: 'files', label: t('detail.tabs.files') },
+          { to: 'status', label: t('detail.tabs.status') },
+        ]}
+      />
       <Outlet
         context={{
           tableId,

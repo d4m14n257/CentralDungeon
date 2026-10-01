@@ -24,6 +24,7 @@ import {
   ReviewingHelp,
   RolesHelp,
   SettingsHelp,
+  TableDetailHelp,
 } from './admins'
 import {
   BanningHelp,
@@ -143,6 +144,9 @@ export const HELP_SECTIONS = {
   'admins.assign-masters': { titleKey: 'admins.assignMasters.title', Body: AssignMastersHelp },
   'admins.catalogs': { titleKey: 'admins.catalogs.title', Body: CatalogsHelp },
   'admins.files': { titleKey: 'admins.files.title', Body: AdminFilesHelp },
+  // One table read whole, and the admin's own edit of it (#284): what is read-only, what the admin
+  // may change, and that the masters are always told.
+  'admins.table-detail': { titleKey: 'admins.tableDetail.title', Body: TableDetailHelp },
   'admins.owner': { titleKey: 'admins.owner.title', Body: OwnerHelp },
   'admins.roles': { titleKey: 'admins.roles.title', Body: RolesHelp },
   'admins.blocking': { titleKey: 'admins.blocking.title', Body: BlockingHelp },

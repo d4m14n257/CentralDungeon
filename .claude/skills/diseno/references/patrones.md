@@ -58,6 +58,7 @@
 | `IconAction` | Una acción de ícono con su tooltip y su `aria-label` | Toda acción de fila o de ficha |
 | `PaginationControls` | La paginación de una lista de trabajo (#271) | Las seis tablas de admin y `/my/files` |
 | `SectionNav` | La navegación de secciones de un contexto (#277): escrita tres veces igual, una por contexto, hasta que se nombró | `PlayerSectionNav`, `MasterSectionNav`, `AdminSectionNav` |
+| `TabNav` | Las pestañas de una pantalla (#284): la fila de pestañas de la mesa estaba escrita a mano en la pantalla del master hasta que la vista del admin la necesitó | `MasterTableDetailPage`, `AdminTableDetailPage` |
 | `GraphCanvas`, `GraphNode`, `GraphTray` | El lienzo de nodos y sus piezas (#275): ponen `.graph-canvas`, `.graph-node*` y `.graph-tray` ellos mismos | `/admin/catalogs/:kind/:id` |
 
 ## Deuda conocida

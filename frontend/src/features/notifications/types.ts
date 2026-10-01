@@ -36,6 +36,12 @@ export const NOTIFICATION_TYPES = [
   'TableApproved',
   'TableApprovedWithChanges',
   'TableChangesRequested',
+  // What an admin did to somebody else's table, told to its masters (#284).
+  'TableEditedByAdmin',
+  'TablePausedByAdmin',
+  'TableResumedByAdmin',
+  'TableCanceledByAdmin',
+  'TableDeletedByAdmin',
   'ApprovalRequestApproved',
   'ApprovalRequestRejected',
 ] as const

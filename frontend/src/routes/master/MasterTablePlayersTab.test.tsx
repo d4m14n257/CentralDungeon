@@ -33,7 +33,11 @@ function player(overrides: Partial<TablePlayer> = {}): TablePlayer {
 const addMaster = vi.fn()
 const removeMaster = vi.fn()
 const confirm = vi.fn().mockResolvedValue(true)
-let outletContext = { tableId: 'table-1', isPrimary: true, masters: MASTERS }
+let outletContext: { tableId: string; isPrimary: boolean; masters: MasterSummary[]; readOnly?: boolean } = {
+  tableId: 'table-1',
+  isPrimary: true,
+  masters: MASTERS,
+}
 let players: TablePlayer[] = [player()]
 /** What the veto dialog was opened with, captured from the stub that stands in for it. */
 let openedDialog: { action: string; isPrimary: boolean; playerName: string } | null = null
@@ -101,6 +105,21 @@ describe('MasterTablePlayersTab', () => {
     openedDialog = null
     vi.clearAllMocks()
     confirm.mockResolvedValue(true)
+  })
+
+  /**
+   * #284: an admin reads the same tab from /admin/tables/:id and changes nothing on it - neither the
+   * masters nor the roster. Seeing a veto is theirs; applying or asking for one is not.
+   */
+  it('read by an admin, shows the masters and the roster with no button to act on them', () => {
+    outletContext = { tableId: 'table-1', isPrimary: false, masters: MASTERS, readOnly: true }
+    players = [player(), player({ registrationId: 'reg-8', userId: 'user-8', userName: 'Eva', status: 'Blocked' })]
+    renderTab()
+
+    expect(screen.getByText('Ana')).toBeInTheDocument()
+    expect(rowFor('Diego').queryByRole('button')).not.toBeInTheDocument()
+    expect(rowFor('Eva').queryByRole('button')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Quitar a Beto' })).not.toBeInTheDocument()
   })
 
   /** On screen these are "master" and "co-master" — the wire words never reach a reader (#166). */

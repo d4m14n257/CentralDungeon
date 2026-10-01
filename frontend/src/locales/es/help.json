@@ -640,6 +640,19 @@
         "step3": "Escribí el número nuevo, dentro del rango que dice la pantalla, y contá por qué lo cambiás.",
         "step4": "Guardá. Se aplica en el pedido siguiente, sin reiniciar nada."
       }
+    },
+    "tableDetail": {
+      "title": "Ver y editar una mesa",
+      "what": "Desde «Mesas» abrís cualquier mesa y la ves entera: sus detalles, quién la dirige, los candidatos, los jugadores, la agenda, las sesiones con su asistencia, las peticiones con lo que entregó cada jugador, los archivos y su historial de estados.",
+      "readOnly": "Lo que es del master se ve pero no se toca: no aceptás candidatos, no registrás asistencia, no publicás peticiones ni agregás archivos por él.",
+      "edit": "Lo que sí podés hacer es editar la mesa (nombre, descripción, sistemas, agenda y cupo) en cualquier momento mientras no esté terminada, cancelada o dada de baja. El cupo no puede quedar por debajo de los jugadores que ya tiene.",
+      "notify": "Cada vez que editás, pausás, reanudás, cancelás o das de baja una mesa ajena, sus masters reciben un aviso. No se dice qué admin fue.",
+      "closed": "Una mesa terminada, cancelada o dada de baja queda como registro de lo que pasó: se puede ver, pero ya no se edita.",
+      "steps": {
+        "step1": "Andá a «Mesas» y tocá el nombre de la mesa o el ícono del ojo.",
+        "step2": "Recorré las pestañas: «Detalles» primero, «Estado» al final con sus acciones.",
+        "step3": "Para corregir algo, tocá «Editar mesa», cambiá lo que haga falta y confirmá."
+      }
     }
   },
   "stepsTitle": "Cómo se hace"

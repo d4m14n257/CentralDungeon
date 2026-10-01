@@ -87,6 +87,10 @@ const EXPLAINED_ERROR_CODES = new Set([
   // "Change what it is" on the same row - so naming that step is the whole answer; "could not
   // complete the action" left them guessing at something the server knew exactly.
   'FILE_NEEDS_CATEGORY',
+  // An admin lowering a table's capacity below the players it already has (#284). Nobody is removed to
+  // make the number fit, so the only way out is a bigger number - and saying how many players there
+  // are is what tells the admin which one.
+  'CAPACITY_BELOW_PLAYERS',
 ])
 
 /**

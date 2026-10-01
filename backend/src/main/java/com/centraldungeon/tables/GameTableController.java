@@ -130,11 +130,12 @@ public class GameTableController {
     }
 
     /**
-     * /master/tables/:id - pertenencia checked in the service before any data is read (#152).
+     * /master/tables/:id and /admin/tables/:id - pertenencia, or the admin rank, checked in the
+     * service before any data is read (#152, #284).
      *
      * @param id          the table to read
      * @param currentUser the actor, from the token
-     * @return 200 with the table as its master sees it. 403 when the actor does not run it
+     * @return 200 with the table as its master sees it. 403 when the actor neither runs it nor is an admin
      */
     @GetMapping("/{id}/managed")
     @PreAuthorize("isAuthenticated()")
@@ -245,6 +246,29 @@ public class GameTableController {
     public GameTableDetailResponse update(
             @PathVariable String id, @Valid @RequestBody UpdateGameTableRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.update(id, request, currentUser.userId());
+    }
+
+    /**
+     * An admin rewriting somebody else's table (#284) - its own path rather than {@link #update} with
+     * a second rule inside, because one path answering two ways depending on who asks is what #152
+     * removed.
+     *
+     * <p>Every master of the table is told, and a closed table cannot be rewritten. The rules are in
+     * {@code GameTableService.adminUpdate}.
+     *
+     * @param id          the table to edit
+     * @param request     the whole table as it should end up - a replacement and not a patch (#189)
+     * @param currentUser the admin, from the token
+     * @return 200 with the table after the edit. 403 when the actor is not an admin, 409 when the
+     *         table is closed, reserved by another admin, smaller than its roster
+     *         ({@code CAPACITY_BELOW_PLAYERS}) or its agenda clashes with its Primary's other tables,
+     *         400 when the agenda overlaps itself
+     */
+    @PutMapping("/{id}/admin-edit")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public GameTableDetailResponse adminUpdate(
+            @PathVariable String id, @Valid @RequestBody UpdateGameTableRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.adminUpdate(id, request, currentUser.userId());
     }
 
     /**

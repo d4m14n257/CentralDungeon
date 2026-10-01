@@ -1059,7 +1059,7 @@ class GameTableServiceTest {
     void getManagedDetailRejectsSomeoneWhoIsNotAMasterOfThatTable() {
         GameTable table = persistedTable("table-6", GameTableStatus.Opened);
         when(gameTableRepository.findById("table-6")).thenReturn(Optional.of(table));
-        when(masterService.isMasterOf("table-6", "outsider-1")).thenReturn(false);
+        when(masterService.canOversee("table-6", "outsider-1")).thenReturn(false);
 
         assertThatThrownBy(() -> gameTableService.getManagedDetail("table-6", "outsider-1")).isInstanceOf(ForbiddenActionException.class);
 
@@ -1084,7 +1084,7 @@ class GameTableServiceTest {
     void getManagedDetailReturnsTheTableForItsOwnMaster() {
         GameTable table = persistedTable("table-7", GameTableStatus.Opened);
         when(gameTableRepository.findById("table-7")).thenReturn(Optional.of(table));
-        when(masterService.isMasterOf("table-7", "master-1")).thenReturn(true);
+        when(masterService.canOversee("table-7", "master-1")).thenReturn(true);
         when(masterService.findByGameTable("table-7")).thenReturn(List.of());
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
@@ -1271,6 +1271,166 @@ class GameTableServiceTest {
         // The agenda travels whole, each slot with its own length (#228): three hours midweek and six
         // on a Saturday is one table, and it used to be a table that had to lie about one of the two.
         verify(tableScheduleService).replace(table, agenda, "master-1");
+    }
+
+    // --- #284: the admin reads and rewrites somebody else's table, and its masters are told ---
+
+    /** The admin's door is for the table that is already open or running and needs correcting (#284). */
+    @Test
+    @DisplayName("an admin rewrites an open table and every master is told")
+    void anAdminRewritesAnOpenTableAndItsMastersAreTold() {
+        GameTable table = persistedTable("table-admin-edit", GameTableStatus.Opened);
+        when(gameTableRepository.findByIdForUpdate("table-admin-edit")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.countByGameTable_IdAndStatus("table-admin-edit", TableRegistrationStatus.Player)).thenReturn(2L);
+        Master primary = new Master(table, persistedUser("primary-1"), MasterType.Primary);
+        Master coMaster = new Master(table, persistedUser("co-master-1"), MasterType.Secondary);
+        when(masterService.findByGameTable("table-admin-edit")).thenReturn(List.of(primary, coMaster));
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-edit", "Opened"));
+
+        gameTableService.adminUpdate("table-admin-edit", runnableUpdate("Corregida", 4), "admin-1");
+
+        assertThat(table.getName()).isEqualTo("Corregida");
+        assertThat(table.getMaxPlayers()).isEqualTo(4);
+        verify(notificationService).notifyAdminActedOnTable("primary-1", table, NotificationType.TableEditedByAdmin);
+        verify(notificationService).notifyAdminActedOnTable("co-master-1", table, NotificationType.TableEditedByAdmin);
+    }
+
+    /**
+     * R1 (#178) asks what the people running the table are committed to. The admin is committed to
+     * nothing here, so measuring against them would let any clash through.
+     */
+    @Test
+    @DisplayName("the admin's new agenda is measured against the Primary's other tables, not the admin's")
+    void theAdminsAgendaIsMeasuredAgainstThePrimary() {
+        GameTable table = persistedTable("table-admin-agenda", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-admin-agenda")).thenReturn(Optional.of(table));
+        when(masterService.findByGameTable("table-admin-agenda"))
+                .thenReturn(List.of(new Master(table, persistedUser("primary-2"), MasterType.Primary)));
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-agenda", "InProgress"));
+
+        gameTableService.adminUpdate("table-admin-agenda", runnableUpdate("Mesa", null), "admin-1");
+
+        verify(tableScheduleService).replace(eq(table), any(), eq("primary-2"));
+    }
+
+    /** Nobody is removed to make a number fit: which player leaves is a person's call (#34, #70). */
+    @Test
+    void anAdminCannotShrinkATableBelowThePlayersItAlreadyHas() {
+        GameTable table = persistedTable("table-admin-cap", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-admin-cap")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.countByGameTable_IdAndStatus("table-admin-cap", TableRegistrationStatus.Player)).thenReturn(5L);
+
+        assertThatThrownBy(() -> gameTableService.adminUpdate("table-admin-cap", runnableUpdate("Mesa", 3), "admin-1"))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.CAPACITY_BELOW_PLAYERS);
+        verify(notificationService, never()).notifyAdminActedOnTable(any(), any(), any());
+    }
+
+    /** A finished, cancelled or removed table is a record of what happened; nobody rewrites it (#284). */
+    @Test
+    void aClosedTableIsNotRewrittenEvenByAnAdmin() {
+        GameTable table = persistedTable("table-admin-closed", GameTableStatus.Finished);
+        when(gameTableRepository.findByIdForUpdate("table-admin-closed")).thenReturn(Optional.of(table));
+
+        assertThatThrownBy(() -> gameTableService.adminUpdate("table-admin-closed", runnableUpdate("Mesa", null), "admin-1"))
+                .isInstanceOf(ConflictException.class);
+    }
+
+    /** The same reservation rule as approving it (#100): a review is not edited out from under a colleague. */
+    @Test
+    void aTableInReviewReservedByAnotherAdminIsNotRewritten() {
+        GameTable table = claimedBy(persistedTable("table-admin-claimed", GameTableStatus.Preparation), persistedUser("admin-2"));
+        when(gameTableRepository.findByIdForUpdate("table-admin-claimed")).thenReturn(Optional.of(table));
+
+        assertThatThrownBy(() -> gameTableService.adminUpdate("table-admin-claimed", runnableUpdate("Mesa", null), "admin-1"))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.ITEM_ALREADY_CLAIMED);
+    }
+
+    /** An admin who also runs the table is editing their own: telling them what they just did is noise. */
+    @Test
+    void anAdminEditingATableTheyRunIsNotToldAboutIt() {
+        GameTable table = persistedTable("table-admin-own", GameTableStatus.Opened);
+        when(gameTableRepository.findByIdForUpdate("table-admin-own")).thenReturn(Optional.of(table));
+        when(masterService.findByGameTable("table-admin-own"))
+                .thenReturn(List.of(new Master(table, persistedUser("admin-1"), MasterType.Primary)));
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-own", "Opened"));
+
+        gameTableService.adminUpdate("table-admin-own", runnableUpdate("Mesa", null), "admin-1");
+
+        verify(notificationService, never()).notifyAdminActedOnTable(any(), any(), any());
+    }
+
+    @Test
+    void pausingATableDirectlyTellsItsMasters() {
+        GameTable table = persistedTable("table-admin-pause", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-admin-pause")).thenReturn(Optional.of(table));
+        when(masterService.findByGameTable("table-admin-pause"))
+                .thenReturn(List.of(new Master(table, persistedUser("primary-3"), MasterType.Primary)));
+        when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-pause", "Pause"));
+
+        gameTableService.pauseDirect("table-admin-pause", "admin-1", new ChangeTableStatusRequest("Conflicto entre jugadores"));
+
+        verify(notificationService).notifyAdminActedOnTable("primary-3", table, NotificationType.TablePausedByAdmin);
+    }
+
+    /** The Primary cancelling their own table hears nothing; an admin doing it is news (#284). */
+    @Test
+    void cancellingTellsTheMastersOnlyWhenAnAdminDidIt() {
+        GameTable own = persistedTable("table-cancel-own", GameTableStatus.Opened);
+        when(gameTableRepository.findByIdForUpdate("table-cancel-own")).thenReturn(Optional.of(own));
+        when(masterService.isPrimaryOf("table-cancel-own", "primary-4")).thenReturn(true);
+        when(masterService.findByGameTable("table-cancel-own"))
+                .thenReturn(List.of(new Master(own, persistedUser("primary-4"), MasterType.Primary)));
+        when(userService.getById(anyString())).thenAnswer(invocation -> persistedUser(invocation.getArgument(0)));
+        when(anyDetailMapping()).thenReturn(detailOf("table-cancel-own", "Canceled"));
+
+        gameTableService.cancel("table-cancel-own", "primary-4", new ChangeTableStatusRequest("Ya no puedo dirigirla"));
+
+        verify(notificationService, never()).notifyAdminActedOnTable(any(), any(), any());
+
+        GameTable other = persistedTable("table-cancel-admin", GameTableStatus.Opened);
+        when(gameTableRepository.findByIdForUpdate("table-cancel-admin")).thenReturn(Optional.of(other));
+        when(userService.loadAuthSnapshot("admin-1")).thenReturn(adminSnapshot("admin-1"));
+        when(masterService.findByGameTable("table-cancel-admin"))
+                .thenReturn(List.of(new Master(other, persistedUser("primary-5"), MasterType.Primary)));
+
+        gameTableService.cancel("table-cancel-admin", "admin-1", new ChangeTableStatusRequest("Incumple las reglas"));
+
+        verify(notificationService).notifyAdminActedOnTable("primary-5", other, NotificationType.TableCanceledByAdmin);
+    }
+
+    /** The masters are read before the removal marks them gone, or there would be nobody left to tell. */
+    @Test
+    void removingATableTellsTheMastersItHad() {
+        GameTable table = persistedTable("table-admin-delete", GameTableStatus.Preparation);
+        when(gameTableRepository.findByIdForUpdate("table-admin-delete")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("admin-1")).thenReturn(adminSnapshot("admin-1"));
+        when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
+        when(masterService.findByGameTable("table-admin-delete"))
+                .thenReturn(List.of(new Master(table, persistedUser("primary-6"), MasterType.Primary)));
+
+        gameTableService.delete("table-admin-delete", "admin-1");
+
+        verify(notificationService).notifyAdminActedOnTable("primary-6", table, NotificationType.TableDeletedByAdmin);
+    }
+
+    /** What every rewrite in these tests sends: the three catalogs and an agenda, as #226 requires. */
+    private UpdateGameTableRequest runnableUpdate(String name, @Nullable Integer maxPlayers) {
+        return new UpdateGameTableRequest(
+                name, null, null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, maxPlayers,
+                List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
+    }
+
+    private static UserAuthSnapshot adminSnapshot(String id) {
+        return new UserAuthSnapshot(id, UserStatus.Allowed, Set.of("Admin"));
+    }
+
+    private GameTableDetailResponse detailOf(String id, String status) {
+        return new GameTableDetailResponse(
+                id, "Test", null, null, null, null, null, status, null, 0, null, null,
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false);
     }
 
     /**

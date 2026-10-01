@@ -151,6 +151,11 @@ interface BanRequestsSectionProps {
   tableId: string
   /** Whether the reader runs the table. Only the `Primary` answers these (#39). */
   isPrimary: boolean
+  /**
+   * An admin reading the table from /admin/tables/:id (#284): neither the one who answers nor the one
+   * who asked, so the sentence above the list cannot be either of theirs.
+   */
+  observer?: boolean
   /** The help link the screen hands down — a feature never imports `features/help` (§3.1.5). */
   help?: ReactNode
 }
@@ -172,9 +177,10 @@ interface BanRequestsSectionProps {
  *
  * @param props.tableId   the table
  * @param props.isPrimary whether the reader may answer these
+ * @param props.observer  an admin reading it, who neither asked nor answers (#284)
  * @param props.help      the explanation of what a veto is, raised by the screen
  */
-export function BanRequestsSection({ tableId, isPrimary, help }: BanRequestsSectionProps) {
+export function BanRequestsSection({ tableId, isPrimary, observer, help }: BanRequestsSectionProps) {
   const { t, i18n } = useTranslation('master')
   // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (#150).
   const { data, isPending, isLoadingError, refetch } = useTableBanRequests(tableId)
@@ -194,7 +200,15 @@ export function BanRequestsSection({ tableId, isPrimary, help }: BanRequestsSect
     <section className="border-border space-y-3 rounded-lg border p-4">
       <div className="space-y-1">
         <h3 className="text-sm font-medium">{t('banRequests.title')}</h3>
-        <p className="text-fg-muted text-xs">{t(isPrimary ? 'banRequests.descriptionPrimary' : 'banRequests.descriptionSecondary')}</p>
+        <p className="text-fg-muted text-xs">
+          {t(
+            observer
+              ? 'banRequests.descriptionObserver'
+              : isPrimary
+                ? 'banRequests.descriptionPrimary'
+                : 'banRequests.descriptionSecondary',
+          )}
+        </p>
       </div>
 
       <ul className="list-divided-bare">

@@ -63,7 +63,8 @@
       "tasks": "Peticiones",
       "files": "Archivos",
       "players": "Jugadores",
-      "schedule": "Agenda"
+      "schedule": "Agenda",
+      "label": "Secciones de la mesa"
     },
     "edit": "Editar"
   },
@@ -237,7 +238,11 @@
     "lockedDescription": "Esta mesa ya no se puede editar: o no sos su master, o pasó el punto en que su master podía reescribirla.",
     "back": "Volver a la mesa",
     "confirmTitle": "¿Guardar los cambios de «{{name}}»?",
-    "confirmDescription": "Lo que escribiste reemplaza lo que la mesa decía."
+    "confirmDescription": "Lo que escribiste reemplaza lo que la mesa decía.",
+    "adminLockedDescription": "Esta mesa terminó, se canceló o se dio de baja: queda como registro y ya no se edita.",
+    "adminConfirmDescription": "Lo que escribiste reemplaza lo que la mesa decía, y sus masters reciben un aviso de que un admin la editó.",
+    "adminSuccess": "Mesa guardada. Avisamos a sus masters.",
+    "adminDescription": "Estás editando una mesa que no es tuya: al guardar, sus masters reciben un aviso."
   },
   "veto": {
     "block": "Vetar",
@@ -268,6 +273,7 @@
     "confirmApproveTitle": "¿Aprobar el veto de {{name}}?",
     "confirmApproveDescription": "Deja de ver la mesa, su detalle y sus archivos. Queda registrado con tu motivo.",
     "confirmRejectTitle": "¿Rechazar el pedido de veto de {{name}}?",
-    "confirmRejectDescription": "Sigue en la mesa como hasta ahora. Queda registrado con tu motivo."
+    "confirmRejectDescription": "Sigue en la mesa como hasta ahora. Queda registrado con tu motivo.",
+    "descriptionObserver": "Un co-master pidió vetar a alguien de esta mesa. Lo resuelve el master principal."
   }
 }

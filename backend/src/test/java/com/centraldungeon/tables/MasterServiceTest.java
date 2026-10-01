@@ -12,10 +12,13 @@ import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.users.User;
+import com.centraldungeon.users.UserAuthSnapshot;
 import com.centraldungeon.users.UserService;
+import com.centraldungeon.users.UserStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -125,6 +128,39 @@ class MasterServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThat(masterService.isMasterOf("table-7", "removed")).isFalse();
+    }
+
+    /** The admin reads every table whole (#45, #284); Owner is the same rank with more reach (#169). */
+    @Test
+    void anAdminOrAnOwnerOverseesATableTheyDoNotRun() {
+        when(masterRepository.findByGameTable_IdAndUser_IdAndStatus(any(), any(), any())).thenReturn(Optional.empty());
+        when(userService.loadAuthSnapshot("admin-1")).thenReturn(new UserAuthSnapshot("admin-1", UserStatus.Allowed, Set.of("Player", "Admin")));
+        when(userService.loadAuthSnapshot("owner-1")).thenReturn(new UserAuthSnapshot("owner-1", UserStatus.Allowed, Set.of("Owner")));
+
+        assertThat(masterService.canOversee("table-8", "admin-1")).isTrue();
+        assertThat(masterService.canOversee("table-8", "owner-1")).isTrue();
+    }
+
+    /** The Master role is not the table (#135): holding it says nothing about somebody else's. */
+    @Test
+    void theMasterRoleAloneDoesNotOverseeSomebodyElsesTable() {
+        when(masterRepository.findByGameTable_IdAndUser_IdAndStatus("table-8", "other-master", MasterRowStatus.Created))
+                .thenReturn(Optional.empty());
+        when(userService.loadAuthSnapshot("other-master"))
+                .thenReturn(new UserAuthSnapshot("other-master", UserStatus.Allowed, Set.of("Player", "Master")));
+
+        assertThat(masterService.canOversee("table-8", "other-master")).isFalse();
+    }
+
+    /** Running it is enough, and the roles are not even read. */
+    @Test
+    void whoeverRunsTheTableOverseesItWithoutAskingTheirRoles() {
+        GameTable table = persistedTable("table-8");
+        when(masterRepository.findByGameTable_IdAndUser_IdAndStatus("table-8", "primary-1", MasterRowStatus.Created))
+                .thenReturn(Optional.of(new Master(table, persistedUser("primary-1"), MasterType.Primary)));
+
+        assertThat(masterService.canOversee("table-8", "primary-1")).isTrue();
+        verify(userService, never()).loadAuthSnapshot(any());
     }
 
     @Test

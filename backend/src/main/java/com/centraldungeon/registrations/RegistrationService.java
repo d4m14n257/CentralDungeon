@@ -413,7 +413,10 @@ public class RegistrationService {
     /** Candidates only, FIFO by arrival - never re-sorted, whatever the caller's sort param says (#28). */
     @Transactional(readOnly = true)
     public PageResponse<RegistrationResponse> listCandidatesForTable(String gameTableId, String actorId, Pageable pageable) {
-        requireMasterOf(gameTableId, actorId, "view its candidates");
+        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        if (!masterService.canOversee(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can view its candidates");
+        }
         Pageable fifo = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("createdAt").ascending());
         Page<TableRegistration> page = registrationRepository.findByGameTable_IdAndStatus(gameTableId, TableRegistrationStatus.Candidate, fifo);
         Map<String, List<RegistrationFileResponse>> filesByRegistration =
@@ -485,11 +488,14 @@ public class RegistrationService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token (#121)
      * @return its players and its vetoed, oldest first
-     * @throws ForbiddenActionException if the actor does not run the table (#17, #135)
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
      */
     @Transactional(readOnly = true)
     public List<TablePlayerResponse> listPlayersForTable(String gameTableId, String actorId) {
-        requireMasterOf(gameTableId, actorId, "view its players");
+        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        if (!masterService.canOversee(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can view its players");
+        }
         List<TableRegistration> roster = registrationRepository.findByGameTable_IdAndStatusInOrderByCreatedAtAsc(
                 gameTableId, List.of(TableRegistrationStatus.Player, TableRegistrationStatus.Blocked));
         Map<String, RegistrationStatusChange> vetoes = latestVetoesOf(roster);

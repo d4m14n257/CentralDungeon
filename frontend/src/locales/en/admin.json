@@ -328,7 +328,24 @@
     "pauseConfirmTitle": "Pause “{{name}}”?",
     "pauseConfirmDescription": "The table stays paused until it is resumed, and it is recorded with your reason.",
     "assignConfirmTitle": "Assign the masters of “{{name}}”?",
-    "assignConfirmDescription": "{{primary}} becomes the primary master, and the table passes to its masters to prepare it."
+    "assignConfirmDescription": "{{primary}} becomes the primary master, and the table passes to its masters to prepare it.",
+    "view": "View table",
+    "detail": {
+      "back": "Back to tables",
+      "ranBy": "Master: {{name}}",
+      "edit": "Edit table",
+      "tabs": {
+        "details": "Details"
+      },
+      "notSet": "Not set",
+      "playersNoCap_one": "{{count}} player, no seat limit",
+      "playersNoCap_other": "{{count}} players, no seat limit",
+      "playersOfCap": "{{count}} of {{max}}",
+      "actionsTitle": "Admin actions",
+      "noActions": "There are no admin actions on the table in this status. To correct something, use “Edit table”.",
+      "reviewInQueue": "This table is waiting for review. It is approved or sent back for changes from the tray.",
+      "goToQueue": "Go to the tray"
+    }
   },
   "settings": {
     "title": "Settings",

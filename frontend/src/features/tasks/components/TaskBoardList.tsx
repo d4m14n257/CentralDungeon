@@ -15,10 +15,10 @@ import type { SubmittedFile, TableTask } from '../types'
 export interface TaskBoardListProps {
   /** The table's tasks, oldest first. */
   tasks: TableTask[]
-  /** Called with the task to correct. */
-  onEdit: (task: TableTask) => void
-  /** Called with the task whose intake should end. */
-  onClose: (task: TableTask) => void
+  /** Called with the task to correct. Absent for a reader who may not change it - an admin (#284). */
+  onEdit?: ((task: TableTask) => void) | undefined
+  /** Called with the task whose intake should end. Absent for a reader who may not end it (#284). */
+  onClose?: ((task: TableTask) => void) | undefined
   /** Whether a mutation is in flight, so the row actions can say so. */
   isBusy: boolean
   /** How to render the files of an answer — see `TaskSubmissionsPanel` for why it is a prop. */
@@ -36,8 +36,8 @@ export interface TaskBoardListProps {
  * requests for panels nobody looked at.
  *
  * @param props.tasks       the table's tasks, oldest first
- * @param props.onEdit      called with the task to correct
- * @param props.onClose     called with the task whose intake should end
+ * @param props.onEdit      called with the task to correct; without it the row offers no edit
+ * @param props.onClose     called with the task whose intake should end; without it, no close
  * @param props.isBusy      whether a mutation is in flight
  * @param props.renderFiles how to render the files of an answer
  */
@@ -63,13 +63,15 @@ export function TaskBoardList({ tasks, onEdit, onClose, isBusy, renderFiles }: T
             }
             actions={
               <>
-                <IconAction
-                  label={t('board.edit')}
-                  icon={<PencilIcon className="size-4" />}
-                  disabled={isBusy}
-                  onClick={() => onEdit(task)}
-                />
-                {task.status === 'Open' && (
+                {onEdit && (
+                  <IconAction
+                    label={t('board.edit')}
+                    icon={<PencilIcon className="size-4" />}
+                    disabled={isBusy}
+                    onClick={() => onEdit(task)}
+                  />
+                )}
+                {onClose && task.status === 'Open' && (
                   <IconAction
                     label={t('board.close')}
                     icon={<LockIcon className="size-4" />}

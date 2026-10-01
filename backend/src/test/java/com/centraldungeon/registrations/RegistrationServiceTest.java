@@ -325,7 +325,7 @@ class RegistrationServiceTest {
 
     @Test
     void listCandidatesForTableRequiresBeingAMaster() {
-        when(masterService.isMasterOf("table-11", "stranger")).thenReturn(false);
+        when(masterService.canOversee("table-11", "stranger")).thenReturn(false);
 
         assertThatThrownBy(() -> registrationService.listCandidatesForTable(
                         "table-11", "stranger", org.springframework.data.domain.PageRequest.of(0, 20)))
@@ -724,7 +724,7 @@ class RegistrationServiceTest {
         ReflectionTestUtils.setField(blocked, "id", "reg-veto");
         blocked.setStatus(TableRegistrationStatus.Blocked);
 
-        when(masterService.isMasterOf("table-b7", "master-1")).thenReturn(true);
+        when(masterService.canOversee("table-b7", "master-1")).thenReturn(true);
         when(registrationRepository.findByGameTable_IdAndStatusInOrderByCreatedAtAsc(
                         "table-b7", List.of(TableRegistrationStatus.Player, TableRegistrationStatus.Blocked)))
                 .thenReturn(List.of(player, blocked));

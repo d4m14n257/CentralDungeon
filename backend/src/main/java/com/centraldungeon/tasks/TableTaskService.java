@@ -258,11 +258,14 @@ public class TableTaskService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token
      * @return its tasks, oldest first
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
      */
     @Transactional(readOnly = true)
     public List<TaskResponse> listForTable(String gameTableId, String actorId) {
-        requireMasterOf(gameTableId, actorId);
+        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        if (!masterService.canOversee(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can view its requests");
+        }
         List<TableTask> tasks =
                 taskRepository.findByGameTable_IdAndStatusNotOrderByCreatedAtAsc(gameTableId, TaskStatus.Deleted);
         if (tasks.isEmpty()) {

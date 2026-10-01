@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* CentralDungeon design tokens — Tailwind 4 @theme block.
    Source of truth: the design system (decision #130).
@@ -6,9 +6,9 @@
 
 @theme {
   /* -- typography -- */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Spectral", ui-serif, Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Spectral', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
   --text-xs: 12px;
   --text-xs--line-height: 16px;
@@ -132,10 +132,12 @@
 
 /* Native UI - scrollbars, form controls, the overscroll gutter - follows the theme too.
    Without it the browser paints them light while the app is dark. */
-:root { color-scheme: dark; }
+:root {
+  color-scheme: dark;
+}
 
 /* Light theme overrides the semantic layer only; primitives never change. */
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   color-scheme: light;
   --color-canvas: #f8fafc;
   --color-surface: #ffffff;
@@ -145,8 +147,8 @@
   --color-fg: #0f172a;
   --color-fg-muted: #475569;
   --color-fg-subtle: #64748b;
-  --color-brand-500: #5442ab;  /* darker on light for AA */
-  --color-brand-fg: #3e308b;  /* 400 only reaches 3.29:1 here */
+  --color-brand-500: #5442ab; /* darker on light for AA */
+  --color-brand-fg: #3e308b; /* 400 only reaches 3.29:1 here */
   --color-state-draft-dot: #64748b;
   --color-state-draft-bg: #f1f5f9;
   --color-state-draft-fg: #475569;

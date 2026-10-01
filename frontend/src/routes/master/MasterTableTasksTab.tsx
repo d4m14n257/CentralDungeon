@@ -26,6 +26,8 @@ import {
 
 interface OutletContext {
   tableId: string
+  /** Set by /admin/tables/:id (#284): what the table asked and what came back, with nothing to publish or close. */
+  readOnly?: boolean
 }
 
 /**
@@ -47,11 +49,14 @@ interface OutletContext {
  *
  * The picker of who to address and the list of sessions come from other features, so they are read
  * **here** and passed down as plain data: a feature never imports from another (regla dura 16).
+ *
+ * Mounted under /admin/tables/:id too, read-only (#284): the board and every answer, without
+ * publishing, correcting or closing.
  */
 export function MasterTableTasksTab() {
   const commit = useCommitStagedFiles()
   const { t } = useTranslation('tasks')
-  const { tableId } = useOutletContext<OutletContext>()
+  const { tableId, readOnly } = useOutletContext<OutletContext>()
   const confirm = useConfirm()
 
   // isLoadingError, not isError: see docs/decisiones.md #150.
@@ -149,9 +154,11 @@ export function MasterTableTasksTab() {
         title={t('board.title')}
         help="masters.tasks"
         actions={
-          <Button type="button" size="sm" onClick={openPublish}>
-            {t('board.publish')}
-          </Button>
+          readOnly ? undefined : (
+            <Button type="button" size="sm" onClick={openPublish}>
+              {t('board.publish')}
+            </Button>
+          )
         }
       />
 
@@ -160,24 +167,26 @@ export function MasterTableTasksTab() {
       ) : (
         <TaskBoardList
           tasks={tasks}
-          onEdit={openEdit}
-          onClose={(task) => void handleClose(task)}
+          onEdit={readOnly ? undefined : openEdit}
+          onClose={readOnly ? undefined : (task) => void handleClose(task)}
           isBusy={update.isPending || close.isPending}
           // The file list lives in `features/files`; this screen is where the two domains meet.
           renderFiles={(files) => <FileList files={files} />}
         />
       )}
 
-      <TaskFormDialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        task={editing}
-        players={addressablePlayers}
-        sessions={(sessions ?? []).map((session) => ({ id: session.id, sequenceNumber: session.sequenceNumber }))}
-        isBusy={publish.isPending || update.isPending}
-        renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="MasterRequest" />}
-        onSubmit={handleSubmit}
-      />
+      {!readOnly && (
+        <TaskFormDialog
+          open={isFormOpen}
+          onOpenChange={setIsFormOpen}
+          task={editing}
+          players={addressablePlayers}
+          sessions={(sessions ?? []).map((session) => ({ id: session.id, sequenceNumber: session.sequenceNumber }))}
+          isBusy={publish.isPending || update.isPending}
+          renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="MasterRequest" />}
+          onSubmit={handleSubmit}
+        />
+      )}
     </div>
   )
 }

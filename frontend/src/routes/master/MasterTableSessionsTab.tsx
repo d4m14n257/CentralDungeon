@@ -30,6 +30,8 @@ import { browserTimeZone, formatDateTime, localInputToUtcIso, utcIsoToLocalInput
 interface OutletContext {
   tableId: string
   status: GameTableStatus
+  /** Set by /admin/tables/:id (#284): the calendar, its notes and who came, with nothing to change. */
+  readOnly?: boolean
 }
 
 /**
@@ -39,7 +41,7 @@ interface OutletContext {
  * It is collapsed by default: a calendar of twelve open sessions is a screen nobody can read, and
  * the header already says the only thing that gets read at a glance — when it is and how it went.
  */
-function SessionRow({ session, tableId }: { session: TableSession; tableId: string }) {
+function SessionRow({ session, tableId, readOnly }: { session: TableSession; tableId: string; readOnly: boolean }) {
   const { t, i18n } = useTranslation('master')
   const timeZone = browserTimeZone()
   const confirm = useConfirm()
@@ -52,6 +54,8 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
   const [scheduledAt, setScheduledAt] = useState(() => utcIsoToLocalInput(session.scheduledAt, timeZone))
   const [notes, setNotes] = useState(session.notes ?? '')
   const isScheduled = session.status === 'Scheduled'
+  // An admin reads every session as if it were already a record: nothing on it is theirs to move.
+  const editable = isScheduled && !readOnly
 
   async function handleSaveDetails() {
     // A review before anything is written (#283): what is about to change, and what follows.
@@ -87,7 +91,7 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
       actions={
         <>
           <SessionStatusBadge status={session.status} />
-          {isScheduled && (
+          {editable && (
             <>
               <IconAction
                 label={t('sessions.hold')}
@@ -115,7 +119,7 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
             id={`scheduled-${session.id}`}
             type="datetime-local"
             value={scheduledAt}
-            disabled={!isScheduled}
+            disabled={!editable}
             onChange={(event) => setScheduledAt(event.target.value)}
           />
           {/* The date is stored in UTC (#22); this says which zone it is being typed in. */}
@@ -129,14 +133,14 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
           <Textarea
             id={`notes-${session.id}`}
             value={notes}
-            disabled={!isScheduled}
+            disabled={!editable}
             onChange={(event) => setNotes(event.target.value)}
             placeholder={t('sessions.notesPlaceholder')}
           />
           <p className="text-fg-subtle text-xs">{t('sessions.notesArePrivate')}</p>
         </div>
 
-        {isScheduled ? (
+        {readOnly ? null : isScheduled ? (
           <div className="flex justify-end">
             <Button size="sm" variant="outline" disabled={updateSession.isPending} onClick={() => void handleSaveDetails()}>
               {t('sessions.saveDetails')}
@@ -154,6 +158,7 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
           ) : (
             <AttendanceEditor
               roster={session.attendance}
+              readOnly={readOnly}
               isSaving={recordAttendance.isPending}
               onSave={(attendance) =>
                 recordAttendance.mutate(
@@ -169,7 +174,7 @@ function SessionRow({ session, tableId }: { session: TableSession; tableId: stri
   )
 }
 
-function SessionsPanel({ tableId, status }: OutletContext) {
+function SessionsPanel({ tableId, status, readOnly }: OutletContext) {
   const { t } = useTranslation('master')
   // isLoadingError, not isError: see docs/decisiones.md #150.
   const { data, isPending, isLoadingError, refetch } = useTableSessions(tableId)
@@ -199,7 +204,7 @@ function SessionsPanel({ tableId, status }: OutletContext) {
       {status === 'Pause' && <p className="text-fg-muted text-sm">{t('sessions.pausedDescription')}</p>}
       <div className="space-y-2">
         {data.map((session) => (
-          <SessionRow key={session.id} session={session} tableId={tableId} />
+          <SessionRow key={session.id} session={session} tableId={tableId} readOnly={readOnly ?? false} />
         ))}
       </div>
     </div>
@@ -212,6 +217,8 @@ function SessionsPanel({ tableId, status }: OutletContext) {
  * replacement session at the end (#194).
  *
  * Dates are typed and read in the viewer's own time; what travels is UTC (#22).
+ *
+ * Mounted under /admin/tables/:id too, read-only (#284): every session reads as a record there.
  */
 export function MasterTableSessionsTab() {
   const context = useOutletContext<OutletContext>()

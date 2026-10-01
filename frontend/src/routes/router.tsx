@@ -103,6 +103,23 @@ export const router = createBrowserRouter([
           // in, reserved one at a time.
           { path: 'queue', lazy: () => import('./admin/AdminQueuePage') },
           { path: 'tables', lazy: () => import('./admin/AdminTablesPage') },
+          // One table, whole (#284): the master's own tab modules, mounted read-only - the admin has no
+          // visibility limits (#45) - with Details as the first tab, since the admin did not write it.
+          { path: 'tables/:id/edit', lazy: () => import('./admin/AdminTableEditPage') },
+          {
+            path: 'tables/:id',
+            lazy: () => import('./admin/AdminTableDetailPage'),
+            children: [
+              { index: true, lazy: () => import('./admin/AdminTableDetailsTab') },
+              { path: 'candidates', lazy: () => import('./master/MasterTableCandidatesTab') },
+              { path: 'players', lazy: () => import('./master/MasterTablePlayersTab') },
+              { path: 'schedule', lazy: () => import('./master/MasterTableScheduleTab') },
+              { path: 'sessions', lazy: () => import('./master/MasterTableSessionsTab') },
+              { path: 'tasks', lazy: () => import('./master/MasterTableTasksTab') },
+              { path: 'files', lazy: () => import('./master/MasterTableFilesTab') },
+              { path: 'status', lazy: () => import('./admin/AdminTableStatusTab') },
+            ],
+          },
           { path: 'catalogs', lazy: () => import('./admin/AdminCatalogsPage') },
           // One group as a canvas of nodes (#275). Its own route and its own chunk, so React Flow
           // only loads for an admin who opens a group.

@@ -31,6 +31,8 @@ import {
 
 interface OutletContext {
   tableId: string
+  /** Set by /admin/tables/:id (#284): every attachment, private ones included, with nothing to attach or detach. */
+  readOnly?: boolean
 }
 
 /**
@@ -46,10 +48,13 @@ interface OutletContext {
  *
  * A child route rather than local state (§3.1.6 regla 5), so the tab has its own URL, survives a
  * refresh and can be linked to.
+ *
+ * Mounted under /admin/tables/:id too, read-only (#284): the admin opens every attachment, the
+ * private ones included, and changes none of them.
  */
 export function MasterTableFilesTab() {
   const { t } = useTranslation('files')
-  const { tableId } = useOutletContext<OutletContext>()
+  const { tableId, readOnly } = useOutletContext<OutletContext>()
   const confirm = useConfirm()
 
   const { data: files, isPending, isLoadingError, refetch } = useTableFiles(tableId)
@@ -123,9 +128,11 @@ export function MasterTableFilesTab() {
         title={t('table.title')}
         help="masters.files"
         actions={
-          <Button type="button" size="sm" onClick={() => setIsAttaching(true)}>
-            {t('table.attach')}
-          </Button>
+          readOnly ? undefined : (
+            <Button type="button" size="sm" onClick={() => setIsAttaching(true)}>
+              {t('table.attach')}
+            </Button>
+          )
         }
       />
 
@@ -141,77 +148,83 @@ export function MasterTableFilesTab() {
               <span className="text-fg-muted text-xs">{file.isPrivate ? t('table.privateBadge') : t('table.sharedBadge')}</span>
             </div>
           )}
-          renderActions={(file) => (
-            <>
-              <IconAction
-                label={file.isPrivate ? t('actions.share') : t('actions.unshare')}
-                icon={file.isPrivate ? <EyeIcon className="size-4" /> : <EyeOffIcon className="size-4" />}
-                disabled={updateAttachment.isPending}
-                onClick={() => handleToggleShared(file)}
-              />
-              <IconAction
-                label={t('actions.detach')}
-                icon={<Trash2Icon className="size-4" />}
-                disabled={detach.isPending}
-                onClick={() => void handleDetach(file)}
-              />
-            </>
-          )}
+          {...(readOnly
+            ? {}
+            : {
+                renderActions: (file: TableFile) => (
+                  <>
+                    <IconAction
+                      label={file.isPrivate ? t('actions.share') : t('actions.unshare')}
+                      icon={file.isPrivate ? <EyeIcon className="size-4" /> : <EyeOffIcon className="size-4" />}
+                      disabled={updateAttachment.isPending}
+                      onClick={() => handleToggleShared(file)}
+                    />
+                    <IconAction
+                      label={t('actions.detach')}
+                      icon={<Trash2Icon className="size-4" />}
+                      disabled={detach.isPending}
+                      onClick={() => void handleDetach(file)}
+                    />
+                  </>
+                ),
+              })}
         />
       )}
 
-      <FormDialog
-        isDirty={kind !== 'Preparation' || isPrivate}
-        open={isAttaching}
-        onOpenChange={(open) => {
-          setIsAttaching(open)
-          if (!open) setStaged([])
-        }}
-        title={t('table.attachTitle')}
-        description={t('table.attachDescription')}
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="attach-kind">{t('table.kindLabel')}</Label>
-            <Select value={kind} onValueChange={(value) => setKind(value as TableFileType)}>
-              <SelectTrigger id="attach-kind">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Preparation">{t('tableFileType.Preparation')}</SelectItem>
-                <SelectItem value="Session">{t('tableFileType.Session')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-start gap-2">
-            <Checkbox id="attach-private" checked={isPrivate} onCheckedChange={(checked) => setIsPrivate(checked === true)} />
-            <div className="space-y-1">
-              <Label htmlFor="attach-private">{t('table.privateLabel')}</Label>
-              <p className="text-fg-muted text-xs">{t('table.privateHint')}</p>
+      {!readOnly && (
+        <FormDialog
+          isDirty={kind !== 'Preparation' || isPrivate}
+          open={isAttaching}
+          onOpenChange={(open) => {
+            setIsAttaching(open)
+            if (!open) setStaged([])
+          }}
+          title={t('table.attachTitle')}
+          description={t('table.attachDescription')}
+        >
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="attach-kind">{t('table.kindLabel')}</Label>
+              <Select value={kind} onValueChange={(value) => setKind(value as TableFileType)}>
+                <SelectTrigger id="attach-kind">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Preparation">{t('tableFileType.Preparation')}</SelectItem>
+                  <SelectItem value="Session">{t('tableFileType.Session')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
 
-          {/* Everything published is offered, not only the `Masters` audience: the community's
+            <div className="flex items-start gap-2">
+              <Checkbox id="attach-private" checked={isPrivate} onCheckedChange={(checked) => setIsPrivate(checked === true)} />
+              <div className="space-y-1">
+                <Label htmlFor="attach-private">{t('table.privateLabel')}</Label>
+                <p className="text-fg-muted text-xs">{t('table.privateHint')}</p>
+              </div>
+            </div>
+
+            {/* Everything published is offered, not only the `Masters` audience: the community's
               default character sheet is published *for players* and the master is the one attaching
               it, which is #79's own example (#64). */}
-          <FilePicker
-            onPick={(picked) => setStaged((current) => [...current, picked])}
-            isBusy={commit.isPending || attach.isPending}
-            offerPublished
-            cajon="TableMaterial"
-            staged={staged}
-            onRemove={(key) =>
-              setStaged((current) => current.filter((entry) => (entry.kind === 'new' ? entry.localId : entry.fileId) !== key))
-            }
-          />
-          <div className="flex justify-end">
-            <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={() => void attachStaged()}>
-              {t('table.attachConfirm', { count: staged.length })}
-            </Button>
+            <FilePicker
+              onPick={(picked) => setStaged((current) => [...current, picked])}
+              isBusy={commit.isPending || attach.isPending}
+              offerPublished
+              cajon="TableMaterial"
+              staged={staged}
+              onRemove={(key) =>
+                setStaged((current) => current.filter((entry) => (entry.kind === 'new' ? entry.localId : entry.fileId) !== key))
+              }
+            />
+            <div className="flex justify-end">
+              <Button type="button" disabled={staged.length === 0 || commit.isPending} onClick={() => void attachStaged()}>
+                {t('table.attachConfirm', { count: staged.length })}
+              </Button>
+            </div>
           </div>
-        </div>
-      </FormDialog>
+        </FormDialog>
+      )}
     </div>
   )
 }

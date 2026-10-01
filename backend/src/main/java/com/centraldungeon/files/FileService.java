@@ -923,6 +923,11 @@ public class FileService {
      *       would leave the file permanently readable by a master who has nothing left to do with it.
      * </ol>
      *
+     * <p><b>The admin reaches whatever the master of the table reaches</b> (#45, #284): the third,
+     * fifth, sixth and seventh ways ask {@code MasterService.canOversee}, which is "runs it, or holds
+     * the admin rank". Only through a table, though - somebody's private file that no table links is
+     * still theirs alone, which is why the admin library does not list them either.
+     *
      * <p><b>The fourth one is deliberately as wide as the table itself, and no wider.</b> A shared
      * attachment already travels inside {@code GameTableDetailResponse}, which anybody who may see
      * the table receives - so requiring membership here would list a file to somebody and then refuse
@@ -958,8 +963,9 @@ public class FileService {
         for (TableFile link : links) {
             String linkedTableId = link.getId().gameTableId();
             // The third way, first because it is the widest: a master sees everything on their own
-            // table, private or shared, and is never the subject of a veto there (#135, #154).
-            if (masterService.isMasterOf(linkedTableId, actorId)) {
+            // table, private or shared, and is never the subject of a veto there (#135, #154). So does
+            // an admin, on every table (#45, #284) - in this and in the three loops below.
+            if (masterService.canOversee(linkedTableId, actorId)) {
                 return file;
             }
             // The fourth, and the one #206 wrote this method's warning for: a shared attachment is
@@ -971,7 +977,7 @@ public class FileService {
         // The fifth way, last because it is the one that costs a join: what somebody handed in to a
         // task is readable by the people running the table that asked for it (#63, #76).
         for (String gameTableId : submissionFileRepository.findTableIdsBySubmittedFileId(fileId)) {
-            if (masterService.isMasterOf(gameTableId, actorId)) {
+            if (masterService.canOversee(gameTableId, actorId)) {
                 return file;
             }
         }
@@ -980,7 +986,7 @@ public class FileService {
         // fifth on purpose - that one is the master reading an answer, this one is the table reading
         // the question - so membership of the table is what it asks for, not running it.
         for (String gameTableId : taskFileRepository.findTableIdsByRequestedFileId(fileId)) {
-            if (masterService.isMasterOf(gameTableId, actorId)
+            if (masterService.canOversee(gameTableId, actorId)
                     || registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
                             gameTableId, actorId, REQUEST_READERS)) {
                 return file;
@@ -992,7 +998,7 @@ public class FileService {
         // rejected application, so this loop never even sees a table whose master should not reach
         // it any more.
         for (String gameTableId : registrationFileRepository.findTableIdsByApplicationFileId(fileId)) {
-            if (masterService.isMasterOf(gameTableId, actorId)) {
+            if (masterService.canOversee(gameTableId, actorId)) {
                 return file;
             }
         }

@@ -50,7 +50,7 @@ public class TableSessionController {
      *
      * @param tableId     the table
      * @param currentUser the actor, from the token; the service checks they run the table
-     * @return 200 with its sessions, first to last. 403 when the actor does not run it. While the
+     * @return 200 with its sessions, first to last. 403 when the actor neither runs it nor is an admin. While the
      *         table is paused the pending sessions are not in the list (#32, #33)
      */
     @GetMapping("/api/v1/game-tables/{tableId}/sessions")

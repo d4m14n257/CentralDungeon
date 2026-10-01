@@ -212,7 +212,7 @@ class TableSessionServiceTest {
         TableSession held = session(table, "s1", 1, "2026-09-08T20:00", TableSessionStatus.Held);
         TableSession pending = session(table, "s2", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
         when(gameTableRepository.findById("t9")).thenReturn(Optional.of(table));
-        when(masterService.isMasterOf("t9", "master-1")).thenReturn(true);
+        when(masterService.canOversee("t9", "master-1")).thenReturn(true);
         when(sessionRepository.findByGameTable_IdOrderBySequenceNumberAsc("t9")).thenReturn(List.of(held, pending));
         when(registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc("t9", TableRegistrationStatus.Player))
                 .thenReturn(List.of());
@@ -445,7 +445,7 @@ class TableSessionServiceTest {
         GameTable table = table("t25", LocalDate.parse("2026-09-08"), 3);
         TableSession first = session(table, "s20", 1, "2026-09-08T20:00", TableSessionStatus.Scheduled);
         when(gameTableRepository.findById("t25")).thenReturn(Optional.of(table));
-        when(masterService.isMasterOf("t25", "master-1")).thenReturn(true);
+        when(masterService.canOversee("t25", "master-1")).thenReturn(true);
         when(sessionRepository.findByGameTable_IdOrderBySequenceNumberAsc("t25")).thenReturn(List.of(first));
         when(registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc("t25", TableRegistrationStatus.Player))
                 .thenReturn(List.of(registration(table, "player-1", TableRegistrationStatus.Player)));

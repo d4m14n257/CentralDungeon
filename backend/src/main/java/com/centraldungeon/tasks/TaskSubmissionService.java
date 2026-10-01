@@ -169,13 +169,16 @@ public class TaskSubmissionService {
      * @param taskId  the task
      * @param actorId the actor, from the token
      * @return every answer, oldest first, plus the people still missing
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
      * @throws com.centraldungeon.common.exception.NotFoundException if the task is not there
      */
     @Transactional(readOnly = true)
     public TaskSubmissionsResponse listForTask(String taskId, String actorId) {
         TableTask task = tableTaskService.getLiveTask(taskId);
-        requireMasterOf(task.getGameTable().getId(), actorId);
+        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        if (!masterService.canOversee(task.getGameTable().getId(), actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can view what was handed in");
+        }
 
         List<TaskSubmission> submissions = submissionRepository.findByTask_IdAndDeletedAtIsNullOrderByCreatedAtAsc(taskId);
         List<TaskRecipientResponse> recipients = tableTaskService.recipientsOf(task);

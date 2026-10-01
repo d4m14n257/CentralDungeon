@@ -24,6 +24,8 @@ Es el entregable que F3 tiene y ninguna otra fase: **dónde termina uno y empiez
 | Aprobar un pedido de `approval_requests` (#42, #90) | sí | sí | F3.2 |
 | Reservar un ítem de la bandeja (#100) | sí | sí | F3.3 |
 | Editar `system_settings` (#141) | sí | sí | F3.5 |
+| Leer todo lo de gestión de cualquier mesa y abrir sus archivos — **solo leer** (`MasterService.canOversee`, #45, #284) | sí | sí | F4 |
+| Editar una mesa ajena no cerrada, avisándoles a sus masters (#284) | sí | sí | F4 |
 | **Consultar `audit_logs`** (#92) | no | sí | F6 |
 | **Borrado físico de archivos** (#66) | no | sí | F6 |
 | **Migrar una cuenta** (#83) | no | sí | F6 |

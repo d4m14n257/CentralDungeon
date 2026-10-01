@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
-import { masterTableDetailPath } from '@/config/paths'
+import { adminTableDetailPath, masterTableDetailPath } from '@/config/paths'
 import { HelpLink } from '@/features/help'
 import { CatalogPicker } from '@/features/catalogs'
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChanges'
@@ -28,7 +28,9 @@ import {
   useManagedTable,
   useMySchedule,
   useTableTypes,
+  useAdminUpdateTable,
   useUpdateTable,
+  ADMIN_EDITABLE_STATUSES,
   MASTER_EDITABLE_STATUSES,
 } from '@/features/tables'
 import type { CreateGameTableForm, TableScheduleEntry } from '@/features/tables'
@@ -56,6 +58,38 @@ import { useConfirm } from '@/hooks/useConfirm'
  * the table, this is what makes the change the admin asked for.
  */
 export function MasterTableEditPage() {
+  return <TableEditPage />
+}
+
+/** What {@link TableEditPage} takes. */
+export interface TableEditPageProps {
+  /**
+   * The admin's edit of somebody else's table, from /admin/tables/:id/edit (#284), rather than the
+   * master's own. It changes five things and nothing else:
+   *
+   * - **who may and when**: an admin, in any status but the three that close a table, instead of the
+   *   Primary in `Draft` or `ChangesRequested`;
+   * - **the endpoint**: `PUT …/admin-edit`, never the master's (#152);
+   * - **where it goes back to**: the admin's view of the table;
+   * - **what the review says**: that every master of the table is told;
+   * - **the week below the agenda is drawn empty**: it shows the reader's own commitments, and the
+   *   admin's are not what this table clashes with - the backend measures it against the Primary's.
+   *   The grid itself stays, because it is how a slot is added.
+   */
+  asAdmin?: boolean
+}
+
+/**
+ * The rewrite form itself, shared by the master's edit and the admin's (#284) rather than written
+ * twice: the fields, the pickers, the agenda and the replace-not-patch rule (#189) are the same, and
+ * two copies of a 400-line form are two places for #231's bugs to come back.
+ *
+ * It lives here and is mounted by `routes/admin/AdminTableEditPage` because a screen composing
+ * domains is a route's job and not a feature's (§3.1.5); the admin route adds nothing but the mode.
+ *
+ * @param props.asAdmin the admin's edit rather than the master's
+ */
+export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
   const { t } = useTranslation('master')
   const confirm = useConfirm()
   // The type's and the week's words belong to the tables domain (regla dura 18).
@@ -68,7 +102,11 @@ export function MasterTableEditPage() {
   const { data: table, isPending, error, isLoadingError, refetch } = useManagedTable(tableId)
   const { data: me } = useMe()
   const { data: tableTypes } = useTableTypes()
-  const updateTable = useUpdateTable(tableId)
+  // Both are called on every render - hooks cannot be conditional - and the mode picks which writes.
+  const masterUpdate = useUpdateTable(tableId)
+  const adminUpdate = useAdminUpdateTable(tableId)
+  const updateTable = asAdmin ? adminUpdate : masterUpdate
+  const detailPath = asAdmin ? adminTableDetailPath(tableId) : masterTableDetailPath(tableId)
 
   const [systems, setSystems] = useState<CatalogValue[]>([])
   const [tags, setTags] = useState<CatalogValue[]>([])
@@ -202,17 +240,19 @@ export function MasterTableEditPage() {
 
   const isPrimary = table.masters.some((master) => master.userId === me?.id && master.masterType === 'Primary')
 
-  // The backend refuses the rewrite past Preparation and ChangesRequested, and only from the table's
-  // master. Painting a form that is guaranteed to fail would be worse than saying why it is closed.
-  if (!isPrimary || !MASTER_EDITABLE_STATUSES.includes(table.status)) {
-    return <ForbiddenState description={t('edit.lockedDescription')} />
+  // The backend refuses the master's rewrite past Preparation and ChangesRequested, and only from the
+  // table's master; the admin's, once the table is closed. Painting a form that is guaranteed to fail
+  // would be worse than saying why it is closed.
+  const allowed = asAdmin ? ADMIN_EDITABLE_STATUSES.includes(table.status) : isPrimary && MASTER_EDITABLE_STATUSES.includes(table.status)
+  if (!allowed) {
+    return <ForbiddenState description={t(asAdmin ? 'edit.adminLockedDescription' : 'edit.lockedDescription')} />
   }
 
   async function onSubmit(values: CreateGameTableForm) {
     // A review before anything is written (#283): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('edit.confirmTitle', { name: values.name }),
-      description: t('edit.confirmDescription'),
+      description: t(asAdmin ? 'edit.adminConfirmDescription' : 'edit.confirmDescription'),
       confirmLabel: t('edit.save'),
     })
     if (!confirmed) return
@@ -235,8 +275,8 @@ export function MasterTableEditPage() {
         onSuccess: () => {
           // Saving and then leaving is not walking out on the work.
           allowNextNavigation()
-          toast.success(t('edit.success'))
-          void navigate(masterTableDetailPath(tableId))
+          toast.success(t(asAdmin ? 'edit.adminSuccess' : 'edit.success'))
+          void navigate(detailPath)
         },
       },
     )
@@ -248,8 +288,8 @@ export function MasterTableEditPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader
         title={t('edit.title', { name: table.name })}
-        description={t('edit.description')}
-        back={{ to: masterTableDetailPath(tableId), label: t('edit.back') }}
+        description={t(asAdmin ? 'edit.adminDescription' : 'edit.description')}
+        back={{ to: detailPath, label: t('edit.back') }}
         help="masters.edit-table"
       />
 
@@ -385,17 +425,22 @@ export function MasterTableEditPage() {
               <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} />
 
               {/* The same week the wizard offers (#227, #228): the master rewriting an agenda needs
-                  to see what else they gave away just as much as the one building it does. */}
+                  to see what else they gave away just as much as the one building it does. The grid
+                  is also the only way to add a slot, so the admin gets it too - empty of anybody's
+                  commitments: theirs are not what this table clashes with, and the backend measures
+                  the clash against the table's Primary (#284). */}
               <div className="space-y-2 pt-2">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="section-label">{tTables('schedule.inWizardTitle')}</h3>
-                  <p className="text-fg-muted text-xs">{tTables('schedule.inWizardDescription')}</p>
+                  <h3 className="section-label">{tTables(asAdmin ? 'schedule.adminGridTitle' : 'schedule.inWizardTitle')}</h3>
+                  <p className="text-fg-muted text-xs">
+                    {tTables(asAdmin ? 'schedule.adminGridDescription' : 'schedule.inWizardDescription')}
+                  </p>
                 </div>
-                {myWeek.isPending ? (
+                {!asAdmin && myWeek.isPending ? (
                   <Skeleton className="h-64 w-full" />
                 ) : (
                   <WeeklyScheduleGrid
-                    commitments={(myWeek.data ?? []).filter((commitment) => commitment.tableId !== tableId)}
+                    commitments={asAdmin ? [] : (myWeek.data ?? []).filter((commitment) => commitment.tableId !== tableId)}
                     timeZone={timeZone}
                     pending={pendingBlocks}
                     onPickHour={claimHour}
@@ -445,7 +490,7 @@ export function MasterTableEditPage() {
 
           <div className="flex items-center justify-between gap-3">
             <Button asChild type="button" variant="outline">
-              <Link to={masterTableDetailPath(tableId)}>{t('edit.cancel')}</Link>
+              <Link to={detailPath}>{t('edit.cancel')}</Link>
             </Button>
             <Button type="submit" disabled={updateTable.isPending}>
               {updateTable.isPending ? t('edit.saving') : t('edit.save')}

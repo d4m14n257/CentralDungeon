@@ -210,7 +210,7 @@ class TableFileServiceTest {
      */
     @Test
     void aFileItsOwnerDeletedDisappearsFromTheTablesThatShowedIt() {
-        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(masterService.canOversee("table-1", "master-1")).thenReturn(true);
         when(tableFileRepository.findById_GameTableIdAndStatus("table-1", TableFileStatus.Current))
                 .thenReturn(List.of(attached("table-1", "file-1", false)));
         when(fileRepository.findAllById(List.of("file-1"))).thenReturn(List.of());
@@ -221,7 +221,7 @@ class TableFileServiceTest {
     @Test
     void listingShowsThePrivateAttachmentsToWhoeverRunsTheTable() {
         StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
-        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(masterService.canOversee("table-1", "master-1")).thenReturn(true);
         when(tableFileRepository.findById_GameTableIdAndStatus("table-1", TableFileStatus.Current))
                 .thenReturn(List.of(attached("table-1", "file-1", true)));
         when(fileRepository.findAllById(List.of("file-1"))).thenReturn(List.of(file));

@@ -145,6 +145,19 @@ public final class ConflictException extends ApiException {
     public static final String PAUSE_ALREADY_REQUESTED = "PAUSE_ALREADY_REQUESTED";
 
     /**
+     * An admin lowered a table's capacity below the players it already has (#34, #284).
+     *
+     * <p>Only an admin can get here: the master rewrites a table before anybody plays at it, so there
+     * is no roster for the new number to fall short of. Nobody is removed to make the number fit -
+     * which player would leave is a person's decision, never a side effect of an edit (#70). The
+     * frontend names how many there are, from {@link #PARAM_PLAYER_COUNT}.
+     */
+    public static final String CAPACITY_BELOW_PLAYERS = "CAPACITY_BELOW_PLAYERS";
+
+    /** The parameter of {@link #CAPACITY_BELOW_PLAYERS}: how many players the table has right now. */
+    public static final String PARAM_PLAYER_COUNT = "playerCount";
+
+    /**
      * @param message what state made the request impossible, in English and for a log (#197)
      */
     public ConflictException(String message) {

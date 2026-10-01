@@ -43,7 +43,15 @@ interface OutletContext {
   isPrimary: boolean
 }
 
-function StatusTimeline({ tableId }: { tableId: string }) {
+/**
+ * A table's lifecycle history, oldest first: who moved it, where to, and why.
+ *
+ * Exported for the admin's status tab (#284), which shows the same history next to the admin's own
+ * actions instead of the master's transitions.
+ *
+ * @param props.tableId the table
+ */
+export function StatusTimeline({ tableId }: { tableId: string }) {
   const { t, i18n } = useTranslation('master')
   const { data, isPending, isLoadingError, refetch } = useTableStatusHistory(tableId)
 

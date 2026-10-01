@@ -313,13 +313,14 @@ public class ApprovalService {
      * @param actorId     the actor, from the token (#121)
      * @return the pending veto requests about this table's applications, oldest first, each naming
      *         the person it is about
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException 403 when the actor does
-     *         not run the table
+     * @throws com.centraldungeon.common.exception.ForbiddenActionException 403 when the actor neither
+     *         runs the table nor is an admin (#45, #284) - an admin reads them, only the Primary answers
      */
     @Transactional(readOnly = true)
     public List<BanRequestResponse> listBanRequests(String gameTableId, String actorId) {
-        if (!masterService.isMasterOf(gameTableId, actorId)) {
-            throw new ForbiddenActionException("Only a master of this table can read its veto requests");
+        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        if (!masterService.canOversee(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can read its veto requests");
         }
         Map<String, TableRegistration> registrations = registrationService.registrationsOf(gameTableId);
         if (registrations.isEmpty()) {

@@ -80,11 +80,14 @@ public class TableFileService {
      * @param actorId     the actor, from the token
      * @return its attachments, oldest first - the order they were put there, which is the order
      *         somebody who assembled them remembers
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
      */
     @Transactional(readOnly = true)
     public List<TableFileResponse> listForTable(String gameTableId, String actorId) {
-        requireMasterOf(gameTableId, actorId);
+        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        if (!masterService.canOversee(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can view its files");
+        }
         List<TableFile> links = tableFileRepository.findById_GameTableIdAndStatus(gameTableId, TableFileStatus.Current);
         Map<String, StoredFile> files = filesOf(links);
         return links.stream()

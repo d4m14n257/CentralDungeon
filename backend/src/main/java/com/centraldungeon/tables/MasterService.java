@@ -4,6 +4,7 @@ import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -261,6 +263,33 @@ public class MasterService {
         return masterRepository
                 .findByGameTable_IdAndUser_IdAndStatus(gameTableId, userId, MasterRowStatus.Created)
                 .isPresent();
+    }
+
+    /**
+     * Whether this person may read everything a table's own masters read: they run it, or they hold
+     * the platform's admin rank.
+     *
+     * <p><b>Reading only.</b> Every read of a table's management side - candidates, players,
+     * sessions, requests and what was handed in, files, veto requests - asks this; every write still
+     * asks {@link #isMasterOf}, because the admin's own mutations have endpoints of their own and
+     * running a table is not something the rank grants (#135). It exists because the admin has no
+     * visibility limits over the platform except who wrote a comment (#45), and until #284 the code
+     * only ever let them read a table's status history.
+     *
+     * <p>{@code Owner} counts the same as {@code Admin}: one rank with two reaches, spelled out here
+     * rather than inherited from a hierarchy (#89, #169).
+     *
+     * @param gameTableId the table
+     * @param userId      the actor, always from the token (#121)
+     * @return true when they run the table or are an admin or owner of the platform
+     */
+    @Transactional(readOnly = true)
+    public boolean canOversee(String gameTableId, String userId) {
+        if (isMasterOf(gameTableId, userId)) {
+            return true;
+        }
+        Set<String> roles = userService.loadAuthSnapshot(userId).roles();
+        return roles.contains(PlatformRole.ADMIN.roleName()) || roles.contains(PlatformRole.OWNER.roleName());
     }
 
     /**

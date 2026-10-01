@@ -14,6 +14,25 @@ import type { GameTableStatus } from './types'
 export const MASTER_EDITABLE_STATUSES: readonly GameTableStatus[] = ['Draft', 'ChangesRequested']
 
 /**
+ * The statuses in which an admin may still rewrite somebody else's table (#284).
+ *
+ * **Mirror of `GameTableService.ADMIN_EDITABLE_STATUSES`**: every status but the three that close a
+ * table. Wider than the master's on purpose - the admin's edit exists for the table that is already
+ * open or running and needs correcting, with its masters told. A finished, cancelled or removed
+ * table is a record of what happened.
+ */
+export const ADMIN_EDITABLE_STATUSES: readonly GameTableStatus[] = [
+  'Draft',
+  'Unassigned',
+  'Preparation',
+  'ChangesRequested',
+  'Opened',
+  'InProgress',
+  'PauseRequested',
+  'Pause',
+]
+
+/**
  * Every status a table can be shown in, in the order of its life (#245).
  *
  * A written-out tuple rather than something derived from the union, for the same reason as

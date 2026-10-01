@@ -91,7 +91,8 @@
       "TABLE_NEEDS_SCHEDULE": "The table has to say when it is played. Add at least one day and time.",
       "TABLE_NEEDS_TAG": "The table has to carry at least one tag. Pick one or propose your own.",
       "FILE_NEEDS_CATEGORY": "Before publishing it, choose what the file is with “Change what it is”. That is how masters know where to find it.",
-      "TASK_CLOSED": "This request is already closed and the master is not taking more answers."
+      "TASK_CLOSED": "This request is already closed and the master is not taking more answers.",
+      "CAPACITY_BELOW_PLAYERS": "The seats cannot go below the {{playerCount}} players the table already has."
     }
   },
   "pagination": {

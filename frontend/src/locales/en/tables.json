@@ -32,7 +32,9 @@
     "inWizardTitle": "Your week",
     "inWizardDescription": "Click a free hour to add it to this table’s agenda.",
     "tablesTitle": "Your tables this week",
-    "withoutAgenda": "no schedule"
+    "withoutAgenda": "no schedule",
+    "adminGridTitle": "The week",
+    "adminGridDescription": "Click an hour to add it to the agenda. If it clashes with another of the master's tables, saving says which one."
   },
   "status": {
     "Draft": "Draft",

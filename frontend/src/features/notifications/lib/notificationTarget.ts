@@ -1,4 +1,11 @@
-import { masterTableDetailPath, myTableDetailPath, playerApplicationsPath, playerProfilePath, tableDetailPath } from '@/config/paths'
+import {
+  masterTableDetailPath,
+  masterTableStatusPath,
+  myTableDetailPath,
+  playerApplicationsPath,
+  playerProfilePath,
+  tableDetailPath,
+} from '@/config/paths'
 
 import type { Notification } from '../types'
 
@@ -66,6 +73,16 @@ export function notificationTarget(notification: Notification): string | null {
     case 'TableApprovedWithChanges':
     case 'TableChangesRequested':
       return masterTableDetailPath(relatedEntityId)
+    // An admin changed somebody else's table (#284). The rewrite and the return to play land on the
+    // table; the pause and the cancellation on its status tab, because that is where the admin's
+    // reason is - the notification does not carry it (#197). A removed table travels with no id at all
+    // and stops at the guard above: there is nothing left to open.
+    case 'TableEditedByAdmin':
+    case 'TableResumedByAdmin':
+      return masterTableDetailPath(relatedEntityId)
+    case 'TablePausedByAdmin':
+    case 'TableCanceledByAdmin':
+      return masterTableStatusPath(relatedEntityId)
     // R4's clash notice (#178) names the *other* table but asks for an action on neither: the
     // fix is withdrawing one of the two pending applications, and that only happens from the
     // applications list (#178 again) - opening either table's detail would show the clash without

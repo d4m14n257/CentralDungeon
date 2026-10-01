@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Navegación del Admin — /admin, 7 secciones, un lienzo y una subida",
+    "title": "Navegación del Admin — /admin, 7 secciones, un lienzo, una subida y el detalle de mesa",
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/d4m14n257/CentralDungeon",
@@ -69,6 +69,15 @@
         "focus": [
           "catalogs",
           "catalogGroup"
+        ]
+      },
+      {
+        "id": "mesa",
+        "label": "Detalle de mesa",
+        "focus": [
+          "tables",
+          "tableDetail",
+          "tableEdit"
         ]
       }
     ]
@@ -168,7 +177,7 @@
       "id": "tables",
       "type": "frontend",
       "label": "/admin/tables",
-      "sublabel": "entrada única · callejón",
+      "sublabel": "todas las mesas · abre cada una",
       "pos": [
         300,
         250
@@ -181,7 +190,7 @@
       "sources": [
         {
           "path": "frontend/src/routes/admin/AdminTablesPage.tsx",
-          "label": "sin detalle de mesa"
+          "label": "nombre y ojo → detalle (#284)"
         }
       ]
     },
@@ -333,6 +342,48 @@
           "label": "ruta lazy"
         }
       ]
+    },
+    {
+      "id": "tableDetail",
+      "type": "frontend",
+      "label": "/admin/tables/:id",
+      "sublabel": "la mesa entera, solo lectura (#284)",
+      "pos": [
+        40,
+        250
+      ],
+      "size": [
+        220,
+        66
+      ],
+      "tag": "AdminTableDetailPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminTableDetailPage.tsx",
+          "label": "pestañas del master en solo lectura"
+        }
+      ]
+    },
+    {
+      "id": "tableEdit",
+      "type": "frontend",
+      "label": "/admin/tables/:id/edit",
+      "sublabel": "editar · avisa a sus masters (#284)",
+      "pos": [
+        40,
+        150
+      ],
+      "size": [
+        220,
+        66
+      ],
+      "tag": "AdminTableEditPage",
+      "sources": [
+        {
+          "path": "frontend/src/routes/admin/AdminTableEditPage.tsx",
+          "label": "el formulario del master en modo admin"
+        }
+      ]
     }
   ],
   "boundaries": [
@@ -349,7 +400,9 @@
         "users",
         "requests",
         "settings",
-        "catalogGroup"
+        "catalogGroup",
+        "tableDetail",
+        "tableEdit"
       ],
       "pad": 14
     }
@@ -432,6 +485,20 @@
       "to": "fileUpload",
       "fromSide": "right",
       "toSide": "left"
+    },
+    {
+      "id": "tables-detail",
+      "from": "tables",
+      "to": "tableDetail",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "detail-edit",
+      "from": "tableDetail",
+      "to": "tableEdit",
+      "fromSide": "top",
+      "toSide": "bottom"
     }
   ],
   "cards": [
@@ -439,8 +506,8 @@
       "dot": "rose",
       "title": "El admin casi no sale",
       "items": [
-        "Catálogos abre un lienzo (#275); archivos, su subida (#278)",
-        "No abre mesa, perfil ni la entidad de un pedido"
+        "Catálogos abre un lienzo (#275); archivos, su subida (#278); mesas, su detalle (#284)",
+        "No abre perfiles ni la entidad de un pedido"
       ]
     },
     {

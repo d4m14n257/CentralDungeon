@@ -61,6 +61,12 @@ export const gameTablesApi = {
   /** A full replacement, not a patch: an absent field empties it, which is how the agenda gets cleared. */
   update: (id: string, request: UpdateGameTableRequest) =>
     api.put<GameTableDetail, UpdateGameTableRequest>(`/api/v1/game-tables/${id}`, request),
+  /**
+   * An admin rewriting somebody else's table (#284): its own path, never the master's `PUT` with a
+   * second rule inside (#152). Its masters are told.
+   */
+  adminUpdate: (id: string, request: UpdateGameTableRequest) =>
+    api.put<GameTableDetail, UpdateGameTableRequest>(`/api/v1/game-tables/${id}/admin-edit`, request),
   createUnassigned: (request: CreateGameTableRequest) =>
     api.post<GameTableDetail, CreateGameTableRequest>('/api/v1/game-tables/unassigned', request),
   assignMasters: (id: string, request: AssignMastersRequest) =>

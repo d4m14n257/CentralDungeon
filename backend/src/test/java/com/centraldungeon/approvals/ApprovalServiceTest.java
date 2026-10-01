@@ -698,7 +698,7 @@ class ApprovalServiceTest {
     void theVetoRequestListingNamesWhoIsToBeVetoed() {
         TableRegistration target = registrationOf("reg-1", user("player-9", "morgana"));
         ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
-        when(masterService.isMasterOf("table-1", "primary-1")).thenReturn(true);
+        when(masterService.canOversee("table-1", "primary-1")).thenReturn(true);
         when(registrationService.registrationsOf("table-1")).thenReturn(Map.of("reg-1", target));
         when(approvalRequestRepository.findByRequestTypeAndStatusAndEntityIdInOrderByCreatedAtAsc(
                         eq(ApprovalRequestType.PlayerBan), eq(ApprovalStatus.Pending), any()))

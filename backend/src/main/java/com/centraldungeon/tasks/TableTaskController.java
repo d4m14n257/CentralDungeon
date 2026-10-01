@@ -52,7 +52,7 @@ public class TableTaskController {
      *
      * @param tableId     the table
      * @param currentUser the actor, from the token; the service checks they run the table
-     * @return 200 with its tasks, oldest first. 403 when the actor does not run it
+     * @return 200 with its tasks, oldest first. 403 when the actor neither runs it nor is an admin
      */
     @GetMapping("/api/v1/game-tables/{tableId}/tasks")
     @PreAuthorize("isAuthenticated()")

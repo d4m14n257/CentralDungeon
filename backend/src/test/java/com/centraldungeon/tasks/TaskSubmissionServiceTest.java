@@ -238,7 +238,7 @@ class TaskSubmissionServiceTest {
     @Test
     void tellsTheMasterWhoAnsweredAndWhoHasNot() {
         TableTask task = givenOpenTask("task-1", true, true);
-        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(masterService.canOversee("table-1", "master-1")).thenReturn(true);
         when(tableTaskService.recipientsOf(task)).thenReturn(List.of(
                 new TaskRecipientResponse("player-1", "discord-player-1"),
                 new TaskRecipientResponse("player-2", "discord-player-2"),
@@ -257,7 +257,7 @@ class TaskSubmissionServiceTest {
     @Test
     void somebodyWhoAnsweredTwiceIsMissingZeroTimes() {
         TableTask task = givenOpenTask("task-1", true, true);
-        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(masterService.canOversee("table-1", "master-1")).thenReturn(true);
         User player = persistedUser("player-1");
         when(tableTaskService.recipientsOf(task))
                 .thenReturn(List.of(new TaskRecipientResponse("player-1", "discord-player-1")));

@@ -90,6 +90,45 @@ public enum NotificationType {
     TableChangesRequested,
 
     /**
+     * To every master of the table: an admin rewrote it - its text, catalogs, agenda or capacity
+     * (#284).
+     *
+     * <p>The rule behind this one and the four that follow is the same: whenever an admin changes
+     * something that is not theirs, the people it belongs to are told (#284). The table keeps
+     * working without them reading it, which is exactly why they would otherwise not notice - nothing
+     * on their screen says the description they wrote is no longer the one people read.
+     */
+    TableEditedByAdmin,
+
+    /**
+     * To every master of the table: an admin paused it directly, without the master having asked
+     * (#32, #284). A pause the master requested and an admin approved reaches them as
+     * {@link #ApprovalRequestApproved} instead. The reason is not copied in: it is mandatory on the
+     * transition and the status history is where it is read whole (#197).
+     */
+    TablePausedByAdmin,
+
+    /**
+     * To every master of the table: an admin resumed it (#32, #284). The players hear about it
+     * separately, through {@link #SessionScheduled}, because what changes for them is the calendar.
+     */
+    TableResumedByAdmin,
+
+    /**
+     * To every master of the table: an admin cancelled it (#27, #284). The reason lives in the status
+     * history, as for a pause.
+     */
+    TableCanceledByAdmin,
+
+    /**
+     * To every master the table had: an admin removed it (#25, #284).
+     *
+     * <p>It links nowhere on purpose. A removed table is invisible on every read path (#25), so a
+     * link would open a 404; the name in the message is the whole of what is left to tell.
+     */
+    TableDeletedByAdmin,
+
+    /**
      * To whoever asked: an admin approved their request (#42).
      *
      * <p><b>The request itself notifies nobody</b> (#100, arquitectura §4.5: «los ítems de trabajo de

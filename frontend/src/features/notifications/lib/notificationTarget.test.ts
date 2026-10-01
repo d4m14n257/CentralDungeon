@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { masterTableDetailPath, masterTableStatusPath } from '@/config/paths'
+
 import { notificationTarget } from './notificationTarget'
 import { NOTIFICATION_TYPES, type Notification } from '../types'
 
@@ -88,13 +90,29 @@ describe('notificationTarget', () => {
     expect(notificationTarget(untargeted)).toBeNull()
   })
 
+  it.each(['TableEditedByAdmin', 'TableResumedByAdmin'] as const)('sends %s to the table its master runs', (type) => {
+    expect(notificationTarget(notification({ notificationType: type }))).toBe(masterTableDetailPath('t1'))
+  })
+
+  /** The admin's reason is in the status history and not in the notification (#197, #284). */
+  it.each(['TablePausedByAdmin', 'TableCanceledByAdmin'] as const)('sends %s to the status tab, where the reason is', (type) => {
+    expect(notificationTarget(notification({ notificationType: type }))).toBe(masterTableStatusPath('t1'))
+  })
+
+  it('opens nothing for a table an admin removed, which has nothing left to open', () => {
+    const removed = notification({ notificationType: 'TableDeletedByAdmin', relatedEntityType: null, relatedEntityId: null })
+    expect(notificationTarget(removed)).toBeNull()
+  })
+
   /**
    * Regression guard: every type the backend can send today has to resolve to a real path. A type
    * silently falling through to the `default` branch is exactly the bug this feature was built to
    * fix - a notification that reads, marks itself read, and opens nothing.
    */
   it('never falls through to the default for a type the backend actually sends', () => {
-    for (const type of ALL_TYPES) {
+    // The one deliberate dead end: a removed table cannot be opened (#25), so the backend sends it with
+    // no id at all - tested on its own below.
+    for (const type of ALL_TYPES.filter((candidate) => candidate !== 'TableDeletedByAdmin')) {
       const row = notification({ notificationType: type })
       expect(notificationTarget(row), `${type} should not resolve to null`).not.toBeNull()
     }

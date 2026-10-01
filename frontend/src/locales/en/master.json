@@ -63,7 +63,8 @@
       "tasks": "Requests",
       "files": "Files",
       "players": "Players",
-      "schedule": "Agenda"
+      "schedule": "Agenda",
+      "label": "Table sections"
     },
     "edit": "Edit"
   },
@@ -237,7 +238,11 @@
     "lockedDescription": "This table can no longer be edited: either you do not run it, or it is past the point where its master could rewrite it.",
     "back": "Back to the table",
     "confirmTitle": "Save the changes to “{{name}}”?",
-    "confirmDescription": "What you wrote replaces what the table said."
+    "confirmDescription": "What you wrote replaces what the table said.",
+    "adminLockedDescription": "This table finished, was cancelled or was removed: it stays as a record and can no longer be edited.",
+    "adminConfirmDescription": "What you wrote replaces what the table said, and its masters are told that an admin edited it.",
+    "adminSuccess": "Table saved. Its masters were notified.",
+    "adminDescription": "You are editing a table that is not yours: when you save, its masters are notified."
   },
   "veto": {
     "block": "Ban",
@@ -268,6 +273,7 @@
     "confirmApproveTitle": "Approve the veto on {{name}}?",
     "confirmApproveDescription": "They stop seeing the table, its detail and its files. It is recorded with your reason.",
     "confirmRejectTitle": "Reject the veto request on {{name}}?",
-    "confirmRejectDescription": "They stay at the table as before. It is recorded with your reason."
+    "confirmRejectDescription": "They stay at the table as before. It is recorded with your reason.",
+    "descriptionObserver": "A co-master asked for somebody to be vetoed from this table. The table's main master decides."
   }
 }

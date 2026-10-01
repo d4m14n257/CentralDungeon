@@ -640,6 +640,19 @@
         "step3": "Type the new number, inside the range the screen states, and say why you are changing it.",
         "step4": "Save. It applies on the very next request, with no restart."
       }
+    },
+    "tableDetail": {
+      "title": "Viewing and editing a table",
+      "what": "From “Tables” you open any table and see it whole: its details, who runs it, the candidates, the players, the agenda, the sessions with their attendance, the requests with what each player handed in, the files and its status history.",
+      "readOnly": "What belongs to the master is shown but not touched: you do not accept candidates, record attendance, publish requests or add files on their behalf.",
+      "edit": "What you can do is edit the table (name, description, systems, agenda and seats) at any time while it is not finished, cancelled or removed. The seats cannot go below the players it already has.",
+      "notify": "Every time you edit, pause, resume, cancel or remove somebody else's table, its masters are notified. Which admin did it is not said.",
+      "closed": "A finished, cancelled or removed table stays as a record of what happened: it can be viewed, but no longer edited.",
+      "steps": {
+        "step1": "Go to “Tables” and press the table's name or the eye icon.",
+        "step2": "Go through the tabs: “Details” first, “Status” last with its actions.",
+        "step3": "To correct something, press “Edit table”, change what is needed and confirm."
+      }
     }
   },
   "stepsTitle": "How to do it"

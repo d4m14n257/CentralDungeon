@@ -120,6 +120,22 @@ public class GameTableService {
     private static final Set<GameTableStatus> EDITABLE_STATUSES =
             Set.of(GameTableStatus.Draft, GameTableStatus.ChangesRequested);
 
+    /**
+     * The statuses in which an admin may still rewrite a table (#284): every one but the three that
+     * close it.
+     *
+     * <p>Wider than {@link #EDITABLE_STATUSES} on purpose. The master's set is narrow because people
+     * apply on the strength of what an open table says; the admin's door exists precisely for the
+     * table that is already open, or running, and needs correcting - a wrong platform, an agenda that
+     * moved, a description that breaks a rule - with the masters told that it happened. A finished,
+     * cancelled or removed table is a record of something that happened and nobody rewrites it.
+     */
+    private static final Set<GameTableStatus> ADMIN_EDITABLE_STATUSES = Arrays.stream(GameTableStatus.values())
+            .filter(status -> status != GameTableStatus.Finished
+                    && status != GameTableStatus.Canceled
+                    && status != GameTableStatus.Deleted)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+
     private static final List<TableRegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
@@ -283,9 +299,84 @@ public class GameTableService {
             throw new ConflictException("A table in status " + gameTable.getStatus() + " can no longer be edited by its master");
         }
         // Authorized first, then the draft itself: somebody who does not run this table gets a 403,
-        // not a complaint about its agenda. Same three requirements as create (#226) - a rewrite that
-        // empties the agenda or the catalogs would leave the table in a state creating it could never
-        // have reached.
+        // not a complaint about its agenda.
+        rewrite(gameTable, request, actorId);
+        return toDetail(gameTable);
+    }
+
+    /**
+     * An admin rewriting somebody else's table (#284), from /admin/tables/:id/edit.
+     *
+     * <p><b>A door of its own, not {@link #update} with a second rule inside</b> (#152): the master's
+     * edit and the admin's differ in who may, when, and what follows, and one path answering two ways
+     * depending on who asks is the shape #152 removed. What they share is the rewrite itself.
+     *
+     * <ul>
+     *   <li><b>When</b>: in any status but the three that close a table ({@link #ADMIN_EDITABLE_STATUSES}).
+     *       While it is in review, not if another admin reserved it from the tray - the same rule as
+     *       approving it (#100).
+     *   <li><b>The agenda's clash check</b> (R1, #178) measures against the <em>Primary</em>'s other
+     *       commitments, because the admin is committed to nothing here. A table with no master yet
+     *       is checked only for its own coherence, as when an admin creates it (#72).
+     *   <li><b>The capacity</b> cannot drop below the players already in: nobody is removed to make a
+     *       number fit (#34, #70).
+     *   <li><b>Every master is told</b>, unless the admin is one of them and is editing their own
+     *       table - the rule of #284: an admin's change to something that is not theirs reaches the
+     *       people it belongs to.
+     * </ul>
+     *
+     * @param gameTableId the table to rewrite
+     * @param request     the whole table as it should end up. Absent means empty, not unchanged (#189)
+     * @param actorId     the admin, from the token (#121)
+     * @return the table after the edit
+     * @throws ConflictException if the table is closed, reserved by another admin
+     *                           ({@code ITEM_ALREADY_CLAIMED}), smaller than its roster
+     *                           ({@code CAPACITY_BELOW_PLAYERS}), or its agenda clashes with the
+     *                           Primary's other tables ({@code SCHEDULE_CONFLICT})
+     */
+    @Transactional
+    public GameTableDetailResponse adminUpdate(String gameTableId, UpdateGameTableRequest request, String actorId) {
+        GameTable gameTable = lockTable(gameTableId);
+        if (!ADMIN_EDITABLE_STATUSES.contains(gameTable.getStatus())) {
+            throw new ConflictException("A table in status " + gameTable.getStatus() + " is closed and cannot be edited");
+        }
+        if (gameTable.getStatus() == GameTableStatus.Preparation) {
+            AdminQueueClaimRule.requireNotHeldByAnother(gameTable.getClaimedBy(), actorId, "table " + gameTableId);
+        }
+        if (request.maxPlayers() != null) {
+            long players = tableRegistrationRepository.countByGameTable_IdAndStatus(gameTableId, TableRegistrationStatus.Player);
+            if (request.maxPlayers() < players) {
+                throw new ConflictException(
+                        "Capacity " + request.maxPlayers() + " is below the " + players + " players the table already has",
+                        ConflictException.CAPACITY_BELOW_PLAYERS,
+                        Map.of(ConflictException.PARAM_PLAYER_COUNT, String.valueOf(players)));
+            }
+        }
+
+        List<Master> masters = masterService.findByGameTable(gameTableId);
+        String primaryId = masters.stream()
+                .filter(master -> master.getMasterType() == MasterType.Primary)
+                .map(master -> master.getUser().getId())
+                .findFirst()
+                .orElse(null);
+        rewrite(gameTable, request, primaryId);
+        announceAdminAction(gameTable, actorId, NotificationType.TableEditedByAdmin, masters);
+        return toDetail(gameTable);
+    }
+
+    /**
+     * The rewrite the master's edit and the admin's share: every field replaced, the catalogs and the
+     * agenda as whole sets (#189, #190).
+     *
+     * <p>The same three requirements as create (#226) - a rewrite that empties the agenda or the
+     * catalogs would leave the table in a state creating it could never have reached. The agenda goes
+     * last: {@code duration} is what gives a slot its length, so the clash check has to run against
+     * the duration the table is about to have (#178).
+     *
+     * @param committedUserId whose other commitments the new agenda is measured against (R1, #178),
+     *                        or null to check only its own coherence
+     */
+    private void rewrite(GameTable gameTable, UpdateGameTableRequest request, @Nullable String committedUserId) {
         requireRunnableDraft(request.systemIds(), request.tagIds(), request.platformIds(), request.schedule());
 
         gameTable.setName(request.name());
@@ -297,10 +388,27 @@ public class GameTableService {
         gameTable.setMaxPlayers(requireWithinPlayerCap(request.maxPlayers()));
         gameTable.setTableType(resolveTableType(request.tableTypeId()));
 
-        applyCatalogs(gameTableId, request.systemIds(), request.tagIds(), request.platformIds());
-        tableScheduleService.replace(gameTable, orEmpty(request.schedule()), actorId);
+        applyCatalogs(gameTable.getId(), request.systemIds(), request.tagIds(), request.platformIds());
+        tableScheduleService.replace(gameTable, orEmpty(request.schedule()), committedUserId);
+    }
 
-        return toDetail(gameTable);
+    /**
+     * Tells every master of a table that an admin changed it (#284), unless the actor is one of them.
+     *
+     * <p>An admin who also runs this table and acts on it is acting on their own table, and telling
+     * them what they just did is noise. Otherwise every live master hears it, co-masters included,
+     * for the same reason {@link #announceReviewOutcome} reaches all of them.
+     *
+     * @param masters the masters to tell - passed in rather than read here because a removal reads
+     *                them before it marks them gone
+     */
+    private void announceAdminAction(GameTable gameTable, String actorId, NotificationType type, List<Master> masters) {
+        if (masters.stream().anyMatch(master -> master.getUser().getId().equals(actorId))) {
+            return;
+        }
+        for (Master master : masters) {
+            notificationService.notifyAdminActedOnTable(master.getUser().getId(), gameTable, type);
+        }
     }
 
     /**
@@ -521,7 +629,19 @@ public class GameTableService {
         return toDetail(gameTable);
     }
 
-    /** Either the table's own Primary or a platform admin may cancel it (#27) - the only transition either can trigger. */
+    /**
+     * Either the table's own Primary or a platform admin may cancel it (#27) - the only transition
+     * either can trigger.
+     *
+     * <p>When an admin does it, every master of the table is told ({@code TableCanceledByAdmin}, #284).
+     *
+     * @param gameTableId the table
+     * @param actorId     the Primary or an admin, from the token (#121)
+     * @param request     the justification, kept in the status history
+     * @return the table, now Canceled
+     * @throws ForbiddenActionException if the actor is neither its Primary nor an admin
+     * @throws ConflictException        if the table cannot be cancelled from its current status
+     */
     @Transactional
     public GameTableDetailResponse cancel(String gameTableId, String actorId, ChangeTableStatusRequest request) {
         GameTable gameTable = lockTable(gameTableId);
@@ -534,10 +654,11 @@ public class GameTableService {
         }
         sealClosedAt(gameTable);
         recordStatusChange(gameTable, from, GameTableStatus.Canceled, actorId, request.justification());
+        // The Primary cancelling their own table hears nothing; an admin cancelling it is news (#284).
+        announceAdminAction(gameTable, actorId, NotificationType.TableCanceledByAdmin, masterService.findByGameTable(gameTableId));
         return toDetail(gameTable);
     }
 
-    /** Immediate pause by an admin (#32) - a master asking for one goes through approval_requests instead (F3). */
     /**
      * Soft delete of a table that never went public (#25, #175). Same actors as cancel - the Primary
      * or an admin - and the same lock, but a different meaning: cancel closes a table that existed
@@ -546,6 +667,13 @@ public class GameTableService {
      * <p>The cascade is explicit and in one transaction, as #25 requires: the master rows and the
      * registrations of the table fall with it, all stamped with the same instant. The status change
      * is recorded too - the trail survives even when the table does not.
+     *
+     * <p>When an admin does it, every master the table had is told ({@code TableDeletedByAdmin}, #284).
+     *
+     * @param gameTableId the table
+     * @param actorId     the Primary or an admin, from the token (#121)
+     * @throws ForbiddenActionException if the actor is neither its Primary nor an admin
+     * @throws ConflictException        if the table already went public, or has candidates or players
      */
     @Transactional
     public void delete(String gameTableId, String actorId) {
@@ -561,6 +689,8 @@ public class GameTableService {
             throw new ConflictException("A table with candidates or players cannot be deleted - cancel it instead");
         }
 
+        // Read before they are marked gone: after the removal the table has no live masters to tell.
+        List<Master> masters = masterService.findByGameTable(gameTableId);
         LocalDateTime deletedAt = LocalDateTime.now();
         for (TableRegistration registration : tableRegistrationRepository.findByGameTable_Id(gameTableId)) {
             registration.setStatus(TableRegistrationStatus.Deleted);
@@ -568,6 +698,7 @@ public class GameTableService {
         masterService.softDeleteAllOfTable(gameTableId, deletedAt);
         gameTable.setDeletedAt(deletedAt);
         recordStatusChange(gameTable, from, GameTableStatus.Deleted, actorId, null);
+        announceAdminAction(gameTable, actorId, NotificationType.TableDeletedByAdmin, masters);
     }
 
     /**
@@ -576,6 +707,8 @@ public class GameTableService {
      * <p>The other road to Pause - a master <em>asking</em> for one - needs
      * {@code approval_requests} and lands in F3. Freezing the agenda while paused (#32, #33) is
      * F1.3.
+     *
+     * <p>Every master of the table is told ({@code TablePausedByAdmin}, #284): nothing they did caused it.
      *
      * @param gameTableId the table
      * @param actorId     the admin, from the token
@@ -590,6 +723,7 @@ public class GameTableService {
             throw new ConflictException("Cannot pause a table in status " + gameTable.getStatus());
         }
         recordStatusChange(gameTable, GameTableStatus.InProgress, GameTableStatus.Pause, actorId, request.justification());
+        announceAdminAction(gameTable, actorId, NotificationType.TablePausedByAdmin, masterService.findByGameTable(gameTableId));
         return toDetail(gameTable);
     }
 
@@ -707,6 +841,8 @@ public class GameTableService {
      * <p><b>The pending sessions are re-laid</b> from this instant (#33). What was played and what
      * was called off keep their dates; the run's numbering does not move.
      *
+     * <p>Every master of the table is told ({@code TableResumedByAdmin}, #284).
+     *
      * @param gameTableId the table
      * @param actorId     the admin, from the token
      * @return the table, back in play, with its calendar re-laid
@@ -734,6 +870,7 @@ public class GameTableService {
 
         recordStatusChange(gameTable, GameTableStatus.Pause, GameTableStatus.InProgress, actorId, null);
         tableSessionService.rescheduleAfterPause(gameTable, LocalDateTime.now());
+        announceAdminAction(gameTable, actorId, NotificationType.TableResumedByAdmin, masterService.findByGameTable(gameTableId));
         return toDetail(gameTable);
     }
 
@@ -879,13 +1016,20 @@ public class GameTableService {
      * getDetail is deliberately public (any player reads it to decide whether to apply), so
      * reusing it here would mean the full table body travels over the network before the
      * frontend ever gets to decide whether to render it. This one checks pertenencia first and
-     * never touches the mapper if the actor isn't a master of this table.
+     * never touches the mapper if the actor is neither a master of this table nor an admin - the
+     * admin reads every table whole, from /admin/tables/:id (#45, #284).
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token (#121)
+     * @return the table as the people running it see it
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin
      */
     @Transactional(readOnly = true)
     public GameTableDetailResponse getManagedDetail(String gameTableId, String actorId) {
         GameTable gameTable = getEntityById(gameTableId);
-        if (!masterService.isMasterOf(gameTableId, actorId)) {
-            throw new ForbiddenActionException("Only a master of this table can view its management detail");
+        // A master of the table, or an admin: the admin reads every table whole (#45, #284).
+        if (!masterService.canOversee(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can view its management detail");
         }
         return toDetail(gameTable);
     }

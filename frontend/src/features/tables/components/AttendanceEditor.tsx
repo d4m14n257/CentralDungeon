@@ -16,6 +16,11 @@ interface AttendanceEditorProps {
   isSaving: boolean
   /** Saves the whole roster. It is called with what is on screen, not with what changed. */
   onSave: (attendance: Pick<SessionAttendanceEntry, 'userId' | 'attendance'>[]) => void
+  /**
+   * Shows what was recorded and offers nothing to change it - an admin reading the session from
+   * /admin/tables/:id (#284). Attendance is the master's to record (#36).
+   */
+  readOnly?: boolean
 }
 
 /**
@@ -30,8 +35,9 @@ interface AttendanceEditorProps {
  * @param props.roster   the roster the server returned
  * @param props.isSaving whether a save is in flight
  * @param props.onSave   what to do with the complete roster
+ * @param props.readOnly show the roster as recorded, with no control (#284)
  */
-export function AttendanceEditor({ roster, isSaving, onSave }: AttendanceEditorProps) {
+export function AttendanceEditor({ roster, isSaving, onSave, readOnly }: AttendanceEditorProps) {
   const { t } = useTranslation('tables')
   // The roster lives in local state while it is edited: it is a form, not server data.
   const [draft, setDraft] = useState<Record<string, AttendanceStatus>>(() =>
@@ -48,33 +54,39 @@ export function AttendanceEditor({ roster, isSaving, onSave }: AttendanceEditorP
         {roster.map((line) => (
           <li key={line.userId} className="flex items-center justify-between gap-4 py-2">
             <span className="truncate text-sm">{line.userName}</span>
-            <Select
-              value={draft[line.userId] ?? line.attendance}
-              onValueChange={(value) => setDraft((current) => ({ ...current, [line.userId]: value as AttendanceStatus }))}
-            >
-              <SelectTrigger className="w-40" aria-label={t('sessions.attendance.forPlayer', { name: line.userName })}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ATTENDANCE_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {t(`sessions.attendance.${option}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {readOnly ? (
+              <span className="text-fg-muted text-sm">{t(`sessions.attendance.${line.attendance}`)}</span>
+            ) : (
+              <Select
+                value={draft[line.userId] ?? line.attendance}
+                onValueChange={(value) => setDraft((current) => ({ ...current, [line.userId]: value as AttendanceStatus }))}
+              >
+                <SelectTrigger className="w-40" aria-label={t('sessions.attendance.forPlayer', { name: line.userName })}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ATTENDANCE_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {t(`sessions.attendance.${option}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </li>
         ))}
       </ul>
-      <div className="flex justify-end">
-        <Button
-          size="sm"
-          disabled={isSaving}
-          onClick={() => onSave(roster.map((line) => ({ userId: line.userId, attendance: draft[line.userId] ?? line.attendance })))}
-        >
-          {t('sessions.attendance.save')}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            disabled={isSaving}
+            onClick={() => onSave(roster.map((line) => ({ userId: line.userId, attendance: draft[line.userId] ?? line.attendance })))}
+          >
+            {t('sessions.attendance.save')}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

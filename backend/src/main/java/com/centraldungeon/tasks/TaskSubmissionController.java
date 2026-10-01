@@ -54,7 +54,7 @@ public class TaskSubmissionController {
      * @param taskId      the task
      * @param currentUser the actor, from the token; the service checks they run the table
      * @return 200 with every answer, oldest first, plus the roster of who is still missing. 403 when
-     *         the actor does not run the table, 404 when the task is not there
+     *         the actor neither runs the table nor is an admin, 404 when the task is not there
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
