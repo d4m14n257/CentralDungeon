@@ -54,7 +54,7 @@
       "adminTitle": "Admin",
       "admin": "Revisás las mesas que esperan aprobación, pedís cambios, y creás mesas sin master para asignarles uno después.",
       "ownerTitle": "Owner",
-      "owner": "Un admin con más alcance: todo lo de admin, más auditoría, archivos y migración de cuentas cuando se construyan. No se acumula con admin, lo reemplaza.",
+      "owner": "Un admin con más alcance: todo lo de admin, más el historial de lo que se hizo, los archivos y el traspaso de cuentas. No se acumula con admin, lo reemplaza.",
       "steps": {
         "step1": "Tocá el selector de contexto, arriba a la izquierda, al lado del nombre del sitio.",
         "step2": "Elegí el contexto en el que querés trabajar. Solo aparecen los que te corresponden.",
@@ -242,7 +242,7 @@
     "creating": {
       "title": "Crear una mesa",
       "role": "Crear mesas propias necesita el rol Master. Dirigir una mesa que te asignaron, no: son cosas distintas.",
-      "wizard": "El wizard va en cuatro pasos: identidad, catálogos, agenda y cupo. El último te muestra el resumen antes de mandar.",
+      "wizard": "Armar la mesa lleva cuatro pasos: identidad, catálogos, agenda y cupo. El último te muestra el resumen antes de mandar.",
       "submit": "Cuando está lista se manda a revisión de un admin.",
       "steps": {
         "step1": "Cambiá al contexto Master con el selector de arriba.",
@@ -418,7 +418,7 @@
       "title": "Editar una mesa",
       "when": "Se edita mientras la mesa está en preparación o cuando un admin pidió correcciones. Después ya no: la gente que se postuló la vio como estaba.",
       "who": "Solo el master de la mesa la edita; un co-master no.",
-      "replaces": "Guardar reemplaza la mesa entera, no parchea campo por campo: lo que borres de un campo queda vacío.",
+      "replaces": "Guardar reemplaza la mesa entera, no solo lo que cambiaste: lo que borres de un campo queda vacío.",
       "sets": "La agenda y los catálogos también se reemplazan como conjunto: lo que quede en pantalla al guardar es lo que queda.",
       "conflict": "Si la agenda nueva se pisa con otra mesa tuya, el guardado falla y la pantalla dice con cuál.",
       "resubmit": "Corregir no reenvía la mesa a revisión: eso se hace desde la pestaña «Estado».",
@@ -537,17 +537,17 @@
     },
     "files": {
       "title": "Archivos",
-      "what": "/admin/files es la biblioteca de la comunidad: lo publicado y lo que espera para publicarse, con quién lo subió y en cuántas mesas se usa.",
+      "what": "«Archivos» es la biblioteca de la comunidad: lo publicado y lo que espera para publicarse, con quién lo subió y en cuántas mesas se usa.",
       "publish": "Cada archivo está Sin publicar (ningún master lo ve), Publicado (los masters lo ven y lo pueden agregar a sus mesas) u Oculto (estuvo publicado y dejó de ofrecerse). Al subir elegís si lo publicás ya o lo dejás sin publicar, y siempre se confirma antes.",
       "categories": "Al subir elegís qué es cada archivo: «De mesa» (aparece cuando un master arma su mesa o busca candidatos), «Petición del master» (cuando pide algo en una mesa que ya corre) o «Anuncios de la comunidad».",
       "playerSide": "«Solicitud de jugador» y «Entrega del jugador» no aparecen acá a propósito: guardan lo que cada jugador respondió, con las hojas que le dio su master. No hay nada que la comunidad publique ahí.",
       "private": "Los archivos privados de las personas no se ven ni se dan de baja desde esta pantalla: son suyos, no de la biblioteca.",
       "notALock": "El cajón no es un permiso. Define en qué listados aparece el archivo, no quién puede abrirlo: un archivo publicado es público.",
       "unpublish": "Ocultar un archivo lo saca de lo que se ofrece a los masters, pero sigue en la biblioteca y lo podés volver a publicar. Las mesas que ya lo agregaron lo conservan. Mientras está sin publicar u oculto podés cambiar qué es.",
-      "remove": "Dar de baja un archivo lo saca de todas las mesas que lo usan. No borra el archivo del disco: eso lo hace el owner desde su menú de mantenimiento.",
+      "remove": "Dar de baja un archivo lo saca de todas las mesas que lo usan. No lo borra para siempre: eso lo hace el owner desde su menú de mantenimiento.",
       "purge": "Los archivos que nadie usa ni tiene agregado a una mesa se dan de baja solos a los tres meses. Los de la biblioteca no, estén publicados o no: son de la plataforma y no caducan.",
       "steps": {
-        "step1": "Entrá a /admin/files desde la navegación del contexto Admin.",
+        "step1": "Entrá a «Archivos» desde las secciones de administración.",
         "step2": "Tocá «Subir archivos», soltá los archivos y elegí qué es cada uno.",
         "step3": "Tocá «Subir sin publicar» o «Subir y publicar», y confirmá.",
         "step4": "Desde la fila publicás, ocultás o cambiás qué es; la columna «Mesas» te dice en cuántas se usa antes de darlo de baja."
@@ -618,7 +618,7 @@
       "clash": "Reanudar puede fallar, y es el único acto de esta pantalla que puede: mientras la mesa estuvo pausada, su master pudo comprometerse con otra. Si las agendas se pisan, la plataforma se niega y te dice con qué mesa choca.",
       "notCancel": "Pausar no es cancelar. Una mesa pausada vuelve; una cancelada no, y eso se hace desde la mesa con «Cancelar».",
       "steps": {
-        "step1": "Andá a «Mesas». Podés acotar con /table_status para ver solo las que están en curso o en pausa.",
+        "step1": "Andá a «Mesas». Podés filtrar por estado para ver solo las que están en curso o en pausa.",
         "step2": "En la fila de la mesa, tocá «Pausar» y escribí el motivo.",
         "step3": "Si lo que hay es un pedido del master, resolvelo desde la bandeja: aprobarlo es lo que la pausa.",
         "step4": "Para devolverla al ruedo, la misma fila ofrece «Reanudar».",

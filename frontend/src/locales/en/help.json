@@ -54,7 +54,7 @@
       "adminTitle": "Admin",
       "admin": "You review the tables waiting for approval, request changes, and create tables without a master to assign one later.",
       "ownerTitle": "Owner",
-      "owner": "An admin with more reach: everything an admin does, plus auditing, files and account migration once those are built. It does not stack with admin, it replaces it.",
+      "owner": "An admin with more reach: everything an admin does, plus the history of what was done, the files and account transfers. It does not stack with admin, it replaces it.",
       "steps": {
         "step1": "Tap the context selector, top left, next to the site name.",
         "step2": "Pick the context you want to work in. Only the ones that apply to you are listed.",
@@ -242,7 +242,7 @@
     "creating": {
       "title": "Creating a table",
       "role": "Creating your own tables needs the Master role. Running a table you were assigned does not: they are different things.",
-      "wizard": "The wizard runs in four steps: identity, catalogs, agenda and seats. The last one shows you the summary before sending.",
+      "wizard": "Setting up the table takes four steps: identity, catalogs, agenda and seats. The last one shows you the summary before sending.",
       "submit": "When it is ready it goes to an admin for review.",
       "steps": {
         "step1": "Switch to the Master context with the selector at the top.",
@@ -418,7 +418,7 @@
       "title": "Editing a table",
       "when": "You can edit while the table is in preparation, or when an admin asked for changes. Not after: the people who applied saw it as it was.",
       "who": "Only the table’s master edits it; a co-master does not.",
-      "replaces": "Saving replaces the whole table, it does not patch field by field: anything you clear from a field ends up empty.",
+      "replaces": "Saving replaces the whole table, not just what you changed: anything you clear from a field ends up empty.",
       "sets": "The agenda and the catalogs are replaced as sets too: what is on screen when you save is what stays.",
       "conflict": "If the new agenda overlaps another table of yours, the save fails and the screen says which one.",
       "resubmit": "Correcting does not send the table back for review: that is done from the “Status” tab.",
@@ -537,17 +537,17 @@
     },
     "files": {
       "title": "Files",
-      "what": "/admin/files is the community's library: what is published and what waits to be, with who uploaded it and how many tables use it.",
+      "what": "“Files” is the community's library: what is published and what waits to be, with who uploaded it and how many tables use it.",
       "publish": "Each file is Unpublished (no master sees it), Published (masters see it and can add it to their tables) or Hidden (it was published and is no longer offered). When uploading you choose whether to publish it now or leave it unpublished, and it is always confirmed first.",
       "categories": "When uploading you choose what each file is: “Table material” (shows up when a master sets up their table or recruits), “Master's request” (when they ask for something on a running table) or “Community announcements”.",
       "playerSide": "“Player application” and “Player submission” are not here on purpose: they hold what each player answered with, using the sheets their master gave them. There is nothing for the community to publish there.",
       "private": "People's private files are neither shown nor removed from this screen: they are theirs, not the library's.",
       "notALock": "The drawer is not a permission. It decides which listings the file appears in, not who may open it: a published file is public.",
       "unpublish": "Hiding a file takes it out of what masters are offered, but it stays in the library and you can publish it again. Tables that already added it keep it. While it is unpublished or hidden you can change what it is.",
-      "remove": "Removing a file takes it off every table using it. It does not erase the file from disk: that is the owner's, from their maintenance menu.",
+      "remove": "Removing a file takes it off every table using it. It does not delete it for good: that is the owner's, from their maintenance menu.",
       "purge": "Files nobody uses and no table has added are removed automatically after three months. The library's are not, published or not: they belong to the platform and do not expire.",
       "steps": {
-        "step1": "Go to /admin/files from the Admin context navigation.",
+        "step1": "Go to “Files” from the administration sections.",
         "step2": "Hit “Upload files”, drop the files and choose what each one is.",
         "step3": "Hit “Upload without publishing” or “Upload and publish”, and confirm.",
         "step4": "From the row you publish, hide or change what it is; the “Tables” column tells you how many use it before you remove it."
@@ -618,7 +618,7 @@
       "clash": "Resuming can fail, and it is the only act on this screen that can: while the table was paused its master may have committed to another one. If the agendas overlap, the platform refuses and tells you which table it clashes with.",
       "notCancel": "Pausing is not cancelling. A paused table comes back; a cancelled one does not, and that is done from the table itself with “Cancel”.",
       "steps": {
-        "step1": "Go to “Tables”. You can narrow it with /table_status to see only the ones in progress or paused.",
+        "step1": "Go to “Tables”. You can filter by status to see only the ones in progress or paused.",
         "step2": "On the table’s row, press “Pause” and write the reason.",
         "step3": "If what you have is a master’s request, resolve it from the tray: approving it is what pauses the table.",
         "step4": "To bring it back, the same row offers “Resume”.",

@@ -83,7 +83,7 @@
     "emptyPendingTitle": "Nothing is waiting for an answer",
     "emptyPendingDescription": "When somebody asks for something it will show up here. Remove the “Pending” filter to see what has already been resolved.",
     "noResultsTitle": "No request matches that search",
-    "noResultsDescription": "Try other words, or narrow by kind with /request_type and by status with /status.",
+    "noResultsDescription": "Try other words, or filter by kind and by status.",
     "approve": "Approve",
     "reject": "Reject",
     "detail": "See details",
@@ -205,7 +205,7 @@
     "emptyTitle": "No accounts yet",
     "emptyDescription": "Accounts show up here as soon as somebody signs in for the first time.",
     "noResultsTitle": "Nobody matches that search",
-    "noResultsDescription": "Try another name, or search by role with /role and by status with /status.",
+    "noResultsDescription": "Try another name, or filter by role and by status.",
     "changeRoles": "Change roles",
     "block": "Block",
     "unblock": "Unblock",
@@ -287,7 +287,7 @@
     "emptyTitle": "No tables yet",
     "emptyDescription": "Tables show up here as soon as a master creates one, or as soon as you create one without a master.",
     "noResultsTitle": "No table matches that search",
-    "noResultsDescription": "Try another name, or narrow by status with /table_status and by master with /table_master.",
+    "noResultsDescription": "Try another name, or filter by status and by master.",
     "noPrimaryMaster": "Unassigned",
     "assignMasters": "Assign masters",
     "assignMastersDialogTitle": "Assign masters to {{name}}",
@@ -332,7 +332,7 @@
   },
   "settings": {
     "title": "Settings",
-    "description": "The values the community adjusts without a deploy. Each one shows what is in use, what it ships as, and the range it can move inside.",
+    "description": "The values the community can adjust whenever it wants. Each one shows what is in use, what it ships as, and the range it can move inside.",
     "categories": {
       "Business": "Business parameters",
       "Limits": "Limits and quotas"

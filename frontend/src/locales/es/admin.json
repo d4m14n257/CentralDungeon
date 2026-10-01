@@ -83,7 +83,7 @@
     "emptyPendingTitle": "No hay nada esperando una respuesta",
     "emptyPendingDescription": "Cuando alguien pida algo, va a aparecer acá. Sacá el filtro de «Pendiente» para ver los que ya se resolvieron.",
     "noResultsTitle": "Ningún pedido coincide con esa búsqueda",
-    "noResultsDescription": "Probá con otro texto, o filtrá por tipo con /request_type y por estado con /status.",
+    "noResultsDescription": "Probá con otro texto, o filtrá por tipo y por estado.",
     "approve": "Aprobar",
     "reject": "Rechazar",
     "detail": "Ver detalle",
@@ -205,7 +205,7 @@
     "emptyTitle": "Todavía no hay cuentas",
     "emptyDescription": "Las cuentas aparecen acá apenas alguien entra por primera vez.",
     "noResultsTitle": "Nadie coincide con esa búsqueda",
-    "noResultsDescription": "Probá con otro nombre, o buscá por rol con /role y por estado con /status.",
+    "noResultsDescription": "Probá con otro nombre, o filtrá por rol y por estado.",
     "changeRoles": "Cambiar roles",
     "block": "Bloquear",
     "unblock": "Desbloquear",
@@ -287,7 +287,7 @@
     "emptyTitle": "Todavía no hay mesas",
     "emptyDescription": "Las mesas aparecen acá apenas un master crea una, o apenas creás una sin asignar.",
     "noResultsTitle": "Ninguna mesa coincide con esa búsqueda",
-    "noResultsDescription": "Probá con otro nombre, o filtrá por estado con /table_status y por master con /table_master.",
+    "noResultsDescription": "Probá con otro nombre, o filtrá por estado y por master.",
     "noPrimaryMaster": "Sin asignar",
     "assignMasters": "Asignar masters",
     "assignMastersDialogTitle": "Asignar masters a {{name}}",
@@ -332,7 +332,7 @@
   },
   "settings": {
     "title": "Configuración",
-    "description": "Los valores que la comunidad ajusta sin un despliegue. Cada uno muestra lo que está en uso, con cuánto viene de fábrica y entre qué límites se puede mover.",
+    "description": "Los valores que la comunidad puede ajustar cuando quiera. Cada uno muestra lo que está en uso, con cuánto viene de fábrica y entre qué límites se puede mover.",
     "categories": {
       "Business": "Parámetros de negocio",
       "Limits": "Límites y cuotas"
