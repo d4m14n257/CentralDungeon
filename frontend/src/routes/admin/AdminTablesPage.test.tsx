@@ -207,15 +207,16 @@ describe('AdminTablesPage', () => {
    * section whose text moved with them is the one this links, and its `listing` line is what answers
    * the question they actually have.
    */
-  it('says where reviewing went, from the screen that used to do it', async () => {
+  it('says where reviewing happens, from the screen that lists the tables', async () => {
     admin.mockResolvedValue(page([table()]))
 
     renderPage()
     await userEvent.click(await screen.findByRole('button', { name: 'Cómo funciona' }))
 
     const dialog = within(await screen.findByRole('dialog'))
-    expect(dialog.getByText(/Las mesas se revisan desde «Bandeja»/)).toBeInTheDocument()
-    expect(dialog.getByText(/«Mesas» es otra cosa/)).toBeInTheDocument()
+    // Since #286 a review is resolved from the tray or from the table's own status tab: both are said.
+    expect(dialog.getByText(/se resuelve desde dos lugares: la «Bandeja»/)).toBeInTheDocument()
+    expect(dialog.getByText(/«Mesas» tiene todas las mesas/)).toBeInTheDocument()
   })
 
   /** #240: the search help documents **this** box's commands rather than a fixed list. */

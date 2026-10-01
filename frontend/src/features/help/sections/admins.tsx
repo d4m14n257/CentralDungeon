@@ -57,7 +57,7 @@ function ListAndSteps({
  * for the buttons there first.
  */
 export function ReviewingHelp() {
-  return <ListAndSteps block="reviewing" keys={['queue', 'approve', 'gone', 'listing']} stepCount={4} />
+  return <ListAndSteps block="reviewing" keys={['queue', 'approve', 'cancel', 'listing']} stepCount={4} />
 }
 
 /**

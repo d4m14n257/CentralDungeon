@@ -6,22 +6,26 @@ import type { GameTableDetail } from '@/features/tables'
 
 import { StatusTimeline } from '../master/MasterTableStatusTab'
 import { AdminTableActions, STATUSES_WITH_ADMIN_ACTIONS } from './AdminTableActions'
+import { AdminTableDecisions, hasAdminDecisions } from './AdminTableDecisions'
 
 interface OutletContext {
   table: GameTableDetail
 }
 
 /**
- * The status tab of `/admin/tables/:id` (#284): the admin's own actions on the table, and its whole
- * history with the reason behind each step.
+ * The status tab of `/admin/tables/:id` (#284, #286): what an admin decides about the table, and its
+ * whole history with the reason behind each step.
  *
- * **The admin's actions, not the master's transitions.** Sending to review, starting and finishing
- * are the master's; what an admin does to a table is assign it masters, remove one nobody runs, and
- * pause or resume it - the same `AdminTableActions` a row of `/admin/tables` offers, so the two cannot
- * disagree about which action fits which status. Each of them tells the table's masters (#284).
+ * **The admin's decisions, not the master's transitions.** Sending to review, starting and finishing
+ * are the master's. What an admin does is in two groups: the **decisions** that change where the
+ * table stands - approve it or send it back while it is in review, cancel it (`AdminTableDecisions`,
+ * #286) - and the **actions** a row of `/admin/tables` offers too: assign masters, remove one nobody
+ * runs, pause or resume (`AdminTableActions`). Every one tells the table's masters (#244, #284).
  *
- * **Reviewing is not here**, and the tab says where it is: approving and requesting changes live in
- * the tray, where a review can be reserved so two admins never answer the same one (#100, #176).
+ * **Reviewing is here as well as in the tray** (#286): an admin who has read the whole table decides
+ * from it. Same endpoints and same reservation rule (#100), so a table a colleague took from the tray
+ * is refused here too. A master's *request* to pause is an approval request and still resolves in the
+ * tray, which the tab says.
  */
 export function AdminTableStatusTab() {
   const { t } = useTranslation('admin')
@@ -29,6 +33,7 @@ export function AdminTableStatusTab() {
   const { table } = useOutletContext<OutletContext>()
   const navigate = useNavigate()
   const hasActions = STATUSES_WITH_ADMIN_ACTIONS.includes(table.status)
+  const hasDecisions = hasAdminDecisions(table.status)
 
   return (
     <div className="space-y-4">
@@ -41,17 +46,19 @@ export function AdminTableStatusTab() {
           </div>
         )}
       </div>
-      {/* Said rather than left as an empty row (principio 2): editing is still in the header. */}
-      {!hasActions && <p className="text-fg-muted text-sm">{t('tables.detail.noActions')}</p>}
-      {table.status === 'Preparation' && (
+      {table.status === 'Preparation' && <p className="text-fg-muted text-sm">{t('tables.detail.reviewHere')}</p>}
+      {table.status === 'PauseRequested' && (
         <p className="text-fg-muted text-sm">
-          {t('tables.detail.reviewInQueue')}{' '}
+          {t('tables.detail.pauseRequestInQueue')}{' '}
           <Link to={adminQueuePath()} className="hover:text-fg underline">
             {t('tables.detail.goToQueue')}
           </Link>
         </p>
       )}
-      <div className="space-y-2">
+      {hasDecisions && <AdminTableDecisions table={table} />}
+      {/* Said rather than left as an empty block (principio 2): editing is still in the header. */}
+      {!hasActions && !hasDecisions && <p className="text-fg-muted text-sm">{t('tables.detail.noActions')}</p>}
+      <div className="space-y-2 pt-2">
         <h2 className="text-sm font-medium">{tMaster('status.historyTitle')}</h2>
         <StatusTimeline tableId={table.id} />
       </div>

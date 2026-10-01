@@ -466,16 +466,16 @@
   "admins": {
     "reviewing": {
       "title": "Revisar mesas",
-      "queue": "Las mesas se revisan desde «Bandeja», junto con todo lo demás que espera una acción. Entran solo las que el master envió a revisión: una mesa devuelta con cambios pedidos está en manos del master, no en las tuyas.",
-      "approve": "Aprobar publica la mesa. Pedir cambios la devuelve al master con el motivo escrito.",
-      "gone": "Resuelta de cualquiera de las dos formas, la mesa sale de la bandeja: la bandeja es lo pendiente, no un listado de todo.",
-      "listing": "«Mesas» es otra cosa: están todas las mesas de la plataforma, con su estado y con buscador. Sirve para encontrar una, no para revisarla.",
+      "queue": "Una mesa que el master envió a revisión se resuelve desde dos lugares: la «Bandeja», junto con todo lo demás que espera una acción, o la pestaña «Estado» de la propia mesa, después de leerla entera. Una mesa devuelta con cambios pedidos está en manos del master, no en las tuyas.",
+      "approve": "Aprobar publica la mesa. Pedir cambios la devuelve al master con el motivo escrito, que lee en el historial de su mesa. En los dos casos le llega un aviso.",
+      "listing": "«Mesas» tiene todas las mesas de la plataforma, con su estado y con buscador. Desde ahí abrís cualquiera y la ves completa.",
       "steps": {
-        "step1": "Cambiá al contexto Admin. Caés en «Bandeja».",
-        "step2": "Buscá la mesa en la lista. Si la vas a leer con calma, tocá «Tomar» para que no la revise otro al mismo tiempo.",
-        "step3": "Leé lo que preparó el master.",
-        "step4": "Tocá «Aprobar» para publicarla, o «Pedir cambios» y escribí qué hay que corregir. La mesa sale de la bandeja."
-      }
+        "step1": "Andá a «Bandeja», o a «Mesas» y abrí la mesa.",
+        "step2": "Si la vas a leer con calma desde la bandeja, tocá «Tomar» para que no la revise otro al mismo tiempo.",
+        "step3": "Leé lo que preparó el master: en la mesa, sus pestañas tienen todo.",
+        "step4": "Tocá «Aprobar» para publicarla, o «Pedir cambios» y escribí qué hay que corregir."
+      },
+      "cancel": "Si la mesa no tiene arreglo, desde su pestaña «Estado» también la podés cancelar, con el motivo. No se deshace."
     },
     "claiming": {
       "title": "Tomar algo de la bandeja",

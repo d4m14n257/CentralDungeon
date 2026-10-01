@@ -27,7 +27,11 @@ export function useRequestChanges() {
     // the global toast of `config/query.ts` fires as well, so the reader gets two messages for one
     // failure - the good sentence inline and "no pudimos completar la acción" on top of it.
     meta: { showsItsOwnError: true },
-    onSuccess: () => {
+    onSuccess: (_table, { tableId }) => {
+      // The table's own admin view too (#284): approving or sending it back from its status tab has to
+      // show the new status and the new line of history without a reload.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managedDetail(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.statusHistory(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
     },

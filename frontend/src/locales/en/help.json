@@ -466,16 +466,16 @@
   "admins": {
     "reviewing": {
       "title": "Reviewing tables",
-      "queue": "Tables are reviewed from “Tray”, together with everything else waiting on an action. Only the ones a master sent in for review are there: a table sent back with changes requested is in the master's hands, not yours.",
-      "approve": "Approving publishes the table. Requesting changes sends it back to the master with the reason in writing.",
-      "gone": "Resolved either way, the table leaves the tray: the tray is what is pending, not a listing of everything.",
-      "listing": "“Tables” is a different thing: every table on the platform, with its status and a search box. It is for finding one, not for reviewing it.",
+      "queue": "A table the master sent for review is resolved from two places: the “Tray”, with everything else waiting on an action, or the table's own “Status” tab, after reading it whole. A table sent back with changes requested is in the master's hands, not yours.",
+      "approve": "Approving publishes the table. Asking for changes sends it back to the master with the written reason, which they read in their table's history. Either way they are notified.",
+      "listing": "“Tables” has every table on the platform, with its status and a search box. From there you open any of them and see it whole.",
       "steps": {
-        "step1": "Switch to the Admin context. You land on “Tray”.",
-        "step2": "Find the table in the list. If you are going to read it carefully, tap “Take” so nobody else reviews it at the same time.",
-        "step3": "Read what the master prepared.",
-        "step4": "Tap “Approve” to publish it, or “Request changes” and write what has to be fixed. The table leaves the tray."
-      }
+        "step1": "Go to the “Tray”, or to “Tables” and open the table.",
+        "step2": "If you are going to read it calmly from the tray, press “Take” so nobody else reviews it at the same time.",
+        "step3": "Read what the master prepared: on the table, its tabs have everything.",
+        "step4": "Press “Approve” to publish it, or “Ask for changes” and write what needs correcting."
+      },
+      "cancel": "If the table has no fix, from its “Status” tab you can also cancel it, with the reason. It cannot be undone."
     },
     "claiming": {
       "title": "Taking something from the tray",

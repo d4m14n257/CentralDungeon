@@ -362,9 +362,29 @@
       "playersOfCap": "{{count}} de {{max}}",
       "actionsTitle": "Acciones de admin",
       "noActions": "En este estado no hay acciones de admin sobre la mesa. Si hay que corregir algo, usá «Editar mesa».",
-      "reviewInQueue": "Esta mesa espera revisión. Se aprueba o se le piden cambios desde la bandeja.",
       "goToQueue": "Ir a la bandeja",
-      "ranByLabel": "Master:"
+      "ranByLabel": "Master:",
+      "reviewHere": "Esta mesa espera revisión. Recorré sus pestañas y decidí: aprobarla la abre a postulaciones; pedir cambios se la devuelve al master con tu motivo. También aparece en la bandeja; si otro admin la tomó ahí, no se puede resolver desde acá.",
+      "pauseRequestInQueue": "El master pidió pausar esta mesa. Ese pedido se resuelve en la bandeja."
+    },
+    "decisions": {
+      "approve": "Aprobar",
+      "approveConfirmTitle": "¿Aprobar «{{name}}»?",
+      "approveConfirmDescription": "La mesa se abre a postulaciones, se arma su calendario y sus masters reciben un aviso.",
+      "approveSuccess": "Mesa aprobada. Avisamos a sus masters.",
+      "requestChanges": "Pedir cambios",
+      "requestChangesTitle": "Pedir cambios en «{{name}}»",
+      "requestChangesDescription": "Contale al master qué tiene que corregir y por qué. Lo lee en el historial de su mesa.",
+      "requestChangesConfirmTitle": "¿Pedir cambios en «{{name}}»?",
+      "requestChangesConfirmDescription": "La mesa vuelve a su master con tu motivo y no se abre hasta que la corrija, la reenvíe y se apruebe.",
+      "requestChangesSuccess": "Se pidieron cambios. Avisamos a sus masters.",
+      "reviewHelpLink": "Cómo se revisa una mesa",
+      "cancel": "Cancelar mesa",
+      "cancelTitle": "Cancelar «{{name}}»",
+      "cancelDescription": "Escribí por qué se cancela. Sus masters lo leen en el historial de la mesa.",
+      "cancelConfirmTitle": "¿Cancelar «{{name}}»?",
+      "cancelConfirmDescription": "No se puede deshacer: la mesa se cierra para siempre, queda como registro y sus masters reciben un aviso.",
+      "cancelSuccess": "Mesa cancelada. Avisamos a sus masters."
     }
   },
   "settings": {

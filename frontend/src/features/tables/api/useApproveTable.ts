@@ -29,7 +29,11 @@ export function useApproveTable() {
     // one of its `EXPLAINED_ERROR_CODES`, the reader would be told "no pudimos completar la acción"
     // on top of (or instead of) the one sentence that says what actually happened.
     meta: { showsItsOwnError: true },
-    onSuccess: () => {
+    onSuccess: (_table, tableId) => {
+      // The table's own admin view too (#284): approving or sending it back from its status tab has to
+      // show the new status and the new line of history without a reload.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managedDetail(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.statusHistory(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
     },
