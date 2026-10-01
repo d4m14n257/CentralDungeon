@@ -57,9 +57,10 @@ erDiagram
         varchar content_hash "SHA-256, para deduplicar"
         varchar mime_type
         bigint size_bytes
-        varchar file_type "Public | Private | Single-use"
+        varchar file_type "Public | Library | Private | Single-use"
         varchar user_created_id FK
         datetime last_used_at "purga por desuso"
+        datetime published_at "primera publicacion, nunca se borra"
         varchar status
         datetime deleted_at
     }

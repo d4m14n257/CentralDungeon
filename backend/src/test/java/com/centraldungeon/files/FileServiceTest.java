@@ -20,7 +20,8 @@ import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.storage.StorageService;
 import com.centraldungeon.files.dto.FileResponse;
 import com.centraldungeon.files.dto.FileUsageResponse;
-import com.centraldungeon.files.dto.PublishFileRequest;
+import com.centraldungeon.files.dto.LibraryUploadRequest;
+import com.centraldungeon.files.dto.UpdateLibraryCategoryRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.registrations.RegistrationFileRepository;
@@ -35,6 +36,7 @@ import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.UserRepository;
 import com.centraldungeon.users.UserRoleRepository;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -628,9 +630,9 @@ class FileServiceTest {
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(existing));
         when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
 
-        PublishedUpload result = fileService().uploadPublished(
+        LibraryUpload result = fileService().uploadToLibrary(
                 pdf("ficha.pdf", "hoja"),
-                new PublishFileRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest)),
+                new LibraryUploadRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest), true),
                 "admin-1");
 
         assertThat(existing.getFileType()).isEqualTo(FileType.Public);
@@ -645,8 +647,8 @@ class FileServiceTest {
      */
     @Test
     void refusesToUploadIntoAPlayerSideCajonAndStoresNothing() {
-        assertThatThrownBy(() -> fileService().uploadPublished(
-                        pdf("ficha.pdf", "hoja"), new PublishFileRequest(List.of(FileCategory.PlayerSubmission)), "admin-1"))
+        assertThatThrownBy(() -> fileService().uploadToLibrary(
+                        pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.PlayerSubmission), true), "admin-1"))
                 .isInstanceOf(InvalidRequestException.class)
                 .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
                         .isEqualTo("FILE_CATEGORY_NOT_PUBLISHABLE"));
@@ -661,23 +663,30 @@ class FileServiceTest {
                 .isInstanceOf(InvalidRequestException.class);
     }
 
+    /**
+     * #282: hiding keeps the file in the library - it used to go back to its uploader as a Private,
+     * and an admin with no library of their own lost it for good. The first publication is kept: it
+     * is what tells a hidden file from one never published.
+     */
     @Test
-    void unpublishingReturnsTheFileToItsOwnerAsSomethingTheyKeep() {
+    void hidingAPublishedFileKeepsItInTheLibraryWithItsFirstPublication() {
         StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
+        LocalDateTime firstPublished = LocalDateTime.now().minusDays(3);
+        file.setPublishedAt(firstPublished);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
         when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
 
-        fileService().unpublish("file-1");
+        var response = fileService().unpublish("file-1");
 
-        // The cajones stay: unpublishing says the platform no longer offers the file, not that it was
-        // never a blank for those flows (#233).
-        assertThat(file.getFileType()).isEqualTo(FileType.Private);
+        assertThat(file.getFileType()).isEqualTo(FileType.Library);
+        assertThat(response.publishedAt()).isEqualTo(firstPublished);
+        // The cajones stay: hiding says the platform no longer offers the file, not what it is (#233).
         verify(categoryRepository, never()).delete(any(FileCategoryLink.class));
     }
 
     @Test
     void refusesToUnpublishSomethingThatWasNeverPublished() {
-        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Private);
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
 
         assertThatThrownBy(() -> fileService().unpublish("file-1")).isInstanceOf(ForbiddenActionException.class);
@@ -706,6 +715,121 @@ class FileServiceTest {
 
         assertThat(file.getStatus()).isEqualTo(FileStatus.Deleted);
         verify(storageService, never()).delete(anyString());
+    }
+
+    /** #282: an upload that does not ask to be published waits in the library, offered to nobody. */
+    @Test
+    void anAdminUploadLeftUnpublishedWaitsInTheLibrary() {
+        User admin = persistedUser("admin-1");
+        StoredFile existing = persistedFile("file-1", admin, FileType.Private);
+        givenUploadRecognised(admin, existing);
+
+        LibraryUpload result = fileService().uploadToLibrary(
+                pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.TableMaterial), false), "admin-1");
+
+        assertThat(existing.getFileType()).isEqualTo(FileType.Library);
+        assertThat(result.file().publishedAt()).isNull();
+        verify(categoryRepository).save(any(FileCategoryLink.class));
+    }
+
+    /** #282: re-uploading a published file without publishing never hides it - hiding is its own act. */
+    @Test
+    void reUploadingAPublishedFileWithoutPublishingLeavesItPublished() {
+        User admin = persistedUser("admin-1");
+        StoredFile existing = persistedFile("file-1", admin, FileType.Public);
+        givenUploadRecognised(admin, existing);
+
+        fileService().uploadToLibrary(
+                pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.TableMaterial), false), "admin-1");
+
+        assertThat(existing.getFileType()).isEqualTo(FileType.Public);
+    }
+
+    /** #282: publishing stamps the first publication once; publishing a hidden file again keeps it. */
+    @Test
+    void publishingStampsTheFirstPublicationOnce() {
+        StoredFile fresh = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        givenInLibraryWithCajon(fresh, FileCategory.TableMaterial);
+
+        fileService().publish("file-1");
+
+        assertThat(fresh.getFileType()).isEqualTo(FileType.Public);
+        assertThat(fresh.getPublishedAt()).isNotNull();
+
+        LocalDateTime first = LocalDateTime.now().minusDays(10);
+        StoredFile hidden = persistedFile("file-2", persistedUser("admin-1"), FileType.Library);
+        hidden.setPublishedAt(first);
+        givenInLibraryWithCajon(hidden, FileCategory.Announcement);
+
+        fileService().publish("file-2");
+
+        assertThat(hidden.getPublishedAt()).isEqualTo(first);
+    }
+
+    /** A file that says no flow it is for is not offered anywhere (M24.1, #233). */
+    @Test
+    void refusesToPublishAFileWithNoCajon() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(categoryRepository.findByFileIds(List.of("file-1"))).thenReturn(List.of());
+
+        assertThatThrownBy(() -> fileService().publish("file-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
+                        .isEqualTo("FILE_NEEDS_CATEGORY"));
+        assertThat(file.getFileType()).isEqualTo(FileType.Library);
+    }
+
+    /**
+     * #282: while unpublished, what a file of the library is can be corrected - its declared cajones
+     * are replaced. Published, it is refused: masters are choosing it under the cajón it has.
+     */
+    @Test
+    void theCajonOfALibraryFileChangesOnlyWhileUnpublished() {
+        StoredFile waiting = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(waiting));
+        when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
+
+        fileService().changeLibraryCategory("file-1", new UpdateLibraryCategoryRequest(FileCategory.Announcement));
+
+        verify(categoryRepository).deleteByFileIdAndCategories(eq("file-1"), any());
+        verify(categoryRepository).save(any(FileCategoryLink.class));
+
+        StoredFile published = persistedFile("file-2", persistedUser("admin-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-2", FileStatus.Current)).thenReturn(Optional.of(published));
+
+        assertThatThrownBy(() -> fileService()
+                        .changeLibraryCategory("file-2", new UpdateLibraryCategoryRequest(FileCategory.Announcement)))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** #282: a file waiting in the library is the platform's - its uploader cannot rename or remove it. */
+    @Test
+    void theUploaderCannotChangeOrRemoveAFileWaitingInTheLibrary() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().update("file-1", new UpdateFileRequest("otro.pdf", true), "admin-1"))
+                .isInstanceOf(ForbiddenActionException.class);
+        assertThatThrownBy(() -> fileService().delete("file-1", "admin-1")).isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** Stubs an upload whose content this person already had, so the recognised row comes back. */
+    private void givenUploadRecognised(User owner, StoredFile existing) {
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
+                        eq(owner.getId()), anyString(), eq(FileStatus.Current)))
+                .thenReturn(Optional.of(existing));
+        when(fileRepository.findByIdAndStatus(existing.getId(), FileStatus.Current)).thenReturn(Optional.of(existing));
+        when(tableFileRepository.countUsesByFileIds(List.of(existing.getId()))).thenReturn(List.of());
+    }
+
+    /** Stubs a live file of the library that is already filed under one cajón. */
+    private void givenInLibraryWithCajon(StoredFile file, FileCategory category) {
+        when(fileRepository.findByIdAndStatus(file.getId(), FileStatus.Current)).thenReturn(Optional.of(file));
+        when(categoryRepository.findByFileIds(List.of(file.getId())))
+                .thenReturn(List.of(new FileCategoryLink(file.getId(), category)));
+        when(tableFileRepository.countUsesByFileIds(List.of(file.getId()))).thenReturn(List.of());
     }
 
     // ---------------------------------------------------------------- attaching

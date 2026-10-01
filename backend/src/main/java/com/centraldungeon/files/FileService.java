@@ -14,7 +14,8 @@ import com.centraldungeon.files.dto.AdminFileResponse;
 import com.centraldungeon.files.dto.FileResponse;
 import com.centraldungeon.files.dto.FileUsageResponse;
 import com.centraldungeon.files.dto.PublicFileResponse;
-import com.centraldungeon.files.dto.PublishFileRequest;
+import com.centraldungeon.files.dto.LibraryUploadRequest;
+import com.centraldungeon.files.dto.UpdateLibraryCategoryRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.registrations.RegistrationFileRepository;
@@ -249,9 +250,12 @@ public class FileService {
      */
     @Transactional
     public UploadResult upload(MultipartFile upload, UploadFileRequest request, String actorId) {
-        if (request.fileType() == FileType.Public) {
+        // Neither side of the platform's library is something an uploader declares: both are what an
+        // admin's own upload produces, through uploadToLibrary (#64, #282).
+        if (request.fileType().isInLibrary()) {
             throw new InvalidRequestException(
-                    "A file cannot be uploaded as Public - publishing is an admin action (#64)", "FILE_CANNOT_SELF_PUBLISH");
+                    "A file cannot be uploaded into the platform's library from here - that is an admin action (#64)",
+                    "FILE_CANNOT_SELF_PUBLISH");
         }
         if (upload.isEmpty()) {
             throw new InvalidRequestException("The uploaded file is empty", "FILE_EMPTY");
@@ -509,14 +513,15 @@ public class FileService {
      * @param actorId the actor, from the token
      * @return the file after the change
      * @throws NotFoundException        if the file is not there
-     * @throws ForbiddenActionException if it is somebody else's, or the platform published it - a
-     *                                  published file is the platform's and only an admin unpublishes
+     * @throws ForbiddenActionException if it is somebody else's, or it is in the platform's library -
+     *                                  published or not, it is the platform's and only an admin
+     *                                  changes it (#64, #282)
      */
     @Transactional
     public FileResponse update(String fileId, UpdateFileRequest request, String actorId) {
         StoredFile file = requireOwned(fileId, actorId);
-        if (file.getFileType() == FileType.Public) {
-            throw new ForbiddenActionException("File " + fileId + " is published; only an admin can change it (#64)");
+        if (file.getFileType().isInLibrary()) {
+            throw new ForbiddenActionException("File " + fileId + " is in the platform's library; only an admin can change it (#64)");
         }
         file.setName(request.name());
         file.setFileType(request.keepInLibrary() ? FileType.Private : FileType.SingleUse);
@@ -537,25 +542,25 @@ public class FileService {
      * @param fileId  the file
      * @param actorId the owner, from the token
      * @throws NotFoundException        if the file is not there
-     * @throws ForbiddenActionException if it is somebody else's, or the platform published it
+     * @throws ForbiddenActionException if it is somebody else's, or it is in the platform's library
      */
     @Transactional
     public void delete(String fileId, String actorId) {
         StoredFile file = requireOwned(fileId, actorId);
-        if (file.getFileType() == FileType.Public) {
-            throw new ForbiddenActionException("File " + fileId + " is published; only an admin can remove it (#64)");
+        if (file.getFileType().isInLibrary()) {
+            throw new ForbiddenActionException("File " + fileId + " is in the platform's library; only an admin can remove it (#64)");
         }
         markDeleted(file);
     }
 
     /**
-     * /admin/files: the platform's library - what it publishes, searchable, with the usage count that
-     * makes #79 visible (#278).
+     * /admin/files: the platform's library - published, unpublished and hidden - searchable, with the
+     * usage count that makes #79 visible (#278, #282).
      *
-     * <p><b>Only what is published</b>, and that is a predicate in the query rather than a filter the
-     * screen may drop. Somebody's private upload - the sheet a player applied with, what they handed
-     * in - is theirs and not the platform's, and seeing or removing it is not this screen's job: that
-     * belongs to acting as that person, not to administering the library (#278).
+     * <p><b>Only the library</b>, and that is a predicate in the query rather than a filter the screen
+     * may drop. Somebody's private upload - the sheet a player applied with, what they handed in - is
+     * theirs and not the platform's, and seeing or removing it is not this screen's job: that belongs
+     * to acting as that person, not to administering the library (#278).
      *
      * <p>The count comes from one grouped query for the whole page rather than one per row, the same
      * shape /admin/catalogs uses.
@@ -564,7 +569,7 @@ public class FileService {
      * @param statuses   the statuses to keep, or empty for all of them
      * @param category   the cajón to keep (#233), or null for all of them
      * @param pageable   the page and its order
-     * @return the published files, page by page
+     * @return the library's files, page by page
      * @throws InvalidRequestException if the cajón is one nothing can be published into - asking the
      *                                 platform's library for a player's answers is asking for a shelf
      *                                 it does not have
@@ -590,50 +595,165 @@ public class FileService {
     }
 
     /**
-     * An admin uploading a file straight into the platform's library, already published into the
-     * cajones it is offered in (#278).
+     * An admin uploading a file into the platform's library, published now or left for later (#282).
      *
-     * <p><b>Uploading and publishing are one act here</b>, and the cajones are chosen before a byte
-     * is sent. They used to be two: the upload asked nothing and publishing came afterwards, so every
-     * file spent a while in the admin's library as a {@code Private} with no cajón at all - a state
-     * that meant nothing, in a library (their own) where #237 says admin work never goes.
-     *
-     * <p>This is what makes #79 work: once the community's default character sheet is here, every
-     * master attaches <em>that</em> file instead of uploading a copy, and correcting it corrects it
-     * everywhere at once.
-     *
-     * <p><b>It takes cajones, plural</b> (#233): the community's blank sheet is asked for both while
-     * a table recruits and once it is running, so it goes into {@code TableMaterial} and
-     * {@code MasterRequest} at once - one file, one blob, two rows.
+     * <p><b>What it is, always; whether it goes out, a choice.</b> The cajón is required, so nothing
+     * sits in the library without saying which flow it is for - the state #278 removed stays removed.
+     * Publishing is not required any more: a published file is attached by tables straight away and
+     * hiding it later does not take it off them (#79), so going out on the same click as the upload
+     * has to be something the admin asked for.
      *
      * <p>Deduplication (#75) applies as on any upload: content this admin already uploaded comes back
-     * as the row they had, now published and with the new cajones <em>added</em> - which is also how
-     * a file that was unpublished comes back to the library.
+     * as the row they had, moved into the library with the cajones <em>added</em>. <b>A re-upload
+     * never hides</b>: a file already published stays published even if this upload asked not to
+     * publish, because taking it out of the pickers is hiding, which is its own action.
      *
      * @param upload  the multipart part: the bytes and the name the browser sent
-     * @param request the cajones it is offered in (#233), at least one
-     * @param actorId the admin uploading, from the token (#121). Publishing never changes whose a
-     *                file is, so they stay its uploader
-     * @return the published file, plus whether it was recognised rather than written (#234)
+     * @param request the cajones it is offered in (#233), at least one, and whether to publish it now
+     * @param actorId the admin uploading, from the token (#121). They stay its uploader
+     * @return the file, plus whether it was recognised rather than written (#234)
      * @throws InvalidRequestException if a cajón is one nobody may publish into, or the part is
      *                                 empty, off the whitelist or over the cap
      * @throws NotFoundException       if the token names somebody who is not there
      */
     @Transactional
-    public PublishedUpload uploadPublished(MultipartFile upload, PublishFileRequest request, String actorId) {
+    public LibraryUpload uploadToLibrary(MultipartFile upload, LibraryUploadRequest request, String actorId) {
         // Before the bytes: a refused cajón should cost nothing, not a stored file rolled back.
         requirePublishable(request.categories());
         UploadResult stored = upload(upload, new UploadFileRequest(FileType.Private, null), actorId);
         String fileId = stored.file().id();
         StoredFile file = requireLive(fileId);
-        file.setFileType(FileType.Public);
-        file.setLastUsedAt(LocalDateTime.now());
+        if (request.publish()) {
+            markPublished(file);
+        } else if (file.getFileType() != FileType.Public) {
+            file.setFileType(FileType.Library);
+        }
         for (FileCategory category : request.categories()) {
             classify(fileId, category);
         }
-        AdminFileResponse response =
-                fileMapper.toAdminResponse(file, usesOf(fileId), publishableOnly(categoriesOf(fileId)));
-        return new PublishedUpload(response, stored.deduplicated());
+        return new LibraryUpload(toLibraryResponse(file), stored.deduplicated());
+    }
+
+    /**
+     * Publishing a file of the library that is not published: never published yet, or hidden (#282).
+     *
+     * <p>From here on masters see it in the picker and can attach it (#79). It needs a cajón first -
+     * which the upload always asks for, so the refusal is for a file whose cajón was somehow lost.
+     *
+     * @param fileId the file to publish
+     * @return the file after publishing
+     * @throws NotFoundException        if the file is not there, was marked gone, or is not in the library
+     * @throws ForbiddenActionException if it is already published
+     * @throws InvalidRequestException  if it has no cajón to be offered in
+     */
+    @Transactional
+    public AdminFileResponse publish(String fileId) {
+        StoredFile file = requireInLibrary(fileId);
+        if (file.getFileType() == FileType.Public) {
+            throw new ForbiddenActionException("File " + fileId + " is already published");
+        }
+        if (publishableOnly(categoriesOf(fileId)).isEmpty()) {
+            throw new InvalidRequestException(
+                    "File " + fileId + " says no flow it is for", "FILE_NEEDS_CATEGORY", Map.of("fileId", fileId));
+        }
+        markPublished(file);
+        return toLibraryResponse(file);
+    }
+
+    /**
+     * Hiding a published file: it stays in the library, offered to nobody (#282).
+     *
+     * <p><b>It no longer leaves the library.</b> It used to go back to its uploader as a {@code
+     * Private}, and when the uploader was an admin with no library of their own the file vanished for
+     * everybody. Now it is {@code Library} again, with its cajón and its {@code publishedAt}, and
+     * publishing it again is one click. Tables that already attached it keep it - hiding is not a
+     * delete (#79).
+     *
+     * @param fileId the file to hide
+     * @return the file after hiding
+     * @throws NotFoundException        if the file is not there, was marked gone, or is not in the library
+     * @throws ForbiddenActionException if it was not published
+     */
+    @Transactional
+    public AdminFileResponse unpublish(String fileId) {
+        StoredFile file = requireInLibrary(fileId);
+        if (file.getFileType() != FileType.Public) {
+            throw new ForbiddenActionException("File " + fileId + " is not published");
+        }
+        file.setFileType(FileType.Library);
+        // The cajones stay: hiding says the platform no longer offers the file, not what it is (#233).
+        return toLibraryResponse(file);
+    }
+
+    /**
+     * Changing what a file of the library is, while it is not published (#282).
+     *
+     * <p><b>The one place a membership is removed</b>, and only a declared one: the library's cajones
+     * are what an admin said the file is for, and correcting that before anybody is offered it is
+     * correcting a declaration. A player-side membership the file carries from its history is not the
+     * library's and stays (#233). A published file is refused - masters are choosing it under the
+     * cajón it has now, so it is hidden first.
+     *
+     * @param fileId  the file
+     * @param request what it is now
+     * @return the file after the change
+     * @throws NotFoundException        if the file is not there, was marked gone, or is not in the library
+     * @throws ForbiddenActionException if it is published
+     * @throws InvalidRequestException  if the cajón is one nothing can be published into
+     */
+    @Transactional
+    public AdminFileResponse changeLibraryCategory(String fileId, UpdateLibraryCategoryRequest request) {
+        requirePublishable(List.of(request.category()));
+        StoredFile file = requireInLibrary(fileId);
+        if (file.getFileType() == FileType.Public) {
+            throw new ForbiddenActionException("File " + fileId + " is published; hide it before changing what it is");
+        }
+        categoryRepository.deleteByFileIdAndCategories(fileId, PUBLISHABLE_CATEGORIES);
+        classify(fileId, request.category());
+        return toLibraryResponse(file);
+    }
+
+    /**
+     * An admin removing a file from the platform's library, published or not.
+     *
+     * <p><b>Only a file of the library</b> (#278). Somebody's private file is theirs: an admin reaches
+     * it by acting as that person, never from the library, so from here it is simply not there. Still
+     * a mark and not an erase (#25, #66).
+     *
+     * @param fileId the file
+     * @throws NotFoundException if the file is not there, was already marked gone, or is not in the library
+     */
+    @Transactional
+    public void deleteAsAdmin(String fileId) {
+        markDeleted(requireInLibrary(fileId));
+    }
+
+    /** The cajones a file of the library can be offered in, as a set for the one delete that uses it. */
+    private static final List<FileCategory> PUBLISHABLE_CATEGORIES =
+            Arrays.stream(FileCategory.values()).filter(FileCategory::isPublishable).toList();
+
+    /** A live file of the platform's library, published or not - anything else is not there (#278). */
+    private StoredFile requireInLibrary(String fileId) {
+        StoredFile file = requireLive(fileId);
+        if (!file.getFileType().isInLibrary()) {
+            throw new NotFoundException("File " + fileId + " is not in the platform's library");
+        }
+        return file;
+    }
+
+    /** Publishes a file, stamping the first publication once and never again (#282). */
+    private static void markPublished(StoredFile file) {
+        LocalDateTime now = LocalDateTime.now();
+        file.setFileType(FileType.Public);
+        file.setLastUsedAt(now);
+        if (file.getPublishedAt() == null) {
+            file.setPublishedAt(now);
+        }
+    }
+
+    /** One file of the library as /admin/files shows it. */
+    private AdminFileResponse toLibraryResponse(StoredFile file) {
+        return fileMapper.toAdminResponse(file, usesOf(file.getId()), publishableOnly(categoriesOf(file.getId())));
     }
 
     /**
@@ -656,9 +776,9 @@ public class FileService {
     /**
      * The cajones the platform's library speaks of (#278).
      *
-     * <p>A published file can still carry a player-side membership from before it was published -
-     * memberships are never revoked (#233) - but that is its history as somebody's answer, not a shelf
-     * the library offers it on, so the admin's screen does not show it.
+     * <p>A file of the library can still carry a player-side membership from before it got there -
+     * memberships are never revoked (#233) - but that is its history as somebody's answer, not a
+     * shelf the library offers it on, so the admin's screen does not show it.
      */
     private static List<String> publishableOnly(List<String> categories) {
         return categories.stream()
@@ -671,52 +791,6 @@ public class FileService {
         return categoryRepository.findByFileIds(List.of(fileId)).stream()
                 .map(link -> link.getId().category().name())
                 .toList();
-    }
-
-    /**
-     * Taking a file back out of the platform's library.
-     *
-     * <p>It leaves the library and returns to its uploader as something they are keeping, not as a
-     * {@code Single-use}: it has been public and attached to tables, and dropping it straight into the
-     * purge's path would be a surprise rather than a decision. Tables that already attached it keep it
-     * - unpublishing is not a delete (#79). Bringing it back is uploading it again, which costs nothing
-     * because the content is recognised (#75).
-     *
-     * @param fileId the file to unpublish
-     * @return the file after unpublishing
-     * @throws NotFoundException        if the file is not there or was marked gone
-     * @throws ForbiddenActionException if it was not published in the first place
-     */
-    @Transactional
-    public AdminFileResponse unpublish(String fileId) {
-        StoredFile file = requireLive(fileId);
-        if (file.getFileType() != FileType.Public) {
-            throw new ForbiddenActionException("File " + fileId + " is not published");
-        }
-        file.setFileType(FileType.Private);
-        // The cajones stay. Unpublishing says the platform no longer offers the file, not that it was
-        // never a blank for those flows - and every table that already attached it keeps it (#79,
-        // #233).
-        return fileMapper.toAdminResponse(file, usesOf(fileId), publishableOnly(categoriesOf(fileId)));
-    }
-
-    /**
-     * An admin removing a file from the platform's library.
-     *
-     * <p><b>Only a published one</b> (#278). Somebody's private file is theirs: an admin reaches it by
-     * acting as that person, never from the library, so from here it is simply not there. Still a mark
-     * and not an erase (#25, #66).
-     *
-     * @param fileId the file
-     * @throws NotFoundException if the file is not there, was already marked gone, or is not published
-     */
-    @Transactional
-    public void deleteAsAdmin(String fileId) {
-        StoredFile file = requireLive(fileId);
-        if (file.getFileType() != FileType.Public) {
-            throw new NotFoundException("File " + fileId + " is not in the platform's library");
-        }
-        markDeleted(file);
     }
 
     /**

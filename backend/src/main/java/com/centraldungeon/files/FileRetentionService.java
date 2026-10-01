@@ -45,6 +45,9 @@ public class FileRetentionService {
     /** The {@code files} rows, and the query that decides which of them have gone unused. */
     private final StoredFileRepository fileRepository;
 
+    /** The platform's library, published or not: never the purge's to take (#64, #282). */
+    private static final List<FileType> LIBRARY_TYPES = List.of(FileType.Public, FileType.Library);
+
     /** Where the retention window comes from - configuration, so it can be tightened without a migration. */
     private final StorageProperties storageProperties;
 
@@ -98,7 +101,7 @@ public class FileRetentionService {
     public int markUnusedFiles() {
         LocalDateTime cutoff = LocalDateTime.now().minus(storageProperties.retention());
         List<StoredFile> candidates =
-                fileRepository.findPurgeCandidates(cutoff, FileType.Public, PageRequest.of(0, BATCH_SIZE));
+                fileRepository.findPurgeCandidates(cutoff, LIBRARY_TYPES, PageRequest.of(0, BATCH_SIZE));
 
         LocalDateTime now = LocalDateTime.now();
         for (StoredFile file : candidates) {

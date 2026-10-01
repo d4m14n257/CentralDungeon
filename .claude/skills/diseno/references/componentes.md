@@ -94,7 +94,7 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 | `adminQueue` (2) | `ClaimBadge` · `QueueItemKindBadge` |
 | `approvals` (7) | `BanRequestsSection` · `RequestDetailPanel` · `RequestStatusBadge` · `RequestTypeBadge` · `ResolveRequestDialog` · `SubmitRequestDialog` · `SubmitRequestSection` |
 | `catalogs` (8) | `AcceptCatalogValueDialog` · `CanonicalPicker` · `CatalogChip` · `CatalogCombobox` · `CatalogPicker` · `CatalogStatusBadge` · `DisableCatalogValueDialog` · `MergeCatalogGroupsDialog` |
-| `files` (12) | `EditFileDialog` · `FileCard` · `FileCategoryBadge` · `FileCategoryChoice` · `FileCategoryFilter` · `FileDropzone` · `FileList` · `FilePicker` · `FileTypeBadge` · `FileUsageChips` · `PublishCategorySelect` · `StagedFileList` |
+| `files` (14) | `EditFileDialog` · `FileCard` · `FileCategoryBadge` · `FileCategoryChoice` · `FileCategoryFilter` · `FileDropzone` · `FileList` · `FilePicker` · `FileTypeBadge` · `FileUsageChips` · `LibraryStateBadge` · `EditLibraryCategoryDialog` · `PublishCategorySelect` · `StagedFileList` |
 | `help` (4) | `HelpBlocks` · `HelpButton` · `HelpDialog` · `HelpLink` |
 | `notifications` (1) | `NotificationBell` |
 | `registrations` (4) | `ApplyToTableDialog` · `BlockPlayerDialog` · `RegistrationStatusBadge` · `RejectRegistrationDialog` |

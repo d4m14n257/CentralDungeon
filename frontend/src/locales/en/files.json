@@ -2,7 +2,8 @@
   "fileType": {
     "Public": "Published",
     "Private": "Saved",
-    "SingleUse": "Table only"
+    "SingleUse": "Table only",
+    "Library": "In the library"
   },
   "status": {
     "Current": "Current",
@@ -22,9 +23,11 @@
     "detach": "Remove from table",
     "share": "Share with the table",
     "unshare": "Keep it to the masters",
-    "unpublish": "Unpublish",
+    "unpublish": "Hide",
     "delete": "Remove",
-    "edit": "Edit"
+    "edit": "Edit",
+    "publish": "Publish",
+    "editCategory": "Change what it is"
   },
   "picker": {
     "upload": "Upload",
@@ -65,7 +68,7 @@
   },
   "admin": {
     "title": "Files",
-    "description": "The community's library: what is published for every table.",
+    "description": "The community's library: what is published for every table and what waits to be published.",
     "searchLabel": "Search files",
     "searchPlaceholder": "Search by name",
     "columns": {
@@ -73,23 +76,27 @@
       "owner": "Uploaded by",
       "uses": "Tables",
       "size": "Size",
-      "status": "Status",
       "createdAt": "Uploaded",
-      "category": "Offered in"
+      "category": "Offered in",
+      "state": "In the library"
     },
     "usesValue_one": "{{count}} table",
     "usesValue_other": "{{count}} tables",
-    "emptyTitle": "Nothing published",
-    "emptyDescription": "Once you publish the community's blank sheet or its rules, they will show up here.",
+    "emptyTitle": "The library is empty",
+    "emptyDescription": "Once you upload the community's blank sheet or its rules, they will show up here.",
     "noResultsTitle": "No results",
     "noResultsDescription": "No file matches that search.",
     "deleteTitle": "Remove the file?",
     "deleteDescription": "It stops showing on every table using it. It is not erased from disk: that is the owner's, from their maintenance menu.",
     "deleteConfirm": "Remove",
-    "unpublishTitle": "Stop publishing it?",
-    "unpublishDescription": "It leaves the library and goes back to being its uploader's file. Tables that already added it keep it. To publish it again, upload it again.",
-    "unpublishConfirm": "Unpublish",
-    "upload": "Upload files"
+    "unpublishTitle": "Hide the file?",
+    "unpublishDescription": "It stops being offered to masters, but it stays in the library and you can publish it again. Tables that already added it keep it.",
+    "unpublishConfirm": "Hide",
+    "upload": "Upload files",
+    "publishTitle": "Publish “{{name}}”?",
+    "publishDescription": "Masters will see it right away and can add it to their tables. If you hide it later, tables that already added it keep it.",
+    "publishConfirm": "Publish",
+    "publishedOne": "“{{name}}” published"
   },
   "search": {
     "file_name": "name",
@@ -174,18 +181,42 @@
   },
   "upload": {
     "title": "Upload files",
-    "description": "What you upload here is published for the whole community. Choose what each file is: that decides where masters see it.",
+    "description": "Choose what each file is, then whether you publish it now or leave it in the library to publish later.",
     "back": "Back to files",
     "categoryLabel": "What “{{name}}” is",
     "categoryPlaceholder": "What is it?",
     "missingCategory_one": "1 file still needs to say what it is.",
     "missingCategory_other": "{{count}} files still need to say what they are.",
     "cancel": "Cancel",
-    "send_one": "Upload 1 file",
-    "send_other": "Upload {{count}} files",
     "published_one": "File published",
     "published_other": "{{count}} files published",
     "reused": "You had already uploaded {{names}}: that same copy was published.",
-    "someFailed": "Could not upload: {{names}}. The rest are in."
+    "someFailed": "Could not upload: {{names}}. The rest are in.",
+    "sendDraft": "Upload without publishing",
+    "sendAndPublish": "Upload and publish",
+    "confirmDraftTitle_one": "Upload 1 file without publishing?",
+    "confirmDraftTitle_other": "Upload {{count}} files without publishing?",
+    "confirmPublishTitle_one": "Upload and publish 1 file?",
+    "confirmPublishTitle_other": "Upload and publish {{count}} files?",
+    "savedDraft_one": "File uploaded, not published",
+    "savedDraft_other": "{{count}} files uploaded, not published",
+    "confirmDraftDescription_one": "It stays in the library and no master sees it until you publish it.",
+    "confirmDraftDescription_other": "They stay in the library and no master sees them until you publish them.",
+    "confirmPublishDescription_one": "Masters will see it right away and can add it to their tables. If you hide it later, tables that already added it keep it.",
+    "confirmPublishDescription_other": "Masters will see them right away and can add them to their tables. If you hide one later, tables that already added it keep it."
+  },
+  "libraryState": {
+    "Unpublished": "Unpublished",
+    "Published": "Published",
+    "Hidden": "Hidden",
+    "Removed": "Removed"
+  },
+  "libraryEdit": {
+    "title": "Change what it is",
+    "description": "“{{name}}” is not published: you can change its drawer before publishing it.",
+    "categoryLabel": "What it is",
+    "cancel": "Cancel",
+    "confirm": "Save",
+    "saved": "Drawer updated"
   }
 }

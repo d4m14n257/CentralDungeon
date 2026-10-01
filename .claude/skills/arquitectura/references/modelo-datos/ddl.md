@@ -20,6 +20,7 @@ propia migración, y se anota acá para que este documento no mienta por omisió
 | `V11__user_admin_changes.sql` | F3.1: **`user_role_changes`** y **`user_status_changes`**, el rastro inmutable de cada rol otorgado o quitado y de cada bloqueo (#84, #169). Copiadas de `table_status_changes`, con `justification` `NOT NULL`: no hay cambio de rol ni bloqueo que pueda ir sin motivo |
 | `V12__registration_status_changes.sql` | F3.4: **`registration_status_changes`**, el veto y su levantamiento como filas propias (#29, #39). `Blocked` sigue siendo un estado de `table_registrations`; lo que se guarda acá es el **cambio**, que una columna no puede contar |
 | `V13__system_setting_changes.sql` | F3.5: **`system_setting_changes`**, cada cambio de un ajuste con su motivo (#141). `setting_key` sin FK a propósito: `system_settings` guarda solo overrides, y el primer cambio de una clave registra una clave que todavía no tiene fila. `from_value` nulo significa «seguía en el default» |
+| `V14__file_library_states.sql` | La biblioteca de la plataforma gana ciclo de vida (#282). `file_type` suma **`Library`** —en la biblioteca, ofrecido a nadie—, que no necesita DDL porque es `VARCHAR` (#10). Lo que sí la necesita es **`published_at DATETIME NULL`**: sin publicar y oculto son los dos `Library`, y la pantalla los nombra distinto; la columna guarda la primera publicación y nunca se borra, porque ocultar un archivo no hace que nunca haya estado publicado |
 
 ```sql
 SET NAMES utf8mb4;

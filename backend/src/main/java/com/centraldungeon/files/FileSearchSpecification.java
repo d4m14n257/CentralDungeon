@@ -39,12 +39,12 @@ final class FileSearchSpecification {
     }
 
     /**
-     * /admin/files: the platform's library - only what is published - narrowed by the search box and
-     * the filters the screen sets explicitly (#278).
+     * /admin/files: the platform's library - published, unpublished and hidden - narrowed by the
+     * search box and the filters the screen sets explicitly (#278, #282).
      *
-     * <p><b>Published is a predicate and not a filter</b>: there is no shape of this query that
-     * returns somebody's private upload. A player's application sheet is theirs, and the library is
-     * not where an admin reaches it.
+     * <p><b>Being in the library is a predicate and not a filter</b>: there is no shape of this query
+     * that returns somebody's private upload. A player's application sheet is theirs, and the library
+     * is not where an admin reaches it.
      *
      * <p><b>The cajón is a filter and not a search field</b> (#233), unlike name, owner and MIME
      * type. Those are free text somebody half-remembers, so they are matched with a {@code LIKE};
@@ -60,7 +60,7 @@ final class FileSearchSpecification {
     static Specification<StoredFile> forAdmin(SearchQuery query, List<FileStatus> statuses, @Nullable FileCategory category) {
         return (root, criteriaQuery, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(builder.equal(root.get("fileType"), FileType.Public));
+            predicates.add(root.get("fileType").in(FileType.Public, FileType.Library));
             Predicate matched = matching(root, criteriaQuery, builder, query);
             if (matched != null) {
                 predicates.add(matched);
@@ -97,6 +97,9 @@ final class FileSearchSpecification {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(builder.equal(root.get("userCreated").get("id"), ownerId));
             predicates.add(builder.equal(root.get("status"), FileStatus.Current));
+            // A file waiting in the platform's library is the platform's, not the admin's who uploaded
+            // it: their own library never lists it (#237, #282).
+            predicates.add(builder.notEqual(root.get("fileType"), FileType.Library));
             Predicate matched = matching(root, criteriaQuery, builder, query);
             if (matched != null) {
                 predicates.add(matched);

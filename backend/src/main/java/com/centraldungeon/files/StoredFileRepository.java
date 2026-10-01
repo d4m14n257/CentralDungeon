@@ -1,6 +1,7 @@
 package com.centraldungeon.files;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -70,8 +71,9 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, String>,
      * <p>Three conditions, each with a reason:
      *
      * <ul>
-     *   <li><b>Published files are exempt.</b> They belong to the platform rather than to a person,
-     *       and a rules document nobody downloaded for three months is still the rules (#64).
+     *   <li><b>The platform's library is exempt</b>, published or not (#64, #282). Those files belong
+     *       to the platform rather than to a person, and a rules document nobody downloaded for three
+     *       months is still the rules - as is the one waiting to be published.
      *   <li><b>{@code lastUsedAt} falls back to {@code createdAt}.</b> A file uploaded and never
      *       touched again has no last use, and treating that as "never used, keep forever" would
      *       exempt exactly the files the purge exists for.
@@ -82,15 +84,15 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, String>,
      * <p>Named parameters only, never positional (#124).
      *
      * @param cutoff     the moment before which a last use counts as too old
-     * @param publicType {@link FileType#Public}, passed rather than written into the query so the
-     *                   attribute converter maps it
+     * @param exemptTypes {@link FileType#Public} and {@link FileType#Library}, passed rather than
+     *                    written into the query so the attribute converter maps them
      * @param pageable   how many to take in one pass - the job works in batches, not all at once
      * @return the candidates, oldest use first
      */
     @Query("""
             select file from StoredFile file
             where file.status = com.centraldungeon.files.FileStatus.Current
-              and file.fileType <> :publicType
+              and file.fileType not in :exemptTypes
               and coalesce(file.lastUsedAt, file.createdAt) < :cutoff
               and not exists (
                   select link from TableFile link
@@ -99,5 +101,5 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, String>,
             order by coalesce(file.lastUsedAt, file.createdAt) asc
             """)
     List<StoredFile> findPurgeCandidates(
-            @Param("cutoff") LocalDateTime cutoff, @Param("publicType") FileType publicType, Pageable pageable);
+            @Param("cutoff") LocalDateTime cutoff, @Param("exemptTypes") Collection<FileType> exemptTypes, Pageable pageable);
 }

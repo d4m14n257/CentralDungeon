@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { EyeOff, Trash2 } from 'lucide-react'
+import { EyeOff, Globe, Pencil, Trash2 } from 'lucide-react'
 import { useSearchParams } from 'react-router'
+import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
+import { useDisclosure } from '@/hooks/useDisclosure'
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
@@ -19,10 +21,14 @@ import { useSearchQuery } from '@/hooks/useSearchQuery'
 import {
   FileCategoryBadge,
   FileCategoryFilter,
+  EditLibraryCategoryDialog,
+  LibraryStateBadge,
   PUBLISHABLE_CATEGORIES,
   formatFileSize,
+  libraryStateOf,
   useAdminFiles,
   useDeleteFileAsAdmin,
+  usePublishFile,
   useUnpublishFile,
   type AdminFile,
   adminFileSearchFields,
@@ -39,8 +45,10 @@ import { ApiError } from '@/types/api'
  * their own copy, so correcting it corrects every table at once and the same bytes are stored once
  * rather than once per master. Without this screen, #79 would be a rule nothing could exercise.
  *
- * **Only what is published, and uploading is publishing** (#278). Uploading happens on its own page,
- * /admin/files/upload, where each file gets the cajón it goes into; and somebody's private file
+ * **The library and its lifecycle** (#278, #282). A file here is unpublished, published or hidden,
+ * and the column says which; publishing and hiding are row actions, each confirmed with what it does
+ * to masters. Uploading happens on its own page, /admin/files/upload, where each file gets the cajón
+ * it goes into and the admin chooses whether it goes out now. Somebody's private file
  * — what a player applied with or handed in — never shows up, because it is theirs and not the
  * library's. That is also why the screen speaks of three cajones and not five: the two player-side
  * ones hold people's answers, and nothing is ever published into them (#233).
@@ -78,8 +86,10 @@ export function AdminFilesPage() {
   const requestedCategory = searchParams.get('category')
   const category = PUBLISHABLE_CATEGORIES.find((value) => value === requestedCategory) ?? null
   const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(search.query, undefined, category ?? undefined, page, size)
+  const publish = usePublishFile()
   const unpublish = useUnpublishFile()
   const remove = useDeleteFileAsAdmin()
+  const editDialog = useDisclosure<AdminFile>()
 
   /**
    * Writes the screen's state into the URL, resetting the page whenever the search changes.
@@ -103,14 +113,32 @@ export function AdminFilesPage() {
     )
   }
 
+  async function handlePublish(file: AdminFile) {
+    const confirmed = await confirm({
+      title: t('admin.publishTitle', { name: file.name }),
+      description: t('admin.publishDescription'),
+      confirmLabel: t('admin.publishConfirm'),
+    })
+    if (!confirmed) return
+    publish.mutate(file.id, { onSuccess: () => toast.success(t('admin.publishedOne', { name: file.name })) })
+  }
+
   async function handleUnpublish(file: AdminFile) {
-    const confirmed = await confirm({ title: t('admin.unpublishTitle'), description: t('admin.unpublishDescription') })
+    const confirmed = await confirm({
+      title: t('admin.unpublishTitle'),
+      description: t('admin.unpublishDescription'),
+      confirmLabel: t('admin.unpublishConfirm'),
+    })
     if (!confirmed) return
     unpublish.mutate(file.id)
   }
 
   async function handleDelete(file: AdminFile) {
-    const confirmed = await confirm({ title: t('admin.deleteTitle'), description: t('admin.deleteDescription') })
+    const confirmed = await confirm({
+      title: t('admin.deleteTitle'),
+      description: t('admin.deleteDescription'),
+      confirmLabel: t('admin.deleteConfirm'),
+    })
     if (!confirmed) return
     remove.mutate(file.id)
   }
@@ -121,6 +149,13 @@ export function AdminFilesPage() {
 
   const columns: DataTableColumn<AdminFile>[] = [
     { id: 'name', header: t('admin.columns.name'), role: 'title', cell: (file) => file.name },
+    // Where it stands in the library (#282): whether masters can see it is the first thing to know.
+    {
+      id: 'state',
+      header: t('admin.columns.state'),
+      role: 'badge',
+      cell: (file) => <LibraryStateBadge state={libraryStateOf(file)} />,
+    },
     {
       id: 'category',
       header: t('admin.columns.category'),
@@ -150,7 +185,6 @@ export function AdminFilesPage() {
       role: 'hidden',
       cell: (file) => formatDate(file.createdAt, i18n.language, timeZone),
     },
-    { id: 'status', header: t('admin.columns.status'), cell: (file) => t(`status.${file.status}`) },
   ]
 
   return (
@@ -195,7 +229,22 @@ export function AdminFilesPage() {
               <>
                 {/* An action a row's state would make the server refuse is absent, never greyed out:
                     a disabled button that does not say why is worse than no button (principio 2). */}
-                {file.status === 'Current' && (
+                {(libraryStateOf(file) === 'Unpublished' || libraryStateOf(file) === 'Hidden') && (
+                  <>
+                    <IconAction
+                      icon={<Globe className="size-4" />}
+                      label={t('actions.publish')}
+                      disabled={publish.isPending}
+                      onClick={() => void handlePublish(file)}
+                    />
+                    <IconAction
+                      icon={<Pencil className="size-4" />}
+                      label={t('actions.editCategory')}
+                      onClick={() => editDialog.open(file)}
+                    />
+                  </>
+                )}
+                {libraryStateOf(file) === 'Published' && (
                   <IconAction
                     icon={<EyeOff className="size-4" />}
                     label={t('actions.unpublish')}
@@ -227,6 +276,8 @@ export function AdminFilesPage() {
           />
         </>
       )}
+
+      <EditLibraryCategoryDialog file={editDialog.item ?? null} onOpenChange={(open) => !open && editDialog.close()} />
     </div>
   )
 }

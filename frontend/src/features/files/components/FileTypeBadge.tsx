@@ -11,6 +11,7 @@ import type { FileType } from '../types'
  */
 const STATE_TONES: Record<FileType, StatusTone> = {
   Public: 'open',
+  Library: 'draft',
   Private: 'draft',
   SingleUse: 'pending',
 }

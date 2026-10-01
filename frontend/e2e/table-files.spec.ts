@@ -228,14 +228,14 @@ test('a master attaches a file the platform published without copying it', async
   const master = await newAuthenticatedPage(browser, `e2e-pub-master-${runId}`, true, false)
 
   try {
-    // The admin uploads on the library's own page, and uploading is publishing (#278): each file in
-    // the upload list says what it is, and nothing is sent while one does not — nothing is
-    // preselected, so a file cannot land in the wrong flow by omission (M24.1, #233).
+    // The admin uploads on the library's own page (#278). Each file says what it is, and nothing is
+    // sent while one does not - nothing is preselected, so a file cannot land in the wrong flow by
+    // omission (M24.1, #233).
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('link', { name: 'Subir archivos' }).click()
     await expect(admin.page).toHaveURL(/\/admin\/files\/upload$/)
     await admin.page.locator('input[type="file"]').setInputFiles(pdf('ficha-comunidad-e2e.pdf', runId))
-    await admin.page.getByRole('button', { name: 'Subir 1 archivo' }).click()
+    await admin.page.getByRole('button', { name: 'Subir sin publicar' }).click()
     await expect(admin.page.getByText('Falta elegir qué es 1 archivo.')).toBeVisible()
 
     await admin.page.getByRole('combobox', { name: 'Qué es «ficha-comunidad-e2e.pdf»' }).click()
@@ -243,16 +243,38 @@ test('a master attaches a file the platform published without copying it', async
     await expect(admin.page.getByRole('option')).toHaveCount(3)
     await expect(admin.page.getByRole('option', { name: 'Solicitud de jugador' })).toHaveCount(0)
     await admin.page.getByRole('option', { name: 'De mesa' }).click()
-    await admin.page.getByRole('button', { name: 'Subir 1 archivo' }).click()
+
+    // Uploading is not publishing any more, and neither happens on the click (#282): the
+    // confirmation says what the choice does first.
+    await admin.page.getByRole('button', { name: 'Subir sin publicar' }).click()
+    const confirmUpload = admin.page.getByRole('dialog')
+    await expect(confirmUpload.getByText('¿Subir 1 archivo sin publicar?')).toBeVisible()
+    await confirmUpload.getByRole('button', { name: 'Subir sin publicar' }).click()
     // Everything went up, so the page hands back to the library.
     await expect(admin.page).toHaveURL(/\/admin\/files$/)
 
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
-    await expect(admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })).toContainText('De mesa')
+    const row = admin.page.getByRole('row', { name: /ficha-comunidad-e2e\.pdf/ })
+    await expect(row).toContainText('De mesa')
+    await expect(row).toContainText('Sin publicar')
 
+    // While it waits, no master is offered it.
     const tableId = await createTable(master.page, tableName)
+    await master.page.goto(`/master/tables/${tableId}/files`)
+    await master.page.getByRole('button', { name: 'Agregar un archivo' }).click()
+    await master.page.getByRole('dialog').getByRole('tab', { name: 'Publicados' }).click()
+    await expect(master.page.getByRole('dialog').getByText('ficha-comunidad-e2e.pdf')).toBeHidden()
+    await master.page.keyboard.press('Escape')
+
+    // Publishing is its own row action, and it says what it does to masters before doing it.
+    await row.getByRole('button', { name: 'Publicar' }).click()
+    const confirmPublish = admin.page.getByRole('dialog')
+    await expect(confirmPublish.getByText(/Los masters lo van a ver al instante/)).toBeVisible()
+    await confirmPublish.getByRole('button', { name: 'Publicar' }).click()
+    await expect(row).toContainText('Publicado')
+
     await master.page.goto(`/master/tables/${tableId}/files`)
     await attach(master.page, false, async (dialog) => {
       await dialog.getByRole('tab', { name: 'Publicados' }).click()

@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { adminFilesPath } from '@/config/paths'
+import { useConfirm } from '@/hooks/useConfirm'
 import {
   FileDropzone,
   PublishCategorySelect,
@@ -27,15 +28,20 @@ import {
  * **The upload list is the same one every flow uses** (`StagedFileList`, #238), with one addition: a
  * select on each row saying what that file is. Each file is its own document — the blank sheet is
  * table material, the rules are an announcement — so they can go up together, each into its own
- * cajón, and uploading is publishing: nothing lands in the library without saying which flow it is
- * for.
+ * cajón, and nothing lands in the library without saying which flow it is for.
  *
- * Nothing is sent until «Subir» (#238). What failed stays listed with its cajón, to try again; when
- * everything went up, the page goes back to the library, where the new rows are.
+ * **Two ways to send, and both are confirmed** (#282). «Subir sin publicar» leaves the files in the
+ * library for later; «Subir y publicar» puts them in front of masters at once — and since a table that
+ * attaches a file keeps it even if it is hidden afterwards (#79), the confirmation says so before it
+ * happens, not after.
+ *
+ * Nothing is sent until one of the two is confirmed (#238). What failed stays listed with its cajón,
+ * to try again; when everything went up, the page goes back to the library, where the new rows are.
  */
 export function AdminFileUploadPage() {
   const { t } = useTranslation('files')
   const navigate = useNavigate()
+  const confirm = useConfirm()
   const [staged, setStaged] = useState<StagedFile[]>([])
   // Keyed by the staged entry, so removing a file takes its choice with it.
   const [categories, setCategories] = useState<Record<string, FileCategory>>({})
@@ -50,17 +56,37 @@ export function AdminFileUploadPage() {
     setCategories(({ [key]: _dropped, ...rest }) => rest)
   }
 
-  function send() {
+  /**
+   * Sends what is staged, published or not, once the admin confirmed what that does. Every file has
+   * to say what it is first; the missing ones are marked instead of asking to confirm an upload that
+   * could not go through.
+   */
+  async function send(publish: boolean) {
     if (missing.length > 0) {
       setShowMissing(true)
       return
     }
+    const count = staged.length
+    const confirmed = await confirm(
+      publish
+        ? {
+            title: t('upload.confirmPublishTitle', { count }),
+            description: t('upload.confirmPublishDescription', { count }),
+            confirmLabel: t('upload.sendAndPublish'),
+          }
+        : {
+            title: t('upload.confirmDraftTitle', { count }),
+            description: t('upload.confirmDraftDescription', { count }),
+            confirmLabel: t('upload.sendDraft'),
+          },
+    )
+    if (!confirmed) return
     upload.mutate(
-      staged.map((entry) => ({ staged: entry, category: categories[stagedKey(entry)]! })),
+      { uploads: staged.map((entry) => ({ staged: entry, category: categories[stagedKey(entry)]! })), publish },
       {
         onSuccess: ({ published, failed, reused }) => {
           if (published.length > 0) {
-            toast.success(t('upload.published', { count: published.length }))
+            toast.success(t(publish ? 'upload.published' : 'upload.savedDraft', { count: published.length }))
           }
           // Reuse is worth saying (#234): the admin already had that content, so no second copy exists.
           if (reused.length > 0) {
@@ -108,8 +134,11 @@ export function AdminFileUploadPage() {
         <Button variant="ghost" asChild>
           <Link to={adminFilesPath()}>{t('upload.cancel')}</Link>
         </Button>
-        <Button type="button" disabled={staged.length === 0 || upload.isPending} onClick={send}>
-          {t('upload.send', { count: staged.length })}
+        <Button type="button" variant="outline" disabled={staged.length === 0 || upload.isPending} onClick={() => void send(false)}>
+          {t('upload.sendDraft')}
+        </Button>
+        <Button type="button" disabled={staged.length === 0 || upload.isPending} onClick={() => void send(true)}>
+          {t('upload.sendAndPublish')}
         </Button>
       </div>
     </div>

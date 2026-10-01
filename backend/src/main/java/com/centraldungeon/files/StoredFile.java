@@ -68,6 +68,14 @@ public class StoredFile extends BaseEntity {
     @Column(name = "file_type", nullable = false, length = 32)
     private FileType fileType = FileType.SingleUse;
 
+    /**
+     * When the file was first published into the platform's library, or null if it never was (#282).
+     * Never cleared: hiding a file makes it {@code Library} again, not never-published, and that is
+     * the one thing that tells a hidden file from one still waiting to be published.
+     */
+    @Column(name = "published_at")
+    private @Nullable LocalDateTime publishedAt;
+
     // The cajones a file belongs to are rows in `file_categories`, never a column here (#233): a
     // file belongs to every flow it has been used in, and deduplication (#75) makes two the normal
     // case rather than an edge one. See FileCategoryLink.
@@ -199,6 +207,24 @@ public class StoredFile extends BaseEntity {
      */
     public void setFileType(FileType fileType) {
         this.fileType = fileType;
+    }
+
+    /**
+     * Returns when the file was first published into the platform's library (#282).
+     *
+     * @return the moment of the first publication, or null if it was never published
+     */
+    public @Nullable LocalDateTime getPublishedAt() {
+        return publishedAt;
+    }
+
+    /**
+     * Records the first publication. Callers set it once and never clear it (#282).
+     *
+     * @param publishedAt when the file was first published
+     */
+    public void setPublishedAt(@Nullable LocalDateTime publishedAt) {
+        this.publishedAt = publishedAt;
     }
 
     /**

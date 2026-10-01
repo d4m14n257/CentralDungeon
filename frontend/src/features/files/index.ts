@@ -16,6 +16,8 @@ export { FileCategoryChoice } from './components/FileCategoryChoice'
 export { StagedFileList } from './components/StagedFileList'
 export { FileUsageChips } from './components/FileUsageChips'
 export { PublishCategorySelect } from './components/PublishCategorySelect'
+export { LibraryStateBadge } from './components/LibraryStateBadge'
+export { EditLibraryCategoryDialog } from './components/EditLibraryCategoryDialog'
 export { EditFileDialog } from './components/EditFileDialog'
 
 export { useMyFiles } from './api/useMyFiles'
@@ -33,11 +35,14 @@ export { useAttachFilesToTable } from './api/useAttachFilesToTable'
 export { useUpdateTableFile } from './api/useUpdateTableFile'
 export { useDetachTableFile } from './api/useDetachTableFile'
 export { useUploadToLibrary, type LibraryUpload, type LibraryUploadResult } from './api/useUploadToLibrary'
+export { usePublishFile } from './api/usePublishFile'
 export { useUnpublishFile } from './api/useUnpublishFile'
+export { useChangeLibraryCategory } from './api/useChangeLibraryCategory'
 export { useDeleteFileAsAdmin } from './api/useDeleteFileAsAdmin'
 
 export { formatFileSize, type FormattedSize } from './format'
 export { FILE_CATEGORIES, PUBLISHABLE_CATEGORIES } from './categories'
+export { libraryStateOf, type LibraryState } from './libraryState'
 export { ALLOWED_MIME_TYPES, rejectionOf } from './limits'
 export { FILE_TYPE_CHOICES, fileCategoryChoices, myFileSearchFields, adminFileSearchFields } from './searchFields'
 export { stagedKey } from '@/types/file'
@@ -52,7 +57,8 @@ export type {
   FileUsage,
   LinkTableFileInput,
   PublicFile,
-  PublishFileInput,
+  LibraryCategoryInput,
+  LibraryUploadInput,
   SharedFile,
   StagedFile,
   StoredFile,

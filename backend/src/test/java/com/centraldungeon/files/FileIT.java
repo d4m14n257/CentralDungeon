@@ -12,7 +12,7 @@ import com.centraldungeon.files.dto.FileResponse;
 import com.centraldungeon.files.dto.FileUsageResponse;
 import com.centraldungeon.files.dto.LinkTableFileRequest;
 import com.centraldungeon.files.dto.PublicFileResponse;
-import com.centraldungeon.files.dto.PublishFileRequest;
+import com.centraldungeon.files.dto.LibraryUploadRequest;
 import com.centraldungeon.files.dto.SharedFileResponse;
 import com.centraldungeon.files.dto.TableFileResponse;
 import com.centraldungeon.files.dto.UploadFileRequest;
@@ -297,13 +297,13 @@ class FileIT {
         // The sheet goes into both master-side cajones at once: it is asked for while the table
         // recruits *and* once it is running. That is the case a single column could not express.
         AdminFileResponse sheet = fileService
-                .uploadPublished(
+                .uploadToLibrary(
                         pdf("ficha-comunidad.pdf", "la de todos"),
-                        new PublishFileRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest)),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest), true),
                         admin.getId())
                 .file();
-        fileService.uploadPublished(
-                pdf("reglamento.pdf", "las normas"), new PublishFileRequest(List.of(FileCategory.Announcement)), admin.getId());
+        fileService.uploadToLibrary(
+                pdf("reglamento.pdf", "las normas"), new LibraryUploadRequest(List.of(FileCategory.Announcement), true), admin.getId());
 
         PageResponse<PublicFileResponse> forRequests =
                 fileService.listPublic(FileCategory.MasterRequest, PageRequest.of(0, 20));
@@ -324,9 +324,9 @@ class FileIT {
      */
     @Test
     void refusesToPublishIntoACajonThatHoldsPeoplesAnswers() {
-        assertThatThrownBy(() -> fileService.uploadPublished(
+        assertThatThrownBy(() -> fileService.uploadToLibrary(
                         pdf("ficha.pdf", "la de todos"),
-                        new PublishFileRequest(List.of(FileCategory.PlayerApplication)),
+                        new LibraryUploadRequest(List.of(FileCategory.PlayerApplication), true),
                         master.getId()))
                 .isInstanceOf(InvalidRequestException.class);
     }
@@ -393,9 +393,9 @@ class FileIT {
     @Test
     void aPublishedFileIsAttachedRatherThanCopied() {
         User admin = userRepository.save(new User(randomDiscordId(), "File Admin"));
-        AdminFileResponse defaultSheet = fileService.uploadPublished(
+        AdminFileResponse defaultSheet = fileService.uploadToLibrary(
                         pdf("ficha-por-defecto.pdf", "la de la comunidad"),
-                        new PublishFileRequest(List.of(FileCategory.TableMaterial)),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true),
                         admin.getId())
                 .file();
 
@@ -432,9 +432,9 @@ class FileIT {
         FileResponse stale = upload("viejo.pdf", "nadie lo abre");
         FileResponse attached = upload("en-uso.pdf", "una mesa lo muestra");
         AdminFileResponse published = fileService
-                .uploadPublished(
+                .uploadToLibrary(
                         pdf("reglas.pdf", "las reglas"),
-                        new PublishFileRequest(List.of(FileCategory.Announcement)),
+                        new LibraryUploadRequest(List.of(FileCategory.Announcement), true),
                         master.getId())
                 .file();
         attach(firstTable, attached.id(), false);
@@ -469,8 +469,8 @@ class FileIT {
     @Test
     void theAdminListingCountsHowManyTablesUseEachFile() {
         AdminFileResponse sheet = fileService
-                .uploadPublished(
-                        pdf("ficha.pdf", "hoja"), new PublishFileRequest(List.of(FileCategory.TableMaterial)), master.getId())
+                .uploadToLibrary(
+                        pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true), master.getId())
                 .file();
         attach(firstTable, sheet.id(), false);
         attach(secondTable, sheet.id(), false);
@@ -495,9 +495,9 @@ class FileIT {
     void theAdminListingHoldsOnlyWhatIsPublished() {
         FileResponse privateSheet = upload("ficha-privada.pdf", "la mía");
         AdminFileResponse publicSheet = fileService
-                .uploadPublished(
+                .uploadToLibrary(
                         pdf("ficha-publica.pdf", "la de todos"),
-                        new PublishFileRequest(List.of(FileCategory.TableMaterial)),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true),
                         master.getId())
                 .file();
 
@@ -506,6 +506,39 @@ class FileIT {
         assertThat(page.content()).extracting(AdminFileResponse::id)
                 .contains(publicSheet.id())
                 .doesNotContain(privateSheet.id());
+    }
+
+    /**
+     * #282 against real SQL: a file uploaded without publishing is in the admin's library and in no
+     * picker; hidden after being published, it is still in the library and still in no picker; and the
+     * purge leaves both alone, because the platform's library is never the purge's to take.
+     */
+    @Test
+    void anUnpublishedOrHiddenFileStaysInTheLibraryOutOfThePickersAndOutOfThePurge() {
+        AdminFileResponse waiting = fileService
+                .uploadToLibrary(
+                        pdf("borrador-e2e.pdf", "todavia no"),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial), false),
+                        master.getId())
+                .file();
+        AdminFileResponse hidden = fileService
+                .uploadToLibrary(
+                        pdf("oculto-e2e.pdf", "ya no"),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true),
+                        master.getId())
+                .file();
+        fileService.unpublish(hidden.id());
+        ageOut(waiting.id(), hidden.id());
+
+        fileRetentionService.markUnusedFiles();
+
+        PageResponse<AdminFileResponse> library = fileService.listForAdmin("e2e", List.of(), null, PageRequest.of(0, 50));
+        assertThat(library.content()).extracting(AdminFileResponse::id).contains(waiting.id(), hidden.id());
+        assertThat(fileService.listPublic(FileCategory.TableMaterial, PageRequest.of(0, 50)).content())
+                .extracting(PublicFileResponse::id)
+                .doesNotContain(waiting.id(), hidden.id());
+        assertThat(statusOf(waiting.id())).isEqualTo(FileStatus.Current);
+        assertThat(statusOf(hidden.id())).isEqualTo(FileStatus.Current);
     }
 
     // ---------------------------------------------------------------- fixtures

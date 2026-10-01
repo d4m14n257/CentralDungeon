@@ -1,14 +1,15 @@
 import type { TableFileType } from '@/types/file'
 
 /**
- * Which lifecycle a file has (#68). Three, not two: what the platform published, what its owner
- * keeps to reuse (#65), and what was uploaded for one context and is transient.
+ * Which lifecycle a file has (#68). What the platform published, what waits in the platform's library
+ * unpublished or hidden (#282), what its owner keeps to reuse (#65), and what was uploaded for one
+ * context and is transient.
  *
  * A union of literals rather than a TypeScript `enum` (arquitectura §3.2). Note that the wire
  * value is the backend constant's name — `SingleUse` — and not the hyphenated `Single-use` the
  * column holds; that spelling stops at the backend's converter and never reaches here.
  */
-export type FileType = 'Public' | 'Private' | 'SingleUse'
+export type FileType = 'Public' | 'Library' | 'Private' | 'SingleUse'
 
 /**
  * The flow a file belongs to (#233) — its cajón.
@@ -103,6 +104,11 @@ export interface AdminFile extends StoredFile {
    */
   uses: number
   status: FileStatus
+  /**
+   * When it was first published into the platform's library, or null if it never was. With
+   * `fileType`, it tells the library's states apart (#282) — see `libraryStateOf`.
+   */
+  publishedAt: string | null
 }
 
 /**
@@ -160,14 +166,20 @@ export type LinkTableFileInput = Pick<TableFile, 'fileId' | 'tableFileType' | 'i
 export type UpdateTableFileInput = Pick<TableFile, 'tableFileType' | 'isPrivate'>
 
 /**
- * What an admin's upload into the platform's library sends with the bytes: the cajones the file is
- * published into, chosen before it is sent (#233, #278).
- *
- * **Plural, and that is the point.** The community's blank sheet is asked for while a table recruits
- * *and* once it is running, so it is published into `TableMaterial` and `MasterRequest` at once — one
- * file, two rows. It replaced the audience of #64 outright: a flow already says who a document is for.
+ * What an admin's upload into the platform's library sends with the bytes (#233, #282): what the file
+ * is, always, and whether it goes out now — a published file is attached by tables straight away and
+ * hiding it later does not take it off them (#79), so that is a choice, never a side effect.
  */
-export type PublishFileInput = Pick<AdminFile, 'categories'>
+export interface LibraryUploadInput extends Pick<AdminFile, 'categories'> {
+  /** True to publish it on upload; false to leave it in the library unpublished. */
+  publish: boolean
+}
+
+/** What changing the cajón of an unpublished file of the library sends (#282): one, like the upload. */
+export interface LibraryCategoryInput {
+  /** What the file is now. One of the three publishable cajones. */
+  category: FileCategory
+}
 
 /**
  * What an admin's upload into the platform's library produced (#278): the published row, and whether

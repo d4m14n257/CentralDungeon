@@ -2,7 +2,8 @@
   "fileType": {
     "Public": "Publicado",
     "Private": "Guardado",
-    "SingleUse": "De una mesa"
+    "SingleUse": "De una mesa",
+    "Library": "En la biblioteca"
   },
   "status": {
     "Current": "Vigente",
@@ -22,9 +23,11 @@
     "detach": "Quitar de la mesa",
     "share": "Compartir con la mesa",
     "unshare": "Dejar solo para masters",
-    "unpublish": "Dejar de publicar",
+    "unpublish": "Ocultar",
     "delete": "Dar de baja",
-    "edit": "Editar"
+    "edit": "Editar",
+    "publish": "Publicar",
+    "editCategory": "Cambiar qué es"
   },
   "picker": {
     "upload": "Subir",
@@ -65,7 +68,7 @@
   },
   "admin": {
     "title": "Archivos",
-    "description": "La biblioteca de la comunidad: lo que se publica para todas las mesas.",
+    "description": "La biblioteca de la comunidad: lo que se publica para todas las mesas y lo que espera para publicarse.",
     "searchLabel": "Buscar archivos",
     "searchPlaceholder": "Buscar por nombre",
     "columns": {
@@ -73,23 +76,27 @@
       "owner": "Subido por",
       "uses": "Mesas",
       "size": "Tamaño",
-      "status": "Estado",
       "createdAt": "Subido",
-      "category": "Dónde se ofrece"
+      "category": "Dónde se ofrece",
+      "state": "En la biblioteca"
     },
     "usesValue_one": "{{count}} mesa",
     "usesValue_other": "{{count}} mesas",
-    "emptyTitle": "No hay nada publicado",
-    "emptyDescription": "Cuando publiques la hoja en blanco de la comunidad o el reglamento, va a aparecer acá.",
+    "emptyTitle": "La biblioteca está vacía",
+    "emptyDescription": "Cuando subas la hoja en blanco de la comunidad o el reglamento, va a aparecer acá.",
     "noResultsTitle": "Sin resultados",
     "noResultsDescription": "Ningún archivo coincide con la búsqueda.",
     "deleteTitle": "¿Dar de baja el archivo?",
     "deleteDescription": "Deja de verse en todas las mesas que lo usan. No se borra del disco: eso lo hace el owner desde su menú de mantenimiento.",
     "deleteConfirm": "Dar de baja",
-    "unpublishTitle": "¿Dejar de publicarlo?",
-    "unpublishDescription": "Sale de la biblioteca y vuelve a ser un archivo de quien lo subió. Las mesas que ya lo tienen agregado lo conservan. Para volver a publicarlo, se sube de nuevo.",
-    "unpublishConfirm": "Dejar de publicar",
-    "upload": "Subir archivos"
+    "unpublishTitle": "¿Ocultar el archivo?",
+    "unpublishDescription": "Deja de ofrecerse a los masters, pero sigue en la biblioteca y lo podés volver a publicar. Las mesas que ya lo agregaron lo conservan.",
+    "unpublishConfirm": "Ocultar",
+    "upload": "Subir archivos",
+    "publishTitle": "¿Publicar «{{name}}»?",
+    "publishDescription": "Los masters lo van a ver al instante y lo pueden agregar a sus mesas. Si después lo ocultás, las mesas que ya lo agregaron lo conservan.",
+    "publishConfirm": "Publicar",
+    "publishedOne": "«{{name}}» publicado"
   },
   "search": {
     "file_name": "nombre",
@@ -174,18 +181,42 @@
   },
   "upload": {
     "title": "Subir archivos",
-    "description": "Lo que subas acá queda publicado para toda la comunidad. Elegí qué es cada archivo: eso decide dónde lo ven los masters.",
+    "description": "Elegí qué es cada archivo y después si lo publicás ya o lo dejás en la biblioteca para publicarlo más adelante.",
     "back": "Volver a archivos",
     "categoryLabel": "Qué es «{{name}}»",
     "categoryPlaceholder": "¿Qué es?",
     "missingCategory_one": "Falta elegir qué es 1 archivo.",
     "missingCategory_other": "Falta elegir qué son {{count}} archivos.",
     "cancel": "Cancelar",
-    "send_one": "Subir 1 archivo",
-    "send_other": "Subir {{count}} archivos",
     "published_one": "Archivo publicado",
     "published_other": "{{count}} archivos publicados",
     "reused": "Ya tenías subido {{names}}: se publicó esa misma copia.",
-    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están."
+    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están.",
+    "sendDraft": "Subir sin publicar",
+    "sendAndPublish": "Subir y publicar",
+    "confirmDraftTitle_one": "¿Subir 1 archivo sin publicar?",
+    "confirmDraftTitle_other": "¿Subir {{count}} archivos sin publicar?",
+    "confirmPublishTitle_one": "¿Subir y publicar 1 archivo?",
+    "confirmPublishTitle_other": "¿Subir y publicar {{count}} archivos?",
+    "savedDraft_one": "Archivo subido sin publicar",
+    "savedDraft_other": "{{count}} archivos subidos sin publicar",
+    "confirmDraftDescription_one": "Queda en la biblioteca y ningún master lo ve hasta que lo publiques.",
+    "confirmDraftDescription_other": "Quedan en la biblioteca y ningún master los ve hasta que los publiques.",
+    "confirmPublishDescription_one": "Los masters lo van a ver al instante y lo pueden agregar a sus mesas. Si después lo ocultás, las mesas que ya lo agregaron lo conservan.",
+    "confirmPublishDescription_other": "Los masters los van a ver al instante y los pueden agregar a sus mesas. Si después ocultás alguno, las mesas que ya lo agregaron lo conservan."
+  },
+  "libraryState": {
+    "Unpublished": "Sin publicar",
+    "Published": "Publicado",
+    "Hidden": "Oculto",
+    "Removed": "Dado de baja"
+  },
+  "libraryEdit": {
+    "title": "Cambiar qué es",
+    "description": "«{{name}}» no está publicado: podés cambiar en qué cajón va antes de publicarlo.",
+    "categoryLabel": "Qué es",
+    "cancel": "Cancelar",
+    "confirm": "Guardar",
+    "saved": "Cajón actualizado"
   }
 }

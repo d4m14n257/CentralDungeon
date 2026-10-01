@@ -537,20 +537,20 @@
     },
     "files": {
       "title": "Archivos",
-      "what": "/admin/files es la biblioteca de la comunidad: solo lo publicado, con quién lo subió y en cuántas mesas se usa.",
-      "publish": "Subir un archivo acá es publicarlo: queda a disposición de todas las mesas. Es la forma de tener una ficha por defecto: cada master la agrega a su mesa en vez de subir su propia copia.",
+      "what": "/admin/files es la biblioteca de la comunidad: lo publicado y lo que espera para publicarse, con quién lo subió y en cuántas mesas se usa.",
+      "publish": "Cada archivo está Sin publicar (ningún master lo ve), Publicado (los masters lo ven y lo pueden agregar a sus mesas) u Oculto (estuvo publicado y dejó de ofrecerse). Al subir elegís si lo publicás ya o lo dejás sin publicar, y siempre se confirma antes.",
       "categories": "Al subir elegís qué es cada archivo: «De mesa» (aparece cuando un master arma su mesa o busca candidatos), «Petición del master» (cuando pide algo en una mesa que ya corre) o «Anuncios de la comunidad».",
       "playerSide": "«Solicitud de jugador» y «Entrega del jugador» no aparecen acá a propósito: guardan lo que cada jugador respondió, con las hojas que le dio su master. No hay nada que la comunidad publique ahí.",
       "private": "Los archivos privados de las personas no se ven ni se dan de baja desde esta pantalla: son suyos, no de la biblioteca.",
       "notALock": "El cajón no es un permiso. Define en qué listados aparece el archivo, no quién puede abrirlo: un archivo publicado es público.",
-      "unpublish": "Dejar de publicar lo saca de la biblioteca, pero las mesas que ya lo agregaron lo conservan. Para volver a publicarlo, se sube de nuevo: el sistema reconoce el contenido y no guarda otra copia.",
+      "unpublish": "Ocultar un archivo lo saca de lo que se ofrece a los masters, pero sigue en la biblioteca y lo podés volver a publicar. Las mesas que ya lo agregaron lo conservan. Mientras está sin publicar u oculto podés cambiar qué es.",
       "remove": "Dar de baja un archivo lo saca de todas las mesas que lo usan. No borra el archivo del disco: eso lo hace el owner desde su menú de mantenimiento.",
-      "purge": "Los archivos que nadie usa ni tiene agregado a una mesa se dan de baja solos a los tres meses. Los publicados no: son de la plataforma y no caducan.",
+      "purge": "Los archivos que nadie usa ni tiene agregado a una mesa se dan de baja solos a los tres meses. Los de la biblioteca no, estén publicados o no: son de la plataforma y no caducan.",
       "steps": {
         "step1": "Entrá a /admin/files desde la navegación del contexto Admin.",
-        "step2": "Tocá «Subir archivos».",
-        "step3": "Soltá los archivos y, en cada uno, elegí qué es; después «Subir».",
-        "step4": "La columna «Mesas» te dice en cuántas se está usando antes de que lo des de baja."
+        "step2": "Tocá «Subir archivos», soltá los archivos y elegí qué es cada uno.",
+        "step3": "Tocá «Subir sin publicar» o «Subir y publicar», y confirmá.",
+        "step4": "Desde la fila publicás, ocultás o cambiás qué es; la columna «Mesas» te dice en cuántas se usa antes de darlo de baja."
       },
       "commands": "El buscador de esta pantalla entiende «/file_name» (el nombre), «/file_owner» (quién lo subió), «/file_type» (el formato) y «/file_categories» (el cajón). Los dos últimos se eligen de una lista. «/and» y «/or» se ofrecen apenas hay un criterio que unir."
     },

@@ -7,7 +7,8 @@ import type {
   FileCategory,
   LinkTableFileInput,
   PublicFile,
-  PublishFileInput,
+  LibraryCategoryInput,
+  LibraryUploadInput,
   StoredFile,
   TableFile,
   UpdateFileInput,
@@ -152,31 +153,48 @@ export const filesApi = {
   },
 
   /**
-   * Uploads a file straight into the platform's library, published into the cajones chosen
-   * beforehand (#233, #278). Uploading is publishing there: no file sits in the library without
-   * saying which flow it is for.
+   * Uploads a file into the platform's library, with what it is and whether it goes out now
+   * (#233, #282). Nothing sits in the library without saying which flow it is for; publishing is
+   * the admin's choice.
    *
    * Reads the status like `upload` does (#234): 200 means this admin already had the content and
-   * that row came back published — which is also how an unpublished file returns.
+   * that row came back into the library.
    *
    * @param file  the content the admin picked
-   * @param input the cajones it is offered in, at least one
+   * @param input the cajones it is offered in, at least one, and whether to publish it now
    */
-  uploadToLibrary: async (file: File, input: PublishFileInput): Promise<AdminUploadedFile> => {
+  uploadToLibrary: async (file: File, input: LibraryUploadInput): Promise<AdminUploadedFile> => {
     const { data, status } = await api.uploadWithStatus<AdminFile>('/api/v1/admin/files', [file], input)
     return { file: data, deduplicated: status === 200 }
   },
 
   /**
-   * Takes a file back out of the published set. Tables that attached it keep it (#79).
+   * Publishes a file of the library that is not published — never published yet, or hidden (#282).
+   *
+   * @param fileId the file
+   */
+  publish: (fileId: string) => api.post<AdminFile>(`/api/v1/admin/files/${fileId}/publish`),
+
+  /**
+   * Hides a published file: it stays in the library, offered to nobody (#282). Tables that attached
+   * it keep it (#79).
    *
    * @param fileId the file
    */
   unpublish: (fileId: string) => api.post<AdminFile>(`/api/v1/admin/files/${fileId}/unpublish`),
 
   /**
-   * An admin removing a file from the platform's library. Only a published one: somebody's private
-   * file is not the library's to remove (#278). Still a mark (#25, #66).
+   * Changes what an unpublished file of the library is (#282).
+   *
+   * @param fileId the file
+   * @param input  what it is now
+   */
+  changeLibraryCategory: (fileId: string, input: LibraryCategoryInput) =>
+    api.put<AdminFile, LibraryCategoryInput>(`/api/v1/admin/files/${fileId}/category`, input),
+
+  /**
+   * An admin removing a file from the platform's library, published or not: somebody's private file
+   * is not the library's to remove (#278, #282). Still a mark (#25, #66).
    *
    * @param fileId the file
    */

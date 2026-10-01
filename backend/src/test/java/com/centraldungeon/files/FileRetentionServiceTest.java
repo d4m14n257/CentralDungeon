@@ -41,14 +41,14 @@ class FileRetentionServiceTest {
 
     @Test
     void asksForTheFilesUnusedForLongerThanTheConfiguredWindow() {
-        when(fileRepository.findPurgeCandidates(any(), eq(FileType.Public), any())).thenReturn(List.of());
+        when(fileRepository.findPurgeCandidates(any(), eq(List.of(FileType.Public, FileType.Library)), any())).thenReturn(List.of());
         LocalDateTime before = LocalDateTime.now().minusDays(90);
 
         retentionService().markUnusedFiles();
 
         ArgumentCaptor<LocalDateTime> cutoff = ArgumentCaptor.forClass(LocalDateTime.class);
         org.mockito.Mockito.verify(fileRepository)
-                .findPurgeCandidates(cutoff.capture(), eq(FileType.Public), any(Pageable.class));
+                .findPurgeCandidates(cutoff.capture(), eq(List.of(FileType.Public, FileType.Library)), any(Pageable.class));
         assertThat(cutoff.getValue()).isBetween(before.minusMinutes(1), before.plusMinutes(1));
     }
 
@@ -57,7 +57,7 @@ class FileRetentionServiceTest {
     void marksTheCandidatesGoneAndStampsWhen() {
         StoredFile stale = file("file-1");
         StoredFile alsoStale = file("file-2");
-        when(fileRepository.findPurgeCandidates(any(), eq(FileType.Public), any()))
+        when(fileRepository.findPurgeCandidates(any(), eq(List.of(FileType.Public, FileType.Library)), any()))
                 .thenReturn(List.of(stale, alsoStale));
 
         int marked = retentionService().markUnusedFiles();
@@ -70,7 +70,7 @@ class FileRetentionServiceTest {
 
     @Test
     void aPassThatFindsNothingChangesNothing() {
-        when(fileRepository.findPurgeCandidates(any(), eq(FileType.Public), any())).thenReturn(List.of());
+        when(fileRepository.findPurgeCandidates(any(), eq(List.of(FileType.Public, FileType.Library)), any())).thenReturn(List.of());
 
         assertThat(retentionService().markUnusedFiles()).isZero();
     }
@@ -81,13 +81,13 @@ class FileRetentionServiceTest {
      */
     @Test
     void takesOneBoundedBatchPerPass() {
-        when(fileRepository.findPurgeCandidates(any(), eq(FileType.Public), any())).thenReturn(List.of());
+        when(fileRepository.findPurgeCandidates(any(), eq(List.of(FileType.Public, FileType.Library)), any())).thenReturn(List.of());
 
         retentionService().markUnusedFiles();
 
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
         org.mockito.Mockito.verify(fileRepository)
-                .findPurgeCandidates(any(), eq(FileType.Public), pageable.capture());
+                .findPurgeCandidates(any(), eq(List.of(FileType.Public, FileType.Library)), pageable.capture());
         assertThat(pageable.getValue().getPageSize()).isPositive();
         assertThat(pageable.getValue().getPageNumber()).isZero();
     }

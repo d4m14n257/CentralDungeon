@@ -28,6 +28,10 @@ import org.jspecify.annotations.Nullable;
  * @param lastUsedAt     when it was last used, in UTC. Null when it never was, which the purge reads
  *                       as its creation date (#75)
  * @param createdAt      when it was uploaded, in UTC
+ * @param publishedAt    when it was first published into the platform's library, in UTC, or null if
+ *                       it never was. With {@code fileType}, it is what tells the three states of the
+ *                       library apart: {@code Public} is published, {@code Library} with a date is
+ *                       hidden, {@code Library} without one has never been published (#282)
  */
 public record AdminFileResponse(
         String id,
@@ -41,5 +45,6 @@ public record AdminFileResponse(
         long uses,
         String status,
         @Nullable LocalDateTime lastUsedAt,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt,
+        @Nullable LocalDateTime publishedAt) {
 }
