@@ -37,7 +37,7 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `SectionHeader` | La misma forma para una sección o pestaña (#280): etiqueta, «Cómo funciona» chico y sus acciones a la derecha |
 | `DataTable` | Listados paginados con orden, sobre `PageResponse<T>`. **Es dueño del contenedor de acciones**: envuelve `renderActions` en `.row-actions`, así ninguna pantalla lo escribe (#273) |
 | `CollapsibleSection` | Bloque plegable con título y acciones en la cabecera — el patrón que el legacy repetía en `CardComponent` y `ListComponent` |
-| `IconAction` | Botón de icono con tooltip para las acciones de una fila o una ficha. **Es la forma de toda acción de fila en una tabla** (#272): ver «Listas de trabajo», abajo |
+| `IconAction` | Botón de icono con tooltip para las acciones de una fila o una ficha. **Es la forma de toda acción de fila en una tabla** (#272): ver «Listas de trabajo», abajo. Una acción que el servidor rechazaría no aparece; si el arreglo está a un paso, aparece apagada con `disabledReason`, que el tooltip muestra en lugar del nombre. Nunca `disabled` a secas: no dice por qué y el tooltip no abre |
 | `EmptyState` | Listas vacías, con la acción que corresponde |
 | `ErrorState` | Error de carga: mensaje del `ProblemDetail` y botón de reintento |
 | `ForbiddenState` | El `403` explicado (el `404` por veto se ve como "no existe", que es intencional) |

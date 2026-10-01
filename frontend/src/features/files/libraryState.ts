@@ -1,4 +1,5 @@
 import type { AdminFile } from './types'
+import { PUBLISHABLE_CATEGORIES } from './categories'
 
 /**
  * Where a file stands in the platform's library (#282).
@@ -24,4 +25,19 @@ export function libraryStateOf(file: Pick<AdminFile, 'fileType' | 'publishedAt' 
   if (file.status === 'Deleted') return 'Removed'
   if (file.fileType === 'Public') return 'Published'
   return file.publishedAt !== null ? 'Hidden' : 'Unpublished'
+}
+
+/**
+ * Whether a library file says where it would be offered, which is what publishing needs (#282).
+ *
+ * The same rule the server enforces with `FILE_NEEDS_CATEGORY`: at least one of the cajones a file can
+ * be published into. The upload always asks for one, so a file failing this is one whose cajón was lost
+ * along the way - an upload from before #282, for instance. Knowing it on this side is what lets the
+ * row say "choose what it is first" instead of offering a button the server would turn down.
+ *
+ * @param file the row of /admin/files
+ * @returns true when it can be published as it stands
+ */
+export function hasPublishableCategory(file: Pick<AdminFile, 'categories'>): boolean {
+  return file.categories.some((category) => (PUBLISHABLE_CATEGORIES as readonly string[]).includes(category))
 }

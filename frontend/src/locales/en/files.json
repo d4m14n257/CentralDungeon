@@ -100,7 +100,8 @@
     "publishTitle": "Publish “{{name}}”?",
     "publishDescription": "Masters will see it right away and can add it to their tables. If you hide it later, tables that already added it keep it.",
     "publishConfirm": "Publish",
-    "publishedOne": "“{{name}}” published"
+    "publishedOne": "“{{name}}” published",
+    "publishNeedsCategory": "To publish it, first choose what it is with “Change what it is”."
   },
   "search": {
     "file_name": "name",

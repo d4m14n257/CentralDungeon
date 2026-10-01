@@ -100,7 +100,8 @@
     "publishTitle": "¿Publicar «{{name}}»?",
     "publishDescription": "Los masters lo van a ver al instante y lo pueden agregar a sus mesas. Si después lo ocultás, las mesas que ya lo agregaron lo conservan.",
     "publishConfirm": "Publicar",
-    "publishedOne": "«{{name}}» publicado"
+    "publishedOne": "«{{name}}» publicado",
+    "publishNeedsCategory": "Para publicarlo, primero elegí qué es con «Cambiar qué es»."
   },
   "search": {
     "file_name": "nombre",

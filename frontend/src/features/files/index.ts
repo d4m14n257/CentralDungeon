@@ -42,7 +42,7 @@ export { useDeleteFileAsAdmin } from './api/useDeleteFileAsAdmin'
 
 export { formatFileSize, type FormattedSize } from './format'
 export { FILE_CATEGORIES, PUBLISHABLE_CATEGORIES } from './categories'
-export { libraryStateOf, type LibraryState } from './libraryState'
+export { hasPublishableCategory, libraryStateOf, type LibraryState } from './libraryState'
 export { ALLOWED_MIME_TYPES, rejectionOf } from './limits'
 export { FILE_TYPE_CHOICES, fileCategoryChoices, myFileSearchFields, adminFileSearchFields } from './searchFields'
 export { stagedKey } from '@/types/file'

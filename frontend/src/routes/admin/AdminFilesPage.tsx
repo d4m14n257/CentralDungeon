@@ -25,6 +25,7 @@ import {
   LibraryStateBadge,
   PUBLISHABLE_CATEGORIES,
   formatFileSize,
+  hasPublishableCategory,
   libraryStateOf,
   useAdminFiles,
   useDeleteFileAsAdmin,
@@ -227,13 +228,16 @@ export function AdminFilesPage() {
             getRowId={(file) => file.id}
             renderActions={(file) => (
               <>
-                {/* An action a row's state would make the server refuse is absent, never greyed out:
-                    a disabled button that does not say why is worse than no button (principio 2). */}
+                {/* An action a row's state would make the server refuse is absent or explained, never
+                    silently greyed out: a disabled button that does not say why is worse than no
+                    button (principio 2). Publishing a file that does not say what it is stays in view
+                    because the fix is the next button along, and the tooltip says so. */}
                 {(libraryStateOf(file) === 'Unpublished' || libraryStateOf(file) === 'Hidden') && (
                   <>
                     <IconAction
                       icon={<Globe className="size-4" />}
                       label={t('actions.publish')}
+                      disabledReason={hasPublishableCategory(file) ? undefined : t('admin.publishNeedsCategory')}
                       disabled={publish.isPending}
                       onClick={() => void handlePublish(file)}
                     />
