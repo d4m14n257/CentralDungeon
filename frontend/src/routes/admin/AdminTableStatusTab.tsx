@@ -22,9 +22,10 @@ interface OutletContext {
  * #286) - and the **actions** a row of `/admin/tables` offers too: assign masters, remove one nobody
  * runs, pause or resume (`AdminTableActions`). Every one tells the table's masters (#244, #284).
  *
- * **Reviewing is here as well as in the tray** (#286): an admin who has read the whole table decides
- * from it. Same endpoints and same reservation rule (#100), so a table a colleague took from the tray
- * is refused here too. A master's *request* to pause is an approval request and still resolves in the
+ * **Reviewing is on the table as well as in the tray** (#286) - not on this tab, though: a table
+ * waiting for review shows its two decisions above the tabs, on every one of them, because that is
+ * where it is seen. Same endpoints and same reservation rule (#100), so a table a colleague took from
+ * the tray is refused here too. A master's *request* to pause is an approval request and still resolves in the
  * tray, which the tab says.
  */
 export function AdminTableStatusTab() {
@@ -33,7 +34,7 @@ export function AdminTableStatusTab() {
   const { table } = useOutletContext<OutletContext>()
   const navigate = useNavigate()
   const hasActions = STATUSES_WITH_ADMIN_ACTIONS.includes(table.status)
-  const hasDecisions = hasAdminDecisions(table.status)
+  const canCancel = hasAdminDecisions(table.status, 'cancel')
 
   return (
     <div className="space-y-4">
@@ -46,7 +47,6 @@ export function AdminTableStatusTab() {
           </div>
         )}
       </div>
-      {table.status === 'Preparation' && <p className="text-fg-muted text-sm">{t('tables.detail.reviewHere')}</p>}
       {table.status === 'PauseRequested' && (
         <p className="text-fg-muted text-sm">
           {t('tables.detail.pauseRequestInQueue')}{' '}
@@ -55,9 +55,9 @@ export function AdminTableStatusTab() {
           </Link>
         </p>
       )}
-      {hasDecisions && <AdminTableDecisions table={table} />}
+      {canCancel && <AdminTableDecisions table={table} scope="cancel" />}
       {/* Said rather than left as an empty block (principio 2): editing is still in the header. */}
-      {!hasActions && !hasDecisions && <p className="text-fg-muted text-sm">{t('tables.detail.noActions')}</p>}
+      {!hasActions && !canCancel && <p className="text-fg-muted text-sm">{t('tables.detail.noActions')}</p>}
       <div className="space-y-2 pt-2">
         <h2 className="text-sm font-medium">{tMaster('status.historyTitle')}</h2>
         <StatusTimeline tableId={table.id} />

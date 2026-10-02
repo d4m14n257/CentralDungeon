@@ -364,8 +364,9 @@
       "noActions": "En este estado no hay acciones de admin sobre la mesa. Si hay que corregir algo, usá «Editar mesa».",
       "goToQueue": "Ir a la bandeja",
       "ranByLabel": "Master:",
-      "reviewHere": "Esta mesa espera revisión. Recorré sus pestañas y decidí: aprobarla la abre a postulaciones; pedir cambios se la devuelve al master con tu motivo. También aparece en la bandeja; si otro admin la tomó ahí, no se puede resolver desde acá.",
-      "pauseRequestInQueue": "El master pidió pausar esta mesa. Ese pedido se resuelve en la bandeja."
+      "reviewHere": "Recorré sus pestañas y decidí: aprobarla la abre a postulaciones; pedir cambios se la devuelve al master con tu motivo. Si otro admin la tomó en la bandeja, no se puede resolver desde acá.",
+      "pauseRequestInQueue": "El master pidió pausar esta mesa. Ese pedido se resuelve en la bandeja.",
+      "reviewTitle": "Esta mesa espera tu revisión"
     },
     "decisions": {
       "approve": "Aprobar",

@@ -22,21 +22,31 @@ import { useDisclosure } from '@/hooks/useDisclosure'
  */
 const ADMIN_CANCELABLE: readonly GameTableStatus[] = ['Preparation', 'ChangesRequested', 'Opened', 'InProgress', 'PauseRequested', 'Pause']
 
+/** Which of the admin's decisions a block offers: the review's two, or the cancellation. */
+export type AdminDecisionScope = 'review' | 'cancel'
+
 /**
- * Whether {@link AdminTableDecisions} has anything to offer for a table in this status, so the screen
- * can say so instead of drawing an empty block.
+ * Whether {@link AdminTableDecisions} has anything to offer for a table in this status and scope, so
+ * the screen can leave the block out - or say so - instead of drawing an empty one.
  *
  * @param status where the table stands
+ * @param scope  the review's decisions, or the cancellation
  * @returns true when there is a decision to take
  */
-export function hasAdminDecisions(status: GameTableStatus): boolean {
-  return status === 'Preparation' || ADMIN_CANCELABLE.includes(status)
+export function hasAdminDecisions(status: GameTableStatus, scope: AdminDecisionScope): boolean {
+  return scope === 'review' ? status === 'Preparation' : ADMIN_CANCELABLE.includes(status)
 }
 
 /** What {@link AdminTableDecisions} takes. */
 export interface AdminTableDecisionsProps {
   /** The table, as its admin view loaded it. */
   table: Pick<GameTableDetail, 'id' | 'name' | 'status'>
+  /**
+   * Which decisions to offer. **The review's go where they are seen** - above the tabs, on every
+   * one of them, because a table waiting for review is waiting on the reader (#286); the
+   * cancellation goes on the status tab, with the rest of what changes where the table stands.
+   */
+  scope: AdminDecisionScope
 }
 
 /**
@@ -55,8 +65,9 @@ export interface AdminTableDecisionsProps {
  * the master reads it in the table's history and is told by the bell (#244, #284).
  *
  * @param props.table the table
+ * @param props.scope the review's decisions, or the cancellation
  */
-export function AdminTableDecisions({ table }: AdminTableDecisionsProps) {
+export function AdminTableDecisions({ table, scope }: AdminTableDecisionsProps) {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
   const approve = useApproveTable()
@@ -65,7 +76,8 @@ export function AdminTableDecisions({ table }: AdminTableDecisionsProps) {
   const changesDialog = useDisclosure()
   const cancelDialog = useDisclosure()
 
-  const inReview = table.status === 'Preparation'
+  const inReview = scope === 'review' && hasAdminDecisions(table.status, 'review')
+  const canCancel = scope === 'cancel' && hasAdminDecisions(table.status, 'cancel')
   const changesError = adminQueueErrorKey(requestChanges.error)
 
   async function handleApprove() {
@@ -95,7 +107,7 @@ export function AdminTableDecisions({ table }: AdminTableDecisionsProps) {
           </Button>
         </>
       )}
-      {ADMIN_CANCELABLE.includes(table.status) && (
+      {canCancel && (
         <Button type="button" size="sm" variant="destructive" onClick={() => cancelDialog.open()}>
           {t('tables.decisions.cancel')}
         </Button>

@@ -5,10 +5,13 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PageHeader } from '@/components/PageHeader'
 import { TabNav } from '@/components/TabNav'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { adminTableEditPath, adminTablesPath, adminUserDetailPath } from '@/config/paths'
 import { ADMIN_EDITABLE_STATUSES, TableStatusBadge, useManagedTable } from '@/features/tables'
 import { ApiError } from '@/types/api'
+
+import { AdminTableDecisions, hasAdminDecisions } from './AdminTableDecisions'
 
 /**
  * `/admin/tables/:id` — one table, whole, as an admin reads it (#284).
@@ -23,6 +26,10 @@ import { ApiError } from '@/types/api'
  * accepting a candidate, recording attendance, publishing a request, attaching a file. What the admin
  * *does* to a table is its own: rewriting it (the header's action) and the actions of the status tab.
  * Every one of them tells the table's masters (#284).
+ *
+ * **A table waiting for review says so above the tabs**, with its two decisions (#286): approving
+ * and asking for changes were first only on the status tab, the last one, and an admin opening the
+ * table landed on Details and never found them.
  *
  * Two tabs are the admin's and not the master's: **Details** goes first, because the master wrote
  * the table and does not need it read back to them, and **Status** offers the admin's actions instead
@@ -75,6 +82,17 @@ export function AdminTableDetailPage() {
         }
         action={canEdit ? { label: t('tables.detail.edit'), to: adminTableEditPath(tableId) } : undefined}
       />
+      {/* A table waiting for review is waiting on the reader (#286): its two decisions sit above the
+          tabs, visible from all of them, rather than at the end of the last one. */}
+      {hasAdminDecisions(table.status, 'review') && (
+        <Alert>
+          <AlertTitle>{t('tables.detail.reviewTitle')}</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>{t('tables.detail.reviewHere')}</p>
+            <AdminTableDecisions table={table} scope="review" />
+          </AlertDescription>
+        </Alert>
+      )}
       <TabNav
         label={tMaster('detail.tabs.label')}
         items={[
