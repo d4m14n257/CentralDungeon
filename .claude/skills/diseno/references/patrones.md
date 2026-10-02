@@ -59,6 +59,7 @@
 | `PaginationControls` | La paginación de una lista de trabajo (#271) | Las seis tablas de admin y `/my/files` |
 | `SectionNav` | La navegación de secciones de un contexto (#277): escrita tres veces igual, una por contexto, hasta que se nombró | `PlayerSectionNav`, `MasterSectionNav`, `AdminSectionNav` |
 | `TabNav` | Las pestañas de una pantalla (#284): la fila de pestañas de la mesa estaba escrita a mano en la pantalla del master hasta que la vista del admin la necesitó | `MasterTableDetailPage`, `AdminTableDetailPage` |
+| `StatusNotice` | **Dónde está una entidad y qué se puede decidir sobre ella** (#287): título que nombra la situación, una frase y los botones con texto en una fila, arriba de las pestañas. Nació de una pestaña «Estado» con secciones de un solo botón, que se veía mal y no se encontraba | `AdminTableStatusNotice` (`/admin/tables/:id`) |
 | `GraphCanvas`, `GraphNode`, `GraphTray` | El lienzo de nodos y sus piezas (#275): ponen `.graph-canvas`, `.graph-node*` y `.graph-tray` ellos mismos | `/admin/catalogs/:kind/:id` |
 
 ## Deuda conocida

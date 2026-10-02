@@ -466,7 +466,7 @@
   "admins": {
     "reviewing": {
       "title": "Reviewing tables",
-      "queue": "A table the master sent for review is resolved from two places: the “Tray”, with everything else waiting on an action, or the table's own “Status” tab, after reading it whole. A table sent back with changes requested is in the master's hands, not yours.",
+      "queue": "A table the master sent for review is resolved from two places: the “Tray”, with everything else waiting on an action, or the notice above the table's own tabs, after reading it whole. A table sent back with changes requested is in the master's hands, not yours.",
       "approve": "Approving publishes the table. Asking for changes sends it back to the master with the written reason, which they read in their table's history. Either way they are notified.",
       "listing": "“Tables” has every table on the platform, with its status and a search box. From there you open any of them and see it whole.",
       "steps": {
@@ -475,7 +475,7 @@
         "step3": "Read what the master prepared: on the table, its tabs have everything.",
         "step4": "Press “Approve” to publish it, or “Ask for changes” and write what needs correcting."
       },
-      "cancel": "If the table has no fix, from its “Status” tab you can also cancel it, with the reason. It cannot be undone."
+      "cancel": "If the table has no fix, from that same notice you can also cancel it, with the reason. It cannot be undone."
     },
     "claiming": {
       "title": "Taking something from the tray",
@@ -650,7 +650,7 @@
       "closed": "A finished, cancelled or removed table stays as a record of what happened: it can be viewed, but no longer edited.",
       "steps": {
         "step1": "Go to “Tables” and press the table's name or the eye icon.",
-        "step2": "Go through the tabs: “Details” first, “Status” last with its actions.",
+        "step2": "Above the tabs, the notice says what state it is in and carries what you can decide; the tabs have everything else, with “History” last.",
         "step3": "To correct something, press “Edit table”, change what is needed and confirm."
       }
     }

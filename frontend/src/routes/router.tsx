@@ -117,7 +117,7 @@ export const router = createBrowserRouter([
               { path: 'sessions', lazy: () => import('./master/MasterTableSessionsTab') },
               { path: 'tasks', lazy: () => import('./master/MasterTableTasksTab') },
               { path: 'files', lazy: () => import('./master/MasterTableFilesTab') },
-              { path: 'status', lazy: () => import('./admin/AdminTableStatusTab') },
+              { path: 'history', lazy: () => import('./admin/AdminTableHistoryTab') },
             ],
           },
           { path: 'catalogs', lazy: () => import('./admin/AdminCatalogsPage') },

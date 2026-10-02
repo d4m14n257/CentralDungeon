@@ -354,19 +354,15 @@
       "back": "Back to tables",
       "edit": "Edit table",
       "tabs": {
-        "details": "Details"
+        "details": "Details",
+        "history": "History"
       },
       "notSet": "Not set",
       "playersNoCap_one": "{{count}} player, no seat limit",
       "playersNoCap_other": "{{count}} players, no seat limit",
       "playersOfCap": "{{count}} of {{max}}",
-      "actionsTitle": "Admin actions",
-      "noActions": "There are no admin actions on the table in this status. To correct something, use “Edit table”.",
       "goToQueue": "Go to the tray",
-      "ranByLabel": "Master:",
-      "reviewHere": "Go through its tabs and decide: approving opens it to applications; asking for changes sends it back to the master with your reason. If another admin took it in the tray, it cannot be resolved from here.",
-      "pauseRequestInQueue": "The master asked to pause this table. That request is resolved in the tray.",
-      "reviewTitle": "This table is waiting for your review"
+      "ranByLabel": "Master:"
     },
     "decisions": {
       "approve": "Approve",
@@ -386,6 +382,52 @@
       "cancelConfirmTitle": "Cancel “{{name}}”?",
       "cancelConfirmDescription": "This cannot be undone: the table closes for good, stays as a record and its masters are notified.",
       "cancelSuccess": "Table cancelled. Its masters were notified."
+    },
+    "notice": {
+      "Draft": {
+        "title": "Master's draft",
+        "description": "They have not sent it for review yet. You can read it; there is nothing to decide until they send it."
+      },
+      "Unassigned": {
+        "title": "Table without a master",
+        "description": "Assign it masters to open it, or remove it if it will not have any."
+      },
+      "Preparation": {
+        "title": "This table is waiting for your review",
+        "description": "Go through its tabs and decide: approving opens it to applications; asking for changes sends it back to the master with your reason. If it has no fix, cancel it. If another admin took it in the tray, it cannot be resolved from here."
+      },
+      "ChangesRequested": {
+        "title": "Waiting for the master's corrections",
+        "description": "Changes were requested. When they correct it and send it again, it comes back for review. If it has no fix, you can cancel it with the reason."
+      },
+      "Opened": {
+        "title": "Open to applications",
+        "description": "It is taking applications. If it has to close, cancel it with the reason; its masters are notified."
+      },
+      "InProgress": {
+        "title": "In progress",
+        "description": "It is being played. You can pause it or cancel it, always with the reason; its masters are notified."
+      },
+      "PauseRequested": {
+        "title": "The master asked to pause it",
+        "description": "That request is resolved in the tray."
+      },
+      "Pause": {
+        "title": "Paused",
+        "description": "Resuming it reschedules the pending sessions from today. If it is not coming back, cancel it with the reason."
+      },
+      "Finished": {
+        "title": "Finished",
+        "description": "It was played to the end and stays as a record. There is nothing to decide."
+      },
+      "Canceled": {
+        "title": "Cancelled",
+        "description": "It closed before the end and stays as a record. The reason is in the history."
+      },
+      "Deleted": {
+        "title": "Removed",
+        "description": "It no longer exists for anyone."
+      }
     }
   },
   "settings": {

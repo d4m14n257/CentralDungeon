@@ -1,8 +1,10 @@
 import { Pause, Play, Trash2, UserPlus } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { IconAction } from '@/components/IconAction'
+import { Button } from '@/components/ui/button'
 import { HelpLink } from '@/features/help'
 import {
   JustifiedTableActionDialog,
@@ -26,6 +28,46 @@ export interface AdminTableActionsProps {
    * table's own detail would be left showing something that no longer exists.
    */
   onDeleted?: (() => void) | undefined
+  /**
+   * How the actions are drawn. `row` (the default) is a list row's: icons with their tooltip (#272).
+   * `notice` is the table's own status notice (#287): buttons with their text, because there they are
+   * the screen's decisions and not the actions of a row.
+   */
+  presentation?: 'row' | 'notice'
+}
+
+/** One of the actions, drawn the way the place that shows it asks for. */
+function ActionControl({
+  presentation,
+  icon,
+  label,
+  onClick,
+  disabled,
+  destructive,
+}: {
+  presentation: 'row' | 'notice'
+  icon: ReactNode
+  label: string
+  onClick: () => void
+  disabled?: boolean
+  destructive?: boolean
+}) {
+  if (presentation === 'notice') {
+    return (
+      <Button type="button" size="sm" variant={destructive ? 'destructive' : 'outline'} onClick={onClick} disabled={disabled ?? false}>
+        {label}
+      </Button>
+    )
+  }
+  return (
+    <IconAction
+      icon={icon}
+      label={label}
+      onClick={onClick}
+      disabled={disabled ?? false}
+      className={destructive ? 'text-destructive hover:text-destructive' : undefined}
+    />
+  )
 }
 
 /**
@@ -39,8 +81,8 @@ export const STATUSES_WITH_ADMIN_ACTIONS: readonly AdminTableSummary['status'][]
  * The admin's own actions on one table, offered only where its status admits them: assigning masters
  * and removing a table nobody runs, pausing a running one, resuming a paused one.
  *
- * **One component for the two places that offer them** (#284): a row of `/admin/tables` and the status
- * tab of `/admin/tables/:id`. It was the list's private row component until the detail arrived; two
+ * **One component for the two places that offer them** (#284, #287): a row of `/admin/tables`, as icons,
+ * and the status notice above the tabs of `/admin/tables/:id`, as buttons. It was the list's private row component until the detail arrived; two
  * copies would be two places for "which actions, in which status" to drift apart. Every one of them
  * tells the table's masters (#284), which the backend does.
  *
@@ -53,7 +95,7 @@ export const STATUSES_WITH_ADMIN_ACTIONS: readonly AdminTableSummary['status'][]
  * sitting in `Preparation` is work waiting on somebody, and work waiting on somebody is the tray's.
  * Two screens offering the same decision under different rules is exactly what the move removes.
  */
-export function AdminTableActions({ table, onDeleted }: AdminTableActionsProps) {
+export function AdminTableActions({ table, onDeleted, presentation = 'row' }: AdminTableActionsProps) {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
   const removeTable = useDeleteTable(table.id)
@@ -110,13 +152,19 @@ export function AdminTableActions({ table, onDeleted }: AdminTableActionsProps) 
           giving it one or admitting it will never have one (principio 2). */}
       {table.status === 'Unassigned' && (
         <>
-          <IconAction icon={<UserPlus className="size-4" />} label={t('tables.assignMasters')} onClick={() => assignDialog.open()} />
-          <IconAction
+          <ActionControl
+            presentation={presentation}
+            icon={<UserPlus className="size-4" />}
+            label={t('tables.assignMasters')}
+            onClick={() => assignDialog.open()}
+          />
+          <ActionControl
+            presentation={presentation}
             icon={<Trash2 className="size-4" />}
             label={t('tables.delete')}
             onClick={() => void handleDelete()}
             disabled={removeTable.isPending}
-            className="text-destructive hover:text-destructive"
+            destructive
           />
         </>
       )}
@@ -127,7 +175,8 @@ export function AdminTableActions({ table, onDeleted }: AdminTableActionsProps) 
           master's request for a pause — arrives in `/admin/queue` as a request, and approving it
           there is what moves the table to `Pause`. */}
       {table.status === 'InProgress' && (
-        <IconAction
+        <ActionControl
+          presentation={presentation}
           icon={<Pause className="size-4" />}
           label={t('tables.pause')}
           onClick={() => pauseDialog.open()}
@@ -135,7 +184,8 @@ export function AdminTableActions({ table, onDeleted }: AdminTableActionsProps) 
         />
       )}
       {table.status === 'Pause' && (
-        <IconAction
+        <ActionControl
+          presentation={presentation}
           icon={<Play className="size-4" />}
           label={t('tables.resume')}
           onClick={() => void handleResume()}

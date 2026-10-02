@@ -354,19 +354,15 @@
       "back": "Volver a las mesas",
       "edit": "Editar mesa",
       "tabs": {
-        "details": "Detalles"
+        "details": "Detalles",
+        "history": "Historial"
       },
       "notSet": "Sin definir",
       "playersNoCap_one": "{{count}} jugador, sin cupo máximo",
       "playersNoCap_other": "{{count}} jugadores, sin cupo máximo",
       "playersOfCap": "{{count}} de {{max}}",
-      "actionsTitle": "Acciones de admin",
-      "noActions": "En este estado no hay acciones de admin sobre la mesa. Si hay que corregir algo, usá «Editar mesa».",
       "goToQueue": "Ir a la bandeja",
-      "ranByLabel": "Master:",
-      "reviewHere": "Recorré sus pestañas y decidí: aprobarla la abre a postulaciones; pedir cambios se la devuelve al master con tu motivo. Si otro admin la tomó en la bandeja, no se puede resolver desde acá.",
-      "pauseRequestInQueue": "El master pidió pausar esta mesa. Ese pedido se resuelve en la bandeja.",
-      "reviewTitle": "Esta mesa espera tu revisión"
+      "ranByLabel": "Master:"
     },
     "decisions": {
       "approve": "Aprobar",
@@ -386,6 +382,52 @@
       "cancelConfirmTitle": "¿Cancelar «{{name}}»?",
       "cancelConfirmDescription": "No se puede deshacer: la mesa se cierra para siempre, queda como registro y sus masters reciben un aviso.",
       "cancelSuccess": "Mesa cancelada. Avisamos a sus masters."
+    },
+    "notice": {
+      "Draft": {
+        "title": "Borrador del master",
+        "description": "Todavía no la envió a revisión. Podés leerla; no hay nada que decidir hasta que la envíe."
+      },
+      "Unassigned": {
+        "title": "Mesa sin master",
+        "description": "Asignale masters para abrirla, o dala de baja si no va a tener."
+      },
+      "Preparation": {
+        "title": "Esta mesa espera tu revisión",
+        "description": "Recorré sus pestañas y decidí: aprobarla la abre a postulaciones; pedir cambios se la devuelve al master con tu motivo. Si no tiene arreglo, cancelala. Si otro admin la tomó en la bandeja, no se puede resolver desde acá."
+      },
+      "ChangesRequested": {
+        "title": "Esperando las correcciones del master",
+        "description": "Se le pidieron cambios. Cuando la corrija y la reenvíe, vuelve a revisión. Si no tiene arreglo, podés cancelarla con el motivo."
+      },
+      "Opened": {
+        "title": "Abierta a postulaciones",
+        "description": "Está recibiendo postulaciones. Si hay que cerrarla, cancelala con el motivo; sus masters reciben un aviso."
+      },
+      "InProgress": {
+        "title": "En curso",
+        "description": "Se está jugando. Podés pausarla o cancelarla, siempre con el motivo; sus masters reciben un aviso."
+      },
+      "PauseRequested": {
+        "title": "El master pidió pausarla",
+        "description": "Ese pedido se resuelve en la bandeja."
+      },
+      "Pause": {
+        "title": "Pausada",
+        "description": "Reanudarla vuelve a programar las sesiones pendientes desde hoy. Si no va a volver, cancelala con el motivo."
+      },
+      "Finished": {
+        "title": "Terminada",
+        "description": "Se jugó hasta el final y queda como registro. No hay nada que decidir."
+      },
+      "Canceled": {
+        "title": "Cancelada",
+        "description": "Se cerró antes de terminar y queda como registro. El motivo está en el historial."
+      },
+      "Deleted": {
+        "title": "Dada de baja",
+        "description": "Ya no existe para nadie."
+      }
     }
   },
   "settings": {

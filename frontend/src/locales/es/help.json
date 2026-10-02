@@ -466,7 +466,7 @@
   "admins": {
     "reviewing": {
       "title": "Revisar mesas",
-      "queue": "Una mesa que el master envió a revisión se resuelve desde dos lugares: la «Bandeja», junto con todo lo demás que espera una acción, o la pestaña «Estado» de la propia mesa, después de leerla entera. Una mesa devuelta con cambios pedidos está en manos del master, no en las tuyas.",
+      "queue": "Una mesa que el master envió a revisión se resuelve desde dos lugares: la «Bandeja», junto con todo lo demás que espera una acción, o el aviso que aparece arriba de las pestañas de la propia mesa, después de leerla entera. Una mesa devuelta con cambios pedidos está en manos del master, no en las tuyas.",
       "approve": "Aprobar publica la mesa. Pedir cambios la devuelve al master con el motivo escrito, que lee en el historial de su mesa. En los dos casos le llega un aviso.",
       "listing": "«Mesas» tiene todas las mesas de la plataforma, con su estado y con buscador. Desde ahí abrís cualquiera y la ves completa.",
       "steps": {
@@ -475,7 +475,7 @@
         "step3": "Leé lo que preparó el master: en la mesa, sus pestañas tienen todo.",
         "step4": "Tocá «Aprobar» para publicarla, o «Pedir cambios» y escribí qué hay que corregir."
       },
-      "cancel": "Si la mesa no tiene arreglo, desde su pestaña «Estado» también la podés cancelar, con el motivo. No se deshace."
+      "cancel": "Si la mesa no tiene arreglo, desde ese mismo aviso también la podés cancelar, con el motivo. No se deshace."
     },
     "claiming": {
       "title": "Tomar algo de la bandeja",
@@ -650,7 +650,7 @@
       "closed": "Una mesa terminada, cancelada o dada de baja queda como registro de lo que pasó: se puede ver, pero ya no se edita.",
       "steps": {
         "step1": "Andá a «Mesas» y tocá el nombre de la mesa o el ícono del ojo.",
-        "step2": "Recorré las pestañas: «Detalles» primero, «Estado» al final con sus acciones.",
+        "step2": "Arriba de las pestañas, el aviso dice en qué estado está y trae lo que podés decidir; las pestañas tienen todo lo demás, con «Historial» al final.",
         "step3": "Para corregir algo, tocá «Editar mesa», cambiá lo que haga falta y confirmá."
       }
     }
