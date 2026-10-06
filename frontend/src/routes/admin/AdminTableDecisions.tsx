@@ -36,6 +36,11 @@ export function hasAdminDecisions(status: GameTableStatus): boolean {
 export interface AdminTableDecisionsProps {
   /** The table, as its admin view loaded it. */
   table: Pick<GameTableDetail, 'id' | 'name' | 'status'>
+  /**
+   * Which half to draw: the review's decisions (`safe`) or the cancellation (`destructive`). The status
+   * notice draws each in its own place, the destructive one apart at the right (#288).
+   */
+  only: 'safe' | 'destructive'
 }
 
 /**
@@ -55,8 +60,9 @@ export interface AdminTableDecisionsProps {
  * the master reads it in the table's history and is told by the bell (#244, #284).
  *
  * @param props.table the table
+ * @param props.only  the review's decisions, or the cancellation
  */
-export function AdminTableDecisions({ table }: AdminTableDecisionsProps) {
+export function AdminTableDecisions({ table, only }: AdminTableDecisionsProps) {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
   const approve = useApproveTable()
@@ -65,8 +71,8 @@ export function AdminTableDecisions({ table }: AdminTableDecisionsProps) {
   const changesDialog = useDisclosure()
   const cancelDialog = useDisclosure()
 
-  const inReview = table.status === 'Preparation'
-  const canCancel = ADMIN_CANCELABLE.includes(table.status)
+  const inReview = only === 'safe' && table.status === 'Preparation'
+  const canCancel = only === 'destructive' && ADMIN_CANCELABLE.includes(table.status)
   const changesError = adminQueueErrorKey(requestChanges.error)
 
   async function handleApprove() {

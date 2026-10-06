@@ -47,19 +47,37 @@ export function AdminTableStatusNotice({ table }: AdminTableStatusNoticeProps) {
       t(`tables.notice.${table.status}.description`)
     )
 
+  const safe = (
+    <>
+      <AdminTableDecisions table={table} only="safe" />
+      <AdminTableActions table={table} presentation="notice" only="safe" />
+    </>
+  )
+  const destructive = (
+    <>
+      <AdminTableDecisions table={table} only="destructive" />
+      {/* Removed, the table no longer has a detail to show: back to the list it was found in. */}
+      <AdminTableActions table={table} presentation="notice" only="destructive" onDeleted={() => void navigate(adminTablesPath())} />
+    </>
+  )
+
+  // Cancelling and removing go apart at the right when there are other buttons to keep them away from
+  // (#288), so a miss aimed at «Aprobar» or «Pausar» never lands on them. Alone, they stay where a
+  // button is read first: a single button stranded at the far end of the notice looks lost.
   return (
     <StatusNotice
       title={t(`tables.notice.${table.status}.title`)}
       description={description}
-      actions={
-        hasActions && (
-          <>
-            <AdminTableDecisions table={table} />
-            {/* Removed, the table no longer has a detail to show: back to the list it was found in. */}
-            <AdminTableActions table={table} presentation="notice" onDeleted={() => void navigate(adminTablesPath())} />
-          </>
-        )
-      }
+      actions={hasActions && (hasSafeActions(table.status) ? safe : destructive)}
+      destructiveActions={hasActions && hasSafeActions(table.status) ? destructive : undefined}
     />
   )
+}
+
+/**
+ * Whether the notice has decisions that are not destructive for a table in this status: reviewing it,
+ * assigning it masters, pausing or resuming it. What decides if cancelling goes apart at the right.
+ */
+function hasSafeActions(status: AdminTableStatusNoticeProps['table']['status']): boolean {
+  return status === 'Preparation' || status === 'Unassigned' || status === 'InProgress' || status === 'Pause'
 }

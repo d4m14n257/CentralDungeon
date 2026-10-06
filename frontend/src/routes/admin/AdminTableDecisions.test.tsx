@@ -18,7 +18,12 @@ vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => vi.fn() }))
 describe('AdminTableDecisions', () => {
   /** #286: an admin who read the table resolves its review from it - approve, or send it back. */
   it('offers approving, asking for changes and cancelling while the table is in review', () => {
-    render(<AdminTableDecisions table={{ id: 't1', name: 'La Cripta', status: 'Preparation' }} />)
+    render(
+      <>
+        <AdminTableDecisions table={{ id: 't1', name: 'La Cripta', status: 'Preparation' }} only="safe" />
+        <AdminTableDecisions table={{ id: 't1', name: 'La Cripta', status: 'Preparation' }} only="destructive" />
+      </>,
+    )
 
     expect(screen.getByRole('button', { name: 'Aprobar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Pedir cambios' })).toBeInTheDocument()
@@ -26,9 +31,16 @@ describe('AdminTableDecisions', () => {
     expect(screen.getByRole('button', { name: 'Cancelar mesa' })).toBeInTheDocument()
   })
 
+  /** #288: the destructive half is drawn on its own, so the notice can put it apart at the right. */
+  it('draws the cancellation only in its destructive half', () => {
+    render(<AdminTableDecisions table={{ id: 't1', name: 'La Cripta', status: 'Preparation' }} only="safe" />)
+
+    expect(screen.queryByRole('button', { name: 'Cancelar mesa' })).not.toBeInTheDocument()
+  })
+
   /** Reviewing only exists in review; a running table can still be cancelled, with its reason. */
   it('offers only cancelling once the table is running', () => {
-    render(<AdminTableDecisions table={{ id: 't1', name: 'La Cripta', status: 'InProgress' }} />)
+    render(<AdminTableDecisions table={{ id: 't1', name: 'La Cripta', status: 'InProgress' }} only="destructive" />)
 
     expect(screen.queryByRole('button', { name: 'Aprobar' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancelar mesa' })).toBeInTheDocument()

@@ -34,6 +34,11 @@ export interface AdminTableActionsProps {
    * the screen's decisions and not the actions of a row.
    */
   presentation?: 'row' | 'notice'
+  /**
+   * Which actions to draw. Absent draws them all, as a list row does; the status notice draws the
+   * `safe` ones with the rest and the `destructive` one (remove) apart at the right (#288).
+   */
+  only?: 'safe' | 'destructive' | undefined
 }
 
 /** One of the actions, drawn the way the place that shows it asks for. */
@@ -95,7 +100,9 @@ export const STATUSES_WITH_ADMIN_ACTIONS: readonly AdminTableSummary['status'][]
  * sitting in `Preparation` is work waiting on somebody, and work waiting on somebody is the tray's.
  * Two screens offering the same decision under different rules is exactly what the move removes.
  */
-export function AdminTableActions({ table, onDeleted, presentation = 'row' }: AdminTableActionsProps) {
+export function AdminTableActions({ table, onDeleted, presentation = 'row', only }: AdminTableActionsProps) {
+  const showSafe = only !== 'destructive'
+  const showDestructive = only !== 'safe'
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
   const removeTable = useDeleteTable(table.id)
@@ -152,20 +159,24 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row' }: Ad
           giving it one or admitting it will never have one (principio 2). */}
       {table.status === 'Unassigned' && (
         <>
-          <ActionControl
-            presentation={presentation}
-            icon={<UserPlus className="size-4" />}
-            label={t('tables.assignMasters')}
-            onClick={() => assignDialog.open()}
-          />
-          <ActionControl
-            presentation={presentation}
-            icon={<Trash2 className="size-4" />}
-            label={t('tables.delete')}
-            onClick={() => void handleDelete()}
-            disabled={removeTable.isPending}
-            destructive
-          />
+          {showSafe && (
+            <ActionControl
+              presentation={presentation}
+              icon={<UserPlus className="size-4" />}
+              label={t('tables.assignMasters')}
+              onClick={() => assignDialog.open()}
+            />
+          )}
+          {showDestructive && (
+            <ActionControl
+              presentation={presentation}
+              icon={<Trash2 className="size-4" />}
+              label={t('tables.delete')}
+              onClick={() => void handleDelete()}
+              disabled={removeTable.isPending}
+              destructive
+            />
+          )}
         </>
       )}
       {/* The two halves of #163, which have had an endpoint since E2 and no screen at all until now.
@@ -174,7 +185,7 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row' }: Ad
           is the screen that lists every table there is (#176). What *does* wait on somebody — a
           master's request for a pause — arrives in `/admin/queue` as a request, and approving it
           there is what moves the table to `Pause`. */}
-      {table.status === 'InProgress' && (
+      {showSafe && table.status === 'InProgress' && (
         <ActionControl
           presentation={presentation}
           icon={<Pause className="size-4" />}
@@ -183,7 +194,7 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row' }: Ad
           disabled={pauseTable.isPending}
         />
       )}
-      {table.status === 'Pause' && (
+      {showSafe && table.status === 'Pause' && (
         <ActionControl
           presentation={presentation}
           icon={<Play className="size-4" />}
