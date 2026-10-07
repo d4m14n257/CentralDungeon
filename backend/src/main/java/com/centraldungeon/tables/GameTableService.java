@@ -1113,7 +1113,7 @@ public class GameTableService {
      * {@code /table_master} over the masters' names. The catalog criteria are resolved to ids before
      * the query is built, exactly as {@link #list} does and for the same reason (#54, #56, #246).
      *
-     * <p><b>The page is built with three queries and not with three per row</b> (F3.3 contrato §3.4):
+     * <p><b>The page is built with three queries and not with three per row</b> (arquitectura §2.2):
      * one for the tables, one for their Primaries and one for their player counts. Asking per row was
      * survivable while the default was a handful of tables in review; listing every table there is
      * turned it into a query storm.
@@ -1311,7 +1311,7 @@ public class GameTableService {
     /**
      * One page of the admin listing, with the two expensive per-row reads done once for the whole page.
      *
-     * <p>This is the N+1 the F3.3 contract §3.4 names. The old {@code toAdminSummary} asked
+     * <p>This is the N+1 that arquitectura §2.2 forbids. The old {@code toAdminSummary} asked
      * {@code findPrimaryMasterOrNull} and {@code countPlayers} <b>per row</b>: forty-one queries for a
      * page of twenty, on a screen that had just stopped being limited to the tables in review. The
      * shape of the fix is the one {@code listMineHistory} and {@code FileService.usagesByFileId}

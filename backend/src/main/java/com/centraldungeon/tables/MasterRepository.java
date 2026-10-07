@@ -105,7 +105,7 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
      * Who runs each of a set of tables, in one query - the batched read behind the admin listing and
      * the shared tray.
      *
-     * <p><b>This is the N+1 fix of the F3.3 contract §3.4.</b> {@code /admin/tables} used to ask
+     * <p><b>This is an N+1 fix (arquitectura §2.2).</b> {@code /admin/tables} used to ask
      * {@code findByGameTable_IdAndStatus} once per row while it built the page; harmless while the
      * listing defaulted to the three statuses waiting on an admin, and a query per table the moment
      * it started listing <em>every</em> table. Same shape and same reason as

@@ -205,7 +205,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     /**
      * How many people are accepted at each of a set of tables, in one query.
      *
-     * <p>The other half of the N+1 the F3.3 contract §3.4 closes: the admin listing used to call
+     * <p>The other half of the admin listing's N+1 fix (arquitectura §2.2): the admin listing used to call
      * {@link #countByGameTable_IdAndStatus} once per row while it built the page. One count per row
      * was tolerable while that listing defaulted to the handful of tables waiting on an admin; it
      * stopped being tolerable the moment the screen started listing every table there is (#176).

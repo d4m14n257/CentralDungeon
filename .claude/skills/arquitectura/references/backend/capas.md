@@ -3,6 +3,9 @@
 > Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
 
 
+**Todas las capas**
+- Las dependencias entran **por constructor**, en campos `private final`. Nada de `@Autowired` sobre un campo y nada de Lombok: el constructor deja a la vista lo que una clase necesita, y permite armarla en un unitario sin levantar Spring (§5.1). Es como está escrito todo el backend hoy.
+
 **Controller** (`*Controller.java`)
 - Solo HTTP: recibe DTO validado, llama a **un** service, devuelve DTO + status code explícito.
 - Nunca inyecta un `Repository`. Nunca contiene `if` de negocio. Nunca devuelve una `@Entity`.
@@ -29,6 +32,13 @@
 - `FetchType.LAZY` por defecto en toda relación — `EAGER` solo con justificación escrita.
 - Enums con `@Enumerated(EnumType.STRING)`, siempre.
 - No se exponen fuera del paquete de su feature: el resto del sistema consume DTOs.
+
+**Lecturas por página: sin N+1**
+- Una página se arma con **un número fijo de consultas, tenga las filas que tenga**. Lo que hace falta por fila —el `Primary` de cada mesa, cuántos jugadores tiene, cuántos candidatos esperan, cuántas veces se usa un valor de catálogo— se resuelve en **una consulta agrupada para la página entera** (`IN (:ids)`, con `GROUP BY` si es un conteo), y el service arma la respuesta desde un `Map` por id. Es la forma de `MasterRepository.findByGameTablesAndType`, `TableRegistrationRepository.countPlayersByTables` y `countPendingByTables`, y `AbstractCatalogService.countUses`.
+- Si la fila necesita una asociación, viene en esa misma consulta, con `join fetch` o con `@EntityGraph` en el finder: resolver después un `LAZY` vuelve a meter el N+1 una capa más abajo. La excepción son los conjuntos chicos y cerrados (los tipos de mesa, los admins), donde la caché de primer nivel responde los repetidos dentro de la página; quedarse con el `LAZY` ahí se dice en el Javadoc, para que se lea como decisión y no como descuido.
+- Las proyecciones de esas consultas (`TablePlayerCount`, `PendingCandidateCount`, `TaskSubmissionCount`, `CatalogUsageCount`) son `record` internos que **nunca cruzan HTTP** (§2.3).
+- **Se mide, no se razona**: el IT cuenta las consultas con `Statistics` de Hibernate (`getPrepareStatementCount` en `AdminQueueServiceIT` y `UserRoleServiceIT`, `getQueryExecutionCount` en `GameTableHistoryIT`). Un `join fetch` justificado solo por leer el mapeo no prueba nada.
+- Nació en F3.3, cuando `/admin/tables` pasó a listar todas las mesas (#176): el armado fila por fila hacía cuarenta y una consultas para una página de veinte.
 
 **DTO** (`dto/*.java`)
 - `record`, inmutable. Sufijo `Request` (entrada) o `Response` (salida) — separados aunque los campos coincidan hoy.

@@ -120,6 +120,8 @@ export function EditGameTableDialog({ table, open, onOpenChange }: EditGameTable
 
 **Documentación**: JSDoc en todo `export`, con los `props` campo por campo. El detalle, junto con el Javadoc del backend, está en §6.2.
 
+**Sin `console.*` en el código que se commitea**: ni `log`, ni `warn`, ni `error`, y hoy `src/` no tiene ninguno. Un error que la persona tiene que ver llega a la interfaz por el estado de error de la pantalla (#150) o por el `ApiError` de `client.ts`, y lo que se agregó para depurar se borra antes del commit. Los tests quedan fuera.
+
 **Ubicación y nombres**: dónde va cada archivo, cuándo sube a la raíz y qué sufijo lleva está en §3.1.1–§3.1.3, y el ruteo en §3.1.6.
 
 **Estilos** (#109): Tailwind en el JSX. Los tokens del tema —colores, tipografía, radios, y los estados de mesa y postulación— se definen en el bloque `@theme` de `styles/globals.css`; no hay `tailwind.config.ts` en Tailwind 4.

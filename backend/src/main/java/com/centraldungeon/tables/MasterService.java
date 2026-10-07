@@ -209,7 +209,7 @@ public class MasterService {
     }
 
     /**
-     * Who runs each of a whole page of tables, in one query (F3.3 contrato §3.4).
+     * Who runs each of a whole page of tables, in one query (arquitectura §2.2).
      *
      * <p>The batched counterpart of {@link #findByGameTable}, and the reason it exists is a concrete
      * N+1: the admin listing and the shared tray both need the Primary of every row they render, and

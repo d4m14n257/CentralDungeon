@@ -41,7 +41,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * Every rule of the shared tray (contrato F3.3 §1 y §2), one test each.
+ * Every rule of the shared tray (#100, #176, #258), one test each.
  *
  * <p>Three of them are what the slice is actually about and the rest exists so they cannot be broken
  * quietly:

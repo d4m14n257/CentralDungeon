@@ -129,7 +129,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * {@code notMasteredBy} belongs to the explorer and not to the admin listing (F3.3 contract §3.2): an
+     * {@code notMasteredBy} belongs to the explorer and not to the admin listing (#155): an
      * admin is not applying to anything, and hiding the tables they run would be a filter nobody asked
      * for and nobody could explain.
      */

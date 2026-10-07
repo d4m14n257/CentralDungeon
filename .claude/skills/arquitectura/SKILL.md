@@ -21,7 +21,7 @@ El stack y sus versiones están en `docs/arquitectura.md` §1; el porqué de cad
 2. **El controller nunca llama a un repository.** Siempre pasa por un service, aunque sea una lectura trivial. → §2.2
 3. **Una `@Entity` nunca cruza la frontera HTTP.** Entrada y salida son `record` en `dto/`, con sufijo `Request` o `Response`. **Nada de tipos abiertos**: ni `Map<String, Object>`, ni `Object`, ni `ResponseEntity<?>`. Listado y detalle son DTOs distintos (`…SummaryResponse` / `…DetailResponse`). → §2.3
 4. **El service es dueño de la transacción** (`@Transactional`, o `readOnly = true` en lectura) y de la lógica de negocio, incluida la que antes vivía en triggers (§4.5). → §2.2
-5. **El repository es una interfaz `JpaRepository<Entity, String>`**, sin lógica y sin `@Transactional`. Todo `@Query` lleva **parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales ni concatenación (#124). → §2.2
+5. **El repository es una interfaz `JpaRepository<Entity, String>`**, sin lógica y sin `@Transactional`. Todo `@Query` lleva **parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales ni concatenación (#124). **Una página se arma con un número fijo de consultas, nunca con una por fila** (sin N+1), y se mide en el IT. → §2.2
 6. **Errores**: excepciones de `common/exception`, nunca `null` para decir «no existe». El `GlobalExceptionHandler` las traduce a `ProblemDetail` con **un código y sus parámetros**, nunca con una frase: la frase la arma el frontend (#197). → §2.5
 7. **Las colecciones van siempre paginadas** (`?page=&size=&sort=`) y devuelven `PageResponse`, con orden por defecto y desempate por `id` (#173). → §2.5
 8. **El actor sale del JWT** vía `@AuthenticationPrincipal`, **nunca** de un parámetro de ruta (#121). → §2.6
