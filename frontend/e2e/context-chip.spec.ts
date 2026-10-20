@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 
 /**
- * The context chip reports **where you are**, not what you hold (decisiones.md #222) - and since
+ * The context chip reports **where you are**, not what you hold (docs/adr #222) - and since
  * #269, where you are is always a context you hold: forcing another one sends you home.
  *
  * It used to be checked inside the help spec, which was where the test actors with exactly one role

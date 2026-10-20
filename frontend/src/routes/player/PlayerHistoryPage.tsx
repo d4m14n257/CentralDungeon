@@ -23,7 +23,7 @@ import { TableStatusBadge, useTableHistory } from '@/features/tables'
 export function PlayerHistoryPage() {
   const { t, i18n } = useTranslation('tables')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (docs/decisiones.md #150).
+  // loaded (docs/adr #150).
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useTableHistory()
 
   const entries = data?.pages.flatMap((page) => page.content) ?? []

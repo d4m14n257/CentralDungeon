@@ -67,7 +67,7 @@ export interface TableTasksSectionProps {
 export function TableTasksSection({ tableId, renderHelp, renderFiles, renderFilePicker, commitFiles }: TableTasksSectionProps) {
   const { t } = useTranslation('tasks')
   const confirm = useConfirm()
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   const { data: tasks, isPending, isLoadingError, refetch } = useApplicableTasks(tableId)
   const submit = useSubmitTask(tableId)
   const [answering, setAnswering] = useState<ApplicableTask | null>(null)

@@ -1,11 +1,11 @@
 ---
 name: arquitectura
-description: CentralDungeon's whole architecture in one place — backend layers, DTOs, API contract and security (§2), frontend structure, types, state, i18n and forms (§3), the data model, DDL, migrations and business rules (§4), how both sides are tested (§5), how the code is documented with Javadoc and JSDoc (§6), and the step-by-step procedures for a new endpoint, a new component or screen, and an @Entity change (§7). Use before writing, changing or reviewing any code in backend/ or frontend/, before touching an @Entity, a migration, a query or a business rule, before writing tests, and whenever code or decisiones.md cites "arquitectura §n" or roles-y-alcance.md.
+description: CentralDungeon's whole architecture in one place — backend layers, DTOs, API contract and security (§2), frontend structure, types, state, i18n and forms (§3), the data model, DDL, migrations and business rules (§4), how both sides are tested (§5), how the code is documented with Javadoc and JSDoc (§6), and the step-by-step procedures for a new endpoint, a new component or screen, and an @Entity change (§7). Use before writing, changing or reviewing any code in backend/ or frontend/, before touching an @Entity, a migration, a query or a business rule, before writing tests, and whenever code or an ADR in docs/adr cites "arquitectura §n" or roles-y-alcance.md.
 ---
 
 # Arquitectura
 
-Cómo se escribe CentralDungeon, de punta a punta. **Es la fuente de sus reglas**: el código y `docs/decisiones.md` citan estas secciones por número (`arquitectura §2.3`). Hasta #274 eran siete skills —`arquitectura-backend`, `arquitectura-frontend`, `modelo-datos`, `tests-java`, `nuevo-endpoint-java`, `nuevo-componente-react` y `er-diagram-sync`—; se juntaron porque ninguna se entendía sin las otras, y **los números viejos se conservaron**, de modo que una cita antigua sigue encontrando su sección:
+Cómo se escribe CentralDungeon, de punta a punta. **Es la fuente de sus reglas**: el código y las ADRs de `docs/adr/` citan estas secciones por número (`arquitectura §2.3`). Hasta #274 eran siete skills —`arquitectura-backend`, `arquitectura-frontend`, `modelo-datos`, `tests-java`, `nuevo-endpoint-java`, `nuevo-componente-react` y `er-diagram-sync`—; se juntaron porque ninguna se entendía sin las otras, y **los números viejos se conservaron**, de modo que una cita antigua sigue encontrando su sección:
 
 - el backend sigue siendo §2 y el frontend §3;
 - el modelo de datos lleva el prefijo `4.`: el viejo `modelo-datos` §5 es §4.5;

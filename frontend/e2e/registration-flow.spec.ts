@@ -28,7 +28,7 @@ async function testLogin(request: APIRequestContext, discordId: string, asMaster
 }
 
 /**
- * Preparation -> Opened is no longer the master's to do alone (E2 sub-slice 1, decisiones.md #163):
+ * Preparation -> Opened is no longer the master's to do alone (E2 sub-slice 1, docs/adr #163):
  * an admin has to approve it. An ephemeral admin signs in for that and nothing else.
  */
 async function createOpenTable(request: APIRequestContext, accessToken: string, name: string) {

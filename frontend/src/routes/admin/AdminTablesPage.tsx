@@ -82,7 +82,7 @@ export function AdminTablesPage() {
     onQueryChange: (query) => updateParams({ q: query }),
   })
 
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   const { data, isPending, isLoadingError, error, refetch } = useAdminTables(search.query, undefined, page, size)
 
   /** Writes the screen's state into the URL, resetting the page whenever the search changes. */

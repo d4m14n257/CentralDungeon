@@ -80,7 +80,7 @@ export function AdminFilesPage() {
   const fields = useMemo(() => adminFileSearchFields(t), [t])
   const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   // The category is a filter and not a search term (#233): three known values are chosen from, never
   // typed at. A hand-edited URL naming one of the player-side cajones is dropped rather than sent,
   // since the library has no such shelf and the server would refuse it (#278).

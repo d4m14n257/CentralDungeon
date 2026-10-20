@@ -1,6 +1,6 @@
 ---
 name: diseno
-description: CentralDungeon's visual system — where every design value comes from (design/build.py → @theme), the named pattern classes and components a screen must use instead of spelling utilities out (page-title, section-label, row-actions, PageHeader…), the component inventory, work lists with icon actions and pagination, the node canvas (React Flow) for editing relationships — grouping, connecting, moving between groups —, the four mandatory states and the responsive rules. Use before writing the JSX of any screen or component in frontend/, before adding a style, a color or a class, when a screen edits how entities relate to each other rather than their data, and whenever code or decisiones.md cites "diseno §n".
+description: CentralDungeon's visual system — where every design value comes from (design/build.py → @theme), the named pattern classes and components a screen must use instead of spelling utilities out (page-title, section-label, row-actions, PageHeader…), the component inventory, work lists with icon actions and pagination, the node canvas (React Flow) for editing relationships — grouping, connecting, moving between groups —, the four mandatory states and the responsive rules. Use before writing the JSX of any screen or component in frontend/, before adding a style, a color or a class, when a screen edits how entities relate to each other rather than their data, and whenever code or an ADR in docs/adr cites "diseno §n".
 ---
 
 # Diseño

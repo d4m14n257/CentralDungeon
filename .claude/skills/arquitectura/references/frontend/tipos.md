@@ -1,6 +1,6 @@
 # 3.2 Modelo de tipos: un tipo base por entidad, el resto derivado
 
-> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 Esta sección es la contraparte frontend de §2.3 y la razón principal por la que se conserva TypeScript al migrar de Next.js a React puro.
@@ -103,4 +103,4 @@ Un `enum` de TS genera código en runtime, no es tree-shakeable y no coincide es
 
 10. **`tsconfig.json`**: `strict: true` más `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` y `verbatimModuleSyntax`. Sin `strict` toda esta sección es decorativa.
 
-> El tipo base se escribe a mano y se mantiene sincronizado con el `...Response` de Java por disciplina. Generarlo desde el OpenAPI que ya publica springdoc (§1.1) eliminaría ese trabajo manual; está anotado como candidato en `decisiones.md`, pero **hoy no está adoptado** y las reglas de arriba asumen tipos escritos a mano.
+> El tipo base se escribe a mano y se mantiene sincronizado con el `...Response` de Java por disciplina. Generarlo desde el OpenAPI que ya publica springdoc (§1.1) eliminaría ese trabajo manual; está anotado como candidato en la sección «Abierto» de `docs/adr/README.md`, pero **hoy no está adoptado** y las reglas de arriba asumen tipos escritos a mano.

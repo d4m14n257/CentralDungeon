@@ -58,5 +58,5 @@ El proyecto viejo terminó con dos `database.sql` desactualizados en dos repos d
    - cascadas en el service, nunca `ON DELETE CASCADE`.
 5. Si el cambio agrega o modifica una **regla de negocio**, anotarla en `references/modelo-datos/reglas-negocio.md` (§4.5) con el service donde vive, y escribir su test.
 6. Si la tabla nueva la llena el e2e, agregarla al orden de borrado de `TestDataService` (#171, #172).
-7. Si el cambio **contradice una decisión** ya registrada, actualizar `docs/decisiones.md` en el mismo commit, para que el registro no quede mintiendo.
+7. Si el cambio **contradice una decisión** ya registrada, escribir la ADR nueva en `docs/adr/` en el mismo commit y marcar con `modificada-por` la que corrige (agente `escriba-adr`), para que el registro no quede mintiendo.
 8. Antes de dar el cambio por terminado, verificar que los bloques Mermaid siguen siendo válidos: nombres de entidad consistentes y sin comas sueltas.

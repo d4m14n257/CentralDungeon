@@ -10,7 +10,7 @@ import { gameTablesApi } from './gameTablesApi'
  * attendance. Backs `/player/history` (#133).
  *
  * A reading list, like the explorer, so it accumulates with "See more" instead of numbered pages
- * (decisiones.md #173): a career's worth of closed tables has no working-list reason to jump around
+ * (docs/adr #173): a career's worth of closed tables has no working-list reason to jump around
  * by page number, and `useInfiniteQuery` keeps the pages already fetched when the reader navigates
  * away and back.
  *

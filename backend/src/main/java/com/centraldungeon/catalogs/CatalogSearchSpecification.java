@@ -134,7 +134,7 @@ final class CatalogSearchSpecification {
     }
 
     /**
-     * The values of one criterion are alternatives: any of them satisfies it (decisiones.md #164).
+     * The values of one criterion are alternatives: any of them satisfies it (docs/adr #164).
      *
      * @param root    the entity being queried
      * @param builder the Criteria API builder

@@ -63,7 +63,7 @@ export function TableListPage() {
 
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
   // loaded fine - TanStack Query sets isError to true anyway, without dropping the cached data
-  // (docs/decisiones.md #150). The global connection indicator already says something is wrong.
+  // (docs/adr #150). The global connection indicator already says something is wrong.
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useGameTables(
     search.query || undefined,
   )

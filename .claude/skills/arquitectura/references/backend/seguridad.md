@@ -1,16 +1,16 @@
 # 2.6 Seguridad
 
-> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 Flujo: el frontend inicia el login OAuth2 de Discord → Spring Security completa el intercambio → `DiscordOAuth2UserService` verifica membresía al guild, crea el usuario si no existe (con rol `Player`), rechaza si `status = 'Blocked'` → el backend emite un JWT propio → el frontend lo usa como `Authorization: Bearer` en todas las llamadas.
 
-**No hay registro propio: la membresía al servidor de Discord es la puerta de entrada** (`decisiones.md` #38). Si el usuario autentica pero no es miembro del guild, no se responde con un error seco: se le ofrece la invitación para unirse y solo se corta el login si la declina. El id del guild es configuración (`DiscordProperties`), nunca una constante en el código.
+**No hay registro propio: la membresía al servidor de Discord es la puerta de entrada** (#38). Si el usuario autentica pero no es miembro del guild, no se responde con un error seco: se le ofrece la invitación para unirse y solo se corta el login si la declina. El id del guild es configuración (`DiscordProperties`), nunca una constante en el código.
 
 - Filter chain **stateless**, sin sesión de servidor.
 - Dos capas de autorización, igual que el modelo de datos: rol global (`users_roles`: **Player / Master / Admin / Owner**) vía `@PreAuthorize("hasRole(...)")`, y rol por mesa (`masters.master_type`: Owner/Master) verificado en el service, porque depende del recurso concreto.
-- ⚠️ **Los dos `Owner` son cosas distintas** (`decisiones.md` #67): el rol global `Owner` es el dueño de la plataforma y puede todo; `masters.master_type = 'Owner'` es el dueño de **una mesa**. En el código no pueden llamarse igual — `PlatformRole.OWNER` y `MasterType.OWNER`, o se renombra el segundo.
-- **Los roles globales son funciones acumulables, no niveles** (`decisiones.md` #37, #67). Un usuario puede ser `Master` y `Player` a la vez, o `Master` sin ser `Player`. **No hay jerarquía ni herencia**: `Admin` no hereda lo de `Master`, ni `Master` lo de `Player`, y `Owner` puede todo por definición, no por heredar de `Admin`. En consecuencia **no se registra un `RoleHierarchy`** y cada endpoint enumera explícitamente los roles que lo alcanzan — `@PreAuthorize("hasAnyRole('MASTER','ADMIN')")`, nunca el "mínimo" de una escala que no existe.
+- ⚠️ **Los dos `Owner` son cosas distintas** (#67): el rol global `Owner` es el dueño de la plataforma y puede todo; `masters.master_type = 'Owner'` es el dueño de **una mesa**. En el código no pueden llamarse igual — `PlatformRole.OWNER` y `MasterType.OWNER`, o se renombra el segundo.
+- **Los roles globales son funciones acumulables, no niveles** (#37, #67). Un usuario puede ser `Master` y `Player` a la vez, o `Master` sin ser `Player`. **No hay jerarquía ni herencia**: `Admin` no hereda lo de `Master`, ni `Master` lo de `Player`, y `Owner` puede todo por definición, no por heredar de `Admin`. En consecuencia **no se registra un `RoleHierarchy`** y cada endpoint enumera explícitamente los roles que lo alcanzan — `@PreAuthorize("hasAnyRole('MASTER','ADMIN')")`, nunca el "mínimo" de una escala que no existe.
 - CORS restringido al origen del frontend por perfil, nunca `*`.
 - Ningún endpoint acepta el `user_id` del usuario autenticado como parámetro de ruta — sale del token. Este era el agujero central del backend Node.
 
@@ -49,4 +49,4 @@ El de Discord no se guarda: después del login no se usa para nada, y conservarl
 **CSRF: activo solo en `/auth/refresh`** (#127). El resto de la API va con `csrf.disable()`, y eso es correcto, no un descuido: se autentica con `Authorization: Bearer`, un header que el navegador nunca adjunta por su cuenta, así que no existe la credencial automática de la que vive el ataque. El refresh es el único endpoint que se autentica con **cookie**, y las cookies sí viajan solas hacia su destino sin importar quién originó la petición.
 
 Qué se protege exactamente: un sitio ajeno no podría leer la respuesta —lo impide CORS—, así que no hay robo de sesión; lo que sí podría es **forzar la rotación** del refresh y dejar al cliente legítimo con un token viejo, cerrándole la sesión al usuario y disparando falsas alarmas de reuso. El `SameSite=Strict` de #125 ya bloquea eso, pero lo aplica el **navegador**: si el agente lo ignora, del lado del servidor no se entera nadie. El token CSRF es la comprobación que sí ocurre acá.
-- **Filtro de visibilidad por veto**: toda lectura de mesas excluye aquellas donde el usuario tenga una solicitud `Blocked`, y el detalle por id responde `404`, no `403` (`decisiones.md` → *Ciclo de vida de la mesa*).
+- **Filtro de visibilidad por veto**: toda lectura de mesas excluye aquellas donde el usuario tenga una solicitud `Blocked`, y el detalle por id responde `404`, no `403` (#29).

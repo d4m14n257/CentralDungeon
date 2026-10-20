@@ -64,7 +64,7 @@ type Suggestion =
   | { kind: 'value'; name: string; label: string; start: number }
 
 /**
- * The application's one search box (decisiones.md #164): it is typed on a single line, and each
+ * The application's one search box (docs/adr #164): it is typed on a single line, and each
  * closed criterion becomes a chip so that what is being searched, and by which field, stays in view.
  *
  * It knows no domain, on purpose — it receives the fields it accepts rather than knowing them

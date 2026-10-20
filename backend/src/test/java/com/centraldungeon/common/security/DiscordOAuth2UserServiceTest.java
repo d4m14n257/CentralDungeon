@@ -39,7 +39,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 /**
- * The door to the whole platform (decisiones.md #38): guild membership decides, a blocked user
+ * The door to the whole platform (docs/adr #38): guild membership decides, a blocked user
  * never gets a session, and the principal that comes out carries our internal user id - which is
  * what OAuth2LoginSuccessHandler signs the refresh token with.
  *

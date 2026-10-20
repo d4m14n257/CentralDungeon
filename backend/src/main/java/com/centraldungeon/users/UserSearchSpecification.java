@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.Specification;
  * joined by which connectors (arquitectura §2.2).
  *
  * <p>Connectors are folded left to right, no precedence - {@code a or b and c} is {@code (a or b) and c},
- * which is what the chip row reads like on screen (decisiones.md #164).
+ * which is what the chip row reads like on screen (docs/adr #164).
  *
  * <p><b>Two audiences, two entry points</b>, the same shape {@code CatalogSearchSpecification} uses
  * for the same reason. {@link #matching(SearchQuery)} is the picker's: it forces
@@ -84,7 +84,7 @@ final class UserSearchSpecification {
         return connector == SearchConnector.OR ? builder.or(left, right) : builder.and(left, right);
     }
 
-    /** The values of one criterion are alternatives: any of them satisfies it (decisiones.md #164). */
+    /** The values of one criterion are alternatives: any of them satisfies it (docs/adr #164). */
     private static Predicate termPredicate(
             Root<User> root, @Nullable CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, SearchTerm term) {
         Predicate matched = null;

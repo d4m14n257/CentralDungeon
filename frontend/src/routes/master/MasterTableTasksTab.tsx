@@ -59,7 +59,7 @@ export function MasterTableTasksTab() {
   const { tableId, readOnly } = useOutletContext<OutletContext>()
   const confirm = useConfirm()
 
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   const { data: tasks, isPending, isLoadingError, refetch } = useTableTasks(tableId)
   const { data: players } = useTablePlayers(tableId)
   const { data: sessions } = useTableSessions(tableId)

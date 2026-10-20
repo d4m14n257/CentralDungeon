@@ -4,11 +4,11 @@
 >
 > Este documento conserva lo que se lee para entender el modelo y no se aplica al escribirlo: qué cambió respecto del schema heredado (§2) y el diagrama entidad-relación (§3), que se actualiza en el mismo cambio que la `@Entity` (skill `arquitectura` §7.3).
 >
-> El **porqué** de cada cosa está en `decisiones.md`. **Alcance v1**: el schema heredado consolidado, corregido y ampliado. **Campañas y Temporadas quedan fuera a propósito** (`decisiones.md` #7), igual que la integración profunda con Discord.
+> El **porqué** de cada cosa está en las ADRs de `docs/adr/`. **Alcance v1**: el schema heredado consolidado, corregido y ampliado. **Campañas y Temporadas quedan fuera a propósito** (#7), igual que la integración profunda con Discord.
 
 ## 2. Qué cambió respecto al schema heredado
 
-El detalle y el razonamiento están en `decisiones.md`. Resumen de lo estructural:
+El detalle y el razonamiento están en las ADRs de `docs/adr/`. Resumen de lo estructural:
 
 | Área | Cambio | Ref. |
 |---|---|---|

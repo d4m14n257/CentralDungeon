@@ -90,7 +90,7 @@ public class RegistrationService {
     private static final List<TableRegistrationStatus> HIDDEN_FROM_MINE =
             List.of(TableRegistrationStatus.Deleted, TableRegistrationStatus.Blocked);
 
-    /** decisiones.md #34 fixes this literal in Spanish - it is content a player reads, not code (#102 does not apply to it). */
+    /** docs/adr #34 fixes this literal in Spanish - it is content a player reads, not code (#102 does not apply to it). */
     /**
      * The reason the application itself writes when a table fills up (#34).
      *

@@ -42,7 +42,7 @@ export interface TaskSubmissionsPanelProps {
  */
 export function TaskSubmissionsPanel({ taskId, renderFiles }: TaskSubmissionsPanelProps) {
   const { t, i18n } = useTranslation('tasks')
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   const { data, isPending, isLoadingError, refetch } = useTaskSubmissions(taskId)
   const timeZone = browserTimeZone()
 

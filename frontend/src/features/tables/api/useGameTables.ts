@@ -6,7 +6,7 @@ import { staleTime } from '@/config/query'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * The explorer brings one page at a time and adds to it with "See more" (decisiones.md #173): it is
+ * The explorer brings one page at a time and adds to it with "See more" (docs/adr #173): it is
  * a listing to browse, not one to walk by page number. `useInfiniteQuery` keeps the pages already
  * fetched, so going back in the browser does not ask for them again.
  *

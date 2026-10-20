@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 /**
- * There is no registration of our own: Discord guild membership is the door (decisiones.md #38).
+ * There is no registration of our own: Discord guild membership is the door (docs/adr #38).
  * The Discord access token is used once, right here, to check membership - it is never persisted.
  */
 @Service

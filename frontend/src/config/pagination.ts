@@ -1,5 +1,5 @@
 /**
- * The page size of each kind of listing (decisiones.md #173). It lives here rather than in each hook
+ * The page size of each kind of listing (docs/adr #173). It lives here rather than in each hook
  * so that "how much a page brings" is a decision and not a loose number repeated in ten places.
  */
 export const pageSize = {

@@ -2,7 +2,7 @@
 
 **Solo se versionan las fuentes.** Los `.mmd` se leen bien en texto plano; los PNG se borraron por ser artefactos regenerables (2,6 MB de binario que no se puede diffear). Desde F3 hay una segunda clase de fuente, los `.architecture.json` de **Archify**, que rinden a un HTML interactivo — misma regla: se versiona el JSON, nunca el HTML de ~800 KB ni las capturas que deja su verificación. Los dos comandos de regeneración están al final.
 
-Los diagramas del **modelo heredado** (`00`–`04`) ya cumplieron su función y se eliminaron. Lo que salió de revisarlos está en `../decisiones.md`.
+Los diagramas del **modelo heredado** (`00`–`04`) ya cumplieron su función y se eliminaron. Lo que salió de revisarlos está en las ADRs de `../adr/`.
 
 ## Modelo objetivo (ER)
 

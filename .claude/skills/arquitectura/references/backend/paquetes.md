@@ -1,6 +1,6 @@
 # 2.1 Patrón: paquete por feature, capas adentro
 
-> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 El árbol se organiza **por dominio de negocio primero, por capa técnica después**. Un `com.centraldungeon.controller` con 9 controllers de dominios distintos obliga a saltar entre 6 carpetas para tocar una sola funcionalidad; con paquete por feature, agregar o borrar una feature es agregar o borrar una carpeta.
@@ -35,7 +35,7 @@ backend/src/main/java/com/centraldungeon/
 │   │   ├── AuditLogRepository.java
 │   │   └── AuditService.java            lo invocan los services, nunca los controllers
 │   │                                    ⚠ NUNCA audita `comments`: guardaría autor + contenido
-│   │                                      y rompería el anonimato (decisiones.md #43)
+│   │                                      y rompería el anonimato (#43)
 │   ├── storage/
 │   │   ├── StorageService.java          interfaz
 │   │   └── LocalDiskStorageService.java implementación por defecto

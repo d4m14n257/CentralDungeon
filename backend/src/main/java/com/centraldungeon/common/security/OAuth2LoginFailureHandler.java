@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Not a member of the guild is not a dead end: the frontend callback screen offers the invite
- * and only cuts the login if the user does not join (decisiones.md #38).
+ * and only cuts the login if the user does not join (docs/adr #38).
  */
 @Component
 public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {

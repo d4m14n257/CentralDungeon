@@ -1,6 +1,6 @@
 # Roles y alcance — lo normativo de F3
 
-> Parte de la skill `arquitectura` (#274), sección 4 — el modelo de datos. Rescatado en F4.0 de `docs/fase-3-admin-owner.md` antes de borrarlo: la línea entre `Admin` y `Owner` (§3), las reglas de diseño de cada rebanada de F3 (§4, sin sus inventarios de cierre), lo que F3 no construyó (§5), el camino de verificación manual (§6) y los riesgos que el código cita (§7). **Conserva la numeración original**, que es la que citan el código y `decisiones.md`. El registro completo de la fase, con sus inventarios, queda en git.
+> Parte de la skill `arquitectura` (#274), sección 4 — el modelo de datos. Rescatado en F4.0 de `docs/fase-3-admin-owner.md` antes de borrarlo: la línea entre `Admin` y `Owner` (§3), las reglas de diseño de cada rebanada de F3 (§4, sin sus inventarios de cierre), lo que F3 no construyó (§5), el camino de verificación manual (§6) y los riesgos que el código cita (§7). **Conserva la numeración original**, que es la que citan el código y las ADRs. El registro completo de la fase, con sus inventarios, queda en git.
 
 ## 3. La línea entre `Admin` y `Owner`
 

@@ -1,5 +1,5 @@
 /**
- * The one-line language every search box in the application speaks (decisiones.md #164).
+ * The one-line language every search box in the application speaks (docs/adr #164).
  *
  *   juan                                     -> the endpoint's basic criterion
  *   /discord_name juan                       -> that field

@@ -27,7 +27,7 @@ interface UserPickerProps {
 /**
  * Finding a person and picking them. The basic criterion is the Discord name **or** the one in the
  * system: whoever is searching knows one of the two, not which of them is stored where
- * (decisiones.md #164).
+ * (docs/adr #164).
  */
 export function UserPicker({ onSelect, excludedIds = [], tableId }: UserPickerProps) {
   const { t } = useTranslation('users')

@@ -16,10 +16,10 @@ import { useMe } from '@/features/users'
 export function MasterTablesPage() {
   const { t } = useTranslation('master')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (docs/decisiones.md #150).
+  // loaded (docs/adr #150).
   const { data, isPending, isLoadingError, refetch } = useManagedTables()
   const { data: me } = useMe()
-  // Running is not creating (decisiones.md #135): somebody running a single table, assigned without
+  // Running is not creating (docs/adr #135): somebody running a single table, assigned without
   // the platform role, sees this list but not the button to create a table of their own.
   const canCreate = me?.roles.includes('Master') ?? false
 

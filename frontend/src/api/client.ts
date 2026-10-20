@@ -2,7 +2,7 @@ import { env } from '@/config/env'
 import { ApiError, type PageResponse, type ProblemDetail } from '@/types/api'
 
 /**
- * The access token lives only in memory (decisiones.md #125) - never localStorage. AuthProvider
+ * The access token lives only in memory (docs/adr #125) - never localStorage. AuthProvider
  * is the only caller of setAccessToken, right after OAuth2 login and after each refresh.
  */
 let accessToken: string | null = null
@@ -49,7 +49,7 @@ function readCookie(name: string): string | null {
 
 /**
  * Only /auth/refresh needs the CSRF header - it is the one endpoint authenticated by cookie
- * (decisiones.md #127). Exported so AuthProvider can call it once on boot to recover a session
+ * (docs/adr #127). Exported so AuthProvider can call it once on boot to recover a session
  * from the httpOnly refresh cookie, without a chicken-and-egg 401 first.
  */
 export async function refreshSession(): Promise<string | null> {

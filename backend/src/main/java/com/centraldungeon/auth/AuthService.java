@@ -34,7 +34,7 @@ public class AuthService {
         this.userService = userService;
     }
 
-    /** The refresh is the re-affirmation point: status and roles are re-read from the database, never trusted from the old token (decisiones.md #122). */
+    /** The refresh is the re-affirmation point: status and roles are re-read from the database, never trusted from the old token (docs/adr #122). */
     @Transactional(readOnly = true)
     public RefreshResult refresh(@Nullable String refreshCookie) {
         if (refreshCookie == null || refreshCookie.isBlank()) {

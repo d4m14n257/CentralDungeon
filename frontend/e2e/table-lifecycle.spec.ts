@@ -5,7 +5,7 @@ import { approveTableFromQueue } from './helpers/adminQueue'
 import { acceptReview } from './helpers/review'
 
 /**
- * E2 sub-slice 1, end to end (decisiones.md #163): a master creates a table through the wizard ->
+ * E2 sub-slice 1, end to end (docs/adr #163): a master creates a table through the wizard ->
  * Preparation; an admin takes it in /admin/queue and approves it -> Opened; the Primary starts it ->
  * InProgress; the Primary finishes it -> Finished. It covers the real state machine, not the
  * self-service E1 had.
@@ -59,7 +59,7 @@ async function createTableThroughWizard(page: Page, name: string) {
 }
 
 /**
- * Assigning masters with the people search (decisiones.md #164, #165): an admin creates a table
+ * Assigning masters with the people search (docs/adr #164, #165): an admin creates a table
  * with no master, searches for two people — one by loose text, the other narrowed with
  * /discord_name — promotes the second and assigns. The table is born Unassigned and leaves the queue
  * once it is Opened.
@@ -127,7 +127,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
 })
 
 /**
- * Deleting what was never public (decisiones.md #175): the master builds a table, decides it is not
+ * Deleting what was never public (docs/adr #175): the master builds a table, decides it is not
  * going to happen and removes it before publishing. Once open that is no longer possible: an open
  * table is cancelled.
  */

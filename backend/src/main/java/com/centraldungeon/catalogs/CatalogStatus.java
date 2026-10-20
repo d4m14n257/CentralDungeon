@@ -5,7 +5,7 @@ package com.centraldungeon.catalogs;
  * catalog tables (arquitectura §4.4); the rest of the vocabulary is defined here.
  *
  * <p>Only {@link #Accepted} values are offered to players, shown to them or usable as a filter
- * (decisiones.md #57, #81). The other three are invisible outside /admin/catalogs, each for its own
+ * (docs/adr #57, #81). The other three are invisible outside /admin/catalogs, each for its own
  * reason: {@code Created} has not been reviewed yet, {@code Rejected} never will be, and
  * {@code Disabled} was taken out of circulation without breaking a single link (#81).
  */

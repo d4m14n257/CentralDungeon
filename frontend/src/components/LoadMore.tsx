@@ -11,7 +11,7 @@ interface LoadMoreProps {
 }
 
 /**
- * Pagination for a reading list: it brings more, it does not jump between pages (decisiones.md #173).
+ * Pagination for a reading list: it brings more, it does not jump between pages (docs/adr #173).
  *
  * An explicit button and not infinite scroll: infinite scroll fires on its own, leaves the footer
  * unreachable and never says how much is left. Here you always see how many of how many, which is

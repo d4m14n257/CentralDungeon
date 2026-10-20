@@ -18,7 +18,7 @@ interface ProfileCardProps {
  * A profile's upper half (frontend-diseno.md §4): initials, name, Discord handle, country, roles,
  * aggregate attendance and how many tables they played to the end (#284). `/player/profile` and `/player/users/:id` both mount this and nothing else yet.
  *
- * **The "Comentarios recibidos" heading of the wireframe is never drawn** (decisiones.md #248): it
+ * **The "Comentarios recibidos" heading of the wireframe is never drawn** (docs/adr #248): it
  * belongs to F5, and a section titled that way with nothing underneath would read as a broken page
  * rather than as "nobody has commented on you yet" (skill `diseno` §5) — the same trap the
  * master dashboard's empty state already sidesteps. There is no placeholder, no "coming soon": the

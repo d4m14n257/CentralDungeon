@@ -135,7 +135,7 @@ public class UserService {
      * The caller's own profile - what the whole frontend shell is built from.
      *
      * <p>{@code hasManagedTables} covers the person who runs a single table without holding the
-     * platform role (decisiones.md #135): the ContextSwitcher needs that signal to offer the Master
+     * platform role (docs/adr #135): the ContextSwitcher needs that signal to offer the Master
      * context even though {@code roles} does not include it. It is the clearest place the difference
      * between a role and membership shows up in the API.
      *
@@ -153,7 +153,7 @@ public class UserService {
     }
 
     /**
-     * The search box behind every user picker (decisiones.md #164). An empty query is not an error:
+     * The search box behind every user picker (docs/adr #164). An empty query is not an error:
      * it lists Allowed users page by page, which is what /admin/users will want to open with.
      */
     @Transactional(readOnly = true)

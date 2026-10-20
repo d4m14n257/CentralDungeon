@@ -15,7 +15,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Only what is transversal lives here - stateless-as-possible, CORS, what is public. The permission
- * itself is declared on each concrete controller method, never in a route list here (decisiones.md #123).
+ * itself is declared on each concrete controller method, never in a route list here (docs/adr #123).
  */
 @Configuration
 @EnableWebSecurity

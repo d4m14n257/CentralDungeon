@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
  * theirs (#121). Answers 403.
  *
  * <p>Not to be used to hide a resource's existence: a table someone is vetoed from answers 404, not
- * this (decisiones.md, the table's life cycle).
+ * this (docs/adr #27).
  */
 public final class ForbiddenActionException extends ApiException {
 

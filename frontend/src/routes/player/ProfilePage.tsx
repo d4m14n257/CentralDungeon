@@ -8,7 +8,7 @@ import { ProfileCard, useMyProfile } from '@/features/users'
 
 /**
  * `/player/profile` — the reader's own profile: name, country, roles and aggregate attendance
- * (decisiones.md #248).
+ * (docs/adr #248).
  *
  * There is no "sin permiso" state here: nobody can be locked out of their own profile, which is
  * exactly what tells this screen apart from {@link import('./UserProfilePage').UserProfilePage}.

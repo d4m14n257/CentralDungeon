@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Removes the rows an e2e run creates. Without this every run left its tables and users behind, and
  * a development database full of "Mesa E2E ..." is not only noise: it is what made
- * registration-flow.spec.ts fail once the explorer had more tables than a page (decisiones.md #171, #172).
+ * registration-flow.spec.ts fail once the explorer had more tables than a page (docs/adr #171, #172).
  *
  * <p><b>The patterns are fixed here and nothing widens them.</b> The controller takes no input: game
  * tables whose name contains "E2E" or that an e2e user created, and users whose discordId starts

@@ -121,7 +121,7 @@
         </dependency>
 
         <dependency>
-            <!-- Allowlist HTML sanitizer for the rich text of #62 (decisiones.md #186). Hand-written
+            <!-- Allowlist HTML sanitizer for the rich text of #62 (docs/adr #186). Hand-written
                  escaping is how XSS gets shipped; this is the OWASP reference implementation and it
                  is the only thing between a table's description and the browser that renders it. -->
             <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>

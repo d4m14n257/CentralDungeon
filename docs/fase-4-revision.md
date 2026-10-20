@@ -109,7 +109,7 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 
 1. **Bug** — se corrige en F4, con su test de regresión.
 2. **Alcance de F5 o F6, anotado a propósito** — con la fase donde vive.
-3. **Decisión nueva** — va a `decisiones.md` con su número. Un hallazgo que cambia una regla no es un bug: es una decisión que nadie había tomado.
+3. **Decisión nueva** — va a una ADR nueva en `docs/adr/`, con su número (agente `escriba-adr`). Un hallazgo que cambia una regla no es un bug: es una decisión que nadie había tomado.
 
 ---
 

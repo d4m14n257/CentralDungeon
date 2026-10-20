@@ -66,7 +66,7 @@ public class GameTableController {
     }
 
     /**
-     * The public explorer. Newest first by default, which closes the gap decisiones.md #163 left
+     * The public explorer. Newest first by default, which closes the gap docs/adr #163 left
      * annotated: with no sort the rows came back in physical order - oldest first, since the ids are
      * time-ordered UUIDv7 - so a table published today could fall off the first page as the table
      * grew. The default lives here and not in the JPQL so an explicit ?sort= still wins.
@@ -469,7 +469,7 @@ public class GameTableController {
     }
 
     /**
-     * Only a table that was never public (decisiones.md #175). Pertenencia and state are checked in
+     * Only a table that was never public (docs/adr #175). Pertenencia and state are checked in
      * the service; 204 because there is nothing left to return.
      *
      * @param id          the table to delete

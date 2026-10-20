@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
  * The shape the three catalogs share by definition, not by coincidence: systems, tags and platforms
  * are the same row with a different table name (arquitectura §2.4, case 2).
  *
- * <p><b>{@code canonicalId} is flat and always depth 1</b> (decisiones.md #59): an alias points
+ * <p><b>{@code canonicalId} is flat and always depth 1</b> (docs/adr #59): an alias points
  * straight at its group's canonical entry, and a canonical entry has it {@code NULL}. There is no
  * tree, because under pure symmetric equivalence (#54) depth means nothing - the search resolves the
  * whole group from any member, and a second level would only be a cycle waiting to happen.

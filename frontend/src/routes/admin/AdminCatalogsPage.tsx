@@ -165,7 +165,7 @@ export function AdminCatalogsPage() {
   const debouncedQuery = useDebounce(query, 300)
   const createDialog = useDisclosure()
 
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   const { data, isPending, isLoadingError, error, refetch } = useAdminCatalog(kind, debouncedQuery, undefined, page, size, {
     groupsOnly: true,
   })

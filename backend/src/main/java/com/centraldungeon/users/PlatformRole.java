@@ -13,7 +13,7 @@ import java.util.Optional;
  * {@code roles.name}.
  *
  * Not to be confused with {@code masters.master_type} (Primary/Secondary), a different
- * "Owner" concept scoped to a single table (decisiones.md #67).
+ * "Owner" concept scoped to a single table (docs/adr #67).
  */
 public enum PlatformRole {
 

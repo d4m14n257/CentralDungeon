@@ -24,7 +24,7 @@ interface AssignMastersDialogProps {
  * (arquitectura §3.1.5). It is the same reason `MasterTableStatusTab` sits next to it.
  *
  * **The order is the role**: the first one added is the Primary and the rest are Secondary, and
- * tapping a chip promotes it (decisiones.md #165). A table has exactly one Primary
+ * tapping a chip promotes it (docs/adr #165). A table has exactly one Primary
  * (arquitectura §4, #73), so promoting somebody demotes whoever held it — which is precisely what
  * moving the chip to the front does. No form and no zod: there is no field to validate, only a list
  * with an order.

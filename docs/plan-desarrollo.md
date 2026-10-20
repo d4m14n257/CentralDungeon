@@ -2,7 +2,7 @@
 
 > En qué orden se construye, qué se rescata del legacy y cuándo una fase está terminada.
 >
-> El *qué* del schema está en `modelo-datos.md`, el *cómo* del código en `arquitectura.md`, las pantallas en `frontend-diseno.md` y el *por qué* de todo en `decisiones.md`.
+> El *qué* del schema está en `modelo-datos.md`, el *cómo* del código en `arquitectura.md`, las pantallas en `frontend-diseno.md` y el *por qué* de todo en las ADRs de `docs/adr/`.
 
 ## 1. Criterio
 

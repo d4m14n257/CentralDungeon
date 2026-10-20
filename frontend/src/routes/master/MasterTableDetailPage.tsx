@@ -26,7 +26,7 @@ export function MasterTableDetailPage() {
   const tableId = id ?? ''
   // useManagedTable and not useGameTable: the backend checks membership before reading anything and
   // answers 403 with no body when the actor does not run this table - useGameTable is the public
-  // detail any player reads on /player/tables/:id (decisiones.md #152).
+  // detail any player reads on /player/tables/:id (docs/adr #152).
   const { data: table, isPending, error, isLoadingError } = useManagedTable(tableId)
   const { data: me } = useMe()
   const personDialog = useDisclosure<string>()

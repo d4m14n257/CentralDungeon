@@ -31,7 +31,7 @@ const OUTCOME_TONE: Record<string, { tone: StatusTone; labelKey: string }> = {
 export function NotificationsPage() {
   const { t } = useTranslation('notifications')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (docs/decisiones.md #150).
+  // loaded (docs/adr #150).
   const { data, isPending, isLoadingError, refetch } = useNotifications()
   const markAllAsRead = useMarkAllAsRead()
   const handleClick = useNotificationClick()

@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext, type Page } from '@playwright/tes
 import { acceptReview } from './helpers/review'
 
 /**
- * The help as dialogs raised in place (decisiones.md #231), which replaced the `/help` routes of
+ * The help as dialogs raised in place (docs/adr #231), which replaced the `/help` routes of
  * #167 and #168.
  *
  * It is tested here and not in a component test because what the change is *for* only exists in a

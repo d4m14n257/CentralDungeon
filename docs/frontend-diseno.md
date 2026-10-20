@@ -2,9 +2,9 @@
 
 > Define **qué pantallas existen y cómo se navega entre ellas**. Con qué piezas se construyen está en la skill `diseno`.
 >
-> El *cómo se escribe el código* está en la skill `arquitectura` §3, y **el sistema visual —tokens, componentes y patrones— en la skill `diseno`** (#273). El *por qué* de cada decisión, en `decisiones.md`. Acá quedan los principios, la navegación, el sitemap y los wireframes.
+> El *cómo se escribe el código* está en la skill `arquitectura` §3, y **el sistema visual —tokens, componentes y patrones— en la skill `diseno`** (#273). El *por qué* de cada decisión, en las ADRs de `docs/adr/`. Acá quedan los principios, la navegación, el sitemap y los wireframes.
 >
-> El diseño visual —tokens y componentes— vive en el design system de **Claude Design** (`decisiones.md` #130). Acá están las pantallas, la navegación y el inventario de piezas; los valores concretos de color, tipografía y espaciado se deciden allá y se transcriben al `@theme` (#118).
+> El diseño visual —tokens y componentes— vive en el design system de **Claude Design** (#130). Acá están las pantallas, la navegación y el inventario de piezas; los valores concretos de color, tipografía y espaciado se deciden allá y se transcriben al `@theme` (#118).
 
 ## 1. Principios
 

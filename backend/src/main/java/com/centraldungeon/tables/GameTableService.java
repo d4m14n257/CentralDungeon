@@ -51,8 +51,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The table's whole lifecycle, and the only place its nine states move (decisiones.md, the table's
- * life cycle). Every transition below follows the same three steps: lock the table, refuse if it is
+ * The table's whole lifecycle, and the only place its nine states move (docs/adr #27, the
+ * table life cycle). Every transition below follows the same three steps: lock the table, refuse if it is
  * not in the one status the transition starts from, and record the change with its author.
  *
  * <p>Two things it never leaves to the caller. <b>Pertenencia</b>: who may act on a concrete table
@@ -98,7 +98,7 @@ public class GameTableService {
             Arrays.stream(GameTableStatus.values()).filter(status -> status != GameTableStatus.Deleted).toList();
 
     /**
-     * A table can be deleted only while it was never public (decisiones.md #175): nobody saw it, so
+     * A table can be deleted only while it was never public (docs/adr #175): nobody saw it, so
      * there is no history worth keeping. Everything past this point is cancelled instead, because a
      * table other people looked at, applied to or played is a record of something that happened.
      */
@@ -139,7 +139,7 @@ public class GameTableService {
     private static final List<TableRegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
-    /** cancel() is the one transition with more than one valid "from" (docs/decisiones.md, the table's life cycle). */
+    /** cancel() is the one transition with more than one valid "from" (docs/adr #27). */
     private static final Set<GameTableStatus> CANCELABLE_STATUSES = Set.of(
             GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested,
             GameTableStatus.Opened, GameTableStatus.InProgress,
@@ -1012,7 +1012,7 @@ public class GameTableService {
     }
 
     /**
-     * /master/tables/:id - a different endpoint from getDetail on purpose (decisiones.md #152):
+     * /master/tables/:id - a different endpoint from getDetail on purpose (docs/adr #152):
      * getDetail is deliberately public (any player reads it to decide whether to apply), so
      * reusing it here would mean the full table body travels over the network before the
      * frontend ever gets to decide whether to render it. This one checks pertenencia first and

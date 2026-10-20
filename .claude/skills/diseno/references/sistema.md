@@ -1,6 +1,6 @@
 # 3. Sistema de diseño
 
-> Parte de la skill `diseno` (#273). Se movió desde `docs/frontend-diseno.md` §3 y **conserva su numeración**, que es la que citan el código y `decisiones.md`. Los valores concretos —colores, tipografía, espaciados, radios— no se escriben acá: salen de `design/build.py` (#130).
+> Parte de la skill `diseno` (#273). Se movió desde `docs/frontend-diseno.md` §3 y **conserva su numeración**, que es la que citan el código y las ADRs. Los valores concretos —colores, tipografía, espaciados, radios— no se escriben acá: salen de `design/build.py` (#130).
 
 Tokens en el bloque `@theme` de `src/styles/globals.css`. Tailwind 4 no tiene `tailwind.config.ts`.
 

@@ -57,7 +57,7 @@ public class UserController {
      * User picker of /admin/tables (assigning masters). Admin-only for now: the only screen that
      * needs it is an admin one, and a user directory is not something to open wider than the
      * current consumer needs. When a Primary master gets to add a Secondary from /master/tables/:id,
-     * widening this is an explicit decision, not a side effect (decisiones.md #165).
+     * widening this is an explicit decision, not a side effect (docs/adr #165).
      *
      * <p>The query syntax lives in SearchQueryParser; the fields it accepts, in UserSearchField.
      *
@@ -75,7 +75,7 @@ public class UserController {
     }
 
     /**
-     * Onboarding is a blocking step the first time: name and country (decisiones.md #134).
+     * Onboarding is a blocking step the first time: name and country (docs/adr #134).
      *
      * @param request     the name and country they chose
      * @param currentUser the actor, from the token. This endpoint can only edit the caller's own

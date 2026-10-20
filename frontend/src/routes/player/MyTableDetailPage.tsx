@@ -23,7 +23,7 @@ import { ApiError } from '@/types/api'
  */
 function MySessionsSection({ tableId }: { tableId: string }) {
   const { t } = useTranslation('tables')
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   const { data, isPending, error, isLoadingError, refetch } = useMySessions(tableId)
 
   if (isPending) {

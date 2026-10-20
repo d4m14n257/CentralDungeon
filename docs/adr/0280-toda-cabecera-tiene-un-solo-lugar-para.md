@@ -1,0 +1,18 @@
+---
+adr: 280
+estado: Aceptada
+fecha: 2026-09-30
+modifica: [273]
+---
+
+# ADR-0280: Toda cabecera tiene un solo lugar para cada cosa: «Volver» arriba del título; «Cómo funciona» y la acción principal a la derecha, en ese orden
+
+> Precisa #273; y un admin **crea** valores de catálogo, ya aceptados
+
+## Decisión
+
+`PageHeader` deja de aceptar `actions` como nodo libre y pasa a recibir **objetos con nombre**: `back {to, label}` (enlace chico arriba del título), `help` (el id de la sección, que pinta `HelpButton`: botón fantasma con ícono y el texto fijo «Cómo funciona»), `action {label, to | onClick, disabled}` (**la** acción principal: violeta, tamaño normal, contra el borde) y `badge` (junto al título, el estado de una mesa). La fila **no hace `wrap`**: desde `sm` la descripción se ajusta y los botones quedan a la derecha; debajo, bajan bajo el título. Lo mismo en chico para secciones y pestañas: **`SectionHeader`** (`h2.section-label`, «Cómo funciona» chico, acciones de la sección). **Dos clases de enlace de ayuda**: el de pantalla o sección («cómo funciona esto») va a la cabecera; el que vive dentro de una frase junto a un control («para pausar… cómo pausar») sigue siendo `HelpLink` y se queda donde está. Se migraron las 13 cabeceras con `actions`, las ayudas que estaban al pie (`/master`, las pestañas Archivos y Peticiones del master, archivos de la mesa del jugador, `/player/profile`), debajo del título (`/player/history`) o sueltas junto a un `h2` (sesiones, asistencia, peticiones de la mesa: `TableTasksSection` recibe `renderHelp` y lo pone en su `SectionHeader`), y se sumó la de pantalla donde había sección de ayuda y no enlace (mis mesas, mis postulaciones, explorar, soporte, notificaciones, crear y editar mesa). `/admin/tables` tenía dos enlaces en la cabecera y queda uno, `admins.reviewing`: el de asignar masters ya vive en su diálogo. Se borraron las 14 claves de texto de los enlaces viejos, en `es` y `en`. **Crear valor**: `POST /api/v1/admin/catalogs/{type}` (`AbstractCatalogService.create`) crea el valor **`Accepted` y canónico**; `/admin/catalogs` gana descripción, «Cómo funciona» y «Crear valor» (`CreateCatalogValueDialog`, en el catálogo de la pestaña abierta)
+
+## Por qué
+
+Lo pidió el usuario revisando las vistas de admin: los botones estaban en distintos lados y se veía mal. El relevamiento lo confirmó: la acción principal salía de cinco formas —violeta normal en archivos, chica con borde detrás de dos enlaces en mesas, violeta chica en las mesas del master, gris en el detalle, texto fantasma en notificaciones— y «Cómo funciona» vivía arriba a la derecha, debajo del título, al pie de la página o en ningún lado. **La causa era la forma del componente**: `actions: ReactNode` dejaba que cada pantalla metiera lo que tenía, así que #273 unificó el título y no los botones. Con objetos en vez de nodos no hay forma de volver a armarlo distinto. **«Volver» arriba y no enfrente**, porque a la derecha ocupaba el lugar de la acción y se leía como tal. La forma la eligió el usuario entre dos (la otra ponía un «?» junto al título). **El valor que crea un admin nace aceptado** —también elección del usuario—: el que acepta es él, así que una propuesta esperando que él mismo la apruebe sería un paso sin nadie del otro lado; el endpoint de proponer de `/systems`, `/tags` y `/platforms` sigue siendo el de los masters. **Un bug encontrado en el camino**: la clave `create.back` ya era el «Atrás» del asistente y se pisó con «Volver a mis mesas»; lo detectó el e2e de cambios sin guardar y quedó en `create.backToTables`. Quedaron **fuera** las cabeceras de detalle con `.page-title` propia (detalle público de una mesa, mi mesa como jugador) y la ayuda de Mis archivos y Mi horario; **las cerró #281**

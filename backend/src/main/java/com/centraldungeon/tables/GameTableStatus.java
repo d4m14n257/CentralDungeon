@@ -10,7 +10,7 @@ import java.util.Optional;
  * plan-desarrollo.md) and a master can ask for a pause instead of an admin pausing directly.
  *
  * <p><b>Deleted is not a lifecycle state.</b> It is the soft-delete marker of #25, paired with
- * deleted_at, and only a table that was never public can reach it (decisiones.md #175): every
+ * deleted_at, and only a table that was never public can reach it (docs/adr #175): every
  * other ending is Canceled, which is history and stays visible. Nothing transitions out of Deleted,
  * and every read filters it out.
  */

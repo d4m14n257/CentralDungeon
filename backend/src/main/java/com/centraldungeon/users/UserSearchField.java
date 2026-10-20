@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The fields a user search box accepts behind a {@code /prefix} (decisiones.md #164). The wire name
+ * The fields a user search box accepts behind a {@code /prefix} (docs/adr #164). The wire name
  * is what the person types and what the chip shows; the attribute is the JPA path it maps to.
  *
  * <p>Typing nothing in particular searches by DISCORD_NAME <em>or</em> USER_NAME: someone looking

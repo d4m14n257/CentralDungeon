@@ -111,7 +111,7 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row', only
   const assignDialog = useDisclosure()
   const pauseDialog = useDisclosure()
 
-  // A table with no master was never public: it is deleted, not cancelled (decisiones.md #175).
+  // A table with no master was never public: it is deleted, not cancelled (docs/adr #175).
   async function handleDelete() {
     const confirmed = await confirm({ title: t('tables.deleteConfirmTitle'), description: t('tables.deleteConfirmDescription') })
     if (!confirmed) return

@@ -1,13 +1,13 @@
 # 2.4 Interfaces y clases abstractas: qué se comparte y qué no
 
-> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y `decisiones.md`.
+> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 Hay tres formas de tratar código parecido entre features, y elegir mal cuesta caro en las dos direcciones — duplicar una regla de negocio genera bugs divergentes, y abstraer dos cosas que solo se parecían acopla dominios que después hay que separar a la fuerza.
 
 **1. Interfaz — cuando hay, o va a haber, más de una implementación real.**
 
-Es el caso de `StorageService`: hoy escribe en disco local, mañana puede escribir en S3, y el resto del backend no debería enterarse (`decisiones.md` #15). La interfaz vive en `common/<área>/`, la implementación al lado, y se inyecta siempre la interfaz.
+Es el caso de `StorageService`: hoy escribe en disco local, mañana puede escribir en S3, y el resto del backend no debería enterarse (#15). La interfaz vive en `common/<área>/`, la implementación al lado, y se inyecta siempre la interfaz.
 
 Lo que **no** se hace: `UserServiceImpl implements UserService` con una sola implementación y sin intención de tener otra. No aporta nada, duplica la navegación entre archivos y no hace falta para testear — Mockito mockea clases concretas sin problema.
 

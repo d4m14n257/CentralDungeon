@@ -58,6 +58,35 @@ Son skills propias, escritas acá, y **se versionan con el repo**. Guardan cómo
 | `diseno` | Antes de escribir el JSX de una pantalla o componente, o de agregar un estilo: de dónde sale cada valor, **las clases y componentes de patrón** que una pantalla no vuelve a escribir (§5.c, #273), el inventario, las listas de trabajo, los cuatro estados y el responsive (§3, §5, §5.b). |
 | `entorno-local` | Antes de correr o verificar algo contra el backend, el frontend, Playwright o Testcontainers: el backend del usuario y no uno paralelo, nunca `mvn clean` con la JVM viva, el autobuild de JDT, las variables de colima. |
 
+## Rules (`.claude/rules/`)
+
+Versionadas desde #290. Una rule es el resumen de una regla dura que Claude Code carga **solo al tocar un archivo de su `paths:`**; el detalle y el porqué siguen en la skill, a la que la rule remite. Las reglas duras conservan su número, y el índice de las 19 está en `CLAUDE.md`.
+
+| Rule | Se carga al tocar | Qué impone |
+|---|---|---|
+| `backend.md` | `backend/**` | Reglas duras 1, 2, 3, 4, 7, 10, 14 y la mitad del backend de la 18 |
+| `frontend.md` | `frontend/**` | 6, 7, 11, 16, 18 |
+| `migraciones.md` | `backend/src/main/resources/db/migration/**` | 8, 9, 10: migración nueva, nunca editar una aplicada |
+| `documentacion-codigo.md` | `.java` de `backend/src`, `.ts`/`.tsx` de `frontend/src` y `frontend/e2e` | 19: Javadoc y JSDoc |
+| `tokens.md` | `design/**`, `frontend/src/styles/**` | `design/build.py` como fuente y cómo se transcribe |
+| `stack.md` | `backend/pom.xml`, `frontend/package.json`, `docs/arquitectura.md` | 15: una major es una ADR |
+| `ecc/common.md`, `ecc/integracion.md` | siempre | Qué de ECC aplica aquí y qué choca con el proyecto |
+| `ecc/java.md`, `ecc/typescript.md` | `**/*.java`, `**/*.ts(x)` | Lo que ECC suma a §2 y §3 sin contradecirlas |
+
+## Agentes (`.claude/agents/`)
+
+Versionados desde #291. Cada uno **precarga entera** la skill del repo que le toca (campo `skills:`), así que arranca sabiendo lo que un agente genérico de ECC no sabe: Boot 4, el rol que no es la pertenencia, el triaje de F4. Las skills de ECC no se precargan; un agente las pide con la herramienta Skill cuando le sirven como lista de control.
+
+| Agente | Precarga | Edita | Cuándo |
+|---|---|---|---|
+| `revisor-backend` | `arquitectura`, `entorno-local` | No | Después de cambiar Java, o para revisar una feature del backend |
+| `revisor-frontend` | `arquitectura`, `diseno` | No | Después de cambiar una pantalla, un componente o un hook |
+| `revisor-seguridad` | `arquitectura` | No | Endpoints nuevos, autorización, archivos, F4.4 |
+| `auditor-conocimiento` | las tres | No | Mejora continua: skills, rules, ADRs y docs contra el código |
+| `escriba-adr` | `arquitectura` | Sí, `docs/adr/` y la regla afectada | Al cerrar una decisión |
+
+Los revisores devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3; ninguno hace commit. Se lanzan cuando el usuario o la tarea lo piden, no por iniciativa propia. Qué agente de ECC sigue sirviendo y para qué, en `.claude/rules/ecc/integracion.md`.
+
 ## Skills externas (globales, `~/.claude/skills/`)
 
 Instaladas **fuera del repo**, a nivel de usuario. No se versionan y no las cubre la regla de arriba: no siguen las reglas de `arquitectura` porque no escriben código del proyecto — producen artefactos. Por eso viven en el directorio global y no en `.claude/skills/`, donde la frase «son skills propias» dejaría de ser cierta.

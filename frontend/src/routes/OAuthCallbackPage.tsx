@@ -39,7 +39,7 @@ function CallbackCard({ tone, title, children }: { tone?: 'pending' | 'canceled'
 }
 
 /**
- * Backend redirect target after the OAuth2 handshake (decisiones.md #38, #125). A full page
+ * Backend redirect target after the OAuth2 handshake (docs/adr #38, #125). A full page
  * reload, not an SPA navigation: AuthProvider remounts and picks up the refresh cookie the
  * backend just set - no chicken-and-egg 401 needed to discover the session.
  */

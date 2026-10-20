@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * The JWT affirms identity, not authorization (decisiones.md #122): roles and status are
+ * The JWT affirms identity, not authorization (docs/adr #122): roles and status are
  * re-read from the database (Caffeine-cached, see application.yml) on every request, so a
  * blocked user or a revoked role takes effect without waiting for the token to expire.
  */

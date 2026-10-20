@@ -1,0 +1,18 @@
+---
+adr: 275
+estado: Aceptada
+fecha: 2026-09-29
+modifica: [55, 179, 185]
+---
+
+# ADR-0275: Los catálogos se administran como grupos, y cada grupo se abre como un lienzo de nodos
+
+> Precisa #55, #179 y #185; agrega un patrón a la skill `diseno`
+
+## Decisión
+
+`/admin/catalogs` pasa a listar **un grupo por fila** (`?groupsOnly=true`): el canónico, o una propuesta que nadie clasificó y que es un grupo de uno hasta que alguien lo haga, con cuántos equivalentes tiene (`aliasCount`). Buscar encuentra un grupo por el nombre de **cualquiera** de sus miembros (una subquery `EXISTS` sobre los alias, así la paginación sigue en SQL). Desde la fila se aprueba una propuesta como grupo nuevo o se rechaza, y el nombre abre **`/admin/catalogs/:kind/:id`**: el grupo como una estrella —el principal al centro con borde de marca, fondo `raised` y **una corona con la palabra «Principal»**, para que quién encabeza se lea sin depender del borde (pedido del usuario al probarlo), los equivalentes alrededor con una arista recta de centro a centro— y **las propuestas `Created` flotando a la izquierda, con borde punteado, hasta que se las conecta**. Conectar un valor al principal de un grupo es clasificarlo: una propuesta se acepta ahí, un equivalente se muda (#276) y un principal fusiona su grupo entero, previa confirmación; quitar una arista lo separa. Qué significa cada conexión lo decide una función pura (`connectionIntent`), que `isValidConnection` usa para **no dejar dibujar** lo que el servidor rechazaría. Nada se pinta por adelantado: la mutación corre, se invalida la rama `catalogs` y el lienzo se redibuja desde el servidor. Otros grupos se traen desde el panel lateral y quedan en `?with=`. **Todo gesto tiene su entrada en el menú «…» del nodo**, y debajo de `md` el lienzo es una lista con ese menú. La librería es **React Flow (`@xyflow/react` 12.12.0, MIT)**, cargada con `lazy` en su ruta, **sin motor de layout**: una estrella de profundidad 1 se ubica con `radialLayout`. Las piezas genéricas viven en `components/graph/` (`GraphCanvas`, `GraphNode`, `GraphStraightEdge`, `GraphTray`) con las clases `.graph-canvas`, `.graph-tray` y `.graph-node*`, que apuntan las variables `--xy-*` de la librería a tokens; `design/build.py` las dibuja y mide sus gráficos a **3:1** (WCAG 1.4.11). El patrón queda en la skill `diseno` §5 como **la otra forma de trabajar una lista**: para cuando lo que se edita son relaciones, no datos
+
+## Por qué
+
+Pedido del usuario revisando `/admin/catalogs` en F4: la tabla mezclaba principales y equivalentes, y entender un grupo obligaba a leer la columna «Grupo» fila por fila; cada movimiento era un diálogo que nombraba por texto dos cosas que no se veían juntas. Pidió una vista por nodos —«como los flows de n8n»— con los nuevos flotando hasta unirlos, y buscar algo hecho en lugar de construirlo. **Se consideró y descartó una taxonomía real** (`D&D` → `D&D 5e` → `D&D 5e 2024`): reabre #59 y el usuario confirmó que lo que quiere es ver el modelo que ya existe. React Flow y no Cytoscape, D3 o un canvas propio: es el estándar en React para editar grafos con conexiones —no solo mostrarlos—, trae `onConnect`/`isValidConnection`/`onBeforeDelete`, y su propia UI se construye sobre shadcn y Tailwind 4, que es este stack. Sin dagre ni ELK porque resuelven grafos por capas de cualquier profundidad, y acá no hay más de una. Arista recta de centro a centro porque las de la librería van de handle a handle, y en una estrella un miembro a la derecha de su cabeza daba la vuelta y la cruzaba. El patrón va a `diseno` por pedido explícito: que quede como otra opción para casos parecidos, no como una pantalla suelta

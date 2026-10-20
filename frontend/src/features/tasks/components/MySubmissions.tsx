@@ -31,7 +31,7 @@ export interface MySubmissionsProps {
  */
 export function MySubmissions({ taskId, renderFiles }: MySubmissionsProps) {
   const { t, i18n } = useTranslation('tasks')
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   const { data, isPending, isLoadingError, refetch } = useMySubmissions(taskId)
   const timeZone = browserTimeZone()
 

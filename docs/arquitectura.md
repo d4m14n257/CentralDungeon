@@ -1,8 +1,8 @@
 # Arquitectura
 
-> **Qué queda acá y qué se mudó.** Desde F4.0, las reglas de cómo se escribe el código viven en **skills del repo**, que Claude carga al trabajar y cualquiera lee en `.claude/skills/`: `arquitectura` (§2 el backend, §3 el frontend) y, para lo visual, `diseno`. Conserva la numeración que tenían acá, que es la que citan el código y `decisiones.md`. Las reglas duras están en `CLAUDE.md`.
+> **Qué queda acá y qué se mudó.** Desde F4.0, las reglas de cómo se escribe el código viven en **skills del repo**, que Claude carga al trabajar y cualquiera lee en `.claude/skills/`: `arquitectura` (§2 el backend, §3 el frontend) y, para lo visual, `diseno`. Conserva la numeración que tenían acá, que es la que citan el código y las ADRs. Las reglas duras están en `CLAUDE.md`.
 >
-> Este documento conserva lo que no es una regla de escritura: el stack con sus versiones fijadas (§1), la deuda del proyecto viejo que las reglas evitan (§5) y el arranque y despliegue (§6). El modelo de datos es la skill `arquitectura` §4; el razonamiento detrás de cada decisión, `decisiones.md`.
+> Este documento conserva lo que no es una regla de escritura: el stack con sus versiones fijadas (§1), la deuda del proyecto viejo que las reglas evitan (§5) y el arranque y despliegue (§6). El modelo de datos es la skill `arquitectura` §4; el razonamiento detrás de cada decisión, las ADRs de `docs/adr/`.
 
 ## 1. Stack y versiones
 
@@ -42,7 +42,7 @@ Consecuencias de Boot 4 que este documento da por sentadas, y que conviene tener
 
 ### 1.2 Frontend
 
-TypeScript **se introduce** en el frontend: `legacy/frontend-next/` era JavaScript (`jsconfig.json`, archivos `.js`/`.jsx`). Lo que se conservaba era el TypeScript del backend Node. Es lo que hace posible la disciplina de tipos de §3.2 y lo que hace que un cambio de contrato en el backend se detecte compilando y no en producción (`decisiones.md` #20).
+TypeScript **se introduce** en el frontend: `legacy/frontend-next/` era JavaScript (`jsconfig.json`, archivos `.js`/`.jsx`). Lo que se conservaba era el TypeScript del backend Node. Es lo que hace posible la disciplina de tipos de §3.2 y lo que hace que un cambio de contrato en el backend se detecte compilando y no en producción (#20).
 
 | Área | Elección | Versión fijada |
 |---|---|---|
@@ -75,7 +75,7 @@ Consecuencias de estas versiones:
 - La fuente de verdad ejecutable es `pom.xml` / `package.json`; esta sección es el objetivo declarado. Si divergen, se corrige el que esté mal y se deja constancia acá.
 - Las versiones de las dependencias del backend **no se escriben a mano**: las gestiona el BOM de Spring Boot. Solo se fija explícitamente lo que el BOM no cubre (springdoc, MapStruct).
 - En el frontend, las dependencias del stack (las de la tabla) se instalan con versión exacta, sin `^`. El resto puede usar el default de npm. El lockfile se commitea siempre.
-- **Subir una major de cualquier cosa de estas tablas es una decisión**: se registra en `decisiones.md` y se actualiza esta sección en el mismo commit. Subir un minor o un patch no requiere nada.
+- **Subir una major de cualquier cosa de estas tablas es una decisión**: se registra como ADR nueva en `docs/adr/` y se actualiza esta sección en el mismo commit. Subir un minor o un patch no requiere nada.
 
 
 ## 2 y 3. Backend y frontend — en las skills
@@ -131,7 +131,7 @@ Spring Boot, a diferencia de Vite, no lee `.env` de forma nativa: `backend/pom.x
 
 ### 6.2 Despliegue en producción
 
-**Una VM Linux genérica, sin atarse a un proveedor** (`decisiones.md` #142). En esta etapa se prueba en una instancia EC2 propia, pero el cliente muy probablemente corre el sistema final en una instancia de Oracle Cloud — así que nada de esto puede depender de un servicio propietario de ninguno de los dos. Para el backend, EC2 y Oracle Compute son la misma cosa: una máquina Linux con Docker, donde corre el jar y, al lado, MySQL.
+**Una VM Linux genérica, sin atarse a un proveedor** (#142). En esta etapa se prueba en una instancia EC2 propia, pero el cliente muy probablemente corre el sistema final en una instancia de Oracle Cloud — así que nada de esto puede depender de un servicio propietario de ninguno de los dos. Para el backend, EC2 y Oracle Compute son la misma cosa: una máquina Linux con Docker, donde corre el jar y, al lado, MySQL.
 
 **Perfil `prod`** (`application-prod.yml`): la misma variable `${DB_URL}` que ya usa `dev` (con su default a `localhost:3306` para no pedir nada en local), pero en `prod` **sin default** — si falta, el arranque falla en vez de conectarse silenciosamente a algo que no es. Mantiene agnóstico si MySQL termina corriendo en la misma instancia o en otro lado, y ambos perfiles comparten el mismo nombre de variable en vez de inventar uno distinto por entorno.
 

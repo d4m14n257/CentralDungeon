@@ -31,7 +31,7 @@ export interface CompleteOnboardingInput {
 
 /**
  * Mirror of ProfileResponse — the upper half of a profile screen, for both `/player/profile` and
- * `/player/users/:id` (decisiones.md #248). Not derived from `User` with a utility type even though
+ * `/player/users/:id` (docs/adr #248). Not derived from `User` with a utility type even though
  * `id`/`name`/`country`/`roles` line up: the two are answers to different questions with different
  * visibility rules (#41, #44, #47, #249) and `User` is only ever the caller describing themselves
  * (arquitectura §2.3) — a `Pick<User, …>` here would quietly imply this shape is also

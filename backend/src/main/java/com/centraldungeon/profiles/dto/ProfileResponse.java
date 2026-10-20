@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
  * Somebody's public profile, as read under the five visibility rules of arquitectura §4.5
  * ("Visibilidad de perfiles": #41, #44, #45, #47).
  *
- * <p><b>No {@code karma}, no {@code comments} - not even {@code null}</b> (decisiones.md #248): both
+ * <p><b>No {@code karma}, no {@code comments} - not even {@code null}</b> (docs/adr #248): both
  * are F5. A field that promises a number the frontend has no way to fill teaches the first component
  * that reads it to ask for one, and shows a gap where a number belongs instead.
  *

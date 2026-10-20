@@ -12,7 +12,7 @@ import { ApiError } from '@/types/api'
  * #47.
  *
  * The backend answers **404** both when the id never existed and when the two-week window of #44
- * has already closed (decisiones.md #249) — on purpose, so the two cases are indistinguishable on
+ * has already closed (docs/adr #249) — on purpose, so the two cases are indistinguishable on
  * the wire and probing ids cannot tell a real account from an expired relationship. This screen
  * still softens the copy: "you can no longer view this profile" tells the truth to whoever once had
  * a relationship with that person, and reveals nothing to anybody else that a plain 404 would not

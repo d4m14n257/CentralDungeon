@@ -81,7 +81,7 @@ export function TableDetailPage() {
   const tableId = id ?? ''
   // isLoadingError, not isError: once the table has loaded, a background refetch that fails must not
   // replace the screen with an error - it would take away something that was working a second ago
-  // (docs/decisiones.md #150).
+  // (docs/adr #150).
   const { data: table, isPending, isLoadingError } = useGameTable(tableId)
   const { data: me } = useMe()
   const { data: myApplications } = useMyApplications()

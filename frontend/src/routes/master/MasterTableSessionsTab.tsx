@@ -176,7 +176,7 @@ function SessionRow({ session, tableId, readOnly }: { session: TableSession; tab
 
 function SessionsPanel({ tableId, status, readOnly }: OutletContext) {
   const { t } = useTranslation('master')
-  // isLoadingError, not isError: see docs/decisiones.md #150.
+  // isLoadingError, not isError: see docs/adr #150.
   const { data, isPending, isLoadingError, refetch } = useTableSessions(tableId)
 
   if (isPending) {

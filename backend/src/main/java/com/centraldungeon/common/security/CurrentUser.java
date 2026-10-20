@@ -4,7 +4,7 @@ import java.util.Set;
 
 /**
  * The actor of the current request, resolved from the JWT - never from a path variable
- * (decisiones.md #121).
+ * (docs/adr #121).
  *
  * <p>The roles in here were read from the database by {@code JwtAuthenticationFilter} during this
  * request, not lifted from the token's claims: the JWT asserts identity, not authorization (#122).
