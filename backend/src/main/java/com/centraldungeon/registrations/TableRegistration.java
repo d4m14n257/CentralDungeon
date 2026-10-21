@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -44,6 +45,10 @@ public class TableRegistration extends BaseEntity {
     /** The applicant's note to the master. Optional - karma and profile already say a lot. */
     @Column(columnDefinition = "LONGTEXT")
     private @Nullable String description;
+
+    /** When the row was logically deleted, or null while it is live (ADR-03 §7). */
+    @Column(name = "deleted_at")
+    private @Nullable LocalDateTime deletedAt;
 
     /** Required by JPA. */
     protected TableRegistration() {
@@ -106,5 +111,23 @@ public class TableRegistration extends BaseEntity {
      */
     public @Nullable String getDescription() {
         return description;
+    }
+
+    /**
+     * Returns when the row was logically deleted.
+     *
+     * @return the timestamp, or null while it is live
+     */
+    public @Nullable LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    /**
+     * Stamps the logical delete. Written together with {@link #setStatus}, never alone (ADR-03 §7).
+     *
+     * @param deletedAt when the row was deleted
+     */
+    public void setDeletedAt(@Nullable LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

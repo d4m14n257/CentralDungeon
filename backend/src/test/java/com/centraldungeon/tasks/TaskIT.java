@@ -19,6 +19,7 @@ import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.GameTable;
+import com.centraldungeon.tables.GameTableStatus;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tasks.dto.ApplicableTaskResponse;
@@ -119,7 +120,10 @@ class TaskIT {
         master = userRepository.save(new User(randomDiscordId(), "Task Master"));
         firstPlayer = userRepository.save(new User(randomDiscordId(), "Primera jugadora"));
         secondPlayer = userRepository.save(new User(randomDiscordId(), "Segundo jugador"));
-        table = gameTableRepository.save(new GameTable("Mesa de las peticiones", master));
+        GameTable newTable = new GameTable("Mesa de las peticiones", master);
+        // Opened, where a table has players at all: a Draft is a 404 to anybody outside it (ADR-07 §1).
+        newTable.setStatus(GameTableStatus.Opened);
+        table = gameTableRepository.save(newTable);
         masterService.createPrimary(table, master);
         enroll(firstPlayer, TableRegistrationStatus.Player);
         enroll(secondPlayer, TableRegistrationStatus.Player);

@@ -1,7 +1,18 @@
 package com.centraldungeon.auth;
 
 import com.centraldungeon.auth.dto.TestCleanupResponse;
+import com.centraldungeon.users.PlatformRole;
+import com.centraldungeon.users.Role;
+import com.centraldungeon.users.RoleRepository;
+import com.centraldungeon.users.User;
+import com.centraldungeon.users.UserRole;
+import com.centraldungeon.users.UserRoleRepository;
+import com.centraldungeon.users.UserRoleStatus;
+import com.centraldungeon.users.UserService;
 import jakarta.persistence.EntityManager;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,11 +55,70 @@ public class TestDataService {
     /** Bulk JPQL deletes, which is the one job that does not fit a repository. */
     private final EntityManager entityManager;
 
+    /** Resolves the roles the test login can grant. */
+    private final RoleRepository roleRepository;
+
+    /** Grants and revokes them. */
+    private final UserRoleRepository userRoleRepository;
+
+    /** Evicts the cached roles once they change (ADR-05 §3). */
+    private final UserService userService;
+
     /**
-     * @param entityManager used for the bulk deletes this cleanup is made of
+     * @param entityManager      used for the bulk deletes this cleanup is made of
+     * @param roleRepository     resolves the roles the test login grants
+     * @param userRoleRepository grants and revokes them
+     * @param userService        evicts the cached roles after a change
      */
-    public TestDataService(EntityManager entityManager) {
+    public TestDataService(
+            EntityManager entityManager,
+            RoleRepository roleRepository,
+            UserRoleRepository userRoleRepository,
+            UserService userService) {
         this.entityManager = entityManager;
+        this.roleRepository = roleRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.userService = userService;
+    }
+
+    /**
+     * Leaves the person holding the wanted roles and nothing else - the test login's fixture.
+     *
+     * <p>Revoking marks the row rather than deleting it (ADR-03 §7), and restoring flips that mark back
+     * instead of inserting: {@code (user_id, role_id)} is the primary key, so a second row for the
+     * same pair is not a thing that can exist. The cache is evicted at the end because otherwise the
+     * roles just taken away stay live for the rest of the TTL (ADR-05 §3) - long enough for the reload
+     * that follows the login to still read them.
+     *
+     * @param user   the actor being logged in
+     * @param wanted the exact roles they must end up with
+     */
+    @Transactional
+    public void setRolesExactly(User user, Set<PlatformRole> wanted) {
+        Set<String> wantedNames = wanted.stream().map(PlatformRole::roleName).collect(Collectors.toSet());
+        Set<String> restored = new HashSet<>();
+
+        for (UserRole grant : userRoleRepository.findAllGrants(user.getId())) {
+            String name = grant.getRole().getName();
+            UserRoleStatus target = wantedNames.contains(name) ? UserRoleStatus.Allowed : UserRoleStatus.Deleted;
+            if (grant.getStatus() != target) {
+                if (target == UserRoleStatus.Allowed) {
+                    grant.restore();
+                } else {
+                    grant.revoke();
+                }
+                userRoleRepository.save(grant);
+            }
+            restored.add(name);
+        }
+        for (PlatformRole role : wanted) {
+            if (!restored.contains(role.roleName())) {
+                Role platformRole = roleRepository.findByName(role.roleName())
+                        .orElseThrow(() -> new IllegalStateException(role.roleName() + " role is missing - check V2__seed.sql"));
+                userRoleRepository.save(new UserRole(user, platformRole));
+            }
+        }
+        userService.evictAuthCache(user.getId());
     }
 
     /**
@@ -120,6 +190,11 @@ public class TestDataService {
         delete("delete from TableTask task2 where task2.gameTable.id in (" + E2E_TABLES + ")");
         int gameTables =
                 delete("delete from GameTable gt where gt.name like :tableName or gt.createdBy.id in (" + E2E_USERS + ")");
+        // The eleventh: an e2e admin who reserves a real table in the queue (ADR-16 §5) leaves its
+        // claimed_by pointing at a user deleted below. The table is not ours, so it stays and only
+        // lets go of the reservation, the same way the tag above lets go of its canonical.
+        update("update GameTable gt2 set gt2.claimedBy = null, gt2.claimedAt = null where gt2.claimedBy.id in ("
+                + E2E_USERS + ")");
         // The blobs on disk are not touched. They are in a temporary directory under the test profile
         // (application-test.yml) and deleting bytes is F5's, never a side effect of a cleanup (ADR-03 §7, ADR-13 §8).
         // And the sixth: a file's cajones (ADR-14 §4) point at `files` and nothing else, so they go

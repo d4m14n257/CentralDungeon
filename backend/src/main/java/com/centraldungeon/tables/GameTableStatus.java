@@ -66,6 +66,19 @@ public enum GameTableStatus {
     Deleted;
 
     /**
+     * Whether a table in this status has never been public: nobody but its masters and the admins has
+     * seen it (ADR-07 §1, §6). None of these statuses comes back once a table opens.
+     *
+     * <p>It draws two lines with one answer: such a table can still be deleted instead of cancelled,
+     * and its public detail is a 404 for everybody else - the same 404 as a deleted one (ADR-03 §7).
+     *
+     * @return true for Draft, Unassigned, Preparation and ChangesRequested
+     */
+    public boolean wasNeverPublic() {
+        return this == Draft || this == Unassigned || this == Preparation || this == ChangesRequested;
+    }
+
+    /**
      * Looks a status up by name, forgivingly - this is the search box's door, not a body's.
      *
      * <p>Added with {@code /table_status} (F3.3). The same shape and the same contract

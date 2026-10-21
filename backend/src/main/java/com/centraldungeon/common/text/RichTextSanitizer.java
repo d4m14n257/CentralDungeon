@@ -30,12 +30,10 @@ public class RichTextSanitizer {
      */
     private static final PolicyFactory POLICY = new HtmlPolicyBuilder()
             .allowElements("p", "br", "strong", "em", "u", "s", "code", "pre", "blockquote", "h1", "h2", "h3", "ul", "ol", "li", "a")
-            // http(s) links, plus the standard protocols (mailto) that allowStandardUrlProtocols adds;
-            // every link is forced to carry rel=nofollow.
+            // http(s) links and nothing else - not even mailto (ADR-05 §6); every link carries rel=nofollow.
             .allowUrlProtocols("http", "https")
             .allowAttributes("href").onElements("a")
             .requireRelNofollowOnLinks()
-            .allowStandardUrlProtocols()
             .toFactory();
 
     /**

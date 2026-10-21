@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -35,8 +37,34 @@ class TableVisibilityServiceTest {
     @Mock
     private TableRegistrationRepository registrationRepository;
 
+    @Mock
+    private MasterService masterService;
+
     private TableVisibilityService service() {
-        return new TableVisibilityService(gameTableRepository, registrationRepository);
+        return new TableVisibilityService(gameTableRepository, registrationRepository, masterService);
+    }
+
+    /**
+     * A table nobody was shown yet is the same 404 as a deleted one for whoever is outside it (ADR-07 §1):
+     * having its id is not being let in.
+     */
+    @ParameterizedTest
+    @EnumSource(value = GameTableStatus.class, names = {"Draft", "Unassigned", "Preparation", "ChangesRequested"})
+    void aTableThatWasNeverPublicIs404ForSomebodyOutsideIt(GameTableStatus status) {
+        when(gameTableRepository.findById("t0")).thenReturn(Optional.of(table(status)));
+        when(masterService.canOversee("t0", "player-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> service().requireVisible("t0", "player-1"))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    /** Its masters and the admins still read it: the line is who is outside, not the status alone. */
+    @Test
+    void aDraftIsVisibleToWhoeverOverseesIt() {
+        when(gameTableRepository.findById("t0")).thenReturn(Optional.of(table(GameTableStatus.Draft)));
+        when(masterService.canOversee("t0", "master-1")).thenReturn(true);
+
+        assertThat(service().requireVisible("t0", "master-1")).isNotNull();
     }
 
     /** The ordinary case: the table is there, the reader is not vetoed, and the table comes back. */

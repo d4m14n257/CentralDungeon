@@ -407,6 +407,7 @@ public class RegistrationService {
             throw new ConflictException("Only a pending application can be withdrawn");
         }
         registration.setStatus(TableRegistrationStatus.Deleted);
+        registration.setDeletedAt(LocalDateTime.now());
     }
 
     /** Candidates only, FIFO by arrival - never re-sorted, whatever the caller's sort param says (ADR-09 §1). */

@@ -43,6 +43,12 @@ class RichTextSanitizerTest {
         assertThat(sanitizer.sanitize("<a href=\"https://example.org\">docs</a>")).contains("https://example.org");
     }
 
+    /** Only http(s) survives (ADR-05 §6): a mailto link is an address harvested off a public page. */
+    @Test
+    void dropsMailtoLinks() {
+        assertThat(sanitizer.sanitize("<a href=\"mailto:someone@example.org\">write</a>")).isEqualTo("write");
+    }
+
     /** An image tag is a request to an arbitrary host, which is not something a description gets to make. */
     @Test
     void dropsImages() {

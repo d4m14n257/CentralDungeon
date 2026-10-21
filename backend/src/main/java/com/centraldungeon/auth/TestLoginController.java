@@ -4,20 +4,12 @@ import com.centraldungeon.auth.dto.TokenResponse;
 import com.centraldungeon.common.security.JwtService;
 import com.centraldungeon.common.security.RefreshCookieFactory;
 import com.centraldungeon.users.PlatformRole;
-import com.centraldungeon.users.Role;
-import com.centraldungeon.users.RoleRepository;
 import com.centraldungeon.users.User;
-import com.centraldungeon.users.UserRole;
-import com.centraldungeon.users.UserRoleRepository;
-import com.centraldungeon.users.UserRoleStatus;
 import com.centraldungeon.users.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.context.annotation.Profile;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,11 +29,8 @@ public class TestLoginController {
     /** Creates the test user, or reuses them across runs. */
     private final UserService userService;
 
-    /** Resolves the roles the shortcut can grant. */
-    private final RoleRepository roleRepository;
-
-    /** Grants them. */
-    private final UserRoleRepository userRoleRepository;
+    /** Sets the actor's roles exactly, the part that writes through repositories (rule 1). */
+    private final TestDataService testDataService;
 
     /** Issues the same pair of tokens the real login would. */
     private final JwtService jwtService;
@@ -51,20 +40,17 @@ public class TestLoginController {
 
     /**
      * @param userService          creates or reuses the test user
-     * @param roleRepository       resolves the roles to grant
-     * @param userRoleRepository   grants them
+     * @param testDataService      sets the actor's roles exactly
      * @param jwtService           issues the tokens
      * @param refreshCookieFactory sets the refresh cookie
      */
     public TestLoginController(
             UserService userService,
-            RoleRepository roleRepository,
-            UserRoleRepository userRoleRepository,
+            TestDataService testDataService,
             JwtService jwtService,
             RefreshCookieFactory refreshCookieFactory) {
         this.userService = userService;
-        this.roleRepository = roleRepository;
-        this.userRoleRepository = userRoleRepository;
+        this.testDataService = testDataService;
         this.jwtService = jwtService;
         this.refreshCookieFactory = refreshCookieFactory;
     }
@@ -97,7 +83,6 @@ public class TestLoginController {
      * @return the access token and its lifetime, exactly as a real login would answer
      */
     @PostMapping("/test-login")
-    @Transactional
     public TokenResponse testLogin(
             @RequestParam String discordId,
             @RequestParam(defaultValue = "false") boolean asMaster,
@@ -105,7 +90,7 @@ public class TestLoginController {
             @RequestParam(defaultValue = "false") boolean asOwner,
             HttpServletResponse response) {
         User user = userService.findOrCreateByDiscordId(discordId, discordId);
-        setRolesExactly(user, wantedRoles(asMaster, asAdmin, asOwner));
+        testDataService.setRolesExactly(user, wantedRoles(asMaster, asAdmin, asOwner));
 
         String accessToken = jwtService.issueAccessToken(user.getId());
         String refreshToken = jwtService.issueRefreshToken(user.getId());
@@ -131,41 +116,5 @@ public class TestLoginController {
             wanted.add(PlatformRole.ADMIN);
         }
         return wanted.isEmpty() ? EnumSet.of(PlatformRole.PLAYER) : wanted;
-    }
-
-    /**
-     * Leaves the person holding the wanted roles and nothing else.
-     *
-     * <p>Revoking marks the row rather than deleting it (ADR-03 §7), and restoring flips that mark back
-     * instead of inserting: {@code (user_id, role_id)} is the primary key, so a second row for the
-     * same pair is not a thing that can exist. The cache is evicted at the end because otherwise the
-     * roles just taken away stay live for the rest of the TTL (ADR-05 §3) - long enough for the reload
-     * that follows this call to still read them.
-     */
-    private void setRolesExactly(User user, Set<PlatformRole> wanted) {
-        Set<String> wantedNames = wanted.stream().map(PlatformRole::roleName).collect(Collectors.toSet());
-        Set<String> restored = new HashSet<>();
-
-        for (UserRole grant : userRoleRepository.findAllGrants(user.getId())) {
-            String name = grant.getRole().getName();
-            UserRoleStatus target = wantedNames.contains(name) ? UserRoleStatus.Allowed : UserRoleStatus.Deleted;
-            if (grant.getStatus() != target) {
-                if (target == UserRoleStatus.Allowed) {
-                    grant.restore();
-                } else {
-                    grant.revoke();
-                }
-                userRoleRepository.save(grant);
-            }
-            restored.add(name);
-        }
-        for (PlatformRole role : wanted) {
-            if (!restored.contains(role.roleName())) {
-                Role platformRole = roleRepository.findByName(role.roleName())
-                        .orElseThrow(() -> new IllegalStateException(role.roleName() + " role is missing - check V2__seed.sql"));
-                userRoleRepository.save(new UserRole(user, platformRole));
-            }
-        }
-        userService.evictAuthCache(user.getId());
     }
 }

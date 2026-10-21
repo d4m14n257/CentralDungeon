@@ -95,7 +95,7 @@ class RegistrationServiceTest {
                 userService, notificationService, scheduleConflictService, statusChangeRepository,
                 // The real gate over the same mocked repositories: applying goes through it now, and
                 // that is exactly what stops a vetoed person re-applying (ADR-09 §4).
-                new TableVisibilityService(gameTableRepository, registrationRepository), registrationMapper);
+                new TableVisibilityService(gameTableRepository, registrationRepository, masterService), registrationMapper);
     }
 
     @Test
@@ -124,7 +124,7 @@ class RegistrationServiceTest {
 
     @Test
     void rejectsApplicationsToATableThatIsNotOpen() {
-        GameTable table = persistedTable("table-2", GameTableStatus.Preparation, null);
+        GameTable table = persistedTable("table-2", GameTableStatus.Finished, null);
         when(gameTableRepository.findByIdForUpdate("table-2")).thenReturn(Optional.of(table));
         when(gameTableRepository.findById("table-2")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
@@ -419,6 +419,7 @@ class RegistrationServiceTest {
         registrationService.withdraw("reg-w1", "player-1");
 
         assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Deleted);
+        assertThat(registration.getDeletedAt()).isNotNull();
     }
 
     @Test

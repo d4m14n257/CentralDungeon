@@ -40,32 +40,43 @@ public class TableVisibilityService {
     /** Where the veto lives: a {@code Blocked} row of {@code table_registrations} (ADR-09 §4, §5). */
     private final TableRegistrationRepository registrationRepository;
 
+    /** Who may still read a table that was never public: its masters and the admins (ADR-07 §1, ADR-06 §8). */
+    private final MasterService masterService;
+
     /**
      * @param gameTableRepository    the {@code game_tables} table
      * @param registrationRepository the {@code table_registrations} table, asked only about vetoes
+     * @param masterService          answers whether the reader runs the table or is an admin
      */
     public TableVisibilityService(
-            GameTableRepository gameTableRepository, TableRegistrationRepository registrationRepository) {
+            GameTableRepository gameTableRepository,
+            TableRegistrationRepository registrationRepository,
+            MasterService masterService) {
         this.gameTableRepository = gameTableRepository;
         this.registrationRepository = registrationRepository;
+        this.masterService = masterService;
     }
 
     /**
      * The one lookup every read of a concrete table goes through.
      *
-     * <p>404 for the deleted (ADR-03 §7, ADR-07 §6) and 404 for the vetoed (ADR-09 §4), and deliberately the same
-     * 404: from the vetoed person's side the table stopped existing, and any answer that
-     * distinguishes the two tells them it is still there.
+     * <p>404 for the deleted (ADR-03 §7, ADR-07 §6), 404 for the vetoed (ADR-09 §4), and 404 for a
+     * table that was never public when the reader neither runs it nor is an admin (ADR-07 §1) -
+     * deliberately the same 404: any answer that distinguishes them tells the reader the table is there.
      *
      * @param gameTableId the table
      * @param actorId     who is reading, always from the token (ADR-05 §5)
      * @return the table
-     * @throws NotFoundException when the table is not there, was soft-deleted, or the actor is
-     *                          vetoed on it - never a 403 in any of the three cases
+     * @throws NotFoundException when the table is not there, was soft-deleted, was never public and
+     *                          the actor is outside it, or the actor is vetoed on it - never a 403
      */
     @Transactional(readOnly = true)
     public GameTable requireVisible(String gameTableId, String actorId) {
         GameTable gameTable = load(gameTableId);
+        // A table nobody was shown yet is not there for anyone outside it (ADR-07 §1): same 404 as gone.
+        if (gameTable.getStatus().wasNeverPublic() && !masterService.canOversee(gameTableId, actorId)) {
+            throw notFound(gameTableId);
+        }
         if (isVetoed(gameTableId, actorId)) {
             throw notFound(gameTableId);
         }

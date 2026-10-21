@@ -126,7 +126,7 @@ class GameTableServiceTest {
                 gameTableSearchResolver,
                 // The real one over the same mocked repositories: every read of a concrete table in
                 // these tests goes through it, and a mock would hide whether it does (ADR-03 §7, ADR-09 §4).
-                new TableVisibilityService(gameTableRepository, tableRegistrationRepository));
+                new TableVisibilityService(gameTableRepository, tableRegistrationRepository, masterService));
     }
 
     @Test
@@ -575,6 +575,24 @@ class GameTableServiceTest {
         assertThat(table.getStatus()).isEqualTo(GameTableStatus.Deleted);
         assertThat(table.getDeletedAt()).isNotNull();
         verify(masterService).softDeleteAllOfTable(eq("table-7a"), any());
+    }
+
+    /** A soft delete is the status and the date together (ADR-03 §7), and the cascade shares the table's date. */
+    @Test
+    void deletingATableStampsItsApplicationsWithTheSameDate() {
+        GameTable table = persistedTable("table-7d", GameTableStatus.Preparation);
+        TableRegistration rejected = new TableRegistration(table, persistedUser("player-1"), null);
+        rejected.setStatus(TableRegistrationStatus.Rejected);
+        when(gameTableRepository.findByIdForUpdate("table-7d")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-7d", "primary-1")).thenReturn(true);
+        when(tableRegistrationRepository.existsByGameTable_IdAndStatusIn(eq("table-7d"), any())).thenReturn(false);
+        when(tableRegistrationRepository.findByGameTable_Id("table-7d")).thenReturn(List.of(rejected));
+        when(userService.getById("primary-1")).thenReturn(persistedUser("primary-1"));
+
+        gameTableService.delete("table-7d", "primary-1");
+
+        assertThat(rejected.getStatus()).isEqualTo(TableRegistrationStatus.Deleted);
+        assertThat(rejected.getDeletedAt()).isNotNull().isEqualTo(table.getDeletedAt());
     }
 
     /** The line ADR-07 §6 draws: what was once public is cancelled, never deleted. */

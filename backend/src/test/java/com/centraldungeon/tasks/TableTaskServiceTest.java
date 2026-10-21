@@ -91,7 +91,7 @@ class TableTaskServiceTest {
                 submissionRepository,
                 // The real TableVisibilityService over the same mocked repositories - see
                 // TableSessionServiceTest for why it is not a mock.
-                new com.centraldungeon.tables.TableVisibilityService(gameTableRepository, registrationRepository),
+                new com.centraldungeon.tables.TableVisibilityService(gameTableRepository, registrationRepository, masterService),
                 sessionRepository,
                 registrationRepository,
                 masterService,

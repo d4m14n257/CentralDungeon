@@ -78,7 +78,7 @@ class TableSessionServiceTest {
             // would test a stub instead of the gate (ADR-03 §7, ADR-09 §4).
             service = new TableSessionService(
                     sessionRepository, attendanceRepository, tableScheduleService,
-                    new TableVisibilityService(gameTableRepository, registrationRepository), registrationRepository,
+                    new TableVisibilityService(gameTableRepository, registrationRepository, masterService), registrationRepository,
                     masterService, notificationService, gameTableMapper);
         }
         return service;

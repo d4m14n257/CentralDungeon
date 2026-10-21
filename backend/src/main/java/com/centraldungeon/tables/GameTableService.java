@@ -98,15 +98,6 @@ public class GameTableService {
             Arrays.stream(GameTableStatus.values()).filter(status -> status != GameTableStatus.Deleted).toList();
 
     /**
-     * A table can be deleted only while it was never public (ADR-07 §6): nobody saw it, so
-     * there is no history worth keeping. Everything past this point is cancelled instead, because a
-     * table other people looked at, applied to or played is a record of something that happened.
-     */
-    private static final Set<GameTableStatus> DELETABLE_STATUSES = Set.of(
-            GameTableStatus.Draft, GameTableStatus.Unassigned, GameTableStatus.Preparation,
-            GameTableStatus.ChangesRequested);
-
-    /**
      * The statuses in which a table is still its master's to rewrite (ADR-07 §1).
      *
      * <p><b>`Preparation` is not one of them.</b> A table that was sent to review is being looked at
@@ -682,7 +673,9 @@ public class GameTableService {
             throw new ForbiddenActionException("Only the Primary master or an admin can delete this table");
         }
         GameTableStatus from = gameTable.getStatus();
-        if (!DELETABLE_STATUSES.contains(from)) {
+        // Only a table that was never public (ADR-07 §6): nobody saw it, so there is no history worth
+        // keeping. Everything past that is cancelled instead.
+        if (!from.wasNeverPublic()) {
             throw new ConflictException("A table in status " + from + " cannot be deleted - cancel it instead");
         }
         if (tableRegistrationRepository.existsByGameTable_IdAndStatusIn(gameTableId, ACTIVE_REGISTRATION_STATUSES)) {
@@ -694,6 +687,7 @@ public class GameTableService {
         LocalDateTime deletedAt = LocalDateTime.now();
         for (TableRegistration registration : tableRegistrationRepository.findByGameTable_Id(gameTableId)) {
             registration.setStatus(TableRegistrationStatus.Deleted);
+            registration.setDeletedAt(deletedAt);
         }
         masterService.softDeleteAllOfTable(gameTableId, deletedAt);
         gameTable.setDeletedAt(deletedAt);

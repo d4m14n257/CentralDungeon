@@ -111,8 +111,6 @@ El 2026-10-20, tres agentes `auditor-conocimiento` contrastaron las 24 ADRs con 
 |---|---|---|
 | B1 | «Mis postulaciones» no pagina: `useMyApplications` pide la página 0 y su key no la incluye, así que con más postulaciones que el tamaño de página el chip «ya te postulaste» del explorador y la lista mienten | Paginar el hook (`queryKeys`), `MyApplicationsPage` y el cruce de `TableListPage` |
 | B2 | Un `Player` que dirige una mesa ve «proponer» en `CatalogPicker` y recibe `403` (los `@PreAuthorize` de proponer exigen rol) | Según D8 |
-| B3 | `TestDataService` no anula `game_tables.claimed_by`: si un admin `e2e-…` reserva una mesa que no es «E2E», el borrado de usuarios falla por FK | `claimedBy = null` antes de borrar usuarios |
-| B4 | Al borrar una mesa, las postulaciones quedan `Deleted` sin `deleted_at` (`TableRegistration` no mapea la columna) | Mapearla y sellarla en `GameTableService.delete`, con test |
 | B5 | Valores sueltos en `NotificationBell` (`text-[11px]`, `text-[13px]`, `w-[15px]`) y `NotFoundPage` (título a mano), y el override viejo del hover en `NotificationsPage` | Tokens, `page-title` y quitar el override |
 
 **Decisiones**

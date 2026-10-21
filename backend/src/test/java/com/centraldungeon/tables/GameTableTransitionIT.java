@@ -1,8 +1,10 @@
 package com.centraldungeon.tables;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
 import java.util.ArrayList;
@@ -100,6 +102,18 @@ class GameTableTransitionIT {
 
         GameTable reloaded = gameTableRepository.findById(table.getId()).orElseThrow();
         assertThat(reloaded.getStatus()).isEqualTo(GameTableStatus.Opened);
+    }
+
+    /**
+     * A table in review was never public (ADR-07 §1): the public detail is a 404 for somebody who
+     * neither runs it nor is an admin, even holding its id - the full read path, against real MySQL.
+     */
+    @Test
+    void aTableInReviewIs404ForSomebodyOutsideIt() {
+        User stranger = admins.getFirst();
+
+        assertThatThrownBy(() -> gameTableService.getDetail(table.getId(), stranger.getId()))
+                .isInstanceOf(NotFoundException.class);
     }
 
     private boolean succeeded(Future<Boolean> future) {
