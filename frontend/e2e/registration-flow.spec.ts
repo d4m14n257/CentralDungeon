@@ -83,7 +83,8 @@ test('a player applies to an open table and the master accepts them', async ({ b
     const master2 = await newAuthenticatedPage(browser, masterDiscordId, true)
     try {
       await master2.page.goto(`/master/tables/${tableId}`)
-      await expect(master2.page.getByText(new RegExp(`1\\. .* · 8000`))).toBeVisible()
+      // FIFO position and name, and no karma until F5 computes one (ADR-10 §5).
+      await expect(master2.page.getByText(new RegExp(`^1\\. ${playerDiscordId}`))).toBeVisible()
 
       await master2.page.getByRole('button', { name: 'Aceptar' }).click()
       await master2.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()

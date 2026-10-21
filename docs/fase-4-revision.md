@@ -109,8 +109,6 @@ El 2026-10-20, tres agentes `auditor-conocimiento` contrastaron las 24 ADRs con 
 
 | # | Bug | Arreglo propuesto |
 |---|---|---|
-| B1 | «Mis postulaciones» no pagina: `useMyApplications` pide la página 0 y su key no la incluye, así que con más postulaciones que el tamaño de página el chip «ya te postulaste» del explorador y la lista mienten | Paginar el hook (`queryKeys`), `MyApplicationsPage` y el cruce de `TableListPage` |
-| B5 | Valores sueltos en `NotificationBell` (`text-[11px]`, `text-[13px]`, `w-[15px]`) y `NotFoundPage` (título a mano), y el override viejo del hover en `NotificationsPage` | Tokens, `page-title` y quitar el override |
 
 **Decisiones**
 

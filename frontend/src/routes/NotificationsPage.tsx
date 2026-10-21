@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next'
 
 import { EmptyState } from '@/components/EmptyState'
+import { LoadMore } from '@/components/LoadMore'
 import { ErrorState } from '@/components/ErrorState'
 import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
-import { notificationText, useMarkAllAsRead, useNotificationClick, useNotifications } from '@/features/notifications'
+import { notificationText, useMarkAllAsRead, useNotificationClick, useNotificationInbox } from '@/features/notifications'
 import { relativeTimeFrom } from '@/lib/relativeTime'
 import { cn } from '@/lib/utils'
 
@@ -32,11 +33,14 @@ export function NotificationsPage() {
   const { t } = useTranslation('notifications')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
   // loaded (ADR-19 §4).
-  const { data, isPending, isLoadingError, refetch } = useNotifications()
+  const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useNotificationInbox()
   const markAllAsRead = useMarkAllAsRead()
   const handleClick = useNotificationClick()
 
-  const unreadCount = data?.content.filter((notification) => notification.readStatus === 'Unread').length ?? 0
+  // "Ver más" accumulates the pages already fetched and shows them together (ADR-04 §6).
+  const notifications = data?.pages.flatMap((page) => page.content) ?? []
+  const total = data?.pages[0]?.totalElements ?? 0
+  const unreadCount = notifications.filter((notification) => notification.readStatus === 'Unread').length
 
   function timeAgoLabel(createdAt: string) {
     const rel = relativeTimeFrom(createdAt)
@@ -59,36 +63,42 @@ export function NotificationsPage() {
         </div>
       )}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && <EmptyState title={t('emptyTitle')} description={t('emptyDescription')} />}
-      {data && data.content.length > 0 && (
-        <ul className="list-divided">
-          {data.content.map((notification) => {
-            const unread = notification.readStatus === 'Unread'
-            const outcome = OUTCOME_TONE[notification.notificationType]
-            return (
-              <li key={notification.id}>
-                <button
-                  type="button"
-                  onClick={() => handleClick(notification)}
-                  className={cn(
-                    // hover:bg-accent does not show on a "raised" row - --color-accent is
-                    // --color-raised in globals.css. A stronger tone of its own, which does change
-                    // over both surfaces (read and unread).
-                    'hover:bg-border-strong/60! flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left',
-                    unread ? 'bg-raised' : 'bg-transparent',
-                  )}
-                >
-                  <span className={cn('size-2 shrink-0 rounded-full', unread ? 'bg-brand-fg' : 'bg-transparent')} aria-hidden />
-                  <span className={cn('flex-1 truncate text-sm', unread ? 'text-fg font-medium' : 'text-fg-muted')}>
-                    {notificationText(notification, t).title}
-                  </span>
-                  {outcome && <StatusBadge tone={outcome.tone} label={t(outcome.labelKey)} />}
-                  <span className="text-fg-subtle w-20 shrink-0 text-right text-xs">{timeAgoLabel(notification.createdAt)}</span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+      {data && notifications.length === 0 && <EmptyState title={t('emptyTitle')} description={t('emptyDescription')} />}
+      {notifications.length > 0 && (
+        <>
+          <ul className="list-divided">
+            {notifications.map((notification) => {
+              const unread = notification.readStatus === 'Unread'
+              const outcome = OUTCOME_TONE[notification.notificationType]
+              return (
+                <li key={notification.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleClick(notification)}
+                    className={cn(
+                      'hover:bg-accent flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left',
+                      unread ? 'bg-raised' : 'bg-transparent',
+                    )}
+                  >
+                    <span className={cn('size-2 shrink-0 rounded-full', unread ? 'bg-brand-fg' : 'bg-transparent')} aria-hidden />
+                    <span className={cn('flex-1 truncate text-sm', unread ? 'text-fg font-medium' : 'text-fg-muted')}>
+                      {notificationText(notification, t).title}
+                    </span>
+                    {outcome && <StatusBadge tone={outcome.tone} label={t(outcome.labelKey)} />}
+                    <span className="text-fg-subtle w-20 shrink-0 text-right text-xs">{timeAgoLabel(notification.createdAt)}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+          <LoadMore
+            hasMore={hasNextPage}
+            isLoading={isFetchingNextPage}
+            onLoadMore={() => void fetchNextPage()}
+            shown={notifications.length}
+            total={total}
+          />
+        </>
       )}
     </div>
   )

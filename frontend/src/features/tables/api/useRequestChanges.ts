@@ -7,7 +7,7 @@ import type { ChangeTableStatusRequest } from '../types'
 
 /**
  * Sends a draft back to its master with a reason. The reason is required and is what the master
- * reads on the status tab.
+ * reads on the history tab.
  *
  * **Performed from `/admin/queue` and no longer from `/admin/tables`** (ADR-16 §7, F3.3) — the same move
  * as `useApproveTable`, and for the same reason: it is the other half of one decision. Refused only

@@ -1238,9 +1238,10 @@ public class GameTableService {
 
     /**
      * One page of cards, with the agendas read in a single query and - when the listing is one where
-     * the question makes sense - the clash warning of ADR-08 §2 computed for the actor of the token.
+     * the question makes sense - the clash warning of ADR-08 §2 and the "already applied" mark of ADR-09 §1,
+     * both computed for the actor of the token, each in one query for the whole page.
      *
-     * <p>{@code /my/tables} and {@code /master/tables} pass {@code false}: a table you already run or
+     * <p>{@code /my/tables} and {@code /master/tables} pass {@code null}: a table you already run or
      * play at is the commitment, so warning that it clashes with itself would be noise.
      */
     private PageResponse<GameTableSummaryResponse> toSummaryPage(Page<GameTable> page, @Nullable String conflictActorId) {
@@ -1248,13 +1249,17 @@ public class GameTableService {
         List<String> ids = tables.stream().map(GameTable::getId).toList();
         Map<String, List<TableScheduleEntry>> schedules = tableScheduleService.findByTables(ids);
         Set<String> clashing = conflictActorId == null ? Set.of() : scheduleConflictService.clashingAmong(conflictActorId, tables);
+        Set<String> applied = conflictActorId == null || ids.isEmpty()
+                ? Set.of()
+                : Set.copyOf(tableRegistrationRepository.findTableIdsWithRegistration(conflictActorId, ids, ACTIVE_REGISTRATION_STATUSES));
 
         return PageResponse.from(page.map(gameTable -> gameTableMapper.toSummary(
                 gameTable,
                 countPlayers(gameTable.getId()),
                 findPrimaryMaster(gameTable.getId()),
                 schedules.getOrDefault(gameTable.getId(), List.of()),
-                clashing.contains(gameTable.getId()))));
+                clashing.contains(gameTable.getId()),
+                applied.contains(gameTable.getId()))));
     }
 
     /**
@@ -1356,8 +1361,9 @@ public class GameTableService {
     }
 
     /**
-     * @param conflictActorId whose commitments to measure the agenda against, or null when the read
-     *                        has no actor for whom the question means anything (ADR-05 §5, ADR-08 §2)
+     * @param conflictActorId whose commitments to measure the agenda against and whose application to look
+     *                        for, or null when the read has no actor for whom the questions mean anything
+     *                        (ADR-05 §5, ADR-08 §2, ADR-09 §1)
      */
     private GameTableDetailResponse toDetail(GameTable gameTable, @Nullable String conflictActorId) {
         int playerCount = countPlayers(gameTable.getId());
@@ -1386,7 +1392,9 @@ public class GameTableService {
                 richTextSanitizer.sanitize(gameTable.getDescription()),
                 richTextSanitizer.sanitize(gameTable.getPermitted()),
                 richTextSanitizer.sanitize(gameTable.getRequirements()),
-                conflictActorId != null && scheduleConflictService.findClashWith(conflictActorId, gameTable) != null);
+                conflictActorId != null && scheduleConflictService.findClashWith(conflictActorId, gameTable) != null,
+                conflictActorId != null && tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        gameTable.getId(), conflictActorId, ACTIVE_REGISTRATION_STATUSES));
     }
 
     private int countPlayers(String gameTableId) {

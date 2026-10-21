@@ -64,7 +64,7 @@ export async function addScheduleSlot(page: Page, hourtime: string, weekday = 'V
  * @param tableId the table to send
  */
 export async function submitForReview(page: Page, tableId: string): Promise<void> {
-  await page.goto(`/master/tables/${tableId}/status`)
+  await page.goto(`/master/tables/${tableId}`)
   const send = page.getByRole('button', { name: 'Enviar a revisión' })
   await send.click()
   const confirm = page.getByRole('dialog')

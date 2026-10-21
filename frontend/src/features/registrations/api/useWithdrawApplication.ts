@@ -22,6 +22,8 @@ export function useWithdrawApplication() {
       // The whole branch and not one entry: since the box arrived, the explorer keys by what was
       // searched, and this mutation has no idea what that was (ADR-12 §8).
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.lists() })
+      // And the table's own detail, whose apply button reads the same mark - which table is not known here.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.details() })
     },
   })
 }

@@ -3,13 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
-import {
-  masterTableDetailPath,
-  masterTableEditPath,
-  masterTableSessionsPath,
-  masterTableStatusPath,
-  masterTableTasksPath,
-} from '@/config/paths'
+import { masterTableDetailPath, masterTableEditPath, masterTableSessionsPath, masterTableTasksPath } from '@/config/paths'
 import { browserTimeZone, formatDateTime } from '@/lib/date'
 
 import type { MasterWorkItem, MasterWorkItemKind } from '../types'
@@ -23,7 +17,8 @@ const DESTINATION: Record<MasterWorkItemKind, (tableId: string) => string> = {
   OverdueTaskMissing: masterTableTasksPath,
   SessionToRecord: masterTableSessionsPath,
   ChangesRequested: masterTableEditPath,
-  ReadyToStart: masterTableStatusPath,
+  // Starting is a decision of the status notice, which every tab shows (ADR-21 §10).
+  ReadyToStart: masterTableDetailPath,
 }
 
 interface MasterWorkItemListProps {

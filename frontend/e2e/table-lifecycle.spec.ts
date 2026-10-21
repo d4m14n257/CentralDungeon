@@ -142,7 +142,7 @@ test('a master deletes a draft that never went public, and cannot delete it once
     // A draft: created and removed without anybody having seen it.
     await createTableThroughWizard(master.page, draftName)
 
-    await master.page.getByRole('link', { name: 'Estado' }).click()
+    // The decisions are in the status notice above the tabs (ADR-21 §10): no tab to open first.
     await master.page.getByRole('button', { name: 'Eliminar mesa' }).click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
 
@@ -165,7 +165,7 @@ test('a master deletes a draft that never went public, and cannot delete it once
       await admin.context.close()
     }
 
-    await master.page.goto(`/master/tables/${tableId}/status`)
+    await master.page.goto(`/master/tables/${tableId}`)
     await expect(master.page.getByText('Abierta', { exact: true })).toBeVisible()
     await expect(master.page.getByRole('button', { name: 'Eliminar mesa' })).toBeHidden()
     await expect(master.page.getByRole('button', { name: 'Cancelar mesa' })).toBeVisible()
@@ -199,7 +199,7 @@ test('a master creates a table, an admin approves it, and the master runs it end
       await admin.context.close()
     }
 
-    await master.page.goto(`/master/tables/${tableId}/status`)
+    await master.page.goto(`/master/tables/${tableId}`)
     await expect(master.page.getByRole('heading', { name: tableName })).toBeVisible()
     await expect(master.page.getByText('Abierta', { exact: true })).toBeVisible()
 

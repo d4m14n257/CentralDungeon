@@ -16,7 +16,7 @@ export function NotFoundPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 text-center">
       {/* The digits are not a translatable string: they read the same in every language. */}
-      <h1 className="font-serif text-3xl font-semibold">404</h1>
+      <h1 className="page-title">404</h1>
       <Button asChild>
         <Link to={paths.root}>{t('notFound.backHome')}</Link>
       </Button>

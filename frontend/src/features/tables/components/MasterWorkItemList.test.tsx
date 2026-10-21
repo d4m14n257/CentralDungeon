@@ -71,7 +71,7 @@ describe('MasterWorkItemList', () => {
       '/master/tables/table-1/tasks',
       '/master/tables/table-1/sessions',
       '/master/tables/table-1/edit',
-      '/master/tables/table-1/status',
+      '/master/tables/table-1',
     ])
   })
 

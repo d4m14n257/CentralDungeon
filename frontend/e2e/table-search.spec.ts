@@ -86,7 +86,7 @@ async function createTable(page: Page, name: string): Promise<string> {
 async function open(masterPage: Page, adminPage: Page, tableId: string, name: string) {
   // A table is born in Draft since ADR-07 §1 and only its master sees it: it has to be sent to review
   // before an admin has anything to approve.
-  await masterPage.goto(`/master/tables/${tableId}/status`)
+  await masterPage.goto(`/master/tables/${tableId}`)
   await masterPage.getByRole('button', { name: 'Enviar a revisión' }).click()
   const confirm = masterPage.getByRole('dialog')
   await confirm.getByRole('button', { name: 'Confirmar' }).click()

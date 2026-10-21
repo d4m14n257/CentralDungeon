@@ -54,6 +54,9 @@ import org.jspecify.annotations.Nullable;
  *                      say why it is disabled instead of only being grey. Computed per request and
  *                      never for an id from the URL (ADR-05 §5); false on the reads where no actor is
  *                      involved, such as a master looking at their own table
+ * @param applied       whether the <b>actor of the token</b> holds a live application on it - Candidate or
+ *                      Player (ADR-09 §1) - so the apply button can say they already did. False where no
+ *                      actor is involved
  */
 public record GameTableDetailResponse(
         String id,
@@ -77,5 +80,6 @@ public record GameTableDetailResponse(
         List<SharedFileResponse> files,
         LocalDateTime createdAt,
         @Nullable LocalDateTime closedAt,
-        boolean scheduleConflict) {
+        boolean scheduleConflict,
+        boolean applied) {
 }

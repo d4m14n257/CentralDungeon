@@ -54,7 +54,7 @@ import { useConfirm } from '@/hooks/useConfirm'
  * replaced as whole sets (ADR-04 §7). That is why every field is sent on every save, including the ones
  * nobody touched: a field left out would empty itself.
  *
- * It is the only way to answer a `ChangesRequested` — the resubmit button on the status tab moves
+ * It is the only way to answer a `ChangesRequested` — the resubmit button of the status notice moves
  * the table, this is what makes the change the admin asked for.
  */
 export function MasterTableEditPage() {

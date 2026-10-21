@@ -45,6 +45,12 @@ export const staleTime = {
 export const live = {
   /** The shared admin tray: rows leave it because a colleague took them (ADR-16 §5). */
   adminQueue: { refetchInterval: 15_000, refetchOnWindowFocus: true },
+  /**
+   * The bell: a notification is written by somebody else's act, which no mutation of the reader's can
+   * see (ADR-18 §2). A minute is enough for news that is not urgent, and the focus refetch catches the
+   * reader coming back to the tab.
+   */
+  notifications: { refetchInterval: 60_000, refetchOnWindowFocus: true },
 } as const
 
 /**

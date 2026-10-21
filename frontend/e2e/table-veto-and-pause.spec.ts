@@ -130,7 +130,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     await acceptAsPlayer(master.page, player.page, tableId, playerDiscordId)
 
     // A pause only makes sense on a table that is actually running.
-    await master.page.goto(`/master/tables/${tableId}/status`)
+    await master.page.goto(`/master/tables/${tableId}`)
     await master.page.getByRole('button', { name: 'Iniciar mesa' }).click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
     await expect(master.page.getByText('En curso', { exact: true })).toBeVisible()
@@ -172,7 +172,8 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     // Resolved work is not work waiting on anybody.
     await expect(pauseRow).toBeHidden()
 
-    await master.page.goto(`/master/tables/${tableId}/status`)
+    // The reason is in the history, a tab of its own since the decisions moved to the status notice (ADR-21 §10).
+    await master.page.goto(`/master/tables/${tableId}/history`)
     await expect(master.page.getByText('Pausada', { exact: true })).toBeVisible()
     // The admin's reason is the pause's justification: they wrote why once and it is recorded once
     // (ADR-07 §2, arquitectura §4.5).

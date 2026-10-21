@@ -10,7 +10,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { SubmitRequestSection } from '@/features/approvals'
 import { HelpLink } from '@/features/help'
-import { useMyApplications } from '@/features/registrations'
 import { explorerSearchFields, GameTableCard, useGameTables } from '@/features/tables'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
 
@@ -67,13 +66,6 @@ export function TableListPage() {
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useGameTables(
     search.query || undefined,
   )
-  // A crossing of domains: the screen composes them, GameTableCard does not import from
-  // features/registrations (regla dura 16). "Rejected" does not count as applied - applying again is
-  // exactly what makes sense there.
-  const { data: myApplications } = useMyApplications()
-  const appliedTableIds = new Set(
-    myApplications?.content.filter((registration) => registration.status !== 'Rejected').map((registration) => registration.gameTableId),
-  )
 
   // The explorer paginates with "See more" (ADR-04 §6): the pages already fetched accumulate and show together.
   const tables = data?.pages.flatMap((page) => page.content) ?? []
@@ -127,7 +119,7 @@ export function TableListPage() {
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {tables.map((table) => (
-              <GameTableCard key={table.id} table={table} alreadyApplied={appliedTableIds.has(table.id)} />
+              <GameTableCard key={table.id} table={table} />
             ))}
           </div>
           <LoadMore

@@ -12,6 +12,8 @@ import { PersonSummaryDialog, useMe } from '@/features/users'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { ApiError } from '@/types/api'
 
+import { MasterTableStatusNotice } from './MasterTableStatusNotice'
+
 /** The two states where the backend still accepts a rewrite of the table (ADR-04 §7). */
 
 /**
@@ -55,6 +57,9 @@ export function MasterTableDetailPage() {
         badge={<TableStatusBadge status={table.status} />}
         action={canEdit ? { label: t('detail.edit'), to: masterTableEditPath(tableId) } : undefined}
       />
+      {/* Where the table stands and what its masters can decide about it, above the tabs and visible
+          from all of them (ADR-21 §10). */}
+      <MasterTableStatusNotice tableId={tableId} status={table.status} isPrimary={isPrimary} />
       <TabNav
         label={t('detail.tabs.label')}
         items={[
@@ -64,7 +69,7 @@ export function MasterTableDetailPage() {
           { to: 'sessions', label: t('detail.tabs.sessions') },
           { to: 'tasks', label: t('detail.tabs.tasks') },
           { to: 'files', label: t('detail.tabs.files') },
-          { to: 'status', label: t('detail.tabs.status') },
+          { to: 'history', label: t('detail.tabs.history') },
         ]}
       />
       <Outlet

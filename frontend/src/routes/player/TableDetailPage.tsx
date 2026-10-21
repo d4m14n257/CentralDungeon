@@ -11,7 +11,7 @@ import { HelpButton, HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
 import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
-import { ApplyToTableDialog, useMyApplications } from '@/features/registrations'
+import { ApplyToTableDialog } from '@/features/registrations'
 import { SessionList, TableStatusBadge, useGameTable } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
 import { useMe } from '@/features/users'
@@ -84,7 +84,6 @@ export function TableDetailPage() {
   // (ADR-19 §4).
   const { data: table, isPending, isLoadingError } = useGameTable(tableId)
   const { data: me } = useMe()
-  const { data: myApplications } = useMyApplications()
   const applyDialog = useDisclosure()
 
   if (isPending) {
@@ -100,8 +99,8 @@ export function TableDetailPage() {
     return <ErrorState message={t('detail.notFoundDescription')} />
   }
 
-  const hasActiveApplication =
-    myApplications?.content.some((registration) => registration.gameTableId === table.id && registration.status !== 'Rejected') ?? false
+  // The server's, for the actor of the token (ADR-09 §1): a Rejected application does not count, applying again is what makes sense there.
+  const hasActiveApplication = table.applied
 
   // The clash is computed by the server for the actor of the token and travels in the detail
   // (ADR-05 §5, ADR-08 §2): the agendas of the reader's other tables are not on this side, and guessing them

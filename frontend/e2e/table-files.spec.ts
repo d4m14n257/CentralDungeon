@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { acceptReview } from './helpers/review'
+import { approveTableFromQueue } from './helpers/adminQueue'
 
 /**
  * F1.4 end to end, against the real backend: F1.4's acceptance criterion — *a master
@@ -140,7 +141,9 @@ test('a file attached to two tables is stored once, and the player downloads it'
     await expect(admin.page.getByText('Sin resultados')).toBeVisible()
     await expect(admin.page.getByRole('row', { name: /ficha-e2e\.pdf/ })).toHaveCount(0)
 
-    // The player reads it from the public detail, without belonging to the table.
+    // The player reads it from the public detail, without belonging to the table - once it is public:
+    // a table in review is a 404 to anybody outside it (ADR-07 §1).
+    await approveTableFromQueue(admin.page, firstName)
     await player.page.goto(`/player/tables/${firstId}`)
     await expect(player.page.getByText('ficha-e2e.pdf')).toBeVisible()
     const download = player.page.waitForEvent('download')
@@ -199,6 +202,7 @@ test('taking a file off one table leaves it on the other', async ({ browser }) =
 test('a private attachment never reaches the public detail', async ({ browser }) => {
   const tableName = `Mesa Privada E2E ${runId}`
   const master = await newAuthenticatedPage(browser, `e2e-priv-master-${runId}`, true, false)
+  const admin = await newAuthenticatedPage(browser, `e2e-priv-admin-${runId}`, false, true)
   const player = await newAuthenticatedPage(browser, `e2e-priv-player-${runId}`, false, false)
 
   try {
@@ -210,11 +214,14 @@ test('a private attachment never reaches the public detail', async ({ browser })
     })
     await expect(master.page.getByText('Solo masters')).toBeVisible()
 
+    // Public first: a table in review is a 404 to anybody outside it (ADR-07 §1).
+    await approveTableFromQueue(admin.page, tableName)
     await player.page.goto(`/player/tables/${tableId}`)
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
     await expect(player.page.getByText('notas-e2e.pdf')).toBeHidden()
   } finally {
     await player.context.close()
+    await admin.context.close()
     await master.context.close()
   }
 })

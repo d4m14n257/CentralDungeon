@@ -68,6 +68,8 @@ export interface GameTableSummary {
    * the server for the actor of the token and for nobody else (ADR-05 §5) - the card only shows it.
    */
   scheduleConflict: boolean
+  /** Whether the reader holds a live application on it - Candidate or Player (ADR-09 §1). The server's, for the whole page. */
+  applied: boolean
   primaryMaster: MasterSummary
 }
 
@@ -162,6 +164,8 @@ export interface GameTableDetail {
    * by the server for the actor of the token (ADR-05 §5) - it is what lets the apply button say why.
    */
   scheduleConflict: boolean
+  /** Whether the reader holds a live application on it - Candidate or Player (ADR-09 §1). */
+  applied: boolean
 }
 
 /**

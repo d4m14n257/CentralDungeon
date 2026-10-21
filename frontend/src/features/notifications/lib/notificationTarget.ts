@@ -1,6 +1,6 @@
 import {
   masterTableDetailPath,
-  masterTableStatusPath,
+  masterTableHistoryPath,
   myTableDetailPath,
   playerApplicationsPath,
   playerProfilePath,
@@ -82,7 +82,7 @@ export function notificationTarget(notification: Notification): string | null {
       return masterTableDetailPath(relatedEntityId)
     case 'TablePausedByAdmin':
     case 'TableCanceledByAdmin':
-      return masterTableStatusPath(relatedEntityId)
+      return masterTableHistoryPath(relatedEntityId)
     // R4's clash notice (ADR-08 §2) names the *other* table but asks for an action on neither: the
     // fix is withdrawing one of the two pending applications, and that only happens from the
     // applications list (ADR-08 §2 again) - opening either table's detail would show the clash without

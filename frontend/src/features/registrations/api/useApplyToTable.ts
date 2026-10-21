@@ -18,6 +18,8 @@ export function useApplyToTable(tableId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.detail(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.mine() })
+      // The explorer's "ya te postulaste" is the server's now (ADR-09 §1), so the cards are stale too.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.lists() })
     },
   })
 }

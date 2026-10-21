@@ -51,10 +51,10 @@ export function NotificationBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      {/* At most 5 (notificationsApi.list asks for size=5), design from design/build.py sc_comp_shell:
+      {/* At most 5 (notificationsApi.recent asks for size=5), design from design/build.py sc_comp_shell:
           a filled dot and a raised row for the unread, a hollow dot and muted text for the read. */}
       <DropdownMenuContent align="end" className="w-72 p-0 py-1">
-        <div className="text-fg-subtle border-border border-b px-3 py-2 text-[11px] tracking-wide uppercase">
+        <div className="section-label border-border border-b px-3 py-2">
           {t('title')}
           {unreadCount > 0 && <> &middot; {t('unreadCount', { count: unreadCount })}</>}
         </div>
@@ -69,18 +69,18 @@ export function NotificationBell() {
               // alias of `--color-raised` (ADR-21 §4), so `focus:bg-accent` shows on a raised row on its
               // own, and `styles/base.css` gives every menu item its cursor. This used to carry both
               // by hand (ADR-18 §4).
-              className={cn('gap-2.5 px-3 py-2 text-[13px]', unread ? 'bg-raised text-fg' : 'text-fg-muted')}
+              className={cn('gap-2.5 px-3 py-2 text-sm', unread ? 'bg-raised text-fg' : 'text-fg-muted')}
             >
-              <span className={cn('w-[15px] shrink-0 text-center', unread ? 'text-brand-fg' : 'text-fg-subtle')} aria-hidden>
+              <span className={cn('w-4 shrink-0 text-center', unread ? 'text-brand-fg' : 'text-fg-subtle')} aria-hidden>
                 {unread ? '●' : '○'}
               </span>
               <span className="flex-1 truncate">{notificationText(notification, t).title}</span>
-              <span className="text-fg-subtle shrink-0 text-[11px]">{relativeTimeLabel(notification.createdAt)}</span>
+              <span className="text-fg-subtle shrink-0 text-xs">{relativeTimeLabel(notification.createdAt)}</span>
             </DropdownMenuItem>
           )
         })}
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="justify-center px-3 py-2 text-[13px]">
+        <DropdownMenuItem asChild className="justify-center px-3 py-2 text-sm">
           <Link to="/notifications" className="text-brand-fg">
             {t('viewAll')}
           </Link>

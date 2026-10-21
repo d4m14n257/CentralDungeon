@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
 import { EmptyState } from '@/components/EmptyState'
+import { PaginationControls } from '@/components/PaginationControls'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -23,6 +24,9 @@ import type { Registration } from '@/features/registrations'
  */
 export function MyApplicationsPage() {
   const { t, i18n } = useTranslation('registrations')
+  // The page lives in the URL like every work list (ADR-21 §11): reloading or sharing keeps it.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = Number(searchParams.get('page') ?? '0')
   const withdraw = useWithdrawApplication()
   // Withdrawing has no way back: the row is marked and applying again is a new application, so it
   // goes through ConfirmDialog explaining the consequence (principle 3 of diseno §1).
@@ -43,7 +47,7 @@ export function MyApplicationsPage() {
   }
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
   // loaded (ADR-19 §4).
-  const { data, isPending, isLoadingError, refetch } = useMyApplications()
+  const { data, isPending, isLoadingError, refetch } = useMyApplications(page)
 
   return (
     <div className="space-y-4">
@@ -105,6 +109,14 @@ export function MyApplicationsPage() {
             </li>
           ))}
         </ul>
+      )}
+      {data && (
+        <PaginationControls
+          page={data.page}
+          totalPages={data.totalPages}
+          totalElements={data.totalElements}
+          onPageChange={(next) => setSearchParams({ page: String(next) })}
+        />
       )}
     </div>
   )

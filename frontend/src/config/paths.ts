@@ -39,7 +39,7 @@ export const paths = {
   masterTableSessions: 'master/tables/:id/sessions',
   masterTableTasks: 'master/tables/:id/tasks',
   masterTableFiles: 'master/tables/:id/files',
-  masterTableStatus: 'master/tables/:id/status',
+  masterTableHistory: 'master/tables/:id/history',
   adminHome: 'admin',
   adminQueue: 'admin/queue',
   adminTables: 'admin/tables',
@@ -175,10 +175,10 @@ export function masterTableFilesPath(id: string): string {
 
 /**
  * @param id the table
- * @returns the absolute path to its status tab
+ * @returns the absolute path to its history tab: every status change, who made it and why (ADR-21 §10)
  */
-export function masterTableStatusPath(id: string): string {
-  return `/master/tables/${id}/status`
+export function masterTableHistoryPath(id: string): string {
+  return `/master/tables/${id}/history`
 }
 
 /**

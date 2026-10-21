@@ -150,7 +150,7 @@ test('a table sent back for changes shows on the tray until the master corrects 
     await acceptReview(master.page)
     await expect(master.page.getByRole('heading', { name: correctedName })).toBeVisible()
 
-    await master.page.goto(`/master/tables/${tableId}/status`)
+    await master.page.goto(`/master/tables/${tableId}`)
     await master.page.getByRole('button', { name: 'Reenviar a revisión' }).click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
     await expect(master.page.getByText('En preparación', { exact: true })).toBeVisible()

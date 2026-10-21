@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { EmptyState } from '@/components/EmptyState'
+import { LoadMore } from '@/components/LoadMore'
 import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
@@ -17,7 +18,9 @@ export function MyTablesPage() {
   const { t } = useTranslation('tables')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
   // loaded (ADR-19 §4).
-  const { data, isPending, isLoadingError, refetch } = useMyTables()
+  const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useMyTables()
+  const tables = data?.pages.flatMap((page) => page.content) ?? []
+  const total = data?.pages[0]?.totalElements ?? 0
 
   return (
     <div className="space-y-4">
@@ -30,13 +33,22 @@ export function MyTablesPage() {
         </div>
       )}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && <EmptyState title={t('myTables.emptyTitle')} description={t('myTables.emptyDescription')} />}
-      {data && data.content.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data.content.map((table) => (
-            <GameTableCard key={table.id} table={table} linkTo={myTableDetailPath(table.id)} />
-          ))}
-        </div>
+      {data && tables.length === 0 && <EmptyState title={t('myTables.emptyTitle')} description={t('myTables.emptyDescription')} />}
+      {tables.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {tables.map((table) => (
+              <GameTableCard key={table.id} table={table} linkTo={myTableDetailPath(table.id)} />
+            ))}
+          </div>
+          <LoadMore
+            hasMore={hasNextPage}
+            isLoading={isFetchingNextPage}
+            onLoadMore={() => void fetchNextPage()}
+            shown={tables.length}
+            total={total}
+          />
+        </>
       )}
     </div>
   )

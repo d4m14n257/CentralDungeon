@@ -58,7 +58,7 @@
   "detail": {
     "tabs": {
       "candidates": "Candidates",
-      "status": "Status",
+      "history": "History",
       "sessions": "Sessions",
       "tasks": "Requests",
       "files": "Files",
@@ -70,11 +70,8 @@
   },
   "status": {
     "justificationLabel": "Justification",
-    "historyTitle": "Status history",
     "historyEmptyTitle": "No status changes yet",
     "changedBy": "By {{name}}",
-    "waitingForAdmin": "Waiting for an admin to review it.",
-    "pausedByAdmin": "The table has been paused by an admin.",
     "resubmit": "Send back for review",
     "resubmitConfirmTitle": "Send this table back",
     "resubmitConfirmDescription": "It goes back to preparation, waiting for an admin to review it.",
@@ -99,14 +96,12 @@
     "submitConfirmTitle": "Send the table to review?",
     "submitConfirmDescription": "An admin will review it. In the meantime you will not be able to edit it — if something needs fixing, do it before sending.",
     "submitSuccess": "Table sent to review",
-    "draftHint": "This is a draft: only you can see it. Send it to review when it is ready.",
     "requestPause": "Ask for a pause",
     "requestPauseDialogTitle": "Ask for this table to be paused",
     "requestPauseDialogDescription": "Say why it has to stop. The admin who answers reads this, and it stays in the table’s history.",
     "requestPauseHint": "Asking is not pausing: until an admin answers, the table is still running and the calendar still promises its dates.",
     "requestPauseHelpLink": "How a pause works",
     "requestPauseSuccess": "Pause request sent",
-    "pauseRequestedHint": "You have asked for this table to be paused and nobody has answered yet. Until then the table is still running: the sessions stand, and they are worth playing.",
     "errors": {
       "PAUSE_ALREADY_REQUESTED": "A pause request for this table is already waiting on an answer. Reload the screen to see it.",
       "generic": "We could not send the request. Try again."
@@ -277,5 +272,43 @@
   },
   "people": {
     "viewRecord": "View {{name}}'s card"
+  },
+  "notice": {
+    "Draft": {
+      "title": "Still a draft",
+      "description": "This is a draft: only you can see it. Send it to review when it is ready."
+    },
+    "Preparation": {
+      "title": "Waiting for an admin to review it",
+      "description": "An admin is about to review it. It cannot be edited meanwhile; once approved, it opens to applications."
+    },
+    "ChangesRequested": {
+      "title": "Changes were requested",
+      "description": "Read the reason in the history, fix it from Edit and send it back to review."
+    },
+    "Opened": {
+      "title": "Open to applications",
+      "description": "It is taking applications. Start it when the first session begins."
+    },
+    "InProgress": {
+      "title": "Being played",
+      "description": "It is being played. Finish it when it ends. If it has to stop, ask for a pause: an admin decides."
+    },
+    "PauseRequested": {
+      "title": "You asked to pause it",
+      "description": "You have asked for this table to be paused and nobody has answered yet. Until then the table is still running: the sessions stand, and they are worth playing."
+    },
+    "Pause": {
+      "title": "Paused by an admin",
+      "description": "The table has been paused by an admin. Only an admin can resume it."
+    },
+    "Finished": {
+      "title": "Played to the end",
+      "description": "It was played to the end and stays on the record. There is nothing to decide."
+    },
+    "Canceled": {
+      "title": "Canceled before the end",
+      "description": "It was closed before the end and stays on the record. The reason is in the history."
+    }
   }
 }

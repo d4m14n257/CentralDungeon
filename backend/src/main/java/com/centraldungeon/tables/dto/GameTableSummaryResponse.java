@@ -22,6 +22,10 @@ import org.jspecify.annotations.Nullable;
  *                         for an id taken from the URL (ADR-05 §5), which is what makes it impossible to
  *                         ask on somebody else's behalf. False on listings where the question does
  *                         not arise - a table you already play at cannot clash with itself
+ * @param applied          whether the <b>actor of the token</b> holds a live application on it - Candidate or
+ *                         Player (ADR-09 §1) - which is the explorer's "you already applied" mark. Computed
+ *                         here for the whole page instead of crossed on the client against a paginated
+ *                         list that only ever held its first page. False where no actor is involved
  * @param primaryMaster    who runs the table. Non-null here because every table this endpoint lists
  *                         already has a Primary - the Unassigned case has its own shape,
  *                         {@link AdminTableSummaryResponse}
@@ -36,5 +40,6 @@ public record GameTableSummaryResponse(
         int playerCount,
         List<TableScheduleEntry> schedule,
         boolean scheduleConflict,
+        boolean applied,
         MasterSummaryResponse primaryMaster) {
 }

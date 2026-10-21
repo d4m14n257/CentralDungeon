@@ -142,7 +142,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-1", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         CreateGameTableRequest request = runnableRequest(null);
         GameTableDetailResponse response = gameTableService.create(request, "creator-1");
@@ -267,7 +267,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-uncapped", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         assertThat(gameTableService.create(requestAskingFor(null), "creator-1").id()).isEqualTo("table-uncapped");
     }
@@ -290,7 +290,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-4", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.approve("table-4", "admin-1");
 
@@ -316,7 +316,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-free", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.approve("table-free", "admin-1");
 
@@ -335,7 +335,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-mine", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.approve("table-mine", "admin-1");
 
@@ -425,7 +425,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-unassigned", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.assignInitialMasters(
                 "table-unassigned", new AssignMastersRequest("primary-1", List.of()), "admin-1");
@@ -451,7 +451,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-handed-over", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.assignInitialMasters(
                 "table-handed-over", new AssignMastersRequest("primary-1", List.of("second-1")), "admin-1");
@@ -476,7 +476,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-approved", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.approve("table-approved", "admin-1");
 
@@ -493,7 +493,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-bounced", "Test", null, null, null, null, null, "ChangesRequested", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.requestChanges("table-bounced", "admin-1", new ChangeTableStatusRequest("Falta la agenda"));
 
@@ -557,7 +557,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-6b", "Test", null, null, null, null, null, "Canceled", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.cancel("table-6b", "admin-1", new ChangeTableStatusRequest("No hay suficientes jugadores"));
 
@@ -754,7 +754,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-veto-3", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         assertThat(gameTableService.getDetail("table-veto-3", "player-1")).isNotNull();
 
@@ -779,7 +779,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-pause-1", "Test", null, null, null, null, null, "PauseRequested", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.markPauseRequested("table-pause-1", "secondary-1");
 
@@ -825,7 +825,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-pause-4", "Test", null, null, null, null, null, "Pause", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.applyApprovedPause("table-pause-4", "admin-1", "The master is moving house");
 
@@ -850,7 +850,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-pause-5", "Test", null, null, null, null, null, "InProgress", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.revertRequestedPause("table-pause-5", "admin-1", "The table has only just started");
 
@@ -881,12 +881,36 @@ class GameTableServiceTest {
         MasterSummaryResponse primarySummary = new MasterSummaryResponse("someone-else", "Someone Else", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
-                new GameTableSummaryResponse("table-4b", "Test", "Opened", null, null, null, 0, List.of(), false, primarySummary);
-        when(gameTableMapper.toSummary(table, 0, primarySummary, List.of(), false)).thenReturn(summary);
+                new GameTableSummaryResponse("table-4b", "Test", "Opened", null, null, null, 0, List.of(), false, false, primarySummary);
+        when(gameTableMapper.toSummary(table, 0, primarySummary, List.of(), false, false)).thenReturn(summary);
 
         var result = gameTableService.list(null, pageable, "player-1");
 
         assertThat(result.content()).containsExactly(summary);
+    }
+
+    /**
+     * ADR-09 §1: the "already applied" mark is the server's, computed for the reader of the token in one
+     * query for the page - the client used to cross it against the first page of its own applications.
+     */
+    @Test
+    void listMarksTheTablesTheReaderAlreadyAppliedTo() {
+        GameTable table = persistedTable("table-applied", GameTableStatus.Opened);
+        Master primary = new Master(table, persistedUser("someone-else"), MasterType.Primary);
+        Pageable pageable = PageRequest.of(0, 20);
+        when(gameTableSearchResolver.resolveCatalogTerms(any())).thenReturn(Map.of());
+        when(gameTableRepository.findAll(ArgumentMatchers.<Specification<GameTable>>any(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(table)));
+        when(masterService.findByGameTable("table-applied")).thenReturn(List.of(primary));
+        MasterSummaryResponse primarySummary = new MasterSummaryResponse("someone-else", "Someone Else", "Primary");
+        when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
+        when(tableRegistrationRepository.findTableIdsWithRegistration(
+                        "player-1", List.of("table-applied"), List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player)))
+                .thenReturn(List.of("table-applied"));
+
+        gameTableService.list(null, pageable, "player-1");
+
+        verify(gameTableMapper).toSummary(table, 0, primarySummary, List.of(), false, true);
     }
 
     /**
@@ -937,8 +961,8 @@ class GameTableServiceTest {
         MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-1", "Primary One", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
-                new GameTableSummaryResponse("table-5", "Test", "Preparation", null, null, null, 0, List.of(), false, primarySummary);
-        when(gameTableMapper.toSummary(table, 0, primarySummary, List.of(), false)).thenReturn(summary);
+                new GameTableSummaryResponse("table-5", "Test", "Preparation", null, null, null, 0, List.of(), false, false, primarySummary);
+        when(gameTableMapper.toSummary(table, 0, primarySummary, List.of(), false, false)).thenReturn(summary);
 
         var result = gameTableService.listManaged("master-1", pageable);
 
@@ -1093,8 +1117,8 @@ class GameTableServiceTest {
         MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-of-" + table.getId(), "Primary", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
-                new GameTableSummaryResponse(table.getId(), "Test", table.getStatus().name(), null, null, null, 0, List.of(), false, primarySummary);
-        when(gameTableMapper.toSummary(eq(table), org.mockito.ArgumentMatchers.anyInt(), eq(primarySummary), any(), org.mockito.ArgumentMatchers.anyBoolean()))
+                new GameTableSummaryResponse(table.getId(), "Test", table.getStatus().name(), null, null, null, 0, List.of(), false, false, primarySummary);
+        when(gameTableMapper.toSummary(eq(table), org.mockito.ArgumentMatchers.anyInt(), eq(primarySummary), any(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyBoolean()))
                 .thenReturn(summary);
     }
 
@@ -1120,6 +1144,7 @@ class GameTableServiceTest {
                         any(),
                         any(),
                         any(),
+                        org.mockito.ArgumentMatchers.anyBoolean(),
                         org.mockito.ArgumentMatchers.anyBoolean());
     }
 
@@ -1132,7 +1157,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-7", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         GameTableDetailResponse response = gameTableService.getManagedDetail("table-7", "master-1");
 
@@ -1157,7 +1182,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-close-1", "Test", null, null, null, null, null, "Finished", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.finish("table-close-1", "primary-1");
 
@@ -1174,7 +1199,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-close-2", "Test", null, null, null, null, null, "Canceled", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.cancel("table-close-2", "primary-1", new ChangeTableStatusRequest("se cae"));
 
@@ -1194,7 +1219,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-close-3", "Test", null, null, null, null, null, "Finished", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.finish("table-close-3", "primary-1");
 
@@ -1210,7 +1235,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-edit-1", "Nuevo", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.update(
                 "table-edit-1",
@@ -1271,7 +1296,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-draft", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
 
         gameTableService.submitForReview("table-draft", "master-1");
 
@@ -1300,7 +1325,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-edit-4", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false));
         List<TableScheduleEntry> agenda = List.of(
                 new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0)),
                 new TableScheduleEntry(Weekday.Saturday, LocalTime.of(15, 0), LocalTime.of(6, 0)));
@@ -1474,7 +1499,7 @@ class GameTableServiceTest {
     private GameTableDetailResponse detailOf(String id, String status) {
         return new GameTableDetailResponse(
                 id, "Test", null, null, null, null, null, status, null, 0, null, null,
-                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false);
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false);
     }
 
     /**
@@ -1527,6 +1552,7 @@ class GameTableServiceTest {
                 any(),
                 any(),
                 any(),
+                org.mockito.ArgumentMatchers.anyBoolean(),
                 org.mockito.ArgumentMatchers.anyBoolean());
     }
 }

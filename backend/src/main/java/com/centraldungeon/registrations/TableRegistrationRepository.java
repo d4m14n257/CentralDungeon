@@ -26,6 +26,22 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     boolean existsByGameTable_IdAndUser_IdAndStatusIn(String gameTableId, String userId, Collection<TableRegistrationStatus> statuses);
 
     /**
+     * Which of these tables the person holds a registration on in one of these statuses - the "you
+     * already applied" mark of a page of cards (ADR-09 §1), in one query for the whole page.
+     *
+     * @param userId       the reader, from the token (ADR-05 §5)
+     * @param gameTableIds the tables on the page
+     * @param statuses     which statuses count - Candidate and Player
+     * @return the ids, among the given ones, where such a registration exists
+     */
+    @Query("select r.gameTable.id from TableRegistration r where r.user.id = :userId "
+            + "and r.gameTable.id in :gameTableIds and r.status in :statuses")
+    List<String> findTableIdsWithRegistration(
+            @Param("userId") String userId,
+            @Param("gameTableIds") Collection<String> gameTableIds,
+            @Param("statuses") Collection<TableRegistrationStatus> statuses);
+
+    /**
      * How many people hold a given status on a table. With {@code Player} it is the seat count the
      * max_players cap is checked against (ADR-09 §3), and the "3/5" every card shows.
      *

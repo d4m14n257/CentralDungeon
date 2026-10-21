@@ -16,10 +16,11 @@ const baseTable: GameTableSummary = {
   playerCount: 2,
   schedule: [],
   scheduleConflict: false,
+  applied: false,
   primaryMaster: { userId: 'master-1', name: 'BrowserTester', masterType: 'Primary' },
 }
 
-function renderCard(table: GameTableSummary, options: { linkTo?: string; alreadyApplied?: boolean } = {}) {
+function renderCard(table: GameTableSummary, options: { linkTo?: string } = {}) {
   return render(
     <MemoryRouter>
       <GameTableCard table={table} {...options} />
@@ -71,8 +72,8 @@ describe('GameTableCard', () => {
     expect(screen.queryByText('Public')).not.toBeInTheDocument()
   })
 
-  it('shows the already-applied chip when alreadyApplied is true', () => {
-    renderCard(baseTable, { alreadyApplied: true })
+  it('shows the already-applied chip when the server marks the table as applied', () => {
+    renderCard({ ...baseTable, applied: true })
 
     expect(screen.getByText('Ya te postulaste')).toBeInTheDocument()
   })

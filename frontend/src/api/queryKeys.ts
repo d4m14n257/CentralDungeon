@@ -13,6 +13,8 @@ export const queryKeys = {
      */
     lists: () => ['tables', 'list'] as const,
     detail: (id: string) => ['tables', 'detail', id] as const,
+    /** Every table detail, for a mutation that changes the reader's own mark on a table it cannot name (ADR-09 §1). */
+    details: () => ['tables', 'detail'] as const,
     managedDetail: (id: string) => ['tables', 'managed-detail', id] as const,
     mine: () => ['tables', 'mine'] as const,
     /**
@@ -134,12 +136,18 @@ export const queryKeys = {
   },
   registrations: {
     candidates: (tableId: string) => ['registrations', 'candidates', tableId] as const,
-    mine: () => ['registrations', 'mine'] as const,
+    /** Their applications, by page. `mine()` with no page is the prefix every mutation invalidates. */
+    mine: (page?: number) => (page === undefined ? (['registrations', 'mine'] as const) : (['registrations', 'mine', page] as const)),
     /** A table's roster. Its own branch: the candidate queue's order is a rule (ADR-09 §1), a roster's is not. */
     players: (tableId: string) => ['registrations', 'players', tableId] as const,
   },
   notifications: {
+    /** The branch: what reading one or all invalidates, so the bell and the inbox both refresh. */
     list: () => ['notifications', 'list'] as const,
+    /** The bell's latest five. */
+    recent: () => ['notifications', 'list', 'recent'] as const,
+    /** The /notifications inbox, page after page with "Ver más" (ADR-04 §6). */
+    inbox: () => ['notifications', 'list', 'inbox'] as const,
   },
   /**
    * The request mechanism (ADR-16 §1): one branch for the four questions it answers.

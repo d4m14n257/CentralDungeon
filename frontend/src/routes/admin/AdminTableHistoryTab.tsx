@@ -2,7 +2,7 @@ import { useOutletContext } from 'react-router'
 
 import type { GameTableDetail } from '@/features/tables'
 
-import { StatusTimeline } from '../master/MasterTableStatusTab'
+import { StatusTimeline } from '../master/MasterTableHistoryTab'
 
 interface OutletContext {
   table: GameTableDetail

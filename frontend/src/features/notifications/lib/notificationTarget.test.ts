@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { masterTableDetailPath, masterTableStatusPath } from '@/config/paths'
+import { masterTableDetailPath, masterTableHistoryPath } from '@/config/paths'
 
 import { notificationTarget } from './notificationTarget'
 import { NOTIFICATION_TYPES, type Notification } from '../types'
@@ -95,8 +95,8 @@ describe('notificationTarget', () => {
   })
 
   /** The admin's reason is in the status history and not in the notification (ADR-23 §3, ADR-06 §8). */
-  it.each(['TablePausedByAdmin', 'TableCanceledByAdmin'] as const)('sends %s to the status tab, where the reason is', (type) => {
-    expect(notificationTarget(notification({ notificationType: type }))).toBe(masterTableStatusPath('t1'))
+  it.each(['TablePausedByAdmin', 'TableCanceledByAdmin'] as const)('sends %s to the history tab, where the reason is', (type) => {
+    expect(notificationTarget(notification({ notificationType: type }))).toBe(masterTableHistoryPath('t1'))
   })
 
   it('opens nothing for a table an admin removed, which has nothing left to open', () => {

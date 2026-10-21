@@ -5,14 +5,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '@/providers/i18n'
 import type { GameTableStatus } from '@/features/tables'
-import { MasterTableStatusTab } from './MasterTableStatusTab'
+import { MasterTableStatusNotice } from './MasterTableStatusNotice'
 
 const requestPause = vi.fn()
-let outletContext = { tableId: 'table-1', status: 'InProgress' as GameTableStatus, isPrimary: true }
 
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router')
-  return { ...actual, useOutletContext: () => outletContext, useNavigate: () => vi.fn() }
+  return { ...actual, useNavigate: () => vi.fn() }
 })
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -37,17 +36,15 @@ vi.mock('@/features/tables', async () => {
     useStartTable: idle,
     useSubmitTableForReview: idle,
     useRequestTablePause: () => ({ mutate: requestPause, isPending: false }),
-    useTableStatusHistory: () => ({ data: [], isPending: false, isLoadingError: false }),
   }
 })
 
 vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => vi.fn().mockResolvedValue(true) }))
 
-function renderTab(status: GameTableStatus, isPrimary = true) {
-  outletContext = { tableId: 'table-1', status, isPrimary }
+function renderNotice(status: GameTableStatus, isPrimary = true) {
   render(
     <MemoryRouter>
-      <MasterTableStatusTab />
+      <MasterTableStatusNotice tableId="table-1" status={status} isPrimary={isPrimary} />
     </MemoryRouter>,
   )
 }
@@ -56,18 +53,18 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe('MasterTableStatusTab · requesting a pause', () => {
+describe('MasterTableStatusNotice · requesting a pause', () => {
   /** ADR-07 §2: there is nothing to pause before the table is running, so the act is absent (principle 2). */
   it('offers the pause request only on a table that is running', () => {
     const { unmount } = render(<span />)
     unmount()
 
-    renderTab('InProgress')
+    renderNotice('InProgress')
     expect(screen.getByRole('button', { name: 'Pedir pausa' })).toBeInTheDocument()
   })
 
   it('offers nothing to ask on a table that has not started', () => {
-    renderTab('Opened')
+    renderNotice('Opened')
 
     expect(screen.queryByRole('button', { name: 'Pedir pausa' })).not.toBeInTheDocument()
   })
@@ -80,7 +77,7 @@ describe('MasterTableStatusTab · requesting a pause', () => {
    * players. Only an admin's answer freezes the agenda.
    */
   it('replaces the button with the wait once a pause has been asked for', () => {
-    renderTab('PauseRequested')
+    renderNotice('PauseRequested')
 
     expect(screen.queryByRole('button', { name: 'Pedir pausa' })).not.toBeInTheDocument()
     expect(screen.getByText(/todavía no te respondieron/)).toBeInTheDocument()
@@ -89,10 +86,10 @@ describe('MasterTableStatusTab · requesting a pause', () => {
 
   /**
    * Asking for a pause is taken from **any** master of the table, unlike everything in
-   * `StatusActions`: a co-master running the sessions is exactly the person who knows it has to stop.
+   * the other transitions: a co-master running the sessions is exactly the person who knows it has to stop.
    */
   it('lets a co-master ask, while the Primary-only transitions stay hidden from them', () => {
-    renderTab('InProgress', false)
+    renderNotice('InProgress', false)
 
     expect(screen.getByRole('button', { name: 'Pedir pausa' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Finalizar mesa' })).not.toBeInTheDocument()
@@ -102,7 +99,7 @@ describe('MasterTableStatusTab · requesting a pause', () => {
   /** ADR-07 §2 asks for a reason on a pause, and it is what the admin reads to decide. */
   it('sends the reason that was written', async () => {
     const user = userEvent.setup()
-    renderTab('InProgress')
+    renderNotice('InProgress')
 
     await user.click(screen.getByRole('button', { name: 'Pedir pausa' }))
     const dialog = within(await screen.findByRole('dialog'))
@@ -121,15 +118,36 @@ describe('MasterTableStatusTab · requesting a pause', () => {
    * longer matters.
    */
   it('still offers cancelling while a pause is waiting on an answer', () => {
-    renderTab('PauseRequested')
+    renderNotice('PauseRequested')
 
     expect(screen.getByRole('button', { name: 'Cancelar mesa' })).toBeInTheDocument()
+  })
+
+  /**
+   * ADR-21 §10: the notice says where the table stands in every status, and cancelling sits apart at the
+   * right when there are other decisions to keep it away from.
+   */
+  it('names the situation and keeps cancelling apart from the other decisions', () => {
+    renderNotice('InProgress')
+
+    expect(screen.getByText('Se está jugando')).toBeInTheDocument()
+    const cancel = screen.getByRole('button', { name: 'Cancelar mesa' })
+    expect(cancel.parentElement).toHaveClass('ml-auto')
+    expect(screen.getByRole('button', { name: 'Finalizar mesa' }).parentElement).not.toHaveClass('ml-auto')
+  })
+
+  /** A status with nothing to decide still has its notice, so the reader learns where to look. */
+  it('still says where a finished table stands, with no buttons', () => {
+    renderNotice('Finished')
+
+    expect(screen.getByText('Se jugó hasta el final')).toBeInTheDocument()
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
   /** An empty reason never leaves the screen: the schema refuses it before the round trip does. */
   it('refuses to send a pause request with no reason', async () => {
     const user = userEvent.setup()
-    renderTab('InProgress')
+    renderNotice('InProgress')
 
     await user.click(screen.getByRole('button', { name: 'Pedir pausa' }))
     const dialog = within(await screen.findByRole('dialog'))

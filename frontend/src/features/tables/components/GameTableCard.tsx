@@ -16,17 +16,16 @@ import { TableStatusBadge } from './TableStatusBadge'
  * it: it is the first thing read after the name, and this way it does not compete with it for
  * width. The footer separates what describes the table from what describes whoever runs it.
  *
- * `alreadyApplied` is a plain boolean and not the application's real status (Candidate/Player):
- * this feature cannot import from `features/registrations` (regla dura 16), and "you already
- * applied" is true whether it is still pending or you were accepted - nothing more is needed. What
- * crosses that data is the screen that composes them (`TableListPage`), not this card.
+ * "You already applied" is the table's own `applied`, computed by the server for the reader (ADR-09 §1):
+ * a plain boolean and not the application's status, because it is true whether it is still pending or
+ * you were accepted - nothing more is needed.
  *
  * The agenda is shown **in local time** (ADR-03 §6): what travels is UTC and the conversion belongs to
  * `lib/date.ts`. And when the table clashes with something the reader is already committed to, the
  * card warns with the reason in view (ADR-08 §2) - a warning that does not explain itself is as useless
  * as a grey button with no stated reason (principle 2 of diseno §1).
  */
-export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTableSummary; linkTo?: string; alreadyApplied?: boolean }) {
+export function GameTableCard({ table, linkTo }: { table: GameTableSummary; linkTo?: string }) {
   const { t, i18n } = useTranslation('tables')
   const typeLabel = tableTypeLabel(t, table.tableTypeCode, table.tableTypeName)
 
@@ -36,7 +35,7 @@ export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTa
         <h2 className="section-title leading-6">{table.name}</h2>
         <div className="flex flex-wrap items-center gap-1.5">
           <TableStatusBadge status={table.status} />
-          {alreadyApplied && (
+          {table.applied && (
             <span className="bg-raised text-fg-muted inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium">
               <Check className="size-3" />
               {t('explorer.alreadyApplied')}

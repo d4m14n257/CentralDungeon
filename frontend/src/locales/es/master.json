@@ -58,7 +58,7 @@
   "detail": {
     "tabs": {
       "candidates": "Candidatos",
-      "status": "Estado",
+      "history": "Historial",
       "sessions": "Sesiones",
       "tasks": "Peticiones",
       "files": "Archivos",
@@ -70,11 +70,8 @@
   },
   "status": {
     "justificationLabel": "Justificación",
-    "historyTitle": "Historial de estados",
     "historyEmptyTitle": "Todavía no hubo cambios de estado",
     "changedBy": "Por {{name}}",
-    "waitingForAdmin": "Esperando la revisión de un admin.",
-    "pausedByAdmin": "La mesa está pausada por un admin.",
     "resubmit": "Reenviar a revisión",
     "resubmitConfirmTitle": "Reenviar esta mesa",
     "resubmitConfirmDescription": "Vuelve a quedar en preparación, esperando la revisión de un admin.",
@@ -99,14 +96,12 @@
     "submitConfirmTitle": "¿Enviar la mesa a revisión?",
     "submitConfirmDescription": "Un admin la va a revisar. Mientras tanto no vas a poder editarla: si hay algo que corregir, hacelo antes de enviarla.",
     "submitSuccess": "Mesa enviada a revisión",
-    "draftHint": "Es un borrador: solo vos la ves. Cuando esté lista, enviala a revisión.",
     "requestPause": "Pedir pausa",
     "requestPauseDialogTitle": "Pedir que se pause la mesa",
     "requestPauseDialogDescription": "Contá por qué hay que pausarla. Lo lee el admin que responde, y queda en el historial de la mesa.",
     "requestPauseHint": "Pedir no es pausar: hasta que un admin responda, la mesa sigue en curso y el calendario sigue prometiendo sus fechas.",
     "requestPauseHelpLink": "Cómo funciona la pausa",
     "requestPauseSuccess": "Pedido de pausa enviado",
-    "pauseRequestedHint": "Ya pediste que se pause la mesa y todavía no te respondieron. Mientras tanto la mesa sigue en curso: las sesiones siguen en pie y conviene jugarlas.",
     "errors": {
       "PAUSE_ALREADY_REQUESTED": "Ya hay un pedido de pausa esperando respuesta para esta mesa. Actualizá la pantalla para verlo.",
       "generic": "No pudimos enviar el pedido. Probá de nuevo."
@@ -277,5 +272,43 @@
   },
   "people": {
     "viewRecord": "Ver la ficha de {{name}}"
+  },
+  "notice": {
+    "Draft": {
+      "title": "Todavía es un borrador",
+      "description": "Es un borrador: solo vos la ves. Cuando esté lista, enviala a revisión."
+    },
+    "Preparation": {
+      "title": "Esperando la revisión de un admin",
+      "description": "Un admin la está por revisar. Mientras tanto no se edita; si la aprueba, se abre a postulaciones."
+    },
+    "ChangesRequested": {
+      "title": "Te pidieron cambios",
+      "description": "Leé el motivo en el historial, corregila desde Editar y reenviala a revisión."
+    },
+    "Opened": {
+      "title": "Abierta a postulaciones",
+      "description": "Está recibiendo postulaciones. Cuando arranque la primera sesión, iniciala."
+    },
+    "InProgress": {
+      "title": "Se está jugando",
+      "description": "Se está jugando. Cuando termine, finalizala. Si hay que frenar, pedí una pausa: la decide un admin."
+    },
+    "PauseRequested": {
+      "title": "Pediste pausarla",
+      "description": "Ya pediste que se pause la mesa y todavía no te respondieron. Mientras tanto la mesa sigue en curso: las sesiones siguen en pie y conviene jugarlas."
+    },
+    "Pause": {
+      "title": "Pausada por un admin",
+      "description": "La mesa está pausada por un admin. Solo un admin puede reanudarla."
+    },
+    "Finished": {
+      "title": "Se jugó hasta el final",
+      "description": "Se jugó hasta el final y queda como registro. No hay nada que decidir."
+    },
+    "Canceled": {
+      "title": "Se canceló antes de terminar",
+      "description": "Se cerró antes de terminar y queda como registro. El motivo está en el historial."
+    }
   }
 }

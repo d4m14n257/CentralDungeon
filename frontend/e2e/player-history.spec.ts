@@ -115,7 +115,7 @@ test('a table that ends leaves «mis mesas» and lands in the history with its a
     await expect(player.page.getByText(new RegExp(tableName))).toBeHidden()
 
     // The master runs it and closes it.
-    await master.page.goto(`/master/tables/${tableId}/status`)
+    await master.page.goto(`/master/tables/${tableId}`)
     await master.page.getByRole('button', { name: 'Iniciar mesa' }).click()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
     await master.page.getByRole('button', { name: 'Finalizar mesa' }).click()
