@@ -101,6 +101,42 @@ Las dos piden lo mismo —que el perfil deje de colgar del contexto Jugador o qu
 
 **Deuda de estilo que dejó a la vista ADR-21 §5, para triar en F4.1**: `text-[11px]` en `NotificationBell` y `WizardSteps`, `text-[13px]` en `NotificationBell` y `text-[10px]` en `WeeklyScheduleGrid` son valores sueltos fuera del `@theme` (regla dura 18) — o se agrega el tamaño a `design/build.py`, o se usa `text-xs`.
 
+### 2.4 Lo que encontró la auditoría de las ADRs
+
+El 2026-10-20, tres agentes `auditor-conocimiento` contrastaron las 24 ADRs con el código (89 hallazgos). Lo crítico —producción arrancaba con el secreto JWT de desarrollo— se corrigió en el acto (`1ebd72f`), y el texto que mentía, en `afb16f1`. Quedan estos, **pendientes de que el usuario apruebe la recomendación** (o la cambie). Al resolverse, cada decisión pasa a una sección de su ADR (agente `escriba-adr`) y sale de acá; cada bug, a un commit con su test.
+
+**Bugs**
+
+| # | Bug | Arreglo propuesto |
+|---|---|---|
+| B1 | «Mis postulaciones» no pagina: `useMyApplications` pide la página 0 y su key no la incluye, así que con más postulaciones que el tamaño de página el chip «ya te postulaste» del explorador y la lista mienten | Paginar el hook (`queryKeys`), `MyApplicationsPage` y el cruce de `TableListPage` |
+| B2 | Un `Player` que dirige una mesa ve «proponer» en `CatalogPicker` y recibe `403` (los `@PreAuthorize` de proponer exigen rol) | Según D8 |
+| B3 | `TestDataService` no anula `game_tables.claimed_by`: si un admin `e2e-…` reserva una mesa que no es «E2E», el borrado de usuarios falla por FK | `claimedBy = null` antes de borrar usuarios |
+| B4 | Al borrar una mesa, las postulaciones quedan `Deleted` sin `deleted_at` (`TableRegistration` no mapea la columna) | Mapearla y sellarla en `GameTableService.delete`, con test |
+| B5 | Valores sueltos en `NotificationBell` (`text-[11px]`, `text-[13px]`, `w-[15px]`) y `NotFoundPage` (título a mano), y el override viejo del hover en `NotificationsPage` | Tokens, `page-title` y quitar el override |
+
+**Decisiones**
+
+| # | Qué decidir | Recomendación |
+|---|---|---|
+| D1 | Regla dura 6 («un tipo base por entidad»): cada feature declara una interfaz por `…Response` | La regla sigue al código: una interfaz espejo por `…Response`; `Pick`/`Omit` solo para lo que arma el frontend |
+| D2 | `router.tsx` escribe segmentos literales; `paths.ts` dice ser el único lugar de las rutas | La regla sigue al código: el router declara segmentos, `paths.ts` da los builders de los enlaces |
+| D3 | Pestaña «Estado» del master frente a la regla 15 de `diseno` (ADR-21 §10 la dejó afuera) | Extender la regla: `MasterTableStatusTab` pasa a `StatusNotice` |
+| D4 | `TestLoginController` inyecta repositories (regla dura 1) | Mover la lógica a `TestDataService` |
+| D5 | Capas raíz (`PageHeader`, `SectionHeader`, layouts, `useAvailableContexts`, `DevPanel`) y `features/help` importan de features | Regla: la raíz puede importar el barrel de una feature; la ayuda, solo `import type` |
+| D6 | #110 (formulario puro + diálogo dueño de la mutación): no existe ningún `*Form.tsx` | La regla sigue al código: el diálogo es dueño de su formulario |
+| D7 | El karma se pinta en cards y padrones (`GameTableCard`, `TableDetailPage`, `MasterTablePlayersTab`) y siempre vale 8000 | Sacarlo de esas pantallas y de sus tres DTOs hasta F5 (coherente con ADR-10 §5) |
+| D8 | Proponer un valor de catálogo: ¿por rol o por pertenencia? | Por pertenencia: quien dirige una mesa puede proponer (resuelve B2) |
+| D9 | El choque de horario (ADR-08 §2) no se mide al sumar un co-master, y al editar se mide contra quien edita, no contra todos los masters | Medir contra todos los masters, en el código |
+| D10 | El admin ve y edita los `Draft`, y ADR-07 §1 dice que nadie más los ve | El admin los ve; corregir ADR-07 §1 |
+| D11 | «Ver más» en notificaciones y en mis mesas (ADR-04 §6) no existe: solo la primera página | Construirlo |
+| D12 | `RichTextSanitizer` deja pasar `mailto:` (`allowStandardUrlProtocols`) | Quitarlo: solo http(s) |
+| D13 | El texto de la postulación se guarda sin sanitizar y se muestra como texto | Declararlo texto plano en ADR-03 §8 |
+| D14 | Los diálogos no pasan a *sheet* en móvil (ADR-21 §7, `diseno` §5) | Retirar la regla hasta que haga falta |
+| D15 | La campana no se refresca sola hasta F6 | Polling de 60 s (`live.notifications`) hasta que llegue el WebSocket |
+| D16 | `staleTime` explícito en toda query, o el default del cliente | El default es la política; se declara solo lo distinto (`arquitectura` §3.3) |
+| D17 | Estado `Confirmed` de `comment_drafts`, y desde qué estado publica el job de Temporadas | Postergar a F5 / fase 2, anotado en «Abierto» de `docs/adr/README.md` |
+
 ## 3. Las seis rebanadas
 
 F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porque no se construye producto—. Lo que sí conserva, y es lo que importa, es el corte: **una rebanada no arranca sin que la anterior tenga sus hallazgos escritos y triados.**
