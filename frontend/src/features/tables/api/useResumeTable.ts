@@ -14,7 +14,8 @@ import { gameTablesApi } from './gameTablesApi'
  *
  * **And it is the one act on this screen that can genuinely be refused.** While the table was paused
  * its master may have committed to another one, so the backend re-checks the clash before moving
- * anything and answers `409 SCHEDULE_CONFLICT` naming the other table. That is why this mutation
+ * anything and answers `409 MASTER_SCHEDULE_CONFLICT` naming the other table — every master is
+ * measured, not only the Primary (ADR-08 §2). That is why this mutation
  * shows its own error: the answer worth reading is *which* table it collides with (`resumeErrorKey`),
  * and the global toast would say "no pudimos completar la acción" over the one fact that makes the
  * problem solvable.

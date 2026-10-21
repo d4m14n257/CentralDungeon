@@ -7,6 +7,7 @@ import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.dto.TableScheduleEntry;
+import com.centraldungeon.users.User;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -62,21 +63,27 @@ public class TableScheduleService {
     /** Tells the affected people their commitments now overlap (ADR-08 §2, R4's sibling). */
     private final NotificationService notificationService;
 
+    /** Who runs the table: an agenda is measured against every one of them (ADR-08 §2). */
+    private final MasterService masterService;
+
     /**
      * @param scheduleRepository      the {@code table_schedules} rows
      * @param scheduleConflictService answers whether the new agenda clashes with anything
      * @param registrationRepository  who is signed up to the table
      * @param notificationService     warns the people a schedule change now clashes for
+     * @param masterService           who runs the table, whose weeks the agenda is measured against
      */
     public TableScheduleService(
             TableScheduleRepository scheduleRepository,
             ScheduleConflictService scheduleConflictService,
             TableRegistrationRepository registrationRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            MasterService masterService) {
         this.scheduleRepository = scheduleRepository;
         this.scheduleConflictService = scheduleConflictService;
         this.registrationRepository = registrationRepository;
         this.notificationService = notificationService;
+        this.masterService = masterService;
     }
 
     /**
@@ -129,14 +136,14 @@ public class TableScheduleService {
      *                 and one without a length claims no interval - it can sit in the agenda and
      *                 never clash with anything (ADR-08 §2)
      * @param entries  the week the master wants. Empty clears the agenda
-     * @param actorId  the master, from the token. Their <em>other</em> commitments are what R1
-     *                 compares against, so it is theirs and never an id from the URL (ADR-05 §5). Null
-     *                 when the table has no master yet - an admin creating an Unassigned one (ADR-06 §7) -
-     *                 in which case only the agenda's own coherence is checked and R1 is deferred to
-     *                 the moment masters are assigned
+     * @param actorId  who is acting, from the token (ADR-05 §5). R1 measures the agenda against
+     *                 <em>every</em> live master of the table (ADR-08 §2); the actor only decides whose
+     *                 clash it reads as. A table with no master yet - an admin creating an Unassigned
+     *                 one (ADR-06 §7) - has nobody to measure, so only its own coherence is checked and
+     *                 R1 waits for the masters to be assigned
      * @throws InvalidRequestException if two of the given slots overlap each other (ADR-08 §2)
-     * @throws ConflictException       if the agenda overlaps another live table the actor runs or
-     *                                 plays at - R1 of ADR-08 §2
+     * @throws ConflictException       if the agenda overlaps another live table one of its masters runs
+     *                                 or plays at - R1 of ADR-08 §2
      */
     @Transactional
     public void replace(GameTable table, List<TableScheduleEntry> entries, @Nullable String actorId) {
@@ -146,20 +153,49 @@ public class TableScheduleService {
         if (scheduleConflictService.hasSelfOverlap(intervals)) {
             throw new InvalidRequestException("Two slots of this table's agenda overlap each other");
         }
-        if (actorId != null) {
-            CommittedTable clash = scheduleConflictService.findClash(actorId, table.getId(), intervals);
-            if (clash != null) {
-                // English, and for a log: the sentence the master reads is rendered by the
-                // frontend from the code and the table name below, in their language (ADR-23 §3).
+        List<User> masters = masterService.findByGameTable(table.getId()).stream().map(Master::getUser).toList();
+        requireNoClash(masters, table.getId(), intervals, actorId);
+
+        applyTo(table.getId(), normalized);
+        warnAffectedPeople(table);
+    }
+
+    /**
+     * R1 of ADR-08 §2 for a group: refuses an agenda that overlaps what <b>any</b> of these people is
+     * already committed to elsewhere. The masters of a table run it together, so measuring only whoever
+     * is editing let a co-master's week through.
+     *
+     * <p>The first clash found is the one reported. When it is the actor's own it reads as theirs
+     * ({@code SCHEDULE_CONFLICT}); anybody else's names the person ({@code MASTER_SCHEDULE_CONFLICT}).
+     * English, and for a log: the sentence is rendered by the frontend from the code and its
+     * parameters, in the reader's language (ADR-23 §3).
+     *
+     * @param people         whose weeks to measure - the table's masters, or the ones about to be
+     * @param excludeTableId the table itself, so it never clashes with its own agenda
+     * @param intervals      the agenda being claimed. An empty one never clashes
+     * @param actorId        who is acting, from the token, or null when nobody is
+     * @throws ConflictException on the first clash
+     */
+    @Transactional(readOnly = true)
+    public void requireNoClash(
+            Collection<User> people, String excludeTableId, List<WeeklyInterval> intervals, @Nullable String actorId) {
+        for (User person : people) {
+            CommittedTable clash = scheduleConflictService.findClash(person.getId(), excludeTableId, intervals);
+            if (clash == null) {
+                continue;
+            }
+            if (person.getId().equals(actorId)) {
                 throw new ConflictException(
                         "Agenda overlaps table " + clash.name() + ", which the actor is already committed to",
                         ConflictException.SCHEDULE_CONFLICT,
                         Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
             }
+            String masterName = person.getName() != null ? person.getName() : person.getDiscordUsername();
+            throw new ConflictException(
+                    "Agenda overlaps table " + clash.name() + ", which master " + person.getId() + " is already committed to",
+                    ConflictException.MASTER_SCHEDULE_CONFLICT,
+                    Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name(), ConflictException.PARAM_MASTER_NAME, masterName));
         }
-
-        applyTo(table.getId(), normalized);
-        warnAffectedPeople(table);
     }
 
     /**

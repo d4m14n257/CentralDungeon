@@ -3,12 +3,14 @@ package com.centraldungeon.catalogs;
 import com.centraldungeon.catalogs.dto.AdminCatalogValueResponse;
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.search.SearchConnector;
 import com.centraldungeon.common.search.SearchQuery;
 import com.centraldungeon.common.search.SearchQueryParser;
 import com.centraldungeon.common.search.SearchTerm;
+import com.centraldungeon.tables.MasterService;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Comparator;
@@ -43,7 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <ul>
  *   <li>groups are flat, depth 1: an alias points at the canonical entry, never at another alias (ADR-12 §2)</li>
  *   <li>searching by any member resolves the whole group (ADR-12 §2, §4)</li>
- *   <li>masters and admins propose; only an admin accepts and classifies (ADR-12 §3)</li>
+ *   <li>whoever writes a table proposes - by role or by pertenencia; only an admin accepts and classifies (ADR-12 §3)</li>
  *   <li>a value in {@code Created} neither shows to players nor filters; accepted, it does (ADR-12 §3)</li>
  *   <li>disabling a value breaks no link, and restoring it puts everything back (ADR-12 §5)</li>
  * </ul>
@@ -62,13 +64,19 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     /** Turns entities into the two response shapes. Never sees a repository (arquitectura §2.2). */
     private final CatalogMapper catalogMapper;
 
+    /** Answers who may propose: whoever writes a table, by role or by pertenencia (ADR-06 §4). */
+    private final MasterService masterService;
+
     /**
      * @param repository    the table this catalog lives in
      * @param catalogMapper the entity-to-DTO mapper shared by the three catalogs
+     * @param masterService answers whether the proposer writes any table
      */
-    protected AbstractCatalogService(CatalogValueRepository<E> repository, CatalogMapper catalogMapper) {
+    protected AbstractCatalogService(
+            CatalogValueRepository<E> repository, CatalogMapper catalogMapper, MasterService masterService) {
         this.repository = repository;
         this.catalogMapper = catalogMapper;
+        this.masterService = masterService;
     }
 
     /**
@@ -264,17 +272,23 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     // ----------------------------------------------------- proposing a value
 
     /**
-     * A master or an admin proposes a value (ADR-12 §3). It is born in {@code Created}: it does not show
-     * to players and does not filter until an admin accepts it (ADR-12 §3), but the table that uses it
-     * publishes anyway - that decoupling is the reason ADR-12 §3 exists.
+     * Whoever writes a table proposes a value (ADR-12 §3): a {@code Master}, an admin, or a player an admin
+     * assigned to run a table (ADR-06 §4). It is born in {@code Created}: it does not show to players and
+     * does not filter until an admin accepts it (ADR-12 §3), but the table that uses it publishes anyway -
+     * that decoupling is the reason ADR-12 §3 exists.
      *
      * @param rawName the name as it was typed; surrounding whitespace is stripped here
+     * @param actorId the proposer, from the token (ADR-05 §5)
      * @return the created value, in {@code Created}
+     * @throws ForbiddenActionException if the actor writes no table at all
      * @throws com.centraldungeon.common.exception.ConflictException if the name is already taken,
      *                                                              ignoring case
      */
     @Transactional
-    public CatalogValueResponse propose(String rawName) {
+    public CatalogValueResponse propose(String rawName, String actorId) {
+        if (!masterService.writesAnyTable(actorId)) {
+            throw new ForbiddenActionException("Only somebody who writes a table can propose a " + type().singular());
+        }
         String name = rawName.strip();
         repository.findByNameIgnoreCase(name).ifPresent(existing -> {
             throw new ConflictException(

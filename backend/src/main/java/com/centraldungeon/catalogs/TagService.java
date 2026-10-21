@@ -1,5 +1,6 @@
 package com.centraldungeon.catalogs;
 
+import com.centraldungeon.tables.MasterService;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,14 @@ public class TagService extends AbstractCatalogService<Tag> {
      * @param tagRepository      the {@code tags} table
      * @param tableTagRepository the {@code table_tags} bridge table, for the usage counts
      * @param catalogMapper      the entity-to-DTO mapper shared by the three catalogs
+     * @param masterService      answers whether a proposer writes any table
      */
-    public TagService(TagRepository tagRepository, TableTagRepository tableTagRepository, CatalogMapper catalogMapper) {
-        super(tagRepository, catalogMapper);
+    public TagService(
+            TagRepository tagRepository,
+            TableTagRepository tableTagRepository,
+            CatalogMapper catalogMapper,
+            MasterService masterService) {
+        super(tagRepository, catalogMapper, masterService);
         this.tableTagRepository = tableTagRepository;
     }
 

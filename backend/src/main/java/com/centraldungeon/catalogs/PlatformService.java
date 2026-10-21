@@ -1,5 +1,6 @@
 package com.centraldungeon.catalogs;
 
+import com.centraldungeon.tables.MasterService;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,14 @@ public class PlatformService extends AbstractCatalogService<Platform> {
      * @param platformRepository      the {@code platforms} table
      * @param tablePlatformRepository the {@code table_platforms} bridge table, for the usage counts
      * @param catalogMapper           the entity-to-DTO mapper shared by the three catalogs
+     * @param masterService           answers whether a proposer writes any table
      */
     public PlatformService(
             PlatformRepository platformRepository,
             TablePlatformRepository tablePlatformRepository,
-            CatalogMapper catalogMapper) {
-        super(platformRepository, catalogMapper);
+            CatalogMapper catalogMapper,
+            MasterService masterService) {
+        super(platformRepository, catalogMapper, masterService);
         this.tablePlatformRepository = tablePlatformRepository;
     }
 

@@ -42,6 +42,9 @@ class TableScheduleServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private MasterService masterService;
+
     @InjectMocks
     private TableScheduleService tableScheduleService;
 
@@ -72,6 +75,7 @@ class TableScheduleServiceTest {
     @Test
     void refusesAnAgendaThatCollidesWithAnotherTableTheMasterIsCommittedTo() {
         GameTable table = table("table-3");
+        when(masterService.findByGameTable("table-3")).thenReturn(List.of(master(table, "master-1", MasterType.Primary)));
         when(scheduleConflictService.findClash(eq("master-1"), eq("table-3"), any())).thenReturn(new CommittedTable("other", "La cripta"));
 
         assertThatThrownBy(() -> tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1"))
@@ -88,6 +92,7 @@ class TableScheduleServiceTest {
     @Test
     void carriesTheClashingTableNameAsAParameterAndNotOnlyInsideTheMessage() {
         GameTable table = table("table-3b");
+        when(masterService.findByGameTable("table-3b")).thenReturn(List.of(master(table, "master-1", MasterType.Primary)));
         when(scheduleConflictService.findClash(eq("master-1"), eq("table-3b"), any()))
                 .thenReturn(new CommittedTable("other", "La cripta"));
 
@@ -108,6 +113,30 @@ class TableScheduleServiceTest {
 
         verify(scheduleConflictService, never()).findClash(anyString(), any(), any());
         verify(scheduleRepository).save(any(TableSchedule.class));
+    }
+
+    /**
+     * The masters run the table together (ADR-08 §2): a co-master's week is measured as well, and the
+     * refusal names them, because "where you are already committed" is false for the one editing.
+     */
+    @Test
+    void refusesAnAgendaThatCollidesWithACoMastersOtherTable() {
+        GameTable table = table("table-3c");
+        when(masterService.findByGameTable("table-3c")).thenReturn(List.of(
+                master(table, "master-1", MasterType.Primary), master(table, "co-master-1", MasterType.Secondary)));
+        when(scheduleConflictService.findClash(eq("master-1"), eq("table-3c"), any())).thenReturn(null);
+        when(scheduleConflictService.findClash(eq("co-master-1"), eq("table-3c"), any()))
+                .thenReturn(new CommittedTable("other", "La cripta"));
+
+        assertThatThrownBy(() -> tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1"))
+                .isInstanceOfSatisfying(ConflictException.class, exception -> {
+                    assertThat(exception.getErrorCode()).isEqualTo(ConflictException.MASTER_SCHEDULE_CONFLICT);
+                    assertThat(exception.getErrorParams())
+                            .containsEntry(ConflictException.PARAM_OTHER_TABLE_NAME, "La cripta")
+                            .containsEntry(ConflictException.PARAM_MASTER_NAME, "name-co-master-1");
+                });
+
+        verify(scheduleRepository, never()).save(any());
     }
 
     /** Rows are marked, never dropped, so putting a slot back is an update and not a collision. */
@@ -202,6 +231,10 @@ class TableScheduleServiceTest {
         TableRegistration registration = new TableRegistration(table, user(userId), null);
         registration.setStatus(status);
         return registration;
+    }
+
+    private static Master master(GameTable table, String userId, MasterType type) {
+        return new Master(table, user(userId), type);
     }
 
     private static User user(String id) {

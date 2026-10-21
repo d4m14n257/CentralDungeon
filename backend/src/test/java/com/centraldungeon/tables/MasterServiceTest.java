@@ -22,6 +22,8 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -161,6 +163,35 @@ class MasterServiceTest {
 
         assertThat(masterService.canOversee("table-8", "primary-1")).isTrue();
         verify(userService, never()).loadAuthSnapshot(any());
+    }
+
+    /** Pertenencia without the role still writes a table (ADR-06 §4): an assigned player may propose (ADR-12 §3). */
+    @Test
+    void somebodyAssignedToATableWritesOneWithoutTheMasterRole() {
+        when(userService.loadAuthSnapshot("assigned-1"))
+                .thenReturn(new UserAuthSnapshot("assigned-1", UserStatus.Allowed, Set.of("Player")));
+        when(masterRepository.existsByUser_IdAndStatus("assigned-1", MasterRowStatus.Created)).thenReturn(true);
+
+        assertThat(masterService.writesAnyTable("assigned-1")).isTrue();
+    }
+
+    /** A plain player who runs nothing writes no table. */
+    @Test
+    void aPlayerWhoRunsNothingWritesNoTable() {
+        when(userService.loadAuthSnapshot("player-1"))
+                .thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
+        when(masterRepository.existsByUser_IdAndStatus("player-1", MasterRowStatus.Created)).thenReturn(false);
+
+        assertThat(masterService.writesAnyTable("player-1")).isFalse();
+    }
+
+    /** The role answers by itself, for the tables still to be created. */
+    @ParameterizedTest
+    @ValueSource(strings = {"Master", "Admin", "Owner"})
+    void theRolesThatWriteTablesNeedNoRow(String role) {
+        when(userService.loadAuthSnapshot("someone")).thenReturn(new UserAuthSnapshot("someone", UserStatus.Allowed, Set.of(role)));
+
+        assertThat(masterService.writesAnyTable("someone")).isTrue();
     }
 
     @Test

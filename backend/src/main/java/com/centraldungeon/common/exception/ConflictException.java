@@ -32,6 +32,19 @@ public final class ConflictException extends ApiException {
     public static final String CANDIDATE_SCHEDULE_CONFLICT = "CANDIDATE_SCHEDULE_CONFLICT";
 
     /**
+     * The same clash of ADR-08 §2, when the week that collides is <b>another master's</b> of the table
+     * and not the reader's: an agenda is measured against every master who runs it, not only the one
+     * editing (ADR-08 §2).
+     *
+     * <p>Its own code for the reason {@link #CANDIDATE_SCHEDULE_CONFLICT} has one: the sentence is
+     * about a third person, so it carries {@link #PARAM_MASTER_NAME} besides the table.
+     */
+    public static final String MASTER_SCHEDULE_CONFLICT = "MASTER_SCHEDULE_CONFLICT";
+
+    /** The placeholder {@link #MASTER_SCHEDULE_CONFLICT} fills in: whose week collides. */
+    public static final String PARAM_MASTER_NAME = "masterName";
+
+    /**
      * The placeholder the clash message fills in: the name of the table the agenda collides with.
      *
      * <p>It travels as data rather than baked into a sentence (ADR-23 §3), which is what lets the same

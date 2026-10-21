@@ -309,6 +309,25 @@ public class MasterService {
     }
 
     /**
+     * Whether this person writes some table at all: they may create their own (the {@code Master} role),
+     * oversee any (an admin or the owner), or run one they were assigned to without the role.
+     *
+     * <p>The role for the first two and pertenencia for the third (ADR-06 §4): proposing a catalog value is
+     * part of writing a table, so whoever can write one may propose (ADR-12 §3).
+     *
+     * @param userId the actor, always from the token (ADR-05 §5)
+     * @return true when any of the three holds
+     */
+    @Transactional(readOnly = true)
+    public boolean writesAnyTable(String userId) {
+        Set<String> roles = userService.loadAuthSnapshot(userId).roles();
+        return roles.contains(PlatformRole.MASTER.roleName())
+                || roles.contains(PlatformRole.ADMIN.roleName())
+                || roles.contains(PlatformRole.OWNER.roleName())
+                || runsAnyTable(userId);
+    }
+
+    /**
      * The narrower check: is this person the table's Primary, rather than one of its co-masters.
      * What the lifecycle transitions reserved to the owner ask (ADR-06 §3).
      *

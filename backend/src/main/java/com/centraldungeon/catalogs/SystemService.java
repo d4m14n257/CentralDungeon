@@ -1,5 +1,6 @@
 package com.centraldungeon.catalogs;
 
+import com.centraldungeon.tables.MasterService;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,14 @@ public class SystemService extends AbstractCatalogService<GameSystem> {
      * @param systemRepository      the {@code systems} table
      * @param tableSystemRepository the {@code table_systems} bridge table, for the usage counts
      * @param catalogMapper         the entity-to-DTO mapper shared by the three catalogs
+     * @param masterService         answers whether a proposer writes any table
      */
     public SystemService(
-            SystemRepository systemRepository, TableSystemRepository tableSystemRepository, CatalogMapper catalogMapper) {
-        super(systemRepository, catalogMapper);
+            SystemRepository systemRepository,
+            TableSystemRepository tableSystemRepository,
+            CatalogMapper catalogMapper,
+            MasterService masterService) {
+        super(systemRepository, catalogMapper, masterService);
         this.tableSystemRepository = tableSystemRepository;
     }
 

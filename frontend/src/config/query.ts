@@ -65,6 +65,9 @@ const EXPLAINED_ERROR_CODES = new Set([
   // sentence is about a third person: "where you are already committed" is false when what
   // collided is the candidate's week, not the reader's.
   'CANDIDATE_SCHEDULE_CONFLICT',
+  // And seen by whoever edits a table run by several (ADR-08 §2): the week that collides is a
+  // co-master's, so the sentence names them instead of saying "you".
+  'MASTER_SCHEDULE_CONFLICT',
   // Every refusal of an upload (F1.4). "Could not save" would be the worst possible answer here:
   // the person picked a file, and what they need to know is which file and why - the type, or the
   // size and the limit. The limit travels as a number of bytes and the sentence is written on this

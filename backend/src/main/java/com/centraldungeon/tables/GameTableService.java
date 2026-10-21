@@ -39,6 +39,7 @@ import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.dto.UserSummaryResponse;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -322,8 +323,8 @@ public class GameTableService {
      * @return the table after the edit
      * @throws ConflictException if the table is closed, reserved by another admin
      *                           ({@code ITEM_ALREADY_CLAIMED}), smaller than its roster
-     *                           ({@code CAPACITY_BELOW_PLAYERS}), or its agenda clashes with the
-     *                           Primary's other tables ({@code SCHEDULE_CONFLICT})
+     *                           ({@code CAPACITY_BELOW_PLAYERS}), or its agenda clashes with what one
+     *                           of its masters is committed to ({@code MASTER_SCHEDULE_CONFLICT}, ADR-08 §2)
      */
     @Transactional
     public GameTableDetailResponse adminUpdate(String gameTableId, UpdateGameTableRequest request, String actorId) {
@@ -345,12 +346,7 @@ public class GameTableService {
         }
 
         List<Master> masters = masterService.findByGameTable(gameTableId);
-        String primaryId = masters.stream()
-                .filter(master -> master.getMasterType() == MasterType.Primary)
-                .map(master -> master.getUser().getId())
-                .findFirst()
-                .orElse(null);
-        rewrite(gameTable, request, primaryId);
+        rewrite(gameTable, request, actorId);
         announceAdminAction(gameTable, actorId, NotificationType.TableEditedByAdmin, masters);
         return toDetail(gameTable);
     }
@@ -364,10 +360,10 @@ public class GameTableService {
      * last: {@code duration} is what gives a slot its length, so the clash check has to run against
      * the duration the table is about to have (ADR-08 §2).
      *
-     * @param committedUserId whose other commitments the new agenda is measured against (R1, ADR-08 §2),
-     *                        or null to check only its own coherence
+     * @param actorId who is rewriting, from the token: the agenda is measured against every master of the
+     *                table (R1, ADR-08 §2), and this only decides whose clash it reads as
      */
-    private void rewrite(GameTable gameTable, UpdateGameTableRequest request, @Nullable String committedUserId) {
+    private void rewrite(GameTable gameTable, UpdateGameTableRequest request, String actorId) {
         requireRunnableDraft(request.systemIds(), request.tagIds(), request.platformIds(), request.schedule());
 
         gameTable.setName(request.name());
@@ -380,7 +376,7 @@ public class GameTableService {
         gameTable.setTableType(resolveTableType(request.tableTypeId()));
 
         applyCatalogs(gameTable.getId(), request.systemIds(), request.tagIds(), request.platformIds());
-        tableScheduleService.replace(gameTable, orEmpty(request.schedule()), committedUserId);
+        tableScheduleService.replace(gameTable, orEmpty(request.schedule()), actorId);
     }
 
     /**
@@ -434,16 +430,12 @@ public class GameTableService {
         List<String> secondaries = request.secondaryUserIds() != null ? request.secondaryUserIds() : List.of();
 
         // R1, deferred from creation: an Unassigned table had no master to clash with, and this is
-        // the moment it gets one. Refusing here is better than opening a table its own master cannot
-        // actually run (ADR-08 §2).
-        CommittedTable clash = scheduleConflictService.findClash(
-                request.primaryUserId(), gameTableId, scheduleConflictService.intervalsOf(gameTable));
-        if (clash != null) {
-            throw new ConflictException(
-                    "Agenda overlaps table " + clash.name() + ", which the assigned master is already committed to",
-                    ConflictException.SCHEDULE_CONFLICT,
-                    Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
-        }
+        // the moment it gets them - all of them, co-masters too. Refusing here is better than opening a
+        // table its own masters cannot actually run (ADR-08 §2).
+        List<User> assigned = new ArrayList<>();
+        assigned.add(userService.getById(request.primaryUserId()));
+        secondaries.forEach(secondaryId -> assigned.add(userService.getById(secondaryId)));
+        tableScheduleService.requireNoClash(assigned, gameTableId, scheduleConflictService.intervalsOf(gameTable), actorId);
 
         masterService.assignInitialMasters(gameTable, request.primaryUserId(), secondaries);
         // **They are told they now run it** (ADR-18 §3). This is the one assignment nobody asked for: an
@@ -841,7 +833,7 @@ public class GameTableService {
      * @param actorId     the admin, from the token
      * @return the table, back in play, with its calendar re-laid
      * @throws ConflictException if the table was not paused, or if its agenda now clashes with
-     *                           something its master is committed to (ADR-08 §2)
+     *                           something one of its masters is committed to (ADR-08 §2)
      */
     @Transactional
     public GameTableDetailResponse resume(String gameTableId, String actorId) {
@@ -850,17 +842,9 @@ public class GameTableService {
             throw new ConflictException("Cannot resume a table in status " + gameTable.getStatus());
         }
 
-        MasterSummaryResponse primary = findPrimaryMasterOrNull(gameTableId);
-        if (primary != null) {
-            CommittedTable clash = scheduleConflictService.findClashWith(primary.userId(), gameTable);
-            if (clash != null) {
-                throw new ConflictException(
-                        "Cannot resume: agenda overlaps table " + clash.name()
-                                + ", which this table's master is already committed to",
-                        ConflictException.SCHEDULE_CONFLICT,
-                        Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
-            }
-        }
+        // Every master may have committed elsewhere while the table was frozen, not only the Primary (ADR-08 §2).
+        List<User> masters = masterService.findByGameTable(gameTableId).stream().map(Master::getUser).toList();
+        tableScheduleService.requireNoClash(masters, gameTableId, scheduleConflictService.intervalsOf(gameTable), actorId);
 
         recordStatusChange(gameTable, GameTableStatus.Pause, GameTableStatus.InProgress, actorId, null);
         tableSessionService.rescheduleAfterPause(gameTable, LocalDateTime.now());
@@ -908,6 +892,13 @@ public class GameTableService {
         boolean joins = !masterService.isMasterOf(gameTableId, request.userId());
         masterService.addOrPromote(gameTable, actorId, request.userId(), request.masterType());
         if (joins) {
+            // After addOrPromote checked pertenencia, so an outsider learns nothing about anybody's week.
+            // A clash rolls the addition back with the rest of the transaction (ADR-08 §2).
+            tableScheduleService.requireNoClash(
+                    List.of(userService.getById(request.userId())),
+                    gameTableId,
+                    scheduleConflictService.intervalsOf(gameTable),
+                    actorId);
             notificationService.notifyMasterAssigned(request.userId(), gameTable);
         }
         return masterService.findByGameTable(gameTableId).stream().map(gameTableMapper::toMasterSummary).toList();
@@ -1408,14 +1399,6 @@ public class GameTableService {
                 .findFirst()
                 .map(gameTableMapper::toMasterSummary)
                 .orElseThrow(() -> new IllegalStateException("Table has no Primary master: " + gameTableId));
-    }
-
-    private @Nullable MasterSummaryResponse findPrimaryMasterOrNull(String gameTableId) {
-        return masterService.findByGameTable(gameTableId).stream()
-                .filter(master -> master.getMasterType() == MasterType.Primary)
-                .findFirst()
-                .map(gameTableMapper::toMasterSummary)
-                .orElse(null);
     }
 
     private GameTable lockTable(String gameTableId) {

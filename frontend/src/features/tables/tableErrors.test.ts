@@ -4,12 +4,12 @@ import { ApiError } from '@/types/api'
 
 import { tableActionErrorMessage } from './tableErrors'
 
-function conflict(errorParams?: Record<string, string>) {
+function conflict(errorParams?: Record<string, string>, errorCode = 'SCHEDULE_CONFLICT') {
   return new ApiError(409, {
     title: 'Conflict',
     status: 409,
     detail: 'Cannot resume: agenda overlaps table Las minas de Phandelver',
-    errorCode: 'SCHEDULE_CONFLICT',
+    errorCode,
     ...(errorParams === undefined ? {} : { errorParams }),
   })
 }
@@ -28,6 +28,14 @@ describe('tableActionErrorMessage', () => {
     expect(tableActionErrorMessage(conflict({ otherTableName: 'Las minas de Phandelver' }))).toEqual({
       key: 'tables.errors.SCHEDULE_CONFLICT',
       params: { otherTableName: 'Las minas de Phandelver' },
+    })
+  })
+
+  /** Every master is measured now (ADR-08 §2), so the clash an admin sees is always a master's. */
+  it('explains a clash in some master’s week the same way', () => {
+    expect(tableActionErrorMessage(conflict({ otherTableName: 'La cripta', masterName: 'Ana' }, 'MASTER_SCHEDULE_CONFLICT'))).toEqual({
+      key: 'tables.errors.SCHEDULE_CONFLICT',
+      params: { otherTableName: 'La cripta' },
     })
   })
 

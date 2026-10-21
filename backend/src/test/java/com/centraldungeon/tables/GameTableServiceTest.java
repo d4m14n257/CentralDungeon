@@ -420,6 +420,7 @@ class GameTableServiceTest {
         User admin = persistedUser("admin-1");
         when(gameTableRepository.findByIdForUpdate("table-unassigned")).thenReturn(Optional.of(table));
         when(userService.getById("admin-1")).thenReturn(admin);
+        when(userService.getById("primary-1")).thenReturn(persistedUser("primary-1"));
         when(masterService.findByGameTable("table-unassigned")).thenReturn(List.of());
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
@@ -442,6 +443,10 @@ class GameTableServiceTest {
         GameTable table = persistedTable("table-handed-over", GameTableStatus.Unassigned);
         when(gameTableRepository.findByIdForUpdate("table-handed-over")).thenReturn(Optional.of(table));
         when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
+        User primary = persistedUser("primary-1");
+        User second = persistedUser("second-1");
+        when(userService.getById("primary-1")).thenReturn(primary);
+        when(userService.getById("second-1")).thenReturn(second);
         when(masterService.findByGameTable("table-handed-over")).thenReturn(List.of());
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
@@ -454,6 +459,8 @@ class GameTableServiceTest {
         // The co-master too: being added to somebody else's table is news for whoever is added (ADR-06 §4).
         org.mockito.Mockito.verify(notificationService).notifyMasterAssigned("primary-1", table);
         org.mockito.Mockito.verify(notificationService).notifyMasterAssigned("second-1", table);
+        // R1 measures every master being assigned, the co-master included, before the table opens (ADR-08 §2).
+        verify(tableScheduleService).requireNoClash(eq(List.of(primary, second)), eq("table-handed-over"), any(), eq("admin-1"));
     }
 
     /**
@@ -494,6 +501,24 @@ class GameTableServiceTest {
         // status history, which is where the master reads it whole (ADR-23 §3).
         org.mockito.Mockito.verify(notificationService)
                 .notifyReviewOutcome("master-1", table, NotificationType.TableChangesRequested);
+    }
+
+    /** A new co-master's week is measured too (ADR-08 §2): a clash refuses them and nobody is told they joined. */
+    @Test
+    void refusesACoMasterWhoseOtherTablesClashWithThisOne() {
+        GameTable table = persistedTable("table-co-clash", GameTableStatus.Opened);
+        User joining = persistedUser("second-1");
+        when(gameTableRepository.findById("table-co-clash")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-co-clash", "second-1")).thenReturn(false);
+        when(userService.getById("second-1")).thenReturn(joining);
+        org.mockito.Mockito.doThrow(new ConflictException("clash", ConflictException.MASTER_SCHEDULE_CONFLICT))
+                .when(tableScheduleService).requireNoClash(eq(List.of(joining)), eq("table-co-clash"), any(), eq("primary-1"));
+
+        assertThatThrownBy(() -> gameTableService.addOrPromoteMaster(
+                        "table-co-clash", "primary-1", new AddMasterRequest("second-1", MasterType.Secondary)))
+                .isInstanceOf(ConflictException.class);
+
+        verify(notificationService, never()).notifyMasterAssigned(any(), any());
     }
 
     /** Being promoted is not news: they already ran the table and are watching the screen that did it. */
@@ -1314,12 +1339,13 @@ class GameTableServiceTest {
     }
 
     /**
-     * R1 (ADR-08 §2) asks what the people running the table are committed to. The admin is committed to
-     * nothing here, so measuring against them would let any clash through.
+     * R1 (ADR-08 §2) asks what the people running the table are committed to, and TableScheduleService
+     * measures every master. The admin is passed as the actor only so the refusal can say that the week
+     * that collides is a master's, not theirs.
      */
     @Test
-    @DisplayName("the admin's new agenda is measured against the Primary's other tables, not the admin's")
-    void theAdminsAgendaIsMeasuredAgainstThePrimary() {
+    @DisplayName("the admin's new agenda is handed over with the admin as the actor, not as somebody committed")
+    void theAdminsAgendaIsMeasuredAgainstTheMastersWithTheAdminAsTheActor() {
         GameTable table = persistedTable("table-admin-agenda", GameTableStatus.InProgress);
         when(gameTableRepository.findByIdForUpdate("table-admin-agenda")).thenReturn(Optional.of(table));
         when(masterService.findByGameTable("table-admin-agenda"))
@@ -1328,7 +1354,7 @@ class GameTableServiceTest {
 
         gameTableService.adminUpdate("table-admin-agenda", runnableUpdate("Mesa", null), "admin-1");
 
-        verify(tableScheduleService).replace(eq(table), any(), eq("primary-2"));
+        verify(tableScheduleService).replace(eq(table), any(), eq("admin-1"));
     }
 
     /** Nobody is removed to make a number fit: which player leaves is a person's call (ADR-09 §3, ADR-15 §2). */

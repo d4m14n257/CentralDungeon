@@ -114,7 +114,7 @@ export const gameTablesApi = {
    * **No justification, and that is not an oversight**: ADR-07 §2 demands one for `Pause` and `Canceled`,
    * and resuming is the return to normal.
    *
-   * **It can be refused with `409 SCHEDULE_CONFLICT`**, because the master may have committed to
+   * **It can be refused with `409 MASTER_SCHEDULE_CONFLICT`**, because a master may have committed to
    * something else while the table was paused — and the refusal carries the other table's name in
    * `errorParams.otherTableName`, which is what lets the screen say *which* one (ADR-08 §2, ADR-23 §3).
    *

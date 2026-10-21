@@ -3,6 +3,7 @@ package com.centraldungeon.catalogs;
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.catalogs.dto.CreateCatalogValueRequest;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.common.security.CurrentUser;
 import jakarta.validation.Valid;
 import java.net.URI;
 import org.jspecify.annotations.Nullable;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,16 +72,20 @@ public class SystemController {
     }
 
     /**
-     * Masters and admins propose; only an admin accepts and classifies (ADR-12 §3).
+     * Whoever writes a table proposes - a Master, an admin, or somebody assigned to run one (ADR-06 §4);
+     * only an admin accepts and classifies (ADR-12 §3).
      *
-     * @param request the name to add to the catalog
+     * @param request     the name to add to the catalog
+     * @param currentUser the proposer, from the token (ADR-05 §5)
      * @return 201 with the created system, in {@code Created}, and its Location header. 409 if the
-     *         name is already taken
+     *         name is already taken, 403 if the proposer writes no table
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('MASTER','ADMIN','OWNER')")
-    public ResponseEntity<CatalogValueResponse> propose(@Valid @RequestBody CreateCatalogValueRequest request) {
-        CatalogValueResponse created = systemService.propose(request.name());
+    // Authenticated here, decided in the service: proposing is pertenencia as well as role (ADR-06 §4).
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<CatalogValueResponse> propose(
+            @Valid @RequestBody CreateCatalogValueRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        CatalogValueResponse created = systemService.propose(request.name(), currentUser.userId());
         return ResponseEntity.created(URI.create("/api/v1/systems/" + created.id())).body(created);
     }
 }

@@ -43,7 +43,9 @@ const GENERIC: TableErrorMessage = { key: 'tables.errors.generic', params: {} }
 export function tableActionErrorMessage(error: unknown): TableErrorMessage | null {
   if (error === null || error === undefined) return null
   if (!(error instanceof ApiError)) return GENERIC
-  if (error.problem.errorCode !== 'SCHEDULE_CONFLICT') return GENERIC
+  // MASTER_SCHEDULE_CONFLICT is what an admin gets since every master is measured (ADR-08 §2): the
+  // week that collides is never the admin's, and this sentence already says it is the master's.
+  if (error.problem.errorCode !== 'SCHEDULE_CONFLICT' && error.problem.errorCode !== 'MASTER_SCHEDULE_CONFLICT') return GENERIC
   const otherTableName = error.problem.errorParams?.['otherTableName']
   // The code without its parameter is the one case where the specific sentence cannot be written:
   // it is "se pisa con «»", which says less than the generic one.

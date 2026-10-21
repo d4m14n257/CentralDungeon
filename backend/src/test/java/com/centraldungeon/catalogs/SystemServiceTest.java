@@ -12,7 +12,9 @@ import static org.mockito.Mockito.when;
 import com.centraldungeon.catalogs.dto.AdminCatalogValueResponse;
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.tables.MasterService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -39,11 +41,16 @@ class SystemServiceTest {
     @Mock
     private TableSystemRepository tableSystemRepository;
 
+    @Mock
+    private MasterService masterService;
+
     private SystemService systemService;
 
     @BeforeEach
     void setUp() {
-        systemService = new SystemService(systemRepository, tableSystemRepository, Mappers.getMapper(CatalogMapper.class));
+        systemService = new SystemService(
+                systemRepository, tableSystemRepository, Mappers.getMapper(CatalogMapper.class), masterService);
+        lenient().when(masterService.writesAnyTable("master-1")).thenReturn(true);
         // Stands in for @PrePersist: without it a freshly proposed value comes back with no id.
         lenient().when(systemRepository.save(any())).thenAnswer(invocation -> {
             GameSystem saved = invocation.getArgument(0);
@@ -64,7 +71,7 @@ class SystemServiceTest {
     void proposesAValueAsPendingReview() {
         when(systemRepository.findByNameIgnoreCase("Blades in the Dark")).thenReturn(Optional.empty());
 
-        CatalogValueResponse response = systemService.propose("Blades in the Dark");
+        CatalogValueResponse response = systemService.propose("Blades in the Dark", "master-1");
 
         assertThat(response.name()).isEqualTo("Blades in the Dark");
         assertThat(response.status()).isEqualTo(CatalogStatus.Created.name());
@@ -74,7 +81,7 @@ class SystemServiceTest {
     void rejectsAProposalWhoseNameAlreadyExistsRegardlessOfCase() {
         when(systemRepository.findByNameIgnoreCase("d&d 5e")).thenReturn(Optional.of(value("s-1", "D&D 5e", null, CatalogStatus.Accepted)));
 
-        assertThatThrownBy(() -> systemService.propose("d&d 5e"))
+        assertThatThrownBy(() -> systemService.propose("d&d 5e", "master-1"))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("D&D 5e");
 
@@ -85,7 +92,18 @@ class SystemServiceTest {
     void stripsSurroundingWhitespaceFromAProposedName() {
         when(systemRepository.findByNameIgnoreCase("Fate Core")).thenReturn(Optional.empty());
 
-        assertThat(systemService.propose("  Fate Core  ").name()).isEqualTo("Fate Core");
+        assertThat(systemService.propose("  Fate Core  ", "master-1").name()).isEqualTo("Fate Core");
+    }
+
+    /** Proposing is part of writing a table (ADR-12 §3): somebody who writes none gets nothing created. */
+    @Test
+    void somebodyWhoWritesNoTableCannotPropose() {
+        when(masterService.writesAnyTable("player-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> systemService.propose("Blades in the Dark", "player-1"))
+                .isInstanceOf(ForbiddenActionException.class);
+
+        verify(systemRepository, never()).save(any());
     }
 
     // ------------------------------------------------------ an admin creating
