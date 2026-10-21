@@ -30,8 +30,8 @@ public class RichTextSanitizer {
      */
     private static final PolicyFactory POLICY = new HtmlPolicyBuilder()
             .allowElements("p", "br", "strong", "em", "u", "s", "code", "pre", "blockquote", "h1", "h2", "h3", "ul", "ol", "li", "a")
-            // Only http(s) links, and every one of them leaves the tab it was clicked from with no
-            // handle back into it: rel=noopener is what stops the opened page from touching window.opener.
+            // http(s) links, plus the standard protocols (mailto) that allowStandardUrlProtocols adds;
+            // every link is forced to carry rel=nofollow.
             .allowUrlProtocols("http", "https")
             .allowAttributes("href").onElements("a")
             .requireRelNofollowOnLinks()

@@ -81,7 +81,7 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("nobody-related", "admin-1")).doesNotThrowAnyException();
     }
 
-    /** #41a: a master's profile is open to anybody with a session while their table is public. */
+    /** ADR-10 §1: a master's profile is open to anybody with a session while their table is public. */
     @Test
     void aPlayerSeesTheMasterOfAnOpenedTable() {
         GameTable table = table("table-1", GameTableStatus.Opened, null);
@@ -90,7 +90,7 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("master-1", "player-1")).doesNotThrowAnyException();
     }
 
-    /** The negative of #41a: a table nobody outside it could ever look at grants nothing. */
+    /** The negative of ADR-10 §1: a table nobody outside it could ever look at grants nothing. */
     @Test
     void aPlayerDoesNotSeeTheMasterOfATableStillInDraft() {
         GameTable table = table("table-2", GameTableStatus.Draft, null);
@@ -99,7 +99,7 @@ class ProfileVisibilityServiceTest {
         assertThatThrownBy(() -> service().requireVisible("master-2", "player-1")).isInstanceOf(NotFoundException.class);
     }
 
-    /** #41b: literal - the master sees the candidate the moment the application arrives, unaccepted. */
+    /** ADR-10 §1: literal - the master sees the candidate the moment the application arrives, unaccepted. */
     @Test
     void aMasterSeesACandidateWhoAppliedWithoutHavingBeenAccepted() {
         GameTable table = table("table-3", GameTableStatus.Opened, null);
@@ -111,7 +111,7 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("candidate-1", "master-3")).doesNotThrowAnyException();
     }
 
-    /** The negative of #41b: a master sees only the people who actually applied to their tables. */
+    /** The negative of ADR-10 §1: a master sees only the people who actually applied to their tables. */
     @Test
     void aMasterDoesNotSeeAStrangerWhoNeverApplied() {
         GameTable table = table("table-4", GameTableStatus.Opened, null);

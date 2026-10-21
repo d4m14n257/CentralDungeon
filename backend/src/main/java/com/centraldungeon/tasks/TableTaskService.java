@@ -52,7 +52,7 @@ import org.springframework.transaction.annotation.Transactional;
  * read by no rule; the roster of who has not answered is a list of people to talk to. Evicting,
  * vetoing and rejecting exist elsewhere and are always somebody's decision.
  *
- * <p>Every mutation answers to <b>pertenencia and not to a role</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4): running this
+ * <p>Every mutation answers to <b>pertenencia and not to a role</b> (hard rule 17, ADR-05 §5, ADR-06 §4): running this
  * table is what authorizes asking things of its people, which no {@code @PreAuthorize} can see.
  */
 @Service
@@ -112,7 +112,7 @@ public class TableTaskService {
      *                               reader may see it - the one gate of ADR-03 §7 and ADR-09 §4
      * @param sessionRepository      resolves the session a task may be tied to (ADR-15 §1)
      * @param registrationRepository turns an audience into people
-     * @param masterService          answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
+     * @param masterService          answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
      * @param userService            resolves the target of a {@code Single} task
      * @param notificationService    tells the recipients on publication (ADR-15 §5)
      * @param richTextSanitizer      the whitelist of ADR-03 §8
@@ -606,7 +606,7 @@ public class TableTaskService {
     }
 
     /**
-     * The membership gate (ADR-11 §1, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
+     * The membership gate (hard rule 17, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
      *
      * @throws ForbiddenActionException if the actor does not run this table
      */

@@ -25,7 +25,8 @@ Los roles son acumulables y sin jerarquía (ADR-06 §1): alguien puede ser `Play
                        ├── Jugador
                        ├── Master
                        ├── Admin
-                       └── Owner      ← solo los que tenga
+                       └── Admin      ← solo los que tenga (un Owner usa
+                                         el de Admin hasta F6)
 ```
 
 - **Quien tiene un solo rol ve el chip igual, pero sin caret ni menú** (ADR-21 §3): no hay nada que elegir, pero sí algo que mostrar — sin esto el header no da ninguna señal de en qué contexto está.
@@ -36,7 +37,7 @@ Los roles son acumulables y sin jerarquía (ADR-06 §1): alguien puede ser `Play
 - **Cada contexto se cierra a quien no lo tiene, y se lo devuelve a su home** (ADR-20 §2). `/player/*` pide el rol `Player`; `/master/*`, el rol `Master` o una fila viva en `masters` (ADR-06 §4); `/admin/*`, `Admin` u `Owner`. Quien fuerza la ruta de un contexto ajeno **no ve ni su nav ni un «sin permiso»**: el layout lo manda a `/` y `/` lo despacha a lo suyo. La regla es la misma que decide qué contextos lista el chip, así que el chip y la puerta nunca discrepan. Las transversales no son de ningún contexto y no se cierran.
 - **Aun así, el contexto no es la seguridad.** El backend sigue autorizando endpoint por endpoint y responde `403` igual (ADR-20 §1, ADR-05 §5): la puerta del frontend decide qué se muestra, no qué se permite. `ForbiddenState` queda para el otro rechazo — un recurso concreto, dentro de un contexto que sí tenés, que no es tuyo.
 - Las notificaciones y el avatar son globales: no dependen del contexto.
-- **El feedback del sistema también es global y vive en el layout, no en una ruta** (ADR-19 §8). No tiene pantalla propia porque no tiene contenido que mostrar: es una acción. Se abre desde el shell, en cualquier contexto, y manda a `system_feedback` — anónima (ADR-11 §11), una cada 24 h (ADR-11 §12), directo a la bandeja de admins sin moderación (ADR-11 §11). Como el límite es del servidor, la interfaz **no lo predice**: ofrece el botón siempre y explica el `429` si toca.
+- **El feedback del sistema también será global y vivirá en el layout, no en una ruta** (ADR-19 §8) — se construye en F5. No tiene pantalla propia porque no tiene contenido que mostrar: es una acción. Se abre desde el shell, en cualquier contexto, y manda a `system_feedback` — anónima (ADR-11 §11), una cada 24 h (ADR-11 §12), directo a la bandeja de admins sin moderación (ADR-11 §11). Como el límite es del servidor, la interfaz **no lo predice**: ofrece el botón siempre y explica el `429` si toca.
 
 ### Sitemap
 
@@ -53,11 +54,11 @@ Los roles son acumulables y sin jerarquía (ADR-06 §1): alguien puede ser `Play
 | | `/player/my-tables/:id` | Mi mesa: agenda, sesiones, peticiones pendientes. Cabecera estándar (ADR-21 §5): estado junto al nombre, «Volver a mis mesas», el enlace a la ficha pública como descripción |
 | | `/player/history` | Mesas terminadas y canceladas, con la asistencia final (ADR-19 §8) |
 | | `/my/files` | Mis archivos: a qué flujos pertenece cada uno (ADR-14 §4) y dónde se usa hoy (ADR-14 §3), reutilizables al adjuntar (ADR-13 §2). **Es el único lugar que pregunta el cajón**, porque es el único sin flujo del que deducirlo — y solo ofrece los que son tuyos (ADR-14 §5): los de jugador a cualquiera, los de master a quien dirija mesas, y nunca los anuncios. **Transversal, no del contexto Jugador** — lo que alguien subió como jugador y como master es una sola biblioteca (ADR-20 §2). **Es de players y masters** (ADR-14 §5): quien no tenga ninguno de los dos roles no la ve en el menú y la pantalla le dice por qué. **El buscador es su único filtro** (ADR-14 §6), y la lista va paginada de a 20 con divider entre filas |
-| | `/player/profile` | Mi karma y los comentarios que recibí |
+| | `/player/profile` | Mi perfil: datos, asistencia y mesas terminadas; el karma y los comentarios recibidos llegan con F5 (ADR-10 §5) |
 | | `/player/users/:id` | Perfil de otra persona, sujeto a ADR-10 §1, §2 y ADR-10 §1 |
 | Transversal | `/my/schedule` | **Mi horario**: la semana entera en una grilla — lo que dirigís y lo que jugás, junto. De ningún contexto a propósito: son las mismas noches (ADR-08 §6) |
 | | `/notifications` | Historial de notificaciones. **De ningún contexto**: no cambia el chip (ADR-20 §2) |
-| | ~~`/help`~~ · ~~`/help/players`~~ · ~~`/help/masters`~~ · ~~`/help/admins`~~ | **Ya no son pantallas** (ADR-20 §5). La ayuda se lee en un diálogo levantado desde la pantalla que provoca la pregunta —`<HelpLink section="masters.schedule">`—, porque navegar a leerla tiraba el wizard a medio llenar. Las secciones y sus textos siguen enteros, en `features/help/sections/`. **`/help` queda reservada para soporte**: pedir asistencia, reportar un error. No se registra hasta que exista |
+| | ~~`/help`~~ · ~~`/help/players`~~ · ~~`/help/masters`~~ · ~~`/help/admins`~~ | **Ya no son pantallas** (ADR-20 §5). La ayuda se lee en un diálogo levantado desde la pantalla que provoca la pregunta —`<HelpLink section="masters.schedule">`—, porque navegar a leerla tiraba el wizard a medio llenar. Las secciones y sus textos siguen enteros, en `features/help/sections/`. **`/help` queda reservada para soporte**: pedir asistencia, reportar un error. |
 | **Master** | `/master` | Dashboard: qué necesita tu atención hoy, en todas tus mesas (ADR-20 §4) |
 | | `/master/tables` | Mis mesas como master |
 | | `/master/tables/new` | Wizard de creación — **solo con el rol `Master`** (ADR-06 §4) |
@@ -77,6 +78,6 @@ Los roles son acumulables y sin jerarquía (ADR-06 §1): alguien puede ser `Play
 | | `/admin/users` | Usuarios y bloqueos; desde acá se inicia **"ver como"** (ADR-06 §9). Cada fila abre la ficha de la persona por su usuario de Discord y por un ícono (ADR-10 §6) |
 | | `/admin/users/:id` | **La ficha de una persona** (ADR-10 §6): datos, roles y estado con sus acciones (cambiar roles, bloquear), asistencia, todas sus mesas con su relación —cada una abre su detalle— y el historial de lo que hicieron los admins. Se abre también desde cualquier persona de una mesa |
 | | `/admin/settings` | Configuración: parámetros de negocio y límites (ADR-17 §3). **Sin «textos»**: desde ADR-23 §3 el backend no escribe ninguna frase que lea una persona, así que esa categoría no se construyó (ADR-17 §3) |
-| **Owner** | `/owner/audit` | Trazabilidad de cambios (ADR-17 §1) |
+| **Owner** *(F6, sin construir)* | `/owner/audit` | Trazabilidad de cambios (ADR-17 §1) |
 | | `/owner/storage` | Borrado físico de archivos (ADR-13 §8) |
 | | `/owner/users/:id/migrate` | Migración de cuenta (ADR-05 §8) |

@@ -52,7 +52,7 @@ absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 
 ## §6 El padrón de la mesa es un endpoint propio, separado de la cola de candidatos
 
-**Decisión.** `GET /game-tables/{id}/players` devuelve los jugadores de la mesa, separado de `GET .../registrations`, que devuelve la cola de candidatos.
+**Decisión.** `GET /game-tables/{id}/players` devuelve los jugadores de la mesa **y los vetados**, con quién vetó, cuándo y por qué —es el único lugar donde se levanta un veto (§5)—, separado de `GET .../registrations`, que devuelve la cola de candidatos.
 
 **Por qué.** El primero que lo necesitó fue el selector de una petición `Single` (ADR-15 §2): dirigirle algo a una persona exige poder elegirla entre los que juegan, no del directorio de la plataforma. No es un `?status=` sobre el otro endpoint porque el orden de la cola es una regla de equidad (§1) y el de un padrón no: un endpoint que responde dos preguntas con dos ordenamientos es cómo alguien termina confiando en el equivocado.
 
@@ -60,7 +60,7 @@ absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 
 ## §7 El jugador ve a qué mesas se postuló y por qué lo rechazaron
 
-**Decisión.** En el explorador, la card de una mesa muestra un chip neutro de «ya te postulaste» cuando hay una postulación no rechazada; `GameTableCard` recibe un booleano `alreadyApplied` que resuelve la ruta (`TableListPage`) cruzando mesas con `useMyApplications()`. En «Mis postulaciones», cada fila dice **a qué mesa** (`gameTableName`, denormalizado en `RegistrationResponse`), enlaza a `/tables/:id` y muestra el **motivo del rechazo** (`rejectionJustification`, que solo llena `listMine()` con una consulta extra por página, sin N+1).
+**Decisión.** En el explorador, la card de una mesa muestra un chip neutro de «ya te postulaste» cuando hay una postulación no rechazada; `GameTableCard` recibe un booleano `alreadyApplied` que resuelve la ruta (`TableListPage`) cruzando mesas con `useMyApplications()`. En «Mis postulaciones», cada fila dice **a qué mesa** (`gameTableName`, denormalizado en `RegistrationResponse`), enlaza a `/player/tables/:id` y muestra el **motivo del rechazo** (`rejectionJustification`, que solo llena `listMine()` con una consulta extra por página, sin N+1).
 
 **Por qué.** La lista tiene que explicar sin entrar a cada mesa. El booleano y no el estado real porque una feature no importa de otra (regla dura 16) y porque «ya te postulaste» es cierto tanto en `Candidate` como en `Player`. El chip es neutro porque el acento se reserva para acciones y karma, y esto no es ni una acción ni un estado de la mesa. Una fila de postulación sin el nombre de la mesa no distinguía una de otra, y un rechazo sin motivo no existe en el modelo.
 

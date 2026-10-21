@@ -113,7 +113,7 @@ public class ApprovalService {
      * Answers who runs a table, for the one type whose resolver is not an admin.
      *
      * <p>{@code PlayerBan} is decided by the table's {@code Primary} (ADR-09 §5), and being <em>this</em>
-     * table's Primary is a row in {@code masters} that no {@code @PreAuthorize} can see (ADR-11 §1, ADR-05 §5,
+     * table's Primary is a row in {@code masters} that no {@code @PreAuthorize} can see (hard rule 17, ADR-05 §5,
      * ADR-06 §4). So the check is here, keyed off the request's type - the same principle F3.1 settled:
      * «el otorgamiento es la regla, no la puerta».
      */
@@ -280,7 +280,7 @@ public class ApprovalService {
         User requester = requireAllowedRequester(actor);
         String gameTableId = registrationService.tableIdOf(registrationId);
         // Pertenencia of the table the application belongs to, not of the application: asking is a
-        // thing the people running the table do (ADR-11 §1, ADR-05 §5, ADR-06 §4).
+        // thing the people running the table do (hard rule 17, ADR-05 §5, ADR-06 §4).
         if (!masterService.isMasterOf(gameTableId, actor.userId())) {
             throw new ForbiddenActionException("Only a master of this table can ask for a veto on it");
         }
@@ -687,7 +687,7 @@ public class ApprovalService {
         // Who may answer depends on the TYPE. Four of the five go to the admins and their
         // @PreAuthorize says so; PlayerBan goes to the table's Primary and to nobody else (ADR-09 §5),
         // which no annotation can express - being this table's Primary is a row in `masters`
-        // (ADR-11 §1, ADR-05 §5). The rule that an annotation cannot carry lives here.
+        // (hard rule 17, ADR-05 §5). The rule that an annotation cannot carry lives here.
         requireMayResolve(request, actor);
 
         // The row outlives what it points at on purpose (ADR-16 §2) - but resolving it would be acting on

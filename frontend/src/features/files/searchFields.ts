@@ -51,7 +51,7 @@ export function fileCategoryChoices(t: TFunction, categories: readonly FileCateg
 }
 
 /**
- * The commands `/my/files` accepts (ADR-22 §1, ADR-14 §5, ADR-22 §3).
+ * The commands `/my/files` accepts (ADR-22 §1, §3, ADR-14 §5).
  *
  * **Only the cajones that are theirs**: offering one this person can never have a file in is offering
  * a search that always comes back empty. Which those are is the server's answer, so it arrives as an
@@ -78,7 +78,7 @@ export function myFileSearchFields(t: TFunction, categories: readonly FileCatego
 }
 
 /**
- * The commands `/admin/files` accepts (ADR-22 §1, ADR-14 §5, ADR-22 §3).
+ * The commands `/admin/files` accepts (ADR-22 §1, §3, ADR-14 §5).
  *
  * Two differences from a person's own library, and both come from what the screen is — the platform's
  * library (ADR-14 §7): `/file_owner` exists, because another admin may have uploaded it, and the cajones

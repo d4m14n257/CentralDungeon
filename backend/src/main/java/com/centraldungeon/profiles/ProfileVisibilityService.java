@@ -24,15 +24,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The five rules of "Visibilidad de perfiles" (arquitectura §4.5: ADR-10 §1, §2, ADR-06 §8, ADR-10 §1), written a
+ * The five rules of "Visibilidad de perfiles" (arquitectura §4.5: ADR-10 §1, §2, ADR-06 §8), written a
  * year ago and never implemented until now - in **one place**, {@link #requireVisible}, cheapest
  * check first.
  *
  * <p>The whole rule set answers one question: given the table that links two people, is that link
- * still open? A table that never published anything never opens it (#41a); one that has, or is
+ * still open? A table that never published anything never opens it (ADR-10 §1); one that has, or is
  * running, or is paused, keeps it open for as long as it has not closed; once closed, it stays open
- * for two more weeks and then it does not (ADR-10 §2). That single idea - {@link #isLinkStillOpen} - is
- * reused by all three of the table-shaped rules (#41a, #41b, ADR-10 §1), which is why a special case for
+ * for a configurable window (`profiles.visibility_window_days`, 14 by default) and then it does not (ADR-10 §2). That single idea - {@link #isLinkStillOpen} - is
+ * reused by all three of the table-shaped rules (ADR-10 §1), which is why a special case for
  * {@code Pause} is never written: {@code closed_at} is null while the table is paused exactly as it
  * is while the table is running, so the clock never starts in the first place.
  *
@@ -46,7 +46,7 @@ public class ProfileVisibilityService {
 
 
     /**
-     * States a table's own master row can never be seen through (#41a). Every other status - Opened,
+     * States a table's own master row can never be seen through (ADR-10 §1). Every other status - Opened,
      * InProgress, PauseRequested, Pause, Finished, Canceled - has been out where somebody could look
      * at it at some point, which is the premise {@link #isLinkStillOpen} builds on. {@code Deleted} is
      * here for the same reason it is everywhere else: a soft-deleted table is gone for everyone
@@ -56,14 +56,14 @@ public class ProfileVisibilityService {
             GameTableStatus.Draft, GameTableStatus.Unassigned, GameTableStatus.Preparation,
             GameTableStatus.ChangesRequested, GameTableStatus.Deleted);
 
-    /** The statuses that mean somebody is actually, actively involved with a table (#41b, ADR-10 §1). */
+    /** The statuses that mean somebody is actually, actively involved with a table (ADR-10 §1). */
     private static final List<TableRegistrationStatus> ACTIVE_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
-    /** Who runs which table, and since when - the source rule #41a and #41b both read. */
+    /** Who runs which table, and since when - the source rule ADR-10 §1 both read. */
     private final MasterRepository masterRepository;
 
-    /** Who applied where, and who plays where - #41b and ADR-10 §1. */
+    /** Who applied where, and who plays where - ADR-10 §1. */
     private final TableRegistrationRepository registrationRepository;
 
     /** Resolves the tables two players share, once their ids are known (ADR-10 §1). */
@@ -86,8 +86,8 @@ public class ProfileVisibilityService {
     private final SettingsService settingsService;
 
     /**
-     * @param masterRepository       who runs which table (#41a, #41b)
-     * @param registrationRepository who applied, and who plays (#41b, ADR-10 §1)
+     * @param masterRepository       who runs which table (ADR-10 §1)
+     * @param registrationRepository who applied, and who plays (ADR-10 §1)
      * @param gameTableRepository    resolves the tables two players share (ADR-10 §1)
      * @param userRoleRepository     the actor's global roles, for ADR-06 §8
      * @param settingsService        the visibility window, editable without a deploy (ADR-10 §2, ADR-17 §3)
@@ -114,7 +114,7 @@ public class ProfileVisibilityService {
      *                           the same reason a vetoed table and a deleted one both answer 404
      *                           (ADR-09 §4, ADR-07 §6) is why this does too. A {@code 403} would confirm that
      *                           the target exists and that a relationship once linked them, which is
-     *                           precisely what the two-week window of ADR-10 §2 is meant to stop confirming
+     *                           precisely what the window of ADR-10 §2 is meant to stop confirming
      */
     @Transactional(readOnly = true)
     public void requireVisible(String targetId, String actorId) {
@@ -144,7 +144,7 @@ public class ProfileVisibilityService {
     }
 
     /**
-     * #41a: the target's profile is visible for anybody with a session while they run at least one
+     * ADR-10 §1: the target's profile is visible for anybody with a session while they run at least one
      * table whose link is still open.
      *
      * <p>Reads every master row the target ever held, live and deleted alike, and filters here rather
@@ -161,7 +161,7 @@ public class ProfileVisibilityService {
     }
 
     /**
-     * #41b: the actor runs a table the target applied to. "Since it receives the application" is
+     * ADR-10 §1: the actor runs a table the target applied to. "Since it receives the application" is
      * literal - {@code Candidate} counts exactly as much as {@code Player}, and there is no
      * acceptance to wait for.
      */

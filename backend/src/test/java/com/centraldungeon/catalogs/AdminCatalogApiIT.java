@@ -157,7 +157,7 @@ class AdminCatalogApiIT {
     }
 
     /**
-     * ADR-21 §5: an admin's new value is born accepted, as a group of its own; a player is refused, and a
+     * ADR-12 §9: an admin's new value is born accepted, as a group of its own; a player is refused, and a
      * name already taken is a conflict rather than a duplicate.
      */
     @Test

@@ -46,7 +46,7 @@ import org.springframework.web.multipart.MultipartFile;
  * it protects (ADR-05 §4) and never on a superclass (regla dura 4, CVE-2025-41248).
  *
  * <p>⚠️ Not to be confused with the physical deletion of ADR-13 §8, which is the <b>platform owner's</b> and
- * is F5. Everything here still only marks (ADR-03 §7).
+ * is F6. Everything here still only marks (ADR-03 §7).
  */
 @RestController
 @RequestMapping("/api/v1/admin/files")

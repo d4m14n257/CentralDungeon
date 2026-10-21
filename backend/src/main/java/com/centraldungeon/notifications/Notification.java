@@ -19,8 +19,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Something that happened and that one person needs to know about. Table {@code notifications}.
  *
- * <p>A row, not a push: the WebSocket that makes them arrive live is F5. Until then the bell polls,
- * and when the socket does land it carries an invalidation signal rather than the data - the row
+ * <p>A row, not a push: the WebSocket that makes them arrive live is F6 (ADR-18 §2). Until then the bell does not poll - it
+ * refreshes when it is opened or after a mutation - and when the socket does land it carries an invalidation signal rather than the data - the row
  * here stays the single source of truth (arquitectura §3.3).
  *
  * <p><b>A row stores what happened, not the sentence describing it</b> (ADR-23 §3). It is written once

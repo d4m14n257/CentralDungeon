@@ -40,7 +40,7 @@ export type CreateGameTableForm = z.infer<typeof createGameTableSchema>
  */
 export const WIZARD_STEPS = ['identity', 'catalogs', 'schedule', 'files', 'capacity'] as const
 
-/** One of the four steps of the create-table wizard. */
+/** One of the five steps of the create-table wizard. */
 export type WizardStep = (typeof WIZARD_STEPS)[number]
 
 /** Validates the justification every denying transition needs: cancel, request changes, pause. */

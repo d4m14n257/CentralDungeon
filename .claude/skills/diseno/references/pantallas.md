@@ -39,7 +39,7 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 | Pantalla legacy | Qué pasa con ella |
 |---|---|
 | `index`, `tables/index`, `public-tables`, `first-class-tables` | Se **fusionan** en `/` con filtros. Eran **cuatro** listados casi iguales que solo se distinguían por un filtro fijo — la duplicación más grande del frontend viejo |
-| `tables/[id]`, `tables/available/[id]`, `tables/joined/[id]` | Se **fusionan** en `/tables/:id`. La vista cambia según la relación del usuario con la mesa, no la URL |
+| `tables/[id]`, `tables/available/[id]`, `tables/joined/[id]` | Se **fusionan** en `/player/tables/:id`. La vista cambia según la relación del usuario con la mesa, no la URL |
 | `joined-tables` | → `/my/tables` |
 | `master/index`, `master/requests` | → `/master/tables` y la pestaña de candidatos |
 | `player-requests` | → `/my/applications` |

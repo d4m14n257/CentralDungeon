@@ -44,7 +44,7 @@ absorbe: [63, 70, 76, 77, 87, 209, 210, 212, 236]
 
 ## §5 Publicar una petición notifica a sus destinatarios, y el aviso lleva al detalle público de la mesa
 
-**Decisión.** Publicar una petición crea una notificación `TaskPublished` (ADR-18 §1) para cada destinatario, con destino **`/tables/:id`**, no `/my/tables/:id`.
+**Decisión.** Publicar una petición crea una notificación `TaskPublished` (ADR-18 §1) para cada destinatario, con destino **`/player/tables/:id`**, no `/player/my-tables/:id`.
 
 **Por qué.** Una petición que nadie ve no se cumple. El mismo aviso le llega a un candidato y a un jugador: una petición de audiencia `Candidates` es para gente que todavía no está en la mesa y no tiene entrada en `/my/tables`. El detalle público muestra a los dos lo que la mesa les pide (ADR-14 §2), así que es el único destino que sirve sin partir el tipo de notificación en dos.
 

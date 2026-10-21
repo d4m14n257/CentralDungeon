@@ -9,7 +9,7 @@ El sistema visual de CentralDungeon, **y las pantallas que se construyen con él
 
 ## Reglas fijas
 
-1. **Todo valor de diseño sale de `design/build.py`**: paleta, tipografía, espaciados y radios (ADR-21 §1). Se corre `python3 design/build.py`, que mide los 30 pares de contraste y sale con código 1 si alguno cae bajo WCAG AA, y su `theme.css` se transcribe al `@theme` de `src/styles/globals.css`, que nunca se edita a mano (ADR-21 §1). → §3
+1. **Todo valor de diseño sale de `design/build.py`**: paleta, tipografía, espaciados y radios (ADR-21 §1). Se corre `python3 design/build.py`, que mide los 34 pares de contraste de texto (AA) y 6 gráficos no textuales (3:1) y sale con código 1 si alguno cae bajo WCAG AA, y su `theme.css` se transcribe al `@theme` de `src/styles/globals.css`, que nunca se edita a mano (ADR-21 §1). → §3
 2. **Ningún valor suelto** (regla dura 18): nada de `text-[11px]`, `#hex` o `px` inventados. Si falta un valor, se agrega en `build.py`. → §3
 3. **Un patrón de estilo tiene nombre** (ADR-21 §5). Una combinación de utilidades que cumple un papel —título de página, etiqueta de sección, acciones de fila, lista con divisores, error en un diálogo— **no se escribe literal en una pantalla**: es una clase de `styles/base.css` o un componente de `components/`. **Antes de escribir el JSX se mira el catálogo**; y si el papel aparece por segunda vez, se crea el nombre y las dos pantallas pasan a usarlo. → §5.c
 4. **Se reusa antes de crear** (ADR-21 §6). El inventario dice qué existe; un décimo badge de estado o un segundo diálogo con motivo obligatorio es un bug de diseño. → §5

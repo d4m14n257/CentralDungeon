@@ -109,7 +109,7 @@ test('the asymmetry of ADR-10 §1: a player reads the master first, the master r
     const tableId = await createTable(master.page, tableName, '20:00')
     await open(master.page, admin.page, tableId, tableName)
 
-    // #41a — the master of a table anybody can see is a profile anybody can read, before applying.
+    // ADR-10 §1 — the master of a table anybody can see is a profile anybody can read, before applying.
     await player.page.goto(`/player/tables/${tableId}`)
     await player.page
       .getByRole('link', { name: /e2e-prof-master/ })
@@ -121,7 +121,7 @@ test('the asymmetry of ADR-10 §1: a player reads the master first, the master r
     // ADR-10 §5 — karma and comments are F5, so the wireframe's lower half is not drawn at all.
     await expect(player.page.getByText('Comentarios recibidos')).toBeHidden()
 
-    // #41b — and only now, with the application in, does the candidate's profile open for the master.
+    // ADR-10 §1 — and only now, with the application in, does the candidate's profile open for the master.
     await player.page.goto(`/player/tables/${tableId}`)
     await applyToTable(player.page)
 

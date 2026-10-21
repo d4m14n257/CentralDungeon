@@ -221,7 +221,7 @@ class TaskSubmissionServiceTest {
 
     // ---------------------------------------------------------------- what the master reads
 
-    /** Reading everything that came in is a question about running the table (ADR-11 §1, ADR-05 §5, ADR-06 §4). */
+    /** Reading everything that came in is a question about running the table (hard rule 17, ADR-05 §5, ADR-06 §4). */
     @Test
     void refusesTheFullListToSomebodyWhoDoesNotRunTheTable() {
         givenOpenTask("task-1", true, true);

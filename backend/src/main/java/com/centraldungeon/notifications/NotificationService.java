@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Emits rows only - no WebSocket push yet (that lands in F5, plan-desarrollo.md). "Personal"
+ * Emits rows only - no WebSocket push yet (that lands in F6, ADR-18 §2). "Personal"
  * notifications only; the shared admin queue signal (ADR-18 §2) is a different mechanism, out of E1's
  * scope.
  *
@@ -82,7 +82,7 @@ public class NotificationService {
      * Every master of the table is notified, Primary and Secondary alike - both can act on candidates.
      *
      * <p>The applicant's name travels as a parameter so the rendered title names them: the bell shows
-     * only the title, and "somebody applied" is a worse headline than "Carla applied" (ADR-18 §5).
+     * only the title, and "somebody applied" is a worse headline than "Carla applied" (ADR-18 §3).
      *
      * @param masterUserId  one master of the table; the caller loops over all of them
      * @param table         the table applied to
@@ -228,7 +228,7 @@ public class NotificationService {
      *
      * <p>It carries the task's title so the bell can name <em>which</em> request arrived: "the table
      * is asking you for something" is a worse headline than "Ficha de personaje", the same reasoning
-     * ADR-18 §5 gives for naming the applicant in {@link #notifyNewCandidate}.
+     * ADR-18 §3 gives for naming the applicant in {@link #notifyNewCandidate}.
      *
      * <p>It links to the table and not to the task. There is no screen for one task on its own: a
      * request is read next to the others of its table, which is where the answer is handed in too.

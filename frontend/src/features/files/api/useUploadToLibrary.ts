@@ -23,7 +23,7 @@ export interface LibraryUploadResult {
 
 /**
  * Sends what is staged on /admin/files/upload into the platform's library, each file with the cajón
- * chosen on its row (ADR-14 §4, ADR-13 §5, ADR-14 §7) — published now, or left unpublished for later, as the admin
+ * chosen on its row (ADR-14 §4, §7, ADR-13 §5) — published now, or left unpublished for later, as the admin
  * chose with the button they pressed.
  *
  * **A failure does not undo the rest**, the same rule as `useCommitStagedFiles`: each file is sent on

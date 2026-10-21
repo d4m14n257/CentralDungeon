@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
  * <p><b>One record for the two doors</b>, and that is not a shortcut: what a {@code Primary} writes
  * when they veto and what a {@code Secondary} writes when they ask for one are the same sentence -
  * the reason. The two endpoints differ in who may call them and in what comes back, which is why
- * they are two (ADR-13 §1 and ADR-01 §9 of the contract), not in what goes in.
+ * they are two, not in what goes in.
  *
  * @param justification why. Never blank: ADR-09 §5 asks that a veto be reversible, and a veto with no
  *                      reason is one nobody - the {@code Primary} included, six months later - can

@@ -148,7 +148,7 @@ public class GameTableController {
      *
      * @param id          the table
      * @param currentUser the actor, from the token; the service checks they may see it
-     * @return 200 with the whole history. Not paginated: it is bounded by the nine states and read
+     * @return 200 with the whole history. Not paginated: it is bounded by the eleven states and read
      *         as a single timeline
      */
     @GetMapping("/{id}/status-history")
@@ -174,7 +174,7 @@ public class GameTableController {
 
     /**
      * /my/tables/history - the tables the actor played at that are now over, with when each one
-     * closed and their own final attendance (#133a). A table still live, {@code Pause} included
+     * closed and their own final attendance (ADR-19 §8). A table still live, {@code Pause} included
      * (ADR-07 §2), stays on {@link #listMine} instead - the two never overlap on any one table.
      *
      * <p>Not the same read as {@link #listMine} with a different filter: the card here has no cupo
@@ -195,7 +195,7 @@ public class GameTableController {
 
     /**
      * /master/tables - every table where the actor is a master of any type, any status. Pertenencia,
-     * not the platform role (ADR-11 §1, ADR-06 §4): somebody made a co-master without holding {@code Master}
+     * not the platform role (hard rule 17, ADR-06 §4): somebody made a co-master without holding {@code Master}
      * still sees their table here.
      *
      * @param pageable    page, size and sort; newest first
@@ -231,7 +231,7 @@ public class GameTableController {
      * {@code ChangesRequested} is corrected.
      *
      * <p>{@code isAuthenticated()} and no role, like every other endpoint about a concrete table:
-     * pertenencia decides, and only the service can see it (ADR-11 §1, ADR-05 §5, ADR-06 §4).
+     * pertenencia decides, and only the service can see it (hard rule 17, ADR-05 §5, ADR-06 §4).
      *
      * @param id          the table to edit
      * @param request     the whole table as it should end up. It is a replacement and not a patch:
@@ -336,7 +336,7 @@ public class GameTableController {
      * The master sending their draft to review for the first time (ADR-07 §1).
      *
      * <p>{@code isAuthenticated()} and no role: pertenencia, not role, decides who may act on THIS
-     * table (ADR-11 §1, ADR-05 §5), and the service checks it before touching anything.
+     * table (hard rule 17, ADR-05 §5), and the service checks it before touching anything.
      *
      * @param id          the table
      * @param currentUser the actor, from the token
@@ -353,7 +353,7 @@ public class GameTableController {
      * The master sending a corrected draft back for review.
      *
      * <p>{@code isAuthenticated()} and no role: pertenencia, not role, decides who may act on THIS
-     * table (ADR-11 §1, ADR-05 §5), and the service checks it before touching anything.
+     * table (hard rule 17, ADR-05 §5), and the service checks it before touching anything.
      *
      * @param id          the table
      * @param currentUser the actor, from the token
@@ -369,7 +369,7 @@ public class GameTableController {
      * The master declaring play has begun: Opened to InProgress.
      *
      * @param id          the table
-     * @param currentUser the actor, from the token; the service checks pertenencia (ADR-11 §1, ADR-05 §5)
+     * @param currentUser the actor, from the token; the service checks pertenencia (hard rule 17, ADR-05 §5)
      * @return 200 with the table, now InProgress
      */
     @PostMapping("/{id}/start")
@@ -382,7 +382,7 @@ public class GameTableController {
      * The master closing a table that ran its course.
      *
      * @param id          the table
-     * @param currentUser the actor, from the token; the service checks pertenencia (ADR-11 §1, ADR-05 §5)
+     * @param currentUser the actor, from the token; the service checks pertenencia (hard rule 17, ADR-05 §5)
      * @return 200 with the table, now Finished
      */
     @PostMapping("/{id}/finish")
@@ -396,7 +396,7 @@ public class GameTableController {
      * origin.
      *
      * <p>Either the Primary or an admin may cancel, and which of the two the actor is gets resolved
-     * inside the service rather than here (ADR-11 §1, ADR-05 §5) - a {@code @PreAuthorize} cannot see
+     * inside the service rather than here (hard rule 17, ADR-05 §5) - a {@code @PreAuthorize} cannot see
      * pertenencia.
      *
      * @param id          the table
@@ -490,7 +490,7 @@ public class GameTableController {
      *
      * @param id          the table
      * @param request     who to add or promote, and as what
-     * @param currentUser the actor, from the token; the service checks pertenencia (ADR-11 §1, ADR-05 §5)
+     * @param currentUser the actor, from the token; the service checks pertenencia (hard rule 17, ADR-05 §5)
      * @return 200 with the table's masters after the change
      */
     @PostMapping("/{id}/masters")
@@ -501,14 +501,14 @@ public class GameTableController {
     }
 
     /**
-     * Removes a co-master. The row is marked, not dropped: who ran a table is a record (ADR-07 §6).
+     * Removes a co-master. The row is marked, not dropped: who ran a table is a record (ADR-07 §8).
      *
      * <p>200 and not 204, unlike the table's own delete: the caller needs the list it has to
      * re-render, and asking for it in a second request would show a stale section in between.
      *
      * @param id          the table
      * @param userId      who to remove
-     * @param currentUser the actor, from the token; the service checks pertenencia (ADR-11 §1, ADR-05 §5)
+     * @param currentUser the actor, from the token; the service checks pertenencia (hard rule 17, ADR-05 §5)
      * @return 200 with the table's masters after the change. 403 when the actor is not its Primary,
      *         409 when the target is the Primary - handing the role over comes first
      */

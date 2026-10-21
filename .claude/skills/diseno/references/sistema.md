@@ -29,7 +29,7 @@ Los valores exactos no viven acá: los genera `design/build.py` y se publican en
 `design/build.py` es la fuente de verdad. **Solo se versiona el script**; `design/out/` se regenera, igual que los PNG de `docs/diagramas/`.
 
 ```bash
-python3 design/build.py                  # regenera out/ y mide los 30 pares de contraste
+python3 design/build.py                  # regenera out/ y mide 34 pares de texto (4.5:1) y 6 gráficos (3:1)
 open design/out/accent-decision.html     # cualquier preview
 python3 design/extract-brand-colors.py <logo.png> "LOGO"   # rehace la medición de ADR-21 §2
 ```

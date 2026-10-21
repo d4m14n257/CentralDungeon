@@ -39,7 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
  *
  * <p>Every method is {@code isAuthenticated()} and none names a role. Whether somebody may reach a
  * concrete file is <b>pertenencia</b> - they own it, or they belong to a table it is attached to -
- * which a {@code @PreAuthorize} cannot see, so the service settles it before reading anything (ADR-11 §1,
+ * which a {@code @PreAuthorize} cannot see, so the service settles it before reading anything (hard rule 17,
  * ADR-05 §5, ADR-06 §4). The annotation is still written out on each method and never inherited (regla dura 4,
  * CVE-2025-41248).
  *

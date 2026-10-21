@@ -33,7 +33,7 @@ public interface TableFileRepository extends JpaRepository<TableFile, TableFileI
     /**
      * Which tables currently hold a given file.
      *
-     * <p>This is what answers "may this person download this" without asking about roles (ADR-11 §1, ADR-05 §5):
+     * <p>This is what answers "may this person download this" without asking about roles (hard rule 17, ADR-05 §5):
      * a file is reachable through the tables it is attached to, and whether the reader belongs to any
      * of them is a membership question.
      *

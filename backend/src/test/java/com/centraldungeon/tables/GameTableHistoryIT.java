@@ -31,7 +31,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * The player's history (#133a), over real MySQL: whether the two endings come back with their own,
+ * The player's history (ADR-19 §8), over real MySQL: whether the two endings come back with their own,
  * different attendance, and whether resolving that attendance for a whole page still costs one
  * query rather than one per table - the exact risk a mocked {@code SessionAttendanceRepository}
  * cannot show, the same reason {@code ProfileServiceIT} exists for ADR-08 §5's other aggregate.
@@ -115,7 +115,7 @@ class GameTableHistoryIT {
         TableSession canceledSession = sessionRepository.save(new TableSession(canceled, 1, LocalDateTime.now().minusDays(20)));
         attendanceRepository.save(new SessionAttendance(canceledSession, player, AttendanceStatus.Excused));
 
-        // Still playing here - it must never leak into the history (#133a).
+        // Still playing here - it must never leak into the history (ADR-19 §8).
         GameTable stillLive = givenATableRunBy(master, GameTableStatus.InProgress);
         registrationRepository.save(playerRegistrationOf(stillLive, player));
 
@@ -130,7 +130,7 @@ class GameTableHistoryIT {
     }
 
     /**
-     * The batched read behind the history (#133a): resolving two tables' attendance for one person
+     * The batched read behind the history (ADR-19 §8): resolving two tables' attendance for one person
      * costs exactly one query against real MySQL, never one per table - the N+1
      * {@code CatalogUsageCount} and {@code FileService.usagesByFileId} already avoid for a page of
      * catalog values and a page of files.

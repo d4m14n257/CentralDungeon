@@ -22,7 +22,7 @@ absorbe: [1, 6, 18, 102, 162, 177, 181, 250, 266, 267, 274, 289, 290, 291, 292]
 
 **Decisión.** Identificadores, tablas, columnas, endpoints, comentarios, Javadoc, JSDoc, logs, comentarios SQL de las migraciones y mensajes de commit van en inglés, sin excepción. En español quedan solo `docs/`, `CLAUDE.md`, las skills y la conversación.
 
-**Por qué.** Con los comentarios en español los archivos eran bilingües: la firma de un método en un idioma y su explicación en otro. Un solo idioma dentro del código lo hace legible para cualquiera que llegue, y deja el español donde aporta, en la documentación y las decisiones. Lo que lee una persona en la interfaz no es código: sale de los archivos de idioma (ADR-23 §3, ADR-23 §2).
+**Por qué.** Con los comentarios en español los archivos eran bilingües: la firma de un método en un idioma y su explicación en otro. Un solo idioma dentro del código lo hace legible para cualquiera que llegue, y deja el español donde aporta, en la documentación y las decisiones. Lo que lee una persona en la interfaz no es código: sale de los archivos de idioma (ADR-23 §3, §2).
 
 *Antes: #102.*
 
@@ -60,7 +60,7 @@ absorbe: [1, 6, 18, 102, 162, 177, 181, 250, 266, 267, 274, 289, 290, 291, 292]
 
 ## §7 Agentes propios que precargan las skills y devuelven hallazgos
 
-**Decisión.** Cinco subagentes en `.claude/agents/`: `revisor-backend` (precarga `arquitectura` y `entorno-local`), `revisor-frontend` (`arquitectura`, `diseno`), `revisor-seguridad` (`arquitectura`; vara: ADR-05 §5–ADR-05 §2, ADR-05 §6), `auditor-conocimiento` (las tres; reglas vencidas, citas rotas, ADRs sin reflejo en su skill, repetición) y `escriba-adr` (`arquitectura`). Los cuatro revisores **no editan**: devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3. Solo `escriba-adr` escribe, y ninguno commitea. Pueden pedir una skill de ECC como lista de control, con los límites de `.claude/rules/ecc/integracion.md`, pero no la precargan. Se lanzan cuando el usuario o la tarea lo piden.
+**Decisión.** Cinco subagentes en `.claude/agents/`: `revisor-backend` (precarga `arquitectura` y `entorno-local`), `revisor-frontend` (`arquitectura`, `diseno`), `revisor-seguridad` (`arquitectura`; vara: ADR-05 §2–§6, ADR-03 §2, §8), `auditor-conocimiento` (las tres; reglas vencidas, citas rotas, ADRs sin reflejo en su skill, repetición) y `escriba-adr` (`arquitectura`). Los cuatro revisores **no editan**: devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3. Solo `escriba-adr` escribe, y ninguno commitea. Pueden pedir una skill de ECC como lista de control, con los límites de `.claude/rules/ecc/integracion.md`, pero no la precargan. Se lanzan cuando el usuario o la tarea lo piden.
 
 **Por qué.** Los agentes de ECC arrancan sin las skills del repo: proponen `@MockBean` y JUnit 5, piden CSRF en todo contra ADR-05 §2 y no saben que el rol no es la pertenencia (ADR-06 §4); cada uso exigía reescribirles el contexto. Las skills de ECC no se precargan porque pondrían lo genérico a la par de la vara del repo. El auditor existe para que una skill desactualizada se note antes de que alguien la siga.
 

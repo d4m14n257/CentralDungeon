@@ -12,6 +12,8 @@ absorbe: [92, 141, 251, 263, 264]
 
 ## §1 La auditoría registra cambios de datos, con el diff de las columnas que cambiaron
 
+*Se construye en F6: hoy solo existe la tabla `audit_logs` de `V1`, sin entidad, service ni pantalla.*
+
 **Decisión.** `audit_logs` registra qué entidad se modificó, su id, quién, cuándo, y el antes y el después **solo de las columnas que cambiaron**, no la fila completa. La consulta es una vista exclusiva del `Owner`. **`comments` y `comment_drafts` no se auditan** (ADR-11 §5).
 
 **Por qué.** No es analítica de uso —nadie registra clics— sino trazabilidad de **cambios de datos**, para reconstruir qué hizo cada persona. Guardar solo el diff mantiene la tabla manejable y cada fila legible. Los comentarios quedan fuera a propósito: auditarlos guardaría autor y contenido juntos y anularía el anonimato. Es un hueco deliberado, no un olvido.
@@ -20,7 +22,7 @@ absorbe: [92, 141, 251, 263, 264]
 
 ## §2 Los cambios de una cuenta tienen su propio historial inmutable, con justificación
 
-**Decisión.** `user_role_changes` y `user_status_changes`, con la forma de `table_status_changes`: fila inmutable —sin `updated_at`, sin `deleted_at`, sin setters—, id UUID v7 en `@PrePersist`, constructor con todo y **justificación obligatoria** (`NOT NULL` en la tabla, `@NotBlank` en el request). Se leen por `GET /api/v1/admin/users/{id}/history`, normalizadas en un `UserAdminChangeResponse` común. Los cambios de ajustes del sistema (§3) siguen la misma forma en `system_setting_changes`. `audit_logs` no las reemplaza: las complementa.
+**Decisión.** `user_role_changes` y `user_status_changes`, con la forma de `table_status_changes`: fila inmutable —sin `updated_at`, sin `deleted_at`, sin setters—, id UUID v7 en `@PrePersist`, constructor con todo y **justificación obligatoria** (`NOT NULL` en la tabla, `@NotBlank` en el request). Se leen por `GET /api/v1/admin/users/{id}/history`, normalizadas en un `UserAdminChangeResponse` común. Los cambios de ajustes del sistema (§3), por `GET /api/v1/admin/settings/{key}/history` con `SystemSettingChangeResponse`; siguen la misma forma en `system_setting_changes`. `audit_logs` no las reemplaza: las complementa.
 
 **Por qué.** Otorgar un rol o bloquear una cuenta no se aprueba, se hace, así que registrarlo en `approval_requests` (ADR-16 §1) mezclaría un acto con un pedido; y esperar a `audit_logs` dejaría esos cambios sin responsable durante fases enteras. La tabla propia es el precedente que el proyecto ya usa para un cambio de estado con justificación: `audit_logs` cubre lo transversal con diff de columnas, estas son el historial específico, con el motivo. Un par de columnas `updated_by`/`updated_at` que la próxima edición pisa no puede decir que algo cambió el martes y volvió el miércoles. El endpoint de lectura entra con las tablas: sin él serían escritura pura.
 

@@ -19,8 +19,8 @@ public enum MasterWorkItemKind {
      * A task's deadline went by and some of the people it was addressed to did not hand anything in.
      *
      * <p>It is not the system judging the answers, which ADR-15 §2 forbids, and it does not expel anybody,
-     * which ADR-15 §2 forbids: it is the failure being <em>visible to the master</em>, which is what ADR-15 §2
-     * asks for. There is no "reviewed" marker anywhere in the model, so "submissions I have not
+     * which it also forbids: it is the failure being <em>visible to the master</em>, which is what that
+     * section asks for. There is no "reviewed" marker anywhere in the model, so "submissions I have not
      * looked at" is not a thing that could be reported here.
      */
     OverdueTaskMissing,

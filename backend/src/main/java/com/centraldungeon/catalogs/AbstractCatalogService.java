@@ -286,7 +286,7 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     // -------------------------------------------------- the admin operations
 
     /**
-     * An admin adds a value straight into the catalog, already accepted as a group of its own (ADR-21 §5).
+     * An admin adds a value straight into the catalog, already accepted as a group of its own (ADR-12 §9).
      *
      * <p>Not a proposal: the admin is the one who accepts, so a {@code Created} row waiting for the
      * same person to accept it would be a step with nobody on the other side. It is born canonical,

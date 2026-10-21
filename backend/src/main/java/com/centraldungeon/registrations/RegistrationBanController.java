@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
  * rule being enforced.
  *
  * <p>Every method is {@code isAuthenticated()} and carries no role. Pertenencia decides, and only a
- * service can see it (ADR-11 §1, ADR-05 §5, ADR-06 §4): a {@code Primary} an admin assigned may never have been
+ * service can see it (hard rule 17, ADR-05 §5, ADR-06 §4): a {@code Primary} an admin assigned may never have been
  * given the {@code Master} role at all (ADR-06 §7).
  */
 @RestController

@@ -11,7 +11,7 @@ paths:
 `design/build.py` es la **fuente de verdad de todo valor de diseño** (ADR-21 §1): paleta, tipografía, espaciados y radios. Escribe en `design/out/` —ignorado por git— el `theme.css` que se transcribe al `@theme` del frontend, más las previews de tokens, componentes y pantallas.
 
 - **Cambiar un color es editar `build.py` y volver a correrlo**, nunca tocar el CSS generado ni `src/styles/globals.css` a mano.
-- Cada corrida mide los 30 pares de contraste y **sale con código 1 si alguno cae por debajo de WCAG AA**: una paleta rota no se publica.
+- Cada corrida mide los 34 pares de contraste de texto y 6 gráficos no textuales (el detalle, en `diseno` §3) y **sale con código 1 si alguno cae por debajo de WCAG AA**: una paleta rota no se publica.
 - Transcripción, después de cada cambio:
 
   ```bash

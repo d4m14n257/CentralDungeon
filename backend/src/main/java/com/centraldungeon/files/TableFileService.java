@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  * uploading their own copy of it, and it is why "remove from this table" and "delete this file" are
  * two different operations living in two different classes.
  *
- * <p><b>Every mutation answers to pertenencia and not to a role</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4): running
+ * <p><b>Every mutation answers to pertenencia and not to a role</b> (hard rule 17, ADR-05 §5, ADR-06 §4): running
  * <em>this</em> table is what authorizes touching its files. {@code hasRole('MASTER')} says "runs
  * some table", which is a different sentence, and no {@code @PreAuthorize} can tell them apart.
  *
@@ -54,7 +54,7 @@ public class TableFileService {
      * @param tableFileRepository the {@code table_files} rows
      * @param fileRepository      the files each link points at
      * @param fileService         resolves and authorizes the file being attached (ADR-14 §1)
-     * @param masterService       answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
+     * @param masterService       answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
      * @param fileMapper          entity to DTO
      */
     public TableFileService(
@@ -243,7 +243,7 @@ public class TableFileService {
     }
 
     /**
-     * The membership gate (ADR-11 §1, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
+     * The membership gate (hard rule 17, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
      *
      * @throws ForbiddenActionException if the actor does not run this table
      */

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Public profiles: the caller's own, and everybody else's under the five rules of arquitectura §4.5
- * ("Visibilidad de perfiles": ADR-10 §1, §2, ADR-06 §8, ADR-10 §1).
+ * ("Visibilidad de perfiles": ADR-10 §1, §2, ADR-06 §8).
  */
 @RestController
 @RequestMapping("/api/v1/users")

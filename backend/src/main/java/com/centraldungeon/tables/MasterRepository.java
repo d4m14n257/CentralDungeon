@@ -91,7 +91,7 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
      * filters by status. Table already fetched.
      *
      * <p>Unlike {@link #findLiveByUser}, deliberately unfiltered: it backs the profile visibility
-     * check of arquitectura §4.5 (#41a), where a deleted row has to be seen in order to be told apart
+     * check of arquitectura §4.5 (ADR-10 §1), where a deleted row has to be seen in order to be told apart
      * from one that counts (ADR-07 §8) - filtering it out in the query would leave nothing for that rule
      * to read.
      *

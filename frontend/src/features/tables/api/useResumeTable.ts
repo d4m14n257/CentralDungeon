@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * Bringing a paused table back (ADR-08 §3, ADR-07 §1, ADR-08 §2).
+ * Bringing a paused table back (ADR-08 §3, §2, ADR-07 §1).
  *
  * The other orphan of ADR-07 §1: `resume()` has had an endpoint since E2 and no button either.
  *

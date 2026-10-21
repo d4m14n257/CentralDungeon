@@ -20,7 +20,7 @@ absorbe: [42, 78, 90, 100, 126, 176, 255, 256, 257, 258, 259, 260]
 
 ## §2 La referencia a la entidad afectada es polimórfica y la integridad es del service
 
-**Decisión.** `entity_type` + `entity_id`, sin FK real. En JPA no es un `@ManyToOne`: es un id suelto que el service resuelve según el tipo, y **el service valida que la entidad exista** antes de crear la fila, con test (regla dura 7). Un borrado de la entidad apuntada no arrastra sus solicitudes. Hace falta una verificación periódica de referencias huérfanas.
+**Decisión.** `entity_type` + `entity_id`, sin FK real. En JPA no es un `@ManyToOne`: es un id suelto que el service resuelve según el tipo, y **el service valida que la entidad exista** antes de crear la fila, con test (regla dura 7). Un borrado de la entidad apuntada no arrastra sus solicitudes. Una verificación periódica busca referencias huérfanas: `ApprovalOrphanCheckService`, un `@Scheduled` diario.
 
 **Por qué.** Agregar un flujo es un valor más del enum, sin `ALTER TABLE`. Con una FK nullable por flujo, cada uno nuevo suma una columna a una tabla que ya nadie entiende, y la bandeja tendría que saber cuál mirar. El precio —la base no garantiza la integridad referencial, la clase de problema que el proyecto ya sufrió con `table_files` apuntando a archivos borrados— se asume porque `approval_requests` es un registro histórico: una solicitud sobre una mesa borrada sigue siendo un hecho que conviene conservar.
 

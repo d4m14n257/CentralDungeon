@@ -20,7 +20,7 @@ absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 
 ## §2 La equivalencia es simétrica, así que el grupo es plano: cada alias apunta al canónico
 
-**Decisión.** Buscar cualquier miembro del grupo trae todas las mesas etiquetadas con cualquier otro miembro; no hay especialización («el padre trae todo y el hijo solo lo suyo»). El modelo es **`canonical_id` plano**: cada alias apunta directo al canónico, nunca a otro alias, con **profundidad 1 siempre**, sostenida por un `CHECK` de un nivel. La migración aplanó el `parent_id` heredado haciendo que cada descendiente apunte a su raíz. Si algún día hace falta una taxonomía real (`D&D 5e` dentro de `D&D`), es una relación distinta y va en **otra** columna.
+**Decisión.** Buscar cualquier miembro del grupo trae todas las mesas etiquetadas con cualquier otro miembro; no hay especialización («el padre trae todo y el hijo solo lo suyo»). El modelo es **`canonical_id` plano**: cada alias apunta directo al canónico, nunca a otro alias, con **profundidad 1 siempre**, sostenida por `AbstractCatalogService` en cada operación —MySQL no puede expresar un `CHECK` que mire otra fila—. `V1__baseline.sql` nace con `canonical_id` plano; no hubo un `parent_id` que aplanar. Si algún día hace falta una taxonomía real (`D&D 5e` dentro de `D&D`), es una relación distinta y va en **otra** columna.
 
 **Por qué.** En una relación simétrica la profundidad no significa nada: el CTE heredado subía nodo por nodo y descartaba todo salvo la raíz, así que la profundidad se calculaba y se tiraba en cada búsqueda. Con `canonical_id` ese resultado ya está guardado: la búsqueda deja de necesitar recursión, cada operación del admin es uno o dos `UPDATE`, y los ciclos (`A → B → A`), que el árbol permitía y podían colgar el CTE, se vuelven imposibles. Se reconsideró una taxonomía real al rediseñar la pantalla (§7) y se descartó: lo que se quería era ver el modelo que ya existe.
 
@@ -50,7 +50,7 @@ absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 
 *Antes: #81, #183.*
 
-## §6 El admin trabaja un grupo con ocho operaciones y una lectura del grupo entero
+## §6 El admin trabaja un grupo con ocho operaciones, el alta directa y una lectura del grupo entero
 
 **Decisión.** Las operaciones son **aceptar, rechazar, fusionar (`merge`), separar (`split`), mover un equivalente (`reassign`), hacer principal (`promote`), dar de baja (`disable`) y restaurar (`restore`)**, escritas una sola vez en `AbstractCatalogService` y cada una con su `@PreAuthorize("hasAnyRole('ADMIN','OWNER')")` en el método. `POST /admin/catalogs/{type}/{id}/reassign {canonicalId}` mueve **un alias** a otro grupo en una transacción; el destino es un canónico `Accepted` distinto del actual, y un canónico no se mueve solo: arrastra a su grupo, y eso es `merge`. `POST /admin/catalogs/{type}/{id}/promote` hace de un alias `Accepted` el principal de su propio grupo: el canónico anterior y los demás alias pasan a apuntarle, nadie sale del grupo, nada sale de circulación y ninguna mesa se toca. `GET /admin/catalogs/{type}/{id}/group` devuelve el grupo completo, canónico primero, con todos sus miembros cualquiera sea su estado, **sin paginar**.
 
@@ -70,6 +70,14 @@ absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 
 **Decisión.** `/table_system`, `/table_tag` y `/table_platform` se declaran con `examples` —como `/file_name`—, no con `values` como `/file_type`. Lo escrito viaja tal cual y `GameTableSearchSpecification` lo expande al grupo de sinónimos (§2, §4) antes de tocar la tabla puente. Los ejemplos salen de `V3__catalog_seed.sql`, así que el primero que alguien pruebe devuelve mesas. `SearchField` no gana un tercer modo.
 
-**Por qué.** `values` es para opciones finitas y ajenas al vocabulario de la gente —nadie tipea un MIME type— (ADR-22 §2), y los catálogos son lo contrario: son cientos, crecen cuando un master propone, y sus valores son las palabras que la gente usa. Ofrecer la lista obligaría al combobox a consultar el catálogo mientras se tipea, un buscador con debounce dentro del buscador que ADR-22 §3 unificó para que hubiera uno solo. Y el grupo de sinónimos ya perdona escribir mal: `DANDD` encuentra lo mismo que `D&D`. Si el uso demuestra que hace falta la lista, el tercer modo se agrega entonces (`arquitectura` §2.4: se abstrae después de ver la repetición).
+**Por qué.** `values` es para opciones finitas y ajenas al vocabulario de la gente —nadie tipea un MIME type— (ADR-22 §2), y los catálogos son lo contrario: son cientos, crecen cuando un master propone, y sus valores son las palabras que la gente usa. Ofrecer la lista obligaría al combobox a consultar el catálogo mientras se tipea, un buscador con debounce dentro del buscador que ADR-22 §1 unificó para que hubiera uno solo. Y el grupo de sinónimos ya perdona escribir mal: `DANDD` encuentra lo mismo que `D&D`. Si el uso demuestra que hace falta la lista, el tercer modo se agrega entonces (`arquitectura` §2.4: se abstrae después de ver la repetición).
 
 *Antes: #246.*
+
+## §9 Un valor que crea un admin nace aceptado y canónico
+
+**Decisión.** Cuando un admin crea un valor desde `/admin/catalogs` no propone: el valor nace `Accepted` y canónico, como grupo propio (`AdminCatalogController` → `AbstractCatalogService.create`), y la cabecera de la pantalla lo ofrece para el catálogo de la pestaña activa. Lo que proponen los masters sigue el camino de §3.
+
+**Por qué.** Quien aceptaría la propuesta es él mismo: hacerlo pasar por la revisión sería un paso vacío, y dejaría en la bandeja un ítem que solo él puede resolver.
+
+*Antes: #280.*

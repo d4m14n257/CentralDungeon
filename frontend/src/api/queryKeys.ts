@@ -69,7 +69,7 @@ export const queryKeys = {
    * whichever aggregate the row came from - so every one of those invalidates `all()` as well as its
    * own branch.
    *
-   * **No `query` in the key, deliberately.** The tray has no search (§2 del contrato): a work list
+   * **No `query` in the key, deliberately.** The tray has no search (ADR-16 §5): a work list
    * orders itself by age and empties, and a box over it would be solving the wrong problem.
    * `/admin/tables` is the screen that searches.
    */

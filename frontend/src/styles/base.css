@@ -1,9 +1,9 @@
 @reference "./globals.css";
 
-/* Estilos base de la app, no tokens.
-   Van acá y no en globals.css porque ese archivo se sobrescribe entero cada vez que se
-   transcribe el tema desde el design system (ADR-21 §1) — lo que se escriba ahí se pierde.
-   Ningún valor suelto: todo sale del @theme. */
+/* The app's base styles, not tokens.
+   They live here and not in globals.css because that file is overwritten whole every time the
+   theme is transcribed from the design system (ADR-21 §1) - anything written there is lost.
+   No loose values: everything comes from the @theme. */
 
 @layer base {
   body {
@@ -12,16 +12,16 @@
     font-family: var(--font-sans);
   }
 
-  /* El serif es solo de títulos (dirección visual "fantasía sobria", ADR-21 §2). */
+  /* The serif is for headings only (the "sober fantasy" visual direction, ADR-21 §2). */
   h1,
   h2,
   h3 {
     font-family: var(--font-serif);
   }
 
-  /* Tailwind 4 sacó de su preflight el `cursor: pointer` de los botones, así que un <button>
-     queda con la flecha del sistema y no se ve clickeable. Se repone acá, una vez, en vez de
-     acordarse de una clase en cada botón. Lo deshabilitado no: ahí la flecha es la verdad. */
+  /* Tailwind 4 dropped the buttons' `cursor: pointer` from its preflight, so a <button> keeps the
+     system arrow and does not look clickable. It is restored here, once, instead of remembering a
+     class on every button. Not on disabled ones: there the arrow tells the truth. */
   button:not(:disabled),
   [role='button']:not([aria-disabled='true']) {
     cursor: pointer;
@@ -29,8 +29,8 @@
 }
 
 @layer components {
-  /* El gradiente propio de la comunidad (ADR-21 §2). Único lugar donde aparece entero: adentro de la
-     app los catorce colores de estado necesitan un fondo que no les compita. */
+  /* The community's own gradient (ADR-21 §2). The only place it appears whole: inside the app the
+     fourteen status colours need a background that does not compete with them. */
   .bg-brand-gradient {
     background-image: var(--gradient-brand);
   }
@@ -132,12 +132,12 @@
   }
 }
 
-/* Correcciones a lo que trae shadcn de fábrica, sobre sus propios `data-slot`.
-   Van SIN `@layer` a propósito: una regla sin capa le gana a cualquier utilidad de Tailwind, y
-   estas dos tienen que ganarle a clases que vienen en el componente generado — que no se edita
-   a mano. Por eso no alcanza con ponerlas en `base` o en `components`. */
+/* Corrections to what shadcn ships, on its own `data-slot`s.
+   UNLAYERED on purpose: an unlayered rule beats any Tailwind utility, and these two have to beat
+   classes that come inside the generated component - which is never edited by hand. That is why
+   putting them in `base` or `components` is not enough. */
 
-/* El ítem de menú viene con `cursor-default`: parece texto, no una opción que se elige. */
+/* A menu item ships with `cursor-default`: it looks like text, not an option to pick. */
 [data-slot='dropdown-menu-item'],
 [data-slot='dropdown-menu-checkbox-item'],
 [data-slot='dropdown-menu-radio-item'],
@@ -151,9 +151,9 @@
   cursor: default;
 }
 
-/* El separador se pinta con `bg-border`, y en un popover eso es el mismo tono que el fondo:
-   `border` y `raised` son el mismo valor en oscuro, así que la línea existía y no se veía.
-   Sobre una superficie elevada la línea es `border-strong`, que es el escalón siguiente. */
+/* The separator is painted with `bg-border`, and in a popover that is the background's own tone:
+   `border` and `raised` are the same value in dark mode, so the line was there and invisible.
+   On a raised surface the line is `border-strong`, the next step up. */
 [data-slot='dropdown-menu-separator'] {
   background-color: var(--color-border-strong);
 }

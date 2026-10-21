@@ -69,7 +69,7 @@ public interface SessionAttendanceRepository extends JpaRepository<SessionAttend
     /**
      * {@link #countByTableAndUser}'s batched sibling: the same three counts, one row per (table,
      * value) pair, for a whole page of tables in a single query - the history screen's own N+1 risk
-     * (#133a) and the exact shape {@code CatalogUsageCount} and
+     * (ADR-19 §8) and the exact shape {@code CatalogUsageCount} and
      * {@code FileService.usagesByFileId} already hold this line for a page of catalog values and a
      * page of files.
      *

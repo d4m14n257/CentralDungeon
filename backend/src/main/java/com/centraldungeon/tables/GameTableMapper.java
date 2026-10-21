@@ -35,7 +35,7 @@ public interface GameTableMapper {
             boolean scheduleConflict);
 
     /**
-     * A table as the player's history shows it (#133a) - a card with when it closed and the actor's
+     * A table as the player's history shows it (ADR-19 §8) - a card with when it closed and the actor's
      * own attendance, and neither the seat count nor the schedule-clash warning
      * {@link #toSummary} carries: a table that already ended cannot clash with anything, and its
      * cupo stopped mattering the moment it stopped recruiting.

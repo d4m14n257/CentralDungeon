@@ -53,7 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
  * the pause's history instead of the session's. So it is a read filter, in one place -
  * {@link #visibleSessionsOf}.
  *
- * <p>Every mutation here answers to <b>pertenencia and not to a role</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4): running
+ * <p>Every mutation here answers to <b>pertenencia and not to a role</b> (hard rule 17, ADR-05 §5, ADR-06 §4): running
  * this table is what authorizes touching its calendar, which no {@code @PreAuthorize} can see.
  */
 @Service
@@ -101,7 +101,7 @@ public class TableSessionService {
      * @param tableVisibilityService resolves the table the reads start from, and whether the reader
      *                               may see it - the one gate of ADR-03 §7 and ADR-09 §4
      * @param registrationRepository the table's players - the roster, and who is notified
-     * @param masterService          answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
+     * @param masterService          answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
      * @param notificationService    warns the players when a session moves or is called off
      * @param gameTableMapper        entity to DTO
      */
@@ -437,7 +437,7 @@ public class TableSessionService {
 
     /**
      * {@link #summarize}'s batched sibling: the same three numbers of ADR-08 §5, for a whole page of
-     * tables in one grouped query - the history screen's own read (#133a), and the exact risk its
+     * tables in one grouped query - the history screen's own read (ADR-19 §8), and the exact risk its
      * contract calls out by name: resolving one table's attendance at a time would be the N+1
      * {@code FileService.usagesByFileId} and {@code CatalogUsageCount} already avoid for a page of
      * files and a page of catalog values.

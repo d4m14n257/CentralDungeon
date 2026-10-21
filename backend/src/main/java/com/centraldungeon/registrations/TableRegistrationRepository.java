@@ -121,7 +121,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * {@link #findByUser_IdAndStatus}'s narrower sibling, filtered by the table's own status rather
-     * than only the registration's (#133a). The registration keeps saying {@code Player} forever
+     * than only the registration's (ADR-19 §8). The registration keeps saying {@code Player} forever
      * once accepted - it is the table that moves on to {@code Finished} or {@code Canceled} - so
      * this is what tells /my/tables (still live) apart from /my/tables/history (already over): the
      * same query, the table statuses in {@code Collection} decide which screen is asking.
@@ -227,7 +227,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * Whether the person holds an active application among a set of tables - the batched read behind
-     * profile visibility's #41b (arquitectura §4.5): checking a master's own tables against one
+     * profile visibility's ADR-10 §1 (arquitectura §4.5): checking a master's own tables against one
      * applicant is one query, not one per table they run.
      *
      * @param gameTableIds the tables to check, in practice the ones the actor runs

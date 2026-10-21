@@ -6,7 +6,7 @@ import { approveTableFromQueue } from './helpers/adminQueue'
 import { acceptReview } from './helpers/review'
 
 /**
- * F2.4 end to end: a table that ends stops being «mine» and becomes history (#133a).
+ * F2.4 end to end: a table that ends stops being «mine» and becomes history (ADR-19 §8).
  *
  * **The claim is the move, not either screen.** `/player/my-tables` used to list a finished table
  * forever, because it filtered by the state of the *application* and never by the state of the
@@ -87,7 +87,7 @@ async function open(masterPage: Page, adminPage: Page, tableId: string, name: st
 }
 
 /**
- * The scenario #133a describes: the table ends and changes lists, without the player doing anything.
+ * The scenario ADR-19 §8 describes: the table ends and changes lists, without the player doing anything.
  */
 test('a table that ends leaves «mis mesas» and lands in the history with its attendance', async ({ browser }) => {
   const tableName = `Mesa Historial E2E ${runId}`

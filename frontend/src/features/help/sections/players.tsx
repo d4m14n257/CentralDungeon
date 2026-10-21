@@ -117,7 +117,7 @@ export function ProfileHelp() {
   )
 }
 
-/** Where a table goes once it is over, and why it left the other list (#133a). */
+/** Where a table goes once it is over, and why it left the other list (ADR-19 §8). */
 export function PlayerHistoryHelp() {
   const { t } = useTranslation('help')
 

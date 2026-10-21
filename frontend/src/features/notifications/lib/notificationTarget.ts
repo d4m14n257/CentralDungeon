@@ -56,7 +56,7 @@ export function notificationTarget(notification: Notification): string | null {
       return tableDetailPath(relatedEntityId)
     // The public detail and not `/player/my-tables/:id`, because the same notice reaches a candidate
     // and a player alike: a candidate has no entry under their own tables for one they are not in
-    // yet, and the public detail shows both of them what the table is asking of them (ADR-15 §1, ADR-14 §2).
+    // yet, and the public detail shows both of them what the table is asking of them (ADR-15 §5, ADR-14 §2).
     case 'TaskPublished':
       return tableDetailPath(relatedEntityId)
     case 'NewCandidate':

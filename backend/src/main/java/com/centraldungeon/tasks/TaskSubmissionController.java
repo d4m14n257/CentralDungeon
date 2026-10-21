@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
  * There is no accept or reject either - the system delivers, the people judge.
  *
  * <p>Every method is {@code isAuthenticated()} and none names a role: handing in is authorized by
- * being <b>addressed</b> by the task, and reading everything by <b>running the table</b> (ADR-11 §1, ADR-05 §5,
+ * being <b>addressed</b> by the task, and reading everything by <b>running the table</b> (hard rule 17, ADR-05 §5,
  * ADR-06 §4). The annotation is written out on each method and never inherited (regla dura 4,
  * CVE-2025-41248).
  */

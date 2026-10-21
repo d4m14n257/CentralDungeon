@@ -90,7 +90,7 @@ class SystemServiceTest {
 
     // ------------------------------------------------------ an admin creating
 
-    /** ADR-21 §5: the admin is the one who accepts, so their value skips the review and heads its own group. */
+    /** ADR-12 §9: the admin is the one who accepts, so their value skips the review and heads its own group. */
     @Test
     void anAdminCreatesAValueAlreadyAcceptedAsItsOwnGroup() {
         when(systemRepository.findByNameIgnoreCase("Fate Core")).thenReturn(Optional.empty());

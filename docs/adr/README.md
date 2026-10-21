@@ -52,7 +52,7 @@ El agente `escriba-adr` (`.claude/agents/`) hace estos pasos.
 | ADR-09 | [Postulaciones y veto](09-postulaciones-y-veto.md) | 7 |
 | ADR-10 | [Perfiles](10-perfiles.md) | 6 |
 | ADR-11 | [Comentarios, karma y feedback](11-comentarios-karma-y-feedback.md) | 12 |
-| ADR-12 | [Catálogos](12-catalogos.md) | 8 |
+| ADR-12 | [Catálogos](12-catalogos.md) | 9 |
 | ADR-13 | ["Archivos: modelo y almacenamiento"](13-archivos-modelo-y-almacenamiento.md) | 8 |
 | ADR-14 | ["Archivos: lectura y bibliotecas"](14-archivos-lectura-y-bibliotecas.md) | 8 |
 | ADR-15 | [Peticiones de la mesa](15-peticiones-de-la-mesa.md) | 5 |

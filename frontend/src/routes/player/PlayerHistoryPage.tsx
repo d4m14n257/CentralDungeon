@@ -32,7 +32,7 @@ export function PlayerHistoryPage() {
   return (
     <div className="space-y-4">
       {/* A table no longer in «Mis mesas» looks lost until somebody explains it moved on its own
-          (#133a): that is what the help of this screen says. */}
+          (ADR-19 §8): that is what the help of this screen says. */}
       <PageHeader title={t('history.title')} help="players.history" />
       {isPending && (
         <div className="space-y-2">

@@ -29,7 +29,7 @@ public interface SubmissionFileRepository extends JpaRepository<SubmissionFile, 
      * and get a 404 opening it - exactly the mismatch ADR-14 §2 had to fix for the files a table shares.
      *
      * <p>It answers with table ids and not with a yes/no, so the membership question stays where it
-     * belongs: a repository resolves reachability, a service decides authorization (ADR-11 §1, ADR-05 §5, ADR-06 §4).
+     * belongs: a repository resolves reachability, a service decides authorization (hard rule 17, ADR-05 §5, ADR-06 §4).
      *
      * <p>Named parameters only, never positional (ADR-03 §2).
      *

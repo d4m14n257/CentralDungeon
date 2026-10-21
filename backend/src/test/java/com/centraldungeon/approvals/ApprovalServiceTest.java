@@ -715,7 +715,7 @@ class ApprovalServiceTest {
         assertThat(pending.getFirst().justification()).isEqualTo(WHY);
     }
 
-    /** Somebody who does not run the table does not read its veto requests (ADR-11 §1, ADR-05 §5, ADR-06 §4). */
+    /** Somebody who does not run the table does not read its veto requests (hard rule 17, ADR-05 §5, ADR-06 §4). */
     @Test
     void anOutsiderCannotReadATablesVetoRequests() {
         when(masterService.isMasterOf("table-1", "stranger")).thenReturn(false);

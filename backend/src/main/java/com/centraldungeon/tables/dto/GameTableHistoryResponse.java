@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A table as the player's history shows it (#133a) - a screen of its own, not
+ * A table as the player's history shows it (ADR-19 §8) - a screen of its own, not
  * {@link GameTableSummaryResponse} with a different filter, because what the two cards carry is
  * genuinely different and not only which rows come back.
  *

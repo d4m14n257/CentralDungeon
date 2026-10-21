@@ -304,7 +304,7 @@ class TableSessionServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** Pertenencia and not role: somebody who does not run this table cannot touch its calendar (ADR-11 §1, ADR-06 §4). */
+    /** Pertenencia and not role: somebody who does not run this table cannot touch its calendar (hard rule 17, ADR-06 §4). */
     @Test
     void refusesToCorrectASessionOfATableTheActorDoesNotRun() {
         GameTable table = table("t16", LocalDate.parse("2026-09-08"), 3);
@@ -512,10 +512,10 @@ class TableSessionServiceTest {
         assertThat(service().summarizeAll("player-2")).isEqualTo(new AttendanceSummaryResponse(0, 0, 0, 0));
     }
 
-    // ---------------------------------------------------------------- the history's batched read (#133a, ADR-08 §5)
+    // ---------------------------------------------------------------- the history's batched read (ADR-19 §8, ADR-08 §5)
 
     /**
-     * #133a's whole reason to have its own repository method: one grouped query resolves every
+     * ADR-19 §8's whole reason to have its own repository method: one grouped query resolves every
      * table's attendance for the page, {@code Unknown} stays out of each table's own denominator,
      * and a table with nothing recorded at all still comes back as zeroes rather than missing.
      */

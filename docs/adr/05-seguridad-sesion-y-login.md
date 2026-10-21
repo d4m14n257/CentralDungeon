@@ -52,7 +52,7 @@ absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 
 ## §6 El texto enriquecido se sanitiza con OWASP, por lista blanca, al guardar y al servir
 
-**Decisión.** `owasp-java-html-sanitizer` detrás de `RichTextSanitizer` en `common/text/`, con lista blanca: `p`, `br`, `strong`, `em`, `u`, `s`, `code`, `pre`, `blockquote`, `h1`–`h3`, `ul`/`ol`/`li` y `a` con `href` `http(s)` y `rel=nofollow`. Todo lo demás cae, incluidos `img`, `style` y cualquier `on*`. Se aplica al guardar y al servir sobre `description`, `permitted` y `requirements` (ADR-03 §8). Nulo entra, nulo sale, y lo que queda vacío tras sanitizar vuelve nulo.
+**Decisión.** `owasp-java-html-sanitizer` detrás de `RichTextSanitizer` en `common/text/`, con lista blanca: `p`, `br`, `strong`, `em`, `u`, `s`, `code`, `pre`, `blockquote`, `h1`–`h3`, `ul`/`ol`/`li` y `a` con `href` `http(s)` y `rel=nofollow`. Todo lo demás cae, incluidos `img`, `style` y cualquier `on*`. Se aplica al guardar y al servir sobre `description`, `permitted` y `requirements` de la mesa (ADR-03 §8), y sobre la descripción de una petición y el contenido de una entrega (ADR-15). Nulo entra, nulo sale, y lo que queda vacío tras sanitizar vuelve nulo.
 
 **Por qué.** Es la superficie de XSS más directa del sistema, y escapar a mano es la forma habitual de publicar un XSS: entidades, protocolos de `href`, atributos de evento y comentarios condicionales, cualquiera alcanza. Lista blanca porque una etiqueta que nadie previó tiene que ser inofensiva por defecto. Al servir además de al guardar porque una fila escrita antes de la puerta, o por un camino que la saltee, llega igual al navegador.
 
@@ -74,9 +74,9 @@ absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 
 *Antes: #83, #85.*
 
-## §9 El retorno de OAuth tiene cinco estados en una misma tarjeta, y todo error tiene salida a `/login`
+## §9 El retorno de OAuth pinta sus estados en una misma tarjeta, y todo error tiene salida a `/login`
 
-**Decisión.** `OAuthCallbackPage` muestra sus cinco estados —verificando, no es miembro, listo, declinó la invitación y **cuenta bloqueada**— con un mismo `CallbackCard` (card + badge) y el wordmark arriba, igual que en `/login`; el diseño vive en `sc_callback()` de `design/build.py`. Bloqueado usa el tono `canceled` y no ofrece reintentar. Los tres estados de error (no es miembro, bloqueado, error genérico) tienen **«Volver al login»** (`Link` de React Router): `ghost` como tercera acción en no-es-miembro, detrás de unirse y «Ya me uní, reintentar»; `outline` y única en bloqueado y en el error genérico.
+**Decisión.** `OAuthCallbackPage` muestra cuatro estados —verificando, no es miembro, **cuenta bloqueada** y error— y, al terminar bien, redirige; con un mismo `CallbackCard` (card + badge) y el wordmark arriba, igual que en `/login`; el diseño vive en `sc_callback()` de `design/build.py`. Bloqueado usa el tono `canceled` y no ofrece reintentar. Los tres estados de error (no es miembro, bloqueado, error genérico) tienen **«Volver al login»** (`Link` de React Router): `ghost` como tercera acción en no-es-miembro, detrás de unirse y «Ya me uní, reintentar»; `outline` y única en bloqueado y en el error genérico.
 
 **Por qué.** `status = 'Blocked'` no tiene que ver con Discord ni con el guild, y no tenía pantalla. Los estados de la misma pantalla son la misma forma repetida, así que van en un solo componente para no quedar inconsistentes uno al lado del otro. La pantalla no tiene header, y el wordmark es la única marca de que se sigue en la aplicación. Sin la salida, quien llegaba a un error se quedaba sin camino: en bloqueado reintentar no cambia el `status`, así que volver al login es la única acción con sentido.
 

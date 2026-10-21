@@ -60,7 +60,7 @@ absorbe: [2, 3, 8, 9, 10, 11, 12, 22, 25, 62, 124, 182, 208]
 
 ## §7 El borrado es lógico, con fecha, y la cascada la hace el service
 
-**Decisión.** Además de `status = 'Deleted'`, cada tabla borrable lleva `deleted_at DATETIME NULL`. Borrar una mesa marca como borradas sus solicitudes, su agenda, sus adjuntos y sus vínculos de catálogo **con la misma marca de tiempo y en una sola transacción**, desde el service.
+**Decisión.** Además de `status = 'Deleted'`, cada tabla borrable lleva `deleted_at DATETIME NULL`. Borrar una mesa marca como borradas sus filas de `masters` y sus `table_registrations` en una sola transacción, desde el service (ADR-07 §6).
 
 **Por qué.** El `status` dice *que* algo está borrado pero no *cuándo*, y sin fecha no se puede purgar, auditar ni deshacer. La cascada es lógica de negocio, así que vive en el service con sus tests y no en un `ON DELETE CASCADE`; la marca compartida permite reconocer qué cayó junto.
 

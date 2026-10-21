@@ -26,7 +26,7 @@ public final class ForbiddenActionException extends ApiException {
 
     /**
      * Blocking somebody who holds Admin or Owner. Nobody can, not even an owner: among peers there
-     * is no authority, and the same limit already governs "ver como" (#140a).
+     * is no authority, and the same limit already governs "ver como" (ADR-06 §9).
      *
      * <p>Its own code for the same reason as the one above - and because it also covers blocking
      * yourself, where "you cannot block an admin" is the whole explanation the reader needs.

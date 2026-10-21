@@ -22,7 +22,7 @@ absorbe: [7, 24, 27, 32, 129, 163, 165, 171, 175, 180, 196, 216, 226, 229, 230, 
 
 **Decisión.** Las justificaciones de moderación —mesa rechazada y por qué, pedido de correcciones, motivo de pausa, motivo de cancelación— van en su propia tabla, **separadas de `comments`**. La pausa que pide un master **no es efectiva hasta que un admin la aprueba**: la mesa pasa a `PauseRequested` y sigue corriendo hasta que el admin resuelve (ADR-16 §1). La pausa que inicia un admin es inmediata, pero también se justifica. `Pause` y `Canceled` exigen justificación.
 
-**Por qué.** `comments` es opinión entre personas y alimenta el karma (ADR-11 §1, ADR-11 §2); mezclar actos administrativos lo contaminaría. La pausa del admin se justifica igual para que el resto de los admins vea el motivo.
+**Por qué.** `comments` es opinión entre personas y alimenta el karma (ADR-11 §1, §2); mezclar actos administrativos lo contaminaría. La pausa del admin se justifica igual para que el resto de los admins vea el motivo.
 
 *Antes: #32.*
 
@@ -52,9 +52,9 @@ absorbe: [7, 24, 27, 32, 129, 163, 165, 171, 175, 180, 196, 216, 226, 229, 230, 
 
 ## §6 Se borra lo que nadie vio; lo demás se cancela
 
-**Decisión.** Una mesa se **borra** solo mientras nunca fue pública —`Draft`, `Unassigned`, `Preparation`, `ChangesRequested`— **y nadie se postuló**. Todo lo demás se **cancela**, con motivo, y queda visible como cancelada. El borrado es lógico (ADR-03 §7): `status = 'Deleted'` + `deleted_at`, con cascada explícita en el service a `masters` y `table_registrations` con la misma marca de tiempo y en una transacción; la transición queda en `table_status_changes`. Lo hace el `Primary` o un admin, `DELETE /api/v1/game-tables/{id}` devuelve `204` y **toda lectura la trata como inexistente** (`404`). Regla general: cada etapa que agrega una entidad decide y construye su borrado en esa misma etapa.
+**Decisión.** Una mesa se **borra** solo mientras nunca fue pública —`Draft`, `Unassigned`, `Preparation`, `ChangesRequested`— **y no tiene postulaciones activas** (`Candidate` o `Player`). Todo lo demás se **cancela**, con motivo, y queda visible como cancelada. El borrado es lógico (ADR-03 §7): `status = 'Deleted'` + `deleted_at`, con cascada explícita en el service a `masters` y `table_registrations` en una transacción; la transición queda en `table_status_changes`. Lo hace el `Primary` o un admin, `DELETE /api/v1/game-tables/{id}` devuelve `204` y **toda lectura la trata como inexistente** (`404`). Regla general: cada etapa que agrega una entidad decide y construye su borrado en esa misma etapa.
 
-**Por qué.** Cancelar una mesa que otros vieron, a la que se postularon o en la que jugaron es el registro de algo que pasó, y de su cierre cuelgan la ventana de visibilidad (ADR-10 §2) y el karma (ADR-11 §9). Un borrador que nadie vio no tiene nada de eso, y obligar a cancelarlo llena la lista de mesas "canceladas" que no existieron para nadie. La condición de "sin postulaciones" cierra el hueco: si alguna vez hay candidatos, manda el hecho y no el estado.
+**Por qué.** Cancelar una mesa que otros vieron, a la que se postularon o en la que jugaron es el registro de algo que pasó, y de su cierre cuelgan la ventana de visibilidad (ADR-10 §2) y el karma (ADR-11 §9). Un borrador que nadie vio no tiene nada de eso, y obligar a cancelarlo llena la lista de mesas "canceladas" que no existieron para nadie. La condición de "sin postulaciones" cierra el hueco: si hay alguien esperando o jugando, manda el hecho y no el estado; una postulación retirada o rechazada no impide borrar.
 
 *Antes: #175.*
 
@@ -70,13 +70,13 @@ absorbe: [7, 24, 27, 32, 129, 163, 165, 171, 175, 180, 196, 216, 226, 229, 230, 
 
 **Decisión.** Al asignar masters, el admin busca personas y cada elegido entra como chip: **el primero es el `Primary` y el resto `Secondary`**; tocar el chip de un `Secondary` lo asciende y el anterior baja, y quitar al `Primary` asciende al siguiente. El buscador es `GET /api/v1/users/search`, **solo `Admin`/`Owner`**, y nunca ofrece a alguien que no esté `Allowed`. El diálogo vive en `routes/admin/` porque compone `users` y `tables`. `DELETE /api/v1/game-tables/{id}/masters/{userId}` marca la fila (`status = Deleted` + `deleted_at`); **solo el `Primary` quita**, al `Primary` no se lo puede quitar (`409`, primero se le pasa la mesa) y volver a agregar a la misma persona **revive su fila**. La pertenencia (`isMasterOf`, `isPrimaryOf`, la lista de masters y `hasManagedTables`) **filtra por estado**.
 
-**Por qué.** Hay exactamente un `Primary` (ADR-06 §3): una lista ordenada lo expresa sin un segundo control y sin estado inválido posible. El buscador queda admin-only porque un directorio de personas no se abre más de lo que pide quien lo usa; abrirlo al `Primary` será una decisión explícita. Sin filtrar por estado, un co-master quitado seguía autorizado. La fila se marca porque quién dirigió una mesa es un registro, y la PK `(game_table_id, user_id)` hace que revivir sea la única forma de volver a agregarlo.
+**Por qué.** Hay exactamente un `Primary` (ADR-06 §3): una lista ordenada lo expresa sin un segundo control y sin estado inválido posible. El buscador queda admin-only porque un directorio de personas no se abre más de lo que pide quien lo usa; abrirlo al `Primary` fue una decisión explícita: `/game-tables/{id}/master-candidates` (ADR-22 §5). Sin filtrar por estado, un co-master quitado seguía autorizado. La fila se marca porque quién dirigió una mesa es un registro, y la PK `(game_table_id, user_id)` hace que revivir sea la única forma de volver a agregarlo.
 
 *Antes: #165, #216.*
 
 ## §9 El explorador ordena por fecha, la mesa nueva primero
 
-**Decisión.** `GET /api/v1/game-tables` toma `@PageableDefault(sort = "createdAt", direction = DESC)`. El default vive en el controller y no en el JPQL, así que un `?sort=` explícito lo pisa.
+**Decisión.** `GET /api/v1/game-tables` toma `@PageableDefault(sort = {"createdAt", "id"}, direction = DESC)`. El default vive en el controller y no en el JPQL, así que un `?sort=` explícito lo pisa.
 
 **Por qué.** Sin orden, MySQL devuelve el orden físico —las más viejas primero, por los UUIDv7— y una mesa recién publicada podía no entrar en la primera página, que es justo la que hay que ver.
 

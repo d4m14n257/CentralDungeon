@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * copy of a rule that can only drift. Same decision F1.3 took for the calendar.
  *
  * <p>Every method is {@code isAuthenticated()} and none names a role: running <em>this</em> table is
- * what authorizes touching its files, and that is a row in {@code masters} (ADR-11 §1, ADR-05 §5, ADR-06 §4). The
+ * what authorizes touching its files, and that is a row in {@code masters} (hard rule 17, ADR-05 §5, ADR-06 §4). The
  * annotation is written out on each method and never inherited (regla dura 4, CVE-2025-41248).
  */
 @RestController

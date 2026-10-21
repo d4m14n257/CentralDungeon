@@ -26,7 +26,7 @@
 | `CLAUDE.md` | Se edita solo a pedido del usuario | Ninguno | `ecc:codebase-onboarding` (genera o reescribe `CLAUDE.md`) |
 | Git | `CLAUDE.md` §Git | Ninguno | `ecc:git-workflow`, `/ecc:pr`, `/ecc:prp-commit` y `/ecc:review-pr`: ramas, PRs y Conventional Commits |
 | Planificación | Plan mode, `docs/plan-desarrollo.md` y `docs/fase-4-revision.md` | `/ecc:plan` como formato de plan | `ecc:orch-*`, `ecc:plan-orchestrate`, `/ecc:multi-*`, `/ecc:prp-*` y `/ecc:epic-*`: pipelines propios que pisan el reparto de §7 y el corte de F4 |
-| Seguridad | `arquitectura` §2.6 y sus decisiones (ADR-05 §5, §3, §4, ADR-03 §2, ADR-05 §2, ADR-16 §2, ADR-05 §6) | `ecc:security-reviewer` y `ecc:security-review` | Sus ejemplos con respuesta `{success: false}`, y «CSRF en todo» (ADR-05 §2 lo activa solo en `/auth/refresh`, con motivo) |
+| Seguridad | `arquitectura` §2.6 y sus decisiones (ADR-05 §5, §3, §4, §2, §6, ADR-03 §2, ADR-16 §2) | `ecc:security-reviewer` y `ecc:security-review` | Sus ejemplos con respuesta `{success: false}`, y «CSRF en todo» (ADR-05 §2 lo activa solo en `/auth/refresh`, con motivo) |
 
 ## Agentes de ECC
 

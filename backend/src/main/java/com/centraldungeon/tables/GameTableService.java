@@ -57,7 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Two things it never leaves to the caller. <b>Pertenencia</b>: who may act on a concrete table
  * is a row in {@code masters}, not a role, so it is checked here rather than in a
- * {@code @PreAuthorize} that cannot see the resource (ADR-11 §1, ADR-05 §5, ADR-06 §4). And <b>locking</b>: the
+ * {@code @PreAuthorize} that cannot see the resource (hard rule 17, ADR-05 §5, ADR-06 §4). And <b>locking</b>: the
  * invariants MySQL cannot express as constraints - one live Primary (ADR-06 §3), one active registration
  * per pair (ADR-09 §1), the player cap (ADR-09 §3) - are held by taking a pessimistic lock on the table row.
  */
@@ -67,7 +67,7 @@ public class GameTableService {
     private static final List<GameTableStatus> VISIBLE_STATUSES = List.of(GameTableStatus.Opened, GameTableStatus.InProgress);
 
     /**
-     * /my/tables: the statuses that still count as "vivo" (#133a). {@code Pause} belongs here and
+     * /my/tables: the statuses that still count as "vivo" (ADR-19 §8). {@code Pause} belongs here and
      * not with {@link #HISTORY_STATUSES} - it is a table frozen, not one that ended (ADR-07 §2); the
      * player who plays there still needs to find it among "mine".
      */
@@ -80,7 +80,7 @@ public class GameTableService {
             GameTableStatus.PauseRequested,
             GameTableStatus.Pause);
 
-    /** /my/tables/history: the two ways a run is over, and nothing else (#133a). */
+    /** /my/tables/history: the two ways a run is over, and nothing else (ADR-19 §8). */
     private static final List<GameTableStatus> HISTORY_STATUSES = List.of(GameTableStatus.Finished, GameTableStatus.Canceled);
 
     /**
@@ -271,7 +271,7 @@ public class GameTableService {
      * The master editing their own table: the wizard's second pass, and how a table sent back with
      * {@code ChangesRequested} is corrected.
      *
-     * <p>Pertenencia, not role (ADR-11 §1, ADR-05 §5, ADR-06 §4): running <em>this</em> table is what authorizes the
+     * <p>Pertenencia, not role (hard rule 17, ADR-05 §5, ADR-06 §4): running <em>this</em> table is what authorizes the
      * edit, and it is checked here because no {@code @PreAuthorize} can see the resource. Only the
      * statuses in which a table is still being written are editable - once it is open, people have
      * applied on the strength of what it says, and changing it out from under them is a different
@@ -1036,7 +1036,7 @@ public class GameTableService {
 
     /**
      * /my/tables: only the tables where the actor currently holds an active Player registration,
-     * <b>and only while the table itself is still live</b> (#133a).
+     * <b>and only while the table itself is still live</b> (ADR-19 §8).
      *
      * <p>The registration's own status never moves once somebody is accepted - it stays
      * {@code Player} whether the table is still running, was finished, or was cancelled. Filtering
@@ -1058,7 +1058,7 @@ public class GameTableService {
 
     /**
      * /my/tables/history: the tables the actor played at that are now over - {@code Finished} or
-     * {@code Canceled} - with when each one closed and the actor's own final attendance (#133a).
+     * {@code Canceled} - with when each one closed and the actor's own final attendance (ADR-19 §8).
      *
      * <p><b>A different shape from {@link #listMine}, not the same read with another filter</b>: a
      * closed table's card has no cupo to show and cannot clash with anything the actor is

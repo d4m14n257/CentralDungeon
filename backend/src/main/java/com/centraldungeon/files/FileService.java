@@ -56,7 +56,7 @@ import org.springframework.web.multipart.MultipartFile;
  * link and a file have different owners, different rules and different lifetimes (ADR-14 §1). This class
  * knows nothing about tables except when it has to answer whether somebody may read a file.
  *
- * <p><b>Reading is authorized by pertenencia, never by role</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4). A file is
+ * <p><b>Reading is authorized by pertenencia, never by role</b> (hard rule 17, ADR-05 §5, ADR-06 §4). A file is
  * reachable through the tables it is attached to, and whether the reader belongs to any of them is a
  * membership question no {@code @PreAuthorize} can answer. {@code hasRole('MASTER')} would say "runs
  * some table", which is not the question.
@@ -147,14 +147,14 @@ public class FileService {
      *
      * <p>The one place in this class that asks about a <b>role</b> rather than about pertenencia, and
      * it is not an authorization: it decides what somebody's own library can hold, not what they may
-     * reach. Reaching is still membership, always (ADR-11 §1, ADR-05 §5, ADR-06 §4).
+     * reach. Reaching is still membership, always (hard rule 17, ADR-05 §5, ADR-06 §4).
      */
     private final UserRoleRepository userRoleRepository;
 
     /**
      * Who belongs to a table, for the sixth way a file is reachable: a request's blank has to open
      * for the people the request reaches. Pertenencia again, and again a row rather than a role
-     * (ADR-11 §1, ADR-05 §5, ADR-06 §4).
+     * (hard rule 17, ADR-05 §5, ADR-06 §4).
      */
     private final TableRegistrationRepository registrationRepository;
 
@@ -182,7 +182,7 @@ public class FileService {
      * @param storageService            where the bytes live (ADR-13 §6)
      * @param storageProperties         the whitelist and the retention window
      * @param settingsService           the per-file cap, editable without a deploy (ADR-17 §3)
-     * @param masterService             answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
+     * @param masterService             answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
      * @param tableVisibilityService    answers the veto, so a shared attachment stops being readable
      *                                  by somebody the table stopped existing for (ADR-09 §4, ADR-14 §2)
      * @param userRoleRepository        the actor's roles, for their own cajones (ADR-14 §5)

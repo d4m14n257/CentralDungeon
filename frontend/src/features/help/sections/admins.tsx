@@ -178,7 +178,7 @@ export function BlockingHelp() {
 }
 
 /**
- * Pausing a table and bringing it back (ADR-07 §2, ADR-08 §3, ADR-07 §1, ADR-08 §2).
+ * Pausing a table and bringing it back (ADR-07 §2, §1, ADR-08 §3, §2).
  *
  * **It exists because the two buttons had no screen for two phases** (ADR-07 §1) and arrive with nothing
  * around them: an admin meeting "Pausar" on a listing has no way to know whether it cancels the

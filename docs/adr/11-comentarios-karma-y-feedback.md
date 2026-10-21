@@ -8,6 +8,8 @@ absorbe: [17, 30, 31, 35, 40, 43, 46, 48, 49, 50, 51, 52, 74, 82, 91, 93, 94, 95
 
 # ADR-11: Comentarios, karma y feedback
 
+> **Diseño cerrado para F5, sin construir**: del subsistema hoy solo existen el DDL de `V1` y la columna `users.karma`.
+>
 > Cómo la comunidad se evalúa entre sí —comentarios anónimos sobre personas con quienes se jugó, moderados y convertidos en karma— y cómo opina sobre el sistema mismo. El modelo de tablas y las reglas que reemplazaron a los triggers están en `arquitectura` §4; esta ADR dice *qué* se decidió y *por qué*.
 
 ## §1 El karma va de 0 a 10000, arranca en 8000 y es una señal, no una sanción
@@ -36,7 +38,7 @@ absorbe: [17, 30, 31, 35, 40, 43, 46, 48, 49, 50, 51, 52, 74, 82, 91, 93, 94, 95
 
 ## §4 Una mesa cancelada no genera comentarios ni mueve karma
 
-**Decisión.** Solo una mesa que llega a `Finished` habilita confirmar comentarios. Si termina en `Canceled`, sus borradores nunca se validan: no entran al karma ni se moderan, y se purgan como cualquier borrador vencido (§6). La visibilidad de perfiles sí corre sus dos semanas (ADR-10 §2).
+**Decisión.** Solo una mesa que llega a `Finished` habilita confirmar comentarios. Si termina en `Canceled`, sus borradores nunca se validan: no entran al karma ni se moderan, y se purgan como cualquier borrador vencido (§6). La visibilidad de perfiles sí corre su ventana (ADR-10 §2).
 
 **Por qué.** Una cancelación suele ser por fuerza mayor —el master se enfermó, el grupo se cayó— y no dice nada del comportamiento de nadie. Permitir comentarios ahí convertiría la mala suerte en karma negativo para gente que no hizo nada. Con el borrador de §3 no hace falta anular ni revertir nada: el borrador simplemente nunca llegó a ser un comentario. Que no se comente no significa que la mesa no haya existido.
 
@@ -121,7 +123,7 @@ Consecuencias: (1) **el karma es un valor derivado, no un contador**: como los p
 
 ## §10 Se muestran el puntaje y los comentarios, sin desglose, y la asistencia va aparte
 
-**Decisión.** Del karma se muestran el puntaje y los comentarios recibidos, sin un resumen agregado («X positivos, Y negativos»). Lo que ve el dueño del perfil es lo mismo que ve un master al evaluarlo, sujeto a las reglas de visibilidad de perfiles (ADR-10 §1, ADR-10 §2, ADR-10 §1). La asistencia **no entra en el cálculo**: se muestra como métrica separada junto al perfil.
+**Decisión.** Del karma se muestran el puntaje y los comentarios recibidos, sin un resumen agregado («X positivos, Y negativos»). Lo que ve el dueño del perfil es lo mismo que ve un master al evaluarlo, sujeto a las reglas de visibilidad de perfiles (ADR-10 §1, §2). La asistencia **no entra en el cálculo**: se muestra como métrica separada junto al perfil.
 
 **Por qué.** Los comentarios mismos son la explicación, y leerlos dice más que contarlos; un desglose sería una segunda representación del karma que puede desincronizarse de la primera. Que ambos vean lo mismo elimina la pregunta de quién tiene información privilegiada. Mezclar asistencia y karma en un número lo vuelve imposible de explicar (§8): separados, un master ve «karma 7800» y «faltó a 3 de 10 sesiones» y saca su conclusión. Si algún día se fusionan, la asistencia ya está registrada (ADR-08 §4).
 

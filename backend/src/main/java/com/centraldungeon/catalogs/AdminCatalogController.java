@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * /admin/catalogs: the nine operations that make the synonym groups an admin's job (ADR-12 §3,
- * ADR-12 §6, ADR-21 §5).
+ * ADR-12 §6, ADR-12 §9).
  *
  * <p>One controller for the three catalogs, with the catalog as a typed path variable, because the
  * operations are identical on all three and writing them out three times would mean fixing every bug
@@ -92,7 +92,7 @@ public class AdminCatalogController {
     }
 
     /**
-     * An admin adding a value, already accepted as a group of its own (ADR-21 §5).
+     * An admin adding a value, already accepted as a group of its own (ADR-12 §9).
      *
      * <p>Not the propose endpoint of {@code /systems}, {@code /tags} and {@code /platforms}: that one
      * leaves the value in {@code Created} for an admin to accept, and here the admin is that person.

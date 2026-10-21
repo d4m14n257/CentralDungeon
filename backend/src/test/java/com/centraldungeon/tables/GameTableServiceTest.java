@@ -744,7 +744,7 @@ class GameTableServiceTest {
         verify(tableStatusChangeRepository).save(any(TableStatusChange.class));
     }
 
-    /** Somebody who does not run the table cannot ask for anything about it (ADR-11 §1, ADR-05 §5, ADR-06 §4). */
+    /** Somebody who does not run the table cannot ask for anything about it (hard rule 17, ADR-05 §5, ADR-06 §4). */
     @Test
     void anOutsiderCannotAskForThePause() {
         GameTable table = persistedTable("table-pause-2", GameTableStatus.InProgress);
@@ -902,16 +902,16 @@ class GameTableServiceTest {
         assertThat(result.content()).containsExactly(summary);
     }
 
-    // ---------------------------------------------------------------- /my/tables and its history (#133a)
+    // ---------------------------------------------------------------- /my/tables and its history (ADR-19 §8)
 
     /**
-     * #133a: the registration alone never says whether a run is over - it stays {@code Player}
+     * ADR-19 §8: the registration alone never says whether a run is over - it stays {@code Player}
      * forever once accepted. What decides "still mine to see here" is the table's own status, and
      * this fakes the repository just enough to prove the service asks for the right ones: a table
      * that ended is filtered out of /my/tables even though the registration on it never changed.
      */
     @Test
-    @DisplayName("/mine no devuelve una mesa Finished ni una Canceled (#133a)")
+    @DisplayName("/mine no devuelve una mesa Finished ni una Canceled (ADR-19 §8)")
     void listMineExcludesFinishedAndCanceledTables() {
         GameTable opened = persistedTable("table-live", GameTableStatus.Opened);
         GameTable finished = persistedTable("table-finished", GameTableStatus.Finished);
@@ -941,7 +941,7 @@ class GameTableServiceTest {
 
     /** The mirror of the two tests above: the history shows exactly the two endings, nothing else. */
     @Test
-    @DisplayName("the history returns Finished and Canceled, and nothing else (#133a)")
+    @DisplayName("the history returns Finished and Canceled, and nothing else (ADR-19 §8)")
     void listMineHistoryReturnsOnlyTheTwoEndings() {
         GameTable opened = persistedTable("table-still-live", GameTableStatus.Opened);
         GameTable finished = persistedTable("table-done", GameTableStatus.Finished);
@@ -963,7 +963,7 @@ class GameTableServiceTest {
     }
 
     /**
-     * #133a, ADR-08 §5: the attendance travels with each table's card, resolved for the whole page in one
+     * ADR-19 §8, ADR-08 §5: the attendance travels with each table's card, resolved for the whole page in one
      * grouped read - {@link TableSessionService#summarizeByTables} and not one {@code summarize}
      * call per row - and {@code Unknown} stays out of the denominator the same way ADR-08 §5 already
      * keeps it out everywhere else.
@@ -999,7 +999,7 @@ class GameTableServiceTest {
 
     /**
      * A row that never became {@code Player} is a candidate the master has not accepted, and it
-     * belongs in neither listing (ADR-09 §1, #133a) - the repository is asked for {@code Player} on both
+     * belongs in neither listing (ADR-09 §1, ADR-19 §8) - the repository is asked for {@code Player} on both
      * calls, never {@code Candidate}.
      */
     @Test

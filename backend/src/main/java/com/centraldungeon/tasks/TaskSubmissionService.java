@@ -46,7 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Two different authorization questions live here and they are not the same one. Handing in is
  * about being <b>addressed</b> by the task ({@link TableTaskService#isRecipient}); reading everything
- * that came in is about <b>running the table</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4).
+ * that came in is about <b>running the table</b> (hard rule 17, ADR-05 §5, ADR-06 §4).
  */
 @Service
 public class TaskSubmissionService {
@@ -84,7 +84,7 @@ public class TaskSubmissionService {
      * @param tableTaskService         the task, its audience and its roster
      * @param fileService              resolves and authorizes each file handed in (ADR-14 §1)
      * @param fileRepository           the files each link points at
-     * @param masterService            answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
+     * @param masterService            answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
      * @param userService              resolves the submitter from the token
      * @param richTextSanitizer        the whitelist of ADR-03 §8
      * @param taskMapper               entity to DTO
@@ -284,7 +284,7 @@ public class TaskSubmissionService {
     }
 
     /**
-     * The membership gate (ADR-11 §1, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
+     * The membership gate (hard rule 17, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
      *
      * @throws ForbiddenActionException if the actor does not run this table
      */

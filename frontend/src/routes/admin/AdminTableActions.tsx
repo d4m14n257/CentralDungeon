@@ -124,7 +124,7 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row', only
   }
 
   /**
-   * Bringing a paused table back (ADR-08 §3, ADR-07 §1, ADR-08 §2).
+   * Bringing a paused table back (ADR-08 §3, §2, ADR-07 §1).
    *
    * **A confirmation and not a form**, because resuming carries no justification: ADR-07 §2 asks for a
    * reason when a table stops and resuming is the return to normal. What the confirmation is for is

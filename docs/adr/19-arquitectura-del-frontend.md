@@ -44,7 +44,7 @@ absorbe: [104, 105, 106, 108, 110, 111, 112, 113, 114, 115, 133, 150, 158, 161, 
 
 ## §5 El estado de UI va en una librería, un Context o Zustand, según a quién pertenece
 
-**Decisión.** Tres criterios para el estado que no es de servidor: **librería** cuando ya existe (toasts con `sonner`, tema con `next-themes`); **Context** cuando el estado pertenece a un subárbol o necesita montar UI (la confirmación imperativa, la selección múltiple de una tabla concreta); **Zustand** cuando es global y plano (el contexto recordado, preferencias). Los datos de servidor no van en ninguno de los tres: son de TanStack Query (regla dura 11).
+**Decisión.** Tres criterios para el estado que no es de servidor: **librería** cuando ya existe (toasts con `sonner`, tema con `next-themes`); **Context** cuando el estado pertenece a un subárbol o necesita montar UI (la confirmación imperativa, la selección múltiple de una tabla concreta); **Zustand** cuando es global y plano (el contexto recordado). Los datos de servidor no van en ninguno de los tres: son de TanStack Query (regla dura 11).
 
 **Por qué.** Los cinco contexts del legacy acertaban en que mensajes, tema, confirmación y selección son estado de UI; fallaban en usar el mismo mecanismo para todo, datos de servidor incluidos. La selección con Shift fija el criterio: es de **una tabla**, no de la aplicación, así que va como Context alrededor de esa tabla y no como estado global.
 
@@ -68,7 +68,7 @@ absorbe: [104, 105, 106, 108, 110, 111, 112, 113, 114, 115, 133, 150, 158, 161, 
 
 ## §8 Las mesas vivas y las terminadas del jugador son dos rutas, y el feedback del sistema es una acción del layout
 
-**Decisión.** `/player/my-tables` muestra **solo las mesas vivas**; las terminadas y canceladas van a **`/player/history`**, con ruta propia. El **feedback del sistema** no es una ruta: es una acción global que se abre desde el shell en cualquier contexto. La interfaz no predice el límite de uno cada 24 h (ADR-11 §12): ofrece el botón siempre y traduce el `429` a un mensaje.
+**Decisión.** `/player/my-tables` muestra **solo las mesas vivas**; las terminadas y canceladas van a **`/player/history`**, con ruta propia. El **feedback del sistema** no es una ruta: será una acción global que se abre desde el shell en cualquier contexto —se construye en F5—. La interfaz no predice el límite de uno cada 24 h (ADR-11 §12): ofrece el botón siempre y traduce el `429` a un mensaje.
 
 **Por qué.** Ruta propia y no un filtro, asumiendo el riesgo de dos listados casi iguales —el patrón que el sitemap eliminó del legacy—, porque el historial no muestra las mismas columnas (asistencia final, si dejaste comentario) y separa lo accionable de lo que solo se consulta. Si termina siendo la misma tabla con otro `WHERE`, se fusiona. El feedback no tiene contenido que mostrar, así que no merece pantalla. Y predecir la cuota obligaría a exponer su estado, que es justo lo que el token opaco de ADR-11 §12 evita.
 

@@ -68,6 +68,8 @@ absorbe: [4, 15, 60, 61, 64, 65, 66, 68, 75, 80, 199, 200, 201, 202, 203, 204, 2
 
 ## §8 Borrar los bytes es una operación del owner de la plataforma
 
+*Diseño de F6, sin construir: no hay endpoint ni pantalla (`routes/owner/` está vacío).*
+
 **Decisión.** El borrado lógico de la aplicación nunca toca los bytes. El borrado físico lo hace **el owner de la plataforma desde un menú de administración**, y contempla borrar también del almacenamiento en la nube.
 
 **Por qué.** Liberar espacio real es una operación de mantenimiento deliberada y con responsable, no el efecto secundario de que alguien apriete «eliminar» ni de la purga de §3, que solo marca y deja margen para notar un error antes de que sea irreversible. Este owner es el rol de plataforma, no el `master_type` `Primary` que encabeza una mesa (ADR-06 §1).

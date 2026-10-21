@@ -90,7 +90,6 @@ public class RegistrationService {
     private static final List<TableRegistrationStatus> HIDDEN_FROM_MINE =
             List.of(TableRegistrationStatus.Deleted, TableRegistrationStatus.Blocked);
 
-    /** ADR-09 §3 fixes this literal in Spanish - it is content a player reads, not code (ADR-01 §2 does not apply to it). */
     /**
      * The reason the application itself writes when a table fills up (ADR-09 §3).
      *
@@ -107,7 +106,7 @@ public class RegistrationService {
     /** The reasons attached to turned-down applications. */
     private final RegistrationRejectionRepository rejectionRepository;
 
-    /** The files attached to an application - linked, never copied (ADR-13 §2, ADR-14 §1, ADR-13 §1 uso 2). */
+    /** The files attached to an application - linked, never copied (ADR-13 §2, §1, ADR-14 §1 uso 2). */
     private final RegistrationFileRepository registrationFileRepository;
 
     /** Resolves and authorizes each file being attached, and puts it in its cajón (ADR-14 §4). */
@@ -116,7 +115,7 @@ public class RegistrationService {
     /** Used to lock the table row, which is what serializes the two invariants above. */
     private final GameTableRepository gameTableRepository;
 
-    /** Answers pertenencia: only a master of the table may accept or reject (ADR-11 §1, ADR-05 §5). */
+    /** Answers pertenencia: only a master of the table may accept or reject (hard rule 17, ADR-05 §5). */
     private final MasterService masterService;
 
     /** Resolves the applicant and the acting master. */
@@ -350,7 +349,7 @@ public class RegistrationService {
      * the worst outcome the flow can produce.
      *
      * @param registrationId the application
-     * @param actorId        the actor, from the token; has to run the table (ADR-11 §1, ADR-05 §5)
+     * @param actorId        the actor, from the token; has to run the table (hard rule 17, ADR-05 §5)
      * @param request        the justification
      * @return the application afterwards
      * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor does not run
@@ -429,7 +428,7 @@ public class RegistrationService {
      * Everything the actor applied to, whatever came of it. Backs /my/applications.
      *
      * <p>It is the one place a rejection's justification is loaded, because it is the only screen
-     * where the applicant themselves reads it (ADR-09 §3) - the master's queue has no use for it.
+     * where the applicant themselves reads it (ADR-09 §7) - the master's queue has no use for it.
      *
      * @param actorId  the actor, from the token (ADR-05 §5)
      * @param pageable page, size and sort
@@ -529,7 +528,7 @@ public class RegistrationService {
      *
      * <p><b>The authorization lives here and not in a {@code @PreAuthorize}</b>, for the reason the
      * whole project keeps repeating: being <em>this</em> table's Primary is a row in {@code masters}
-     * and no annotation can see it (ADR-11 §1, ADR-05 §5, ADR-06 §4). Same principle as F3.1 - «el otorgamiento es la
+     * and no annotation can see it (hard rule 17, ADR-05 §5, ADR-06 §4). Same principle as F3.1 - «el otorgamiento es la
      * regla, no la puerta».
      *
      * <p>Under the table's lock, like every other transition here: two masters vetoing the same

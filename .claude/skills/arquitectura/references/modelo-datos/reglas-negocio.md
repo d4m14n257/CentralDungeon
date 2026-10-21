@@ -19,7 +19,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 | Otorgar o quitar un rol es **idempotente**: repetirlo no escribe fila de auditoría. Restaurar un rol revocado **flipea `users_roles.status`**, nunca inserta una segunda fila — la PK es `(user_id, role_id)` | `UserRoleService` | ADR-03 §7 |
 | `users_roles.status` y `users_roles.deleted_at` se mueven **juntos**, vía `UserRole.revoke()` / `.restore()`: no hay setter que permita una fila `Deleted` sin fecha ni una viva con fecha. La columna existía desde el baseline y nada la escribía hasta F3.1 | `UserRole` (entidad) | ADR-03 §7 |
 | Salirse del servidor conserva los datos; el baneo lo marca un admin a mano | `UserService` | ADR-05 §7, M30 |
-| **Nadie con `Admin` u `Owner` puede ser bloqueado** — ni por un admin, ni por un owner, ni por sí mismo: `403 CANNOT_BLOCK_PRIVILEGED`. Entre pares no hay autoridad, y el bloqueo es irreversible desde el lado del bloqueado | `AdminUserService` | ADR-05 §7, #140a |
+| **Nadie con `Admin` u `Owner` puede ser bloqueado** — ni por un admin, ni por un owner, ni por sí mismo: `403 CANNOT_BLOCK_PRIVILEGED`. Entre pares no hay autoridad, y el bloqueo es irreversible desde el lado del bloqueado | `AdminUserService` | ADR-05 §7, ADR-06 §9 |
 | Bloquear **conserva los datos**: no borra mesas, postulaciones ni historial. `Deleted` no transiciona en F3.1 | `AdminUserService` | ADR-05 §7 |
 | **Todo cambio de rol o de estado invalida la caché `userAuth`** (`UserService.evictAuthCache`). El TTL de 60 s es la red de seguridad, no el mecanismo: un bloqueo que tarda un minuto en aplicar es un bloqueo que no bloquea | `UserRoleService`, `AdminUserService` | ADR-05 §3 |
 | El owner puede migrar los datos de un usuario a una cuenta nueva | `UserService` | ADR-05 §8 |
@@ -45,13 +45,13 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| **`max_players` tiene un tope de plataforma** desde F3.5: `tables.max_players_cap` en `system_settings`, arranca en 12, y por encima es `400 MAX_PLAYERS_ABOVE_CAP` con el tope en los parámetros. Antes no había ninguno —solo `@Positive`—, así que un ajuste sobre un límite inexistente no habría hecho nada. Gatea **lo que se escribe**, nunca lo guardado: bajarlo no achica una mesa existente, y lo que se rechaza es su próxima edición. Se aplica en un solo punto por el que pasan las tres puertas (`create`, `createUnassigned` y `update`) | `GameTableService` | ADR-07 §5, ADR-17 §3, ADR-07 §5 |
-| Máquina de estados: `Draft` → `Preparation` (la envía el master) o `Unassigned` (la crea un admin) → `ChangesRequested` → `Opened` → `InProgress` → `PauseRequested` → `Pause` → `Finished`/`Canceled`. Toda transición no declarada devuelve `409` | `GameTableService` | ADR-07 §1, §2, ADR-06 §7, ADR-07 §1 |
+| **`max_players` tiene un tope de plataforma** desde F3.5: `tables.max_players_cap` en `system_settings`, arranca en 12, y por encima es `400 MAX_PLAYERS_ABOVE_CAP` con el tope en los parámetros. Antes no había ninguno —solo `@Positive`—, así que un ajuste sobre un límite inexistente no habría hecho nada. Gatea **lo que se escribe**, nunca lo guardado: bajarlo no achica una mesa existente, y lo que se rechaza es su próxima edición. Se aplica en un solo punto por el que pasan las tres puertas (`create`, `createUnassigned` y `update`) | `GameTableService` | ADR-07 §5, ADR-17 §3 |
+| Máquina de estados: `Draft` → `Preparation` (la envía el master) o `Unassigned` (la crea un admin) → `ChangesRequested` → `Opened` → `InProgress` → `PauseRequested` → `Pause` → `Finished`/`Canceled`. Toda transición no declarada devuelve `409` | `GameTableService` | ADR-07 §1, §2, ADR-06 §7 |
 | Una mesa creada por un admin nace `Unassigned` y, al asignarle masters, pasa directo a `Opened` sin revisión | `GameTableService` | ADR-06 §7 |
 | Exactamente un `Primary` vivo por mesa | `MasterService` | ADR-06 §3 |
 | **La pertenencia mira `masters.status`**: una fila `Deleted` no autoriza nada. Es lo que hace que quitar a un co-master le saque el acceso en el momento, sin borrar el registro de que dirigió la mesa | `MasterService.isMasterOf` · `.isPrimaryOf` · `.findByGameTable` | ADR-06 §4, ADR-07 §6, §8 |
 | Solo el `Primary` agrega, promueve y quita masters; **al `Primary` no se lo puede quitar** —primero se le pasa la mesa a otra persona—, y quitarlo marca la fila, nunca la borra | `MasterService.removeMaster` | ADR-06 §3, ADR-07 §6, §8 |
-| Volver a agregar a alguien que fue quitado **revive su fila** en vez de insertar una segunda: la clave primaria es `(game_table_id, user_id)` | `MasterService.addOrPromote` | ADR-07 §6, ADR-04 §7, ADR-07 §8 |
+| Volver a agregar a alguien que fue quitado **revive su fila** en vez de insertar una segunda: la clave primaria es `(game_table_id, user_id)` | `MasterService.addOrPromote` | ADR-07 §6, §8, ADR-04 §7 |
 | `Pause` y `Canceled` exigen justificación, que se registra en `table_status_changes` | `GameTableService` | ADR-07 §2 |
 | La pausa pedida por un master no aplica hasta que un admin la aprueba (`approval_requests`). La pide **cualquier master** —pedir no es decidir—, mueve `InProgress → PauseRequested` y crea el pedido **en una transacción**; aprobar la lleva a `Pause` con la nota de resolución como justificación, y **rechazar la devuelve a `InProgress`** o queda varada | `ApprovalService.submitTablePause` · `GameTableService.markPauseRequested` · `.applyApprovedPause` · `.revertRequestedPause` | ADR-07 §2, ADR-16 §1 |
 | **`PauseRequested` sigue reservando horario**: nada se otorgó todavía, así que sus franjas cuentan como choque y la mesa sigue apareciendo en `/my/tables` | `ScheduleConflictService` · `GameTableService.LIVE_MINE_STATUSES` | ADR-07 §2, ADR-08 §2 |
@@ -72,7 +72,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 | **Aprobar y pedir cambios rechazan una mesa que tiene otro admin** (`409 ITEM_ALREADY_CLAIMED`); una mesa libre se aprueba sin pasar por la bandeja. Los endpoints siguen siendo del agregado mesa, y los usan **dos pantallas con la misma regla**: la bandeja y el aviso de estado de `/admin/tables/:id` (ADR-21 §10) | `GameTableService.approve` · `.requestChanges` · `AdminQueueClaimRule` | ADR-16 §5, §7 |
 | `/admin/tables` lista **todos los estados menos `Deleted`** y acepta `?q=` con seis comandos. `/table_master` se resuelve con un `exists` sobre `masters` y **nunca con un join** —una mesa con tres masters se duplicaría y rompería el `count`— y filtra solo filas vivas | `GameTableService.listForAdmin` · `GameTableSearchSpecification.forAdmin` | ADR-22 §1, ADR-16 §7, ADR-07 §8 |
 | **Un admin lee todo lo de gestión de cualquier mesa** —detalle, candidatos, jugadores, sesiones, peticiones y entregas, archivos y pedidos de veto— y abre cualquier archivo ligado a una mesa. **Solo lecturas**: las escrituras siguen exigiendo `isMasterOf` | `MasterService.canOversee`, preguntado por cada lectura · `FileService.requireReadable` | ADR-06 §8, §4 |
-| **Un admin edita una mesa ajena** en cualquier estado salvo `Finished`, `Canceled` y `Deleted`, por su propia ruta (`PUT …/admin-edit`). En `Preparation`, no si otro admin la reservó. El choque de agenda (R1) se mide contra el **Primary**; **el cupo no baja de los jugadores aceptados** (`409 CAPACITY_BELOW_PLAYERS`) | `GameTableService.adminUpdate` · `.rewrite` | ADR-16 §5, ADR-06 §6, ADR-08 §2, ADR-06 §8 |
+| **Un admin edita una mesa ajena** en cualquier estado salvo `Finished`, `Canceled` y `Deleted`, por su propia ruta (`PUT …/admin-edit`). En `Preparation`, no si otro admin la reservó. El choque de agenda (R1) se mide contra el **Primary**; **el cupo no baja de los jugadores aceptados** (`409 CAPACITY_BELOW_PLAYERS`) | `GameTableService.adminUpdate` · `.rewrite` | ADR-16 §5, ADR-06 §6, §8, ADR-08 §2 |
 | **Las mesas de una persona** (`GET /users/{id}/tables`, solo admin): sus filas de `masters` vivas y sus postulaciones `Candidate`, `Player`, `Rejected` y `Blocked`, sin mesas dadas de baja (ADR-03 §7). Mezcladas y paginadas **en memoria**, la más nueva primero con desempate por id | `ProfileService.listTablesForAdmin` | ADR-16 §5, ADR-04 §6, ADR-10 §6 |
 
 ### Postulaciones
@@ -117,7 +117,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 | `Pause` **oculta** las sesiones pendientes en toda lectura, también para el master. No se marcan filas: la pausa es reversible | `TableSessionService` | ADR-07 §2, ADR-08 §3 |
 | Al reanudar, las pendientes se vuelven a tender desde la fecha de reanudación con la agenda actual, conservando su numeración. Lo jugado y lo cancelado no se toca | `TableSessionService.rescheduleAfterPause` | ADR-07 §2, ADR-08 §3 |
 | Mover una fecha o cancelar una sesión **avisa** a candidatos y jugadores. Nadie es removido | `TableSessionService` | ADR-15 §2, §5 |
-| La asistencia se registra por sesión y alimenta la evaluación de karma | `TableSessionService.recordAttendance` | ADR-08 §4 |
+| La asistencia se registra por sesión y valida quién puede comentar a quién (ADR-11 §2); **no** entra en el karma | `TableSessionService.recordAttendance` | ADR-08 §4 |
 | El padrón de una sesión son los `Player` activos de la mesa, resuelto en el servidor: un `userId` que no juega ahí es `400` | `TableSessionService.recordAttendance` | ADR-05 §5 |
 | La asistencia histórica se **deriva con `GROUP BY` y no se cachea**, con `Unknown` fuera del denominador y los tres números sin colapsar | `TableSessionService.summarize` | ADR-03 §1, ADR-08 §5 |
 | **Crear una petición es publicarla**: no hay borrador, y la creación notifica a sus destinatarios en la misma transacción | `TableTaskService.publish` | ADR-15 §5 |
@@ -150,7 +150,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 | El karma se mueve solo con los comentarios aprobados | `CommentModerationService` *(F5, sin construir)* | ADR-11 §7 |
 | **Fórmula**: `karma = 10000 × (W·m + Σ wᵢ·vᵢ) / (W + Σ wᵢ)` con `m=0.8`, `W=20`, `wᵢ=2^(−antigüedad/12 meses)`; `v` vale `1.0` positivo, `0.8` neutro, `0.0` negativo | `KarmaService` *(F5, sin construir)* | ADR-11 §8 |
 | El **neutro vale igual que el prior**: no mueve el promedio pero acumula confianza y amortigua un negativo aislado | `KarmaService` *(F5, sin construir)* | ADR-11 §8 |
-| `users.karma` es una **proyección cacheada**, no la fuente de verdad. La fuente son las filas de `comments` | `KarmaService` *(F5, sin construir)* | ADR-11 §9 |
+| `users.karma` es una **proyección cacheada**, no la fuente de verdad. La fuente son las filas de `comments` | `KarmaService` *(F5, sin construir)* | ADR-11 §8 |
 | Se recalcula al aprobar un comentario (solo esa persona) y en un **job semanal nocturno** (todos) | `KarmaService` *(F5, sin construir)* | ADR-11 §9 |
 | La asistencia **no** entra en el cálculo: se muestra como métrica aparte | `KarmaService` *(F5, sin construir)* | ADR-11 §10 |
 | Se muestra el puntaje y los comentarios recibidos, sin desglose agregado. El master ve lo mismo que el dueño del perfil | `UserService` | ADR-11 §10 |
@@ -175,16 +175,16 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| Los grupos son de sinónimos, profundidad 1: un alias apunta al canónico, nunca a otro alias | `CatalogService` | ADR-12 §2 |
+| Los grupos son de sinónimos, profundidad 1: un alias apunta al canónico, nunca a otro alias | `AbstractCatalogService` | ADR-12 §2 |
 | Buscar por cualquier miembro devuelve las mesas etiquetadas con cualquier otro del grupo. **La equivalencia es simétrica y plana**: dos alias del mismo grupo se encuentran entre sí sin pasar por ser el canónico | `AbstractCatalogService.resolveGroupIdsByName` · `GameTableSearchSpecification` | ADR-12 §2, §4 |
 | **Un criterio que no resolvió a ningún valor aceptado no coincide con nada**, nunca con todo: leerlo como «sin filtro» convierte un error de tipeo en el listado completo de la plataforma | `GameTableSearchSpecification` | ADR-12 §8 |
 | **El buscador solo acota lo que el lector ya podía ver**: las reglas de visibilidad y los criterios se unen con `and` y nunca se pliegan en la misma expresión, así que un `/or` entre dos criterios no puede cruzar el filtro | `GameTableSearchSpecification.forExplorer` | ADR-05 §5, ADR-18 §4, ADR-12 §8 |
-| Masters y admins proponen valores; solo un admin acepta y clasifica | `CatalogService` | ADR-12 §3 |
-| **Un admin que crea un valor desde `/admin/catalogs` no propone: el valor nace `Accepted` y canónico**, como grupo propio. Un nombre ya tomado, sin importar mayúsculas, es 409 | `AbstractCatalogService.create` | ADR-21 §5 |
-| Un valor en `Created` no filtra ni se muestra a los jugadores; al aceptarse, sí | `CatalogService` | ADR-12 §3 |
-| La mesa muestra siempre el alias que le puso su master | `CatalogService` | ADR-12 §4 |
-| Dar de baja un valor no rompe vínculos: las lecturas lo saltan por estado y restaurarlo devuelve todo | `CatalogService` | ADR-12 §5 |
-| Dar de baja el canónico de un grupo con alias vivos **es** cambiar el canónico: exige sucesor, y lo elige el admin | `CatalogService` | ADR-12 §3, §2, §5 |
+| Masters y admins proponen valores; solo un admin acepta y clasifica | `AbstractCatalogService` | ADR-12 §3 |
+| **Un admin que crea un valor desde `/admin/catalogs` no propone: el valor nace `Accepted` y canónico**, como grupo propio. Un nombre ya tomado, sin importar mayúsculas, es 409 | `AbstractCatalogService.create` | ADR-12 §9 |
+| Un valor en `Created` no filtra ni se muestra a los jugadores; al aceptarse, sí | `AbstractCatalogService` | ADR-12 §3 |
+| La mesa muestra siempre el alias que le puso su master | `AbstractCatalogService` | ADR-12 §4 |
+| Dar de baja un valor no rompe vínculos: las lecturas lo saltan por estado y restaurarlo devuelve todo | `AbstractCatalogService` | ADR-12 §5 |
+| Dar de baja el canónico de un grupo con alias vivos **es** cambiar el canónico: exige sucesor, y lo elige el admin | `AbstractCatalogService` | ADR-12 §3, §2, §5 |
 | Una mesa puede vincular un valor en `Created` —su master lo acaba de proponer— pero no uno `Rejected` ni `Disabled`. Dar de baja un valor **no** rompe los vínculos que ya tenía | `TableCatalogService` | ADR-12 §3, §5 |
 | **Mover un alias de grupo es una sola operación** (`reassign`): solo mueve un alias —un canónico arrastra su grupo y eso es `merge`—, y el destino tiene que ser un canónico `Accepted` distinto del grupo actual | `AbstractCatalogService.reassign` | ADR-12 §2, §6 |
 | **Hacer principal a un alias da vuelta el grupo sin sacar a nadie** (`promote`): el alias queda canónico y el canónico anterior y los demás alias pasan a apuntarle, en una transacción. Solo un alias `Accepted`; a diferencia de dar de baja el canónico (ADR-12 §5), nada sale de circulación | `AbstractCatalogService.promote` | ADR-12 §2, §6 |
@@ -197,7 +197,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 | Nombre físico = un id generado por el servidor; el nombre original es solo metadato y nunca toca el sistema de archivos | `LocalDiskStorageService` | ADR-13 §6 |
 | El usuario ve y reutiliza todo lo que subió; vincular no duplica | `FileService` | ADR-13 §2 |
 | Un master puede usar un archivo `Public` como requisito sin copiarlo; quitarlo de la mesa no borra el archivo global | `TableFileService` | ADR-14 §1 |
-| Se purgan los archivos sin vínculo vivo y con ~3 meses sin uso. Los `Public` quedan exentos, y el marcado no libera bytes | `FileRetentionService` | ADR-13 §3, §8 |
+| Se purgan los archivos sin vínculo vivo y con ~3 meses sin uso. La biblioteca de la plataforma (`Public` y `Library`) queda exenta, y el marcado no libera bytes | `FileRetentionService` | ADR-13 §3, §8 |
 | Se deduplica por `content_hash` **dentro del mismo dueño** —`uk_files_storage_key` prohíbe que dos filas compartan blob— y se comprime con gzip al guardar. **Reconocer una subida responde 200 y no 201**, y la fila reconocida conserva su categoría | `FileService` · `LocalDiskStorageService` | ADR-13 §3, §4, §7 |
 | **Dónde está vinculado ahora se deriva** —tres consultas agrupadas por página, una por tabla puente— y **dónde perteneció alguna vez se guarda**. Despegar un archivo saca el uso y deja el cajón. Un archivo sin ningún uso reporta vacío, que es el aviso de que la purga lo va a alcanzar primero | `FileService.usagesByFileId` | ADR-14 §3, §4 |
 | Los cajones que alguien puede usar en **su** biblioteca salen de sus roles y de las mesas que dirige; `Announcement` no es de nadie y solo vive en la de la plataforma | `FileService.personalCategoriesOf` | ADR-14 §5, ADR-05 §1, ADR-06 §4 |
@@ -210,7 +210,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 | La búsqueda de «mis archivos» filtra de verdad: el frontend mandaba `q` y el endpoint no tenía parámetro que lo recibiera | `FileService.listMine` | ADR-13 §2 |
 | El contenido se escribe a un área de staging y se confirma al commit de la transacción; un rollback no deja huérfanos | `LocalDiskStorageService` | M26.2 |
 | Publicar solo lo hace un admin; el archivo sigue siendo de quien lo subió. ~~La audiencia~~ la reemplazó el cajón (ADR-14 §4) | `FileService` | ADR-12 §3, ~~ADR-13 §2~~ |
-| Lo que una mesa comparte lo lee cualquiera que pueda ver la mesa; lo privado, solo quien la dirige. **Al llegar el veto (F3) hay que excluir al vetado acá también** | `FileService` | ADR-11 §1, ADR-09 §4, ADR-05 §5 |
+| Lo que una mesa comparte lo lee cualquiera que pueda ver la mesa; lo privado, solo quien la dirige. **Al llegar el veto (F3) hay que excluir al vetado acá también** | `FileService` | regla dura 17, ADR-09 §4, ADR-05 §5 |
 | El borrado físico lo ejecuta el owner desde el menú de administración | `StorageService` | ADR-13 §8 |
 | `comments` y `comment_drafts` **nunca** se auditan | `AuditService` *(F6, sin construir)* | ADR-11 §5 |
 
@@ -242,7 +242,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 | El mensaje que viaja es una **señal de invalidación**, no el contenido: el cliente refetchea con TanStack Query | `NotificationService` | ADR-18 §2 |
 | La suscripción a `/topic/admin-queue` se rechaza si el usuario no tiene `Admin` u `Owner` | `WebSocketConfig` *(F6, sin construir)* | ADR-18 §2 |
 | Una notificación de comentario recibido **nunca** nombra a su autor | `NotificationService` | ADR-11 §5 |
-| **Todo lo que un admin cambia de una mesa ajena se le avisa a sus masters**: editarla, pausarla directo, reanudarla, cancelarla y darla de baja (`Table…ByAdmin`). No nombra al admin ni copia el motivo, que está en el historial; la baja no enlaza. **No se avisa si el admin también dirige esa mesa** | `GameTableService.announceAdminAction` · `NotificationService.notifyAdminActedOnTable` | ADR-06 §9, ADR-23 §3, ADR-06 §8 |
+| **Todo lo que un admin cambia de una mesa ajena se le avisa a sus masters**: editarla, pausarla directo, reanudarla, cancelarla y darla de baja (`Table…ByAdmin`). No nombra al admin ni copia el motivo, que está en el historial; la baja no enlaza. **No se avisa si el admin también dirige esa mesa** | `GameTableService.announceAdminAction` · `NotificationService.notifyAdminActedOnTable` | ADR-06 §9, §8, ADR-23 §3 |
 
 ### Configuración
 

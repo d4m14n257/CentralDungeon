@@ -31,7 +31,7 @@ Es el entregable que F3 tiene y ninguna otra fase: **dónde termina uno y empiez
 | **Borrado físico de archivos** (ADR-13 §8) | no | sí | F6 |
 | **Migrar una cuenta** (ADR-05 §8) | no | sí | F6 |
 | Iniciar «ver como» (ADR-06 §9) | sí | sí | F6 |
-| Ser objeto de «ver como» (#140a) | **no** | **no** | F6 |
+| Ser objeto de «ver como» (ADR-06 §9) | **no** | **no** | F6 |
 
 **Leído de una vez: en F3 la diferencia es exactamente una — quién puede otorgar el rango.** Todo lo demás que separa a un owner necesita `audit_logs`, y por eso es F6: ADR-06 §9 lo dice sin rodeos para «ver como», y el borrado físico y la migración de cuenta son de la misma clase. Un owner, hasta F6, usa la superficie de admin completa y nada más (ADR-06 §1).
 

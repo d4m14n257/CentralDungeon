@@ -46,7 +46,7 @@ interface OutletContext {
 /**
  * A table's lifecycle history, oldest first: who moved it, where to, and why.
  *
- * Exported for the admin's status tab (ADR-06 §8), which shows the same history next to the admin's own
+ * Exported for the admin's history tab (ADR-06 §8), which shows the same history next to the admin's own
  * actions instead of the master's transitions.
  *
  * @param props.tableId the table

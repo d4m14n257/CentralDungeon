@@ -95,7 +95,7 @@ Al dibujar los diagramas 21–24 (ADR-01 §10) se barrieron `router.tsx`, cada `
 **Consecuencias de ADR-20 §2, para triar en F4.1** — dos cruces de contexto de §2.2 que antes llevaban a una pantalla del prefijo ajeno y ahora **redirigen**:
 
 - El `UserMenu` manda a `/player/profile` también a una cuenta sin `Player` (solo admin, solo master): el perfil propio queda inalcanzable para ella.
-- Las pestañas Candidatos y Jugadores del master enlazan a `/player/users/:id`: un master sin `Player` que abre un perfil vuelve a `/master`. **Esto rompe #41b para ese master** —ver el perfil de quien se postuló a su mesa— y lo fija en rojo el e2e `profile-visibility.spec.ts` (el paso del master que abre al candidato), que se deja sin tocar a propósito hasta decidir dónde vive el perfil.
+- Las pestañas Candidatos y Jugadores del master enlazan a `/player/users/:id`: un master sin `Player` que abre un perfil vuelve a `/master`. **Esto rompe ADR-10 §1 para ese master** —ver el perfil de quien se postuló a su mesa— y lo fija en rojo el e2e `profile-visibility.spec.ts` (el paso del master que abre al candidato), que se deja sin tocar a propósito hasta decidir dónde vive el perfil.
 
 Las dos piden lo mismo —que el perfil deje de colgar del contexto Jugador o que cada contexto tenga el suyo— y es una decisión, no un bug.
 

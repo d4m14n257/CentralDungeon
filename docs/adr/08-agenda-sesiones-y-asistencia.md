@@ -36,7 +36,7 @@ absorbe: [26, 33, 36, 137, 178, 191, 193, 194, 195, 227, 228]
 
 ## §4 Marcar una sesión como jugada y registrar quién vino son dos actos
 
-**Decisión.** `table_sessions` registra la asistencia de cada jugador (`Present`, `Excused`, `Absent`, `Unknown`). `POST /sessions/{id}/hold` mueve `Scheduled` → `Held`; `PUT /sessions/{id}/attendance` no toca el estado de la sesión.
+**Decisión.** `session_attendance` —PK `(table_session_id, user_id)`— registra la asistencia de cada jugador a cada sesión de `table_sessions` (`Present`, `Excused`, `Absent`, `Unknown`). `POST /sessions/{id}/hold` mueve `Scheduled` → `Held`; `PUT /sessions/{id}/attendance` no toca el estado de la sesión.
 
 **Por qué.** La asistencia permite validar que quien comenta sobre alguien jugó con esa persona (ADR-11 §2) y es una métrica más del karma: faltar sin aviso dice algo y antes no quedaba en ningún lado. «Jugamos» y «vino esta gente» son hechos distintos: deducir uno del otro marcaría como jugada una sesión suspendida en la que el master cargó quién había avisado, o exigiría inventar un padrón para cerrar una sesión. Cuesta un clic y ningún registro dice algo que nadie afirmó.
 

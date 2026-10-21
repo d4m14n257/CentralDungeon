@@ -36,7 +36,7 @@ absorbe: [41, 44, 47, 134, 248, 249, 285]
 
 ## §4 Nombre y país se piden una vez, en un onboarding bloqueante
 
-**Decisión.** No hay pantalla de edición de perfil en v1. `name` y `country` se piden **una sola vez**, en `/onboarding`, un paso bloqueante después del primer login e inmediatamente después de la invitación al servidor (ADR-05 §1). `name` viene precargado con el `discord_username` y se puede cambiar; `country` es `CHAR(2)` ISO 3166-1 alpha-2; `discord_username` se conserva siempre. Editar después queda fuera de v1, no descartado: sería una pantalla que reusa el mismo formulario, sin tocar el schema.
+**Decisión.** No hay pantalla de edición de perfil en v1. `name` y `country` se piden **una sola vez**, en `/onboarding`, un paso bloqueante después del primer login e inmediatamente después de la invitación al servidor (ADR-05 §1). `name` arranca vacío, con un placeholder que pide cómo te conocen en la mesa; `country` es `CHAR(2)` ISO 3166-1 alpha-2; `discord_username` se conserva siempre. Editar después queda fuera de v1, no descartado: sería una pantalla que reusa el mismo formulario, sin tocar el schema.
 
 **Por qué.** Ninguna de las dos columnas tenía quién la llenara: Discord no expone país y el legacy nunca tuvo un endpoint de escritura de usuarios. Una ruta entera para dos campos no se paga, y eliminarlos perdía un objetivo legítimo: que cada quien se llame como quiera **sin perder el rastro de cuál es su Discord**, que queda como identidad verificable. El paso bloquea a propósito: si se pudiera saltar, las columnas volverían a quedar nulas. `CHAR(2)` evita *México* / *Mexico* / *MX* y deriva la bandera del ISO sin llamar a ningún servicio externo.
 
