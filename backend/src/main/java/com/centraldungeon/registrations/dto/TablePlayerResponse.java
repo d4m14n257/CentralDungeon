@@ -27,7 +27,6 @@ import org.jspecify.annotations.Nullable;
  * @param registrationId     the application this row is, which is what the veto endpoints address
  * @param userId             the person
  * @param userName           how to name them on screen - their Discord username, which everybody has
- * @param userKarma          their karma, which is what a master weighs people by elsewhere
  * @param status             {@code Player} or {@code Blocked}, as a string. Nothing else reaches
  *                           this list
  * @param blockedByName      who vetoed them, or null when they are not vetoed (ADR-09 §5)
@@ -40,7 +39,6 @@ public record TablePlayerResponse(
         String registrationId,
         String userId,
         String userName,
-        int userKarma,
         String status,
         @Nullable String blockedByName,
         @Nullable LocalDateTime blockedAt,

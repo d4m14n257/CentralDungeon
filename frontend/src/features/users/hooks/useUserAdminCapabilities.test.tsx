@@ -9,7 +9,7 @@ const me = vi.hoisted(() => vi.fn())
 vi.mock('../api/useMe', () => ({ useMe: me }))
 
 function signedInAs(...roles: string[]) {
-  const profile: User = { id: 'me', name: 'Yo', country: 'AR', karma: 0, needsOnboarding: false, roles, hasManagedTables: false }
+  const profile: User = { id: 'me', name: 'Yo', country: 'AR', needsOnboarding: false, roles, hasManagedTables: false }
   me.mockReturnValue({ data: profile, isPending: false })
 }
 

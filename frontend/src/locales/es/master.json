@@ -218,7 +218,6 @@
     "title": "Jugadores",
     "summary_one": "{{count}} jugador",
     "summary_other": "{{count}} jugadores",
-    "karma": "karma {{karma}}",
     "emptyTitle": "Todavía no hay nadie jugando",
     "emptyDescription": "Cuando aceptes a un candidato, aparece acá."
   },

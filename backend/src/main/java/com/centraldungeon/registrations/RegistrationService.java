@@ -455,7 +455,7 @@ public class RegistrationService {
             boolean automatic = rejection.getRejectedBy() == null;
             return new RegistrationResponse(
                     response.id(), response.gameTableId(), response.gameTableName(), response.userId(), response.userName(),
-                    response.userKarma(), response.status(), response.description(), response.createdAt(),
+                    response.status(), response.description(), response.createdAt(),
                     automatic ? null : rejection.getDescription(),
                     automatic ? rejection.getDescription() : null,
                     response.attachedFiles(),
@@ -509,7 +509,6 @@ public class RegistrationService {
                             registration.getId(),
                             registration.getUser().getId(),
                             registration.getUser().getDiscordUsername(),
-                            registration.getUser().getKarma(),
                             registration.getStatus().name(),
                             veto == null ? null : displayNameOf(veto.getChangedBy()),
                             veto == null ? null : veto.getCreatedAt(),
@@ -801,7 +800,7 @@ public class RegistrationService {
             RegistrationResponse response, String blockedByName, LocalDateTime blockedAt, String justification) {
         return new RegistrationResponse(
                 response.id(), response.gameTableId(), response.gameTableName(), response.userId(),
-                response.userName(), response.userKarma(), response.status(), response.description(),
+                response.userName(), response.status(), response.description(),
                 response.createdAt(), response.rejectionJustification(), response.rejectionReasonCode(),
                 response.attachedFiles(), blockedByName, blockedAt, justification);
     }

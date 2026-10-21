@@ -162,7 +162,7 @@ class RegistrationServiceTest {
         when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
-                .thenReturn(new RegistrationResponse("reg-1", "table-4", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
+                .thenReturn(new RegistrationResponse("reg-1", "table-4", "Test table", "player-1", "P1", "Candidate", null, null, null, null, List.of(), null, null, null));
 
         RegistrationResponse response = registrationService.apply("table-4", "player-1", new CreateRegistrationRequest("please", List.of()));
 
@@ -179,7 +179,7 @@ class RegistrationServiceTest {
         when(userService.getById("player-1")).thenReturn(persistedUser("player-1"));
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
-                .thenReturn(new RegistrationResponse("reg-1b", "table-4b", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
+                .thenReturn(new RegistrationResponse("reg-1b", "table-4b", "Test table", "player-1", "P1", "Candidate", null, null, null, null, List.of(), null, null, null));
         com.centraldungeon.tables.Master primary =
                 new com.centraldungeon.tables.Master(table, persistedUser("master-1"), com.centraldungeon.tables.MasterType.Primary);
         com.centraldungeon.tables.Master secondary =
@@ -220,7 +220,7 @@ class RegistrationServiceTest {
         when(masterService.isMasterOf("table-7", "master-1")).thenReturn(true);
         when(registrationRepository.countByGameTable_IdAndStatus("table-7", TableRegistrationStatus.Player)).thenReturn(1L);
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-3", "table-7", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of(), null, null, null));
+                .thenReturn(new RegistrationResponse("reg-3", "table-7", "Test table", "player-1", "P1", "Player", null, null, null, null, List.of(), null, null, null));
 
         registrationService.accept("reg-3", "master-1");
 
@@ -242,7 +242,7 @@ class RegistrationServiceTest {
         when(registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc("table-8", TableRegistrationStatus.Candidate))
                 .thenReturn(List.of(otherCandidate));
         when(registrationMapper.toResponse(eq(accepted), any()))
-                .thenReturn(new RegistrationResponse("reg-4", "table-8", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of(), null, null, null));
+                .thenReturn(new RegistrationResponse("reg-4", "table-8", "Test table", "player-1", "P1", "Player", null, null, null, null, List.of(), null, null, null));
 
         registrationService.accept("reg-4", "master-1");
 
@@ -269,7 +269,7 @@ class RegistrationServiceTest {
         when(masterService.isMasterOf("table-10", "master-1")).thenReturn(true);
         when(userService.getById("master-1")).thenReturn(persistedUser("master-1"));
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-7", "table-10", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of(), null, null, null));
+                .thenReturn(new RegistrationResponse("reg-7", "table-10", "Test table", "player-1", "P1", "Rejected", null, null, null, null, List.of(), null, null, null));
 
         registrationService.reject("reg-7", "master-1", new RejectRegistrationRequest("Not a fit"));
 
@@ -292,7 +292,7 @@ class RegistrationServiceTest {
                         pageable))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-8", "table-12", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of(), null, null, null));
+                .thenReturn(new RegistrationResponse("reg-8", "table-12", "Test table", "player-1", "P1", "Rejected", null, null, null, null, List.of(), null, null, null));
         RegistrationRejection rejection = new RegistrationRejection(registration, "No encaja con el tono", persistedUser("master-9"));
         when(rejectionRepository.findByRegistration_IdIn(List.of("reg-8"))).thenReturn(List.of(rejection));
 
@@ -312,7 +312,7 @@ class RegistrationServiceTest {
                         pageable))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-9", "table-13", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of(), null, null, null));
+                .thenReturn(new RegistrationResponse("reg-9", "table-13", "Test table", "player-1", "P1", "Rejected", null, null, null, null, List.of(), null, null, null));
         // rejected_by null is what marks the rejection as the system's own (ADR-09 §3).
         RegistrationRejection rejection = new RegistrationRejection(registration, "TABLE_FULL", null);
         when(rejectionRepository.findByRegistration_IdIn(List.of("reg-9"))).thenReturn(List.of(rejection));
@@ -402,7 +402,7 @@ class RegistrationServiceTest {
                 .thenReturn(List.of(accepted, pendingElsewhere));
         when(scheduleConflictService.overlap(acceptedTable, pendingElsewhere.getGameTable())).thenReturn(true);
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
-                .thenReturn(new RegistrationResponse("reg-r4", "table-r4", "Test table", "player-1", "P1", 8000, "Player", null, null, null, null, List.of(), null, null, null));
+                .thenReturn(new RegistrationResponse("reg-r4", "table-r4", "Test table", "player-1", "P1", "Player", null, null, null, null, List.of(), null, null, null));
 
         registrationService.accept("reg-r4", "master-1");
 
@@ -470,7 +470,7 @@ class RegistrationServiceTest {
         when(fileService.requireAttachable("file-1", "player-1")).thenReturn(file);
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
                 .thenReturn(new RegistrationResponse(
-                        "reg-f1", "table-f1", "Test table", "player-1", "P1", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
+                        "reg-f1", "table-f1", "Test table", "player-1", "P1", "Candidate", null, null, null, null, List.of(), null, null, null));
 
         registrationService.apply("table-f1", "player-1", new CreateRegistrationRequest(null, List.of("file-1")));
 
@@ -497,7 +497,7 @@ class RegistrationServiceTest {
         when(fileService.requireAttachable("file-published", "player-2")).thenReturn(published);
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
                 .thenReturn(new RegistrationResponse(
-                        "reg-f2", "table-f2", "Test table", "player-2", "P2", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
+                        "reg-f2", "table-f2", "Test table", "player-2", "P2", "Candidate", null, null, null, null, List.of(), null, null, null));
 
         registrationService.apply("table-f2", "player-2", new CreateRegistrationRequest(null, List.of("file-published")));
 
@@ -536,7 +536,7 @@ class RegistrationServiceTest {
         when(registrationRepository.save(any(TableRegistration.class))).thenAnswer(persistRegistration("reg-f4"));
         when(registrationMapper.toResponse(any(TableRegistration.class), any()))
                 .thenReturn(new RegistrationResponse(
-                        "reg-f4", "table-f4", "Test table", "player-4", "P4", 8000, "Candidate", null, null, null, null, List.of(), null, null, null));
+                        "reg-f4", "table-f4", "Test table", "player-4", "P4", "Candidate", null, null, null, null, List.of(), null, null, null));
 
         RegistrationResponse response =
                 registrationService.apply("table-f4", "player-4", new CreateRegistrationRequest(null, List.of()));
@@ -573,7 +573,7 @@ class RegistrationServiceTest {
         when(masterService.isPrimaryOf("table-b1", "primary-1")).thenReturn(true);
         when(userService.getById("primary-1")).thenReturn(persistedUser("primary-1"));
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-b1", "table-b1", "Test table", "player-1", "P1", 8000,
+                .thenReturn(new RegistrationResponse("reg-b1", "table-b1", "Test table", "player-1", "P1", 
                         "Blocked", null, null, null, null, List.of(), null, null, null));
 
         RegistrationResponse response =
@@ -641,7 +641,7 @@ class RegistrationServiceTest {
                         registration, TableRegistrationStatus.Candidate, TableRegistrationStatus.Blocked,
                         persistedUser("primary-1"), "fue un malentendido")));
         when(registrationMapper.toResponse(eq(registration), any()))
-                .thenReturn(new RegistrationResponse("reg-b4", "table-b4", "Test table", "player-1", "P1", 8000,
+                .thenReturn(new RegistrationResponse("reg-b4", "table-b4", "Test table", "player-1", "P1", 
                         "Candidate", null, null, null, null, List.of(), null, null, null));
 
         registrationService.unblock("table-b4", "reg-b4", "primary-1", "We talked it through and it is settled");

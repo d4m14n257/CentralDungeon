@@ -38,7 +38,7 @@ function page(content: AdminUserSummary[]) {
 }
 
 function signedInAs(...roles: string[]) {
-  const profile: User = { id: 'me', name: 'Yo', country: 'AR', karma: 0, needsOnboarding: false, roles, hasManagedTables: false }
+  const profile: User = { id: 'me', name: 'Yo', country: 'AR', needsOnboarding: false, roles, hasManagedTables: false }
   me.mockResolvedValue(profile)
 }
 

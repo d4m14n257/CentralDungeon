@@ -64,12 +64,7 @@ export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTa
               ? t('explorer.players', { current: table.playerCount, max: table.maxPlayers })
               : t('explorer.playersUnlimited', { current: table.playerCount })}
           </span>
-          {/* If the name does not fit, the name is what gets cut, never the karma: the karma is the number being compared. */}
-          <span className="flex min-w-0 items-center gap-1">
-            <span className="truncate">{table.primaryMaster.name}</span>
-            <span className="shrink-0">·</span>
-            <span className="text-brand-fg shrink-0">{table.primaryMaster.karma.toLocaleString(i18n.language)}</span>
-          </span>
+          <span className="min-w-0 truncate">{table.primaryMaster.name}</span>
         </div>
       </Card>
     </Link>

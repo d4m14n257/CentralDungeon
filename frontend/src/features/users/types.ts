@@ -6,7 +6,6 @@ export interface User {
   id: string
   name: string | null
   country: string | null
-  karma: number
   needsOnboarding: boolean
   roles: string[]
   hasManagedTables: boolean

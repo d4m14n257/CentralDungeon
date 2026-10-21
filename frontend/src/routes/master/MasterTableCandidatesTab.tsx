@@ -67,7 +67,7 @@ function CandidatesList({ tableId, maxPlayers, playerCount, readOnly, onOpenPers
           <li key={candidate.id} className="space-y-2 px-4 py-3">
             <div className="flex items-center justify-between gap-4">
               <span className="text-sm">
-                {index + 1}. {candidate.userName} · {candidate.userKarma}
+                {index + 1}. {candidate.userName}
               </span>
               <div className="flex items-center gap-2">
                 {/* ADR-10 §1: whoever applies is opening themselves up to the master's evaluation, so the

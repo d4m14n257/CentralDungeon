@@ -16,7 +16,7 @@ const baseTable: GameTableSummary = {
   playerCount: 2,
   schedule: [],
   scheduleConflict: false,
-  primaryMaster: { userId: 'master-1', name: 'BrowserTester', karma: 8000, masterType: 'Primary' },
+  primaryMaster: { userId: 'master-1', name: 'BrowserTester', masterType: 'Primary' },
 }
 
 function renderCard(table: GameTableSummary, options: { linkTo?: string; alreadyApplied?: boolean } = {}) {

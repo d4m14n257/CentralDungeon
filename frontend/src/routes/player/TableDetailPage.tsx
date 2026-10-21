@@ -130,8 +130,6 @@ export function TableDetailPage() {
               <Link to={playerUserProfilePath(primaryMaster.userId)} className="hover:text-fg underline">
                 {primaryMaster.name}
               </Link>
-              <span>·</span>
-              <span className="text-brand-fg">{primaryMaster.karma.toLocaleString(i18n.language)}</span>
               {coMasters.length > 0 && (
                 <>
                   <span>·</span>

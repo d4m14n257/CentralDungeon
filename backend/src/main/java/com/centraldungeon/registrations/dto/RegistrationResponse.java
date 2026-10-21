@@ -18,8 +18,6 @@ import org.jspecify.annotations.Nullable;
  * @param gameTableName          its title, so the applicant's list does not need a second request
  * @param userId                 the applicant
  * @param userName               their display name - the master sees a person, not an id
- * @param userKarma              their karma at the time of the read (ADR-11 §9), which is most of what a
- *                               master decides on
  * @param status                 where the application stands, as a string
  * @param description            the applicant's note, or null when they wrote none
  * @param createdAt              when they applied, in UTC. FIFO order is not decoration: it is the
@@ -52,7 +50,6 @@ public record RegistrationResponse(
         String gameTableName,
         String userId,
         String userName,
-        int userKarma,
         String status,
         @Nullable String description,
         LocalDateTime createdAt,

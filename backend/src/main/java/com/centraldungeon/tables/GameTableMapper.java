@@ -135,7 +135,7 @@ public interface GameTableMapper {
     default MasterSummaryResponse toMasterSummary(Master master) {
         String displayName = master.getUser().getName() != null ? master.getUser().getName() : master.getUser().getDiscordUsername();
         return new MasterSummaryResponse(
-                master.getUser().getId(), displayName, master.getUser().getKarma(), master.getMasterType().name());
+                master.getUser().getId(), displayName, master.getMasterType().name());
     }
 
     default TableStatusChangeResponse toStatusChangeResponse(TableStatusChange change) {

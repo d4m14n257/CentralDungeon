@@ -32,7 +32,6 @@ export type GameTableStatus =
 export interface MasterSummary {
   userId: string
   name: string
-  karma: number
   masterType: 'Primary' | 'Secondary'
 }
 

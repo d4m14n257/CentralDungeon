@@ -36,7 +36,6 @@ export interface Registration {
   gameTableName: string
   userId: string
   userName: string
-  userKarma: number
   status: RegistrationStatus
   description: string | null
   createdAt: string
@@ -91,10 +90,7 @@ export interface Registration {
  * - `blockedByName`, `blockedAt` and `blockJustification`, which are what whoever is about to lift
  *   one reads first: whose decision it was, how long ago, and why.
  */
-export type TablePlayer = Pick<
-  Registration,
-  'userId' | 'userName' | 'userKarma' | 'status' | 'blockedByName' | 'blockedAt' | 'blockJustification'
-> & {
+export type TablePlayer = Pick<Registration, 'userId' | 'userName' | 'status' | 'blockedByName' | 'blockedAt' | 'blockJustification'> & {
   /** The application this row is: what the two acts of the veto address. */
   registrationId: Registration['id']
 }

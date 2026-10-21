@@ -218,7 +218,6 @@
     "title": "Players",
     "summary_one": "{{count}} player",
     "summary_other": "{{count}} players",
-    "karma": "karma {{karma}}",
     "emptyTitle": "Nobody is playing yet",
     "emptyDescription": "Once you accept a candidate, they show up here."
   },

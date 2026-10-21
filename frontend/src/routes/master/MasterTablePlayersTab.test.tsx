@@ -10,8 +10,8 @@ import type { UserSummary } from '@/features/users'
 import { MasterTablePlayersTab } from './MasterTablePlayersTab'
 
 const MASTERS: MasterSummary[] = [
-  { userId: 'user-1', name: 'Ana', karma: 8240, masterType: 'Primary' },
-  { userId: 'user-2', name: 'Beto', karma: 8000, masterType: 'Secondary' },
+  { userId: 'user-1', name: 'Ana', masterType: 'Primary' },
+  { userId: 'user-2', name: 'Beto', masterType: 'Secondary' },
 ]
 
 const CANDIDATE: UserSummary = { id: 'user-3', discordUsername: 'carla', name: 'Carla' }
@@ -21,7 +21,6 @@ function player(overrides: Partial<TablePlayer> = {}): TablePlayer {
     registrationId: 'reg-9',
     userId: 'user-9',
     userName: 'Diego',
-    userKarma: 6100,
     status: 'Player',
     blockedByName: null,
     blockedAt: null,

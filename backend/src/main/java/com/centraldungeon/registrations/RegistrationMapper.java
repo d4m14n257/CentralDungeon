@@ -24,7 +24,6 @@ public interface RegistrationMapper {
             target = "userName",
             expression =
                     "java(registration.getUser().getName() != null ? registration.getUser().getName() : registration.getUser().getDiscordUsername())")
-    @Mapping(target = "userKarma", source = "registration.user.karma")
     @Mapping(target = "status", expression = "java(registration.getStatus().name())")
     @Mapping(target = "rejectionJustification", ignore = true)
     @Mapping(target = "rejectionReasonCode", ignore = true)

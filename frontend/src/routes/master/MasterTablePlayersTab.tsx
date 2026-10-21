@@ -182,7 +182,6 @@ function PlayerRow({
           {isBlocked && <RegistrationStatusBadge status={player.status} />}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <span className="text-fg-muted text-xs">{t('players.karma', { karma: player.userKarma })}</span>
           {onOpenPerson && (
             <IconAction
               icon={<IdCard className="size-4" />}

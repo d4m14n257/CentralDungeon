@@ -95,7 +95,7 @@ class UserServiceTest {
         when(userRoleRepository.findActiveRoleNames("user-4")).thenReturn(Set.of("Player"));
         when(masterRepository.existsByUser_IdAndStatus("user-4", MasterRowStatus.Created)).thenReturn(false);
         when(userMapper.toDetailResponse(user, Set.of("Player"), false))
-                .thenReturn(new UserDetailResponse("user-4", "Onboarded Name", "AR", 8000, false, Set.of("Player"), false));
+                .thenReturn(new UserDetailResponse("user-4", "Onboarded Name", "AR", false, Set.of("Player"), false));
 
         UserDetailResponse response = userService.completeOnboarding("user-4", new UpdateUserRequest("Onboarded Name", "AR"));
 
@@ -111,7 +111,7 @@ class UserServiceTest {
         when(userRoleRepository.findActiveRoleNames("user-5")).thenReturn(Set.of("Player"));
         when(masterRepository.existsByUser_IdAndStatus("user-5", MasterRowStatus.Created)).thenReturn(true);
         when(userMapper.toDetailResponse(user, Set.of("Player"), true))
-                .thenReturn(new UserDetailResponse("user-5", "X", null, 8000, true, Set.of("Player"), true));
+                .thenReturn(new UserDetailResponse("user-5", "X", null, true, Set.of("Player"), true));
 
         UserDetailResponse response = userService.getDetailResponse("user-5");
 

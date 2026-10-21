@@ -13,7 +13,6 @@ import org.jspecify.annotations.Nullable;
  * @param id                the person's identifier
  * @param name              their display name, or null while onboarding is incomplete
  * @param country           where they play from, ISO 3166-1 alpha-2, or null while incomplete
- * @param karma             their community reputation (ADR-11 §9)
  * @param needsOnboarding   whether the app has to send them to the onboarding screen before
  *                          anything else (ADR-10 §4). Derived from name and country, so the frontend
  *                          never has to re-derive the rule
@@ -28,7 +27,6 @@ public record UserDetailResponse(
         String id,
         @Nullable String name,
         @Nullable String country,
-        int karma,
         boolean needsOnboarding,
         Set<String> roles,
         boolean hasManagedTables) {

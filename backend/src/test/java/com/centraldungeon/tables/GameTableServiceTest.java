@@ -878,7 +878,7 @@ class GameTableServiceTest {
         when(gameTableRepository.findAll(ArgumentMatchers.<Specification<GameTable>>any(), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of(table)));
         when(masterService.findByGameTable("table-4b")).thenReturn(List.of(primary));
-        MasterSummaryResponse primarySummary = new MasterSummaryResponse("someone-else", "Someone Else", 8000, "Primary");
+        MasterSummaryResponse primarySummary = new MasterSummaryResponse("someone-else", "Someone Else", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
                 new GameTableSummaryResponse("table-4b", "Test", "Opened", null, null, null, 0, List.of(), false, primarySummary);
@@ -934,7 +934,7 @@ class GameTableServiceTest {
         Pageable pageable = PageRequest.of(0, 20);
         when(gameTableRepository.findByMasterUserId("master-1", pageable)).thenReturn(new PageImpl<>(List.of(table)));
         when(masterService.findByGameTable("table-5")).thenReturn(List.of(primary));
-        MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-1", "Primary One", 8000, "Primary");
+        MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-1", "Primary One", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
                 new GameTableSummaryResponse("table-5", "Test", "Preparation", null, null, null, 0, List.of(), false, primarySummary);
@@ -1090,7 +1090,7 @@ class GameTableServiceTest {
     private void stubPrimarylessSummary(GameTable table) {
         Master primary = new Master(table, persistedUser("primary-of-" + table.getId()), MasterType.Primary);
         when(masterService.findByGameTable(table.getId())).thenReturn(List.of(primary));
-        MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-of-" + table.getId(), "Primary", 8000, "Primary");
+        MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-of-" + table.getId(), "Primary", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
                 new GameTableSummaryResponse(table.getId(), "Test", table.getStatus().name(), null, null, null, 0, List.of(), false, primarySummary);
