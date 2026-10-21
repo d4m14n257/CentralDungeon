@@ -21,7 +21,7 @@ export function HelpList({ items }: { items: string[] }) {
 
 /**
  * The steps of a task: how it is done, in order. The help does not merely describe what exists, it
- * teaches how to use it (#170), and for that a numbered step is the shape somebody can follow with
+ * teaches how to use it (ADR-20 §6), and for that a numbered step is the shape somebody can follow with
  * the screen open behind the dialog.
  */
 export function HelpSteps({ title, items }: { title: string; items: string[] }) {

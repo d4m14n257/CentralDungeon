@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * Changing one setting: the new value and why (#141).
+ * Changing one setting: the new value and why (ADR-17 §3).
  *
  * <p><b>The range is not here.</b> Bean Validation can say "a whole number" and cannot say "between
  * 1 and 1440 for this key and between 1 and 25 for that one", because the bound belongs to the key

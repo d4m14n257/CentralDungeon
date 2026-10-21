@@ -10,7 +10,7 @@ interface FileCategoryChoiceProps {
   value: FileCategory
   /** Called with the cajón that was picked. */
   onChange: (value: FileCategory) => void
-  /** The cajones to offer. Only the actor's own (#237). */
+  /** The cajones to offer. Only the actor's own (ADR-14 §5). */
   options: readonly FileCategory[]
   /** The accessible name of the group, since the chips have no visible legend of their own. */
   label: string
@@ -21,7 +21,7 @@ interface FileCategoryChoiceProps {
 }
 
 /**
- * Choosing which cajón a file goes in, as chips (#233).
+ * Choosing which cajón a file goes in, as chips (ADR-14 §4).
  *
  * **Chips and not a `<Select>`**, for the reason {@link FileCategoryFilter} is one too: the whole set
  * is two to four short values, and a dropdown hides what is on offer behind a click. Here it matters

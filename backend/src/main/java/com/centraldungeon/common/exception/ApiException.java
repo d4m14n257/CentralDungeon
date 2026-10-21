@@ -12,10 +12,10 @@ import org.springframework.http.HttpStatus;
  * it closed is what lets a {@code switch} over them stay exhaustive (arquitectura §2.4). Anything
  * that is not one of these is a bug, and a bug answers 500.
  *
- * <p><b>The message is for whoever is reading a log, not for the person on the screen</b> (#197). It
+ * <p><b>The message is for whoever is reading a log, not for the person on the screen</b> (ADR-23 §3). It
  * is written in English like the rest of the code; what the user reads is rendered by the frontend
  * from {@link #getErrorCode()} and {@link #getErrorParams()}, in whichever language they picked.
- * Before #197 the clash message of #188 was written in Spanish precisely because it was shown
+ * Before ADR-23 §3 the clash message of ADR-04 §4 was written in Spanish precisely because it was shown
  * verbatim - that is what stopped being true.
  */
 public sealed abstract class ApiException extends RuntimeException
@@ -41,7 +41,7 @@ public sealed abstract class ApiException extends RuntimeException
      * @param status    the HTTP status this failure maps to
      * @param errorCode the stable code that travels in the {@code ProblemDetail}
      * @param message   the developer-facing detail, in English. It reaches the client but is not what
-     *                  the client shows (#197)
+     *                  the client shows (ADR-23 §3)
      */
     protected ApiException(HttpStatus status, String errorCode, String message) {
         this(status, errorCode, message, Map.of());

@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 /**
  * The session: who is signed in, whether it is still loading, and how to end it.
  *
- * What it exposes is **for deciding what to render, never what to allow** (#103). The backend
+ * What it exposes is **for deciding what to render, never what to allow** (ADR-20 §1). The backend
  * authorizes endpoint by endpoint, and no component decides a permission by reading this.
  *
  * @returns the session context

@@ -19,7 +19,7 @@ interface UserPickerProps {
    * Search among the people who could be made a master of this table, instead of the whole
    * directory. An id and never an entity (§3.1.5), so this component still knows nothing about
    * tables — what changes is which endpoint answers, because the two are authorized differently
-   * (#165).
+   * (ADR-07 §8).
    */
   tableId?: string
 }
@@ -27,12 +27,12 @@ interface UserPickerProps {
 /**
  * Finding a person and picking them. The basic criterion is the Discord name **or** the one in the
  * system: whoever is searching knows one of the two, not which of them is stored where
- * (docs/adr #164).
+ * (ADR-22 §1).
  */
 export function UserPicker({ onSelect, excludedIds = [], tableId }: UserPickerProps) {
   const { t } = useTranslation('users')
 
-  // The commands and the state, wired the same way as every other box (#240): it searches on Enter (#268).
+  // The commands and the state, wired the same way as every other box (ADR-22 §3): it searches on Enter (ADR-22 §4).
   const fields = useMemo(() => userSearchFields(t), [t])
   const search = useSearchQuery({ fields })
 

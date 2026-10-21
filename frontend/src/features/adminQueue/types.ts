@@ -1,7 +1,7 @@
 /**
- * Which table a tray item came out of (#100).
+ * Which table a tray item came out of (ADR-16 §5).
  *
- * **The same vocabulary of strings `entity_type` (#78) and `Notification.relatedEntityType` already
+ * **The same vocabulary of strings `entity_type` (ADR-16 §2) and `Notification.relatedEntityType` already
  * use**, and not a third one invented here: the value travels in the claim URL
  * (`/admin-queue/{type}/{id}/claim`), so a spelling of its own would be a second name for a thing
  * that already has one.
@@ -17,19 +17,19 @@ export type AdminQueueItemType = 'approval_request' | 'game_table'
  * F5's, and they arrive with the query that produces them. A value of an enum nothing can emit is a
  * filter that always answers nothing.
  *
- * It crosses HTTP, so the backend pins it with `@JsonValue` over these exact names (#253).
+ * It crosses HTTP, so the backend pins it with `@JsonValue` over these exact names (ADR-04 §5).
  */
 export type AdminQueueItemKind = 'ApprovalRequest' | 'TableWaitingReview'
 
 /**
  * Mirror of `AdminQueueItemResponse` — one row of the shared admin tray, whatever it came from.
  *
- * **One flat shape for every source, which is the whole point of the tray** (#100): an admin opens
- * one screen and sees everything waiting on them, ordered by who has been waiting longest (#136),
+ * **One flat shape for every source, which is the whole point of the tray** (ADR-16 §5): an admin opens
+ * one screen and sees everything waiting on them, ordered by who has been waiting longest (ADR-20 §4),
  * rather than checking four listings and guessing which is most overdue.
  *
  * `id` is the id of the row **in its own table**, not an id of the tray: there is no `admin_queue`
- * table and there is not going to be one (#11). The pair `(type, id)` is what addresses an item.
+ * table and there is not going to be one (ADR-03 §1). The pair `(type, id)` is what addresses an item.
  *
  * Names and never ids on the people involved, like every other admin listing: a tray nobody can read
  * without a second lookup is a tray nobody reads.
@@ -44,10 +44,10 @@ export interface AdminQueueItem {
   requestedByName: string
   /** The justification of a request. Null for a table: sending one in carries no words. */
   detail: string | null
-  /** Since when it has been waiting. The tray's order, and the only urgency it has (#136). */
+  /** Since when it has been waiting. The tray's order, and the only urgency it has (ADR-20 §4). */
   waitingSince: string
   /**
-   * Who took the item for themselves, or null while nobody has (#100).
+   * Who took the item for themselves, or null while nobody has (ADR-16 §5).
    *
    * **A non-null value here always means the reader**: the listing only ever returns what is free or
    * what belongs to whoever asked, so a name in this field is their own. That is what
@@ -67,12 +67,12 @@ export interface AdminQueueItem {
  *
  * **It is not a permission check, and it never should have read like one.** Resolving an item does
  * not require holding it: an item nobody holds is resolved on the spot, and doing so reserves it
- * implicitly (#100). What this answers is narrower and purely presentational — does the row say
+ * implicitly (ADR-16 §5). What this answers is narrower and purely presentational — does the row say
  * "Tomar" or "Soltar", and does the chip say it is free or that somebody is on it.
  *
  * Written as a function over the row rather than compared against the reader's own name, because the
  * server already answered the question: `GET /admin-queue` returns `claimed_by IS NULL OR
- * claimed_by = :actor` and nothing else (#100), so a claim that is visible at all is the reader's.
+ * claimed_by = :actor` and nothing else (ADR-16 §5), so a claim that is visible at all is the reader's.
  * Matching names on this side would be a second, worse implementation of a rule that is enforced
  * where it belongs — and it would break on two people sharing a display name.
  *

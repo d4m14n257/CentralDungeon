@@ -5,7 +5,7 @@ import { filesApi } from './filesApi'
 import type { CommitResult, FileCategory, StagedFile } from '../types'
 
 /**
- * Sends everything that was staged, at the moment the operation is confirmed (#238).
+ * Sends everything that was staged, at the moment the operation is confirmed (ADR-13 §5).
  *
  * **This is where uploading happens now, and nowhere else.** A picker stages; the button that creates
  * the table, sends the answer or publishes the request is what puts bytes on the server. Uploading at
@@ -18,12 +18,12 @@ import type { CommitResult, FileCategory, StagedFile } from '../types'
  * by editing afterwards.
  *
  * **Retrying is free.** The server recognises content somebody already uploaded and hands back the
- * row they had (#75), so sending the list again after fixing one file stores nothing twice.
+ * row they had (ADR-13 §3), so sending the list again after fixing one file stores nothing twice.
  *
  * Sequential rather than parallel: the order of the resulting ids is the order they were picked in,
  * and a partial failure is easier to describe when it happened at a known point.
  *
- * @returns the mutation, taking the staged list and the cajón to file new uploads under (#233)
+ * @returns the mutation, taking the staged list and the cajón to file new uploads under (ADR-14 §4)
  */
 export function useCommitStagedFiles() {
   const queryClient = useQueryClient()

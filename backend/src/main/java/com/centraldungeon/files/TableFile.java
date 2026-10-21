@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * A file attached to a table. Table {@code table_files}.
  *
- * <p><b>This links, it does not copy</b> (#79). Detaching a file from a table removes this row and
+ * <p><b>This links, it does not copy</b> (ADR-14 §1). Detaching a file from a table removes this row and
  * leaves the file untouched, and editing the file changes what every table using it shows - which is
  * the entire reason a master can use the platform's default character sheet instead of uploading
  * their own.
@@ -25,7 +25,7 @@ import org.jspecify.annotations.Nullable;
  *   <li>{@code isPrivate} - <em>in this table</em>, do the players see it, or only the people running
  *       it? A master's own notes are private; the map everyone needs is not.
  *   <li>{@link FileType#Public} - an admin published this file for the whole platform, with its
- *       audience (#64). It says nothing about any particular table.
+ *       audience (ADR-13 §2). It says nothing about any particular table.
  * </ul>
  *
  * <p>No id and no {@code updated_at}: it is a bridge row keyed by the pair it joins, same shape as
@@ -64,7 +64,7 @@ public class TableFile {
     @Column(name = "created_at", nullable = false)
     private @Nullable LocalDateTime createdAt;
 
-    /** Soft delete (#25): set when the file is detached. The row itself is never dropped. */
+    /** Soft delete (ADR-03 §7): set when the file is detached. The row itself is never dropped. */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
@@ -76,7 +76,7 @@ public class TableFile {
      * Attaches a file to a table, live from the start.
      *
      * @param gameTableId   the table the file is being attached to
-     * @param fileId        the file being attached. It is not copied (#79)
+     * @param fileId        the file being attached. It is not copied (ADR-14 §1)
      * @param tableFileType what the file is doing on the table
      * @param isPrivate     true to keep it to the people running the table
      */
@@ -147,7 +147,7 @@ public class TableFile {
     }
 
     /**
-     * Attaches or detaches the file. Detaching never touches the file itself (#79), and re-attaching
+     * Attaches or detaches the file. Detaching never touches the file itself (ADR-14 §1), and re-attaching
      * revives this row rather than inserting a second one - the pair is the key.
      *
      * @param status the new status

@@ -42,10 +42,10 @@ import org.testcontainers.mysql.MySQLContainer;
 /**
  * The half of the file story only a real database and a real disk can answer.
  *
- * <p><b>The headline case is the one #79 exists for</b>: one upload, two tables, <em>one</em> row in
+ * <p><b>The headline case is the one ADR-14 §1 exists for</b>: one upload, two tables, <em>one</em> row in
  * {@code files}. A unit test can only assert that {@code save} was not called twice; this counts the
  * rows. It also exercises the composite key of {@code table_files}, which is what makes detaching and
- * re-attaching a revive rather than a duplicate-key failure, and the purge query of #75, whose
+ * re-attaching a revive rather than a duplicate-key failure, and the purge query of ADR-13 §3, whose
  * {@code not exists} and {@code coalesce} are exactly the parts a mock cannot check.
  *
  * <p>Storage points at a temporary directory rather than the dev root, so a run never leaves blobs in
@@ -129,7 +129,7 @@ class FileIT {
     }
 
     /**
-     * The uses an owner sees, resolved against a real database (#232).
+     * The uses an owner sees, resolved against a real database (ADR-14 §3).
      *
      * <p>This is the case a mock cannot check. Both queries are constructor expressions carrying an
      * <b>enum literal</b> - {@code FileCategory.TableMaterial} written into the JPQL itself - joined across
@@ -153,7 +153,7 @@ class FileIT {
                         tuple("TableMaterial", "Mesa de los martes"), tuple("TableMaterial", "Mesa de los jueves"));
     }
 
-    /** A file nothing points at reports no uses, which is what the purge of #75 is about to notice. */
+    /** A file nothing points at reports no uses, which is what the purge of ADR-13 §3 is about to notice. */
     @Test
     void aFileNoTableHoldsReportsNoUses() {
         FileResponse loose = upload("suelto.pdf", "nada lo usa");
@@ -172,7 +172,7 @@ class FileIT {
      *
      * <p>The frontend had been sending {@code q} on this call all along and the endpoint had no
      * parameter to receive it, so "buscar entre mis archivos" returned everything regardless of what
-     * was typed - and a reuse history you cannot search is one nobody reuses from (#65).
+     * was typed - and a reuse history you cannot search is one nobody reuses from (ADR-13 §2).
      */
     @Test
     void theOwnersListIsNarrowedByWhatTheyTyped() {
@@ -185,7 +185,7 @@ class FileIT {
     }
 
     /**
-     * <b>The link classifies the file, and the membership is never revoked</b> (#233).
+     * <b>The link classifies the file, and the membership is never revoked</b> (ADR-14 §4).
      *
      * <p>The whole design in one case: nobody declared a cajón on the upload, attaching the file to a
      * table put it in one, and detaching it left the cajón standing while the <em>use</em> went away.
@@ -211,10 +211,10 @@ class FileIT {
     }
 
     /**
-     * The same file in two cajones, which is what the column could never express (#233).
+     * The same file in two cajones, which is what the column could never express (ADR-14 §4).
      *
      * <p>A sheet attached to a table and later handed in to that table's request belongs to both
-     * flows, and deduplication (#75) guarantees it is one row - so one row has to hold two answers.
+     * flows, and deduplication (ADR-13 §3) guarantees it is one row - so one row has to hold two answers.
      */
     @Test
     void aFileUsedInTwoFlowsBelongsToTwoCajones() {
@@ -226,7 +226,7 @@ class FileIT {
     }
 
     /**
-     * The cajón as a search command, not only as a filter (#239).
+     * The cajón as a search command, not only as a filter (ADR-22 §2).
      *
      * <p>It is the one field of the search language that is not a column: membership is a row per
      * cajón, so the criterion resolves to an {@code exists} rather than a {@code LIKE}. Whether
@@ -259,7 +259,7 @@ class FileIT {
         assertThat(none.content()).isEmpty();
     }
 
-    /** Somebody's own library, narrowed to one cajón, through the {@code exists} subquery (#233). */
+    /** Somebody's own library, narrowed to one cajón, through the {@code exists} subquery (ADR-14 §4). */
     @Test
     void theOwnersListIsNarrowedByCajon() {
         FileResponse attached = upload("ficha.pdf", "la elfa");
@@ -274,7 +274,7 @@ class FileIT {
 
     /**
      * Uploading the same content twice answers 200's worth of "already there", not a second row
-     * (#234, #75).
+     * (ADR-13 §4, §3).
      */
     @Test
     void theSecondUploadOfTheSameContentIsRecognisedRatherThanStored() {
@@ -290,7 +290,7 @@ class FileIT {
         assertThat(second.file().name()).isEqualTo("ficha.pdf");
     }
 
-    /** The published set narrows by category, which is what makes it browsable (#233, #79). */
+    /** The published set narrows by category, which is what makes it browsable (ADR-14 §4, §1). */
     @Test
     void thePublishedSetCanBeNarrowedToOneKindOfDocument() {
         User admin = userRepository.save(new User(randomDiscordId(), "Library Admin"));
@@ -317,7 +317,7 @@ class FileIT {
     }
 
     /**
-     * The two player-side cajones refuse to be published into (#233).
+     * The two player-side cajones refuse to be published into (ADR-14 §4).
      *
      * <p>They hold what individual people answered with. A blank offered to the whole community is
      * not an answer - it belongs in the master-side cajón the request was written from.
@@ -331,7 +331,7 @@ class FileIT {
                 .isInstanceOf(InvalidRequestException.class);
     }
 
-    /** Taking a file off one table leaves the file, and leaves the other table's copy of it (#79). */
+    /** Taking a file off one table leaves the file, and leaves the other table's copy of it (ADR-14 §1). */
     @Test
     void detachingFromOneTableLeavesTheFileAndTheOtherTable() {
         FileResponse sheet = upload("ficha.pdf", "hoja de personaje");
@@ -367,7 +367,7 @@ class FileIT {
                 .isEqualTo(true);
     }
 
-    /** #75 on real rows: the same bytes from the same person are recognised, not stored again. */
+    /** ADR-13 §3 on real rows: the same bytes from the same person are recognised, not stored again. */
     @Test
     void uploadingTheSameContentTwiceWritesOneRow() {
         FileResponse first = upload("ficha.pdf", "exactamente lo mismo");
@@ -378,7 +378,7 @@ class FileIT {
                 .hasSize(1);
     }
 
-    /** The bytes survive a round trip through gzip and the staging move (#75, M26.2). */
+    /** The bytes survive a round trip through gzip and the staging move (ADR-13 §3, M26.2). */
     @Test
     void theContentComesBackExactlyAsItWentIn() {
         FileResponse sheet = upload("ficha.pdf", "contenido con acentos: ñáé");
@@ -389,7 +389,7 @@ class FileIT {
         assertThat(download.name()).isEqualTo("ficha.pdf");
     }
 
-    /** A published file is attachable by a master who did not upload it, and is not copied (#79). */
+    /** A published file is attachable by a master who did not upload it, and is not copied (ADR-14 §1). */
     @Test
     void aPublishedFileIsAttachedRatherThanCopied() {
         User admin = userRepository.save(new User(randomDiscordId(), "File Admin"));
@@ -424,7 +424,7 @@ class FileIT {
     }
 
     /**
-     * The purge query of #75 against real SQL: its {@code not exists} over {@code table_files} and its
+     * The purge query of ADR-13 §3 against real SQL: its {@code not exists} over {@code table_files} and its
      * {@code coalesce} of the two dates are the parts no mock can check.
      */
     @Test
@@ -465,7 +465,7 @@ class FileIT {
         assertThat(fileRepository.findById(stale.id()).orElseThrow().getDeletedAt()).isNotNull();
     }
 
-    /** /admin/files shows the usage count, which is what makes #79 visible instead of merely true. */
+    /** /admin/files shows the usage count, which is what makes ADR-14 §1 visible instead of merely true. */
     @Test
     void theAdminListingCountsHowManyTablesUseEachFile() {
         AdminFileResponse sheet = fileService
@@ -487,7 +487,7 @@ class FileIT {
     }
 
     /**
-     * /admin/files is the platform's library and nothing else (#278): somebody's private upload never
+     * /admin/files is the platform's library and nothing else (ADR-14 §7): somebody's private upload never
      * shows up in it, however well it matches the search - against real SQL, because "published" is
      * a predicate of the query and not a filter the screen could forget.
      */
@@ -509,7 +509,7 @@ class FileIT {
     }
 
     /**
-     * #282 against real SQL: a file uploaded without publishing is in the admin's library and in no
+     * ADR-14 §7 against real SQL: a file uploaded without publishing is in the admin's library and in no
      * picker; hidden after being published, it is still in the library and still in no picker; and the
      * purge leaves both alone, because the platform's library is never the purge's to take.
      */

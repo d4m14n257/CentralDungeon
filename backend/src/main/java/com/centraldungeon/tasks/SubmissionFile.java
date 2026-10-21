@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * A file handed in with an answer. Table {@code submission_files}.
  *
- * <p><b>It links, it does not copy</b> (#65, #79): the character sheet a player uploaded months ago
+ * <p><b>It links, it does not copy</b> (ADR-13 §2, ADR-14 §1): the character sheet a player uploaded months ago
  * is attached again here, and the file keeps living in their own history untouched. That reuse is the
  * cost lever the whole file feature was built around.
  *
@@ -41,7 +41,7 @@ public class SubmissionFile {
     @Column(name = "created_at", nullable = false)
     private @Nullable LocalDateTime createdAt;
 
-    /** Soft delete (#25). The row itself is never dropped, and the bytes are never freed here (#66). */
+    /** Soft delete (ADR-03 §7). The row itself is never dropped, and the bytes are never freed here (ADR-13 §8). */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
@@ -53,7 +53,7 @@ public class SubmissionFile {
      * Attaches a file to an answer, live from the start.
      *
      * @param submissionId the answer being handed in
-     * @param fileId       the file being attached. It is not copied (#79)
+     * @param fileId       the file being attached. It is not copied (ADR-14 §1)
      */
     public SubmissionFile(String submissionId, String fileId) {
         this.id = new SubmissionFileId(submissionId, fileId);
@@ -84,7 +84,7 @@ public class SubmissionFile {
     }
 
     /**
-     * Attaches or detaches the file. Detaching never touches the file itself (#79).
+     * Attaches or detaches the file. Detaching never touches the file itself (ADR-14 §1).
      *
      * @param status the new status
      */

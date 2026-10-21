@@ -6,7 +6,7 @@ import { z } from 'zod'
  * under exactOptionalPropertyTypes breaks the resolver's type inference.
  *
  * The catalogs and the agenda are **not** here: they are not text fields but collections the wizard
- * keeps in its own state and the server validates - catalog depth (#59), schedule clashes (#178).
+ * keeps in its own state and the server validates - catalog depth (ADR-12 §2), schedule clashes (ADR-08 §2).
  * Putting them in the schema would duplicate rules only the backend can decide.
  */
 export const createGameTableSchema = z.object({
@@ -23,7 +23,7 @@ export const createGameTableSchema = z.object({
 
 /**
  * The create-table form's values, inferred from its schema and tied to `CreateGameTableRequest` by a
- * compile-time assertion (#3.2 regla 7).
+ * compile-time assertion (arquitectura §3.2, rule 7).
  */
 export type CreateGameTableForm = z.infer<typeof createGameTableSchema>
 
@@ -31,7 +31,7 @@ export type CreateGameTableForm = z.infer<typeof createGameTableSchema>
  * The wizard's five steps, in order: identity → catalogs → agenda → files → capacity and review.
  * One decision per step (the rule F1.2 was built on), and the summary before sending.
  *
- * **Files earn a step of their own** (#228) rather than a section inside another: what the master
+ * **Files earn a step of their own** (ADR-08 §1) rather than a section inside another: what the master
  * hands the players is its own decision, and folded into the review step it would be the thing
  * nobody notices — which is exactly how it went missing until somebody tried to create a table.
  *

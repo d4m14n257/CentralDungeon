@@ -1,7 +1,7 @@
 import { ApiError } from '@/types/api'
 
 /**
- * The four refusals F3.2 adds, each with a sentence of its own (#197).
+ * The four refusals F3.2 adds, each with a sentence of its own (ADR-23 §3).
  *
  * **The message a person reads is built here from the code, never from the `ProblemDetail`'s
  * `detail`**: that field is English and written for a log, so showing it would put an English
@@ -24,12 +24,12 @@ export const APPROVAL_ERROR_CODES = [
   'REQUEST_ALREADY_PENDING',
   /** Approving or rejecting something that somebody else already resolved. */
   'REQUEST_ALREADY_RESOLVED',
-  /** What the request pointed at is gone (#78): the row outlived its reference, so it cannot be acted on. */
+  /** What the request pointed at is gone (ADR-16 §2): the row outlived its reference, so it cannot be acted on. */
   'REQUEST_ENTITY_GONE',
   /** Asking for the master role while already holding it. */
   'MASTER_ROLE_ALREADY_HELD',
   /**
-   * Resolving a request another admin has taken from the shared tray (#100, F3.3).
+   * Resolving a request another admin has taken from the shared tray (ADR-16 §5, F3.3).
    *
    * **This screen has no way to reserve anything and does not need one**: resolving something nobody
    * holds reserves it implicitly, which is the whole of the correction F3.3 made to the rule. What is
@@ -39,12 +39,12 @@ export const APPROVAL_ERROR_CODES = [
    */
   'ITEM_ALREADY_CLAIMED',
   /**
-   * Resolving something only the table's `Primary` may resolve (#39, F3.4).
+   * Resolving something only the table's `Primary` may resolve (ADR-09 §5, F3.4).
    *
    * **It is a `403` and not a `400`**: it is who you are, not what you sent. It reaches this screen
    * two ways — a co-master whose promotion was undone between opening the dialog and pressing, and
    * an admin who found a `PlayerBan` in `/admin/requests` and assumed the tray's rules applied to
-   * it. The second is the one worth a sentence: #39 hands that decision to whoever runs the table,
+   * it. The second is the one worth a sentence: ADR-09 §5 hands that decision to whoever runs the table,
    * and an admin has no way to guess that from a button that looks like every other one.
    */
   'NOT_PRIMARY_MASTER',
@@ -58,7 +58,7 @@ const KNOWN_CODES: ReadonlySet<string> = new Set(APPROVAL_ERROR_CODES)
  * **Pointed at rather than copied.** `ITEM_ALREADY_CLAIMED` is not this feature's vocabulary — the
  * reservation belongs to the shared tray, and the same refusal reaches `/admin/queue` and
  * `/admin/requests` about the same fact. Writing it twice, once per screen, is how two sentences that
- * mean one thing start to disagree (#176). It is a key in the same `admin` namespace both screens
+ * mean one thing start to disagree (ADR-16 §7). It is a key in the same `admin` namespace both screens
  * translate against, not an import: `features/approvals` still imports nothing from
  * `features/adminQueue` (§3.1.5).
  */

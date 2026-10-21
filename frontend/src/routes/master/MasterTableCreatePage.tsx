@@ -44,14 +44,14 @@ import { useConfirm } from '@/hooks/useConfirm'
  * **Four steps, one decision each**: identity → catalogs → agenda and duration → capacity and
  * review. It is not decoration: a complete table asks for fifteen values of five different kinds,
  * and a single form forces somebody to read all of them before answering the first. The last step is
- * the summary, because what is sent goes to an admin for review (#27) and is worth seeing whole.
+ * the summary, because what is sent goes to an admin for review (ADR-07 §1) and is worth seeing whole.
  *
  * The screen composes: the catalogs come from `features/catalogs` and the agenda from
  * `features/tables`, and neither knows about the other (§3.1.5, regla dura 16).
  *
- * The agenda's hours are typed in the reader's zone and travel as UTC (#22): the conversion belongs
+ * The agenda's hours are typed in the reader's zone and travel as UTC (ADR-03 §6): the conversion belongs
  * to `lib/date.ts` and happens once. The start date is the exception and carries none - it is a day
- * and not an instant (#230).
+ * and not an instant (ADR-07 §4).
  */
 export function MasterTableCreatePage() {
   const { t, i18n } = useTranslation('master')
@@ -71,19 +71,19 @@ export function MasterTableCreatePage() {
   const [platforms, setPlatforms] = useState<CatalogValue[]>([])
   const [schedule, setSchedule] = useState<TableScheduleEntry[]>([])
   // What the current step is missing, as an i18n key. The backend refuses the same three things
-  // (#226); saying it here means the master finds out on the step that can fix it, not after
+  // (ADR-07 §3); saying it here means the master finds out on the step that can fix it, not after
   // filling in four steps and pressing «Crear mesa».
   const [stepError, setStepError] = useState<string | null>(null)
-  // Picked while the table does not exist yet; attached the moment it does (#228).
-  // Staged in the browser through all four steps, and sent only when the table is created (#238):
+  // Picked while the table does not exist yet; attached the moment it does (ADR-08 §1).
+  // Staged in the browser through all four steps, and sent only when the table is created (ADR-13 §5):
   // abandoning the wizard halfway used to leave the files on the server anyway.
   const [files, setFiles] = useState<StagedFile[]>([])
   // The week as it already is, so the grid can show what is taken before anything is taken again.
   const myWeek = useMySchedule()
 
-  // #22 took `users.timezone` out of the model, so today the browser is the only source. `lib/date.ts`
+  // ADR-03 §6 took `users.timezone` out of the model, so today the browser is the only source. `lib/date.ts`
   // takes the zone as a parameter precisely so that the day a profile preference exists, this line
-  // changes and nothing else (#111).
+  // changes and nothing else (ADR-19 §7).
   const timeZone = useMemo(() => browserTimeZone(), [])
 
   const form = useForm<CreateGameTableForm>({
@@ -91,7 +91,7 @@ export function MasterTableCreatePage() {
     // **Every field, not only the text ones.** A field missing from here registers as `''`
     // against a default of `undefined`, which react-hook-form reads as dirty - and on the edit
     // page `keepDirtyValues` then defended that emptiness against the value the table actually
-    // had, which is how the table type was being silently dropped (#231).
+    // had, which is how the table type was being silently dropped (ADR-20 §5).
     defaultValues: {
       name: '',
       description: '',
@@ -105,7 +105,7 @@ export function MasterTableCreatePage() {
   })
 
   // Everything on this screen counts, not just the text fields: the catalogs, the agenda and the
-  // picked files live outside react-hook-form and are most of what gets lost (#231).
+  // picked files live outside react-hook-form and are most of what gets lost (ADR-20 §5).
   //
   // What is asked of the form is "is anything written in it", not `formState.isDirty`. Dirty
   // compares against `defaultValues`, and the fields this wizard leaves out of that object read as
@@ -123,9 +123,9 @@ export function MasterTableCreatePage() {
     files.length > 0
   const { allowNextNavigation } = useUnsavedChangesGuard(hasProgress)
 
-  // Creating requires the Master platform role, not merely membership (#135) - the backend already
+  // Creating requires the Master platform role, not merely membership (ADR-06 §4) - the backend already
   // refuses with a 403. Somebody who runs a table without the role and forces this URL goes back to
-  // the context they do have, like any other door that is not theirs (#269), instead of reading a
+  // the context they do have, like any other door that is not theirs (ADR-20 §2), instead of reading a
   // refusal.
   if (me && !me.roles.includes('Master')) {
     return <Navigate to={masterDashboardPath()} replace />
@@ -137,7 +137,7 @@ export function MasterTableCreatePage() {
   const selectedTableTypeLabel = selectedType ? tableTypeLabel(tTables, selectedType.code, selectedType.name) : null
 
   // What this table has claimed so far, drawn on the same grid as everything else. Each slot brings
-  // its own length now (#228), so the rectangle is the size the slot actually is.
+  // its own length now (ADR-08 §1), so the rectangle is the size the slot actually is.
   const pendingBlocks = schedule.map((entry) => ({
     startMinute: WEEKDAYS.indexOf(entry.weekday) * 24 * 60 + minutesOfDay(entry.hourtime),
     durationMinutes: minutesOfDay(entry.duration ?? DEFAULT_SLOT_DURATION),
@@ -242,7 +242,7 @@ export function MasterTableCreatePage() {
       setStepError(missing)
       return
     }
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('create.confirmTitle', { name: formValues.name }),
       description: t('create.confirmDescription'),
@@ -267,14 +267,14 @@ export function MasterTableCreatePage() {
       {
         onSuccess: async (table) => {
           // The files were picked before the table had an id *and* before anything was uploaded, so
-          // this is where both happen (#228, #238). Shared with the players by default: handing them
+          // this is where both happen (ADR-08 §1, ADR-13 §5). Shared with the players by default: handing them
           // something is the reason they were picked, and the Archivos tab is where a master makes
           // one private afterwards.
           //
           // **A file that fails does not undo the table.** It is created and editable in
           // preparation, so the master is told which one to add rather than losing four steps of
           // work over it - and retrying costs nothing, because the server recognises content it
-          // already has (#75).
+          // already has (ADR-13 §3).
           let failedFiles: string[] = []
           if (files.length > 0) {
             const { fileIds, failed } = await commit.mutateAsync({ staged: files })
@@ -301,7 +301,7 @@ export function MasterTableCreatePage() {
 
   return (
     // Centred rather than hugging the left: these two are forms, and a form read against one
-    // edge of a wide screen is a column of text with a desert next to it (#228).
+    // edge of a wide screen is a column of text with a desert next to it (ADR-08 §1).
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader
         title={t('create.title')}
@@ -446,7 +446,7 @@ export function MasterTableCreatePage() {
                     <FormItem>
                       <FormLabel>{t('create.startDateLabel')}</FormLabel>
                       <FormControl>
-                        {/* A day and not an instant (#230): no session takes its hour from here,
+                        {/* A day and not an instant (ADR-07 §4): no session takes its hour from here,
                             the weekly agenda below does. So there is nothing to convert. */}
                         <Input type="date" {...field} value={field.value ?? ''} />
                       </FormControl>
@@ -459,7 +459,7 @@ export function MasterTableCreatePage() {
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-sm font-medium">{t('create.scheduleLabel')}</p>
-                  {/* The help is linked from the screen that needs it, by its #ref (#167, #168). */}
+                  {/* The help is linked from the screen that needs it, by its #ref (ADR-20 §5, §6). */}
                   <HelpLink section="masters.schedule" className="text-xs">
                     {t('create.scheduleHelp')}
                   </HelpLink>
@@ -467,7 +467,7 @@ export function MasterTableCreatePage() {
                 <ScheduleEditor value={schedule} onChange={setSchedule} timeZone={timeZone} />
 
                 {/* The week the master already gave away, so finding room is looking and not guessing
-                    (#227). Clicking a free hour claims it: the gap and taking it are one gesture. */}
+                    (ADR-08 §6). Clicking a free hour claims it: the gap and taking it are one gesture. */}
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <h3 className="section-label">{tTables('schedule.inWizardTitle')}</h3>
@@ -571,7 +571,7 @@ export function MasterTableCreatePage() {
           )}
 
           {/* Not on the catalogs step: there the blocks mark themselves, and repeating it underneath
-              says the same thing twice without saying which field it is about (#228). */}
+              says the same thing twice without saying which field it is about (ADR-08 §1). */}
           {stepError && step !== 'catalogs' && (
             <p role="alert" className="text-state-canceled-fg text-sm">
               {t(stepError)}

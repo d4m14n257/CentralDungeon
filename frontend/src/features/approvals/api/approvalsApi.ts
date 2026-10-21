@@ -10,7 +10,7 @@ import type {
 } from '../types'
 
 /**
- * The six calls of the request mechanism (#42), as one module.
+ * The six calls of the request mechanism (ADR-16 §1), as one module.
  *
  * **They answer to two audiences and that is visible in the paths**: `/api/v1/requests` is the side
  * of whoever asks, authenticated and with no role behind it, while `/api/v1/admin/requests` is the
@@ -30,7 +30,7 @@ import type {
  */
 export const approvalsApi = {
   /**
-   * Asks for something (#42). Refused with `REQUEST_ALREADY_PENDING` when one of the same kind is
+   * Asks for something (ADR-16 §1). Refused with `REQUEST_ALREADY_PENDING` when one of the same kind is
    * still waiting, and with `MASTER_ROLE_ALREADY_HELD` when the master role is asked for by somebody
    * who has it — neither of which the screens offer, so both only surface for another route in.
    *
@@ -66,7 +66,7 @@ export const approvalsApi = {
    *
    * @param query the search box, already debounced, in the language of `lib/searchQuery.ts`
    * @param page  zero-based page number
-   * @param size  rows per page, one of `adminPageSizeOptions` (#271)
+   * @param size  rows per page, one of `adminPageSizeOptions` (ADR-21 §11)
    */
   list: (query: string | undefined, page = 0, size: number = pageSize.admin) =>
     api.getPage<ApprovalRequestSummary>('/api/v1/admin/requests', { q: query, page, size }),
@@ -92,7 +92,7 @@ export const approvalsApi = {
     api.post<ApprovalRequestDetail, ResolveApprovalRequestInput>(`/api/v1/admin/requests/${id}/approve`, input),
 
   /**
-   * Rejects a request. The note is required here too (#42): a refusal nobody explained is the half
+   * Rejects a request. The note is required here too (ADR-16 §1): a refusal nobody explained is the half
    * that makes the mechanism worthless to whoever asked.
    *
    * @param id    the request to reject
@@ -115,11 +115,11 @@ export const approvalsApi = {
 type UnreadBody = unknown
 
 /**
- * The veto requests of one table, which **an admin does not resolve** (#39, F3.4).
+ * The veto requests of one table, which **an admin does not resolve** (ADR-09 §5, F3.4).
  *
  * **Its own module, and that separation is the decision rather than a filing convention.** Two
- * written decisions meet here and pull opposite ways: #90 is generic — `approval_requests` covers
- * "todo pedido dirigido a los admins" — and #39 is specific: a veto is applied by the table's
+ * written decisions meet here and pull opposite ways: ADR-16 §1 is generic — `approval_requests` covers
+ * "todo pedido dirigido a los admins" — and ADR-09 §5 is specific: a veto is applied by the table's
  * `Primary`, and a co-master "necesita aprobación del `Primary`". The specific one wins, because a
  * veto between a co-master and a player of *that* table is decided by whoever runs it, not by the
  * platform. So these rows are kept out of the shared admin tray entirely, and the three calls below
@@ -145,7 +145,7 @@ export const banRequestsApi = {
   list: (tableId: string) => api.get<BanRequest[]>(`/api/v1/game-tables/${tableId}/ban-requests`),
 
   /**
-   * Granting a co-master's veto request: the veto is applied in the same transaction (#39).
+   * Granting a co-master's veto request: the veto is applied in the same transaction (ADR-09 §5).
    *
    * **What comes back is a `RegistrationResponse`, and it is deliberately not read here** — see
    * {@link UnreadBody}. That is `features/registrations`' vocabulary and a feature never imports
@@ -154,7 +154,7 @@ export const banRequestsApi = {
    *
    * @param tableId   the table
    * @param requestId the request being granted
-   * @param input     the note, required at both ends of the mechanism (#42)
+   * @param input     the note, required at both ends of the mechanism (ADR-16 §1)
    */
   approve: (tableId: string, requestId: string, input: ResolveApprovalRequestInput) =>
     api.post<UnreadBody, ResolveApprovalRequestInput>(`/api/v1/game-tables/${tableId}/ban-requests/${requestId}/approve`, input),

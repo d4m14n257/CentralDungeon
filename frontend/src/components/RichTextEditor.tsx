@@ -20,7 +20,7 @@ export interface RichTextEditorProps {
 }
 
 /**
- * The editor behind a table's description, its house rules and its requirements (#62).
+ * The editor behind a table's description, its house rules and its requirements (ADR-03 §8).
  *
  * **TipTap and not TinyMCE**: the hosted TinyMCE the legacy used needs an API key, which is a
  * dependency on somebody else's account for a text box (diseno §6).

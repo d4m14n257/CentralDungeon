@@ -1,6 +1,6 @@
 # 2.2 Reglas por capa
 
-> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
+> Parte de la skill `arquitectura` (ADR-01 §5). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 **Todas las capas**
@@ -9,7 +9,7 @@
 **Controller** (`*Controller.java`)
 - Solo HTTP: recibe DTO validado, llama a **un** service, devuelve DTO + status code explícito.
 - Nunca inyecta un `Repository`. Nunca contiene `if` de negocio. Nunca devuelve una `@Entity`.
-- **Clase concreta, sin interfaz de contrato** (#119). El contrato publicado es el OpenAPI que genera springdoc desde este archivo, más los `record` de §2.3.
+- **Clase concreta, sin interfaz de contrato** (ADR-04 §2). El contrato publicado es el OpenAPI que genera springdoc desde este archivo, más los `record` de §2.3.
 - Anotaciones de autorización (`@PreAuthorize`) van acá, **en el método concreto** — nunca en una interfaz, una superclase genérica ni una lista de rutas aparte (§2.6).
 - La identidad del actor entra por `@AuthenticationPrincipal`, jamás como `@PathVariable` ni en el cuerpo.
 - Un `@RestController` por agregado, no por tabla: `GameTableController` cubre mesa + horario + masters porque son el mismo agregado.
@@ -24,7 +24,7 @@
 **Repository** (`*Repository.java`)
 - Interfaz `JpaRepository<Entity, String>` (los IDs son `String`, §4.1), o `JpaRepository<Entity, XxxId>` con un `@Embeddable` en las tablas puente de clave compuesta (`MasterId`, `UserRoleId`, `TableTagId`…).
 - Query methods derivados por defecto; `@Query` (JPQL) solo cuando el derivado no alcanza. SQL nativo solo si JPQL no puede expresarlo, y con un comentario que diga por qué.
-- **Todo `@Query` usa parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales y **nunca concatenación de strings** (#124). Los posicionales fueron una fuente real de bugs en el intento previo: una consulta pasaba cinco argumentos para seis placeholders y todos quedaban corridos una posición, sin que nada lo detectara.
+- **Todo `@Query` usa parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales y **nunca concatenación de strings** (ADR-03 §2). Los posicionales fueron una fuente real de bugs en el intento previo: una consulta pasaba cinco argumentos para seis placeholders y todos quedaban corridos una posición, sin que nada lo detectara.
 - Sin lógica. Sin `@Transactional`.
 
 **Entity** (`User.java`, `GameTable.java`, …)
@@ -38,7 +38,7 @@
 - Si la fila necesita una asociación, viene en esa misma consulta, con `join fetch` o con `@EntityGraph` en el finder: resolver después un `LAZY` vuelve a meter el N+1 una capa más abajo. La excepción son los conjuntos chicos y cerrados (los tipos de mesa, los admins), donde la caché de primer nivel responde los repetidos dentro de la página; quedarse con el `LAZY` ahí se dice en el Javadoc, para que se lea como decisión y no como descuido.
 - Las proyecciones de esas consultas (`TablePlayerCount`, `PendingCandidateCount`, `TaskSubmissionCount`, `CatalogUsageCount`) son `record` internos que **nunca cruzan HTTP** (§2.3).
 - **Se mide, no se razona**: el IT cuenta las consultas con `Statistics` de Hibernate (`getPrepareStatementCount` en `AdminQueueServiceIT` y `UserRoleServiceIT`, `getQueryExecutionCount` en `GameTableHistoryIT`). Un `join fetch` justificado solo por leer el mapeo no prueba nada.
-- Nació en F3.3, cuando `/admin/tables` pasó a listar todas las mesas (#176): el armado fila por fila hacía cuarenta y una consultas para una página de veinte.
+- Nació en F3.3, cuando `/admin/tables` pasó a listar todas las mesas (ADR-16 §7): el armado fila por fila hacía cuarenta y una consultas para una página de veinte.
 
 **DTO** (`dto/*.java`)
 - `record`, inmutable. Sufijo `Request` (entrada) o `Response` (salida) — separados aunque los campos coincidan hoy.

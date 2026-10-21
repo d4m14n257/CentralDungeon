@@ -12,8 +12,8 @@ export interface ReassignCatalogValueVariables extends ReassignCatalogValueInput
 }
 
 /**
- * Moves an alias from its group to another, in one request (#276) - what dragging it onto another
- * group on the catalog canvas does (#275). Before it existed this was a split and then a merge,
+ * Moves an alias from its group to another, in one request (ADR-12 §6) - what dragging it onto another
+ * group on the catalog canvas does (ADR-12 §7). Before it existed this was a split and then a merge,
  * with a moment in between where the alias stood alone.
  *
  * Invalidates the whole catalog branch, like every admin operation: two groups changed size.

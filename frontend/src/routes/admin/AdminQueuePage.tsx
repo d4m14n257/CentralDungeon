@@ -42,9 +42,9 @@ type QueueAction = 'requestChanges' | 'approveRequest' | 'rejectRequest'
  * **A table's `title` is its name and a request's is the wire name of its kind** — `MasterGrant`, not
  * "Rol de master". That is the price of normalizing four sources into one shape: the tray answers the
  * same five questions about every one of them and cannot translate for a vocabulary it does not own,
- * so the value travels canonical (#253) and is read here.
+ * so the value travels canonical (ADR-04 §5) and is read here.
  *
- * The labels are the ones `/admin/requests` already shows, **reused and not copied** (#176): one
+ * The labels are the ones `/admin/requests` already shows, **reused and not copied** (ADR-16 §7): one
  * place where a kind of request has a name. `defaultValue` is the fallback, so a kind F5 adds before
  * its translation lands reads as its own name rather than as a bare key.
  *
@@ -78,16 +78,16 @@ function resolutionErrorKey(error: unknown): string | null {
 }
 
 /**
- * `/admin/queue` — the shared admin tray (#100, F3.3): everything waiting on an admin, whichever
+ * `/admin/queue` — the shared admin tray (ADR-16 §5, F3.3): everything waiting on an admin, whichever
  * table the work lives in, with the thing that has been waiting longest first.
  *
- * **The home of the admin context**, like `/master` is the master's (#136, #220): the screen a
+ * **The home of the admin context**, like `/master` is the master's (ADR-20 §4, §3): the screen a
  * context opens on is the one that says what to do next, not one of its listings. `/admin/tables`
  * answers "which tables exist", which is a question somebody asks on purpose.
  *
  * **Reserving is not permission, it is courtesy with teeth.** Taking an item drops it out of every
  * other admin's tray, so two people cannot spend the evening on the same request without knowing —
- * which is the whole of what #100 buys. It is **not** a precondition for resolving: every row this
+ * which is the whole of what ADR-16 §5 buys. It is **not** a precondition for resolving: every row this
  * screen can show is either free or already the reader's, and resolving a free one takes it
  * implicitly. So the resolution buttons are offered on **every** row, and principle 2 is satisfied by
  * that rather than violated: there is no row here whose resolution could only answer a refusal. The
@@ -101,33 +101,33 @@ function resolutionErrorKey(error: unknown): string | null {
  *
  * **It refreshes itself** (`live.adminQueue` in `config/query.ts`). The acceptance of this slice is
  * that an item a colleague reserves disappears *without a manual reload*, and invalidation after a
- * mutation cannot see what somebody else did. The WebSocket of F6 replaces the polling (#101).
+ * mutation cannot see what somebody else did. The WebSocket of F6 replaces the polling (ADR-18 §2).
  *
- * **The empty tray is good news** (#136, the same reading as `/master` and `/admin/requests`):
+ * **The empty tray is good news** (ADR-20 §4, the same reading as `/master` and `/admin/requests`):
  * nothing is waiting for an action. The tray has no search box, deliberately — a work list sorts
  * itself by age and empties, so there is only ever one empty state to tell, and no "your search found
  * nothing" to distinguish it from.
  *
- * **Which page is in the URL** (#185), like every other admin screen: a tray is something one admin
+ * **Which page is in the URL** (ADR-12 §7), like every other admin screen: a tray is something one admin
  * points another at.
  *
  * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
+ * **Behind the admin context's guard** (ADR-20 §2): an account without `Admin` or `Owner` is sent home by
  * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
- * backend authorizes on its own (#103) and the page must not go blank if it refuses.
+ * backend authorizes on its own (ADR-20 §1) and the page must not go blank if it refuses.
  */
 export function AdminQueuePage() {
   const { t, i18n } = useTranslation('admin')
-  // The reservation's timeout is a setting since F3.5 (#141): the hint says the number the
+  // The reservation's timeout is a setting since F3.5 (ADR-17 §3): the hint says the number the
   // platform is actually using, not one written into the copy.
   const { claimTimeoutMinutes } = useClientLimits()
   const [searchParams, setSearchParams] = useSearchParams()
   const confirm = useConfirm()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
 
   const { data, isPending, isLoadingError, error, refetch } = useAdminQueue(page, size)
@@ -181,10 +181,10 @@ export function AdminQueuePage() {
   }
 
   /**
-   * Approving a table carries no note, so it is a confirmation and not a form (#175's shape).
+   * Approving a table carries no note, so it is a confirmation and not a form (ADR-07 §6's shape).
    *
    * **And therefore the refusal goes to a toast**: there is no dialog left open to put it over, the
-   * confirmation having closed on the press. It is written from the code like every other one (#197)
+   * confirmation having closed on the press. It is written from the code like every other one (ADR-23 §3)
    * — the failure worth a sentence here is a colleague having taken the table inside the fifteen
    * seconds between two polls, and "no pudimos completar la acción" would leave the reader pressing
    * the button again on a row that is about to vanish from their tray.
@@ -247,7 +247,7 @@ export function AdminQueuePage() {
       id: 'waitingSince',
       header: t('queue.columns.waitingSince'),
       // "Hace tres días" and not a date: the tray's order *is* this number, and urgency here is time
-      // (#136). A formatted timestamp would make the reader do the subtraction themselves.
+      // (ADR-20 §4). A formatted timestamp would make the reader do the subtraction themselves.
       cell: (item) => formatRelativeDate(item.waitingSince, i18n.language),
     },
   ]
@@ -268,7 +268,7 @@ export function AdminQueuePage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
-          already showing rows (#150) — and this table refetches every fifteen seconds. */}
+          already showing rows (ADR-19 §4) — and this table refetches every fifteen seconds. */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && <EmptyState title={t('queue.emptyTitle')} description={t('queue.emptyDescription')} />}
       {data && data.content.length > 0 && (

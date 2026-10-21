@@ -5,7 +5,7 @@ paths:
 ---
 # ECC — TypeScript y React (curado para CentralDungeon)
 
-> Complementa la skill `arquitectura` §3, §5.2 y §6.2, y la skill `diseno`; **ante un choque, mandan ellas**. No se adoptan de ECC: la interfaz `ApiResponse` con `success/data/error` (la API devuelve el DTO desnudo, #120), el «repository pattern» del frontend (HTTP solo por `api/client.ts` y TanStack Query, §3.3) ni el `try/catch` alrededor de queries (los errores los maneja TanStack Query).
+> Complementa la skill `arquitectura` §3, §5.2 y §6.2, y la skill `diseno`; **ante un choque, mandan ellas**. No se adoptan de ECC: la interfaz `ApiResponse` con `success/data/error` (la API devuelve el DTO desnudo, ADR-04 §3), el «repository pattern» del frontend (HTTP solo por `api/client.ts` y TanStack Query, §3.3) ni el `try/catch` alrededor de queries (los errores los maneja TanStack Query).
 
 ## Tipos
 

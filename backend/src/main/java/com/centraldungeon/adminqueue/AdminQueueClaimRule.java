@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
  * that way first. The sentence below is the corrected one; the paragraph after it says what the
  * stricter reading broke, because the wrong version is the kind that looks right on paper.
  *
- * <p><b>What the rule protects, precisely.</b> #100 buys one thing: <em>if one admin takes it, it
+ * <p><b>What the rule protects, precisely.</b> ADR-16 §5 buys one thing: <em>if one admin takes it, it
  * drops for everybody else</em>. So what resolving must refuse is acting on an item <b>somebody else
  * holds</b> - a stale link, a second tab, a tray that has not refreshed. An item nobody holds is not
  * that situation, and resolving it is an implicit claim.
@@ -20,13 +20,13 @@ import org.jspecify.annotations.Nullable;
  * <p><b>Why it is not "you must claim first".</b> That stricter reading was tried and it broke
  * {@code /admin/requests}, which F3.2 shipped with Approve and Reject and <em>no way to reserve
  * anything</em>: every resolution from that screen answered 409 for a reservation the screen could
- * not offer. Two designs had collided - #176 gives requests their own screen, §5 assumed the tray was
+ * not offer. Two designs had collided - ADR-16 §7 gives requests their own screen, §5 assumed the tray was
  * the only place anything gets resolved - and the stricter rule silently made the tray mandatory for
  * a flow that never went through it. Refusing only what another admin holds keeps both screens
- * working and still gives #100 everything it asks for.
+ * working and still gives ADR-16 §5 everything it asks for.
  *
  * <p>Correctness does not rest on this check either way: two admins resolving the same unclaimed row
- * at once are serialized by the pessimistic lock of #256, and the loser is told it was already
+ * at once are serialized by the pessimistic lock of ADR-16 §4, and the loser is told it was already
  * resolved. This rule is about not stepping on a colleague's work, not about consistency.
  *
  * <p><b>Four callers, one sentence.</b> {@code ApprovalService.approve} and {@code reject},
@@ -53,10 +53,10 @@ public final class AdminQueueClaimRule {
      * and the reader's next step is to leave it alone - it is being handled.
      *
      * @param claimedBy who holds the reservation, or null when nobody does
-     * @param actorId   the actor, always from the token (#121)
+     * @param actorId   the actor, always from the token (ADR-05 §5)
      * @param what      how to name the item in the log line - "request abc" or "table abc". English
      *                  and for a log: the sentence the reader sees is written by the frontend from
-     *                  the error code (#197)
+     *                  the error code (ADR-23 §3)
      * @throws ConflictException 409 {@code ITEM_ALREADY_CLAIMED} when another admin holds it
      */
     public static void requireNotHeldByAnother(@Nullable User claimedBy, String actorId, String what) {

@@ -23,7 +23,7 @@ import { ApiError } from '@/types/api'
  */
 function MySessionsSection({ tableId }: { tableId: string }) {
   const { t } = useTranslation('tables')
-  // isLoadingError, not isError: see docs/adr #150.
+  // isLoadingError, not isError: see ADR-19 §4.
   const { data, isPending, error, isLoadingError, refetch } = useMySessions(tableId)
 
   if (isPending) {
@@ -43,7 +43,7 @@ function MySessionsSection({ tableId }: { tableId: string }) {
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        {/* The three numbers are explained in the help, under its stable #ref (#137, #167, #168). */}
+        {/* The three numbers are explained in the help, under its stable #ref (ADR-08 §5, ADR-20 §5, §6). */}
         <SectionHeader title={t('sessions.myAttendanceTitle')} help="players.my-sessions" />
         <AttendanceSummaryView summary={mine.summary} />
       </section>
@@ -66,9 +66,9 @@ function MySessionsSection({ tableId }: { tableId: string }) {
  * It is the minimum player-side screen F1 needs to be testable end to end; the rest of it — tasks,
  * files, the other players — arrives with F1.5 and F2.
  *
- * Everything on it is in the reader's own time; what the server stores is UTC (#22).
+ * Everything on it is in the reader's own time; what the server stores is UTC (ADR-03 §6).
  *
- * **The standard header** (#280): the status next to the name instead of in the corner where the
+ * **The standard header** (ADR-21 §5): the status next to the name instead of in the corner where the
  * main action goes, «Volver a mis mesas» above, «Cómo funciona» on the right, and the link to the
  * public detail as the line under the title. There is no main action: this view only reads.
  */
@@ -96,7 +96,7 @@ export function MyTableDetailPage() {
   }
 
   const timeZone = browserTimeZone()
-  // The length rides along: it belongs to the slot now (#228), and utcSlotToLocal only moves the day and the hour.
+  // The length rides along: it belongs to the slot now (ADR-08 §1), and utcSlotToLocal only moves the day and the hour.
   const localSchedule = table.schedule.map((slot) => ({ ...utcSlotToLocal(slot, timeZone), duration: slot.duration }))
 
   return (
@@ -126,7 +126,7 @@ export function MyTableDetailPage() {
           </section>
         )}
 
-        {/* What the table shares (#79). Private attachments never arrive here — the server leaves them
+        {/* What the table shares (ADR-14 §1). Private attachments never arrive here — the server leaves them
           out of the detail, so the screen has nothing to hide. */}
         {/* The divider separates it from the agenda, so it only exists when the agenda does. */}
         <section className={cn(localSchedule.length > 0 && 'border-border border-t pt-4')}>
@@ -143,7 +143,7 @@ export function MyTableDetailPage() {
           </div>
         </section>
 
-        {/* What the table asks of its players, and of me in particular (#63, #76). The block owns its
+        {/* What the table asks of its players, and of me in particular (ADR-15 §1, §2). The block owns its
           own query and its own dialog; this screen only hands it the id and the two pieces that
           belong to the files domain (§3.1.5, regla dura 16). */}
         <div className="border-border border-t pt-4">
@@ -152,7 +152,7 @@ export function MyTableDetailPage() {
             renderHelp={() => <HelpButton section="players.tasks" size="sm" />}
             renderFiles={(files) => <FileList files={files} />}
             renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerSubmission" />}
-            // Uploading happens here and not in the picker (#238): this screen owns the send, so it is
+            // Uploading happens here and not in the picker (ADR-13 §5): this screen owns the send, so it is
             // what turns the staged files into ids right before the answer travels.
             commitFiles={(staged) => commit.mutateAsync({ staged, fileCategory: 'PlayerSubmission' })}
           />

@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Neither carries a {@code @PreAuthorize}: {@code SecurityConfig} leaves both public, because
  * their whole point is being reachable when the access token is gone. They authenticate with the
  * refresh cookie instead - which is why refresh is the one path in the API that keeps CSRF
- * protection on (#127): a cookie travels on its own, a bearer header does not.
+ * protection on (ADR-05 §2): a cookie travels on its own, a bearer header does not.
  *
  * <p>There is no login endpoint here. Logging in is Discord's OAuth2 flow, and it ends at
- * {@code OAuth2LoginSuccessHandler} (#38).
+ * {@code OAuth2LoginSuccessHandler} (ADR-05 §1).
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -46,10 +46,10 @@ public class AuthController {
      * Renews the access token, rotating the refresh token with it.
      *
      * <p>This is the point where the system asks again whether the person is still allowed in: status
-     * and roles are re-read from the database, so somebody blocked stops being renewed (#122, #125).
+     * and roles are re-read from the database, so somebody blocked stops being renewed (ADR-05 §3, §2).
      *
      * <p>The new refresh token goes back <b>only</b> in the cookie, never in the body - which is what
-     * keeps it out of reach of any script (#125).
+     * keeps it out of reach of any script (ADR-05 §2).
      *
      * @param refreshCookie the current refresh token, from the cookie. Null when the browser sent
      *                      none, which is answered as 401 like any other invalid token
@@ -67,7 +67,7 @@ public class AuthController {
 
     /**
      * Ends the session by clearing the refresh cookie. The access token is not revoked - it simply
-     * expires, which is what its short lifetime is for (#125).
+     * expires, which is what its short lifetime is for (ADR-05 §2).
      *
      * @param response the response the expiring cookie is written onto
      * @return nothing - 204

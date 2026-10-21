@@ -3,7 +3,7 @@ package com.centraldungeon.files;
 import com.centraldungeon.files.dto.FileResponse;
 
 /**
- * What an upload actually did, so the controller can say so in the status code (#234).
+ * What an upload actually did, so the controller can say so in the status code (ADR-13 §4).
  *
  * <p>Not a DTO and not in {@code dto/}: what crosses HTTP is the {@link FileResponse} inside it plus
  * a 200 or a 201, and the flag stops at {@code FileController}. Adding a {@code deduplicated} field
@@ -11,7 +11,7 @@ import com.centraldungeon.files.dto.FileResponse;
  * describes <em>the file</em>, where every other reader of that shape would have to ignore it.
  *
  * <p>It exists because deduplication was invisible. Recognising an upload and handing back the row
- * somebody already had is the cheapest of the three levers of #75, and until now it answered 201
+ * somebody already had is the cheapest of the three levers of ADR-13 §3, and until now it answered 201
  * exactly like a fresh write - so the person who triggered it had no way to learn that reuse
  * happened, and no reason to expect it next time.
  *

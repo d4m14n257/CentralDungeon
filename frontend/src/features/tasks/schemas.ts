@@ -21,7 +21,7 @@ export const taskFormSchema = z
     acceptsText: z.boolean(),
     acceptsFiles: z.boolean(),
     isMandatory: z.boolean(),
-    /** `datetime-local`, in the reader's own zone. Converted to UTC on submit (#22, #192). */
+    /** `datetime-local`, in the reader's own zone. Converted to UTC on submit (ADR-03 §6, ADR-19 §7). */
     dueAtLocal: z.string().optional(),
   })
   .refine((values) => values.acceptsText || values.acceptsFiles, {
@@ -43,7 +43,7 @@ export type TaskForm = z.infer<typeof taskFormSchema>
  *
  * It only checks that something is being sent: whether *this* task takes text or files is the task's
  * own shape, and the dialog already offers only the channels it opened. An answer empty on both
- * counts would be a row claiming somebody responded when they did not (#76).
+ * counts would be a row claiming somebody responded when they did not (ADR-15 §2).
  */
 export const submissionFormSchema = z.object({
   content: z.string().optional(),

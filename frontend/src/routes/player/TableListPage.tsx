@@ -18,37 +18,37 @@ import { useSearchQuery } from '@/hooks/useSearchQuery'
  * The explorer, `/player` - the open tables anyone can apply to.
  *
  * A master never finds their own table here: a table has one set of people who play at it and a
- * disjoint set who run it (#154), and the backend filters by the actor rather than the screen
+ * disjoint set who run it (ADR-18 §4), and the backend filters by the actor rather than the screen
  * hiding rows after the fact.
  *
- * **The search box is the only filter** (#242, and the same reading as `/my/files`). The row of
+ * **The search box is the only filter** (ADR-14 §6, and the same reading as `/my/files`). The row of
  * dropdowns the sitemap once described asked the same three questions the commands answer better —
  * `/table_system`, `/table_tag` and `/table_platform` narrow from the same line and combine with the
  * rest — and a term typed without a command searches the table's name.
  *
- * **Searching by one synonym finds the tables labelled with another** (#54, #56). The table keeps
- * the alias its master chose (#58) and the backend resolves the whole group, so nobody has to know
+ * **Searching by one synonym finds the tables labelled with another** (ADR-12 §2, §4). The table keeps
+ * the alias its master chose (ADR-12 §4) and the backend resolves the whole group, so nobody has to know
  * which of `D&D`, `DND` or `Dungeons & Dragons` the master happened to type.
  *
- * **What was searched lives in the URL** (#185): a filtered explorer can be linked to and survives a
- * refresh. The page number does not — this listing accumulates with "See more" (#173), so there is
+ * **What was searched lives in the URL** (ADR-12 §7): a filtered explorer can be linked to and survives a
+ * refresh. The page number does not — this listing accumulates with "See more" (ADR-04 §6), so there is
  * no page number to keep.
  *
  * **Asking for a table to be opened happens from the empty explorer** and not from a screen for
  * making requests (roles-y-alcance.md §4, F3.2): this is the moment somebody looked for a table and
  * found none, which is the whole of what a `TableOpen` request says. Approving it does not create
  * the table — the request carries no name, no system, no seats and no agenda — it records that the
- * request stands, and an admin opens one (#72).
+ * request stands, and an admin opens one (ADR-06 §7).
  */
 export function TableListPage() {
   const { t } = useTranslation('tables')
-  // The request lives in the `admin` namespace with the rest of the mechanism (#42): one wording for
+  // The request lives in the `admin` namespace with the rest of the mechanism (ADR-16 §1): one wording for
   // what a request is, read by whoever makes one and by whoever resolves it.
   const { t: tAdmin } = useTranslation('admin')
   const [searchParams, setSearchParams] = useSearchParams()
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
-  // of #164. One list of commands, given to the box, used to read `?q=` and shown in the help (#240).
+  // of ADR-22 §1. One list of commands, given to the box, used to read `?q=` and shown in the help (ADR-22 §3).
   const fields = useMemo(() => explorerSearchFields(t), [t])
   const search = useSearchQuery({
     fields,
@@ -63,7 +63,7 @@ export function TableListPage() {
 
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
   // loaded fine - TanStack Query sets isError to true anyway, without dropping the cached data
-  // (docs/adr #150). The global connection indicator already says something is wrong.
+  // (ADR-19 §4). The global connection indicator already says something is wrong.
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useGameTables(
     search.query || undefined,
   )
@@ -75,7 +75,7 @@ export function TableListPage() {
     myApplications?.content.filter((registration) => registration.status !== 'Rejected').map((registration) => registration.gameTableId),
   )
 
-  // The explorer paginates with "See more" (#173): the pages already fetched accumulate and show together.
+  // The explorer paginates with "See more" (ADR-04 §6): the pages already fetched accumulate and show together.
   const tables = data?.pages.flatMap((page) => page.content) ?? []
   const total = data?.pages[0]?.totalElements ?? 0
 

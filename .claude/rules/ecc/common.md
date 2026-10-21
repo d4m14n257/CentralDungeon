@@ -1,6 +1,6 @@
 # ECC — reglas comunes (curadas para CentralDungeon)
 
-> Selección de las reglas de ECC (`ecc@ecc`) para este repo, versionada desde #290. **Ante cualquier choque mandan `CLAUDE.md`, las rules del proyecto (`.claude/rules/*.md`) y la skill `arquitectura`.** Quedaron fuera a propósito las reglas de ECC que las contradicen: envoltura `{success, data, error}` (choca con #120 y #197), Conventional Commits, ramas y PRs (Git §2–3), cobertura mínima del 80% y TDD obligatorio (§5 define qué se testea), delegación automática a agentes (`plan-desarrollo` §7) e inmutabilidad absoluta (las `@Entity` son mutables).
+> Selección de las reglas de ECC (`ecc@ecc`) para este repo, versionada desde ADR-01 §6. **Ante cualquier choque mandan `CLAUDE.md`, las rules del proyecto (`.claude/rules/*.md`) y la skill `arquitectura`.** Quedaron fuera a propósito las reglas de ECC que las contradicen: envoltura `{success, data, error}` (choca con ADR-04 §3 y ADR-23 §3), Conventional Commits, ramas y PRs (Git §2–3), cobertura mínima del 80% y TDD obligatorio (§5 define qué se testea), delegación automática a agentes (`plan-desarrollo` §7) e inmutabilidad absoluta (las `@Entity` son mutables).
 
 ## Calidad del código
 
@@ -17,7 +17,7 @@ Son guías para revisar, no topes que justifiquen partir algo cohesivo:
 ## Seguridad: comprobar antes de cada commit
 
 - Ningún secreto en el código: van en variables de entorno, como ya hace `.mcp.json` con `${VAR}`.
-- Queries parametrizadas (`arquitectura` §2.2, #124) y HTML sanitizado (#186).
+- Queries parametrizadas (`arquitectura` §2.2, ADR-03 §2) y HTML sanitizado (ADR-05 §6).
 - Ninguna respuesta expone stack traces, rutas internas ni errores SQL: el detalle va al log y el cliente recibe el `ProblemDetail` con su código.
 - Nunca se registran en el log tokens, contraseñas ni datos personales.
 - Si aparece un problema de seguridad: se detiene el trabajo, se corrige lo crítico antes de seguir y se buscan casos similares en el resto del código.

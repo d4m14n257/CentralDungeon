@@ -8,7 +8,7 @@ import { registrationsApi } from './registrationsApi'
  * The table's current players, for the people running it.
  *
  * Its own branch and not a filter over the candidate queue: the queue's order is a fairness rule
- * (#28) and a roster's is not, and one hook answering both questions is how a caller ends up relying
+ * (ADR-09 §1) and a roster's is not, and one hook answering both questions is how a caller ends up relying
  * on the wrong ordering.
  *
  * @param tableId the table

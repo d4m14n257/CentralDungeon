@@ -6,15 +6,15 @@ import { staleTime } from '@/config/query'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * The explorer brings one page at a time and adds to it with "See more" (docs/adr #173): it is
+ * The explorer brings one page at a time and adds to it with "See more" (ADR-04 §6): it is
  * a listing to browse, not one to walk by page number. `useInfiniteQuery` keeps the pages already
  * fetched, so going back in the browser does not ask for them again.
  *
  * **The search is part of the key** and not a filter applied after the fact: changing what was typed
  * asks a different question, so the pages already accumulated for the previous one must not be
- * appended to (#116). A new query starts its own stack of pages.
+ * appended to (ADR-18 §2). A new query starts its own stack of pages.
  *
- * @param query the raw search box, in the language of #164, or undefined when it is empty
+ * @param query the raw search box, in the language of ADR-22 §1, or undefined when it is empty
  */
 export function useGameTables(query?: string) {
   return useInfiniteQuery({

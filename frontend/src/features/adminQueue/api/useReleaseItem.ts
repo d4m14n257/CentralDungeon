@@ -6,7 +6,7 @@ import { adminQueueApi } from './adminQueueApi'
 import type { AdminQueueItemType } from '../types'
 
 /**
- * Hands an item back to the tray (#100).
+ * Hands an item back to the tray (ADR-16 §5).
  *
  * **It is the half that makes the reservation bearable.** Without it, an admin who opens something,
  * reads it and decides it is not theirs has locked it for fifteen minutes; with it, the answer to "I

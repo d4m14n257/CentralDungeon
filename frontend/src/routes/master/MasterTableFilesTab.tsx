@@ -31,14 +31,14 @@ import {
 
 interface OutletContext {
   tableId: string
-  /** Set by /admin/tables/:id (#284): every attachment, private ones included, with nothing to attach or detach. */
+  /** Set by /admin/tables/:id (ADR-06 §8): every attachment, private ones included, with nothing to attach or detach. */
   readOnly?: boolean
 }
 
 /**
  * The **Archivos** tab of /master/tables/:id — what the table has attached and who can see each thing.
  *
- * Two ideas the screen has to keep apart, because confusing them is the easiest mistake here (#79):
+ * Two ideas the screen has to keep apart, because confusing them is the easiest mistake here (ADR-14 §1):
  *
  * - **Sharing is about this table.** The same map can be shared here and kept private on another
  *   table; the toggle acts on the attachment, never on the file.
@@ -49,7 +49,7 @@ interface OutletContext {
  * A child route rather than local state (§3.1.6 regla 5), so the tab has its own URL, survives a
  * refresh and can be linked to.
  *
- * Mounted under /admin/tables/:id too, read-only (#284): the admin opens every attachment, the
+ * Mounted under /admin/tables/:id too, read-only (ADR-06 §8): the admin opens every attachment, the
  * private ones included, and changes none of them.
  */
 export function MasterTableFilesTab() {
@@ -69,14 +69,14 @@ export function MasterTableFilesTab() {
   const [isPrivate, setIsPrivate] = useState(false)
 
   /**
-   * Sends what was staged and attaches it (#238).
+   * Sends what was staged and attaches it (ADR-13 §5).
    *
    * Nothing uploaded when the file was picked, so this is both steps: upload, then link. A file that
    * fails leaves the others attached and stays listed to try again - the table is the master's and
    * editable, so there is nothing to roll back.
    */
   async function attachStaged() {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('table.attachConfirmTitle', { count: staged.length }),
       description: t(isPrivate ? 'table.attachConfirmPrivate' : 'table.attachConfirmShared'),
@@ -206,7 +206,7 @@ export function MasterTableFilesTab() {
 
             {/* Everything published is offered, not only the `Masters` audience: the community's
               default character sheet is published *for players* and the master is the one attaching
-              it, which is #79's own example (#64). */}
+              it, which is ADR-14 §1's own example (ADR-13 §2). */}
             <FilePicker
               onPick={(picked) => setStaged((current) => [...current, picked])}
               isBusy={commit.isPending || attach.isPending}

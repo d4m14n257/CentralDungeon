@@ -1,6 +1,6 @@
 # 5. Componentes
 
-> Parte de la skill `diseno` (#273). Se movió desde `docs/frontend-diseno.md` §5 y §5.b y **conserva su numeración**. Se lee antes de crear cualquier componente: dice qué existe ya (#261). Las clases y componentes de patrón —lo que una pantalla nunca vuelve a escribir a mano— están en §5.c, `patrones.md`.
+> Parte de la skill `diseno` (ADR-21 §5). Se movió desde `docs/frontend-diseno.md` §5 y §5.b y **conserva su numeración**. Se lee antes de crear cualquier componente: dice qué existe ya (ADR-21 §6). Las clases y componentes de patrón —lo que una pantalla nunca vuelve a escribir a mano— están en §5.c, `patrones.md`.
 
 ### Primitivas shadcn/ui
 
@@ -17,8 +17,8 @@ Todo lo demás se usa tal como viene: los tokens del `@theme` ya lo tiñen solo.
 | Primitiva | Qué cambia | Por qué |
 |---|---|---|
 | `badge` | Lleva **punto de color + etiqueta de texto**, no solo texto | El color nunca es el único portador de información (§3). `Pause` y `PauseRequested` comparten familia y solo se distinguen leyendo |
-| `dialog` | En móvil es un **sheet desde abajo** con asa, no un modal centrado | Un diálogo centrado en 375 px queda pegado a los bordes (#138) |
-| `table` | En móvil **deja de ser tabla**: cada fila pasa a ficha. Nunca scroll horizontal | Los listados de Admin y Owner tienen cinco o más columnas (#138) |
+| `dialog` | En móvil es un **sheet desde abajo** con asa, no un modal centrado | Un diálogo centrado en 375 px queda pegado a los bordes (ADR-21 §7) |
+| `table` | En móvil **deja de ser tabla**: cada fila pasa a ficha. Nunca scroll horizontal | Los listados de Admin y Owner tienen cinco o más columnas (ADR-21 §7) |
 
 `button` no cambia de estructura, pero su color de texto **se calcula**: se elige entre casi-negro y blanco el que da AA sobre el relleno del acento, en cada tema. No es un valor fijo.
 
@@ -26,40 +26,40 @@ Todo lo demás se usa tal como viene: los tokens del `@theme` ya lo tiñen solo.
 
 En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estaría mal ubicado (skill `arquitectura` §3.1.2).
 
-> Los compuestos de esta sección están dibujados en `design/out/`: `components-dialogs.html` (ConfirmDialog, FormDialog), `components-data.html` (DataTable, CollapsibleSection, IconAction), `components-inputs.html` (FilePicker, RichText, ScheduleEditor), `components-shell.html` (NotificationBell, ContextSwitcher, UserMenu), `ui-states.html` (EmptyState, ErrorState, ForbiddenState) y `components.html` (badges, karma, GameTableCard). `SearchQueryInput` y `UserPicker` (#164, #165) todavía no tienen preview: se construyeron directo en la pantalla que los pedía.
+> Los compuestos de esta sección están dibujados en `design/out/`: `components-dialogs.html` (ConfirmDialog, FormDialog), `components-data.html` (DataTable, CollapsibleSection, IconAction), `components-inputs.html` (FilePicker, RichText, ScheduleEditor), `components-shell.html` (NotificationBell, ContextSwitcher, UserMenu), `ui-states.html` (EmptyState, ErrorState, ForbiddenState) y `components.html` (badges, karma, GameTableCard). `SearchQueryInput` y `UserPicker` (ADR-22 §1, ADR-07 §8) todavía no tienen preview: se construyeron directo en la pantalla que los pedía.
 
 | Componente | Para qué |
 |---|---|
-| `FormDialog` | Envoltorio de todo formulario en modal: título, descripción y confirmación al cerrar con cambios sin guardar (#110) |
+| `FormDialog` | Envoltorio de todo formulario en modal: título, descripción y confirmación al cerrar con cambios sin guardar (ADR-19 §6) |
 | `ConfirmDialog` | Toda acción irreversible (principio 3), detrás de `useConfirm` |
 | `AppToaster` | La única salida de toasts, montada una vez en `main.tsx`. Envuelve el `sonner` generado y le pasa los tokens del tema: el generado apunta a `--popover`/`--border`/`--radius`, que este tema no define, y el toast quedaba sin fondo. Cada tipo toma los colores de su estado (error = `canceled`, éxito = `open`, aviso = `pending`, info = `active`). **Nunca se monta el `Toaster` de `components/ui` directo** |
-| `PageHeader` | **La cabecera de toda pantalla** (#273, #280): «Volver» arriba, título y propósito a la izquierda, y a la derecha «Cómo funciona» y **la** acción principal, siempre en ese orden y en ese lugar. Una pantalla con más de una acción pone las demás en su contenido, junto a lo que tocan. Las de detalle cuya cabecera tiene otra forma usan `.page-title` sola (§5.c) |
-| `SectionHeader` | La misma forma para una sección o pestaña (#280): etiqueta, «Cómo funciona» chico y sus acciones a la derecha |
-| `DataTable` | Listados paginados con orden, sobre `PageResponse<T>`. **Es dueño del contenedor de acciones**: envuelve `renderActions` en `.row-actions`, así ninguna pantalla lo escribe (#273) |
+| `PageHeader` | **La cabecera de toda pantalla** (ADR-21 §5): «Volver» arriba, título y propósito a la izquierda, y a la derecha «Cómo funciona» y **la** acción principal, siempre en ese orden y en ese lugar. Una pantalla con más de una acción pone las demás en su contenido, junto a lo que tocan. Las de detalle cuya cabecera tiene otra forma usan `.page-title` sola (§5.c) |
+| `SectionHeader` | La misma forma para una sección o pestaña (ADR-21 §5): etiqueta, «Cómo funciona» chico y sus acciones a la derecha |
+| `DataTable` | Listados paginados con orden, sobre `PageResponse<T>`. **Es dueño del contenedor de acciones**: envuelve `renderActions` en `.row-actions`, así ninguna pantalla lo escribe (ADR-21 §5) |
 | `CollapsibleSection` | Bloque plegable con título y acciones en la cabecera — el patrón que el legacy repetía en `CardComponent` y `ListComponent` |
-| `IconAction` | Botón de icono con tooltip para las acciones de una fila o una ficha. **Es la forma de toda acción de fila en una tabla** (#272): ver «Listas de trabajo», abajo. Una acción que el servidor rechazaría no aparece; si el arreglo está a un paso, aparece apagada con `disabledReason`, que el tooltip muestra en lugar del nombre. Nunca `disabled` a secas: no dice por qué y el tooltip no abre |
+| `IconAction` | Botón de icono con tooltip para las acciones de una fila o una ficha. **Es la forma de toda acción de fila en una tabla** (ADR-21 §11): ver «Listas de trabajo», abajo. Una acción que el servidor rechazaría no aparece; si el arreglo está a un paso, aparece apagada con `disabledReason`, que el tooltip muestra en lugar del nombre. Nunca `disabled` a secas: no dice por qué y el tooltip no abre |
 | `EmptyState` | Listas vacías, con la acción que corresponde |
 | `ErrorState` | Error de carga: mensaje del `ProblemDetail` y botón de reintento |
 | `ForbiddenState` | El `403` explicado (el `404` por veto se ve como "no existe", que es intencional) |
-| `RichTextEditor` | Texto enriquecido (#62), sanitizado al enviar y al mostrar |
+| `RichTextEditor` | Texto enriquecido (ADR-03 §8), sanitizado al enviar y al mostrar |
 | `RichTextView` | Render sanitizado de lo guardado |
-| `LoadMore` | Paginación de un listado de lectura: trae la página siguiente y siempre dice cuántos de cuántos se están viendo. Botón explícito, nunca scroll infinito (#173) |
-| `PaginationControls` | Paginación de una lista de trabajo (#173, #271): página X de Y y el total, anterior/siguiente, tira numerada compacta (`1 … 899 900 901 … 1000`), salto directo con «Ir a…» y, si la pantalla lo pide, el selector «Por página» (10 · 25 · 50 · 100) |
-| `SearchQueryInput` | **Todo buscador de la app** (#164, #240). Texto suelto busca por el criterio básico; `/` abre la lista —comandos, y `/and`/`/or` cuando hay algo que unir— y **elegir de ahí escribe el comando en el texto, igual que tipearlo a mano**: hasta **Enter** todo es texto, y Enter es lo que lo cierra en chips. **Buscar son dos Enter** (#268): el primero cierra lo escrito en chips, el segundo —con el texto vacío— busca, y mientras los chips difieran de lo buscado la caja se marca con borde de marca y un botón «↵ Buscar» que confirma igual que Enter. Recibe `searchedQuery` y `onSearch`. «Limpiar filtros» aparece cuando hay algo que limpiar y vuelve a la búsqueda por defecto de la pantalla (`defaultQuery`), incluidos los filtros que viven al lado de la caja (`extraFiltersActive`, `onClearExtraFilters`). Un comando de opciones fijas ofrece sus valores en cuanto hay un espacio después de él, venga escrito o elegido; las comas separan alternativas y el chip del conector se toca para pasarlo de "y" a "o". Recibe los comandos que acepta, no los conoce, y con ellos arma además los ejemplos de su ayuda |
-| `StatusBadge` | **Todo badge de estado de la aplicación** (#261): punto de color + etiqueta. Recibe el `tone` —una de las nueve familias de §3— y la etiqueta **ya traducida**; el mapa de estado a tono y el `t()` quedan en cada feature, que es la parte que sí le pertenece. Las clases viven acá como literales completos porque Tailwind 4 no ve una clase armada con template string |
+| `LoadMore` | Paginación de un listado de lectura: trae la página siguiente y siempre dice cuántos de cuántos se están viendo. Botón explícito, nunca scroll infinito (ADR-04 §6) |
+| `PaginationControls` | Paginación de una lista de trabajo (ADR-04 §6, ADR-21 §11): página X de Y y el total, anterior/siguiente, tira numerada compacta (`1 … 899 900 901 … 1000`), salto directo con «Ir a…» y, si la pantalla lo pide, el selector «Por página» (10 · 25 · 50 · 100) |
+| `SearchQueryInput` | **Todo buscador de la app** (ADR-22 §1, §3). Texto suelto busca por el criterio básico; `/` abre la lista —comandos, y `/and`/`/or` cuando hay algo que unir— y **elegir de ahí escribe el comando en el texto, igual que tipearlo a mano**: hasta **Enter** todo es texto, y Enter es lo que lo cierra en chips. **Buscar son dos Enter** (ADR-22 §4): el primero cierra lo escrito en chips, el segundo —con el texto vacío— busca, y mientras los chips difieran de lo buscado la caja se marca con borde de marca y un botón «↵ Buscar» que confirma igual que Enter. Recibe `searchedQuery` y `onSearch`. «Limpiar filtros» aparece cuando hay algo que limpiar y vuelve a la búsqueda por defecto de la pantalla (`defaultQuery`), incluidos los filtros que viven al lado de la caja (`extraFiltersActive`, `onClearExtraFilters`). Un comando de opciones fijas ofrece sus valores en cuanto hay un espacio después de él, venga escrito o elegido; las comas separan alternativas y el chip del conector se toca para pasarlo de "y" a "o". Recibe los comandos que acepta, no los conoce, y con ellos arma además los ejemplos de su ayuda |
+| `StatusBadge` | **Todo badge de estado de la aplicación** (ADR-21 §6): punto de color + etiqueta. Recibe el `tone` —una de las nueve familias de §3— y la etiqueta **ya traducida**; el mapa de estado a tono y el `t()` quedan en cada feature, que es la parte que sí le pertenece. Las clases viven acá como literales completos porque Tailwind 4 no ve una clase armada con template string |
 | `WizardSteps` | El riel de pasos de un formulario largo, con el paso actual y los que ya se completaron. Hoy lo usa solo el wizard de crear mesa, que es el único formulario de varios pasos que existe |
-| `AttendanceSummaryView` | Los tres números de asistencia de #137 —presentes, ausentes, justificados— sin saber de qué mesa son. Lo usan la pestaña del master y la ficha del jugador |
-| `LanguageSwitch` | Elegir idioma, recordado sin ida al servidor (#198). Vive acá y no en `UserMenu` porque `/login` no tiene header y también lo necesita |
-| `SectionNav` | **La fila de secciones de un contexto** (Player, Master, Admin), con la actual subrayada (#277). Cuando no entran —las ocho de admin en un teléfono— **bajan de línea**, nunca empujan la página ni se esconden en un scroll interno. Los tres `*SectionNav` de `layouts/components/` solo le pasan su lista |
-| `TabNav` | **Las pestañas de una pantalla**, como enlaces a sus rutas hijas (#284): las de la mesa del master y las de la mesa vista por un admin. **No es `SectionNav`**: esa es la fila de secciones de un contexto, con más aire y el subrayado de marca; las pestañas van debajo, subordinadas, más compactas. Mismo mecanismo, distinto papel |
-| `StatusNotice` | **El aviso de estado de una pantalla de detalle** (#287), sobre el `Alert` del inventario en su variante normal: título, frase y botones con texto en una sola fila, debajo de `PageHeader` y arriba de `TabNav`, visible desde todas las pestañas. Aparece en todos los estados, también sin botones. Las destructivas van en `destructiveActions`, aparte a la derecha, solo si hay otros botones (#288). Es donde van las decisiones que cambian el estado de la entidad (regla 15) |
+| `AttendanceSummaryView` | Los tres números de asistencia de ADR-08 §5 —presentes, ausentes, justificados— sin saber de qué mesa son. Lo usan la pestaña del master y la ficha del jugador |
+| `LanguageSwitch` | Elegir idioma, recordado sin ida al servidor (ADR-23 §2). Vive acá y no en `UserMenu` porque `/login` no tiene header y también lo necesita |
+| `SectionNav` | **La fila de secciones de un contexto** (Player, Master, Admin), con la actual subrayada (ADR-21 §7). Cuando no entran —las ocho de admin en un teléfono— **bajan de línea**, nunca empujan la página ni se esconden en un scroll interno. Los tres `*SectionNav` de `layouts/components/` solo le pasan su lista |
+| `TabNav` | **Las pestañas de una pantalla**, como enlaces a sus rutas hijas (ADR-06 §8): las de la mesa del master y las de la mesa vista por un admin. **No es `SectionNav`**: esa es la fila de secciones de un contexto, con más aire y el subrayado de marca; las pestañas van debajo, subordinadas, más compactas. Mismo mecanismo, distinto papel |
+| `StatusNotice` | **El aviso de estado de una pantalla de detalle** (ADR-21 §10), sobre el `Alert` del inventario en su variante normal: título, frase y botones con texto en una sola fila, debajo de `PageHeader` y arriba de `TabNav`, visible desde todas las pestañas. Aparece en todos los estados, también sin botones. Las destructivas van en `destructiveActions`, aparte a la derecha, solo si hay otros botones (ADR-21 §10). Es donde van las decisiones que cambian el estado de la entidad (regla 15) |
 | `BackendStatusIndicator` | Si el backend responde. En `RootLayout` para que se vea en toda pantalla, `/login` incluida |
-| `GraphCanvas` | **El lienzo de nodos** (#275), en `components/graph/`: React Flow con el marco `.graph-canvas`, fondo de puntos, controles de zoom con sus `aria-label` por `t()`, y la arista `straight-center` registrada. Es el único archivo que importa la hoja de React Flow. Ver «Lienzo de nodos», abajo |
+| `GraphCanvas` | **El lienzo de nodos** (ADR-12 §7), en `components/graph/`: React Flow con el marco `.graph-canvas`, fondo de puntos, controles de zoom con sus `aria-label` por `t()`, y la arista `straight-center` registrada. Es el único archivo que importa la hoja de React Flow. Ver «Lienzo de nodos», abajo |
 | `GraphNode` | El nodo base del lienzo: nombre, `StatusBadge`, una línea opcional y el menú de acciones, con el handle de entrada a la izquierda y el de salida a la derecha. Tres papeles —`head`, `member`, `floating`— que cambian el marco, nunca el color. **La cabeza se dice, no solo se enmarca**: arriba del nombre lleva una corona (`Crown`) y `headLabel` —«Principal» en catálogos—, y un fondo `raised` |
 | `GraphStraightEdge` | La arista del lienzo: recta de centro a centro, dibujada debajo de los nodos, para que en una estrella cada miembro sea un rayo a su cabeza sin importar de qué lado esté |
 | `GraphTray` | El panel lateral del lienzo (`.graph-tray`): lo que el lienzo necesita al lado y no puede dibujar como nodo — traer otro grupo, la guía de gestos |
 | `radialLayout` · `radiusFor` | El layout de una estrella de profundidad 1: los miembros repartidos en círculo alrededor de la cabeza, con un radio que crece con la cantidad. Funciones puras, con test |
-| `useSearchQuery` | El cableado alrededor de esa caja, escrito una vez (#240): estado de los chips, la última consulta confirmada (`query`, `onSearch`) y escritura del `?q=` cuando una búsqueda la cambia — sin debounce desde #268. Cada feature declara sus comandos en un `searchFields.ts` propio — `userSearchFields`, `myFileSearchFields`, `adminFileSearchFields` |
+| `useSearchQuery` | El cableado alrededor de esa caja, escrito una vez (ADR-22 §3): estado de los chips, la última consulta confirmada (`query`, `onSearch`) y escritura del `?q=` cuando una búsqueda la cambia — sin debounce desde ADR-22 §4. Cada feature declara sus comandos en un `searchFields.ts` propio — `userSearchFields`, `myFileSearchFields`, `adminFileSearchFields` |
 
 ### Compuestos con dominio
 
@@ -71,22 +71,22 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `ScheduleEditor` — día de semana + hora, mostrado en hora local | `features/tables/` |
 | `GameTableCard` — la ficha del explorador | `features/tables/` |
 | `RegistrationStatusBadge` — los cinco de postulación | `features/registrations/` |
-| `FilePicker` — subir **o** reutilizar del historial (#65) o de lo publicado (#79). Recibe el **cajón en el que está parado** y la pestaña Publicados pide justo lo que la comunidad publicó para ese momento (#233) | `features/files/` |
-| `FileDropzone` — arrastrar y soltar, con los límites dichos antes de romperlos y el error **inline** bajo la zona. **No sube: acumula** (#238). Con `multiple` toma varios de una vez, cada uno por separado, y un rechazo nombra su archivo — solo en `/admin/files/upload` (#279) | `features/files/` |
-| `StagedFileList` — lo que está por subirse, con su botón de quitar. Sin subida inmediata, es la única señal de que el archivo se tomó (#238). `renderControls` le suma algo a cada fila —el `PublishCategorySelect` de `/admin/files/upload`— y entonces, debajo de `sm`, el nombre va en su línea y los controles debajo (#279) | `features/files/` |
-| `FileCategoryChoice` — el cajón como chips, no como `<Select>`: es una decisión previa al envío y verla entera es lo que deja tomarla (#233) | `features/files/` |
+| `FilePicker` — subir **o** reutilizar del historial (ADR-13 §2) o de lo publicado (ADR-14 §1). Recibe el **cajón en el que está parado** y la pestaña Publicados pide justo lo que la comunidad publicó para ese momento (ADR-14 §4) | `features/files/` |
+| `FileDropzone` — arrastrar y soltar, con los límites dichos antes de romperlos y el error **inline** bajo la zona. **No sube: acumula** (ADR-13 §5). Con `multiple` toma varios de una vez, cada uno por separado, y un rechazo nombra su archivo — solo en `/admin/files/upload` (ADR-14 §8) | `features/files/` |
+| `StagedFileList` — lo que está por subirse, con su botón de quitar. Sin subida inmediata, es la única señal de que el archivo se tomó (ADR-13 §5). `renderControls` le suma algo a cada fila —el `PublishCategorySelect` de `/admin/files/upload`— y entonces, debajo de `sm`, el nombre va en su línea y los controles debajo (ADR-14 §8) | `features/files/` |
+| `FileCategoryChoice` — el cajón como chips, no como `<Select>`: es una decisión previa al envío y verla entera es lo que deja tomarla (ADR-14 §4) | `features/files/` |
 | `FileCard` — la fila de un archivo: icono por MIME, tamaño, categoría, último uso y dónde se usa | `features/files/` |
-| `FileCategoryFilter` — los cajones como fila de toggles, no como `<Select>` (#233). **Solo en `/admin/files`**, y ahí con los tres publicables (#278): en `/my/files` el cajón se narrowea desde el buscador con `/file_categories` (#242) | `features/files/` |
-| `PublishCategorySelect` — qué es **un** archivo, como `<Select>` de los tres cajones publicables, **en su fila** de la lista de subida de `/admin/files/upload` (#279). Nada preseleccionado (M24.1); sin elegir, «Subir» no manda nada y lo dice | `features/files/` |
-| `FileUsageChips` — dónde se usa un archivo, o «sin usar», que es el aviso de la purga (#232, #75) | `features/files/` |
+| `FileCategoryFilter` — los cajones como fila de toggles, no como `<Select>` (ADR-14 §4). **Solo en `/admin/files`**, y ahí con los tres publicables (ADR-14 §7): en `/my/files` el cajón se narrowea desde el buscador con `/file_categories` (ADR-14 §6) | `features/files/` |
+| `PublishCategorySelect` — qué es **un** archivo, como `<Select>` de los tres cajones publicables, **en su fila** de la lista de subida de `/admin/files/upload` (ADR-14 §8). Nada preseleccionado (M24.1); sin elegir, «Subir» no manda nada y lo dice | `features/files/` |
+| `FileUsageChips` — dónde se usa un archivo, o «sin usar», que es el aviso de la purga (ADR-14 §3, ADR-13 §3) | `features/files/` |
 | `KarmaBadge` — número + indicador cualitativo. **Nunca se construyó**: el karma se pinta dentro de `ProfileCard` y como texto en las listas | `features/users/` |
-| `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (#164) | `features/users/` |
+| `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (ADR-22 §1) | `features/users/` |
 | `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |
-| `CatalogGraph` — el lienzo de un catálogo (#275): los grupos abiertos como estrellas y las propuestas flotando a la izquierda. Conectar es clasificar; debajo de `md` es una lista con el mismo menú | `features/catalogs/` |
+| `CatalogGraph` — el lienzo de un catálogo (ADR-12 §7): los grupos abiertos como estrellas y las propuestas flotando a la izquierda. Conectar es clasificar; debajo de `md` es una lista con el mismo menú | `features/catalogs/` |
 | `CatalogValueActions` — el menú «…» de un valor del catálogo: el equivalente de teclado de cada gesto del lienzo, más lo que no es gesto (hacer principal, dar de baja, restaurar) | `features/catalogs/` |
 | `ContextSwitcher` — el selector de rol de §2 | `layouts/components/` (es shell, no dominio) |
 | `UserMenu` — avatar, idioma, tema y cerrar sesión | `layouts/components/` |
-| `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto. **Todavía no construido**: `features/feedback/` existe vacío y `system_feedback` es de F5 (#250) | `features/feedback/` |
+| `SystemFeedbackDialog` — el botón global de §2, sobre `FormDialog`; maneja el `429` de la cuota como mensaje, no como error roto. **Todavía no construido**: `features/feedback/` existe vacío y `system_feedback` es de F5 (ADR-01 §3) | `features/feedback/` |
 
 ### Inventario completo, y lo que el inventario curado escondía
 
@@ -101,7 +101,7 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 | `help` (4) | `HelpBlocks` · `HelpButton` · `HelpDialog` · `HelpLink` |
 | `notifications` (1) | `NotificationBell` |
 | `registrations` (4) | `ApplyToTableDialog` · `BlockPlayerDialog` · `RegistrationStatusBadge` · `RejectRegistrationDialog` |
-| `settings` (2) | `SettingHistory` · `SettingValueDialog` — F3.5 (#141). La pantalla no usa `DataTable`: son cuatro filas que se leen enteras, no un listado que se recorre y se busca |
+| `settings` (2) | `SettingHistory` · `SettingValueDialog` — F3.5 (ADR-17 §3). La pantalla no usa `DataTable`: son cuatro filas que se leen enteras, no un listado que se recorre y se busca |
 | `tables` (10) | `AttendanceEditor` · `CreateUnassignedTableDialog` · `GameTableCard` · `JustifiedTableActionDialog` · `MasterWorkItemList` · `ScheduleEditor` · `SessionList` · `SessionStatusBadge` · `TableStatusBadge` · `WeeklyScheduleGrid` |
 | `tasks` (9) | `ApplicableTaskList` · `MySubmissions` · `TableTasksSection` · `TaskAudienceBadge` · `TaskBoardList` · `TaskFormDialog` · `TaskStatusBadge` · `TaskSubmissionsPanel` · `TaskSubmitDialog` |
 | `users` (7) | `AdminUserRolesCell` · `BlockUserDialog` · `ProfileCard` · `RoleChangeDialog` · `UserAdminHistory` · `UserPicker` · `UserStatusBadge` |
@@ -109,7 +109,7 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 
 **Tres que este documento prometió y no existen**: `KarmaBadge` (el karma se pinta dentro de `ProfileCard` y como texto en las listas, nunca como badge propio), `SystemFeedbackDialog` (F5, ya anotado) y el hook `useTableSelection` (ninguna tabla pide selección múltiple todavía, ya anotado). `KarmaBadge` no estaba anotado y ahora lo está: un componente prometido que nadie construyó es una pieza que la próxima fase cree que puede reusar.
 
-#### El badge de estado estaba escrito diez veces — resuelto en #261
+#### El badge de estado estaba escrito diez veces — resuelto en ADR-21 §6
 
 **Fue el hallazgo que abrir el inventario completo produjo**, y era un incumplimiento de skill `arquitectura` §3.1.2: esa regla fija el umbral en **dos** usos reales, más bajo que el del backend, y la razón que da es exacta — *«acá la alternativa a subir no es un poco de duplicación: es un import prohibido»*. Nueve no era un caso de borde.
 
@@ -158,16 +158,16 @@ Queda escrito igual, con los nombres, por dos razones. Una: que la próxima fase
 
 Lo que el usuario fijó en la revisión de F4 para toda tabla que se **trabaja** —las seis de `/admin`— y que vale para las que vengan (`/admin/moderation`, `/admin/feedback`, `/owner/audit`):
 
-- **Las acciones de una fila son íconos, con tooltip** (#272). Cada una es un `IconAction`: el ícono en la última columna, el nombre de la acción en un tooltip al pasar el cursor y como `aria-label` —en un teléfono no hay hover—. **Van en una sola línea, sin wrap** (`.row-actions`, que pone `DataTable` y no la pantalla, #273): una segunda línea de íconos se lee como otra fila. Las destructivas llevan `text-destructive`. Botones con texto solo para lo que no es de una fila («Subir», «Crear mesa sin master»). Lo que la fila no permite **no aparece** (principio 2): ni gris ni deshabilitado.
+- **Las acciones de una fila son íconos, con tooltip** (ADR-21 §11). Cada una es un `IconAction`: el ícono en la última columna, el nombre de la acción en un tooltip al pasar el cursor y como `aria-label` —en un teléfono no hay hover—. **Van en una sola línea, sin wrap** (`.row-actions`, que pone `DataTable` y no la pantalla, ADR-21 §5): una segunda línea de íconos se lee como otra fila. Las destructivas llevan `text-destructive`. Botones con texto solo para lo que no es de una fila («Subir», «Crear mesa sin master»). Lo que la fila no permite **no aparece** (principio 2): ni gris ni deshabilitado.
 - **El vocabulario de íconos se repite, no se inventa por pantalla**: aprobar/aceptar `Check` · rechazar `X` · borrar `Trash2` · detalle `Eye` · historial `History` · roles `UserCog` · bloquear `Ban` · desbloquear `LockOpen` · publicar `Globe` · despublicar `EyeOff` · asignar masters `UserPlus` · pausar `Pause` · reanudar `Play` · fusionar `Merge` · separar `Split` · restaurar `RotateCcw` · reservar/liberar `Bookmark`/`BookmarkX` · pedir cambios `MessageSquareWarning` · abrir un lienzo de nodos `Network` · más acciones (el menú de un nodo) `Ellipsis` · hacer principal `Crown` · mover a otro grupo `ArrowRightLeft` · aceptar dentro de un grupo `FolderInput`. Una acción nueva que ya tiene su gemela en esta lista usa el mismo ícono.
-- **La paginación llega a cualquier página en un paso** (#271): tira numerada con la primera, la última y las vecinas de la actual; «Ir a…» para el resto; y el selector «Por página» con 10 · 25 · 50 · 100, que vive en `?size=` como la página y el buscador (#185). Por debajo de `sm` la tira se esconde y quedan las flechas, «X de Y» y el salto.
+- **La paginación llega a cualquier página en un paso** (ADR-21 §11): tira numerada con la primera, la última y las vecinas de la actual; «Ir a…» para el resto; y el selector «Por página» con 10 · 25 · 50 · 100, que vive en `?size=` como la página y el buscador (ADR-12 §7). Por debajo de `sm` la tira se esconde y quedan las flechas, «X de Y» y el salto.
 - **A 375 px la tabla deja de ser tabla** (§5.b, `DataTable`): cada fila es una ficha y los íconos van al pie.
 
 Dibujado en `design/out/components-data.html`.
 
 ### Lienzo de nodos — cuando lo que se edita son relaciones
 
-La otra forma de trabajar una lista, además de la tabla (#275). Nació en `/admin/catalogs`, pero es un patrón del sistema y no de catálogos: las piezas están en `components/graph/`, sin dominio, y una feature aporta solo sus tipos de nodo, qué significa conectar y las mutaciones.
+La otra forma de trabajar una lista, además de la tabla (ADR-12 §7). Nació en `/admin/catalogs`, pero es un patrón del sistema y no de catálogos: las piezas están en `components/graph/`, sin dominio, y una feature aporta solo sus tipos de nodo, qué significa conectar y las mutaciones.
 
 **Cuándo sí.** Cuando lo que se edita es **cómo se relacionan** las entidades —agrupar, conectar, mover algo de un grupo a otro, cambiar quién encabeza— y no los datos de cada una. Una tabla con diálogos obliga a reconstruir esas relaciones leyendo una columna fila por fila, y cada movimiento es un diálogo que nombra por texto dos cosas que el lienzo muestra una al lado de la otra.
 
@@ -180,7 +180,7 @@ La otra forma de trabajar una lista, además de la tabla (#275). Nació en `/adm
 - **Lo irreversible o masivo se confirma** (principio 3). Mover un grupo entero —fusionar— pregunta antes; quitar una arista también.
 - **Todo gesto tiene su equivalente en el menú del nodo** (`Ellipsis`), accesible por teclado. Sin eso, el lienzo es una capacidad que solo tiene quien usa mouse.
 - **Debajo de `md` no hay lienzo**: la misma información es una lista `.list-divided` con el mismo menú por fila. Arrastrar una conexión con el pulgar no es algo que alguien termine.
-- **El estado del lienzo vive en la URL** (#185): qué se abrió (`?with=`), para que un lienzo se pueda mandar como un link.
+- **El estado del lienzo vive en la URL** (ADR-12 §7): qué se abrió (`?with=`), para que un lienzo se pueda mandar como un link.
 - **Los cuatro estados obligatorios** (§«Estados obligatorios»), en lugar del lienzo.
 - **El color de un nodo es su `StatusBadge`**; el papel del nodo cambia el marco (cabeza con borde de marca y fondo `raised`, flotante con borde punteado), nunca el color.
 - **Quién es la cabeza se lee sin mirar el borde**: corona y la palabra del dominio («Principal») arriba del nombre, en el nodo y en la lista móvil. Es el mismo ícono que «Hacer principal» en el vocabulario.
@@ -195,29 +195,29 @@ En `hooks/`:
 
 | Hook | Para qué |
 |---|---|
-| `useTableSelection` | Selección múltiple en tablas, con rango al mantener **Shift**. Se monta como Context **alrededor de la tabla que lo usa**, no global (#105). **Todavía no construido**: ninguna tabla pide selección múltiple por ahora |
-| `useConfirm` | Confirmación imperativa: devuelve una promesa, para no encadenar estados de diálogo a mano. El hook y su Context están en `hooks/useConfirm.ts`; `components/ConfirmDialog.tsx` monta el provider y el diálogo (#243) |
+| `useTableSelection` | Selección múltiple en tablas, con rango al mantener **Shift**. Se monta como Context **alrededor de la tabla que lo usa**, no global (ADR-19 §5). **Todavía no construido**: ninguna tabla pide selección múltiple por ahora |
+| `useConfirm` | Confirmación imperativa: devuelve una promesa, para no encadenar estados de diálogo a mano. El hook y su Context están en `hooks/useConfirm.ts`; `components/ConfirmDialog.tsx` monta el provider y el diálogo (ADR-19 §1) |
 | `useDebounce` | Filtros del explorador y buscadores |
-| `useSearchQuery` | El cableado de un buscador (#240): estado de los chips, última consulta confirmada y escritura del `?q=`; busca con el segundo Enter (#268). Los comandos se le pasan; no los conoce |
-| `useHasPersonalLibrary` | Si esta cuenta es de las que llenan biblioteca — `Player` o `Master` o `hasManagedTables` (#241) |
-| `useAvailableContexts` | Qué contextos tiene la cuenta y en cuál está parada, resuelto desde la URL (#222) |
+| `useSearchQuery` | El cableado de un buscador (ADR-22 §3): estado de los chips, última consulta confirmada y escritura del `?q=`; busca con el segundo Enter (ADR-22 §4). Los comandos se le pasan; no los conoce |
+| `useHasPersonalLibrary` | Si esta cuenta es de las que llenan biblioteca — `Player` o `Master` o `hasManagedTables` (ADR-14 §5) |
+| `useAvailableContexts` | Qué contextos tiene la cuenta y en cuál está parada, resuelto desde la URL (ADR-20 §2) |
 | `useUnsavedChanges` | Avisar antes de perder un formulario a medio llenar |
-| `useLanguage` | El idioma elegido, recordado sin ida al servidor (#198) |
+| `useLanguage` | El idioma elegido, recordado sin ida al servidor (ADR-23 §2) |
 | `useBackendStatus` | Si el backend responde, para el indicador «En línea» |
-| `useClientLimits` | Los límites de plataforma que una pantalla enuncia antes de que alguien los rompa: el tope por archivo y el timeout de la reserva de la bandeja (#141, #264). Están en `hooks/` y no en una feature porque `features/files`, `features/help` y `/admin/queue` los leen y `features/settings` los edita — y una feature nunca importa otra. Nunca suspende ni rompe una pantalla: contesta con los defaults de `config/limits.ts` mientras viaja el pedido |
+| `useClientLimits` | Los límites de plataforma que una pantalla enuncia antes de que alguien los rompa: el tope por archivo y el timeout de la reserva de la bandeja (ADR-17 §3, §4). Están en `hooks/` y no en una feature porque `features/files`, `features/help` y `/admin/queue` los leen y `features/settings` los edita — y una feature nunca importa otra. Nunca suspende ni rompe una pantalla: contesta con los defaults de `config/limits.ts` mientras viaja el pedido |
 | `useDisclosure<T>` | Abrir/cerrar modales y paneles, y guardar el ítem que los abrió (`open(row)`) — es lo que hacía `useModal` con su `dataModal` |
 
 ### Estados obligatorios
 
 Toda pantalla que lea datos define los cuatro: **cargando** (`skeleton`, no spinner suelto), **vacío** (`EmptyState`), **error** (mensaje del `ProblemDetail`, con reintento) y **sin permiso** (`403` con explicación; el `404` por veto se ve como "no existe", que es intencional).
 
-**No se especifican pantalla por pantalla** (#139). Hay **cuatro arquetipos** —listado, detalle, formulario y dashboard— y cada pantalla hereda los cuatro estados del suyo, porque el skeleton, el error y el 403 son idénticos entre pantallas del mismo tipo.
+**No se especifican pantalla por pantalla** (ADR-21 §8). Hay **cuatro arquetipos** —listado, detalle, formulario y dashboard— y cada pantalla hereda los cuatro estados del suyo, porque el skeleton, el error y el 403 son idénticos entre pantallas del mismo tipo.
 
 Lo único que cada pantalla define por su cuenta es **el texto del vacío y qué acción ofrece**. Está en `design/out/ui-states-copy.html`, y ahí hay una trampa que conviene no repetir: `/master` y `/admin/queue` vacíos son **buenas noticias** —"nada espera tu respuesta"— y no pueden leerse como una pantalla rota.
 
 # 5.b Responsive
 
-**Las 28 rutas funcionan en teléfono, tablet y escritorio** (#138). Puntos de corte de Tailwind, sin inventar ninguno, y se diseña **de menor a mayor**: las clases sin prefijo son las del teléfono.
+**Las 28 rutas funcionan en teléfono, tablet y escritorio** (ADR-21 §7). Puntos de corte de Tailwind, sin inventar ninguno, y se diseña **de menor a mayor**: las clases sin prefijo son las del teléfono.
 
 | Prefijo | Ancho | Qué cambia |
 |---|---|---|
@@ -225,9 +225,9 @@ Lo único que cada pantalla define por su cuenta es **el texto del vacío y qué
 | `md` | ≥ 768 px | Dos columnas. Los filtros vuelven a la barra |
 | `lg` | ≥ 1024 px | Tres columnas. Barra lateral donde la haya |
 
-**Ningún ancho saca la página de la pantalla** (#277), ni por abajo ni por arriba. Por arriba, el header y el `main` de cada layout se acotan a `max-w-5xl` (1024 px): en un ultrawide la app queda centrada y no se estira. Por abajo, hasta 320 px: la navegación de secciones baja de línea (`SectionNav`), el header achica espacios y logo debajo de `sm` y, si aun así no entra, **cede el logo** (`min-w-0 truncate`), nunca un control. Un hijo de grid o de flex que lleva texto largo necesita `min-w-0`, o su contenido empuja la columna. Se verifica midiendo `scrollWidth` contra `innerWidth` en todas las rutas.
+**Ningún ancho saca la página de la pantalla** (ADR-21 §7), ni por abajo ni por arriba. Por arriba, el header y el `main` de cada layout se acotan a `max-w-5xl` (1024 px): en un ultrawide la app queda centrada y no se estira. Por abajo, hasta 320 px: la navegación de secciones baja de línea (`SectionNav`), el header achica espacios y logo debajo de `sm` y, si aun así no entra, **cede el logo** (`min-w-0 truncate`), nunca un control. Un hijo de grid o de flex que lleva texto largo necesita `min-w-0`, o su contenido empuja la columna. Se verifica midiendo `scrollWidth` contra `innerWidth` en todas las rutas.
 
-**La regla del lienzo** (#275): debajo de `md` un lienzo de nodos se vuelve la lista de lo mismo, con el mismo menú por fila; nunca un lienzo diminuto con zoom.
+**La regla del lienzo** (ADR-12 §7): debajo de `md` un lienzo de nodos se vuelve la lista de lo mismo, con el mismo menú por fila; nunca un lienzo diminuto con zoom.
 
 **La regla de la tabla ancha**, que es el caso caro: `/admin/catalogs`, `/admin/files`, `/admin/users` y `/owner/audit` tienen cinco o más columnas. En móvil **dejan de ser tablas** — cada fila se vuelve una ficha con identidad y estado arriba, el resto como texto y la acción al pie. **Nunca scroll horizontal.**
 

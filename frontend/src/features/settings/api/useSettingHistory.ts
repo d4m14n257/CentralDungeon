@@ -6,7 +6,7 @@ import { settingsApi } from './settingsApi'
 import type { SettingKey } from '../types'
 
 /**
- * What was done to one setting, and why (#141).
+ * What was done to one setting, and why (ADR-17 §3).
  *
  * It is what keeps the audit table from being write-only. A platform-wide change produces no
  * notification and no visible event, so without somewhere to read it back the row would be born

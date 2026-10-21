@@ -34,7 +34,7 @@ public interface CatalogValueRepository<E extends CatalogValue> extends JpaRepos
 
     /**
      * A whole synonym group in one query: the canonical entry (matched by its own id) plus every
-     * alias pointing at it. Depth is always 1 (#59), so this is the complete group - there is no
+     * alias pointing at it. Depth is always 1 (ADR-12 §2), so this is the complete group - there is no
      * second level to recurse into.
      *
      * @param id          the canonical entry's id
@@ -54,7 +54,7 @@ public interface CatalogValueRepository<E extends CatalogValue> extends JpaRepos
     /**
      * The aliases of several groups at once, whatever their status.
      *
-     * <p>What the groups-only listing counts to say how big each group is (#275). Depth is 1 (#59)
+     * <p>What the groups-only listing counts to say how big each group is (ADR-12 §7). Depth is 1 (ADR-12 §2)
      * and a group is bounded by how many synonyms a community writes for one thing, so reading the
      * rows is cheaper to reason about than a grouped count per catalog table.
      *
@@ -69,10 +69,10 @@ public interface CatalogValueRepository<E extends CatalogValue> extends JpaRepos
      * <p>Half of what {@link AbstractCatalogService#resolveGroupIdsByName} needs: given the roots a
      * search landed on, this brings back the roots themselves. The other half is
      * {@link #findByStatusAndCanonicalIdIn}, and together they are the whole group - depth is always
-     * 1 (#59), so there is no third query.
+     * 1 (ADR-12 §2), so there is no third query.
      *
      * @param status  the status to keep. Always {@code Accepted} today: a value nobody accepted does
-     *                not filter (#57)
+     *                not filter (ADR-12 §3)
      * @param ids     the canonical entries to bring back
      * @return the matching rows, never null and possibly empty
      */

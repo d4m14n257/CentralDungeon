@@ -34,7 +34,7 @@ import org.testcontainers.mysql.MySQLContainer;
  * The player's history (#133a), over real MySQL: whether the two endings come back with their own,
  * different attendance, and whether resolving that attendance for a whole page still costs one
  * query rather than one per table - the exact risk a mocked {@code SessionAttendanceRepository}
- * cannot show, the same reason {@code ProfileServiceIT} exists for #137's other aggregate.
+ * cannot show, the same reason {@code ProfileServiceIT} exists for ADR-08 §5's other aggregate.
  *
  * <p>Wired with {@code @DynamicPropertySource}, not {@code @ServiceConnection} - see
  * {@code ProfileServiceIT} / {@code RegistrationServiceIT} for why.

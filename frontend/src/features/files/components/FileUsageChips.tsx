@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next'
 import type { FileUsage } from '../types'
 
 interface FileUsageChipsProps {
-  /** Where the file is being used (#232). An empty array is a meaningful answer, not a missing one. */
+  /** Where the file is being used (ADR-14 §3). An empty array is a meaningful answer, not a missing one. */
   usages: FileUsage[]
 }
 
 /**
- * Where a file is being used, as chips (#232).
+ * Where a file is being used, as chips (ADR-14 §3).
  *
  * **This is the classification, shown.** The origin of a file — a player's, a master's — is not a
  * column on the row but a fact about each place it is used, because the same character sheet can be
@@ -16,7 +16,7 @@ interface FileUsageChipsProps {
  * screen shows the uses rather than a label, and a file with two of them shows two.
  *
  * **The empty case is the point of the component, not its degenerate state.** A file nothing points
- * at is the one the purge of #75 will reach first, and saying so plainly — "sin usar" — is what lets
+ * at is the one the purge of ADR-13 §3 will reach first, and saying so plainly — "sin usar" — is what lets
  * somebody notice before it goes quiet, without the screen ever having to explain retention.
  *
  * @param props.usages where the file is being used

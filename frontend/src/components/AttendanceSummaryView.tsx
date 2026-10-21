@@ -8,11 +8,11 @@ interface AttendanceSummaryViewProps {
 }
 
 /**
- * Somebody's historical attendance, on one table or aggregated across every table (#137).
+ * Somebody's historical attendance, on one table or aggregated across every table (ADR-08 §5).
  *
  * **Three numbers and never a percentage.** A ratio would have decided for the reader, and the
  * distinction it hides is the one that matters: missing after warning and simply not turning up are
- * different facts, and collapsing them makes attendance unexplainable — it is #98 applied one level
+ * different facts, and collapsing them makes attendance unexplainable — it is ADR-11 §10 applied one level
  * down. The reader draws a better conclusion from the three numbers than from an average that
  * already drew it for them.
  *

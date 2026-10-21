@@ -24,11 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * {@code /requests}: the asking end. Two audiences means two controllers, and this is the one with
  * <b>no role at all</b> - anybody logged in can ask for something, which is what makes the mechanism
- * of #42 a door rather than a privilege.
+ * of ADR-16 §1 a door rather than a privilege.
  *
  * <p>Every endpoint here is scoped to the actor from the token. There is no user id in any path and
- * none in any body, so there is no way to ask on somebody else's behalf (#121, arquitectura §2.6) -
- * and the polymorphic reference has no foreign key that would catch it if there were (#78).
+ * none in any body, so there is no way to ask on somebody else's behalf (ADR-05 §5, arquitectura §2.6) -
+ * and the polymorphic reference has no foreign key that would catch it if there were (ADR-16 §2).
  *
  * <p>The form that produces one of these lives on the screen that provokes it - the profile, the
  * explorer, the help page - and never on a "make a request" screen
@@ -53,7 +53,7 @@ public class ApprovalRequestController {
      *
      * @param request     what is being asked for, and why. No entity id: the request is about the
      *                    actor, who comes from the token
-     * @param currentUser the actor, from the token (#121)
+     * @param currentUser the actor, from the token (ADR-05 §5)
      * @return 201 with the request and a {@code Location} header. 400 when the reason is blank or the
      *         type is not one of the three, 409 when the same request is already open or when the
      *         Master role is already held
@@ -89,8 +89,8 @@ public class ApprovalRequestController {
      *                    {@code /status}, {@code /request_type} and {@code /requested_by}, with bare
      *                    text over the justification. Null or blank lists all of theirs. <b>It cannot
      *                    widen the result past the actor</b> - that filter is not part of the
-     *                    language and is applied in the service (#121)
-     * @param pageable    page and size; newest first, with a tie-break by id (#171)
+     *                    language and is applied in the service (ADR-05 §5)
+     * @param pageable    page and size; newest first, with a tie-break by id (ADR-07 §9)
      * @param currentUser the actor, from the token
      * @return 200 with one page of their requests
      */

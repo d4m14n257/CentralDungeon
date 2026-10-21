@@ -10,9 +10,9 @@ package com.centraldungeon.registrations;
  *
  * @param registrationId the application the file is attached to, which is what the service groups by
  * @param fileId          the file
- * @param name            the original filename. Metadata only (#80)
+ * @param name            the original filename. Metadata only (ADR-13 §6)
  * @param mimeType        the declared MIME type
- * @param sizeBytes       the size as it was uploaded, before compression (#75)
+ * @param sizeBytes       the size as it was uploaded, before compression (ADR-13 §3)
  */
 public record RegistrationFileRow(String registrationId, String fileId, String name, String mimeType, long sizeBytes) {
 }

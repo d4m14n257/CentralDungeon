@@ -12,11 +12,11 @@ import { adminUsersApi } from './adminUsersApi'
  * accounts.
  *
  * A working list, so it pages by number and keeps the previous page on screen while the next one
- * arrives: without that, the table blinks to a skeleton on every click (#173).
+ * arrives: without that, the table blinks to a skeleton on every click (ADR-04 §6).
  *
  * @param query the search box, already debounced
  * @param page  zero-based page number
- * @param size  rows per page, one of `adminPageSizeOptions` (#271)
+ * @param size  rows per page, one of `adminPageSizeOptions` (ADR-21 §11)
  * @returns the query for that page
  */
 export function useAdminUsers(query: string, page: number, size: number = pageSize.admin) {

@@ -34,7 +34,7 @@ import {
  * its master may end.
  */
 const CANCELABLE_STATUSES: GameTableStatus[] = ['Preparation', 'ChangesRequested', 'Opened', 'InProgress', 'PauseRequested', 'Pause']
-/** Only what was never public is deleted; everything else is cancelled and stays in the history (#175). */
+/** Only what was never public is deleted; everything else is cancelled and stays in the history (ADR-07 §6). */
 const DELETABLE_STATUSES: GameTableStatus[] = ['Draft', 'Preparation', 'ChangesRequested']
 
 interface OutletContext {
@@ -46,7 +46,7 @@ interface OutletContext {
 /**
  * A table's lifecycle history, oldest first: who moved it, where to, and why.
  *
- * Exported for the admin's status tab (#284), which shows the same history next to the admin's own
+ * Exported for the admin's status tab (ADR-06 §8), which shows the same history next to the admin's own
  * actions instead of the master's transitions.
  *
  * @param props.tableId the table
@@ -101,7 +101,7 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
   }
 
   /**
-   * Sending the draft is what makes the table exist for anybody else (#245), and what takes it out of
+   * Sending the draft is what makes the table exist for anybody else (ADR-07 §1), and what takes it out of
    * the master's hands until an admin answers — so it is confirmed, like every other one-way step.
    */
   async function handleSubmitForReview() {
@@ -197,7 +197,7 @@ function StatusActions({ tableId, status, isPrimary }: OutletContext) {
 }
 
 /**
- * Asking an admin to pause the table (#32, F3.4).
+ * Asking an admin to pause the table (ADR-07 §2, F3.4).
  *
  * **Its own block, outside `StatusActions`, and that placement is the rule made visible.** Everything
  * in `StatusActions` belongs to the `Primary` alone — starting, finishing, cancelling, deleting — so
@@ -274,7 +274,7 @@ function StatusPanel(context: OutletContext) {
       <StatusActions {...context} />
       <PauseRequest tableId={context.tableId} status={context.status} />
       {/* The two halves of the wait, said out loud: a draft nobody has seen yet, and one an admin is
-          already reading — which is also why the Edit button is gone in the second (#245). */}
+          already reading — which is also why the Edit button is gone in the second (ADR-07 §1). */}
       {context.status === 'Draft' && <p className="text-fg-muted text-sm">{t('status.draftHint')}</p>}
       {context.status === 'Preparation' && <p className="text-fg-muted text-sm">{t('status.waitingForAdmin')}</p>}
       {context.status === 'Pause' && <p className="text-fg-muted text-sm">{t('status.pausedByAdmin')}</p>}

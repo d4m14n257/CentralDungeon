@@ -16,12 +16,12 @@ export const sessionsApi = {
   forTable: (tableId: string) => api.get<TableSession[]>(`/api/v1/game-tables/${tableId}/sessions`),
   /** The player's own calendar and their attendance, for `/player/my-tables/:id`. */
   mine: (tableId: string) => api.get<MySessions>(`/api/v1/game-tables/${tableId}/sessions/mine`),
-  /** Correcting the date and the notes. It replaces both fields rather than patching them (#189). */
+  /** Correcting the date and the notes. It replaces both fields rather than patching them (ADR-04 §7). */
   update: (sessionId: string, request: UpdateSessionRequest) =>
     api.patch<TableSession, UpdateSessionRequest>(`/api/v1/sessions/${sessionId}`, request),
-  /** Marking the session as played. Its own action, separate from recording attendance (#195). */
+  /** Marking the session as played. Its own action, separate from recording attendance (ADR-08 §4). */
   hold: (sessionId: string) => api.post<TableSession>(`/api/v1/sessions/${sessionId}/hold`),
-  /** Cancelling a session. Answers with the whole calendar: the cancellation and its replacement are one change (#194). */
+  /** Cancelling a session. Answers with the whole calendar: the cancellation and its replacement are one change (ADR-08 §3). */
   cancel: (sessionId: string) => api.post<TableSession[]>(`/api/v1/sessions/${sessionId}/cancel`),
   /** Recording who came. The roster travels as a whole, which is why this is a `PUT` and not a `PATCH`. */
   recordAttendance: (sessionId: string, request: RecordAttendanceRequest) =>

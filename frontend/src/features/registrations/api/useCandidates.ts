@@ -6,7 +6,7 @@ import { registrationsApi } from './registrationsApi'
 
 /**
  * The queue of pending candidates for a table, oldest first. FIFO is the backend's order and the
- * screen never re-sorts it: it is what decides who is auto-rejected when the table fills up (#28, #34).
+ * screen never re-sorts it: it is what decides who is auto-rejected when the table fills up (ADR-09 §1, §3).
  *
  * @param tableId the table whose queue to read
  * @returns the query for its candidates

@@ -4,10 +4,10 @@ import org.springframework.http.HttpStatus;
 
 /**
  * The actor is authenticated but has no business doing this - typically because the resource is not
- * theirs (#121). Answers 403.
+ * theirs (ADR-05 §5). Answers 403.
  *
  * <p>Not to be used to hide a resource's existence: a table someone is vetoed from answers 404, not
- * this (docs/adr #27).
+ * this (ADR-07 §1).
  */
 public final class ForbiddenActionException extends ApiException {
 
@@ -16,7 +16,7 @@ public final class ForbiddenActionException extends ApiException {
 
     /**
      * An admin reaching for the Admin or Owner role, granting it or taking it away. Only an owner
-     * moves the rank (roles-y-alcance.md §3, #169).
+     * moves the rank (roles-y-alcance.md §3, ADR-06 §1).
      *
      * <p>It gets a code of its own because it is the one 403 the screen has to <b>explain</b>: the
      * reader is an admin who legitimately administers the platform and is being told that this one
@@ -35,7 +35,7 @@ public final class ForbiddenActionException extends ApiException {
 
     /**
      * A {@code Secondary} reaching for something only the table's {@code Primary} may do: vetoing
-     * somebody, lifting a veto, or answering a co-master's request for one (#39, #71).
+     * somebody, lifting a veto, or answering a co-master's request for one (ADR-09 §5, ADR-06 §3).
      *
      * <p><b>403 and not 400</b>, the same shape F3.1 settled on: it is a question of who you are,
      * not of what you sent. Nothing about the body would make it succeed.
@@ -59,7 +59,7 @@ public final class ForbiddenActionException extends ApiException {
     }
 
     /**
-     * @param message   what the actor is not allowed to do, in English and for a log (#197)
+     * @param message   what the actor is not allowed to do, in English and for a log (ADR-23 §3)
      * @param errorCode the stable code the frontend branches on. Use {@link #ROLE_GRANT_FORBIDDEN}
      *                  or {@link #CANNOT_BLOCK_PRIVILEGED} where the screen has to say something
      *                  specific; anything else has no reason not to be the default

@@ -58,8 +58,8 @@ describe('UserProfilePage', () => {
   })
 
   /**
-   * #249: a 404 here never means "no existe" the way the veto's 404 does (#29) — it can also mean
-   * the two-week window of #44 closed. The screen has to say the truth that is safe for both cases.
+   * ADR-10 §3: a 404 here never means "no existe" the way the veto's 404 does (ADR-09 §4) — it can also mean
+   * the two-week window of ADR-10 §2 closed. The screen has to say the truth that is safe for both cases.
    */
   it('explains that the profile is no longer visible on a 404, not that it does not exist', () => {
     queryResult = {

@@ -8,7 +8,7 @@ import { tasksApi } from './tasksApi'
 /**
  * My own answers to a task — what I already handed in, oldest first.
  *
- * A list rather than "the latest one", because answers accumulate and none replaces another (#76):
+ * A list rather than "the latest one", because answers accumulate and none replaces another (ADR-15 §2):
  * showing only the last would quietly claim the earlier ones stopped counting.
  *
  * Nothing is fetched for a task nobody opened: `CollapsibleSection` does not render its children

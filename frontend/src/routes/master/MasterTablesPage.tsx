@@ -11,15 +11,15 @@ import { useMe } from '@/features/users'
 /**
  * /master/tables - every table the person runs, whatever its status, drafts included.
  *
- * Membership, not role (#135): a co-master without the `Master` role sees their table here.
+ * Membership, not role (ADR-06 §4): a co-master without the `Master` role sees their table here.
  */
 export function MasterTablesPage() {
   const { t } = useTranslation('master')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (docs/adr #150).
+  // loaded (ADR-19 §4).
   const { data, isPending, isLoadingError, refetch } = useManagedTables()
   const { data: me } = useMe()
-  // Running is not creating (docs/adr #135): somebody running a single table, assigned without
+  // Running is not creating (ADR-06 §4): somebody running a single table, assigned without
   // the platform role, sees this list but not the button to create a table of their own.
   const canCreate = me?.roles.includes('Master') ?? false
 

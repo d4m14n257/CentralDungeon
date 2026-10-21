@@ -3,7 +3,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test'
 import { chooseRequiredCatalogs } from './helpers/tableWizard'
 
 /**
- * Leaving work in progress asks first (docs/adr #231).
+ * Leaving work in progress asks first (ADR-20 §5).
  *
  * An e2e and not a component test because the thing being tested is a router transition being held
  * and then released - a `MemoryRouter` blocks nothing, and the bug this prevents only ever happened

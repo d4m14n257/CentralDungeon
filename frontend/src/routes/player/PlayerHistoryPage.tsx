@@ -10,7 +10,7 @@ import { browserTimeZone, formatDate } from '@/lib/date'
 import { TableStatusBadge, useTableHistory } from '@/features/tables'
 
 /**
- * `/player/history` (#133) - every table this reader played at whose run is over, `Finished` or
+ * `/player/history` (ADR-19 §8) - every table this reader played at whose run is over, `Finished` or
  * `Canceled`, with how it ended for them.
  *
  * It exists because `/player/my-tables` stopped answering for these the moment it was scoped to
@@ -23,7 +23,7 @@ import { TableStatusBadge, useTableHistory } from '@/features/tables'
 export function PlayerHistoryPage() {
   const { t, i18n } = useTranslation('tables')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (docs/adr #150).
+  // loaded (ADR-19 §4).
   const { data, isPending, isLoadingError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useTableHistory()
 
   const entries = data?.pages.flatMap((page) => page.content) ?? []
@@ -52,7 +52,7 @@ export function PlayerHistoryPage() {
                   <p className="truncate font-medium">{entry.name}</p>
                   <p className="text-fg-subtle text-xs">
                     {/* The date goes through lib/date.ts: locale and zone are parameters, never
-                        constants (#111, #192). */}
+                        constants (ADR-19 §7). */}
                     {t('history.closedOn', { date: formatDate(entry.closedAt, i18n.language, browserTimeZone()) })}
                   </p>
                 </div>

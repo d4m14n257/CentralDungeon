@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { settingsApi } from './settingsApi'
 
 /**
- * Every setting the platform has, for `/admin/settings` (#141).
+ * Every setting the platform has, for `/admin/settings` (ADR-17 §3).
  *
  * Reads the live values rather than anything cached on the server: this answers "what is configured,
  * by whom and when", which somebody is looking at in order to change it — a cached listing would

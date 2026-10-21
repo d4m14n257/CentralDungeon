@@ -1,9 +1,9 @@
 /**
- * Which language the application speaks, and how it gets decided (#198).
+ * Which language the application speaks, and how it gets decided (ADR-23 §2).
  *
  * The rule is the same shape as the theme's: a stored choice wins, and when there is none the
  * browser is asked. The difference is the fallback — the theme falls back to a design decision
- * (dark, #131) and this one falls back to Spanish, because the community writes and plays in
+ * (dark, ADR-21 §2) and this one falls back to Spanish, because the community writes and plays in
  * Spanish and an unrecognized browser is far more likely to belong to somebody who does.
  */
 

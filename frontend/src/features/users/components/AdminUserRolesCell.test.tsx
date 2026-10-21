@@ -6,18 +6,18 @@ import { AdminUserRolesCell } from './AdminUserRolesCell'
 
 describe('AdminUserRolesCell', () => {
   /**
-   * #165's order, and the reason the component sorts instead of trusting what arrived: a column
+   * ADR-07 §8's order, and the reason the component sorts instead of trusting what arrived: a column
    * where one row reads "Master · Jugador" and the next "Jugador · Master" makes an admin compare
    * two rows character by character.
    */
-  it('draws the roles in the order of #165, whatever order they arrived in', () => {
+  it('draws the roles in the order of ADR-07 §8, whatever order they arrived in', () => {
     render(<AdminUserRolesCell roles={['Owner', 'Player', 'Master']} />)
 
     const chips = screen.getAllByRole('listitem').map((chip) => chip.textContent)
     expect(chips).toEqual(['Jugador', 'Master', 'Owner'])
   })
 
-  /** Every account is *created* with Player (#38), which is not the same as always having it. */
+  /** Every account is *created* with Player (ADR-05 §1), which is not the same as always having it. */
   it('says so when an account has no roles left', () => {
     render(<AdminUserRolesCell roles={[]} />)
 

@@ -24,7 +24,7 @@ export interface TabNavProps {
  * A screen's tabs, as links to its child routes (arquitectura §3.1.6 regla 5): each tab has a URL, can
  * be shared and survives the back button.
  *
- * **A named pattern** (#273) since a second screen needed it (#284): the table as its master sees it
+ * **A named pattern** (ADR-21 §5) since a second screen needed it (ADR-06 §8): the table as its master sees it
  * and as an admin sees it draw the same row of tabs, and the underline that marks the active one was a
  * string of utilities written into the first of them.
  *

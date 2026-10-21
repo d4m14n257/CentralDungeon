@@ -25,15 +25,15 @@ import org.springframework.web.bind.annotation.RestController;
  * one is open to anybody logged in and this one is not.
  *
  * <p><b>Admin and Owner are enumerated on every method.</b> There is no {@code RoleHierarchy} in this
- * project: an owner can do everything an admin can by being listed, never by inheriting (#37, #89,
- * #123), and the annotation goes on the concrete method rather than on the class, an interface or a
+ * project: an owner can do everything an admin can by being listed, never by inheriting (ADR-06 §1,
+ * ADR-05 §4), and the annotation goes on the concrete method rather than on the class, an interface or a
  * list of paths in {@code SecurityConfig}. The matrix of roles-y-alcance.md §3 does not separate
  * the two ranks here - answering a request is something both do - so the guard is the whole of the
  * authorization story for this screen, which is why it must not be wrong: {@code hasRole('ADMIN')}
  * would lock the owner out and nobody would notice in development.
  *
  * <p><b>The claim endpoints are not here.</b> {@code POST}/{@code DELETE .../claim} belong to the
- * shared queue of F3.3 (#100). F3.2 leaves the two columns and no behaviour.
+ * shared queue of F3.3 (ADR-16 §5). F3.2 leaves the two columns and no behaviour.
  */
 @RestController
 @RequestMapping("/api/v1/admin/requests")
@@ -52,12 +52,12 @@ public class AdminApprovalRequestController {
     /**
      * The listing.
      *
-     * @param q        the search box, in the language of #164: bare text matches the justification or
+     * @param q        the search box, in the language of ADR-22 §1: bare text matches the justification or
      *                 the requester's name, and {@code /request_type}, {@code /status} and
      *                 {@code /requested_by} narrow it. Null or blank lists every request in every
      *                 state - the screen's {@code Pending} default is the frontend's initial
      *                 {@code ?q=}, not a filter hidden in here
-     * @param pageable page, size and sort; oldest first, with a tie-break by id (#171, #173)
+     * @param pageable page, size and sort; oldest first, with a tie-break by id (ADR-07 §9, ADR-04 §6)
      * @return 200 with one page of requests
      */
     @GetMapping
@@ -90,7 +90,7 @@ public class AdminApprovalRequestController {
      *
      * @param id          the request to approve
      * @param request     why
-     * @param currentUser the actor, from the token (#121)
+     * @param currentUser the actor, from the token (ADR-05 §5)
      * @return 200 with the request afterwards. 400 when the note is blank, 404 when it does not
      *         exist, 409 when it was already resolved or when what it points at is gone
      */
@@ -104,11 +104,11 @@ public class AdminApprovalRequestController {
     }
 
     /**
-     * Says no, with a reason - which is as mandatory here as it is on an approval (#42).
+     * Says no, with a reason - which is as mandatory here as it is on an approval (ADR-16 §1).
      *
      * @param id          the request to reject
      * @param request     why
-     * @param currentUser the actor, from the token (#121)
+     * @param currentUser the actor, from the token (ADR-05 §5)
      * @return 200 with the request afterwards. 400 when the note is blank, 404 when it does not
      *         exist, 409 when it was already resolved or when what it points at is gone
      */

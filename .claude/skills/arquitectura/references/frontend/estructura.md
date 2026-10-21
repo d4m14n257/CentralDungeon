@@ -1,6 +1,6 @@
 # 3.1 Patrón: features de dominio, con capas transversales en la raíz
 
-> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
+> Parte de la skill `arquitectura` (ADR-01 §5). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 El dominio manda, igual que en el backend. Una feature es autocontenida —sus llamadas a la API, sus hooks, sus componentes, sus tipos— y **nunca importa de otra feature**: solo depende de las capas transversales de la raíz de `src/`.
@@ -17,20 +17,20 @@ frontend/
 └── src/
     ├── main.tsx                     bootstrap: providers + RouterProvider
     ├── styles/
-    │   ├── globals.css              @import "tailwindcss" + @theme, transcripto de design/build.py (#130)
-    │   └── base.css                 las clases de patrón (`diseno` §5.c, #273)
+    │   ├── globals.css              @import "tailwindcss" + @theme, transcripto de design/build.py (ADR-21 §1)
+    │   └── base.css                 las clases de patrón (`diseno` §5.c, ADR-21 §5)
     ├── assets/                      imágenes, íconos propios, fuentes
     │
     ├── config/                      configuración de la app, sin lógica
     │   ├── paths.ts                 builders de URL para los enlaces (§3.1.6)
     │   ├── env.ts                   variables de entorno, leídas y validadas en un solo lugar
     │   ├── query.ts                 defaults del QueryClient, política de staleTime y el único polling (§3.3)
-    │   ├── pagination.ts            tamaños de página (#271)   limits.ts   los topes que se dicen antes (#264)
-    │   ├── language.ts              idiomas soportados (#198)  zodErrors.ts  mensajes de zod por clave i18n
+    │   ├── pagination.ts            tamaños de página (ADR-21 §11)   limits.ts   los topes que se dicen antes (ADR-17 §4)
+    │   ├── language.ts              idiomas soportados (ADR-23 §2)  zodErrors.ts  mensajes de zod por clave i18n
     │
     ├── routes/                      TODAS las pantallas + el árbol de rutas (§3.1.6)
     │   ├── router.tsx               createBrowserRouter: URLs, layouts anidados y lazy
-    │   ├── RootRedirect.tsx         `/`: no es pantalla, despacha a la home del contexto (#222)
+    │   ├── RootRedirect.tsx         `/`: no es pantalla, despacha a la home del contexto (ADR-20 §2)
     │   ├── LoginPage.tsx  OAuthCallbackPage.tsx  OnboardingPage.tsx  NotificationsPage.tsx  NotFoundPage.tsx
     │   ├── player/                  /player/*
     │   ├── master/                  /master/*  (las pestañas de una mesa son …Tab.tsx)
@@ -41,12 +41,12 @@ frontend/
     │   ├── RootLayout.tsx           sesión y guard de autenticación
     │   ├── PublicLayout.tsx         la tarjeta centrada de callback y onboarding
     │   ├── ShellLayout.tsx          el shell sin nav de sección, para las transversales
-    │   ├── PlayerLayout.tsx  MasterLayout.tsx  AdminLayout.tsx   cada uno cerrado con RequireContext (#269)
+    │   ├── PlayerLayout.tsx  MasterLayout.tsx  AdminLayout.tsx   cada uno cerrado con RequireContext (ADR-20 §2)
     │   └── components/              AppHeader, ContextSwitcher, UserMenu, BrandMark, RequireContext,
     │                                PlayerSectionNav, MasterSectionNav, AdminSectionNav
     │
     ├── providers/                   QueryProvider, ThemeProvider, AuthProvider, I18nProvider (+ i18n.ts)
-    ├── stores/                      Zustand global: contextStore (contexto de rol de respaldo, #222)
+    ├── stores/                      Zustand global: contextStore (contexto de rol de respaldo, ADR-20 §2)
     │
     ├── features/                    los dominios. Sin páginas adentro
     │   ├── tables/                  el ejemplo de la forma completa:
@@ -59,7 +59,7 @@ frontend/
     │   │   │                        JustifiedTableActionDialog, WeeklyScheduleGrid…
     │   │   ├── lib/                 utilidades puras del dominio (tableTypeLabel.ts)
     │   │   ├── schemas.ts           esquemas zod de los formularios
-    │   │   ├── searchFields.ts      los campos del buscador (#164)   tableErrors.ts   códigos → claves i18n (#197)
+    │   │   ├── searchFields.ts      los campos del buscador (ADR-22 §1)   tableErrors.ts   códigos → claves i18n (ADR-23 §3)
     │   │   ├── lifecycle.ts         qué acción admite cada estado de la mesa
     │   │   ├── types.ts             los tipos del dominio (§3.2)
     │   │   └── index.ts             la superficie pública de la feature (§3.1.3)
@@ -68,22 +68,22 @@ frontend/
     │
     ├── components/                  sin dominio, para toda la app
     │   ├── ui/                      primitivas shadcn/ui generadas (button.tsx, dialog.tsx…)
-    │   ├── graph/                   el lienzo de nodos sobre React Flow (`diseno` §5, #275)
-    │   ├── dev/                     DevPanel, solo en desarrollo (#158)
+    │   ├── graph/                   el lienzo de nodos sobre React Flow (`diseno` §5, ADR-12 §7)
+    │   ├── dev/                     DevPanel, solo en desarrollo (ADR-19 §9)
     │   └── …                        compuestos propios: PageHeader, SectionHeader, DataTable,
     │                                FormDialog, ConfirmDialog, StatusBadge, StatusNotice, IconAction,
     │                                EmptyState, ErrorState, ForbiddenState, SearchQueryInput,
     │                                LoadMore, PaginationControls… (inventario: `diseno` §5)
     ├── hooks/                       useDisclosure, useDebounce, useUnsavedChanges, useLanguage,
-    │                                useBackendStatus, useAvailableContexts (#222),
-    │                                useSearchQuery (#240), useHasPersonalLibrary (#241),
-    │                                useClientLimits (#264), useConfirm (#243) — su Context vive
+    │                                useBackendStatus, useAvailableContexts (ADR-20 §2),
+    │                                useSearchQuery (ADR-22 §3), useHasPersonalLibrary (ADR-14 §5),
+    │                                useClientLimits (ADR-17 §4), useConfirm (ADR-19 §1) — su Context vive
     │                                acá con el hook y components/ConfirmDialog.tsx solo exporta el provider
     ├── lib/
     │   ├── utils.ts                 cn() — la ruta que shadcn/ui espera por defecto
     │   ├── date.ts                  formateo de fechas y horas con Intl (§3.3)
     │   ├── relativeTime.ts          «hace 2 h»   countries.ts   países del onboarding
-    │   └── searchQuery.ts           el lenguaje de los buscadores (#164) — espejo de common/search/
+    │   └── searchQuery.ts           el lenguaje de los buscadores (ADR-22 §1) — espejo de common/search/
     ├── api/
     │   ├── client.ts                fetch tipado: base URL, JWT, parseo de ProblemDetail
     │   └── queryKeys.ts             fábrica central de query keys
@@ -93,7 +93,7 @@ frontend/
     │   └── utils.ts                 helpers de tipos propios: StrictOmit, Expect, Equals (§3.2)
     └── locales/
         ├── es/                      un JSON por espacio de nombres (§3.3)
-        └── en/                      las mismas claves, en el mismo commit (#198)
+        └── en/                      las mismas claves, en el mismo commit (ADR-23 §2)
 ```
 
 Dos notas sobre `components/`: las primitivas de shadcn/ui caen en `components/ui/` porque es el alias que su CLI usa por defecto, y `lib/utils.ts` es donde espera encontrar `cn()` — respetar ambos evita reconfigurar el generador en cada componente nuevo.
@@ -136,7 +136,7 @@ Una feature **nunca importa de otra feature**. Esa es la regla que fuerza el cri
 
 Se admite **una** subcarpeta dentro de `components/` solo cuando la feature pasa de una docena de archivos y hay un subconjunto que se lee como un bloque. Nunca una carpeta con uno o dos archivos: eso era lo que hacía `components/tables/status/` en el legacy con un único componente adentro.
 
-**Cada feature declara su superficie pública en `index.ts`** (#114). Desde afuera se importa `@/features/tables`, nunca una ruta interna; lo que no está exportado ahí es privado de la feature:
+**Cada feature declara su superficie pública en `index.ts`** (ADR-19 §1). Desde afuera se importa `@/features/tables`, nunca una ruta interna; lo que no está exportado ahí es privado de la feature:
 
 ```ts
 // features/tables/index.ts
@@ -155,14 +155,14 @@ El frontend viejo agrupaba **por tipo de archivo** en la raíz de `src/`, mezcla
 
 | Legacy | Dónde va ahora | Por qué |
 |---|---|---|
-| `src/forms/` | `features/<dominio>/components/` | Mezclaba cinco dominios en una sola carpeta (#106) |
-| `src/contexts/` | `providers/` si es global; junto al componente que envuelve si es de subárbol | Un Context de una tabla no es global (#105) |
-| `src/api/` con un archivo por verbo | `api/client.ts` + `features/<dominio>/api/` | Eran siete wrappers sin tipos (#104) |
+| `src/forms/` | `features/<dominio>/components/` | Mezclaba cinco dominios en una sola carpeta (ADR-19 §6) |
+| `src/contexts/` | `providers/` si es global; junto al componente que envuelve si es de subárbol | Un Context de una tabla no es global (ADR-19 §5) |
+| `src/api/` con un archivo por verbo | `api/client.ts` + `features/<dominio>/api/` | Eran siete wrappers sin tipos (ADR-19 §3) |
 | `src/constants/` | `config/paths.ts` las rutas; `features/<dominio>/constants.ts` los labels del dominio | Un archivo global de constantes termina siendo el cajón de todo |
-| `src/normalize/` | No existe (#108) | El tipo base es el contrato (§3.2) |
-| `src/styles/*.js` | Clases de Tailwind en el JSX (#109) | — |
+| `src/normalize/` | No existe (ADR-19 §3) | El tipo base es el contrato (§3.2) |
+| `src/styles/*.js` | Clases de Tailwind en el JSX (ADR-21 §1) | — |
 | `src/helper/` | `lib/` si es puro y sin dominio; si no, su feature | "helper" no dice nada sobre qué hay adentro |
-| `src/language/*.xml` | `locales/es/*.json` con i18next (#107, #117) | — |
+| `src/language/*.xml` | `locales/es/*.json` con i18next (ADR-23 §1) | — |
 | `pages/` de Next.js | `routes/` (§3.1.6) | La carpeta ya no define la URL; el router la declara |
 
 Los tests van **junto al archivo que prueban** (`GameTableForm.test.tsx`), no en un `__tests__/` aparte. Los de Playwright son la excepción: viven en `e2e/`.
@@ -209,9 +209,9 @@ export const router = createBrowserRouter([
           { path: '/onboarding',    lazy: () => import('./OnboardingPage') },
         ],
       },
-      { index: true, lazy: () => import('./RootRedirect') },  // `/` despacha al contexto (#222)
+      { index: true, lazy: () => import('./RootRedirect') },  // `/` despacha al contexto (ADR-20 §2)
       {
-        path: 'player',                       // cada contexto es dueño de su prefijo (#222)
+        path: 'player',                       // cada contexto es dueño de su prefijo (ADR-20 §2)
         Component: PlayerLayout,
         children: [
           { index: true,        lazy: () => import('./player/TableListPage') },
@@ -242,6 +242,6 @@ export { TableDetailPage as Component };   // lo que consume router.tsx
 
 5. **Las pestañas de una pantalla son rutas hijas, no `useState`.** Las siete de `/master/tables/:id` (`candidates`, `players`, `schedule`, `sessions`, `tasks`, `files`, `status`) se declaran como `children`, así cada una tiene URL propia, se comparte por link y el botón de atrás funciona.
 
-**Guards: en el layout, no por ruta.** `RootLayout` redirige a `/login` si no hay sesión, y con eso cubre todo lo que cuelga de él. Cada layout de contexto (`PlayerLayout`, `MasterLayout`, `AdminLayout`) se envuelve en **`RequireContext`** (#269): quien no tiene ese contexto —misma regla que `useAvailableContexts`— es redirigido a `/`, que lo despacha a su home; nunca ve la nav ajena ni un 403. Una pantalla **no** repite ese chequeo. ⚠️ Sigue sin ser la seguridad: el backend autoriza endpoint por endpoint (#103), y `ForbiddenState` queda para el `403` por pertenencia a un recurso concreto (#121).
+**Guards: en el layout, no por ruta.** `RootLayout` redirige a `/login` si no hay sesión, y con eso cubre todo lo que cuelga de él. Cada layout de contexto (`PlayerLayout`, `MasterLayout`, `AdminLayout`) se envuelve en **`RequireContext`** (ADR-20 §2): quien no tiene ese contexto —misma regla que `useAvailableContexts`— es redirigido a `/`, que lo despacha a su home; nunca ve la nav ajena ni un 403. Una pantalla **no** repite ese chequeo. ⚠️ Sigue sin ser la seguridad: el backend autoriza endpoint por endpoint (ADR-20 §1), y `ForbiddenState` queda para el `403` por pertenencia a un recurso concreto (ADR-05 §5).
 
-**No se usan los `loader` de React Router** (#115). La recomendación general del ecosistema es combinarlos con TanStack Query para adelantar el fetch, y es buena con SSR; acá no hay SSR, la app está detrás de login y cada pantalla ya define su skeleton (skill `diseno` §5). Adoptarlos obligaría a inyectar el `queryClient` en el router y a declarar cada query en dos lugares. Si algún día se mide un waterfall real, se agrega el loader en esa pantalla concreta sin tocar el resto.
+**No se usan los `loader` de React Router** (ADR-19 §4). La recomendación general del ecosistema es combinarlos con TanStack Query para adelantar el fetch, y es buena con SSR; acá no hay SSR, la app está detrás de login y cada pantalla ya define su skeleton (skill `diseno` §5). Adoptarlos obligaría a inyectar el `queryClient` en el router y a declarar cada query en dos lugares. Si algún día se mide un waterfall real, se agrega el loader en esa pantalla concreta sin tocar el resto.

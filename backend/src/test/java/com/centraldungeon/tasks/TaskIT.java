@@ -51,8 +51,8 @@ import org.testcontainers.mysql.MySQLContainer;
  * The half of the task story only a real database can answer.
  *
  * <p>Three things a mock structurally cannot check are here. <b>Publishing writes one notification
- * row per recipient</b> (#77) - a unit test can assert the service was called, this counts what is in
- * the table. <b>Two answers from one person are two rows</b> (#76), which is the accumulation rule
+ * row per recipient</b> (ADR-15 §5) - a unit test can assert the service was called, this counts what is in
+ * the table. <b>Two answers from one person are two rows</b> (ADR-15 §2), which is the accumulation rule
  * against a real primary key rather than against a stubbed {@code save}. And <b>the fifth way a file
  * becomes readable</b>: the query behind it joins three tables, so it only means anything against
  * SQL that actually runs.
@@ -125,7 +125,7 @@ class TaskIT {
         enroll(secondPlayer, TableRegistrationStatus.Player);
     }
 
-    /** #77 against the table it writes to: one row per recipient, and none for anybody else. */
+    /** ADR-15 §5 against the table it writes to: one row per recipient, and none for anybody else. */
     @Test
     void publishingWritesOneNotificationPerRecipient() {
         TaskResponse task = publish(TaskAudience.Players, null);
@@ -136,7 +136,7 @@ class TaskIT {
         assertThat(taskNotificationsOf(master)).isEmpty();
     }
 
-    /** The title travels as a parameter so the bell can name the request (#197). */
+    /** The title travels as a parameter so the bell can name the request (ADR-23 §3). */
     @Test
     void theNotificationCarriesTheTaskTitleRatherThanASentence() {
         publish(TaskAudience.Players, null);
@@ -150,7 +150,7 @@ class TaskIT {
     }
 
     /**
-     * <b>The rule of #76 against a real primary key.</b> Two answers from one person are two rows;
+     * <b>The rule of ADR-15 §2 against a real primary key.</b> Two answers from one person are two rows;
      * neither overwrites the other, and the person leaves the roster of who is missing exactly once.
      */
     @Test
@@ -190,9 +190,9 @@ class TaskIT {
     }
 
     /**
-     * <b>The fifth way a file is reachable</b> (#63, #76, #206): the master opens what their player
+     * <b>The fifth way a file is reachable</b> (ADR-15 §1, §2, ADR-14 §2): the master opens what their player
      * handed in, and somebody with no business there gets a 404 rather than a 403 - confirming a file
-     * exists is itself a leak (#9, #29).
+     * exists is itself a leak (ADR-03 §4, ADR-09 §4).
      */
     @Test
     void theMasterCanOpenAFileTheirPlayerHandedInAndAStrangerCannot() {
@@ -210,7 +210,7 @@ class TaskIT {
                 .isInstanceOf(NotFoundException.class);
     }
 
-    /** Handing in a file links it and never stores it again (#65, #79). */
+    /** Handing in a file links it and never stores it again (ADR-13 §2, ADR-14 §1). */
     @Test
     void aSubmittedFileTravelsWithTheAnswerAndIsNotCopied() {
         TaskResponse task = publish(TaskAudience.Players, null);
@@ -233,7 +233,7 @@ class TaskIT {
 
     /**
      * The audience against real rows: a candidate sees what is asked of candidates and not what is
-     * asked of players, and can answer only the first (#63, #206).
+     * asked of players, and can answer only the first (ADR-15 §1, ADR-14 §2).
      */
     @Test
     void aCandidateSeesTheCandidatesTaskAndNotThePlayersOne() {
@@ -250,7 +250,7 @@ class TaskIT {
         });
     }
 
-    /** A Single task is only ever seen by its target, even by the table's other players (#76). */
+    /** A Single task is only ever seen by its target, even by the table's other players (ADR-15 §2). */
     @Test
     void aSingleTaskReachesOnlyItsTarget() {
         publish(TaskAudience.Single, firstPlayer.getId());
@@ -261,7 +261,7 @@ class TaskIT {
         assertThat(taskNotificationsOf(secondPlayer)).isEmpty();
     }
 
-    /** Closing ends the intake and leaves what came in exactly where it was (#76). */
+    /** Closing ends the intake and leaves what came in exactly where it was (ADR-15 §2). */
     @Test
     void closingKeepsWhatWasAlreadyHandedIn() {
         TaskResponse task = publish(TaskAudience.Players, null);
@@ -276,7 +276,7 @@ class TaskIT {
     // ---------------------------------------------------------------- fixtures
 
     /**
-     * The master's half of a request, end to end (#63, #233).
+     * The master's half of a request, end to end (ADR-15 §1, ADR-14 §4).
      *
      * <p>Three things only a real round trip proves. The master can attach a blank at all - which the
      * model simply could not express before, since {@code accepts_files} only ever said whether an
@@ -318,13 +318,13 @@ class TaskIT {
                 .containsExactly(blank.id());
         assertThat(fileService.download(blank.id(), firstPlayer.getId()).name()).isEqualTo("formulario.pdf");
 
-        // Somebody with no registration on the table still gets nothing (#9, #29).
+        // Somebody with no registration on the table still gets nothing (ADR-03 §4, ADR-09 §4).
         User stranger = userRepository.save(new User(randomDiscordId(), "Nadie"));
         assertThatThrownBy(() -> fileService.download(blank.id(), stranger.getId()))
                 .isInstanceOf(NotFoundException.class);
     }
 
-    /** Taking a blank off the ask marks the link and leaves the file, and its cajón, alone (#79, #233). */
+    /** Taking a blank off the ask marks the link and leaves the file, and its cajón, alone (ADR-14 §1, §4). */
     @Test
     void takingABlankOffTheRequestNeverTouchesTheFile() {
         FileResponse blank = fileService

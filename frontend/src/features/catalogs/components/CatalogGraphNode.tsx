@@ -9,12 +9,12 @@ import { CATALOG_STATUS_TONES } from './catalogStatusTones'
 import { CatalogValueActions } from './CatalogValueActions'
 
 /**
- * One catalog value on the canvas (#275): the base `GraphNode` of skill `diseno` §5 with this
+ * One catalog value on the canvas (ADR-12 §7): the base `GraphNode` of skill `diseno` §5 with this
  * feature's words and actions in it.
  *
  * Which handles are live follows the canvas's grammar (`connectionIntent`): anything with
  * somewhere to go can start a connection, and only an accepted head can receive one - depth is
- * always 1 (#59), so nothing hangs from an alias.
+ * always 1 (ADR-12 §2), so nothing hangs from an alias.
  *
  * @param props.data     the value and its place in the star
  * @param props.selected whether the canvas has it selected

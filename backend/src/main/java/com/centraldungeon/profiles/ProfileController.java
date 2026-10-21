@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Public profiles: the caller's own, and everybody else's under the five rules of arquitectura §4.5
- * ("Visibilidad de perfiles": #41, #44, #45, #47).
+ * ("Visibilidad de perfiles": ADR-10 §1, §2, ADR-06 §8, ADR-10 §1).
  */
 @RestController
 @RequestMapping("/api/v1/users")
@@ -35,7 +35,7 @@ public class ProfileController {
      * The caller's own profile.
      *
      * @param currentUser the actor, from the token. There is no id parameter, so this can only ever
-     *                    answer about the caller (#121)
+     *                    answer about the caller (ADR-05 §5)
      * @return 200 with their profile
      */
     @GetMapping("/me/profile")
@@ -48,14 +48,14 @@ public class ProfileController {
      * Somebody else's profile.
      *
      * <p>{@code id} names the person the profile describes, never the actor - the actor still only
-     * ever comes from the token (#121). Whether it may be read is the five rules of §5.
+     * ever comes from the token (ADR-05 §5). Whether it may be read is the five rules of §5.
      *
      * @param id          whose profile this is
      * @param currentUser the actor, from the token
      * @return 200 with the profile
      * @throws com.centraldungeon.common.exception.NotFoundException 404 if the person does not exist,
      *         or the actor may not see them - the two never distinguish themselves in the response
-     *         (#249)
+     *         (ADR-10 §3)
      */
     @GetMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
@@ -64,7 +64,7 @@ public class ProfileController {
     }
 
     /**
-     * Every table a person runs, plays at or applied to, for an admin reading their record (#284).
+     * Every table a person runs, plays at or applied to, for an admin reading their record (ADR-06 §8).
      *
      * @param id       whose tables these are
      * @param pageable page and size; newest table first, always

@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * A file attached to an application. Table {@code registration_files}.
  *
- * <p><b>It links, it does not copy</b> (#65, #79): the character sheet a player uploaded for a
+ * <p><b>It links, it does not copy</b> (ADR-13 §2, ADR-14 §1): the character sheet a player uploaded for a
  * previous table is attached again here, and the file keeps living in their own history untouched.
  * That reuse is the cost lever the whole file feature was built around.
  *
@@ -21,7 +21,7 @@ import org.jspecify.annotations.Nullable;
  * {@code SubmissionFile} lives in {@code tasks/}: a file on an application has no meaning apart from
  * that application - it is part of it. So the aggregate that owns the application owns the link.
  *
- * <p><b>Withdrawing an application does not touch these rows</b> (#247, deliberately): the row is
+ * <p><b>Withdrawing an application does not touch these rows</b> (ADR-09 §2, deliberately): the row is
  * the record that a sheet was sent, and withdrawing does not undo that it was. What treats a
  * withdrawn application's files as no longer in use is the read side - see
  * {@link RegistrationFileRepository#findUsagesByFileIds} - never a cascade from here.
@@ -45,7 +45,7 @@ public class RegistrationFile {
     @Column(name = "created_at", nullable = false)
     private @Nullable LocalDateTime createdAt;
 
-    /** Soft delete (#25). The row itself is never dropped, and the bytes are never freed here (#66). */
+    /** Soft delete (ADR-03 §7). The row itself is never dropped, and the bytes are never freed here (ADR-13 §8). */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
@@ -57,7 +57,7 @@ public class RegistrationFile {
      * Attaches a file to an application, live from the start.
      *
      * @param registrationId the application being submitted
-     * @param fileId          the file being attached. It is not copied (#79)
+     * @param fileId          the file being attached. It is not copied (ADR-14 §1)
      */
     public RegistrationFile(String registrationId, String fileId) {
         this.id = new RegistrationFileId(registrationId, fileId);
@@ -88,7 +88,7 @@ public class RegistrationFile {
     }
 
     /**
-     * Attaches or detaches the file. Detaching never touches the file itself (#79).
+     * Attaches or detaches the file. Detaching never touches the file itself (ADR-14 §1).
      *
      * @param status the new status
      */

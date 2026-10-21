@@ -24,7 +24,7 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
 
     /**
      * /master/tables: every status, including Preparation - a master needs to see and open their own
-     * drafts. Deleted is the exception: a soft-deleted table is gone for everyone (#25, #175).
+     * drafts. Deleted is the exception: a soft-deleted table is gone for everyone (ADR-03 §7, ADR-07 §6).
      *
      * @param userId   the actor, from the token
      * @param pageable page, size and sort
@@ -36,14 +36,14 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
 
     /**
      * The tables somebody runs, in the statuses that count as a live commitment - half of what the
-     * clash rules of #178 compare against. Not paginated: it feeds a computation, not a screen.
+     * clash rules of ADR-08 §2 compare against. Not paginated: it feeds a computation, not a screen.
      *
-     * <p>Only live master rows count. Somebody whose master row fell with a deleted table (#175) no
+     * <p>Only live master rows count. Somebody whose master row fell with a deleted table (ADR-07 §6) no
      * longer occupies that stretch of the week.
      *
-     * @param userId   the person whose commitments are being collected, always from the token (#121)
+     * @param userId   the person whose commitments are being collected, always from the token (ADR-05 §5)
      * @param statuses the statuses that count as committed. {@code Pause} is deliberately not among
-     *                 them: a paused table freezes its agenda and does not reserve the slot (#32, #178)
+     *                 them: a paused table freezes its agenda and does not reserve the slot (ADR-07 §2, ADR-08 §2)
      * @return the tables they run in those statuses
      */
     @Query("select m.gameTable from Master m where m.user.id = :userId "
@@ -54,7 +54,7 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
 
     /**
      * This source's contribution to the shared admin tray: the tables sitting in review that are
-     * either free or already the reader's (#100).
+     * either free or already the reader's (ADR-16 §5).
      *
      * <p>The twin of {@code ApprovalRequestRepository.findQueueItems}, and the reservation rule is
      * the same one: {@code claimed_by is null or claimed_by = :actorId}, so a table another admin
@@ -63,10 +63,10 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
      * <p><b>One status and only one.</b> The caller passes {@code Preparation} - a table that was
      * sent to review - and nothing else qualifies: {@code Draft} was never sent, {@code
      * ChangesRequested} is back with its master, and {@code Unassigned} is waiting for a master
-     * rather than for a review (#245).
+     * rather than for a review (ADR-07 §1).
      *
      * @param status   the status that means "waiting on an admin", always {@code Preparation}
-     * @param actorId  the admin reading the tray, always from the token (#121)
+     * @param actorId  the admin reading the tray, always from the token (ADR-05 §5)
      * @param pageable the per-source ceiling; the tray pages after the merge
      * @return the tables waiting for this admin, oldest first
      */
@@ -80,7 +80,7 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
             @Param("status") GameTableStatus status, @Param("actorId") String actorId, Pageable pageable);
 
     /**
-     * The reservations that went stale - what the release job hands back (#100).
+     * The reservations that went stale - what the release job hands back (ADR-16 §5).
      *
      * <p>Bounded to the tables still in review for the same reason its twin is: a table that was
      * approved or sent back is in nobody's tray, and clearing its {@code claimed_by} would be a write
@@ -104,12 +104,12 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
             Pageable pageable);
 
     // findByStatusIn used to back /admin/tables. It is gone since F3.3: that listing now accepts the
-    // ?q= of #164 as well as a status filter, so it goes through findAll(Specification, Pageable)
+    // ?q= of ADR-22 §1 as well as a status filter, so it goes through findAll(Specification, Pageable)
     // like every other search in the application, and a derived query nobody calls is dead weight.
 
     /**
      * Locks the table aggregate root for the invariants MySQL cannot express as a constraint:
-     * one active registration per pair (#28) and the max_players cap / auto-reject on fill (#34).
+     * one active registration per pair (ADR-09 §1) and the max_players cap / auto-reject on fill (ADR-09 §3).
      * There is no natural row to lock for "no active registration yet exists", so registrations
      * locks the table itself and serializes on it instead.
      *

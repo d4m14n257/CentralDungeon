@@ -1,7 +1,7 @@
 import type { StrictOmit } from '@/types/utils'
 
 /**
- * The kinds of request the platform knows (#42, #90).
+ * The kinds of request the platform knows (ADR-16 §1).
  *
  * **Five since F3.4, and the last two arrived with their producer** — which is the rule F3.2 set
  * when it deliberately declared three: a value of an enum that nothing emits is an orphan, and this
@@ -35,7 +35,7 @@ export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected'
  * is what a resolution comes back as, so it is the shape the screen writes into its cache.
  *
  * `entityType`/`entityId` are a loose pair and not a reference to an entity, because that is the
- * price of #78: the row survives whatever it points at. In F3.2 all three kinds point at the person
+ * price of ADR-16 §2: the row survives whatever it points at. In F3.2 all three kinds point at the person
  * who asked (`user`), which is true of every one of them — the request is about them.
  *
  * Names and never ids on the people involved: a queue nobody can read without a second lookup is a
@@ -50,7 +50,7 @@ export interface ApprovalRequestDetail {
   requestedByName: string
   justification: string
   /**
-   * Who took the request for themselves. **Always null in F3.2**: the columns exist (#100) and the
+   * Who took the request for themselves. **Always null in F3.2**: the columns exist (ADR-16 §5) and the
    * claim endpoints are F3.3's, so nothing writes it yet.
    */
   claimedByName: string | null
@@ -73,7 +73,7 @@ export type ApprovalRequestSummary = StrictOmit<
 >
 
 /**
- * Mirror of `BanRequestResponse` — one veto a co-master is asking for (#39, F3.4).
+ * Mirror of `BanRequestResponse` — one veto a co-master is asking for (ADR-09 §5, F3.4).
  *
  * **Its own shape and not {@link ApprovalRequestSummary}**, because of the one thing that summary
  * cannot say: *who* is going to be vetoed. The shared row carries who asked and why, which is right
@@ -94,7 +94,7 @@ export interface BanRequest {
   targetUserId: string
   /** The field this shape exists for: a decision about a person is made by name, not by id. */
   targetUserName: string
-  /** The co-master who asked. They are the one the answer is written to (#42). */
+  /** The co-master who asked. They are the one the answer is written to (ADR-16 §1). */
   requestedByName: string
   /** Why they are asking, verbatim. It is the whole of what the `Primary` decides on. */
   justification: string
@@ -102,7 +102,7 @@ export interface BanRequest {
 }
 
 /**
- * What asking for something sends: which kind, and why (#42).
+ * What asking for something sends: which kind, and why (ADR-16 §1).
  *
  * **No `entityId`.** The three kinds of F3.2 are about whoever is asking, and who that is comes from
  * the token (arquitectura §2.6) — taking it from the body would let somebody ask in another
@@ -116,7 +116,7 @@ export interface SubmitApprovalRequestInput {
 /**
  * What resolving one sends: the note, which is all either act sends.
  *
- * **Required on both of them** (#42): the justification is obligatory at the two ends of the
+ * **Required on both of them** (ADR-16 §1): the justification is obligatory at the two ends of the
  * mechanism. Rejecting without saying why is half a mechanism.
  */
 export interface ResolveApprovalRequestInput {

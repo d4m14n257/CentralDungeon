@@ -18,10 +18,10 @@ export interface CatalogChipProps {
  *
  * Two rules of the catalog design meet in this component, and both are visible rather than implied:
  *
- * - **It shows the alias its master chose, never the group's canonical entry** (#58). The
+ * - **It shows the alias its master chose, never the group's canonical entry** (ADR-12 §4). The
  *   equivalence works in the search, not in the presentation: rewriting "DANDD" to "D&D 5e" on
  *   screen would erase a choice that said something.
- * - **A value still waiting for review is dimmed and says so** (#57). The master sees their table
+ * - **A value still waiting for review is dimmed and says so** (ADR-12 §3). The master sees their table
  *   with a tag the other players cannot see yet, and an interface that did not admit that would be
  *   lying about what is published.
  *

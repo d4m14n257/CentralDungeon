@@ -1,5 +1,5 @@
 /**
- * The public surface of `features/tasks` (#114).
+ * The public surface of `features/tasks` (ADR-19 §1).
  *
  * From outside, this is the only path: `@/features/tasks`, never a route inside it. What is not
  * exported here is private to the feature — the api module and the query hooks the components use

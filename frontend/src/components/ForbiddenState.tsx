@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 /**
  * What a screen paints on a 403.
  *
- * A context the reader does not have never gets this far - its layout sends them home first (#269).
+ * A context the reader does not have never gets this far - its layout sends them home first (ADR-20 §2).
  * What is left is the other refusal: a concrete resource, inside a context they do have, that is not
- * theirs (#121). The backend is the authorization, and that answer has to land on an explanation
+ * theirs (ADR-05 §5). The backend is the authorization, and that answer has to land on an explanation
  * rather than on a blank page.
  *
  * @param props.description optional override of the default explanation

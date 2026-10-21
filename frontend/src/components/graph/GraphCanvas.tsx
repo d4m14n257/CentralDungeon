@@ -18,12 +18,12 @@ export interface GraphCanvasProps<N extends Node, E extends Edge> extends Omit<R
 }
 
 /**
- * The node canvas of skill `diseno` §5 (#275): React Flow with the project's frame, background,
+ * The node canvas of skill `diseno` §5 (ADR-12 §7): React Flow with the project's frame, background,
  * zoom controls and theme, so a screen only brings its nodes, its edges and what a connection means.
  *
  * **It is the only file that imports React Flow's stylesheet**, and it does so from here rather
  * than from `globals.css` because that file is rewritten whole every time the theme is transcribed
- * (#118, #130). The library's colours are its `--xy-*` variables, and `.graph-canvas` points every
+ * (ADR-21 §1). The library's colours are its `--xy-*` variables, and `.graph-canvas` points every
  * one of them at a token of the `@theme` - so the canvas follows the light and dark themes with the
  * rest of the app and carries no loose value (regla dura 18).
  *
@@ -32,7 +32,7 @@ export interface GraphCanvasProps<N extends Node, E extends Edge> extends Omit<R
  *
  * The controls' accessible names come from `t()` too, through React Flow's `ariaLabelConfig`: the
  * library ships them in English, and a Spanish screen reader reading "Zoom In" is the half-translated
- * interface #198 forbids.
+ * interface ADR-23 §2 forbids.
  *
  * @param props.label  the canvas's accessible name
  * @param props.nodes  the nodes, as React Flow takes them

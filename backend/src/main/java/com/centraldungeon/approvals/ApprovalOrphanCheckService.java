@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Finds the requests that point at something which is no longer there (#78).
+ * Finds the requests that point at something which is no longer there (ADR-16 §2).
  *
  * <p><b>The third of the three things the polymorphic reference costs, and the one that is easiest to
  * skip.</b> {@code roles-y-alcance.md} §7 says it outright: «dos cosas van con ella o no va: la
@@ -49,7 +49,7 @@ public class ApprovalOrphanCheckService {
     /** The {@code approval_requests} rows, read oldest first. */
     private final ApprovalRequestRepository approvalRequestRepository;
 
-    /** Answers "does this still exist?" for each entity type (#78). */
+    /** Answers "does this still exist?" for each entity type (ADR-16 §2). */
     private final ApprovalEntityResolver entityResolver;
 
     /**
@@ -66,7 +66,7 @@ public class ApprovalOrphanCheckService {
      * Sweeps once a day, in the small hours.
      *
      * <p>05:30 UTC, half an hour after {@code FileRetentionService}: the community plays at night in
-     * the Americas, which is early morning of the next day in UTC (#22), and staggering the two keeps
+     * the Americas, which is early morning of the next day in UTC (ADR-03 §6), and staggering the two keeps
      * them from competing for the same quiet window.
      *
      * <p>⚠️ <b>{@code @Transactional} has to be on <em>this</em> method too</b>, not only on the one
@@ -112,7 +112,7 @@ public class ApprovalOrphanCheckService {
                 orphans++;
                 // Everything needed to go and look, on one line: which request, who asked, what they
                 // asked for, and what it pointed at. Reconstructing that after the fact is exactly
-                // what #78 warns is impossible once the reference is gone and nothing wrote it down -
+                // what ADR-16 §2 warns is impossible once the reference is gone and nothing wrote it down -
                 // and the requester is the half that makes the line actionable without a query.
                 log.warn(
                         "Orphaned approval request {}: type={} requested by {} points at {}:{} which no longer exists",

@@ -33,7 +33,7 @@ import org.testcontainers.mysql.MySQLContainer;
  * The half of the calendar that only a real database can answer.
  *
  * <p>Three things nothing proves without MySQL. {@code table_sessions} has a unique constraint on
- * {@code (game_table_id, sequence_number)}, and the replacement of #194 takes a fresh number from a
+ * {@code (game_table_id, sequence_number)}, and the replacement of ADR-08 §3 takes a fresh number from a
  * {@code max()} the unit tests only ever stub - here it is the real column. {@code session_attendance}
  * has a composite key built from two foreign keys, and recording somebody twice has to be an update
  * and not a duplicate-key failure. And the whole materialization runs through the lifecycle, from
@@ -100,7 +100,7 @@ class TableSessionIT {
         tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0))), master.getId());
     }
 
-    /** The whole point of #26 and #33: approving a draft is what turns an agenda into dates. */
+    /** The whole point of ADR-08 §3 and ADR-08 §3: approving a draft is what turns an agenda into dates. */
     @Test
     void approvingATableMaterializesItsCalendar() {
         gameTableService.approve(table.getId(), admin.getId());
@@ -116,7 +116,7 @@ class TableSessionIT {
     }
 
     /**
-     * #194 against the real unique constraint: the cancelled row keeps its number and the
+     * ADR-08 §3 against the real unique constraint: the cancelled row keeps its number and the
      * replacement takes the next one, so the two never collide on {@code (table, sequence_number)}.
      */
     @Test
@@ -157,7 +157,7 @@ class TableSessionIT {
         assertThat(tableSessionService.summarize(table.getId(), player.getId()).registered()).isEqualTo(1);
     }
 
-    /** A pause hides the pending dates and resuming re-lays them from that moment on (#32, #33). */
+    /** A pause hides the pending dates and resuming re-lays them from that moment on (ADR-07 §2, ADR-08 §3). */
     @Test
     void pausingHidesThePendingSessionsAndResumingRelaysThem() {
         gameTableService.approve(table.getId(), admin.getId());
@@ -179,14 +179,14 @@ class TableSessionIT {
         assertThat(calendar.getFirst().scheduledAt()).isEqualTo(LocalDateTime.parse("2026-09-08T20:00"));
     }
 
-    /** #193: coming back is when the slot is claimed again, and a taken slot refuses the resume. */
+    /** ADR-08 §2: coming back is when the slot is claimed again, and a taken slot refuses the resume. */
     @Test
     void resumingIsRefusedWhenTheMasterTookOnAClashingTableDuringThePause() {
         gameTableService.approve(table.getId(), admin.getId());
         gameTableService.start(table.getId(), master.getId());
         gameTableService.pauseDirect(table.getId(), admin.getId(), new ChangeTableStatusRequest("Se enfermó"));
 
-        // Legal precisely because a paused table does not reserve its slot (#32, #178).
+        // Legal precisely because a paused table does not reserve its slot (ADR-07 §2, ADR-08 §2).
         GameTable second = gameTableRepository.save(draft("Mesa que ocupó el martes"));
         masterService.createPrimary(second, master);
         tableScheduleService.replace(second, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(21, 0), LocalTime.of(3, 0))), master.getId());
@@ -198,7 +198,7 @@ class TableSessionIT {
         assertThat(gameTableRepository.findById(table.getId()).orElseThrow().getStatus()).isEqualTo(GameTableStatus.Pause);
     }
 
-    /** #196: a draft with no agenda opens anyway - materializing is a consequence, not a gate. */
+    /** ADR-07 §3: a draft with no agenda opens anyway - materializing is a consequence, not a gate. */
     @Test
     void approvingATableWithNoAgendaOpensItWithNoSessions() {
         GameTable bare = gameTableRepository.save(draft("Mesa sin agenda"));
@@ -214,7 +214,7 @@ class TableSessionIT {
      * A table already sent to review, which is what every test here needs: they are about what
      * happens when an admin approves it.
      *
-     * <p><b>The status is set explicitly since #245.</b> A new table is born in {@code Draft} - only
+     * <p><b>The status is set explicitly since ADR-07 §1.</b> A new table is born in {@code Draft} - only
      * its master sees it, and no admin can act on it - so building one and approving it now fails
      * where it used to work. Going through {@code submitForReview} would be the long way round: these
      * tests are not about the door into review, they are about what is on the other side of it.

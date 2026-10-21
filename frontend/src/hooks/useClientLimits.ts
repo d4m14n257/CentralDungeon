@@ -11,7 +11,7 @@ import type { ClientLimits } from '@/types/api'
  *
  * **Why it exists.** Until F3.5 the per-file cap and the tray's reservation timeout were constants on
  * both sides that happened to agree. Now an admin can change either from `/admin/settings` without a
- * deploy (#141), and a hardcoded mirror becomes a client that refuses files the server would take —
+ * deploy (ADR-17 §3), and a hardcoded mirror becomes a client that refuses files the server would take —
  * or a help page promising fifteen minutes when the platform gives thirty. Asking the server is what
  * keeps the two in step.
  *
@@ -26,7 +26,7 @@ import type { ClientLimits } from '@/types/api'
  * waiting on a fetch costs the whole screen.
  *
  * @returns the limits a client states rules with. Never the authority: the server applies the same
- *          cap and answers `FILE_TOO_LARGE` with the real number (#197), and the release job is what
+ *          cap and answers `FILE_TOO_LARGE` with the real number (ADR-23 §3), and the release job is what
  *          actually hands a stale reservation back
  */
 export function useClientLimits(): ClientLimits {

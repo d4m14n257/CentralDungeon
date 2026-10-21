@@ -1,7 +1,7 @@
 import { ApiError } from '@/types/api'
 
 /**
- * The refusals `/admin/settings` can answer with, each with a sentence of its own (#197).
+ * The refusals `/admin/settings` can answer with, each with a sentence of its own (ADR-23 §3).
  *
  * **The message a person reads is built here from the code, never from the `ProblemDetail`'s
  * `detail`**: that field is English and written for a log, so showing it would put an English
@@ -22,7 +22,7 @@ const KNOWN_CODES: ReadonlySet<string> = new Set(SETTING_ERROR_CODES)
  * The translation key and parameters for whatever an update failed with.
  *
  * `SETTING_OUT_OF_RANGE` is useless without its numbers — "out of range" says nothing about what to
- * type instead — so the `errorParams` the backend sent travel with the key (#197). Everything else
+ * type instead — so the `errorParams` the backend sent travel with the key (ADR-23 §3). Everything else
  * falls back to one generic sentence: guessing at a message for a code nobody committed to is how an
  * interface ends up asserting something the server never said.
  *

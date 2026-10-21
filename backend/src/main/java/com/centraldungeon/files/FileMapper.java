@@ -35,8 +35,8 @@ public interface FileMapper {
      * so the field is a list that happens to be empty and never a special case to check for.
      *
      * @param file       the entity to describe
-     * @param categories the cajones it belongs to (#233), or empty when nobody asked
-     * @param usages     where it is being used right now (#232), or empty when nobody asked
+     * @param categories the cajones it belongs to (ADR-14 §4), or empty when nobody asked
+     * @param usages     where it is being used right now (ADR-14 §3), or empty when nobody asked
      * @return the file as its owner sees it, in the reuse history and after an upload
      */
     @Mapping(target = "id", source = "file.id")
@@ -66,8 +66,8 @@ public interface FileMapper {
      * touches a repository (arquitectura §2.2).
      *
      * @param file       the entity to describe
-     * @param uses       how many tables hold a live link to it (#79)
-     * @param categories the cajones it belongs to (#233)
+     * @param uses       how many tables hold a live link to it (ADR-14 §1)
+     * @param categories the cajones it belongs to (ADR-14 §4)
      * @return the file as an admin sees it, owner and usage count included
      */
     @Mapping(target = "id", source = "file.id")
@@ -87,7 +87,7 @@ public interface FileMapper {
      * One row of the master's Archivos tab: the file and the link that put it there.
      *
      * @param file        the attached file
-     * @param link        the attachment itself, which is where {@code isPrivate} lives (#79)
+     * @param link        the attachment itself, which is where {@code isPrivate} lives (ADR-14 §1)
      * @param isOwnedByMe whether the actor uploaded the file, resolved by the service from the token
      * @return the attachment as the people running the table see it
      */
@@ -117,10 +117,10 @@ public interface FileMapper {
     SharedFileResponse toSharedResponse(StoredFile file, TableFile link);
 
     /**
-     * One row of what the platform published, for whoever is choosing one to attach (#64, #79).
+     * One row of what the platform published, for whoever is choosing one to attach (ADR-13 §2, ADR-14 §1).
      *
      * @param file       the published file
-     * @param categories the cajones it is offered in (#233)
+     * @param categories the cajones it is offered in (ADR-14 §4)
      * @return the file as the picker offers it
      */
     @Mapping(target = "id", source = "file.id")

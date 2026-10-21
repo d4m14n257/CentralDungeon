@@ -8,7 +8,7 @@ import { ProfileCard, useMyProfile } from '@/features/users'
 
 /**
  * `/player/profile` — the reader's own profile: name, country, roles and aggregate attendance
- * (docs/adr #248).
+ * (ADR-10 §5).
  *
  * There is no "sin permiso" state here: nobody can be locked out of their own profile, which is
  * exactly what tells this screen apart from {@link import('./UserProfilePage').UserProfilePage}.
@@ -44,8 +44,8 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-3">
-      {/* «Quién ve esto» is the question the screen raises and cannot answer alone (#231): the expiry
-          of #44 is not something anybody guesses by looking at a profile they can see today. */}
+      {/* «Quién ve esto» is the question the screen raises and cannot answer alone (ADR-20 §5): the expiry
+          of ADR-10 §2 is not something anybody guesses by looking at a profile they can see today. */}
       <ProfileCard profile={data} actions={<HelpButton section="players.profile" />} />
       {/* Nothing at all for somebody who already runs tables: the role is not something you can hold
           twice, so there is no request to make and nothing to explain. */}

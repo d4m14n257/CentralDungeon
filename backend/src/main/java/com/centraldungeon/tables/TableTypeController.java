@@ -36,7 +36,7 @@ public class TableTypeController {
      * inside, and a catalog of the community's table formats is not something to open wider than its
      * consumers need.
      *
-     * @param pageable page, size and sort; by name with a tie-break by id (#171). The default size
+     * @param pageable page, size and sort; by name with a tie-break by id (ADR-07 §9). The default size
      *                 is 50 because the whole list is meant to arrive in one page
      * @return 200 with one page of table types
      */

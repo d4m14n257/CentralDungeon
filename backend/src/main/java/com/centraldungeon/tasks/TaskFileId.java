@@ -12,7 +12,7 @@ import java.io.Serializable;
  * that is already there rather than failing on a duplicate key.
  *
  * @param taskId the request the file is attached to
- * @param fileId the file being attached. It is linked, never copied (#65, #79)
+ * @param fileId the file being attached. It is linked, never copied (ADR-13 §2, ADR-14 §1)
  */
 @Embeddable
 public record TaskFileId(

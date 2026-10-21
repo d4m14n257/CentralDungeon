@@ -6,7 +6,7 @@ Los diagramas del **modelo heredado** (`00`–`04`) ya cumplieron su función y 
 
 ## Modelo objetivo (ER)
 
-Reflejan el schema de la skill `arquitectura` §4, resultado de las decisiones #1–#95. Sin columnas de auditoría repetitivas: el DDL completo está en la skill (§4.4).
+Reflejan el schema de la skill `arquitectura` §4, resultado de las decisiones del modelo de datos (sobre todo `ADR-03`). Sin columnas de auditoría repetitivas: el DDL completo está en la skill (§4.4).
 
 | Diagrama | Qué cubre |
 |---|---|
@@ -22,20 +22,20 @@ Reflejan el schema de la skill `arquitectura` §4, resultado de las decisiones #
 | Diagrama | Qué cubre |
 |---|---|
 | [`17-notificaciones.mmd`](17-notificaciones.mmd) | Motor de notificaciones: la personal como fila en `notifications`, la bandeja de admins como **vista** sobre el trabajo pendiente, el ciclo de reserva y el mensaje como señal de invalidación. |
-| [`19-choque-horarios.mmd`](19-choque-horarios.mmd) | Las cuatro reglas de #178: qué cuenta como choque —intervalo semiabierto en UTC, con envoltura semanal— y qué pasa en cada uno de los tres momentos (el master se compromete, el jugador se postula, el master acepta). **Dónde se bloquea y dónde solo se avisa.** |
+| [`19-choque-horarios.mmd`](19-choque-horarios.mmd) | Las cuatro reglas de ADR-08 §2: qué cuenta como choque —intervalo semiabierto en UTC, con envoltura semanal— y qué pasa en cada uno de los tres momentos (el master se compromete, el jugador se postula, el master acepta). **Dónde se bloquea y dónde solo se avisa.** |
 
 ## Interactivos (Archify)
 
 Fuente `.architecture.json`, salida HTML autocontenida con temas claro/oscuro, zoom, búsqueda y exportación. La salida está en `.gitignore`.
 
-Los cuatro de navegación (#267) tienen **un nodo por ruta del router** y marcan en el sublabel la clasificación de F4.1 —sin puerta, entrada única, callejón, cruce de contexto—, que además se puede recorrer como capítulos desde el visor. Fijan el commit del que se leyó la evidencia, así que un diagrama viejo se delata solo.
+Los cuatro de navegación (ADR-01 §10) tienen **un nodo por ruta del router** y marcan en el sublabel la clasificación de F4.1 —sin puerta, entrada única, callejón, cruce de contexto—, que además se puede recorrer como capítulos desde el visor. Fijan el commit del que se leyó la evidencia, así que un diagrama viejo se delata solo.
 
 | Diagrama | Qué cubre |
 |---|---|
-| [`21-navegacion-general.architecture.json`](21-navegacion-general.architecture.json) | **Del login a los tres contextos.** Guardia de sesión, `/login`, Discord, `/auth/callback` y sus salidas, `/onboarding`, `/` (`RootRedirect`), el `AppHeader` como riel común, las cuatro transversales, los tres hogares, el 404 y las guardias de contexto (#269). |
+| [`21-navegacion-general.architecture.json`](21-navegacion-general.architecture.json) | **Del login a los tres contextos.** Guardia de sesión, `/login`, Discord, `/auth/callback` y sus salidas, `/onboarding`, `/` (`RootRedirect`), el `AppHeader` como riel común, las cuatro transversales, los tres hogares, el 404 y las guardias de contexto (ADR-20 §2). |
 | [`22-navegacion-jugador.architecture.json`](22-navegacion-jugador.architecture.json) | Las 8 rutas de `/player`, una por nodo, con cada entrada de fuera del contexto —tipo de notificación, `/my/schedule`, pestañas del master, `UserMenu`— como ficha pegada a su destino. |
 | [`23-navegacion-master.architecture.json`](23-navegacion-master.architecture.json) | `/master`, el listado, crear, editar y las **siete pestañas** de `/master/tables/:id`, con los cinco destinos de la bandeja (`MasterWorkItemList`) y los de las notificaciones. |
-| [`24-navegacion-admin.architecture.json`](24-navegacion-admin.architecture.json) | La home `/admin` (#270), las siete secciones y su única puerta, `AdminSectionNav`, detrás de la guardia Admin u Owner (#269). Se ve de un vistazo que casi ninguna sale a ningún lado: la excepción es `/admin/catalogs`, que abre el lienzo de un grupo (#275) y vuelve. |
+| [`24-navegacion-admin.architecture.json`](24-navegacion-admin.architecture.json) | La home `/admin` (ADR-20 §3), las siete secciones y su única puerta, `AdminSectionNav`, detrás de la guardia Admin u Owner (ADR-20 §2). Se ve de un vistazo que casi ninguna sale a ningún lado: la excepción es `/admin/catalogs`, que abre el lienzo de un grupo (ADR-12 §7) y vuelve. |
 
 ## Ciclos de vida
 

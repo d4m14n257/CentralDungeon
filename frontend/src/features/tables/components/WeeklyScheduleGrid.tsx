@@ -38,7 +38,7 @@ interface Piece {
 export interface WeeklyScheduleGridProps {
   /** Everything the reader is already committed to, as the API sent it: UTC minutes from Monday 00:00. */
   commitments: WeeklyCommitment[]
-  /** The IANA zone to draw it in — from the profile, or the browser's (#111). */
+  /** The IANA zone to draw it in — from the profile, or the browser's (ADR-19 §7). */
   timeZone: string
   /**
    * Blocks belonging to the table being built right now, drawn in the accent so they read as
@@ -66,14 +66,14 @@ export interface WeeklyScheduleGridProps {
 
 /**
  * The reader's week as a grid: seven day columns, twenty-four hour rows, and a rectangle for every
- * stretch they have committed (#227).
+ * stretch they have committed (ADR-08 §6).
  *
- * **It draws what the rule measures.** The blocks are the same intervals #178 compares to refuse a
+ * **It draws what the rule measures.** The blocks are the same intervals ADR-08 §2 compares to refuse a
  * clash, so an hour that looks free here is an hour the server will accept — which is the whole
  * reason the screen exists. A master building a table can see the evenings they have already given
  * away instead of finding out by being refused.
  *
- * **Everything is converted once, here, from UTC** (#22). A Tuesday-night table in America is
+ * **Everything is converted once, here, from UTC** (ADR-03 §6). A Tuesday-night table in America is
  * Wednesday in UTC, and a block that crosses midnight is drawn as two rectangles, on the two days it
  * actually touches — the same wrap the backend does when it compares.
  *

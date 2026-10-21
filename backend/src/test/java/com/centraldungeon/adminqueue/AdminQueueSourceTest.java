@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
  * The {@code {type}} segment of the two reservation routes, and the one thing it must not do: invent
  * a vocabulary.
  *
- * <p>The spelling is the one {@code approval_requests.entity_type} already uses (#78) and that
+ * <p>The spelling is the one {@code approval_requests.entity_type} already uses (ADR-16 §2) and that
  * {@code Notification.relatedEntityType} publishes. A second vocabulary for the same things is how a
  * frontend ends up with two maps saying the same thing and a bug living between them - which is why
  * the shape is pinned here and not left to a reader to notice.

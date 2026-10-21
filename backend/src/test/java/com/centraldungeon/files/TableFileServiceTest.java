@@ -29,7 +29,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The link, and the one property everything here exists to protect: <b>attaching is not copying</b>
- * (#79). Taking a map off one table cannot touch the map, and cannot touch any other table that has
+ * (ADR-14 §1). Taking a map off one table cannot touch the map, and cannot touch any other table that has
  * it - which is what lets the community publish one default character sheet instead of one per master.
  */
 @ExtendWith(MockitoExtension.class)
@@ -56,7 +56,7 @@ class TableFileServiceTest {
 
     // ---------------------------------------------------------------- pertenencia
 
-    /** The role is not the membership (#135): only a row in masters opens this door. */
+    /** The role is not the membership (ADR-06 §4): only a row in masters opens this door. */
     @Test
     void refusesEveryOperationToSomebodyWhoDoesNotRunTheTable() {
         when(masterService.isMasterOf("table-1", "outsider-1")).thenReturn(false);
@@ -95,7 +95,7 @@ class TableFileServiceTest {
         verify(fileRepository, never()).save(any(StoredFile.class));
     }
 
-    /** #79's point of the whole thing: a master borrows the platform's sheet rather than duplicating it. */
+    /** ADR-14 §1's point of the whole thing: a master borrows the platform's sheet rather than duplicating it. */
     @Test
     void attachesAPublishedFileTheMasterDidNotUpload() {
         StoredFile published = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
@@ -139,7 +139,7 @@ class TableFileServiceTest {
 
     // ---------------------------------------------------------------- detaching
 
-    /** The heart of #79: removing the community's sheet from one table cannot remove it from anywhere else. */
+    /** The heart of ADR-14 §1: removing the community's sheet from one table cannot remove it from anywhere else. */
     @Test
     void detachingMarksTheLinkAndLeavesTheFileUntouched() {
         StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
@@ -206,7 +206,7 @@ class TableFileServiceTest {
 
     /**
      * A file its owner deleted stops showing on the tables that had it, without any link having to be
-     * found and rewritten (#25). The link stays as the record that it was once there.
+     * found and rewritten (ADR-03 §7). The link stays as the record that it was once there.
      */
     @Test
     void aFileItsOwnerDeletedDisappearsFromTheTablesThatShowedIt() {

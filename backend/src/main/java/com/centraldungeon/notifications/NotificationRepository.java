@@ -11,7 +11,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Stri
     /**
      * Someone's inbox, newest first - the order the bell and the notifications screen read in.
      *
-     * @param userId   the recipient, always the actor from the token (#121)
+     * @param userId   the recipient, always the actor from the token (ADR-05 §5)
      * @param pageable page and size
      * @return one page of their notifications
      */

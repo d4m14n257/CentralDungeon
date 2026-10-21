@@ -5,7 +5,7 @@ import type { AdminUserSummary, PlatformRole } from '../types'
 /** What `/admin/users` is allowed to offer the person reading it. */
 export interface UserAdminCapabilities {
   /**
-   * The roles this reader may hand out and take back, in the order of #165. Empty for anybody who is
+   * The roles this reader may hand out and take back, in the order of ADR-07 §8. Empty for anybody who is
    * neither an admin nor the owner, and empty until the profile arrives.
    */
   grantableRoles: readonly PlatformRole[]
@@ -27,7 +27,7 @@ export interface UserAdminCapabilities {
  * this person an admin" button, and does not find one that fails when pressed — there is no button.
  * The owner sees all four roles.
  *
- * **It decides what to show and never what to allow** (#103). The backend authorizes endpoint by
+ * **It decides what to show and never what to allow** (ADR-20 §1). The backend authorizes endpoint by
  * endpoint and answers `ROLE_GRANT_FORBIDDEN` or `CANNOT_BLOCK_PRIVILEGED` to anybody who reaches
  * the API another way; this is what keeps the screen from offering an action it knows is refused.
  *

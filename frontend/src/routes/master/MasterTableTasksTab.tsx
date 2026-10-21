@@ -26,7 +26,7 @@ import {
 
 interface OutletContext {
   tableId: string
-  /** Set by /admin/tables/:id (#284): what the table asked and what came back, with nothing to publish or close. */
+  /** Set by /admin/tables/:id (ADR-06 §8): what the table asked and what came back, with nothing to publish or close. */
   readOnly?: boolean
 }
 
@@ -37,11 +37,11 @@ interface OutletContext {
  * Three things the screen has to keep true, because each one is a rule that reads as a missing
  * feature to anybody who does not know it:
  *
- * - **Publishing notifies** (#77). Creating and publishing are one act; there is no draft to save.
+ * - **Publishing notifies** (ADR-15 §5). Creating and publishing are one act; there is no draft to save.
  *   Correcting afterwards deliberately does not notify again.
- * - **The system does not judge answers** (#76). There is no accept and no reject — answers pile up
+ * - **The system does not judge answers** (ADR-15 §2). There is no accept and no reject — answers pile up
  *   and the master reads them.
- * - **Missing an answer costs nothing** (#70). The roster of who has not answered offers no action,
+ * - **Missing an answer costs nothing** (ADR-15 §2). The roster of who has not answered offers no action,
  *   on purpose.
  *
  * A child route rather than local state (§3.1.6 regla 5), so the tab has its own URL, survives a
@@ -50,7 +50,7 @@ interface OutletContext {
  * The picker of who to address and the list of sessions come from other features, so they are read
  * **here** and passed down as plain data: a feature never imports from another (regla dura 16).
  *
- * Mounted under /admin/tables/:id too, read-only (#284): the board and every answer, without
+ * Mounted under /admin/tables/:id too, read-only (ADR-06 §8): the board and every answer, without
  * publishing, correcting or closing.
  */
 export function MasterTableTasksTab() {
@@ -59,7 +59,7 @@ export function MasterTableTasksTab() {
   const { tableId, readOnly } = useOutletContext<OutletContext>()
   const confirm = useConfirm()
 
-  // isLoadingError, not isError: see docs/adr #150.
+  // isLoadingError, not isError: see ADR-19 §4.
   const { data: tasks, isPending, isLoadingError, refetch } = useTableTasks(tableId)
   const { data: players } = useTablePlayers(tableId)
   const { data: sessions } = useTableSessions(tableId)
@@ -73,7 +73,7 @@ export function MasterTableTasksTab() {
    *
    * Without this filter the picker offers somebody the backend refuses with `400`: an option whose
    * only possible outcome is an error, which is principle 2 exactly backwards. And the person has
-   * stopped seeing the table at all (#29), so a request addressed to them could never be answered.
+   * stopped seeing the table at all (ADR-09 §4), so a request addressed to them could never be answered.
    */
   const addressablePlayers = (players ?? []).filter((player) => player.status === 'Player')
 
@@ -95,14 +95,14 @@ export function MasterTableTasksTab() {
   }
 
   /**
-   * Uploads the blanks, then publishes or corrects the request (#238).
+   * Uploads the blanks, then publishes or corrects the request (ADR-13 §5).
    *
    * A blank that failed does not hold the request back: it goes out with the ones that made it, and
    * the master is told which to add — the request is theirs and editable, so completing it is one
    * more edit rather than writing it again.
    */
   async function handleSubmit(draft: TaskDraft) {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm(
       editing
         ? { title: t('board.editConfirmTitle'), description: t('board.editConfirmDescription') }

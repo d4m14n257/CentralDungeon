@@ -7,7 +7,7 @@ package com.centraldungeon.files;
  * <p>It exists so a page of twenty files on /admin/files costs one grouped query instead of twenty
  * counts, the same shape as {@code CatalogUsageCount}.
  *
- * <p>It is also what makes #79 visible: a file used by three tables is one row with three uses, not
+ * <p>It is also what makes ADR-14 §1 visible: a file used by three tables is one row with three uses, not
  * three files, and a screen that shows the number is a screen where "linking is not copying" stops
  * being a claim in a document.
  *

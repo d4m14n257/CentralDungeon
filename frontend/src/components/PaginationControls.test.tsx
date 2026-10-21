@@ -29,7 +29,7 @@ function stripPages() {
 }
 
 describe('PaginationControls', () => {
-  /** #271: the ends and the neighbours of the current page, with the rest folded into gaps. */
+  /** ADR-21 §11: the ends and the neighbours of the current page, with the rest folded into gaps. */
   it('shows the first, the last and the neighbours of the current page', () => {
     renderPager({ page: 19 })
 
@@ -44,7 +44,7 @@ describe('PaginationControls', () => {
     expect(stripPages()).toEqual(['1', '2', '3', '4', '10'])
   })
 
-  /** The point of #271: page 900 is a number and an Enter, not 899 clicks. */
+  /** The point of ADR-21 §11: page 900 is a number and an Enter, not 899 clicks. */
   it('jumps straight to a typed page, clamped into range', async () => {
     const { onPageChange } = renderPager({ totalPages: 1000, totalElements: 25000 })
 

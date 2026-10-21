@@ -1,8 +1,8 @@
 import type { TableFileType } from '@/types/file'
 
 /**
- * Which lifecycle a file has (#68). What the platform published, what waits in the platform's library
- * unpublished or hidden (#282), what its owner keeps to reuse (#65), and what was uploaded for one
+ * Which lifecycle a file has (ADR-13 §2). What the platform published, what waits in the platform's library
+ * unpublished or hidden (ADR-14 §7), what its owner keeps to reuse (ADR-13 §2), and what was uploaded for one
  * context and is transient.
  *
  * A union of literals rather than a TypeScript `enum` (arquitectura §3.2). Note that the wire
@@ -12,7 +12,7 @@ import type { TableFileType } from '@/types/file'
 export type FileType = 'Public' | 'Library' | 'Private' | 'SingleUse'
 
 /**
- * The flow a file belongs to (#233) — its cajón.
+ * The flow a file belongs to (ADR-14 §4) — its cajón.
  *
  * **It says where a file is used, not what the document is.** Nobody uploading can honestly declare
  * "this is a character sheet template": what a master asks for might be a form in a `.doc`. What the
@@ -23,12 +23,12 @@ export type FileType = 'Public' | 'Library' | 'Private' | 'SingleUse'
  * detaching a file from a table says it is no longer that table's, never that it was never its
  * material. That is why this is a list everywhere and never a single value.
  *
- * `public_audience` is gone (#64 derogated): the flow already says who a document is for.
+ * `public_audience` is gone (ADR-13 §2 derogated): the flow already says who a document is for.
  */
 export type FileCategory = 'TableMaterial' | 'MasterRequest' | 'PlayerApplication' | 'PlayerSubmission' | 'Announcement'
 
 /**
- * One place a file is linked **right now** (#232).
+ * One place a file is linked **right now** (ADR-14 §3).
  *
  * Not the same question as a cajón, though it names one: a cajón is what the file has belonged to and
  * never goes away, a use is a live link and vanishes when the link does.
@@ -41,7 +41,7 @@ export interface FileUsage {
   contextName: string
 }
 
-/** Whether a file still counts. Marking is the only delete F1 has — the bytes wait for F5 (#25, #66). */
+/** Whether a file still counts. Marking is the only delete F1 has — the bytes wait for F5 (ADR-03 §7, ADR-13 §8). */
 export type FileStatus = 'Current' | 'Deleted'
 
 export type { CommitResult, CommitStagedFiles, SharedFile, StagedFile, TableFileType } from '@/types/file'
@@ -54,32 +54,32 @@ export type { CommitResult, CommitStagedFiles, SharedFile, StagedFile, TableFile
  */
 export interface StoredFile {
   id: string
-  /** The original filename. Metadata only — it never touched the filesystem on the way in (#80). */
+  /** The original filename. Metadata only — it never touched the filesystem on the way in (ADR-13 §6). */
   name: string
   mimeType: string
-  /** The size as uploaded, before compression (#75). What is shown, and what the cap applies to. */
+  /** The size as uploaded, before compression (ADR-13 §3). What is shown, and what the cap applies to. */
   sizeBytes: number
   fileType: FileType
   /**
-   * The cajones it belongs to (#233). Plural and cumulative. **Only `/files/mine` fills this in** —
+   * The cajones it belongs to (ADR-14 §4). Plural and cumulative. **Only `/files/mine` fills this in** —
    * an upload and a single-file read answer with an empty array.
    */
   categories: FileCategory[]
   /**
-   * Where the file is linked right now (#232). Same rule: only the owner's own list pays for it.
+   * Where the file is linked right now (ADR-14 §3). Same rule: only the owner's own list pays for it.
    */
   usages: FileUsage[]
-  /** ISO-8601 UTC, or null when never recorded. The conversion to the reader's zone is ours (#22, #111). */
+  /** ISO-8601 UTC, or null when never recorded. The conversion to the reader's zone is ours (ADR-03 §6, ADR-19 §7). */
   lastUsedAt: string | null
   /** ISO-8601 UTC. */
   createdAt: string
 }
 
 /**
- * What an upload answers with: the file, and whether it was recognised rather than written (#234).
+ * What an upload answers with: the file, and whether it was recognised rather than written (ADR-13 §4).
  *
  * The flag is a fact about *this request* and not about the file, which is why it rides alongside
- * `StoredFile` instead of on it. It exists so the screen can say "you already had this" — until #234
+ * `StoredFile` instead of on it. It exists so the screen can say "you already had this" — until ADR-13 §4
  * the two cases were the same 201 and deduplication happened in complete silence.
  */
 export interface UploadedFile {
@@ -99,20 +99,20 @@ export interface AdminFile extends StoredFile {
   /** How to name the uploader on screen — their Discord username, which everybody has. */
   ownerName: string
   /**
-   * How many tables hold a live link to it. **This is where #79 stops being a claim**: one file used
+   * How many tables hold a live link to it. **This is where ADR-14 §1 stops being a claim**: one file used
    * by three tables reads as one row with three uses, not as three files.
    */
   uses: number
   status: FileStatus
   /**
    * When it was first published into the platform's library, or null if it never was. With
-   * `fileType`, it tells the library's states apart (#282) — see `libraryStateOf`.
+   * `fileType`, it tells the library's states apart (ADR-14 §7) — see `libraryStateOf`.
    */
   publishedAt: string | null
 }
 
 /**
- * Mirror of `PublicFileResponse` — what the platform published, as the picker offers it (#64, #79).
+ * Mirror of `PublicFileResponse` — what the platform published, as the picker offers it (ADR-13 §2, ADR-14 §1).
  *
  * Deliberately narrower than {@link StoredFile}: choosing the community's default character sheet
  * needs its name and its size, not who uploaded it or when it was last touched.
@@ -123,7 +123,7 @@ export type PublicFile = Pick<StoredFile, 'id' | 'name' | 'mimeType' | 'sizeByte
  * Mirror of `TableFileResponse` — one row of the master's Archivos tab.
  *
  * It carries the file *and* the link, because the two say different things and the screen needs
- * both: `isPrivate` is about this attachment, `fileType` about the file itself (#79).
+ * both: `isPrivate` is about this attachment, `fileType` about the file itself (ADR-14 §1).
  */
 export interface TableFile extends Pick<StoredFile, 'name' | 'mimeType' | 'sizeBytes' | 'fileType'> {
   fileId: string
@@ -139,11 +139,11 @@ export interface TableFile extends Pick<StoredFile, 'name' | 'mimeType' | 'sizeB
   attachedAt: string | null
 }
 
-/** What an upload sends alongside the bytes. `Public` is an admin's to grant, never an uploader's (#64). */
+/** What an upload sends alongside the bytes. `Public` is an admin's to grant, never an uploader's (ADR-13 §2). */
 export interface UploadFileInput {
   fileType: Extract<FileType, 'Private' | 'SingleUse'>
   /**
-   * The cajón to put it in (#233), or **null** — which is the normal case. A file uploaded to attach
+   * The cajón to put it in (ADR-14 §4), or **null** — which is the normal case. A file uploaded to attach
    * to a table or to answer a request is classified by the link that follows, because the flow knows
    * what the uploader cannot be asked to declare. Only `/my/files` sends one.
    */
@@ -152,38 +152,38 @@ export interface UploadFileInput {
 
 /**
  * What renaming sends. Both fields always travel, so the request describes the state the file should
- * end in rather than a delta — same reasoning as #189.
+ * end in rather than a delta — same reasoning as ADR-04 §7.
  */
 export type UpdateFileInput = Pick<StoredFile, 'name'> & {
-  /** True to keep it in the reuse history (#65), which is the "save this for later" of #68. */
+  /** True to keep it in the reuse history (ADR-13 §2), which is the "save this for later" of ADR-13 §2. */
   keepInLibrary: boolean
 }
 
-/** What attaching sends. The file is linked, never copied (#79). */
+/** What attaching sends. The file is linked, never copied (ADR-14 §1). */
 export type LinkTableFileInput = Pick<TableFile, 'fileId' | 'tableFileType' | 'isPrivate'>
 
 /** What changing an attachment sends. Nothing here can reach the file itself. */
 export type UpdateTableFileInput = Pick<TableFile, 'tableFileType' | 'isPrivate'>
 
 /**
- * What an admin's upload into the platform's library sends with the bytes (#233, #282): what the file
+ * What an admin's upload into the platform's library sends with the bytes (ADR-14 §4, §7): what the file
  * is, always, and whether it goes out now — a published file is attached by tables straight away and
- * hiding it later does not take it off them (#79), so that is a choice, never a side effect.
+ * hiding it later does not take it off them (ADR-14 §1), so that is a choice, never a side effect.
  */
 export interface LibraryUploadInput extends Pick<AdminFile, 'categories'> {
   /** True to publish it on upload; false to leave it in the library unpublished. */
   publish: boolean
 }
 
-/** What changing the cajón of an unpublished file of the library sends (#282): one, like the upload. */
+/** What changing the cajón of an unpublished file of the library sends (ADR-14 §7): one, like the upload. */
 export interface LibraryCategoryInput {
   /** What the file is now. One of the three publishable cajones. */
   category: FileCategory
 }
 
 /**
- * What an admin's upload into the platform's library produced (#278): the published row, and whether
- * the admin already had that content (#75, #234).
+ * What an admin's upload into the platform's library produced (ADR-14 §7): the published row, and whether
+ * the admin already had that content (ADR-13 §3, §4).
  */
 export interface AdminUploadedFile {
   file: AdminFile

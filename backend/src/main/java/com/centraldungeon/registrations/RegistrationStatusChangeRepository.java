@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-/** The veto's trail (#39). No logic and no {@code @Transactional} - the service owns both. */
+/** The veto's trail (ADR-09 §5). No logic and no {@code @Transactional} - the service owns both. */
 public interface RegistrationStatusChangeRepository extends JpaRepository<RegistrationStatusChange, String> {
 
     /**

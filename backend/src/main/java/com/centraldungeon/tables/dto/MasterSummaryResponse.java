@@ -9,9 +9,9 @@ package com.centraldungeon.tables.dto;
  * @param userId     the person's identifier, enough to open their profile
  * @param name       their display name - the name they set, or their Discord username when they
  *                   have not set one
- * @param karma      their karma at the time of the read (#97)
+ * @param karma      their karma at the time of the read (ADR-11 §9)
  * @param masterType Primary or Secondary, as a string. The interface renders these as "master" and
- *                   "co-master" and never shows these words (#166)
+ *                   "co-master" and never shows these words (ADR-06 §3)
  */
 public record MasterSummaryResponse(String userId, String name, int karma, String masterType) {
 }

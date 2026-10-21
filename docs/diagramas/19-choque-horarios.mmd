@@ -1,5 +1,5 @@
 ---
-title: 19. Choque de horarios (#178)
+title: 19. Choque de horarios (ADR-08 §2)
 ---
 flowchart TB
 
@@ -47,10 +47,10 @@ flowchart TB
         A5 -->|no| A8
     end
 
-    note1["Por que R4 avisa y no rechaza:<br/>tres postulaciones a mesas Opened<br/>no son un compromiso. Recien al ser<br/>aceptado en una hay algo que respetar,<br/>y elegir cual es del jugador (#70)."]
+    note1["Por que R4 avisa y no rechaza:<br/>tres postulaciones a mesas Opened<br/>no son un compromiso. Recien al ser<br/>aceptado en una hay algo que respetar,<br/>y elegir cual es del jugador (ADR-15 §2)."]
     A6 -.- note1
 
-    note2["Pause NO reserva horario:<br/>congela la agenda (#32), asi que<br/>sus franjas no cuentan. Al reanudar<br/>se reagenda y se vuelve a verificar."]
+    note2["Pause NO reserva horario:<br/>congela la agenda (ADR-07 §2), asi que<br/>sus franjas no cuentan. Al reanudar<br/>se reagenda y se vuelve a verificar."]
     M2 -.- note2
 
     note3["En el explorador cada mesa trae<br/>un campo derivado que dice si choca<br/>con lo ya comprometido, y la card<br/>lo advierte antes de postularse."]

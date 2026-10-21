@@ -33,7 +33,7 @@ export interface ApplyToTableDialogProps {
    */
   renderFilePicker: (onPick: (file: StagedFile) => void) => ReactNode
   /**
-   * Uploads what was staged and hands back the ids (#238).
+   * Uploads what was staged and hands back the ids (ADR-13 §5).
    *
    * A prop and not an import, for the same reason `renderFilePicker` is one: `features/registrations`
    * may never import `features/files` (regla dura 16), and the screen that composes both is the one
@@ -45,13 +45,13 @@ export interface ApplyToTableDialogProps {
 /**
  * The dialog that wraps an application. **Two steps, and the second is not decoration.**
  *
- * An application, once sent, cannot be edited and cannot have a file taken off it afterwards (#238,
- * #247): there is no `PUT` on a registration and no endpoint that detaches one of its files. Once the
+ * An application, once sent, cannot be edited and cannot have a file taken off it afterwards (ADR-13 §5,
+ * ADR-09 §2): there is no `PUT` on a registration and no endpoint that detaches one of its files. Once the
  * mutation below succeeds, the character sheet that went with it is attached forever. The review step
  * is the only barrier between somebody and that mistake — it shows exactly the message and the file
  * names about to be sent, with nothing left to edit once the button that sends them exists.
  *
- * **Attaching does not upload** (#238). Picking a file in the write step only stages it in the
+ * **Attaching does not upload** (ADR-13 §5). Picking a file in the write step only stages it in the
  * browser; the confirm button on the review step is what uploads it, through
  * {@link ApplyToTableDialogProps.commitStagedFiles}. Closing the dialog after a pick leaves nothing
  * on the server.
@@ -119,7 +119,7 @@ export function ApplyToTableDialog({
     }
     setIsSending(true)
     // Nothing to upload is nothing to await: skipping the round trip when the applicant attached
-    // nothing is the common case, and it is what most applications will be (#238).
+    // nothing is the common case, and it is what most applications will be (ADR-13 §5).
     const { fileIds, failed } = files.length > 0 ? await commitStagedFiles(files) : { fileIds: [], failed: [] }
     applyToTable.mutate(
       { description: values.description ? values.description : null, fileIds },

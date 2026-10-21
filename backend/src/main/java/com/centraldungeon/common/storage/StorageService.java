@@ -3,12 +3,12 @@ package com.centraldungeon.common.storage;
 /**
  * Where the bytes of an uploaded file live, behind one seam.
  *
- * <p><b>This is the interface that earns being an interface</b> (arquitectura §2.4, #15). Today
+ * <p><b>This is the interface that earns being an interface</b> (arquitectura §2.4, ADR-13 §6). Today
  * the only implementation writes to local disk; the plan is that it can write to S3 later without
  * the rest of the backend noticing. It is not an {@code Impl} pair created out of habit.
  *
  * <p>The key is opaque to every caller. {@code FileService} passes the file's own id, which is what
- * makes the physical name the id and never the name the user typed (#80) - the legacy concatenated
+ * makes the physical name the id and never the name the user typed (ADR-13 §6) - the legacy concatenated
  * the original filename unsanitized into the path, which is path traversal with extra steps (M21.5).
  * Whether an implementation prefixes, shards or compresses under that key is its own business.
  *
@@ -25,7 +25,7 @@ public interface StorageService {
      * - the legacy knew about this and left it as an unresolved TODO (M21.6). So the content goes to
      * a staging area first and is only moved into place after the commit.
      *
-     * @param key     the name to store under. Callers pass the file's id (#80)
+     * @param key     the name to store under. Callers pass the file's id (ADR-13 §6)
      * @param content the bytes exactly as they were uploaded, uncompressed
      * @throws java.io.UncheckedIOException if the content cannot be written
      * @throws IllegalArgumentException     if the key is not a safe single path segment
@@ -45,9 +45,9 @@ public interface StorageService {
     /**
      * Removes the bytes for good.
      *
-     * <p><b>Nothing in F1 calls this.</b> Deleting a file in the application is logical (#25): the
+     * <p><b>Nothing in F1 calls this.</b> Deleting a file in the application is logical (ADR-03 §7): the
      * row is marked and the bytes stay. Freeing real space is a deliberate maintenance operation the
-     * platform owner runs, and it is F5 (#66) - this method is what that will be built on.
+     * platform owner runs, and it is F5 (ADR-13 §8) - this method is what that will be built on.
      *
      * @param key the key to remove
      * @throws java.io.UncheckedIOException if the content exists but cannot be removed

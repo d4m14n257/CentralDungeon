@@ -8,7 +8,7 @@ import type { Notification } from '../types'
  * Clicking a notification: it marks it read if it was not, and takes the reader where it points.
  *
  * It no longer has to switch the context on the way: a master notification opens a `/master/*` path
- * and the header reads the context from there (#222), which is what #156 was working around when the
+ * and the header reads the context from there (ADR-20 §2), which is what ADR-18 §5 was working around when the
  * chip still tracked a remembered value.
  *
  * @returns the click handler, ready to hand to a notification row

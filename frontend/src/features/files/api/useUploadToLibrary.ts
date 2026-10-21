@@ -7,7 +7,7 @@ import type { FileCategory, StagedFile } from '../types'
 export interface LibraryUpload {
   /** The file as it was staged. Only `new` entries are sent: the library's dropzone stages nothing else. */
   staged: StagedFile
-  /** The cajón it is published into, chosen on its own row (#278). */
+  /** The cajón it is published into, chosen on its own row (ADR-14 §7). */
   category: FileCategory
 }
 
@@ -17,13 +17,13 @@ export interface LibraryUploadResult {
   published: string[]
   /** The names the server could not take, to be tried again. */
   failed: string[]
-  /** The names the admin had already uploaded, whose existing row came back published (#75, #234). */
+  /** The names the admin had already uploaded, whose existing row came back published (ADR-13 §3, §4). */
   reused: string[]
 }
 
 /**
  * Sends what is staged on /admin/files/upload into the platform's library, each file with the cajón
- * chosen on its row (#233, #238, #282) — published now, or left unpublished for later, as the admin
+ * chosen on its row (ADR-14 §4, ADR-13 §5, ADR-14 §7) — published now, or left unpublished for later, as the admin
  * chose with the button they pressed.
  *
  * **A failure does not undo the rest**, the same rule as `useCommitStagedFiles`: each file is sent on

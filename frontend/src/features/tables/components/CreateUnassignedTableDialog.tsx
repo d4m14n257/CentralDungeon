@@ -20,7 +20,7 @@ interface CreateUnassignedTableDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-/** An admin can create a table without running it (#72) - assignMasters is what opens it afterwards. */
+/** An admin can create a table without running it (ADR-06 §7) - assignMasters is what opens it afterwards. */
 export function CreateUnassignedTableDialog({ open, onOpenChange }: CreateUnassignedTableDialogProps) {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
@@ -31,7 +31,7 @@ export function CreateUnassignedTableDialog({ open, onOpenChange }: CreateUnassi
   })
 
   async function onSubmit(values: CreateUnassignedTableForm) {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('tables.confirmCreateUnassignedTitle', { name: values.name }),
       description: t('tables.confirmCreateUnassignedDescription'),

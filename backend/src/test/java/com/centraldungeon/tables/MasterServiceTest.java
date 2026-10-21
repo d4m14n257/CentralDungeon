@@ -118,7 +118,7 @@ class MasterServiceTest {
     }
 
     /**
-     * The row of a removed co-master survives as a record (#175), and membership has to stop
+     * The row of a removed co-master survives as a record (ADR-07 §6), and membership has to stop
      * counting it - otherwise removing somebody would take away their screens and leave their
      * permissions.
      */
@@ -130,7 +130,7 @@ class MasterServiceTest {
         assertThat(masterService.isMasterOf("table-7", "removed")).isFalse();
     }
 
-    /** The admin reads every table whole (#45, #284); Owner is the same rank with more reach (#169). */
+    /** The admin reads every table whole (ADR-06 §8); Owner is the same rank with more reach (ADR-06 §1). */
     @Test
     void anAdminOrAnOwnerOverseesATableTheyDoNotRun() {
         when(masterRepository.findByGameTable_IdAndUser_IdAndStatus(any(), any(), any())).thenReturn(Optional.empty());
@@ -141,7 +141,7 @@ class MasterServiceTest {
         assertThat(masterService.canOversee("table-8", "owner-1")).isTrue();
     }
 
-    /** The Master role is not the table (#135): holding it says nothing about somebody else's. */
+    /** The Master role is not the table (ADR-06 §4): holding it says nothing about somebody else's. */
     @Test
     void theMasterRoleAloneDoesNotOverseeSomebodyElsesTable() {
         when(masterRepository.findByGameTable_IdAndUser_IdAndStatus("table-8", "other-master", MasterRowStatus.Created))
@@ -189,7 +189,7 @@ class MasterServiceTest {
         assertThat(other.getStatus()).isEqualTo(MasterRowStatus.Created);
     }
 
-    /** A table with nobody in charge has nobody authorized to run it: hand the role over first (#73). */
+    /** A table with nobody in charge has nobody authorized to run it: hand the role over first (ADR-06 §3). */
     @Test
     void refusesToRemoveThePrimary() {
         GameTable table = persistedTable("table-10");

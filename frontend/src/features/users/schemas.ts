@@ -4,7 +4,7 @@ import { PLATFORM_ROLES } from './roles'
 import type { ChangeUserRoleInput, ChangeUserStatusInput } from './types'
 import type { Equals, Expect } from '@/types/utils'
 
-/** Validates the onboarding form: a display name and a country, both required (#134). */
+/** Validates the onboarding form: a display name and a country, both required (ADR-10 §4). */
 export const completeOnboardingSchema = z.object({
   name: z.string().min(1).max(64),
   country: z.string().regex(/^[A-Z]{2}$/),
@@ -12,12 +12,12 @@ export const completeOnboardingSchema = z.object({
 
 /**
  * The onboarding form's values, inferred from the schema. Tied to `CompleteOnboardingInput` by a
- * compile-time assertion below, so form and payload cannot drift apart (#3.2 regla 7).
+ * compile-time assertion below, so form and payload cannot drift apart (arquitectura §3.2, rule 7).
  */
 export type CompleteOnboardingForm = z.infer<typeof completeOnboardingSchema>
 
 /**
- * Validates a role change: which role, and why (#169).
+ * Validates a role change: which role, and why (ADR-06 §1).
  *
  * **The justification is required on this side too, and not only on the server.** The backend
  * answers `VALIDATION_ERROR` to an empty one, but a round trip is a bad way to learn that a textarea
@@ -36,7 +36,7 @@ export const changeUserRoleSchema = z.object({
 /** The role-change form's values, inferred from the schema. */
 export type ChangeUserRoleForm = z.infer<typeof changeUserRoleSchema>
 
-/** Validates a block or an unblock: the reason, which is all either of them sends (#84). */
+/** Validates a block or an unblock: the reason, which is all either of them sends (ADR-05 §7). */
 export const changeUserStatusSchema = z.object({
   justification: z.string().trim().min(1).max(2000),
 })

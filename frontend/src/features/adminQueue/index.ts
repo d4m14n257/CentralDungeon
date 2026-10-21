@@ -1,5 +1,5 @@
 /**
- * Public surface of the admin tray feature (#114, #100): the one screen that says what is waiting on
+ * Public surface of the admin tray feature (ADR-19 §1, ADR-16 §5): the one screen that says what is waiting on
  * an admin, whichever table the work lives in, and the reservation that keeps two of them from
  * resolving the same thing. Anything not listed here is private to it.
  *

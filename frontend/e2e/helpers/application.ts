@@ -10,7 +10,7 @@ interface AttachedFile {
 /**
  * Applies to a table from its public detail, walking the dialog's two steps.
  *
- * **The second step arrived with F2.2 and broke four specs at once** (#238, #247). Applying used to
+ * **The second step arrived with F2.2 and broke four specs at once** (ADR-13 §5, ADR-09 §2). Applying used to
  * be one form: open the dialog, press «Postularme», done. Now the dialog is *write and attach* →
  * *review and send*, because an application cannot be edited once it is sent and the character sheet
  * that goes with it is attached forever. Every spec that only cared about *being* a player — to test

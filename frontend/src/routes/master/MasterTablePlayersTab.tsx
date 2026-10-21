@@ -25,10 +25,10 @@ interface OutletContext {
   tableId: string
   isPrimary: boolean
   masters: MasterSummary[]
-  /** Set by /admin/tables/:id (#284): the admin reads who is at the table and changes none of it here. */
+  /** Set by /admin/tables/:id (ADR-06 §8): the admin reads who is at the table and changes none of it here. */
   readOnly?: boolean
   /**
-   * Opens a person's card (#284). The screen that mounts the tab decides what that is - the master's
+   * Opens a person's card (ADR-06 §8). The screen that mounts the tab decides what that is - the master's
    * short card, or the admin's full record - so the tab never needs to know who is reading it.
    */
   onOpenPerson?: (userId: string) => void
@@ -37,11 +37,11 @@ interface OutletContext {
 /**
  * Who runs the table. Adding, handing the table over and removing all live here.
  *
- * **On screen these are "master" and "co-master", never `Primary`/`Secondary`** (#166) — the wire
+ * **On screen these are "master" and "co-master", never `Primary`/`Secondary`** (ADR-06 §3) — the wire
  * words say nothing to somebody who did not read the schema.
  *
  * Only the current master gets the controls, because the backend only accepts them from that person
- * (#73). Everybody else reads the list, which is information they legitimately have.
+ * (ADR-06 §3). Everybody else reads the list, which is information they legitimately have.
  */
 function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletContext) {
   const { t } = useTranslation('master')
@@ -50,7 +50,7 @@ function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletCon
   const removeMaster = useRemoveMaster(tableId)
 
   async function handleAdd(user: UserSummary) {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('masters.addConfirmTitle', { name: user.name ?? user.discordUsername }),
       description: t('masters.addConfirmDescription'),
@@ -99,7 +99,7 @@ function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletCon
               <span className="text-fg-muted shrink-0 text-xs">
                 {t(master.masterType === 'Primary' ? 'masters.roleMaster' : 'masters.roleCoMaster')}
               </span>
-              {/* #41: a master's profile is visible to anyone looking at their table — the co-master
+              {/* ADR-10 §1: a master's profile is visible to anyone looking at their table — the co-master
                   reading this list included. */}
               {onOpenPerson && (
                 <IconAction
@@ -133,7 +133,7 @@ function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletCon
             <p className="text-sm font-medium">{t('masters.addLabel')}</p>
             <UserPicker onSelect={(user) => void handleAdd(user)} excludedIds={masters.map((master) => master.userId)} tableId={tableId} />
             <p className="text-fg-subtle text-xs">
-              {t('masters.hint')} {/* To the exact #ref and not the whole page: that is what makes it worth opening (#168). */}
+              {t('masters.hint')} {/* To the exact #ref and not the whole page: that is what makes it worth opening (ADR-20 §6). */}
               <HelpLink section="masters.co-masters">{t('masters.helpLink')}</HelpLink>
             </p>
           </div>
@@ -144,9 +144,9 @@ function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletCon
 }
 
 /**
- * One row of the roster, with whatever the reader may do to it (#29, #39, F3.4).
+ * One row of the roster, with whatever the reader may do to it (ADR-09 §4, §5, F3.4).
  *
- * **A vetoed row stays here, and that is the decision rather than an oversight.** #39 requires the
+ * **A vetoed row stays here, and that is the decision rather than an oversight.** ADR-09 §5 requires the
  * veto to be reversible; an interface that removed the row would leave the only act that reverses it
  * with nothing to hang off, and "reversible" would be true of the database and false of the
  * platform. So the row stays, marked, saying whose decision it was and when — which is also the
@@ -176,7 +176,7 @@ function PlayerRow({
     <li className="space-y-1 py-2 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          {/* #47: a master already sees the roster to run the table, and #41's asymmetry does
+          {/* ADR-10 §1: a master already sees the roster to run the table, and ADR-10 §1's asymmetry does
               not apply between a master and a player who is sitting at their own table. */}
           <span className="min-w-0 truncate">{player.userName}</span>
           {isBlocked && <RegistrationStatusBadge status={player.status} />}
@@ -199,7 +199,7 @@ function PlayerRow({
               </Button>
             )
           ) : (
-            // Offered to both, worded for each: the Primary vetoes, the co-master asks (#39, #71).
+            // Offered to both, worded for each: the Primary vetoes, the co-master asks (ADR-09 §5, ADR-06 §3).
             <Button size="sm" variant={isPrimary ? 'destructive' : 'outline'} onClick={() => onVeto(player, 'block')}>
               {t(isPrimary ? 'veto.block' : 'veto.request')}
             </Button>
@@ -215,11 +215,11 @@ function PlayerRow({
         </p>
       )}
       {/* The reason, on the row and not behind a click. It is the whole point of making it
-          obligatory (#39): whoever is weighing whether to lift the veto — often a different master
+          obligatory (ADR-09 §5): whoever is weighing whether to lift the veto — often a different master
           from the one who applied it — decides on this sentence. */}
       {isBlocked && player.blockJustification !== null && (
         // The quotation marks come from the translation, not from the JSX: Spanish opens with « and
-        // English with “, and a hard-coded " would be wrong in both (#117).
+        // English with “, and a hard-coded " would be wrong in both (ADR-23 §1).
         <p className="text-fg text-xs italic">{t('veto.quotedReason', { reason: player.blockJustification })}</p>
       )}
     </li>
@@ -230,12 +230,12 @@ function PlayerRow({
  * The table's roster: who is playing there right now, and who was thrown out of it.
  *
  * **It stopped being a read-only list in F3.4.** The veto lives here because this is where the
- * people are: it is per table (#29), so it belongs to the table's own screen and not to a moderation
+ * people are: it is per table (ADR-09 §4), so it belongs to the table's own screen and not to a moderation
  * panel — the same account may be playing happily at four others, and nothing about those changes.
  *
  * @param props.tableId   the table
- * @param props.isPrimary whether the reader runs it or co-runs it — what the veto button does (#71)
- * @param props.readOnly  an admin reading it from /admin/tables/:id: the roster and its vetoes, no button (#284)
+ * @param props.isPrimary whether the reader runs it or co-runs it — what the veto button does (ADR-06 §3)
+ * @param props.readOnly  an admin reading it from /admin/tables/:id: the roster and its vetoes, no button (ADR-06 §8)
  */
 function PlayersSection({
   tableId,
@@ -249,7 +249,7 @@ function PlayersSection({
   onOpenPerson: ((userId: string) => void) | undefined
 }) {
   const { t } = useTranslation('master')
-  // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (#150).
+  // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (ADR-19 §4).
   const { data, isPending, isLoadingError, refetch } = useTablePlayers(tableId)
   const vetoDialog = useDisclosure<{ player: TablePlayer; action: VetoAction }>()
 
@@ -335,13 +335,13 @@ function PlayersSection({
  * The people tab of `/master/tables/:id` — who runs the table and who plays at it.
  *
  * The two blocks share a tab because the question they answer is one: who is at this table. Running
- * it and playing at it are mutually exclusive (#154), so no name can appear in both.
+ * it and playing at it are mutually exclusive (ADR-18 §4), so no name can appear in both.
  *
  * It lives in `routes/` and not in a feature because it composes three domains — masters and the
  * roster from `tables` and `registrations`, the people search from `users` — and a feature never
  * imports from another (regla dura 16).
  *
- * Mounted under /admin/tables/:id too (#284), where the context arrives with `isPrimary` false and
+ * Mounted under /admin/tables/:id too (ADR-06 §8), where the context arrives with `isPrimary` false and
  * `readOnly` set: the masters, the roster, the vetoes and the pending veto requests, and none of the
  * buttons that act on them.
  */

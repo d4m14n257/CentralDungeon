@@ -7,7 +7,7 @@ import { gameTablesApi } from './gameTablesApi'
 /**
  * Removes a co-master from a table.
  *
- * The row is marked and not dropped (#175) — who ran a table stays on the record — but membership
+ * The row is marked and not dropped (ADR-07 §6) — who ran a table stays on the record — but membership
  * stops counting it at once, so the person loses the table's screens immediately.
  *
  * The table's own master cannot be removed: handing the role over comes first, and the backend

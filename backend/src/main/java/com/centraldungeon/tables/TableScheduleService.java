@@ -24,18 +24,18 @@ import org.springframework.transaction.annotation.Transactional;
  * A table's weekly agenda: reading it, and replacing it as a whole.
  *
  * <p><b>Replace, not add and remove one slot at a time.</b> The agenda is edited as a unit on
- * screen - a master looks at the week and says what it is - and the clash rules of #178 are about
+ * screen - a master looks at the week and says what it is - and the clash rules of ADR-08 §2 are about
  * the whole agenda anyway: checking a slot in isolation would let a pair that is fine one at a time
  * and broken together through the door. So the caller sends the week it wants and this decides what
  * that means for the rows.
  *
  * <p>Two rules apply in order, and the order matters. First the agenda has to make sense on its own:
  * two slots of the <b>same</b> table whose sessions overlap are a {@code 400}, because that is input
- * that does not describe a playable week (#178). Only then is it compared against the rest of the
+ * that does not describe a playable week (ADR-08 §2). Only then is it compared against the rest of the
  * master's life, which is R1 and a {@code 409}.
  *
- * <p>Editing the agenda of a table that already has players <b>warns and does not expel</b> (#70,
- * #178): the people it now clashes with are notified, and what to do about it is theirs and their
+ * <p>Editing the agenda of a table that already has players <b>warns and does not expel</b> (ADR-15 §2,
+ * ADR-08 §2): the people it now clashes with are notified, and what to do about it is theirs and their
  * master's to sort out. The system says what happened; it does not decide for them.
  */
 @Service
@@ -59,7 +59,7 @@ public class TableScheduleService {
     /** Who is signed up to the table whose agenda is changing. */
     private final TableRegistrationRepository registrationRepository;
 
-    /** Tells the affected people their commitments now overlap (#178, R4's sibling). */
+    /** Tells the affected people their commitments now overlap (ADR-08 §2, R4's sibling). */
     private final NotificationService notificationService;
 
     /**
@@ -125,18 +125,18 @@ public class TableScheduleService {
      * {@code (table, weekday, hourtime)}, so a master who removes Tuesday 20:00 and puts it back
      * would otherwise collide with the row they just deleted (see {@link TableScheduleStatus}).
      *
-     * @param table    the table whose agenda is being set. Each slot carries its own length (#228),
+     * @param table    the table whose agenda is being set. Each slot carries its own length (ADR-08 §1),
      *                 and one without a length claims no interval - it can sit in the agenda and
-     *                 never clash with anything (#178)
+     *                 never clash with anything (ADR-08 §2)
      * @param entries  the week the master wants. Empty clears the agenda
      * @param actorId  the master, from the token. Their <em>other</em> commitments are what R1
-     *                 compares against, so it is theirs and never an id from the URL (#121). Null
-     *                 when the table has no master yet - an admin creating an Unassigned one (#72) -
+     *                 compares against, so it is theirs and never an id from the URL (ADR-05 §5). Null
+     *                 when the table has no master yet - an admin creating an Unassigned one (ADR-06 §7) -
      *                 in which case only the agenda's own coherence is checked and R1 is deferred to
      *                 the moment masters are assigned
-     * @throws InvalidRequestException if two of the given slots overlap each other (#178)
+     * @throws InvalidRequestException if two of the given slots overlap each other (ADR-08 §2)
      * @throws ConflictException       if the agenda overlaps another live table the actor runs or
-     *                                 plays at - R1 of #178
+     *                                 plays at - R1 of ADR-08 §2
      */
     @Transactional
     public void replace(GameTable table, List<TableScheduleEntry> entries, @Nullable String actorId) {
@@ -150,7 +150,7 @@ public class TableScheduleService {
             CommittedTable clash = scheduleConflictService.findClash(actorId, table.getId(), intervals);
             if (clash != null) {
                 // English, and for a log: the sentence the master reads is rendered by the
-                // frontend from the code and the table name below, in their language (#197).
+                // frontend from the code and the table name below, in their language (ADR-23 §3).
                 throw new ConflictException(
                         "Agenda overlaps table " + clash.name() + ", which the actor is already committed to",
                         ConflictException.SCHEDULE_CONFLICT,
@@ -181,7 +181,7 @@ public class TableScheduleService {
             } else {
                 slot.setStatus(TableScheduleStatus.Created);
                 slot.setDeletedAt(null);
-                // A slot that comes back can come back a different length (#228): the key is the day
+                // A slot that comes back can come back a different length (ADR-08 §1): the key is the day
                 // and the hour, so changing only how long it runs is this branch and not an insert.
                 slot.setDuration(entry.duration());
             }
@@ -196,7 +196,7 @@ public class TableScheduleService {
 
     /**
      * Tells the people signed up to the table whose own commitments the new agenda now clashes with.
-     * Nobody is removed and nothing is refused: the notice is the whole of the action (#70, #178).
+     * Nobody is removed and nothing is refused: the notice is the whole of the action (ADR-15 §2, ADR-08 §2).
      */
     private void warnAffectedPeople(GameTable table) {
         for (TableRegistration registration : registrationRepository.findByGameTable_Id(table.getId())) {
@@ -229,7 +229,7 @@ public class TableScheduleService {
 
     /** The stretches of the week the requested agenda would occupy. A slot with no length occupies nothing. */
     private List<WeeklyInterval> intervalsOf(List<TableScheduleEntry> entries) {
-        // Each slot brings its own length since #228, so a slot without one is skipped rather than
+        // Each slot brings its own length since ADR-08 §1, so a slot without one is skipped rather than
         // the whole agenda being written off - the two used to be the same thing.
         return entries.stream()
                 .filter(entry -> entry.duration() != null)

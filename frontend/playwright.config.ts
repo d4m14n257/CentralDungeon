@@ -7,7 +7,7 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
-  // Cada corrida borra sus propias filas al terminar (docs/adr #172).
+  // Cada corrida borra sus propias filas al terminar (ADR-24 §3).
   globalTeardown: './e2e/globalTeardown.ts',
   fullyParallel: false,
   retries: 0,
@@ -16,7 +16,7 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     trace: 'retain-on-failure',
     // Every spec runs in Spanish unless it says otherwise. Without this the language would come
-    // from the browser's own locale (#198), so a spec asserting on a label would pass or fail
+    // from the browser's own locale (ADR-23 §2), so a spec asserting on a label would pass or fail
     // depending on the machine running it. `language.spec.ts` overrides it per context, which is
     // exactly what it is testing.
     locale: 'es-AR',

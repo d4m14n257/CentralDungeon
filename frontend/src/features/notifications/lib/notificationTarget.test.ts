@@ -30,7 +30,7 @@ function notification(overrides: Partial<Notification>): Notification {
 
 describe('notificationTarget', () => {
   /**
-   * #178: the clash names another table but asks for an action on neither - withdrawing one of the
+   * ADR-08 §2: the clash names another table but asks for an action on neither - withdrawing one of the
    * two pending applications, which only happens from the list of applications.
    */
   it('sends a schedule clash to the applications list, where a pending one can be withdrawn', () => {
@@ -41,7 +41,7 @@ describe('notificationTarget', () => {
 
   /**
    * Both reach only people already signed up to play at the table (`NotificationType.java`): the
-   * player's own table screen is where the calendar and their attendance live, in local time (#22).
+   * player's own table screen is where the calendar and their attendance live, in local time (ADR-03 §6).
    */
   it.each(['SessionScheduled', 'SessionCanceled'] as const)('sends %s to the player’s own table detail', (type) => {
     const changed = notification({ notificationType: type, relatedEntityId: 't7' })
@@ -94,7 +94,7 @@ describe('notificationTarget', () => {
     expect(notificationTarget(notification({ notificationType: type }))).toBe(masterTableDetailPath('t1'))
   })
 
-  /** The admin's reason is in the status history and not in the notification (#197, #284). */
+  /** The admin's reason is in the status history and not in the notification (ADR-23 §3, ADR-06 §8). */
   it.each(['TablePausedByAdmin', 'TableCanceledByAdmin'] as const)('sends %s to the status tab, where the reason is', (type) => {
     expect(notificationTarget(notification({ notificationType: type }))).toBe(masterTableStatusPath('t1'))
   })
@@ -110,7 +110,7 @@ describe('notificationTarget', () => {
    * fix - a notification that reads, marks itself read, and opens nothing.
    */
   it('never falls through to the default for a type the backend actually sends', () => {
-    // The one deliberate dead end: a removed table cannot be opened (#25), so the backend sends it with
+    // The one deliberate dead end: a removed table cannot be opened (ADR-03 §7), so the backend sends it with
     // no id at all - tested on its own below.
     for (const type of ALL_TYPES.filter((candidate) => candidate !== 'TableDeletedByAdmin')) {
       const row = notification({ notificationType: type })

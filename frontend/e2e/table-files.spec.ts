@@ -9,10 +9,10 @@ import { acceptReview } from './helpers/review'
  * downloads it from the public detail*.
  *
  * What no unit test proves and this does: that **one upload attached to two tables is still one
- * file** (#79) — which a mock can only assert about a call, not about a row — that a private
+ * file** (ADR-14 §1) — which a mock can only assert about a call, not about a row — that a private
  * attachment is genuinely **absent** from what a player receives rather than hidden by the screen,
  * and that publishing from /admin/files lets a master use the community's sheet without copying it —
- * while a master's own private file never shows up in that library at all (#278).
+ * while a master's own private file never shows up in that library at all (ADR-14 §7).
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
@@ -43,8 +43,8 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 /**
  * @param page    the master's page
  * @param name    the table's name
- * @param weekday the agenda's day. Two tables for the same master need different ones: R1 of #178
- *                refuses overlapping agendas, and every table carries one now (#226)
+ * @param weekday the agenda's day. Two tables for the same master need different ones: R1 of ADR-08 §2
+ *                refuses overlapping agendas, and every table carries one now (ADR-07 §3)
  */
 async function createTable(page: Page, name: string, weekday = 'Viernes'): Promise<string> {
   await page.goto('/master/tables/new')
@@ -57,7 +57,7 @@ async function createTable(page: Page, name: string, weekday = 'Viernes'): Promi
   await addScheduleSlot(page, '20:00', weekday)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -66,7 +66,7 @@ async function createTable(page: Page, name: string, weekday = 'Viernes'): Promi
 
   const id = page.url().split('/master/tables/')[1]
   expect(id).toBeTruthy()
-  // Born in Draft since #245: nothing an admin can approve until it is sent.
+  // Born in Draft since ADR-07 §1: nothing an admin can approve until it is sent.
   await submitForReview(page, id as string)
   return id as string
 }
@@ -90,13 +90,13 @@ async function attach(page: Page, isPrivate: boolean, pick: (dialog: ReturnType<
     await dialog.getByRole('checkbox', { name: 'Solo para quienes dirigen la mesa' }).click()
   }
   await pick(dialog)
-  // Picking only stages it (#238): nothing has reached the server until this button is pressed.
+  // Picking only stages it (ADR-13 §5): nothing has reached the server until this button is pressed.
   await dialog.getByRole('button', { name: /Agregar \d+ archivos?/ }).click()
   await acceptReview(page)
   await expect(dialog).toBeHidden()
 }
 
-/** The headline case of #79: one upload, two tables, one file — and the player can read it. */
+/** The headline case of ADR-14 §1: one upload, two tables, one file — and the player can read it. */
 test('a file attached to two tables is stored once, and the player downloads it', async ({ browser }) => {
   const firstName = `Mesa Archivos A E2E ${runId}`
   const secondName = `Mesa Archivos B E2E ${runId}`
@@ -116,7 +116,7 @@ test('a file attached to two tables is stored once, and the player downloads it'
     })
     await expect(master.page.getByText('ficha-e2e.pdf')).toBeVisible()
 
-    // Reuse it on the second: the same file, chosen from the history, never uploaded again (#65).
+    // Reuse it on the second: the same file, chosen from the history, never uploaded again (ADR-13 §2).
     await master.page.goto(`/master/tables/${secondId}/files`)
     await attach(master.page, false, async (dialog) => {
       await dialog.getByRole('tab', { name: 'Mis archivos' }).click()
@@ -124,7 +124,7 @@ test('a file attached to two tables is stored once, and the player downloads it'
     })
     await expect(master.page.getByText('ficha-e2e.pdf')).toBeVisible()
 
-    // One file, two tables. This is the assertion the whole slice exists for (#79): the master's own
+    // One file, two tables. This is the assertion the whole slice exists for (ADR-14 §1): the master's own
     // library shows a single entry, used on both.
     await master.page.goto('/my/files')
     const entry = master.page.getByRole('listitem').filter({ hasText: 'ficha-e2e.pdf' })
@@ -132,7 +132,7 @@ test('a file attached to two tables is stored once, and the player downloads it'
     await expect(entry.getByText(firstName)).toBeVisible()
     await expect(entry.getByText(secondName)).toBeVisible()
 
-    // And it is the master's, not the platform's: the library holds only what is published (#278).
+    // And it is the master's, not the platform's: the library holds only what is published (ADR-14 §7).
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-e2e')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
@@ -154,7 +154,7 @@ test('a file attached to two tables is stored once, and the player downloads it'
 })
 
 /**
- * Detaching is not deleting (#79): the file survives on the other table and in the master's own
+ * Detaching is not deleting (ADR-14 §1): the file survives on the other table and in the master's own
  * history, which is what makes the community's shared sheet safe to attach anywhere.
  */
 test('taking a file off one table leaves it on the other', async ({ browser }) => {
@@ -220,8 +220,8 @@ test('a private attachment never reaches the public detail', async ({ browser })
 })
 
 /**
- * #79 from the platform's side: an admin uploads a file into the library — which publishes it, into
- * the cajón chosen on its row (#278) — and a master who never uploaded it attaches it: linked, not
+ * ADR-14 §1 from the platform's side: an admin uploads a file into the library — which publishes it, into
+ * the cajón chosen on its row (ADR-14 §7) — and a master who never uploaded it attaches it: linked, not
  * copied, which is why it still shows a single row in /admin/files.
  */
 test('a master attaches a file the platform published without copying it', async ({ browser }) => {
@@ -231,9 +231,9 @@ test('a master attaches a file the platform published without copying it', async
   const master = await newAuthenticatedPage(browser, `e2e-pub-master-${runId}`, true, false)
 
   try {
-    // The admin uploads on the library's own page (#278). Each file says what it is, and nothing is
+    // The admin uploads on the library's own page (ADR-14 §7). Each file says what it is, and nothing is
     // sent while one does not - nothing is preselected, so a file cannot land in the wrong flow by
-    // omission (M24.1, #233).
+    // omission (M24.1, ADR-14 §4).
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('link', { name: 'Subir archivos' }).click()
     await expect(admin.page).toHaveURL(/\/admin\/files\/upload$/)
@@ -247,7 +247,7 @@ test('a master attaches a file the platform published without copying it', async
     await expect(admin.page.getByRole('option', { name: 'Solicitud de jugador' })).toHaveCount(0)
     await admin.page.getByRole('option', { name: 'De mesa' }).click()
 
-    // Uploading is not publishing any more, and neither happens on the click (#282): the
+    // Uploading is not publishing any more, and neither happens on the click (ADR-14 §7): the
     // confirmation says what the choice does first.
     await admin.page.getByRole('button', { name: 'Subir sin publicar' }).click()
     const confirmUpload = admin.page.getByRole('dialog')
@@ -285,7 +285,7 @@ test('a master attaches a file the platform published without copying it', async
     })
     await expect(master.page.getByText('ficha-comunidad-e2e.pdf')).toBeVisible()
 
-    // Still one file, still the admin's: attaching linked it, it did not copy it (#79).
+    // Still one file, still the admin's: attaching linked it, it did not copy it (ADR-14 §1).
     await admin.page.goto('/admin/files')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).fill('ficha-comunidad-e2e')
     await admin.page.getByRole('combobox', { name: 'Buscar archivos' }).press('Enter')
@@ -298,7 +298,7 @@ test('a master attaches a file the platform published without copying it', async
 })
 
 /**
- * The refusals of #197: what the person reads names the actual problem, in their language, instead of
+ * The refusals of ADR-23 §3: what the person reads names the actual problem, in their language, instead of
  * "no se pudo guardar". The legacy had no limit of any kind, so there was nothing to explain (M21.3).
  */
 test('an unaccepted file type is refused with a message that says why', async ({ browser }) => {

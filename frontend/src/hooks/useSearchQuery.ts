@@ -6,11 +6,11 @@ import { buildSearchQuery, searchQueryOf, type SearchField, type SearchQueryValu
 export interface UseSearchQueryOptions {
   /** The commands this box accepts, in the order it offers them. */
   fields: readonly SearchField[]
-  /** The canonical query to start from — `?q=` restored from the URL, normally (#185). */
+  /** The canonical query to start from — `?q=` restored from the URL, normally (ADR-12 §7). */
   initialQuery?: string
   /**
    * Called with the canonical query **only when a search changes it** — the second Enter, or «clear
-   * filters» (#268).
+   * filters» (ADR-22 §4).
    *
    * This is the URL write. Editing the chips does not reach it: nothing is searched until it is
    * confirmed, and a screen whose URL writer also resets the page would otherwise send the reader
@@ -29,7 +29,7 @@ export interface UseSearchQueryResult {
   onChange: (value: SearchQueryValue) => void
   /**
    * The canonical query last confirmed with Enter: what the server should be asked for and what the
-   * URL should say. Never the chips still being composed, nor what is being typed (#268).
+   * URL should say. Never the chips still being composed, nor what is being typed (ADR-22 §4).
    */
   query: string
   /** The box's way of confirming a search; hand it over as `onSearch`, with `query` as `searchedQuery`. */
@@ -37,14 +37,14 @@ export interface UseSearchQueryResult {
 }
 
 /**
- * The wiring every search box needs, written once (#240).
+ * The wiring every search box needs, written once (ADR-22 §3).
  *
  * Three screens had grown their own copy of the same six lines — hold the structured value, turn it
  * into the canonical string and write it to the URL — and they had already started to drift: one of
  * them parsed the URL against a **second** hardcoded list of command names, kept beside the one it
  * passed to the box and free to disagree with it. Here there is one list, the one the box is given.
  *
- * There is no debounce any more (#268): the query only moves when somebody confirms it — Enter on an
+ * There is no debounce any more (ADR-22 §4): the query only moves when somebody confirms it — Enter on an
  * empty text, after the Enter that closed the chips — or clears the filters. One request per intention.
  *
  * It holds no domain and no endpoint: which commands exist and who answers them are the caller's,

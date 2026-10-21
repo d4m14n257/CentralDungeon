@@ -31,10 +31,10 @@ import org.springframework.test.util.ReflectionTestUtils;
  * The six rules of {@code grantRole} and the six of {@code revokeRole} (contrato F3.1, 3).
  *
  * <p>Unit and not integration because every one of them is a decision the service makes before it
- * touches anything: who may move which rank, what the exclusion of #169 drags along, and when the
+ * touches anything: who may move which rank, what the exclusion of ADR-06 §1 drags along, and when the
  * last owner makes the whole operation impossible. The only rule that genuinely needs a database is
  * the global "there is always an owner" invariant under concurrency, and that one is
- * {@code UserRoleIT}'s - the same treatment #73 gives the single Primary.
+ * {@code UserRoleIT}'s - the same treatment ADR-06 §3 gives the single Primary.
  *
  * <p>The mapper is the real one: the order of the roles in the response is part of the contract, and
  * a mocked mapper would assert nothing about it.
@@ -142,7 +142,7 @@ class UserRoleServiceTest {
         assertThat(response.roles()).containsExactly("Player", "Admin");
     }
 
-    // ---------------------------------------------------------------- rule 2: the #169 exclusion
+    // ---------------------------------------------------------------- rule 2: the ADR-06 §1 exclusion
 
     @Test
     void otorgarAdminAUnOwnerLeQuitaOwnerYDejaSuPropiaFilaDeAuditoria() {
@@ -180,7 +180,7 @@ class UserRoleServiceTest {
 
     // ---------------------------------------------------------------- rule 3: the last owner
 
-    /** The back door: nobody asked to remove Owner, but #169 would, and it is still the last one. */
+    /** The back door: nobody asked to remove Owner, but ADR-06 §1 would, and it is still the last one. */
     @Test
     void otorgarAdminAlUltimoOwnerSeRechazaEnteroSinEscribirNada() {
         User target = persistedUser("target");
@@ -229,7 +229,7 @@ class UserRoleServiceTest {
 
         assertThat(response.roles()).isEmpty();
         assertThat(grants.getFirst().getStatus()).isEqualTo(UserRoleStatus.Deleted);
-        // La fila se marca, no se borra (#25) - y deleted_at deja de nacer muerta.
+        // La fila se marca, no se borra (ADR-03 §7) - y deleted_at deja de nacer muerta.
         assertThat(grants.getFirst().getDeletedAt()).isNotNull();
         assertThat(savedRoleChanges()).singleElement().satisfies(change -> {
             assertThat(change.getAction()).isEqualTo(UserRoleChangeAction.Revoked);

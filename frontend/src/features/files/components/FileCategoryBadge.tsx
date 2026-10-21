@@ -21,14 +21,14 @@ const CATEGORY_ICONS: Record<FileCategory, ReactNode> = {
 }
 
 interface FileCategoryBadgeProps {
-  /** The cajón (#233). */
+  /** The cajón (ADR-14 §4). */
   category: FileCategory
   /** Extra classes for the caller's layout. */
   className?: string
 }
 
 /**
- * Which flow a file belongs to (#233), as a badge.
+ * Which flow a file belongs to (ADR-14 §4), as a badge.
  *
  * It says **where the file is used**, never what the document is — nobody can declare that a PDF is a
  * character sheet template, but the system always knows the file came in through a table, an

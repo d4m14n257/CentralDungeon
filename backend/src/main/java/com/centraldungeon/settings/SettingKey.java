@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Every setting the platform has, with its default and the range it may be moved inside (#141).
+ * Every setting the platform has, with its default and the range it may be moved inside (ADR-17 §3).
  *
  * <p><b>This enum is the catalogue, and {@code system_settings} holds overrides only.</b> A row
  * exists for a key after somebody changed it and never before, which is what lets the screen show
@@ -14,26 +14,26 @@ import java.util.List;
  * value the platform boots with on a database nobody has touched. It also means a setting can never
  * be missing - a fresh install and a wiped table behave identically.
  *
- * <p><b>Every key here has a consumer today.</b> #141 lists eight values worth moving out of the
- * code; F3.5 moves the four that something actually reads. Initial karma and the decay window (#97)
- * and the feedback window (#94) belong to subsystems F5 builds, and the default rejection reason of
- * #34 stopped being a sentence the backend owns when #197 turned it into the code
+ * <p><b>Every key here has a consumer today.</b> ADR-17 §3 lists eight values worth moving out of the
+ * code; F3.5 moves the four that something actually reads. Initial karma and the decay window (ADR-11 §9)
+ * and the feedback window (ADR-11 §12) belong to subsystems F5 builds, and the default rejection reason of
+ * ADR-09 §3 stopped being a sentence the backend owns when ADR-23 §3 turned it into the code
  * {@code TABLE_FULL} - see {@link SettingCategory} for why no {@code Texts} setting exists. A key
- * nothing reads is a switch that does nothing, which is the orphan F3.2 refused to create (#255).
+ * nothing reads is a switch that does nothing, which is the orphan F3.2 refused to create (ADR-16 §1).
  *
  * <p><b>The bounds are part of the setting, not of the form.</b> An admin who can type any number
  * into a box can take the platform down without writing a line of code: a visibility window of zero
  * days hides every profile at once, and a file cap above what the servlet container accepts makes
- * every upload fail with an error the application never gets to explain (#197). The range is
+ * every upload fail with an error the application never gets to explain (ADR-23 §3). The range is
  * checked in {@link SettingsService}, so it holds for the API and not only for the screen.
  */
 public enum SettingKey {
 
     /**
-     * How long an admin keeps an item of the shared tray before the release job hands it back (#100).
+     * How long an admin keeps an item of the shared tray before the release job hands it back (ADR-16 §5).
      *
      * <p>Moved here from {@code app.admin-queue.claim-timeout}, which arquitectura §4.5 named F3.5's
-     * job by name. The starting value is the fifteen minutes #100 asks for; the floor is one minute
+     * job by name. The starting value is the fifteen minutes ADR-16 §5 asks for; the floor is one minute
      * because a timeout shorter than the round trip of resolving something would hand every item back
      * mid-review, and the ceiling is a day because a reservation nobody can outlive is the deadlock
      * the release job exists to prevent.
@@ -41,7 +41,7 @@ public enum SettingKey {
     ADMIN_QUEUE_CLAIM_TIMEOUT_MINUTES("admin_queue.claim_timeout_minutes", SettingCategory.Limits, 15, 1, 1440, false),
 
     /**
-     * The per-file cap, in whole megabytes - the one piece of #61 that #75 kept.
+     * The per-file cap, in whole megabytes - the one piece of ADR-13 §3 that ADR-13 §3 kept.
      *
      * <p>Moved here from {@code app.storage.max-file-size}. <b>Its ceiling is not a taste
      * judgement</b>: {@code spring.servlet.multipart.max-file-size} rejects an oversized part before
@@ -52,11 +52,11 @@ public enum SettingKey {
     FILES_MAX_FILE_SIZE_MB("files.max_file_size_mb", SettingCategory.Limits, 2, 1, 25, false),
 
     /**
-     * The largest {@code max_players} a table may be given (#24, #141).
+     * The largest {@code max_players} a table may be given (ADR-07 §5, ADR-17 §3).
      *
      * <p><b>New in F3.5, and the one key that was not a constant before</b>: until now
      * {@code maxPlayers} was only {@code @Positive}, so a table could be created for two billion
-     * people. #141 names «cupo máximo» among the values the community edits without a deploy, and a
+     * people. ADR-17 §3 names «cupo máximo» among the values the community edits without a deploy, and a
      * limit that does not exist cannot be edited.
      *
      * <p>It gates what is written, never what is already stored: lowering it does not shrink an
@@ -66,10 +66,10 @@ public enum SettingKey {
 
     /**
      * How long a closed table keeps two of its people able to see each other's profile, in days
-     * (#44).
+     * (ADR-10 §2).
      *
      * <p>Moved here from a constant in {@code ProfileVisibilityService}. <b>The one retroactive
-     * setting F3.5 ships</b>: #44 is evaluated on every profile read against {@code closed_at}, so
+     * setting F3.5 ships</b>: ADR-10 §2 is evaluated on every profile read against {@code closed_at}, so
      * lowering this number takes visibility away from people who have it right now, and raising it
      * gives it back to people who had already lost it. Nothing is recomputed and nothing is stored -
      * the answer simply changes on the next read, which is why {@link #retroactive()} exists and why
@@ -101,7 +101,7 @@ public enum SettingKey {
      * @param defaultValue what the platform uses until somebody overrides it
      * @param minValue     the smallest value that may be saved, inclusive
      * @param maxValue     the largest value that may be saved, inclusive
-     * @param retroactive  whether changing it changes answers the platform already gave (#141)
+     * @param retroactive  whether changing it changes answers the platform already gave (ADR-17 §3)
      */
     SettingKey(String wireName, SettingCategory category, int defaultValue, int minValue, int maxValue, boolean retroactive) {
         this.wireName = wireName;
@@ -115,7 +115,7 @@ public enum SettingKey {
     /**
      * Returns the spelling the key has everywhere outside this enum.
      *
-     * <p>{@code @JsonValue} for the same reason {@code PlatformRole.roleName()} carries it (#253):
+     * <p>{@code @JsonValue} for the same reason {@code PlatformRole.roleName()} carries it (ADR-04 §5):
      * the constants are {@code SCREAMING_CASE} and the wire says {@code files.max_file_size_mb},
      * so without it a response would publish a name no request could send back - and the screen
      * builds its labels from this string, so the mismatch would surface as a raw i18n key rather
@@ -179,9 +179,9 @@ public enum SettingKey {
     }
 
     /**
-     * Returns whether changing this setting changes answers the platform already gave (#141).
+     * Returns whether changing this setting changes answers the platform already gave (ADR-17 §3).
      *
-     * <p>It travels to the frontend as a flag and not as a sentence (#197): the warning is written
+     * <p>It travels to the frontend as a flag and not as a sentence (ADR-23 §3): the warning is written
      * once per key in {@code src/locales/}, in both languages, and the flag is what makes the screen
      * show it. A setting marked this way is never a cosmetic adjustment and the screen has to say so
      * <em>before</em> the value is saved, not after.

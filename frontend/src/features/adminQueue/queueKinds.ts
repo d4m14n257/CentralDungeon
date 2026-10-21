@@ -16,7 +16,7 @@ export const ADMIN_QUEUE_ITEM_KINDS = ['ApprovalRequest', 'TableWaitingReview'] 
 /**
  * The two source discriminators, which are also the first segment of the claim URL.
  *
- * They are the vocabulary of `entity_type` (#78), reused rather than re-coined — see
+ * They are the vocabulary of `entity_type` (ADR-16 §2), reused rather than re-coined — see
  * {@link AdminQueueItemType}.
  */
 export const ADMIN_QUEUE_ITEM_TYPES = ['approval_request', 'game_table'] as const satisfies readonly AdminQueueItemType[]

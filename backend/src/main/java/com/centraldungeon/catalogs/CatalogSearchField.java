@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The fields a catalog search box accepts behind a {@code /prefix} (docs/adr #164).
+ * The fields a catalog search box accepts behind a {@code /prefix} (ADR-22 §1).
  *
  * <p>Only one for now, and it is also the default criterion: typing nothing in particular searches
  * by name, which is the only thing anyone knows about a catalog value. The enum exists anyway

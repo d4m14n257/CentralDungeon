@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotNull;
  * with a body is not an honest DELETE.
  *
  * @param role          the role to take away
- * @param justification why. Required (#169)
+ * @param justification why. Required (ADR-06 §1)
  */
 public record RevokeRoleRequest(@NotNull PlatformRole role, @NotBlank String justification) {
 }

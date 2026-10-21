@@ -11,15 +11,15 @@ import org.junit.jupiter.api.Test;
  * The vocabulary of the table's search box. Small on purpose: what it fixes is the wire contract the
  * frontend's {@code searchFields.ts} mirrors, and a rename on either side has to break something.
  *
- * <p>Six commands since F3.3. The language belongs to the <b>entity</b> and not to the screen (#239):
- * {@code /table_status} and {@code /table_master} were added for {@code /admin/tables} (#176), and the
+ * <p>Six commands since F3.3. The language belongs to the <b>entity</b> and not to the screen (ADR-22 §2):
+ * {@code /table_status} and {@code /table_master} were added for {@code /admin/tables} (ADR-16 §7), and the
  * explorer parses them too - where they can only ever narrow what the visibility rules already
  * allowed, which is the invariant {@code GameTableSearchSpecification} documents.
  */
 class GameTableSearchFieldTest {
 
     @Test
-    @DisplayName("every wire name carries its entity in front (#239)")
+    @DisplayName("every wire name carries its entity in front (ADR-22 §2)")
     void prefixesEveryWireNameWithTheEntity() {
         assertThat(GameTableSearchField.wireNames())
                 .containsExactlyInAnyOrder(

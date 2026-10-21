@@ -18,15 +18,15 @@ interface OutletContext {
   tableId: string
   maxPlayers: number | null
   playerCount: number
-  /** Set by /admin/tables/:id (#284): the admin reads the queue and does not accept or reject for the master. */
+  /** Set by /admin/tables/:id (ADR-06 §8): the admin reads the queue and does not accept or reject for the master. */
   readOnly?: boolean
-  /** Opens a person's card; the screen mounting the tab decides which one (#284). */
+  /** Opens a person's card; the screen mounting the tab decides which one (ADR-06 §8). */
   onOpenPerson?: (userId: string) => void
 }
 
 function CandidatesList({ tableId, maxPlayers, playerCount, readOnly, onOpenPerson }: OutletContext) {
   const { t } = useTranslation('registrations')
-  // isLoadingError, not isError: see docs/adr #150.
+  // isLoadingError, not isError: see ADR-19 §4.
   const { data, isPending, isLoadingError, refetch } = useCandidates(tableId)
   const acceptRegistration = useAcceptRegistration(tableId)
   const confirm = useConfirm()
@@ -70,7 +70,7 @@ function CandidatesList({ tableId, maxPlayers, playerCount, readOnly, onOpenPers
                 {index + 1}. {candidate.userName} · {candidate.userKarma}
               </span>
               <div className="flex items-center gap-2">
-                {/* #41: whoever applies is opening themselves up to the master's evaluation, so the
+                {/* ADR-10 §1: whoever applies is opening themselves up to the master's evaluation, so the
                     master can always open the candidate's card from here on. */}
                 {onOpenPerson && (
                   <IconAction
@@ -118,11 +118,11 @@ function CandidatesList({ tableId, maxPlayers, playerCount, readOnly, onOpenPers
 /**
  * The candidates tab: who applied, in the order they did, and the accept/reject actions.
  *
- * Mounted under /admin/tables/:id too, read-only (#284): the admin sees the same queue the master
+ * Mounted under /admin/tables/:id too, read-only (ADR-06 §8): the admin sees the same queue the master
  * answers, without the two buttons that are the master's to press.
  *
  * FIFO is the backend's order and this screen never re-sorts it - it is what decides who gets
- * auto-rejected when the last seat goes (#28, #34).
+ * auto-rejected when the last seat goes (ADR-09 §1, §3).
  */
 export function MasterTableCandidatesTab() {
   const context = useOutletContext<OutletContext>()

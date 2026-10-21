@@ -14,7 +14,7 @@ interface SectionHeaderProps {
 
 /**
  * The top of a section inside a screen — a tab of a table, a block of a detail — with its
- * «Cómo funciona» at the right end, the same place `PageHeader` puts it for a whole screen (#280).
+ * «Cómo funciona» at the right end, the same place `PageHeader` puts it for a whole screen (ADR-21 §5).
  *
  * It exists because a section's help used to land wherever the section ended: at the bottom of the
  * files tab, under the tasks board, next to a title on one tab and below the list on the next.

@@ -14,7 +14,7 @@ import org.springframework.data.repository.query.Param;
 public interface TableRegistrationRepository extends JpaRepository<TableRegistration, String> {
 
     /**
-     * The one-active-registration-per-pair rule (#28): somebody cannot apply twice to the same
+     * The one-active-registration-per-pair rule (ADR-09 §1): somebody cannot apply twice to the same
      * table while an application is still alive. Called under the table's pessimistic lock, because
      * "no row exists yet" has no row of its own to lock.
      *
@@ -27,7 +27,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * How many people hold a given status on a table. With {@code Player} it is the seat count the
-     * max_players cap is checked against (#34), and the "3/5" every card shows.
+     * max_players cap is checked against (ADR-09 §3), and the "3/5" every card shows.
      *
      * @param gameTableId the table
      * @param status      the status to count
@@ -47,8 +47,8 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * A table's registrations in the order they arrived. FIFO is not negotiable
-     * (arquitectura §4, #28): callers never re-sort this, because it is what decides who gets
-     * auto-rejected when the table fills up (#34).
+     * (arquitectura §4, ADR-09 §1): callers never re-sort this, because it is what decides who gets
+     * auto-rejected when the table fills up (ADR-09 §3).
      *
      * @param gameTableId the table
      * @param status      the status to list, in practice Candidate
@@ -58,7 +58,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * The same read over more than one status - the roster of a table since F3.4: its
-     * {@code Player} rows <b>and</b> its {@code Blocked} ones (#39).
+     * {@code Player} rows <b>and</b> its {@code Blocked} ones (ADR-09 §5).
      *
      * <p>The vetoed stay on the roster because that is the screen the veto is lifted from, and a
      * veto that disappears from the interface is not reversible in practice. They are still
@@ -74,18 +74,18 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     /**
      * Backs /my/applications: everything the actor ever applied to, whatever came of it.
      *
-     * @param userId   the actor, from the token (#121)
+     * @param userId   the actor, from the token (ADR-05 §5)
      * @param pageable page, size and sort
      * @return one page of their applications
      */
     Page<TableRegistration> findByUser_Id(String userId, Pageable pageable);
 
     /**
-     * The same listing, minus the soft-deleted rows. A withdrawn application (#178) and one that
-     * fell with its table (#175) are both {@code Deleted}, and neither is something the applicant
+     * The same listing, minus the soft-deleted rows. A withdrawn application (ADR-08 §2) and one that
+     * fell with its table (ADR-07 §6) are both {@code Deleted}, and neither is something the applicant
      * should keep reading about on /my/applications.
      *
-     * @param userId   the actor, from the token (#121)
+     * @param userId   the actor, from the token (ADR-05 §5)
      * @param status   the status to leave out, in practice Deleted
      * @param pageable page, size and sort
      * @return one page of their applications, the marked ones excluded
@@ -94,14 +94,14 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * The same read, excluding more than one status - what {@code /registrations/mine} needs since
-     * F3.4 (#29).
+     * F3.4 (ADR-09 §4).
      *
      * <p><b>{@code Blocked} is excluded alongside {@code Deleted}</b>, and that is a decision rather
-     * than tidiness: #29 says the vetoed person «no ve esa mesa», and this row carries
+     * than tidiness: ADR-09 §4 says the vetoed person «no ve esa mesa», and this row carries
      * {@code gameTableName}. Leaving it in the applicant's own list would be the one crack through
      * which they keep seeing the table by name, right next to a status telling them why.
      *
-     * @param userId   the applicant, always from the token (#121)
+     * @param userId   the applicant, always from the token (ADR-05 §5)
      * @param statuses the statuses that must not come back - {@code Deleted} and {@code Blocked}
      * @param pageable page, size and sort
      * @return one page of their applications, minus those
@@ -112,7 +112,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     /**
      * Backs /my/tables: every game table where the actor holds an active Player registration.
      *
-     * @param userId   the actor, from the token (#121)
+     * @param userId   the actor, from the token (ADR-05 §5)
      * @param status   the status to match, in practice Player
      * @param pageable page, size and sort
      * @return one page of their registrations in that status
@@ -126,7 +126,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
      * this is what tells /my/tables (still live) apart from /my/tables/history (already over): the
      * same query, the table statuses in {@code Collection} decide which screen is asking.
      *
-     * @param userId           the actor, from the token (#121)
+     * @param userId           the actor, from the token (ADR-05 §5)
      * @param status           the registration status to match, in practice {@code Player}
      * @param gameTableStatuses which of the table's own statuses to keep - live ones for the current
      *                         listing, {@code Finished}/{@code Canceled} for the history
@@ -138,12 +138,12 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * The tables somebody plays at, in the statuses that count as a live commitment - the other half
-     * of what the clash rules of #178 compare against. Playing and running weigh the same there:
+     * of what the clash rules of ADR-08 §2 compare against. Playing and running weigh the same there:
      * they are the same person in the same stretch of the week.
      *
-     * @param userId   the person whose commitments are being collected, always from the token (#121)
+     * @param userId   the person whose commitments are being collected, always from the token (ADR-05 §5)
      * @param statuses the table statuses that count as committed. {@code Pause} is not among them,
-     *                 because a paused table does not reserve the slot (#32, #178)
+     *                 because a paused table does not reserve the slot (ADR-07 §2, ADR-08 §2)
      * @return the tables where they hold a Player registration and the table is in one of those
      *         statuses
      */
@@ -156,7 +156,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     /**
      * Somebody's applications in one status, unpaginated. Used for the notice R4 sends: when a
      * person is accepted somewhere, their other pending applications are checked for a clash and
-     * they are told about it (#178).
+     * they are told about it (ADR-08 §2).
      *
      * @param userId the applicant
      * @param status the status to match, in practice Candidate
@@ -166,7 +166,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * Whether anybody is involved with a table yet. It is what separates a table that can still be
-     * deleted from one that can only be cancelled (#175): once someone applied, there is history.
+     * deleted from one that can only be cancelled (ADR-07 §6): once someone applied, there is history.
      *
      * @param gameTableId the table
      * @param statuses    which statuses count as involvement
@@ -175,7 +175,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     boolean existsByGameTable_IdAndStatusIn(String gameTableId, Collection<TableRegistrationStatus> statuses);
 
     /**
-     * Every registration of a table, whatever its status - what the delete cascade walks (#25, #175).
+     * Every registration of a table, whatever its status - what the delete cascade walks (ADR-03 §7, ADR-07 §6).
      *
      * @param gameTableId the table
      * @return all of its registrations
@@ -184,7 +184,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * Who is waiting for an answer across several tables at once - the first probe of the master
-     * dashboard (#136).
+     * dashboard (ADR-20 §4).
      *
      * @param gameTableIds the tables somebody runs. A table with nobody waiting is absent from the
      *                     result rather than reported as zero
@@ -208,7 +208,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
      * <p>The other half of the admin listing's N+1 fix (arquitectura §2.2): the admin listing used to call
      * {@link #countByGameTable_IdAndStatus} once per row while it built the page. One count per row
      * was tolerable while that listing defaulted to the handful of tables waiting on an admin; it
-     * stopped being tolerable the moment the screen started listing every table there is (#176).
+     * stopped being tolerable the moment the screen started listing every table there is (ADR-16 §7).
      *
      * @param gameTableIds the tables of the page. An empty collection is the caller's to avoid
      * @param status       the status that means "accepted", always
@@ -233,7 +233,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
      * @param gameTableIds the tables to check, in practice the ones the actor runs
      * @param userId       the applicant being looked for
      * @param statuses     which statuses count as active - Candidate and Player, never Deleted or
-     *                     Rejected (#216)
+     *                     Rejected (ADR-07 §8)
      * @return their active applications among those tables
      */
     List<TableRegistration> findByGameTable_IdInAndUser_IdAndStatusIn(
@@ -241,7 +241,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * How many tables somebody played to the end: accepted as a {@code Player} at a table that is now
-     * {@code Finished} (#284). What a master reads on a candidate's card - a run they saw through, not
+     * {@code Finished} (ADR-06 §8). What a master reads on a candidate's card - a run they saw through, not
      * one they joined.
      *
      * @param userId      the person
@@ -253,7 +253,7 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
 
     /**
      * Every registration a person has in the given statuses, with its table already fetched - the
-     * player half of an admin's view of that person's tables (#284).
+     * player half of an admin's view of that person's tables (ADR-06 §8).
      *
      * @param userId   the person
      * @param statuses the registration statuses to include

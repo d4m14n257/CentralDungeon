@@ -58,7 +58,7 @@ class RegistrationServiceTest {
     @Mock
     private RegistrationRejectionRepository rejectionRepository;
 
-    /** The veto's trail (#39): every block and every lifting leaves a row. */
+    /** The veto's trail (ADR-09 §5): every block and every lifting leaves a row. */
     @Mock
     private RegistrationStatusChangeRepository statusChangeRepository;
 
@@ -94,7 +94,7 @@ class RegistrationServiceTest {
                 registrationRepository, rejectionRepository, registrationFileRepository, fileService, gameTableRepository, masterService,
                 userService, notificationService, scheduleConflictService, statusChangeRepository,
                 // The real gate over the same mocked repositories: applying goes through it now, and
-                // that is exactly what stops a vetoed person re-applying (#29).
+                // that is exactly what stops a vetoed person re-applying (ADR-09 §4).
                 new TableVisibilityService(gameTableRepository, registrationRepository), registrationMapper);
     }
 
@@ -140,7 +140,7 @@ class RegistrationServiceTest {
         when(gameTableRepository.findById("table-3")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
         // The veto gate asks the same method with [Blocked] before anything else, so the stubbing
-        // has to say what that one answers too (#29).
+        // has to say what that one answers too (ADR-09 §4).
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
                         "table-3", "player-1", List.of(TableRegistrationStatus.Blocked)))
                 .thenReturn(false);
@@ -279,7 +279,7 @@ class RegistrationServiceTest {
     }
 
     /**
-     * #197: what a master wrote is their own words and travels verbatim. What the application wrote
+     * ADR-23 §3: what a master wrote is their own words and travels verbatim. What the application wrote
      * is a code, so it can be read in whichever language the applicant chose.
      */
     @Test
@@ -313,7 +313,7 @@ class RegistrationServiceTest {
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(registration)));
         when(registrationMapper.toResponse(eq(registration), any()))
                 .thenReturn(new RegistrationResponse("reg-9", "table-13", "Test table", "player-1", "P1", 8000, "Rejected", null, null, null, null, List.of(), null, null, null));
-        // rejected_by null is what marks the rejection as the system's own (#34).
+        // rejected_by null is what marks the rejection as the system's own (ADR-09 §3).
         RegistrationRejection rejection = new RegistrationRejection(registration, "TABLE_FULL", null);
         when(rejectionRepository.findByRegistration_IdIn(List.of("reg-9"))).thenReturn(List.of(rejection));
 
@@ -335,15 +335,15 @@ class RegistrationServiceTest {
     @Test
     void applyThrowsWhenTheTableDoesNotExist() {
         // The locking read is what answers here, because it is the first statement of the transaction
-        // and has to be (#252). It gives the same 404 the single gate would have - a missing table and
-        // a vetoed one are indistinguishable on purpose (#25, #29).
+        // and has to be (ADR-06 §2). It gives the same 404 the single gate would have - a missing table and
+        // a vetoed one are indistinguishable on purpose (ADR-03 §7, ADR-09 §4).
         when(gameTableRepository.findByIdForUpdate("missing")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> registrationService.apply("missing", "player-1", new CreateRegistrationRequest(null, List.of())))
                 .isInstanceOf(NotFoundException.class);
     }
 
-    /** R2 (#178): a table where you already play is a real commitment, so applying elsewhere at that hour is refused. */
+    /** R2 (ADR-08 §2): a table where you already play is a real commitment, so applying elsewhere at that hour is refused. */
     @Test
     void refusesAnApplicationThatClashesWithATableTheApplicantAlreadyPlaysAt() {
         GameTable table = persistedTable("table-r2", GameTableStatus.Opened, null);
@@ -360,7 +360,7 @@ class RegistrationServiceTest {
         verify(registrationRepository, never()).save(any(TableRegistration.class));
     }
 
-    /** R3 (#178): asked again at accept time, because the candidate may have been taken elsewhere in between. */
+    /** R3 (ADR-08 §2): asked again at accept time, because the candidate may have been taken elsewhere in between. */
     @Test
     void refusesToAcceptACandidateWhoNowPlaysAtAClashingTable() {
         TableRegistration registration = persistedRegistration("reg-r3", "table-r3", TableRegistrationStatus.Candidate, null);
@@ -371,7 +371,7 @@ class RegistrationServiceTest {
                 .thenReturn(new CommittedTable("other", "El faro"));
 
         // The code and the parameter, not the sentence: what the master reads is written by the
-        // frontend in their language (#197). This assertion used to look for the table's name inside
+        // frontend in their language (ADR-23 §3). This assertion used to look for the table's name inside
         // the message, which is how the one Spanish sentence left in the backend went unnoticed.
         assertThatThrownBy(() -> registrationService.accept("reg-r3", "master-1"))
                 .isInstanceOf(ConflictException.class)
@@ -387,8 +387,8 @@ class RegistrationServiceTest {
     }
 
     /**
-     * R4 (#178): the other pending applications that now clash are <b>notified</b>, not rejected.
-     * Until somebody is accepted there is no commitment, and choosing between them is theirs (#70).
+     * R4 (ADR-08 §2): the other pending applications that now clash are <b>notified</b>, not rejected.
+     * Until somebody is accepted there is no commitment, and choosing between them is theirs (ADR-15 §2).
      */
     @Test
     void acceptingSomebodyWarnsThemAboutTheirOtherApplicationsThatNowClash() {
@@ -410,7 +410,7 @@ class RegistrationServiceTest {
         assertThat(pendingElsewhere.getStatus()).isEqualTo(TableRegistrationStatus.Candidate);
     }
 
-    /** The way out R4's notice needs to leave open (#178): withdrawing your own pending application. */
+    /** The way out R4's notice needs to leave open (ADR-08 §2): withdrawing your own pending application. */
     @Test
     void withdrawMarksTheOwnPendingApplicationAsDeleted() {
         TableRegistration registration = persistedRegistration("reg-w1", "table-w1", TableRegistrationStatus.Candidate, null);
@@ -439,7 +439,7 @@ class RegistrationServiceTest {
     }
 
     /**
-     * #247, deliberate: withdrawing a pending application never touches {@code registration_files}.
+     * ADR-09 §2, deliberate: withdrawing a pending application never touches {@code registration_files}.
      * The row is the record that a sheet was sent, and withdrawing does not undo that it was - only
      * the read side stops counting it as in use.
      */
@@ -453,9 +453,9 @@ class RegistrationServiceTest {
         verifyNoInteractions(registrationFileRepository);
     }
 
-    // ---------------------------------------------------------------- files attached to an application (#60 uso 2)
+    // ---------------------------------------------------------------- files attached to an application (ADR-13 §1 uso 2)
 
-    /** The same gate as attaching to a table or an answer: the applicant's own, or one published (#79). */
+    /** The same gate as attaching to a table or an answer: the applicant's own, or one published (ADR-14 §1). */
     @Test
     void attachingOwnFileLinksItAndClassifiesItAsPlayerApplication() {
         GameTable table = persistedTable("table-f1", GameTableStatus.Opened, null);
@@ -480,7 +480,7 @@ class RegistrationServiceTest {
     /**
      * From this service's point of view, a published file goes through the exact same door as the
      * applicant's own: {@code FileService.requireAttachable} is where "own or published" is decided
-     * (#79), and it is mocked here on purpose - that gate has its own test in {@code FileServiceTest}.
+     * (ADR-14 §1), and it is mocked here on purpose - that gate has its own test in {@code FileServiceTest}.
      */
     @Test
     void attachingAPublishedFileLinksItTheSameWay() {
@@ -504,7 +504,7 @@ class RegistrationServiceTest {
         verify(registrationFileRepository).save(any(RegistrationFile.class));
     }
 
-    /** Somebody else's private upload never gets attached (#79) - 403, and nothing is linked. */
+    /** Somebody else's private upload never gets attached (ADR-14 §1) - 403, and nothing is linked. */
     @Test
     void refusesAFileThatIsSomebodyElsesAndNotPublished() {
         GameTable table = persistedTable("table-f3", GameTableStatus.Opened, null);
@@ -523,7 +523,7 @@ class RegistrationServiceTest {
         verify(registrationFileRepository, never()).save(any());
     }
 
-    /** Attaching is optional (#60 uso 2): an empty list is a normal application. */
+    /** Attaching is optional (ADR-13 §1 uso 2): an empty list is a normal application. */
     @Test
     void applyingWithNoFilesIsValid() {
         GameTable table = persistedTable("table-f4", GameTableStatus.Opened, null);
@@ -561,7 +561,7 @@ class RegistrationServiceTest {
         return file;
     }
 
-    // ------------------------------------------------------------------ the veto (#39)
+    // ------------------------------------------------------------------ the veto (ADR-09 §5)
 
     /** The {@code Primary} vetoes, the row moves to {@code Blocked}, and the trail keeps the reason. */
     @Test
@@ -590,7 +590,7 @@ class RegistrationServiceTest {
     }
 
     /**
-     * <b>A {@code Secondary} gets a 403 with a code of its own, not a 400</b> (#39, #71): it is who
+     * <b>A {@code Secondary} gets a 403 with a code of its own, not a 400</b> (ADR-09 §5, ADR-06 §3): it is who
      * you are, not what you sent. The same shape F3.1 settled on - and nothing is written.
      */
     @Test
@@ -668,7 +668,7 @@ class RegistrationServiceTest {
     /**
      * <b>Applying to the same table again is impossible without any rule of its own.</b> It is the
      * proof the single point works: nobody had to remember this endpoint - it goes through
-     * {@code requireVisible} like everything else and answers 404 (#29).
+     * {@code requireVisible} like everything else and answers 404 (ADR-09 §4).
      */
     @Test
     void aVetoedPersonCannotApplyAgainAndGets404() {
@@ -692,7 +692,7 @@ class RegistrationServiceTest {
     // -------------------------------------- the side leaks the contract decided about (§1.C)
 
     /**
-     * <b>{@code /registrations/mine} excludes {@code Blocked} just like {@code Deleted}.</b> #29 says
+     * <b>{@code /registrations/mine} excludes {@code Blocked} just like {@code Deleted}.</b> ADR-09 §4 says
      * the vetoed person «no ve esa mesa», and this row carries {@code gameTableName}: leaving it in
      * would be the one crack through which they keep seeing it, with the status beside it explaining
      * why.

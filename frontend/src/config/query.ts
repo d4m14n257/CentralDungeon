@@ -16,7 +16,7 @@ export const staleTime = {
   /** What a table asks and what came in: same shape as files — somebody publishes, somebody answers. */
   tasks: 60_000,
   /**
-   * The shared admin tray (#100). Short on purpose: it is the one listing whose rows are taken away
+   * The shared admin tray (ADR-16 §5). Short on purpose: it is the one listing whose rows are taken away
    * by **somebody else**, so anything an admin is about to press may already belong to a colleague.
    */
   adminQueue: 10_000,
@@ -38,41 +38,41 @@ export const staleTime = {
  * refetch is what matters most, because an admin coming back to the tab after reading Discord is
  * exactly the person about to act on a stale row.
  *
- * **F6 replaces this with the WebSocket** (#101, `roles-y-alcance.md` §5). Polling is the
+ * **F6 replaces this with the WebSocket** (ADR-18 §2, `roles-y-alcance.md` §5). Polling is the
  * honest stopgap: it is one request every fifteen seconds per admin looking at the tray, which for a
  * handful of admins is nothing, and it is deleted in one line when the socket lands.
  */
 export const live = {
-  /** The shared admin tray: rows leave it because a colleague took them (#100). */
+  /** The shared admin tray: rows leave it because a colleague took them (ADR-16 §5). */
   adminQueue: { refetchInterval: 15_000, refetchOnWindowFocus: true },
 } as const
 
 /**
  * The error codes that have a message of their own to show, rendered here from the code and the
- * parameters the backend sent with it (#197).
+ * parameters the backend sent with it (ADR-23 §3).
  *
  * A short list on purpose: a person only reads a specific message when the backend committed to a
- * code for it. `SCHEDULE_CONFLICT` (#178) is the first — a clash is refused naming the table it
+ * code for it. `SCHEDULE_CONFLICT` (ADR-08 §2) is the first — a clash is refused naming the table it
  * collides with, and answering "could not save" there would hide the one thing the person can
  * actually resolve (principle 2 of diseno §1).
  *
- * Before #197 the backend's own `detail` was shown verbatim, which meant a Spanish sentence no
+ * Before ADR-23 §3 the backend's own `detail` was shown verbatim, which meant a Spanish sentence no
  * matter what language the reader had picked.
  */
 const EXPLAINED_ERROR_CODES = new Set([
   'SCHEDULE_CONFLICT',
-  // The same clash of #178 seen by the master accepting somebody (R3). Its own code because the
+  // The same clash of ADR-08 §2 seen by the master accepting somebody (R3). Its own code because the
   // sentence is about a third person: "where you are already committed" is false when what
   // collided is the candidate's week, not the reader's.
   'CANDIDATE_SCHEDULE_CONFLICT',
   // Every refusal of an upload (F1.4). "Could not save" would be the worst possible answer here:
   // the person picked a file, and what they need to know is which file and why - the type, or the
   // size and the limit. The limit travels as a number of bytes and the sentence is written on this
-  // side, in their language and their units (#197).
+  // side, in their language and their units (ADR-23 §3).
   'FILE_TOO_LARGE',
   'FILE_TYPE_NOT_ALLOWED',
   'FILE_EMPTY',
-  // The three things a table cannot be run without (#226): what is played, where, and when. The
+  // The three things a table cannot be run without (ADR-07 §3): what is played, where, and when. The
   // wizard blocks all three before sending, so these only surface when somebody reaches the API by
   // another route - and then "could not save" would hide which of the three is missing.
   'TABLE_NEEDS_SYSTEM',
@@ -83,11 +83,11 @@ const EXPLAINED_ERROR_CODES = new Set([
   // worst possible answer to somebody who just wrote one: retrying will not help, and what they need
   // to know is that the intake ended — which is a fact about the table, not about their connection.
   'TASK_CLOSED',
-  // Publishing a library file nobody has said what it is (#282). The admin can fix it in one step -
+  // Publishing a library file nobody has said what it is (ADR-14 §7). The admin can fix it in one step -
   // "Change what it is" on the same row - so naming that step is the whole answer; "could not
   // complete the action" left them guessing at something the server knew exactly.
   'FILE_NEEDS_CATEGORY',
-  // An admin lowering a table's capacity below the players it already has (#284). Nobody is removed to
+  // An admin lowering a table's capacity below the players it already has (ADR-06 §8). Nobody is removed to
   // make the number fit, so the only way out is a bigger number - and saying how many players there
   // are is what tells the admin which one.
   'CAPACITY_BELOW_PLAYERS',

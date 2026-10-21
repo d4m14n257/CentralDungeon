@@ -10,8 +10,8 @@ import java.util.List;
  * next to the first.
  *
  * @param sessions the calendar. While the table is paused the pending sessions are not in it: a
- *                 pause freezes the agenda and there is no date to promise (#32, #33)
- * @param summary  their historical attendance on this table, as three numbers (#137)
+ *                 pause freezes the agenda and there is no date to promise (ADR-07 §2, ADR-08 §3)
+ * @param summary  their historical attendance on this table, as three numbers (ADR-08 §5)
  */
 public record MySessionsResponse(List<PlayerSessionResponse> sessions, AttendanceSummaryResponse summary) {
 }

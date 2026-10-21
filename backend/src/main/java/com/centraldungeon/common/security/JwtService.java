@@ -17,7 +17,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 /**
- * Issues and verifies CentralDungeon's own access/refresh JWTs (arquitectura §2.6, docs/adr #125).
+ * Issues and verifies CentralDungeon's own access/refresh JWTs (arquitectura §2.6, ADR-05 §2).
  * The Discord access token is never persisted or reused here - it is discarded once
  * DiscordOAuth2UserService finishes the login callback.
  */
@@ -48,7 +48,7 @@ public class JwtService {
      * Issues the token sent as {@code Authorization: Bearer} on every call.
      *
      * <p>It carries the subject and the token type, and <b>no roles</b>: the JWT asserts identity,
-     * not authorization, so what the person may do is read from the database on each request (#122).
+     * not authorization, so what the person may do is read from the database on each request (ADR-05 §3).
      *
      * @param userId who the token identifies
      * @return the signed token
@@ -58,7 +58,7 @@ public class JwtService {
     }
 
     /**
-     * Issues the long-lived rotating token that travels in an httpOnly cookie (#125).
+     * Issues the long-lived rotating token that travels in an httpOnly cookie (ADR-05 §2).
      *
      * <p>Typed as a refresh token so it can never be replayed as an access token, which is what the
      * type claim is for.
@@ -74,7 +74,7 @@ public class JwtService {
      * How long an access token lasts.
      *
      * @return the configured lifetime. Short on purpose: it is the window a stolen bearer token is
-     *         worth anything in (#125)
+     *         worth anything in (ADR-05 §2)
      */
     public Duration accessTokenTtl() {
         return properties.accessTokenTtl();

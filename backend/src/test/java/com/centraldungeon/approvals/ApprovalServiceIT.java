@@ -39,16 +39,16 @@ import org.testcontainers.mysql.MySQLContainer;
 
 /**
  * What only a real database can answer about F3.2: the two check-then-act rules under a real race,
- * and the orphan sweep of #78 over real rows.
+ * and the orphan sweep of ADR-16 §2 over real rows.
  *
  * <p>{@code REQUEST_ALREADY_RESOLVED} and {@code REQUEST_ALREADY_PENDING} both read a row, decide,
  * and then write - with nothing serialising the two halves. Every unit test of them runs one thread,
  * so the rule reads correct and the interleaving is invisible; F3.1 learned what that costs when the
- * last-owner invariant turned out to break for real against MySQL (#252). These are the same shape,
+ * last-owner invariant turned out to break for real against MySQL (ADR-06 §2). These are the same shape,
  * so they get the same treatment: two threads, one latch, and an assertion about the row afterwards.
  *
  * <p>And {@link ApprovalOrphanCheckService}, which is a third of the price of the polymorphic
- * reference (#78) and had only ever run against mocks. A job nobody ever ran against a database is a
+ * reference (ADR-16 §2) and had only ever run against mocks. A job nobody ever ran against a database is a
  * job nobody knows runs.
  *
  * <p>Wired with {@code @DynamicPropertySource}, not {@code @ServiceConnection}: see
@@ -244,7 +244,7 @@ class ApprovalServiceIT {
     // ---------------------------------------------------------------- the orphan sweep, for real
 
     /**
-     * <b>The sweep of #78, over rows instead of mocks.</b> One Pending request whose reference no
+     * <b>The sweep of ADR-16 §2, over rows instead of mocks.</b> One Pending request whose reference no
      * longer resolves is reported; a healthy one is not; and a resolved one is not looked at, because
      * whether a two-year-old approval still points at a live entity is a question nobody can act on.
      */

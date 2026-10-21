@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * Deleting the draft of a table that was never public (docs/adr #175). There is no detail to
+ * Deleting the draft of a table that was never public (ADR-07 §6). There is no detail to
  * update afterwards: the table stops existing for everybody, so its cache entry is dropped and the
  * listings it was in are invalidated.
  */

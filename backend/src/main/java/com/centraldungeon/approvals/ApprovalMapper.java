@@ -36,7 +36,7 @@ public interface ApprovalMapper {
      *
      * @param request the request
      * @return the detail, with both people resolved to display names and the polymorphic reference
-     *         published as the two plain strings it is (#78)
+     *         published as the two plain strings it is (ADR-16 §2)
      */
     default ApprovalRequestDetailResponse toDetailResponse(ApprovalRequest request) {
         return new ApprovalRequestDetailResponse(

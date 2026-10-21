@@ -5,21 +5,21 @@ import type { SearchChoice, SearchField } from '@/lib/searchQuery'
 import { ALL_TABLE_STATUSES } from './lifecycle'
 
 /**
- * The commands the explorer's search box accepts (#164, #239, #240, #246).
+ * The commands the explorer's search box accepts (ADR-22 §1, §2, §3, ADR-12 §8).
  *
- * **This is the box #164 was designed for.** The search language was specified thinking of `/tag`,
+ * **This is the box ADR-22 §1 was designed for.** The search language was specified thinking of `/tag`,
  * and until F2.1 the command existed in no screen — the explorer was a paged list of everything
  * open, which stops being a listing somewhere around twenty tables.
  *
- * **All four are the free-text kind**, `examples` and not `values` (#246). `/file_type` declares its
+ * **All four are the free-text kind**, `examples` and not `values` (ADR-12 §8). `/file_type` declares its
  * choices because there are four MIME types and nobody types them; a catalog is the opposite in both
- * halves — its values are hundreds, they grow whenever a master proposes one (#55), and they are
+ * halves — its values are hundreds, they grow whenever a master proposes one (ADR-12 §3), and they are
  * exactly the words people already use. Offering a list would mean querying the catalog while
  * somebody types, which is a second search box inside the search box.
  *
  * **And spelling it differently still works**, which is what a list of options would have been for:
  * the backend resolves the whole synonym group, so a table tagged `DANDD` comes back for `D&D` and
- * the other way round (#54, #56).
+ * the other way round (ADR-12 §2, §4).
  *
  * The examples are real values of `V3__catalog_seed.sql`, deliberately: the first thing somebody
  * tries out of the help has to return tables, or the command reads as broken.
@@ -37,17 +37,17 @@ export function explorerSearchFields(t: TFunction): SearchField[] {
 }
 
 /**
- * What `/table_status` offers: every state a table can be in (#245).
+ * What `/table_status` offers: every state a table can be in (ADR-07 §1).
  *
  * **A command with fixed choices and not free text**, the same distinction `/role`, `/file_type` and
  * `/status` make: there are ten of them, they are a closed set nobody grows by proposing one, and a
  * box that offers them is a box nobody has to guess the spelling of. That is the exact opposite of
  * `/table_system` and `/table_tag` next to it, whose values are catalogs — hundreds of them, growing
- * whenever a master proposes one (#55) — which is why those two declare `examples` instead (#246).
+ * whenever a master proposes one (ADR-12 §3) — which is why those two declare `examples` instead (ADR-12 §8).
  *
  * The `value` is what the backend matches against `game_tables.status`; the `label` is what is typed
  * and read, so it is translated — and it is translated from the `tables` namespace, where the ten
- * labels already live, rather than copied into `admin` (#176: one place per thing).
+ * labels already live, rather than copied into `admin` (ADR-16 §7: one place per thing).
  *
  * @param t the translator of the `tables` namespace
  * @returns the choices, in the order of a table's life
@@ -57,7 +57,7 @@ export function tableStatusChoices(t: TFunction): SearchChoice[] {
 }
 
 /**
- * The commands `/admin/tables` accepts (#164, #240, #176).
+ * The commands `/admin/tables` accepts (ADR-22 §1, §3, ADR-16 §7).
  *
  * **Six and not four**: the explorer's four, which mean exactly the same thing here, plus the two
  * that only make sense once the screen shows every table there is rather than the handful waiting on

@@ -6,7 +6,7 @@ import { sessionsApi } from './sessionsApi'
 import type { TableSession } from '../types'
 
 /**
- * The master calling off a session — and the table getting it back at the end (#194).
+ * The master calling off a session — and the table getting it back at the end (ADR-08 §3).
  *
  * The response is the whole calendar, because the cancellation and its replacement are one change,
  * so it is written straight into the cache instead of invalidating and asking again.

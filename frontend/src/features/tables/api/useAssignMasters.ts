@@ -7,7 +7,7 @@ import type { AssignMastersRequest } from '../types'
 
 /**
  * Hands an unassigned table its first masters, which opens it directly - review is skipped because
- * an admin already vouched for it by creating it (#72).
+ * an admin already vouched for it by creating it (ADR-06 §7).
  *
  * @returns the mutation, taking the table's id and who runs it
  */

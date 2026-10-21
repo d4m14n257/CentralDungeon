@@ -20,7 +20,7 @@ export interface EditLibraryCategoryDialogProps {
 }
 
 /**
- * Changing what an unpublished file of the platform's library is (#282).
+ * Changing what an unpublished file of the platform's library is (ADR-14 §7).
  *
  * **Only while nobody is offered it**: /admin/files opens this for a file that waits unpublished or
  * is hidden, never for a published one — masters are choosing that one under the cajón it has, and
@@ -40,7 +40,7 @@ export function EditLibraryCategoryDialog({ file, onOpenChange }: EditLibraryCat
 
   async function save() {
     if (!file || value === null) return
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('libraryEdit.confirmTitle', { name: file.name }),
       description: t('libraryEdit.confirmDescription', { category: t(`category.${value}`) }),

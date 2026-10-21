@@ -6,7 +6,7 @@ import { StatusBadge, type StatusTone } from '@/components/StatusBadge'
 import { cn } from '@/lib/utils'
 
 /**
- * The three places a node can hold in a node canvas (skill `diseno` §5, #275):
+ * The three places a node can hold in a node canvas (skill `diseno` §5, ADR-12 §7):
  *
  * - `head` - the centre of a star, the one the others hang from
  * - `member` - hanging from a head
@@ -20,7 +20,7 @@ export interface GraphNodeProps {
   label: string
   /** Where the node stands in the graph; it decides the frame, not the colour. */
   role: GraphNodeRole
-  /** The state the node is in, as a `StatusBadge` tone - the colour is never the only carrier (#261). */
+  /** The state the node is in, as a `StatusBadge` tone - the colour is never the only carrier (ADR-21 §6). */
   tone: StatusTone
   /** The state's name, written next to its dot. */
   statusLabel: string
@@ -30,7 +30,7 @@ export interface GraphNodeProps {
   connectableFrom?: boolean
   /** Whether a connection can end on this node. */
   connectableTo?: boolean
-  /** The node's actions menu - the keyboard's way to do what dragging does (#275). */
+  /** The node's actions menu - the keyboard's way to do what dragging does (ADR-12 §7). */
   actions?: ReactNode
   /** A secondary line under the name: a count, a hint. */
   meta?: ReactNode
@@ -42,7 +42,7 @@ export interface GraphNodeProps {
 }
 
 /**
- * The base node of the node canvas pattern (skill `diseno` §5, #275): a name, its state as a
+ * The base node of the node canvas pattern (skill `diseno` §5, ADR-12 §7): a name, its state as a
  * `StatusBadge`, an optional line under it and an actions menu, with the two handles a connection
  * starts and ends on.
  *
@@ -81,7 +81,7 @@ export function GraphNode({
       <Handle type="target" position={Position.Left} isConnectable={connectableTo} className="graph-handle" />
       <div className="min-w-0 flex-1 space-y-1">
         {/* The head is said, not only framed: a crown and its name, so which node the others hang
-            from reads at a glance and to a screen reader, never by the border colour alone (#261). */}
+            from reads at a glance and to a screen reader, never by the border colour alone (ADR-21 §6). */}
         {role === 'head' && headLabel && (
           <p className="graph-node-head-marker">
             <Crown className="size-3.5" aria-hidden="true" />

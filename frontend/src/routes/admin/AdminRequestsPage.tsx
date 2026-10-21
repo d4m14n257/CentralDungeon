@@ -33,7 +33,7 @@ import { ApiError } from '@/types/api'
 
 /**
  * `/admin/requests` — every request somebody made of an admin, and the two things an admin can do
- * with one: approve it or turn it down, each with a reason (#42, F3.2).
+ * with one: approve it or turn it down, each with a reason (ADR-16 §1, F3.2).
  *
  * **It opens filtered by what is waiting.** A tray that opens showing what is already resolved is
  * not a tray anybody can work from — it is a log. The filter is a `?q=` like any other, put there by
@@ -41,7 +41,7 @@ import { ApiError } from '@/types/api'
  * like every other listing), so the `/status` chip is visible, editable and removable: seeing what
  * was decided is one click away rather than a different screen.
  *
- * **The empty tray is good news, not a broken screen** (#136, the same reading as `/master`):
+ * **The empty tray is good news, not a broken screen** (ADR-20 §4, the same reading as `/master`):
  * nothing is waiting for an action. That is a different sentence from "your search found nothing",
  * and telling somebody who just filtered by `Rejected` that the platform is all caught up would
  * answer a question they did not ask.
@@ -50,18 +50,18 @@ import { ApiError } from '@/types/api'
  * `UserRoleService` that `/admin/users` uses — never a second road to the same grant
  * (roles-y-alcance.md §4, F3.2) — while a `TableOpen` records that the request stands and creates
  * nothing: the request carries no name, no system, no seats and no agenda, so the table is created
- * afterwards from `/admin/tables` (#72). The dialog says which one is about to happen.
+ * afterwards from `/admin/tables` (ADR-06 §7). The dialog says which one is about to happen.
  *
- * **What was searched and which page are in the URL** (#185), like the other four admin screens: a
+ * **What was searched and which page are in the URL** (ADR-12 §7), like the other four admin screens: a
  * row is something one admin sends to another, and state that only lives in `useState` cannot be
  * linked to.
  *
  * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
+ * **Behind the admin context's guard** (ADR-20 §2): an account without `Admin` or `Owner` is sent home by
  * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
- * backend authorizes on its own (#103) and the page must not go blank if it refuses.
+ * backend authorizes on its own (ADR-20 §1) and the page must not go blank if it refuses.
  */
 export function AdminRequestsPage() {
   const { t, i18n } = useTranslation('admin')
@@ -69,11 +69,11 @@ export function AdminRequestsPage() {
   const timeZone = browserTimeZone()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
-  // of #164. With no `?q=` to restore, the tray starts on what is waiting: the URL says nothing and
+  // of ADR-22 §1. With no `?q=` to restore, the tray starts on what is waiting: the URL says nothing and
   // the box shows the chip, which is the one state this screen is allowed to open in.
   const fields = useMemo(() => approvalRequestSearchFields(t), [t])
   const search = useSearchQuery({
@@ -146,7 +146,7 @@ export function AdminRequestsPage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
-          already showing rows (#150). */}
+          already showing rows (ADR-19 §4). */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && (
         <EmptyState
@@ -202,7 +202,7 @@ export function AdminRequestsPage() {
 
       {/* The dialog gets its help as a node rather than raising it itself: `HelpLink` lives in
           `features/help`, and a feature never imports another one (§3.1.5). The screen is what may
-          compose the two, so the explanation still sits inside the dialog that prompts it (#231). */}
+          compose the two, so the explanation still sits inside the dialog that prompts it (ADR-20 §5). */}
       <ResolveRequestDialog
         request={resolveDialog.item?.request ?? null}
         action={resolveDialog.item?.action ?? 'approve'}

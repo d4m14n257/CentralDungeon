@@ -19,7 +19,7 @@ interface PublishCategorySelectProps {
 }
 
 /**
- * What one file is, chosen on its own row of the upload list of /admin/files/upload (#233, #278).
+ * What one file is, chosen on its own row of the upload list of /admin/files/upload (ADR-14 §4, §7).
  *
  * **One per file**, because each file dropped in is its own document: the community's blank sheet is
  * table material, the rules are an announcement, and they can go up together.

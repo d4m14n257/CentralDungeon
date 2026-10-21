@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The reader's own week: everything they run and everything they play at, in one answer (#227).
+ * The reader's own week: everything they run and everything they play at, in one answer (ADR-08 §6).
  *
  * <p>It sits outside the contexts on purpose. A person's week is not a master's week or a player's
  * week - it is theirs, and the whole reason the screen exists is that the two halves collide with
@@ -39,10 +39,10 @@ public class MyScheduleController {
      * person can be in, and it is read as one picture — the same criterion as a table's calendar.
      *
      * <p>Needs no role. Running a table and playing at one are both read here, and demanding either
-     * would hide half the answer from somebody who only has the other (#103, #135).
+     * would hide half the answer from somebody who only has the other (ADR-20 §1, ADR-06 §4).
      *
      * @param currentUser the actor, from the token. There is deliberately no parameter for whose
-     *                    week to read: somebody else's is not public (#44, #121)
+     *                    week to read: somebody else's is not public (ADR-10 §2, ADR-05 §5)
      * @return 200 with every table that claims a slot, each with the stretches it occupies. A table
      *         with no agenda yet comes back with no blocks rather than being left out
      */

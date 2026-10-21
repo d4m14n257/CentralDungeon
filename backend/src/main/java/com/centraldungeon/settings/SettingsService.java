@@ -27,12 +27,12 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.util.unit.DataSize;
 
 /**
- * The values the community changes without a deploy (#141), and the four accessors the rest of the
+ * The values the community changes without a deploy (ADR-17 §3), and the four accessors the rest of the
  * application reads them through.
  *
  * <h2>Typed accessors, never a lookup by string</h2>
  *
- * <p>Regla dura 3 is about what crosses HTTP, and #141 extends the same idea inwards: the storage is
+ * <p>Regla dura 3 is about what crosses HTTP, and ADR-17 §3 extends the same idea inwards: the storage is
  * generic - one table, any key - and <b>nothing outside this class ever sees that</b>. A caller asks
  * {@link #maxFileSizeBytes()} and gets a {@code long} in the unit it needs; it never learns that the
  * number is stored in megabytes, as text, in a row that may not exist. That is what makes adding a
@@ -42,7 +42,7 @@ import org.springframework.util.unit.DataSize;
  *
  * <p>These are read on the hot path - every upload, every profile read, every minute by the release
  * job - and a settings table queried once per request is a query per request. The cache is the same
- * Caffeine instance #128 introduced, under its own name.
+ * Caffeine instance ADR-05 §3 introduced, under its own name.
  *
  * <p>The annotation sits on each accessor rather than on one shared {@code readInt} underneath
  * because Spring's caching is a proxy: a call this class makes to itself does not pass through it,
@@ -55,14 +55,14 @@ import org.springframework.util.unit.DataSize;
  *
  * <h2>Why the eviction waits for the commit</h2>
  *
- * <p>Same rule as {@code AdminUserService} and the same reason (#128): evicting inside the
+ * <p>Same rule as {@code AdminUserService} and the same reason (ADR-05 §3): evicting inside the
  * transaction opens a window in which a concurrent request misses the cache, reads the row as it was
  * <em>before</em> the commit, and repopulates the entry with the value the change was meant to
  * replace - where it then survives the whole TTL. So the clear runs on {@code afterCommit}, and it
  * is done through the {@link CacheManager} rather than a {@code @CacheEvict} annotation for the
  * proxy reason above: the callback is this bean calling itself.
  *
- * <p>Per JVM, like every other cache here (#128, #101): with more than one instance running, a
+ * <p>Per JVM, like every other cache here (ADR-05 §3, ADR-18 §2): with more than one instance running, a
  * change would take up to the TTL to reach the others. That is the day the shared cache of
  * plan-desarrollo.md §8 is needed, and not before.
  */
@@ -81,7 +81,7 @@ public class SettingsService {
     /** The overrides. Absent key means the platform is still on {@link SettingKey#defaultValue()}. */
     private final SystemSettingRepository settingRepository;
 
-    /** The audit trail (#141), written on every change and read by the history panel. */
+    /** The audit trail (ADR-17 §3), written on every change and read by the history panel. */
     private final SystemSettingChangeRepository changeRepository;
 
     /** Resolves the actor of a change into the {@code User} row the audit points at. */
@@ -128,7 +128,7 @@ public class SettingsService {
      * <p>{@code spring.servlet.multipart.max-file-size} rejects an oversized part <b>before</b> a
      * byte reaches a controller, so a setting allowed to go past it would let an admin configure a
      * limit that produces a raw container error instead of the explained {@code FILE_TOO_LARGE} the
-     * frontend renders (#197). The two numbers have to be kept in agreement by somebody, and a
+     * frontend renders (ADR-23 §3). The two numbers have to be kept in agreement by somebody, and a
      * comment asking them to is not a mechanism - a boot failure naming both values is.
      *
      * <p>Strictly greater and not "at least": the container is the backstop, so the application's own
@@ -151,7 +151,7 @@ public class SettingsService {
     }
 
     /**
-     * The per-file upload cap, in bytes (#75, #141).
+     * The per-file upload cap, in bytes (ADR-13 §3, ADR-17 §3).
      *
      * @return the cap, converted from the whole megabytes the setting stores
      */
@@ -161,7 +161,7 @@ public class SettingsService {
     }
 
     /**
-     * The largest {@code max_players} a table may be given (#24, #141).
+     * The largest {@code max_players} a table may be given (ADR-07 §5, ADR-17 §3).
      *
      * @return the cap, in people
      */
@@ -171,7 +171,7 @@ public class SettingsService {
     }
 
     /**
-     * How long an admin keeps an item of the shared tray before the release job hands it back (#100).
+     * How long an admin keeps an item of the shared tray before the release job hands it back (ADR-16 §5).
      *
      * @return the timeout, built from the whole minutes the setting stores
      */
@@ -181,7 +181,7 @@ public class SettingsService {
     }
 
     /**
-     * How long a closed table keeps two of its people able to see each other's profile (#44).
+     * How long a closed table keeps two of its people able to see each other's profile (ADR-10 §2).
      *
      * @return the window, in days
      */
@@ -230,7 +230,7 @@ public class SettingsService {
     }
 
     /**
-     * Changes one setting (#141).
+     * Changes one setting (ADR-17 §3).
      *
      * <p>Three things happen together or none of them do: the override is written, the change is
      * recorded with its reason, and the cached value is dropped once the transaction commits. The
@@ -240,12 +240,12 @@ public class SettingsService {
      * @param key           which setting to change
      * @param value         the new value
      * @param justification why, never blank
-     * @param actor         the actor, from the token (#121)
+     * @param actor         the actor, from the token (ADR-05 §5)
      * @return the setting as it is after the change
      * @throws InvalidRequestException 400 {@code SETTING_OUT_OF_RANGE}, carrying the bounds, when the
      *                                 value is outside what the key allows. The message needs the
      *                                 numbers in it - "out of range" without them says nothing about
-     *                                 what to type instead (#197)
+     *                                 what to type instead (ADR-23 §3)
      */
     @Transactional
     public SystemSettingResponse update(SettingKey key, int value, String justification, CurrentUser actor) {

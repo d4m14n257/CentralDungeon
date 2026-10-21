@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The master's tray: everything waiting for an answer, across every table they run (#136).
+ * The master's tray: everything waiting for an answer, across every table they run (ADR-20 §4).
  *
  * <p><b>A tray, not a summary with numbers.</b> A master with three tables does not need to be told
  * how many candidates they have, they need to know <em>who they owe an answer to</em>. Every item
@@ -42,7 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
  * registrations and tasks - and nothing reads from it. Putting it inside {@code tables/} would have
  * made that package depend on {@code tasks/}, which already depends on it.
  *
- * <p><b>There is no reservation</b>, unlike the admin tray of #100: the work of a table has one
+ * <p><b>There is no reservation</b>, unlike the admin tray of ADR-16 §5: the work of a table has one
  * owner and nobody competes for it.
  */
 @Service
@@ -52,7 +52,7 @@ public class MasterDashboardService {
     private static final Set<GameTableStatus> CLOSED_STATUSES =
             EnumSet.of(GameTableStatus.Finished, GameTableStatus.Canceled, GameTableStatus.Deleted);
 
-    /** Where the tray starts: the tables the actor runs, membership and not role (#135). */
+    /** Where the tray starts: the tables the actor runs, membership and not role (ADR-06 §4). */
     private final MasterService masterService;
 
     /** The people waiting for an answer. */
@@ -67,7 +67,7 @@ public class MasterDashboardService {
     /** How many different people answered each of those tasks. */
     private final TaskSubmissionRepository submissionRepository;
 
-    /** Resolves who a task was addressed to - the one place that rule lives (#63, #76). */
+    /** Resolves who a task was addressed to - the one place that rule lives (ADR-15 §1, §2). */
     private final TableTaskService tableTaskService;
 
     /**
@@ -96,12 +96,12 @@ public class MasterDashboardService {
     /**
      * Builds the tray for one person.
      *
-     * <p>The actor always comes from the token and never from a parameter of the URL (#121): this
+     * <p>The actor always comes from the token and never from a parameter of the URL (ADR-05 §5): this
      * answer is about what <em>they</em> owe, and there is no version of it about somebody else.
      *
      * @param actorId the actor, from the token
      * @return their work items, longest wait first. Empty when every table is up to date, which is
-     *         a success and the screen says so (#136)
+     *         a success and the screen says so (ADR-20 §4)
      */
     @Transactional(readOnly = true)
     public MasterDashboardResponse forMaster(String actorId) {
@@ -131,7 +131,7 @@ public class MasterDashboardService {
         return new MasterDashboardResponse(items);
     }
 
-    /** People who applied and are still waiting, one item per table (#28). */
+    /** People who applied and are still waiting, one item per table (ADR-09 §1). */
     private List<MasterWorkItem> candidatesWaiting(Map<String, GameTable> byId) {
         List<MasterWorkItem> items = new ArrayList<>();
         for (PendingCandidateCount count :
@@ -151,7 +151,7 @@ public class MasterDashboardService {
         return items;
     }
 
-    /** Sessions whose date went by while still open, one item per table (#195). */
+    /** Sessions whose date went by while still open, one item per table (ADR-08 §4). */
     private List<MasterWorkItem> sessionsToRecord(Map<String, GameTable> byId, LocalDateTime now) {
         List<MasterWorkItem> items = new ArrayList<>();
         for (UnrecordedSessionCount count :
@@ -172,10 +172,10 @@ public class MasterDashboardService {
     }
 
     /**
-     * Tasks past their deadline that somebody did not answer, one item per task (#70).
+     * Tasks past their deadline that somebody did not answer, one item per task (ADR-15 §2).
      *
      * <p>The count is recipients minus the people who handed something in - answers accumulate
-     * (#76), so three versions from one player are one person. A task everybody answered produces
+     * (ADR-15 §2), so three versions from one player are one person. A task everybody answered produces
      * no item: the deadline passing is not by itself something to do.
      */
     private List<MasterWorkItem> overdueTasks(Map<String, GameTable> byId, LocalDateTime now) {
@@ -198,7 +198,7 @@ public class MasterDashboardService {
                 continue;
             }
             // recipientsOf and not a count of registrations: who a task is addressed to depends on
-            // its audience, and that rule has one home (#63, #76). The list of overdue tasks is
+            // its audience, and that rule has one home (ADR-15 §1, §2). The list of overdue tasks is
             // small by construction, so the query per task is not the N+1 the counts above avoid.
             int missing = tableTaskService.recipientsOf(task).size() - answeredBy.getOrDefault(task.getId(), 0L).intValue();
             if (missing <= 0) {
@@ -227,7 +227,7 @@ public class MasterDashboardService {
             }
             LocalDate startDate = table.getStartDate();
             // The start day having arrived, not an instant having passed: the date carries no hour
-            // any more (#230), and a table is ready to start on the day it starts.
+            // any more (ADR-07 §4), and a table is ready to start on the day it starts.
             if (table.getStatus() == GameTableStatus.Opened && startDate != null && !now.toLocalDate().isBefore(startDate)) {
                 items.add(new MasterWorkItem(
                         table.getId(), table.getName(), MasterWorkItemKind.ReadyToStart, null, 1, startDate.atStartOfDay()));

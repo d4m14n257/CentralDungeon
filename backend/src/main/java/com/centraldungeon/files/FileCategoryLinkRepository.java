@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-/** Reads and writes the {@code file_categories} bridge table (#233). */
+/** Reads and writes the {@code file_categories} bridge table (ADR-14 §4). */
 public interface FileCategoryLinkRepository extends JpaRepository<FileCategoryLink, FileCategoryLinkId> {
 
     /**
@@ -16,7 +16,7 @@ public interface FileCategoryLinkRepository extends JpaRepository<FileCategoryLi
      * <p>One round trip and never one per row, the same rule {@code countUsesByFileIds} follows: a
      * page of twenty files in somebody's library costs one query, not twenty.
      *
-     * <p>Named parameters only, never positional (#124).
+     * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param fileIds the files to resolve cajones for
      * @return one row per membership. A file in no cajón at all is simply absent
@@ -44,15 +44,15 @@ public interface FileCategoryLinkRepository extends JpaRepository<FileCategoryLi
 
     /**
      * Takes a file out of the given cajones - the one write that removes a membership, and only for
-     * the platform's library (#282).
+     * the platform's library (ADR-14 §7).
      *
-     * <p>Memberships are add-only everywhere else (#233): they record which flows a file was used in,
+     * <p>Memberships are add-only everywhere else (ADR-14 §4): they record which flows a file was used in,
      * and that stays true. A file of the library is different: its cajón is what an admin declared it
      * is for, and correcting that while it is unpublished is correcting a declaration, not rewriting
      * history. Only the publishable cajones are ever passed here, so a player-side membership the file
      * carries from before is never touched.
      *
-     * <p>Named parameters only, never positional (#124).
+     * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param fileId     the file
      * @param categories the cajones to take it out of

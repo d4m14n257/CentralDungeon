@@ -38,7 +38,7 @@ public class SettingsController {
      * The limits the interface mirrors.
      *
      * @return 200 with the caps a client checks against before sending anything. Never the authority:
-     *         the server applies the same limit again and answers with the real number (#197)
+     *         the server applies the same limit again and answers with the real number (ADR-23 §3)
      */
     @GetMapping("/limits")
     @PreAuthorize("isAuthenticated()")

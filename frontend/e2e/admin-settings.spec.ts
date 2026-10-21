@@ -116,9 +116,9 @@ test('an admin raises the file cap, the next upload screen respects it, and the 
     await refusing.getByLabel('Motivo').fill('Fuera de rango a propósito')
     await refusing.getByRole('button', { name: 'Guardar el cambio' }).click()
     // Refused by the form itself, so there is nothing to review: the review only opens for a change
-    // that could be written (#283).
+    // that could be written (ADR-21 §9).
     await expect(refusing.getByText('Tiene que estar entre 1 y 25')).toBeVisible()
-    // Closing a half-filled form asks first (#110), which is `FormDialog` doing its job and not
+    // Closing a half-filled form asks first (ADR-19 §6), which is `FormDialog` doing its job and not
     // something this dialog had to remember. Confirming the discard is part of the path.
     await refusing.getByRole('button', { name: 'Close' }).click()
     await admin.page.getByRole('button', { name: 'Descartar lo hecho' }).click()
@@ -192,11 +192,11 @@ test('an owner finds the same settings screen an admin does', async ({ browser }
 })
 
 /**
- * The warning of #141, on the card and before anything is opened.
+ * The warning of ADR-17 §3, on the card and before anything is opened.
  *
  * The visibility window is the one setting of this slice whose change is retroactive: it is evaluated
  * on every profile read, so lowering it takes visibility away from people who have it at that
- * instant. #141 asks for the warning by name, and a warning that only appears after saving is not
+ * instant. ADR-17 §3 asks for the warning by name, and a warning that only appears after saving is not
  * one.
  */
 test('the retroactive setting says so before anybody opens it', async ({ browser }) => {

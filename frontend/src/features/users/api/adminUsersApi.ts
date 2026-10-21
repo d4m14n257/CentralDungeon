@@ -10,7 +10,7 @@ import type { AdminUserDetail, AdminUserSummary, ChangeUserRoleInput, ChangeUser
  * operations under their own prefix.
  *
  * **The four mutators answer with the updated detail** rather than `204`, which is what lets a
- * caller confirm the outcome — a grant of `Admin` comes back without `Owner` on it (#169), so the
+ * caller confirm the outcome — a grant of `Admin` comes back without `Owner` on it (ADR-06 §1), so the
  * answer is the only place the second half of the transaction is visible. The hooks on top of it
  * still re-read the branch instead of patching one row in: one of these calls moves roles this
  * screen never asked about, and the listing has no way to know which rows those were.
@@ -28,7 +28,7 @@ export const adminUsersApi = {
    *
    * @param query the search box, already debounced, in the language of `lib/searchQuery.ts`
    * @param page  zero-based page number
-   * @param size  rows per page, one of `adminPageSizeOptions` (#271)
+   * @param size  rows per page, one of `adminPageSizeOptions` (ADR-21 §11)
    */
   list: (query: string | undefined, page = 0, size: number = pageSize.admin) =>
     api.getPage<AdminUserSummary>('/api/v1/admin/users', { q: query, page, size }),
@@ -41,7 +41,7 @@ export const adminUsersApi = {
   byId: (id: string) => api.get<AdminUserDetail>(`/api/v1/admin/users/${id}`),
 
   /**
-   * What admins did to this account, and why (#84, #169). Never paginated: it is read as a whole,
+   * What admins did to this account, and why (ADR-05 §7, ADR-06 §1). Never paginated: it is read as a whole,
    * inside the panel that opens on one person.
    *
    * @param id the account whose history to read
@@ -50,7 +50,7 @@ export const adminUsersApi = {
 
   /**
    * Gives somebody a role. A `POST` with a body and not a `PUT`, because the justification is part
-   * of the act: a grant nobody explained is a grant nobody can review (#169).
+   * of the act: a grant nobody explained is a grant nobody can review (ADR-06 §1).
    *
    * Refused with `ROLE_GRANT_FORBIDDEN` when an admin reaches for `Admin` or `Owner` — which this
    * screen never offers them, so it only surfaces for somebody calling the API another way.
@@ -72,7 +72,7 @@ export const adminUsersApi = {
     api.post<AdminUserDetail, ChangeUserRoleInput>(`/api/v1/admin/users/${id}/revoke-role`, input),
 
   /**
-   * Closes an account (#84). The person stops being able to sign in; **nothing of theirs is
+   * Closes an account (ADR-05 §7). The person stops being able to sign in; **nothing of theirs is
    * deleted** — their tables, applications and history stay exactly where they were.
    *
    * @param id    the account to block

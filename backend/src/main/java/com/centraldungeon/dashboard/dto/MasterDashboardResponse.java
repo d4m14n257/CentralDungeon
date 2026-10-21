@@ -3,7 +3,7 @@ package com.centraldungeon.dashboard.dto;
 import java.util.List;
 
 /**
- * Everything waiting for the master's answer, across every table they run (#136).
+ * Everything waiting for the master's answer, across every table they run (ADR-20 §4).
  *
  * <p>A record wrapping the list rather than a bare {@code List}: the tray is going to grow a
  * "generated at" or a count of tables scanned, and a top-level array has nowhere to put either.

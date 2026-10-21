@@ -64,8 +64,8 @@ async function newActor(
 }
 
 /**
- * Types a criterion, closes it into a chip and searches it: the first Enter closes one (#240), the
- * second, on the empty text, is what searches (#268).
+ * Types a criterion, closes it into a chip and searches it: the first Enter closes one (ADR-22 §3), the
+ * second, on the empty text, is what searches (ADR-22 §4).
  */
 async function search(page: Page, criterion: string) {
   const box = page.getByRole('combobox', { name: 'Buscar usuarios' })
@@ -166,7 +166,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await ownOwnDialog.getByRole('button', { name: 'Quitar el rol' }).click()
     await acceptReview(owner.page)
 
-    // The refusal is rendered from the error code, not from the backend's English detail (#197).
+    // The refusal is rendered from the error code, not from the backend's English detail (ADR-23 §3).
     await expect(ownOwnDialog.getByRole('alert')).toContainText('No podés quitarte tu propio rol de Owner')
     // And the dialog stays open with the account untouched: nothing was half-applied.
     await expect(ownOwnDialog).toBeVisible()
@@ -207,12 +207,12 @@ test('the /role command travels from the box through the URL to the backend', as
     await search(owner.page, `/discord_name ${prefix} /and /role Master`)
 
     // The canonical string the box built is the one the address bar carries and the one
-    // SearchQueryParser reads on the other side (#185, #240).
+    // SearchQueryParser reads on the other side (ADR-12 §7, ADR-22 §3).
     await expect(owner.page).toHaveURL(/q=%2Frole\+Master|q=.*role.*Master/)
     await expect(rowOf(owner.page, masterId)).toBeVisible()
     await expect(rowOf(owner.page, playerId)).toHaveCount(0)
 
-    // The state is in the URL, so a reload has to come back to the same rows (#185).
+    // The state is in the URL, so a reload has to come back to the same rows (ADR-12 §7).
     await owner.page.reload()
     await expect(rowOf(owner.page, masterId)).toBeVisible()
     await expect(rowOf(owner.page, playerId)).toHaveCount(0)
@@ -233,7 +233,7 @@ test('the /role command travels from the box through the URL to the backend', as
 
 /**
  * The other half of the matrix: a block is the door closing, and the accounts holding a rank are out
- * of reach of it - which the screen expresses by not offering the button at all (#84, §3).
+ * of reach of it - which the screen expresses by not offering the button at all (ADR-05 §7, §3).
  */
 test('an account can be blocked and let back in, and one holding a rank is never offered a block', async ({ browser }) => {
   // Same reason as above: the marker before the role, so one search brings the three of them up.
@@ -263,7 +263,7 @@ test('an account can be blocked and let back in, and one holding a rank is never
 
     await rowOf(owner.page, victimId).getByRole('button', { name: 'Bloquear' }).click()
     const blockDialog = owner.page.getByRole('dialog')
-    // The dialog says what a block implies before it is confirmed (#84).
+    // The dialog says what a block implies before it is confirmed (ADR-05 §7).
     await expect(blockDialog).toContainText('no va a poder volver a entrar')
     await expect(blockDialog).toContainText('Sus datos se conservan')
     await blockDialog.getByLabel('Motivo').fill('Prueba E2E de bloqueo')
@@ -273,7 +273,7 @@ test('an account can be blocked and let back in, and one holding a rank is never
 
     await expect(rowOf(owner.page, victimId)).toContainText('Bloqueada', { timeout: 15_000 })
 
-    // The block applies now and not at the end of the cache's TTL (#128): the blocked person's own
+    // The block applies now and not at the end of the cache's TTL (ADR-05 §3): the blocked person's own
     // tab stops working on its very next load. `AuthService.refresh` re-reads the snapshot and
     // refuses anything that is not Allowed, so a cache that had not been dropped would have kept
     // them inside for another minute - "a block that takes sixty seconds to apply is a block that

@@ -25,12 +25,12 @@ export interface TaskSubmissionsPanelProps {
 /**
  * What came in for one task, and who has not answered.
  *
- * **Answers accumulate and none replaces another** (#76), so this is a history read forwards rather
+ * **Answers accumulate and none replaces another** (ADR-15 §2), so this is a history read forwards rather
  * than "the latest version": somebody who sent three drafts appears three times, in order, and the
  * master decides which one they meant. There is no accept and no reject, because judging an answer
  * takes a criterion the software does not have.
  *
- * **The missing list is a list of people to talk to** (#70). It offers no action, and that is
+ * **The missing list is a list of people to talk to** (ADR-15 §2). It offers no action, and that is
  * deliberate: not answering blocks nothing and removes nobody, so an "expulsar" button here would be
  * the interface promising something the rules refuse.
  *
@@ -42,7 +42,7 @@ export interface TaskSubmissionsPanelProps {
  */
 export function TaskSubmissionsPanel({ taskId, renderFiles }: TaskSubmissionsPanelProps) {
   const { t, i18n } = useTranslation('tasks')
-  // isLoadingError, not isError: see docs/adr #150.
+  // isLoadingError, not isError: see ADR-19 §4.
   const { data, isPending, isLoadingError, refetch } = useTaskSubmissions(taskId)
   const timeZone = browserTimeZone()
 
@@ -91,7 +91,7 @@ export function TaskSubmissionsPanel({ taskId, renderFiles }: TaskSubmissionsPan
                 </li>
               ))}
             </ul>
-            {/* #70 stated where it is easiest to forget: this list is information, not a sanction. */}
+            {/* ADR-15 §2 stated where it is easiest to forget: this list is information, not a sanction. */}
             <p className="text-fg-muted text-xs">{t('submissions.missingHint')}</p>
           </>
         )}

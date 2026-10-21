@@ -14,8 +14,8 @@ import org.springframework.cache.annotation.EnableCaching;
  * <p>{@code @EnableConfigurationProperties} binds the three records that carry external
  * configuration - Discord's guild, the JWT settings and where uploaded files live - and
  * {@code @EnableCaching} turns on the two Caffeine caches: the one that keeps the per-request
- * authorization read from being a query per call (#128), and the one F3.5 added so the editable
- * settings of #141 are not a table hit on every upload.
+ * authorization read from being a query per call (ADR-05 §3), and the one F3.5 added so the editable
+ * settings of ADR-17 §3 are not a table hit on every upload.
  *
  * <p>There were four records until F3.5. {@code AdminQueueProperties} is gone because its one value
  * moved to {@code system_settings}, which is what arquitectura §4.5 said this slice would do: a

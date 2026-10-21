@@ -6,7 +6,7 @@ import { sessionsApi } from './sessionsApi'
 import type { RecordAttendanceRequest } from '../types'
 
 /**
- * The master recording who was at a session (#36).
+ * The master recording who was at a session (ADR-08 §4).
  *
  * The roster is saved as a whole: that is how it is filled in on screen, and a half-saved roster
  * would be a state the screen then has to explain.

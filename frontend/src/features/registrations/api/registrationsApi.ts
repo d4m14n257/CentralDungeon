@@ -11,29 +11,29 @@ export const registrationsApi = {
   /**
    * The table's current players — its roster, for the master.
    *
-   * A different question from `candidates`, which is the FIFO queue waiting to get in (#28). The
+   * A different question from `candidates`, which is the FIFO queue waiting to get in (ADR-09 §1). The
    * first thing that needed it is choosing who a `Single` task is addressed to: offering the whole
    * platform there would be offering people who cannot be chosen.
    */
   players: (tableId: string) => api.get<TablePlayer[]>(`/api/v1/game-tables/${tableId}/players`),
   accept: (registrationId: string) => api.post<Registration>(`/api/v1/registrations/${registrationId}/accept`),
-  /** Withdrawing one's own pending application - the way out R4's clash notice needs (#178). */
+  /** Withdrawing one's own pending application - the way out R4's clash notice needs (ADR-08 §2). */
   withdraw: (registrationId: string) => api.delete(`/api/v1/registrations/${registrationId}`),
   reject: (registrationId: string, justification: string) =>
     api.post<Registration, { justification: string }>(`/api/v1/registrations/${registrationId}/reject`, { justification }),
 
   /**
-   * The veto: the table's `Primary` throwing somebody out of **this** table (#29, #39).
+   * The veto: the table's `Primary` throwing somebody out of **this** table (ADR-09 §4, §5).
    *
    * **Hung off the table and not off the registration**, unlike `accept` and `reject` above, and that
    * is the shape of the rule rather than a stylistic choice: who may do this is "the `Primary` of
    * *this* table", so the table belongs in the path where the authorization can be checked against it
-   * (#121). A `Secondary` calling it gets `403 NOT_PRIMARY_MASTER` — it is who you are, not what you
+   * (ADR-05 §5). A `Secondary` calling it gets `403 NOT_PRIMARY_MASTER` — it is who you are, not what you
    * sent — and should be calling {@link requestBlock} instead.
    *
    * @param tableId        the table the veto is for
    * @param registrationId the application being vetoed
-   * @param justification  why, required (#39)
+   * @param justification  why, required (ADR-09 §5)
    */
   block: (tableId: string, registrationId: string, justification: string) =>
     api.post<Registration, { justification: string }>(`/api/v1/game-tables/${tableId}/registrations/${registrationId}/block`, {
@@ -41,7 +41,7 @@ export const registrationsApi = {
     }),
 
   /**
-   * Lifting a veto, which is the half of #39 that makes the other half acceptable.
+   * Lifting a veto, which is the half of ADR-09 §5 that makes the other half acceptable.
    *
    * The reason is required here too, and for the same purpose: what is being recorded is not the
    * veto but the **change**, so that a pattern of impulsive vetoes is visible afterwards.
@@ -56,7 +56,7 @@ export const registrationsApi = {
     }),
 
   /**
-   * A co-master **asking** for a veto, which is all a `Secondary` can do (#39, #71).
+   * A co-master **asking** for a veto, which is all a `Secondary` can do (ADR-09 §5, ADR-06 §3).
    *
    * **A second endpoint and not the same one behaving differently.** The screen already knows which
    * of the two the reader is, and the phase document asks it to say so *before* the button is

@@ -6,9 +6,9 @@ import { catalogsApi } from './catalogsApi'
 import type { CatalogKind, MergeCatalogGroupsInput } from '../types'
 
 /**
- * Merges two synonym groups into one (#55).
+ * Merges two synonym groups into one (ADR-12 §3).
  *
- * Not one row of the bridge tables moves, and that is the point of #56: a table tagged "DANDD"
+ * Not one row of the bridge tables moves, and that is the point of ADR-12 §4: a table tagged "DANDD"
  * becomes findable by "D&D 5e" the moment this runs, with nothing migrated.
  *
  * @param kind which catalog

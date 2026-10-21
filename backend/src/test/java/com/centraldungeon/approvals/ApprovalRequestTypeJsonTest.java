@@ -10,7 +10,7 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * How {@link ApprovalRequestType} crosses HTTP, in both directions.
  *
- * <p>This test exists because of #253, which F3.1 paid for once already. {@code PlatformRole} crossed
+ * <p>This test exists because of ADR-04 §5, which F3.1 paid for once already. {@code PlatformRole} crossed
  * HTTP without {@code @JsonValue}: every response published {@code "Player"} - built by hand in a
  * mapper - and every request carrying that same value was rejected with a 400. No service test could
  * see it, because a service test calls the method with the enum already in hand, and the frontend's
@@ -91,7 +91,7 @@ class ApprovalRequestTypeJsonTest {
 
     /**
      * Every type declares which kind of entity it is about. The three from F3.2 are about the person
-     * asking, which is what keeps the invariant of #78 without a nullable column per flow (#126); the
+     * asking, which is what keeps the invariant of ADR-16 §2 without a nullable column per flow (ADR-16 §2); the
      * two from F3.4 are the first that point at something else, and therefore the first that need a
      * case in {@link ApprovalEntityResolver}.
      */

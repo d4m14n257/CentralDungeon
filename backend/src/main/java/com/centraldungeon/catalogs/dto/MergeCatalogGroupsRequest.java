@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
  * Merging two synonym groups into one - "DANDD" and "D&amp;D 5e" turn out to be the same thing.
  *
  * <p>It is an operation of its own and not a PATCH of {@code canonicalId}, because it is part of the
- * product (#55): the source's whole group moves, aliases included, and nothing about that is
+ * product (ADR-12 §3): the source's whole group moves, aliases included, and nothing about that is
  * expressible as setting one field.
  *
  * @param sourceCanonicalId the group that stops being a group. It becomes an alias of the target,

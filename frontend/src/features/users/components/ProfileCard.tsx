@@ -10,21 +10,21 @@ import type { Profile } from '../types'
 interface ProfileCardProps {
   /** The profile to show. */
   profile: Profile
-  /** What sits at the right end of the card's header — on one's own profile, its «Cómo funciona» (#280). */
+  /** What sits at the right end of the card's header — on one's own profile, its «Cómo funciona» (ADR-21 §5). */
   actions?: ReactNode
 }
 
 /**
  * A profile's upper half (diseno §4): initials, name, Discord handle, country, roles,
- * aggregate attendance and how many tables they played to the end (#284). `/player/profile` and `/player/users/:id` both mount this and nothing else yet.
+ * aggregate attendance and how many tables they played to the end (ADR-06 §8). `/player/profile` and `/player/users/:id` both mount this and nothing else yet.
  *
- * **The "Comentarios recibidos" heading of the wireframe is never drawn** (docs/adr #248): it
+ * **The "Comentarios recibidos" heading of the wireframe is never drawn** (ADR-10 §5): it
  * belongs to F5, and a section titled that way with nothing underneath would read as a broken page
  * rather than as "nobody has commented on you yet" (skill `diseno` §5) — the same trap the
  * master dashboard's empty state already sidesteps. There is no placeholder, no "coming soon": the
  * card simply ends after attendance.
  *
- * **Attendance is three numbers, never a percentage** (#137, #98): it delegates to
+ * **Attendance is three numbers, never a percentage** (ADR-08 §5, ADR-11 §10): it delegates to
  * {@link AttendanceSummaryView}, the one place that renders that shape, so a profile and a table's
  * own session tab can never drift into showing it two different ways.
  *
@@ -54,7 +54,7 @@ export function ProfileCard({ profile, actions }: ProfileCardProps) {
         <div className="min-w-0 flex-1 space-y-1.5">
           <h1 className="page-title">{label}</h1>
           <div className="text-fg-muted flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-            {/* How the community finds them on the server (#284). */}
+            {/* How the community finds them on the server (ADR-06 §8). */}
             <span>{t('profile.discordHandle', { handle: profile.discordUsername })}</span>
             {/* No fallback text for a missing country: a person who never set one is not an error,
                 and "no country" is not information anybody asked for (skill `diseno` §5). */}

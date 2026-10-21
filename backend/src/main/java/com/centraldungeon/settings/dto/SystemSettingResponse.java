@@ -8,14 +8,14 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * One row of {@code /admin/settings}: what the setting is worth now, what it ships as, and how far
- * it may be moved (#141).
+ * it may be moved (ADR-17 §3).
  *
  * <p><b>The default travels with the current value</b>, which is what the screen was asked for -
  * «con el valor actual y el por defecto a la vista». Without it, an admin looking at {@code 15} has
  * no way to tell whether somebody set it there or whether it has always been that, and no way to put
  * it back without finding the number in the source.
  *
- * <p><b>No label and no description</b>, deliberately (#197): the backend writes nothing a person
+ * <p><b>No label and no description</b>, deliberately (ADR-23 §3): the backend writes nothing a person
  * reads. The screen builds both from {@code key}, in the reader's language, out of
  * {@code src/locales/<idioma>/admin.json} - which is also why {@code key} is the stable string
  * {@link SettingKey#wireName()} publishes and not an index.
@@ -31,7 +31,7 @@ import org.jspecify.annotations.Nullable;
  * @param overridden    whether a human set this, as opposed to it still being the shipped default.
  *                      Not derivable from comparing the two numbers: somebody may set a setting to
  *                      exactly its default, and that is a decision somebody made
- * @param retroactive   whether changing it re-answers questions already answered (#44, #97). The
+ * @param retroactive   whether changing it re-answers questions already answered (ADR-10 §2, ADR-11 §9). The
  *                      screen turns it into a warning shown before the value is saved
  * @param updatedByName who set it last, already resolved to a display name, or null when nobody has
  * @param updatedAt     when it was last set, or null when nobody has

@@ -20,9 +20,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * What a mocked repository cannot prove about the catalogs: that the visibility filter of #57 is
- * really in the SQL, that a merge leaves the flat depth-1 shape of #59 intact against a real FK, and
- * that resolving a group works from either end of it (#54, #56).
+ * What a mocked repository cannot prove about the catalogs: that the visibility filter of ADR-12 §3 is
+ * really in the SQL, that a merge leaves the flat depth-1 shape of ADR-12 §2 intact against a real FK, and
+ * that resolving a group works from either end of it (ADR-12 §2, §4).
  *
  * <p>The last one is the scenario F1.1 is measured by: an admin merges "DANDD" into "D&D 5e" and the
  * explorer finds the tables of both, <b>without a single row of table_systems being rewritten</b>.
@@ -65,7 +65,7 @@ class CatalogGroupIT {
         disabled = save(new Tag("Fuera de circulación"), CatalogStatus.Disabled, null);
     }
 
-    /** The whole point of #57 and #81: neither a proposal nor a disabled value reaches a player. */
+    /** The whole point of ADR-12 §3 and ADR-12 §5: neither a proposal nor a disabled value reaches a player. */
     @Test
     void showsOnlyAcceptedValuesToEveryoneButAnAdmin() {
         assertThat(namesOf(tagService.search(null, FIRST_PAGE))).containsExactlyInAnyOrder("D&D 5e", "DANDD");
@@ -87,7 +87,7 @@ class CatalogGroupIT {
         assertThat(page.content()).extracting(AdminCatalogValueResponse::name).containsExactly("Todavía sin revisar");
     }
 
-    /** #275: one row per group - canonical entries and unclassified proposals, never an alias - with its size. */
+    /** ADR-12 §7: one row per group - canonical entries and unclassified proposals, never an alias - with its size. */
     @Test
     void listsOnlyGroupHeadsWithHowManyAliasesEachHas() {
         accepted("DND", dnd);
@@ -101,7 +101,7 @@ class CatalogGroupIT {
                 .singleElement().extracting(AdminCatalogValueResponse::aliasCount).isEqualTo(2L);
     }
 
-    /** #54 carried to the listing: searching an alias's name brings up the group it belongs to. */
+    /** ADR-12 §2 carried to the listing: searching an alias's name brings up the group it belongs to. */
     @Test
     void findsAGroupByTheNameOfOneOfItsAliases() {
         accepted("Dungeons & Dragons", dnd);
@@ -111,7 +111,7 @@ class CatalogGroupIT {
         assertThat(page.content()).extracting(AdminCatalogValueResponse::name).containsExactly("D&D 5e");
     }
 
-    /** #276 against the real FK: the alias lands in the other group and nothing is left one level too deep. */
+    /** ADR-12 §6 against the real FK: the alias lands in the other group and nothing is left one level too deep. */
     @Test
     void reassigningMovesAnAliasBetweenGroups() {
         String alias = accepted("DND", dnd);
@@ -123,7 +123,7 @@ class CatalogGroupIT {
         assertThat(tagService.resolveGroupIds(dandd)).containsExactlyInAnyOrder(dandd, alias);
     }
 
-    /** #276: promoting keeps the whole group, and it is still found from every member. */
+    /** ADR-12 §6: promoting keeps the whole group, and it is still found from every member. */
     @Test
     void promotingAnAliasKeepsTheGroupAndChangesItsHead() {
         String alias = accepted("DND", dnd);
@@ -143,11 +143,11 @@ class CatalogGroupIT {
     void searchesByNameFromTheOneQueryParameter() {
         assertThat(namesOf(tagService.search("dandd", FIRST_PAGE))).containsExactly("DANDD");
         assertThat(namesOf(tagService.search("/catalog_name d&d", FIRST_PAGE))).containsExactly("D&D 5e");
-        // An unknown /field is searched as literal text, never answered with a 400 (#164).
+        // An unknown /field is searched as literal text, never answered with a 400 (ADR-22 §1).
         assertThat(namesOf(tagService.search("/nombre d&d", FIRST_PAGE))).isEmpty();
     }
 
-    /** The scenario F1.1 closes on (#54, #56): merge, then find the group from either member. */
+    /** The scenario F1.1 closes on (ADR-12 §2, §4): merge, then find the group from either member. */
     @Test
     void resolvesTheMergedGroupFromEitherOfItsNames() {
         assertThat(tagService.resolveGroupIds(dandd)).containsExactly(dandd);
@@ -158,7 +158,7 @@ class CatalogGroupIT {
         assertThat(tagService.resolveGroupIds(dnd)).containsExactlyInAnyOrder(dnd, dandd);
     }
 
-    /** #59 against a real self-referencing FK: after a merge every alias still points at a canonical entry. */
+    /** ADR-12 §2 against a real self-referencing FK: after a merge every alias still points at a canonical entry. */
     @Test
     void keepsGroupsOneLevelDeepAfterAMerge() {
         String alias = accepted("DND", dandd);
@@ -180,7 +180,7 @@ class CatalogGroupIT {
         assertThat(tagService.resolveGroupIds(dnd)).containsExactly(dnd);
     }
 
-    /** Restoring puts everything back with no migration (#81). */
+    /** Restoring puts everything back with no migration (ADR-12 §5). */
     @Test
     void disablingAndRestoringLeavesTheGroupAsItWas() {
         tagService.merge(dandd, dnd);
@@ -192,7 +192,7 @@ class CatalogGroupIT {
         assertThat(tagService.resolveGroupIds(dnd)).containsExactlyInAnyOrder(dnd, dandd);
     }
 
-    /** Accepting a proposal into a group is the other half of #55, and it is one round trip. */
+    /** Accepting a proposal into a group is the other half of ADR-12 §3, and it is one round trip. */
     @Test
     void acceptingAProposalIntoAGroupMakesItSearchableAsTheGroup() {
         tagService.accept(pending, dnd);

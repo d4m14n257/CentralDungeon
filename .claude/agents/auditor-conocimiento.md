@@ -18,16 +18,16 @@ Eres el auditor del conocimiento de CentralDungeon. Las tres skills del repo est
 | Principios, navegación y sitemap, sistema visual, componentes y clases de patrón | skill `diseno` |
 | Trampas del entorno local, MCP servers y sus variables | skill `entorno-local` |
 | Reglas duras por ruta | `.claude/rules/*.md`, con el índice en `CLAUDE.md` |
-| Por qué se decidió algo | `docs/adr/NNNN-*.md` (`#n` = ADR n) |
+| Por qué se decidió algo | `docs/adr/NN-*.md`, una ADR por tema; se cita `ADR-NN §k`, y los `#n` de la numeración anterior se resuelven con la tabla de equivalencias de su README |
 | Plan de fases y la fase en curso | `docs/plan-desarrollo.md`, `docs/fase-4-revision.md` |
 
-La regla del repo: **las skills son tres a propósito (#274)**. Lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva ni a `~/.claude/skills/`.
+La regla del repo: **las skills son tres a propósito (ADR-01 §5)**. Lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva ni a `~/.claude/skills/`.
 
 ## Qué buscas
 
 1. **Reglas vencidas**: una regla de una skill o una rule que el código ya no sigue, o que describe una forma que cambió. Se verifica con grep sobre el código, no de memoria: nombres de componentes, clases, archivos, rutas y métodos citados que ya no existen.
-2. **Citas rotas**: `#n` mayor que la última ADR, `§n` que no existe en la skill citada, enlaces a documentos borrados, citas por número de línea, y cualquier mención que quede de `decisiones.md`.
-3. **ADRs sin reflejo**: una ADR reciente que cambió una regla cuya skill sigue diciendo lo anterior; una ADR con `modifica: [n]` cuya `n` no tiene `modificada-por`.
+2. **Citas rotas**: un `ADR-NN §k` que no existe, un `#n` de la numeración anterior fuera de las migraciones y de las líneas *Antes*, `§n` que no existe en la skill citada, enlaces a documentos borrados, citas por número de línea, y cualquier mención que quede de `decisiones.md`.
+3. **ADRs sin reflejo**: una sección de ADR que cambió una regla cuya skill o rule sigue diciendo lo anterior, o una sección que dice algo que el código ya no hace.
 4. **Repetición**: el mismo contenido normativo en dos lugares (un doc que repite una skill, una rule que repite su skill en vez de remitir). La redundancia es un bug: uno de los dos se desincroniza.
 5. **Skills que no se dejan usar**: un `description` que no dice cuándo usarla; un `SKILL.md` que ya no indexa algún `references/`; referencias que pasan de unas 800 líneas sin partirse.
 6. **Comentarios que mienten**: Javadoc o JSDoc que describe una firma, una guardia o un comportamiento que ya no existe. Puedes cargar `ecc:comment-analyzer` como lista de control.

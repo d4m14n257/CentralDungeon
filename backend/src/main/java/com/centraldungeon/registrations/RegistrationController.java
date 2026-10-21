@@ -46,13 +46,13 @@ public class RegistrationController {
     }
 
     /**
-     * Applying to a table. The applicant is the actor from the token, never a body field (#121).
+     * Applying to a table. The applicant is the actor from the token, never a body field (ADR-05 §5).
      *
      * @param tableId     the table applied to
      * @param request     the applicant's note, optional
      * @param currentUser the applicant, from the token
      * @return 201 with the application and its Location header. 409 if they already have an active
-     *         one on this table (#28), or if the table is not accepting applications
+     *         one on this table (ADR-09 §1), or if the table is not accepting applications
      */
     @PostMapping("/api/v1/game-tables/{tableId}/registrations")
     @PreAuthorize("isAuthenticated()")
@@ -66,7 +66,7 @@ public class RegistrationController {
     }
 
     /**
-     * Candidates only, FIFO - the queue the master's "Candidatos" tab reads (#28).
+     * Candidates only, FIFO - the queue the master's "Candidatos" tab reads (ADR-09 §1).
      *
      * @param tableId     the table
      * @param pageable    page and size; the FIFO order is fixed and not a caller's choice
@@ -86,7 +86,7 @@ public class RegistrationController {
      * The table's current players - its roster, for the master.
      *
      * <p>A different endpoint from the one above and not a {@code ?status=} on it: the candidate
-     * queue is FIFO and its order is a fairness rule (#28), while a roster is just a roster. One
+     * queue is FIFO and its order is a fairness rule (ADR-09 §1), while a roster is just a roster. One
      * endpoint answering two questions with two different orderings is how a caller ends up relying
      * on the wrong one.
      *
@@ -106,7 +106,7 @@ public class RegistrationController {
     /**
      * A master accepting a candidate.
      *
-     * <p>Taking the last seat auto-rejects the candidates still queued (#34), and everyone affected
+     * <p>Taking the last seat auto-rejects the candidates still queued (ADR-09 §3), and everyone affected
      * is notified - so one call can produce several notifications.
      *
      * @param registrationId the application to accept
@@ -139,11 +139,11 @@ public class RegistrationController {
     /**
      * The applicant withdrawing their own pending application.
      *
-     * <p>It is the way out R4's clash notice needs to leave open (#178): a notification saying two
+     * <p>It is the way out R4's clash notice needs to leave open (ADR-08 §2): a notification saying two
      * of your tables now fall at the same hour is only useful if you can do something about it.
      *
      * <p>The path addresses the registration and the actor comes from the token, so there is no way
-     * to spell "withdraw somebody else's" (#121) - the service still checks, because a path that
+     * to spell "withdraw somebody else's" (ADR-05 §5) - the service still checks, because a path that
      * cannot express it is not the same as a rule that is enforced.
      *
      * @param registrationId the application to withdraw
@@ -163,7 +163,7 @@ public class RegistrationController {
      *
      * @param pageable    page, size and sort; newest first
      * @param currentUser the actor, from the token. There is no way to ask for somebody else's
-     *                    applications: the id is not a parameter (#121)
+     *                    applications: the id is not a parameter (ADR-05 §5)
      * @return 200 with one page of their applications
      */
     @GetMapping("/api/v1/registrations/mine")

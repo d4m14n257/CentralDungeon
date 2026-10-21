@@ -15,7 +15,7 @@ export interface AttachFilesInput {
 
 /**
  * Attaches several files to a table whose id the caller did not have when the files were chosen
- * (#228).
+ * (ADR-08 §1).
  *
  * It exists for the create wizard: a master picks the maps and sheets while building the table, and
  * the table has no id until the moment it is saved. `useAttachTableFile` takes its id at hook time

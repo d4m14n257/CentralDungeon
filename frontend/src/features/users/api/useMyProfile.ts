@@ -6,7 +6,7 @@ import { staleTime } from '@/config/query'
 import { usersApi } from './usersApi'
 
 /**
- * The reader's own profile screen, `/player/profile` (#248): name, country, roles and aggregate
+ * The reader's own profile screen, `/player/profile` (ADR-10 §5): name, country, roles and aggregate
  * attendance.
  *
  * Deliberately not {@link import('./useMe').useMe}: that one feeds the app shell — which contexts

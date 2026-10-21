@@ -22,17 +22,17 @@ import org.jspecify.annotations.Nullable;
  * other (arquitectura §2.3).
  *
  * @param name          the table's title
- * @param description   what the table is about, as rich text. Re-sanitized on every save (#62)
+ * @param description   what the table is about, as rich text. Re-sanitized on every save (ADR-03 §8)
  * @param permitted     the house rules. Rich text, same sanitization
  * @param requirements  what is asked of a player to be accepted, as rich text. Same sanitization
  * @param tableTypeId   how the table is run, or null to leave it unclassified
  * @param systemIds     the game systems the table ends up using. Empty clears them
  * @param tagIds        the tags the table ends up labelled with. Empty clears them
  * @param platformIds   where the table ends up being played. Empty clears them
- * @param startDate     the day the table starts running (#230). A plain date: no session takes
+ * @param startDate     the day the table starts running (ADR-07 §4). A plain date: no session takes
  *                      its hour from here, the weekly agenda does
- * @param totalSessions how many sessions are planned (#26)
- * @param maxPlayers    the player cap (#24), or null for no cap
+ * @param totalSessions how many sessions are planned (ADR-08 §3)
+ * @param maxPlayers    the player cap (ADR-07 §5), or null for no cap
  * @param schedule      the weekly agenda the table ends up with, in UTC. Empty clears it
  */
 public record UpdateGameTableRequest(

@@ -24,7 +24,7 @@ interface SearchQueryInputProps {
   fields: readonly SearchField[]
   /** The box's state; it keeps none of its own, so the screen owns it (normally via `useSearchQuery`). */
   value: SearchQueryValue
-  /** Called with every change, typed or clicked. None of them is a search: that is {@link onSearch} (#268). */
+  /** Called with every change, typed or clicked. None of them is a search: that is {@link onSearch} (ADR-22 §4). */
   onChange: (value: SearchQueryValue) => void
   /**
    * The canonical query the screen's results currently answer. Compared with the chips on screen to
@@ -33,7 +33,7 @@ interface SearchQueryInputProps {
   searchedQuery: string
   /**
    * Asks the screen to search the given canonical query: Enter on an empty text, or «clear filters».
-   * The only way a search leaves the box (#268).
+   * The only way a search leaves the box (ADR-22 §4).
    */
   onSearch: (query: string) => void
   /** Shown while the box is empty. */
@@ -44,13 +44,13 @@ interface SearchQueryInputProps {
   autoFocus?: boolean
   /**
    * The canonical query the screen shows when nobody has searched anything, and what «clear filters»
-   * goes back to (#268). Empty for most screens; the admin requests tray opens on what is pending.
+   * goes back to (ADR-22 §4). Empty for most screens; the admin requests tray opens on what is pending.
    */
   defaultQuery?: string
   /**
    * Whether the screen has filters of its own beside the box that are away from their default, so
    * «clear filters» is offered even when the box itself is untouched — the category of `/admin/files`
-   * (#233).
+   * (ADR-14 §4).
    */
   extraFiltersActive?: boolean
   /** Puts those filters beside the box back to their default. Called together with the box's own reset. */
@@ -60,31 +60,31 @@ interface SearchQueryInputProps {
 type Suggestion =
   | { kind: 'field'; name: string; label: string }
   | { kind: 'connector'; name: string; label: string; connector: SearchConnector }
-  /** One of a field's fixed values (#164), and where in the text it goes when it is picked. */
+  /** One of a field's fixed values (ADR-22 §1), and where in the text it goes when it is picked. */
   | { kind: 'value'; name: string; label: string; start: number }
 
 /**
- * The application's one search box (docs/adr #164): it is typed on a single line, and each
+ * The application's one search box (ADR-22 §1): it is typed on a single line, and each
  * closed criterion becomes a chip so that what is being searched, and by which field, stays in view.
  *
  * It knows no domain, on purpose — it receives the fields it accepts rather than knowing them
  * (arquitectura §3.1.1). Everything that differs between the people search and the file searches
  * arrives as a prop; there is no second implementation of any of this.
  *
- * **The slash is the only separator, and Enter is the only thing that closes a criterion** (#240).
+ * **The slash is the only separator, and Enter is the only thing that closes a criterion** (ADR-22 §3).
  * Picking a command from the list writes it into the text exactly as typing it by hand would —
- * `/user_name ` and the cursor after it — and nothing becomes a chip until Enter. Before #240 the two
+ * `/user_name ` and the cursor after it — and nothing becomes a chip until Enter. Before ADR-22 §3 the two
  * ways parted company: picking pinned a chip straight away while typing the same command left plain
  * text, so the same query behaved differently depending on which screen taught you to enter it.
  * Commas separate alternatives within one criterion. None of this uses bare reserved words: an "or"
  * typed without a slash is part of the value, which is what makes it possible to search for somebody
  * named that.
  *
- * A command whose values are a fixed set still offers them (#239) — it is the **text** that says one
+ * A command whose values are a fixed set still offers them (ADR-22 §2) — it is the **text** that says one
  * is open now, not a pinned chip, so `/file_type ` typed by hand opens the same list as picking it.
  * What goes into the box is the label; the value that travels is resolved on the way out.
  *
- * **And a search is a second Enter** (#268). The first Enter closes what is typed into a chip and
+ * **And a search is a second Enter** (ADR-22 §4). The first Enter closes what is typed into a chip and
  * searches nothing; Enter again, with the text empty, sends the chips. Composing a query — picking a
  * command, spelling its value, removing or toggling a chip — is somebody still deciding, and none of it
  * reaches the server. While the chips differ from what the results answer, the box says Enter is
@@ -159,7 +159,7 @@ export function SearchQueryInput({
    *
    * Nothing is offered once what is typed *is* one of them: there is nothing left to choose, and a
    * list repeating the word already in the box is noise. That holds whether the label got there by
-   * being picked or by being typed, which is the point of #240.
+   * being picked or by being typed, which is the point of ADR-22 §3.
    */
   function buildValueSuggestions(open: NonNullable<ReturnType<typeof openValueOf>>): Suggestion[] {
     const typed = open.typed.trim().toLowerCase()
@@ -218,7 +218,7 @@ export function SearchQueryInput({
   }
 
   function chooseSuggestion(suggestion: Suggestion) {
-    // Picking only writes text — the same text typing it by hand would produce (#240).
+    // Picking only writes text — the same text typing it by hand would produce (ADR-22 §3).
     const draft = suggestion.kind === 'value' ? value.draft.slice(0, suggestion.start) + suggestion.label : withCommand(suggestion.name)
     setHighlightStep(0)
     onChange({ ...value, draft })
@@ -283,7 +283,7 @@ export function SearchQueryInput({
     }
     if (event.key === 'Enter') {
       event.preventDefault()
-      // First Enter closes the text into chips; Enter on empty text is the one that searches (#268).
+      // First Enter closes the text into chips; Enter on empty text is the one that searches (ADR-22 §4).
       if (value.draft.trim() !== '') {
         onChange(commitSearchDraft(value, fields))
         return
@@ -313,7 +313,7 @@ export function SearchQueryInput({
         className={cn(
           'border-input flex flex-wrap items-center gap-1.5 rounded-md border px-2 py-1.5',
           'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
-          // A search waiting for its Enter marks the whole box, not only a line under it (#268).
+          // A search waiting for its Enter marks the whole box, not only a line under it (ADR-22 §4).
           hasPendingSearch && 'border-brand-500 focus-within:border-brand-500',
         )}
       >
@@ -378,7 +378,7 @@ export function SearchQueryInput({
               }}
               className={cn('flex cursor-pointer items-center gap-2 px-3 py-1.5', index === highlighted && 'bg-surface')}
             >
-              {/* **The command first, its description after** (#239). What is being picked from this
+              {/* **The command first, its description after** (ADR-22 §2). What is being picked from this
                   list is the command, so it leads; the description explains it. It read the other way
                   round, with the command dimmed on the right, which is the wrong emphasis for the
                   thing somebody is here to learn.
@@ -396,7 +396,7 @@ export function SearchQueryInput({
         <p className="text-fg-subtle text-xs">
           {t('search.hint')}{' '}
           {/* The help is the box's own: it lists **these** commands, because a list of somebody else's
-              is a list of things that do not work here (#240). */}
+              is a list of things that do not work here (ADR-22 §3). */}
           <HelpLink section="basics.search" searchFields={fields}>
             {t('search.helpLink')}
           </HelpLink>
@@ -444,7 +444,7 @@ interface ChipProps {
   removeLabel: string
 }
 
-/** A closed criterion. It always carries its values: a chip with nothing in it is no longer a state (#240). */
+/** A closed criterion. It always carries its values: a chip with nothing in it is no longer a state (ADR-22 §3). */
 function Chip({ label, text, onRemove, removeLabel }: ChipProps) {
   return (
     <span className="bg-raised text-fg flex items-center gap-1 rounded-full py-0.5 pr-1 pl-2 text-xs">

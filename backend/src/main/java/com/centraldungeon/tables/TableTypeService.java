@@ -26,7 +26,7 @@ public class TableTypeService {
     /**
      * Every table type, for the wizard's selector.
      *
-     * @param pageable page, size and sort; callers order by name with a tie-break by id (#171)
+     * @param pageable page, size and sort; callers order by name with a tie-break by id (ADR-07 §9)
      * @return one page of types
      */
     @Transactional(readOnly = true)

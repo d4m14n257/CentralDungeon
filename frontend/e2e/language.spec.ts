@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser } from '@playwright/test'
 
 /**
- * The language switch (#198), end to end and against the real application.
+ * The language switch (ADR-23 §2), end to end and against the real application.
  *
  * What no unit test proves and this does: that the browser's own language decides what a person
  * sees the first time, that the choice survives a reload, and that `<html lang>` follows — a page
@@ -36,7 +36,7 @@ test('an English browser gets English on the first visit, with no choice stored'
   }
 })
 
-/** The fallback of #198: a language the application does not speak is not a reason to guess. */
+/** The fallback of ADR-23 §2: a language the application does not speak is not a reason to guess. */
 test('a browser in a language the app does not speak falls back to Spanish', async ({ browser }) => {
   const { context, page } = await contextSpeaking(browser, 'fr-FR', `e2e-lang-fr-${runId}`)
   try {
@@ -51,7 +51,7 @@ test('a browser in a language the app does not speak falls back to Spanish', asy
 /**
  * The case the switch on the login card exists for: somebody lands in a language they cannot read
  * and has no session yet, so there is no `UserMenu` to reach for. Without a control in the card
- * they would conclude it cannot be done (#198).
+ * they would conclude it cannot be done (ADR-23 §2).
  */
 test('the language can be changed from the login card, before signing in', async ({ browser }) => {
   // A French browser falls back to Spanish, so this is somebody who may well read neither.

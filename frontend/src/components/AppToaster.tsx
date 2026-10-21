@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 
 /**
- * The palette every toast reads, taken from the design tokens of the `@theme` (#118, #130).
+ * The palette every toast reads, taken from the design tokens of the `@theme` (ADR-21 §1).
  *
  * **Why it exists**: the generated `components/ui/sonner.tsx` points Sonner at shadcn's default
  * variable names (`--popover`, `--border`, `--radius`), which this project's theme does not define -

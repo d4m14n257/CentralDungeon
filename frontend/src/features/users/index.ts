@@ -1,5 +1,5 @@
 /**
- * Public surface of the users feature (#114): the session's own profile, the picker, onboarding, and
+ * Public surface of the users feature (ADR-19 §1): the session's own profile, the picker, onboarding, and
  * the administration of accounts that `/admin/users` is built on (F3.1).
  * Anything not listed here is private to it.
  */
@@ -38,7 +38,7 @@ export {
   type ChangeUserStatusForm,
   type CompleteOnboardingForm,
 } from './schemas'
-/** The feature's domain types. Each is written once in `types.ts` and derived from there (#3.2). */
+/** The feature's domain types. Each is written once in `types.ts` and derived from there (arquitectura §3.2). */
 export type {
   AccountStatus,
   AdminUserDetail,

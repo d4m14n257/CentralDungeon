@@ -14,12 +14,12 @@ import org.jspecify.annotations.Nullable;
  * @param status            where the table is in its lifecycle, as a string
  * @param tableTypeName     how the table is run, resolved to its label. Null when none was chosen
  * @param tableTypeCode     the identifier the frontend translates by, when the application shipped
- *                          that type. Null for one a person named, whose label is read verbatim (#225)
- * @param maxPlayers        the player cap (#24), or null for no cap
+ *                          that type. Null for one a person named, whose label is read verbatim (ADR-23 §4)
+ * @param maxPlayers        the player cap (ADR-07 §5), or null for no cap
  * @param playerCount       how many people are accepted right now
  * @param primaryMasterName who runs the table, as a display name. <b>Null for an Unassigned table</b>,
  *                          which is the whole reason this record exists
- * @param claimedByName     the admin who reserved this table's review from the shared tray (#100), or
+ * @param claimedByName     the admin who reserved this table's review from the shared tray (ADR-16 §5), or
  *                          null when nobody has. It is here so a reserved table reads the same way a
  *                          reserved request does: an admin scanning this listing can see somebody is
  *                          already on it instead of opening it to find out

@@ -17,13 +17,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Who runs a table, and the invariant that there is exactly one live Primary per table (#73).
+ * Who runs a table, and the invariant that there is exactly one live Primary per table (ADR-06 §3).
  *
  * <p>MySQL has no partial unique index, so that invariant cannot be a constraint: it is held here,
  * behind a pessimistic lock on the table's master rows, and covered by {@code MasterServiceIT}.
  *
  * <p>This is also where pertenencia is answered from. A row here - not the {@code Master} role - is
- * what authorizes acting on a concrete table (#135), which is why {@link #isMasterOf} and
+ * what authorizes acting on a concrete table (ADR-06 §4), which is why {@link #isMasterOf} and
  * {@link #isPrimaryOf} are read by half the transitions in {@code GameTableService}.
  */
 @Service
@@ -36,7 +36,7 @@ public class MasterService {
     /** The {@code masters} table. */
     private final MasterRepository masterRepository;
 
-    /** Used to refuse making somebody a master of a table they already play at (#154). */
+    /** Used to refuse making somebody a master of a table they already play at (ADR-18 §4). */
     private final TableRegistrationRepository registrationRepository;
 
     /** Resolves the people being added. */
@@ -55,7 +55,7 @@ public class MasterService {
 
     /**
      * Makes the creator of a table its Primary. Called right after the table is saved, which is what
-     * turns "created it" into the pertenencia that authorizes running it (#73, #135).
+     * turns "created it" into the pertenencia that authorizes running it (ADR-06 §3, §4).
      *
      * @param gameTable the freshly created table
      * @param creator   its author
@@ -67,7 +67,7 @@ public class MasterService {
     }
 
     /**
-     * Only the current Primary may add a Secondary or hand off Primary itself (arquitectura §4, #73).
+     * Only the current Primary may add a Secondary or hand off Primary itself (arquitectura §4, ADR-06 §3).
      * The row lock on the table's existing masters serializes concurrent calls so exactly one
      * Primary survives even under a race - the invariant MySQL cannot enforce with a partial
      * unique index.
@@ -89,7 +89,7 @@ public class MasterService {
                 });
 
         // Somebody removed earlier keeps their row - the record of who ran a table is not erased
-        // (#175) - so re-adding them revives it. Inserting a second one would break the composite key.
+        // (ADR-07 §6) - so re-adding them revives it. Inserting a second one would break the composite key.
         if (target.getStatus() == MasterRowStatus.Deleted) {
             target.setStatus(MasterRowStatus.Created);
             target.setDeletedAt(null);
@@ -110,11 +110,11 @@ public class MasterService {
      * Removes a co-master. Only the Primary may do it, and the Primary itself cannot be removed:
      * a table without one has nobody authorized to run it, so handing the role over comes first.
      *
-     * <p>The row is marked, never dropped (#175), which is also what lets the same person be added
+     * <p>The row is marked, never dropped (ADR-07 §6), which is also what lets the same person be added
      * back later without colliding with the composite key.
      *
      * @param gameTable    the table
-     * @param actorId      the actor, always from the token (#121)
+     * @param actorId      the actor, always from the token (ADR-05 §5)
      * @param targetUserId who to remove
      * @throws ForbiddenActionException when the actor is not this table's Primary
      * @throws ConflictException        when the target is the Primary, or does not run the table
@@ -142,7 +142,7 @@ public class MasterService {
      * The gate both management operations share: the actor has to be this table's live Primary.
      *
      * @param masters the table's rows, already locked
-     * @param actorId the actor, always from the token (#121)
+     * @param actorId the actor, always from the token (ADR-05 §5)
      * @param action  what they were trying to do, for the message
      * @return the actor's own row, so the caller can demote it when handing Primary over
      * @throws ForbiddenActionException when the actor does not run the table, or is not its Primary
@@ -160,7 +160,7 @@ public class MasterService {
     }
 
     /**
-     * Bootstraps the very first masters of a table an admin created Unassigned (arquitectura §4, #72).
+     * Bootstraps the very first masters of a table an admin created Unassigned (arquitectura §4, ADR-06 §7).
      * Cannot reuse addOrPromote: that method assumes a Primary already exists to authorize the
      * caller, which is exactly what is missing on an Unassigned table.
      */
@@ -181,7 +181,7 @@ public class MasterService {
     }
 
     /**
-     * The cascade of a table's logical delete (#25): its master rows go down with it (#175).
+     * The cascade of a table's logical delete (ADR-03 §7): its master rows go down with it (ADR-07 §6).
      *
      * <p>Marked, never dropped - the record of who ran a table outlives the table itself.
      *
@@ -197,7 +197,7 @@ public class MasterService {
     }
 
     /**
-     * Everyone who runs a table right now. Removed co-masters keep their row (#175) but are not
+     * Everyone who runs a table right now. Removed co-masters keep their row (ADR-07 §6) but are not
      * part of the answer: this is what the table's screens list as its masters.
      *
      * @param gameTableId the table
@@ -213,14 +213,14 @@ public class MasterService {
      *
      * <p>The batched counterpart of {@link #findByGameTable}, and the reason it exists is a concrete
      * N+1: the admin listing and the shared tray both need the Primary of every row they render, and
-     * asking per row was a query per table on a screen that now lists every table there is (#176).
+     * asking per row was a query per table on a screen that now lists every table there is (ADR-16 §7).
      *
      * <p>Live rows only, and the {@code Primary} only - the same two filters {@link #findByGameTable}
      * applies, so the batched answer and the single one cannot disagree.
      *
      * @param gameTableIds the tables of the page
      * @return the live Primary of each, keyed by table id. A table with none - an {@code Unassigned}
-     *         one (#72) - is absent from the map rather than mapped to null, which is what lets the
+     *         one (ADR-06 §7) - is absent from the map rather than mapped to null, which is what lets the
      *         caller write {@code get(id)} and get the nullable it already has to handle
      */
     @Transactional(readOnly = true)
@@ -237,9 +237,9 @@ public class MasterService {
     }
 
     /**
-     * Every table the person runs right now - where the master dashboard starts (#136).
+     * Every table the person runs right now - where the master dashboard starts (ADR-20 §4).
      *
-     * @param userId the actor, always from the token (#121)
+     * @param userId the actor, always from the token (ADR-05 §5)
      * @return their live master rows, table included
      */
     @Transactional(readOnly = true)
@@ -251,10 +251,10 @@ public class MasterService {
      * Pertenencia: does this person run this table, in any capacity.
      *
      * <p>This, and not {@code hasRole('MASTER')}, is what authorizes acting on a concrete table
-     * (#135). The role only says somebody may create tables of their own.
+     * (ADR-06 §4). The role only says somebody may create tables of their own.
      *
      * @param gameTableId the table
-     * @param userId      the actor, always from the token (#121)
+     * @param userId      the actor, always from the token (ADR-05 §5)
      * @return true when they have a live master row on it. A co-master who was removed does not
      *         count: their row survives as a record, not as a permission
      */
@@ -272,15 +272,15 @@ public class MasterService {
      * <p><b>Reading only.</b> Every read of a table's management side - candidates, players,
      * sessions, requests and what was handed in, files, veto requests - asks this; every write still
      * asks {@link #isMasterOf}, because the admin's own mutations have endpoints of their own and
-     * running a table is not something the rank grants (#135). It exists because the admin has no
-     * visibility limits over the platform except who wrote a comment (#45), and until #284 the code
+     * running a table is not something the rank grants (ADR-06 §4). It exists because the admin has no
+     * visibility limits over the platform except who wrote a comment (ADR-06 §8), and until ADR-06 §8 the code
      * only ever let them read a table's status history.
      *
      * <p>{@code Owner} counts the same as {@code Admin}: one rank with two reaches, spelled out here
-     * rather than inherited from a hierarchy (#89, #169).
+     * rather than inherited from a hierarchy (ADR-06 §1).
      *
      * @param gameTableId the table
-     * @param userId      the actor, always from the token (#121)
+     * @param userId      the actor, always from the token (ADR-05 §5)
      * @return true when they run the table or are an admin or owner of the platform
      */
     @Transactional(readOnly = true)
@@ -295,12 +295,12 @@ public class MasterService {
     /**
      * Whether this person runs any table at all.
      *
-     * <p><b>Pertenencia and not the role</b> (#135): somebody an admin assigned to a table has a live
+     * <p><b>Pertenencia and not the role</b> (ADR-06 §4): somebody an admin assigned to a table has a live
      * row in {@code masters} and may hold no {@code Master} role whatsoever, and they run that table
      * all the same. Callers that want "can create their own tables" are asking about the role and
      * should not come here.
      *
-     * @param userId the actor, always from the token (#121)
+     * @param userId the actor, always from the token (ADR-05 §5)
      * @return true when they have at least one live master row
      */
     @Transactional(readOnly = true)
@@ -310,10 +310,10 @@ public class MasterService {
 
     /**
      * The narrower check: is this person the table's Primary, rather than one of its co-masters.
-     * What the lifecycle transitions reserved to the owner ask (#71).
+     * What the lifecycle transitions reserved to the owner ask (ADR-06 §3).
      *
      * @param gameTableId the table
-     * @param userId      the actor, always from the token (#121)
+     * @param userId      the actor, always from the token (ADR-05 §5)
      * @return true when their live master row is the Primary one
      */
     @Transactional(readOnly = true)

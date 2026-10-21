@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  * What a table asks of people: publishing it, correcting it, closing it, and working out who it
  * applies to.
  *
- * <p><b>Publishing is one act</b> (#77). Creating the row and telling the recipients happen in the
+ * <p><b>Publishing is one act</b> (ADR-15 §5). Creating the row and telling the recipients happen in the
  * same transaction, because a task nobody heard about cannot be answered - and because two steps
  * would mean a state where the row exists and nobody knows, which somebody would eventually have to
  * clean up by hand. There is no draft for the same reason.
@@ -48,11 +48,11 @@ import org.springframework.transaction.annotation.Transactional;
  * resolved in {@link #recipientsOf} and {@link #isRecipient} and nowhere else, so the four answers
  * cannot drift apart.
  *
- * <p><b>Nothing here punishes anybody</b> (#70). {@code isMandatory} is carried to the screen and
+ * <p><b>Nothing here punishes anybody</b> (ADR-15 §2). {@code isMandatory} is carried to the screen and
  * read by no rule; the roster of who has not answered is a list of people to talk to. Evicting,
  * vetoing and rejecting exist elsewhere and are always somebody's decision.
  *
- * <p>Every mutation answers to <b>pertenencia and not to a role</b> (#17, #121, #135): running this
+ * <p>Every mutation answers to <b>pertenencia and not to a role</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4): running this
  * table is what authorizes asking things of its people, which no {@code @PreAuthorize} can see.
  */
 @Service
@@ -70,7 +70,7 @@ public class TableTaskService {
      *
      * <p>It replaced a private {@code requireLiveTable} that was the third copy of the same lookup
      * (roles-y-alcance.md §7). {@code /tasks/applicable} is the read that made the difference:
-     * it is an endpoint of its own (#209), so unlike the sessions and the shared files it does
+     * it is an endpoint of its own (ADR-15 §4), so unlike the sessions and the shared files it does
      * <b>not</b> inherit the table detail's answer and had to be closed here.
      */
     private final TableVisibilityService tableVisibilityService;
@@ -81,24 +81,24 @@ public class TableTaskService {
     /** The audience, resolved into people: candidates, players, or one named target. */
     private final TableRegistrationRepository registrationRepository;
 
-    /** Answers pertenencia: a row in {@code masters}, never the platform role (#135). */
+    /** Answers pertenencia: a row in {@code masters}, never the platform role (ADR-06 §4). */
     private final MasterService masterService;
 
     /** Resolves the one person a {@code Single} task addresses. */
     private final UserService userService;
 
-    /** Tells the recipients that something was asked of them (#77). */
+    /** Tells the recipients that something was asked of them (ADR-15 §5). */
     private final NotificationService notificationService;
 
-    /** The whitelist of #62, applied on the way in and on the way out. */
+    /** The whitelist of ADR-03 §8, applied on the way in and on the way out. */
     private final RichTextSanitizer richTextSanitizer;
 
-    /** The blanks a master attaches to their ask (#63). */
+    /** The blanks a master attaches to their ask (ADR-15 §1). */
     private final TaskFileRepository taskFileRepository;
 
     /**
      * Resolves and classifies the blanks. A request's form is a file like any other: linked and never
-     * copied (#79), and put in its cajón by the act of attaching it (#233).
+     * copied (ADR-14 §1), and put in its cajón by the act of attaching it (ADR-14 §4).
      */
     private final FileService fileService;
 
@@ -109,15 +109,15 @@ public class TableTaskService {
      * @param taskRepository         the {@code table_tasks} rows
      * @param submissionRepository   the answers, for the counts a task row shows
      * @param tableVisibilityService resolves the table every operation hangs off, and whether the
-     *                               reader may see it - the one gate of #25 and #29
-     * @param sessionRepository      resolves the session a task may be tied to (#63)
+     *                               reader may see it - the one gate of ADR-03 §7 and ADR-09 §4
+     * @param sessionRepository      resolves the session a task may be tied to (ADR-15 §1)
      * @param registrationRepository turns an audience into people
-     * @param masterService          answers pertenencia (#17, #121, #135)
+     * @param masterService          answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
      * @param userService            resolves the target of a {@code Single} task
-     * @param notificationService    tells the recipients on publication (#77)
-     * @param richTextSanitizer      the whitelist of #62
-     * @param taskFileRepository     the blanks attached to an ask (#63)
-     * @param fileService            resolves and classifies those blanks (#79, #233)
+     * @param notificationService    tells the recipients on publication (ADR-15 §5)
+     * @param richTextSanitizer      the whitelist of ADR-03 §8
+     * @param taskFileRepository     the blanks attached to an ask (ADR-15 §1)
+     * @param fileService            resolves and classifies those blanks (ADR-14 §1, §4)
      * @param taskMapper             entity to DTO
      */
     public TableTaskService(
@@ -148,7 +148,7 @@ public class TableTaskService {
     }
 
     /**
-     * Publishes a task and tells the people it is addressed to (#77).
+     * Publishes a task and tells the people it is addressed to (ADR-15 §5).
      *
      * <p><b>The table's status does not gate this</b>, deliberately. Writing what will be asked of
      * applicants is one of the things a master does <em>while</em> preparing a table, and refusing it
@@ -193,13 +193,13 @@ public class TableTaskService {
     /**
      * Corrects a published task.
      *
-     * <p><b>It does not notify again.</b> #77 puts the notification at publication; a task fixed
+     * <p><b>It does not notify again.</b> ADR-15 §5 puts the notification at publication; a task fixed
      * three times ringing three times for a headline that never changed is how people learn to ignore
      * the bell. What has already been answered stays answered - correcting the wording of a request
-     * does not invalidate what somebody sent in good faith (#76).
+     * does not invalidate what somebody sent in good faith (ADR-15 §2).
      *
      * @param taskId  the task
-     * @param request the whole state it should end in (#189)
+     * @param request the whole state it should end in (ADR-04 §7)
      * @param actorId the actor, from the token
      * @return the task after the correction
      * @throws ForbiddenActionException if the actor does not run the table
@@ -221,8 +221,8 @@ public class TableTaskService {
         task.setAcceptsFiles(request.acceptsFiles());
         task.setMandatory(request.isMandatory());
         task.setDueAt(request.dueAt());
-        // The whole list travels (#189), so a blank absent from it is taken off the ask - which marks
-        // the link and never the file (#79), and leaves its cajón standing (#233).
+        // The whole list travels (ADR-04 §7), so a blank absent from it is taken off the ask - which marks
+        // the link and never the file (ADR-14 §1), and leaves its cajón standing (ADR-14 §4).
         syncBlanks(taskId, request.fileIds(), actorId);
 
         return describe(task);
@@ -232,7 +232,7 @@ public class TableTaskService {
      * Stops the task from taking answers.
      *
      * <p>What was already handed in stays readable: closing ends the intake, it does not erase the
-     * history (#76). Closing an already closed task is left alone rather than refused - the end state
+     * history (ADR-15 §2). Closing an already closed task is left alone rather than refused - the end state
      * is the one that was asked for.
      *
      * @param taskId  the task
@@ -258,11 +258,11 @@ public class TableTaskService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token
      * @return its tasks, oldest first
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
      */
     @Transactional(readOnly = true)
     public List<TaskResponse> listForTable(String gameTableId, String actorId) {
-        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
         if (!masterService.canOversee(gameTableId, actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can view its requests");
         }
@@ -292,17 +292,17 @@ public class TableTaskService {
      *
      * <p><b>No pertenencia check, on purpose.</b> The {@code Candidates} tasks are readable by anybody
      * who can see the table, because what will be asked of you is half of deciding whether to apply -
-     * the same reasoning #206 settled for the files a table shares. What membership does decide is the
+     * the same reasoning ADR-14 §2 settled for the files a table shares. What membership does decide is the
      * rest: the {@code Players} tasks need a live Player registration, and a {@code Single} one is
      * only ever seen by its target.
      *
-     * <p>The actor comes from the token and never from the URL (#121), so this cannot be pointed at
+     * <p>The actor comes from the token and never from the URL (ADR-05 §5), so this cannot be pointed at
      * somebody else's list.
      *
-     * <p><b>The veto of #29 is applied here and not inherited</b>, which is the whole reason this
+     * <p><b>The veto of ADR-09 §4 is applied here and not inherited</b>, which is the whole reason this
      * line differs from {@link #publish}'s. The table's calendar and its shared files travel inside
      * {@code GameTableDetailResponse} and take that read's answer with them; this one is an endpoint
-     * of its own (#209), so a vetoed reader who never asks for the detail would otherwise still be
+     * of its own (ADR-15 §4), so a vetoed reader who never asks for the detail would otherwise still be
      * told what the table is asking of them - the table's name included, in the title of every task.
      *
      * @param gameTableId the table
@@ -310,7 +310,7 @@ public class TableTaskService {
      * @return the tasks that apply to them, oldest first. Closed ones are left out: the reader's list
      *         is what is being asked of them <em>now</em>
      * @throws NotFoundException if the table is not there, was marked gone, or the actor is vetoed
-     *                           on it - the same 404 for all three (#25, #29)
+     *                           on it - the same 404 for all three (ADR-03 §7, ADR-09 §4)
      */
     @Transactional(readOnly = true)
     public List<ApplicableTaskResponse> listApplicable(String gameTableId, String actorId) {
@@ -334,7 +334,7 @@ public class TableTaskService {
                 .filter(task -> task.getAudience() != TaskAudience.Single || isTargetOf(task, actorId))
                 .toList();
         // The blanks for the whole list in one query, and they matter most here: a request that says
-        // "fill in this form" is useless to its reader if the form is not on it (#63).
+        // "fill in this form" is useless to its reader if the form is not on it (ADR-15 §1).
         Map<String, List<TaskFileResponse>> blanks = blanksOf(applicable);
         return applicable.stream()
                 .map(task -> taskMapper.toApplicable(
@@ -350,7 +350,7 @@ public class TableTaskService {
 
     /**
      * The single lookup every task read goes through, so it is the single place where a marked task
-     * stops existing (#25).
+     * stops existing (ADR-03 §7).
      *
      * <p>Public because {@code TaskSubmissionService} needs the same entity under the same rule, and
      * a second copy of "and it must not be Deleted" is a second thing to remember. It is an internal
@@ -373,7 +373,7 @@ public class TableTaskService {
     /**
      * The audience, resolved into the people it names.
      *
-     * <p>One method for the three uses - who gets notified on publication (#77), who counts as
+     * <p>One method for the three uses - who gets notified on publication (ADR-15 §5), who counts as
      * missing on the master's roster, and how many people were asked - so those three answers cannot
      * disagree. It is computed at read time and never stored: a table that gains a player gains a
      * recipient, without anything having to be rewritten.
@@ -402,7 +402,7 @@ public class TableTaskService {
      * whether an answer may be handed in at all.
      *
      * @param task    the task
-     * @param userId  the person, always the actor from the token (#121)
+     * @param userId  the person, always the actor from the token (ADR-05 §5)
      * @return true when the task is addressed to them
      */
     @Transactional(readOnly = true)
@@ -426,7 +426,7 @@ public class TableTaskService {
                 recipientsOf(task).size());
     }
 
-    /** The mapper call, with the description sanitized on the way out as well as in (#62). */
+    /** The mapper call, with the description sanitized on the way out as well as in (ADR-03 §8). */
     private TaskResponse toResponse(
             TableTask task,
             List<TaskFileResponse> files,
@@ -443,7 +443,7 @@ public class TableTaskService {
     }
 
     /**
-     * The blanks of a whole board, keyed by request, in one query (#63).
+     * The blanks of a whole board, keyed by request, in one query (ADR-15 §1).
      *
      * <p>One round trip and never one per request, the same rule the submission counts follow: a
      * board of ten asks costs one query, not ten.
@@ -464,16 +464,16 @@ public class TableTaskService {
     }
 
     /**
-     * Brings a request's blanks to exactly the list it should end with (#189).
+     * Brings a request's blanks to exactly the list it should end with (ADR-04 §7).
      *
      * <p><b>Revives rather than inserts</b>, because the pair is the primary key: re-attaching a file
      * that was taken off has to bring its row back to life, not fail on a duplicate. And taking one
      * off marks the link and never the file - the blank stays in its owner's library and on every
-     * other request that uses it (#79).
+     * other request that uses it (ADR-14 §1).
      *
      * <p>Each file goes through {@code requireAttachable}, so a master can attach their own or one
-     * the platform published, and never somebody else's private upload (#79). Attaching is also what
-     * puts the file in the {@code MasterRequest} cajón (#233) - the flow classifies it, never the
+     * the platform published, and never somebody else's private upload (ADR-14 §1). Attaching is also what
+     * puts the file in the {@code MasterRequest} cajón (ADR-14 §4) - the flow classifies it, never the
      * upload.
      *
      * @param taskId  the request
@@ -601,12 +601,12 @@ public class TableTaskService {
      */
     private GameTable requireLiveTable(String gameTableId) {
         // The master-side door: publish() demands a row in `masters` on the very next line, and a
-        // master of a table cannot hold a registration on it (#154).
+        // master of a table cannot hold a registration on it (ADR-18 §4).
         return tableVisibilityService.requireExisting(gameTableId);
     }
 
     /**
-     * The membership gate (#17, #121, #135): a row in {@code masters}, not the {@code Master} role.
+     * The membership gate (ADR-11 §1, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
      *
      * @throws ForbiddenActionException if the actor does not run this table
      */

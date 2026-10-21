@@ -5,11 +5,11 @@ import { queryKeys } from '@/api/queryKeys'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * Bringing a paused table back (#33, #163, #193).
+ * Bringing a paused table back (ADR-08 §3, ADR-07 §1, ADR-08 §2).
  *
- * The other orphan of #163: `resume()` has had an endpoint since E2 and no button either.
+ * The other orphan of ADR-07 §1: `resume()` has had an endpoint since E2 and no button either.
  *
- * **It carries no justification**, unlike pausing and cancelling: #32 asks for a reason when a table
+ * **It carries no justification**, unlike pausing and cancelling: ADR-07 §2 asks for a reason when a table
  * stops, and resuming is the return to normal.
  *
  * **And it is the one act on this screen that can genuinely be refused.** While the table was paused
@@ -32,7 +32,7 @@ export function useResumeTable() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.lists() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.statusHistory(tableId) })
       // Resuming reschedules from today, keeping the numbering: every calendar that showed the old
-      // dates is stale, the players' own week included (#193).
+      // dates is stale, the players' own week included (ADR-08 §2).
       void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.list(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.mine(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.schedule.mine() })

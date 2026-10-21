@@ -55,10 +55,10 @@ import org.springframework.test.util.ReflectionTestUtils;
  * quietly:
  *
  * <ul>
- *   <li><b>The referenced entity is validated before the insert</b> (#78). There is no foreign key
+ *   <li><b>The referenced entity is validated before the insert</b> (ADR-16 §2). There is no foreign key
  *       behind those two columns, so this test is the only thing standing between the application and
  *       a row pointing at nothing. Its twin at resolution time is here too, and so is the sweep's
- *       test, next door in {@code ApprovalOrphanCheckServiceTest} - the price of #78 is three things,
+ *       test, next door in {@code ApprovalOrphanCheckServiceTest} - the price of ADR-16 §2 is three things,
  *       and this file covers two of them.</li>
  *   <li><b>Approving a MasterGrant goes through {@code UserRoleService}</b> and not through a second
  *       path writing the same row. Asserted as a call with the exact arguments, because "the person
@@ -86,15 +86,15 @@ class ApprovalServiceTest {
     @Mock
     private ApprovalEntityResolver entityResolver;
 
-    /** The pause's effect, approved and rejected alike (#32) - never written in ApprovalService. */
+    /** The pause's effect, approved and rejected alike (ADR-07 §2) - never written in ApprovalService. */
     @Mock
     private com.centraldungeon.tables.GameTableService gameTableService;
 
-    /** The veto's effect (#39) - the one place `Blocked` is written. */
+    /** The veto's effect (ADR-09 §5) - the one place `Blocked` is written. */
     @Mock
     private com.centraldungeon.registrations.RegistrationService registrationService;
 
-    /** Answers who is a table's Primary, for the one type an admin does not resolve (#39). */
+    /** Answers who is a table's Primary, for the one type an admin does not resolve (ADR-09 §5). */
     @Mock
     private com.centraldungeon.tables.MasterService masterService;
 
@@ -150,11 +150,11 @@ class ApprovalServiceTest {
         assertThat(response.entityId()).isEqualTo("user-1");
         assertThat(response.resolvedAt()).isNull();
         assertThat(response.resolutionNote()).isNull();
-        // #100: a request is born unreserved. Only the shared tray writes those two columns.
+        // ADR-16 §5: a request is born unreserved. Only the shared tray writes those two columns.
         assertThat(response.claimedByName()).isNull();
     }
 
-    /** The whole of #78 at the writing end: the reference is checked, and it is checked <em>first</em>. */
+    /** The whole of ADR-16 §2 at the writing end: the reference is checked, and it is checked <em>first</em>. */
     @Test
     void itValidatesTheReferencedEntityBeforeInserting() {
         allowedRequester();
@@ -174,8 +174,8 @@ class ApprovalServiceTest {
 
         service().submit(ApprovalRequestType.General, WHY, REQUESTER);
 
-        // #100: admin work items are not duplicated as notifications. The tray shows them; one
-        // notification per request would be the copy #100 avoided.
+        // ADR-16 §5: admin work items are not duplicated as notifications. The tray shows them; one
+        // notification per request would be the copy ADR-16 §5 avoided.
         verifyNoInteractions(notificationService);
     }
 
@@ -278,7 +278,7 @@ class ApprovalServiceTest {
 
     /**
      * Aprobar un {@code TableOpen} no crea la mesa: el pedido no trae nombre, sistema, cupo ni agenda,
-     * so creating it automatically is not a refused option but an impossible one (#72, #90).
+     * so creating it automatically is not a refused option but an impossible one (ADR-06 §7, ADR-16 §1).
      */
     @Test
     void approvingATableOpenCreatesNoTableAndGrantsNoRole() {
@@ -349,7 +349,7 @@ class ApprovalServiceTest {
     }
 
     /**
-     * The other half of #78. The row outlives what it points at on purpose (#126) — «una solicitud
+     * The other half of ADR-16 §2. The row outlives what it points at on purpose (ADR-16 §2) — «una solicitud
      * sobre una mesa borrada sigue siendo un hecho» — but resolving it anyway would be acting on a
      * fantasma.
      */
@@ -398,7 +398,7 @@ class ApprovalServiceTest {
      * <p>It was the other way round for a while -«resolver exige tenerlo reservado»- and it left
      * {@code /admin/requests} unusable in the real application: that screen has Approve and Reject and
      * <b>no way to claim anything</b>, so every resolution answered 409 over a reservation it could not
-     * offer. Two designs collided - #176 gives requests a screen of their own, §5 of modelo-datos
+     * offer. Two designs collided - ADR-16 §7 gives requests a screen of their own, §5 of modelo-datos
      * assumed the tray was the only place anything is resolved - and the strict rule made the tray
      * compulsory for a flow that never passed through it.
      */
@@ -428,10 +428,10 @@ class ApprovalServiceTest {
     /**
      * Case 3 of 3, and the only one refused: <b>somebody else</b> holds it. A stale link, a second tab,
      * a tray that has not refreshed - the three ways of taking work off a colleague's desk, which is
-     * exactly what #100 buys.
+     * exactly what ADR-16 §5 buys.
      *
      * <p>And it is not the rule consistency rests on: two admins resolving the same row unclaimed are
-     * serialized by the pessimistic lock (#256) and the second is told «it was already resolved». This
+     * serialized by the pessimistic lock (ADR-16 §4) and the second is told «it was already resolved». This
      * one is about courtesy between colleagues, not about correctness.
      */
     @Test
@@ -552,7 +552,7 @@ class ApprovalServiceTest {
         // Stubbed on the LOCKING read, not on a plain load: submit takes the requester's row with
         // PESSIMISTIC_WRITE as the first thing it does, and that is what serializes two submits by one
         // person. Stubbing getById instead would leave these tests green over a service that had
-        // dropped the lock (#252).
+        // dropped the lock (ADR-06 §2).
         when(userRepository.lockById("user-1")).thenReturn(Optional.of(requester));
         when(userRoleRepository.findActiveRoleNames("user-1")).thenReturn(Set.of("Player"));
         when(approvalRequestRepository.existsByRequestTypeAndRequestedBy_IdAndStatus(any(), anyString(), any()))
@@ -571,8 +571,8 @@ class ApprovalServiceTest {
 
     /**
      * Approving a {@code TablePause} applies it <b>through the {@code GameTableService}</b> and not by
-     * writing the status here - the same clause #42 demands for the role, applied to the lifecycle. And
-     * the resolution note is the pause's justification (#32, arquitectura §4.5).
+     * writing the status here - the same clause ADR-16 §1 demands for the role, applied to the lifecycle. And
+     * the resolution note is the pause's justification (ADR-07 §2, arquitectura §4.5).
      */
     @Test
     void approvingATablePauseAppliesItThroughTheGameTableService() {
@@ -612,8 +612,8 @@ class ApprovalServiceTest {
     }
 
     /**
-     * <b>A {@code PlayerBan} is resolved by the table's {@code Primary}, and not by an admin</b> (#39
-     * over #90). It is the most delicate decision of the contract, and this is what makes it true: the
+     * <b>A {@code PlayerBan} is resolved by the table's {@code Primary}, and not by an admin</b> (ADR-09 §5
+     * over ADR-16 §1). It is the most delicate decision of the contract, and this is what makes it true: the
      * admin passes the route's {@code @PreAuthorize} and is stopped by the rule, which is what an
      * annotation could not express - being <em>this</em> table's {@code Primary} is a row in
      * {@code masters}.
@@ -715,7 +715,7 @@ class ApprovalServiceTest {
         assertThat(pending.getFirst().justification()).isEqualTo(WHY);
     }
 
-    /** Somebody who does not run the table does not read its veto requests (#17, #121, #135). */
+    /** Somebody who does not run the table does not read its veto requests (ADR-11 §1, ADR-05 §5, ADR-06 §4). */
     @Test
     void anOutsiderCannotReadATablesVetoRequests() {
         when(masterService.isMasterOf("table-1", "stranger")).thenReturn(false);

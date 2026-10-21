@@ -14,9 +14,9 @@ package com.centraldungeon.registrations.dto;
  * feature rather than borrowed from one it cannot import.
  *
  * @param fileId    the file's identifier, which is what the download endpoint takes
- * @param name      the original filename, which is what the reader recognises it by (#80)
+ * @param name      the original filename, which is what the reader recognises it by (ADR-13 §6)
  * @param mimeType  the declared MIME type, so the screen can show the right icon
- * @param sizeBytes the size as it was uploaded, before compression (#75)
+ * @param sizeBytes the size as it was uploaded, before compression (ADR-13 §3)
  */
 public record RegistrationFileResponse(String fileId, String name, String mimeType, long sizeBytes) {
 }

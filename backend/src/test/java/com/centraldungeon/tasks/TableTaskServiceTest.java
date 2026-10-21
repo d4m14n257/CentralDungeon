@@ -45,7 +45,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * The rules of what a table asks: who may ask, of whom, in what shape, and who is told about it.
  *
  * <p>Two of them are about the system <b>not</b> doing something, and those are the ones worth
- * writing down: a mandatory task blocks nothing (#70), and correcting one does not notify again.
+ * writing down: a mandatory task blocks nothing (ADR-15 §2), and correcting one does not notify again.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -77,11 +77,11 @@ class TableTaskServiceTest {
 
     private final TaskMapper taskMapper = org.mapstruct.factory.Mappers.getMapper(TaskMapper.class);
 
-    /** The blanks a master attaches to their ask (#63). Empty in every case here but the one that is about them. */
+    /** The blanks a master attaches to their ask (ADR-15 §1). Empty in every case here but the one that is about them. */
     @Mock
     private TaskFileRepository taskFileRepository;
 
-    /** Resolves and classifies those blanks (#79, #233). */
+    /** Resolves and classifies those blanks (ADR-14 §1, §4). */
     @Mock
     private FileService fileService;
 
@@ -105,7 +105,7 @@ class TableTaskServiceTest {
 
     // ---------------------------------------------------------------- pertenencia
 
-    /** The role is not the membership (#135): only a row in masters opens this door. */
+    /** The role is not the membership (ADR-06 §4): only a row in masters opens this door. */
     @Test
     void refusesEveryMutationToSomebodyWhoDoesNotRunTheTable() {
         givenTable("table-1");
@@ -124,9 +124,9 @@ class TableTaskServiceTest {
         verify(notificationService, never()).notifyTaskPublished(anyString(), any(), anyString());
     }
 
-    // ---------------------------------------------------------------- publishing notifies (#77)
+    // ---------------------------------------------------------------- publishing notifies (ADR-15 §5)
 
-    /** #77: a task nobody heard about cannot be answered, so publishing tells every recipient. */
+    /** ADR-15 §5: a task nobody heard about cannot be answered, so publishing tells every recipient. */
     @Test
     void publishingToThePlayersNotifiesEveryPlayer() {
         GameTable table = givenTable("table-1");
@@ -261,7 +261,7 @@ class TableTaskServiceTest {
                 .hasMessageContaining("another table");
     }
 
-    /** The rich text is cleaned on the way in (#62): this is the same XSS surface as the table's own body. */
+    /** The rich text is cleaned on the way in (ADR-03 §8): this is the same XSS surface as the table's own body. */
     @Test
     void sanitizesTheDescriptionBeforeStoringIt() {
         givenTable("table-1");
@@ -284,11 +284,11 @@ class TableTaskServiceTest {
         assertThat(response.description()).isEqualTo("<p>Nivel 3</p>");
     }
 
-    // ---------------------------------------------------------------- #70: mandatory blocks nothing
+    // ---------------------------------------------------------------- ADR-15 §2: mandatory blocks nothing
 
     /**
      * The decision that is easiest to lose: {@code isMandatory} is carried to the screen and read by
-     * no rule (#70). A mandatory task publishes, closes and reads exactly like any other.
+     * no rule (ADR-15 §2). A mandatory task publishes, closes and reads exactly like any other.
      */
     @Test
     void aMandatoryTaskBehavesExactlyLikeAnyOther() {
@@ -309,7 +309,7 @@ class TableTaskServiceTest {
 
     // ---------------------------------------------------------------- correcting and closing
 
-    /** #77 puts the notification at publication: a task fixed three times must not ring three times. */
+    /** ADR-15 §5 puts the notification at publication: a task fixed three times must not ring three times. */
     @Test
     void correctingATaskDoesNotNotifyAgain() {
         givenTable("table-1");
@@ -336,7 +336,7 @@ class TableTaskServiceTest {
         verify(submissionRepository, never()).delete(any());
     }
 
-    /** A marked task stops existing, and 404 rather than 403: "it was deleted" is not a caller's business (#25). */
+    /** A marked task stops existing, and 404 rather than 403: "it was deleted" is not a caller's business (ADR-03 §7). */
     @Test
     void aDeletedTaskIsNotFound() {
         TableTask task = givenTask("task-1", "table-1", TaskAudience.Players);
@@ -349,7 +349,7 @@ class TableTaskServiceTest {
 
     /**
      * Somebody who has not applied still sees what will be asked of them - which is half of deciding
-     * whether to apply (#206). They cannot answer it yet, and the flag is what lets the button say so.
+     * whether to apply (ADR-14 §2). They cannot answer it yet, and the flag is what lets the button say so.
      */
     @Test
     void aStrangerSeesTheCandidatesTasksButCannotAnswerThem() {
@@ -363,11 +363,11 @@ class TableTaskServiceTest {
     }
 
     /**
-     * <b>Read path 5 of F3.4.</b> {@code /tasks/applicable} is an endpoint of its own (#209), so it
+     * <b>Read path 5 of F3.4.</b> {@code /tasks/applicable} is an endpoint of its own (ADR-15 §4), so it
      * does <b>not</b> inherit the detail's answer the way the sessions and the shared files do: it has
      * to be closed separately, and this pins that it is.
      *
-     * <p>404 and not 403 (#29). And what leaked was no small thing: the title of every task tells
+     * <p>404 and not 403 (ADR-09 §4). And what leaked was no small thing: the title of every task tells
      * somebody that the table is still there and what it is asking of them.
      */
     @Test
@@ -409,7 +409,7 @@ class TableTaskServiceTest {
         assertThat(service().listApplicable("table-1", "player-1")).hasSize(1);
     }
 
-    /** Answers accumulate (#76), so what the reader is shown is a count and not a "done" flag. */
+    /** Answers accumulate (ADR-15 §2), so what the reader is shown is a count and not a "done" flag. */
     @Test
     void tellsTheReaderHowManyTimesTheyAlreadyAnswered() {
         givenTable("table-1");

@@ -15,13 +15,13 @@ import org.springframework.data.repository.query.Param;
  * Reads and writes {@code files}.
  *
  * <p>{@code JpaSpecificationExecutor} is what /admin/files searches through, over
- * {@link FileSearchSpecification} - the same shape the catalogs use for their admin screen (#164).
+ * {@link FileSearchSpecification} - the same shape the catalogs use for their admin screen (ADR-22 §1).
  */
 public interface StoredFileRepository extends JpaRepository<StoredFile, String>, JpaSpecificationExecutor<StoredFile> {
 
     /**
      * One live file by id. The status is in the {@code WHERE} rather than checked afterwards, so a
-     * file that was marked gone is simply not found (#25).
+     * file that was marked gone is simply not found (ADR-03 §7).
      *
      * @param id     the file
      * @param status the status it has to be in
@@ -30,25 +30,25 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, String>,
     Optional<StoredFile> findByIdAndStatus(String id, FileStatus status);
 
     /**
-     * Somebody's own files, newest first - the reuse history of #65.
+     * Somebody's own files, newest first - the reuse history of ADR-13 §2.
      *
-     * <p>The owner is in the {@code WHERE} and comes from the token, never from the URL (#121). This
+     * <p>The owner is in the {@code WHERE} and comes from the token, never from the URL (ADR-05 §5). This
      * is the query the {@code FilePicker} is built on: reusing what is already uploaded is the point,
      * and it only works if seeing your own history is one round trip.
      *
      * @param userId   the owner, from the token
      * @param status   the status to include - always {@link FileStatus#Current} in practice
-     * @param pageable the page and its order, defaulted by the controller (#171, #173)
+     * @param pageable the page and its order, defaulted by the controller (ADR-07 §9, ADR-04 §6)
      * @return their files, page by page
      */
     Page<StoredFile> findByUserCreated_IdAndStatus(String userId, FileStatus status, Pageable pageable);
 
     // The published set is read through FileSearchSpecification.forPublic instead of derived methods:
-    // audience and category narrow it independently (#64, #233), and four derived names to cover two
+    // audience and category narrow it independently (ADR-13 §2, ADR-14 §4), and four derived names to cover two
     // optional filters becomes eight the moment a third one shows up.
 
     /**
-     * The same content, already uploaded by the same person - the deduplication of #75.
+     * The same content, already uploaded by the same person - the deduplication of ADR-13 §3.
      *
      * <p><b>Scoped to the owner, and that is the schema's doing, not a preference.</b>
      * {@code uk_files_storage_key} is unique, so two rows cannot share one blob; sharing bytes across
@@ -65,23 +65,23 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, String>,
             String userId, String contentHash, FileStatus status);
 
     /**
-     * The files the retention job of #75 should mark: live, unused for longer than the window, and
+     * The files the retention job of ADR-13 §3 should mark: live, unused for longer than the window, and
      * attached to nothing.
      *
      * <p>Three conditions, each with a reason:
      *
      * <ul>
-     *   <li><b>The platform's library is exempt</b>, published or not (#64, #282). Those files belong
+     *   <li><b>The platform's library is exempt</b>, published or not (ADR-13 §2, ADR-14 §7). Those files belong
      *       to the platform rather than to a person, and a rules document nobody downloaded for three
      *       months is still the rules - as is the one waiting to be published.
      *   <li><b>{@code lastUsedAt} falls back to {@code createdAt}.</b> A file uploaded and never
      *       touched again has no last use, and treating that as "never used, keep forever" would
      *       exempt exactly the files the purge exists for.
      *   <li><b>A live link keeps a file alive.</b> A table that still shows a map needs its map,
-     *       however long ago anybody opened it (#79).
+     *       however long ago anybody opened it (ADR-14 §1).
      * </ul>
      *
-     * <p>Named parameters only, never positional (#124).
+     * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param cutoff     the moment before which a last use counts as too old
      * @param exemptTypes {@link FileType#Public} and {@link FileType#Library}, passed rather than

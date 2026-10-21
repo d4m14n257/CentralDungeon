@@ -24,7 +24,7 @@ import type { CatalogValue } from '@/types/catalog'
  * button that does not say why it is grey is worse than no button (principle 2 of
  * diseno §1).
  *
- * The schedule clash (R2 of #178) comes **before** the cap: it is the block the backend will apply
+ * The schedule clash (R2 of ADR-08 §2) comes **before** the cap: it is the block the backend will apply
  * anyway with a 409, and it is the only one on the list the reader can resolve on their own - by
  * withdrawing an application or leaving a table.
  */
@@ -61,7 +61,7 @@ function primaryMasterOf(masters: MasterSummary[]) {
 /**
  * A table's public detail, /player/tables/:id - what a prospective player reads before applying.
  *
- * **The standard header** (#280): the status next to the name, the masters as the line under it,
+ * **The standard header** (ADR-21 §5): the status next to the name, the masters as the line under it,
  * «Volver a explorar» above, and on the right «Cómo funciona» and **«Postularme»** — which used to sit
  * at the foot of the card, after everything, where the one thing this screen is for was the last
  * thing on it. Its label is also its reason when it cannot run (principle 2), so a disabled button
@@ -69,7 +69,7 @@ function primaryMasterOf(masters: MasterSummary[]) {
  * the header, next to the button it blocks.
  *
  * It composes: the page owns only the table query, and each block is a section that fetches its own
- * data from an id (#3.1.5). That is what keeps a feature from ever importing another.
+ * data from an id (arquitectura §3.1.5). That is what keeps a feature from ever importing another.
  */
 export function TableDetailPage() {
   const commit = useCommitStagedFiles()
@@ -81,7 +81,7 @@ export function TableDetailPage() {
   const tableId = id ?? ''
   // isLoadingError, not isError: once the table has loaded, a background refetch that fails must not
   // replace the screen with an error - it would take away something that was working a second ago
-  // (docs/adr #150).
+  // (ADR-19 §4).
   const { data: table, isPending, isLoadingError } = useGameTable(tableId)
   const { data: me } = useMe()
   const { data: myApplications } = useMyApplications()
@@ -104,11 +104,11 @@ export function TableDetailPage() {
     myApplications?.content.some((registration) => registration.gameTableId === table.id && registration.status !== 'Rejected') ?? false
 
   // The clash is computed by the server for the actor of the token and travels in the detail
-  // (#121, #178): the agendas of the reader's other tables are not on this side, and guessing them
+  // (ADR-05 §5, ADR-08 §2): the agendas of the reader's other tables are not on this side, and guessing them
   // would be writing the rule a second time, in the wrong language.
   const hasScheduleConflict = table.scheduleConflict
   const state = applyState(t, table, me?.roles ?? [], hasActiveApplication, hasScheduleConflict)
-  // The length rides along: it belongs to the slot now (#228), and utcSlotToLocal only moves the day and the hour.
+  // The length rides along: it belongs to the slot now (ADR-08 §1), and utcSlotToLocal only moves the day and the hour.
   const localSchedule = table.schedule.map((slot) => ({ ...utcSlotToLocal(slot, browserTimeZone()), duration: slot.duration }))
   const primaryMaster = primaryMasterOf(table.masters)
   const coMasters = table.masters.filter((master) => master.userId !== primaryMaster?.userId)
@@ -125,7 +125,7 @@ export function TableDetailPage() {
           primaryMaster && (
             <span className="flex flex-wrap items-center gap-x-1">
               <span>{t('detail.masterLabel')}:</span>
-              {/* #41: a master's profile is visible to anyone looking at their table, no
+              {/* ADR-10 §1: a master's profile is visible to anyone looking at their table, no
                   application required — the asymmetry that makes this link always safe to show. */}
               <Link to={playerUserProfilePath(primaryMaster.userId)} className="hover:text-fg underline">
                 {primaryMaster.name}
@@ -151,12 +151,12 @@ export function TableDetailPage() {
         }
       />
 
-      {/* R2 explained rather than hinted at: the block says what it clashes with and what can be done (#178). */}
+      {/* R2 explained rather than hinted at: the block says what it clashes with and what can be done (ADR-08 §2). */}
       {hasScheduleConflict && (
         <p className="text-state-canceled-fg flex items-start gap-1.5 text-xs">
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
           <span>
-            {t('detail.scheduleConflictExplained')} {/* To the full explanation, under its stable #ref (#167, #168). */}
+            {t('detail.scheduleConflictExplained')} {/* To the full explanation, under its stable #ref (ADR-20 §5, §6). */}
             <HelpLink section="players.schedule-conflicts">{t('detail.scheduleConflictHelp')}</HelpLink>
           </span>
         </p>
@@ -195,13 +195,13 @@ export function TableDetailPage() {
                 <li key={`${slot.weekday}-${slot.hourtime}`}>{formatSlot(slot, i18n.language, slot.duration)}</li>
               ))}
             </ul>
-            {/* The agenda is stored in UTC (#22); this says which zone it is being shown in. */}
+            {/* The agenda is stored in UTC (ADR-03 §6); this says which zone it is being shown in. */}
             <p className="text-fg-subtle mt-1 text-xs">{t('detail.scheduleTimeZone', { timeZone: browserTimeZone() })}</p>
           </section>
         )}
 
         {/* The real calendar, not the weekly shape: once a table has been paused and resumed the two
-            stop matching, and the dates are what somebody deciding whether to apply needs (#26, #33). */}
+            stop matching, and the dates are what somebody deciding whether to apply needs (ADR-08 §3). */}
         {table.sessions.length > 0 && (
           <section>
             <h2 className="section-label">{t('sessions.calendarTitle')}</h2>
@@ -211,7 +211,7 @@ export function TableDetailPage() {
           </section>
         )}
 
-        {/* The files the table shares (#79). Only the shared ones ever arrive here — an attachment
+        {/* The files the table shares (ADR-14 §1). Only the shared ones ever arrive here — an attachment
             the master kept private is absent from the response, not hidden by the screen. */}
         {table.files.length > 0 && (
           <section>
@@ -227,14 +227,14 @@ export function TableDetailPage() {
 
         {/* What the table asks of whoever is reading it. Somebody who has not applied still sees the
             requests aimed at candidates: what will be asked of you is half of deciding whether to
-            apply (#206). The block owns its query; this screen hands it the id and the two pieces
+            apply (ADR-14 §2). The block owns its query; this screen hands it the id and the two pieces
             that belong to the files domain (§3.1.5, regla dura 16). */}
         <TableTasksSection
           tableId={table.id}
           renderHelp={() => <HelpButton section="players.tasks" size="sm" />}
           renderFiles={(files) => <FileList files={files} />}
           renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerSubmission" />}
-          // Uploading happens here and not in the picker (#238): this screen owns the send, so it is
+          // Uploading happens here and not in the picker (ADR-13 §5): this screen owns the send, so it is
           // what turns the staged files into ids right before the answer travels.
           commitFiles={(staged) => commit.mutateAsync({ staged, fileCategory: 'PlayerSubmission' })}
         />
@@ -265,7 +265,7 @@ export function TableDetailPage() {
         open={applyDialog.isOpen}
         onOpenChange={applyDialog.close}
         renderFilePicker={(onPick) => <FilePicker onPick={onPick} offerPublished cajon="PlayerApplication" />}
-        // Uploading happens here and not in the picker (#238): this screen owns the send, so it is
+        // Uploading happens here and not in the picker (ADR-13 §5): this screen owns the send, so it is
         // what turns the staged files into ids right before the application travels.
         commitStagedFiles={(staged) => commit.mutateAsync({ staged, fileCategory: 'PlayerApplication' })}
       />

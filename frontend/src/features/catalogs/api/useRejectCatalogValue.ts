@@ -6,7 +6,7 @@ import { catalogsApi } from './catalogsApi'
 import type { CatalogKind } from '../types'
 
 /**
- * Turns down a proposal: it never shows and never filters (#57).
+ * Turns down a proposal: it never shows and never filters (ADR-12 §3).
  *
  * Not the same as disabling. Rejecting says the value should never have been proposed; disabling
  * says it was fine and is no longer in use.

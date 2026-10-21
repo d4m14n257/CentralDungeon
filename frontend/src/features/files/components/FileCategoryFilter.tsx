@@ -18,7 +18,7 @@ interface FileCategoryFilterProps {
 }
 
 /**
- * Narrowing a list of files to one cajón (#233).
+ * Narrowing a list of files to one cajón (ADR-14 §4).
  *
  * **A row of toggles and not a `<Select>`**, because the whole set is five short values and the
  * point is to see what is on offer without opening anything — the same reason a filter bar beats a

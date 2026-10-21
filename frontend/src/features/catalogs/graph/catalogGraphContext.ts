@@ -11,12 +11,12 @@ export interface CatalogGraphContextValue {
 }
 
 /**
- * The channel between the catalog canvas and its nodes (#275).
+ * The channel between the catalog canvas and its nodes (ADR-12 §7).
  *
  * React Flow renders node types by name, from a map registered once, so a node cannot be handed
  * props by the component that draws the canvas. What is the same for every node - the catalog, the
  * callback - travels here; what differs per node travels in its `data`. A subtree Context, not a
- * store: it is scoped to one canvas (#105).
+ * store: it is scoped to one canvas (ADR-19 §5).
  */
 export const CatalogGraphContext = createContext<CatalogGraphContextValue | null>(null)
 

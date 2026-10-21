@@ -32,7 +32,7 @@ interface BlockUserDialogProps {
 }
 
 /**
- * Closes an account, or reopens one (#84). Which of the two it is comes from the account's own
+ * Closes an account, or reopens one (ADR-05 §7). Which of the two it is comes from the account's own
  * status — there is no third thing this dialog could be asked to do.
  *
  * **It says what a block means before the button is pressed**, which is the whole reason it is a
@@ -43,7 +43,7 @@ interface BlockUserDialogProps {
  *
  * **A justification is required**, not offered. Until F6 brings `audit_logs`, the row this writes is
  * the only record of why an account was closed, and a row with an empty reason is a row nobody can
- * review (#84). The server enforces it too, with `@NotBlank`.
+ * review (ADR-05 §7). The server enforces it too, with `@NotBlank`.
  *
  * The dialog is never reached for an account holding `Admin` or `Owner`: the screen does not offer
  * the button, and the server refuses it with `CANNOT_BLOCK_PRIVILEGED` to anybody arriving another
@@ -80,7 +80,7 @@ export function BlockUserDialog({ user, open, onOpenChange, help }: BlockUserDia
 
   async function onSubmit(values: ChangeUserStatusForm) {
     if (!user) return
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t(isUnblocking ? 'users.confirmUnblockTitle' : 'users.confirmBlockTitle', { name: user.discordUsername }),
       description: t(isUnblocking ? 'users.confirmUnblockDescription' : 'users.confirmBlockDescription'),
@@ -109,7 +109,7 @@ export function BlockUserDialog({ user, open, onOpenChange, help }: BlockUserDia
     >
       <Form {...form}>
         <form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)} className="space-y-4">
-          {/* The two consequences, spelled out and not implied (#84). Only on the block: reopening an
+          {/* The two consequences, spelled out and not implied (ADR-05 §7). Only on the block: reopening an
               account has one consequence and everybody already knows what it is. */}
           {!isUnblocking && (
             <ul className="border-border text-fg-muted space-y-1 rounded-lg border border-dashed px-4 py-3 text-sm">
@@ -119,7 +119,7 @@ export function BlockUserDialog({ user, open, onOpenChange, help }: BlockUserDia
           )}
 
           {/* Offered on both acts, not only the block: "why can I not block this person" and "what
-              does unblocking restore" are asked from the same place (#231). */}
+              does unblocking restore" are asked from the same place (ADR-20 §5). */}
           {help}
 
           <FormField

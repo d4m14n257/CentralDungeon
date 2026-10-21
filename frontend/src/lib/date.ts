@@ -1,5 +1,5 @@
 /**
- * The one place UTC becomes local time and back again (#22, #111).
+ * The one place UTC becomes local time and back again (ADR-03 §6, ADR-19 §7).
  *
  * The backend stores and sends everything in UTC — a table plays "Wednesday 01:00 UTC", and the
  * fact that its players call that Tuesday night is theirs, not the server's. Converting in one
@@ -8,7 +8,7 @@
  * **No date library.** There is no calendar arithmetic in this application: a schedule is a weekday
  * plus a time, and `Intl.DateTimeFormat` already knows every rule involved. The legacy `useDate`
  * did this with `Intl` too — what it got wrong was hard-coding `'es-ES'` inside the hook, which is
- * why **locale and time zone are parameters of every function here and never constants** (#111).
+ * why **locale and time zone are parameters of every function here and never constants** (ADR-19 §7).
  */
 
 /** A day of the week as the API spells it. The same seven names the backend enum carries. */
@@ -43,7 +43,7 @@ const REFERENCE_MONDAY_UTC = Date.UTC(2026, 5, 15)
  * The reader's own time zone, from the browser.
  *
  * It is the **fallback only**: when a profile states a zone, that is the one to pass, because
- * somebody travelling has not moved their table (#111). Callers pass the zone explicitly; this is
+ * somebody travelling has not moved their table (ADR-19 §7). Callers pass the zone explicitly; this is
  * what they use when there is nothing to pass.
  *
  * @returns an IANA zone name such as `America/Argentina/Buenos_Aires`
@@ -80,11 +80,11 @@ export function formatMinutes(minutes: number): string {
  *
  * The day can move: a table at Wednesday 01:00 UTC is Tuesday 22:00 in Buenos Aires, and showing
  * "Wednesday" to somebody who plays on Tuesday night is the bug this function exists to prevent
- * (#22).
+ * (ADR-03 §6).
  *
  * @param slot     the slot as the API sent it, in UTC
  * @param timeZone the IANA zone to show it in — from the profile, or `browserTimeZone()` when there
- *                 is none (#111)
+ *                 is none (ADR-19 §7)
  * @returns the same slot expressed in that zone
  */
 export function utcSlotToLocal(slot: WeeklySlot, timeZone: string): WeeklySlot {
@@ -95,7 +95,7 @@ export function utcSlotToLocal(slot: WeeklySlot, timeZone: string): WeeklySlot {
  * Turns a weekly slot the reader typed in their own zone into the UTC the API expects.
  *
  * The inverse of {@link utcSlotToLocal}, and the direction that actually travels: what is written
- * to `table_schedules` is always UTC (#22).
+ * to `table_schedules` is always UTC (ADR-03 §6).
  *
  * @param slot     the slot as the person entered it, in their own zone
  * @param timeZone the IANA zone they entered it in
@@ -109,10 +109,10 @@ export function localSlotToUtc(slot: WeeklySlot, timeZone: string): WeeklySlot {
 export const MINUTES_PER_WEEK_TOTAL = MINUTES_PER_WEEK
 
 /**
- * A stretch of the week as the API sends it: minutes from Monday 00:00 **UTC**, and a length (#227).
+ * A stretch of the week as the API sends it: minutes from Monday 00:00 **UTC**, and a length (ADR-08 §6).
  *
  * A single offset rather than a weekday and a time, because the reader's week does not start where
- * UTC's does: a Tuesday-night table in America is Wednesday in UTC (#22), and sending the pair would
+ * UTC's does: a Tuesday-night table in America is Wednesday in UTC (ADR-03 §6), and sending the pair would
  * make this side undo a conversion the other side had already half-made.
  */
 export interface WeekBlock {
@@ -123,7 +123,7 @@ export interface WeekBlock {
 }
 
 /**
- * The same week-minute, expressed in the reader's zone (#22, #111).
+ * The same week-minute, expressed in the reader's zone (ADR-03 §6, ADR-19 §7).
  *
  * It wraps: a Sunday-night slot in UTC can be Monday morning locally, and the other way round.
  *
@@ -137,7 +137,7 @@ export function utcWeekMinuteToLocal(startMinute: number, timeZone: string): num
 }
 
 /**
- * The inverse: a minute the reader picked on their own grid, as the UTC that travels (#22).
+ * The inverse: a minute the reader picked on their own grid, as the UTC that travels (ADR-03 §6).
  *
  * @param startMinute the minute, from Monday 00:00 in the reader's zone
  * @param timeZone    the zone they picked it in
@@ -155,7 +155,7 @@ export function localWeekMinuteToUtc(startMinute: number, timeZone: string): num
  * Splits a block into the day-sized pieces a grid can draw.
  *
  * A block that runs past midnight belongs to two columns, and one that runs past Sunday night comes
- * back round to Monday — the same wrap {@code WeeklyInterval} does on the other side (#178).
+ * back round to Monday — the same wrap {@code WeeklyInterval} does on the other side (ADR-08 §2).
  *
  * @param block the stretch, already in the reader's zone
  * @returns one piece per day it touches, each with the day's index from Monday and the minutes of
@@ -179,15 +179,15 @@ export function splitBlockByDay(block: WeekBlock): { dayIndex: number; startMinu
 }
 
 /**
- * A week block written the way a person reads it: "Martes 20:00–23:00" (#227).
+ * A week block written the way a person reads it: "Martes 20:00–23:00" (ADR-08 §6).
  *
  * The same phrasing {@link formatSlot} produces, for a block that travels as minutes rather than as
  * a weekday and a time. It names the day the block **starts** on, in the reader's zone, and closes
  * the range with where it ends — even when that is the small hours of the next day.
  *
  * @param block    the stretch, in UTC minutes from Monday 00:00
- * @param locale   the BCP-47 locale (#111)
- * @param timeZone the IANA zone to read it in (#22)
+ * @param locale   the BCP-47 locale (ADR-19 §7)
+ * @param timeZone the IANA zone to read it in (ADR-03 §6)
  * @returns the block as a phrase
  */
 export function formatWeekBlock(block: WeekBlock, locale: string, timeZone: string): string {
@@ -216,7 +216,7 @@ function mod(value: number, modulus: number): number {
  * capital is itself language-dependent.
  *
  * @param weekday the day to name
- * @param locale  the BCP-47 locale — a parameter, never a constant (#111)
+ * @param locale  the BCP-47 locale — a parameter, never a constant (ADR-19 §7)
  * @param width   how long the name should be; `'short'` for a card, `'long'` for a form
  * @returns the localized name, capitalized
  */
@@ -231,7 +231,7 @@ export function weekdayName(weekday: Weekday, locale: string, width: 'long' | 's
  *
  * @param slot     the slot, **already in the reader's zone** — convert with {@link utcSlotToLocal}
  *                 first, so the caller decides once whether it is showing local or UTC
- * @param locale   the BCP-47 locale (#111)
+ * @param locale   the BCP-47 locale (ADR-19 §7)
  * @param duration how long a session lasts, as `HH:mm`, to close the range. Omit for the start only
  * @returns the slot as a phrase, with its end time when a duration was given
  */
@@ -248,8 +248,8 @@ export function formatSlot(slot: WeeklySlot, locale: string, duration?: string |
  * An ISO-8601 UTC instant as a date and time in the reader's zone.
  *
  * @param iso      the instant, as the API sends it
- * @param locale   the BCP-47 locale (#111)
- * @param timeZone the IANA zone to show it in (#111)
+ * @param locale   the BCP-47 locale (ADR-19 §7)
+ * @param timeZone the IANA zone to show it in (ADR-19 §7)
  * @returns the formatted date and time
  */
 export function formatDateTime(iso: string, locale: string, timeZone: string): string {
@@ -260,8 +260,8 @@ export function formatDateTime(iso: string, locale: string, timeZone: string): s
  * An ISO-8601 UTC instant as a plain date in the reader's zone.
  *
  * @param iso      the instant, as the API sends it
- * @param locale   the BCP-47 locale (#111)
- * @param timeZone the IANA zone to show it in (#111)
+ * @param locale   the BCP-47 locale (ADR-19 §7)
+ * @param timeZone the IANA zone to show it in (ADR-19 §7)
  * @returns the formatted date
  */
 export function formatDate(iso: string, locale: string, timeZone: string): string {
@@ -284,16 +284,16 @@ const RELATIVE_UNITS: { unit: Intl.RelativeTimeFormatUnit; seconds: number }[] =
  * **For the values whose meaning is the distance and not the date.** `lastUsedAt` is the case this
  * was written for: the question a person asks of it is "is this file still in use", and a formatted
  * date makes them do the subtraction themselves. It is also what warns them, without a word about
- * retention, that a file nobody has touched in months is the one the purge will reach first (#75).
+ * retention, that a file nobody has touched in months is the one the purge will reach first (ADR-13 §3).
  *
  * **No time zone parameter, and that is not an omission.** A distance between two instants is the
  * same distance everywhere; there is nothing to convert. Use `formatDate` when the calendar day is
  * what matters.
  *
- * The locale is a parameter like everywhere else in this module (#111, #192).
+ * The locale is a parameter like everywhere else in this module (ADR-19 §7).
  *
  * @param iso    the instant, as the API sends it
- * @param locale the BCP-47 locale (#111)
+ * @param locale the BCP-47 locale (ADR-19 §7)
  * @param now    the instant to measure against. A parameter so the result is testable without
  *               freezing the clock, and never something a caller needs to pass
  * @returns the distance in words, e.g. `hace 3 días`
@@ -313,13 +313,13 @@ export function formatRelativeDate(iso: string, locale: string, now: Date = new 
 /**
  * A plain `YYYY-MM-DD` the API sent, formatted as it is.
  *
- * **No zone, on purpose** (#230). A date is not an instant: `game_tables.start_date` says which day
+ * **No zone, on purpose** (ADR-07 §4). A date is not an instant: `game_tables.start_date` says which day
  * the table starts and means the same day to everybody reading it, so converting it would be the
  * bug and not the fix - a reader west of UTC would be shown the day before. The formatter is pinned
  * to UTC precisely so that nothing shifts.
  *
  * @param value  the date, as the API sends it, `YYYY-MM-DD`
- * @param locale the BCP-47 locale (#111)
+ * @param locale the BCP-47 locale (ADR-19 §7)
  * @returns the formatted date
  */
 export function formatPlainDate(value: string, locale: string): string {
@@ -327,7 +327,7 @@ export function formatPlainDate(value: string, locale: string): string {
 }
 
 /**
- * Reads an instant the API sent, which is **always UTC** even when it does not say so (#22).
+ * Reads an instant the API sent, which is **always UTC** even when it does not say so (ADR-03 §6).
  *
  * The backend serializes `LocalDateTime` as `2026-09-09T01:00:00`, with no offset, and JavaScript
  * reads a bare date-time like that as **local** time — so a session at 01:00 UTC rendered as 01:00
@@ -343,7 +343,7 @@ function utcInstant(iso: string): Date {
  * Converts what an `<input type="datetime-local">` holds into the ISO-8601 UTC the API takes.
  *
  * The control gives back wall-clock text with no zone attached, so the zone has to be supplied
- * rather than inferred — which is the same reason it is a parameter everywhere else here (#111).
+ * rather than inferred — which is the same reason it is a parameter everywhere else here (ADR-19 §7).
  *
  * @param value    the control's value, `YYYY-MM-DDTHH:mm`
  * @param timeZone the IANA zone the person typed it in

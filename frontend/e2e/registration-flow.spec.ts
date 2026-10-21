@@ -28,7 +28,7 @@ async function testLogin(request: APIRequestContext, discordId: string, asMaster
 }
 
 /**
- * Preparation -> Opened is no longer the master's to do alone (E2 sub-slice 1, docs/adr #163):
+ * Preparation -> Opened is no longer the master's to do alone (E2 sub-slice 1, ADR-07 §1):
  * an admin has to approve it. An ephemeral admin signs in for that and nothing else.
  */
 async function createOpenTable(request: APIRequestContext, accessToken: string, name: string) {
@@ -39,7 +39,7 @@ async function createOpenTable(request: APIRequestContext, accessToken: string, 
   expect(created.ok()).toBeTruthy()
   const table = (await created.json()) as { id: string }
 
-  // Born in Draft since #245: an admin has nothing to approve until its master lets go of it.
+  // Born in Draft since ADR-07 §1: an admin has nothing to approve until its master lets go of it.
   const submitted = await request.post(`${BACKEND_URL}/api/v1/game-tables/${table.id}/submit`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })

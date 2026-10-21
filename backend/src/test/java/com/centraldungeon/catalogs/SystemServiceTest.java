@@ -90,7 +90,7 @@ class SystemServiceTest {
 
     // ------------------------------------------------------ an admin creating
 
-    /** #280: the admin is the one who accepts, so their value skips the review and heads its own group. */
+    /** ADR-21 §5: the admin is the one who accepts, so their value skips the review and heads its own group. */
     @Test
     void anAdminCreatesAValueAlreadyAcceptedAsItsOwnGroup() {
         when(systemRepository.findByNameIgnoreCase("Fate Core")).thenReturn(Optional.empty());
@@ -137,7 +137,7 @@ class SystemServiceTest {
         assertThat(response.canonicalName()).isEqualTo("D&D 5e");
     }
 
-    /** Depth is always 1 (#59): pointing at an alias would build the second level that makes cycles possible. */
+    /** Depth is always 1 (ADR-12 §2): pointing at an alias would build the second level that makes cycles possible. */
     @Test
     void rejectsAClassificationWhoseTargetIsItselfAnAlias() {
         GameSystem proposed = value("s-3", "DND", null, CatalogStatus.Created);
@@ -288,7 +288,7 @@ class SystemServiceTest {
         verify(tableSystemRepository, never()).deleteAll();
     }
 
-    /** Disabling a canonical entry that still has aliases is changing the group's canonical (#59). */
+    /** Disabling a canonical entry that still has aliases is changing the group's canonical (ADR-12 §2). */
     @Test
     void refusesToDisableACanonicalEntryOfALiveGroupWithoutASuccessor() {
         GameSystem canonical = value("s-1", "D&D 5e", null, CatalogStatus.Accepted);
@@ -350,7 +350,7 @@ class SystemServiceTest {
 
     // ------------------------------------------------------------- reassigning
 
-    /** #276: one step, no moment in between where the alias is a group of its own. */
+    /** ADR-12 §6: one step, no moment in between where the alias is a group of its own. */
     @Test
     void movesAnAliasToAnotherGroupInOneStep() {
         GameSystem alias = value("s-2", "DND", "s-1", CatalogStatus.Accepted);
@@ -364,7 +364,7 @@ class SystemServiceTest {
         assertThat(alias.getCanonicalId()).isEqualTo("s-3");
     }
 
-    /** A head carries its group with it; moving it alone would leave its aliases one level too deep (#59). */
+    /** A head carries its group with it; moving it alone would leave its aliases one level too deep (ADR-12 §2). */
     @Test
     void refusesToReassignACanonicalEntry() {
         when(systemRepository.findById("s-1")).thenReturn(Optional.of(value("s-1", "D&D 5e", null, CatalogStatus.Accepted)));
@@ -406,7 +406,7 @@ class SystemServiceTest {
 
     // --------------------------------------------------------------- promoting
 
-    /** #276: the group keeps every member; only its head changes, and depth stays 1 (#59). */
+    /** ADR-12 §6: the group keeps every member; only its head changes, and depth stays 1 (ADR-12 §2). */
     @Test
     void promotingAnAliasTurnsTheWholeGroupAroundIt() {
         GameSystem head = value("s-1", "D&D 5e", null, CatalogStatus.Accepted);
@@ -433,7 +433,7 @@ class SystemServiceTest {
                 .hasMessageContaining("already the canonical entry");
     }
 
-    /** A disabled alias is out of circulation (#81); heading a group would put it back in by the side door. */
+    /** A disabled alias is out of circulation (ADR-12 §5); heading a group would put it back in by the side door. */
     @Test
     void refusesToPromoteADisabledAlias() {
         when(systemRepository.findById("s-2")).thenReturn(Optional.of(value("s-2", "DND", "s-1", CatalogStatus.Disabled)));
@@ -444,7 +444,7 @@ class SystemServiceTest {
 
     // --------------------------------------------------------- group resolution
 
-    /** #54, #56: searching by any member has to return the whole group, from either direction. */
+    /** ADR-12 §2, §4: searching by any member has to return the whole group, from either direction. */
     @Test
     void resolvesTheWholeGroupFromAnyOfItsMembers() {
         GameSystem canonical = value("s-1", "D&D 5e", null, CatalogStatus.Accepted);
@@ -455,7 +455,7 @@ class SystemServiceTest {
         assertThat(systemService.resolveGroupIds("s-2")).containsExactlyInAnyOrder("s-1", "s-2");
     }
 
-    /** A disabled or unreviewed synonym does not filter (#57, #81), so it is not part of the group a search resolves. */
+    /** A disabled or unreviewed synonym does not filter (ADR-12 §3, §5), so it is not part of the group a search resolves. */
     @Test
     void leavesOutGroupMembersThatAreNotAccepted() {
         GameSystem canonical = value("s-1", "D&D 5e", null, CatalogStatus.Accepted);

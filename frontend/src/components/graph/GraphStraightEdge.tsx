@@ -1,7 +1,7 @@
 import { BaseEdge, getStraightPath, useInternalNode, type EdgeProps } from '@xyflow/react'
 
 /**
- * The edge of the node canvas pattern (skill `diseno` §5, #275): a straight line from the centre of
+ * The edge of the node canvas pattern (skill `diseno` §5, ADR-12 §7): a straight line from the centre of
  * one node to the centre of the other, drawn under both.
  *
  * React Flow's own edges run from handle to handle, which suits a flow that reads left to right and

@@ -1,19 +1,19 @@
 # 2.4 Interfaces y clases abstractas: qué se comparte y qué no
 
-> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
+> Parte de la skill `arquitectura` (ADR-01 §5). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 Hay tres formas de tratar código parecido entre features, y elegir mal cuesta caro en las dos direcciones — duplicar una regla de negocio genera bugs divergentes, y abstraer dos cosas que solo se parecían acopla dominios que después hay que separar a la fuerza.
 
 **1. Interfaz — cuando hay, o va a haber, más de una implementación real.**
 
-Es el caso de `StorageService`: hoy escribe en disco local, mañana puede escribir en S3, y el resto del backend no debería enterarse (#15). La interfaz vive en `common/<área>/`, la implementación al lado, y se inyecta siempre la interfaz.
+Es el caso de `StorageService`: hoy escribe en disco local, mañana puede escribir en S3, y el resto del backend no debería enterarse (ADR-13 §6). La interfaz vive en `common/<área>/`, la implementación al lado, y se inyecta siempre la interfaz.
 
 Lo que **no** se hace: `UserServiceImpl implements UserService` con una sola implementación y sin intención de tener otra. No aporta nada, duplica la navegación entre archivos y no hace falta para testear — Mockito mockea clases concretas sin problema.
 
 **2. Clase abstracta genérica — cuando la misma forma se repite idéntica en tres o más features.**
 
-El caso real del proyecto son los catálogos. `systems`, `tags` y `platforms` tienen la misma estructura (`id`, `name`, `canonical_id`: un grupo de sinónimos de profundidad 1, #59) y el mismo ciclo de vida —proponer, aceptar, rechazar, fusionar, separar, promover, dar de baja (#275)—. Escribir tres veces el mismo service es mantener tres veces el mismo bug.
+El caso real del proyecto son los catálogos. `systems`, `tags` y `platforms` tienen la misma estructura (`id`, `name`, `canonical_id`: un grupo de sinónimos de profundidad 1, ADR-12 §2) y el mismo ciclo de vida —proponer, aceptar, rechazar, fusionar, separar, promover, dar de baja (ADR-12 §7)—. Escribir tres veces el mismo service es mantener tres veces el mismo bug.
 
 ```java
 // catalogs/AbstractCatalogService.java (abreviado)

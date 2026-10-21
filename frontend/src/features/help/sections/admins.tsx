@@ -5,9 +5,9 @@ import { useClientLimits } from '@/hooks/useClientLimits'
 import { HelpList, HelpSteps } from '../components/HelpBlocks'
 
 /**
- * The help of somebody moderating. Bodies only - the heading lives in the registry (#231).
+ * The help of somebody moderating. Bodies only - the heading lives in the registry (ADR-20 §5).
  *
- * Owner reads this rather than an audience of its own: it is an admin with more privileges (#169).
+ * Owner reads this rather than an audience of its own: it is an admin with more privileges (ADR-06 §1).
  */
 
 /**
@@ -48,7 +48,7 @@ function ListAndSteps({
 }
 
 /**
- * Reviewing a table, and where that is done (#176, F3.3).
+ * Reviewing a table, and where that is done (ADR-16 §7, F3.3).
  *
  * **Its text moved with the actions.** Approving and requesting changes left `/admin/tables` for the
  * shared tray, and an explanation that stayed behind would be a set of instructions pointing at
@@ -61,12 +61,12 @@ export function ReviewingHelp() {
 }
 
 /**
- * The reservation: what taking an item means, and what happens if you walk away (#100).
+ * The reservation: what taking an item means, and what happens if you walk away (ADR-16 §5).
  *
  * **It exists because a reservation nobody understands is a button nobody presses.** Taking an item
  * is optional — anything in your tray can be resolved on the spot — so unless the help says what it
  * is *for*, "Tomar" reads as a pointless extra step and the whole mechanism goes unused, which is
- * exactly the two-admins-on-one-request problem #100 was built to prevent.
+ * exactly the two-admins-on-one-request problem ADR-16 §5 was built to prevent.
  *
  * **The section used to teach the opposite and that was worse than having none.** It said resolving
  * required holding the item first, which was the rule as it was originally written and which made
@@ -79,7 +79,7 @@ export function ReviewingHelp() {
  * and somebody who closed a tab by accident would assume they had broken something permanent.
  */
 export function ClaimingHelp() {
-  // The timeout is a setting since F3.5 (#141), so the help asks for it instead of quoting a number
+  // The timeout is a setting since F3.5 (ADR-17 §3), so the help asks for it instead of quoting a number
   // that stopped being true the moment somebody changed it. The hook always answers.
   const { claimTimeoutMinutes } = useClientLimits()
 
@@ -98,14 +98,14 @@ export function AssignMastersHelp() {
   return <ListAndSteps block="assignMasters" keys={['create', 'search', 'order', 'opens', 'delete']} stepCount={6} />
 }
 
-/** Accepting, grouping, merging and retiring catalog values, and the canvas it is done on (#57, #58, #59, #275). */
+/** Accepting, grouping, merging and retiring catalog values, and the canvas it is done on (ADR-12 §3, §4, §2, §7). */
 export function CatalogsHelp() {
   return (
     <ListAndSteps block="catalogs" keys={['what', 'canvas', 'pending', 'groups', 'alias', 'merge', 'disable', 'successor']} stepCount={6} />
   )
 }
 
-/** The platform's library: uploading is publishing, into three cajones, and what unpublishing does not undo (#278). */
+/** The platform's library: uploading is publishing, into three cajones, and what unpublishing does not undo (ADR-14 §7). */
 export function AdminFilesHelp() {
   return (
     <ListAndSteps
@@ -117,7 +117,7 @@ export function AdminFilesHelp() {
 }
 
 /**
- * One table seen whole by an admin, and the admin's own edit of it (#284).
+ * One table seen whole by an admin, and the admin's own edit of it (ADR-06 §8).
  *
  * **`notify` is the reason this section exists.** An admin who rewrites a table, pauses it or cancels
  * it is changing something that belongs to somebody else, and the master finds out through the bell.
@@ -127,7 +127,7 @@ export function TableDetailHelp() {
   return <ListAndSteps block="tableDetail" keys={['what', 'readOnly', 'edit', 'notify', 'closed']} stepCount={3} />
 }
 
-/** What Owner can do that Admin cannot (#169). */
+/** What Owner can do that Admin cannot (ADR-06 §1). */
 export function OwnerHelp() {
   return <ListAndSteps block="owner" keys={['same', 'exclusive', 'grants', 'soon']} stepCount={0} />
 }
@@ -139,14 +139,14 @@ export function OwnerHelp() {
  * the four roles simply absent — that is principle 2 working as intended (a button that cannot be
  * used is not shown), but from the reader's side an absence and a bug look identical until something
  * says which it is. The rest of the list is what they will ask next: why the other chip vanished
- * (#169), and why the platform refused to let them unmake the last owner.
+ * (ADR-06 §1), and why the platform refused to let them unmake the last owner.
  */
 export function RolesHelp() {
   return <ListAndSteps block="roles" keys={['what', 'whoGrants', 'exclusive', 'lastOwner', 'reason', 'history']} stepCount={6} />
 }
 
 /**
- * The request tray and what approving each kind actually does (#42, F3.2).
+ * The request tray and what approving each kind actually does (ADR-16 §1, F3.2).
  *
  * **`masterGrant` and `tableOpen` are the reason this section exists.** The two approvals look
  * identical on screen — same button, same note — and do completely different things: one hands out a
@@ -166,7 +166,7 @@ export function RequestsAdminHelp() {
 }
 
 /**
- * What closing an account does, and who is out of reach of it (#84, §3).
+ * What closing an account does, and who is out of reach of it (ADR-05 §7, §3).
  *
  * The two halves of `what` and `keepsData` are deliberately adjacent: "block" is a word people read
  * as "delete", and learning the second half afterwards is learning it too late.
@@ -178,9 +178,9 @@ export function BlockingHelp() {
 }
 
 /**
- * Pausing a table and bringing it back (#32, #33, #163, #193).
+ * Pausing a table and bringing it back (ADR-07 §2, ADR-08 §3, ADR-07 §1, ADR-08 §2).
  *
- * **It exists because the two buttons had no screen for two phases** (#163) and arrive with nothing
+ * **It exists because the two buttons had no screen for two phases** (ADR-07 §1) and arrive with nothing
  * around them: an admin meeting "Pausar" on a listing has no way to know whether it cancels the
  * sessions, hides the table, or notifies anybody.
  *
@@ -194,7 +194,7 @@ export function PausingHelp() {
 }
 
 /**
- * What the configuration screen is, and what changing one of its values actually does (F3.5, #141).
+ * What the configuration screen is, and what changing one of its values actually does (F3.5, ADR-17 §3).
  *
  * **Its own section rather than a line inside `admins.owner`**, because the thing that has to be
  * learned is not who may edit settings — `Admin` and `Owner` may both, which is one sentence — but

@@ -30,15 +30,15 @@ export function requestStatusChoices(t: TFunction): SearchChoice[] {
 }
 
 /**
- * The commands `/admin/requests` accepts (#164, #240).
+ * The commands `/admin/requests` accepts (ADR-22 §1, §3).
  *
  * **Written here and not in the component that renders the box**, the same way users and files
  * declare theirs: the list is what the box offers, what the help documents and what a `?q=` is read
- * against, and three copies of it free to disagree is exactly the drift #240 went to remove.
+ * against, and three copies of it free to disagree is exactly the drift ADR-22 §3 went to remove.
  *
  * `/requested_by` is free text — a person's name is not something anybody could offer a list of —
  * and it searches the two names the platform keeps, the display one and the Discord one, because
- * whoever is looking knows one of them and not which of the two the system keeps where (#164).
+ * whoever is looking knows one of them and not which of the two the system keeps where (ADR-22 §1).
  *
  * Without a command in front of it, what is typed searches the justification **and** the name of
  * whoever asked: the two things an admin reads a row for.

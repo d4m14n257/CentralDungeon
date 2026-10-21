@@ -12,7 +12,7 @@ const players = [
 ]
 
 function renderForm(onSubmit = vi.fn()) {
-  // FormDialog asks the provider before discarding a dirty form (#231), so it has to be there.
+  // FormDialog asks the provider before discarding a dirty form (ADR-20 §5), so it has to be there.
   render(
     <ConfirmDialogProvider>
       <TaskFormDialog
@@ -31,7 +31,7 @@ function renderForm(onSubmit = vi.fn()) {
 }
 
 describe('TaskFormDialog', () => {
-  it('says publishing will notify, because that is what it does (#77)', () => {
+  it('says publishing will notify, because that is what it does (ADR-15 §5)', () => {
     renderForm()
 
     expect(screen.getByRole('button', { name: 'Publicar y avisar' })).toBeInTheDocument()
@@ -100,7 +100,7 @@ describe('TaskFormDialog', () => {
     )
   })
 
-  /** #70 stated where a master decides: the label is a label and the copy says so. */
+  /** ADR-15 §2 stated where a master decides: the label is a label and the copy says so. */
   it('says that marking a request as important blocks nothing', () => {
     renderForm()
 

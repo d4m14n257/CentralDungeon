@@ -76,7 +76,7 @@ public class TableStatusChange {
      * @param gameTable     the table that moved
      * @param fromStatus    where it was
      * @param toStatus      where it went
-     * @param changedBy     who moved it, always the actor from the token (#121)
+     * @param changedBy     who moved it, always the actor from the token (ADR-05 §5)
      * @param justification why, or null for a transition that does not deny anything
      */
     public TableStatusChange(

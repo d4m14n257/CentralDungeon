@@ -23,7 +23,7 @@ import { useNotificationClick } from '../hooks/useNotificationClick'
  * The header's bell: the unread count, and the last few notifications in a dropdown.
  *
  * It shows **titles only**, which is why every notification's title has to be readable on its own
- * (#156). Clicking one marks it read and navigates to what it is about.
+ * (ADR-18 §5). Clicking one marks it read and navigates to what it is about.
  */
 export function NotificationBell() {
   const { t } = useTranslation('notifications')
@@ -66,9 +66,9 @@ export function NotificationBell() {
               key={notification.id}
               onSelect={() => handleClick(notification)}
               // The hover and the pointer are the base's now: `--color-accent` stopped being an
-              // alias of `--color-raised` (#224), so `focus:bg-accent` shows on a raised row on its
+              // alias of `--color-raised` (ADR-21 §4), so `focus:bg-accent` shows on a raised row on its
               // own, and `styles/base.css` gives every menu item its cursor. This used to carry both
-              // by hand (#157).
+              // by hand (ADR-18 §4).
               className={cn('gap-2.5 px-3 py-2 text-[13px]', unread ? 'bg-raised text-fg' : 'text-fg-muted')}
             >
               <span className={cn('w-[15px] shrink-0 text-center', unread ? 'text-brand-fg' : 'text-fg-subtle')} aria-hidden>

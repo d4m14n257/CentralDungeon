@@ -11,15 +11,15 @@ interface ResolveBanVariables {
 }
 
 /**
- * The `Primary` granting a co-master's veto request (#39).
+ * The `Primary` granting a co-master's veto request (ADR-09 §5).
  *
  * **Approving is what applies the veto**, in one transaction on the backend — there is no second
  * step where somebody then presses "vetar". Which is why this invalidates the registration branches
  * as well as the request list: the person just stopped being able to see the table, and every
  * cached answer that still shows them at it is describing the past.
  *
- * **It never touches `adminQueue`**: a `PlayerBan` is not in the shared tray, by decision. #39 is
- * specific where #90 is generic, and the specific one wins — this is the table's business.
+ * **It never touches `adminQueue`**: a `PlayerBan` is not in the shared tray, by decision. ADR-09 §5 is
+ * specific where ADR-16 §1 is generic, and the specific one wins — this is the table's business.
  *
  * The invalidation crosses into another feature's keys and that is allowed: `api/queryKeys.ts` is
  * the shared factory, not a feature (§3.3). What is forbidden is importing another feature's code,
@@ -32,11 +32,11 @@ export function useApproveBanRequest(tableId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ requestId, input }: ResolveBanVariables) => banRequestsApi.approve(tableId, requestId, input),
-    /** The dialog is still open over the button: the refusal goes there, not into a toast (#197). */
+    /** The dialog is still open over the button: the refusal goes there, not into a toast (ADR-23 §3). */
     meta: { showsItsOwnError: true },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.banRequests(tableId) })
-      // Granting it applies the veto, so everything a veto makes stale is stale here too (#29).
+      // Granting it applies the veto, so everything a veto makes stale is stale here too (ADR-09 §4).
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.players(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.candidates(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.detail(tableId) })
@@ -50,11 +50,11 @@ export function useApproveBanRequest(tableId: string) {
 }
 
 /**
- * The `Primary` turning a co-master's veto request down (#39).
+ * The `Primary` turning a co-master's veto request down (ADR-09 §5).
  *
  * Nothing about the table moves, so only the request list is re-read. The note is required all the
  * same: it is the whole of what the co-master receives, and a refusal nobody explained is the half
- * that makes the mechanism worthless (#42).
+ * that makes the mechanism worthless (ADR-16 §1).
  *
  * @param tableId the table the request belongs to
  * @returns the mutation, taking the request and the note

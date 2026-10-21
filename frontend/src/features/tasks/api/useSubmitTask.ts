@@ -6,12 +6,12 @@ import { tasksApi } from './tasksApi'
 import type { CreateSubmissionInput } from '../types'
 
 /**
- * Handing in an answer. **Every call inserts a new one** (#76) — nothing is overwritten, so there is
+ * Handing in an answer. **Every call inserts a new one** (ADR-15 §2) — nothing is overwritten, so there is
  * no optimistic update to write and no cached answer to patch in place.
  *
  * Three branches are invalidated: my own answers to that task, the applicable list (its
  * `mySubmissionCount` just changed), and the reuse history, because a file handed in counts as used
- * and its `lastUsedAt` moved (#75).
+ * and its `lastUsedAt` moved (ADR-13 §3).
  *
  * @param tableId the table the task belongs to
  * @returns the mutation, taking the task and the answer

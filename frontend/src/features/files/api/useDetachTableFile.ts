@@ -7,7 +7,7 @@ import { filesApi } from './filesApi'
 /**
  * Taking a file off a table.
  *
- * **The file survives** (#79): it stays in its owner's history and on every other table that has it,
+ * **The file survives** (ADR-14 §1): it stays in its owner's history and on every other table that has it,
  * which is why only this table's branches are invalidated and not the history.
  *
  * @param tableId the table

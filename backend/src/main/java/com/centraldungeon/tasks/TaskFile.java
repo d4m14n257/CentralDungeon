@@ -18,10 +18,10 @@ import org.jspecify.annotations.Nullable;
  * me your sheet on this form" and had no way to attach the form - the blank the whole request is
  * about. Everyone had to describe it in prose and hope.
  *
- * <p>It links and never copies (#65, #79), which is what lets the community's published form be
+ * <p>It links and never copies (ADR-13 §2, ADR-14 §1), which is what lets the community's published form be
  * attached by every master who wants it instead of re-uploaded once per table. It is also what fills
  * the {@link com.centraldungeon.files.FileCategory#MasterRequest} cajón with anything other than what
- * an admin published (#233).
+ * an admin published (ADR-14 §4).
  *
  * <p>It lives in {@code tasks/} rather than in {@code files/}, for the reason {@code SubmissionFile}
  * gives: a file on a request has no meaning apart from the request, so the aggregate that owns the
@@ -47,7 +47,7 @@ public class TaskFile {
     @Column(name = "created_at", nullable = false)
     private @Nullable LocalDateTime createdAt;
 
-    /** Soft delete (#25). The row is never dropped and the bytes are never freed here (#66). */
+    /** Soft delete (ADR-03 §7). The row is never dropped and the bytes are never freed here (ADR-13 §8). */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
@@ -59,7 +59,7 @@ public class TaskFile {
      * Attaches a file to a request, live from the start.
      *
      * @param taskId the request being written
-     * @param fileId the file being attached. It is not copied (#79)
+     * @param fileId the file being attached. It is not copied (ADR-14 §1)
      */
     public TaskFile(String taskId, String fileId) {
         this.id = new TaskFileId(taskId, fileId);
@@ -90,7 +90,7 @@ public class TaskFile {
     }
 
     /**
-     * Attaches or takes off the file. Taking it off never touches the file itself (#79).
+     * Attaches or takes off the file. Taking it off never touches the file itself (ADR-14 §1).
      *
      * @param status the new status
      */

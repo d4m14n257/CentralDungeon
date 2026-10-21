@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The veto, from both ends (#39): the {@code Primary} who applies and lifts it, and the
+ * The veto, from both ends (ADR-09 §5): the {@code Primary} who applies and lifts it, and the
  * {@code Secondary} who asks for one.
  *
  * <p><b>Its own controller and not six more methods on {@link RegistrationController}.</b> That one
@@ -30,13 +30,13 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p><b>Every route hangs off the table and not off the registration alone</b>, unlike
  * {@code /registrations/{id}/accept}. The authorization is «are you the {@code Primary} of
- * <em>this</em> table», so the table belongs in the path where it can be read (§2.6, #121) - and the
+ * <em>this</em> table», so the table belongs in the path where it can be read (§2.6, ADR-05 §5) - and the
  * service checks it anyway, because a path that cannot express the wrong thing is not the same as a
  * rule being enforced.
  *
  * <p>Every method is {@code isAuthenticated()} and carries no role. Pertenencia decides, and only a
- * service can see it (#17, #121, #135): a {@code Primary} an admin assigned may never have been
- * given the {@code Master} role at all (#72).
+ * service can see it (ADR-11 §1, ADR-05 §5, ADR-06 §4): a {@code Primary} an admin assigned may never have been
+ * given the {@code Master} role at all (ADR-06 §7).
  */
 @RestController
 @RequestMapping("/api/v1/game-tables/{tableId}")
@@ -45,7 +45,7 @@ public class RegistrationBanController {
     /** Where {@code Blocked} is written and lifted - the direct half of the veto. */
     private final RegistrationService registrationService;
 
-    /** The one mechanism behind a co-master's request, and behind resolving one (#42, #39). */
+    /** The one mechanism behind a co-master's request, and behind resolving one (ADR-16 §1, ADR-09 §5). */
     private final ApprovalService approvalService;
 
     /**
@@ -58,7 +58,7 @@ public class RegistrationBanController {
     }
 
     /**
-     * The {@code Primary} vetoing somebody from their table (#39).
+     * The {@code Primary} vetoing somebody from their table (ADR-09 §5).
      *
      * <p>It goes through {@code ApprovalService} rather than straight to {@code RegistrationService}
      * for one reason: any veto a co-master had <em>asked</em> for on this person has just been
@@ -85,7 +85,7 @@ public class RegistrationBanController {
     }
 
     /**
-     * The {@code Primary} lifting a veto (#39).
+     * The {@code Primary} lifting a veto (ADR-09 §5).
      *
      * <p>The person goes back to where they were, read from the trail - {@code Candidate} if that is
      * what they were when it happened, and not a blanket {@code Player}.
@@ -109,7 +109,7 @@ public class RegistrationBanController {
     }
 
     /**
-     * A {@code Secondary} asking the {@code Primary} for a veto (#39).
+     * A {@code Secondary} asking the {@code Primary} for a veto (ADR-09 §5).
      *
      * <p><b>A second endpoint rather than the first one behaving differently.</b> The screen already
      * knows which of the two the reader is and says, before the button is pressed, that what it sends
@@ -140,8 +140,8 @@ public class RegistrationBanController {
     /**
      * The veto requests waiting on this table, for the masters who run it.
      *
-     * <p><b>It is not in {@code /admin/queue} and that is the decision, not an omission</b> (#39 over
-     * #90): a veto between a co-master and a player of <em>this</em> table is decided by whoever runs
+     * <p><b>It is not in {@code /admin/queue} and that is the decision, not an omission</b> (ADR-09 §5 over
+     * ADR-16 §1): a veto between a co-master and a player of <em>this</em> table is decided by whoever runs
      * it. So the pending ones need a home, and this is it.
      *
      * <p>Readable by any master - the {@code Secondary} who asked has to see that they did - and
@@ -164,7 +164,7 @@ public class RegistrationBanController {
     }
 
     /**
-     * The {@code Primary} granting a co-master's veto request (#39).
+     * The {@code Primary} granting a co-master's veto request (ADR-09 §5).
      *
      * <p>It goes through the same {@code ApprovalService.approve} an admin uses, which is why there
      * is no second way to write {@code Blocked}: the resolution is bookkept once, and the effect is
@@ -177,7 +177,7 @@ public class RegistrationBanController {
      *
      * @param tableId     the table
      * @param requestId   the request to grant
-     * @param request     the resolution note, required in both directions (#42). It becomes the
+     * @param request     the resolution note, required in both directions (ADR-16 §1). It becomes the
      *                    veto's own reason
      * @param currentUser the actor, from the token; the service checks they are the Primary
      * @return 200 with the application, now Blocked. 403 {@code NOT_PRIMARY_MASTER}, 409
@@ -194,10 +194,10 @@ public class RegistrationBanController {
     }
 
     /**
-     * The {@code Primary} refusing a co-master's veto request (#39).
+     * The {@code Primary} refusing a co-master's veto request (ADR-09 §5).
      *
      * <p>Nothing moves: the application was never touched when the request was opened, so refusing it
-     * leaves the person exactly where they are. The reason is mandatory all the same (#42) - the
+     * leaves the person exactly where they are. The reason is mandatory all the same (ADR-16 §1) - the
      * co-master who asked is the one who reads it.
      *
      * @param tableId     the table

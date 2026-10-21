@@ -17,13 +17,13 @@ function value(overrides: Partial<CatalogValue> = {}): CatalogValue {
 }
 
 describe('CatalogChip', () => {
-  it('shows the alias its master chose, not the group it belongs to (#58)', () => {
+  it('shows the alias its master chose, not the group it belongs to (ADR-12 §4)', () => {
     render(<CatalogChip value={value({ name: 'DANDD' })} />)
 
     expect(screen.getByText('DANDD')).toBeInTheDocument()
   })
 
-  it('says out loud that a proposed value is still pending (#57)', () => {
+  it('says out loud that a proposed value is still pending (ADR-12 §3)', () => {
     render(<CatalogChip value={value({ status: 'Created' })} />)
 
     expect(screen.getByText('· pendiente')).toBeInTheDocument()

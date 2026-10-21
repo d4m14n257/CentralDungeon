@@ -1,9 +1,9 @@
 package com.centraldungeon.tasks;
 
 /**
- * Where one answer to a task stands. <b>Two values, not four</b> (#76).
+ * Where one answer to a task stands. <b>Two values, not four</b> (ADR-15 §2).
  *
- * <p>The design of #63 originally had {@code Accepted} and {@code Rejected} as well. They were
+ * <p>The design of ADR-15 §1 originally had {@code Accepted} and {@code Rejected} as well. They were
  * dropped on purpose: judging whether a submitted character sheet is the right one takes a criterion
  * the system does not have and should not pretend to have, so there is no approval flow and the
  * master reviews by looking. What is left is the mechanical half - has this been handed in or not.

@@ -10,7 +10,7 @@ import java.time.DayOfWeek;
  * values or need a converter that maps them one to one anyway. The mapping to {@code DayOfWeek}
  * lives in {@link #toDayOfWeek()}, for the arithmetic that needs it.
  *
- * <p><b>The day is in UTC</b>, like the hour it goes with (#22). A table the community plays on
+ * <p><b>The day is in UTC</b>, like the hour it goes with (ADR-03 §6). A table the community plays on
  * Tuesday night in America is a Wednesday slot here, and that is the single most likely source of an
  * off-by-one-day bug in the whole feature - which is why the conversion happens once, in the
  * frontend, and never again.
@@ -52,7 +52,7 @@ public enum Weekday {
      * Returns the equivalent {@code java.time} constant.
      *
      * @return the day as {@link DayOfWeek}, for the week arithmetic of {@link WeeklyInterval} and for
-     *         materializing sessions later (#26)
+     *         materializing sessions later (ADR-08 §3)
      */
     public DayOfWeek toDayOfWeek() {
         return dayOfWeek;

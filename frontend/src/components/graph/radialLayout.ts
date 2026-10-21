@@ -6,11 +6,11 @@ export interface GraphPoint {
 
 /**
  * Where the satellites of a star go: evenly around a centre, starting at the top and turning
- * clockwise (#275).
+ * clockwise (ADR-12 §7).
  *
  * It is the whole layout a depth-1 group needs, which is why the canvas pattern carries no layout
  * engine (dagre, ELK): those solve layered graphs of any depth, and a synonym group is a head with
- * its members around it and nothing more (#59). A pure function, so the geometry is tested without
+ * its members around it and nothing more (ADR-12 §2). A pure function, so the geometry is tested without
  * rendering anything.
  *
  * @param center where the head of the star sits

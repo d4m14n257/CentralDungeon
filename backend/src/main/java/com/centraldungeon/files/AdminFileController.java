@@ -29,24 +29,24 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * /admin/files: the platform's library - what the community publishes for everybody, and what waits
- * to be published (#64, #278, #282).
+ * to be published (ADR-13 §2, ADR-14 §7).
  *
  * <p><b>Only the library's files, and nothing else.</b> Somebody's private upload - the sheet a
  * player applied with, what they handed in - is theirs; an admin reaches it by acting as that person,
- * never from here (#278). That is also why the library speaks of three cajones and not five: the two
- * player-side ones hold people's answers, and nothing is ever published into them (#233).
+ * never from here (ADR-14 §7). That is also why the library speaks of three cajones and not five: the two
+ * player-side ones hold people's answers, and nothing is ever published into them (ADR-14 §4).
  *
- * <p>Publishing is what makes #79 work. Once the community's default character sheet exists here,
+ * <p>Publishing is what makes ADR-14 §1 work. Once the community's default character sheet exists here,
  * every master attaches <em>that</em> file instead of uploading their own copy - so correcting it
  * corrects it on every table at once, and the same bytes are stored once rather than once per master.
  *
  * <p>Admin and Owner are enumerated explicitly on every method. There is no {@code RoleHierarchy} in
- * this project: Owner can do everything Admin can by being listed, not by inheriting (#169). And the
+ * this project: Owner can do everything Admin can by being listed, not by inheriting (ADR-06 §1). And the
  * authorization is declared here, on the concrete method, never in a route list far from the endpoint
- * it protects (#123) and never on a superclass (regla dura 4, CVE-2025-41248).
+ * it protects (ADR-05 §4) and never on a superclass (regla dura 4, CVE-2025-41248).
  *
- * <p>⚠️ Not to be confused with the physical deletion of #66, which is the <b>platform owner's</b> and
- * is F5. Everything here still only marks (#25).
+ * <p>⚠️ Not to be confused with the physical deletion of ADR-13 §8, which is the <b>platform owner's</b> and
+ * is F5. Everything here still only marks (ADR-03 §7).
  */
 @RestController
 @RequestMapping("/api/v1/admin/files")
@@ -64,14 +64,14 @@ public class AdminFileController {
 
     /**
      * Every file of the library - published, unpublished or hidden - searchable, with the usage count that makes "linking is not copying"
-     * visible (#79).
+     * visible (ADR-14 §1).
      *
-     * @param query     the search box in the language of #164 - by name, by uploader or by type - or
+     * @param query     the search box in the language of ADR-22 §1 - by name, by uploader or by type - or
      *                  null for everything
      * @param statuses   the statuses to keep, or null for all of them, marked-gone files included
-     * @param category   the cajón to keep (#233), or null for all of them. A filter and not a search
+     * @param category   the cajón to keep (ADR-14 §4), or null for all of them. A filter and not a search
      *                   term, because three known values are chosen from and not typed at
-     * @param pageable   page, size and sort; <b>newest first</b>, with a tie-break by id (#171). The
+     * @param pageable   page, size and sort; <b>newest first</b>, with a tie-break by id (ADR-07 §9). The
      *                   direction is spelled out because the default is ascending: what an admin opens
      *                   this screen for is what just arrived, not the oldest thing on the platform
      * @return 200 with one page of files. 400 when the cajón is one of the two nothing is ever
@@ -92,21 +92,21 @@ public class AdminFileController {
     }
 
     /**
-     * Uploading a file into the platform's library, published now or left for later (#278, #282).
+     * Uploading a file into the platform's library, published now or left for later (ADR-14 §7).
      *
      * <p><b>The cajón is always said; publishing is a choice.</b> The first keeps the library free of
      * files that do not say which flow they are for. The second exists because a published file is
-     * attached by tables straight away, and hiding it afterwards does not take it off them (#79) - so
+     * attached by tables straight away, and hiding it afterwards does not take it off them (ADR-14 §1) - so
      * going out has to be asked for, not a side effect of uploading.
      *
      * <p>Two parts, like every upload: {@code file} with the content and {@code data} with the
      * cajones and the choice, the latter as {@code application/json}.
      *
      * @param file        the content and the name the browser sent
-     * @param request     the cajones (#233), at least one, and whether to publish it now
+     * @param request     the cajones (ADR-14 §4), at least one, and whether to publish it now
      * @param currentUser the admin uploading, from the token - they stay its uploader
      * @return 201 with the file when the content was written; 200 when this admin had already
-     *         uploaded it and that row came back into the library (#75, #234). 400 when a cajón is
+     *         uploaded it and that row came back into the library (ADR-13 §3, §4). 400 when a cajón is
      *         one nobody may publish into, or the part is empty, off the whitelist or over the cap
      */
     @PostMapping
@@ -123,7 +123,7 @@ public class AdminFileController {
     }
 
     /**
-     * Publishing a file of the library that is not published - never published yet, or hidden (#282).
+     * Publishing a file of the library that is not published - never published yet, or hidden (ADR-14 §7).
      *
      * @param fileId the file to publish
      * @return 200 with the file after publishing. 400 when it has no cajón, 403 when it is already
@@ -136,8 +136,8 @@ public class AdminFileController {
     }
 
     /**
-     * Hiding a published file: it stays in the library, offered to nobody (#282). Tables that already
-     * attached it keep it (#79).
+     * Hiding a published file: it stays in the library, offered to nobody (ADR-14 §7). Tables that already
+     * attached it keep it (ADR-14 §1).
      *
      * @param fileId the file to hide
      * @return 200 with the file after hiding. 403 when it was not published, 404 when it is not there
@@ -150,7 +150,7 @@ public class AdminFileController {
     }
 
     /**
-     * Changing what a file of the library is, while it is not published (#282).
+     * Changing what a file of the library is, while it is not published (ADR-14 §7).
      *
      * @param fileId  the file
      * @param request what it is now
@@ -165,10 +165,10 @@ public class AdminFileController {
     }
 
     /**
-     * Removing a file from the platform's library. Still a mark, never an erase (#25, #66).
+     * Removing a file from the platform's library. Still a mark, never an erase (ADR-03 §7, ADR-13 §8).
      *
      * <p>Only a file of the library, published or not: somebody's private file is not the library's
-     * to remove (#278, #282).
+     * to remove (ADR-14 §7).
      *
      * @param fileId the file
      * @return 204. 404 when it is not there, was already marked gone, or is not in the library

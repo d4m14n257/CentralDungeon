@@ -1,7 +1,7 @@
 import { ApiError } from '@/types/api'
 
 /**
- * The three refusals the veto adds, each with a sentence of its own (#197, F3.4).
+ * The three refusals the veto adds, each with a sentence of its own (ADR-23 §3, F3.4).
  *
  * **Built from the code and never from the `ProblemDetail`'s `detail`**, which is English and
  * written for a log — showing it would put an English sentence in front of somebody who chose

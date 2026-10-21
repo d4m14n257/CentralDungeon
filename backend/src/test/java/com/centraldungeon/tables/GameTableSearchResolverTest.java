@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * The step that turns «D&D» into a set of catalog ids (#54, #56, #246).
+ * The step that turns «D&D» into a set of catalog ids (ADR-12 §2, §4, §8).
  *
  * <p>What it can prove without a database is the routing: which criteria go to which catalog, which
  * ones are left alone, and that the words of one criterion travel together. Whether the resulting
@@ -69,7 +69,7 @@ class GameTableSearchResolverTest {
     }
 
     @Test
-    @DisplayName("the values of one criterion are resolved together, not one query each (#164)")
+    @DisplayName("the values of one criterion are resolved together, not one query each (ADR-22 §1)")
     void resolvesTheAlternativesOfOneCriterionInASingleCall() {
         doReturn(tagService).when(catalogServices).of(CatalogType.TAGS);
         when(tagService.resolveGroupIdsByName(anyCollection())).thenReturn(Set.of("tag-1"));

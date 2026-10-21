@@ -7,10 +7,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The fields the /admin/files search box accepts behind a {@code /prefix} (#164).
+ * The fields the /admin/files search box accepts behind a {@code /prefix} (ADR-22 §1).
  *
  * <p><b>Every wire name is prefixed with the entity</b>, as {@code UserSearchField} already does with
- * {@code discord_name} and {@code user_name} (#164). Two screens in the same application both
+ * {@code discord_name} and {@code user_name} (ADR-22 §1). Two screens in the same application both
  * offering a bare {@code /name} would mean the same command searched different things depending on
  * where it was typed, and somebody who learned it once would be wrong half the time.
  *
@@ -34,7 +34,7 @@ public enum FileSearchField {
     TYPE("file_type", "mimeType"),
 
     /**
-     * Which cajones the file belongs to (#233).
+     * Which cajones the file belongs to (ADR-14 §4).
      *
      * <p><b>The only field here that is not a column</b>, which is why {@link FileSearchSpecification}
      * gives it its own predicate: membership lives in {@code file_categories}, one row per cajón, so

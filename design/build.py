@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Builds the CentralDungeon design-system bundle.
 
-This file is the source of truth for every design token value (decision #130).
+This file is the source of truth for every design token value (decision ADR-21 §1).
 Editing a colour here and re-running is the only supported way to change the
 palette: `out/theme.css` is what gets transcribed into the frontend's @theme,
 and every contrast pair is measured on each run so a change that breaks WCAG AA
@@ -320,7 +320,7 @@ def surfaces(t, cfg, cmut):
 
 col_body = ["<h1>Neutros y superficies</h1>",
             f'<p style="color:{DARK["fg-muted"]};max-width:70ch;margin:0;font-size:14px;line-height:22px">'
-            'Base fria a proposito (#131): los catorce colores de estado necesitan respirar. '
+            'Base fria a proposito (ADR-21 §2): los catorce colores de estado necesitan respirar. '
             'El fondo se aparta, el acento da el caracter.</p>',
             f'<div class="grid" style="grid-template-columns:repeat(11,1fr)">{sw}</div>',
             f'<div class="grid" style="grid-template-columns:1fr 1fr">'
@@ -412,7 +412,7 @@ open(f"{OUT}/components.html", "w").write(page("Componentes", "Components", "".j
 
 # ============ 6. theme.css ============
 lines = ["/* CentralDungeon design tokens — Tailwind 4 @theme block.",
-         "   Source of truth: the design system (decision #130).",
+         "   Source of truth: the design system (decision ADR-21 §1).",
          "   Transcribed into frontend/src/styles/globals.css. */", "", "@theme {",
          "  /* -- typography -- */",
          '  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;',
@@ -465,7 +465,7 @@ lines += ["", "  /* -- shadcn/ui bridge: aliases of the tokens above, not new co
           # `accent` is shadcn's *hover and selection* surface, and it is the one alias that cannot
           # be `raised`: menus, popovers and the notification panel are already painted `raised`, so
           # aliasing it there made every hover paint the background it was sitting on - invisible.
-          # #157 found this on the notification rows and worked around it row by row; the tone it
+          # ADR-18 §4 found this on the notification rows and worked around it row by row; the tone it
           # picked by hand, `border-strong`, is the one that belongs in the token.
           "  --color-accent: var(--color-border-strong);",
           "  --color-accent-foreground: var(--color-fg);",
@@ -474,10 +474,10 @@ lines += ["", "  /* -- shadcn/ui bridge: aliases of the tokens above, not new co
           "  --color-input: var(--color-border);",
           "  --color-ring: var(--color-brand-500);"]
 
-# The community's own gradient (#132), as a token so the login screen does not hand-copy four
+# The community's own gradient (ADR-21 §2), as a token so the login screen does not hand-copy four
 # hex values. It is the one place it appears whole: inside the app the fourteen state colours
 # need a background that does not compete.
-lines += ["", "  /* -- brand gradient: measured from links.centraldungeon.org (#132) -- */",
+lines += ["", "  /* -- brand gradient: measured from links.centraldungeon.org (ADR-21 §2) -- */",
           f'  --gradient-brand: linear-gradient(-45deg, {", ".join(BRAND_SOURCE["gradient"])});']
 
 # The accent as *text* is a different shade than the accent as *fill*, and it flips between
@@ -509,7 +509,7 @@ lines.append(f"  --color-destructive-foreground: {on_solid(light_destructive)};"
 lines.append("}")
 open(f"{OUT}/theme.css", "w").write("\n".join(lines) + "\n")
 
-# ---------- non-text contrast (WCAG 1.4.11): the node canvas's graphics, 3:1 (#275) ----------
+# ---------- non-text contrast (WCAG 1.4.11): the node canvas's graphics, 3:1 (ADR-12 §7) ----------
 # What carries meaning on the canvas without being text: the spoke that says "this belongs to that",
 # the dot a connection is dragged from, and the frame that marks a group's head. Text on a node is
 # `fg` on `surface` and the state badges, which the pairs above already measure.
@@ -1224,17 +1224,17 @@ def sc_master_wizard(t):
     Solo las mesas que crea un admin saltan la revision y nacen en Unassigned.</div>""")
 
 screen("screen-master-dashboard.html", "Dashboard del master — /master", "Screens", sc_master_dashboard,
-       "Bandeja de trabajo, no resumen con numeros (#136). Un master con tres mesas no necesita saber "
+       "Bandeja de trabajo, no resumen con numeros (ADR-20 §4). Un master con tres mesas no necesita saber "
        "cuantos candidatos tiene, necesita saber a quien le debe una respuesta. Sin reserva: el trabajo "
        "de una mesa tiene un solo dueno.")
 screen("screen-master-tables.html", "Mis mesas — /master/tables", "Screens", sc_master_tables,
        "Todos los estados en una lista. El boton de crear aparece solo con el rol Master: quien dirige "
-       "una mesa por asignacion de un admin (#135) la ve aca, pero no crea mesas.")
+       "una mesa por asignacion de un admin (ADR-06 §4) la ve aca, pero no crea mesas.")
 screen("screen-master-states.html", "La mesa segun su estado", "Screens", sc_master_states,
        "Lo que el master puede hacer sale del estado, no del rol. Cinco variantes de la misma pantalla, "
        "con las acciones que cada estado habilita de verdad.")
 screen("screen-master-candidate.html", "Ficha de un candidato", "Screens", sc_master_candidate,
-       "El perfil se abre para el master desde que recibe la solicitud, no antes (#41). La asistencia va con los tres numeros y no como razon: mezclar una falta avisada con un planton la vuelve inexplicable, y las sesiones sin registrar quedan fuera del denominador (#137). Los comentarios se muestran, no se cuentan (#99).")
+       "El perfil se abre para el master desde que recibe la solicitud, no antes (ADR-10 §1). La asistencia va con los tres numeros y no como razon: mezclar una falta avisada con un planton la vuelve inexplicable, y las sesiones sin registrar quedan fuera del denominador (ADR-08 §5). Los comentarios se muestran, no se cuentan (ADR-11 §10).")
 screen("screen-master-tasks.html", "Peticiones durante la mesa", "Screens", sc_master_tasks,
        "Publicar requisitos nuevos mientras la mesa corre. Vencer no bloquea: las entregas tardias "
        "siguen entrando y se acumulan.")
@@ -1515,10 +1515,10 @@ def sc_states_copy(t):
             f'<strong>buenas noticias</strong> y no deben leerse como una pantalla rota.</div>')
 
 screen("responsive.html", "Responsive — puntos de corte y arquetipos", "Foundations", sc_responsive,
-       "Responsive completo en las 27 rutas (#138). Los puntos de corte son los de Tailwind y se disena "
+       "Responsive completo en las 27 rutas (ADR-21 §7). Los puntos de corte son los de Tailwind y se disena "
        "de menor a mayor. Lo caro son las tablas anchas de Admin y Owner, y por eso tienen regla propia.")
 screen("ui-states.html", "Los cuatro estados obligatorios", "Foundations", sc_states,
-       "Cuatro arquetipos por cuatro estados (#139). Toda pantalla que lea datos hereda los de su "
+       "Cuatro arquetipos por cuatro estados (ADR-21 §8). Toda pantalla que lea datos hereda los de su "
        "arquetipo; lo unico que define por su cuenta es el texto del vacio.")
 screen("ui-states-copy.html", "Estado vacio — texto por pantalla", "Foundations", sc_states_copy,
        "El vacio es el unico de los cuatro que cambia entre pantallas, porque cambia que ofrece hacer. "
@@ -1594,7 +1594,7 @@ def sc_comp_dialogs(t):
               f'<div style="display:flex;gap:16px;flex-wrap:wrap">{veto}{cancel}{comment}</div>')
           + demo(t, "FormDialog — confirmar al cerrar con cambios sin guardar",
               "Lo unico que se rescata de <code>ModalBase</code> del legacy, como la prop "
-              "<code>confirmOnDirtyClose</code> (#110). El dialogo es dueno de la mutacion; "
+              "<code>confirmOnDirtyClose</code> (ADR-19 §6). El dialogo es dueno de la mutacion; "
               "el formulario solo valida y llama <code>onSubmit</code>.", dirty))
 
 def sc_comp_data(t):
@@ -1610,7 +1610,7 @@ def sc_comp_data(t):
                 ("Eva Lorca", "EL", "8 000", "hace 4 horas", "pending", "Candidate"),
                 ("Bruno Paz", "BP", "7 250", "hace 2 horas", "canceled", "Rejected")]):
             on = selected and i in (1, 2)
-            # Row actions are IconActions (#272): a glyph per action, the name in a tooltip and as
+            # Row actions are IconActions (ADR-21 §11): a glyph per action, the name in a tooltip and as
             # aria-label, destructive ones in the danger colour. A resolved row keeps only "detail".
             acts = "".join(
                 f'<span title="{tip}" style="width:28px;height:28px;border-radius:6px;display:inline-flex;'
@@ -1640,7 +1640,7 @@ def sc_comp_data(t):
                f'{btn(t, "Rechazar los 2", "secondary", small=True)}'
                f'<span style="font-size:11px;color:{t["fg-subtle"]}">Shift para rango</span></div>'
                if selected else "")
-        # The pager of a working list (#271): where you are and how much there is, the size picker,
+        # The pager of a working list (ADR-21 §11): where you are and how much there is, the size picker,
         # then previous/next around a compact strip and the "go to" box for any page in one step.
         def pg(label, current=False):
             return (f'<span style="min-width:28px;height:28px;border-radius:6px;display:inline-flex;'
@@ -1680,9 +1680,9 @@ def sc_comp_data(t):
 
     return (demo(t, "DataTable — orden, seleccion con Shift, acciones con icono y paginacion",
               "Sobre <code>PageResponse&lt;T&gt;</code>. Las acciones de fila son <code>IconAction</code> "
-              "con tooltip (#272); la paginacion llega a cualquier pagina en un paso y deja elegir "
-              "10 &middot; 25 &middot; 50 &middot; 100 por pagina (#271). La seleccion multiple con Shift se monta como "
-              "Context <strong>alrededor de esta tabla</strong>, no global (#105). La tabla "
+              "con tooltip (ADR-21 §11); la paginacion llega a cualquier pagina en un paso y deja elegir "
+              "10 &middot; 25 &middot; 50 &middot; 100 por pagina (ADR-21 §11). La seleccion multiple con Shift se monta como "
+              "Context <strong>alrededor de esta tabla</strong>, no global (ADR-19 §5). La tabla "
               "<strong>emite la accion</strong>; la mutacion es de quien la monta — el borrado que "
               "<code>TableComponent</code> hacia adentro llamando a <code>deleter</code> no vuelve.",
               f'<div style="display:flex;flex-direction:column;gap:20px">{dt(False)}'
@@ -1692,11 +1692,11 @@ def sc_comp_data(t):
                  coll)
           + demo(t, "IconAction", "Boton de icono con tooltip para las acciones de una fila o una ficha. "
                  "El tooltip no es decorativo: sin el, cuatro iconos seguidos son una adivinanza.", icons)
-          + demo(t, "Clases de patron (#273)",
+          + demo(t, "Clases de patron (ADR-21 §5)",
                  "Cada papel de diseno tiene un nombre y se define una vez, en <code>styles/base.css</code>: "
                  "una pantalla escribe <code>page-title</code>, nunca sus utilidades. Catalogo en la skill "
                  "<code>diseno</code> &sect;5.c.", patterns(t))
-          + demo(t, "Lienzo de nodos (#275)",
+          + demo(t, "Lienzo de nodos (ADR-12 §7)",
                  "Para editar <strong>relaciones</strong> — agrupar, conectar, mover entre grupos — y no los datos "
                  "de cada fila. Un grupo de profundidad 1 es una estrella: la cabeza con corona, la palabra &laquo;Principal&raquo; y borde de marca, los "
                  "miembros alrededor con una arista recta a ella, y a la izquierda lo que flota sin conectar, "
@@ -1705,7 +1705,7 @@ def sc_comp_data(t):
                  graph_canvas(t)))
 
 def graph_canvas(t):
-    """The node canvas of #275: a star with its head, three members, their spokes and one floating proposal."""
+    """The node canvas of ADR-12 §7: a star with its head, three members, their spokes and one floating proposal."""
     brand = acc_solid(t)
 
     def node(x, y, name, state, label, meta, role="member"):
@@ -1740,7 +1740,7 @@ def graph_canvas(t):
             + '</div>')
 
 def patterns(t):
-    """The pattern classes of #273, each drawn with the tokens its @apply uses, next to its name."""
+    """The pattern classes of ADR-21 §5, each drawn with the tokens its @apply uses, next to its name."""
     def item(name, sample):
         return (f'<div style="display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:center;'
                 f'padding:10px 0;border-bottom:1px solid {t["border"]}">'
@@ -1817,10 +1817,10 @@ def sc_comp_inputs(t):
 
     return (demo(t, "FilePicker — subir <em>o</em> reusar",
               "El usuario accede a todo lo que subio en cualquier momento de su historia y puede volver "
-              "a adjuntarlo sin duplicarlo (#65). Reemplaza a <code>ListFilesTable</code> y "
+              "a adjuntarlo sin duplicarlo (ADR-13 §2). Reemplaza a <code>ListFilesTable</code> y "
               "<code>UploadButton</code>.", picker)
           + demo(t, "RichTextEditor y RichTextView",
-              "Texto enriquecido para la descripcion de la mesa (#62).", editor)
+              "Texto enriquecido para la descripcion de la mesa (ADR-03 §8).", editor)
           + demo(t, "ScheduleEditor",
               "Dia de semana mas hora, siempre con la traduccion a hora local a la vista: es el bug que "
               "hace que alguien se pierda su propia sesion.", sched))
@@ -1857,13 +1857,13 @@ def sc_comp_shell(t):
               f'padding:1px 5px">2</span></span>{bell}</div>')
           + demo(t, "ContextSwitcher — desplegado",
               "Solo aparecen los contextos que la persona tiene. <strong>Master aparece con el rol "
-              "o con al menos una mesa asignada</strong> (#135) — de ahi el &laquo;1 mesa&raquo;. "
+              "o con al menos una mesa asignada</strong> (ADR-06 §4) — de ahi el &laquo;1 mesa&raquo;. "
               "Quien tiene un solo contexto no ve el selector.",
               f'<div class="row" style="gap:30px;align-items:flex-start">{chip(t,"Jugador")}{ctx}</div>')
           + demo(t, "UserMenu",
               "Avatar, tema y cerrar sesion, sobre <code>dropdown-menu</code>. El click-fuera escrito "
               "a mano con <code>window.addEventListener</code> desaparece: lo resuelve Radix. "
-              "Aca cuelga tambien la accion global de feedback (#133).",
+              "Aca cuelga tambien la accion global de feedback (ADR-19 §8).",
               f'<div class="row" style="gap:30px;align-items:flex-start">{avatar(t,"AV",30)}{user}</div>'))
 
 screen("components-dialogs.html", "Diálogos — ConfirmDialog y FormDialog", "Components", sc_comp_dialogs,
@@ -1898,7 +1898,7 @@ def sc_admin_users(t):
         + u("Sonia Paz", "SP", "Owner", "8 000", "open", "Allowed", imp=False))
         + f'<div style="font-size:12px;color:{t["fg-subtle"]};line-height:19px">'
           f'<strong>Ver como</strong> no aparece sobre un <strong>Admin</strong> ni sobre el '
-          f'<strong>Owner</strong>: seria escalada de privilegios (#140).</div>')
+          f'<strong>Owner</strong>: seria escalada de privilegios (ADR-06 §9).</div>')
 
 def sc_admin_impersonation(t):
     start = confirm(t, "Ver como Ana Valdez",
@@ -1978,7 +1978,7 @@ def sc_admin_impersonation(t):
               "Banda permanente arriba, con el tiempo que queda y la salida siempre a mano. "
               "<strong>Lo bloqueado se muestra con candado, no se esconde.</strong>", active)
           + demo(t, "3. Lo que recibe la persona",
-              "Notificacion inmediata con el motivo. Sin nombre del admin (#140).", notif)
+              "Notificacion inmediata con el motivo. Sin nombre del admin (ADR-06 §9).", notif)
           + demo(t, "4. Como queda en la auditoria",
               "<code>updated_by</code> sigue siendo Ana, asi que &laquo;que cambio Ana&raquo; se "
               "responde igual que siempre; el rastro del admin cuelga de <code>impersonation_id</code>.",
@@ -2046,7 +2046,7 @@ def sc_admin_moderation(t):
              "Hijos del Vacio", "hace 1 d"))
         + f'<div style="font-size:12px;color:{t["fg-subtle"]};line-height:19px">'
           f'Se ve el <strong>contenido</strong> y a quien va dirigido. <strong>Nunca el autor</strong> '
-          f'&mdash; ni para vos, ni para el Owner, ni para quien desarrolla el sistema (#43, #45). '
+          f'&mdash; ni para vos, ni para el Owner, ni para quien desarrolla el sistema (ADR-11 §5, ADR-06 §8). '
           f'Aprobar dispara el recalculo de karma de esa persona.</div>')
 
 def sc_admin_catalogs(t):
@@ -2072,17 +2072,17 @@ def sc_admin_catalogs(t):
 
 screen("screen-admin-users.html", "Usuarios — /admin/users", "Screens", sc_admin_users,
        "El listado desde donde arranca «ver como». La accion no aparece sobre un Admin ni sobre el "
-       "Owner: seria escalada de privilegios (#140).")
+       "Owner: seria escalada de privilegios (ADR-06 §9).")
 screen("screen-admin-impersonation.html", "«Ver como» — el flujo completo", "Screens", sc_admin_impersonation,
        "Las cuatro pantallas de la funcion mas delicada del sistema: iniciar con motivo obligatorio, "
        "la sesion siempre visible, lo que recibe la persona, y como queda el rastro. Todo lo que toca "
-       "comentarios esta fuera, porque #43 no es negociable.")
+       "comentarios esta fuera, porque ADR-11 §5 no es negociable.")
 screen("screen-admin-settings.html", "Configuración — /admin/settings", "Screens", sc_admin_settings,
        "Los ajustes que hoy viven en el codigo. Dos de ellos cambian comportamiento retroactivo o "
-       "visibilidad entre personas, y la pantalla lo dice en vez de dejarlos parecer cosmeticos (#141).")
+       "visibilidad entre personas, y la pantalla lo dice en vez de dejarlos parecer cosmeticos (ADR-17 §3).")
 screen("screen-admin-moderation.html", "Moderación — /admin/moderation", "Screens", sc_admin_moderation,
        "Se modera el contenido sin saber quien lo escribio: es la unica excepcion a la visibilidad "
-       "total del admin (#45), y esta por encima de ese permiso.")
+       "total del admin (ADR-06 §8), y esta por encima de ese permiso.")
 screen("screen-admin-catalogs.html", "Catálogos — /admin/catalogs", "Screens", sc_admin_catalogs,
        "Grupos de sinonimos planos: cada alias apunta al canonico, nunca a otro alias. Fusionar y "
        "separar son las dos operaciones que justifican la pantalla.")
@@ -2147,8 +2147,8 @@ def sc_callback(t):
     return (f'<div style="display:flex;gap:16px;flex-wrap:wrap">{a}{b}{c}{d}{e}</div>'
             f'<div style="font-size:12px;color:{t["fg-subtle"]};margin-top:14px;line-height:19px">'
             f'Los cinco estados del retorno de OAuth. <strong>No se rechaza con un error seco</strong>: '
-            f'se ofrece la invitacion y recien si la persona la declina se corta (#38). '
-            f'El tercero encadena con <code>/onboarding</code> (#134). '
+            f'se ofrece la invitacion y recien si la persona la declina se corta (ADR-05 §1). '
+            f'El tercero encadena con <code>/onboarding</code> (ADR-10 §4). '
             f'El quinto no tiene nada que ver con Discord ni con el guild: es <code>status = Blocked</code> '
             f'del lado nuestro, y por eso no ofrece reintentar - reintentar no cambia nada.</div>')
 
@@ -2241,9 +2241,9 @@ def sc_owner_audit(t):
         + f'<div style="font-size:12px;color:{t["fg-subtle"]};line-height:19px">'
           f'Se guarda <strong>solo el diff</strong>, no la fila entera: mantiene la tabla manejable y '
           f'hace legible cada linea. <strong>Este es el unico lugar donde se ve que admin actuo detras '
-          f'de un &laquo;ver como&raquo;</strong> (#140). '
+          f'de un &laquo;ver como&raquo;</strong> (ADR-06 §9). '
           f'<strong>Los comentarios no se auditan</strong> &mdash; auditarlos guardaria autor y '
-          f'contenido juntos, que es exactamente lo que #43 prohibe.</div>')
+          f'contenido juntos, que es exactamente lo que ADR-11 §5 prohibe.</div>')
 
 def sc_owner_storage(t):
     def f(name, size, deleted, refs):
@@ -2323,7 +2323,7 @@ screen("screen-login.html", "Entrar — /login", "Screens", sc_login,
        "los catorce colores de estado necesitan un fondo que no compita.")
 screen("screen-auth-callback.html", "Retorno del OAuth — /auth/callback", "Screens", sc_callback,
        "Los cuatro estados del retorno. No se rechaza con un error seco: se ofrece la invitacion al "
-       "servidor y recien si la persona la declina se corta (#38).")
+       "servidor y recien si la persona la declina se corta (ADR-05 §1).")
 screen("screen-admin-tables.html", "Mesas por revisar — /admin/tables", "Screens", sc_admin_tables,
        "Pedir correcciones exige justificacion: es lo que el master ve al volver. Una mesa en "
        "Unassigned la creo un admin y le falta master.")
@@ -2334,7 +2334,7 @@ screen("screen-admin-feedback.html", "Feedback — /admin/feedback", "Screens", 
        "Anonimo sin excepcion y sin moderacion: el estado marca lo revisado, no aprueba ni rechaza.")
 screen("screen-owner-audit.html", "Auditoría — /owner/audit", "Screens", sc_owner_audit,
        "Solo el diff, no la fila entera. Es el unico lugar donde se ve que admin actuo detras de un "
-       "«ver como» (#140), y los comentarios siguen fuera de la auditoria (#43).")
+       "«ver como» (ADR-06 §9), y los comentarios siguen fuera de la auditoria (ADR-11 §5).")
 screen("screen-owner-storage.html", "Borrado físico — /owner/storage", "Screens", sc_owner_storage,
        "El borrado logico nunca toca los bytes. Los archivos con referencias activas no se pueden "
        "seleccionar: es la clase de problema que el proyecto ya sufrio.")

@@ -43,12 +43,12 @@ export interface CatalogGraphProps {
 }
 
 /**
- * The catalog canvas (#275): the groups an admin has open, drawn as stars, and the proposals
+ * The catalog canvas (ADR-12 §7): the groups an admin has open, drawn as stars, and the proposals
  * nobody has classified yet floating to their left until somebody connects them.
  *
  * **Connecting is classifying.** Dropping one value on a group's head does what the canvas grammar
  * says it means (`connectionIntent`): a proposal is accepted into the group, an alias moves to it
- * (#276), a whole group merges into it - that last one confirmed first, because it moves every
+ * (ADR-12 §6), a whole group merges into it - that last one confirmed first, because it moves every
  * member. Deleting an edge splits the alias out. Nothing is drawn locally: the mutation runs, the
  * catalog branch is invalidated, and the canvas redraws from what the server says, so it never shows
  * a state the server refused.
@@ -97,7 +97,7 @@ export function CatalogGraph({ kind, groupIds, onBecameGroup }: CatalogGraphProp
     if (!source || !target) return
 
     switch (connectionIntent(source, target)) {
-      // Every connection is confirmed before it is written (#283): a drag that lands on the wrong
+      // Every connection is confirmed before it is written (ADR-21 §9): a drag that lands on the wrong
       // node is the easiest mistake on this screen.
       case 'accept': {
         const confirmed = await confirm({

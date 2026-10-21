@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 /**
  * Sets the refresh cookie and redirects to the frontend - never the access token in the URL.
  * The frontend's /auth/callback immediately calls POST /auth/refresh to get its first access
- * token in memory, using the cookie set here (docs/adr #125).
+ * token in memory, using the cookie set here (ADR-05 §2).
  */
 @Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
@@ -41,7 +41,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
      *
      * <p><b>No access token in the redirect.</b> The browser gets only the httpOnly cookie, and the
      * callback screen turns it into an access token by calling {@code /auth/refresh} - a token in a
-     * URL would land in history, in logs and in the referrer (#125).
+     * URL would land in history, in logs and in the referrer (ADR-05 §2).
      *
      * @param request        the completed callback
      * @param response       the response the cookie and the redirect are written onto

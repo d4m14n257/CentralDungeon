@@ -19,10 +19,10 @@ import org.jspecify.annotations.Nullable;
  * One step of an application's life that somebody decided: who moved it, from where to where, and
  * why. Table {@code registration_status_changes}.
  *
- * <p><b>It is the veto's memory</b> (#39). The veto itself is a state of {@code table_registrations}
- * and needs no table of its own (#29) - what needs one is the <em>change</em>, because a column
+ * <p><b>It is the veto's memory</b> (ADR-09 §5). The veto itself is a state of {@code table_registrations}
+ * and needs no table of its own (ADR-09 §4) - what needs one is the <em>change</em>, because a column
  * holding "why this person is vetoed" cannot say that the veto was lifted, by whom, or how many
- * times the same master has done it. #39 asks for exactly that to be visible.
+ * times the same master has done it. ADR-09 §5 asks for exactly that to be visible.
  *
  * <p>It is also what makes lifting a veto possible at all: {@link #getFromStatus()} is where the
  * person was before, so unblocking puts them back there rather than guessing.
@@ -60,7 +60,7 @@ public class RegistrationStatusChange {
     @Column(name = "to_status", nullable = false, length = 32)
     private TableRegistrationStatus toStatus;
 
-    /** Who made the change: the table's {@code Primary} (#39). */
+    /** Who made the change: the table's {@code Primary} (ADR-09 §5). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "changed_by", nullable = false)
     private User changedBy;
@@ -83,8 +83,8 @@ public class RegistrationStatusChange {
      * @param registration  the application that moved
      * @param fromStatus    where it was
      * @param toStatus      where it went
-     * @param changedBy     who moved it, always the actor from the token (#121)
-     * @param justification why, never blank (#39)
+     * @param changedBy     who moved it, always the actor from the token (ADR-05 §5)
+     * @param justification why, never blank (ADR-09 §5)
      */
     public RegistrationStatusChange(
             TableRegistration registration,

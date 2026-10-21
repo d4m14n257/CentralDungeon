@@ -18,8 +18,8 @@ import org.jspecify.annotations.Nullable;
  * {@code table_registrations}.
  *
  * <p>It is the other half of membership: {@code masters} says who runs a table, this says who plays
- * at it, and the two sets are disjoint (#154). Only one may be alive per (table, person) pair at a
- * time (#28), an invariant {@code RegistrationService} holds under the table's lock because there
+ * at it, and the two sets are disjoint (ADR-18 §4). Only one may be alive per (table, person) pair at a
+ * time (ADR-09 §1), an invariant {@code RegistrationService} holds under the table's lock because there
  * is no row to lock for "nothing exists yet".
  */
 @Entity
@@ -31,7 +31,7 @@ public class TableRegistration extends BaseEntity {
     @JoinColumn(name = "game_table_id", nullable = false)
     private GameTable gameTable;
 
-    /** The applicant. Always the actor from the token, never an id from the URL (#121). */
+    /** The applicant. Always the actor from the token, never an id from the URL (ADR-05 §5). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -93,7 +93,7 @@ public class TableRegistration extends BaseEntity {
      * Moves the application forward.
      *
      * @param status the new status. Which transitions are legal, who may make them and what cap
-     *               they run into is {@code RegistrationService}'s call (#28, #34)
+     *               they run into is {@code RegistrationService}'s call (ADR-09 §1, §3)
      */
     public void setStatus(TableRegistrationStatus status) {
         this.status = status;

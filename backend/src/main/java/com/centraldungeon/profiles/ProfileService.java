@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * plays at it, and {@code users/} already sits underneath {@code tables/} the other way around -
  * {@code MasterService} depends on {@code UserService}. Putting the visibility rules inside
  * {@code users/} would close that into a cycle. This package depends on {@code users}, {@code tables}
- * and {@code registrations} instead, the exact precedent of decision #219, which pulled
+ * and {@code registrations} instead, the exact precedent of decision ADR-20 §4, which pulled
  * {@code MasterDashboardService} out into {@code dashboard/} rather than let {@code tables/} depend
  * on {@code tasks/}.
  */
@@ -44,21 +44,21 @@ public class ProfileService {
     /** The global roles a profile lists. */
     private final UserRoleRepository userRoleRepository;
 
-    /** The aggregate attendance a profile shows, across every table (#137). */
+    /** The aggregate attendance a profile shows, across every table (ADR-08 §5). */
     private final TableSessionService tableSessionService;
 
     /** The one gate every read goes through - the five rules of §5, in one place. */
     private final ProfileVisibilityService visibilityService;
 
-    /** The tables a person runs, for an admin's view of their record (#284). */
+    /** The tables a person runs, for an admin's view of their record (ADR-06 §8). */
     private final MasterRepository masterRepository;
 
-    /** The tables a person applied to or plays at, and how many they finished (#284). */
+    /** The tables a person applied to or plays at, and how many they finished (ADR-06 §8). */
     private final TableRegistrationRepository registrationRepository;
 
     /**
      * The registration statuses an admin's view of a person's tables lists: everything but a
-     * withdrawn application, which is soft-deleted and invisible on every read path (#25).
+     * withdrawn application, which is soft-deleted and invisible on every read path (ADR-03 §7).
      */
     private static final List<TableRegistrationStatus> LISTED_REGISTRATIONS = List.of(
             TableRegistrationStatus.Candidate, TableRegistrationStatus.Player,
@@ -90,15 +90,15 @@ public class ProfileService {
     /**
      * Somebody's profile, as the actor is allowed to read it.
      *
-     * <p>No {@code karma}, no {@code comments} (#248): both are F5, and a field that promises them
+     * <p>No {@code karma}, no {@code comments} (ADR-10 §5): both are F5, and a field that promises them
      * teaches the frontend to ask for a number that is not there yet. The Discord handle and the count
-     * of finished tables are what a master reads on a candidate's card instead (#284).
+     * of finished tables are what a master reads on a candidate's card instead (ADR-06 §8).
      *
      * @param targetId whose profile this is
-     * @param actorId  who is asking, always from the token (#121)
+     * @param actorId  who is asking, always from the token (ADR-05 §5)
      * @return the profile
      * @throws NotFoundException if the target does not exist, or the actor may not see them - the two
-     *                           answer identically, on purpose (#249)
+     *                           answer identically, on purpose (ADR-10 §3)
      */
     @Transactional(readOnly = true)
     public ProfileResponse getProfile(String targetId, String actorId) {
@@ -114,17 +114,17 @@ public class ProfileService {
     }
 
     /**
-     * Every table a person is linked to, for an admin reading their record (#284): the ones they run
+     * Every table a person is linked to, for an admin reading their record (ADR-06 §8): the ones they run
      * and the ones they applied to or play at, in any status but removed.
      *
      * <p><b>Admins only</b> - the controller enforces it - and with no visibility rule in between: the
-     * admin has none (#45). It answers what the admin needs to judge an account: where this person is
+     * admin has none (ADR-06 §8). It answers what the admin needs to judge an account: where this person is
      * and in what capacity, with each table one click away.
      *
-     * <p><b>Merged and paged in memory</b>, the precedent of the shared tray (#100): the rows come from
+     * <p><b>Merged and paged in memory</b>, the precedent of the shared tray (ADR-16 §5): the rows come from
      * two tables ({@code masters} and {@code table_registrations}) that no single query can page
      * together, and one person's tables are a handful, not thousands. Newest table first, by id on a
-     * tie (#173).
+     * tie (ADR-04 §6).
      *
      * @param targetId whose tables these are
      * @param pageable which page, and its size; the sort is fixed

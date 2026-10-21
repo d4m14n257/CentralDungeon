@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-/** Reads and writes the {@code masters} table - the source of truth for who runs a table (#135). */
+/** Reads and writes the {@code masters} table - the source of truth for who runs a table (ADR-06 §4). */
 public interface MasterRepository extends JpaRepository<Master, MasterId> {
 
     /**
@@ -40,10 +40,10 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
     Optional<Master> findByGameTable_IdAndUser_Id(String gameTableId, String userId);
 
     /**
-     * The membership check behind every "may this person touch this table" decision (#121, #135).
+     * The membership check behind every "may this person touch this table" decision (ADR-05 §5, ADR-06 §4).
      *
      * <p>It filters by status on purpose: a co-master who was removed keeps their row - the record
-     * of who ran a table outlives the table (#175) - and answering membership from a dead row would
+     * of who ran a table outlives the table (ADR-07 §6) - and answering membership from a dead row would
      * leave them authorized forever.
      *
      * @param gameTableId the table
@@ -55,7 +55,7 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
 
     /**
      * Whether someone runs any table at all - what the context switcher uses to decide if the Master
-     * context is worth offering (#135). Removed rows do not count, for the same reason
+     * context is worth offering (ADR-06 §4). Removed rows do not count, for the same reason
      * {@link #findByGameTable_IdAndUser_IdAndStatus} filters them.
      *
      * @param userId the person to check
@@ -66,9 +66,9 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
 
     /**
      * Every table the person runs right now, whatever the table's own state. What the master
-     * dashboard starts from before asking each table what it is waiting on (#136).
+     * dashboard starts from before asking each table what it is waiting on (ADR-20 §4).
      *
-     * @param userId the actor, always from the token (#121)
+     * @param userId the actor, always from the token (ADR-05 §5)
      * @param status the row status to require, always {@code Created} in production code
      * @return their live master rows, with the table already fetched
      */
@@ -76,7 +76,7 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
     List<Master> findLiveByUser(@Param("userId") String userId, @Param("status") MasterRowStatus status);
 
     /**
-     * Row-locked read used by MasterService before flipping who is Primary (arquitectura §4, #73):
+     * Row-locked read used by MasterService before flipping who is Primary (arquitectura §4, ADR-06 §3):
      * concurrent requests on the same table serialize here instead of racing past each other.
      *
      * @param gameTableId the table whose master rows are being changed
@@ -92,7 +92,7 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
      *
      * <p>Unlike {@link #findLiveByUser}, deliberately unfiltered: it backs the profile visibility
      * check of arquitectura §4.5 (#41a), where a deleted row has to be seen in order to be told apart
-     * from one that counts (#216) - filtering it out in the query would leave nothing for that rule
+     * from one that counts (ADR-07 §8) - filtering it out in the query would leave nothing for that rule
      * to read.
      *
      * @param userId the person whose profile visibility is being decided
@@ -118,9 +118,9 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
      * @param gameTableIds the tables of the page. An empty collection is the caller's to avoid
      * @param masterType   which master is wanted, always {@code Primary} in production code
      * @param status       the row status to require, always {@code Created}: a removed co-master no
-     *                     longer runs the table (#216)
+     *                     longer runs the table (ADR-07 §8)
      * @return the matching master rows, user included. A table with no live Primary - an
-     *         {@code Unassigned} one (#72) - is simply absent from the answer
+     *         {@code Unassigned} one (ADR-06 §7) - is simply absent from the answer
      */
     @Query("""
             select m from Master m

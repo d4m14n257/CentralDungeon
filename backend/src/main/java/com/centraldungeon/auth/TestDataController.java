@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Deletes what an e2e run left behind, so the development database stops growing one run at a time
- * (docs/adr #172). Playwright calls it once when the suite finishes.
+ * (ADR-24 §3). Playwright calls it once when the suite finishes.
  *
  * <p><b>It takes no parameters on purpose.</b> The patterns it deletes are fixed in
  * {@link TestDataService} - tables whose name contains "E2E" and users whose discordId starts with

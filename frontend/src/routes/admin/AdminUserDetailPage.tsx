@@ -77,7 +77,7 @@ function UserTablesSection({ userId }: { userId: string }) {
 }
 
 /**
- * `/admin/users/:id` — one account, whole, as an admin reads it (#284).
+ * `/admin/users/:id` — one account, whole, as an admin reads it (ADR-06 §8).
  *
  * **Everything about the person, and the actions on them, in one place.** The list of `/admin/users`
  * answers "who is there"; this answers "who is this": their profile (Discord handle, country,
@@ -86,11 +86,11 @@ function UserTablesSection({ userId }: { userId: string }) {
  * and what admins did to the account and why. It replaced the history dialog of the list, which showed
  * the last of those and nothing else.
  *
- * Reached from the list and from any person on a table an admin is reading (#284). **No karma and no
- * comments yet** (#248): both are F5, and when they arrive they belong here.
+ * Reached from the list and from any person on a table an admin is reading (ADR-06 §8). **No karma and no
+ * comments yet** (ADR-10 §5): both are F5, and when they arrive they belong here.
  *
  * Each block reads its own data from the id (§3.1.5): the account from the admin read, the profile
- * from the profile read - which an admin always passes (#45) - the tables and the history from theirs.
+ * from the profile read - which an admin always passes (ADR-06 §8) - the tables and the history from theirs.
  */
 export function AdminUserDetailPage() {
   const { t, i18n } = useTranslation('admin')

@@ -29,7 +29,7 @@ export function useRevokeRole() {
       // The branch, not a patch of the row: `adminAll()` is a prefix of the detail's own key, so
       // writing the answer in would be undone by this same line (see useGrantRole for the full note).
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.adminAll() })
-      // The reader may have just demoted themselves out of a context they are standing in (#222).
+      // The reader may have just demoted themselves out of a context they are standing in (ADR-20 §2).
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.me() })
     },
   })

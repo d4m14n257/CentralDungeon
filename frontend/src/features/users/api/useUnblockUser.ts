@@ -12,7 +12,7 @@ import type { ChangeUserStatusInput } from '../types'
  * `Deleted` one is not brought back here either — F3.1 does not touch that status in either
  * direction.
  *
- * `meta.showsItsOwnError`: the dialog renders the refusal inline (#197).
+ * `meta.showsItsOwnError`: the dialog renders the refusal inline (ADR-23 §3).
  *
  * @returns the mutation, taking the account and the reason
  */

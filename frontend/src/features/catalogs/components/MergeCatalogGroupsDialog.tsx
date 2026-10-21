@@ -30,7 +30,7 @@ export interface MergeCatalogGroupsDialogProps {
  * and all, and the target keeps its name. It is not symmetric, and an admin who reads it backwards
  * merges the wrong way round.
  *
- * What it does **not** do is touch a single row of the bridge tables (#56). A table tagged "DANDD"
+ * What it does **not** do is touch a single row of the bridge tables (ADR-12 §4). A table tagged "DANDD"
  * becomes findable by "D&D 5e" the moment this runs, with nothing migrated - which is the whole
  * reason the model stores the alias the master chose rather than a normalized value.
  *
@@ -47,7 +47,7 @@ export function MergeCatalogGroupsDialog({ kind, source, open, onOpenChange }: M
 
   async function handleMerge() {
     if (!target) return
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('admin.mergeReviewTitle', { source: source.name, target: target.name }),
       description: t('admin.mergeReviewDescription', { source: source.name }),

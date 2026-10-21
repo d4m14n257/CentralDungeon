@@ -25,13 +25,13 @@ export interface DisableCatalogValueDialogProps {
 }
 
 /**
- * Taking a value out of circulation (#81) - and, when it is a group's canonical entry, handing the
+ * Taking a value out of circulation (ADR-12 §5) - and, when it is a group's canonical entry, handing the
  * group to somebody else at the same time.
  *
  * Those two are one operation rather than two, because under a flat `canonical_id` they *are* the
- * same one (#59): a group whose canonical entry went away needs a new one, and the alternative -
+ * same one (ADR-12 §2): a group whose canonical entry went away needs a new one, and the alternative -
  * promoting whichever alias happens to come first - is a decision the system is not entitled to
- * make (#55). So the dialog reads the group, and asks only when there is something to ask.
+ * make (ADR-12 §3). So the dialog reads the group, and asks only when there is something to ask.
  *
  * What it never does is break a link. Every table tagged with the value keeps its row, the value
  * stays in the group as an alias of the successor, and restoring puts all of it back with nothing
@@ -55,7 +55,7 @@ export function DisableCatalogValueDialog({ kind, value, open, onOpenChange }: D
   const needsSuccessor = value.canonicalId === null && liveAliases.length > 0
 
   async function handleDisable() {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('admin.disableConfirmTitle', { name: value.name }),
       description: t('admin.disableConfirmDescription'),

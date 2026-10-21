@@ -6,7 +6,7 @@ erDiagram
     table_types {
         varchar id PK
         varchar name UK
-        varchar code UK "NULL si lo creo un admin (#225)"
+        varchar code UK "NULL si lo creo un admin (ADR-23 §4)"
         varchar description
         varchar status
     }
@@ -17,7 +17,7 @@ erDiagram
         varchar name
         longtext description
         longtext requirements "texto enriquecido"
-        date start_date "día de inicio, sin hora ni zona (#230)"
+        date start_date "día de inicio, sin hora ni zona (ADR-07 §4)"
         int total_sessions
         int max_players
         varchar status "Unassigned | Preparation | ChangesRequested | Opened | InProgress | PauseRequested | Pause | Finished | Canceled"
@@ -41,7 +41,7 @@ erDiagram
         time hourtime PK "UTC"
         varchar status
         datetime deleted_at
-        time duration "de ESTA sesion (#228)"
+        time duration "de ESTA sesion (ADR-08 §1)"
     }
 
     table_sessions {

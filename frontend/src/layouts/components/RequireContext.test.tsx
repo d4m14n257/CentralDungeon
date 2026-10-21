@@ -39,7 +39,7 @@ describe('RequireContext', () => {
     isPending = false
   })
 
-  /** #269: a player who types an admin URL never sees the admin shell - they go back to `/`. */
+  /** ADR-20 §2: a player who types an admin URL never sees the admin shell - they go back to `/`. */
   it('sends a player who forces /admin back to the root dispatcher', () => {
     contexts = ['player']
     renderAt('/admin/users', 'admin')

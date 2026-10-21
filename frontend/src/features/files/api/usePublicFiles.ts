@@ -7,12 +7,12 @@ import { filesApi } from './filesApi'
 import type { FileCategory } from '../types'
 
 /**
- * What the platform published (#64) — the list a master picks the community's default sheet from.
+ * What the platform published (ADR-13 §2) — the list a master picks the community's default sheet from.
  *
- * It is the whole point of #79: attaching one of these links it instead of copying it, so correcting
+ * It is the whole point of ADR-14 §1: attaching one of these links it instead of copying it, so correcting
  * the document corrects every table that uses it.
  *
- * **Narrowed by cajón and no longer by audience** (#233, which derogated #64): the flow already says
+ * **Narrowed by cajón and no longer by audience** (ADR-14 §4, which derogated ADR-13 §2): the flow already says
  * who a document is for, so a picker asks for the cajón it is standing in and gets the community's
  * blanks for exactly that moment.
  *

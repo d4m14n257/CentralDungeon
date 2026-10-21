@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { HelpButton, type HelpSectionId } from '@/features/help'
 
 /**
- * The one main action of a screen (#280). An object and not a node, so every screen's button comes
+ * The one main action of a screen (ADR-21 §5). An object and not a node, so every screen's button comes
  * out the same: violet, normal size, at the right edge.
  */
 export interface PageAction {
@@ -45,7 +45,7 @@ interface PageHeaderProps {
 }
 
 /**
- * The top of a screen, laid out the same way on every one of them (#273, #280).
+ * The top of a screen, laid out the same way on every one of them (ADR-21 §5).
  *
  * - **«Volver»**, when the screen has somewhere to return to, is a small link **above** the title —
  *   never a button across from it, where it looked like the screen's action.

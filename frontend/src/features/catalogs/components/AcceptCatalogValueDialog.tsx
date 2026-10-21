@@ -23,7 +23,7 @@ export interface AcceptCatalogValueDialogProps {
 }
 
 /**
- * Accepting a proposed value **and classifying it in the same step**, which is what #55 describes:
+ * Accepting a proposed value **and classifying it in the same step**, which is what ADR-12 §3 describes:
  * the admin decides whether it is a new group of its own or another name for one that exists.
  *
  * The two decisions are one dialog on purpose. Splitting them would let a value be accepted and
@@ -42,7 +42,7 @@ export function AcceptCatalogValueDialog({ kind, value, open, onOpenChange }: Ac
   const [canonicalId, setCanonicalId] = useState<string | null>(null)
 
   async function handleAccept() {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('admin.acceptConfirmTitle', { name: value.name }),
       description: t('admin.acceptConfirmDescription'),

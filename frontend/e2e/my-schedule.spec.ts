@@ -19,7 +19,7 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 }
 
 /**
- * The reader's own week (#227): the screen exists so that finding room for a table is looking rather
+ * The reader's own week (ADR-08 §6): the screen exists so that finding room for a table is looking rather
  * than guessing, and so the grid it is found on is the same one the wizard offers to claim from.
  */
 test('a master sees the week they have committed, and takes a free hour from the grid', async ({ browser }) => {
@@ -35,20 +35,20 @@ test('a master sees the week they have committed, and takes a free hour from the
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await addScheduleSlot(page, '20:00', 'Martes')
     await page.getByRole('button', { name: 'Siguiente' }).click()
-    // The files step (#228): nothing is required there.
+    // The files step (ADR-08 §1): nothing is required there.
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await page.getByRole('button', { name: 'Crear mesa' }).click()
     await acceptReview(page)
     await expect(page.getByRole('heading', { name: firstName })).toBeVisible()
 
-    // It shows on the person's own week, which belongs to no context (#222).
+    // It shows on the person's own week, which belongs to no context (ADR-20 §2).
     await page.goto('/my/schedule')
     await expect(page.getByRole('heading', { name: 'Mi horario' })).toBeVisible()
     // The list underneath says when, for the blocks too small to read their own label.
     await expect(page.getByText('Mar 20:00–23:00')).toBeVisible()
 
     // And the block itself is a shortcut: looking at the week and going to one of its tables is one
-    // errand, not two (#227).
+    // errand, not two (ADR-08 §6).
     await page
       .getByRole('link', { name: `${firstName} — la dirigís` })
       .first()
@@ -67,7 +67,7 @@ test('a master sees the week they have committed, and takes a free hour from the
     // In the wizard the blocks lead nowhere on purpose: navigating away would throw away the form.
     await expect(page.getByRole('link', { name: `${firstName} — la dirigís` })).toHaveCount(0)
     await page.getByRole('button', { name: 'Ocupar Jueves 21:00' }).click()
-    // Claiming it fills the agenda, which is what lets the step be left at all (#226).
+    // Claiming it fills the agenda, which is what lets the step be left at all (ADR-07 §3).
     await page.getByRole('button', { name: 'Siguiente' }).click()
     await expect(page.getByText('Lo que le das a la mesa', { exact: false })).toBeVisible()
     await page.getByRole('button', { name: 'Siguiente' }).click()

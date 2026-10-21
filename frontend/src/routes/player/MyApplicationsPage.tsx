@@ -17,7 +17,7 @@ import type { Registration } from '@/features/registrations'
  * /player/applications - everything they applied to and how it went, rejections and their reasons
  * included.
  *
- * It is also where a pending application is taken back (#178). That action exists because R4's
+ * It is also where a pending application is taken back (ADR-08 §2). That action exists because R4's
  * clash notice needs somewhere to lead: being told that two of your tables now fall at the same
  * hour is only useful if there is a way out, and this is it.
  */
@@ -42,7 +42,7 @@ export function MyApplicationsPage() {
     })
   }
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (docs/adr #150).
+  // loaded (ADR-19 §4).
   const { data, isPending, isLoadingError, refetch } = useMyApplications()
 
   return (
@@ -66,14 +66,14 @@ export function MyApplicationsPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium">{registration.gameTableName}</p>
                 <p className="text-fg-subtle text-xs">
-                  {/* The date goes through lib/date.ts: locale and zone are parameters, never constants (#111). */}
+                  {/* The date goes through lib/date.ts: locale and zone are parameters, never constants (ADR-19 §7). */}
                   {t('myApplications.appliedOn', {
                     date: formatDate(registration.createdAt, i18n.language, browserTimeZone()),
                   })}
                 </p>
-                {/* A rejection always has a reason (#34). A master's own words are shown exactly as
+                {/* A rejection always has a reason (ADR-09 §3). A master's own words are shown exactly as
                     typed; the one the application writes itself is a code, so it can be read in the
-                    reader's language (#197). */}
+                    reader's language (ADR-23 §3). */}
                 {registration.rejectionJustification && (
                   <p className="text-state-canceled-fg text-xs">{registration.rejectionJustification}</p>
                 )}
@@ -86,7 +86,7 @@ export function MyApplicationsPage() {
               <div className="flex items-center gap-3">
                 <RegistrationStatusBadge status={registration.status} />
                 {/* Only while it is pending: once accepted there is a table counting on you, and
-                    leaving is a conversation with the master, not a button (#178). */}
+                    leaving is a conversation with the master, not a button (ADR-08 §2). */}
                 {registration.status === 'Candidate' && (
                   <Button
                     variant="ghost"

@@ -61,7 +61,7 @@ class NotificationServiceTest {
     }
 
     /**
-     * #197: the row stores what happened and the names involved, never the sentence. A notification
+     * ADR-23 §3: the row stores what happened and the names involved, never the sentence. A notification
      * that arrived with a rendered title would still be in the language of the day it was written.
      */
     @Test
@@ -93,7 +93,7 @@ class NotificationServiceTest {
                         && "Tumbas de Sal".equals(notification.getParams().tableName())));
     }
 
-    /** A clash has to name both tables: the one it links to and the one it collides with (#178). */
+    /** A clash has to name both tables: the one it links to and the one it collides with (ADR-08 §2). */
     @Test
     void notifiesAScheduleClashCarryingBothTableNames() {
         when(userRepository.getReferenceById("player-4")).thenReturn(persistedUser("player-4"));

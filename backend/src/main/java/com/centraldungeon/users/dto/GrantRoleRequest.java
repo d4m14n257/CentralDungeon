@@ -14,7 +14,7 @@ import jakarta.validation.constraints.NotNull;
  * @param role          the role to grant. A name outside the four is a 400 from Jackson, which is
  *                      correct: it is not a role
  * @param justification why. Required, like every other change an admin makes to somebody else's
- *                      account: the history is only worth keeping if the reason is in it (#169)
+ *                      account: the history is only worth keeping if the reason is in it (ADR-06 §1)
  */
 public record GrantRoleRequest(@NotNull PlatformRole role, @NotBlank String justification) {
 }

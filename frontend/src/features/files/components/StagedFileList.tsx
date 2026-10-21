@@ -14,20 +14,20 @@ interface StagedFileListProps {
   onRemove: (key: string) => void
   /**
    * What else a row carries, between the name and the remove button — on /admin/files/upload, the
-   * select that says what each file is (#278). Undefined everywhere a flow already knows.
+   * select that says what each file is (ADR-14 §7). Undefined everywhere a flow already knows.
    */
   renderControls?: (staged: StagedFile) => ReactNode
 }
 
 /**
- * What is about to be sent, before anything is sent (#238).
+ * What is about to be sent, before anything is sent (ADR-13 §5).
  *
  * **It is the only feedback a pick gets now**, and that is the point of deferring the upload: until
  * the operation is confirmed nothing has reached the server, so the list is what tells somebody the
  * file was taken. Without it, picking a file would look like it did nothing.
  *
  * It does not distinguish a fresh upload from something reused. To whoever is assembling the set the
- * two are the same decision (#65) — the difference is only what the confirm has to do about each,
+ * two are the same decision (ADR-13 §2) — the difference is only what the confirm has to do about each,
  * and that is `useCommitStagedFiles`'s business.
  *
  * @param props.files          what is waiting to be sent

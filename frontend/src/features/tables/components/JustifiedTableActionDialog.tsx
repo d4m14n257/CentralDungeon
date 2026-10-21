@@ -44,13 +44,13 @@ interface JustifiedTableActionDialogProps {
   /**
    * The refusal to show over the button, already translated, or null.
    *
-   * **Inline and not a toast** (#197): the form is still open and the answer belongs where the reader
+   * **Inline and not a toast** (ADR-23 §3): the form is still open and the answer belongs where the reader
    * is looking. The races this dialog cannot prevent — a colleague resolved it, the reservation ran
    * out — are exactly what lands here.
    */
   errorMessage?: string | null
   /**
-   * The review shown before anything is written (#283): what is about to happen and what follows,
+   * The review shown before anything is written (ADR-21 §9): what is about to happen and what follows,
    * with `submitLabel` as its button. **Required**, so no act that goes through this dialog can skip
    * it — the note makes the act deliberate, the review is what catches the wrong row or the wrong
    * button.

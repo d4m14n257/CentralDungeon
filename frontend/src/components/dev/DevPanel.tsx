@@ -26,7 +26,7 @@ const DEFAULT_OWNER_ID = 'owner-1'
 
 /**
  * Only under `npm run dev` (import.meta.env.DEV, substituted at build time and dropped from the
- * production bundle) - it replaces the console `fetch()` calls manual testing used to need (#158)
+ * production bundle) - it replaces the console `fetch()` calls manual testing used to need (ADR-19 §9)
  * with buttons. It depends on the backend running with the `test` profile; without it, test-login
  * answers 404 and the global error toast (config/query.ts) says so.
  *

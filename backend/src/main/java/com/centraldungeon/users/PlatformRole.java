@@ -8,27 +8,27 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * The four global roles (arquitectura §4, #37, #67). They stack, and there is no hierarchy among
+ * The four global roles (arquitectura §4, ADR-06 §1). They stack, and there is no hierarchy among
  * them: no RoleHierarchy is registered anywhere (arquitectura §2.6). Values mirror
  * {@code roles.name}.
  *
  * Not to be confused with {@code masters.master_type} (Primary/Secondary), a different
- * "Owner" concept scoped to a single table (docs/adr #67).
+ * "Owner" concept scoped to a single table (ADR-06 §1).
  */
 public enum PlatformRole {
 
-    /** Can apply to tables and be accepted as a player. Everyone gets it on first login (#38). */
+    /** Can apply to tables and be accepted as a player. Everyone gets it on first login (ADR-05 §1). */
     PLAYER("Player"),
 
     /** Can create tables of their own - and nothing more. Running <em>this</em> table is a row in
-     * {@code masters}, not this role (#135). */
+     * {@code masters}, not this role (ADR-06 §4). */
     MASTER("Master"),
 
-    /** Moderates the platform. Does not stack with OWNER: they are the same role at two scopes (#169). */
+    /** Moderates the platform. Does not stack with OWNER: they are the same role at two scopes (ADR-06 §1). */
     ADMIN("Admin"),
 
     /** The platform's owner. Can do everything an admin can, by being listed on each endpoint rather
-     * than by inheriting (#169). */
+     * than by inheriting (ADR-06 §1). */
     OWNER("Owner");
 
     /** The name as it is stored in {@code roles.name} and written in a {@code @PreAuthorize}. */

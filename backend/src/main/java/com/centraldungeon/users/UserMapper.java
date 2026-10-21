@@ -25,7 +25,7 @@ public interface UserMapper {
      * One row of {@code /admin/users}.
      *
      * <p>Written by hand rather than generated because the roles arrive as a separate collection -
-     * {@code User} does not map them (#122) - and because their order is part of the contract:
+     * {@code User} does not map them (ADR-05 §3) - and because their order is part of the contract:
      * {@link PlatformRole#ordered} is what keeps the chips from reshuffling between two rows.
      *
      * @param user  the person

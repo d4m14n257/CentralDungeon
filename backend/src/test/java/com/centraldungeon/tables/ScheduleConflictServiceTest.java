@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The matrix #178 asks for, and the piece of F1 with the most edge cases - which is why it is tested
+ * The matrix ADR-08 §2 asks for, and the piece of F1 with the most edge cases - which is why it is tested
  * on its own, before being wired to anything - F1 named it as a risk when it was planned.
  *
  * <p>Two levels, deliberately: the interval arithmetic is pure and tested without a repository in
@@ -60,13 +60,13 @@ class ScheduleConflictServiceTest {
             assertThat(second.overlaps(first)).isTrue();
         }
 
-        /** Comparing weekday + hourtime for equality would have missed exactly this case (#178). */
+        /** Comparing weekday + hourtime for equality would have missed exactly this case (ADR-08 §2). */
         @Test
         void twoSessionsAtDifferentHoursOfTheSameDayCanStillCollide() {
             assertThat(interval(Weekday.Friday, "18:00", "04:00").overlaps(interval(Weekday.Friday, "21:00", "01:00"))).isTrue();
         }
 
-        /** Half-open: chaining two tables is legitimate and must not be refused (#178). */
+        /** Half-open: chaining two tables is legitimate and must not be refused (ADR-08 §2). */
         @Test
         void aSessionStartingExactlyWhenAnotherEndsDoesNotClash() {
             assertThat(interval(Weekday.Tuesday, "20:00", "03:00").overlaps(interval(Weekday.Tuesday, "23:00", "02:00"))).isFalse();
@@ -74,7 +74,7 @@ class ScheduleConflictServiceTest {
 
         /**
          * The most likely bug of F1: the community plays at night in America, which is the small
-         * hours of the next day in UTC (#22).
+         * hours of the next day in UTC (ADR-03 §6).
          */
         @Test
         void aSessionThatRunsIntoTheNextDayClashesWithOneThatStartsThere() {
@@ -105,7 +105,7 @@ class ScheduleConflictServiceTest {
         }
     }
 
-    /** Two slots of the same table that overlap each other: the 400 of #178, before anything is saved. */
+    /** Two slots of the same table that overlap each other: the 400 of ADR-08 §2, before anything is saved. */
     @Test
     void detectsTwoSlotsOfTheSameTableOverlappingEachOther() {
         List<WeeklyInterval> agenda = List.of(interval(Weekday.Tuesday, "20:00", "03:00"), interval(Weekday.Tuesday, "22:00", "03:00"));
@@ -151,7 +151,7 @@ class ScheduleConflictServiceTest {
         assertThat(clash.id()).isEqualTo("committed");
     }
 
-    /** Running one table and playing at another weigh the same: it is one person and one Tuesday (#178). */
+    /** Running one table and playing at another weigh the same: it is one person and one Tuesday (ADR-08 §2). */
     @Test
     void aTableSomebodyOnlyPlaysAtCountsAsACommitmentToo() {
         GameTable played = table("played", GameTableStatus.InProgress);
@@ -167,7 +167,7 @@ class ScheduleConflictServiceTest {
         assertThat(clash.id()).isEqualTo("played");
     }
 
-    /** A paused table freezes its agenda, so its slot is not reserved (#32, #178). */
+    /** A paused table freezes its agenda, so its slot is not reserved (ADR-07 §2, ADR-08 §2). */
     @Test
     void aPausedTableIsNotAmongTheStatusesThatCommitASlot() {
         when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of());
@@ -178,7 +178,7 @@ class ScheduleConflictServiceTest {
 
         assertThat(clash).isNull();
         // The proof is in the argument: Pause is never asked for, so a paused table cannot come back.
-        // And Draft *is* asked for, which is the half #245 left broken - the doc above the list said
+        // And Draft *is* asked for, which is the half ADR-07 §1 left broken - the doc above the list said
         // drafts claim their slot and the list did not contain Draft, so a master could build two
         // drafts on the same Friday and only find out when an admin approved the second.
         org.mockito.Mockito.verify(gameTableRepository)
@@ -195,7 +195,7 @@ class ScheduleConflictServiceTest {
 
     /**
      * The rule the list above exists to enforce, asserted on behaviour rather than on an argument: a
-     * master's own draft holds its slot from the moment it exists (#178, #245).
+     * master's own draft holds its slot from the moment it exists (ADR-08 §2, ADR-07 §1).
      *
      * <p>Letting two drafts through would move the clash to where nobody is looking for it - an admin
      * approving the second one, with no idea that the first one was already there.
@@ -233,7 +233,7 @@ class ScheduleConflictServiceTest {
         assertThat(scheduleConflictService.findClash("master-1", null, List.of())).isNull();
     }
 
-    /** The week as the reader's own screen asks for it (#227) - the same commitments, read instead of enforced. */
+    /** The week as the reader's own screen asks for it (ADR-08 §6) - the same commitments, read instead of enforced. */
     @Nested
     class MyWeek {
 
@@ -277,7 +277,7 @@ class ScheduleConflictServiceTest {
         }
 
         @Test
-        @DisplayName("a table may run three hours on a weekday and six on Saturday (#228)")
+        @DisplayName("a table may run three hours on a weekday and six on Saturday (ADR-08 §1)")
         void eachSlotClaimsItsOwnLength() {
             GameTable table = table("mixed", GameTableStatus.InProgress);
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(table));
@@ -310,7 +310,7 @@ class ScheduleConflictServiceTest {
         }
 
         /**
-         * A draft with no agenda commits nobody to anything (#178), but it is still something the
+         * A draft with no agenda commits nobody to anything (ADR-08 §2), but it is still something the
          * reader has on - so it comes back with no blocks rather than disappearing.
          */
         @Test
@@ -319,7 +319,7 @@ class ScheduleConflictServiceTest {
             GameTable draft = table("draft", GameTableStatus.Preparation);
             when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of(draft));
             when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of());
-            // A slot that exists and never got a length: since #228 that is what "no agenda" means,
+            // A slot that exists and never got a length: since ADR-08 §1 that is what "no agenda" means,
             // and it is why the query happens at all - the table alone no longer knows the answer.
             when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
                     .thenReturn(List.of(new TableSchedule("draft", Weekday.Monday, LocalTime.of(20, 0), null)));
@@ -347,7 +347,7 @@ class ScheduleConflictServiceTest {
         return WeeklyInterval.of(weekday, LocalTime.parse(start), LocalTime.parse(duration));
     }
 
-    /** Since #228 a table has no length of its own: it is the slots that say how long they run. */
+    /** Since ADR-08 §1 a table has no length of its own: it is the slots that say how long they run. */
     private static GameTable table(String id, GameTableStatus status) {
         User creator = new User("discord-" + id, "name-" + id);
         ReflectionTestUtils.setField(creator, "id", "creator-" + id);

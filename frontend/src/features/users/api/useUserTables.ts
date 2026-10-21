@@ -7,7 +7,7 @@ import { usersApi } from './usersApi'
 
 /**
  * The tables a person runs, plays at or applied to, one page at a time - the "Mesas" section of an
- * admin's view of their record (#284). Admins only: the backend refuses anybody else.
+ * admin's view of their record (ADR-06 §8). Admins only: the backend refuses anybody else.
  *
  * The previous page stays on screen while the next one loads, so paging does not blank the list.
  *

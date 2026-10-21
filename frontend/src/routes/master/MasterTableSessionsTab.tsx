@@ -30,7 +30,7 @@ import { browserTimeZone, formatDateTime, localInputToUtcIso, utcIsoToLocalInput
 interface OutletContext {
   tableId: string
   status: GameTableStatus
-  /** Set by /admin/tables/:id (#284): the calendar, its notes and who came, with nothing to change. */
+  /** Set by /admin/tables/:id (ADR-06 §8): the calendar, its notes and who came, with nothing to change. */
   readOnly?: boolean
 }
 
@@ -58,7 +58,7 @@ function SessionRow({ session, tableId, readOnly }: { session: TableSession; tab
   const editable = isScheduled && !readOnly
 
   async function handleSaveDetails() {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({ title: t('sessions.saveConfirmTitle'), description: t('sessions.saveConfirmDescription') })
     if (!confirmed) return
     updateSession.mutate(
@@ -74,7 +74,7 @@ function SessionRow({ session, tableId, readOnly }: { session: TableSession; tab
   }
 
   async function handleCancel() {
-    // The replacement of #194 is announced **before** confirming, not after: it is half of what
+    // The replacement of ADR-08 §3 is announced **before** confirming, not after: it is half of what
     // cancelling does, and finding out by spotting a new session would be a surprise.
     const confirmed = await confirm({
       title: t('sessions.cancelConfirmTitle', { number: session.sequenceNumber }),
@@ -122,7 +122,7 @@ function SessionRow({ session, tableId, readOnly }: { session: TableSession; tab
             disabled={!editable}
             onChange={(event) => setScheduledAt(event.target.value)}
           />
-          {/* The date is stored in UTC (#22); this says which zone it is being typed in. */}
+          {/* The date is stored in UTC (ADR-03 §6); this says which zone it is being typed in. */}
           <p className="text-fg-subtle text-xs">{t('sessions.timeZone', { timeZone, ns: 'tables' })}</p>
         </div>
 
@@ -176,7 +176,7 @@ function SessionRow({ session, tableId, readOnly }: { session: TableSession; tab
 
 function SessionsPanel({ tableId, status, readOnly }: OutletContext) {
   const { t } = useTranslation('master')
-  // isLoadingError, not isError: see docs/adr #150.
+  // isLoadingError, not isError: see ADR-19 §4.
   const { data, isPending, isLoadingError, refetch } = useTableSessions(tableId)
 
   if (isPending) {
@@ -187,7 +187,7 @@ function SessionsPanel({ tableId, status, readOnly }: OutletContext) {
     return <ErrorState onRetry={() => void refetch()} />
   }
 
-  // A paused table promises no dates, so the backend does not send the pending ones (#32, #33). The
+  // A paused table promises no dates, so the backend does not send the pending ones (ADR-07 §2, ADR-08 §3). The
   // empty state has to say that, and not look like something broke.
   if (data.length === 0) {
     return (
@@ -213,12 +213,12 @@ function SessionsPanel({ tableId, status, readOnly }: OutletContext) {
 
 /**
  * The Sessions tab of `/master/tables/:id`: the materialized calendar and the four things a master
- * does with it — correct a date, write notes, mark it played (#195), and cancel, which adds a
- * replacement session at the end (#194).
+ * does with it — correct a date, write notes, mark it played (ADR-08 §4), and cancel, which adds a
+ * replacement session at the end (ADR-08 §3).
  *
- * Dates are typed and read in the viewer's own time; what travels is UTC (#22).
+ * Dates are typed and read in the viewer's own time; what travels is UTC (ADR-03 §6).
  *
- * Mounted under /admin/tables/:id too, read-only (#284): every session reads as a record there.
+ * Mounted under /admin/tables/:id too, read-only (ADR-06 §8): every session reads as a record there.
  */
 export function MasterTableSessionsTab() {
   const context = useOutletContext<OutletContext>()

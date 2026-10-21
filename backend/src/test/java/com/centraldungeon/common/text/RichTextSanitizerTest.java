@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 /**
- * The XSS gate of #62. Every case here is something a table's description could actually carry, and
+ * The XSS gate of ADR-03 §8. Every case here is something a table's description could actually carry, and
  * every one of them is rendered in somebody else's browser.
  */
 class RichTextSanitizerTest {

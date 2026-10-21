@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * @param pending     how many applications are still in {@code Candidate}. A table nobody applied
  *                    to is absent from the result rather than reported as zero
  * @param oldest      when the longest-waiting of them applied. It is what orders the dashboard:
- *                    urgency is time waited, not volume (#136)
+ *                    urgency is time waited, not volume (ADR-20 §4)
  */
 public record PendingCandidateCount(String gameTableId, long pending, LocalDateTime oldest) {
 }

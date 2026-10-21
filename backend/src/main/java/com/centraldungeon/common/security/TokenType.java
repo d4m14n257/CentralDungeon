@@ -1,7 +1,7 @@
 package com.centraldungeon.common.security;
 
 /**
- * Which of the two tokens this application issues a JWT is (docs/adr #125). It travels as a
+ * Which of the two tokens this application issues a JWT is (ADR-05 §2). It travels as a
  * claim so an access token can never be replayed at the refresh endpoint, or the other way round.
  *
  * <p>Discord's own access token is not in here on purpose: it is discarded when the login callback

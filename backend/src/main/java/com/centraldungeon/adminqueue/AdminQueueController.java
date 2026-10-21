@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * {@code /admin/queue}: the shared tray, and the two routes that reserve an item of it (#100).
+ * {@code /admin/queue}: the shared tray, and the two routes that reserve an item of it (ADR-16 §5).
  *
  * <p><b>Admin and Owner are enumerated on every method.</b> There is no {@code RoleHierarchy} in this
- * project: an owner can do everything an admin can by being listed, never by inheriting (#37, #89,
- * #123), and the annotation goes on the concrete method rather than on the class, an interface or a
+ * project: an owner can do everything an admin can by being listed, never by inheriting (ADR-06 §1,
+ * ADR-05 §4), and the annotation goes on the concrete method rather than on the class, an interface or a
  * list of paths in {@code SecurityConfig}. The matrix of roles-y-alcance.md §3 does not separate
  * the two ranks for the tray - both work it - so this guard is the whole authorization story here,
  * which is why writing {@code hasRole('ADMIN')} would lock the owner out and nobody would notice in
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Note what is <b>not</b> here: approving, rejecting and asking for changes stay on their own
  * aggregates ({@code /admin/requests/{id}/approve}, {@code /game-tables/{id}/approve}). The screen
- * moved (#176); the endpoints did not, because they are still operations on those aggregates - what
+ * moved (ADR-16 §7); the endpoints did not, because they are still operations on those aggregates - what
  * changed is that they now require the reservation this controller hands out.
  */
 @RestController
@@ -56,13 +56,13 @@ public class AdminQueueController {
      *
      * <p><b>No {@code ?q=}</b>, on purpose: a tray sorts itself by age and empties, and a search box
      * over it would be solving the wrong problem. {@code /admin/tables} is the screen that searches
-     * (#176). Its sort is fixed for the same reason - "who has been waiting longest" is the tray's
-     * whole promise (#136).
+     * (ADR-16 §7). Its sort is fixed for the same reason - "who has been waiting longest" is the tray's
+     * whole promise (ADR-20 §4).
      *
-     * @param pageable    which page and how big (#173). The sort is ignored: the order is the rule
-     * @param currentUser the actor, from the token (#121). An item another admin reserved is not in
-     *                    this answer at all, and one this admin reserved still is (#100)
-     * @return 200 with one page of the tray. An empty one is good news and the screen says so (#136)
+     * @param pageable    which page and how big (ADR-04 §6). The sort is ignored: the order is the rule
+     * @param currentUser the actor, from the token (ADR-05 §5). An item another admin reserved is not in
+     *                    this answer at all, and one this admin reserved still is (ADR-16 §5)
+     * @return 200 with one page of the tray. An empty one is good news and the screen says so (ADR-20 §4)
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
@@ -78,9 +78,9 @@ public class AdminQueueController {
      * reservation's clock forward.
      *
      * @param type        which table the item lives in: {@code approval_request} or
-     *                    {@code game_table}, the vocabulary {@code entity_type} already uses (#78)
+     *                    {@code game_table}, the vocabulary {@code entity_type} already uses (ADR-16 §2)
      * @param id          the row's id in that table
-     * @param currentUser the actor, from the token (#121)
+     * @param currentUser the actor, from the token (ADR-05 §5)
      * @return 200 with the item as it now stands. 404 when the type names nothing or the row is gone,
      *         409 {@code ITEM_ALREADY_CLAIMED} when another admin holds it
      */
@@ -100,7 +100,7 @@ public class AdminQueueController {
      *
      * @param type        which table the item lives in
      * @param id          the row's id in that table
-     * @param currentUser the actor, from the token (#121)
+     * @param currentUser the actor, from the token (ADR-05 §5)
      */
     @DeleteMapping("/{type}/{id}/claim")
     @ResponseStatus(HttpStatus.NO_CONTENT)

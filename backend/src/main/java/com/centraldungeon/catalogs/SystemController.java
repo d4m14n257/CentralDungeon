@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Concrete class with its own {@code @PreAuthorize} on every method, even though the logic comes
  * from a generic base (arquitectura §2.4, last line): reading this file has to answer who can call
- * what, and an inherited annotation is the shape CVE-2025-41248 describes (#123).
+ * what, and an inherited annotation is the shape CVE-2025-41248 describes (ADR-05 §4).
  */
 @RestController
 @RequestMapping("/api/v1/systems")
@@ -42,10 +42,10 @@ public class SystemController {
     }
 
     /**
-     * Accepted values only (#57): what the wizard's combobox offers and what a filter can use.
+     * Accepted values only (ADR-12 §3): what the wizard's combobox offers and what a filter can use.
      *
      * @param query    the search box, or null for the whole catalog
-     * @param pageable page, size and sort; by name, with a tie-break by id (#171)
+     * @param pageable page, size and sort; by name, with a tie-break by id (ADR-07 §9)
      * @return 200 with one page of accepted systems
      */
     @GetMapping
@@ -58,7 +58,7 @@ public class SystemController {
 
     /**
      * One system, whatever its status, so the master who proposed it can be shown that it is still
-     * pending (#57).
+     * pending (ADR-12 §3).
      *
      * @param id the system to read
      * @return 200 with the system, or 404 if it does not exist
@@ -70,7 +70,7 @@ public class SystemController {
     }
 
     /**
-     * Masters and admins propose; only an admin accepts and classifies (#55).
+     * Masters and admins propose; only an admin accepts and classifies (ADR-12 §3).
      *
      * @param request the name to add to the catalog
      * @return 201 with the created system, in {@code Created}, and its Location header. 409 if the

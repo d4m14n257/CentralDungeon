@@ -20,15 +20,15 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>F1.1 built the three bridge entities and the group resolution, and stopped there on purpose:
  * linking had nobody to call it until the wizard existed. This is that caller's other half.
  *
- * <p><b>The link stores the alias the master picked, never the group's canonical entry</b> (#56,
- * #58). Merging two synonyms later makes the table findable by both terms without touching a single
- * row here - which is exactly what #56 promised and what {@code CatalogGroupIT} proves.
+ * <p><b>The link stores the alias the master picked, never the group's canonical entry</b> (ADR-12 §4,
+ * ADR-12 §4). Merging two synonyms later makes the table findable by both terms without touching a single
+ * row here - which is exactly what ADR-12 §4 promised and what {@code CatalogGroupIT} proves.
  *
- * <p>A value still in {@code Created} <b>can</b> be linked. That is the whole point of #57: a master
+ * <p>A value still in {@code Created} <b>can</b> be linked. That is the whole point of ADR-12 §3: a master
  * proposes a system, tags their table with it and publishes, while the value stays invisible to
  * everyone else's filters until an admin accepts it. What cannot be linked is a value that was
  * turned down or taken out of service - and disabling one later does not break the links it already
- * has (#81).
+ * has (ADR-12 §5).
  */
 @Service
 public class TableCatalogService {
@@ -99,7 +99,7 @@ public class TableCatalogService {
      *
      * <p>Replace and not add-one-remove-one for the same reason the agenda works that way: the
      * wizard edits the set as a whole. Links that leave are marked, never dropped - the row is the
-     * record of what the master once chose (#56), and marking is also what makes taking a value off
+     * record of what the master once chose (ADR-12 §4), and marking is also what makes taking a value off
      * and putting it back an update instead of a collision with a key that still exists.
      *
      * @param gameTableId the table
@@ -108,7 +108,7 @@ public class TableCatalogService {
      *                    Duplicates collapse; order is not significant
      * @throws com.centraldungeon.common.exception.NotFoundException if a value does not exist
      * @throws ConflictException if a value was rejected or taken out of service, which cannot be
-     *                           linked anew (#81)
+     *                           linked anew (ADR-12 §5)
      */
     @Transactional
     public void replaceLinks(String gameTableId, CatalogType type, List<String> valueIds) {

@@ -135,7 +135,7 @@ describe('AdminUsersPage', () => {
 
   /**
    * Reading the record is not an action on the account, so it survives on a row nobody may touch.
-   * Since #284 it opens the whole record, where the history now lives.
+   * Since ADR-06 §8 it opens the whole record, where the history now lives.
    */
   it('offers the record on every row, even the untouchable ones', async () => {
     signedInAs('Admin')
@@ -147,7 +147,7 @@ describe('AdminUsersPage', () => {
     expect(row.getByRole('button', { name: 'Ver ficha' })).toBeInTheDocument()
   })
 
-  /** #103: no guard in the router, so the 403 has to land somewhere that explains itself. */
+  /** ADR-20 §1: no guard in the router, so the 403 has to land somewhere that explains itself. */
   it('paints the forbidden state when the backend refuses the listing', async () => {
     signedInAs('Player')
     list.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Access denied', errorCode: 'FORBIDDEN' }))
@@ -157,7 +157,7 @@ describe('AdminUsersPage', () => {
     await waitFor(() => expect(screen.getByText('No tenés permiso')).toBeInTheDocument())
   })
 
-  /** The four states of #150; this is the one that is easiest to leave out. */
+  /** The four states of ADR-19 §4; this is the one that is easiest to leave out. */
   it('says the search found nobody, differently from having no accounts at all', async () => {
     signedInAs('Admin')
     list.mockResolvedValue(page([]))
@@ -168,9 +168,9 @@ describe('AdminUsersPage', () => {
   })
 
   /**
-   * Point 8 of plan-desarrollo.md §6 (#231): the help is raised from the screen that prompts
+   * Point 8 of plan-desarrollo.md §6 (ADR-20 §5): the help is raised from the screen that prompts
    * the question, and the search help documents **this** box's commands rather than a fixed list
-   * (#240). `/role` and `/status` are written once, in `adminUserSearchFields`, and the box hands
+   * (ADR-22 §3). `/role` and `/status` are written once, in `adminUserSearchFields`, and the box hands
    * them over - so this is what proves they reach the reader without being spelled out twice.
    */
   it('documents its own search commands, /role and /status among them', async () => {
@@ -191,7 +191,7 @@ describe('AdminUsersPage', () => {
     expect(dialog.queryByText(/file_name/)).not.toBeInTheDocument()
   })
 
-  /** The explanation of who may grant what, raised from the header (#231). */
+  /** The explanation of who may grant what, raised from the header (ADR-20 §5). */
   it('offers the roles help from the screen itself', async () => {
     signedInAs('Admin')
     list.mockResolvedValue(page([account()]))
@@ -210,7 +210,7 @@ describe('AdminUsersPage', () => {
     renderPage()
     const row = await rowFor('dami')
 
-    // The order of #165, whatever order the server sent them in.
+    // The order of ADR-07 §8, whatever order the server sent them in.
     expect(row.getAllByRole('listitem').map((chip) => chip.textContent)).toEqual(['Jugador', 'Master'])
     expect(row.getByText('Bloqueada')).toBeInTheDocument()
   })

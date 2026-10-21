@@ -12,7 +12,7 @@ import java.time.LocalTime;
  * pattern as {@link MasterId}.
  *
  * @param gameTableId the table the slot belongs to
- * @param weekday     the day of the week, <b>in UTC</b> (#22) - not the day the players call it
+ * @param weekday     the day of the week, <b>in UTC</b> (ADR-03 §6) - not the day the players call it
  * @param hourtime    the time of day the slot starts, in UTC, truncated to the minute by
  *                    {@code TableScheduleService} before it ever gets here
  */

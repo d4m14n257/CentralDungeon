@@ -18,18 +18,18 @@ import org.jspecify.annotations.Nullable;
 /**
  * Something somebody asked for and an admin has to answer. Table {@code approval_requests}.
  *
- * <p>One table for every request that needs an approval (#42): the alternative was a table per flow,
+ * <p>One table for every request that needs an approval (ADR-16 §1): the alternative was a table per flow,
  * each with its own screen and its own half of the same rules.
  *
  * <p><b>{@link #getEntityType()} and {@link #getEntityId()} are two loose columns and never a
- * {@code @ManyToOne}</b> (#78, #126). That is the whole price of the polymorphic reference and it is
+ * {@code @ManyToOne}</b> (ADR-16 §2). That is the whole price of the polymorphic reference and it is
  * paid in three places, not one:
  *
  * <ol>
  *   <li>{@link ApprovalService} validates the referenced entity exists <em>before</em> inserting -
  *       the database cannot, because there is no foreign key to check.</li>
  *   <li>Nothing here maps the reference as an association. A {@code @ManyToOne} would need one
- *       nullable column per target type, which is the shape #126 explicitly refused.</li>
+ *       nullable column per target type, which is the shape ADR-16 §2 explicitly refused.</li>
  *   <li>{@link ApprovalOrphanCheckService} sweeps the unresolved rows and logs whatever no longer
  *       resolves. Without it the problem surfaces months later with no way to reconstruct what
  *       pointed at what - which is what this project already lived through with {@code table_files}
@@ -37,7 +37,7 @@ import org.jspecify.annotations.Nullable;
  * </ol>
  *
  * <p>The three associations that <b>are</b> real all point at {@code users} and all have a foreign
- * key: who asked, who reserved it (#100) and who resolved it.
+ * key: who asked, who reserved it (ADR-16 §5) and who resolved it.
  *
  * <p>No {@link com.centraldungeon.common.model.BaseEntity}: this table has no {@code updated_at}. A
  * request is created, optionally reserved, and resolved once - and each of those moments has a
@@ -59,13 +59,13 @@ public class ApprovalRequest {
 
     /**
      * What kind of thing the request is about: {@code user} for the three types of F3.2,
-     * {@code game_table} or {@code table_registration} for F3.4's. A plain column (#78) - see the
+     * {@code game_table} or {@code table_registration} for F3.4's. A plain column (ADR-16 §2) - see the
      * class comment for why it is not an association.
      */
     @Column(name = "entity_type", nullable = false, length = 32)
     private String entityType;
 
-    /** The id of that thing. Not a foreign key, which is the entire point and the entire cost (#126). */
+    /** The id of that thing. Not a foreign key, which is the entire point and the entire cost (ADR-16 §2). */
     @Column(name = "entity_id", nullable = false, length = 64)
     private String entityId;
 
@@ -74,7 +74,7 @@ public class ApprovalRequest {
     @JoinColumn(name = "requested_by", nullable = false)
     private User requestedBy;
 
-    /** Why they are asking. Required: a request with no reason is one an admin cannot answer (#42). */
+    /** Why they are asking. Required: a request with no reason is one an admin cannot answer (ADR-16 §1). */
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String justification;
 
@@ -84,7 +84,7 @@ public class ApprovalRequest {
     private ApprovalStatus status = ApprovalStatus.Pending;
 
     /**
-     * The admin who reserved this item from the shared queue (#100).
+     * The admin who reserved this item from the shared queue (ADR-16 §5).
      *
      * <p>F3.2 mapped the column and left it without behaviour, which is exactly what F3.3 came to
      * add: {@link #claim} and {@link #releaseClaim} below, moved only by
@@ -97,7 +97,7 @@ public class ApprovalRequest {
 
     /**
      * When it was reserved. Released automatically after
-     * {@code app.admin-queue.claim-timeout} (#100).
+     * {@code app.admin-queue.claim-timeout} (ADR-16 §5).
      */
     @Column(name = "claimed_at")
     private @Nullable LocalDateTime claimedAt;
@@ -108,7 +108,7 @@ public class ApprovalRequest {
     private @Nullable User resolvedBy;
 
     /**
-     * Why it was approved or rejected. Null only while Pending: #42 makes the reason mandatory at
+     * Why it was approved or rejected. Null only while Pending: ADR-16 §1 makes the reason mandatory at
      * <b>both</b> ends, and rejecting without one is half the mechanism.
      */
     @Column(name = "resolution_note", columnDefinition = "LONGTEXT")
@@ -130,7 +130,7 @@ public class ApprovalRequest {
      * Opens a request, Pending and unreserved.
      *
      * <p>The reference is passed in already resolved: the caller is {@link ApprovalService}, which
-     * checked that the entity exists before getting here (#78). This constructor cannot check it -
+     * checked that the entity exists before getting here (ADR-16 §2). This constructor cannot check it -
      * there is no foreign key and no association to fail on - which is precisely why the check has to
      * live in the service and be tested there.
      *
@@ -168,15 +168,15 @@ public class ApprovalRequest {
      * <p>The four columns move together, which is why there is one method and not four setters: a
      * row that is {@code Approved} with no note, or that has a note and is still {@code Pending}, is
      * a state nothing in the application should be able to produce. Same reasoning as
-     * {@code UserRole.revoke()} (#25).
+     * {@code UserRole.revoke()} (ADR-03 §7).
      *
      * <p>It does not guard the transition. Refusing to re-resolve is a rule about the request and
      * about who is asking, so it lives in {@link ApprovalService} with its own error code and its own
      * test, next to every other rule of this slice.
      *
      * @param status         {@link ApprovalStatus#Approved} or {@link ApprovalStatus#Rejected}
-     * @param resolvedBy     the admin answering, always the actor from the token (#121)
-     * @param resolutionNote why, never blank - mandatory in both directions (#42)
+     * @param resolvedBy     the admin answering, always the actor from the token (ADR-05 §5)
+     * @param resolutionNote why, never blank - mandatory in both directions (ADR-16 §1)
      */
     public void resolve(ApprovalStatus status, User resolvedBy, String resolutionNote) {
         this.status = status;
@@ -186,14 +186,14 @@ public class ApprovalRequest {
     }
 
     /**
-     * Takes the reservation for an admin (#100).
+     * Takes the reservation for an admin (ADR-16 §5).
      *
      * <p>One method for the two columns, the same reasoning {@link #resolve} gives for its four. Who
      * is allowed to take it - it is free, or already this same admin's - is decided by
      * {@link com.centraldungeon.adminqueue.AdminQueueService} under this row's lock, because it is a
      * rule about two admins racing rather than about one row.
      *
-     * @param admin     the admin taking it, always the actor from the token (#121)
+     * @param admin     the admin taking it, always the actor from the token (ADR-05 §5)
      * @param claimedAt when they took it
      */
     public void claim(User admin, LocalDateTime claimedAt) {
@@ -203,7 +203,7 @@ public class ApprovalRequest {
 
     /**
      * Gives the reservation back: by the admin who had it, or by the job that expires it after
-     * {@code app.admin-queue.claim-timeout} (#100).
+     * {@code app.admin-queue.claim-timeout} (ADR-16 §5).
      */
     public void releaseClaim() {
         this.claimedBy = null;
@@ -244,7 +244,7 @@ public class ApprovalRequest {
     /**
      * Returns the id of what the request is about.
      *
-     * @return the entity id, never null and never a foreign key (#78)
+     * @return the entity id, never null and never a foreign key (ADR-16 §2)
      */
     public String getEntityId() {
         return entityId;
@@ -278,7 +278,7 @@ public class ApprovalRequest {
     }
 
     /**
-     * Returns the admin who reserved this item (#100).
+     * Returns the admin who reserved this item (ADR-16 §5).
      *
      * @return the admin, or null when nobody has taken it
      */
@@ -287,7 +287,7 @@ public class ApprovalRequest {
     }
 
     /**
-     * Returns when it was reserved (#100).
+     * Returns when it was reserved (ADR-16 §5).
      *
      * @return the timestamp, or null when the request is not reserved
      */

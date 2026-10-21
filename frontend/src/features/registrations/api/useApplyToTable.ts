@@ -6,7 +6,7 @@ import type { CreateRegistrationInput } from '../types'
 import { registrationsApi } from './registrationsApi'
 
 /**
- * Applies to a table. The applicant is whoever holds the session - the id is never sent (#121).
+ * Applies to a table. The applicant is whoever holds the session - the id is never sent (ADR-05 §5).
  *
  * @param tableId the table being applied to
  * @returns the mutation, taking the applicant's optional note

@@ -11,14 +11,14 @@ export interface RichTextViewProps {
 /**
  * Renders the rich text a master wrote — a table's description, its house rules, its requirements.
  *
- * **The safety of this component is the server's** (#62). What arrives has been through the
+ * **The safety of this component is the server's** (ADR-03 §8). What arrives has been through the
  * allowlist sanitizer on the way in *and* on the way out, which is why `dangerouslySetInnerHTML` is
  * the right call here rather than a smell: re-sanitizing in the browser would put a second policy
  * in a second language in front of the same text, and the one that matters is the one the attacker
  * cannot reach.
  *
  * The typography is spelled out per element instead of leaning on a prose plugin: the design
- * system's tokens are the source of every value (#118, #130), and a plugin would bring its own.
+ * system's tokens are the source of every value (ADR-21 §1), and a plugin would bring its own.
  *
  * @param props.html      the stored HTML
  * @param props.className extra classes for the wrapper

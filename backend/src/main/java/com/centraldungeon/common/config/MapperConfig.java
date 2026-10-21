@@ -95,7 +95,7 @@ public class MapperConfig {
     }
 
     /**
-     * The mapper for the requests that need an approval (#42).
+     * The mapper for the requests that need an approval (ADR-16 §1).
      *
      * @return the MapStruct-generated implementation
      */

@@ -4,9 +4,9 @@ import { persist } from 'zustand/middleware'
 /**
  * Which section of the app the navigation is showing: player, master, admin or owner.
  *
- * **UI organisation, not authorization** (#103). Being "in the Admin context" allows nothing: the
+ * **UI organisation, not authorization** (ADR-20 §1). Being "in the Admin context" allows nothing: the
  * backend decides endpoint by endpoint. A forced route into a context the account does not have is
- * redirected home by the context's layout (#269), which is what the interface shows, not the security.
+ * redirected home by the context's layout (ADR-20 §2), which is what the interface shows, not the security.
  */
 export type AppContext = 'player' | 'master' | 'admin'
 
@@ -15,7 +15,7 @@ interface ContextState {
   setActiveContext: (context: AppContext) => void
 }
 
-/** Which role the ContextSwitcher currently shows (diseno §2) - UI organization only, never authorization (#103). */
+/** Which role the ContextSwitcher currently shows (diseno §2) - UI organization only, never authorization (ADR-20 §1). */
 export const useContextStore = create<ContextState>()(
   persist(
     (set) => ({

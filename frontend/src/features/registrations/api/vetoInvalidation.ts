@@ -8,14 +8,14 @@ import { queryKeys } from '@/api/queryKeys'
  * **Written once rather than copied into the three mutations**, because the list is not obvious and
  * a copy that falls one entry behind is a cache describing a table the reader can no longer see. A
  * veto is the widest-reaching write the master's screens have: it does not change a row, it changes
- * **who may read the table at all** (#29), and the branches that go stale are branches this feature
+ * **who may read the table at all** (ADR-09 §4), and the branches that go stale are branches this feature
  * does not own.
  *
  * - the roster, which is where the row now shows as `Blocked`;
  * - the candidate queue, because the person can no longer be in it;
  * - the table's detail and every listing of tables, because one reader just stopped being allowed
  *   to see it — the explorer filters vetoes in the `WHERE`, so its cached page is now wrong;
- * - the table's files, which is the read path #206 anticipated: what a table shares is read by
+ * - the table's files, which is the read path ADR-14 §2 anticipated: what a table shares is read by
  *   whoever can see the table, and the vetoed person no longer can.
  *
  * The master's tray goes too: a candidate who is no longer waiting is no longer work.

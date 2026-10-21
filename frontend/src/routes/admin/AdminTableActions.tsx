@@ -29,14 +29,14 @@ export interface AdminTableActionsProps {
    */
   onDeleted?: (() => void) | undefined
   /**
-   * How the actions are drawn. `row` (the default) is a list row's: icons with their tooltip (#272).
-   * `notice` is the table's own status notice (#287): buttons with their text, because there they are
+   * How the actions are drawn. `row` (the default) is a list row's: icons with their tooltip (ADR-21 §11).
+   * `notice` is the table's own status notice (ADR-21 §10): buttons with their text, because there they are
    * the screen's decisions and not the actions of a row.
    */
   presentation?: 'row' | 'notice'
   /**
    * Which actions to draw. Absent draws them all, as a list row does; the status notice draws the
-   * `safe` ones with the rest and the `destructive` one (remove) apart at the right (#288).
+   * `safe` ones with the rest and the `destructive` one (remove) apart at the right (ADR-21 §10).
    */
   only?: 'safe' | 'destructive' | undefined
 }
@@ -86,16 +86,16 @@ export const STATUSES_WITH_ADMIN_ACTIONS: readonly AdminTableSummary['status'][]
  * The admin's own actions on one table, offered only where its status admits them: assigning masters
  * and removing a table nobody runs, pausing a running one, resuming a paused one.
  *
- * **One component for the two places that offer them** (#284, #287): a row of `/admin/tables`, as icons,
+ * **One component for the two places that offer them** (ADR-06 §8, ADR-21 §10): a row of `/admin/tables`, as icons,
  * and the status notice above the tabs of `/admin/tables/:id`, as buttons. It was the list's private row component until the detail arrived; two
  * copies would be two places for "which actions, in which status" to drift apart. Every one of them
- * tells the table's masters (#284), which the backend does.
+ * tells the table's masters (ADR-06 §8), which the backend does.
  *
  * A component of its own rather than a closure in the column list, because deleting is per-table state
  * — `useDeleteTable` is keyed by the table's id — and hoisting it to the screen would mean one
  * mutation shared by every row.
  *
- * **Approving and requesting changes are not here any more** (#176, F3.3). They moved to
+ * **Approving and requesting changes are not here any more** (ADR-16 §7, F3.3). They moved to
  * `/admin/queue` with the work they belong to, and they moved rather than being copied: a table
  * sitting in `Preparation` is work waiting on somebody, and work waiting on somebody is the tray's.
  * Two screens offering the same decision under different rules is exactly what the move removes.
@@ -111,7 +111,7 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row', only
   const assignDialog = useDisclosure()
   const pauseDialog = useDisclosure()
 
-  // A table with no master was never public: it is deleted, not cancelled (docs/adr #175).
+  // A table with no master was never public: it is deleted, not cancelled (ADR-07 §6).
   async function handleDelete() {
     const confirmed = await confirm({ title: t('tables.deleteConfirmTitle'), description: t('tables.deleteConfirmDescription') })
     if (!confirmed) return
@@ -124,16 +124,16 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row', only
   }
 
   /**
-   * Bringing a paused table back (#33, #163, #193).
+   * Bringing a paused table back (ADR-08 §3, ADR-07 §1, ADR-08 §2).
    *
-   * **A confirmation and not a form**, because resuming carries no justification: #32 asks for a
+   * **A confirmation and not a form**, because resuming carries no justification: ADR-07 §2 asks for a
    * reason when a table stops and resuming is the return to normal. What the confirmation is for is
    * the consequence nobody would guess — the pending sessions are rescheduled from today, so every
    * date the players had in their calendar moves.
    *
    * **And therefore the refusal is a toast**: the confirmation has already closed on the press and
    * there is no form left to put a message over. It is written from the code, naming the table the
-   * agenda now collides with (#193, #197) — "no pudimos completar la acción" would throw away the
+   * agenda now collides with (ADR-08 §2, ADR-23 §3) — "no pudimos completar la acción" would throw away the
    * one fact that makes it solvable.
    */
   async function handleResume() {
@@ -179,10 +179,10 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row', only
           )}
         </>
       )}
-      {/* The two halves of #163, which have had an endpoint since E2 and no screen at all until now.
+      {/* The two halves of ADR-07 §1, which have had an endpoint since E2 and no screen at all until now.
           They live here rather than in the tray because neither is work waiting on anybody: pausing
           a running table is a decision an admin takes about a table they went looking for, and this
-          is the screen that lists every table there is (#176). What *does* wait on somebody — a
+          is the screen that lists every table there is (ADR-16 §7). What *does* wait on somebody — a
           master's request for a pause — arrives in `/admin/queue` as a request, and approving it
           there is what moves the table to `Pause`. */}
       {showSafe && table.status === 'InProgress' && (
@@ -204,7 +204,7 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row', only
         />
       )}
       <AssignMastersDialog tableId={table.id} tableName={table.name} open={assignDialog.isOpen} onOpenChange={assignDialog.close} />
-      {/* Pausing does carry a reason (#32), and it is the master who will read it: the table stops
+      {/* Pausing does carry a reason (ADR-07 §2), and it is the master who will read it: the table stops
           promising dates to their players and they were not the ones who decided it. */}
       <JustifiedTableActionDialog
         open={pauseDialog.isOpen}

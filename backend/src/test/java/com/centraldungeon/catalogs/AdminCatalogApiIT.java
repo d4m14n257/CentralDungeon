@@ -35,12 +35,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * What the catalog canvas (#275) calls over HTTP that {@code CatalogGroupIT} cannot reach: the
- * {@code @PreAuthorize} on the two operations of #276 and the {@code ?groupsOnly=} parameter.
+ * What the catalog canvas (ADR-12 §7) calls over HTTP that {@code CatalogGroupIT} cannot reach: the
+ * {@code @PreAuthorize} on the two operations of ADR-12 §6 and the {@code ?groupsOnly=} parameter.
  *
  * <p>Both ranks walk the same routes with the same expectation, for the reason
  * {@code AdminSettingsApiIT} gives: {@code hasRole('ADMIN')} written where
- * {@code hasAnyRole('ADMIN','OWNER')} was meant leaves the owner out and nobody notices (#169).
+ * {@code hasAnyRole('ADMIN','OWNER')} was meant leaves the owner out and nobody notices (ADR-06 §1).
  */
 @SpringBootTest
 @Testcontainers
@@ -140,14 +140,14 @@ class AdminCatalogApiIT {
         assertThat(canonicalIdOf(alias)).isEqualTo(head);
     }
 
-    /** Moving a head alone is a merge, and the 409 says so rather than building a second level (#59). */
+    /** Moving a head alone is a merge, and the 409 says so rather than building a second level (ADR-12 §2). */
     @Test
     void reassigningAHeadIsAConflict() throws Exception {
         reassign(admin, head, otherHead).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("CONFLICT"));
     }
 
-    /** #275: the table's listing has one row per group, and says how big each one is. */
+    /** ADR-12 §7: the table's listing has one row per group, and says how big each one is. */
     @Test
     void theGroupsOnlyListingLeavesAliasesOut() throws Exception {
         as(get(BASE).param("groupsOnly", "true"), admin)
@@ -157,7 +157,7 @@ class AdminCatalogApiIT {
     }
 
     /**
-     * #280: an admin's new value is born accepted, as a group of its own; a player is refused, and a
+     * ADR-21 §5: an admin's new value is born accepted, as a group of its own; a player is refused, and a
      * name already taken is a conflict rather than a duplicate.
      */
     @Test

@@ -5,7 +5,7 @@ import { useBlocker } from 'react-router'
 import { useConfirm } from '@/hooks/useConfirm'
 
 /**
- * Asks before throwing away work in progress (#231).
+ * Asks before throwing away work in progress (ADR-20 §5).
  *
  * **Two ways out, and both are covered.** Navigating inside the application is intercepted with
  * `useBlocker`, which holds the transition until the answer comes back; closing the tab or

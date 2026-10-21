@@ -12,7 +12,7 @@ interface OutletContext {
 }
 
 /**
- * The first tab of `/admin/tables/:id` (#284): the table as its master wrote it - what is played, how
+ * The first tab of `/admin/tables/:id` (ADR-06 §8): the table as its master wrote it - what is played, how
  * and where, the text, the rules, the capacity.
  *
  * **The admin's tab and not the master's**: the master wrote all of this and reads it back on the edit

@@ -7,7 +7,7 @@ import { AppHeader } from './components/AppHeader'
  *
  * It serves the two screens that belong to no context - `/notifications` and `/help` - which is
  * exactly why it has no nav to show: their sections are not a context's sections. The header keeps
- * reporting whichever context the reader came from (#222).
+ * reporting whichever context the reader came from (ADR-20 §2).
  */
 export function ShellLayout() {
   return (

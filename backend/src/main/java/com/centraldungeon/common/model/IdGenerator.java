@@ -3,7 +3,7 @@ package com.centraldungeon.common.model;
 import java.security.SecureRandom;
 import java.util.UUID;
 
-/** UUID v7 (RFC 9562): 48-bit millisecond timestamp + random bits, sortable by creation order (arquitectura §4, #9). */
+/** UUID v7 (RFC 9562): 48-bit millisecond timestamp + random bits, sortable by creation order (arquitectura §4, ADR-03 §4). */
 public final class IdGenerator {
 
     /** Source of the 74 random bits. Cryptographic, so ids cannot be guessed from one another. */

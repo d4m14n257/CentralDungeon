@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Whether the backend is answering at all.
  *
  * <p>Public on purpose: the frontend calls it from /login, before there is any session, to decide
- * whether offering the Discord button is worth it (docs/adr #146).
+ * whether offering the Discord button is worth it (ADR-02 §6).
  *
  * <p>It measures no dependency - not the database, not Discord. The question behind "is the backend
  * online?" is whether the process is up and can answer HTTP, and a health check that fails because

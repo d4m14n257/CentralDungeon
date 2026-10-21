@@ -6,7 +6,7 @@ import { filesApi } from './filesApi'
 import type { LinkTableFileInput } from '../types'
 
 /**
- * Attaching a file to a table — the actor's own, or one the platform published (#79).
+ * Attaching a file to a table — the actor's own, or one the platform published (ADR-14 §1).
  *
  * Two branches are invalidated and both matter: the table's attachments, obviously, and the table's
  * own detail, because a shared attachment is part of what candidates and players read there.

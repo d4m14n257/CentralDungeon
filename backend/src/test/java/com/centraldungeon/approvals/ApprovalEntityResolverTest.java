@@ -18,7 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * The half of {@code entity_type}/{@code entity_id} that the database cannot do (#78).
+ * The half of {@code entity_type}/{@code entity_id} that the database cannot do (ADR-16 §2).
  *
  * <p>The interesting case is the last one. An entity type with no case here used to answer
  * {@code false}, which never lied in the dangerous direction - nothing was ever treated as verified
@@ -34,11 +34,11 @@ class ApprovalEntityResolverTest {
     @Mock
     private UserRepository userRepository;
 
-    /** {@code game_table}, added by F3.4 with the flow that produces it (#32). */
+    /** {@code game_table}, added by F3.4 with the flow that produces it (ADR-07 §2). */
     @Mock
     private GameTableRepository gameTableRepository;
 
-    /** {@code table_registration}, same (#39). */
+    /** {@code table_registration}, same (ADR-09 §5). */
     @Mock
     private TableRegistrationRepository registrationRepository;
 
@@ -74,7 +74,7 @@ class ApprovalEntityResolverTest {
     }
 
     /**
-     * {@code game_table}, the first of the two F3.4 added (#32). The case exists, so it does not throw
+     * {@code game_table}, the first of the two F3.4 added (ADR-07 §2). The case exists, so it does not throw
      * - and if somebody removed it, the test above would not notice: this one does.
      */
     @Test
@@ -88,7 +88,7 @@ class ApprovalEntityResolverTest {
 
     /**
      * A soft-deleted table <b>counts as absent</b>, which is the question F3.2 left open and the F3.4
-     * contract closed: the resolver reads the way the rest of the application reads (#25). It is also
+     * contract closed: the resolver reads the way the rest of the application reads (ADR-03 §7). It is also
      * the first case in which {@code REQUEST_ENTITY_GONE} is genuinely reachable.
      */
     @Test
@@ -100,7 +100,7 @@ class ApprovalEntityResolverTest {
         assertThat(resolver().exists(ApprovalEntityResolver.GAME_TABLE, "mesa-borrada")).isFalse();
     }
 
-    /** {@code table_registration}, the second (#39), with the same soft-delete rule. */
+    /** {@code table_registration}, the second (ADR-09 §5), with the same soft-delete rule. */
     @Test
     void aDeletedRegistrationCountsAsAbsent() {
         TableRegistration live = new TableRegistration(null, null, null);

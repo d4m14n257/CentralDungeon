@@ -51,15 +51,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The table's whole lifecycle, and the only place its nine states move (docs/adr #27, the
+ * The table's whole lifecycle, and the only place its nine states move (ADR-07 §1, the
  * table life cycle). Every transition below follows the same three steps: lock the table, refuse if it is
  * not in the one status the transition starts from, and record the change with its author.
  *
  * <p>Two things it never leaves to the caller. <b>Pertenencia</b>: who may act on a concrete table
  * is a row in {@code masters}, not a role, so it is checked here rather than in a
- * {@code @PreAuthorize} that cannot see the resource (#17, #121, #135). And <b>locking</b>: the
- * invariants MySQL cannot express as constraints - one live Primary (#73), one active registration
- * per pair (#28), the player cap (#34) - are held by taking a pessimistic lock on the table row.
+ * {@code @PreAuthorize} that cannot see the resource (ADR-11 §1, ADR-05 §5, ADR-06 §4). And <b>locking</b>: the
+ * invariants MySQL cannot express as constraints - one live Primary (ADR-06 §3), one active registration
+ * per pair (ADR-09 §1), the player cap (ADR-09 §3) - are held by taking a pessimistic lock on the table row.
  */
 @Service
 public class GameTableService {
@@ -68,7 +68,7 @@ public class GameTableService {
 
     /**
      * /my/tables: the statuses that still count as "vivo" (#133a). {@code Pause} belongs here and
-     * not with {@link #HISTORY_STATUSES} - it is a table frozen, not one that ended (#32); the
+     * not with {@link #HISTORY_STATUSES} - it is a table frozen, not one that ended (ADR-07 §2); the
      * player who plays there still needs to find it among "mine".
      */
     private static final List<GameTableStatus> LIVE_MINE_STATUSES = List.of(
@@ -85,7 +85,7 @@ public class GameTableService {
 
     /**
      * /admin/tables: every status a table can actually be seen in - which is all of them but
-     * {@code Deleted} (#25, #176).
+     * {@code Deleted} (ADR-03 §7, ADR-16 §7).
      *
      * <p>It replaces the three-status default that used to live here, whose own comment said «until
      * the queue screen exists». The queue screen exists (F3.3), and with it the review work moved to
@@ -98,7 +98,7 @@ public class GameTableService {
             Arrays.stream(GameTableStatus.values()).filter(status -> status != GameTableStatus.Deleted).toList();
 
     /**
-     * A table can be deleted only while it was never public (docs/adr #175): nobody saw it, so
+     * A table can be deleted only while it was never public (ADR-07 §6): nobody saw it, so
      * there is no history worth keeping. Everything past this point is cancelled instead, because a
      * table other people looked at, applied to or played is a record of something that happened.
      */
@@ -107,7 +107,7 @@ public class GameTableService {
             GameTableStatus.ChangesRequested);
 
     /**
-     * The statuses in which a table is still its master's to rewrite (#245).
+     * The statuses in which a table is still its master's to rewrite (ADR-07 §1).
      *
      * <p><b>`Preparation` is not one of them.</b> A table that was sent to review is being looked at
      * by somebody else, and moving it while they read is how a reviewer ends up approving something
@@ -121,7 +121,7 @@ public class GameTableService {
             Set.of(GameTableStatus.Draft, GameTableStatus.ChangesRequested);
 
     /**
-     * The statuses in which an admin may still rewrite a table (#284): every one but the three that
+     * The statuses in which an admin may still rewrite a table (ADR-06 §8): every one but the three that
      * close it.
      *
      * <p>Wider than {@link #EDITABLE_STATUSES} on purpose. The master's set is narrow because people
@@ -139,7 +139,7 @@ public class GameTableService {
     private static final List<TableRegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
-    /** cancel() is the one transition with more than one valid "from" (docs/adr #27). */
+    /** cancel() is the one transition with more than one valid "from" (ADR-07 §1). */
     private static final Set<GameTableStatus> CANCELABLE_STATUSES = Set.of(
             GameTableStatus.Unassigned, GameTableStatus.Preparation, GameTableStatus.ChangesRequested,
             GameTableStatus.Opened, GameTableStatus.InProgress,
@@ -164,10 +164,10 @@ public class GameTableService {
 
     /**
      * Where the largest allowed {@code max_players} comes from: {@code tables.max_players_cap} in
-     * {@code system_settings} (#24, #141).
+     * {@code system_settings} (ADR-07 §5, ADR-17 §3).
      *
      * <p><b>Nothing capped it before F3.5.</b> {@code maxPlayers} was only {@code @Positive}, so a
-     * table could be created for two billion people; #141 names «cupo máximo» among the values the
+     * table could be created for two billion people; ADR-17 §3 names «cupo máximo» among the values the
      * community adjusts without a deploy, and a limit that does not exist cannot be adjusted. The
      * cap gates what is <em>written</em> and never what is already stored - lowering it does not
      * shrink an existing table, and the next edit of a table already above it is what gets refused.
@@ -185,20 +185,20 @@ public class GameTableService {
      * @param masterService              answers pertenencia and keeps the one-Primary invariant
      * @param gameTableMapper            entity to DTO
      * @param userService                resolves the actor, and their roles for the admin checks
-     * @param tableScheduleService       owns the weekly agenda and the clash check that guards it (#178)
-     * @param scheduleConflictService    computes the warning the explorer's cards show (#178)
-     * @param tableCatalogService        links the table to its systems, tags and platforms (#56)
+     * @param tableScheduleService       owns the weekly agenda and the clash check that guards it (ADR-08 §2)
+     * @param scheduleConflictService    computes the warning the explorer's cards show (ADR-08 §2)
+     * @param tableCatalogService        links the table to its systems, tags and platforms (ADR-12 §4)
      * @param tableSessionService        materializes the calendar when the table opens, and re-lays it
-     *                                   when it comes back from a pause (#26, #33)
+     *                                   when it comes back from a pause (ADR-08 §3)
      * @param tableFileService           the files the table shares, which ride along with the detail
-     *                                   for the same reason the calendar does (#29, #79)
-     * @param richTextSanitizer          cleans the rich text on the way in and on the way out (#62)
-     * @param settingsService            the largest allowed player cap, editable without a deploy (#141)
-     * @param notificationService        tells the masters how the review ended (#244)
+     *                                   for the same reason the calendar does (ADR-09 §4, ADR-14 §1)
+     * @param richTextSanitizer          cleans the rich text on the way in and on the way out (ADR-03 §8)
+     * @param settingsService            the largest allowed player cap, editable without a deploy (ADR-17 §3)
+     * @param notificationService        tells the masters how the review ended (ADR-18 §3)
      * @param gameTableSearchResolver    expands the explorer's catalog criteria into synonym groups
-     *                                   before the query is built (#54, #56, #246)
+     *                                   before the query is built (ADR-12 §2, §4, §8)
      * @param tableVisibilityService     the one gate every read of a concrete table goes through -
-     *                                   soft delete and veto, decided in one place (#25, #29)
+     *                                   soft delete and veto, decided in one place (ADR-03 §7, ADR-09 §4)
      */
     public GameTableService(
             GameTableRepository gameTableRepository,
@@ -238,7 +238,7 @@ public class GameTableService {
     }
 
     /**
-     * Tells every master of the table how its review ended (#244).
+     * Tells every master of the table how its review ended (ADR-18 §3).
      *
      * <p>Every one of them and not only the Primary: a co-master runs the table too, and "it opened"
      * or "it came back" is news for whoever is going to run it, the same way {@code notifyNewCandidate}
@@ -250,7 +250,7 @@ public class GameTableService {
         }
     }
 
-    /** The creator becomes the table's Primary master (#73); a Master row is the source of pertenencia, not the role alone (#135). */
+    /** The creator becomes the table's Primary master (ADR-06 §3); a Master row is the source of pertenencia, not the role alone (ADR-06 §4). */
     @Transactional
     public GameTableDetailResponse create(CreateGameTableRequest request, String creatorId) {
         requireRunnableDraft(request.systemIds(), request.tagIds(), request.platformIds(), request.schedule());
@@ -261,7 +261,7 @@ public class GameTableService {
         masterService.createPrimary(gameTable, creator);
         applyCatalogs(gameTable.getId(), request.systemIds(), request.tagIds(), request.platformIds());
         // After the Master row exists: R1 measures the agenda against what the actor is already
-        // committed to, and creating the table is itself one of those commitments (#178).
+        // committed to, and creating the table is itself one of those commitments (ADR-08 §2).
         tableScheduleService.replace(gameTable, orEmpty(request.schedule()), creatorId);
 
         return toDetail(gameTable);
@@ -271,7 +271,7 @@ public class GameTableService {
      * The master editing their own table: the wizard's second pass, and how a table sent back with
      * {@code ChangesRequested} is corrected.
      *
-     * <p>Pertenencia, not role (#17, #121, #135): running <em>this</em> table is what authorizes the
+     * <p>Pertenencia, not role (ADR-11 §1, ADR-05 §5, ADR-06 §4): running <em>this</em> table is what authorizes the
      * edit, and it is checked here because no {@code @PreAuthorize} can see the resource. Only the
      * statuses in which a table is still being written are editable - once it is open, people have
      * applied on the strength of what it says, and changing it out from under them is a different
@@ -279,7 +279,7 @@ public class GameTableService {
      *
      * <p>The agenda goes last on purpose: {@code duration} is what gives a slot its length, so the
      * clash check has to run against the duration the table is about to have and not the one it had
-     * (#178).
+     * (ADR-08 §2).
      *
      * @param gameTableId the table to edit
      * @param request     the whole table as it should end up. Absent means empty, not unchanged
@@ -287,7 +287,7 @@ public class GameTableService {
      * @return the table after the edit
      * @throws ForbiddenActionException if the actor does not run the table
      * @throws ConflictException if the table is past the point where its own master may rewrite it,
-     *         or if the new agenda clashes with something the actor is committed to (#178)
+     *         or if the new agenda clashes with something the actor is committed to (ADR-08 §2)
      */
     @Transactional
     public GameTableDetailResponse update(String gameTableId, UpdateGameTableRequest request, String actorId) {
@@ -305,29 +305,29 @@ public class GameTableService {
     }
 
     /**
-     * An admin rewriting somebody else's table (#284), from /admin/tables/:id/edit.
+     * An admin rewriting somebody else's table (ADR-06 §8), from /admin/tables/:id/edit.
      *
-     * <p><b>A door of its own, not {@link #update} with a second rule inside</b> (#152): the master's
+     * <p><b>A door of its own, not {@link #update} with a second rule inside</b> (ADR-06 §6): the master's
      * edit and the admin's differ in who may, when, and what follows, and one path answering two ways
-     * depending on who asks is the shape #152 removed. What they share is the rewrite itself.
+     * depending on who asks is the shape ADR-06 §6 removed. What they share is the rewrite itself.
      *
      * <ul>
      *   <li><b>When</b>: in any status but the three that close a table ({@link #ADMIN_EDITABLE_STATUSES}).
      *       While it is in review, not if another admin reserved it from the tray - the same rule as
-     *       approving it (#100).
-     *   <li><b>The agenda's clash check</b> (R1, #178) measures against the <em>Primary</em>'s other
+     *       approving it (ADR-16 §5).
+     *   <li><b>The agenda's clash check</b> (R1, ADR-08 §2) measures against the <em>Primary</em>'s other
      *       commitments, because the admin is committed to nothing here. A table with no master yet
-     *       is checked only for its own coherence, as when an admin creates it (#72).
+     *       is checked only for its own coherence, as when an admin creates it (ADR-06 §7).
      *   <li><b>The capacity</b> cannot drop below the players already in: nobody is removed to make a
-     *       number fit (#34, #70).
+     *       number fit (ADR-09 §3, ADR-15 §2).
      *   <li><b>Every master is told</b>, unless the admin is one of them and is editing their own
-     *       table - the rule of #284: an admin's change to something that is not theirs reaches the
+     *       table - the rule of ADR-06 §8: an admin's change to something that is not theirs reaches the
      *       people it belongs to.
      * </ul>
      *
      * @param gameTableId the table to rewrite
-     * @param request     the whole table as it should end up. Absent means empty, not unchanged (#189)
-     * @param actorId     the admin, from the token (#121)
+     * @param request     the whole table as it should end up. Absent means empty, not unchanged (ADR-04 §7)
+     * @param actorId     the admin, from the token (ADR-05 §5)
      * @return the table after the edit
      * @throws ConflictException if the table is closed, reserved by another admin
      *                           ({@code ITEM_ALREADY_CLAIMED}), smaller than its roster
@@ -366,14 +366,14 @@ public class GameTableService {
 
     /**
      * The rewrite the master's edit and the admin's share: every field replaced, the catalogs and the
-     * agenda as whole sets (#189, #190).
+     * agenda as whole sets (ADR-04 §7).
      *
-     * <p>The same three requirements as create (#226) - a rewrite that empties the agenda or the
+     * <p>The same three requirements as create (ADR-07 §3) - a rewrite that empties the agenda or the
      * catalogs would leave the table in a state creating it could never have reached. The agenda goes
      * last: {@code duration} is what gives a slot its length, so the clash check has to run against
-     * the duration the table is about to have (#178).
+     * the duration the table is about to have (ADR-08 §2).
      *
-     * @param committedUserId whose other commitments the new agenda is measured against (R1, #178),
+     * @param committedUserId whose other commitments the new agenda is measured against (R1, ADR-08 §2),
      *                        or null to check only its own coherence
      */
     private void rewrite(GameTable gameTable, UpdateGameTableRequest request, @Nullable String committedUserId) {
@@ -393,7 +393,7 @@ public class GameTableService {
     }
 
     /**
-     * Tells every master of a table that an admin changed it (#284), unless the actor is one of them.
+     * Tells every master of a table that an admin changed it (ADR-06 §8), unless the actor is one of them.
      *
      * <p>An admin who also runs this table and acts on it is acting on their own table, and telling
      * them what they just did is noise. Otherwise every live master hears it, co-masters included,
@@ -412,7 +412,7 @@ public class GameTableService {
     }
 
     /**
-     * A table an admin creates without running it (#72): it is born directly in Unassigned, with no
+     * A table an admin creates without running it (ADR-06 §7): it is born directly in Unassigned, with no
      * Primary. {@link #assignInitialMasters} is what moves it to Opened.
      *
      * @param request the draft
@@ -428,12 +428,12 @@ public class GameTableService {
         gameTable = gameTableRepository.save(gameTable);
         applyCatalogs(gameTable.getId(), request.systemIds(), request.tagIds(), request.platformIds());
         // No owner yet, so there is nobody whose commitments the agenda could clash with. R1 is
-        // checked when the table gets its masters, in assignInitialMasters (#178).
+        // checked when the table gets its masters, in assignInitialMasters (ADR-08 §2).
         tableScheduleService.replace(gameTable, orEmpty(request.schedule()), null);
         return toDetail(gameTable);
     }
 
-    /** Assigning masters to an Unassigned table skips review entirely and opens it directly (#72). */
+    /** Assigning masters to an Unassigned table skips review entirely and opens it directly (ADR-06 §7). */
     @Transactional
     public GameTableDetailResponse assignInitialMasters(String gameTableId, AssignMastersRequest request, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
@@ -444,7 +444,7 @@ public class GameTableService {
 
         // R1, deferred from creation: an Unassigned table had no master to clash with, and this is
         // the moment it gets one. Refusing here is better than opening a table its own master cannot
-        // actually run (#178).
+        // actually run (ADR-08 §2).
         CommittedTable clash = scheduleConflictService.findClash(
                 request.primaryUserId(), gameTableId, scheduleConflictService.intervalsOf(gameTable));
         if (clash != null) {
@@ -455,7 +455,7 @@ public class GameTableService {
         }
 
         masterService.assignInitialMasters(gameTable, request.primaryUserId(), secondaries);
-        // **They are told they now run it** (#244). This is the one assignment nobody asked for: an
+        // **They are told they now run it** (ADR-18 §3). This is the one assignment nobody asked for: an
         // admin created the table and handed it over, so without the bell the person finds out by
         // stumbling on a table they had never seen. Co-masters too - being added is news for whoever
         // is added.
@@ -469,17 +469,17 @@ public class GameTableService {
     }
 
     /**
-     * An admin approving a master's draft (#27) - the only way Preparation reaches Opened now.
+     * An admin approving a master's draft (ADR-07 §1) - the only way Preparation reaches Opened now.
      *
-     * <p>Opening is what materializes the calendar (#26, #33): from here on the table has dates and
+     * <p>Opening is what materializes the calendar (ADR-08 §3): from here on the table has dates and
      * not only a weekly shape. A table missing a start date, an agenda or a session count opens with
-     * no sessions rather than being refused (#196) - materializing is a consequence of opening, not a
+     * no sessions rather than being refused (ADR-07 §3) - materializing is a consequence of opening, not a
      * precondition for it.
      *
      * <p><b>It refuses a table another admin has reserved</b> since F3.3 ({@link AdminQueueClaimRule},
-     * #100). Not "reserved by the actor": an unreserved table is nobody's and approving it is an
+     * ADR-16 §5). Not "reserved by the actor": an unreserved table is nobody's and approving it is an
      * implicit claim - the screen that offers this moved to {@code /admin/queue}, but the endpoint
-     * stayed here because approving is an operation on the table aggregate and nowhere else (#176),
+     * stayed here because approving is an operation on the table aggregate and nowhere else (ADR-16 §7),
      * and it has to keep working for whoever reaches it without passing through the tray. What the
      * check buys is that a stale link or a second tab cannot take a review out from under the colleague
      * who took it.
@@ -510,7 +510,7 @@ public class GameTableService {
     /**
      * An admin sending a draft back to its master, with a reason. Preparation to ChangesRequested.
      *
-     * <p>Same reservation check as {@link #approve} and for the same reason (#100): the two answers to
+     * <p>Same reservation check as {@link #approve} and for the same reason (ADR-16 §5): the two answers to
      * a review are the same act seen from two sides, and a rule that held for one of them only would
      * be a door left open.
      *
@@ -535,7 +535,7 @@ public class GameTableService {
     }
 
     /**
-     * The master sending their draft to review for the first time. Draft to Preparation (#245).
+     * The master sending their draft to review for the first time. Draft to Preparation (ADR-07 §1).
      *
      * <p><b>This is the act that makes the table exist for anybody else.</b> Up to here it was theirs
      * alone; from here an admin has it, which is also why the master stops being able to edit it —
@@ -605,9 +605,9 @@ public class GameTableService {
     /**
      * The master closing a table that ran its course. InProgress to Finished.
      *
-     * <p>This is where {@code closed_at} gets stamped (#180). It is not bookkeeping: it starts the
+     * <p>This is where {@code closed_at} gets stamped (ADR-07 §7). It is not bookkeeping: it starts the
      * two-week window in which the people who shared the table can still see each other's profiles
-     * (#44), and a phase that delivers the end of a table without recording when it ended has not
+     * (ADR-10 §2), and a phase that delivers the end of a table without recording when it ended has not
      * delivered it.
      *
      * @param gameTableId the table
@@ -630,13 +630,13 @@ public class GameTableService {
     }
 
     /**
-     * Either the table's own Primary or a platform admin may cancel it (#27) - the only transition
+     * Either the table's own Primary or a platform admin may cancel it (ADR-07 §1) - the only transition
      * either can trigger.
      *
-     * <p>When an admin does it, every master of the table is told ({@code TableCanceledByAdmin}, #284).
+     * <p>When an admin does it, every master of the table is told ({@code TableCanceledByAdmin}, ADR-06 §8).
      *
      * @param gameTableId the table
-     * @param actorId     the Primary or an admin, from the token (#121)
+     * @param actorId     the Primary or an admin, from the token (ADR-05 §5)
      * @param request     the justification, kept in the status history
      * @return the table, now Canceled
      * @throws ForbiddenActionException if the actor is neither its Primary nor an admin
@@ -654,24 +654,24 @@ public class GameTableService {
         }
         sealClosedAt(gameTable);
         recordStatusChange(gameTable, from, GameTableStatus.Canceled, actorId, request.justification());
-        // The Primary cancelling their own table hears nothing; an admin cancelling it is news (#284).
+        // The Primary cancelling their own table hears nothing; an admin cancelling it is news (ADR-06 §8).
         announceAdminAction(gameTable, actorId, NotificationType.TableCanceledByAdmin, masterService.findByGameTable(gameTableId));
         return toDetail(gameTable);
     }
 
     /**
-     * Soft delete of a table that never went public (#25, #175). Same actors as cancel - the Primary
+     * Soft delete of a table that never went public (ADR-03 §7, ADR-07 §6). Same actors as cancel - the Primary
      * or an admin - and the same lock, but a different meaning: cancel closes a table that existed
      * for other people, this one removes a draft that did not.
      *
-     * <p>The cascade is explicit and in one transaction, as #25 requires: the master rows and the
+     * <p>The cascade is explicit and in one transaction, as ADR-03 §7 requires: the master rows and the
      * registrations of the table fall with it, all stamped with the same instant. The status change
      * is recorded too - the trail survives even when the table does not.
      *
-     * <p>When an admin does it, every master the table had is told ({@code TableDeletedByAdmin}, #284).
+     * <p>When an admin does it, every master the table had is told ({@code TableDeletedByAdmin}, ADR-06 §8).
      *
      * @param gameTableId the table
-     * @param actorId     the Primary or an admin, from the token (#121)
+     * @param actorId     the Primary or an admin, from the token (ADR-05 §5)
      * @throws ForbiddenActionException if the actor is neither its Primary nor an admin
      * @throws ConflictException        if the table already went public, or has candidates or players
      */
@@ -705,10 +705,10 @@ public class GameTableService {
      * An admin pausing a table directly. InProgress to Pause.
      *
      * <p>The other road to Pause - a master <em>asking</em> for one - needs
-     * {@code approval_requests} and lands in F3. Freezing the agenda while paused (#32, #33) is
+     * {@code approval_requests} and lands in F3. Freezing the agenda while paused (ADR-07 §2, ADR-08 §3) is
      * F1.3.
      *
-     * <p>Every master of the table is told ({@code TablePausedByAdmin}, #284): nothing they did caused it.
+     * <p>Every master of the table is told ({@code TablePausedByAdmin}, ADR-06 §8): nothing they did caused it.
      *
      * @param gameTableId the table
      * @param actorId     the admin, from the token
@@ -728,7 +728,7 @@ public class GameTableService {
     }
 
     /**
-     * The master <em>asking</em> for a pause. InProgress to PauseRequested (#32).
+     * The master <em>asking</em> for a pause. InProgress to PauseRequested (ADR-07 §2).
      *
      * <p><b>This is the producer {@code PauseRequested} never had.</b> F1.7 surveyed it as an orphan -
      * a state declared in the enum that no endpoint could reach - and it stayed that way until
@@ -736,7 +736,7 @@ public class GameTableService {
      *
      * <p>It only moves the table. The request itself is written by {@code ApprovalService}, in the
      * same transaction and as the caller of this method, because the mechanism has to stay single
-     * (#42): a second place that created approval rows would be a second set of rules about them.
+     * (ADR-16 §1): a second place that created approval rows would be a second set of rules about them.
      *
      * <p><b>The table keeps its slot while it waits.</b> {@code ScheduleConflictService} counts
      * {@code PauseRequested} among the committing statuses on purpose - nothing has been granted
@@ -754,7 +754,7 @@ public class GameTableService {
     public GameTableDetailResponse markPauseRequested(String gameTableId, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
         // isMasterOf and not isPrimaryOf: asking is not deciding, and a co-master who cannot run
-        // next week's session is exactly the person with a reason to ask (#121, #135).
+        // next week's session is exactly the person with a reason to ask (ADR-05 §5, ADR-06 §4).
         if (!masterService.isMasterOf(gameTableId, actorId)) {
             throw new ForbiddenActionException("Only a master of this table can ask for a pause");
         }
@@ -771,10 +771,10 @@ public class GameTableService {
     }
 
     /**
-     * An admin saying yes to a requested pause. PauseRequested to Pause (#32).
+     * An admin saying yes to a requested pause. PauseRequested to Pause (ADR-07 §2).
      *
      * <p>Called by {@code ApprovalService} when a {@code TablePause} request is approved. The
-     * resolution note becomes the justification, which is not bookkeeping: #32 makes a reason
+     * resolution note becomes the justification, which is not bookkeeping: ADR-07 §2 makes a reason
      * mandatory for {@code Pause}, and the reason an admin gave when they approved <em>is</em> that
      * reason. Inventing a second one would leave two answers to the same question.
      *
@@ -799,7 +799,7 @@ public class GameTableService {
     }
 
     /**
-     * An admin saying no to a requested pause. PauseRequested back to InProgress (#32).
+     * An admin saying no to a requested pause. PauseRequested back to InProgress (ADR-07 §2).
      *
      * <p><b>A rejection with an effect, which is new.</b> Until F3.4 no type of request did anything
      * when it was rejected - that is what made {@code ApprovalService.reject} a method with no
@@ -831,23 +831,23 @@ public class GameTableService {
      *
      * <p>Two things happen here that do not happen anywhere else in the lifecycle.
      *
-     * <p><b>The clash is checked again</b> (#178, #193). A paused table does not reserve its slot, so
+     * <p><b>The clash is checked again</b> (ADR-08 §2). A paused table does not reserve its slot, so
      * its master was free to take on something else while it was down; coming back is the moment
      * those slots are claimed again. If they are no longer free the resume is refused with a
      * {@code 409} that names the other table - the same answer R1 gives everywhere else, because a
      * table its own master cannot attend is not a table that has resumed. The way out is to move one
      * of the two agendas.
      *
-     * <p><b>The pending sessions are re-laid</b> from this instant (#33). What was played and what
+     * <p><b>The pending sessions are re-laid</b> from this instant (ADR-08 §3). What was played and what
      * was called off keep their dates; the run's numbering does not move.
      *
-     * <p>Every master of the table is told ({@code TableResumedByAdmin}, #284).
+     * <p>Every master of the table is told ({@code TableResumedByAdmin}, ADR-06 §8).
      *
      * @param gameTableId the table
      * @param actorId     the admin, from the token
      * @return the table, back in play, with its calendar re-laid
      * @throws ConflictException if the table was not paused, or if its agenda now clashes with
-     *                           something its master is committed to (#193)
+     *                           something its master is committed to (ADR-08 §2)
      */
     @Transactional
     public GameTableDetailResponse resume(String gameTableId, String actorId) {
@@ -908,7 +908,7 @@ public class GameTableService {
     @Transactional
     public List<MasterSummaryResponse> addOrPromoteMaster(String gameTableId, String actorId, AddMasterRequest request) {
         GameTable gameTable = getEntityById(gameTableId);
-        // Asked *before* the change, so it can tell being added apart from being promoted (#244): the
+        // Asked *before* the change, so it can tell being added apart from being promoted (ADR-18 §3): the
         // first is news - a table this person did not run until now - and the second is not, because
         // they were already running it and are watching the screen that did it.
         boolean joins = !masterService.isMasterOf(gameTableId, request.userId());
@@ -938,10 +938,10 @@ public class GameTableService {
     /**
      * The people search behind adding a co-master, answered only for a table's own Primary.
      *
-     * <p>The scope is the whole point (#165): the admin directory stays closed, and what opens is a
+     * <p>The scope is the whole point (ADR-07 §8): the admin directory stays closed, and what opens is a
      * search that only the person who may actually add a master can run. The check is membership and
      * not a role, because a Primary an admin assigned may never have been given {@code Master}
-     * (#72, #135) - and the actor comes from the token, never from the URL (#121).
+     * (ADR-06 §7, §4) - and the actor comes from the token, never from the URL (ADR-05 §5).
      *
      * @param gameTableId the table the search is for
      * @param actorId     the actor, from the token
@@ -961,21 +961,21 @@ public class GameTableService {
     }
 
     /**
-     * The public explorer, narrowed by what the reader typed (#164, #246).
+     * The public explorer, narrowed by what the reader typed (ADR-22 §1, ADR-12 §8).
      *
-     * <p>Excludes tables the actor masters (#154): a master cannot browse their own table to apply as
-     * a Player at it. It is also the one listing that carries the clash warning of #178, computed for
+     * <p>Excludes tables the actor masters (ADR-18 §4): a master cannot browse their own table to apply as
+     * a Player at it. It is also the one listing that carries the clash warning of ADR-08 §2, computed for
      * the actor of the token: this is the screen where the question "can I actually take this on?" is
      * asked.
      *
      * <p><b>The catalog criteria are resolved before the query is built</b>, not inside it: a search
      * for {@code D&D} has to find the tables tagged {@code DANDD} too, and that expansion is a read of
-     * its own (#54, #56). The search only ever narrows what the visibility rules already allowed -
+     * its own (ADR-12 §2, §4). The search only ever narrows what the visibility rules already allowed -
      * see {@code GameTableSearchSpecification} for why the two are joined and never folded together.
      *
      * @param query    the raw search box, or null when it is empty
      * @param pageable page, size and sort
-     * @param actorId  the actor, from the token - never from the URL (#121)
+     * @param actorId  the actor, from the token - never from the URL (ADR-05 §5)
      * @return one page of the tables the actor could apply to
      */
     @Transactional(readOnly = true)
@@ -990,21 +990,21 @@ public class GameTableService {
     /**
      * The public detail of a table, for /tables/:id.
      *
-     * <p>It carries the clash flag of #178 computed for the actor: the apply button on that screen
+     * <p>It carries the clash flag of ADR-08 §2 computed for the actor: the apply button on that screen
      * has to be able to say <em>why</em> it is disabled, and R2 is the one reason the reader can do
      * something about (principle 2 of diseno §1).
      *
-     * <p><b>The veto of #29 is applied here and nowhere below it.</b> The gate is
+     * <p><b>The veto of ADR-09 §4 is applied here and nowhere below it.</b> The gate is
      * {@link TableVisibilityService#requireVisible}, which answers {@code 404} - never {@code 403},
      * because a 403 confirms exactly what the 404 denies. The public sessions and the shared files
      * ride along inside this answer precisely so that they inherit the one decision instead of
      * repeating it somewhere it could drift (see {@link #toDetail}).
      *
      * @param gameTableId the table
-     * @param actorId     the actor, from the token - never from the URL (#121)
+     * @param actorId     the actor, from the token - never from the URL (ADR-05 §5)
      * @return its detail
      * @throws com.centraldungeon.common.exception.NotFoundException if it does not exist, was
-     *         deleted, or the actor is vetoed on it - the same 404 for all three (#25, #29, #175)
+     *         deleted, or the actor is vetoed on it - the same 404 for all three (ADR-03 §7, ADR-09 §4, ADR-07 §6)
      */
     @Transactional(readOnly = true)
     public GameTableDetailResponse getDetail(String gameTableId, String actorId) {
@@ -1012,22 +1012,22 @@ public class GameTableService {
     }
 
     /**
-     * /master/tables/:id - a different endpoint from getDetail on purpose (docs/adr #152):
+     * /master/tables/:id - a different endpoint from getDetail on purpose (ADR-06 §6):
      * getDetail is deliberately public (any player reads it to decide whether to apply), so
      * reusing it here would mean the full table body travels over the network before the
      * frontend ever gets to decide whether to render it. This one checks pertenencia first and
      * never touches the mapper if the actor is neither a master of this table nor an admin - the
-     * admin reads every table whole, from /admin/tables/:id (#45, #284).
+     * admin reads every table whole, from /admin/tables/:id (ADR-06 §8).
      *
      * @param gameTableId the table
-     * @param actorId     the actor, from the token (#121)
+     * @param actorId     the actor, from the token (ADR-05 §5)
      * @return the table as the people running it see it
      * @throws ForbiddenActionException if the actor neither runs the table nor is an admin
      */
     @Transactional(readOnly = true)
     public GameTableDetailResponse getManagedDetail(String gameTableId, String actorId) {
         GameTable gameTable = getEntityById(gameTableId);
-        // A master of the table, or an admin: the admin reads every table whole (#45, #284).
+        // A master of the table, or an admin: the admin reads every table whole (ADR-06 §8).
         if (!masterService.canOversee(gameTableId, actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can view its management detail");
         }
@@ -1043,9 +1043,9 @@ public class GameTableService {
      * by it alone, as this used to, left a table sitting among "mine" forever after it closed. What
      * decides "still mine to see here" is the table's own status; a closed run moves to
      * {@link #listMineHistory} instead. {@code Pause} counts as live - the table is frozen, not
-     * over (#32).
+     * over (ADR-07 §2).
      *
-     * @param actorId  the actor, from the token (#121)
+     * @param actorId  the actor, from the token (ADR-05 §5)
      * @param pageable page, size and sort
      * @return one page of the tables they play at that have not ended
      */
@@ -1063,16 +1063,16 @@ public class GameTableService {
      * <p><b>A different shape from {@link #listMine}, not the same read with another filter</b>: a
      * closed table's card has no cupo to show and cannot clash with anything the actor is
      * committed to, and it carries two things a live card never needs - {@code closed_at} and the
-     * attendance aggregate of #137. See {@link GameTableHistoryResponse} for the exact fields.
+     * attendance aggregate of ADR-08 §5. See {@link GameTableHistoryResponse} for the exact fields.
      *
      * <p>The attendance is resolved for the whole page in one grouped query
      * ({@link TableSessionService#summarizeByTables}), never one {@code summarize} call per row -
      * the same N+1 {@code CatalogUsageCount} and {@code FileService.usagesByFileId} already avoid.
      *
-     * <p>Whether the actor left a comment on the table - the field #133 also names - is not here:
+     * <p>Whether the actor left a comment on the table - the field ADR-19 §8 also names - is not here:
      * comments are F5, and there is nowhere yet to read that from.
      *
-     * @param actorId  the actor, from the token (#121)
+     * @param actorId  the actor, from the token (ADR-05 §5)
      * @param pageable page, size and sort
      * @return one page of the tables they played at that have ended
      */
@@ -1100,18 +1100,18 @@ public class GameTableService {
 
     /**
      * /admin/tables: the management listing, unfiltered by pertenencia - the caller is already an
-     * admin (#176).
+     * admin (ADR-16 §7).
      *
      * <p><b>Every table, not only the ones waiting on a review.</b> That default moved out with F3.3:
      * reviewing is the shared tray's job now ({@code /admin/queue}), and what this screen is for is
      * finding a table - any table - and acting on it. {@code Deleted} is the one status that is never
      * listed even when it is asked for, because the filter belongs to the listing and not to the
-     * caller (#25).
+     * caller (ADR-03 §7).
      *
-     * <p><b>It takes the same {@code ?q=} the explorer does</b> (#164, arquitectura §2.5), with two
+     * <p><b>It takes the same {@code ?q=} the explorer does</b> (ADR-22 §1, arquitectura §2.5), with two
      * commands the explorer has no use for: {@code /table_status} over the closed list of states, and
      * {@code /table_master} over the masters' names. The catalog criteria are resolved to ids before
-     * the query is built, exactly as {@link #list} does and for the same reason (#54, #56, #246).
+     * the query is built, exactly as {@link #list} does and for the same reason (ADR-12 §2, §4, §8).
      *
      * <p><b>The page is built with three queries and not with three per row</b> (arquitectura §2.2):
      * one for the tables, one for their Primaries and one for their player counts. Asking per row was
@@ -1121,7 +1121,7 @@ public class GameTableService {
      * @param rawQuery the search box, or null when it is empty. An unrecognized value matches nothing
      *                 and is never a 400
      * @param statuses which statuses to list, or null/empty for all of them but {@code Deleted}
-     * @param pageable page, size and sort, with a tie-break by id (#171, #173)
+     * @param pageable page, size and sort, with a tie-break by id (ADR-07 §9, ADR-04 §6)
      * @return one page of tables, as an admin sees them
      */
     @Transactional(readOnly = true)
@@ -1144,12 +1144,12 @@ public class GameTableService {
      * <p><b>It used to claim to be «the single lookup every read goes through» and it was not</b> -
      * {@code TableSessionService} and {@code TableTaskService} each had their own copy of the same
      * four lines. F3.4 made the claim true by moving the lookup to
-     * {@link TableVisibilityService}, which is where the veto of #29 is now written once; this
+     * {@link TableVisibilityService}, which is where the veto of ADR-09 §4 is now written once; this
      * method is a name the callers inside this class already use, and nothing more.
      *
      * <p>Every caller left is a master's or an admin's operation on a table they run, where
      * pertenencia is checked on the next line and being vetoed is not a question that can be asked
-     * (#154). The read a <em>player</em> performs is {@link #getDetail}, and it goes through
+     * (ADR-18 §4). The read a <em>player</em> performs is {@link #getDetail}, and it goes through
      * {@link TableVisibilityService#requireVisible}.
      */
     @Transactional(readOnly = true)
@@ -1170,20 +1170,20 @@ public class GameTableService {
     }
 
     /**
-     * The platform-wide ceiling on {@code max_players} (#24, #141).
+     * The platform-wide ceiling on {@code max_players} (ADR-07 §5, ADR-17 §3).
      *
-     * <p>Written here and not as a {@code @Max} on the two request records, for the reason #141 gives
+     * <p>Written here and not as a {@code @Max} on the two request records, for the reason ADR-17 §3 gives
      * for the whole table: an annotation is a constant, and the number has to be changeable without a
      * deploy. Both ways in pass through this - {@link #buildTable} covers {@code create} and
      * {@code createUnassigned}, {@code update} calls it directly - so there is no third door.
      *
-     * <p>A table with no cap at all stays legal: {@code null} means «sin tope» (#24) and is the
+     * <p>A table with no cap at all stays legal: {@code null} means «sin tope» (ADR-07 §5) and is the
      * absence of a number, not a number above the ceiling.
      *
      * @param maxPlayers what the request asked for, or null for no cap
      * @return the same value, once it is known to be allowed
      * @throws InvalidRequestException 400 {@code MAX_PLAYERS_ABOVE_CAP}, carrying the cap, because
-     *                                 "too many" without the number tells nobody what to type (#197)
+     *                                 "too many" without the number tells nobody what to type (ADR-23 §3)
      */
     private @Nullable Integer requireWithinPlayerCap(@Nullable Integer maxPlayers) {
         if (maxPlayers == null) {
@@ -1209,7 +1209,7 @@ public class GameTableService {
                 .orElseThrow(() -> new NotFoundException("Table type not found: " + tableTypeId));
     }
 
-    /** Sets the three catalogs of a table in one step - each of them a full replacement (#56). */
+    /** Sets the three catalogs of a table in one step - each of them a full replacement (ADR-12 §4). */
     private void applyCatalogs(
             String gameTableId, @Nullable List<String> systemIds, @Nullable List<String> tagIds, @Nullable List<String> platformIds) {
         tableCatalogService.replaceLinks(gameTableId, CatalogType.SYSTEMS, orEmpty(systemIds));
@@ -1218,7 +1218,7 @@ public class GameTableService {
     }
 
     /**
-     * Stamps the closing instant, once. A table closes one time (#44, #180): if the column already
+     * Stamps the closing instant, once. A table closes one time (ADR-10 §2, ADR-07 §7): if the column already
      * carries a date, that is the date, and no later transition gets to move it.
      */
     private void sealClosedAt(GameTable gameTable) {
@@ -1243,7 +1243,7 @@ public class GameTableService {
         return roles.contains(PlatformRole.ADMIN.roleName()) || roles.contains(PlatformRole.OWNER.roleName());
     }
 
-    /** Every real transition goes through here: it is the one place that flips status and leaves its trail (#27, #32). */
+    /** Every real transition goes through here: it is the one place that flips status and leaves its trail (ADR-07 §1, §2). */
     private void recordStatusChange(
             GameTable gameTable, GameTableStatus from, GameTableStatus to, String actorId, @Nullable String justification) {
         User changedBy = userService.getById(actorId);
@@ -1253,7 +1253,7 @@ public class GameTableService {
 
     /**
      * One page of cards, with the agendas read in a single query and - when the listing is one where
-     * the question makes sense - the clash warning of #178 computed for the actor of the token.
+     * the question makes sense - the clash warning of ADR-08 §2 computed for the actor of the token.
      *
      * <p>{@code /my/tables} and {@code /master/tables} pass {@code false}: a table you already run or
      * play at is the commitment, so warning that it clashes with itself would be noise.
@@ -1273,18 +1273,18 @@ public class GameTableService {
     }
 
     /**
-     * The four things a table cannot be run without: what is played, how it is labelled, where, and when (#226, #229).
+     * The four things a table cannot be run without: what is played, how it is labelled, where, and when (ADR-07 §3).
      *
-     * <p>#196 left this exact door open - "if it is later decided that a table cannot open without a
+     * <p>ADR-07 §3 left this exact door open - "if it is later decided that a table cannot open without a
      * calendar, it is a validation of CreateGameTableRequest and not a silent effect of approve()".
-     * This is that decision, and it lands where #196 said it would.
+     * This is that decision, and it lands where ADR-07 §3 said it would.
      *
-     * <p>Tags are required too since #229, which reverses that part of #226: they were left optional
-     * to avoid filler labels (#59), and the owner decided that a table nobody can find by subject is
+     * <p>Tags are required too since ADR-07 §3, which reverses that part of ADR-07 §3: they were left optional
+     * to avoid filler labels (ADR-12 §2), and the owner decided that a table nobody can find by subject is
      * the worse of the two problems.
      *
      * <p>It does not apply to {@link #createUnassigned}: that one is an admin's stub, deliberately
-     * created with a name and nothing else, for a master to fill in later (#72).
+     * created with a name and nothing else, for a master to fill in later (ADR-06 §7).
      *
      * @throws InvalidRequestException naming which of the three is missing, so the frontend can say
      *                                 which field to go fix rather than "invalid"
@@ -1339,7 +1339,7 @@ public class GameTableService {
     }
 
     /**
-     * @param primary     the table's live Primary, or null for an {@code Unassigned} one (#72)
+     * @param primary     the table's live Primary, or null for an {@code Unassigned} one (ADR-06 §7)
      * @param playerCount how many people are accepted, already resolved for the whole page
      */
     private AdminTableSummaryResponse toAdminSummary(
@@ -1354,7 +1354,7 @@ public class GameTableService {
                 gameTable.getMaxPlayers(),
                 playerCount,
                 primary != null ? gameTableMapper.toMasterSummary(primary).name() : null,
-                // A reserved table reads the same way a reserved request does (#100), so an admin
+                // A reserved table reads the same way a reserved request does (ADR-16 §5), so an admin
                 // scanning this listing can see that somebody is already on it.
                 claimedBy != null ? displayNameOf(claimedBy) : null,
                 gameTable.getCreatedAt());
@@ -1372,7 +1372,7 @@ public class GameTableService {
 
     /**
      * @param conflictActorId whose commitments to measure the agenda against, or null when the read
-     *                        has no actor for whom the question means anything (#121, #178)
+     *                        has no actor for whom the question means anything (ADR-05 §5, ADR-08 §2)
      */
     private GameTableDetailResponse toDetail(GameTable gameTable, @Nullable String conflictActorId) {
         int playerCount = countPlayers(gameTable.getId());
@@ -1380,7 +1380,7 @@ public class GameTableService {
                 masterService.findByGameTable(gameTable.getId()).stream().map(gameTableMapper::toMasterSummary).toList();
         Map<CatalogType, List<CatalogValueResponse>> catalogs = tableCatalogService.findLinks(gameTable.getId());
 
-        // Sanitized on the way out as well as on the way in (#62): a row written before this gate
+        // Sanitized on the way out as well as on the way in (ADR-03 §8): a row written before this gate
         // existed, or by any path that ever skips it, still reaches the browser through here. The
         // cleaned strings are passed to the mapper and not written back - a read stays a read.
         return gameTableMapper.toDetail(
@@ -1396,7 +1396,7 @@ public class GameTableService {
                 catalogs.get(CatalogType.TAGS),
                 catalogs.get(CatalogType.PLATFORMS),
                 // Same call, same reason as the calendar above: only what the table shares, and only
-                // once this read has already established the reader may see the table at all (#29, #79).
+                // once this read has already established the reader may see the table at all (ADR-09 §4, ADR-14 §1).
                 tableFileService.sharedFilesOf(gameTable.getId()),
                 richTextSanitizer.sanitize(gameTable.getDescription()),
                 richTextSanitizer.sanitize(gameTable.getPermitted()),

@@ -23,11 +23,11 @@ export interface ApplicableTaskListProps {
  * What a table is asking of the person reading it, on `/player/tables/:id` and `/player/my-tables/:id`.
  *
  * **A request you cannot answer yet still says why.** Somebody who has not applied sees what will be
- * asked of them - which is half of deciding whether to apply (#206) - with a line explaining that
+ * asked of them - which is half of deciding whether to apply (ADR-14 §2) - with a line explaining that
  * answering comes after applying, rather than a button that is simply missing (principle 2 of
  * diseno §1).
  *
- * **Mandatory is shown as a label and never as a threat** (#70): the copy says the master considers
+ * **Mandatory is shown as a label and never as a threat** (ADR-15 §2): the copy says the master considers
  * it important, and nothing on this screen suggests that missing it costs a seat, because it does not.
  *
  * @param props.tasks       what the table asks of the reader
@@ -57,7 +57,7 @@ export function ApplicableTaskList({ tasks, onAnswer, renderFiles }: ApplicableT
             <div className="space-y-4">
               {task.description && <RichTextView html={task.description} />}
 
-              {/* The blanks the master attached (#63). They go above the answer, not below it: the
+              {/* The blanks the master attached (ADR-15 §1). They go above the answer, not below it: the
                   form is part of the question, and somebody reading what is being asked of them
                   needs it before they open the dialog to reply. */}
               {task.files.length > 0 && (

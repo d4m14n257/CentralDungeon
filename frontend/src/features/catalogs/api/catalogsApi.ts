@@ -24,7 +24,7 @@ import type {
  */
 export const catalogsApi = {
   /**
-   * Accepted values only - the backend never returns anything else here (#57).
+   * Accepted values only - the backend never returns anything else here (ADR-12 §3).
    *
    * @param kind  which catalog
    * @param query the search box, or undefined for the whole catalog
@@ -33,7 +33,7 @@ export const catalogsApi = {
   list: (kind: CatalogKind, query?: string, size = pageSize.picker) => api.getPage<CatalogValue>(`/api/v1/${kind}`, { q: query, size }),
 
   /**
-   * One value whatever its status, so a pending proposal can be shown as pending (#57).
+   * One value whatever its status, so a pending proposal can be shown as pending (ADR-12 §3).
    *
    * @param kind which catalog
    * @param id   the value to read
@@ -42,7 +42,7 @@ export const catalogsApi = {
 
   /**
    * Proposes a value. Masters and admins may; it is born `Created` and shows to nobody until an
-   * admin accepts it (#55, #57).
+   * admin accepts it (ADR-12 §3).
    *
    * @param kind  which catalog
    * @param input the name to add
@@ -51,7 +51,7 @@ export const catalogsApi = {
     api.post<CatalogValue, ProposeCatalogValueInput>(`/api/v1/${kind}`, input),
 
   /**
-   * An admin adds a value straight into the catalog, already `Accepted` as a group of its own (#280).
+   * An admin adds a value straight into the catalog, already `Accepted` as a group of its own (ADR-21 §5).
    * Not `propose`: the admin is the one who accepts, so there is nothing to wait for.
    *
    * @param kind  which catalog
@@ -68,9 +68,9 @@ export const catalogsApi = {
    * @param statuses the statuses to keep, or undefined for no filter - which is the default,
    *                 because reviewing what was proposed is the point of the screen
    * @param page       zero-based page number
-   * @param size       rows per page, one of `adminPageSizeOptions` (#271)
+   * @param size       rows per page, one of `adminPageSizeOptions` (ADR-21 §11)
    * @param groupsOnly true for one row per group - canonical entries and unclassified proposals,
-   *                   each found by the name of any of its members (#275)
+   *                   each found by the name of any of its members (ADR-12 §7)
    */
   adminList: (kind: CatalogKind, query?: string, statuses?: CatalogStatus[], page = 0, size: number = pageSize.admin, groupsOnly = false) =>
     api.getPage<AdminCatalogValue>(`/api/v1/admin/catalogs/${kind}`, {
@@ -84,7 +84,7 @@ export const catalogsApi = {
   /**
    * One value's whole synonym group, canonical entry first, every member whatever its status.
    *
-   * Not paginated - depth is always 1 (#59), so a group is bounded by how many synonyms a community
+   * Not paginated - depth is always 1 (ADR-12 §2), so a group is bounded by how many synonyms a community
    * writes for one thing, and it is read as a whole.
    *
    * @param kind which catalog
@@ -93,7 +93,7 @@ export const catalogsApi = {
   group: (kind: CatalogKind, id: string) => api.get<AdminCatalogValue[]>(`/api/v1/admin/catalogs/${kind}/${id}/group`),
 
   /**
-   * Accepts a proposal and classifies it in one step (#55).
+   * Accepts a proposal and classifies it in one step (ADR-12 §3).
    *
    * @param kind  which catalog
    * @param id    the proposal
@@ -103,7 +103,7 @@ export const catalogsApi = {
     api.post<AdminCatalogValue, AcceptCatalogValueInput>(`/api/v1/admin/catalogs/${kind}/${id}/accept`, input),
 
   /**
-   * Turns down a proposal: it never shows and never filters (#57).
+   * Turns down a proposal: it never shows and never filters (ADR-12 §3).
    *
    * @param kind which catalog
    * @param id   the proposal
@@ -130,7 +130,7 @@ export const catalogsApi = {
     api.post<AdminCatalogValue, SplitCatalogGroupInput>(`/api/v1/admin/catalogs/${kind}/split`, input),
 
   /**
-   * Moves an alias to another group in one step (#276) - what dragging it onto that group does.
+   * Moves an alias to another group in one step (ADR-12 §6) - what dragging it onto that group does.
    *
    * @param kind  which catalog
    * @param id    the alias that moves
@@ -140,7 +140,7 @@ export const catalogsApi = {
     api.post<AdminCatalogValue, ReassignCatalogValueInput>(`/api/v1/admin/catalogs/${kind}/${id}/reassign`, input),
 
   /**
-   * Makes an alias the canonical entry of its own group; every member stays (#276).
+   * Makes an alias the canonical entry of its own group; every member stays (ADR-12 §6).
    *
    * @param kind which catalog
    * @param id   the alias that becomes the group's head
@@ -148,7 +148,7 @@ export const catalogsApi = {
   promote: (kind: CatalogKind, id: string) => api.post<AdminCatalogValue>(`/api/v1/admin/catalogs/${kind}/${id}/promote`),
 
   /**
-   * Takes a value out of circulation without breaking a single link (#81).
+   * Takes a value out of circulation without breaking a single link (ADR-12 §5).
    *
    * @param kind  which catalog
    * @param id    the value
@@ -158,7 +158,7 @@ export const catalogsApi = {
     api.post<AdminCatalogValue, DisableCatalogValueInput>(`/api/v1/admin/catalogs/${kind}/${id}/disable`, input),
 
   /**
-   * Puts a disabled value back in circulation, in the group it was in (#81).
+   * Puts a disabled value back in circulation, in the group it was in (ADR-12 §5).
    *
    * @param kind which catalog
    * @param id   the value

@@ -5,7 +5,7 @@ import type { ResolveApprovalRequestInput, SubmitApprovalRequestInput } from './
 import type { Equals, Expect } from '@/types/utils'
 
 /**
- * Validates a request before it is sent: which kind, and why (#42).
+ * Validates a request before it is sent: which kind, and why (ADR-16 §1).
  *
  * **The justification is required on this side too**, not only on the server. The backend answers
  * `VALIDATION_ERROR` to an empty one, but a round trip is a bad way to learn that a textarea was
@@ -28,7 +28,7 @@ export type SubmitApprovalRequestForm = z.infer<typeof submitApprovalRequestSche
 /**
  * Validates a resolution: the note, which both approving and rejecting send.
  *
- * **Obligatory in the two acts** (#42). The mechanism asks for a reason at both ends, and a
+ * **Obligatory in the two acts** (ADR-16 §1). The mechanism asks for a reason at both ends, and a
  * rejection nobody explained is the half that makes the other half worthless.
  */
 export const resolveApprovalRequestSchema = z.object({

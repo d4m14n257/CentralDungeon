@@ -11,7 +11,7 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * How {@link AdminQueueItemKind} crosses HTTP, in both directions.
  *
- * <p>This test exists because of #253, which this phase has already paid for twice.
+ * <p>This test exists because of ADR-04 §5, which this phase has already paid for twice.
  * {@code PlatformRole} crossed HTTP without {@code @JsonValue}: every response published
  * {@code "Player"} - built by hand in a mapper - and every request carrying that same value was
  * rejected with a 400. No service test could see it, because a service test calls the method with the

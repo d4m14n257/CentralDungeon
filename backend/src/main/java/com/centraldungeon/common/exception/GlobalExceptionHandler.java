@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
     /**
      * Everything the application refuses on purpose: 404, 409, 403, 401.
      *
-     * <p>{@code errorParams} rides along when the failure has values its message needs (#197). The
+     * <p>{@code errorParams} rides along when the failure has values its message needs (ADR-23 §3). The
      * {@code detail} is still sent, in English, but it is for a log: what the person reads is
      * rendered by the frontend from the code and these values, in the language they chose.
      *
@@ -130,11 +130,11 @@ public class GlobalExceptionHandler {
      * whose only mistake was pressing at the same moment as someone else that the site is broken.
      *
      * <p><b>This is a backstop, not the rule.</b> Every race the application knows about is meant to
-     * be serialized before it reaches the database - the pessimistic locks of #252 in
+     * be serialized before it reaches the database - the pessimistic locks of ADR-06 §2 in
      * {@code UserRoleService}, and the ones in {@code ApprovalService}. When one of those is missing
      * or a new path forgets it, the constraint still holds and this turns the breakage into a
      * truthful 409 instead of an alarming 500. The same posture {@code handleUnreadableBody} has for
-     * a malformed body (#197): the detail stays English and for the log, and the frontend writes the
+     * a malformed body (ADR-23 §3): the detail stays English and for the log, and the frontend writes the
      * sentence from the code.
      *
      * @param exception the constraint violation the persistence layer raised
@@ -154,7 +154,7 @@ public class GlobalExceptionHandler {
      * <p>Without this it would fall through to handleUnexpected and answer 500 to somebody who simply
      * picked a large file - a "the site is broken" where the truth is "that file is too big". It
      * carries {@code FILE_TOO_LARGE}, the same code {@code FileService} raises when the application's
-     * own cap is the one that refuses, so the frontend writes one sentence for both (#197).
+     * own cap is the one that refuses, so the frontend writes one sentence for both (ADR-23 §3).
      *
      * <p>The container's limit sits slightly above {@code app.storage.max-file-size} on purpose
      * (application.yml), so in normal use it is the application that answers and this stays the

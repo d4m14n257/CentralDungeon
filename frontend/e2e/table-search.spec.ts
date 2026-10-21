@@ -10,7 +10,7 @@ import { acceptReview } from './helpers/review'
  * **This is the claim no other test can make.** The unit tests prove the routing, the integration
  * test proves the SQL, and neither of them proves that somebody typing `/table_system DANDD` into the
  * real box, against the real seed, ends up looking at a table labelled `D&D 5e`. The whole value of
- * #54 and #56 is that last sentence.
+ * ADR-12 §2 and ADR-12 §4 is that last sentence.
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
@@ -70,7 +70,7 @@ async function createTable(page: Page, name: string): Promise<string> {
   await addScheduleSlot(page, '21:00')
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -84,7 +84,7 @@ async function createTable(page: Page, name: string): Promise<string> {
 
 /** Sends the table to review and approves it, which is what puts it in the explorer. */
 async function open(masterPage: Page, adminPage: Page, tableId: string, name: string) {
-  // A table is born in Draft since #245 and only its master sees it: it has to be sent to review
+  // A table is born in Draft since ADR-07 §1 and only its master sees it: it has to be sent to review
   // before an admin has anything to approve.
   await masterPage.goto(`/master/tables/${tableId}/status`)
   await masterPage.getByRole('button', { name: 'Enviar a revisión' }).click()
@@ -96,8 +96,8 @@ async function open(masterPage: Page, adminPage: Page, tableId: string, name: st
 }
 
 /**
- * Types a criterion, closes it into a chip and searches it: the first Enter closes one (#240), the
- * second, on the empty text, is what searches (#268).
+ * Types a criterion, closes it into a chip and searches it: the first Enter closes one (ADR-22 §3), the
+ * second, on the empty text, is what searches (ADR-22 §4).
  */
 async function search(page: Page, criterion: string) {
   const box = page.getByRole('combobox', { name: 'Buscar mesas' })
@@ -108,8 +108,8 @@ async function search(page: Page, criterion: string) {
 }
 
 /**
- * The scenario F2.1 is measured by, and the reason the search language was designed (#164): a table
- * labelled with the canonical entry is found by an alias nobody rewrote into it (#56).
+ * The scenario F2.1 is measured by, and the reason the search language was designed (ADR-22 §1): a table
+ * labelled with the canonical entry is found by an alias nobody rewrote into it (ADR-12 §4).
  */
 test('the explorer finds a table by a synonym of the system it is labelled with', async ({ browser }) => {
   const tableName = `Mesa Buscador E2E ${runId}`
@@ -125,7 +125,7 @@ test('the explorer finds a table by a synonym of the system it is labelled with'
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
 
     // The table carries `D&D 5e`; `DANDD` is an alias of it in V3__catalog_seed.sql, and not a single
-    // row of table_systems was touched to make this work (#56).
+    // row of table_systems was touched to make this work (ADR-12 §4).
     await search(player.page, '/table_system DANDD')
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
 
@@ -143,7 +143,7 @@ test('the explorer finds a table by a synonym of the system it is labelled with'
 
 /**
  * The failure mode that looks like success. A word that names no accepted value has to match nothing;
- * read as "no filter", one typo lists the whole platform and nobody notices it went wrong (#246).
+ * read as "no filter", one typo lists the whole platform and nobody notices it went wrong (ADR-12 §8).
  */
 test('a system nobody has ever proposed matches no table, instead of listing them all', async ({ browser }) => {
   const player = await newAuthenticatedPage(browser, `e2e-search-typo-${runId}`, false, false)
@@ -159,7 +159,7 @@ test('a system nobody has ever proposed matches no table, instead of listing the
 })
 
 /**
- * What was searched survives a reload and can be linked to (#185), and the empty search box is the
+ * What was searched survives a reload and can be linked to (ADR-12 §7), and the empty search box is the
  * listing of everything.
  */
 test('the search lives in the URL and can be linked to', async ({ browser }) => {

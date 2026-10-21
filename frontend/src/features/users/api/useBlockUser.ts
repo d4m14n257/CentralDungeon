@@ -6,7 +6,7 @@ import { adminUsersApi } from './adminUsersApi'
 import type { ChangeUserStatusInput } from '../types'
 
 /**
- * Closes an account (#84).
+ * Closes an account (ADR-05 §7).
  *
  * **Blocking keeps everything.** The person stops being able to sign in; their tables, applications,
  * sessions and history stay exactly where they were. It is the one thing the dialog has to say out
@@ -17,7 +17,7 @@ import type { ChangeUserStatusInput } from '../types'
  * for it to be undone. The screen never offers the button in that case, so the code only surfaces
  * for somebody calling the API another way.
  *
- * `meta.showsItsOwnError`: the dialog renders the refusal inline (#197).
+ * `meta.showsItsOwnError`: the dialog renders the refusal inline (ADR-23 §3).
  *
  * @returns the mutation, taking the account and the reason
  */

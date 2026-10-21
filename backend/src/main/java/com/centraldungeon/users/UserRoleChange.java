@@ -26,7 +26,7 @@ import org.jspecify.annotations.Nullable;
  * as {@code TableStatusChange}: a historical row is never edited and never deleted, so it has no
  * {@code updated_at} and no {@code deleted_at} to carry.
  *
- * <p>The exclusion of #169 writes <b>two</b> rows, not one: granting Admin to an owner is a grant of
+ * <p>The exclusion of ADR-06 §1 writes <b>two</b> rows, not one: granting Admin to an owner is a grant of
  * Admin and a revocation of Owner, and burying the second one inside the first would lose exactly
  * the event somebody would go looking for.
  */
@@ -54,14 +54,14 @@ public class UserRoleChange {
     @Column(nullable = false, length = 32)
     private UserRoleChangeAction action;
 
-    /** Who made the change - always the actor from the token (#121). */
+    /** Who made the change - always the actor from the token (ADR-05 §5). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "changed_by", nullable = false)
     private User changedBy;
 
     /**
      * Why. Required, unlike {@code table_status_changes}: there is no role change that does not
-     * grant or deny something to a person, so there is none that can go without a reason (#169).
+     * grant or deny something to a person, so there is none that can go without a reason (ADR-06 §1).
      */
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String justification;
@@ -80,7 +80,7 @@ public class UserRoleChange {
      * @param user          whose roles changed
      * @param role          which role moved
      * @param action        whether it was given or taken away
-     * @param changedBy     who made the change, always the actor from the token (#121)
+     * @param changedBy     who made the change, always the actor from the token (ADR-05 §5)
      * @param justification why, never blank
      */
     public UserRoleChange(User user, Role role, UserRoleChangeAction action, User changedBy, String justification) {

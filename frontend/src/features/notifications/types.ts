@@ -1,5 +1,5 @@
 /**
- * Mirror of NotificationParams — the names a notification's sentence needs filled in (#197).
+ * Mirror of NotificationParams — the names a notification's sentence needs filled in (ADR-23 §3).
  *
  * Every field is optional because each notification type fills in a different subset: a clash names
  * two tables, a new candidate names a person and a table, an acceptance names only the table.
@@ -8,7 +8,7 @@ export interface NotificationParams {
   tableName?: string | null
   otherTableName?: string | null
   actorName?: string | null
-  /** What a table is asking for, so the bell names the request rather than announcing one (#77). */
+  /** What a table is asking for, so the bell names the request rather than announcing one (ADR-15 §5). */
   taskTitle?: string | null
 }
 
@@ -20,9 +20,9 @@ export interface NotificationParams {
  * nobody gave it a destination" into a failing test instead of a notice that reads, marks itself
  * read and opens nothing.
  *
- * The last two are F3.2's (#42): a request is resolved and the person who made it is told, which is
+ * The last two are F3.2's (ADR-16 §1): a request is resolved and the person who made it is told, which is
  * the only thing the mechanism notifies. The request itself notifies nobody — an admin work item is
- * not duplicated as a notification (#100).
+ * not duplicated as a notification (ADR-16 §5).
  */
 export const NOTIFICATION_TYPES = [
   'RegistrationAccepted',
@@ -36,7 +36,7 @@ export const NOTIFICATION_TYPES = [
   'TableApproved',
   'TableApprovedWithChanges',
   'TableChangesRequested',
-  // What an admin did to somebody else's table, told to its masters (#284).
+  // What an admin did to somebody else's table, told to its masters (ADR-06 §8).
   'TableEditedByAdmin',
   'TablePausedByAdmin',
   'TableResumedByAdmin',
@@ -52,7 +52,7 @@ export type NotificationType = (typeof NOTIFICATION_TYPES)[number]
 /**
  * Espejo de NotificationResponse.
  *
- * **It carries no rendered sentence** (#197): `notificationType` plus `params` is what the frontend
+ * **It carries no rendered sentence** (ADR-23 §3): `notificationType` plus `params` is what the frontend
  * turns into words, in the reader's language. `title` and `message` are the frozen text of a row
  * written before that change, and they are the fallback for exactly those rows — see
  * `lib/notificationText.ts`.

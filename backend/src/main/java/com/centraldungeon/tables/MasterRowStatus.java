@@ -13,7 +13,7 @@ public enum MasterRowStatus {
     Created,
 
     /**
-     * Logically deleted: either the cascade of a deleted table (#25, #175) or a Primary removing a
+     * Logically deleted: either the cascade of a deleted table (ADR-03 §7, ADR-07 §6) or a Primary removing a
      * co-master. Membership stops counting the row immediately, but the row stays - who ran a table
      * is a record, not a permission, and re-adding the same person revives this row rather than
      * inserting a second one.

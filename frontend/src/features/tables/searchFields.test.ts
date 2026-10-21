@@ -10,21 +10,21 @@ import { adminTableSearchFields, explorerSearchFields } from './searchFields'
 const t = ((key: string) => key) as never
 
 describe('explorerSearchFields', () => {
-  it('offers the four commands the backend understands, entity first (#239)', () => {
+  it('offers the four commands the backend understands, entity first (ADR-22 §2)', () => {
     expect(explorerSearchFields(t).map((field) => field.name)).toEqual(['table_name', 'table_system', 'table_tag', 'table_platform'])
   })
 
   /**
-   * The half of #246 that lives on this side. A command with `values` turns into a list the box
+   * The half of ADR-12 §8 that lives on this side. A command with `values` turns into a list the box
    * offers; a catalog has hundreds of them and grows whenever a master proposes one, so all four are
    * typed. If somebody ever adds `values` here, the box silently stops accepting anything that is
    * not on the list - which is a table nobody can find.
    */
-  it('declares no fixed values: every catalog command is free text (#246)', () => {
+  it('declares no fixed values: every catalog command is free text (ADR-12 §8)', () => {
     expect(explorerSearchFields(t).every((field) => field.values === undefined)).toBe(true)
   })
 
-  it('gives every command worked examples for the help (#240)', () => {
+  it('gives every command worked examples for the help (ADR-22 §3)', () => {
     expect(explorerSearchFields(t).every((field) => (field.examples?.length ?? 0) > 0)).toBe(true)
   })
 
@@ -49,7 +49,7 @@ const tTables = i18n.getFixedT('es', 'tables')
 
 /**
  * The box `/admin/tables` grew when the screen stopped being a queue and started showing every table
- * there is (#176). A listing of everything with no way to narrow it is a listing nobody can use, so
+ * there is (ADR-16 §7). A listing of everything with no way to narrow it is a listing nobody can use, so
  * the two things arrived in the same slice.
  */
 describe('adminTableSearchFields', () => {
@@ -65,8 +65,8 @@ describe('adminTableSearchFields', () => {
   })
 
   /**
-   * #246 in both directions, in one screen: the status is a closed set of ten, so it is **chosen**;
-   * the catalogs grow whenever a master proposes one (#55), so they are **typed**. Getting this
+   * ADR-12 §8 in both directions, in one screen: the status is a closed set of ten, so it is **chosen**;
+   * the catalogs grow whenever a master proposes one (ADR-12 §3), so they are **typed**. Getting this
    * backwards either makes somebody guess a spelling or silently refuses a tag that exists.
    */
   it('declares fixed choices for the status and free text for everything else', () => {
@@ -78,7 +78,7 @@ describe('adminTableSearchFields', () => {
     expect(byName.table_tag?.values).toBeUndefined()
   })
 
-  /** The value is what travels to the backend; the label is what is typed and read (#240). */
+  /** The value is what travels to the backend; the label is what is typed and read (ADR-22 §3). */
   it('sends the API spelling of a status and shows the translated label', () => {
     const status = adminTableSearchFields(tAdmin, tTables).find((field) => field.name === 'table_status')
 
@@ -86,7 +86,7 @@ describe('adminTableSearchFields', () => {
   })
 
   /**
-   * A deleted table is gone for everybody (#175), so no row can be in that status and a command that
+   * A deleted table is gone for everybody (ADR-07 §6), so no row can be in that status and a command that
    * offered it would be a filter that always answers nothing.
    */
   it('offers no status a row cannot be in', () => {
@@ -97,7 +97,7 @@ describe('adminTableSearchFields', () => {
     expect(values).not.toContain('Deleted')
   })
 
-  /** Every free-text command carries worked examples, which is what the search help renders (#240). */
+  /** Every free-text command carries worked examples, which is what the search help renders (ADR-22 §3). */
   it('gives every free-text command worked examples', () => {
     const free = adminTableSearchFields(tAdmin, tTables).filter((field) => field.values === undefined)
 
@@ -105,7 +105,7 @@ describe('adminTableSearchFields', () => {
   })
 
   /**
-   * The `?q=` of #185 is read by two parsers, here and in `SearchQueryParser.java`. A status
+   * The `?q=` of ADR-12 §7 is read by two parsers, here and in `SearchQueryParser.java`. A status
    * criterion that does not survive the round trip does not fail loudly — it silently matches
    * nothing, and the reader sees an empty listing and concludes the platform has no tables.
    */

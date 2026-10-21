@@ -9,10 +9,10 @@ import { BrandMark } from '@/layouts/components/BrandMark'
 
 /**
  * The front door (diseno §4). Over the community's own gradient, the one place it shows
- * in full (#132). The small print is not decoration: it explains why there is no sign-up and no
- * password, which is the first question anybody arriving asks (#38).
+ * in full (ADR-21 §2). The small print is not decoration: it explains why there is no sign-up and no
+ * password, which is the first question anybody arriving asks (ADR-05 §1).
  *
- * The language switch lives inside the card (#198). This is the only screen with no `UserMenu`, so
+ * The language switch lives inside the card (ADR-23 §2). This is the only screen with no `UserMenu`, so
  * without it somebody landing in a language they do not read has no way to know it can be changed —
  * and browser detection, which handles the common case, does not handle everybody's.
  */

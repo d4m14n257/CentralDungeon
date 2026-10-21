@@ -20,19 +20,19 @@ function value(id: string, overrides: Partial<AdminCatalogValue> = {}): AdminCat
 const head = value('dnd')
 
 describe('connectionIntent', () => {
-  it('accepts a floating proposal into the group it is dropped on (#55)', () => {
+  it('accepts a floating proposal into the group it is dropped on (ADR-12 §3)', () => {
     expect(connectionIntent(value('dandd', { status: 'Created' }), head)).toBe('accept')
   })
 
-  it('lets a rejected proposal be reconsidered into a group (#55)', () => {
+  it('lets a rejected proposal be reconsidered into a group (ADR-12 §3)', () => {
     expect(connectionIntent(value('dandd', { status: 'Rejected' }), head)).toBe('accept')
   })
 
-  it('moves an alias to another group (#276)', () => {
+  it('moves an alias to another group (ADR-12 §6)', () => {
     expect(connectionIntent(value('dnd-alias', { canonicalId: 'pf2' }), head)).toBe('reassign')
   })
 
-  it('merges a whole group when its head is dropped on another (#55)', () => {
+  it('merges a whole group when its head is dropped on another (ADR-12 §3)', () => {
     expect(connectionIntent(value('pf2'), head)).toBe('merge')
   })
 
@@ -40,7 +40,7 @@ describe('connectionIntent', () => {
     expect(connectionIntent(value('old', { status: 'Disabled' }), head)).toBeNull()
   })
 
-  it('refuses to hang anything from an alias - depth is always 1 (#59)', () => {
+  it('refuses to hang anything from an alias - depth is always 1 (ADR-12 §2)', () => {
     expect(connectionIntent(value('x', { status: 'Created' }), value('dnd-alias', { canonicalId: 'dnd' }))).toBeNull()
   })
 

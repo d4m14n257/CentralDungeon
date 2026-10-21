@@ -22,7 +22,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * The half of #178 that only a real database can answer.
+ * The half of ADR-08 §2 that only a real database can answer.
  *
  * <p>{@code table_schedules} has a composite primary key made of a table id, an <b>enum stored as
  * text</b> and a {@code TIME} column. Every unit test in {@code ScheduleConflictServiceTest} works
@@ -123,7 +123,7 @@ class TableScheduleIT {
         GameTable second = gameTableRepository.save(opened(new GameTable("Mesa que choca", master)));
         masterService.createPrimary(second, master);
 
-        // 22:00 falls inside the 20:00 + 3 h stretch: they overlap without sharing an hourtime (#178).
+        // 22:00 falls inside the 20:00 + 3 h stretch: they overlap without sharing an hourtime (ADR-08 §2).
         assertThatThrownBy(() -> tableScheduleService.replace(
                         second, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(22, 0), LocalTime.of(3, 0))), master.getId()))
                 .isInstanceOf(ConflictException.class)
@@ -132,7 +132,7 @@ class TableScheduleIT {
         assertThat(tableScheduleService.findByTable(second.getId())).isEmpty();
     }
 
-    /** Chaining two tables is legitimate: the interval is half-open (#178). */
+    /** Chaining two tables is legitimate: the interval is half-open (ADR-08 §2). */
     @Test
     void aMasterCanRunATableThatStartsExactlyWhenAnotherEnds() {
         tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0))), master.getId());
@@ -145,7 +145,7 @@ class TableScheduleIT {
         assertThat(tableScheduleService.findByTable(second.getId())).hasSize(1);
     }
 
-    /** The weekly wrap, against the database: Tuesday 23:00 + 3 h ends on Wednesday (#22, #178). */
+    /** The weekly wrap, against the database: Tuesday 23:00 + 3 h ends on Wednesday (ADR-03 §6, ADR-08 §2). */
     @Test
     void aSessionThatRunsIntoTheNextDayBlocksTheNextMorning() {
         tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(23, 0), LocalTime.of(3, 0))), master.getId());
@@ -158,7 +158,7 @@ class TableScheduleIT {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** Two slots of the same table overlapping is bad input, not a clash with anybody (#178). */
+    /** Two slots of the same table overlapping is bad input, not a clash with anybody (ADR-08 §2). */
     @Test
     void anAgendaThatOverlapsItselfIsRejectedBeforeAnythingIsWritten() {
         assertThatThrownBy(() -> tableScheduleService.replace(
@@ -172,7 +172,7 @@ class TableScheduleIT {
         assertThat(tableScheduleService.findByTable(table.getId())).isEmpty();
     }
 
-    /** A table with no duration occupies no interval, so it clashes with nothing (#178). */
+    /** A table with no duration occupies no interval, so it clashes with nothing (ADR-08 §2). */
     @Test
     void aTableWithoutADurationNeverClashes() {
         tableScheduleService.replace(table, List.of(new TableScheduleEntry(Weekday.Thursday, LocalTime.of(20, 0), LocalTime.of(3, 0))), master.getId());
@@ -180,7 +180,7 @@ class TableScheduleIT {
         GameTable noDuration = gameTableRepository.save(new GameTable("Mesa sin duración", master));
         masterService.createPrimary(noDuration, master);
 
-        // No length, which is what the test is about: #228 made the duration a property of the slot
+        // No length, which is what the test is about: ADR-08 §1 made the duration a property of the slot
         // and left it nullable, and a slot without one claims no interval.
         tableScheduleService.replace(noDuration, List.of(new TableScheduleEntry(Weekday.Thursday, LocalTime.of(20, 0), null)), master.getId());
 
@@ -189,7 +189,7 @@ class TableScheduleIT {
     }
 
     /**
-     * A table ready to hold an agenda. It carries no length of its own since #228 - each slot says
+     * A table ready to hold an agenda. It carries no length of its own since ADR-08 §1 - each slot says
      * how long it runs - so this only opens it.
      */
     private static GameTable opened(GameTable gameTable) {

@@ -1,6 +1,6 @@
 # 1 Stack y versiones
 
-> Parte de la skill `arquitectura`. Hasta #292 era `docs/arquitectura.md` §1, y conserva su numeración: una cita a su §1.1 es `arquitectura` §1.1. La deuda del proyecto viejo, que era el §5 de ese documento, es §1.4.
+> Parte de la skill `arquitectura`. Hasta ADR-01 §5 era `docs/arquitectura.md` §1, y conserva su numeración: una cita a su §1.1 es `arquitectura` §1.1. La deuda del proyecto viejo, que era el §5 de ese documento, es §1.4.
 
 Las versiones de abajo son las **fijadas para el proyecto**: son las que se escriben en `pom.xml` y `package.json` al scaffoldear, y las que asume el resto de esta skill. Se fijaron en agosto de 2026, al retomar el proyecto. La política para cambiarlas está en §1.3.
 
@@ -19,7 +19,7 @@ Las versiones de abajo son las **fijadas para el proyecto**: son las que se escr
 | Null-safety | JSpecify | reemplaza a `org.springframework.lang.@Nullable` |
 | Mapeo entity↔DTO | MapStruct | 1.6.x, declarado en `annotationProcessorPaths` del `maven-compiler-plugin` |
 | Documentación de API | springdoc-openapi | **3.1.0** (`springdoc-openapi-starter-webmvc-ui`) — la línea 3.x es la de Boot 4; la 2.x es de Boot 3 |
-| Caché en proceso | Spring Cache + Caffeine (#128) | `spring-boot-starter-cache` del BOM + `com.github.ben-manes.caffeine:caffeine` |
+| Caché en proceso | Spring Cache + Caffeine (ADR-05 §3) | `spring-boot-starter-cache` del BOM + `com.github.ben-manes.caffeine:caffeine` |
 | Tests | JUnit **6** (Jupiter) + Mockito + AssertJ + Testcontainers | Testcontainers 2.x (MySQL) |
 
 **Por qué Java 25 y no 21**: Boot 4.1 acepta de Java 17 a 26, y 25 es el LTS vigente. Además, los updates de JDK 21 posteriores a septiembre de 2026 dejan de estar bajo licencia permisiva de Oracle.
@@ -39,7 +39,7 @@ Consecuencias de Boot 4 que este documento da por sentadas, y que conviene tener
 
 ### 1.2 Frontend
 
-TypeScript **se introduce** en el frontend: `legacy/frontend-next/` era JavaScript (`jsconfig.json`, archivos `.js`/`.jsx`). Lo que se conservaba era el TypeScript del backend Node. Es lo que hace posible la disciplina de tipos de §3.2 y lo que hace que un cambio de contrato en el backend se detecte compilando y no en producción (#20).
+TypeScript **se introduce** en el frontend: `legacy/frontend-next/` era JavaScript (`jsconfig.json`, archivos `.js`/`.jsx`). Lo que se conservaba era el TypeScript del backend Node. Es lo que hace posible la disciplina de tipos de §3.2 y lo que hace que un cambio de contrato en el backend se detecte compilando y no en producción (ADR-02 §3).
 
 | Área | Elección | Versión fijada |
 |---|---|---|
@@ -53,9 +53,9 @@ TypeScript **se introduce** en el frontend: `legacy/frontend-next/` era JavaScri
 | Estado de UI | Zustand global, Context por subárbol, `useState` local — criterio en `arquitectura` §3.3 | 5.x |
 | Formularios | react-hook-form + zod + `@hookform/resolvers` | RHF 7.8x (la 8 está en beta), zod 4.x, resolvers 5.x |
 | HTTP | `fetch` envuelto en un cliente propio tipado | — |
-| Fechas y horas | `Intl.DateTimeFormat` nativo, sin librería (#111) | — |
-| Internacionalización | `i18next` + `react-i18next`, JSON por espacio de nombres (#107, #117) | 25.x / 16.x |
-| Lienzo de nodos | React Flow (`@xyflow/react`), MIT — solo para el patrón de lienzo de la skill `diseno` §5 (#275), cargado con `lazy` en su ruta | **12.12.0** |
+| Fechas y horas | `Intl.DateTimeFormat` nativo, sin librería (ADR-19 §7) | — |
+| Internacionalización | `i18next` + `react-i18next`, JSON por espacio de nombres (ADR-23 §1) | 25.x / 16.x |
+| Lienzo de nodos | React Flow (`@xyflow/react`), MIT — solo para el patrón de lienzo de la skill `diseno` §5 (ADR-12 §7), cargado con `lazy` en su ruta | **12.12.0** |
 | Tests | Vitest + React Testing Library, Playwright para e2e | Vitest **4.x**, RTL 16.x, Playwright 1.6x |
 
 Consecuencias de estas versiones:
@@ -64,7 +64,7 @@ Consecuencias de estas versiones:
 - **React Router 8 es ESM-only** y asume React 19 y Node 22+. Los `future.v8_*` flags ya no existen: su comportamiento es el default.
 - **Vite 8 usa Rolldown**. Antes de agregar un plugin que dependa de internals de Rollup, verificar que esté portado. **Ya mordió una vez**: Vitest 3 declara peer `vite ^5–^7`, así que npm le instala **su propio Vite** anidado y `defineConfig` de `vitest/config` deja de tipar contra el Vite del proyecto — el error habla de `rolldownVersion` faltante en `PluginContextMeta`. Se resuelve con **Vitest 4**, que sí declara `vite ^8`. Si aparece un `node_modules/vitest/node_modules/vite`, es este problema.
 - **`npm create vite` instala TypeScript 6**, y el stack está fijado en **5.9.x**. Al scaffoldear se bajó a `~5.9.3` a propósito: subir una major es una decisión (regla dura 15), no algo que decida una plantilla. No lo "arregles" subiéndolo.
-- **React Flow trae su propia hoja de estilos**, y `globals.css` se reescribe entero al transcribir el tema (#118, #130): por eso se importa desde `components/graph/GraphCanvas.tsx` y sus colores son variables `--xy-*` apuntadas a tokens en `.graph-canvas` (`styles/base.css`). Sin motor de layout (dagre, ELK): un grupo de profundidad 1 es una estrella y se ubica con `radialLayout` (#275).
+- **React Flow trae su propia hoja de estilos**, y `globals.css` se reescribe entero al transcribir el tema (ADR-21 §1): por eso se importa desde `components/graph/GraphCanvas.tsx` y sus colores son variables `--xy-*` apuntadas a tokens en `.graph-canvas` (`styles/base.css`). Sin motor de layout (dagre, ELK): un grupo de profundidad 1 es una estrella y se ubica con `radialLayout` (ADR-12 §7).
 - **El template trae `oxlint`**, no ESLint. No estaba fijado en ningún lado, así que se conserva; si se cambia, es una decisión.
 
 ### 1.3 Política de versiones
@@ -72,7 +72,7 @@ Consecuencias de estas versiones:
 - La fuente de verdad ejecutable es `pom.xml` / `package.json`; esta sección es el objetivo declarado. Si divergen, se corrige el que esté mal y se deja constancia acá.
 - Las versiones de las dependencias del backend **no se escriben a mano**: las gestiona el BOM de Spring Boot. Solo se fija explícitamente lo que el BOM no cubre (springdoc, MapStruct).
 - En el frontend, las dependencias del stack (las de la tabla) se instalan con versión exacta, sin `^`. El resto puede usar el default de npm. El lockfile se commitea siempre.
-- **Subir una major de cualquier cosa de estas tablas es una decisión**: se registra como ADR nueva en `docs/adr/` y se actualiza esta sección en el mismo commit (regla dura 15, `.claude/rules/stack.md`). Subir un minor o un patch no requiere nada.
+- **Subir una major de cualquier cosa de estas tablas es una decisión**: se registra en `ADR-02` (`docs/adr/`) y se actualiza esta sección en el mismo commit (regla dura 15, `.claude/rules/stack.md`). Subir un minor o un patch no requiere nada.
 
 ### 1.4 Deuda del proyecto viejo que no se repite
 

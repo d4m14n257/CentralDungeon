@@ -34,7 +34,7 @@ public class NotificationParamsConverter implements AttributeConverter<Notificat
     /**
      * Reads the parameters back.
      *
-     * @param dbData the stored JSON, or null for a row written before #197
+     * @param dbData the stored JSON, or null for a row written before ADR-23 §3
      * @return the parameters, or null when the row has none - the caller falls back to the text that
      *         was frozen into {@code title} and {@code message} at the time
      */

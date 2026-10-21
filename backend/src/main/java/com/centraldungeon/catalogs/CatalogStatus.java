@@ -5,23 +5,23 @@ package com.centraldungeon.catalogs;
  * catalog tables (arquitectura §4.4); the rest of the vocabulary is defined here.
  *
  * <p>Only {@link #Accepted} values are offered to players, shown to them or usable as a filter
- * (docs/adr #57, #81). The other three are invisible outside /admin/catalogs, each for its own
+ * (ADR-12 §3, §5). The other three are invisible outside /admin/catalogs, each for its own
  * reason: {@code Created} has not been reviewed yet, {@code Rejected} never will be, and
- * {@code Disabled} was taken out of circulation without breaking a single link (#81).
+ * {@code Disabled} was taken out of circulation without breaking a single link (ADR-12 §5).
  */
 public enum CatalogStatus {
 
-    /** Proposed by a master or an admin, waiting for an admin to accept and classify it (#55). */
+    /** Proposed by a master or an admin, waiting for an admin to accept and classify it (ADR-12 §3). */
     Created,
 
     /** Reviewed and in circulation: it shows, it filters, and it can be picked from the combobox. */
     Accepted,
 
-    /** An admin decided it should not exist. It never shows and never filters (#57). */
+    /** An admin decided it should not exist. It never shows and never filters (ADR-12 §3). */
     Rejected,
 
     /**
-     * Logically deleted (#81). Links in table_systems / table_tags / table_platforms stay exactly as
+     * Logically deleted (ADR-12 §5). Links in table_systems / table_tags / table_platforms stay exactly as
      * they were, so restoring it puts everything back with no migration.
      */
     Disabled

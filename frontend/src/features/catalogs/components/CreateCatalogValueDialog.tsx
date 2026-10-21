@@ -25,12 +25,12 @@ export interface CreateCatalogValueDialogProps {
 }
 
 /**
- * An admin adding a value to a catalog, the main action of /admin/catalogs (#280).
+ * An admin adding a value to a catalog, the main action of /admin/catalogs (ADR-21 §5).
  *
  * It goes into **the catalog of the tab the admin is on**, which the title says, so there is no
  * second choice to make. The value is born accepted and heading its own group: the admin is the one
  * who reviews, so a proposal waiting for them would be a step with nobody on the other side.
- * Grouping it with a synonym is the canvas's job afterwards (#275).
+ * Grouping it with a synonym is the canvas's job afterwards (ADR-12 §7).
  *
  * A name already taken, in any case, comes back as a conflict and the dialog stays open with what
  * was typed.
@@ -52,7 +52,7 @@ export function CreateCatalogValueDialog({ kind, open, onOpenChange }: CreateCat
   }
 
   async function handleCreate() {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('admin.createConfirmTitle', { name: trimmed }),
       description: t('admin.createConfirmDescription'),

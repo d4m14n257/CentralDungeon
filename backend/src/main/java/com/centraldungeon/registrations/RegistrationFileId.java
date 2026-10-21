@@ -14,7 +14,7 @@ import java.io.Serializable;
  * @param registrationId the application the file was submitted with. A plain id and not an
  *                        association, so the link can be counted and filtered without loading
  *                        either side. The database still enforces the foreign key
- * @param fileId          the file being attached. It is linked, never copied (#65, #79)
+ * @param fileId          the file being attached. It is linked, never copied (ADR-13 §2, ADR-14 §1)
  */
 @Embeddable
 public record RegistrationFileId(

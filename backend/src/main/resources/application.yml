@@ -15,7 +15,7 @@ spring:
     web:
       pageable:
         # A page is a page: `?size=100000` cannot turn a paginated endpoint into a full dump
-        # (docs/adr #173). Each endpoint sets its own default with @PageableDefault.
+        # (ADR-04 §6). Each endpoint sets its own default with @PageableDefault.
         default-page-size: 20
         max-page-size: 100
   flyway:
@@ -25,7 +25,7 @@ spring:
     multipart:
       # The container's own cap, and the backstop behind the editable one. Enforced before a single
       # byte reaches a controller, where the application's rule produces the explained message
-      # (#197) - so it is kept strictly above the largest value files.max_file_size_mb can be raised
+      # (ADR-23 §3) - so it is kept strictly above the largest value files.max_file_size_mb can be raised
       # to (25 MB, SettingKey), and SettingsService refuses to start if that ever stops being true.
       # It answers only for a request that lies about its size.
       max-file-size: 26MB
@@ -36,7 +36,7 @@ spring:
     caffeine:
       # TTL is the revocation window, not a performance number (arquitectura §2.6):
       # explicit @CacheEvict on block/role-change makes it immediate, this is the safety net.
-      # systemSettings (#141) works the same way: SettingsService clears it on afterCommit, so an
+      # systemSettings (ADR-17 §3) works the same way: SettingsService clears it on afterCommit, so an
       # edited limit applies to the next request, and this is what bounds a cache somebody's
       # SQL client changed behind the application's back.
       spec: expireAfterWrite=60s,maximumSize=10000
@@ -47,7 +47,7 @@ spring:
           discord:
             # Spring validates these as non-blank at startup even before any login attempt.
             # The placeholders let the app boot; real Discord login stays broken (as it should)
-            # until a real Discord application is created and these are overridden (#38).
+            # until a real Discord application is created and these are overridden (ADR-05 §1).
             client-id: ${DISCORD_CLIENT_ID:placeholder-create-a-discord-app}
             client-secret: ${DISCORD_CLIENT_SECRET:placeholder-create-a-discord-app}
             authorization-grant-type: authorization_code
@@ -83,7 +83,7 @@ app:
   cookie:
     secure: ${APP_COOKIE_SECURE:true}
   jwt:
-    # Dev-only default, 32+ bytes for HS256. Never used as-is outside a local machine (#125).
+    # Dev-only default, 32+ bytes for HS256. Never used as-is outside a local machine (ADR-05 §2).
     secret: ${APP_JWT_SECRET:dev-only-insecure-secret-change-me-0123456789abcdef}
     access-token-ttl: PT15M
     refresh-token-ttl: P30D
@@ -99,11 +99,11 @@ app:
       - application/pdf
       - application/msword
       - application/vnd.openxmlformats-officedocument.wordprocessingml.document
-    # How long a file survives unused before the purge marks it gone (#75). Marks only - freeing the
-    # bytes is the platform owner's, from the administration menu, and that is F5 (#66).
+    # How long a file survives unused before the purge marks it gone (ADR-13 §3). Marks only - freeing the
+    # bytes is the platform owner's, from the administration menu, and that is F5 (ADR-13 §8).
     retention: P90D
   # app.admin-queue.claim-timeout and app.storage.max-file-size both lived here until F3.5 and both
-  # moved to system_settings (#141): they are decisions of whoever runs the community, not of
+  # moved to system_settings (ADR-17 §3): they are decisions of whoever runs the community, not of
   # whoever deploys the application, and their defaults now live in SettingKey. What stays in this
   # file is the second kind - where the blobs go, which MIME types the parser accepts, how long the
   # purge waits.

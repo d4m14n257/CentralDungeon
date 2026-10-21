@@ -1,7 +1,7 @@
 package com.centraldungeon.files;
 
 /**
- * The flow a file belongs to (#233) - its cajón.
+ * The flow a file belongs to (ADR-14 §4) - its cajón.
  *
  * <p><b>It says where a file is used, not what the document is.</b> That distinction is the whole
  * design and the first attempt got it backwards. Nobody uploading can honestly declare "this is a
@@ -12,7 +12,7 @@ package com.centraldungeon.files;
  *
  * <p><b>A file belongs to as many cajones as it has been used in</b>, which is why membership lives
  * in {@code file_categories} and not in a column. A sheet uploaded on an application and later handed
- * in to a task belongs to both, and deduplication (#75) makes that the normal case rather than an
+ * in to a task belongs to both, and deduplication (ADR-13 §3) makes that the normal case rather than an
  * edge one: the same bytes are one row by design, so one row has to be able to hold two answers.
  *
  * <p><b>Membership is never revoked.</b> Detaching a file from a table says nothing about whether it
@@ -28,13 +28,13 @@ public enum FileCategory {
      * What a master attaches to their table: maps, handouts, house rules, the sheet they require.
      *
      * <p>Filled while the table is being assembled and while it recruits. An admin publishes here so
-     * that the community's blank sheet is attached rather than re-uploaded by every master (#79).
+     * that the community's blank sheet is attached rather than re-uploaded by every master (ADR-14 §1).
      */
     TableMaterial(true),
 
     /**
      * What a master attaches when <b>asking</b> for something on a table already in progress - the
-     * blank the request is about (#63).
+     * blank the request is about (ADR-15 §1).
      *
      * <p>A different moment from {@link #TableMaterial} and therefore a different cajón: one is what
      * the table offers, the other is what it asks for halfway through. The same published document
@@ -43,7 +43,7 @@ public enum FileCategory {
     MasterRequest(true),
 
     /**
-     * What a player uploads when applying to a table (#60 uso 2).
+     * What a player uploads when applying to a table (ADR-13 §1 uso 2).
      *
      * <p><b>An admin cannot publish here.</b> This cajón holds what each person answered with; a
      * blank offered to everybody is not an answer, and it belongs in the master-side cajón the
@@ -52,7 +52,7 @@ public enum FileCategory {
     PlayerApplication(false),
 
     /**
-     * What a player hands in answering a request on a table they already play at (#63, #76).
+     * What a player hands in answering a request on a table they already play at (ADR-15 §1, §2).
      *
      * <p>Not publishable, for the same reason as {@link #PlayerApplication}.
      */

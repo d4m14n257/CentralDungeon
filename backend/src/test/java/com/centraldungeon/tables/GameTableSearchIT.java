@@ -28,7 +28,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * The explorer's search, against real MySQL (#54, #56, #246).
+ * The explorer's search, against real MySQL (ADR-12 §2, §4, §8).
  *
  * <p><b>None of this can be proven with a mocked repository.</b> The synonym group resolves across
  * two tables and the match is an {@code exists} subquery over a third; what a unit test sees is a
@@ -102,14 +102,14 @@ class GameTableSearchIT {
     }
 
     @Test
-    @DisplayName("searching by the canonical entry finds the tables tagged with its alias (#56)")
+    @DisplayName("searching by the canonical entry finds the tables tagged with its alias (ADR-12 §4)")
     void findsTablesTaggedWithAnAliasWhenSearchingTheCanonicalEntry() {
         assertThat(namesOf("/table_tag D&D"))
                 .containsExactlyInAnyOrder("Curse of Strahd", "Waterdeep Dragon Heist");
     }
 
     @Test
-    @DisplayName("searching by an alias finds the tables tagged with the canonical entry (#54)")
+    @DisplayName("searching by an alias finds the tables tagged with the canonical entry (ADR-12 §2)")
     void findsTablesTaggedWithTheCanonicalEntryWhenSearchingAnAlias() {
         assertThat(namesOf("/table_tag DANDD"))
                 .containsExactlyInAnyOrder("Curse of Strahd", "Waterdeep Dragon Heist");
@@ -134,7 +134,7 @@ class GameTableSearchIT {
     }
 
     /**
-     * The case that proves the equivalence is <b>symmetric and flat</b> (#54, #59): two aliases of the
+     * The case that proves the equivalence is <b>symmetric and flat</b> (ADR-12 §2): two aliases of the
      * same group find each other without either of them being the canonical entry. A resolution that
      * only walked alias to canonical would pass every other test here and fail this one.
      */
@@ -152,7 +152,7 @@ class GameTableSearchIT {
     }
 
     @Test
-    @DisplayName("a value nobody accepted does not filter (#57)")
+    @DisplayName("a value nobody accepted does not filter (ADR-12 §3)")
     void doesNotResolveAValueStillInCreated() {
         assertThat(namesOf("/table_tag Cyberpunk")).isEmpty();
     }
@@ -169,7 +169,7 @@ class GameTableSearchIT {
     }
 
     @Test
-    @DisplayName("a tag the master took off the table stops matching it (#190)")
+    @DisplayName("a tag the master took off the table stops matching it (ADR-04 §7)")
     void ignoresARemovedLink() {
         TableTag link = tableTagRepository.findAll().stream()
                 .filter(each -> each.getId().tagId().equals(tagRepository.findByNameIgnoreCase("Horror").orElseThrow().getId()))
@@ -196,7 +196,7 @@ class GameTableSearchIT {
     /**
      * The visibility rule and the search are joined with {@code and} and never folded together, so a
      * criterion cannot reach across it: the master searching for their own table still does not find
-     * it (#154).
+     * it (ADR-18 §4).
      */
     @Test
     @DisplayName("a search never reaches a table the actor runs")

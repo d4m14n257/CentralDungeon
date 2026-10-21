@@ -17,11 +17,11 @@ const STATE_TONES: Record<FileType, StatusTone> = {
 }
 
 /**
- * Which lifecycle a file has (#68), as a badge.
+ * Which lifecycle a file has (ADR-13 §2), as a badge.
  *
  * It answers a question people actually ask of a row: is this mine and kept, is it the platform's, or
- * is it something that will be reclaimed once nobody uses it (#75)? Its variants come from a `Record`
- * over `FileType`, so a fourth kind cannot be added without deciding how it looks (#3.2 regla 9).
+ * is it something that will be reclaimed once nobody uses it (ADR-13 §3)? Its variants come from a `Record`
+ * over `FileType`, so a fourth kind cannot be added without deciding how it looks (arquitectura §3.2, rule 9).
  *
  * @param props.fileType which lifecycle the file has
  */

@@ -27,7 +27,7 @@ const toastError = vi.hoisted(() => vi.fn())
 // features and the four states running for real, which is where this screen's behaviour lives.
 vi.mock('@/features/adminQueue/api/adminQueueApi', () => ({ adminQueueApi: { list, claim, release } }))
 // `sonner` renders outside this tree, so the only way to count the messages one failure produces is
-// to hold the calls. Counting them is the point: #197 is as much about *one* message as about which.
+// to hold the calls. Counting them is the point: ADR-23 §3 is as much about *one* message as about which.
 vi.mock('sonner', () => ({ toast: { error: toastError, success: vi.fn() } }))
 vi.mock('@/features/approvals/api/approvalsApi', () => ({
   approvalsApi: { approve: approveRequest, reject: rejectRequest, list: vi.fn(), byId: vi.fn(), mine: vi.fn(), submit: vi.fn() },
@@ -122,7 +122,7 @@ beforeEach(() => {
 
 describe('AdminQueuePage', () => {
   /**
-   * #136, the same reading as `/master` and `/admin/requests`: an empty tray is a fact about the
+   * ADR-20 §4, the same reading as `/master` and `/admin/requests`: an empty tray is a fact about the
    * platform and it is good news. There is no second empty state to tell it apart from, because the
    * tray has no search — which is itself the decision of §2 of the contract.
    */
@@ -135,7 +135,7 @@ describe('AdminQueuePage', () => {
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
   })
 
-  /** #103: no guard in the router, so the 403 has to land somewhere that explains itself. */
+  /** ADR-20 §1: no guard in the router, so the 403 has to land somewhere that explains itself. */
   it('paints the forbidden state when the backend refuses the tray', async () => {
     list.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Access denied', errorCode: 'FORBIDDEN' }))
 
@@ -145,8 +145,8 @@ describe('AdminQueuePage', () => {
   })
 
   /**
-   * #197: what a person reads is written on this side from the code the backend sent, never taken
-   * from its text. A request's `title` arrives as `MasterGrant` — the canonical wire name (#253) —
+   * ADR-23 §3: what a person reads is written on this side from the code the backend sent, never taken
+   * from its text. A request's `title` arrives as `MasterGrant` — the canonical wire name (ADR-04 §5) —
    * and the row has to show the same sentence `/admin/requests` shows, from the very same key. A
    * table's title is its own name and is shown verbatim, because that one *is* user text.
    */
@@ -161,7 +161,7 @@ describe('AdminQueuePage', () => {
     expect(within(grid).getByText('La maldición de Strahd')).toBeInTheDocument()
   })
 
-  /** #185: which page is in the URL, like every other admin screen. */
+  /** ADR-12 §7: which page is in the URL, like every other admin screen. */
   it('asks for the page the URL names', async () => {
     list.mockResolvedValue(page([]))
 
@@ -220,7 +220,7 @@ describe('AdminQueuePage', () => {
     const row = await rowFor('Rol de master')
     await userEvent.click(row.getByRole('button', { name: 'Tomar' }))
 
-    // `(type, id)` and not an id of the tray: there is no `admin_queue` table (#11).
+    // `(type, id)` and not an id of the tray: there is no `admin_queue` table (ADR-03 §1).
     await waitFor(() => expect(claim).toHaveBeenCalledWith('approval_request', 'req-1'))
   })
 
@@ -253,7 +253,7 @@ describe('AdminQueuePage', () => {
     expect(waiting.queryByRole('button', { name: 'Rechazar' })).not.toBeInTheDocument()
   })
 
-  /** #42: the note is required on both acts, and the form refuses an empty one without a round trip. */
+  /** ADR-16 §1: the note is required on both acts, and the form refuses an empty one without a round trip. */
   it('refuses to resolve a request without a note', async () => {
     list.mockResolvedValue(page([item()]))
 
@@ -284,7 +284,7 @@ describe('AdminQueuePage', () => {
   })
 
   /**
-   * The mudanza of #176 seen from this end: requesting changes on a table is performed **here**,
+   * The mudanza of ADR-16 §7 seen from this end: requesting changes on a table is performed **here**,
    * with the justification the master reads on the status tab.
    */
   it('requests changes on a table from the tray', async () => {
@@ -303,7 +303,7 @@ describe('AdminQueuePage', () => {
   })
 
   /**
-   * #197: the reservation's refusal gets a sentence of its own, **inside the dialog that was
+   * ADR-23 §3: the reservation's refusal gets a sentence of its own, **inside the dialog that was
    * refused** and in the reader's language. Answering `ITEM_ALREADY_CLAIMED` with "no pudimos
    * completar la acción" would leave the reader pressing the button again on a row that is about to
    * vanish from their tray, instead of telling them a colleague got there first.
@@ -329,7 +329,7 @@ describe('AdminQueuePage', () => {
   })
 
   /**
-   * #197 on the one act with no form to put the answer in.
+   * ADR-23 §3 on the one act with no form to put the answer in.
    *
    * Approving a table is a confirmation, so by the time it is refused there is no dialog left open —
    * the sentence goes to a toast, and it still has to be **the** sentence. The refusal worth naming
@@ -383,7 +383,7 @@ describe('AdminQueuePage', () => {
     expect(toastError).not.toHaveBeenCalled()
   })
 
-  /** Point 8 of plan-desarrollo.md §6 (#231): the help is raised from the screen that prompts it. */
+  /** Point 8 of plan-desarrollo.md §6 (ADR-20 §5): the help is raised from the screen that prompts it. */
   it('explains the reservation from the screen itself', async () => {
     list.mockResolvedValue(page([item()]))
 

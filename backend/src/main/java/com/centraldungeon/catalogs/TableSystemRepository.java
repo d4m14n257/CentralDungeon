@@ -26,7 +26,7 @@ public interface TableSystemRepository extends JpaRepository<TableSystem, TableS
      * Counts, in one grouped query, how many tables use each of the given systems - so a page of
      * twenty values on /admin/catalogs costs one round trip instead of twenty.
      *
-     * <p>Named parameters only, never positional (#124).
+     * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param valueIds the systems to count. A system nothing points at is absent from the result
      *                 rather than reported as zero

@@ -6,11 +6,11 @@ import { tasksApi } from './tasksApi'
 import type { UpdateTaskInput } from '../types'
 
 /**
- * Correcting a published task. It does not notify again — #77 puts the notification at publication,
+ * Correcting a published task. It does not notify again — ADR-15 §5 puts the notification at publication,
  * and a request fixed three times must not ring three times.
  *
  * @param tableId the table the task belongs to, for the branches to invalidate
- * @returns the mutation, taking the task and the whole state it should end in (#189)
+ * @returns the mutation, taking the task and the whole state it should end in (ADR-04 §7)
  */
 export function useUpdateTask(tableId: string) {
   const queryClient = useQueryClient()

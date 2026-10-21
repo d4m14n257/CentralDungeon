@@ -22,7 +22,7 @@ export type ResolveAction = 'approve' | 'reject'
 interface ResolveRequestDialogProps {
   /** The request being resolved, or null when the dialog is closed. */
   request: ApprovalRequestSummary | null
-  /** Approving or rejecting. The note is required either way (#42). */
+  /** Approving or rejecting. The note is required either way (ADR-16 §1). */
   action: ResolveAction
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -36,7 +36,7 @@ interface ResolveRequestDialogProps {
 }
 
 /**
- * Resolving a request, in its two acts (#42).
+ * Resolving a request, in its two acts (ADR-16 §1).
  *
  * **The note is required on both of them.** The mechanism asks for a justification at each end, and
  * rejecting without one is the half that makes the other half worthless — whoever asked is told no
@@ -49,7 +49,7 @@ interface ResolveRequestDialogProps {
  * **Approving is not the same act for every kind**, and the dialog says which one it is: a
  * `MasterGrant` hands out the role through the very same `UserRoleService` that `/admin/users` uses;
  * a `TableOpen` records that the request stands and creates nothing — the table is created
- * afterwards, by an admin, with a name and an agenda the request never carried (#72); a `General`
+ * afterwards, by an admin, with a name and an agenda the request never carried (ADR-06 §7); a `General`
  * simply closes.
  *
  * @param props.request      the request being resolved
@@ -84,7 +84,7 @@ export function ResolveRequestDialog({ request, action, open, onOpenChange, help
 
   async function onSubmit(values: ResolveApprovalRequestForm) {
     if (!request) return
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm(
       isApproving
         ? {

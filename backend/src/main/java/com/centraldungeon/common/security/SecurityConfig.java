@@ -15,7 +15,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Only what is transversal lives here - stateless-as-possible, CORS, what is public. The permission
- * itself is declared on each concrete controller method, never in a route list here (docs/adr #123).
+ * itself is declared on each concrete controller method, never in a route list here (ADR-05 §4).
  */
 @Configuration
 @EnableWebSecurity
@@ -34,7 +34,7 @@ public class SecurityConfig {
     /**
      * @param corsConfigurationSource   the per-profile CORS policy
      * @param jwtAuthenticationFilter   turns a bearer token into the request's authorities
-     * @param discordOAuth2UserService  the guild-membership gate of the login (#38)
+     * @param discordOAuth2UserService  the guild-membership gate of the login (ADR-05 §1)
      * @param oAuth2LoginSuccessHandler sets the refresh cookie and redirects on success
      * @param oAuth2LoginFailureHandler redirects with the reason, and the invite when it applies
      * @param restAuthenticationEntryPoint answers 401 with a ProblemDetail instead of a redirect
@@ -59,7 +59,7 @@ public class SecurityConfig {
      *
      * <p>Only the transversal decisions are here - CORS, what is public, where CSRF applies, how the
      * session behaves. <b>Not one endpoint's permission</b>: those are declared on each concrete
-     * controller method (#123), because the previous attempt kept them in a route list where five of
+     * controller method (ADR-05 §4), because the previous attempt kept them in a route list where five of
      * six paths were written without a leading slash, matched nothing, and let any authenticated user
      * through to the admin endpoints.
      *

@@ -24,12 +24,12 @@ import { useConfirm } from '@/hooks/useConfirm'
 type BanResolution = 'approve' | 'reject'
 
 /**
- * The answer to one veto request, written with the note both acts require (#42).
+ * The answer to one veto request, written with the note both acts require (ADR-16 §1).
  *
  * **Its own dialog rather than `ResolveRequestDialog`**, which is the same shape one folder over.
  * That one is welded to `useApproveRequest`/`useRejectRequest` — the admin tray's mutations, on
  * `/admin/requests/{id}` — and a veto request is resolved by the table's `Primary` on the table's
- * own route (#39). Threading a pair of mutations through as props would turn a component that reads
+ * own route (ADR-09 §5). Threading a pair of mutations through as props would turn a component that reads
  * plainly today into one whose behaviour is decided by its caller, for two uses.
  */
 function ResolveBanRequestDialog({
@@ -70,7 +70,7 @@ function ResolveBanRequestDialog({
 
   async function onSubmit(values: ResolveApprovalRequestForm) {
     if (!request) return
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t(isApproving ? 'banRequests.confirmApproveTitle' : 'banRequests.confirmRejectTitle', {
         name: request.targetUserName,
@@ -134,7 +134,7 @@ function ResolveBanRequestDialog({
           {errorKey !== null && (
             <p role="alert" className="inline-error">
               {/* The sentences live in the `admin` namespace, where the mechanism's vocabulary
-                  already is: one place where a refusal of a request has a wording (#176). */}
+                  already is: one place where a refusal of a request has a wording (ADR-16 §7). */}
               {t(errorKey, { ns: 'admin' })}
             </p>
           )}
@@ -149,10 +149,10 @@ function ResolveBanRequestDialog({
 
 interface BanRequestsSectionProps {
   tableId: string
-  /** Whether the reader runs the table. Only the `Primary` answers these (#39). */
+  /** Whether the reader runs the table. Only the `Primary` answers these (ADR-09 §5). */
   isPrimary: boolean
   /**
-   * An admin reading the table from /admin/tables/:id (#284): neither the one who answers nor the one
+   * An admin reading the table from /admin/tables/:id (ADR-06 §8): neither the one who answers nor the one
    * who asked, so the sentence above the list cannot be either of theirs.
    */
   observer?: boolean
@@ -161,14 +161,14 @@ interface BanRequestsSectionProps {
 }
 
 /**
- * The veto requests waiting on one table, and the `Primary`'s answer to them (#39, F3.4).
+ * The veto requests waiting on one table, and the `Primary`'s answer to them (ADR-09 §5, F3.4).
  *
  * **A section of this feature and not of the screen, receiving an id and doing its own query**
  * (§3.1.5): the players tab already composes three domains, and a block that fetched through props
  * would make the tab the owner of a query about a mechanism it knows nothing about.
  *
  * **Both masters see the list; only the `Primary` sees the buttons.** A co-master who asked needs to
- * see that the answer has not come — otherwise they ask again, and #39's whole point is that the
+ * see that the answer has not come — otherwise they ask again, and ADR-09 §5's whole point is that the
  * decision belongs to one person. Principio 2 is satisfied rather than violated by that: what is
  * hidden from the co-master is the button they could not use, not the information.
  *
@@ -177,12 +177,12 @@ interface BanRequestsSectionProps {
  *
  * @param props.tableId   the table
  * @param props.isPrimary whether the reader may answer these
- * @param props.observer  an admin reading it, who neither asked nor answers (#284)
+ * @param props.observer  an admin reading it, who neither asked nor answers (ADR-06 §8)
  * @param props.help      the explanation of what a veto is, raised by the screen
  */
 export function BanRequestsSection({ tableId, isPrimary, observer, help }: BanRequestsSectionProps) {
   const { t, i18n } = useTranslation('master')
-  // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (#150).
+  // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (ADR-19 §4).
   const { data, isPending, isLoadingError, refetch } = useTableBanRequests(tableId)
   const dialog = useDisclosure<{ request: BanRequest; resolution: BanResolution }>()
 

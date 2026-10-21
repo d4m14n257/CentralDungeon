@@ -17,7 +17,7 @@ import {
 
 const FIELDS = ['discord_name', 'user_name', 'tag']
 
-/** The same three, plus one with fixed choices: the two kinds of command of #164. */
+/** The same three, plus one with fixed choices: the two kinds of command of ADR-22 §1. */
 const SEARCH_FIELDS: SearchField[] = [
   { name: 'discord_name', label: 'Discord' },
   { name: 'user_name', label: 'Nombre' },
@@ -121,7 +121,7 @@ describe('serializeSearchQuery', () => {
 })
 
 /**
- * The layer above the parser: the one that knows a command's fixed choices (#240).
+ * The layer above the parser: the one that knows a command's fixed choices (ADR-22 §3).
  *
  * What is typed - or picked - is the label, and what leaves is the value that travels. Nothing else
  * is touched, which is what lets a canonical query read straight back from the URL.
@@ -155,7 +155,7 @@ describe('toTerms', () => {
   })
 })
 
-/** What tells the box a command with fixed choices is open, now that no chip does (#240). */
+/** What tells the box a command with fixed choices is open, now that no chip does (ADR-22 §3). */
 describe('openValueOf', () => {
   it('finds the command whose value is being typed, and what is typed of it', () => {
     expect(openValueOf('/file_type PD', SEARCH_FIELDS)).toMatchObject({ typed: 'PD' })
@@ -249,7 +249,7 @@ describe('commitSearchDraft', () => {
   })
 })
 
-/** Only closed criteria are a search (#268): what is half-written is somebody still deciding. */
+/** Only closed criteria are a search (ADR-22 §4): what is half-written is somebody still deciding. */
 describe('buildSearchQuery', () => {
   it('is only the chips', () => {
     const terms: SearchTerm[] = [{ field: 'tag', values: ['terror'], connector: 'and' }]
@@ -277,7 +277,7 @@ describe('searchQueryOf', () => {
     })
   })
 
-  /** `?q=` and the box have to mean the same thing, or a refresh changes the search (#185). */
+  /** `?q=` and the box have to mean the same thing, or a refresh changes the search (ADR-12 §7). */
   it('round trip: what a restored box builds is the query it was restored from', () => {
     const raw = '/user_name juan,ana /or /file_type application/pdf'
 

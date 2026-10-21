@@ -21,9 +21,9 @@ import { TableStatusBadge } from './TableStatusBadge'
  * applied" is true whether it is still pending or you were accepted - nothing more is needed. What
  * crosses that data is the screen that composes them (`TableListPage`), not this card.
  *
- * The agenda is shown **in local time** (#22): what travels is UTC and the conversion belongs to
+ * The agenda is shown **in local time** (ADR-03 §6): what travels is UTC and the conversion belongs to
  * `lib/date.ts`. And when the table clashes with something the reader is already committed to, the
- * card warns with the reason in view (#178) - a warning that does not explain itself is as useless
+ * card warns with the reason in view (ADR-08 §2) - a warning that does not explain itself is as useless
  * as a grey button with no stated reason (principle 2 of diseno §1).
  */
 export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTableSummary; linkTo?: string; alreadyApplied?: boolean }) {

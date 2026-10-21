@@ -11,27 +11,27 @@ import org.jspecify.annotations.Nullable;
 /**
  * Correcting a task.
  *
- * <p><b>It carries the whole state the task should end in, not a delta</b> (#189): an absent
+ * <p><b>It carries the whole state the task should end in, not a delta</b> (ADR-04 §7): an absent
  * description clears the description, an absent due date clears the date. A request that describes
  * the end state can be replayed and reasoned about; a patch of optional fields cannot say the
  * difference between "leave it" and "clear it" without inventing a convention for it.
  *
- * <p><b>Correcting does not notify again.</b> #77 puts the notification at publication, and a task
+ * <p><b>Correcting does not notify again.</b> ADR-15 §5 puts the notification at publication, and a task
  * fixed three times would otherwise ring three times for a headline that never changed - which is
  * how people learn to ignore the bell.
  *
  * @param title          the headline. Required
- * @param description    the detail as rich text, sanitized before storing (#62). Null clears it
+ * @param description    the detail as rich text, sanitized before storing (ADR-03 §8). Null clears it
  * @param audience       who is being asked. Changing it re-checks the target against it
  * @param targetUserId   the one person addressed, required only with {@link TaskAudience#Single}
  * @param tableSessionId the session to tie the ask to, or null to untie it
  * @param acceptsText    whether a written answer is expected
  * @param acceptsFiles   whether files are expected. At least one of the two has to be true
- * @param isMandatory    whether to label it indispensable (#70)
- * @param fileIds        the blanks the request should end up with (#63). The whole list travels,
+ * @param isMandatory    whether to label it indispensable (ADR-15 §2)
+ * @param fileIds        the blanks the request should end up with (ADR-15 §1). The whole list travels,
  *                       like every other field here: a file absent from it is taken off the ask,
- *                       which never touches the file itself (#79)
- * @param dueAt          when the master would like it by, in UTC (#22). Null clears the date
+ *                       which never touches the file itself (ADR-14 §1)
+ * @param dueAt          when the master would like it by, in UTC (ADR-03 §6). Null clears the date
  */
 public record UpdateTaskRequest(
         @NotBlank @Size(max = 128) String title,

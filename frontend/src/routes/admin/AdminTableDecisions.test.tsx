@@ -16,7 +16,7 @@ vi.mock('@/features/help', () => ({ HelpLink: () => null }))
 vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => vi.fn() }))
 
 describe('AdminTableDecisions', () => {
-  /** #286: an admin who read the table resolves its review from it - approve, or send it back. */
+  /** ADR-21 §10: an admin who read the table resolves its review from it - approve, or send it back. */
   it('offers approving, asking for changes and cancelling while the table is in review', () => {
     render(
       <>
@@ -27,11 +27,11 @@ describe('AdminTableDecisions', () => {
 
     expect(screen.getByRole('button', { name: 'Aprobar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Pedir cambios' })).toBeInTheDocument()
-    // And cancelling, for a table in review that has no fix: all of it in the one notice (#287).
+    // And cancelling, for a table in review that has no fix: all of it in the one notice (ADR-21 §10).
     expect(screen.getByRole('button', { name: 'Cancelar mesa' })).toBeInTheDocument()
   })
 
-  /** #288: the destructive half is drawn on its own, so the notice can put it apart at the right. */
+  /** ADR-21 §10: the destructive half is drawn on its own, so the notice can put it apart at the right. */
   it('draws the cancellation only in its destructive half', () => {
     render(<AdminTableDecisions table={{ id: 't1', name: 'La Cripta', status: 'Preparation' }} only="safe" />)
 
@@ -47,7 +47,7 @@ describe('AdminTableDecisions', () => {
   })
 
   /**
-   * A table nobody ever saw is removed, not cancelled (#175), and a closed one is a record: neither
+   * A table nobody ever saw is removed, not cancelled (ADR-07 §6), and a closed one is a record: neither
    * has a decision left, so the tab says so instead of drawing an empty block.
    */
   it('has nothing to decide for a table without masters or one already closed', () => {

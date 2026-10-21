@@ -14,12 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Emits rows only - no WebSocket push yet (that lands in F5, plan-desarrollo.md). "Personal"
- * notifications only; the shared admin queue signal (#101) is a different mechanism, out of E1's
+ * notifications only; the shared admin queue signal (ADR-18 §2) is a different mechanism, out of E1's
  * scope.
  *
- * <p><b>No method here writes a sentence</b> (#197). Each one records the type of thing that
+ * <p><b>No method here writes a sentence</b> (ADR-23 §3). Each one records the type of thing that
  * happened and the names involved; the sentence is rendered by whoever opens their inbox, in the
- * language they chose. Before #197 the text was written here in Spanish - which froze every row in
+ * language they chose. Before ADR-23 §3 the text was written here in Spanish - which froze every row in
  * the language it happened to be created in.
  */
 @Service
@@ -82,7 +82,7 @@ public class NotificationService {
      * Every master of the table is notified, Primary and Secondary alike - both can act on candidates.
      *
      * <p>The applicant's name travels as a parameter so the rendered title names them: the bell shows
-     * only the title, and "somebody applied" is a worse headline than "Carla applied" (#156).
+     * only the title, and "somebody applied" is a worse headline than "Carla applied" (ADR-18 §5).
      *
      * @param masterUserId  one master of the table; the caller loops over all of them
      * @param table         the table applied to
@@ -97,7 +97,7 @@ public class NotificationService {
     }
 
     /**
-     * Tells somebody they are now a master of a table (#72, #135, #244).
+     * Tells somebody they are now a master of a table (ADR-06 §7, §4, ADR-18 §3).
      *
      * <p><b>The recipient did nothing to cause this</b>, which is what makes it the notification that
      * cannot be skipped: an admin creates a table and assigns it, and until now the person only found
@@ -105,7 +105,7 @@ public class NotificationService {
      * other notification follows an act of theirs or lands on a table they already knew.
      *
      * <p>It is sent to co-masters too, and by the same reasoning: being added to somebody else's
-     * table is news for whoever is added, whether or not they hold the {@code Master} role (#135).
+     * table is news for whoever is added, whether or not they hold the {@code Master} role (ADR-06 §4).
      *
      * @param userId the new master
      * @param table  the table they now run; the notification links to it
@@ -119,7 +119,7 @@ public class NotificationService {
     }
 
     /**
-     * Tells a master their table came out of review (#27, #244).
+     * Tells a master their table came out of review (ADR-07 §1, ADR-18 §3).
      *
      * <p>Review is a wait whose other side the master cannot see: the table sits there and nothing on
      * their screen changes until an admin acts. These are the three ways out, and each is different
@@ -127,7 +127,7 @@ public class NotificationService {
      *
      * <p>The reason for a rejection is <b>not</b> carried here. It is already mandatory on the
      * transition and kept in the status history, which is where the master reads it in full; a copy in
-     * the notification would be a second one, free to drift from the first (#197).
+     * the notification would be a second one, free to drift from the first (ADR-23 §3).
      *
      * @param userId one master of the table; the caller loops over all of them
      * @param table  the table that was reviewed
@@ -141,18 +141,18 @@ public class NotificationService {
     }
 
     /**
-     * Tells a master that an admin changed their table (#284): rewrote it, paused it, resumed it,
+     * Tells a master that an admin changed their table (ADR-06 §8): rewrote it, paused it, resumed it,
      * cancelled it or removed it.
      *
      * <p>One method for the five because they are the same message with a different verb: who acted
-     * is "an admin", never named, the way #140 shows any change an admin makes on somebody else's
+     * is "an admin", never named, the way ADR-06 §9 shows any change an admin makes on somebody else's
      * behalf. What the admin wrote as a reason is not copied in - it is already kept with the status
-     * change, which is where the master reads it in full (#197).
+     * change, which is where the master reads it in full (ADR-23 §3).
      *
      * @param userId one master of the table; the caller loops over all of them
      * @param table  the table the admin acted on
      * @param type   what the admin did. {@link NotificationType#TableDeletedByAdmin} links nowhere,
-     *               since a removed table cannot be opened (#25); the rest link to the table
+     *               since a removed table cannot be opened (ADR-03 §7); the rest link to the table
      */
     @Transactional
     public void notifyAdminActedOnTable(String userId, GameTable table, NotificationType type) {
@@ -164,10 +164,10 @@ public class NotificationService {
     }
 
     /**
-     * Tells somebody that two of their tables now fall at the same time (#178).
+     * Tells somebody that two of their tables now fall at the same time (ADR-08 §2).
      *
      * <p>It carries no action of its own on purpose: the notification names both tables and stops
-     * there, because deciding which one to keep is the person's call and not the system's (#70). The
+     * there, because deciding which one to keep is the person's call and not the system's (ADR-15 §2). The
      * way out is on the screen it links to - withdrawing the application, or talking to the master.
      *
      * @param userId         who has the clash
@@ -185,12 +185,12 @@ public class NotificationService {
     }
 
     /**
-     * Tells the people signed up to a table that its calendar moved (#33).
+     * Tells the people signed up to a table that its calendar moved (ADR-08 §3).
      *
      * <p>It names no date. One notification covers a single correction and a whole re-laying after a
      * pause alike, and carrying an instant would mean handing the reader a UTC time to convert in
      * their head - the conversion belongs on the screen it links to, where {@code lib/date.ts} does
-     * it (#22).
+     * it (ADR-03 §6).
      *
      * @param userId the person signed up to the table
      * @param table  the table whose calendar moved; the notification links to it
@@ -207,7 +207,7 @@ public class NotificationService {
      * Tells the people signed up to a table that one of its sessions was called off.
      *
      * <p>The rendered message says the run is not shorter, because that is the first thing a player
-     * wonders: the table gets the session back at the end (#194).
+     * wonders: the table gets the session back at the end (ADR-08 §3).
      *
      * @param userId the person signed up to the table
      * @param table  the table the session belonged to
@@ -221,19 +221,19 @@ public class NotificationService {
     }
 
     /**
-     * Tells somebody that a table is asking them for something (#77).
+     * Tells somebody that a table is asking them for something (ADR-15 §5).
      *
      * <p>Sent once, at publication - correcting the task later says nothing, because a request fixed
      * three times ringing three times is how people learn to ignore the bell.
      *
      * <p>It carries the task's title so the bell can name <em>which</em> request arrived: "the table
      * is asking you for something" is a worse headline than "Ficha de personaje", the same reasoning
-     * #156 gives for naming the applicant in {@link #notifyNewCandidate}.
+     * ADR-18 §5 gives for naming the applicant in {@link #notifyNewCandidate}.
      *
      * <p>It links to the table and not to the task. There is no screen for one task on its own: a
      * request is read next to the others of its table, which is where the answer is handed in too.
      *
-     * @param userId    the recipient, resolved from the task's audience (#63)
+     * @param userId    the recipient, resolved from the task's audience (ADR-15 §1)
      * @param table     the table doing the asking; the notification links to it
      * @param taskTitle what is being asked, named in the rendered title
      */
@@ -246,16 +246,16 @@ public class NotificationService {
     }
 
     /**
-     * Tells whoever asked that their request was answered (#42).
+     * Tells whoever asked that their request was answered (ADR-16 §1).
      *
      * <p><b>Nothing is sent when the request is made</b>, and that is a rule rather than an omission:
-     * admin work items are not duplicated as notifications (#100) - the shared queue is a view over
-     * the rows that already exist, and a bell per request would be the copy #100 removed. The
+     * admin work items are not duplicated as notifications (ADR-16 §5) - the shared queue is a view over
+     * the rows that already exist, and a bell per request would be the copy ADR-16 §5 removed. The
      * resolution is the half nobody can see coming, and only the requester needs it.
      *
      * <p>The reason is <b>not</b> carried here. It is mandatory on the resolution and stored on the
      * request, which is where it is read in full; a copy would be a second one free to disagree with
-     * the first (#197).
+     * the first (ADR-23 §3).
      *
      * <p><b>It carries no parameters at all</b>, which makes it the first notification that does not.
      * A field naming the request type was written and then taken back out: the rendered sentences say
@@ -286,7 +286,7 @@ public class NotificationService {
     /**
      * Somebody's inbox, newest first.
      *
-     * @param userId   the recipient, always the actor from the token (#121)
+     * @param userId   the recipient, always the actor from the token (ADR-05 §5)
      * @param pageable page and size
      * @return one page of their notifications
      */
@@ -302,7 +302,7 @@ public class NotificationService {
      * @param notificationId the notification
      * @param actorId        the actor, from the token
      * @throws com.centraldungeon.common.exception.ForbiddenActionException if the notification
-     *         belongs to somebody else - a notification is read by its recipient and nobody else (#121)
+     *         belongs to somebody else - a notification is read by its recipient and nobody else (ADR-05 §5)
      * @throws com.centraldungeon.common.exception.NotFoundException if it does not exist
      */
     @Transactional
@@ -319,7 +319,7 @@ public class NotificationService {
      * Empties somebody's unread count in one call.
      *
      * @param actorId the actor, from the token. Only their own notifications are touched: there is no
-     *                id parameter that could point anywhere else (#121)
+     *                id parameter that could point anywhere else (ADR-05 §5)
      */
     @Transactional
     public void markAllAsRead(String actorId) {

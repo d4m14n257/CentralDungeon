@@ -19,7 +19,7 @@ import {
 } from './date'
 
 /**
- * The community plays at night in America, which is the small hours of the next day in UTC (#22).
+ * The community plays at night in America, which is the small hours of the next day in UTC (ADR-03 §6).
  * Every case here is that fact, from one angle or another — it is the most likely bug of F1.
  */
 const BUENOS_AIRES = 'America/Argentina/Buenos_Aires'
@@ -82,7 +82,7 @@ describe('minutesOfDay and formatMinutes', () => {
 })
 
 describe('weekdayName', () => {
-  it('names the day in the given locale, never a hard-coded one (#111)', () => {
+  it('names the day in the given locale, never a hard-coded one (ADR-19 §7)', () => {
     expect(weekdayName('Tuesday', 'es-AR')).toBe('Martes')
     expect(weekdayName('Tuesday', 'en-US')).toBe('Tuesday')
   })
@@ -102,7 +102,7 @@ describe('splitBlockByDay', () => {
     ])
   })
 
-  it('cuts a block that runs past midnight into the two days it touches (#178)', () => {
+  it('cuts a block that runs past midnight into the two days it touches (ADR-08 §2)', () => {
     // Tuesday 23:00 plus three hours ends Wednesday 02:00.
     expect(splitBlockByDay({ startMinute: 1440 + 1380, durationMinutes: 180 })).toEqual([
       { dayIndex: 1, startMinuteOfDay: 1380, durationMinutes: 60 },
@@ -120,7 +120,7 @@ describe('splitBlockByDay', () => {
 })
 
 describe('week minutes', () => {
-  it('round-trips a minute through a zone and back (#22)', () => {
+  it('round-trips a minute through a zone and back (ADR-03 §6)', () => {
     const tuesdayEvening = 1440 + 1200
     const local = utcWeekMinuteToLocal(tuesdayEvening, 'America/Argentina/Buenos_Aires')
 
@@ -166,7 +166,7 @@ describe('formatDateTime and formatDate', () => {
   /**
    * The backend serializes `LocalDateTime` with no offset — `2026-09-09T01:00:00` — and JavaScript
    * reads a date like that as **local** time. Without normalizing it, a session at 01:00 UTC showed
-   * as 01:00 to somebody three hours behind: exactly the bug the conversion exists to prevent (#22).
+   * as 01:00 to somebody three hours behind: exactly the bug the conversion exists to prevent (ADR-03 §6).
    */
   it('reads a bare instant from the API as UTC and not as the reader wall clock', () => {
     expect(formatDateTime('2026-09-09T01:00:00', 'es', BUENOS_AIRES)).toMatch(/8 sept/)
@@ -187,9 +187,9 @@ describe('formatDateTime and formatDate', () => {
 })
 
 /**
- * #230: `start_date` is a day, and a day does not move.
+ * ADR-07 §4: `start_date` is a day, and a day does not move.
  *
- * The suite runs three hours behind UTC on purpose (#192), which is exactly the zone where treating
+ * The suite runs three hours behind UTC on purpose (ADR-19 §7), which is exactly the zone where treating
  * a date as an instant shows the day before — the bug this function exists to not have.
  */
 describe('formatPlainDate', () => {
@@ -212,13 +212,13 @@ describe('formatRelativeDate', () => {
     expect(formatRelativeDate('2026-01-10T12:00:00', 'es', now)).toBe('hace 8 meses')
   })
 
-  it('speaks the reader’s language, because the locale is a parameter (#111, #192)', () => {
+  it('speaks the reader’s language, because the locale is a parameter (ADR-19 §7)', () => {
     expect(formatRelativeDate('2026-09-07T12:00:00', 'en', now)).toBe('3 days ago')
   })
 
   /**
    * The API sends `2026-09-10T11:00:00` with no offset and JavaScript reads a bare date-time as
-   * local, which would make an hour ago read as hours off for anybody not on UTC (#22).
+   * local, which would make an hour ago read as hours off for anybody not on UTC (ADR-03 §6).
    */
   it('reads the instant as UTC even when it does not say so', () => {
     expect(formatRelativeDate('2026-09-10T11:00:00', 'es', now)).toBe('hace 1 hora')

@@ -92,8 +92,8 @@ class SettingKeyTest {
     }
 
     /**
-     * <b>The one retroactive setting F3.5 ships</b> (#44). The flag is what makes the screen warn
-     * before saving, and #141 asks for that warning by name - so a key quietly losing it would turn a
+     * <b>The one retroactive setting F3.5 ships</b> (ADR-10 §2). The flag is what makes the screen warn
+     * before saving, and ADR-17 §3 asks for that warning by name - so a key quietly losing it would turn a
      * change that takes visibility away from people right now into an adjustment nobody was told
      * about.
      */

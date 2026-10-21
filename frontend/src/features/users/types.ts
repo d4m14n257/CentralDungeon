@@ -23,7 +23,7 @@ export interface UserSummary {
   name: string | null
 }
 
-/** What onboarding sends: the display name and country that unblock the rest of the app (#134). */
+/** What onboarding sends: the display name and country that unblock the rest of the app (ADR-10 §4). */
 export interface CompleteOnboardingInput {
   name: NonNullable<User['name']>
   country: NonNullable<User['country']>
@@ -31,34 +31,34 @@ export interface CompleteOnboardingInput {
 
 /**
  * Mirror of ProfileResponse — the upper half of a profile screen, for both `/player/profile` and
- * `/player/users/:id` (docs/adr #248). Not derived from `User` with a utility type even though
+ * `/player/users/:id` (ADR-10 §5). Not derived from `User` with a utility type even though
  * `id`/`name`/`country`/`roles` line up: the two are answers to different questions with different
- * visibility rules (#41, #44, #47, #249) and `User` is only ever the caller describing themselves
+ * visibility rules (ADR-10 §1, §2, §3) and `User` is only ever the caller describing themselves
  * (arquitectura §2.3) — a `Pick<User, …>` here would quietly imply this shape is also
  * self-only, which is exactly wrong for the id-keyed half of this type's job.
  *
- * **No `karma`, no `comments` — not even as `null`** (#248): those are F5, behind `KarmaService`,
+ * **No `karma`, no `comments` — not even as `null`** (ADR-10 §5): those are F5, behind `KarmaService`,
  * and a field that traveled empty would teach this screen to expect a number that has nowhere to
  * come from yet.
  */
 export interface Profile {
   id: string
-  /** Their Discord handle: how the community finds them on the server (#284). */
+  /** Their Discord handle: how the community finds them on the server (ADR-06 §8). */
   discordUsername: string
   name: string | null
   country: string | null
   roles: string[]
   attendance: AttendanceSummary
-  /** How many tables they played to the end, as a player (#284). Their track record without karma (#248). */
+  /** How many tables they played to the end, as a player (ADR-06 §8). Their track record without karma (ADR-10 §5). */
   finishedTables: number
 }
 
-/** What a person is to a table, as an admin reads it on their record (#284). Mirror of `UserTableResponse.relation`. */
+/** What a person is to a table, as an admin reads it on their record (ADR-06 §8). Mirror of `UserTableResponse.relation`. */
 export type UserTableRelation = 'Primary' | 'Secondary' | 'Player' | 'Candidate' | 'Rejected' | 'Blocked'
 
 /**
  * Mirror of `UserTableResponse`: one table a person is linked to, on an admin's view of their record
- * (#284). One row per table - nobody runs and plays the same one (#155).
+ * (ADR-06 §8). One row per table - nobody runs and plays the same one (ADR-06 §5).
  */
 export interface UserTable {
   tableId: string
@@ -74,9 +74,9 @@ export interface UserTable {
  * The four platform roles, spelled as the API spells them — a union of literals and not a TS `enum`
  * (arquitectura §3.2). Mirror of `PlatformRole.roleName()`.
  *
- * They stack and there is no hierarchy among them (#37, #89), with one exception written in the
+ * They stack and there is no hierarchy among them (ADR-06 §1), with one exception written in the
  * service and not here: `Admin` and `Owner` never coexist, because they are one rank at two scopes
- * (#169).
+ * (ADR-06 §1).
  */
 export type PlatformRole = 'Player' | 'Master' | 'Admin' | 'Owner'
 
@@ -102,7 +102,7 @@ export interface AdminUserDetail {
   name: string | null
   country: string | null
   status: AccountStatus
-  /** Only the roles that are active, in the order of #165: Player, Master, Admin, Owner. */
+  /** Only the roles that are active, in the order of ADR-07 §8: Player, Master, Admin, Owner. */
   roles: PlatformRole[]
   createdAt: string
   /**
@@ -130,7 +130,7 @@ export type UserAdminChangeType = 'RoleGranted' | 'RoleRevoked' | 'StatusChanged
  * `changedByName` and never the id, the same as a table's status history: a history nobody can read
  * without a second lookup is a history nobody reads.
  *
- * **The justification is never optional** (#84, #169): every row here was written by somebody who
+ * **The justification is never optional** (ADR-05 §7, ADR-06 §1): every row here was written by somebody who
  * had to say why.
  */
 export interface UserAdminChange {

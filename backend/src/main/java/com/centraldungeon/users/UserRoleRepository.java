@@ -27,9 +27,9 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> 
 
     /**
      * The roles a person holds right now. Called on every authenticated request by
-     * {@code JwtAuthenticationFilter}, which is the whole point of #122: authorization is read from
+     * {@code JwtAuthenticationFilter}, which is the whole point of ADR-05 §3: authorization is read from
      * the database, not lifted from the token's claims. The cost is absorbed by the Caffeine cache
-     * (#128), whose TTL is the revocation window.
+     * (ADR-05 §3), whose TTL is the revocation window.
      *
      * @param userId the person, resolved from the token's subject
      * @return their live role names. Never null; someone with no roles gets an empty set

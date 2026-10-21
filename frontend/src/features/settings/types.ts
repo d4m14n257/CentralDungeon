@@ -3,16 +3,16 @@
  * a TS `enum` (arquitectura §3.2). Mirror of `SettingKey.wireName()`.
  *
  * The key is the contract: it addresses the setting in the URL, and it is what the screen builds the
- * label, the description and the unit from, in the reader's language (#197). A key the backend
+ * label, the description and the unit from, in the reader's language (ADR-23 §3). A key the backend
  * publishes and this union does not have stops compiling, which is the point.
  */
 export type SettingKey =
   'admin_queue.claim_timeout_minutes' | 'files.max_file_size_mb' | 'tables.max_players_cap' | 'profiles.visibility_window_days'
 
 /**
- * How `/admin/settings` groups what it shows (#141). Mirror of `SettingCategory`.
+ * How `/admin/settings` groups what it shows (ADR-17 §3). Mirror of `SettingCategory`.
  *
- * V1's column comment names a third group, `Texts`, and it deliberately does not exist: since #197
+ * V1's column comment names a third group, `Texts`, and it deliberately does not exist: since ADR-23 §3
  * the backend writes no sentence a person reads, so a text setting would be a phrase stored in one
  * language and rendered raw — regla dura 18, broken by design.
  */
@@ -24,11 +24,11 @@ export type SettingValueType = 'Integer'
 /**
  * One row of `/admin/settings`. Mirror of `SystemSettingResponse`.
  *
- * **The default travels with the current value**, which is what the screen was asked for (#141): an
+ * **The default travels with the current value**, which is what the screen was asked for (ADR-17 §3): an
  * admin looking at `15` has no way to tell whether somebody set it there or whether it has always
  * been that, and no way to put it back without finding the number in the source.
  *
- * **No label and no description here**, deliberately: the backend sends none (#197) and the screen
+ * **No label and no description here**, deliberately: the backend sends none (ADR-23 §3) and the screen
  * builds both from `key`, out of `src/locales/<idioma>/admin.json`.
  */
 export interface SystemSetting {
@@ -49,7 +49,7 @@ export interface SystemSetting {
    */
   overridden: boolean
   /**
-   * Whether changing it re-answers questions the platform already answered (#44, #141).
+   * Whether changing it re-answers questions the platform already answered (ADR-10 §2, ADR-17 §3).
    *
    * The screen turns it into a warning shown **before** the value is saved. The sentence is per key
    * and lives in i18n; this flag is what makes it appear.

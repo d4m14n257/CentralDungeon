@@ -16,7 +16,7 @@
  * serializes it as a string and because `Record<CatalogStatus, …>` then forces every case to be
  * covered when mapping to a label or a badge variant (§3.2 regla 9).
  *
- * Only `Accepted` shows to players and filters (#57, #81); the other three exist for
+ * Only `Accepted` shows to players and filters (ADR-12 §3, §5); the other three exist for
  * /admin/catalogs.
  */
 export type CatalogStatus = 'Created' | 'Accepted' | 'Rejected' | 'Disabled'
@@ -26,14 +26,14 @@ export type CatalogStatus = 'Created' | 'Accepted' | 'Rejected' | 'Disabled'
  * /admin/catalogs sees it.
  *
  * No `canonicalId`. Which synonym group a value belongs to is an admin's concern; the equivalence
- * works in the search, not in the presentation (#58).
+ * works in the search, not in the presentation (ADR-12 §4).
  *
  * `status` travels because a master who has just proposed a value has to be told it is pending: a
- * table tagged with something the other players cannot see yet has to say so (#57).
+ * table tagged with something the other players cannot see yet has to say so (ADR-12 §3).
  */
 export interface CatalogValue {
   id: string
-  /** The value as its author wrote it — the alias, never rewritten to the group's canonical entry (#58). */
+  /** The value as its author wrote it — the alias, never rewritten to the group's canonical entry (ADR-12 §4). */
   name: string
   status: CatalogStatus
 }

@@ -30,15 +30,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * The shared tray of the admins: everything waiting for an admin, wherever it lives (#100).
+ * The shared tray of the admins: everything waiting for an admin, wherever it lives (ADR-16 §5).
  *
- * <p><b>There is no {@code admin_queue} table and there is not going to be</b> (#11). The tray is a
+ * <p><b>There is no {@code admin_queue} table and there is not going to be</b> (ADR-03 §1). The tray is a
  * view over work that already exists in its own table, so nothing here is ever the source of truth
  * for what is pending - a pending request <em>is</em> a row in {@code approval_requests}, a table in
  * review <em>is</em> a row in {@code game_tables}. A table of its own would be a second place to keep
  * in step with the first, and the two would drift.
  *
- * <p><b>N queries and a merge in Java, not a native {@code UNION ALL}.</b> #100 asked for «un
+ * <p><b>N queries and a merge in Java, not a native {@code UNION ALL}.</b> ADR-16 §5 asked for «un
  * {@code UNION ALL} de cuatro consultas pequeñas, normalizadas a un DTO común en el service», and
  * this is that, minus the native SQL. Three reasons, in order of weight:
  *
@@ -47,7 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
  *       different columns would be the first, and it would have to be rewritten by hand in F5 when
  *       {@code comments} and {@code system_feedback} join.</li>
  *   <li>The project's own precedent for exactly this problem is {@code MasterDashboardService}: four
- *       private reads concatenated into one list and sorted in Java (#136).</li>
+ *       private reads concatenated into one list and sorted in Java (ADR-20 §4).</li>
  *   <li>What the tray unions is <em>pending work</em>, which is bounded by what it means. A tray with
  *       thousands of items is a staffing problem, not a paging one.</li>
  * </ul>
@@ -81,9 +81,9 @@ public class AdminQueueService {
     /**
      * The request types that are <b>not</b> the admins' to answer, and therefore never in the tray.
      *
-     * <p>Today: {@code PlayerBan}. #39 puts a veto with the table's {@code Primary} - «un co-master
+     * <p>Today: {@code PlayerBan}. ADR-09 §5 puts a veto with the table's {@code Primary} - «un co-master
      * necesita aprobación del {@code Primary}» - and the slice's own acceptance sentence says «un
-     * {@code Secondary} pide un veto y el {@code Primary} lo resuelve». It tensions with #90, which
+     * {@code Secondary} pide un veto y el {@code Primary} lo resuelve». It tensions with ADR-16 §1, which
      * generically calls {@code approval_requests} «todo pedido dirigido a los admins», and the
      * specific decision wins.
      *
@@ -104,7 +104,7 @@ public class AdminQueueService {
     /** Resolves the Primary of a whole page of tables in one query, instead of one per row. */
     private final MasterService masterService;
 
-    /** Loads the admin doing the reserving, from the token's id and never from a parameter (#121). */
+    /** Loads the admin doing the reserving, from the token's id and never from a parameter (ADR-05 §5). */
     private final UserService userService;
 
     /**
@@ -128,20 +128,20 @@ public class AdminQueueService {
      * The tray, for one admin.
      *
      * <p><b>The one who has been waiting longest goes first</b>, and ties break by id so page two is
-     * stable (#136, #171). The order is the tray's rule and not the caller's choice: a work tray whose
+     * stable (ADR-20 §4, ADR-07 §9). The order is the tray's rule and not the caller's choice: a work tray whose
      * order can be changed from the URL is a listing, and the thing that makes this a tray is that it
      * always answers "what should I do next" the same way.
      *
      * <p>The total is exact and costs nothing: the merge is already in memory, so it is sorted,
-     * counted and cut (#173).
+     * counted and cut (ADR-04 §6).
      *
      * <p><b>No {@code ?q=}.</b> A tray sorts itself by age and empties; a search box over it would be
-     * solving the wrong problem. {@code /admin/tables} is the screen that searches (#176).
+     * solving the wrong problem. {@code /admin/tables} is the screen that searches (ADR-16 §7).
      *
-     * @param actorId  the admin reading it, always from the token (#121). It decides what they see:
+     * @param actorId  the admin reading it, always from the token (ADR-05 §5). It decides what they see:
      *                 an item another admin reserved is not in their tray at all
      * @param pageable which page and how big. Its sort is deliberately ignored - see above
-     * @return one page of the tray. Empty is a success and the screen says so (#136)
+     * @return one page of the tray. Empty is a success and the screen says so (ADR-20 §4)
      */
     @Transactional(readOnly = true)
     public PageResponse<AdminQueueItemResponse> list(String actorId, Pageable pageable) {
@@ -156,7 +156,7 @@ public class AdminQueueService {
     }
 
     /**
-     * Reserves an item for an admin (#100).
+     * Reserves an item for an admin (ADR-16 §5).
      *
      * <p><b>Idempotent for the same admin, and it must be</b>: a double click, a retry after a flaky
      * connection, or the tray refetching and the admin clicking again all end up here, and every one
@@ -166,13 +166,13 @@ public class AdminQueueService {
      *
      * <p>Under the row's own lock, and the locking read is the first thing this transaction does with
      * the row. This is a check-then-act - read who holds it, then write - and it is the third one in
-     * this phase to turn out to be a real race rather than a theoretical one (#252, #256): two admins
+     * this phase to turn out to be a real race rather than a theoretical one (ADR-06 §2, ADR-16 §4): two admins
      * opening the same tray and clicking the same item at the same instant is the ordinary case, not
      * the exotic one.
      *
      * @param type    which table the item lives in: {@code approval_request} or {@code game_table}
      * @param id      the row's id in that table
-     * @param actorId the admin, from the token (#121)
+     * @param actorId the admin, from the token (ADR-05 §5)
      * @return the item as it now stands, so the row on screen re-renders from the answer
      * @throws NotFoundException 404 when the type names nothing, or no row has that id
      * @throws ConflictException 409 {@code ITEM_ALREADY_CLAIMED} when another admin holds it, or a
@@ -189,7 +189,7 @@ public class AdminQueueService {
     }
 
     /**
-     * Gives an item back (#100).
+     * Gives an item back (ADR-16 §5).
      *
      * <p><b>Idempotent in the other direction</b>: releasing something nobody holds is a 204, because
      * the state the caller asked for is already true. Releasing something another admin holds is not -
@@ -201,7 +201,7 @@ public class AdminQueueService {
      *
      * @param type    which table the item lives in
      * @param id      the row's id in that table
-     * @param actorId the admin, from the token (#121)
+     * @param actorId the admin, from the token (ADR-05 §5)
      * @throws NotFoundException 404 when the type names nothing, or no row has that id
      * @throws ConflictException 409 {@code ITEM_ALREADY_CLAIMED} when another admin holds it
      */
@@ -241,18 +241,18 @@ public class AdminQueueService {
     }
 
     /**
-     * {@code game_tables} in {@code Preparation}, <b>and nothing else</b> (arquitectura §4.5, #245).
+     * {@code game_tables} in {@code Preparation}, <b>and nothing else</b> (arquitectura §4.5, ADR-07 §1).
      *
-     * <p>This is the part of the tray that a loose reading of #176 gets wrong. {@code Draft} does not
+     * <p>This is the part of the tray that a loose reading of ADR-16 §7 gets wrong. {@code Draft} does not
      * enter: nobody sent it, and putting half-written drafts in front of a reviewer is exactly what
      * {@code submitForReview} exists to prevent. {@code ChangesRequested} does not enter either: an
      * admin already answered it and the ball is with the master. And {@code Unassigned} does not
      * enter, which is the subtle one - it <em>is</em> waiting on an admin, but for a master to be
-     * assigned (#72), which is a different action on a different screen, not a review.
+     * assigned (ADR-06 §7), which is a different action on a different screen, not a review.
      *
      * <p>Who is waiting is the table's Primary - the master who sent it - resolved in one batched
      * query for the whole source rather than one per row. A table with no live Primary falls back to
-     * whoever created the row: the answer is still true and the tray never prints an id (#136).
+     * whoever created the row: the answer is still true and the tray never prints an id (ADR-20 §4).
      *
      * @param actorId the admin reading the tray
      * @return their lines of the tray, oldest first
@@ -408,7 +408,7 @@ public class AdminQueueService {
     // ------------------------------------------------------------------ plumbing
 
     /**
-     * The locking read, and it is also the read of who holds the item (#252).
+     * The locking read, and it is also the read of who holds the item (ADR-06 §2).
      *
      * <p>A plain {@code findById} beforehand would put a stale instance in the persistence context
      * and the lock would refresh nothing: under MySQL's REPEATABLE READ the transaction that waited
@@ -421,7 +421,7 @@ public class AdminQueueService {
                 .orElseThrow(() -> new NotFoundException("Approval request not found: " + id));
     }
 
-    /** Same, for a table - and a soft-deleted one does not exist here either (#25, #175). */
+    /** Same, for a table - and a soft-deleted one does not exist here either (ADR-03 §7, ADR-07 §6). */
     private GameTable lockGameTable(String id) {
         GameTable table = gameTableRepository
                 .findByIdForUpdate(id)

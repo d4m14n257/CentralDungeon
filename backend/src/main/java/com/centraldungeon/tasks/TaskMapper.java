@@ -22,7 +22,7 @@ import org.mapstruct.Mapping;
  * {@code @Mapping(expression = ...)} would say the same thing in a language that is harder to read.
  *
  * <p>The rich text arrives as a parameter and is not read off the entity: it is sanitized on the way
- * out as well as on the way in (#62), and passing the cleaned string keeps a read from turning into a
+ * out as well as on the way in (ADR-03 §8), and passing the cleaned string keeps a read from turning into a
  * write on a managed entity - the same reason {@code GameTableMapper.toDetail} takes its three.
  */
 @Mapper
@@ -42,9 +42,9 @@ public interface TaskMapper {
      * A task as the people running the table see it.
      *
      * @param task            the task
-     * @param description     its detail, already sanitized (#62)
+     * @param description     its detail, already sanitized (ADR-03 §8)
      * @param submissionCount how many answers it has - answers accumulate, so this can exceed the
-     *                        number of people (#76)
+     *                        number of people (ADR-15 §2)
      * @param respondentCount how many different people answered
      * @param recipientCount  how many were asked, resolved from the audience at read time
      * @return the task as the Peticiones tab shows it
@@ -84,10 +84,10 @@ public interface TaskMapper {
      * A task as the person being asked sees it.
      *
      * @param task              the task
-     * @param description       its detail, already sanitized (#62)
+     * @param description       its detail, already sanitized (ADR-03 §8)
      * @param canSubmit         whether this reader may answer right now - in the audience, and the
      *                          task still open. It is what lets the button explain itself
-     * @param mySubmissionCount how many times this reader already answered (#76)
+     * @param mySubmissionCount how many times this reader already answered (ADR-15 §2)
      * @return the task as {@code /tables/:id} and {@code /my/tables/:id} show it
      */
     default ApplicableTaskResponse toApplicable(
@@ -118,7 +118,7 @@ public interface TaskMapper {
      * One answer, with the files handed in alongside it.
      *
      * @param submission the answer
-     * @param content    its written half, already sanitized (#62), or null when it was files only
+     * @param content    its written half, already sanitized (ADR-03 §8), or null when it was files only
      * @param files      the files handed in with it, resolved by the service
      * @return the answer as whoever may read it sees it
      */
@@ -138,7 +138,7 @@ public interface TaskMapper {
      * The session a task points at, flattened to the two values a response carries.
      *
      * <p>It exists so the null case is written once instead of four times: an untied task is the
-     * common one (#63), and repeating {@code task.getTableSession() == null ? null : ...} per field is
+     * common one (ADR-15 §1), and repeating {@code task.getTableSession() == null ? null : ...} per field is
      * how one of them eventually gets it wrong.
      *
      * @param id             the session's identifier, or null when the task is not tied to one

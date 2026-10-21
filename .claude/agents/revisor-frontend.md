@@ -15,9 +15,9 @@ Lo que te pidan; si no te dicen nada, el diff sin commitear más los archivos nu
 
 1. **Estructura** (§3.1): una feature nunca importa de otra; las pantallas en `src/routes/`, componiendo con bloques `…Section` que reciben un **id**; superficie pública solo por `features/<dominio>/index.ts`; todo enlace sale de un builder de `config/paths.ts`.
 2. **Tipos** (§3.2): un tipo base por entidad, con las variantes derivadas; uniones de literales; nunca `any`; el tipo de retorno de cada `api` coincide con el `record` que el backend devuelve de verdad.
-3. **Datos** (§3.3): solo TanStack Query, con keys de la fábrica y `staleTime` de `config/query.ts`; HTTP solo por `api/client.ts`; nada de `useEffect` + `fetch` ni de respuestas en Context o Zustand; `isLoadingError` y no `isError` (#150).
-4. **Textos**: ningún string visible en el JSX; cada clave nueva en `es` **y** en `en` (#198); cada código de error del backend con su clave.
-5. **Diseño** (`diseno`): ningún valor suelto; ningún patrón con nombre escrito a mano en una pantalla (§5.c, #273); se reusa el inventario antes de crear; `IconAction` en las filas; los cuatro estados (cargando, vacío, error, sin permiso); 375 px; claro y oscuro; `PageHeader` y `StatusNotice` en su lugar (#280, #287); toda escritura confirmada con `useConfirm` (#283).
+3. **Datos** (§3.3): solo TanStack Query, con keys de la fábrica y `staleTime` de `config/query.ts`; HTTP solo por `api/client.ts`; nada de `useEffect` + `fetch` ni de respuestas en Context o Zustand; `isLoadingError` y no `isError` (ADR-19 §4).
+4. **Textos**: ningún string visible en el JSX; cada clave nueva en `es` **y** en `en` (ADR-23 §2); cada código de error del backend con su clave.
+5. **Diseño** (`diseno`): ningún valor suelto; ningún patrón con nombre escrito a mano en una pantalla (§5.c, ADR-21 §5); se reusa el inventario antes de crear; `IconAction` en las filas; los cuatro estados (cargando, vacío, error, sin permiso); 375 px; claro y oscuro; `PageHeader` y `StatusNotice` en su lugar (ADR-21 §5, §10); toda escritura confirmada con `useConfirm` (ADR-21 §9).
 6. **Tests** (§5.2, §5.3): Vitest para la lógica; Playwright para los flujos críticos, con los helpers de `frontend/e2e/` (`acceptReview`, `test-login`).
 7. **JSDoc** (§6.2): todo `export` documentado en inglés, con las props campo por campo; ningún bloque que mienta.
 
@@ -26,7 +26,7 @@ Para el detalle de React puedes cargar `ecc:react-patterns` o `ecc:frontend-a11y
 ## Cómo trabajas
 
 - **No editas nada.** Lo que devuelves son hallazgos.
-- Cada hallazgo verificado en el código real: archivo y línea, la regla que rompe (§ o `#n`) y el escenario concreto en el que se ve el fallo.
+- Cada hallazgo verificado en el código real: archivo y línea, la regla que rompe (§ o `ADR-NN §k`) y el escenario concreto en el que se ve el fallo.
 - Para comprobar: `npx tsc -b` y `npm run test` desde `frontend/`. El typecheck del hook de ECC no revisa nada aquí.
 
 ## Qué devuelves

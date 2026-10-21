@@ -1,6 +1,6 @@
 import type { StagedFile } from '@/types/file'
 /**
- * Who a task is addressed to (#63). A union of literals rather than a TypeScript `enum`
+ * Who a task is addressed to (ADR-15 §1). A union of literals rather than a TypeScript `enum`
  * (arquitectura §3.2).
  *
  * The three moments a table asks for something: before you are in, once you are in, and to you in
@@ -23,10 +23,10 @@ export type TaskStatus = 'Open' | 'Closed'
  */
 export interface SubmittedFile {
   fileId: string
-  /** The original filename — metadata only, it never touched the filesystem on the way in (#80). */
+  /** The original filename — metadata only, it never touched the filesystem on the way in (ADR-13 §6). */
   name: string
   mimeType: string
-  /** The size as uploaded, before compression (#75). */
+  /** The size as uploaded, before compression (ADR-13 §3). */
   sizeBytes: number
 }
 
@@ -39,7 +39,7 @@ export interface SubmittedFile {
 export interface TableTask {
   taskId: string
   gameTableId: string
-  /** The session this is tied to, or null for "at any point" — the common case (#63). */
+  /** The session this is tied to, or null for "at any point" — the common case (ADR-15 §1). */
   tableSessionId: string | null
   /** Which session of the run that is, from 1, so the screen can name it. Null together with the id. */
   sessionSequenceNumber: number | null
@@ -48,33 +48,33 @@ export interface TableTask {
   targetUserId: string | null
   targetUserName: string | null
   title: string
-  /** Sanitized rich text (#62), rendered through `RichTextView`. Null when the title said it all. */
+  /** Sanitized rich text (ADR-03 §8), rendered through `RichTextView`. Null when the title said it all. */
   description: string | null
   acceptsText: boolean
   acceptsFiles: boolean
   /**
-   * Whether the master labelled it indispensable. **It is a label** (#70): the screen says so, and
+   * Whether the master labelled it indispensable. **It is a label** (ADR-15 §2): the screen says so, and
    * nothing in the application refuses, blocks or removes anybody over it.
    */
   isMandatory: boolean
   /**
-   * The blanks the master attached — the forms the ask is about (#63, #233).
+   * The blanks the master attached — the forms the ask is about (ADR-15 §1, ADR-14 §4).
    *
    * **The half of a request the model never had.** `acceptsFiles` says whether an *answer* may carry
    * files; this is what the *asking* carries. Without it, "send me your sheet on this form" arrived
    * with no form and the master had to describe it in prose.
    */
   files: SubmittedFile[]
-  /** ISO-8601 UTC, or null for no date. Nothing happens when it passes (#22, #70). */
+  /** ISO-8601 UTC, or null for no date. Nothing happens when it passes (ADR-03 §6, ADR-15 §2). */
   dueAt: string | null
   status: TaskStatus
-  /** How many answers came in. Answers accumulate, so it can exceed the number of people (#76). */
+  /** How many answers came in. Answers accumulate, so it can exceed the number of people (ADR-15 §2). */
   submissionCount: number
   /** How many different people answered. This is the number that means "handed in". */
   respondentCount: number
   /** How many were asked, derived from the audience at read time and never stored. */
   recipientCount: number
-  /** ISO-8601 UTC. Publishing and creating are the same act — there is no draft (#77). */
+  /** ISO-8601 UTC. Publishing and creating are the same act — there is no draft (ADR-15 §5). */
   createdAt: string
 }
 
@@ -107,7 +107,7 @@ export type ApplicableTask = Pick<
    * reason (principle 2 of diseno §1).
    */
   canSubmit: boolean
-  /** How many times **this** reader already answered. A count, because answers accumulate (#76). */
+  /** How many times **this** reader already answered. A count, because answers accumulate (ADR-15 §2). */
   mySubmissionCount: number
 }
 
@@ -122,14 +122,14 @@ export interface TaskRecipient {
  * Mirror of `TaskSubmissionResponse` — one answer somebody handed in.
  *
  * There is no verdict on it and there never will be: the system records that something arrived and
- * stops there (#76).
+ * stops there (ADR-15 §2).
  */
 export interface TaskSubmission {
   submissionId: string
   taskId: string
   userId: string
   userName: string
-  /** Sanitized rich text (#62), or null when the answer was files only. */
+  /** Sanitized rich text (ADR-03 §8), or null when the answer was files only. */
   content: string | null
   files: SubmittedFile[]
   /** ISO-8601 UTC. */
@@ -144,52 +144,52 @@ export interface TaskSubmission {
 export interface TaskSubmissions {
   taskId: string
   submissions: TaskSubmission[]
-  /** The people still to answer. **A list to talk to, not one to act on** (#70). */
+  /** The people still to answer. **A list to talk to, not one to act on** (ADR-15 §2). */
   missing: TaskRecipient[]
   recipientCount: number
 }
 
 /**
  * What publishing sends. Every field always travels, so the request describes the state the task
- * should end in rather than a delta — same reasoning as #189.
+ * should end in rather than a delta — same reasoning as ADR-04 §7.
  */
 export type CreateTaskInput = Pick<
   TableTask,
   'title' | 'description' | 'audience' | 'targetUserId' | 'tableSessionId' | 'acceptsText' | 'acceptsFiles' | 'isMandatory' | 'dueAt'
 > & {
   /**
-   * The blanks to attach, by id (#63). Linked and never copied (#79), so the community's published
+   * The blanks to attach, by id (ADR-15 §1). Linked and never copied (ADR-14 §1), so the community's published
    * form is attached rather than re-uploaded by every master.
    */
   fileIds: string[]
 }
 
 /**
- * What the request form hands up, before anything has been uploaded (#238).
+ * What the request form hands up, before anything has been uploaded (ADR-13 §5).
  *
  * Same split as {@link SubmissionDraft}, and for the same reason: the wire keeps `fileIds` because
  * that is what the backend takes, and the form says `staged` because that is what it has.
  */
 export type TaskDraft = Omit<CreateTaskInput, 'fileIds'> & { staged: StagedFile[] }
 
-/** What correcting sends. The same shape: a full replacement, never a patch (#189). */
+/** What correcting sends. The same shape: a full replacement, never a patch (ADR-04 §7). */
 export type UpdateTaskInput = CreateTaskInput
 
 /**
  * What handing in an answer sends.
  *
- * The files are **already uploaded** and travel by id (#65, #79) — reusing the character sheet from
+ * The files are **already uploaded** and travel by id (ADR-13 §2, ADR-14 §1) — reusing the character sheet from
  * somebody's history rather than storing it again is the point of the whole file feature.
  */
 export interface CreateSubmissionInput {
   /** The written answer as rich text, or null when the answer is files only. */
   content: string | null
-  /** The files to hand in, by id. Already uploaded by the time this travels (#65, #79). */
+  /** The files to hand in, by id. Already uploaded by the time this travels (ADR-13 §2, ADR-14 §1). */
   fileIds: string[]
 }
 
 /**
- * What the answer dialog hands up, before anything has been uploaded (#238).
+ * What the answer dialog hands up, before anything has been uploaded (ADR-13 §5).
  *
  * **The draft and the request are two different shapes on purpose.** Nothing reaches the server
  * until the screen that owns the send uploads the staged files and turns them into ids — so the

@@ -39,7 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The master's tray (#136): what it reports, what it deliberately does not, and the order.
+ * The master's tray (ADR-20 §4): what it reports, what it deliberately does not, and the order.
  *
  * <p>The order is the part worth testing hardest. A tray sorted by anything other than time waited
  * stops answering the question it exists for - who has been waiting longest for an answer.
@@ -141,7 +141,7 @@ class MasterDashboardServiceTest {
 
         assertThat(item.kind()).isEqualTo(MasterWorkItemKind.OverdueTaskMissing);
         assertThat(item.subject()).isEqualTo("Ficha de personaje");
-        // Four asked, one person answered - the five rows are that person's accumulated answers (#76).
+        // Four asked, one person answered - the five rows are that person's accumulated answers (ADR-15 §2).
         assertThat(item.count()).isEqualTo(3);
         assertThat(item.since()).isEqualTo(A_WHILE_AGO);
     }
@@ -180,7 +180,7 @@ class MasterDashboardServiceTest {
         MasterWorkItem item = only(service.forMaster("master-1"));
 
         assertThat(item.kind()).isEqualTo(MasterWorkItemKind.ReadyToStart);
-        // The start of that day: the date carries no hour of its own any more (#230).
+        // The start of that day: the date carries no hour of its own any more (ADR-07 §4).
         assertThat(item.since()).isEqualTo(A_WHILE_AGO.toLocalDate().atStartOfDay());
     }
 

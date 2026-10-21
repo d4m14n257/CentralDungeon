@@ -18,24 +18,24 @@ interface AttendanceEditorProps {
   onSave: (attendance: Pick<SessionAttendanceEntry, 'userId' | 'attendance'>[]) => void
   /**
    * Shows what was recorded and offers nothing to change it - an admin reading the session from
-   * /admin/tables/:id (#284). Attendance is the master's to record (#36).
+   * /admin/tables/:id (ADR-06 §8). Attendance is the master's to record (ADR-08 §4).
    */
   readOnly?: boolean
 }
 
 /**
- * A session's roster: one select per player, and a single save button (#36).
+ * A session's roster: one select per player, and a single save button (ADR-08 §4).
  *
  * **It is saved whole, not line by line.** A master looks at the list and says what happened; saving
  * each select on its own would turn one decision into five writes and leave half-saved states the
  * screen would then have to explain.
  *
- * Recording attendance does **not** mark the session as played: that is a separate action (#195).
+ * Recording attendance does **not** mark the session as played: that is a separate action (ADR-08 §4).
  *
  * @param props.roster   the roster the server returned
  * @param props.isSaving whether a save is in flight
  * @param props.onSave   what to do with the complete roster
- * @param props.readOnly show the roster as recorded, with no control (#284)
+ * @param props.readOnly show the roster as recorded, with no control (ADR-06 §8)
  */
 export function AttendanceEditor({ roster, isSaving, onSave, readOnly }: AttendanceEditorProps) {
   const { t } = useTranslation('tables')

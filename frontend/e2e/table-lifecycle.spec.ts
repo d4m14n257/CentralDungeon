@@ -5,7 +5,7 @@ import { approveTableFromQueue } from './helpers/adminQueue'
 import { acceptReview } from './helpers/review'
 
 /**
- * E2 sub-slice 1, end to end (docs/adr #163): a master creates a table through the wizard ->
+ * E2 sub-slice 1, end to end (ADR-07 §1): a master creates a table through the wizard ->
  * Preparation; an admin takes it in /admin/queue and approves it -> Opened; the Primary starts it ->
  * InProgress; the Primary finishes it -> Finished. It covers the real state machine, not the
  * self-service E1 had.
@@ -33,7 +33,7 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 
 /**
  * Creates a table through F1.2's four-step wizard. These tests are about the state machine and not
- * about the agenda, so the three things a table cannot exist without (#226) are filled in with the
+ * about the agenda, so the three things a table cannot exist without (ADR-07 §3) are filled in with the
  * shared helpers and nothing more is said about them.
  *
  * @param page  the tab, already signed in as a master
@@ -50,7 +50,7 @@ async function createTableThroughWizard(page: Page, name: string) {
   await addScheduleSlot(page, '20:00')
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -59,7 +59,7 @@ async function createTableThroughWizard(page: Page, name: string) {
 }
 
 /**
- * Assigning masters with the people search (docs/adr #164, #165): an admin creates a table
+ * Assigning masters with the people search (ADR-22 §1, ADR-07 §8): an admin creates a table
  * with no master, searches for two people — one by loose text, the other narrowed with
  * /discord_name — promotes the second and assigns. The table is born Unassigned and leaves the queue
  * once it is Opened.
@@ -96,7 +96,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     const result = (discordId: string) => dialog.getByRole('button', { name: new RegExp(`^${discordId}\\b`) })
 
     // With a prefix: Enter closes the criterion into a chip, which narrows the search to one field, and
-    // a second Enter on the empty text searches it (#268).
+    // a second Enter on the empty text searches it (ADR-22 §4).
     // The input is always filled while empty - Enter and the chip's X clear it on their own. Typing
     // over existing text was deliberately left out of the case: in an earlier run of this suite the
     // `fill` over an already-loaded input ended with the input blank, and key handling is already
@@ -127,7 +127,7 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
 })
 
 /**
- * Deleting what was never public (docs/adr #175): the master builds a table, decides it is not
+ * Deleting what was never public (ADR-07 §6): the master builds a table, decides it is not
  * going to happen and removes it before publishing. Once open that is no longer possible: an open
  * table is cancelled.
  */
@@ -155,7 +155,7 @@ test('a master deletes a draft that never went public, and cannot delete it once
     await createTableThroughWizard(master.page, openedName)
     const tableId = master.page.url().split('/master/tables/')[1] as string
     // The one above stayed a draft on purpose - that is what the first half tests. This one has to
-    // become public, so it goes to review first (#245).
+    // become public, so it goes to review first (ADR-07 §1).
     await submitForReview(master.page, tableId)
 
     const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
@@ -182,7 +182,7 @@ test('a master creates a table, an admin approves it, and the master runs it end
   const master = await newAuthenticatedPage(browser, masterDiscordId, true, false)
   try {
     await createTableThroughWizard(master.page, tableName)
-    // A table is born in Draft and only becomes Preparation when its master lets go of it (#245).
+    // A table is born in Draft and only becomes Preparation when its master lets go of it (ADR-07 §1).
     await expect(master.page.getByText('Borrador', { exact: true })).toBeVisible()
     const tableUrl = master.page.url()
     const tableId = tableUrl.split('/master/tables/')[1] as string
@@ -192,7 +192,7 @@ test('a master creates a table, an admin approves it, and the master runs it end
 
     const admin = await newAuthenticatedPage(browser, adminDiscordId, false, true)
     try {
-      // Reviewing moved to the shared tray with F3.3 (#176): the admin takes the row and resolves
+      // Reviewing moved to the shared tray with F3.3 (ADR-16 §7): the admin takes the row and resolves
       // it there, and `/admin/tables` is now the listing of every table and reviews nothing.
       await approveTableFromQueue(admin.page, tableName)
     } finally {

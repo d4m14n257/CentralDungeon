@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test'
 import { acceptReview } from './review'
 
 /**
- * Reviewing a table, from where F3.3 moved it to (#176, #100).
+ * Reviewing a table, from where F3.3 moved it to (ADR-16 §7, §5).
  *
  * **Seven specs had their own copy of these six lines** pointed at `/admin/tables`, which is exactly
  * why the move of one slice broke seven files at once. One copy here: when the review moves again, or

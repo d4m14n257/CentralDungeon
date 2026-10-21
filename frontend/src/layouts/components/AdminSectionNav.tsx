@@ -23,7 +23,7 @@ import { SectionNav, type SectionNavItem } from '@/components/SectionNav'
  * /admin/queue with F3.3, /admin/settings with F3.5, and the rest of the sitemap joins this list as
  * its screens land, not a different one somewhere else.
  *
- * **The home goes first, and it is where the context starts** (`homePathFor`, #270). It matches only
+ * **The home goes first, and it is where the context starts** (`homePathFor`, ADR-20 §3). It matches only
  * `/admin` itself (`end`), or it would stay underlined on every admin screen. **The tray comes right
  * after it**: of the working screens it is the one that says what to do next, so a listing sitting
  * there would say the context is about browsing. It is about resolving.

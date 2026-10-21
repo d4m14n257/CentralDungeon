@@ -16,7 +16,7 @@ const STATE_TONES: Record<LibraryState, StatusTone> = {
 }
 
 /**
- * Where a file stands in the platform's library, as a badge (#282): the column that tells an admin
+ * Where a file stands in the platform's library, as a badge (ADR-14 §7): the column that tells an admin
  * whether masters can see it, whether it waits, or whether it was taken out of the pickers.
  *
  * @param props.state where the file stands

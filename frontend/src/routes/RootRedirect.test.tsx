@@ -33,7 +33,7 @@ describe('RootRedirect', () => {
     contexts = []
   })
 
-  /** #270: the admin context's home is `/admin` itself, not the tray. */
+  /** ADR-20 §3: the admin context's home is `/admin` itself, not the tray. */
   it('sends an admin-only account to /admin', () => {
     contexts = ['admin']
     renderRoot()
@@ -41,7 +41,7 @@ describe('RootRedirect', () => {
     expect(screen.getByText('admin home')).toBeInTheDocument()
   })
 
-  /** #269: with no context at all, navigating would loop between `/` and the player guard. */
+  /** ADR-20 §2: with no context at all, navigating would loop between `/` and the player guard. */
   it('explains instead of redirecting when the account has no context', () => {
     renderRoot()
 

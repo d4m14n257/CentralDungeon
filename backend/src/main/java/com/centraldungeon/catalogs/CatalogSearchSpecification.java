@@ -19,7 +19,7 @@ import org.springframework.data.jpa.domain.Specification;
  * {@code UserSearchSpecification} does for people. Criteria API because the shape is only known at
  * runtime: how many terms and joined by which connectors (arquitectura §2.2).
  *
- * <p>Two audiences, two entry points, and the difference between them is the whole point of #57:
+ * <p>Two audiences, two entry points, and the difference between them is the whole point of ADR-12 §3:
  * {@link #accepted(SearchQuery)} is what a master's combobox and a player's filter see, and it never
  * returns a value that has not been accepted. {@link #forAdmin(SearchQuery, List)} sees everything,
  * because reviewing what was proposed is exactly the admin's job.
@@ -34,7 +34,7 @@ final class CatalogSearchSpecification {
     }
 
     /**
-     * Everything a non-admin is allowed to see: accepted values only (#57, #81).
+     * Everything a non-admin is allowed to see: accepted values only (ADR-12 §3, §5).
      *
      * @param query the parsed search box; an empty one matches every accepted value
      * @param <E>   the catalog entity being queried
@@ -68,11 +68,11 @@ final class CatalogSearchSpecification {
     }
 
     /**
-     * /admin/catalogs as a list of groups (#275): only the rows that head a group - a canonical entry,
+     * /admin/catalogs as a list of groups (ADR-12 §7): only the rows that head a group - a canonical entry,
      * or a proposal nobody has classified yet, which is a group of one until somebody does.
      *
      * <p>A search still finds a group by <b>any</b> of its members: a row matches when its own name
-     * matches or when one of its aliases does. That is the symmetry of #54 carried to the listing -
+     * matches or when one of its aliases does. That is the symmetry of ADR-12 §2 carried to the listing -
      * typing "DANDD" has to bring up the "D&amp;D 5e" group it belongs to, not an empty table. It is
      * a correlated subquery rather than a second round trip so that the pagination stays in SQL.
      *
@@ -134,7 +134,7 @@ final class CatalogSearchSpecification {
     }
 
     /**
-     * The values of one criterion are alternatives: any of them satisfies it (docs/adr #164).
+     * The values of one criterion are alternatives: any of them satisfies it (ADR-22 §1).
      *
      * @param root    the entity being queried
      * @param builder the Criteria API builder

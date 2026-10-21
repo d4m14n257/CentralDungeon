@@ -16,7 +16,7 @@ export interface HelpLinkProps extends HelpSectionBodyProps {
 }
 
 /**
- * The way a screen offers help: opens {@link HelpDialog} in place instead of navigating (#231).
+ * The way a screen offers help: opens {@link HelpDialog} in place instead of navigating (ADR-20 §5).
  *
  * **A `button` and not an anchor**, and `type="button"` on purpose: most of these sit inside a form,
  * and a bare `<button>` inside one submits it. The old version was a `<Link>`, which is exactly the

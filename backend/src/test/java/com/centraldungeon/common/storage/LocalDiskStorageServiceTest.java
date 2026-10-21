@@ -45,7 +45,7 @@ class LocalDiskStorageServiceTest {
     }
 
     /**
-     * The compression of #75 lives below the seam: callers hand over and get back the original bytes,
+     * The compression of ADR-13 §3 lives below the seam: callers hand over and get back the original bytes,
      * and what sits on disk is smaller. Asserting the gzip magic number is what proves the file was
      * not simply written through.
      */
@@ -61,7 +61,7 @@ class LocalDiskStorageServiceTest {
     }
 
     /**
-     * #80's guarantee, asserted rather than assumed. Every key the application passes is an id it
+     * ADR-13 §6's guarantee, asserted rather than assumed. Every key the application passes is an id it
      * generated, so this can only fail if some future caller starts passing something a person typed
      * - which is exactly the mistake worth catching.
      */

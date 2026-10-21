@@ -17,7 +17,7 @@ import java.io.Serializable;
  *
  * @param fileId   the file. A plain id and not an association, so a cajón can be counted and filtered
  *                 without loading the file. The database still enforces the foreign key
- * @param category the cajón. Stored as the constant's name, like every other enum in this schema (#10)
+ * @param category the cajón. Stored as the constant's name, like every other enum in this schema (ADR-03 §5)
  */
 @Embeddable
 public record FileCategoryLinkId(

@@ -57,7 +57,7 @@ interface StatusBadgeProps {
  * two things that are genuinely each feature's — which of its states looks how, and what the state is
  * called in two languages — stay in the feature, next to the union they belong to.
  *
- * **Why it exists** (#261). It was written **ten** times before this: `TableStatusBadge`,
+ * **Why it exists** (ADR-21 §6). It was written **ten** times before this: `TableStatusBadge`,
  * `SessionStatusBadge`, `RegistrationStatusBadge`, `UserStatusBadge`, `RequestStatusBadge`,
  * `CatalogStatusBadge`, `TaskStatusBadge`, `FileTypeBadge`, `ClaimBadge`, and once more inline in
  * `NotificationsPage` - each carrying this markup byte for byte. §3.1.2 puts the threshold at **two**

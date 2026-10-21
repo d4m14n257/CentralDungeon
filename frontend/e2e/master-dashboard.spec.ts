@@ -45,14 +45,14 @@ async function createTableThroughWizard(page: Page, name: string) {
   await addScheduleSlot(page, '20:00')
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
   await acceptReview(page)
   await expect(page.getByRole('heading', { name })).toBeVisible()
   const id = page.url().split('/master/tables/')[1] as string
-  // Born in Draft since #245: a draft reaches no tray and no admin, so it is sent right away.
+  // Born in Draft since ADR-07 §1: a draft reaches no tray and no admin, so it is sent right away.
   await submitForReview(page, id)
   return id
 }
@@ -70,7 +70,7 @@ test('a master adds a co-master, who sees the table, and loses it when removed',
   const tableName = `Mesa Co-master E2E ${runId}`
 
   // The co-master has to exist before it can be searched for; the test login creates them. Note they
-  // are created *without* the Master role: running a table is membership, not the role (#135).
+  // are created *without* the Master role: running a table is membership, not the role (ADR-06 §4).
   const coMasterContext = await browser.newContext()
   await testLogin(coMasterContext.request, coMasterDiscordId)
   await coMasterContext.close()

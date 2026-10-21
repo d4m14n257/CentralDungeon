@@ -16,7 +16,7 @@ export interface CatalogNodeData extends Record<string, unknown> {
 /** A node of the catalog canvas. The one node type the canvas registers. */
 export type CatalogFlowNode = Node<CatalogNodeData, 'catalog'>
 
-/** An edge of the catalog canvas: always from a member to the head of its group (#59). */
+/** An edge of the catalog canvas: always from a member to the head of its group (ADR-12 §2). */
 export type CatalogFlowEdge = Edge
 
 /** The edge type's name: the pattern's centre-to-centre spoke, registered by `GraphCanvas`. */
@@ -46,10 +46,10 @@ const FLOATING_STEP = 104
 
 /**
  * Turns the groups on screen and the proposals waiting for one into React Flow's nodes and edges
- * (#275).
+ * (ADR-12 §7).
  *
  * - **Groups** are stars, laid out left to right: the head in the centre, its members around it
- *   with {@link radialLayout}. Depth is always 1 (#59), so this is the whole drawing.
+ *   with {@link radialLayout}. Depth is always 1 (ADR-12 §2), so this is the whole drawing.
  * - **Floating proposals** stand in a column to the left of every group, connected to nothing -
  *   the "floating in the air until you connect it" the canvas was asked for.
  *

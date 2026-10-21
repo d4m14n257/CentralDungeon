@@ -6,7 +6,7 @@ import { PUBLISHABLE_CATEGORIES } from './categories'
 import type { FileCategory } from './types'
 
 /**
- * What `/file_type` offers, and what each choice sends (#164).
+ * What `/file_type` offers, and what each choice sends (ADR-22 §1).
  *
  * **A command with fixed choices rather than free text**, because the values it searches are MIME
  * types: nobody is going to type
@@ -32,7 +32,7 @@ export function FILE_TYPE_CHOICES(t: TFunction): { value: string; label: string 
 }
 
 /**
- * What `/file_categories` offers: the cajones a file can belong to (#233, #239).
+ * What `/file_categories` offers: the cajones a file can belong to (ADR-14 §4, ADR-22 §2).
  *
  * **A different question from `/file_type`, and both are commands with fixed choices.** The type is
  * the format — PDF, PNG — and the cajón is the flow the file came out of: table material, something
@@ -40,7 +40,7 @@ export function FILE_TYPE_CHOICES(t: TFunction): { value: string; label: string 
  * no amount of searching filenames answers it.
  *
  * The caller passes which cajones to offer, because on somebody's own library that is only theirs
- * (#237) while the platform's library offers the three publishable ones (#278).
+ * (ADR-14 §5) while the platform's library offers the three publishable ones (ADR-14 §7).
  *
  * @param t          the translator of the `files` namespace
  * @param categories the cajones to offer
@@ -51,7 +51,7 @@ export function fileCategoryChoices(t: TFunction, categories: readonly FileCateg
 }
 
 /**
- * The commands `/my/files` accepts (#164, #237, #240).
+ * The commands `/my/files` accepts (ADR-22 §1, ADR-14 §5, ADR-22 §3).
  *
  * **Only the cajones that are theirs**: offering one this person can never have a file in is offering
  * a search that always comes back empty. Which those are is the server's answer, so it arrives as an
@@ -78,12 +78,12 @@ export function myFileSearchFields(t: TFunction, categories: readonly FileCatego
 }
 
 /**
- * The commands `/admin/files` accepts (#164, #237, #240).
+ * The commands `/admin/files` accepts (ADR-22 §1, ADR-14 §5, ADR-22 §3).
  *
  * Two differences from a person's own library, and both come from what the screen is — the platform's
- * library (#278): `/file_owner` exists, because another admin may have uploaded it, and the cajones
+ * library (ADR-14 §7): `/file_owner` exists, because another admin may have uploaded it, and the cajones
  * offered are **the three a file can be published into**, announcements included. The two player-side
- * ones would be a search that can never match: nothing is published there (#233).
+ * ones would be a search that can never match: nothing is published there (ADR-14 §4).
  *
  * @param t the translator of the `files` namespace
  * @returns the commands, in the order they are offered

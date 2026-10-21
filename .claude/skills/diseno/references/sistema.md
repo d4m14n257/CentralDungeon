@@ -1,14 +1,14 @@
 # 3. Sistema de diseño
 
-> Parte de la skill `diseno` (#273). Se movió desde `docs/frontend-diseno.md` §3 y **conserva su numeración**, que es la que citan el código y las ADRs. Los valores concretos —colores, tipografía, espaciados, radios— no se escriben acá: salen de `design/build.py` (#130).
+> Parte de la skill `diseno` (ADR-21 §5). Se movió desde `docs/frontend-diseno.md` §3 y **conserva su numeración**, que es la que citan el código y las ADRs. Los valores concretos —colores, tipografía, espaciados, radios— no se escriben acá: salen de `design/build.py` (ADR-21 §1).
 
 Tokens en el bloque `@theme` de `src/styles/globals.css`. Tailwind 4 no tiene `tailwind.config.ts`.
 
 ### Dirección visual
 
-**Fantasía sobria** (#131): serif solo en títulos, sans en el cuerpo, densidad media. Se lee como herramienta seria, con un guiño al género.
+**Fantasía sobria** (ADR-21 §2): serif solo en títulos, sans en el cuerpo, densidad media. Se lee como herramienta seria, con un guiño al género.
 
-La paleta **no se eligió, se midió** sobre los assets que la comunidad ya usaba (#132):
+La paleta **no se eligió, se midió** sobre los assets que la comunidad ya usaba (ADR-21 §2):
 
 | Fuente | Qué dio |
 |---|---|
@@ -22,7 +22,7 @@ De ahí salen las dos decisiones que gobiernan todo lo demás:
 
 **El choque es inevitable y se contiene con separación de roles**, no con distancia de tono: los dos hues de la marca ya están ocupados por estados, así que el **acento aparece únicamente como relleno sólido** (botones, foco, karma) y los **estados únicamente como relleno suave con punto y etiqueta**. Nunca compiten en el mismo rol.
 
-Los valores exactos no viven acá: los genera `design/build.py` y se publican en el design system (#130).
+Los valores exactos no viven acá: los genera `design/build.py` y se publican en el design system (ADR-21 §1).
 
 ### Cómo se trabaja la paleta
 
@@ -31,7 +31,7 @@ Los valores exactos no viven acá: los genera `design/build.py` y se publican en
 ```bash
 python3 design/build.py                  # regenera out/ y mide los 30 pares de contraste
 open design/out/accent-decision.html     # cualquier preview
-python3 design/extract-brand-colors.py <logo.png> "LOGO"   # rehace la medición de #132
+python3 design/extract-brand-colors.py <logo.png> "LOGO"   # rehace la medición de ADR-21 §2
 ```
 
 Qué produce en `design/out/`:
@@ -49,13 +49,13 @@ Qué produce en `design/out/`:
 
 Ambos, con `next-themes` o equivalente. El frontend viejo ya tenía `ColorModeContext`; es una función que se conserva.
 
-**Oscuro por defecto** (#131) — la comunidad juega de noche. El claro se deriva del oscuro, no al revés, y los dos tienen que estar igual de terminados: E0.5 no se cierra con uno solo.
+**Oscuro por defecto** (ADR-21 §2) — la comunidad juega de noche. El claro se deriva del oscuro, no al revés, y los dos tienen que estar igual de terminados: E0.5 no se cierra con uno solo.
 
-**Se cambia desde el `UserMenu`**, no desde una pantalla de configuración, y **sin opción "seguir al sistema"** (#144): que el default sea oscuro es una decisión de diseño, no la preferencia del sistema operativo de cada uno. El ítem nombra la acción, no el estado — estando en oscuro dice "Tema claro". La elección queda guardada. Como el menú solo existe con sesión, `/login` se ve siempre en oscuro; el gradiente de marca que lo cubre no depende del tema.
+**Se cambia desde el `UserMenu`**, no desde una pantalla de configuración, y **sin opción "seguir al sistema"** (ADR-21 §3): que el default sea oscuro es una decisión de diseño, no la preferencia del sistema operativo de cada uno. El ítem nombra la acción, no el estado — estando en oscuro dice "Tema claro". La elección queda guardada. Como el menú solo existe con sesión, `/login` se ve siempre en oscuro; el gradiente de marca que lo cubre no depende del tema.
 
 ### Idioma
 
-Dos, **español e inglés** (#198), y se elige en el mismo lugar y con la misma lógica que el tema:
+Dos, **español e inglés** (ADR-23 §2), y se elige en el mismo lugar y con la misma lógica que el tema:
 desde el `UserMenu`, guardado en el navegador, sin pantalla de configuración.
 
 **El primer idioma se calcula**, a diferencia del tema: se mira la elección guardada, después
@@ -107,7 +107,7 @@ Los nueve estados de mesa y los cinco de postulación aparecen en toda la aplica
 
 ### Karma
 
-Escala 0–10000 con 8000 por defecto (#30). Se muestra como número con un indicador cualitativo, **sin** desglose agregado (#99):
+Escala 0–10000 con 8000 por defecto (ADR-11 §1). Se muestra como número con un indicador cualitativo, **sin** desglose agregado (ADR-11 §10):
 
 ```
 Karma  8 240   ●●●●○     (basado en 12 comentarios)

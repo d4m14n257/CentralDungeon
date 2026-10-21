@@ -24,15 +24,15 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p><b>There is no upload here.</b> Uploading is {@code POST /api/v1/files} and attaching is this,
  * which is what makes "upload a new one" and "reuse one I already have" end in the same request. Reuse
- * is the cost lever of the whole fase (#65, #75), so it cannot be the path with the extra step.
+ * is the cost lever of the whole fase (ADR-13 §2, §3), so it cannot be the path with the extra step.
  *
  * <p>What a candidate or a player sees is <b>not</b> here either: the shared files travel inside
  * {@code GameTableDetailResponse}, because that read already decides who may see the table, down to
- * answering 404 to somebody vetoed (#29). Repeating the check in a second endpoint would be a second
+ * answering 404 to somebody vetoed (ADR-09 §4). Repeating the check in a second endpoint would be a second
  * copy of a rule that can only drift. Same decision F1.3 took for the calendar.
  *
  * <p>Every method is {@code isAuthenticated()} and none names a role: running <em>this</em> table is
- * what authorizes touching its files, and that is a row in {@code masters} (#17, #121, #135). The
+ * what authorizes touching its files, and that is a row in {@code masters} (ADR-11 §1, ADR-05 §5, ADR-06 §4). The
  * annotation is written out on each method and never inherited (regla dura 4, CVE-2025-41248).
  */
 @RestController
@@ -67,7 +67,7 @@ public class TableFileController {
     }
 
     /**
-     * Attaching a file the actor already has, or one the platform published (#79).
+     * Attaching a file the actor already has, or one the platform published (ADR-14 §1).
      *
      * @param tableId     the table
      * @param request     the file to attach and how
@@ -91,7 +91,7 @@ public class TableFileController {
      * Changing what an attachment is for, or whether the table's players see it.
      *
      * <p>Nothing here reaches the file: sharing a map on this table says nothing about the same map on
-     * another one (#79).
+     * another one (ADR-14 §1).
      *
      * @param tableId     the table
      * @param fileId      the attached file
@@ -113,7 +113,7 @@ public class TableFileController {
     /**
      * Taking a file off the table.
      *
-     * <p><b>The file survives</b> (#79): it stays in its owner's history and on every other table that
+     * <p><b>The file survives</b> (ADR-14 §1): it stays in its owner's history and on every other table that
      * has it. Removing the community's default sheet from one table cannot remove it from the
      * community.
      *

@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
  * {@code deleted_at}, and nothing ever takes it away. The reason is what it records: {@code
  * table_files} says a file is attached to a table <em>right now</em>, while this says it has
  * <em>been</em> that table's material. Detaching changes the first and leaves the second true, and
- * letting go of the file marks {@code files.status} while these rows stand as the record (#25).
+ * letting go of the file marks {@code files.status} while these rows stand as the record (ADR-03 §7).
  *
  * <p>Two things write one of these, and a reader cannot tell them apart on purpose:
  *

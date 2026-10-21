@@ -77,7 +77,7 @@ describe('UserAdminHistory', () => {
     expect(screen.getByText('Se quitó el rol Jugador')).toBeInTheDocument()
     expect(screen.getByText('Activa → Bloqueada')).toBeInTheDocument()
     expect(screen.getAllByText('Por Ana Valdez')).toHaveLength(3)
-    // Never conditional: the justification is mandatory on both tables (#84, #169).
+    // Never conditional: the justification is mandatory on both tables (ADR-05 §7, ADR-06 §1).
     expect(screen.getByText('"Acoso reiterado"')).toBeInTheDocument()
   })
 
@@ -90,7 +90,7 @@ describe('UserAdminHistory', () => {
     expect(await screen.findByText('Sin cambios registrados')).toBeInTheDocument()
   })
 
-  /** Its own four states (#150): the listing around it loaded, this is a second question. */
+  /** Its own four states (ADR-19 §4): the listing around it loaded, this is a second question. */
   it('explains a 403 rather than blanking', async () => {
     byId.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Denied', errorCode: 'FORBIDDEN' }))
     history.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Denied', errorCode: 'FORBIDDEN' }))

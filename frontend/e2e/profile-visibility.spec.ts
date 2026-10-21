@@ -6,13 +6,13 @@ import { approveTableFromQueue } from './helpers/adminQueue'
 import { acceptReview } from './helpers/review'
 
 /**
- * F2.3 end to end: the profile, and the asymmetry that #41 is about.
+ * F2.3 end to end: the profile, and the asymmetry that ADR-10 §1 is about.
  *
  * **The claim worth making here is the negative one.** The five visibility rules of
  * `arquitectura` §4.5 had been written for a year with nothing implementing them, so what has to be
  * proven is not that a profile renders — it is that somebody with no relationship to another person
  * cannot reach theirs, and that the refusal reads as «ya no podés ver este perfil» rather than
- * confirming the person exists (#249).
+ * confirming the person exists (ADR-10 §3).
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
@@ -64,7 +64,7 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
  *
  * @param page     the tab, authenticated as a master
  * @param name     the table's name
- * @param hourtime the weekly slot, so two tables in one spec do not collide under R1 (#178)
+ * @param hourtime the weekly slot, so two tables in one spec do not collide under R1 (ADR-08 §2)
  */
 async function createTable(page: Page, name: string, hourtime: string): Promise<string> {
   await page.goto('/master/tables/new')
@@ -77,7 +77,7 @@ async function createTable(page: Page, name: string, hourtime: string): Promise<
   await addScheduleSlot(page, hourtime)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -96,10 +96,10 @@ async function open(masterPage: Page, adminPage: Page, tableId: string, name: st
 }
 
 /**
- * The two halves of #41, in the order the rules describe them: the player looks at the master
+ * The two halves of ADR-10 §1, in the order the rules describe them: the player looks at the master
  * *before* applying, and the master looks at the candidate only once the application arrives.
  */
-test('the asymmetry of #41: a player reads the master first, the master reads the candidate after', async ({ browser }) => {
+test('the asymmetry of ADR-10 §1: a player reads the master first, the master reads the candidate after', async ({ browser }) => {
   const tableName = `Mesa Perfil E2E ${runId}`
   const master = await newAuthenticatedPage(browser, `e2e-prof-master-${runId}`, true, false)
   const admin = await newAuthenticatedPage(browser, `e2e-prof-admin-${runId}`, false, true)
@@ -118,7 +118,7 @@ test('the asymmetry of #41: a player reads the master first, the master reads th
     await expect(player.page).toHaveURL(new RegExp(`/player/users/${master.id}$`))
     await expect(player.page.getByRole('heading', { name: 'Asistencia' })).toBeVisible()
 
-    // #248 — karma and comments are F5, so the wireframe's lower half is not drawn at all.
+    // ADR-10 §5 — karma and comments are F5, so the wireframe's lower half is not drawn at all.
     await expect(player.page.getByText('Comentarios recibidos')).toBeHidden()
 
     // #41b — and only now, with the application in, does the candidate's profile open for the master.
@@ -140,7 +140,7 @@ test('the asymmetry of #41: a player reads the master first, the master reads th
 
 /**
  * The negative case, which is the one that matters. Two people the platform never put in the same
- * room cannot read each other, and the screen says so without confirming anybody exists (#44, #249).
+ * room cannot read each other, and the screen says so without confirming anybody exists (ADR-10 §2, §3).
  */
 test('somebody with no table in common cannot read another profile', async ({ browser }) => {
   const one = await newAuthenticatedPage(browser, `e2e-prof-stranger-a-${runId}`, false, false)
@@ -155,7 +155,7 @@ test('somebody with no table in common cannot read another profile', async ({ br
   }
 })
 
-/** #45 — an admin has no visibility restrictions, on the same pair the test above refuses. */
+/** ADR-06 §8 — an admin has no visibility restrictions, on the same pair the test above refuses. */
 test('an admin reads a profile nobody else could', async ({ browser }) => {
   const admin = await newAuthenticatedPage(browser, `e2e-prof-admin2-${runId}`, false, true)
   const stranger = await newAuthenticatedPage(browser, `e2e-prof-stranger-c-${runId}`, false, false)
@@ -170,7 +170,7 @@ test('an admin reads a profile nobody else could', async ({ browser }) => {
   }
 })
 
-/** The reader's own profile is always reachable, and from the account menu (#248). */
+/** The reader's own profile is always reachable, and from the account menu (ADR-10 §5). */
 test('the account menu leads to your own profile', async ({ browser }) => {
   const me = await newAuthenticatedPage(browser, `e2e-prof-self-${runId}`, false, false)
 

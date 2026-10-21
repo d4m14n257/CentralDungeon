@@ -4,7 +4,7 @@ paths:
 ---
 # ECC — Java (curado para CentralDungeon)
 
-> Complementa la skill `arquitectura` §2, §5 y §6; **ante un choque, manda ella**. Stack: Java 25, Spring Boot 4.1, **JUnit 6**, Jackson 3, JSpecify. No se adoptan de ECC: la envoltura `ApiResponse`, el nombre de test `method_scenario_expected` (se usa el de §5.1), las carpetas de test por capa ni los mensajes de excepción con frases para el cliente (#197).
+> Complementa la skill `arquitectura` §2, §5 y §6; **ante un choque, manda ella**. Stack: Java 25, Spring Boot 4.1, **JUnit 6**, Jackson 3, JSpecify. No se adoptan de ECC: la envoltura `ApiResponse`, el nombre de test `method_scenario_expected` (se usa el de §5.1), las carpetas de test por capa ni los mensajes de excepción con frases para el cliente (ADR-23 §3).
 
 ## Skills y agentes de ECC escritos para otro stack
 
@@ -40,7 +40,7 @@ paths:
 
 - Las de dominio son unchecked y extienden las de `common/exception`.
 - Nada de `catch (Exception e)` amplio fuera del `GlobalExceptionHandler`.
-- El mensaje de una excepción es para el log, en inglés y con contexto (ids). **El cliente recibe un código y sus parámetros** (#197), nunca ese mensaje.
+- El mensaje de una excepción es para el log, en inglés y con contexto (ids). **El cliente recibe un código y sus parámetros** (ADR-23 §3), nunca ese mensaje.
 
 ## Streams
 

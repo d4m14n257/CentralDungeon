@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/PageHeader'
 
 /**
- * `/admin` — the home of the Admin context (#270), and where an administrator lands on entering.
+ * `/admin` — the home of the Admin context (ADR-20 §3), and where an administrator lands on entering.
  *
  * **A welcome and nothing else, on purpose.** Until this existed the prefix painted the layout
  * around an empty outlet, open to anybody with a session. A dashboard of metrics was the obvious
@@ -12,7 +12,7 @@ import { PageHeader } from '@/components/PageHeader'
  * and the place in the nav are already the home's.
  *
  * It fetches nothing, so it has no loading, empty or error state to cover. Who may see it is
- * `AdminLayout`'s guard (#269).
+ * `AdminLayout`'s guard (ADR-20 §2).
  */
 export function AdminHomePage() {
   const { t } = useTranslation('admin')

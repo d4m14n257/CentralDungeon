@@ -1,11 +1,11 @@
 package com.centraldungeon.tables.dto;
 
 /**
- * Somebody's historical attendance on one table (#137).
+ * Somebody's historical attendance on one table (ADR-08 §5).
  *
  * <p><b>Three numbers and never a ratio.</b> A percentage would have decided for the reader, and the
  * distinction it hides is the one that matters: a warned absence and a no-show are different facts,
- * the same way #98 keeps attendance out of karma so both stay explainable.
+ * the same way ADR-11 §10 keeps attendance out of karma so both stay explainable.
  *
  * <p>{@code registered} is the denominator, and it is the count of sessions <b>with something
  * recorded</b> - the {@code Unknown} ones are out. Counting them would make everybody read as a

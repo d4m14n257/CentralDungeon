@@ -37,23 +37,23 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * A table's calendar: turning its agenda into sessions, moving them, and recording who came.
  *
- * <p><b>Sessions are rows, not a calculation</b> (#33). The weekly agenda plus a start date plus a
+ * <p><b>Sessions are rows, not a calculation</b> (ADR-08 §3). The weekly agenda plus a start date plus a
  * count would describe the calendar exactly once - the first time - and {@code Pause} breaks that
  * immediately: resuming has to re-lay what was still pending, which needs to know what was actually
  * played. Materializing is also what makes correcting one date and cancelling one evening possible
  * at all.
  *
- * <p><b>The unit of time is an instant in UTC</b> (#22), unlike {@link ScheduleConflictService},
+ * <p><b>The unit of time is an instant in UTC</b> (ADR-03 §6), unlike {@link ScheduleConflictService},
  * whose unit is a stretch of an abstract week. That is why a corrected date is never checked against
- * the clash rules of #178: those compare weeks, and moving one session is not changing the week.
+ * the clash rules of ADR-08 §2: those compare weeks, and moving one session is not changing the week.
  *
- * <p><b>A pause hides the pending sessions rather than marking them</b> (#32, #33). A pause is
+ * <p><b>A pause hides the pending sessions rather than marking them</b> (ADR-07 §2, ADR-08 §3). A pause is
  * reversible and its whole point is that no date is being promised while it lasts; writing a status
  * onto every pending row would be a change that resuming then has to undo, and the rows would carry
  * the pause's history instead of the session's. So it is a read filter, in one place -
  * {@link #visibleSessionsOf}.
  *
- * <p>Every mutation here answers to <b>pertenencia and not to a role</b> (#17, #121, #135): running
+ * <p>Every mutation here answers to <b>pertenencia and not to a role</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4): running
  * this table is what authorizes touching its calendar, which no {@code @PreAuthorize} can see.
  */
 @Service
@@ -66,7 +66,7 @@ public class TableSessionService {
     /** The materialized calendar. */
     private final TableSessionRepository sessionRepository;
 
-    /** Who was at each session (#36). */
+    /** Who was at each session (ADR-08 §4). */
     private final SessionAttendanceRepository attendanceRepository;
 
     /** The weekly agenda the calendar is laid out on. */
@@ -77,7 +77,7 @@ public class TableSessionService {
      * F3.4, decides whether the reader may see it at all.
      *
      * <p>It replaced a private {@code getTable} that was one of <b>three</b> copies of the same
-     * lookup. The veto of #29 has to be written once or it gets written twice and forgotten once
+     * lookup. The veto of ADR-09 §4 has to be written once or it gets written twice and forgotten once
      * (roles-y-alcance.md §7), so the copy is gone and this is the gate.
      */
     private final TableVisibilityService tableVisibilityService;
@@ -85,10 +85,10 @@ public class TableSessionService {
     /** The roster, and who gets told when a date moves. */
     private final TableRegistrationRepository registrationRepository;
 
-    /** Answers pertenencia: a row in {@code masters}, never the platform role (#135). */
+    /** Answers pertenencia: a row in {@code masters}, never the platform role (ADR-06 §4). */
     private final MasterService masterService;
 
-    /** Tells the players a session moved or was called off (#77's sibling for sessions). */
+    /** Tells the players a session moved or was called off (ADR-15 §5's sibling for sessions). */
     private final NotificationService notificationService;
 
     /** Entity to DTO. */
@@ -96,12 +96,12 @@ public class TableSessionService {
 
     /**
      * @param sessionRepository      the {@code table_sessions} rows
-     * @param attendanceRepository   the {@code session_attendance} rows, and the count of #137
+     * @param attendanceRepository   the {@code session_attendance} rows, and the count of ADR-08 §5
      * @param tableScheduleService   the weekly agenda a calendar is laid out on
      * @param tableVisibilityService resolves the table the reads start from, and whether the reader
-     *                               may see it - the one gate of #25 and #29
+     *                               may see it - the one gate of ADR-03 §7 and ADR-09 §4
      * @param registrationRepository the table's players - the roster, and who is notified
-     * @param masterService          answers pertenencia (#17, #121, #135)
+     * @param masterService          answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
      * @param notificationService    warns the players when a session moves or is called off
      * @param gameTableMapper        entity to DTO
      */
@@ -126,13 +126,13 @@ public class TableSessionService {
 
     /**
      * Turns the table's agenda into its calendar. Called once, when the table reaches {@code Opened}
-     * (#26, #33).
+     * (ADR-08 §3).
      *
      * <p>The hours are the agenda's, always: {@code start_date} only says which day to start looking
-     * from, which is why it is a date and carries no hour of its own (#230).
+     * from, which is why it is a date and carries no hour of its own (ADR-07 §4).
      *
      * <p><b>A table missing any of the three inputs opens with no sessions and is not refused</b>
-     * (#196): {@code start_date}, the agenda and {@code total_sessions} are all nullable, and turning
+     * (ADR-07 §3): {@code start_date}, the agenda and {@code total_sessions} are all nullable, and turning
      * them into a precondition of approval would be a new gate on the admin's flow rather than the
      * consequence of opening that this is. The master fills them in and the sessions appear when they
      * do.
@@ -158,14 +158,14 @@ public class TableSessionService {
 
         int sequenceNumber = 1;
         // From the very start of the day, so a slot on the start date itself is the first session
-        // rather than one the cut-off walks past (#230).
+        // rather than one the cut-off walks past (ADR-07 §4).
         for (LocalDateTime instant : occurrencesFrom(startDate.atStartOfDay(), agenda, totalSessions, true)) {
             sessionRepository.save(new TableSession(table, sequenceNumber++, instant));
         }
     }
 
     /**
-     * Re-lays the sessions a pause left pending, from the moment the table comes back (#32, #33).
+     * Re-lays the sessions a pause left pending, from the moment the table comes back (ADR-07 §2, ADR-08 §3).
      *
      * <p>Only the pending ones move. What was played and what was called off are facts with dates of
      * their own, and the run's numbering is untouched: the fifth session is still the fifth, it just
@@ -202,17 +202,17 @@ public class TableSessionService {
      * The whole calendar as the people running the table see it, with notes and rosters.
      *
      * @param gameTableId the table
-     * @param actorId     the actor, from the token (#121)
+     * @param actorId     the actor, from the token (ADR-05 §5)
      * @return its sessions, first to last. While the table is paused the pending ones are not in it
      * @throws NotFoundException        if the table does not exist
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
      */
     @Transactional(readOnly = true)
     public List<TableSessionResponse> listForTable(String gameTableId, String actorId) {
         // requireExisting and not requireVisible: the next line demands a row in `masters` or the admin
-        // rank, and neither can be vetoed on the table (#154) - a veto is a player's, not theirs.
+        // rank, and neither can be vetoed on the table (ADR-18 §4) - a veto is a player's, not theirs.
         GameTable table = tableVisibilityService.requireExisting(gameTableId);
-        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
         if (!masterService.canOversee(gameTableId, actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can view its sessions");
         }
@@ -225,12 +225,12 @@ public class TableSessionService {
      *
      * <p>It has no endpoint of its own. It travels inside the table's detail, which is what already
      * decides whether the reader may see the table at all - a vetoed one gets a {@code 404} there
-     * (#29) - so the calendar inherits that answer instead of repeating the check somewhere it could
+     * (ADR-09 §4) - so the calendar inherits that answer instead of repeating the check somewhere it could
      * drift out of step.
      *
      * @param table the table
      * @return its sessions, first to last. Empty until the table opens; while it is paused, only
-     *         what already happened (#32, #33)
+     *         what already happened (ADR-07 §2, ADR-08 §3)
      */
     @Transactional(readOnly = true)
     public List<PublicSessionResponse> findPublicSessions(GameTable table) {
@@ -241,11 +241,11 @@ public class TableSessionService {
      * A player's own calendar and their own attendance, for {@code /my/tables/:id}.
      *
      * <p>Both are about the actor of the token and there is no parameter that could name anybody
-     * else, which is what makes them impossible to ask for on somebody's behalf (#121).
+     * else, which is what makes them impossible to ask for on somebody's behalf (ADR-05 §5).
      *
      * @param gameTableId the table
      * @param actorId     the actor, from the token
-     * @return their sessions and the three numbers of #137
+     * @return their sessions and the three numbers of ADR-08 §5
      * @throws NotFoundException        if the table does not exist
      * @throws ForbiddenActionException if the actor does not play at the table
      */
@@ -253,7 +253,7 @@ public class TableSessionService {
     public MySessionsResponse listMine(String gameTableId, String actorId) {
         // The veto is checked here rather than left to the Player filter below, even though moving
         // somebody to `Blocked` already takes them out of it: what a vetoed person must get is the
-        // 404 of #29, and «only a player can see their sessions» is a 403 that would confirm the
+        // 404 of ADR-09 §4, and «only a player can see their sessions» is a 403 that would confirm the
         // table is still there.
         GameTable table = tableVisibilityService.requireVisible(gameTableId, actorId);
         if (!registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
@@ -281,11 +281,11 @@ public class TableSessionService {
      * {@code Cancelled} the row is a record of something that did or did not happen, and moving it
      * would rewrite that.
      *
-     * <p>Moving a date tells the players (#77's principle applied to sessions): a calendar that
+     * <p>Moving a date tells the players (ADR-15 §5's principle applied to sessions): a calendar that
      * changes silently is a calendar nobody can rely on.
      *
      * @param sessionId the session
-     * @param request   the new date and notes. Absent notes clear them (#189)
+     * @param request   the new date and notes. Absent notes clear them (ADR-04 §7)
      * @param actorId   the actor, from the token; has to run the table
      * @return the session after the correction
      * @throws ForbiddenActionException if the actor does not run the table
@@ -312,7 +312,7 @@ public class TableSessionService {
     }
 
     /**
-     * A master declaring that a session was played (#195).
+     * A master declaring that a session was played (ADR-08 §4).
      *
      * <p>It is a separate action from recording attendance on purpose: "we played" and "these people
      * came" are two facts, and inferring one from the other would let a master who fills in a roster
@@ -335,7 +335,7 @@ public class TableSessionService {
     }
 
     /**
-     * A master calling off one session - <b>and the table getting it back at the end</b> (#194).
+     * A master calling off one session - <b>and the table getting it back at the end</b> (ADR-08 §3).
      *
      * <p>The cancelled row stays with its number, as the record that the evening was planned and did
      * not happen, and a new session is added on the first agenda slot after the last one still
@@ -366,11 +366,11 @@ public class TableSessionService {
     }
 
     /**
-     * A master recording who was at a session (#36).
+     * A master recording who was at a session (ADR-08 §4).
      *
      * <p>The roster is the table's active players, resolved here: a {@code userId} that does not play
      * at this table is a {@code 400} and never a silently created row. Recording does <b>not</b> mark
-     * the session as played - that is {@link #hold} and a separate decision (#195).
+     * the session as played - that is {@link #hold} and a separate decision (ADR-08 §4).
      *
      * @param sessionId the session
      * @param request   one line per player being recorded; a player left out is left alone
@@ -405,15 +405,15 @@ public class TableSessionService {
     }
 
     /**
-     * Somebody's historical attendance on one table, as the three numbers of #137.
+     * Somebody's historical attendance on one table, as the three numbers of ADR-08 §5.
      *
-     * <p>Derived with a {@code GROUP BY} and never cached, following the precedent of #11: a
+     * <p>Derived with a {@code GROUP BY} and never cached, following the precedent of ADR-03 §1: a
      * maintained counter is a class of inconsistency, not a saving. {@code Unknown} is out of the
      * denominator, which is what keeps a table that started yesterday from making everybody look
      * like an absentee.
      *
      * @param gameTableId the table the count is scoped to
-     * @param userId      the person, always the actor from the token (#121)
+     * @param userId      the person, always the actor from the token (ADR-05 §5)
      * @return their present, excused and absent counts, and the denominator they share
      */
     @Transactional(readOnly = true)
@@ -422,9 +422,9 @@ public class TableSessionService {
     }
 
     /**
-     * {@link #summarize}'s sibling with no game table to scope it to - the same three numbers of #137
+     * {@link #summarize}'s sibling with no game table to scope it to - the same three numbers of ADR-08 §5
      * across every table the person has ever played, which is what a profile shows (arquitectura skill
-     * §4.5). Never cached (#11), for the same reason the scoped version is not.
+     * §4.5). Never cached (ADR-03 §1), for the same reason the scoped version is not.
      *
      * @param userId the person whose profile is being read
      * @return their present, excused and absent counts across every table, and the denominator they
@@ -436,14 +436,14 @@ public class TableSessionService {
     }
 
     /**
-     * {@link #summarize}'s batched sibling: the same three numbers of #137, for a whole page of
+     * {@link #summarize}'s batched sibling: the same three numbers of ADR-08 §5, for a whole page of
      * tables in one grouped query - the history screen's own read (#133a), and the exact risk its
      * contract calls out by name: resolving one table's attendance at a time would be the N+1
      * {@code FileService.usagesByFileId} and {@code CatalogUsageCount} already avoid for a page of
      * files and a page of catalog values.
      *
      * @param gameTableIds the tables on the page. Empty answers with an empty map and issues no query
-     * @param userId       the actor, from the token (#121)
+     * @param userId       the actor, from the token (ADR-05 §5)
      * @return one summary per table id, including a table with nothing recorded for this person -
      *         {@code registered} zero rather than the id being absent from the map
      */
@@ -465,7 +465,7 @@ public class TableSessionService {
     }
 
     /**
-     * Turns the grouped counts of #137 into the three numbers and their shared denominator.
+     * Turns the grouped counts of ADR-08 §5 into the three numbers and their shared denominator.
      *
      * @param counts one row per attendance value actually recorded; {@code Unknown} never among them
      * @return the summary, zero for whichever value is absent from {@code counts}
@@ -480,7 +480,7 @@ public class TableSessionService {
                 case Excused -> excused = (int) count.total();
                 case Absent -> absent = (int) count.total();
                 // Unknown never comes back: the query leaves it out, which is what makes the
-                // denominator below the count of sessions with something actually recorded (#137).
+                // denominator below the count of sessions with something actually recorded (ADR-08 §5).
                 case Unknown -> { }
             }
         }
@@ -490,7 +490,7 @@ public class TableSessionService {
     /**
      * The instants an agenda falls on, starting from a moment in time.
      *
-     * <p>The whole of the calendar's arithmetic, and the one place the weekly wrap of #22 is handled:
+     * <p>The whole of the calendar's arithmetic, and the one place the weekly wrap of ADR-03 §6 is handled:
      * a Tuesday 23:00 table lasting three hours ends on Wednesday, and the community plays at night
      * in America, which is the small hours of the next day in UTC. Written against
      * {@code java.time} directly - there is no calendar arithmetic here beyond "the same weekday next
@@ -532,7 +532,7 @@ public class TableSessionService {
         return instants;
     }
 
-    /** Adds the session that replaces a cancelled one, at the end of the run (#194). */
+    /** Adds the session that replaces a cancelled one, at the end of the run (ADR-08 §3). */
     private void addReplacementSession(GameTable table) {
         List<TableScheduleEntry> agenda = tableScheduleService.findByTable(table.getId());
         if (agenda.isEmpty()) {
@@ -559,7 +559,7 @@ public class TableSessionService {
     /**
      * The sessions a table shows right now.
      *
-     * <p>The one place the pause of #32 and #33 is applied: while a table is paused it promises no
+     * <p>The one place the pause of ADR-07 §2 and ADR-08 §3 is applied: while a table is paused it promises no
      * dates, so the pending sessions are not shown - to its master either. What was played and what
      * was called off stay visible, because those already happened.
      */
@@ -588,7 +588,7 @@ public class TableSessionService {
 
     /**
      * A calendar with every roster filled in, in two reads: the players once and the attendance rows
-     * once. Asking per session would be the N+1 that #137 names as the real risk.
+     * once. Asking per session would be the N+1 that ADR-08 §5 names as the real risk.
      */
     private List<TableSessionResponse> toResponses(GameTable table, List<TableSession> sessions) {
         if (sessions.isEmpty()) {
@@ -616,7 +616,7 @@ public class TableSessionService {
                 .toList();
     }
 
-    /** Tells everybody signed up that the calendar moved. Nobody is removed and nothing is refused (#70). */
+    /** Tells everybody signed up that the calendar moved. Nobody is removed and nothing is refused (ADR-15 §2). */
     private void notifyPlayers(GameTable table, boolean scheduled) {
         for (TableRegistration registration : registrationRepository.findByGameTable_Id(table.getId())) {
             if (!NOTIFIED_STATUSES.contains(registration.getStatus())) {

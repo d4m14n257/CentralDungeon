@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
  * Changing an attachment without touching the file: what it is for on this table, and who sees it.
  *
  * <p>Nothing here can reach the file itself. Sharing a map on one table says nothing about the same
- * map on another, and that separation is what {@code table_files} exists for (#79).
+ * map on another, and that separation is what {@code table_files} exists for (ADR-14 §1).
  *
  * @param tableFileType what the file is doing on the table: prepared beforehand, or produced at a
  *                      session

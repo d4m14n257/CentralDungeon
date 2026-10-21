@@ -18,16 +18,16 @@ import org.jspecify.annotations.Nullable;
 /**
  * Someone who runs a table. Table {@code masters}.
  *
- * <p><b>This row is what authorizes running a table, not the {@code Master} role</b> (#135). Holding
+ * <p><b>This row is what authorizes running a table, not the {@code Master} role</b> (ADR-06 §4). Holding
  * the role means "I can create tables of my own" and nothing else; every read and every mutation of
- * a concrete table checks for a row here instead (#121).
+ * a concrete table checks for a row here instead (ADR-05 §5).
  *
- * <p>Exactly one live {@code Primary} per table (#73). MySQL has no partial unique index, so the
+ * <p>Exactly one live {@code Primary} per table (ADR-06 §3). MySQL has no partial unique index, so the
  * invariant is held by {@link MasterService} behind a pessimistic lock, and covered by
  * {@code MasterServiceIT}.
  *
  * <p>Careful with the word Owner: {@code MasterType} is about one table, {@code PlatformRole.OWNER}
- * is about the whole platform, and they are unrelated (#67, #71, #89).
+ * is about the whole platform, and they are unrelated (ADR-06 §1, §3).
  */
 @Entity
 @Table(name = "masters")
@@ -49,7 +49,7 @@ public class Master {
     @JoinColumn(name = "user_id")
     private User user;
 
-    /** Primary or Secondary (#71). On screen these are "master" and "co-master", never these words (#166). */
+    /** Primary or Secondary (ADR-06 §3). On screen these are "master" and "co-master", never these words (ADR-06 §3). */
     @Enumerated(EnumType.STRING)
     @Column(name = "master_type", nullable = false, length = 32)
     private MasterType masterType;
@@ -123,7 +123,7 @@ public class Master {
      * Promotes or demotes this master.
      *
      * @param masterType the new type. Keeping exactly one live Primary is {@link MasterService}'s
-     *                   responsibility (#73) - this setter enforces nothing
+     *                   responsibility (ADR-06 §3) - this setter enforces nothing
      */
     public void setMasterType(MasterType masterType) {
         this.masterType = masterType;
@@ -139,7 +139,7 @@ public class Master {
     }
 
     /**
-     * Marks the row live or deleted - by the cascade of a deleted table (#25, #175), by a Primary
+     * Marks the row live or deleted - by the cascade of a deleted table (ADR-03 §7, ADR-07 §6), by a Primary
      * removing a co-master, or by re-adding somebody who had been removed. A master row is never
      * dropped.
      *

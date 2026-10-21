@@ -20,7 +20,7 @@ interface PaginationControlsProps {
   /** Rows per page right now. Only read when `onPageSizeChange` is given. */
   pageSize?: number
   /**
-   * Called with the size the reader picked. **Its presence is what shows the size selector** (#271):
+   * Called with the size the reader picked. **Its presence is what shows the size selector** (ADR-21 §11):
    * an admin's working list passes it, a list whose size is a fixed decision (`/my/files`) does not.
    */
   onPageSizeChange?: (size: number) => void
@@ -48,13 +48,13 @@ function pageSlots(page: number, totalPages: number): PageSlot[] {
 }
 
 /**
- * Pagination for a working list (#173, #271): where the reader is, how much there is, and **any page
+ * Pagination for a working list (ADR-04 §6, ADR-21 §11): where the reader is, how much there is, and **any page
  * one step away**.
  *
  * Three ways to move, because a working list is worked, not browsed: previous and next for the page
  * beside this one; a compact numbered strip — first, last, and the current one with its neighbours —
  * for the ends; and **"go to page"** for everything between, so page 900 of 1000 is a number and an
- * Enter, not 899 clicks. The listing's order is fixed and tie-broken by id on the server (#173), which
+ * Enter, not 899 clicks. The listing's order is fixed and tie-broken by id on the server (ADR-04 §6), which
  * is what makes a page number mean the same rows twice.
  *
  * **The size selector is optional** (10 · 25 · 50 · 100, `adminPageSizeOptions`): it shows only when

@@ -9,7 +9,7 @@ import { browserTimeZone, formatPlainDate, formatSlot, utcSlotToLocal } from '@/
 import { MASTER_EDITABLE_STATUSES } from '@/features/tables'
 import type { GameTableStatus, TableScheduleEntry } from '@/features/tables'
 
-/** The two states where the backend still accepts a rewrite of the table (#189). */
+/** The two states where the backend still accepts a rewrite of the table (ADR-04 §7). */
 
 interface OutletContext {
   tableId: string
@@ -25,15 +25,15 @@ interface OutletContext {
  * The agenda tab of `/master/tables/:id` — the weekly shape of the table, plus when it starts, how
  * long a session runs and how many there are.
  *
- * **Read-only, and shown in the reader's own time** (#22): the agenda travels in UTC and is
+ * **Read-only, and shown in the reader's own time** (ADR-03 §6): the agenda travels in UTC and is
  * converted once, here, through `lib/date.ts`. Editing it is the same act as editing the table —
- * the agenda is replaced as a set, not row by row (#190) — so this tab links to the form rather
+ * the agenda is replaced as a set, not row by row (ADR-04 §7) — so this tab links to the form rather
  * than growing a second way to write the same rows.
  */
 export function MasterTableScheduleTab() {
   const { t, i18n } = useTranslation('master')
   const { tableId, status, isPrimary, schedule, startDate, duration, totalSessions } = useOutletContext<OutletContext>()
-  // #22 took `users.timezone` out of the model, so the browser is the only source today (#111, #192).
+  // ADR-03 §6 took `users.timezone` out of the model, so the browser is the only source today (ADR-19 §7).
   const timeZone = useMemo(() => browserTimeZone(), [])
 
   const canEdit = isPrimary && MASTER_EDITABLE_STATUSES.includes(status)

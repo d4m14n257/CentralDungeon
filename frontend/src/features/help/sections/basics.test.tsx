@@ -23,7 +23,7 @@ const FILE_FIELDS: SearchField[] = [
 ]
 
 /**
- * #240: the rules of the search are the same everywhere, but the examples are not.
+ * ADR-22 §3: the rules of the search are the same everywhere, but the examples are not.
  *
  * They used to be five fixed rows about `/user_name` and `/discord_name`, shown from every box — so
  * the help of `/my/files` taught two commands that screen does not have and none of the ones it does.
@@ -72,7 +72,7 @@ describe('SearchHelp', () => {
   })
 
   /**
-   * A command declared with no choices behind it — a person with no cajón of their own (#237) — is
+   * A command declared with no choices behind it — a person with no cajón of their own (ADR-14 §5) — is
    * not the pick-from-a-list kind. Saying «elegís entre:» with nothing after the colon promises a
    * list that is not there.
    */
@@ -91,7 +91,7 @@ describe('SearchHelp', () => {
 })
 
 /**
- * The help F3.2 owes from the side of whoever asks (plan-desarrollo.md §6 point 8, #231).
+ * The help F3.2 owes from the side of whoever asks (plan-desarrollo.md §6 point 8, ADR-20 §5).
  *
  * These assert on the **substance** of the section rather than on whole sentences: the wording is
  * free to improve, but a section that stopped saying the reason is required, or stopped explaining
@@ -119,7 +119,7 @@ describe('RequestsHelp', () => {
     expect(body).toMatch(/en lugar del botón/i)
   })
 
-  /** #42: the justification is required at **both** ends, and the second half is the one people miss. */
+  /** ADR-16 §1: the justification is required at **both** ends, and the second half is the one people miss. */
   it('says the answer carries a required reason too', () => {
     render(<RequestsHelp />)
 
@@ -137,7 +137,7 @@ describe('RequestsHelp', () => {
     expect(body).toMatch(/no crea la mesa/i)
   })
 
-  /** #170: the help teaches the doing and not only the rule. */
+  /** ADR-20 §6: the help teaches the doing and not only the rule. */
   it('walks through making a request, step by step', () => {
     const { container } = render(<RequestsHelp />)
 
@@ -148,7 +148,7 @@ describe('RequestsHelp', () => {
 })
 
 /**
- * #280: the two screens of the account menu got their «Cómo funciona». A key missing from the JSON
+ * ADR-21 §5: the two screens of the account menu got their «Cómo funciona». A key missing from the JSON
  * would print itself raw, so every line is checked to be real text.
  */
 describe('MyFilesHelp and MyScheduleHelp', () => {

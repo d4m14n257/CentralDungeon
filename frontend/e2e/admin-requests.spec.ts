@@ -75,8 +75,8 @@ async function newActor(
 }
 
 /**
- * Types a criterion, closes it into a chip and searches it: the first Enter closes one (#240), the
- * second, on the empty text, is what searches (#268).
+ * Types a criterion, closes it into a chip and searches it: the first Enter closes one (ADR-22 §3), the
+ * second, on the empty text, is what searches (ADR-22 §4).
  */
 async function search(page: Page, label: string, criterion: string) {
   const box = page.getByRole('combobox', { name: label })
@@ -110,14 +110,14 @@ async function ask(page: Page, buttonName: string, justification: string) {
  * counted off a screen.
  *
  * No screen answers "did a table appear anywhere", which is exactly the question here: approving a
- * `TableOpen` must create nothing, and a table born from an approval would land in `Unassigned` (#72,
+ * `TableOpen` must create nothing, and a table born from an approval would land in `Unassigned` (ADR-06 §7,
  * the status a table with no master yet gets) — which no public listing shows.
  *
  * **Scoped to the run, which is what F3.2 could not do.** The obvious assertion — total tables before
  * equals total tables after — is not assertable with parallel workers: the suite runs six at a time
  * and any other spec creating a table between the two reads fails this one for something it did not
  * do. F3.2 narrowed to `Unassigned` and compared ids, which left a single spec able to interfere;
- * F3.3 gives the admin listing `?q=` (#176), so the question can finally be asked the way it was
+ * F3.3 gives the admin listing `?q=` (ADR-16 §7), so the question can finally be asked the way it was
  * always meant to be — *did a table belonging to **this run** appear* — and no other worker can
  * answer it.
  *
@@ -181,9 +181,9 @@ test('a player asks for the master role, an admin approves it from /admin/reques
 
     // ---- 3. The request reaches /admin/requests, with its reason.
     // Through the URL and not by typing: the box opens holding the `Pending` chip, and a criterion
-    // typed into it *joins* what is already there rather than replacing it (#240). A `?q=` in the
+    // typed into it *joins* what is already there rather than replacing it (ADR-22 §3). A `?q=` in the
     // address is the screen's own state, and it is also what proves the string travels
-    // (#185) - the box builds it, the URL carries it, `SearchQueryParser` reads it.
+    // (ADR-12 §7) - the box builds it, the URL carries it, `SearchQueryParser` reads it.
     await admin.page.goto(`/admin/requests?q=${encodeURIComponent(`/status Pending /and /requested_by ${playerId}`)}`)
     await expect(admin.page.getByRole('heading', { name: 'Pedidos' })).toBeVisible()
 
@@ -194,7 +194,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     // With its reason: the whole of what the admin has to decide on.
     await expect(row).toContainText(justification)
 
-    // ---- 4. The admin approves it, with a reason of their own - mandatory at both ends (#42).
+    // ---- 4. The admin approves it, with a reason of their own - mandatory at both ends (ADR-16 §1).
     await row.getByRole('button', { name: 'Aprobar' }).click()
     const approveDialog = admin.page.getByRole('dialog')
     await expect(approveDialog).toBeVisible()
@@ -238,7 +238,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
 
     // ---- 6. The requester is told, once, and the notice opens something.
     //
-    // Submitting notifies nobody (#100) and the resolution notifies only the person who asked. The
+    // Submitting notifies nobody (ADR-16 §5) and the resolution notifies only the person who asked. The
     // guard in `notificationTarget` was rewritten so these two would be clickable at all; this is
     // the first time one is rendered from a real row.
     await player.page.goto('/player/profile')
@@ -315,8 +315,8 @@ test('a rejected request notifies the person who asked, and the notice opens', a
  * implemented one step too far.
  *
  * It is not a refused option but an impossible one: the request carries no name, no system, no seats
- * and no agenda. An admin creates the table `Unassigned` and assigns a master (#72), which is the
- * same circuit from its other end (#90) - and the screen says so instead of doing it.
+ * and no agenda. An admin creates the table `Unassigned` and assigns a master (ADR-06 §7), which is the
+ * same circuit from its other end (ADR-16 §1) - and the screen says so instead of doing it.
  */
 test('approving a request for a new table records the request and creates no table', async ({ browser }) => {
   const adminId = `e2e-f32t-admin-${runId}`

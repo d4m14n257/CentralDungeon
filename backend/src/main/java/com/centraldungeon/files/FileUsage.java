@@ -7,7 +7,7 @@ package com.centraldungeon.files;
  * <p><b>Not the same question as {@link FileCategory}, though it carries one.</b> A cajón says the
  * file <em>has belonged</em> to a flow and is never revoked; a usage says it <em>is linked</em>
  * somewhere at this moment, and disappears when the link does. Detaching a file from a table removes
- * a usage and leaves the cajón standing - which is exactly the difference #233 turns on.
+ * a usage and leaves the cajón standing - which is exactly the difference ADR-14 §4 turns on.
  *
  * <p>It carries the cajón rather than a kind of its own because there would be nothing to tell them
  * apart: a link to a table is a {@code TableMaterial} use, and a second enum saying so would be the

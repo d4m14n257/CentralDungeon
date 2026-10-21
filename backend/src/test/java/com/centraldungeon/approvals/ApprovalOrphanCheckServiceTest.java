@@ -19,7 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The third thing the polymorphic reference of #78 costs, and the one with no other test behind it.
+ * The third thing the polymorphic reference of ADR-16 §2 costs, and the one with no other test behind it.
  *
  * <p>{@code roles-y-alcance.md} 7: «dos cosas van con ella o no va: la validación en el
  * service antes de insertar, y el chequeo periódico de huérfanas. Sin la segunda, el problema aparece
@@ -28,7 +28,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * system would ever notice it had stopped working.
  *
  * <p>What is asserted is the contract around the sweep: which rows it looks at, that it only reports,
- * and that it touches nothing (#25, #126 - the row is evidence, and deleting it automatically is how
+ * and that it touches nothing (ADR-03 §7, ADR-16 §2 - the row is evidence, and deleting it automatically is how
  * the evidence is lost).
  */
 @ExtendWith(MockitoExtension.class)
@@ -71,7 +71,7 @@ class ApprovalOrphanCheckServiceTest {
 
     /**
      * It neither deletes nor resolves. An automatic delete over data that has already lost its anchor is
-     * exactly how the evidence of what pointed at what gets lost (#25, #126).
+     * exactly how the evidence of what pointed at what gets lost (ADR-03 §7, ADR-16 §2).
      */
     @Test
     void reportaYNoTocaNada() {

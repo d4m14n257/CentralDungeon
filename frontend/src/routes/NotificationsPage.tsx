@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
  * The badge's tone per type - only the ones that stand for a settled outcome (design/build.py
  * sc_notifications).
  *
- * **The tenth copy of the badge, and the one that hid the longest** (#261). It was not in
+ * **The tenth copy of the badge, and the one that hid the longest** (ADR-21 §6). It was not in
  * a feature's own `components/` folder like the other nine, so the first count of the duplication
  * missed it: a screen is a place a component gets written too. Now it is the same `StatusBadge` as
  * everywhere else, and what stays here is what belongs to notifications - which type counts as a
@@ -31,7 +31,7 @@ const OUTCOME_TONE: Record<string, { tone: StatusTone; labelKey: string }> = {
 export function NotificationsPage() {
   const { t } = useTranslation('notifications')
   // isLoadingError, not isError: a background refetch that fails must not hide a list that already
-  // loaded (docs/adr #150).
+  // loaded (ADR-19 §4).
   const { data, isPending, isLoadingError, refetch } = useNotifications()
   const markAllAsRead = useMarkAllAsRead()
   const handleClick = useNotificationClick()

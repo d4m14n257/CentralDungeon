@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import type { TaskAudience } from '../types'
 
 /**
- * Which of the three groups a task is addressed to (#63), as one dot and one label.
+ * Which of the three groups a task is addressed to (ADR-15 §1), as one dot and one label.
  *
  * **The colour is never the only carrier of the information** (skill `diseno` §3): dot plus
  * label, always. The classes are written out in full and statically, because Tailwind 4 scans the

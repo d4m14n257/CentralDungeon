@@ -10,7 +10,7 @@ function refusal(errorCode: string, status = 409) {
 }
 
 /**
- * #197: what a person reads is built here from the code, never from the `ProblemDetail`'s `detail` —
+ * ADR-23 §3: what a person reads is built here from the code, never from the `ProblemDetail`'s `detail` —
  * that field is English and written for a log.
  */
 describe('approvalErrorKey', () => {
@@ -25,7 +25,7 @@ describe('approvalErrorKey', () => {
    *
    * The reservation belongs to the shared tray: the very same fact — a colleague is working on this —
    * reaches `/admin/queue` and `/admin/requests`, and writing it twice, once per screen, is how two
-   * sentences that mean one thing start to disagree (#176). So this points at the tray's key instead
+   * sentences that mean one thing start to disagree (ADR-16 §7). So this points at the tray's key instead
    * of copying its words. It is a key in the same `admin` namespace both screens translate against,
    * not an import: `features/approvals` still imports nothing from `features/adminQueue` (§3.1.5).
    */

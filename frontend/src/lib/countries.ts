@@ -24,7 +24,7 @@ const ISO_3166_1_ALPHA_2 = (
  * than fetched: it changes about once a decade, and a select that waits on the network to render is
  * worse than a list that ships with the bundle.
  *
- * **The locale is a parameter** (#111, #192, #198). `Intl.DisplayNames` names the countries and
+ * **The locale is a parameter** (ADR-19 §7, ADR-23 §2). `Intl.DisplayNames` names the countries and
  * `localeCompare` orders them, and both answers change with the language: Germany is "Alemania"
  * near the top of a Spanish list and "Germany" in the middle of an English one. Sorting once in
  * Spanish and reusing it would leave an English reader with an alphabet that is not theirs.

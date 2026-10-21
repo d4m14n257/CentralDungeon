@@ -14,12 +14,12 @@ import org.springframework.stereotype.Component;
 
 /**
  * Not a member of the guild is not a dead end: the frontend callback screen offers the invite
- * and only cuts the login if the user does not join (docs/adr #38).
+ * and only cuts the login if the user does not join (ADR-05 §1).
  */
 @Component
 public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
 
-    /** Source of the invite URL. Configuration, never a constant in the code (#38). */
+    /** Source of the invite URL. Configuration, never a constant in the code (ADR-05 §1). */
     private final DiscordProperties discordProperties;
 
     /** Where to send the browser back to; the callback screen turns the query string into a message. */

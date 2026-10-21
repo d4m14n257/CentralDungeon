@@ -26,10 +26,10 @@ interface BlockPlayerDialogProps {
   /** Vetoing or lifting a veto. */
   action: VetoAction
   /**
-   * Whether the reader runs the table or co-runs it (#71).
+   * Whether the reader runs the table or co-runs it (ADR-06 §3).
    *
    * **It changes what pressing the button does, not whether it is offered**: a `Primary` vetoes, a
-   * `Secondary` files a request the `Primary` answers (#39). The dialog says which of the two is
+   * `Secondary` files a request the `Primary` answers (ADR-09 §5). The dialog says which of the two is
    * about to happen — before the press, which is what `roles-y-alcance.md §4, F3.4` asks for.
    */
   isPrimary: boolean
@@ -48,7 +48,7 @@ interface BlockPlayerDialogProps {
  * The dialog behind the three acts of the veto: applying one, asking for one, and lifting one.
  *
  * **One component for three acts because they are one shape** — name the person, read what is about
- * to happen, write why, send — and the note is obligatory on all three (#39). Splitting them would
+ * to happen, write why, send — and the note is obligatory on all three (ADR-09 §5). Splitting them would
  * be three copies of the same form whose wording would drift apart.
  *
  * **It is not `JustifiedTableActionDialog`**, which is the identical shape one feature over. A
@@ -56,11 +56,11 @@ interface BlockPlayerDialogProps {
  * registration. The shared component of `components/` is the move if a third feature ever needs it
  * (§3.1.2); two is not yet that.
  *
- * **The refusal lands inline and not in a toast** (#197): the form is still open, and the races this
+ * **The refusal lands inline and not in a toast** (ADR-23 §3): the form is still open, and the races this
  * cannot prevent — a colleague vetoed the same person, somebody lifted it first — are exactly what
  * the reader needs to read where they are already looking.
  *
- * @param props.tableId        the table the veto belongs to — it is per table, never platform-wide (#29)
+ * @param props.tableId        the table the veto belongs to — it is per table, never platform-wide (ADR-09 §4)
  * @param props.registrationId the application being acted on
  * @param props.playerName     who, for the title
  * @param props.action         vetoing or lifting
@@ -102,7 +102,7 @@ export function BlockPlayerDialog({
   }
 
   async function onSubmit(values: BlockRegistrationForm) {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t(`veto.${variant}ConfirmTitle`, { name: playerName }),
       description: t(`veto.${variant}ConfirmDescription`),

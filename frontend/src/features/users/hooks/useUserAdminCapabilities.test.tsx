@@ -36,8 +36,8 @@ describe('useUserAdminCapabilities', () => {
     expect(result.current.grantableRoles).not.toContain('Owner')
   })
 
-  /** And the owner sees the four, in the order of #165. */
-  it('an owner may move all four roles, in the order of #165', () => {
+  /** And the owner sees the four, in the order of ADR-07 §8. */
+  it('an owner may move all four roles, in the order of ADR-07 §8', () => {
     signedInAs('Owner')
     const { result } = renderHook(() => useUserAdminCapabilities())
 

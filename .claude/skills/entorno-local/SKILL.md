@@ -50,4 +50,4 @@ Bajo zsh, `ls backend/*.md` sin coincidencias imprime `no matches found` como **
 
 ## 6–8. Las herramientas de Claude
 
-Los MCP servers de `.mcp.json` con sus variables de entorno y su aprobación (§6), Claude Design (§7) y la skill externa `archify` (§8) están en [`references/herramientas.md`](references/herramientas.md). Hasta #292 eran `docs/mcp-y-skills.md`.
+Los MCP servers de `.mcp.json` con sus variables de entorno y su aprobación (§6), Claude Design (§7) y la skill externa `archify` (§8) están en [`references/herramientas.md`](references/herramientas.md). Hasta ADR-01 §5 eran `docs/mcp-y-skills.md`.

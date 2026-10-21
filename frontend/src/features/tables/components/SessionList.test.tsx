@@ -12,7 +12,7 @@ function session(overrides: Partial<SessionListItem> & Pick<SessionListItem, 'id
 }
 
 describe('SessionList', () => {
-  /** What arrives is UTC and what is read is local time (#22): the day moves one back. */
+  /** What arrives is UTC and what is read is local time (ADR-03 §6): the day moves one back. */
   it('shows a UTC instant in the reader zone, not in UTC', () => {
     render(<SessionList sessions={[session({ id: 's1', sequenceNumber: 1 })]} timeZone={BUENOS_AIRES} />)
 
@@ -45,7 +45,7 @@ describe('SessionList', () => {
     expect(screen.getByText('Jugada')).toBeInTheDocument()
   })
 
-  /** `Unknown` is not an absence: it means nobody recorded anything, and it is not shown as data (#137). */
+  /** `Unknown` is not an absence: it means nobody recorded anything, and it is not shown as data (ADR-08 §5). */
   it('shows my attendance when there is one, and stays silent when there is not', () => {
     render(
       <SessionList

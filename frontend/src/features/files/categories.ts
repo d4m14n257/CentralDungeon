@@ -1,7 +1,7 @@
 import type { FileCategory } from './types'
 
 /**
- * Every cajón, in the order a table lives through them (#233).
+ * Every cajón, in the order a table lives through them (ADR-14 §4).
  *
  * A written-out tuple rather than something derived from the type, because a union of literals has no
  * runtime value to iterate. Typed as `readonly FileCategory[]` so dropping a value the union still
@@ -17,7 +17,7 @@ export const FILE_CATEGORIES = [
 ] as const satisfies readonly FileCategory[]
 
 /**
- * The cajones an admin may publish into (#233).
+ * The cajones an admin may publish into (ADR-14 §4).
  *
  * The two player-side ones are absent, and not because of a permission check bolted on afterwards:
  * they hold what individual people answered with, and a blank offered to the whole community is not

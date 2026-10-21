@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Removes the rows an e2e run creates. Without this every run left its tables and users behind, and
  * a development database full of "Mesa E2E ..." is not only noise: it is what made
- * registration-flow.spec.ts fail once the explorer had more tables than a page (docs/adr #171, #172).
+ * registration-flow.spec.ts fail once the explorer had more tables than a page (ADR-07 §9, ADR-24 §3).
  *
  * <p><b>The patterns are fixed here and nothing widens them.</b> The controller takes no input: game
  * tables whose name contains "E2E" or that an e2e user created, and users whose discordId starts
@@ -28,7 +28,7 @@ public class TestDataService {
 
     private static final String TABLE_NAME_PATTERN = "%E2E%";
     private static final String DISCORD_ID_PREFIX = "e2e-%";
-    /** Tags the catalog canvas spec proposes (#275). A prefix, not a substring: "E2E" inside a real tag's name is not ours. */
+    /** Tags the catalog canvas spec proposes (ADR-12 §7). A prefix, not a substring: "E2E" inside a real tag's name is not ours. */
     private static final String TAG_NAME_PREFIX = "E2E %";
 
     private static final String E2E_USERS = "select u.id from User u where u.discordId like :discordId";
@@ -64,13 +64,13 @@ public class TestDataService {
     public TestCleanupResponse deleteE2eData() {
         delete("delete from RegistrationRejection r where r.registration.id in (" + E2E_REGISTRATIONS + ")");
         // The fifth time a foreign key of a bridge table broke this cleanup, after the agenda (F1.2),
-        // the calendar (F1.3), the table files (F1.4) and the submissions (F1.5) - #171, #172. The
+        // the calendar (F1.3), the table files (F1.4) and the submissions (F1.5) - ADR-07 §9, ADR-24 §3. The
         // files a candidate attached hang off the application, so they go before it; leaving them
         // behind makes this endpoint answer 500, and a cleanup that 500s is what fills the database
         // and makes the *next* run fail on pagination, which reads as a broken feature.
         delete("delete from RegistrationFile rf where rf.id.registrationId in (" + E2E_REGISTRATIONS
                 + ") or rf.id.fileId in (" + E2E_FILES + ")");
-        // The sixth time, and the lesson of #254 repeating exactly: F3.4 added `registration_status_changes`
+        // The sixth time, and the lesson of ADR-24 §3 repeating exactly: F3.4 added `registration_status_changes`
         // with foreign keys to the application and to whoever moved it, and the veto's e2e was the
         // first run to write one. The trail hangs off the application, so it goes before it - and
         // `changedBy` is covered too, because the master who vetoed is a test user as well.
@@ -84,7 +84,7 @@ public class TestDataService {
         // before the table itself. Same reason as the agenda and the catalog links below: all of
         // them are keyed on the table, and deleting the tables first breaks the foreign key. The
         // cleanup then answers 500, which is what leaves the next run with a full database and
-        // makes it fail on pagination (#171, #172).
+        // makes it fail on pagination (ADR-07 §9, ADR-24 §3).
         delete("delete from SessionAttendance a where a.session.gameTable.id in (" + E2E_TABLES + ") or a.id.userId in ("
                 + E2E_USERS + ")");
         delete("delete from TableSession ses where ses.gameTable.id in (" + E2E_TABLES + ")");
@@ -92,7 +92,7 @@ public class TestDataService {
         delete("delete from TableSystem ts where ts.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TableTag tt where tt.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TablePlatform tp where tp.id.gameTableId in (" + E2E_TABLES + ")");
-        // The tenth: the catalog canvas spec proposes a tag to float and connect (#275), and a
+        // The tenth: the catalog canvas spec proposes a tag to float and connect (ADR-12 §7), and a
         // proposal can only be rejected or disabled, never deleted - so without this every run left
         // one more row in the review queue. canonical_id is a self-referencing foreign key, so
         // whatever still points at one of these tags is let go first, then any link to them, then
@@ -102,18 +102,18 @@ public class TestDataService {
         delete("delete from Tag tg2 where tg2.name like :tagName");
         // Attachments before tables, and before the files themselves: table_files points at both, so
         // it has to go first in each direction. Third time this foreign key shape has had to be
-        // remembered here - the agenda in F1.2 and the calendar in F1.3 were the other two (#171, #172).
+        // remembered here - the agenda in F1.2 and the calendar in F1.3 were the other two (ADR-07 §9, ADR-24 §3).
         delete("delete from TableFile tf where tf.id.gameTableId in (" + E2E_TABLES + ") or tf.id.fileId in ("
                 + E2E_FILES + ")");
         // And the fourth time, with tasks: submission_files -> task_submissions -> table_tasks ->
         // game_tables is a three-deep chain, so it unwinds in that order and all of it before the
         // table. The submitted files also point at `files`, which is why this goes before StoredFile
-        // below as well - the same two directions table_files has (#171, #172).
+        // below as well - the same two directions table_files has (ADR-07 §9, ADR-24 §3).
         delete("delete from SubmissionFile sf where sf.id.submissionId in (" + E2E_SUBMISSIONS + ") or sf.id.fileId in ("
                 + E2E_FILES + ")");
         delete("delete from TaskSubmission sub2 where sub2.task.id in (" + E2E_TASKS + ") or sub2.user.id in ("
                 + E2E_USERS + ")");
-        // The blanks a master attached to their ask (#63): task_files points at both table_tasks and
+        // The blanks a master attached to their ask (ADR-15 §1): task_files points at both table_tasks and
         // files, so it unwinds before either. Fifth time this shape has had to be remembered here.
         delete("delete from TaskFile tkf where tkf.id.taskId in (" + E2E_TASKS + ") or tkf.id.fileId in ("
                 + E2E_FILES + ")");
@@ -121,18 +121,18 @@ public class TestDataService {
         int gameTables =
                 delete("delete from GameTable gt where gt.name like :tableName or gt.createdBy.id in (" + E2E_USERS + ")");
         // The blobs on disk are not touched. They are in a temporary directory under the test profile
-        // (application-test.yml) and deleting bytes is F5's, never a side effect of a cleanup (#25, #66).
-        // And the sixth: a file's cajones (#233) point at `files` and nothing else, so they go
+        // (application-test.yml) and deleting bytes is F5's, never a side effect of a cleanup (ADR-03 §7, ADR-13 §8).
+        // And the sixth: a file's cajones (ADR-14 §4) point at `files` and nothing else, so they go
         // immediately before it. Missing this is not a visible failure - the whole cleanup is one
         // transaction, so a foreign key here rolls back *everything* and the next run starts on a
-        // full database, which is the failure mode #171 and #172 were about.
+        // full database, which is the failure mode ADR-07 §9 and ADR-24 §3 were about.
         delete("delete from FileCategoryLink fc where fc.id.fileId in (" + E2E_FILES + ")");
         delete("delete from StoredFile f2 where f2.userCreated.id in (" + E2E_USERS + ")");
         // And the seventh, with F3.1's two audit trails. Each points at `users` twice - `user_id` and
         // `changed_by` - so a spec that promotes an e2e account, or an e2e admin that blocks anybody,
         // leaves rows the delete below cannot get past. Same shape as `TableStatusChange` above, and
         // the same consequence for missing it: one foreign key rolls the whole transaction back and
-        // the next run starts on a full database (#84, #169, #171, #172).
+        // the next run starts on a full database (ADR-05 §7, ADR-06 §1, ADR-07 §9, ADR-24 §3).
         delete("delete from UserRoleChange urc where urc.user.id in (" + E2E_USERS + ") or urc.changedBy.id in ("
                 + E2E_USERS + ")");
         delete("delete from UserStatusChange usc where usc.user.id in (" + E2E_USERS + ") or usc.changedBy.id in ("
@@ -140,7 +140,7 @@ public class TestDataService {
         // And the eighth, with F3.2's requests. This one points at `users` three times - requested_by,
         // claimed_by and resolved_by - so an e2e player asking for the master role, or an e2e admin
         // answering anybody's request, leaves a row the delete below cannot get past. The reference to
-        // whatever the request is *about* needs nothing here: it has no foreign key on purpose (#78),
+        // whatever the request is *about* needs nothing here: it has no foreign key on purpose (ADR-16 §2),
         // which is the same reason nothing else in the database will complain about it either.
         delete("delete from ApprovalRequest ar where ar.requestedBy.id in (" + E2E_USERS + ") or ar.claimedBy.id in ("
                 + E2E_USERS + ") or ar.resolvedBy.id in (" + E2E_USERS + ")");
@@ -148,7 +148,7 @@ public class TestDataService {
         // through `updated_by` and `system_setting_changes` once through `changed_by` - so an e2e
         // admin who edits a limit leaves two rows the delete below cannot get past. The change goes
         // first: nothing links the two tables, but the order keeps the pair reading the way every
-        // other audit trail here does, history before the thing it is about (#141).
+        // other audit trail here does, history before the thing it is about (ADR-17 §3).
         delete("delete from SystemSettingChange ssc where ssc.changedBy.id in (" + E2E_USERS + ")");
         delete("delete from SystemSetting ss where ss.updatedBy.id in (" + E2E_USERS + ")");
         delete("delete from UserRole ur where ur.user.id in (" + E2E_USERS + ")");

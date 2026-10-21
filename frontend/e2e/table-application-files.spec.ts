@@ -5,13 +5,13 @@ import { approveTableFromQueue } from './helpers/adminQueue'
 import { acceptReview } from './helpers/review'
 
 /**
- * F2.2 end to end: the character sheet that goes with an application (#60 uso 2).
+ * F2.2 end to end: the character sheet that goes with an application (ADR-13 §1 uso 2).
  *
  * **Three claims no unit test can make.** That picking a file stages it and the *send* button is what
- * uploads it (#238); that the master of the table can open what a candidate attached — the seventh
+ * uploads it (ADR-13 §5); that the master of the table can open what a candidate attached — the seventh
  * way a file becomes readable; and that withdrawing the application makes the file report «sin usar»
- * again (#247), which is the rule that keeps a withdrawn application from immunising a file against
- * the purge of #75 forever.
+ * again (ADR-09 §2), which is the rule that keeps a withdrawn application from immunising a file against
+ * the purge of ADR-13 §3 forever.
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
@@ -55,7 +55,7 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
  *
  * @param page     the tab, authenticated as a master
  * @param name     the table's name
- * @param hourtime the weekly slot, so two tables in one spec do not collide under R1 (#178)
+ * @param hourtime the weekly slot, so two tables in one spec do not collide under R1 (ADR-08 §2)
  */
 async function createTable(page: Page, name: string, hourtime: string): Promise<string> {
   await page.goto('/master/tables/new')
@@ -68,7 +68,7 @@ async function createTable(page: Page, name: string, hourtime: string): Promise<
   await addScheduleSlot(page, hourtime)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -116,7 +116,7 @@ test('a player applies with a character sheet, and the master opens it', async (
     await expect(dialog.getByText(sheet)).toBeVisible()
 
     // Step one cannot send: the confirm button only exists on the review step, which is the whole
-    // point of the second step (#238, #247) — an application cannot be corrected afterwards.
+    // point of the second step (ADR-13 §5, ADR-09 §2) — an application cannot be corrected afterwards.
     await expect(dialog.getByRole('button', { name: 'Postularme' })).toBeHidden()
 
     await dialog.getByRole('button', { name: 'Siguiente' }).click()
@@ -132,7 +132,7 @@ test('a player applies with a character sheet, and the master opens it', async (
     await expect(candidate.getByText('Archivos adjuntos')).toBeVisible()
     await expect(candidate.getByText(sheet)).toBeVisible()
 
-    // And the applicant sees where their own file ended up (#232): the fourth source of uses.
+    // And the applicant sees where their own file ended up (ADR-14 §3): the fourth source of uses.
     await player.page.goto('/my/files')
     const row = player.page.getByRole('listitem').filter({ hasText: sheet })
     await expect(row).toBeVisible()
@@ -145,9 +145,9 @@ test('a player applies with a character sheet, and the master opens it', async (
 })
 
 /**
- * The rule that fails silently if it is wrong (#247). The rows of `registration_files` survive a
+ * The rule that fails silently if it is wrong (ADR-09 §2). The rows of `registration_files` survive a
  * withdrawal — they are the record that the sheet was sent — but they stop counting as a **use**. Get
- * that filter wrong and a withdrawn application immunises the file against the purge of #75 forever,
+ * that filter wrong and a withdrawn application immunises the file against the purge of ADR-13 §3 forever,
  * with nothing on screen to show for it.
  */
 test('withdrawing an application stops the file counting as a use, without deleting it', async ({ browser }) => {
@@ -158,7 +158,7 @@ test('withdrawing an application stops the file counting as a use, without delet
   const player = await newAuthenticatedPage(browser, `e2e-appwd-player-${runId}`, false, false)
 
   try {
-    // A different slot from the spec above: R1 refuses one master two live tables that overlap (#178).
+    // A different slot from the spec above: R1 refuses one master two live tables that overlap (ADR-08 §2).
     const tableId = await createTable(master.page, tableName, '17:00')
     await open(master.page, admin.page, tableId, tableName)
 

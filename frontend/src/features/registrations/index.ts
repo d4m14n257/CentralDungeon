@@ -1,5 +1,5 @@
 /**
- * Public surface of the registrations feature (#114) - applying to a table, and everything a master
+ * Public surface of the registrations feature (ADR-19 §1) - applying to a table, and everything a master
  * does about the queue. Anything not listed here is private to it.
  */
 
@@ -19,5 +19,5 @@ export { RegistrationStatusBadge } from './components/RegistrationStatusBadge'
 export { RejectRegistrationDialog } from './components/RejectRegistrationDialog'
 export { VETO_ERROR_CODES, vetoErrorKey } from './vetoErrors'
 export { blockRegistrationSchema, type BlockRegistrationForm } from './schemas'
-/** The feature's domain types. Each is written once in `types.ts` and derived from there (#3.2). */
+/** The feature's domain types. Each is written once in `types.ts` and derived from there (arquitectura §3.2). */
 export type { CreateRegistrationInput, Registration, RegistrationFile, RegistrationStatus, TablePlayer } from './types'

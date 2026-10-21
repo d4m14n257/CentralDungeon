@@ -1,5 +1,5 @@
 /**
- * The help of the system, as dialogs raised from the screen that needs them (#231).
+ * The help of the system, as dialogs raised from the screen that needs them (ADR-20 §5).
  *
  * A screen names a section and nothing else: `<HelpLink section="masters.schedule">`. The catalogue
  * of what exists lives in `sections/registry.tsx`.

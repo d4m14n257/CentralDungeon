@@ -5,7 +5,7 @@
  * feature never imports another (§3.1.2, regla dura 16). `files` owns everything about a file, and
  * `tables` receives these nested inside a table's detail — a table arrives already carrying what it
  * shares, which is one round trip instead of two and which inherits the veto check that read already
- * performs (#29).
+ * performs (ADR-09 §4).
  *
  * The alternative was re-declaring the same five fields in `tables`, and that is exactly what "un
  * tipo base por entidad" (§3.2) forbids: the day the backend adds a field, one of the two copies
@@ -27,17 +27,17 @@ export type TableFileType = 'Preparation' | 'Session'
  * Deliberately narrow. There is no `isPrivate` here because **a private attachment is absent from
  * this list rather than listed and hidden** — a reader has no reason to know their master keeps notes
  * — and no owner, because who uploaded the map is not something anybody needs in order to open it
- * (#79).
+ * (ADR-14 §1).
  */
 export interface SharedFile {
   /** The file's identifier, which is what the download endpoint takes. */
   fileId: string
-  /** The original filename — what the reader recognises it by. Metadata only (#80). */
+  /** The original filename — what the reader recognises it by. Metadata only (ADR-13 §6). */
   name: string
   /** The declared MIME type, so a screen can show the right icon. */
   mimeType: string
   /**
-   * The size as uploaded, before compression (#75). Shown because somebody on a phone deserves to
+   * The size as uploaded, before compression (ADR-13 §3). Shown because somebody on a phone deserves to
    * know what a tap is about to cost them.
    */
   sizeBytes: number
@@ -45,7 +45,7 @@ export interface SharedFile {
 }
 
 /**
- * A file waiting to be sent (#238).
+ * A file waiting to be sent (ADR-13 §5).
  *
  * **In the root layer and not inside `features/files`**, for the reason `SharedFile` is here: two
  * features need it and a feature never imports another (§3.1.2, regla dura 16). `files` owns the
@@ -57,7 +57,7 @@ export interface SharedFile {
  * confirm that creates the table — or sends the answer, or publishes the request — is what uploads.
  *
  * Two shapes, because only one of them has anything to upload: `new` is bytes still in the browser,
- * `existing` is something reused from the history (#65) or published by the platform (#79), which
+ * `existing` is something reused from the history (ADR-13 §2) or published by the platform (ADR-14 §1), which
  * already has an id. `localId` exists only to key the list and remove one before sending — two files
  * with the same name are two entries, and `name` cannot tell them apart.
  */
@@ -69,7 +69,7 @@ export function stagedKey(staged: StagedFile): string {
 }
 
 /**
- * What came back from sending a staged list (#238).
+ * What came back from sending a staged list (ADR-13 §5).
  *
  * **`failed` is not an exception**, and that is the whole shape of it: a file that could not be
  * uploaded does not undo the rest. The table is created, the answer is sent, and what did upload is
@@ -82,7 +82,7 @@ export interface CommitResult {
   fileIds: string[]
   /** The names that could not be uploaded. Empty when everything went through. */
   failed: string[]
-  /** The names the server recognised instead of storing again (#75, #234). */
+  /** The names the server recognised instead of storing again (ADR-13 §3, §4). */
   reused: string[]
 }
 

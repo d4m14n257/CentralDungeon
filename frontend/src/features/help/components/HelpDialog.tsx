@@ -15,7 +15,7 @@ export interface HelpDialogProps extends HelpSectionBodyProps {
 }
 
 /**
- * One piece of help, read without leaving the screen that raised the question (#231).
+ * One piece of help, read without leaving the screen that raised the question (ADR-20 §5).
  *
  * **This is the whole point of the change**: the help used to be a route, and reading it meant
  * navigating away - which threw out a half-filled wizard. A dialog keeps the work behind it and

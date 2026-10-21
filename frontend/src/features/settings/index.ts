@@ -1,5 +1,5 @@
 /**
- * Public surface of the settings feature (#114, #141): the values the community changes without a
+ * Public surface of the settings feature (ADR-19 §1, ADR-17 §3): the values the community changes without a
  * deploy, and the screen that changes them. Anything not listed here is private to it.
  *
  * **The client-side mirror of the file cap is deliberately not here.** `features/files` is what

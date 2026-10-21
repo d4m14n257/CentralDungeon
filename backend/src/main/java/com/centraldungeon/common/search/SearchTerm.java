@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * @param values    what satisfies the criterion. Alternatives, never a conjunction. Copied
  *                  defensively and never empty
  * @param connector how this criterion joins the one before it. Folded left to right, without
- *                  precedence, because that is how the chips read on screen (#164)
+ *                  precedence, because that is how the chips read on screen (ADR-22 §1)
  */
 public record SearchTerm(@Nullable String field, List<String> values, SearchConnector connector) {
 

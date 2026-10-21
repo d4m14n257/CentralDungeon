@@ -4,7 +4,7 @@ import { expect, type Page } from '@playwright/test'
  * The steps of the create-table wizard that every spec has to walk through, in one place.
  *
  * Six specs had their own copy of "fill the name and press Siguiente three times", which worked for
- * as long as the wizard asked for nothing else. #226 made three things required — a system, a
+ * as long as the wizard asked for nothing else. ADR-07 §3 made three things required — a system, a
  * platform and at least one weekly slot — and all six copies broke at once. They live here now so
  * the next requirement is one edit.
  */
@@ -14,10 +14,10 @@ const A_SYSTEM = 'D&D 5e'
 const A_PLATFORM = 'Discord'
 
 /**
- * Picks the three catalogs the table cannot be created without (#226, #229).
+ * Picks the three catalogs the table cannot be created without (ADR-07 §3).
  *
- * Call it while the wizard is on step 2. Tags joined the list with #229, which reversed the part of
- * #226 that left them optional.
+ * Call it while the wizard is on step 2. Tags joined the list with ADR-07 §3, which reversed the part of
+ * ADR-07 §3 that left them optional.
  *
  * @param page the master's page, on the catalogs step
  */
@@ -35,13 +35,13 @@ export async function chooseRequiredCatalogs(page: Page): Promise<void> {
 /**
  * Claims one weekly slot by clicking it on the grid.
  *
- * Since #228 that is the only way in: the day-and-hour form is gone, because having it *and* the
+ * Since ADR-08 §1 that is the only way in: the day-and-hour form is gone, because having it *and* the
  * grid meant two ways to do one thing. The slot is born three hours long, which is the default the
  * editor gives it.
  *
- * **A spec that creates two tables for the same master has to give them different days.** R1 of #178
+ * **A spec that creates two tables for the same master has to give them different days.** R1 of ADR-08 §2
  * refuses a master two live tables with overlapping agendas, and every table carries an agenda now
- * (#226), so two built on the same day would collide - which is the rule working, not a broken spec.
+ * (ADR-07 §3), so two built on the same day would collide - which is the rule working, not a broken spec.
  *
  * @param page     the master's page, on the schedule step
  * @param hourtime the local start time, `HH:mm`, as the grid labels it
@@ -52,7 +52,7 @@ export async function addScheduleSlot(page: Page, hourtime: string, weekday = 'V
 }
 
 /**
- * Sends a freshly created table to review, which is what makes it exist for an admin (#245).
+ * Sends a freshly created table to review, which is what makes it exist for an admin (ADR-07 §1).
  *
  * **Every spec that approves a table needs this now.** A table is born in `Draft` — only its master
  * sees it, it appears in no listing and no admin is told about it — so the create-then-approve

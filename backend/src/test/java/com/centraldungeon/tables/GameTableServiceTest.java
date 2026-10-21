@@ -107,7 +107,7 @@ class GameTableServiceTest {
     private GameTableSearchResolver gameTableSearchResolver;
 
     /**
-     * The platform-wide player cap, new in F3.5 (#24, #141). Stubbed generously on purpose: these
+     * The platform-wide player cap, new in F3.5 (ADR-07 §5, ADR-17 §3). Stubbed generously on purpose: these
      * tests are about creating and editing tables, not about the cap, and its own cases live in
      * {@code SettingsServiceTest} and in the two written below.
      */
@@ -125,7 +125,7 @@ class GameTableServiceTest {
                 tableSessionService, tableFileService, new RichTextSanitizer(), settingsService, notificationService,
                 gameTableSearchResolver,
                 // The real one over the same mocked repositories: every read of a concrete table in
-                // these tests goes through it, and a mock would hide whether it does (#25, #29).
+                // these tests goes through it, and a mock would hide whether it does (ADR-03 §7, ADR-09 §4).
                 new TableVisibilityService(gameTableRepository, tableRegistrationRepository));
     }
 
@@ -162,7 +162,7 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("a table with no system is not created: it has to say what is played (#226)")
+    @DisplayName("a table with no system is not created: it has to say what is played (ADR-07 §3)")
     void rejectsCreationWithoutASystem() {
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Test", null, null, null, null, List.of(), List.of("tag-1"), List.of("platform-1"), null, null, null,
@@ -177,7 +177,7 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("a table with no platform is not created: it has to say where it is played (#226)")
+    @DisplayName("a table with no platform is not created: it has to say where it is played (ADR-07 §3)")
     void rejectsCreationWithoutAPlatform() {
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), null, null, null, null,
@@ -191,7 +191,7 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("a table with no schedule is not created: it has to say when it is played (#226, what #196 left written down)")
+    @DisplayName("a table with no schedule is not created: it has to say when it is played (ADR-07 §3, what ADR-07 §3 left written down)")
     void rejectsCreationWithoutASchedule() {
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, null, List.of());
@@ -204,7 +204,7 @@ class GameTableServiceTest {
     }
 
     @Test
-    @DisplayName("a table with no tags is not created: it has to be findable by subject (#229, corrects #226)")
+    @DisplayName("a table with no tags is not created: it has to be findable by subject (ADR-07 §3, corrects ADR-07 §3)")
     void rejectsCreationWithoutATag() {
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Test", null, null, null, null, List.of("system-1"), List.of(), List.of("platform-1"), null, null, null,
@@ -217,7 +217,7 @@ class GameTableServiceTest {
         verify(gameTableRepository, never()).save(any(GameTable.class));
     }
 
-    /** A draft that carries the three things #226 requires, so a test about something else gets past them. */
+    /** A draft that carries the three things ADR-07 §3 requires, so a test about something else gets past them. */
     private static CreateGameTableRequest runnableRequest(@Nullable String tableTypeId) {
         return new CreateGameTableRequest(
                 "Test", null, null, null, tableTypeId, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, null,
@@ -231,12 +231,12 @@ class GameTableServiceTest {
     }
 
     /**
-     * <b>The platform-wide player cap</b> (#24, #141), which did not exist before F3.5: {@code
+     * <b>The platform-wide player cap</b> (ADR-07 §5, ADR-17 §3), which did not exist before F3.5: {@code
      * maxPlayers} was only {@code @Positive}, so a table could be created for two billion people. The
-     * error carries the cap because "too many" without the number tells nobody what to type (#197).
+     * error carries the cap because "too many" without the number tells nobody what to type (ADR-23 §3).
      */
     @Test
-    @DisplayName("a table above the platform player cap is not created (#141)")
+    @DisplayName("a table above the platform player cap is not created (ADR-17 §3)")
     void rejectsCreationAboveThePlayerCap() {
         CreateGameTableRequest request = requestAskingFor(500);
 
@@ -250,11 +250,11 @@ class GameTableServiceTest {
     }
 
     /**
-     * And a table with no cap at all stays legal: {@code null} means «sin tope» (#24), which is the
+     * And a table with no cap at all stays legal: {@code null} means «sin tope» (ADR-07 §5), which is the
      * absence of a number rather than a number above the ceiling.
      */
     @Test
-    @DisplayName("a table with no player cap is unaffected by the platform cap (#24)")
+    @DisplayName("a table with no player cap is unaffected by the platform cap (ADR-07 §5)")
     void acceptsCreationWithoutAPlayerCap() {
         User creator = persistedUser("creator-1");
         when(userService.getById("creator-1")).thenReturn(creator);
@@ -303,7 +303,7 @@ class GameTableServiceTest {
      *
      * <p>It was the other way round for a while and it broke the real application: with «resolver exige
      * tenerlo reservado», every resolution from a screen with no claim button answered 409 over a
-     * reservation the screen could not offer. What #100 buys is «si lo toma uno, baja para todos», so an
+     * reservation the screen could not offer. What ADR-16 §5 buys is «si lo toma uno, baja para todos», so an
      * item nobody owns is not the situation to prevent: resolving it is an implicit claim. This test is
      * the one that fails if somebody tightens the rule again.
      */
@@ -434,7 +434,7 @@ class GameTableServiceTest {
     }
 
     /**
-     * #244: the one assignment nobody asked for. An admin creates the table and hands it over, so
+     * ADR-18 §3: the one assignment nobody asked for. An admin creates the table and hands it over, so
      * without the bell the new master finds out by stumbling on a table they had never seen.
      */
     @Test
@@ -451,13 +451,13 @@ class GameTableServiceTest {
         gameTableService.assignInitialMasters(
                 "table-handed-over", new AssignMastersRequest("primary-1", List.of("second-1")), "admin-1");
 
-        // The co-master too: being added to somebody else's table is news for whoever is added (#135).
+        // The co-master too: being added to somebody else's table is news for whoever is added (ADR-06 §4).
         org.mockito.Mockito.verify(notificationService).notifyMasterAssigned("primary-1", table);
         org.mockito.Mockito.verify(notificationService).notifyMasterAssigned("second-1", table);
     }
 
     /**
-     * #244: review is a wait whose other side the master cannot see. The table sits there and nothing
+     * ADR-18 §3: review is a wait whose other side the master cannot see. The table sits there and nothing
      * on their screen changes until an admin acts, so the bell is the only thing that says it came out.
      */
     @Test
@@ -491,7 +491,7 @@ class GameTableServiceTest {
         gameTableService.requestChanges("table-bounced", "admin-1", new ChangeTableStatusRequest("Falta la agenda"));
 
         // The reason is not in the notification: it is mandatory on the transition and kept in the
-        // status history, which is where the master reads it whole (#197).
+        // status history, which is where the master reads it whole (ADR-23 §3).
         org.mockito.Mockito.verify(notificationService)
                 .notifyReviewOutcome("master-1", table, NotificationType.TableChangesRequested);
     }
@@ -577,7 +577,7 @@ class GameTableServiceTest {
         verify(masterService).softDeleteAllOfTable(eq("table-7a"), any());
     }
 
-    /** The line #175 draws: what was once public is cancelled, never deleted. */
+    /** The line ADR-07 §6 draws: what was once public is cancelled, never deleted. */
     @Test
     void cannotDeleteATableThatWasAlreadyPublic() {
         GameTable table = persistedTable("table-7b", GameTableStatus.Opened);
@@ -607,7 +607,7 @@ class GameTableServiceTest {
         assertThatThrownBy(() -> gameTableService.delete("table-7d", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
     }
 
-    /** A deleted table exists for nobody: 404 and not 403 (#25). */
+    /** A deleted table exists for nobody: 404 and not 403 (ADR-03 §7). */
     @Test
     void aDeletedTableIsNotFound() {
         GameTable table = persistedTable("table-7e", GameTableStatus.Deleted);
@@ -663,7 +663,7 @@ class GameTableServiceTest {
 
     /**
      * <b>Read path 2.</b> The detail of a table the actor is vetoed on answers {@code 404},
-     * <b>never</b> {@code 403} (#29). A 403 confirms what the 404 denies.
+     * <b>never</b> {@code 403} (ADR-09 §4). A 403 confirms what the 404 denies.
      */
     @Test
     void theDetailOfAVetoedTableIs404AndNeverA403() {
@@ -719,7 +719,7 @@ class GameTableServiceTest {
         verify(tableFileService).sharedFilesOf("table-veto-3");
     }
 
-    // ------------------------------------------------------------- the requested pause (#32)
+    // ------------------------------------------------------------- the requested pause (ADR-07 §2)
 
     /**
      * {@code PauseRequested} stops being the orphan F1.7 surveyed: this is its producer. <b>Any
@@ -744,7 +744,7 @@ class GameTableServiceTest {
         verify(tableStatusChangeRepository).save(any(TableStatusChange.class));
     }
 
-    /** Somebody who does not run the table cannot ask for anything about it (#17, #121, #135). */
+    /** Somebody who does not run the table cannot ask for anything about it (ADR-11 §1, ADR-05 §5, ADR-06 §4). */
     @Test
     void anOutsiderCannotAskForThePause() {
         GameTable table = persistedTable("table-pause-2", GameTableStatus.InProgress);
@@ -770,7 +770,7 @@ class GameTableServiceTest {
 
     /**
      * Approving it takes the table to {@code Pause} and <b>the resolution note is the
-     * justification</b> (#32, arquitectura §4.5): the admin already wrote why, and asking them for a
+     * justification</b> (ADR-07 §2, arquitectura §4.5): the admin already wrote why, and asking them for a
      * second reason would leave two answers to one question.
      */
     @Test
@@ -820,7 +820,7 @@ class GameTableServiceTest {
 
     /**
      * The explorer's visibility rules - public statuses only, and never a table the actor runs
-     * (#154) - moved into {@code GameTableSearchSpecification} when the search box arrived, so what a
+     * (ADR-18 §4) - moved into {@code GameTableSearchSpecification} when the search box arrived, so what a
      * unit test can still assert here is the mapping. The predicate itself is covered by
      * {@code GameTableSearchIT} against real MySQL, which is the only place a Criteria predicate can
      * be proven to mean what it says.
@@ -847,7 +847,7 @@ class GameTableServiceTest {
     }
 
     /**
-     * The resolution of #246 happens before the query is built, and this is what says so: the service
+     * The resolution of ADR-12 §8 happens before the query is built, and this is what says so: the service
      * hands the resolver a parsed query, not the raw string, and the criterion arrives as a term of
      * the field it was written with.
      */
@@ -925,9 +925,9 @@ class GameTableServiceTest {
         assertThat(result.content()).extracting(GameTableSummaryResponse::id).containsExactly("table-live");
     }
 
-    /** #32: a paused table is frozen, not over - it stays among "mine" and never moves to the history. */
+    /** ADR-07 §2: a paused table is frozen, not over - it stays among "mine" and never moves to the history. */
     @Test
-    @DisplayName("/mine does return a table in Pause: it is alive, only frozen (#32)")
+    @DisplayName("/mine does return a table in Pause: it is alive, only frozen (ADR-07 §2)")
     void listMineIncludesPausedTables() {
         GameTable paused = persistedTable("table-paused", GameTableStatus.Pause);
         Pageable pageable = PageRequest.of(0, 20);
@@ -963,9 +963,9 @@ class GameTableServiceTest {
     }
 
     /**
-     * #133a, #137: the attendance travels with each table's card, resolved for the whole page in one
+     * #133a, ADR-08 §5: the attendance travels with each table's card, resolved for the whole page in one
      * grouped read - {@link TableSessionService#summarizeByTables} and not one {@code summarize}
-     * call per row - and {@code Unknown} stays out of the denominator the same way #137 already
+     * call per row - and {@code Unknown} stays out of the denominator the same way ADR-08 §5 already
      * keeps it out everywhere else.
      */
     @Test
@@ -999,7 +999,7 @@ class GameTableServiceTest {
 
     /**
      * A row that never became {@code Player} is a candidate the master has not accepted, and it
-     * belongs in neither listing (#28, #133a) - the repository is asked for {@code Player} on both
+     * belongs in neither listing (ADR-09 §1, #133a) - the repository is asked for {@code Player} on both
      * calls, never {@code Candidate}.
      */
     @Test
@@ -1103,7 +1103,7 @@ class GameTableServiceTest {
         assertThatThrownBy(() -> gameTableService.getEntityById("missing")).isInstanceOf(NotFoundException.class);
     }
 
-    /** #180: closing a table is what starts the two-week profile window of #44, so it gets a date. */
+    /** ADR-07 §7: closing a table is what starts the two-week profile window of ADR-10 §2, so it gets a date. */
     @Test
     void finishSealsClosedAt() {
         GameTable table = persistedTable("table-close-1", GameTableStatus.InProgress);
@@ -1138,7 +1138,7 @@ class GameTableServiceTest {
         assertThat(table.getClosedAt()).isNotNull();
     }
 
-    /** A table closes once (#44, #180): a later transition never moves the date. */
+    /** A table closes once (ADR-10 §2, ADR-07 §7): a later transition never moves the date. */
     @Test
     void closedAtIsNotOverwrittenOnceItIsSet() {
         GameTable table = persistedTable("table-close-3", GameTableStatus.InProgress);
@@ -1191,7 +1191,7 @@ class GameTableServiceTest {
                 .isInstanceOf(ForbiddenActionException.class);
     }
 
-    /** Past Preparation people applied on the strength of what the table says (#27). */
+    /** Past Preparation people applied on the strength of what the table says (ADR-07 §1). */
     @Test
     void anOpenedTableIsNoLongerItsMastersToRewrite() {
         GameTable table = persistedTable("table-edit-3", GameTableStatus.Opened);
@@ -1203,7 +1203,7 @@ class GameTableServiceTest {
     }
 
     /**
-     * #245: a table sent to review is being read by somebody else, and moving it while they read is
+     * ADR-07 §1: a table sent to review is being read by somebody else, and moving it while they read is
      * how a reviewer approves something that no longer exists.
      */
     @Test
@@ -1217,7 +1217,7 @@ class GameTableServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** Sending it is the act that makes the table exist for anybody else (#245). */
+    /** Sending it is the act that makes the table exist for anybody else (ADR-07 §1). */
     @Test
     @DisplayName("sending to review moves the draft to Preparation")
     void submittingADraftSendsItToReview() {
@@ -1246,7 +1246,7 @@ class GameTableServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** Each slot carries its own length, so one table can run two different ones (#228). */
+    /** Each slot carries its own length, so one table can run two different ones (ADR-08 §1). */
     @Test
     @DisplayName("the schedule travels whole, each slot with its own duration")
     void updateSendsEachSlotWithItsOwnDuration() {
@@ -1268,14 +1268,14 @@ class GameTableServiceTest {
                         "Test", null, null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, null, agenda),
                 "master-1");
 
-        // The agenda travels whole, each slot with its own length (#228): three hours midweek and six
+        // The agenda travels whole, each slot with its own length (ADR-08 §1): three hours midweek and six
         // on a Saturday is one table, and it used to be a table that had to lie about one of the two.
         verify(tableScheduleService).replace(table, agenda, "master-1");
     }
 
-    // --- #284: the admin reads and rewrites somebody else's table, and its masters are told ---
+    // --- ADR-06 §8: the admin reads and rewrites somebody else's table, and its masters are told ---
 
-    /** The admin's door is for the table that is already open or running and needs correcting (#284). */
+    /** The admin's door is for the table that is already open or running and needs correcting (ADR-06 §8). */
     @Test
     @DisplayName("an admin rewrites an open table and every master is told")
     void anAdminRewritesAnOpenTableAndItsMastersAreTold() {
@@ -1296,7 +1296,7 @@ class GameTableServiceTest {
     }
 
     /**
-     * R1 (#178) asks what the people running the table are committed to. The admin is committed to
+     * R1 (ADR-08 §2) asks what the people running the table are committed to. The admin is committed to
      * nothing here, so measuring against them would let any clash through.
      */
     @Test
@@ -1313,7 +1313,7 @@ class GameTableServiceTest {
         verify(tableScheduleService).replace(eq(table), any(), eq("primary-2"));
     }
 
-    /** Nobody is removed to make a number fit: which player leaves is a person's call (#34, #70). */
+    /** Nobody is removed to make a number fit: which player leaves is a person's call (ADR-09 §3, ADR-15 §2). */
     @Test
     void anAdminCannotShrinkATableBelowThePlayersItAlreadyHas() {
         GameTable table = persistedTable("table-admin-cap", GameTableStatus.InProgress);
@@ -1326,7 +1326,7 @@ class GameTableServiceTest {
         verify(notificationService, never()).notifyAdminActedOnTable(any(), any(), any());
     }
 
-    /** A finished, cancelled or removed table is a record of what happened; nobody rewrites it (#284). */
+    /** A finished, cancelled or removed table is a record of what happened; nobody rewrites it (ADR-06 §8). */
     @Test
     void aClosedTableIsNotRewrittenEvenByAnAdmin() {
         GameTable table = persistedTable("table-admin-closed", GameTableStatus.Finished);
@@ -1336,7 +1336,7 @@ class GameTableServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** The same reservation rule as approving it (#100): a review is not edited out from under a colleague. */
+    /** The same reservation rule as approving it (ADR-16 §5): a review is not edited out from under a colleague. */
     @Test
     void aTableInReviewReservedByAnotherAdminIsNotRewritten() {
         GameTable table = claimedBy(persistedTable("table-admin-claimed", GameTableStatus.Preparation), persistedUser("admin-2"));
@@ -1375,7 +1375,7 @@ class GameTableServiceTest {
         verify(notificationService).notifyAdminActedOnTable("primary-3", table, NotificationType.TablePausedByAdmin);
     }
 
-    /** The Primary cancelling their own table hears nothing; an admin doing it is news (#284). */
+    /** The Primary cancelling their own table hears nothing; an admin doing it is news (ADR-06 §8). */
     @Test
     void cancellingTellsTheMastersOnlyWhenAnAdminDidIt() {
         GameTable own = persistedTable("table-cancel-own", GameTableStatus.Opened);
@@ -1416,7 +1416,7 @@ class GameTableServiceTest {
         verify(notificationService).notifyAdminActedOnTable("primary-6", table, NotificationType.TableDeletedByAdmin);
     }
 
-    /** What every rewrite in these tests sends: the three catalogs and an agenda, as #226 requires. */
+    /** What every rewrite in these tests sends: the three catalogs and an agenda, as ADR-07 §3 requires. */
     private UpdateGameTableRequest runnableUpdate(String name, @Nullable Integer maxPlayers) {
         return new UpdateGameTableRequest(
                 name, null, null, null, null, List.of("system-1"), List.of("tag-1"), List.of("platform-1"), null, null, maxPlayers,
@@ -1435,7 +1435,7 @@ class GameTableServiceTest {
 
     /**
      * A bare request, on purpose: the two tests that use it are refused before the draft is looked at
-     * - permission and status come first (#226) - and that ordering is part of what they assert.
+     * - permission and status come first (ADR-07 §3) - and that ordering is part of what they assert.
      */
     private UpdateGameTableRequest updateRequest() {
         return new UpdateGameTableRequest("Test", null, null, null, null, null, null, null, null, null, null, null);

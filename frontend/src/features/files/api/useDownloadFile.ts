@@ -6,7 +6,7 @@ import { filesApi } from './filesApi'
  * Downloading a file's content and handing it to the browser to save.
  *
  * A mutation and not a query, even though it reads: it happens because somebody clicked, its result
- * is not something to cache, and the backend stamps `lastUsedAt` on every one of them (#75).
+ * is not something to cache, and the backend stamps `lastUsedAt` on every one of them (ADR-13 §3).
  *
  * A plain `<a href>` cannot do this — the endpoint is authenticated with a bearer token the browser
  * never attaches on its own — so the bytes are fetched and released through an object URL.

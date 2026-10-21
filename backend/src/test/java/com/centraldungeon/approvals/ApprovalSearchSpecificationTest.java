@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
  * "the service passed some specification to the repository" would keep passing if the filter were
  * dropped. What has to be true is that the predicate that comes out names the id the caller was given
  * and never one that arrived inside {@code ?q=} - which is the whole reason
- * {@code GET /requests/mine} cannot be turned into a way of reading somebody else's requests (#121).
+ * {@code GET /requests/mine} cannot be turned into a way of reading somebody else's requests (ADR-05 §5).
  *
  * <p>The builder is mocked rather than run against a database: what is being checked is which
  * predicate gets composed, and that is a statement about this class, not about SQL.
@@ -99,7 +99,7 @@ class ApprovalSearchSpecificationTest {
      * {@code /admin/requests} even though it is not in {@code /admin/queue}. They are two different
      * questions - the tray is work waiting on you, and this is the record of every request there is.
      * Seeing is not resolving: an admin who tries to resolve one is answered
-     * {@code 403 NOT_PRIMARY_MASTER} by {@code ApprovalService} (#39).
+     * {@code 403 NOT_PRIMARY_MASTER} by {@code ApprovalService} (ADR-09 §5).
      */
     @Test
     void theAdminListingDoesNotNarrowByTypeEitherAndShowsVetoRequests() {

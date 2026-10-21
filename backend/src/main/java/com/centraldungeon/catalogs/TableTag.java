@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 /**
  * Link between a table and a tag. Table {@code table_tags}.
  *
- * <p>It stores the alias the master chose, never the group's canonical entry (#56): merging two
+ * <p>It stores the alias the master chose, never the group's canonical entry (ADR-12 §4): merging two
  * synonyms later makes this table findable by both terms without rewriting a single row.
  */
 @Entity
@@ -26,7 +26,7 @@ public class TableTag extends TableCatalogLink {
      * Links a table to a tag, live from the start.
      *
      * @param gameTableId the table being labelled
-     * @param tagId       the tag it is labelled with, as the master wrote it (#56)
+     * @param tagId       the tag it is labelled with, as the master wrote it (ADR-12 §4)
      */
     public TableTag(String gameTableId, String tagId) {
         this.id = new TableTagId(gameTableId, tagId);

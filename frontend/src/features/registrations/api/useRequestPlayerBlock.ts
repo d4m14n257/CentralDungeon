@@ -10,14 +10,14 @@ interface RequestBlockVariables {
 }
 
 /**
- * A co-master **asking** for a veto (#39, #71).
+ * A co-master **asking** for a veto (ADR-09 §5, ADR-06 §3).
  *
  * **Nothing about the table changes yet**, which is the whole difference from `useBlockPlayer`: the
  * person keeps playing, keeps seeing the table and keeps downloading its files until the `Primary`
  * answers. So this invalidates only the list of pending veto requests — invalidating the roster here
  * would suggest something moved, and nothing did.
  *
- * **And the `Primary` is who answers it, not an admin.** #39 is specific where #90 is generic, and a
+ * **And the `Primary` is who answers it, not an admin.** ADR-09 §5 is specific where ADR-16 §1 is generic, and a
  * veto between a co-master and a player of *that* table is decided by whoever runs it rather than by
  * the platform. The request is therefore kept out of the shared admin tray, which is also why this
  * hook does not invalidate `adminQueue`: the row was never going to appear there.

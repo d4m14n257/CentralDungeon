@@ -55,7 +55,7 @@ class TableScheduleServiceTest {
         verify(scheduleRepository, org.mockito.Mockito.times(2)).save(any(TableSchedule.class));
     }
 
-    /** Two slots of the same table that overlap each other: malformed input, not a conflict (#178). */
+    /** Two slots of the same table that overlap each other: malformed input, not a conflict (ADR-08 §2). */
     @Test
     void refusesAnAgendaThatOverlapsItself() {
         GameTable table = table("table-2");
@@ -82,7 +82,7 @@ class TableScheduleServiceTest {
     }
 
     /**
-     * #197: the refusal travels as a code plus the name, not as a finished sentence. The message is
+     * ADR-23 §3: the refusal travels as a code plus the name, not as a finished sentence. The message is
      * for a log; what the master reads is rendered by the frontend in their language.
      */
     @Test
@@ -98,7 +98,7 @@ class TableScheduleServiceTest {
                 });
     }
 
-    /** An Unassigned table has no master yet, so R1 has nobody to compare against (#72, #178). */
+    /** An Unassigned table has no master yet, so R1 has nobody to compare against (ADR-06 §7, ADR-08 §2). */
     @Test
     void skipsTheOwnerCheckWhenTheTableHasNoMasterYet() {
         GameTable table = table("table-4");
@@ -137,7 +137,7 @@ class TableScheduleServiceTest {
         assertThat(dropped.getDeletedAt()).isNotNull();
     }
 
-    /** Moving an agenda under people who are already in warns them; it never expels anybody (#70, #178). */
+    /** Moving an agenda under people who are already in warns them; it never expels anybody (ADR-15 §2, ADR-08 §2). */
     @Test
     void warnsThePeopleTheNewAgendaNowClashesFor() {
         GameTable table = table("table-7");
@@ -185,7 +185,7 @@ class TableScheduleServiceTest {
     }
 
     /**
-     * A slot with the length it is meant to claim (#228). The duration belongs to the slot now, so
+     * A slot with the length it is meant to claim (ADR-08 §1). The duration belongs to the slot now, so
      * it is here and no longer on the table.
      */
     private static TableScheduleEntry entry(Weekday weekday, String hourtime, String duration) {

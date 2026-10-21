@@ -10,7 +10,7 @@ import java.io.Serializable;
  *
  * @param gameTableId the table the link belongs to. A plain id, not an association - see
  *                    {@link TableCatalogLink} for why
- * @param tagId       the tag the table was labelled with, exactly as its master picked it (#56)
+ * @param tagId       the tag the table was labelled with, exactly as its master picked it (ADR-12 §4)
  */
 @Embeddable
 public record TableTagId(

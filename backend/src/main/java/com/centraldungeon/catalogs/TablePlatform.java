@@ -21,7 +21,7 @@ public class TablePlatform extends TableCatalogLink {
      * Links a table to a platform, live from the start.
      *
      * @param gameTableId the table being described
-     * @param platformId  the platform it is played on, as the master picked it (#56)
+     * @param platformId  the platform it is played on, as the master picked it (ADR-12 §4)
      */
     public TablePlatform(String gameTableId, String platformId) {
         this.id = new TablePlatformId(gameTableId, platformId);

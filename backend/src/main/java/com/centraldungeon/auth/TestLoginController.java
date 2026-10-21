@@ -81,8 +81,8 @@ public class TestLoginController {
      * would be testing something the users never do.
      *
      * <p>The actor comes out holding <strong>exactly one role</strong>, not the requested one on top
-     * of whatever they already had. A real account gets Player on first login (#38) and accumulates
-     * from there (#37), which is right for the product and wrong for a fixture: an actor who is
+     * of whatever they already had. A real account gets Player on first login (ADR-05 §1) and accumulates
+     * from there (ADR-06 §1), which is right for the product and wrong for a fixture: an actor who is
      * Master <em>and</em> Player cannot show what a master alone sees, and every crossing between
      * contexts stays invisible. So the roles that were not asked for are revoked on the way in, which
      * also repairs an account that a previous run left with two.
@@ -92,7 +92,7 @@ public class TestLoginController {
      * @param asMaster  whether the actor is a Master. Their only role, unless {@code asAdmin} too
      * @param asAdmin   whether the actor is an Admin. Their only role, unless {@code asMaster} too
      * @param asOwner   whether the actor is the platform Owner. Never together with {@code asAdmin}:
-     *                  the two are one rank at two scopes and never coexist (#169), so Owner wins
+     *                  the two are one rank at two scopes and never coexist (ADR-06 §1), so Owner wins
      * @param response  the response the refresh cookie is written onto
      * @return the access token and its lifetime, exactly as a real login would answer
      */
@@ -116,7 +116,7 @@ public class TestLoginController {
     /**
      * Player when nothing is asked for: the actor with no flags is a plain member of the community.
      *
-     * <p><b>Owner excludes Admin, here as everywhere</b> (#169). The two are the same rank at two
+     * <p><b>Owner excludes Admin, here as everywhere</b> (ADR-06 §1). The two are the same rank at two
      * scopes, and a fixture that handed out both would be the one place in the application where they
      * coexist - which is exactly the state F3.1's rules assume cannot happen.
      */
@@ -136,10 +136,10 @@ public class TestLoginController {
     /**
      * Leaves the person holding the wanted roles and nothing else.
      *
-     * <p>Revoking marks the row rather than deleting it (#25), and restoring flips that mark back
+     * <p>Revoking marks the row rather than deleting it (ADR-03 §7), and restoring flips that mark back
      * instead of inserting: {@code (user_id, role_id)} is the primary key, so a second row for the
      * same pair is not a thing that can exist. The cache is evicted at the end because otherwise the
-     * roles just taken away stay live for the rest of the TTL (#128) - long enough for the reload
+     * roles just taken away stay live for the rest of the TTL (ADR-05 §3) - long enough for the reload
      * that follows this call to still read them.
      */
     private void setRolesExactly(User user, Set<PlatformRole> wanted) {

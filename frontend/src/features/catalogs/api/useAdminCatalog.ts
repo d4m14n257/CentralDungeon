@@ -9,7 +9,7 @@ import type { CatalogKind, CatalogStatus } from '../types'
 
 /** How the listing is cut. */
 export interface AdminCatalogOptions {
-  /** One row per group instead of one per value (#275). */
+  /** One row per group instead of one per value (ADR-12 §7). */
   groupsOnly?: boolean
 }
 
@@ -18,13 +18,13 @@ export interface AdminCatalogOptions {
  * how much it is used - or, with `groupsOnly`, one row per group.
  *
  * A work list, so it pages by number and keeps the previous page on screen while the next one
- * arrives - without that the table blinks to a skeleton on every click (#173).
+ * arrives - without that the table blinks to a skeleton on every click (ADR-04 §6).
  *
  * @param kind     which catalog
  * @param query    the search box, already debounced
  * @param statuses the statuses to keep, or undefined for all of them
  * @param page     zero-based page number
- * @param size     rows per page, one of `adminPageSizeOptions` (#271)
+ * @param size     rows per page, one of `adminPageSizeOptions` (ADR-21 §11)
  * @param options  how the listing is cut; by default, every value
  * @returns the query for that page
  */

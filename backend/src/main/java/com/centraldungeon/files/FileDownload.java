@@ -9,10 +9,10 @@ package com.centraldungeon.files;
  *
  * @param name     the original filename, for the {@code Content-Disposition} header. This is the one
  *                 place the name the user typed is used at all - and it goes into a header, never
- *                 into a path (#80)
+ *                 into a path (ADR-13 §6)
  * @param mimeType the declared MIME type, for {@code Content-Type}
  * @param content  the bytes as they were uploaded. Storage compressed them on the way in and
- *                 expanded them again on the way out (#75); nothing above that layer notices
+ *                 expanded them again on the way out (ADR-13 §3); nothing above that layer notices
  */
 public record FileDownload(String name, String mimeType, byte[] content) {
 }

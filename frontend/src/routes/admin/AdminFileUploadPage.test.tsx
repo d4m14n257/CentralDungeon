@@ -35,7 +35,7 @@ function renderPage() {
 const pdf = (name: string) => new File(['hoja'], name, { type: 'application/pdf' })
 
 describe('AdminFileUploadPage', () => {
-  /** Each dropped file gets its own select, so several can go up at once, each as what it is (#278). */
+  /** Each dropped file gets its own select, so several can go up at once, each as what it is (ADR-14 §7). */
   it('gives every staged file its own select', async () => {
     renderPage()
 
@@ -48,7 +48,7 @@ describe('AdminFileUploadPage', () => {
   })
 
   /**
-   * Nothing lands in the library without saying which flow it is for (#278, M24.1): with a file still
+   * Nothing lands in the library without saying which flow it is for (ADR-14 §7, M24.1): with a file still
    * unclassified, «Subir» sends nothing and says what is missing instead of greying out silently.
    */
   it('sends nothing and says so while a file has no cajón', async () => {
@@ -63,7 +63,7 @@ describe('AdminFileUploadPage', () => {
   })
 
   /**
-   * #282: nothing goes up on the click. The confirmation says what the choice does first; cancelling
+   * ADR-14 §7: nothing goes up on the click. The confirmation says what the choice does first; cancelling
    * sends nothing, and confirming sends each file with its cajón and the choice that was made.
    */
   it('asks before uploading, and sends the choice only once confirmed', async () => {

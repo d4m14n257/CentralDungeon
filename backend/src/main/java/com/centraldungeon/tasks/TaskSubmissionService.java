@@ -32,21 +32,21 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Handing in an answer to a task, and reading what came in.
  *
- * <p><b>Answers accumulate and nothing is ever overwritten</b> (#76). Every submission is an insert;
+ * <p><b>Answers accumulate and nothing is ever overwritten</b> (ADR-15 §2). Every submission is an insert;
  * there is no update endpoint and this class has no method that edits one. Sending a second version
  * leaves the first untouched, because deciding which of two character sheets counts takes a
  * judgement the system does not have - and silently replacing would be the system making it anyway.
  *
- * <p><b>There is no review.</b> No accept, no reject, no {@code reviewed_by} (#76). The master reads
+ * <p><b>There is no review.</b> No accept, no reject, no {@code reviewed_by} (ADR-15 §2). The master reads
  * what came in and talks to people; the software's job ends at delivering it.
  *
- * <p><b>And nothing here punishes a missing answer</b> (#70). The roster of who has not handed
+ * <p><b>And nothing here punishes a missing answer</b> (ADR-15 §2). The roster of who has not handed
  * anything in is a list of names on a screen: no endpoint acts on it, and {@code isMandatory} changes
  * none of the answers below.
  *
  * <p>Two different authorization questions live here and they are not the same one. Handing in is
  * about being <b>addressed</b> by the task ({@link TableTaskService#isRecipient}); reading everything
- * that came in is about <b>running the table</b> (#17, #121, #135).
+ * that came in is about <b>running the table</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4).
  */
 @Service
 public class TaskSubmissionService {
@@ -54,25 +54,25 @@ public class TaskSubmissionService {
     /** The {@code task_submissions} rows. */
     private final TaskSubmissionRepository submissionRepository;
 
-    /** The files handed in with an answer - linked, never copied (#65, #79). */
+    /** The files handed in with an answer - linked, never copied (ADR-13 §2, ADR-14 §1). */
     private final SubmissionFileRepository submissionFileRepository;
 
     /** The task being answered, its audience, and its roster. */
     private final TableTaskService tableTaskService;
 
-    /** Resolves and authorizes each file being handed in, and stamps its last use (#75). */
+    /** Resolves and authorizes each file being handed in, and stamps its last use (ADR-13 §3). */
     private final FileService fileService;
 
     /** The files themselves, for the metadata each answer is shown with. */
     private final StoredFileRepository fileRepository;
 
-    /** Answers pertenencia: a row in {@code masters}, never the platform role (#135). */
+    /** Answers pertenencia: a row in {@code masters}, never the platform role (ADR-06 §4). */
     private final MasterService masterService;
 
-    /** Resolves the submitter, who is always the actor of the token (#121). */
+    /** Resolves the submitter, who is always the actor of the token (ADR-05 §5). */
     private final UserService userService;
 
-    /** The whitelist of #62, applied on the way in and on the way out. */
+    /** The whitelist of ADR-03 §8, applied on the way in and on the way out. */
     private final RichTextSanitizer richTextSanitizer;
 
     /** Entity to DTO. */
@@ -82,11 +82,11 @@ public class TaskSubmissionService {
      * @param submissionRepository     the {@code task_submissions} rows
      * @param submissionFileRepository the files handed in with each answer
      * @param tableTaskService         the task, its audience and its roster
-     * @param fileService              resolves and authorizes each file handed in (#79)
+     * @param fileService              resolves and authorizes each file handed in (ADR-14 §1)
      * @param fileRepository           the files each link points at
-     * @param masterService            answers pertenencia (#17, #121, #135)
+     * @param masterService            answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
      * @param userService              resolves the submitter from the token
-     * @param richTextSanitizer        the whitelist of #62
+     * @param richTextSanitizer        the whitelist of ADR-03 §8
      * @param taskMapper               entity to DTO
      */
     public TaskSubmissionService(
@@ -115,10 +115,10 @@ public class TaskSubmissionService {
      *
      * @param taskId  the task being answered
      * @param request the written answer, the files, or both
-     * @param actorId the actor, from the token - the submitter is never named in the request (#121)
+     * @param actorId the actor, from the token - the submitter is never named in the request (ADR-05 §5)
      * @return the answer as it was recorded
      * @throws ForbiddenActionException if the task is not addressed to the actor, or a file is
-     *                                  somebody else's and not published (#79)
+     *                                  somebody else's and not published (ADR-14 §1)
      * @throws ConflictException        if the task is no longer taking answers
      * @throws InvalidRequestException  if the answer uses a channel the task does not take, or is
      *                                  empty on both
@@ -133,7 +133,7 @@ public class TaskSubmissionService {
         if (task.getStatus() != TaskStatus.Open) {
             // Its own code, because "could not save" is the wrong thing to tell somebody who just
             // wrote an answer: what they need to know is that the master closed the request, which is
-            // not something they can fix by retrying (#188, #197).
+            // not something they can fix by retrying (ADR-04 §4, ADR-23 §3).
             throw new ConflictException("Task " + taskId + " is closed and no longer takes answers", "TASK_CLOSED");
         }
 
@@ -147,9 +147,9 @@ public class TaskSubmissionService {
         List<SubmittedFileResponse> files = new ArrayList<>();
         for (String fileId : fileIds) {
             // The same gate attaching a file to a table goes through: the actor's own, or one the
-            // platform published. Somebody else's private upload never gets here (#79).
+            // platform published. Somebody else's private upload never gets here (ADR-14 §1).
             StoredFile file = fileService.requireAttachable(fileId, actorId);
-            // Handing a file in is what puts it in the player-side cajón (#233). Cumulative: the
+            // Handing a file in is what puts it in the player-side cajón (ADR-14 §4). Cumulative: the
             // sheet somebody applied with and now hands in belongs to both, and neither is revoked.
             fileService.classify(fileId, FileCategory.PlayerSubmission);
             submissionFileRepository.save(new SubmissionFile(submission.getId(), file.getId()));
@@ -169,13 +169,13 @@ public class TaskSubmissionService {
      * @param taskId  the task
      * @param actorId the actor, from the token
      * @return every answer, oldest first, plus the people still missing
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
      * @throws com.centraldungeon.common.exception.NotFoundException if the task is not there
      */
     @Transactional(readOnly = true)
     public TaskSubmissionsResponse listForTask(String taskId, String actorId) {
         TableTask task = tableTaskService.getLiveTask(taskId);
-        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
         if (!masterService.canOversee(task.getGameTable().getId(), actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can view what was handed in");
         }
@@ -198,7 +198,7 @@ public class TaskSubmissionService {
      * Somebody's own answers to a task - what they see of what they handed in.
      *
      * <p>No membership check and none needed: the actor comes from the token and the query is keyed
-     * on them, so there is no parameter that could point at anybody else's answers (#121).
+     * on them, so there is no parameter that could point at anybody else's answers (ADR-05 §5).
      *
      * @param taskId  the task
      * @param actorId the actor, from the token
@@ -220,7 +220,7 @@ public class TaskSubmissionService {
         return submissions.stream()
                 .map(submission -> taskMapper.toSubmissionResponse(
                         submission,
-                        // Sanitized on the way out as well as on the way in (#62): a row written
+                        // Sanitized on the way out as well as on the way in (ADR-03 §8): a row written
                         // before this gate existed still reaches the browser through here. The clean
                         // string is passed to the mapper and not written back - a read stays a read.
                         richTextSanitizer.sanitize(submission.getContent()),
@@ -234,7 +234,7 @@ public class TaskSubmissionService {
      * <p>A file its owner has since deleted is left out rather than shown as a broken row: the same
      * thing {@code TableFileService} does for a table's attachments, and for the same reason - an
      * owner removing a file removes it from what shows it, without those links having to be found and
-     * rewritten (#25).
+     * rewritten (ADR-03 §7).
      */
     private Map<String, List<SubmittedFileResponse>> filesOf(List<TaskSubmission> submissions) {
         List<SubmissionFile> links = submissionFileRepository.findById_SubmissionIdInAndStatus(
@@ -284,7 +284,7 @@ public class TaskSubmissionService {
     }
 
     /**
-     * The membership gate (#17, #121, #135): a row in {@code masters}, not the {@code Master} role.
+     * The membership gate (ADR-11 §1, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
      *
      * @throws ForbiddenActionException if the actor does not run this table
      */

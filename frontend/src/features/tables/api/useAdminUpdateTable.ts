@@ -6,7 +6,7 @@ import { gameTablesApi } from './gameTablesApi'
 import type { UpdateGameTableRequest } from '../types'
 
 /**
- * Rewrites a table as an admin, from /admin/tables/:id/edit (#284). The backend tells every master
+ * Rewrites a table as an admin, from /admin/tables/:id/edit (ADR-06 §8). The backend tells every master
  * of the table that it happened.
  *
  * It invalidates what {@link useUpdateTable} does - the table is read from the master's screens and

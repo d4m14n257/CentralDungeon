@@ -38,7 +38,7 @@ vi.mock('@/features/approvals/api/approvalsApi', () => ({ approvalsApi: { mine }
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   function wrap(children: ReactNode) {
-    // The request dialog composes `FormDialog`, which guards a dirty form on the way out (#231).
+    // The request dialog composes `FormDialog`, which guards a dirty form on the way out (ADR-20 §5).
     return (
       <QueryClientProvider client={queryClient}>
         <ConfirmDialogProvider>{children}</ConfirmDialogProvider>

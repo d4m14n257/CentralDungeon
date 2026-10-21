@@ -6,7 +6,7 @@ export const queryKeys = {
      * The whole explorer branch, whatever was searched - what a mutation invalidates when it changes
      * who may see what.
      *
-     * **It exists because `list()` stopped being one entry** when the search box arrived (#246): the
+     * **It exists because `list()` stopped being one entry** when the search box arrived (ADR-12 §8): the
      * explorer now keys by what was typed, so invalidating `list()` - which is
      * `['tables', 'list', undefined]` - matches the unfiltered page and misses every filtered one.
      * A mutation never knows what the reader had typed, so it invalidates the branch.
@@ -16,7 +16,7 @@ export const queryKeys = {
     managedDetail: (id: string) => ['tables', 'managed-detail', id] as const,
     mine: () => ['tables', 'mine'] as const,
     /**
-     * `/player/history` (#133): closed tables, accumulated with "See more" like the explorer - no
+     * `/player/history` (ADR-19 §8): closed tables, accumulated with "See more" like the explorer - no
      * page number in the key, `useInfiniteQuery` keeps the pages already fetched itself. Its own
      * branch and not `mine()` with a filter tacked on: `mine` answers "what am I playing now" and
      * this answers "how did it go" - two different questions whose answers must never share a cache
@@ -30,7 +30,7 @@ export const queryKeys = {
      * which page - the same `admin` convention `files`, `catalogs`, `users` and `requests` follow,
      * with `files.admin` as the exact shape.
      *
-     * **It gained `query` with F3.3** (#176): the listing now shows every table there is and accepts
+     * **It gained `query` with F3.3** (ADR-16 §7): the listing now shows every table there is and accepts
      * the six search commands, so keying only by status would serve one search's answer to another.
      */
     admin: (query?: string, statuses?: string[], page = 0, size?: number) => ['tables', 'admin', query, statuses, page, size] as const,
@@ -45,11 +45,11 @@ export const queryKeys = {
      */
     adminAll: () => ['tables', 'admin'] as const,
     statusHistory: (id: string) => ['tables', 'status-history', id] as const,
-    /** The platform's table types. One list for the whole app - admins change it rarely (#72). */
+    /** The platform's table types. One list for the whole app - admins change it rarely (ADR-06 §7). */
     types: () => ['tables', 'types'] as const,
   },
   /**
-   * The reader's own week (#227). Its own branch and not part of `tables`: it is an answer about a
+   * The reader's own week (ADR-08 §6). Its own branch and not part of `tables`: it is an answer about a
    * person across everything they run *and* everything they play at, so every mutation that moves an
    * agenda invalidates it, whichever side it came from.
    */
@@ -58,13 +58,13 @@ export const queryKeys = {
   },
   master: {
     /**
-     * The master's work tray (#136). Its own branch and not part of `tables`: it is an answer about
+     * The master's work tray (ADR-20 §4). Its own branch and not part of `tables`: it is an answer about
      * a person across every table they run, and every mutation that resolves work invalidates it.
      */
     dashboard: () => ['master', 'dashboard'] as const,
   },
   /**
-   * The shared admin tray (#100, F3.3). Its own branch and not a corner of `tables` or `requests`:
+   * The shared admin tray (ADR-16 §5, F3.3). Its own branch and not a corner of `tables` or `requests`:
    * it is one answer merged out of several sources, and what takes a row out of it is a mutation on
    * whichever aggregate the row came from - so every one of those invalidates `all()` as well as its
    * own branch.
@@ -89,14 +89,14 @@ export const queryKeys = {
     mine: (tableId: string) => ['sessions', 'mine', tableId] as const,
   },
   files: {
-    /** The reuse history of #65, keyed by what the picker searched and how /my/files narrowed it. */
+    /** The reuse history of ADR-13 §2, keyed by what the picker searched and how /my/files narrowed it. */
     mine: (query?: string, category?: string, page = 0) => ['files', 'mine', query, category, page] as const,
-    /** What the platform published, by cajón (#233, which derogated the audience of #64). */
+    /** What the platform published, by cajón (ADR-14 §4, which derogated the audience of ADR-13 §2). */
     public: (category?: string) => ['files', 'public', category] as const,
     /**
      * One table's attachments, as the people running it see them. Its own branch and not part of
      * `tables.detail`: what a master sees includes the private ones, and the table's detail carries
-     * only what it shares - two different answers that must not share a cache entry (#79).
+     * only what it shares - two different answers that must not share a cache entry (ADR-14 §1).
      */
     table: (tableId: string) => ['files', 'table', tableId] as const,
     /** The /admin/files table. Every admin mutation invalidates this branch and nothing else. */
@@ -109,12 +109,12 @@ export const queryKeys = {
     /**
      * What the table asks of **this** reader. Its own branch and not part of `tables.detail`:
      * the answer depends on who is asking — whether they play there, and who a `Single` task names —
-     * so two people looking at the same table must not share one cache entry (#121).
+     * so two people looking at the same table must not share one cache entry (ADR-05 §5).
      */
     applicable: (tableId: string) => ['tasks', 'applicable', tableId] as const,
     /** Everything handed in to one task, plus who has not answered. Only the masters read it. */
     submissions: (taskId: string) => ['tasks', 'submissions', taskId] as const,
-    /** My own answers to one task. A list, because answers accumulate (#76). */
+    /** My own answers to one task. A list, because answers accumulate (ADR-15 §2). */
     mine: (taskId: string) => ['tasks', 'mine', taskId] as const,
   },
   catalogs: {
@@ -124,25 +124,25 @@ export const queryKeys = {
     all: () => ['catalogs'] as const,
     /** The accepted values a combobox offers. Keyed by catalog and by what was typed. */
     list: (kind: string, query?: string) => ['catalogs', 'list', kind, query] as const,
-    /** One value by id, whatever its status - how a pending proposal is read back (#57). */
+    /** One value by id, whatever its status - how a pending proposal is read back (ADR-12 §3). */
     detail: (kind: string, id: string) => ['catalogs', 'detail', kind, id] as const,
     /** One value's whole synonym group - what the merge and disable dialogs are built on. */
     group: (kind: string, id: string) => ['catalogs', 'group', kind, id] as const,
-    /** The /admin/catalogs table, by value or by group (#275). Every admin mutation invalidates the whole branch. */
+    /** The /admin/catalogs table, by value or by group (ADR-12 §7). Every admin mutation invalidates the whole branch. */
     admin: (kind: string, query?: string, statuses?: string[], page = 0, size?: number, groupsOnly = false) =>
       ['catalogs', 'admin', kind, query, statuses, page, size, groupsOnly] as const,
   },
   registrations: {
     candidates: (tableId: string) => ['registrations', 'candidates', tableId] as const,
     mine: () => ['registrations', 'mine'] as const,
-    /** A table's roster. Its own branch: the candidate queue's order is a rule (#28), a roster's is not. */
+    /** A table's roster. Its own branch: the candidate queue's order is a rule (ADR-09 §1), a roster's is not. */
     players: (tableId: string) => ['registrations', 'players', tableId] as const,
   },
   notifications: {
     list: () => ['notifications', 'list'] as const,
   },
   /**
-   * The request mechanism (#42): one branch for the four questions it answers.
+   * The request mechanism (ADR-16 §1): one branch for the four questions it answers.
    *
    * `mine` and `admin` are two different answers to two different audiences and never share an
    * entry: what somebody asked for is theirs, and the tray is every request there is. The same
@@ -171,7 +171,7 @@ export const queryKeys = {
     /** One request in full - where the resolution is: who sealed it, when, and why. */
     adminDetail: (id: string) => ['requests', 'admin', 'detail', id] as const,
     /**
-     * The veto requests pending on one table (F3.4, #39).
+     * The veto requests pending on one table (F3.4, ADR-09 §5).
      *
      * **Its own branch, and deliberately outside `admin`**: a `PlayerBan` is not the platform's work
      * but the table's, resolved by its `Primary` and excluded from the shared tray. Keying it under
@@ -202,15 +202,15 @@ export const queryKeys = {
     adminAll: () => ['users', 'admin'] as const,
     /** One account as an admin sees it - what the six mutators answer with, written back by id. */
     adminDetail: (id: string) => ['users', 'admin', 'detail', id] as const,
-    /** What admins did to one account, and why (#84, #169). Invalidated by every one of the four
+    /** What admins did to one account, and why (ADR-05 §7, ADR-06 §1). Invalidated by every one of the four
      *  mutators: each of them is what adds a row to it. */
     adminHistory: (id: string) => ['users', 'admin', 'history', id] as const,
   },
   /**
-   * Profile screens (#248): `/player/profile` and `/player/users/:id`. Its own branch and not part
+   * Profile screens (ADR-10 §5): `/player/profile` and `/player/users/:id`. Its own branch and not part
    * of `users.me()`: that key backs the app shell (contexts, onboarding, `hasManagedTables`) and
-   * never carries attendance, while this one answers a visibility-gated question (#41, #44, #47)
-   * that can 404 on purpose (#249) — mixing the two would risk a stale shell surviving a profile
+   * never carries attendance, while this one answers a visibility-gated question (ADR-10 §1, §2)
+   * that can 404 on purpose (ADR-10 §3) — mixing the two would risk a stale shell surviving a profile
    * that just stopped being visible, or the reverse.
    */
   profiles: {
@@ -218,15 +218,15 @@ export const queryKeys = {
      *  their own id offhand, and `/me/profile` never needs one to ask. */
     mine: () => ['profiles', 'mine'] as const,
     /** Somebody else's profile, keyed by id - visibility can change per viewer, so two people
-     *  looking at the same id must not share a cache entry either (#121). */
+     *  looking at the same id must not share a cache entry either (ADR-05 §5). */
     detail: (id: string) => ['profiles', 'detail', id] as const,
-    /** The tables a person is linked to, on an admin's view of their record (#284), by page. */
+    /** The tables a person is linked to, on an admin's view of their record (ADR-06 §8), by page. */
     tables: (id: string, page: number) => ['profiles', 'tables', id, page] as const,
   },
   system: {
     health: () => ['system', 'health'] as const,
     /**
-     * The platform limits every client mirrors (F3.5, #141). Under `system` and not under a domain:
+     * The platform limits every client mirrors (F3.5, ADR-17 §3). Under `system` and not under a domain:
      * the answer is about the platform, is the same for everybody, and is read by whichever screen
      * is about to state a rule — which is why it is cached for an hour and invalidated by the one
      * screen that can move it.
@@ -234,7 +234,7 @@ export const queryKeys = {
     limits: () => ['system', 'limits'] as const,
   },
   /**
-   * The editable configuration of #141. Its own branch and not a corner of `system`: `system` holds
+   * The editable configuration of ADR-17 §3. Its own branch and not a corner of `system`: `system` holds
    * answers anybody reads, and this is the administrative view — what is configured, by whom, and
    * when — which only Admin and Owner can ask for.
    */

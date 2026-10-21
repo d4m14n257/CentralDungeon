@@ -122,7 +122,7 @@
       "id": "bare",
       "type": "frontend",
       "label": "/admin",
-      "sublabel": "Inicio · bienvenida (#270)",
+      "sublabel": "Inicio · bienvenida (ADR-20 §3)",
       "pos": [
         570,
         40
@@ -199,7 +199,7 @@
       "sources": [
         {
           "path": "frontend/src/routes/admin/AdminTablesPage.tsx",
-          "label": "nombre y ojo → detalle (#284)"
+          "label": "nombre y ojo → detalle (ADR-06 §8)"
         }
       ]
     },
@@ -220,7 +220,7 @@
       "sources": [
         {
           "path": "frontend/src/routes/admin/AdminCatalogsPage.tsx",
-          "label": "fila → lienzo (#275)",
+          "label": "fila → lienzo (ADR-12 §7)",
           "line": 117
         }
       ]
@@ -242,7 +242,7 @@
       "sources": [
         {
           "path": "frontend/src/routes/admin/AdminFilesPage.tsx",
-          "label": "cabecera → subir (#278)"
+          "label": "cabecera → subir (ADR-14 §7)"
         }
       ]
     },
@@ -305,7 +305,7 @@
       "sources": [
         {
           "path": "frontend/src/routes/admin/AdminSettingsPage.tsx",
-          "label": "#141"
+          "label": "ADR-17 §3"
         }
       ]
     },
@@ -313,7 +313,7 @@
       "id": "catalogGroup",
       "type": "frontend",
       "label": "/admin/catalogs/:kind/:id",
-      "sublabel": "lienzo de nodos (#275)",
+      "sublabel": "lienzo de nodos (ADR-12 §7)",
       "pos": [
         40,
         450
@@ -335,7 +335,7 @@
       "id": "fileUpload",
       "type": "frontend",
       "label": "/admin/files/upload",
-      "sublabel": "subir y publicar (#278)",
+      "sublabel": "subir y publicar (ADR-14 §7)",
       "pos": [
         1100,
         150
@@ -356,7 +356,7 @@
       "id": "tableDetail",
       "type": "frontend",
       "label": "/admin/tables/:id",
-      "sublabel": "la mesa entera, solo lectura (#284)",
+      "sublabel": "la mesa entera, solo lectura (ADR-06 §8)",
       "pos": [
         40,
         250
@@ -377,7 +377,7 @@
       "id": "tableEdit",
       "type": "frontend",
       "label": "/admin/tables/:id/edit",
-      "sublabel": "editar · avisa a sus masters (#284)",
+      "sublabel": "editar · avisa a sus masters (ADR-06 §8)",
       "pos": [
         40,
         150
@@ -398,7 +398,7 @@
       "id": "userDetail",
       "type": "frontend",
       "label": "/admin/users/:id",
-      "sublabel": "la ficha de la persona (#285)",
+      "sublabel": "la ficha de la persona (ADR-10 §6)",
       "pos": [
         1100,
         250
@@ -419,7 +419,7 @@
   "boundaries": [
     {
       "kind": "region",
-      "label": "Contexto Admin — AdminLayout · RequireContext: Admin u Owner (#269)",
+      "label": "Contexto Admin — AdminLayout · RequireContext: Admin u Owner (ADR-20 §2)",
       "wraps": [
         "bare",
         "nav",
@@ -551,7 +551,7 @@
       "dot": "rose",
       "title": "El admin casi no sale",
       "items": [
-        "Catálogos abre un lienzo (#275); archivos, su subida (#278); mesas, su detalle (#284); usuarios, su ficha (#285)",
+        "Catálogos abre un lienzo (ADR-12 §7); archivos, su subida (ADR-14 §7); mesas, su detalle (ADR-06 §8); usuarios, su ficha (ADR-10 §6)",
         "Una persona de una mesa abre su ficha; la entidad de un pedido no se abre"
       ]
     },
@@ -559,7 +559,7 @@
       "dot": "amber",
       "title": "Entrada única",
       "items": [
-        "/admin es la home y el primer ítem de la nav (#270)",
+        "/admin es la home y el primer ítem de la nav (ADR-20 §3)",
         "Las secciones de trabajo: solo AdminSectionNav"
       ]
     },
@@ -567,7 +567,7 @@
       "dot": "violet",
       "title": "El shell para un admin",
       "items": [
-        "Sin Admin u Owner: redirige a / (#269), sin 403",
+        "Sin Admin u Owner: redirige a / (ADR-20 §2), sin 403",
         "UserMenu → /player/profile sin rol Player: ahora redirige",
         "/my/files oculto sin biblioteca"
       ]

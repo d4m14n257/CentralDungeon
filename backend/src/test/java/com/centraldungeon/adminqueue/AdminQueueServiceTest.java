@@ -41,18 +41,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * Every rule of the shared tray (#100, #176, #258), one test each.
+ * Every rule of the shared tray (ADR-16 §5, §7, §6), one test each.
  *
  * <p>Three of them are what the slice is actually about and the rest exists so they cannot be broken
  * quietly:
  *
  * <ul>
  *   <li><b>What enters is taxative</b> (arquitectura §4.5): {@code Pending} requests and tables in
- *       {@code Preparation}, <em>and nothing else</em>. A loose reading of #176 would also list
+ *       {@code Preparation}, <em>and nothing else</em>. A loose reading of ADR-16 §7 would also list
  *       {@code Draft}, {@code ChangesRequested} and {@code Unassigned}, and each of those is work that
  *       is not an admin's to do right now.</li>
  *   <li><b>A reserved item disappears for the rest and stays for whoever took it</b> - the filter the
- *       whole mechanism of #100 rests on, asserted as the actor reaching the query.</li>
+ *       whole mechanism of ADR-16 §5 rests on, asserted as the actor reaching the query.</li>
  *   <li><b>Reserving is idempotent for the same admin and a 409 for anybody else.</b> Including the
  *       part that is easy to get wrong: the second click must not push {@code claimed_at} forward, or
  *       an admin clicking every fourteen minutes would hold an item for ever.</li>
@@ -86,7 +86,7 @@ class AdminQueueServiceTest {
 
     /**
      * «La bandeja es un UNION sobre {@code approval_requests} (Pending) y {@code game_tables}
-     * (Preparation)» - and nothing else (arquitectura §4.5, #245).
+     * (Preparation)» - and nothing else (arquitectura §4.5, ADR-07 §1).
      *
      * <p>Asserted on the arguments each query receives rather than on what comes back, because what
      * has to be pinned is <em>what is being asked</em>. A test that built fake rows and counted the
@@ -108,7 +108,7 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * The actor enters the WHERE of both sources (#121, #100): an item another admin took is not in
+     * The actor enters the WHERE of both sources (ADR-05 §5, ADR-16 §5): an item another admin took is not in
      * this answer, and one this admin took is.
      */
     @Test
@@ -158,7 +158,7 @@ class AdminQueueServiceTest {
     // ------------------------------------------------------------------ the order and the page
 
     /**
-     * «El que espera hace más tiempo va primero», the same as the master's tray (#136): urgency here is
+     * «El que espera hace más tiempo va primero», the same as the master's tray (ADR-20 §4): urgency here is
      * time and not volume. And the ordering is <b>across sources</b>, which is what makes this one tray
      * rather than two listings stuck together.
      */
@@ -176,7 +176,7 @@ class AdminQueueServiceTest {
                 .containsExactly("req-viejo", "table-1", "req-nuevo");
     }
 
-    /** Tie-break by id, so page 2 is the remainder and not a fresh shuffle (#171). */
+    /** Tie-break by id, so page 2 is the remainder and not a fresh shuffle (ADR-07 §9). */
     @Test
     void theTieIsBrokenByIdSoThatPageTwoIsStable() {
         ApprovalRequest primero = pendingRequest("req-aaa", "2026-09-01T09:00");
@@ -190,7 +190,7 @@ class AdminQueueServiceTest {
 
     /**
      * The total is the whole tray's and not the slice's: the merge is already in memory, so counting it
-     * exactly is free (#173).
+     * exactly is free (ADR-04 §6).
      */
     @Test
     void theTotalIsTheWholeTrayAndThePageIsTheSlice() {
@@ -209,7 +209,7 @@ class AdminQueueServiceTest {
         assertThat(page.content()).extracting(AdminQueueItemResponse::id).containsExactly("req-3");
     }
 
-    /** A page beyond the end is empty, not an exception: the frontend can ask for it from the URL (#185). */
+    /** A page beyond the end is empty, not an exception: the frontend can ask for it from the URL (ADR-12 §7). */
     @Test
     void aPageBeyondTheEndIsEmpty() {
         queue(List.of(pendingRequest("req-1", "2026-09-01T09:00")), List.of());
@@ -220,7 +220,7 @@ class AdminQueueServiceTest {
         assertThat(page.totalElements()).isEqualTo(1);
     }
 
-    /** An empty tray is good news and not a broken screen (#136). */
+    /** An empty tray is good news and not a broken screen (ADR-20 §4). */
     @Test
     void anEmptyTrayIsAnOrdinaryAnswer() {
         noQueue();
@@ -272,7 +272,7 @@ class AdminQueueServiceTest {
 
     /**
      * And if the table has no live Primary it falls back to whoever created the row: still true, and the
-     * tray never prints an id (#136).
+     * tray never prints an id (ADR-20 §4).
      */
     @Test
     void aTableWithNoLivePrimaryNamesWhoeverCreatedIt() {
@@ -285,7 +285,7 @@ class AdminQueueServiceTest {
         assertThat(item.requestedByName()).isEqualTo("quien-la-creo");
     }
 
-    /** The whole page's masters are resolved in one query, not one per row (#136, contract §3.4). */
+    /** The whole page's masters are resolved in one query, not one per row (ADR-20 §4, contract §3.4). */
     @Test
     void thePagesMastersAreResolvedInOneQuery() {
         queue(
@@ -334,7 +334,7 @@ class AdminQueueServiceTest {
         assertThat(item.claimedByName()).isEqualTo("damian");
     }
 
-    /** If somebody else holds it, 409 with the code the screen needs to write the sentence (#197). */
+    /** If somebody else holds it, 409 with the code the screen needs to write the sentence (ADR-23 §3). */
     @Test
     void claimingWhatAnotherAdminHoldsIs409() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
@@ -350,7 +350,7 @@ class AdminQueueServiceTest {
         assertThat(request.getClaimedBy().getId()).isEqualTo("admin-2");
     }
 
-    /** The claim is taken under the row's lock, which is what gives the race between two admins one winner (#252, #256). */
+    /** The claim is taken under the row's lock, which is what gives the race between two admins one winner (ADR-06 §2, ADR-16 §4). */
     @Test
     void theClaimIsTakenUnderTheRowsLock() {
         ApprovalRequest request = pendingRequest("req-1", "2026-09-01T09:00");
@@ -400,7 +400,7 @@ class AdminQueueServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** A deleted table does not exist here either (#25, #175): 404 and not 403 - «fue borrada» is not told. */
+    /** A deleted table does not exist here either (ADR-03 §7, ADR-07 §6): 404 and not 403 - «fue borrada» is not told. */
     @Test
     void aDeletedTableDoesNotExistForTheTray() {
         GameTable table = tableInReview("table-1", "2026-09-01T09:00");
@@ -517,7 +517,7 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * <b>{@code PlayerBan} does not enter the tray</b> (#39 over #90), and that had to be <em>built</em>:
+     * <b>{@code PlayerBan} does not enter the tray</b> (ADR-09 §5 over ADR-16 §1), and that had to be <em>built</em>:
      * the query never asked what type a row was, so new types joined for free. {@code TablePause} does
      * enter - an admin resolves it - and a veto does not, because the table's {@code Primary} resolves
      * it. A tray full of work the reader gets a 403 for taking is worse than one that under-reports.

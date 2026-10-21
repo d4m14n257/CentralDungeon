@@ -34,14 +34,14 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * <ul>
  *   <li><b>Nobody with Admin or Owner can be blocked</b> - not by an admin, not by an owner, not by
  *       themselves (roles-y-alcance.md §3). Among peers there is no authority, and a block is
- *       irreversible from the blocked side: they cannot log in to ask about it (#84). Stated as one
+ *       irreversible from the blocked side: they cannot log in to ask about it (ADR-05 §7). Stated as one
  *       rule about the target rather than as a comparison between actor and target, it also covers
  *       blocking yourself for free - the actor of this screen always holds one of the two.</li>
- *   <li><b>A block evicts the auth cache</b> (#128). A block that takes sixty seconds to apply is a
+ *   <li><b>A block evicts the auth cache</b> (ADR-05 §3). A block that takes sixty seconds to apply is a
  *       block that does not block, and the blocked person spends that minute inside.</li>
  * </ul>
  *
- * <p>A block <b>keeps everything</b> (#84): no table, no application and no history is removed. It
+ * <p>A block <b>keeps everything</b> (ADR-05 §7): no table, no application and no history is removed. It
  * is a door that stops opening, not a deletion.
  */
 @Service
@@ -99,7 +99,7 @@ public class AdminUserService {
      * @param rawQuery the search box: bare text matches either name, and {@code /discord_name},
      *                 {@code /user_name}, {@code /role} and {@code /status} narrow it. An
      *                 unrecognized value matches nothing and is never a 400
-     * @param pageable page, size and sort, with a tie-break by id (#171)
+     * @param pageable page, size and sort, with a tie-break by id (ADR-07 §9)
      * @return one page of people, each with their roles resolved in a single extra query
      */
     @Transactional(readOnly = true)
@@ -125,11 +125,11 @@ public class AdminUserService {
     }
 
     /**
-     * Blocks an account (#84). The person stops being able to log in; everything they made stays.
+     * Blocks an account (ADR-05 §7). The person stops being able to log in; everything they made stays.
      *
      * @param targetId      the account to block
      * @param justification why. Required: the blocked person cannot log in to ask
-     * @param actor         the actor, from the token (#121)
+     * @param actor         the actor, from the token (ADR-05 §5)
      * @return the account afterwards
      * @throws NotFoundException        404 when nobody has that id
      * @throws ForbiddenActionException 403 {@code CANNOT_BLOCK_PRIVILEGED} when the target holds
@@ -157,7 +157,7 @@ public class AdminUserService {
      *
      * @param targetId      the account to unblock
      * @param justification why, so the history reads as a conversation and not as a silent reversal
-     * @param actor         the actor, from the token (#121)
+     * @param actor         the actor, from the token (ADR-05 §5)
      * @return the account afterwards
      * @throws NotFoundException 404 when nobody has that id
      * @throws ConflictException 409 {@code USER_NOT_BLOCKED} when the account is not Blocked. A
@@ -235,7 +235,7 @@ public class AdminUserService {
      * between the eviction and the commit: a concurrent request misses the cache, reads the rows as
      * they were <em>before</em> the commit, and repopulates {@code userAuth} with the answer the
      * change was meant to replace - where it then survives the full TTL. That is the exact hole
-     * #128 exists to close, so the eviction waits for {@code afterCommit}.
+     * ADR-05 §3 exists to close, so the eviction waits for {@code afterCommit}.
      *
      * <p>Called without a transaction - a unit test, or a future caller that forgets one - it
      * evicts immediately, which is the best that can be done when there is no commit to wait for.

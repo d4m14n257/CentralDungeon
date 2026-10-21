@@ -12,7 +12,7 @@ import { MasterWorkItemList, useMasterDashboard } from '@/features/tables'
 import { ApiError } from '@/types/api'
 
 /**
- * `/master` — the work tray: what needs an answer today, across every table the reader runs (#136).
+ * `/master` — the work tray: what needs an answer today, across every table the reader runs (ADR-20 §4).
  *
  * **A tray, not a summary with numbers.** A master with three tables does not need to be told they
  * have twelve candidates, they need to know who they owe an answer to. Nothing here is a figure
@@ -24,7 +24,7 @@ import { ApiError } from '@/types/api'
 export function MasterDashboardPage() {
   const { t } = useTranslation('master')
   // isLoadingError, not isError: a background refetch that fails must not blank a tray that already
-  // loaded (#150).
+  // loaded (ADR-19 §4).
   const { data, isPending, error, isLoadingError, refetch } = useMasterDashboard()
 
   if (isPending) {

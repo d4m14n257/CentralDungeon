@@ -7,7 +7,7 @@ import { registrationsApi } from './registrationsApi'
 /**
  * Accepts a candidate.
  *
- * Taking the last seat auto-rejects everyone still queued (#34), so this invalidates the whole
+ * Taking the last seat auto-rejects everyone still queued (ADR-09 §3), so this invalidates the whole
  * table branch rather than patching one row - one accept can change several.
  *
  * @param tableId the table, for the invalidation

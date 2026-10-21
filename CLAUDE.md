@@ -12,11 +12,11 @@ frontend/           React 19 + Vite 8 + TypeScript ← idem; pantallas en src/ro
 design/             Sistema de diseño — build.py genera tokens y previews
 legacy/backend-node/    Express + TS (2024)  — SOLO LECTURA, referencia funcional
 legacy/frontend-next/   Next.js 14 + MUI     — SOLO LECTURA, referencia funcional
-docs/               Documentación; docs/adr/ son las decisiones, una por archivo
+docs/               Documentación; docs/adr/ son las decisiones, una ADR por tema
 .claude/            skills/ (cómo se hace), rules/ (reglas por ruta), agents/ (revisores)
 ```
 
-`design/build.py` es la **fuente de verdad de todo valor de diseño** (#130); cómo se corre y se transcribe al frontend está en `.claude/rules/tokens.md`, que se carga al tocar `design/` o los estilos.
+`design/build.py` es la **fuente de verdad de todo valor de diseño** (ADR-21 §1); cómo se corre y se transcribe al frontend está en `.claude/rules/tokens.md`, que se carga al tocar `design/` o los estilos.
 
 `legacy/` nunca se edita. Se consulta para recordar cómo se comportaba realmente el sistema, y se elimina cuando el código nuevo alcance paridad.
 
@@ -24,7 +24,7 @@ Existe otro repo, `CentralDungeonBackend` (intento previo de migración a Java),
 
 ## Dónde vive cada cosa
 
-Sin redundancia: cada cosa se dice en un solo lugar, y los demás remiten. Desde #292, `docs/` solo guarda lo que no es una regla: las ADRs, el plan de fases, la fase en curso y los diagramas.
+Sin redundancia: cada cosa se dice en un solo lugar, y los demás remiten. Desde ADR-01 §5, `docs/` solo guarda lo que no es una regla: las ADRs, el plan de fases, la fase en curso y los diagramas.
 
 | Qué | Dónde |
 |---|---|
@@ -32,7 +32,7 @@ Sin redundancia: cada cosa se dice en un solo lugar, y los demás remiten. Desde
 | **Las pantallas y lo visual**: principios (§1), navegación y sitemap (§2), tokens y temas (§3), pantallas clave (§4), componentes, responsive y clases de patrón (§5) | Skill `diseno` |
 | **El entorno local** y sus trampas (§1–§5), los MCP servers con sus variables (§6), Claude Design (§7) y las skills externas (§8) | Skill `entorno-local` |
 | **Las reglas duras**, cargadas por ruta | `.claude/rules/*.md` (índice abajo) |
-| **Qué se decidió y por qué** | `docs/adr/`, una ADR por archivo; `#n` es la ADR n (#289). El README es el índice, lo abierto y cómo se escribe una nueva |
+| **Qué se decidió y por qué** | `docs/adr/`, una ADR por tema; se cita `ADR-NN §k` (ADR-01 §8). El README es el índice, lo abierto, cómo se escribe una nueva y la tabla de equivalencias de la numeración anterior (`#n`) |
 | Fases de construcción, qué se rescata del legacy, definición de terminado | `docs/plan-desarrollo.md` |
 | **La fase en curso (F4): cómo se revisa lo construido** y la deuda que dejaron F1–F3 | `docs/fase-4-revision.md` |
 | Diagramas: ER por subsistema (11–16), ciclos de vida (05–07), navegación real de la UI (21–24) | `docs/diagramas/` (fuentes `.mmd` y `.architecture.json`; se regeneran con los comandos de su README) |
@@ -43,13 +43,13 @@ Versiones **fijadas** en `arquitectura` §1 (agosto 2026). Subir una major es un
 
 **Backend** — Java 25 (LTS), Spring Boot 4.1.1, Maven, Spring Data JPA + Hibernate 7.4, MySQL 8, Flyway, Spring Security 7.1 + OAuth2 (Discord) + JWT, Bean Validation, MapStruct, springdoc-openapi 3.1, Caffeine (caché en proceso). Tests: JUnit 6 + Mockito + AssertJ + Testcontainers 2.x. **Es Boot 4**: Jackson 3, JSpecify, JUnit 6 — el detalle de lo que cambia respecto de Boot 3, en `.claude/rules/stack.md`.
 
-**Frontend** — TypeScript 5.9 (`strict`), Vite 8, React 19.2, React Router 8 (paquete `react-router`), shadcn/ui + Tailwind 4 (config en CSS, **no** hay `tailwind.config.ts`), TanStack Query 5 (estado de servidor), Zustand 5 (estado de UI global), react-hook-form 7 + zod 4, i18next (**español e inglés**, #198). Tests: Vitest + React Testing Library, Playwright para e2e. Node 24 LTS.
+**Frontend** — TypeScript 5.9 (`strict`), Vite 8, React 19.2, React Router 8 (paquete `react-router`), shadcn/ui + Tailwind 4 (config en CSS, **no** hay `tailwind.config.ts`), TanStack Query 5 (estado de servidor), Zustand 5 (estado de UI global), react-hook-form 7 + zod 4, i18next (**español e inglés**, ADR-23 §2). Tests: Vitest + React Testing Library, Playwright para e2e. Node 24 LTS.
 
 Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<feature>/` y `src/features/<dominio>/`). En el backend, las capas van adentro de la feature más un `common/` transversal; en el frontend, las **pantallas viven fuera** de las features en `src/routes/`, y lo sin dominio en capas de la raíz (`components/`, `hooks/`, `lib/`, `api/`, `types/`, `config/`). Detalle en `arquitectura` §2.1 y §3.1.
 
 ## Reglas duras
 
-Se citan por número desde el código y los docs, y **el número no cambia** (#290). Las del dominio están completas acá porque valen al planificar cualquier cosa; el resto se carga desde su rule al tocar los archivos de su ruta, con el detalle en la skill.
+Se citan por número desde el código y los docs, y **el número no cambia** (ADR-01 §6). Las del dominio están completas acá porque valen al planificar cualquier cosa; el resto se carga desde su rule al tocar los archivos de su ruta, con el detalle en la skill.
 
 | # | Regla | Dónde |
 |---|---|---|
@@ -73,15 +73,15 @@ Se citan por número desde el código y los docs, y **el número no cambia** (#2
 | 18 | Ningún texto ni valor de estilo suelto; el backend manda códigos, no frases | `rules/frontend.md`, `rules/backend.md` |
 | 19 | Todo lo público lleva su Javadoc o JSDoc, en inglés | `rules/documentacion-codigo.md` |
 
-**5.** **Cuatro roles, acumulables salvo una pareja**: `Player`, `Master`, `Admin`, `Owner`. `Player` y `Master` se suman con cualquiera; **`Admin` y `Owner` son el mismo rol con distinto alcance y no se acumulan** — nadie tiene los dos, y `Owner` puede todo lo de `Admin` (#169). **No se registra un `RoleHierarchy`**: cada endpoint enumera sus roles (`hasAnyRole('ADMIN','OWNER')`). Y ojo con los dos `Owner`: el rol de plataforma y `masters.master_type = 'Primary'` no son lo mismo y no se llaman igual (#67, #71, #89).
+**5.** **Cuatro roles, acumulables salvo una pareja**: `Player`, `Master`, `Admin`, `Owner`. `Player` y `Master` se suman con cualquiera; **`Admin` y `Owner` son el mismo rol con distinto alcance y no se acumulan** — nadie tiene los dos, y `Owner` puede todo lo de `Admin` (ADR-06 §1). **No se registra un `RoleHierarchy`**: cada endpoint enumera sus roles (`hasAnyRole('ADMIN','OWNER')`). Y ojo con los dos `Owner`: el rol de plataforma y `masters.master_type = 'Primary'` no son lo mismo y no se llaman igual (ADR-06 §1, §3).
 
 **8.** Nada de lógica de negocio en la base de datos: ni triggers ni stored procedures. Lo que era trigger vive ahora en el service layer.
 
 **12.** `legacy/` es de solo lectura.
 
-**13.** **Campañas y Temporadas están fuera de la v1 a propósito** — no las agregues al modelo ni al código sin decisión explícita (#7). Su **diseño** ya está cerrado (#129) y los tres puntos a resolver antes de construirlas, en `arquitectura` §4.7.1.
+**13.** **Campañas y Temporadas están fuera de la v1 a propósito** — no las agregues al modelo ni al código sin decisión explícita (ADR-07 §10). Su **diseño** ya está cerrado (ADR-07 §10) y los tres puntos a resolver antes de construirlas, en `arquitectura` §4.7.1.
 
-**17.** **El rol no es la pertenencia**, y en las mesas la pertenencia manda: dirigir una mesa concreta se autoriza **solo por la fila en `masters`**, sin exigir el rol `Master` — que significa "puedo crear mesas propias" y nada más (#135). Toda lectura o mutación de un recurso concreto filtra por el actor —el actor en el `WHERE`, o verificación explícita en el service antes de tocar nada— y el actor sale siempre del token, nunca de la URL (#121). El JWT afirma **identidad, no autorización**: roles y `status` se leen de la base en cada request (#122).
+**17.** **El rol no es la pertenencia**, y en las mesas la pertenencia manda: dirigir una mesa concreta se autoriza **solo por la fila en `masters`**, sin exigir el rol `Master` — que significa "puedo crear mesas propias" y nada más (ADR-06 §4). Toda lectura o mutación de un recurso concreto filtra por el actor —el actor en el `WHERE`, o verificación explícita en el service antes de tocar nada— y el actor sale siempre del token, nunca de la URL (ADR-05 §5). El JWT afirma **identidad, no autorización**: roles y `status` se leen de la base en cada request (ADR-05 §3).
 
 ## Comandos
 
@@ -97,7 +97,7 @@ cd frontend && npm run dev
 cd frontend && npm run test          # Vitest
 cd frontend && npm run test:e2e      # Playwright, contra el backend real — arrancarlo con -Dspring-boot.run.profiles=dev,test (backend/README.md)
 cd frontend && npx tsc -b            # typecheck (strict)
-cd frontend && npm run format        # prettier con la config del repo (#174)
+cd frontend && npm run format        # prettier con la config del repo (ADR-02 §4)
 
 # Diseño
 python3 design/build.py                  # regenera design/out/ y mide los contrastes
@@ -121,25 +121,25 @@ Configurados en `.mcp.json`, sin secretos literales. Detalle y variables de ento
 | `playwright` | Tests e2e sobre el frontend real |
 | `shadcn-ui` | Código fuente real de los componentes shadcn, para no inventar props |
 
-El diseño **no** va por MCP: se usa `DesignSync` contra Claude Design, autorizado una vez con `/design-login` (#130). Figma se removió — exige plan pago.
+El diseño **no** va por MCP: se usa `DesignSync` contra Claude Design, autorizado una vez con `/design-login` (ADR-21 §1). Figma se removió — exige plan pago.
 
 ## Skills
 
-En `.claude/skills/`, versionadas con el repo. **Son la forma en que se guarda cómo se hace cada cosa**, y el código las cita por sección (`arquitectura §2.3`, `diseno §5.c`). Son tres, a propósito (#274): lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva. Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` (detalle en `entorno-local` §8).
+En `.claude/skills/`, versionadas con el repo. **Son la forma en que se guarda cómo se hace cada cosa**, y el código las cita por sección (`arquitectura §2.3`, `diseno §5.c`). Son tres, a propósito (ADR-01 §5): lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva. Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` (detalle en `entorno-local` §8).
 
 | Skill | Cuándo |
 |---|---|
 | `arquitectura` | Antes de escribir o revisar cualquier código, de tocar una `@Entity`, una migración o una regla de negocio, o de escribir tests. El stack fijado (§1), backend (§2), frontend (§3), modelo de datos con su DDL y su ER (§4), testing (§5), Javadoc y JSDoc (§6), los procedimientos —nuevo endpoint, nuevo componente o pantalla, cambio de schema— (§7) y configuración y despliegue (§8) |
-| `diseno` | Antes de diseñar o escribir una pantalla o un componente, o de agregar un estilo: los principios (§1), la navegación y el sitemap (§2), de dónde sale cada valor (§3), las pantallas clave (§4), el inventario de componentes (§5), el responsive (§5.b) y **las clases y componentes de patrón** que una pantalla no vuelve a escribir (§5.c, #273) |
+| `diseno` | Antes de diseñar o escribir una pantalla o un componente, o de agregar un estilo: los principios (§1), la navegación y el sitemap (§2), de dónde sale cada valor (§3), las pantallas clave (§4), el inventario de componentes (§5), el responsive (§5.b) y **las clases y componentes de patrón** que una pantalla no vuelve a escribir (§5.c, ADR-21 §5) |
 | `entorno-local` | Antes de correr, reiniciar o verificar algo contra el backend, el frontend, Playwright o Testcontainers — y antes de culpar al código por una suite entera en rojo. También los MCP servers y sus variables (§6), Claude Design (§7) y `archify` (§8) |
 
 ## Rules
 
-En `.claude/rules/`, versionadas (#290). Cada una se carga sola al tocar un archivo de su `paths:`, y remite a la skill para el detalle. Las de `rules/ecc/` dicen qué parte de ECC aplica aquí y cuál choca: `common.md` e `integracion.md` se cargan siempre; `java.md` y `typescript.md`, por extensión.
+En `.claude/rules/`, versionadas (ADR-01 §6). Cada una se carga sola al tocar un archivo de su `paths:`, y remite a la skill para el detalle. Las de `rules/ecc/` dicen qué parte de ECC aplica aquí y cuál choca: `common.md` e `integracion.md` se cargan siempre; `java.md` y `typescript.md`, por extensión.
 
 ## Agentes
 
-En `.claude/agents/`, versionados (#291). Cada uno precarga la skill del repo que le toca. **Se lanzan cuando el usuario o la tarea lo piden**, no por iniciativa propia. Los revisores no editan: devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3 (bug, alcance de F5 o F6, decisión nueva); el auditor, en las suyas (corrección directa, decisión nueva, limpieza).
+En `.claude/agents/`, versionados (ADR-01 §7). Cada uno precarga la skill del repo que le toca. **Se lanzan cuando el usuario o la tarea lo piden**, no por iniciativa propia. Los revisores no editan: devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3 (bug, alcance de F5 o F6, decisión nueva); el auditor, en las suyas (corrección directa, decisión nueva, limpieza).
 
 | Agente | Cuándo |
 |---|---|

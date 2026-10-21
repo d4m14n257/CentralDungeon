@@ -10,7 +10,7 @@ import type { CatalogKind } from '../types'
  * One value's whole synonym group, canonical entry first.
  *
  * It is what lets /admin/catalogs answer two things a single row cannot: which synonyms a value
- * has, and - when the canonical entry is being disabled - who can take the group over (#59). Every
+ * has, and - when the canonical entry is being disabled - who can take the group over (ADR-12 §2). Every
  * member comes back, whatever its status, because a disabled synonym is still something to restore.
  *
  * @param kind which catalog

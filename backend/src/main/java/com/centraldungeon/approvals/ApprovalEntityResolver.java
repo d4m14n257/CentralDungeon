@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 /**
  * The half of {@code entity_type} / {@code entity_id} that the database cannot do.
  *
- * <p>There is no foreign key behind those two columns and there never will be (#78, #126): a
+ * <p>There is no foreign key behind those two columns and there never will be (ADR-16 §2): a
  * reference that can point at three different tables cannot be constrained by one. So the question
  * "does what this row points at still exist?" has to be answered in code, and this is the single
  * place that answers it - for three callers that would otherwise each grow their own copy:
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  *       against something that is not there.</li>
  *   <li>{@code ApprovalService.approve} / {@code reject} ask again before acting, because the row
  *       outlives what it points at on purpose - «una solicitud sobre una mesa borrada sigue siendo un
- *       hecho» (#126) - but resolving one would be acting on a ghost.</li>
+ *       hecho» (ADR-16 §2) - but resolving one would be acting on a ghost.</li>
  *   <li>{@link ApprovalOrphanCheckService} asks it of every unresolved row, on a schedule, so the
  *       answer shows up in a log while it can still be traced.</li>
  * </ul>
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  * {@code default} is what would have caught the case being forgotten.
  *
  * <p><b>A soft-deleted entity counts as absent</b>, which is the question F3.2 left open and F3.4
- * answered. The resolver reads the same way the rest of the application does (#25), so a request
+ * answered. The resolver reads the same way the rest of the application does (ADR-03 §7), so a request
  * about a deleted table answers {@code REQUEST_ENTITY_GONE} when somebody tries to resolve it -
  * the first time that code is reachable at all. F3.2's own debt table said so: «hoy es inalcanzable
  * [...] empieza a dispararse en F3.4».
@@ -44,19 +44,19 @@ public class ApprovalEntityResolver {
      * The only entity type F3.2 produces. The three types of this slice are all about the person who
      * asked: {@code TableOpen} is about a table that does not exist yet and {@code General} is about
      * nothing, and both columns are {@code NOT NULL}, so pointing at the requester is the one answer
-     * that is true and needs no nullable column per flow (#126).
+     * that is true and needs no nullable column per flow (ADR-16 §2).
      */
     public static final String USER = "user";
 
     /**
-     * The table a {@code TablePause} is about (#32).
+     * The table a {@code TablePause} is about (ADR-07 §2).
      *
      * <p>Added by F3.4 together with the flow that produces it, which is the whole discipline of
-     * #78: the type and its case arrive in the same commit or the {@code default} below fires.
+     * ADR-16 §2: the type and its case arrive in the same commit or the {@code default} below fires.
      */
     public static final String GAME_TABLE = "game_table";
 
-    /** The application a {@code PlayerBan} is about (#39). */
+    /** The application a {@code PlayerBan} is about (ADR-09 §5). */
     public static final String TABLE_REGISTRATION = "table_registration";
 
     /** Resolves {@link #USER}. {@code existsById} and not a load: the answer is a boolean. */
@@ -71,7 +71,7 @@ public class ApprovalEntityResolver {
     /**
      * @param userRepository         the {@code users} table, asked only whether a row is there
      * @param gameTableRepository    the {@code game_tables} table, asked whether the row is there
-     *                               <em>and</em> still alive (#25)
+     *                               <em>and</em> still alive (ADR-03 §7)
      * @param registrationRepository the {@code table_registrations} table, asked the same
      */
     public ApprovalEntityResolver(
@@ -99,7 +99,7 @@ public class ApprovalEntityResolver {
      * <p><b>Existing and being gone are different questions, and this answers the second.</b> The
      * {@code USER} case asks {@code existsById} because a user is never soft-deleted out of
      * {@code users}; the two F3.4 added load the row and look at its status, because a table and an
-     * application both have a {@code Deleted} state and #25 says a soft-deleted thing does not exist
+     * application both have a {@code Deleted} state and ADR-03 §7 says a soft-deleted thing does not exist
      * for any read. A resolver that answered "yes, it is there" about a deleted table would let an
      * admin resolve a request to pause something nobody can see.
      *

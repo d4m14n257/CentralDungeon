@@ -3,7 +3,7 @@ import { api } from '@/api/client'
 import type { SettingKey, SystemSetting, SystemSettingChange, UpdateSettingInput } from '../types'
 
 /**
- * The three calls of `/admin/settings` (F3.5, #141). Under their own prefix like every other
+ * The three calls of `/admin/settings` (F3.5, ADR-17 §3). Under their own prefix like every other
  * administrative surface, because all three answer to `hasAnyRole('ADMIN','OWNER')`.
  *
  * **None of them is paginated**, and that is the backend's shape rather than an omission here: there

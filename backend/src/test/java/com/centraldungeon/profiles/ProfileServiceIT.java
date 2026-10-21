@@ -37,7 +37,7 @@ import org.testcontainers.mysql.MySQLContainer;
 
 /**
  * The two things a mocked repository has no opinion about, over real MySQL: the two-week window of
- * #44 against a real {@code closed_at} column, and the aggregate attendance of #137 summed across more
+ * ADR-10 §2 against a real {@code closed_at} column, and the aggregate attendance of ADR-08 §5 summed across more
  * than one table.
  *
  * <p>Wired with {@code @DynamicPropertySource}, not {@code @ServiceConnection} - see
@@ -107,7 +107,7 @@ class ProfileServiceIT {
         assertThat(longClosed.getId()).isNotEqualTo(recentlyClosed.getId());
     }
 
-    /** #137's aggregate, summed across two tables in the same read - the risk a single-table mock cannot show. */
+    /** ADR-08 §5's aggregate, summed across two tables in the same read - the risk a single-table mock cannot show. */
     @Test
     void attendanceAggregatesAcrossSeveralTablesAtOnce() {
         User master = givenAPlayer("Master");

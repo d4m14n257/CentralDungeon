@@ -1,11 +1,11 @@
 import type { AccountStatus, PlatformRole } from './types'
 
 /**
- * The four platform roles, **in the order of #165** — the same order `PlatformRole` declares them in
+ * The four platform roles, **in the order of ADR-07 §8** — the same order `PlatformRole` declares them in
  * and the same order the API returns them in.
  *
  * The order is read as increasing scope: the two anybody can hold, then the two that are one rank at
- * two scopes (#169). Chips, the role picker of the change dialog and the `/role` command all take
+ * two scopes (ADR-06 §1). Chips, the role picker of the change dialog and the `/role` command all take
  * their order from here, so a listing and a dialog can never disagree about it.
  *
  * A written-out tuple rather than something derived from the union, because a union of literals has
@@ -46,7 +46,7 @@ export const ACCOUNT_STATUSES = ['Allowed', 'Blocked', 'Deleted'] as const satis
  * disagree.
  *
  * @param roles the account's active roles
- * @returns whether blocking it is refused to everybody (#84, §3)
+ * @returns whether blocking it is refused to everybody (ADR-05 §7, §3)
  */
 export function isPrivileged(roles: readonly PlatformRole[]): boolean {
   return roles.some((role) => (PRIVILEGED_ROLES as readonly PlatformRole[]).includes(role))

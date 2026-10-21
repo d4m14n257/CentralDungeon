@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { sessionsApi } from './sessionsApi'
 
 /**
- * The master declaring that a session was played (#195).
+ * The master declaring that a session was played (ADR-08 §4).
  *
  * It is its own action and not a side effect of recording attendance: "we played" and "these people
  * came" are two facts, and inferring one from the other would silently mark as played a session that

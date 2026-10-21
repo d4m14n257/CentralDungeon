@@ -11,7 +11,7 @@ export interface StatusNoticeProps {
   /** The decisions that change where the entity stands, as buttons with their text. Absent when there is none. */
   actions?: ReactNode
   /**
-   * The destructive ones - cancel, remove - kept apart at the right end of the row (#288), so a press
+   * The destructive ones - cancel, remove - kept apart at the right end of the row (ADR-21 §10), so a press
    * aimed at «Aprobar» never lands on «Cancelar». The confirmation still catches it; this is the help
    * before it. On a narrow screen they wrap below, still on the right. Only when there are other
    * buttons to keep them away from: a destructive action that is the only one goes in `actions`.
@@ -21,15 +21,15 @@ export interface StatusNoticeProps {
 
 /**
  * The notice that says where an entity stands and carries the decisions that move it, above the
- * screen's tabs (#287).
+ * screen's tabs (ADR-21 §10).
  *
- * **A named pattern because the alternative looked broken** (#273, #287): the admin's decisions about
+ * **A named pattern because the alternative looked broken** (ADR-21 §5, §10): the admin's decisions about
  * a table were first a section of their own on a "Status" tab - a heading and one button, or none -
  * which the user found ugly, and which put the decision at the end of the last tab, where it was not
  * found. A decision belongs where the situation is said, and the situation belongs above everything
  * else: this block says both at once, and is visible from every tab.
  *
- * Text buttons and not icons: they are the screen's decisions, not a row's actions (#272). Built on
+ * Text buttons and not icons: they are the screen's decisions, not a row's actions (ADR-21 §11). Built on
  * the inventory's `Alert`, default variant, so it follows both themes with no colour of its own.
  *
  * @param props.title              where the entity stands

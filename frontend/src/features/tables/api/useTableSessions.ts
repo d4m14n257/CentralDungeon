@@ -8,7 +8,7 @@ import { sessionsApi } from './sessionsApi'
 /**
  * A table's calendar as the people running it see it, with notes and rosters.
  *
- * While the table is in `Pause` the backend does not return the pending sessions (#32, #33): a pause
+ * While the table is in `Pause` the backend does not return the pending sessions (ADR-07 §2, ADR-08 §3): a pause
  * promises no dates, so the screen shows what was played and what was called off, and nothing else.
  *
  * @param tableId the table

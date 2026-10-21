@@ -6,7 +6,7 @@ import { settingsApi } from './settingsApi'
 import type { SettingKey, UpdateSettingInput } from '../types'
 
 /**
- * Changes one setting (#141).
+ * Changes one setting (ADR-17 §3).
  *
  * **It invalidates three branches, and the third is the one that is easy to forget.** The listing and
  * that setting's history are obvious. `system.limits()` is the copy of the file cap every other
@@ -17,7 +17,7 @@ import type { SettingKey, UpdateSettingInput } from '../types'
  * key it just moved by the time the cache is being cleaned, and re-reading one small answer is
  * cheaper than a rule that has to be kept in step with the settings catalogue.
  *
- * `meta.showsItsOwnError`: the dialog renders the refusal inline, beside the field (#197).
+ * `meta.showsItsOwnError`: the dialog renders the refusal inline, beside the field (ADR-23 §3).
  *
  * @returns the mutation, taking the setting, the new value and the reason
  */

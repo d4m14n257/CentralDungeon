@@ -15,13 +15,13 @@ import { countriesIn } from '@/lib/countries'
 import { useConfirm } from '@/hooks/useConfirm'
 
 /**
- * The blocking first step: display name and country (#134). Nothing else in the app is reachable
+ * The blocking first step: display name and country (ADR-10 §4). Nothing else in the app is reachable
  * until it is done, which is why the redirect lives in the session guard and not in each screen.
  */
 export function OnboardingPage() {
   const { t, i18n } = useTranslation('onboarding')
   const confirm = useConfirm()
-  // Named and sorted in the reader's language: the alphabet changes with it (#198).
+  // Named and sorted in the reader's language: the alphabet changes with it (ADR-23 §2).
   const countries = useMemo(() => countriesIn(i18n.language), [i18n.language])
   const navigate = useNavigate()
   const completeOnboarding = useCompleteOnboarding()
@@ -31,7 +31,7 @@ export function OnboardingPage() {
   })
 
   async function onSubmit(values: CompleteOnboardingForm) {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({ title: t('confirmTitle', { name: values.name }), description: t('confirmDescription') })
     if (!confirmed) return
     completeOnboarding.mutate(values, {

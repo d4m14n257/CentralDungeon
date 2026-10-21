@@ -18,12 +18,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * Something a table asks of somebody. Table {@code table_tasks}.
  *
- * <p><b>One shape for what used to be three things</b> (#63). The requirements a master publishes
+ * <p><b>One shape for what used to be three things</b> (ADR-15 §1). The requirements a master publishes
  * when opening the table, what a player is asked for once accepted, and what comes up mid-campaign
  * are the same object at different moments: somebody asks, somebody answers with text, files, or
  * both. The analogy the feature was designed against is a classroom.
  *
- * <p><b>{@code isMandatory} is a label and nothing else</b> (#70). Nothing in this feature reads it
+ * <p><b>{@code isMandatory} is a label and nothing else</b> (ADR-15 §2). Nothing in this feature reads it
  * to refuse an action, and that is the decision, not an omission: a missing answer can have a
  * thousand reasons and automating a punishment over it does more damage than it prevents. The system
  * reports; the people decide.
@@ -32,7 +32,7 @@ import org.jspecify.annotations.Nullable;
  * "whenever you can". A non-null one ties the ask to one evening, which is what makes "bring the
  * map for session 4" expressible at all.
  *
- * <p>Named {@code TableTask} rather than {@code TableRequirement} (#87): {@code game_tables} already
+ * <p>Named {@code TableTask} rather than {@code TableRequirement} (ADR-15 §1): {@code game_tables} already
  * has a {@code requirements} column holding rich text, and a {@code TableRequirement} entity next to
  * {@code gameTable.getRequirements()} would be two different things wearing one name.
  */
@@ -46,7 +46,7 @@ public class TableTask extends BaseEntity {
     private GameTable gameTable;
 
     /**
-     * The session this is tied to, or null for "at any point" (#63).
+     * The session this is tied to, or null for "at any point" (ADR-15 §1).
      *
      * <p>The service checks the session belongs to this table before it is ever set: a task pointing
      * at somebody else's evening is a row nothing on screen could explain.
@@ -55,12 +55,12 @@ public class TableTask extends BaseEntity {
     @JoinColumn(name = "table_session_id")
     private @Nullable TableSession tableSession;
 
-    /** Who is being asked (#63). It is what publication resolves into a list of recipients (#77). */
+    /** Who is being asked (ADR-15 §1). It is what publication resolves into a list of recipients (ADR-15 §5). */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private TaskAudience audience;
 
-    /** The one person addressed, and only when {@link TaskAudience#Single} (#76). Null otherwise. */
+    /** The one person addressed, and only when {@link TaskAudience#Single} (ADR-15 §2). Null otherwise. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "target_user_id")
     private @Nullable User targetUser;
@@ -69,7 +69,7 @@ public class TableTask extends BaseEntity {
     @Column(nullable = false, length = 128)
     private String title;
 
-    /** The detail, as sanitized rich text (#62). Sanitized on the way in and on the way out. */
+    /** The detail, as sanitized rich text (ADR-03 §8). Sanitized on the way in and on the way out. */
     @Column(columnDefinition = "LONGTEXT")
     private @Nullable String description;
 
@@ -77,20 +77,20 @@ public class TableTask extends BaseEntity {
     @Column(name = "accepts_text", nullable = false)
     private boolean acceptsText = true;
 
-    /** Whether files are expected. Reused from the submitter's history, never re-uploaded (#65). */
+    /** Whether files are expected. Reused from the submitter's history, never re-uploaded (ADR-13 §2). */
     @Column(name = "accepts_files", nullable = false)
     private boolean acceptsFiles = true;
 
     /**
      * Whether the master considers this indispensable.
      *
-     * <p><b>Informational</b> (#70): it changes what the screen says and nothing else. No code path
+     * <p><b>Informational</b> (ADR-15 §2): it changes what the screen says and nothing else. No code path
      * reads it to block, evict or refuse.
      */
     @Column(name = "is_mandatory", nullable = false)
     private boolean isMandatory;
 
-    /** When the master would like it by, in UTC (#22), or null for no date. Nothing expires on it. */
+    /** When the master would like it by, in UTC (ADR-03 §6), or null for no date. Nothing expires on it. */
     @Column(name = "due_at")
     private @Nullable LocalDateTime dueAt;
 
@@ -99,7 +99,7 @@ public class TableTask extends BaseEntity {
     @Column(nullable = false, length = 32)
     private TaskStatus status = TaskStatus.Open;
 
-    /** Soft delete (#25). Null for a live row. */
+    /** Soft delete (ADR-03 §7). Null for a live row. */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
@@ -108,7 +108,7 @@ public class TableTask extends BaseEntity {
     }
 
     /**
-     * Publishes a task, open from the start - there is no draft state (#77).
+     * Publishes a task, open from the start - there is no draft state (ADR-15 §5).
      *
      * @param gameTable the table doing the asking
      * @param audience  who is being asked
@@ -132,7 +132,7 @@ public class TableTask extends BaseEntity {
     /**
      * Returns the session this task is tied to.
      *
-     * @return the session, or null when the ask is not tied to one evening (#63)
+     * @return the session, or null when the ask is not tied to one evening (ADR-15 §1)
      */
     public @Nullable TableSession getTableSession() {
         return tableSession;
@@ -213,7 +213,7 @@ public class TableTask extends BaseEntity {
     /**
      * Rewrites the detail.
      *
-     * @param description the new rich text, already sanitized by the service (#62)
+     * @param description the new rich text, already sanitized by the service (ADR-03 §8)
      */
     public void setDescription(@Nullable String description) {
         this.description = description;
@@ -258,7 +258,7 @@ public class TableTask extends BaseEntity {
     /**
      * Returns whether the master considers this indispensable.
      *
-     * @return true when the task is labelled mandatory. <b>Informational only</b> (#70)
+     * @return true when the task is labelled mandatory. <b>Informational only</b> (ADR-15 §2)
      */
     public boolean isMandatory() {
         return isMandatory;
@@ -267,7 +267,7 @@ public class TableTask extends BaseEntity {
     /**
      * Labels the task mandatory, or stops labelling it so.
      *
-     * @param mandatory true to label it. It changes what the screen says and nothing else (#70)
+     * @param mandatory true to label it. It changes what the screen says and nothing else (ADR-15 §2)
      */
     public void setMandatory(boolean mandatory) {
         this.isMandatory = mandatory;
@@ -276,7 +276,7 @@ public class TableTask extends BaseEntity {
     /**
      * Returns when the master would like the answer by.
      *
-     * @return the instant in UTC (#22), or null when no date was set. Nothing happens when it passes
+     * @return the instant in UTC (ADR-03 §6), or null when no date was set. Nothing happens when it passes
      */
     public @Nullable LocalDateTime getDueAt() {
         return dueAt;
@@ -285,7 +285,7 @@ public class TableTask extends BaseEntity {
     /**
      * Sets or clears the date the master would like the answer by.
      *
-     * @param dueAt the instant in UTC (#22), or null for no date
+     * @param dueAt the instant in UTC (ADR-03 §6), or null for no date
      */
     public void setDueAt(@Nullable LocalDateTime dueAt) {
         this.dueAt = dueAt;
@@ -319,7 +319,7 @@ public class TableTask extends BaseEntity {
     }
 
     /**
-     * Stamps or clears the logical delete (#25).
+     * Stamps or clears the logical delete (ADR-03 §7).
      *
      * @param deletedAt when it was marked gone, or null to bring it back
      */

@@ -775,7 +775,7 @@
       "dot": "rose",
       "title": "Destino equivocado",
       "items": [
-        "TableChangesRequested y TableApproved caen en Candidatos, no en Estado (#244)",
+        "TableChangesRequested y TableApproved caen en Candidatos, no en Estado (ADR-18 §3)",
         "TableApprovedWithChanges: ningún código la emite"
       ]
     },

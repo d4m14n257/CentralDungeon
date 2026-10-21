@@ -7,9 +7,9 @@ import org.springframework.http.HttpStatus;
  * The request is malformed in a way Bean Validation cannot see, because what is wrong is the
  * relation between fields rather than any field on its own. Answers 400.
  *
- * <p>The case that brought it into existence (#187): two slots of the <b>same</b> table whose
+ * <p>The case that brought it into existence (ADR-04 §4): two slots of the <b>same</b> table whose
  * sessions overlap each other. Each slot is perfectly valid, the agenda they describe is not, and
- * #178 asks for a {@code 400} there - it is input that does not describe a playable week, not a
+ * ADR-08 §2 asks for a {@code 400} there - it is input that does not describe a playable week, not a
  * conflict with anybody else's state, which is what {@link ConflictException} and its {@code 409}
  * are for.
  */
@@ -39,8 +39,8 @@ public final class InvalidRequestException extends ApiException {
      * A coded 400 that carries values, for the messages that are useless without a number in them -
      * "up to 2 MB" says something, "too large" does not.
      *
-     * <p>Same shape {@link ConflictException} grew for #188, and the same reason: the sentence is the
-     * frontend's to write, in the reader's language, from a code and its parameters (#197).
+     * <p>Same shape {@link ConflictException} grew for ADR-04 §4, and the same reason: the sentence is the
+     * frontend's to write, in the reader's language, from a code and its parameters (ADR-23 §3).
      *
      * @param message     the developer-facing detail, in English
      * @param errorCode   the stable code the frontend branches on

@@ -36,7 +36,7 @@ import org.testcontainers.mysql.MySQLContainer;
  * The one global invariant of F3.1: <b>the platform is never left without an Owner</b>
  * (roles-y-alcance.md §3). MySQL cannot express it - there is no constraint for "at least one row
  * of this shape has to survive" - so it is checked in {@link UserRoleService} and therefore has to
- * be proven against the real engine, exactly like the single live Primary of #73 in
+ * be proven against the real engine, exactly like the single live Primary of ADR-06 §3 in
  * {@code MasterServiceIT}.
  *
  * <p>And the rest of what only a real database can answer for this slice: the two audit tables
@@ -133,7 +133,7 @@ class UserRoleServiceIT {
 
     /**
      * The same invariant from the other side: several owners are demoted at once by granting them
-     * Admin, which revokes Owner as the exclusion of #169 requires. Whatever order the threads land
+     * Admin, which revokes Owner as the exclusion of ADR-06 §1 requires. Whatever order the threads land
      * in, one owner has to survive.
      */
     @Test
@@ -163,7 +163,7 @@ class UserRoleServiceIT {
         assertThat(pool.awaitTermination(30, TimeUnit.SECONDS)).isTrue();
 
         assertThat(userRoleRepository.countActiveHolders(PlatformRole.OWNER.roleName()))
-                .as("granting Admin revokes Owner (#169); the last owner's grant must be refused whole")
+                .as("granting Admin revokes Owner (ADR-06 §1); the last owner's grant must be refused whole")
                 .isGreaterThanOrEqualTo(1);
     }
 
@@ -201,7 +201,7 @@ class UserRoleServiceIT {
     }
 
     /**
-     * The exclusion of #169 through the real tables: granting Admin to an owner flips <b>one</b> row
+     * The exclusion of ADR-06 §1 through the real tables: granting Admin to an owner flips <b>one</b> row
      * of {@code users_roles} per role - the primary key is the pair, so a second row cannot exist -
      * and leaves <b>two</b> rows of {@code user_role_changes}, one for each half of the change.
      */
@@ -295,7 +295,7 @@ class UserRoleServiceIT {
      * <b>The least exercised line of the slice.</b> The eviction is registered on {@code afterCommit}
      * and every unit test runs the other branch - the one with no transaction open - so this is the
      * first time the synchronisation actually fires. A block whose eviction never ran leaves the
-     * blocked person inside for the full 60 s of the cache's TTL (#128), which is the whole failure
+     * blocked person inside for the full 60 s of the cache's TTL (ADR-05 §3), which is the whole failure
      * the callback exists to prevent.
      */
     @Test

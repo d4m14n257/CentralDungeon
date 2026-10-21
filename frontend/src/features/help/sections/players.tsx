@@ -4,7 +4,7 @@ import type { RegistrationStatus } from '@/features/registrations'
 
 import { HelpList, HelpSteps, HelpTerms } from '../components/HelpBlocks'
 
-/** The help of somebody playing. Bodies only - the heading lives in the registry (#231). */
+/** The help of somebody playing. Bodies only - the heading lives in the registry (ADR-20 §5). */
 
 const APPLICATION_STATUSES: RegistrationStatus[] = ['Candidate', 'Player', 'Rejected']
 
@@ -39,7 +39,7 @@ export function ApplicationStatusHelp() {
   )
 }
 
-/** Why a table can clash with another one you already play (#178). */
+/** Why a table can clash with another one you already play (ADR-08 §2). */
 export function ScheduleConflictsHelp() {
   const { t } = useTranslation('help')
 
@@ -98,12 +98,12 @@ export function PlayerFilesHelp() {
 }
 
 /**
- * Who can see a profile, and why one stops being visible (#41, #44, #47).
+ * Who can see a profile, and why one stops being visible (ADR-10 §1, §2).
  *
  * **The expiry is the part that needs explaining and the only part nobody would guess.** A profile
  * that was readable last month and is not today looks like a bug unless somebody says the window
  * closed — and the screen that refuses it cannot say much, because confirming the person exists is
- * exactly what the refusal withholds (#249).
+ * exactly what the refusal withholds (ADR-10 §3).
  */
 export function ProfileHelp() {
   const { t } = useTranslation('help')

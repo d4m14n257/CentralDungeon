@@ -19,13 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * What a table has attached: putting a file on it, changing who sees it, and taking it off again.
  *
- * <p><b>This links, it never copies</b> (#79), and every method here is written so that stays true.
+ * <p><b>This links, it never copies</b> (ADR-14 §1), and every method here is written so that stays true.
  * Detaching a file leaves the file alone; editing the file changes what every table using it shows.
  * That is the whole reason a master can attach the community's default character sheet rather than
  * uploading their own copy of it, and it is why "remove from this table" and "delete this file" are
  * two different operations living in two different classes.
  *
- * <p><b>Every mutation answers to pertenencia and not to a role</b> (#17, #121, #135): running
+ * <p><b>Every mutation answers to pertenencia and not to a role</b> (ADR-11 §1, ADR-05 §5, ADR-06 §4): running
  * <em>this</em> table is what authorizes touching its files. {@code hasRole('MASTER')} says "runs
  * some table", which is a different sentence, and no {@code @PreAuthorize} can tell them apart.
  *
@@ -41,10 +41,10 @@ public class TableFileService {
     /** The files themselves, for the metadata each link is shown with. */
     private final StoredFileRepository fileRepository;
 
-    /** Resolves and authorizes the file being attached, and stamps its last use (#75). */
+    /** Resolves and authorizes the file being attached, and stamps its last use (ADR-13 §3). */
     private final FileService fileService;
 
-    /** Answers pertenencia: a row in {@code masters}, never the platform role (#135). */
+    /** Answers pertenencia: a row in {@code masters}, never the platform role (ADR-06 §4). */
     private final MasterService masterService;
 
     /** Entity to DTO. */
@@ -53,8 +53,8 @@ public class TableFileService {
     /**
      * @param tableFileRepository the {@code table_files} rows
      * @param fileRepository      the files each link points at
-     * @param fileService         resolves and authorizes the file being attached (#79)
-     * @param masterService       answers pertenencia (#17, #121, #135)
+     * @param fileService         resolves and authorizes the file being attached (ADR-14 §1)
+     * @param masterService       answers pertenencia (ADR-11 §1, ADR-05 §5, ADR-06 §4)
      * @param fileMapper          entity to DTO
      */
     public TableFileService(
@@ -80,11 +80,11 @@ public class TableFileService {
      * @param actorId     the actor, from the token
      * @return its attachments, oldest first - the order they were put there, which is the order
      *         somebody who assembled them remembers
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (#45, #284)
+     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
      */
     @Transactional(readOnly = true)
     public List<TableFileResponse> listForTable(String gameTableId, String actorId) {
-        // Read by the table's masters and by any admin (#45, #284); its writes stay the masters' own.
+        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
         if (!masterService.canOversee(gameTableId, actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can view its files");
         }
@@ -114,14 +114,14 @@ public class TableFileService {
      * @param actorId     the actor, from the token
      * @return the attachment
      * @throws ForbiddenActionException if the actor does not run the table, or the file is somebody
-     *                                  else's and is not published (#79)
+     *                                  else's and is not published (ADR-14 §1)
      * @throws NotFoundException        if the file is not there or was marked gone
      */
     @Transactional
     public TableFileResponse attach(String gameTableId, LinkTableFileRequest request, String actorId) {
         requireMasterOf(gameTableId, actorId);
         StoredFile file = fileService.requireAttachable(request.fileId(), actorId);
-        // The link is what classifies the file, not the upload (#233): attaching it to a table is
+        // The link is what classifies the file, not the upload (ADR-14 §4): attaching it to a table is
         // what makes it table material, and the membership stands even if it is detached later.
         fileService.classify(file.getId(), FileCategory.TableMaterial);
 
@@ -140,7 +140,7 @@ public class TableFileService {
      * Changes what an attachment is for, or who sees it - without touching the file.
      *
      * <p>Sharing a map on this table says nothing about the same map on another one: {@code isPrivate}
-     * belongs to the link, which is exactly what {@code table_files} exists to make possible (#79).
+     * belongs to the link, which is exactly what {@code table_files} exists to make possible (ADR-14 §1).
      *
      * @param gameTableId the table
      * @param fileId      the attached file
@@ -165,7 +165,7 @@ public class TableFileService {
     /**
      * Takes a file off a table.
      *
-     * <p><b>The file survives, in full</b> (#79). It stays in its owner's history, it stays attached to
+     * <p><b>The file survives, in full</b> (ADR-14 §1). It stays in its owner's history, it stays attached to
      * every other table that has it, and if the platform published it, it stays published. What ends
      * is this one attachment. Removing the community's default sheet from one table cannot be allowed
      * to remove it from the community.
@@ -189,7 +189,7 @@ public class TableFileService {
      *
      * <p><b>No authorization here, on purpose.</b> This travels inside
      * {@code GameTableDetailResponse}, and that read has already decided who may see the table -
-     * down to answering 404 to somebody vetoed (#29). Checking again here would be a second copy of a
+     * down to answering 404 to somebody vetoed (ADR-09 §4). Checking again here would be a second copy of a
      * rule that can only drift out of step with the first. Same decision F1.3 took for the calendar.
      *
      * <p>Private attachments are simply absent. Not listed and locked: absent. A player has no reason
@@ -217,7 +217,7 @@ public class TableFileService {
      *
      * <p>Files marked gone are left out of the map, which is what makes every caller skip them: an
      * owner deleting a file removes it from the tables that showed it, without those links having to
-     * be found and rewritten (#25).
+     * be found and rewritten (ADR-03 §7).
      */
     private Map<String, StoredFile> filesOf(List<TableFile> links) {
         if (links.isEmpty()) {
@@ -243,7 +243,7 @@ public class TableFileService {
     }
 
     /**
-     * The membership gate (#17, #121, #135): a row in {@code masters}, not the {@code Master} role.
+     * The membership gate (ADR-11 §1, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
      *
      * @throws ForbiddenActionException if the actor does not run this table
      */

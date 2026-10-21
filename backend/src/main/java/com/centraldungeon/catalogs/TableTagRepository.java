@@ -26,7 +26,7 @@ public interface TableTagRepository extends JpaRepository<TableTag, TableTagId> 
      * Counts, in one grouped query, how many tables use each of the given tags - so a page of twenty
      * values on /admin/catalogs costs one round trip instead of twenty.
      *
-     * <p>Named parameters only, never positional (#124).
+     * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param valueIds the tags to count. A tag nothing points at is absent from the result rather
      *                 than reported as zero

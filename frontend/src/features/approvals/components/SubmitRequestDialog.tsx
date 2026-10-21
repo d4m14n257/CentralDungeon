@@ -37,7 +37,7 @@ interface SubmitRequestDialogProps {
 }
 
 /**
- * Asking an admin for something (#42).
+ * Asking an admin for something (ADR-16 §1).
  *
  * **The kind of request is a prop and not a field.** The form lives on the screen that prompted the
  * question — the master role on your own profile, an open table in the explorer, anything else from
@@ -79,7 +79,7 @@ export function SubmitRequestDialog({ type, open, onOpenChange, help }: SubmitRe
   }
 
   async function onSubmit(values: SubmitApprovalRequestForm) {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('requests.submit.confirmTitle'),
       description: t('requests.submit.confirmDescription'),

@@ -11,10 +11,10 @@ import { acceptReview } from './helpers/review'
  * table*.
  *
  * What no unit test proves and this does: that publishing **actually notifies**, end to end, from the
- * master's dialog to the other person's bell (#77); that an answer with a reused file arrives whole
- * and the master can **open a file that is not theirs** (#63, #206); that a second answer does not
- * replace the first (#76); and that a request aimed at candidates is readable by somebody who has not
- * applied yet, and not answerable by them (#206).
+ * master's dialog to the other person's bell (ADR-15 §5); that an answer with a reused file arrives whole
+ * and the master can **open a file that is not theirs** (ADR-15 §1, ADR-14 §2); that a second answer does not
+ * replace the first (ADR-15 §2); and that a request aimed at candidates is readable by somebody who has not
+ * applied yet, and not answerable by them (ADR-14 §2).
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
@@ -47,7 +47,7 @@ async function createTable(page: Page, name: string): Promise<string> {
   await addScheduleSlot(page, '20:00')
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -56,12 +56,12 @@ async function createTable(page: Page, name: string): Promise<string> {
 
   const id = page.url().split('/master/tables/')[1]
   expect(id).toBeTruthy()
-  // Born in Draft since #245: nothing an admin can approve until it is sent.
+  // Born in Draft since ADR-07 §1: nothing an admin can approve until it is sent.
   await submitForReview(page, id as string)
   return id as string
 }
 
-/** Approves the table from the shared admin tray (#176), which is what opens it to applications. */
+/** Approves the table from the shared admin tray (ADR-16 §7), which is what opens it to applications. */
 async function approve(page: Page, name: string) {
   await approveTableFromQueue(page, name)
 }
@@ -137,7 +137,7 @@ test('a request reaches the players, and what they hand in reaches the master', 
 
     await publishTask(master.page, tableId, `Ficha E2E ${runId}`, 'Para los jugadores')
 
-    // #77 end to end: the bell of the other person, not a call somebody mocked.
+    // ADR-15 §5 end to end: the bell of the other person, not a call somebody mocked.
     await player.page.goto('/notifications')
     await expect(player.page.getByText(new RegExp(`Ficha E2E ${runId}`))).toBeVisible()
 
@@ -155,7 +155,7 @@ test('a request reaches the players, and what they hand in reaches the master', 
     await expect(submitDialog).toBeHidden()
 
     // The master sees the answer, and can open a file that belongs to somebody else - the fifth way
-    // a file becomes readable (#63, #206). Without it the row would be visible and the download 404.
+    // a file becomes readable (ADR-15 §1, ADR-14 §2). Without it the row would be visible and the download 404.
     await master.page.goto(`/master/tables/${tableId}/tasks`)
     await master.page.getByRole('button', { name: new RegExp(`Ficha E2E ${runId}`) }).click()
     await expect(master.page.getByText('Elfa exploradora')).toBeVisible()
@@ -163,7 +163,7 @@ test('a request reaches the players, and what they hand in reaches the master', 
     await master.page.getByRole('button', { name: 'Descargar' }).first().click()
     expect((await download).suggestedFilename()).toBe('ficha-tarea-e2e.pdf')
 
-    // Nobody is left on the missing roster, and nothing on screen offers to punish anybody (#70).
+    // Nobody is left on the missing roster, and nothing on screen offers to punish anybody (ADR-15 §2).
     await expect(master.page.getByText('Ya entregaron todos.')).toBeVisible()
   } finally {
     await player.context.close()
@@ -173,7 +173,7 @@ test('a request reaches the players, and what they hand in reaches the master', 
 })
 
 /**
- * #76 against the real thing: a second answer is a second row. The first one is still there, and the
+ * ADR-15 §2 against the real thing: a second answer is a second row. The first one is still there, and the
  * master reads both — the system never decides which of the two counts.
  */
 test('a second answer is added and never replaces the first', async ({ browser }) => {
@@ -222,7 +222,7 @@ test('a second answer is added and never replaces the first', async ({ browser }
 })
 
 /**
- * #206 applied to what a table asks: somebody who has not applied reads the requests aimed at
+ * ADR-14 §2 applied to what a table asks: somebody who has not applied reads the requests aimed at
  * candidates — half of deciding whether to apply — and the screen says why they cannot answer yet
  * rather than simply not offering a button.
  */
@@ -251,7 +251,7 @@ test('somebody who has not applied reads the candidate requests and is told why 
 
 /**
  * Closing ends the intake and says so where it matters: what was already handed in stays readable,
- * and the request stops appearing among what the table is asking for (#76).
+ * and the request stops appearing among what the table is asking for (ADR-15 §2).
  */
 test('closing a request stops new answers and keeps the ones already in', async ({ browser }) => {
   const tableName = `Mesa Cierre E2E ${runId}`
@@ -276,7 +276,7 @@ test('closing a request stops new answers and keeps the ones already in', async 
 
     await master.page.goto(`/master/tables/${tableId}/tasks`)
     await master.page.getByRole('button', { name: 'Cerrar la petición' }).click()
-    // The confirmation says what survives: closing is not deleting what people sent (#76).
+    // The confirmation says what survives: closing is not deleting what people sent (ADR-15 §2).
     await expect(master.page.getByRole('dialog').getByText(/sigue estando/)).toBeVisible()
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
     await expect(master.page.getByText('Cerrada')).toBeVisible()

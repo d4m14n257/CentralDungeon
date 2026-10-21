@@ -41,38 +41,38 @@ import { formatRelativeDate } from '@/lib/date'
 /**
  * `/my/files` — everything this person has uploaded, and what each file is doing.
  *
- * **It belongs to no context**, beside `/my/schedule` (#222): the sheet somebody applied with and
+ * **It belongs to no context**, beside `/my/schedule` (ADR-20 §2): the sheet somebody applied with and
  * the map they attached to a table they run are the same library, and splitting it by role would
  * ask them to remember which hat they were wearing when they uploaded something.
  *
- * The screen exists to make the cost strategy of #75 legible from the one place a person can act on
+ * The screen exists to make the cost strategy of ADR-13 §3 legible from the one place a person can act on
  * it. Three things it says that no other screen does:
  *
- * - **Where each file is used** (#232). That is the classification, shown as chips rather than
+ * - **Where each file is used** (ADR-14 §3). That is the classification, shown as chips rather than
  *   stored as a column — a file attached to two tables shows two, and neither of them is a lie.
  * - **A file nothing points at is "sin usar"**, which is the honest warning that the purge will
  *   reach it first, without the screen ever having to explain retention.
- * - **Which flows each file belongs to** (#233), which is what makes a library of thirty navigable.
+ * - **Which flows each file belongs to** (ADR-14 §4), which is what makes a library of thirty navigable.
  *
- * **It is the personal library and not the platform's** (#237). What an admin publishes for the
+ * **It is the personal library and not the platform's** (ADR-14 §5). What an admin publishes for the
  * community lives in `/admin/files`, which is a different screen with a different job — so the
  * `Admin` role adds no cajón here and takes none away, and `Announcement` never appears at all. What
  * somebody may file under is their roles plus the tables they run, and the server decides it.
  *
- * **And an account that is neither player nor master has no screen here** (#241): filling a library
+ * **And an account that is neither player nor master has no screen here** (ADR-14 §5): filling a library
  * is what those two flows do, so a pure admin or the owner never fills one. They get the reason
  * written out rather than an empty library with an upload button that cannot work — and the entry in
  * the account menu is absent for them too. The roles are cumulative: what is asked is whether they
  * hold one of the two, never whether they hold only it.
  *
- * **The search box is the only filter** (#242). The row of cajón toggles that used to sit under it
+ * **The search box is the only filter** (ADR-14 §6). The row of cajón toggles that used to sit under it
  * asked one question the search already answers better — `/file_categories` narrows by cajón from the
  * same line, combinable with the rest — while each row carries its cajón as a badge anyway. One way
  * to narrow, one place to look at what is narrowing.
  *
- * **What was searched and which page are in the URL**, like /admin/files (#185): a tidying session
+ * **What was searched and which page are in the URL**, like /admin/files (ADR-12 §7): a tidying session
  * survives a refresh, and a filtered view can be linked to. The list is paged at 20, the server's
- * default, most recently used first (#171): the controls appear from the second page on.
+ * default, most recently used first (ADR-07 §9): the controls appear from the second page on.
  */
 export function MyFilesPage() {
   const { t, i18n } = useTranslation('files')
@@ -81,18 +81,18 @@ export function MyFilesPage() {
 
   const page = Number(searchParams.get('page') ?? '0')
 
-  // Whether this account is one of the two that fill a library at all (#241). By role, like the
+  // Whether this account is one of the two that fill a library at all (ADR-14 §5). By role, like the
   // switcher's contexts; the screen below says so rather than 404ing.
   const libraryAccess = useHasPersonalLibrary()
 
-  // And *which* cajones are theirs to use (#237), which is a finer question than the one above and
+  // And *which* cajones are theirs to use (ADR-14 §5), which is a finer question than the one above and
   // only the server can answer it: it depends on the roles *and* on the tables they run. The search
   // box needs them before it can offer `/file_categories`, so it is asked first.
   const { data: myCategories } = useMyCategories()
 
   // The search box holds a structured value, but what travels - to the URL and to the API - is the
-  // raw string of #164. One list of commands, given to the box, used to read `?q=` and shown in the
-  // help (#240); the wiring around it is the shared hook, the same one /admin/files uses.
+  // raw string of ADR-22 §1. One list of commands, given to the box, used to read `?q=` and shown in the
+  // help (ADR-22 §3); the wiring around it is the shared hook, the same one /admin/files uses.
   const fields = useMemo(() => myFileSearchFields(t, myCategories ?? []), [t, myCategories])
   const search = useSearchQuery({
     fields,
@@ -101,16 +101,16 @@ export function MyFilesPage() {
   })
 
   // isLoadingError, not isError: a background refetch that fails must not blank a list that already
-  // loaded (#150).
+  // loaded (ADR-19 §4).
   // No `category`: the cajón is one more criterion of the search now, and it travels inside `?q=`
-  // like the rest of them (#242).
+  // like the rest of them (ADR-14 §6).
   const { data, isPending, isLoadingError, refetch } = useMyFiles(search.query || undefined, undefined, page)
   const update = useUpdateFile()
   const remove = useDeleteFile()
   const editDialog = useDisclosure<StoredFile>()
   const uploadPanel = useDisclosure()
 
-  // Staged in the browser until the button below is pressed (#238).
+  // Staged in the browser until the button below is pressed (ADR-13 §5).
   const [staged, setStaged] = useState<StagedFile[]>([])
   const [cajon, setCajon] = useState<FileCategory | null>(null)
   const commit = useCommitStagedFiles()
@@ -124,12 +124,12 @@ export function MyFilesPage() {
    *
    * A file that failed does not undo the ones that went through: they are already in the library and
    * the person is told which one to try again — retrying costs nothing, because the server
-   * recognises content it already has (#75, #238).
+   * recognises content it already has (ADR-13 §3, §5).
    */
   async function send() {
     const chosen = cajon ?? myCategories?.[0]
     if (chosen === undefined) return
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('mine.sendConfirmTitle', { count: staged.length }),
       description: t('mine.sendConfirmDescription', { category: t(`category.${chosen}`) }),
@@ -167,7 +167,7 @@ export function MyFilesPage() {
   async function handleEdit(input: UpdateFileInput) {
     const file = editDialog.item
     if (!file) return
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({ title: t('edit.confirmTitle', { name: file.name }), description: t('edit.confirmDescription') })
     if (!confirmed) return
     update.mutate(
@@ -197,17 +197,17 @@ export function MyFilesPage() {
   const isFiltered = search.query !== ''
 
   /**
-   * **The screen is for players and masters** (#241).
+   * **The screen is for players and masters** (ADR-14 §5).
    *
    * A personal library is filled by those two flows — an application, a submission, a table's
    * material. An account that holds neither role, a pure admin or the owner, never fills one, so
    * there is nothing here to search and nothing to upload: what the platform publishes is
-   * `/admin/files`, which is a different screen with a different job (#237).
+   * `/admin/files`, which is a different screen with a different job (ADR-14 §5).
    *
    * **Decided by role**, like the contexts of the switcher: the roles are cumulative, so what is
    * asked is whether they hold `Player` or `Master`, never whether they hold *only* it — an admin who
-   * also plays is on the screen, and so is a co-master an admin assigned without the role (#135).
-   * Showing or hiding is all it does; authorization stays the backend's, endpoint by endpoint (#103),
+   * also plays is on the screen, and so is a co-master an admin assigned without the role (ADR-06 §4).
+   * Showing or hiding is all it does; authorization stays the backend's, endpoint by endpoint (ADR-20 §1),
    * which is why this is a state on the screen and not a guard on the route.
    */
   if (!libraryAccess.isPending && !libraryAccess.hasPersonalLibrary) {
@@ -226,25 +226,25 @@ export function MyFilesPage() {
         description={t('mine.description')}
         help="basics.my-files"
         // Disabled rather than gone while the cajones are still loading, so it does not appear and
-        // jump. With none of them the screen never gets this far: it says so above (#241).
+        // jump. With none of them the screen never gets this far: it says so above (ADR-14 §5).
         action={{
           label: uploadPanel.isOpen ? t('mine.uploadClose') : t('mine.upload'),
           onClick: () => (uploadPanel.isOpen ? uploadPanel.close() : uploadPanel.open()),
-          // Disabled while the cajones are still loading, so it does not appear and jump (#241).
+          // Disabled while the cajones are still loading, so it does not appear and jump (ADR-14 §5).
           disabled: myCategories === undefined,
         }}
       />
 
       {/* **The panel stays open after an upload**, and no toast fires. Closing it on success would
           unmount the zone along with the one thing it had to say — that the file was recognised
-          rather than stored again (#234) — and a "file uploaded" toast would flatly contradict it.
+          rather than stored again (ADR-13 §4) — and a "file uploaded" toast would flatly contradict it.
           The row appearing in the list below is the confirmation; the zone says the rest, and the
           person is left where they are if they have another file to add. */}
-      {/* **The one place that asks which cajón** (#233): every other upload happens inside a flow that
+      {/* **The one place that asks which cajón** (ADR-14 §4): every other upload happens inside a flow that
           already knows, and this one has no flow to observe. */}
       {uploadPanel.isOpen && myCategories !== undefined && (
         <div className="border-border space-y-3 rounded-lg border p-4">
-          {/* Nothing uploads on pick (#238). The button below is the confirm — here the operation is
+          {/* Nothing uploads on pick (ADR-13 §5). The button below is the confirm — here the operation is
               just "upload these", so the confirm is that and nothing more. */}
           <FileDropzone onStaged={(file) => setStaged((current) => [...current, file])} isBusy={commit.isPending} />
           <StagedFileList files={staged} onRemove={removeStaged} />
@@ -272,10 +272,10 @@ export function MyFilesPage() {
           zone puts a search box and thirty rows between the person and the button they came for. */}
       {!uploadPanel.isOpen && (
         <>
-          {/* The application's one search box (#164): free text searches the filename, and a
+          {/* The application's one search box (ADR-22 §1): free text searches the filename, and a
               `/campo` searches that field. A plain `<input>` here was the only buscador in the app
               that did not speak the shared language.
-              **And it is the only filter on this screen** (#242). The row of cajón toggles that used
+              **And it is the only filter on this screen** (ADR-14 §6). The row of cajón toggles that used
               to sit under it said the same thing twice: `/file_categories` already narrows by cajón,
               from the same line as everything else and combinable with the rest, and each row already
               carries its cajón as a badge — so the toggles were a second way to ask one question the
@@ -320,7 +320,7 @@ export function MyFilesPage() {
                 )}
                 renderActions={(file) => (
                   <>
-                    {/* A published file is the platform's: only an admin renames or removes it (#64). */}
+                    {/* A published file is the platform's: only an admin renames or removes it (ADR-13 §2). */}
                     {file.fileType !== 'Public' && (
                       <>
                         <IconAction

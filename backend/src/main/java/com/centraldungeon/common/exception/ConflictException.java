@@ -13,7 +13,7 @@ public final class ConflictException extends ApiException {
     private static final String DEFAULT_ERROR_CODE = "CONFLICT";
 
     /**
-     * A schedule clash of #178. It gets a code of its own because it is the one conflict the
+     * A schedule clash of ADR-08 §2. It gets a code of its own because it is the one conflict the
      * interface has to <b>explain</b> rather than merely report: the message names the table the
      * agenda collides with, and a screen that cannot tell this 409 from any other has nothing to
      * show but a generic failure (principle 2 of diseno §1).
@@ -21,20 +21,20 @@ public final class ConflictException extends ApiException {
     public static final String SCHEDULE_CONFLICT = "SCHEDULE_CONFLICT";
 
     /**
-     * The same clash of #178, seen from the other side: a master accepting somebody whose own
+     * The same clash of ADR-08 §2, seen from the other side: a master accepting somebody whose own
      * commitments collide with this table (R3).
      *
      * <p>It gets a code of its own and not {@link #SCHEDULE_CONFLICT} because the sentence is about
      * a <b>third person</b>, not about the reader - "it clashes with a table where you are already
      * committed" is simply false when what clashed is the candidate's week. Two situations, two
-     * messages, and the backend picks neither of them (#197).
+     * messages, and the backend picks neither of them (ADR-23 §3).
      */
     public static final String CANDIDATE_SCHEDULE_CONFLICT = "CANDIDATE_SCHEDULE_CONFLICT";
 
     /**
      * The placeholder the clash message fills in: the name of the table the agenda collides with.
      *
-     * <p>It travels as data rather than baked into a sentence (#197), which is what lets the same
+     * <p>It travels as data rather than baked into a sentence (ADR-23 §3), which is what lets the same
      * clash read as "se pisa con «La Cripta»" or "clashes with “La Cripta”" depending on the
      * language the reader chose.
      */
@@ -54,14 +54,14 @@ public final class ConflictException extends ApiException {
      */
     public static final String CANNOT_REVOKE_OWN_OWNER = "CANNOT_REVOKE_OWN_OWNER";
 
-    /** Blocking an account that cannot be blocked because it is not usable already (#84). */
+    /** Blocking an account that cannot be blocked because it is not usable already (ADR-05 §7). */
     public static final String USER_ALREADY_BLOCKED = "USER_ALREADY_BLOCKED";
 
     /** Unblocking an account that is not blocked. A Deleted account answers this too: F3.1 never moves one back to Allowed. */
     public static final String USER_NOT_BLOCKED = "USER_NOT_BLOCKED";
 
     /**
-     * A second request of the same type from the same person while the first is still Pending (#42).
+     * A second request of the same type from the same person while the first is still Pending (ADR-16 §1).
      *
      * <p>Its own code because the screen has something specific to do with it: stop offering the
      * button and show the pending request instead. A button whose only possible answer is this 409
@@ -80,10 +80,10 @@ public final class ConflictException extends ApiException {
     public static final String REQUEST_ALREADY_RESOLVED = "REQUEST_ALREADY_RESOLVED";
 
     /**
-     * The entity a request points at is gone (#78, #126).
+     * The entity a request points at is gone (ADR-16 §2).
      *
      * <p>The direct consequence of a polymorphic reference with no foreign key: the row outlives what
-     * it points at, which #126 accepts on purpose - «una solicitud sobre una mesa borrada sigue
+     * it points at, which ADR-16 §2 accepts on purpose - «una solicitud sobre una mesa borrada sigue
      * siendo un hecho» - but resolving it would be acting on a ghost. Its own code because it is the
      * one 409 here that is nobody's fault and that no retry fixes.
      */
@@ -99,7 +99,7 @@ public final class ConflictException extends ApiException {
     public static final String MASTER_ROLE_ALREADY_HELD = "MASTER_ROLE_ALREADY_HELD";
 
     /**
-     * Acting on an item of the shared admin tray that <b>another admin holds</b> (#100) - reserving
+     * Acting on an item of the shared admin tray that <b>another admin holds</b> (ADR-16 §5) - reserving
      * it, giving it back, or resolving it.
      *
      * <p>Its own code because it is the one 409 here whose sentence names <b>somebody else</b>: the
@@ -116,7 +116,7 @@ public final class ConflictException extends ApiException {
     public static final String ITEM_ALREADY_CLAIMED = "ITEM_ALREADY_CLAIMED";
 
     /**
-     * Vetoing somebody who is already vetoed on this table (#39).
+     * Vetoing somebody who is already vetoed on this table (ADR-09 §5).
      *
      * <p>Its own code because the screen has something to do with it: the row is already showing the
      * veto and its reason, so the answer is "refresh, it is done", not a failure. The likeliest way
@@ -126,7 +126,7 @@ public final class ConflictException extends ApiException {
     public static final String REGISTRATION_ALREADY_BLOCKED = "REGISTRATION_ALREADY_BLOCKED";
 
     /**
-     * Lifting a veto on somebody who is not vetoed (#39).
+     * Lifting a veto on somebody who is not vetoed (ADR-09 §5).
      *
      * <p>The mirror of {@link #REGISTRATION_ALREADY_BLOCKED}, and it exists for the same reason a
      * veto is reversible at all: the two buttons sit on the same row, and a screen that cannot tell
@@ -135,7 +135,7 @@ public final class ConflictException extends ApiException {
     public static final String REGISTRATION_NOT_BLOCKED = "REGISTRATION_NOT_BLOCKED";
 
     /**
-     * Asking for a pause of a table that is already waiting on one (#32).
+     * Asking for a pause of a table that is already waiting on one (ADR-07 §2).
      *
      * <p>Its own code for the same reason as {@link #REQUEST_ALREADY_PENDING}, which it deliberately
      * does not reuse: that one is about the person - «you already asked for this» - and this one is
@@ -145,11 +145,11 @@ public final class ConflictException extends ApiException {
     public static final String PAUSE_ALREADY_REQUESTED = "PAUSE_ALREADY_REQUESTED";
 
     /**
-     * An admin lowered a table's capacity below the players it already has (#34, #284).
+     * An admin lowered a table's capacity below the players it already has (ADR-09 §3, ADR-06 §8).
      *
      * <p>Only an admin can get here: the master rewrites a table before anybody plays at it, so there
      * is no roster for the new number to fall short of. Nobody is removed to make the number fit -
-     * which player would leave is a person's decision, never a side effect of an edit (#70). The
+     * which player would leave is a person's decision, never a side effect of an edit (ADR-15 §2). The
      * frontend names how many there are, from {@link #PARAM_PLAYER_COUNT}.
      */
     public static final String CAPACITY_BELOW_PLAYERS = "CAPACITY_BELOW_PLAYERS";
@@ -158,7 +158,7 @@ public final class ConflictException extends ApiException {
     public static final String PARAM_PLAYER_COUNT = "playerCount";
 
     /**
-     * @param message what state made the request impossible, in English and for a log (#197)
+     * @param message what state made the request impossible, in English and for a log (ADR-23 §3)
      */
     public ConflictException(String message) {
         this(message, DEFAULT_ERROR_CODE);
@@ -176,7 +176,7 @@ public final class ConflictException extends ApiException {
     /**
      * @param message     what state made the request impossible, in English
      * @param errorCode   the stable code the frontend branches on
-     * @param errorParams the values the translated message needs, keyed by placeholder name (#197)
+     * @param errorParams the values the translated message needs, keyed by placeholder name (ADR-23 §3)
      */
     public ConflictException(String message, String errorCode, Map<String, String> errorParams) {
         super(HttpStatus.CONFLICT, errorCode, message, errorParams);

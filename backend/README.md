@@ -68,7 +68,7 @@ Ese perfil trae dos cosas, y ninguna se registra fuera de él — en `dev`/produ
 | Qué | Para qué |
 |---|---|
 | `POST /api/v1/auth/test-login` (`auth/TestLoginController`) | **Saltea** el handshake de Discord y devuelve un access token. Es el atajo para los tests que necesitan una sesión pero no están probando el login (`registration-flow.spec.ts`). |
-| `/test-discord/**` (`auth/TestDiscordController`) | Un **Discord falso** dentro del propio backend. `application-test.yml` apunta ahí las cuatro URIs (authorize, token, user-info y `discord.guilds-uri`), así que el handshake **real** corre entero contra él y `discord-login.spec.ts` puede probar el login de verdad desde el navegador (#143). |
+| `/test-discord/**` (`auth/TestDiscordController`) | Un **Discord falso** dentro del propio backend. `application-test.yml` apunta ahí las cuatro URIs (authorize, token, user-info y `discord.guilds-uri`), así que el handshake **real** corre entero contra él y `discord-login.spec.ts` puede probar el login de verdad desde el navegador (ADR-24 §1). |
 
 Quién entra en el próximo login es estado del servidor, no un parámetro del link: `POST /test-discord/next-login?discordId=…&username=…&inGuild=true|false` antes de arrancar el flujo. Con `inGuild=false` el backend termina en el redirect de `not_guild_member` con la invitación, que es el otro desenlace del login.
 

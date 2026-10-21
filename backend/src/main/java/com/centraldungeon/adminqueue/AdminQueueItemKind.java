@@ -9,7 +9,7 @@ import java.util.Optional;
  * What kind of work an item of the shared admin tray is - the fine discriminator, next to the coarse
  * one that says which table the row came from ({@link AdminQueueSource}).
  *
- * <p>A code and not a sentence (#197): the backend says <em>what</em> is waiting and the frontend
+ * <p>A code and not a sentence (ADR-23 §3): the backend says <em>what</em> is waiting and the frontend
  * writes the phrase in the reader's language, exactly as {@code MasterWorkItemKind} does for the
  * master's tray.
  *
@@ -30,7 +30,7 @@ public enum AdminQueueItemKind {
      *
      * <p>Not {@code Draft}, which nobody has sent; not {@code ChangesRequested}, where the ball is
      * back with the master; not {@code Unassigned}, which is waiting for a master rather than for a
-     * review (arquitectura §4.5, #245). A tray that listed those would be showing an admin work that
+     * review (arquitectura §4.5, ADR-07 §1). A tray that listed those would be showing an admin work that
      * is not theirs to do.
      */
     TableWaitingReview;
@@ -47,7 +47,7 @@ public enum AdminQueueItemKind {
      *
      * <p>{@code @JsonValue} is here anyway, and it earns its place: it is what makes the enum safe to
      * accept in a body or to publish directly the day something does either - F5 adding two kinds, or
-     * a filter that takes one. Without it that day is the one #253 describes, where every response
+     * a filter that takes one. Without it that day is the one ADR-04 §5 describes, where every response
      * publishes a value every request is rejected for, and {@code PlatformRole} has already paid for
      * it once in this phase. {@code AdminQueueItemKindJsonTest} pins both directions <em>and</em> pins
      * that the DTO's string is the same string, which is the half that could actually drift today.

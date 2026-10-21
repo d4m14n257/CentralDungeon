@@ -29,7 +29,7 @@ import { ApiError } from '@/types/api'
 import { AdminTableActions } from './AdminTableActions'
 
 /**
- * `/admin/tables` — **every table the platform has**, with its status (#176, F3.3).
+ * `/admin/tables` — **every table the platform has**, with its status (ADR-16 §7, F3.3).
  *
  * It used to be "Mesas por revisar": a listing that defaulted to the review statuses, which made it a
  * second tray with rules of its own. Reviewing moved to `/admin/queue` with the two buttons that
@@ -38,27 +38,27 @@ import { AdminTableActions } from './AdminTableActions'
  * nowhere to look before this.
  *
  * **Showing everything is only useful with a way to narrow it**, which is why the search box arrived
- * in the same slice: six commands (#164, #240), declared once in `adminTableSearchFields` so that the
+ * in the same slice: six commands (ADR-22 §1, §3), declared once in `adminTableSearchFields` so that the
  * box, the help and the `?q=` cannot disagree. `/table_status` offers its ten values because they are
  * a closed set; the two catalog commands do not, because catalogs grow whenever a master proposes one
- * (#246).
+ * (ADR-12 §8).
  *
- * **What was searched and which page are in the URL** (#185), like the other admin screens. Until
+ * **What was searched and which page are in the URL** (ADR-12 §7), like the other admin screens. Until
  * F3.3 the page number lived in `useState`, which meant the second page of a listing could not be
  * linked to and was lost on reload.
  *
- * **The reservation shows here too** (#100): a table somebody is reviewing right now says so, even
+ * **The reservation shows here too** (ADR-16 §5): a table somebody is reviewing right now says so, even
  * though this screen offers no action that needs it. Without that an admin sees a table in
  * `Preparation`, goes to the tray to review it, and finds it is not there.
  *
- * A work list, so it pages by number with the total in view instead of "load more" (#173).
+ * A work list, so it pages by number with the total in view instead of "load more" (ADR-04 §6).
  *
  * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, from the same column definitions — never horizontal scroll.
  *
- * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
+ * **Behind the admin context's guard** (ADR-20 §2): an account without `Admin` or `Owner` is sent home by
  * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
- * backend authorizes on its own (#103) and the page must not go blank if it refuses.
+ * backend authorizes on its own (ADR-20 §1) and the page must not go blank if it refuses.
  */
 export function AdminTablesPage() {
   const { t, i18n } = useTranslation('admin')
@@ -69,12 +69,12 @@ export function AdminTablesPage() {
   const timeZone = browserTimeZone()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
-  // of #164. Nothing is filtered by default: this screen answers "which tables exist", and a listing
-  // that silently hides some of them is the thing #176 took away.
+  // of ADR-22 §1. Nothing is filtered by default: this screen answers "which tables exist", and a listing
+  // that silently hides some of them is the thing ADR-16 §7 took away.
   const fields = useMemo(() => adminTableSearchFields(t, tTables), [t, tTables])
   const search = useSearchQuery({
     fields,
@@ -82,7 +82,7 @@ export function AdminTablesPage() {
     onQueryChange: (query) => updateParams({ q: query }),
   })
 
-  // isLoadingError, not isError: see docs/adr #150.
+  // isLoadingError, not isError: see ADR-19 §4.
   const { data, isPending, isLoadingError, error, refetch } = useAdminTables(search.query, undefined, page, size)
 
   /** Writes the screen's state into the URL, resetting the page whenever the search changes. */
@@ -106,7 +106,7 @@ export function AdminTablesPage() {
   const showsEverything = search.query.trim() === ''
 
   const columns: DataTableColumn<AdminTableSummary>[] = [
-    // The name opens the table (#284): the row is where an admin finds it, the detail is where they read it.
+    // The name opens the table (ADR-06 §8): the row is where an admin finds it, the detail is where they read it.
     {
       id: 'name',
       header: t('tables.columns.name'),
@@ -176,7 +176,7 @@ export function AdminTablesPage() {
             getRowId={(table) => table.id}
             renderActions={(table) => (
               <>
-                {/* First and on every row, whatever its status: seeing a table is never refused (#45, #284). */}
+                {/* First and on every row, whatever its status: seeing a table is never refused (ADR-06 §8). */}
                 <IconAction
                   icon={<Eye className="size-4" />}
                   label={t('tables.view')}

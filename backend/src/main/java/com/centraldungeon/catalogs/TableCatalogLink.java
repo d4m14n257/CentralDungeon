@@ -28,7 +28,7 @@ public abstract class TableCatalogLink {
     @Column(name = "created_at", nullable = false)
     private @Nullable LocalDateTime createdAt;
 
-    /** Soft delete (#25): set when the link is removed. The row itself is never dropped. */
+    /** Soft delete (ADR-03 §7): set when the link is removed. The row itself is never dropped. */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
@@ -49,7 +49,7 @@ public abstract class TableCatalogLink {
 
     /**
      * Marks the link live or removed. A link is never deleted, only unlinked: the row is what says
-     * the master once chose that alias (#56, #58).
+     * the master once chose that alias (ADR-12 §4).
      *
      * @param status the new status
      */

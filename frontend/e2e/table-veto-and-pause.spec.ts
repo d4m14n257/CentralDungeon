@@ -31,7 +31,7 @@ import { acceptReview } from './helpers/review'
 const BACKEND_URL = 'http://localhost:8080'
 const runId = Math.random().toString(36).slice(2, 10)
 
-/** The community's usual slot, and the hour the materialized sessions take (#230). */
+/** The community's usual slot, and the hour the materialized sessions take (ADR-07 §4). */
 const FRIDAY_EVENING = '20:00'
 
 async function testLogin(request: APIRequestContext, discordId: string, asMaster = false, asAdmin = false) {
@@ -52,13 +52,13 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
 /**
  * A table with a real calendar, sent for review.
  *
- * The start date and the session count are what materialization needs (#26, #33), and the pause half
+ * The start date and the session count are what materialization needs (ADR-08 §3), and the pause half
  * of this spec is about sessions disappearing — so a table without them would have nothing to freeze.
  *
  * @param page    the tab, already authenticated as a master
  * @param name    the table's name
- * @param weekday the agenda's day. Two tables for one master need different ones: R1 of #178 refuses
- *                overlapping agendas and every table carries one (#226)
+ * @param weekday the agenda's day. Two tables for one master need different ones: R1 of ADR-08 §2 refuses
+ *                overlapping agendas and every table carries one (ADR-07 §3)
  * @returns the id of the created table
  */
 async function createTableWithCalendar(page: Page, name: string, weekday = 'Viernes'): Promise<string> {
@@ -73,7 +73,7 @@ async function createTableWithCalendar(page: Page, name: string, weekday = 'Vier
   await addScheduleSlot(page, FRIDAY_EVENING, weekday)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByLabel('Sesiones planeadas').fill('4')
@@ -83,7 +83,7 @@ async function createTableWithCalendar(page: Page, name: string, weekday = 'Vier
 
   const id = page.url().split('/master/tables/')[1]
   expect(id).toBeTruthy()
-  // Born in Draft since #245: nothing an admin can approve until it is sent.
+  // Born in Draft since ADR-07 §1: nothing an admin can approve until it is sent.
   await submitForReview(page, id as string)
   return id as string
 }
@@ -114,7 +114,7 @@ async function acceptAsPlayer(master: Page, player: Page, tableId: string, playe
  * stops turning up while the calendar is still promising dates. That the request lands in the shared
  * tray as an admin's work, which is what makes `TablePause` a request rather than a column. And that
  * the admin's yes reaches the player: the pending sessions leave the calendar, which is the whole
- * point of freezing an agenda (#32, #33) and is derived on read rather than deleted, so the same
+ * point of freezing an agenda (ADR-07 §2, ADR-08 §3) and is derived on read rather than deleted, so the same
  * screen is the only place it can be seen.
  */
 test('a master asks for a pause, an admin grants it, and the player calendar freezes', async ({ browser }) => {
@@ -140,7 +140,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     await player.page.goto(`/player/my-tables/${tableId}`)
     await expect(player.page.getByText('Sesión 1')).toBeVisible()
 
-    // Asking. The reason is mandatory (#32) and it is what the admin reads in the tray.
+    // Asking. The reason is mandatory (ADR-07 §2) and it is what the admin reads in the tray.
     await master.page.getByRole('button', { name: 'Pedir pausa' }).click()
     const pauseDialog = master.page.getByRole('dialog')
     await pauseDialog.getByRole('textbox').fill('Me operan y no puedo dirigir por un mes')
@@ -175,7 +175,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
     await master.page.goto(`/master/tables/${tableId}/status`)
     await expect(master.page.getByText('Pausada', { exact: true })).toBeVisible()
     // The admin's reason is the pause's justification: they wrote why once and it is recorded once
-    // (#32, arquitectura §4.5).
+    // (ADR-07 §2, arquitectura §4.5).
     await expect(master.page.getByText('Aprobada: avisá cuando puedas retomar')).toBeVisible()
 
     // And this is the sentence the slice promised: the calendar froze. A paused table promises no
@@ -198,7 +198,7 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
  * after-state would pass just as well against a table the player could never reach in the first
  * place, which is exactly how five of six doors get closed and nobody notices the sixth.
  *
- * And the answer is `404` every time, never `403` (#29): a 403 confirms what the 404 denies.
+ * And the answer is `404` every time, never `403` (ADR-09 §4): a 403 confirms what the 404 denies.
  */
 test('a Primary vetoes a player, who stops seeing the table, its detail and its file', async ({ browser }) => {
   const tableName = `Mesa Veto E2E ${runId}`
@@ -211,7 +211,7 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
     const tableId = await createTableWithCalendar(master.page, tableName, 'Sábado')
     await approveTableFromQueue(admin.page, tableName)
 
-    // A shared attachment, which is the door #206 anticipated the bug on: until F3.4 the condition
+    // A shared attachment, which is the door ADR-14 §2 anticipated the bug on: until F3.4 the condition
     // was «not private» alone, so any authenticated person reached it - the vetoed included.
     await master.page.goto(`/master/tables/${tableId}/files`)
     await master.page.getByRole('button', { name: 'Agregar un archivo' }).click()
@@ -237,7 +237,7 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
     // Asked over HTTP rather than through the download button: what is being pinned is the status
     // code the slice promised, and a started-then-cancelled browser download cannot show one. The
     // token goes in the header because that is how the application authenticates - the JWT is not a
-    // cookie, so `page.request` on its own would be an anonymous caller (#122).
+    // cookie, so `page.request` on its own would be an anonymous caller (ADR-05 §3).
     const fileId = await fileIdOfTable(player.page, player.accessToken, tableId)
     expect(await fileStatusFor(player.page, player.accessToken, fileId)).toBe(200)
 
@@ -261,7 +261,7 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
 
     await player.page.goto(`/player/tables/${tableId}`)
     // The `ErrorState` of a 404 detail, which is the same sentence a deleted table gets: from this
-    // person's side the table stopped existing, and telling the two apart would be the 403 (#29).
+    // person's side the table stopped existing, and telling the two apart would be the 403 (ADR-09 §4).
     await expect(player.page.getByText('Puede que ya no esté disponible.')).toBeVisible()
     await expect(player.page.getByRole('heading', { name: tableName })).toBeHidden()
 
@@ -305,7 +305,7 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
  * exposes, and the point of the assertion is the status code of a request, not the markup.
  *
  * @param page        the reader's page, for its request context
- * @param accessToken  the reader's token - the API authenticates by header, never by cookie (#122)
+ * @param accessToken  the reader's token - the API authenticates by header, never by cookie (ADR-05 §3)
  * @param tableId      the table
  * @returns the id of its first shared file
  */

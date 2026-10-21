@@ -10,7 +10,7 @@ import { z } from 'zod'
  * refuses.
  *
  * The server checks the same range again in `SettingsService` and answers `SETTING_OUT_OF_RANGE`
- * carrying both numbers (#197) — this is what makes the refusal immediate, not what makes it safe.
+ * carrying both numbers (ADR-23 §3) — this is what makes the refusal immediate, not what makes it safe.
  *
  * `value` stays a string, like `maxPlayers` in `features/tables/schemas.ts` and for the same reason:
  * mixing `z.coerce.number()` with an optional field under `exactOptionalPropertyTypes` breaks the

@@ -56,7 +56,7 @@ beforeEach(() => {
 })
 
 describe('BlockPlayerDialog', () => {
-  /** #39: the `Primary` vetoes, and the veto is per table — the table travels with the call (#29). */
+  /** ADR-09 §5: the `Primary` vetoes, and the veto is per table — the table travels with the call (ADR-09 §4). */
   it('vetoes when the reader runs the table', async () => {
     block.mockResolvedValue({})
     const user = userEvent.setup()
@@ -72,7 +72,7 @@ describe('BlockPlayerDialog', () => {
 
   /**
    * And a co-master's identical press sends a **request** instead — two endpoints, not one that
-   * behaves two ways (#39, #71).
+   * behaves two ways (ADR-09 §5, ADR-06 §3).
    */
   it('sends a request when the reader co-runs the table', async () => {
     requestBlock.mockResolvedValue(undefined)
@@ -103,7 +103,7 @@ describe('BlockPlayerDialog', () => {
     expect(screen.getByText(/No pierde la cuenta/)).toBeInTheDocument()
   })
 
-  /** The half that makes the other half acceptable (#39), and it asks for a reason too. */
+  /** The half that makes the other half acceptable (ADR-09 §5), and it asks for a reason too. */
   it('lifts the veto with its own reason', async () => {
     unblock.mockResolvedValue({})
     const user = userEvent.setup()
@@ -142,7 +142,7 @@ describe('BlockPlayerDialog', () => {
 
   /**
    * The race a screen cannot prevent: a colleague vetoed the same person a moment ago. The answer is
-   * inline, because the form is still open and that is where the reader is looking (#197) — and it
+   * inline, because the form is still open and that is where the reader is looking (ADR-23 §3) — and it
    * is written from the code, never from the backend's English `detail`.
    */
   it('shows the refusal inline, in the reader’s language', async () => {

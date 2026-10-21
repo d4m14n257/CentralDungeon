@@ -8,9 +8,9 @@ import { PlayerSectionNav } from './components/PlayerSectionNav'
  * The shell of the player context, `/player/*`: the explorer, a table's public detail, and the
  * reader's own applications and tables.
  *
- * Only for an account with the `Player` role (#269): anybody else is sent back to their own home
+ * Only for an account with the `Player` role (ADR-20 §2): anybody else is sent back to their own home
  * before this shell paints. It is a statement about what the interface shows, not the security -
- * the backend still authorizes every endpoint on its own (#103).
+ * the backend still authorizes every endpoint on its own (ADR-20 §1).
  */
 export function PlayerLayout() {
   return (

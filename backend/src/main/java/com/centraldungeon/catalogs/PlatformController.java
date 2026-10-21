@@ -34,10 +34,10 @@ public class PlatformController {
     }
 
     /**
-     * Accepted values only (#57): what the wizard's combobox offers and what a filter can use.
+     * Accepted values only (ADR-12 §3): what the wizard's combobox offers and what a filter can use.
      *
      * @param query    the search box, or null for the whole catalog
-     * @param pageable page, size and sort; by name, with a tie-break by id (#171)
+     * @param pageable page, size and sort; by name, with a tie-break by id (ADR-07 §9)
      * @return 200 with one page of accepted platforms
      */
     @GetMapping
@@ -49,7 +49,7 @@ public class PlatformController {
     }
 
     /**
-     * One platform, whatever its status, so a pending proposal can be shown as pending (#57).
+     * One platform, whatever its status, so a pending proposal can be shown as pending (ADR-12 §3).
      *
      * @param id the platform to read
      * @return 200 with the platform, or 404 if it does not exist
@@ -61,7 +61,7 @@ public class PlatformController {
     }
 
     /**
-     * Masters and admins propose; only an admin accepts and classifies (#55).
+     * Masters and admins propose; only an admin accepts and classifies (ADR-12 §3).
      *
      * @param request the name to add to the catalog
      * @return 201 with the created platform, in {@code Created}, and its Location header. 409 if the

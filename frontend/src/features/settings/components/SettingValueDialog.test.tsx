@@ -48,7 +48,7 @@ function renderDialog(setting: SystemSetting) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   function wrap(children: ReactNode) {
     // The confirm provider is real and not a stub: FormDialog asks it before discarding a dirty
-    // form (#231), so a dialog rendered without it throws rather than rendering.
+    // form (ADR-20 §5), so a dialog rendered without it throws rather than rendering.
     return (
       <QueryClientProvider client={queryClient}>
         <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
@@ -99,9 +99,9 @@ describe('SettingValueDialog', () => {
   })
 
   /**
-   * **The warning of #141, before the value is saved and not after.** The visibility window is
+   * **The warning of ADR-17 §3, before the value is saved and not after.** The visibility window is
    * evaluated on every profile read, so lowering it takes visibility away from people who have it at
-   * this instant — #141 says in so many words that «ninguno de los dos es un ajuste cosmético y la
+   * this instant — ADR-17 §3 says in so many words that «ninguno de los dos es un ajuste cosmético y la
    * pantalla tiene que decirlo».
    */
   it('warns before saving a setting whose change is retroactive', () => {
@@ -119,7 +119,7 @@ describe('SettingValueDialog', () => {
 
   /**
    * Out of range is refused here, in the reader's language and naming both bounds. The server refuses
-   * it too with `SETTING_OUT_OF_RANGE` (#197) — this is what makes the refusal immediate rather than
+   * it too with `SETTING_OUT_OF_RANGE` (ADR-23 §3) — this is what makes the refusal immediate rather than
    * what makes it safe.
    */
   it('refuses a value outside the setting’s own range, naming both bounds', async () => {
@@ -149,7 +149,7 @@ describe('SettingValueDialog', () => {
 
   /**
    * The reason is mandatory, and this is the one thing that makes a settings change reviewable: it
-   * sends no notification and appears nowhere else (#141).
+   * sends no notification and appears nowhere else (ADR-17 §3).
    */
   it('does not submit without a reason', async () => {
     renderDialog(FILE_CAP)
@@ -182,7 +182,7 @@ describe('SettingValueDialog', () => {
   /**
    * A refusal from the server is rendered inline, beside the field, with its numbers interpolated —
    * not as a toast that vanishes while the form is still open, and never as the backend's English
-   * `detail` (#197).
+   * `detail` (ADR-23 §3).
    */
   it('renders the server’s refusal inline, with the bounds it sent', async () => {
     update.mockRejectedValue(

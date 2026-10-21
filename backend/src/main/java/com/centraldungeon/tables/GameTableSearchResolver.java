@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The step between parsing the explorer's search box and querying it: every catalog criterion is
- * expanded to the ids of its whole synonym group (#54, #56, #246).
+ * expanded to the ids of its whole synonym group (ADR-12 §2, §4, §8).
  *
  * <p><b>It exists because a specification cannot ask the database a question of its own.</b>
  * {@code GameTableSearchSpecification} is a lambda that runs while a query is being built; giving it
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * receives an answer instead of a question.
  *
  * <p><b>One query per catalog criterion, not one per value.</b> {@code /table_tag horror,misterio} is
- * a single resolution: the values of one criterion are alternatives (#164), so they seed one search
+ * a single resolution: the values of one criterion are alternatives (ADR-22 §1), so they seed one search
  * and come back as one group set.
  *
  * <p>A term whose text names no accepted value resolves to the empty set, and the specification reads

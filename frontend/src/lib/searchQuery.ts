@@ -1,5 +1,5 @@
 /**
- * The one-line language every search box in the application speaks (docs/adr #164).
+ * The one-line language every search box in the application speaks (ADR-22 §1).
  *
  *   juan                                     -> the endpoint's basic criterion
  *   /discord_name juan                       -> that field
@@ -10,10 +10,10 @@
  * up to the next `/`. A bare "and" or "or" is text — it has to be, or nobody could search for a
  * value containing those words.
  *
- * **And the text is all there is until Enter** (#240): picking a command from the list writes the
+ * **And the text is all there is until Enter** (ADR-22 §3): picking a command from the list writes the
  * same string spelling it by hand would, so one query cannot reach two states depending on how it
  * was entered. Enter is what turns the text into criteria, and a second Enter on the empty text is
- * what searches them (#268): a half-written `/user_name da` is somebody still deciding, not a question
+ * what searches them (ADR-22 §4): a half-written `/user_name da` is somebody still deciding, not a question
  * for the server.
  *
  * It is an exact mirror of `common/search/SearchQueryParser.java`: the backend is what decides what
@@ -27,7 +27,7 @@ export type SearchConnector = 'and' | 'or'
 /**
  * One criterion of a search box: a field, the values that satisfy it, and how it joins the one
  * before it. Mirror of the backend's `SearchTerm` - the two parsers cover the same cases and are
- * kept in step by their tests (#164).
+ * kept in step by their tests (ADR-22 §1).
  */
 export interface SearchTerm {
   /** null = the basic criterion: whatever is typed without a `/field` in front of it. */
@@ -48,7 +48,7 @@ export interface SearchChoice {
  * A field the search box accepts, with the label whoever uses it reads.
  *
  * **The name is the command somebody types and it is always English and prefixed with its entity**
- * (#164): `file_name`, `user_name`, `catalog_name`. Two screens both offering a bare `/name` would
+ * (ADR-22 §1): `file_name`, `user_name`, `catalog_name`. Two screens both offering a bare `/name` would
  * mean the same command searched different things depending on where it was typed.
  */
 export interface SearchField {
@@ -63,12 +63,12 @@ export interface SearchField {
    * anybody will do. Declaring the values here is what turns the second kind into a list.
    *
    * The `value` is what travels to the backend; the `label` is what is **typed, read and matched**
-   * (#240). Nothing but the label ever reaches the text box: the MIME type is resolved on the way
+   * (ADR-22 §3). Nothing but the label ever reaches the text box: the MIME type is resolved on the way
    * out, by {@link toTerms}.
    */
   values?: readonly SearchChoice[]
   /**
-   * Values worth showing in this command's worked examples, in the help (#240).
+   * Values worth showing in this command's worked examples, in the help (ADR-22 §3).
    *
    * Only for the free-text kind, and only the caller can supply them: `damian` is a good example of a
    * `/user_name` and a terrible one of a `/file_name`, and this module knows about neither. Give more
@@ -82,7 +82,7 @@ export interface SearchField {
  * The state of a search box: the criteria already closed into chips, what is being typed, and the
  * connector the next criterion will come in with.
  *
- * **Nothing but Enter turns text into a chip** (#240). There used to be a third piece here, an
+ * **Nothing but Enter turns text into a chip** (ADR-22 §3). There used to be a third piece here, an
  * `activeField`: choosing a command from the list pinned its chip immediately, while typing the very
  * same command by hand left it as text until Enter — the same input reaching two different states
  * depending on which way it was entered. Now both ways write the same text, and the text is the only
@@ -165,7 +165,7 @@ export function parseSearchQuery(raw: string, knownFields: readonly string[]): S
 
 /**
  * The `/field` whose value is being typed at the end of the text, when it is one that takes a fixed
- * set of them — and which of its alternatives is half-written (#240).
+ * set of them — and which of its alternatives is half-written (ADR-22 §3).
  *
  * This is what replaces the old pinned chip as the trigger for the value list: **the text says which
  * command is open**, so typing `/file_type ` by hand offers the same list as picking it from the
@@ -192,7 +192,7 @@ export function leadingConnector(raw: string): SearchConnector | null {
 }
 
 /**
- * The criteria a piece of text means, with each value already the one that travels (#240).
+ * The criteria a piece of text means, with each value already the one that travels (ADR-22 §3).
  *
  * {@link parseSearchQuery} is the mirror of the backend and knows only field *names*; this is the
  * layer above it, the one that knows a command's fixed choices. Somebody types — or picks — the
@@ -226,7 +226,7 @@ export function serializeSearchQuery(terms: readonly SearchTerm[]): string {
 }
 
 /**
- * Closes what is typed into criteria: what Enter does (#240). The text is parsed, which is the only
+ * Closes what is typed into criteria: what Enter does (ADR-22 §3). The text is parsed, which is the only
  * rule there is — pasting `/field value`, typing it, or picking it from the list all arrive here as
  * the same string and therefore as the same criteria.
  *
@@ -246,7 +246,7 @@ export function commitSearchDraft(value: SearchQueryValue, fields: readonly Sear
 }
 
 /**
- * The canonical query of a box's chips: **its closed criteria and nothing else** (#268). It is what
+ * The canonical query of a box's chips: **its closed criteria and nothing else** (ADR-22 §4). It is what
  * the second Enter confirms as a search, and what is compared with the confirmed one to tell the
  * reader a search is pending.
  *
@@ -258,7 +258,7 @@ export function buildSearchQuery({ terms }: SearchQueryValue): string {
   return serializeSearchQuery(terms)
 }
 
-/** An empty box holding the criteria a canonical query means: how a screen restores `?q=` (#185). */
+/** An empty box holding the criteria a canonical query means: how a screen restores `?q=` (ADR-12 §7). */
 export function searchQueryOf(raw: string, fields: readonly SearchField[]): SearchQueryValue {
   return { ...emptySearchQuery, terms: toTerms(raw, fields) }
 }

@@ -9,9 +9,9 @@ package com.centraldungeon.tasks.dto;
  * DTO starts drifting (arquitectura §2.3).
  *
  * @param fileId    the file's identifier, which is what the download endpoint takes
- * @param name      the original filename, which is what the reader recognises it by (#80)
+ * @param name      the original filename, which is what the reader recognises it by (ADR-13 §6)
  * @param mimeType  the declared MIME type, so the screen can show the right icon
- * @param sizeBytes the size as it was uploaded, before compression (#75). Shown because somebody on a
+ * @param sizeBytes the size as it was uploaded, before compression (ADR-13 §3). Shown because somebody on a
  *                  phone deserves to know what a tap is about to cost them
  */
 public record SubmittedFileResponse(String fileId, String name, String mimeType, long sizeBytes) {

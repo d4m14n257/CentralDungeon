@@ -19,7 +19,7 @@ El cliente recibe este proyecto para usarlo y para seguir mejorándolo. Eso exig
 | Backend | **Javadoc** (`/** … */`) | Todo lo `public` y `protected`, más los campos de entidad. Cada componente de un `record` lleva su `@param`, todos, incluso `id` y `name`. Métodos con retorno llevan `@return`; los que lanzan una excepción de negocio, su `@throws` |
 | Frontend | **JSDoc** (`/** … */`) | Todo `export`: componentes, hooks, funciones, tipos, interfaces, constantes y esquemas zod. Los `props` de un componente se documentan en su `interface` o `type`, campo por campo |
 
-**Qué escribir.** El bloque dice **qué hace y por qué existe**, nunca cómo está implementado: el cuerpo ya cuenta el cómo, y un comentario que lo repite se desincroniza en el primer refactor. Cuando una decisión explica la forma de algo, se cita con su `#n` (la ADR de `docs/adr/`): es lo que convierte el código en algo que se puede mantener sin la conversación que lo produjo.
+**Qué escribir.** El bloque dice **qué hace y por qué existe**, nunca cómo está implementado: el cuerpo ya cuenta el cómo, y un comentario que lo repite se desincroniza en el primer refactor. Cuando una decisión explica la forma de algo, se cita con su `ADR-NN §k` (`docs/adr/`): es lo que convierte el código en algo que se puede mantener sin la conversación que lo produjo.
 
 **En inglés, como todo el código.** Un archivo de código no tiene una sola palabra en español, y el Javadoc y el JSDoc son código.
 

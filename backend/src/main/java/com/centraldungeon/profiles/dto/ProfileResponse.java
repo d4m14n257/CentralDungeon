@@ -6,23 +6,23 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Somebody's public profile, as read under the five visibility rules of arquitectura §4.5
- * ("Visibilidad de perfiles": #41, #44, #45, #47).
+ * ("Visibilidad de perfiles": ADR-10 §1, §2, ADR-06 §8, ADR-10 §1).
  *
- * <p><b>No {@code karma}, no {@code comments} - not even {@code null}</b> (docs/adr #248): both
+ * <p><b>No {@code karma}, no {@code comments} - not even {@code null}</b> (ADR-10 §5): both
  * are F5. A field that promises a number the frontend has no way to fill teaches the first component
  * that reads it to ask for one, and shows a gap where a number belongs instead.
  *
  * @param id              the person's identifier
  * @param discordUsername their Discord handle, as of their last login - how the community finds them
- *                        on the server, and what a master reads first on a candidate's card (#284)
- * @param name            their display name, or null while they have not completed onboarding (#134)
+ *                        on the server, and what a master reads first on a candidate's card (ADR-06 §8)
+ * @param name            their display name, or null while they have not completed onboarding (ADR-10 §4)
  * @param country    where they play from, ISO 3166-1 alpha-2, or null while incomplete
- * @param roles      the global roles they hold right now (#37, #67) - shown here, never used to
- *                   authorize anything: the backend decides that endpoint by endpoint (#103)
- * @param attendance their historical attendance across every table they have played (#137): three
+ * @param roles      the global roles they hold right now (ADR-06 §1) - shown here, never used to
+ *                   authorize anything: the backend decides that endpoint by endpoint (ADR-20 §1)
+ * @param attendance their historical attendance across every table they have played (ADR-08 §5): three
  *                   numbers, and {@code Unknown} never among them
  * @param finishedTables how many tables they played to the end: accepted as a player at a table that
- *                       is now finished (#284). Their track record in one number, without karma (#248)
+ *                       is now finished (ADR-06 §8). Their track record in one number, without karma (ADR-10 §5)
  */
 public record ProfileResponse(
         String id,

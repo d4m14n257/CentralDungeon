@@ -30,7 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The job that hands back the reservations nobody finished (#100).
+ * The job that hands back the reservations nobody finished (ADR-16 §5).
  *
  * <p>Asserted through {@link AdminQueueClaimReleaseService#releaseExpiredClaims()} and not through the
  * scheduled method, for the reason {@code FileRetentionServiceTest} and
@@ -77,7 +77,7 @@ class AdminQueueClaimReleaseServiceTest {
     /**
      * El corte sale del timeout configurable (contrato §2, {@code app.admin-queue.claim-timeout}), y
      * is what the query is given: it is the difference between a value that can be adjusted without a
-     * constante escondida. F3.5 lo muda a {@code system_settings} (#141) y este test no cambia.
+     * constante escondida. F3.5 lo muda a {@code system_settings} (ADR-17 §3) y este test no cambia.
      */
     @Test
     void theCutoffComesFromTheConfiguredTimeout() {
@@ -93,12 +93,12 @@ class AdminQueueClaimReleaseServiceTest {
     }
 
     /**
-     * And with nothing configured, the value #100 says it starts at: fifteen minutes.
+     * And with nothing configured, the value ADR-16 §5 says it starts at: fifteen minutes.
      *
      * <p>The default moved with the setting in F3.5 - it is {@code SettingKey}'s now, not a
      * {@code @ConfigurationProperties} record's - so the assertion moved to where the default lives.
      * {@code SettingsServiceTest} is what proves an unset setting answers with it; this one keeps the
-     * number written down beside the job that uses it, because fifteen minutes is #100's number and
+     * number written down beside the job that uses it, because fifteen minutes is ADR-16 §5's number and
      * not an implementation detail of the settings table.
      */
     @Test

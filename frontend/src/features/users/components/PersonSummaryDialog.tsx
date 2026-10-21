@@ -17,15 +17,15 @@ export interface PersonSummaryDialogProps {
 }
 
 /**
- * A person's card as a master reads it from their table (#284): who they are on the server and how
+ * A person's card as a master reads it from their table (ADR-06 §8): who they are on the server and how
  * many tables they saw through - the general picture, and nothing an admin would act on.
  *
- * **Deliberately short, and the line between the two roles** (#284): a master deciding on a candidate
+ * **Deliberately short, and the line between the two roles** (ADR-06 §8): a master deciding on a candidate
  * or looking at a player needs to know who that is, not their account's standing; the full record -
  * status, roles, every table, what admins did to it - is the admin's, on /admin/users/:id.
  *
- * It reads the same profile the visibility rules already gate (#41, #47), so the master only ever
- * opens it for somebody linked to their table. **No karma and no comments yet** (#248): both are F5,
+ * It reads the same profile the visibility rules already gate (ADR-10 §1), so the master only ever
+ * opens it for somebody linked to their table. **No karma and no comments yet** (ADR-10 §5): both are F5,
  * and the card says nothing about them rather than drawing an empty section.
  *
  * @param props.userId       the person

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 /**
- * There is no registration of our own: Discord guild membership is the door (docs/adr #38).
+ * There is no registration of our own: Discord guild membership is the door (ADR-05 §1).
  * The Discord access token is used once, right here, to check membership - it is never persisted.
  */
 @Service
@@ -29,11 +29,11 @@ public class DiscordOAuth2UserService implements OAuth2UserService<OAuth2UserReq
 
     /**
      * The login was refused because the person is not in the guild. Not a dead end: the failure
-     * handler passes the invite along so they can join and try again (#38).
+     * handler passes the invite along so they can join and try again (ADR-05 §1).
      */
     public static final String NOT_GUILD_MEMBER_ERROR = "not_guild_member";
 
-    /** The login was refused because the account is blocked (#84, #86). This one <em>is</em> a dead end. */
+    /** The login was refused because the account is blocked (ADR-05 §7). This one <em>is</em> a dead end. */
     public static final String USER_BLOCKED_ERROR = "user_blocked";
 
     private static final String INTERNAL_USER_ID_ATTRIBUTE = "internalUserId";
@@ -44,7 +44,7 @@ public class DiscordOAuth2UserService implements OAuth2UserService<OAuth2UserReq
     /** Calls Discord's guilds endpoint. {@code RestClient}, because Boot 4 no longer autoconfigures RestTemplate. */
     private final RestClient restClient;
 
-    /** Holds the guild id and the guilds URI - configuration, never constants in the code (#38). */
+    /** Holds the guild id and the guilds URI - configuration, never constants in the code (ADR-05 §1). */
     private final DiscordProperties discordProperties;
 
     /** Creates the local user on first login, or refreshes their handle on every later one. */
@@ -85,10 +85,10 @@ public class DiscordOAuth2UserService implements OAuth2UserService<OAuth2UserReq
      * The gate of the whole system: Discord says who this is, and this method decides whether they
      * get in at all.
      *
-     * <p>Three steps, in order - read the Discord profile, refuse anyone outside the guild (#38), and
+     * <p>Three steps, in order - read the Discord profile, refuse anyone outside the guild (ADR-05 §1), and
      * create or refresh the local user. The Discord access token is used once here to check
      * membership and then discarded: keeping it would mean maintaining a second refresh cycle for a
-     * capability v1 does not have (#125).
+     * capability v1 does not have (ADR-05 §2).
      *
      * @param userRequest the completed OAuth2 exchange, carrying Discord's access token
      * @return the principal, whose name is the <b>local</b> user id - which is what ends up as the

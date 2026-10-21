@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * {@code user_status_changes}.
  *
  * <p>A block is irreversible from the blocked person's side - they cannot log in to ask about it
- * (#84) - so the reason is the only thing that makes it answerable afterwards. That is why
+ * (ADR-05 §7) - so the reason is the only thing that makes it answerable afterwards. That is why
  * {@code justification} is NOT NULL here.
  *
  * <p>No {@link com.centraldungeon.common.model.BaseEntity} and not one setter: same reasoning as
@@ -49,12 +49,12 @@ public class UserStatusChange {
     @Column(name = "to_status", nullable = false, length = 32)
     private UserStatus toStatus;
 
-    /** Who made the change - always the actor from the token (#121). */
+    /** Who made the change - always the actor from the token (ADR-05 §5). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "changed_by", nullable = false)
     private User changedBy;
 
-    /** Why. Required: a block nobody explained is a block nobody can undo fairly (#84). */
+    /** Why. Required: a block nobody explained is a block nobody can undo fairly (ADR-05 §7). */
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String justification;
 
@@ -72,7 +72,7 @@ public class UserStatusChange {
      * @param user          whose account changed
      * @param fromStatus    where it was
      * @param toStatus      where it went
-     * @param changedBy     who made the change, always the actor from the token (#121)
+     * @param changedBy     who made the change, always the actor from the token (ADR-05 §5)
      * @param justification why, never blank
      */
     public UserStatusChange(User user, UserStatus fromStatus, UserStatus toStatus, User changedBy, String justification) {

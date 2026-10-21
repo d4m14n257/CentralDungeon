@@ -11,12 +11,12 @@ import java.time.LocalDateTime;
  * per table.
  *
  * <p>"Unrecorded" means still {@code Scheduled} with its date in the past. Marking a session held
- * is an explicit act (#195), so a date going by does not close anything on its own - which is
+ * is an explicit act (ADR-08 §4), so a date going by does not close anything on its own - which is
  * precisely what makes this something waiting for the master.
  *
  * @param gameTableId the table the count belongs to
  * @param unrecorded  how many of its sessions are overdue and still open
- * @param oldest      when the earliest of them was scheduled, in UTC (#22)
+ * @param oldest      when the earliest of them was scheduled, in UTC (ADR-03 §6)
  */
 public record UnrecordedSessionCount(String gameTableId, long unrecorded, LocalDateTime oldest) {
 }

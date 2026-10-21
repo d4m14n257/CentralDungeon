@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * A person's own inbox. Every endpoint here is scoped to the actor from the token: there is no way
- * to ask for somebody else's notifications, because the user id is not a parameter anywhere (#121).
+ * to ask for somebody else's notifications, because the user id is not a parameter anywhere (ADR-05 §5).
  */
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -37,7 +37,7 @@ public class NotificationController {
     /**
      * The actor's inbox, newest first - what the bell and the notifications screen read.
      *
-     * @param pageable    page, size and sort; newest first, with a tie-break by id (#171)
+     * @param pageable    page, size and sort; newest first, with a tie-break by id (ADR-07 §9)
      * @param currentUser the actor, from the token
      * @return 200 with one page of their notifications
      */
@@ -54,7 +54,7 @@ public class NotificationController {
      *
      * @param id          the notification
      * @param currentUser the actor, from the token; the service refuses a notification that is not
-     *                    theirs (#121)
+     *                    theirs (ADR-05 §5)
      * @return nothing - 204, because the client already knows what changed
      */
     @PatchMapping("/{id}/read")

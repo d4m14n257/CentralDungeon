@@ -1,7 +1,7 @@
 import { ApiError } from '@/types/api'
 
 /**
- * The six refusals F3.1 added, each with a sentence of its own (#197).
+ * The six refusals F3.1 added, each with a sentence of its own (ADR-23 §3).
  *
  * **The message a person reads is built here from the code, never from the `ProblemDetail`'s
  * `detail`**: that field is English and written for a log, so showing it would put an English

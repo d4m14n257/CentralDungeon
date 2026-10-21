@@ -42,7 +42,7 @@ test('a member of the server signs in with Discord and stays signed in', async (
   await acceptReview(page)
 
   // The onboarding lands on `/`, which is a dispatcher and not a screen: it forwards to the home of
-  // the context this account has, which for a fresh Player account is the explorer (#222).
+  // the context this account has, which for a fresh Player account is the explorer (ADR-20 §2).
   await expect(page).toHaveURL(/\/player$/)
 })
 

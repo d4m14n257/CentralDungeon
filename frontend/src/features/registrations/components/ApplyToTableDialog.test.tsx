@@ -19,7 +19,7 @@ const testFile: StagedFile = { kind: 'new', localId: 'staged-1', name: 'ficha.pd
 
 function renderDialog(overrides: Partial<ApplyToTableDialogProps> = {}) {
   render(
-    // The provider is real, not a stub: FormDialog asks it before discarding a dirty form (#231), so
+    // The provider is real, not a stub: FormDialog asks it before discarding a dirty form (ADR-20 §5), so
     // a dialog rendered without it throws rather than rendering.
     <ConfirmDialogProvider>
       <ApplyToTableDialog
@@ -42,7 +42,7 @@ function renderDialog(overrides: Partial<ApplyToTableDialogProps> = {}) {
 }
 
 describe('ApplyToTableDialog', () => {
-  /** #238, #247: a sent application cannot be edited, so the send button lives only past the review. */
+  /** ADR-13 §5, ADR-09 §2: a sent application cannot be edited, so the send button lives only past the review. */
   it('offers no send button on the writing step', () => {
     renderDialog()
 

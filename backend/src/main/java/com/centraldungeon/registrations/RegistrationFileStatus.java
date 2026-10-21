@@ -10,6 +10,6 @@ public enum RegistrationFileStatus {
     /** Still attached to the application. */
     Current,
 
-    /** Taken off. The file itself is untouched (#79), and the bytes are never freed here (#25, #66). */
+    /** Taken off. The file itself is untouched (ADR-14 §1), and the bytes are never freed here (ADR-03 §7, ADR-13 §8). */
     Removed
 }

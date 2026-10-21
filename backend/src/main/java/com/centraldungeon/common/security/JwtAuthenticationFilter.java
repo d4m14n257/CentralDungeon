@@ -19,20 +19,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * The JWT affirms identity, not authorization (docs/adr #122): roles and status are
+ * The JWT affirms identity, not authorization (ADR-05 §3): roles and status are
  * re-read from the database (Caffeine-cached, see application.yml) on every request, so a
  * blocked user or a revoked role takes effect without waiting for the token to expire.
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    /** The scheme every authenticated call uses. A header the browser never attaches on its own (#127). */
+    /** The scheme every authenticated call uses. A header the browser never attaches on its own (ADR-05 §2). */
     private static final String BEARER_PREFIX = "Bearer ";
 
     /** Validates the token and reads its subject. */
     private final JwtService jwtService;
 
-    /** Reads the roles and status from the database - the whole point of #122. */
+    /** Reads the roles and status from the database - the whole point of ADR-05 §3. */
     private final UserService userService;
 
     /**
@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Turns a bearer token into the request's {@code Authentication}, with the authorities the person
-     * holds <em>right now</em> rather than the ones their token was minted with (#122).
+     * holds <em>right now</em> rather than the ones their token was minted with (ADR-05 §3).
      *
      * <p>A missing or invalid token is not an error here: the chain continues unauthenticated and
      * whatever the request was aimed at decides. That is what lets the public paths work and what

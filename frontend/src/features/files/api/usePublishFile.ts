@@ -4,7 +4,7 @@ import { filesApi } from './filesApi'
 
 /**
  * Publishing a file of the platform's library that is not published — never published yet, or hidden
- * (#282). From then on masters see it in the picker and can attach it (#79).
+ * (ADR-14 §7). From then on masters see it in the picker and can attach it (ADR-14 §1).
  *
  * @returns the mutation, taking the id of the file to publish
  */

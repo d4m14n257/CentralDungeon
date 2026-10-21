@@ -1,6 +1,6 @@
 # 6–8 Las herramientas de Claude en este repo
 
-> Parte de la skill `entorno-local`. Hasta #292 era `docs/mcp-y-skills.md`. Lo que son las skills, las rules y los agentes del repo, y cuándo se usa cada uno, está en `CLAUDE.md`.
+> Parte de la skill `entorno-local`. Hasta ADR-01 §5 era `docs/mcp-y-skills.md`. Lo que son las skills, las rules y los agentes del repo, y cuándo se usa cada uno, está en `CLAUDE.md`.
 
 ## 6. MCP servers (`.mcp.json`, raíz del repo)
 
@@ -15,7 +15,7 @@ Ninguno tiene secretos literales: todos usan `${VAR}` (variables de entorno) o a
 
 GitHub MCP no se configuró: no fue solicitado. Si más adelante se quieren gestionar issues/PRs desde Claude Code, se agrega `github/github-mcp-server` con `claude mcp add`.
 
-**Figma se removió** (#130). Estaba configurado apuntando al MCP remoto oficial, pero tanto ese como el servidor local de Figma Desktop exigen asiento Dev o Full en plan pago, que el proyecto no tiene. El diseño pasó a Claude Design.
+**Figma se removió** (ADR-21 §1). Estaba configurado apuntando al MCP remoto oficial, pero tanto ese como el servidor local de Figma Desktop exigen asiento Dev o Full en plan pago, que el proyecto no tiene. El diseño pasó a Claude Design.
 
 ### 6.1 Aprobación de los servidores del proyecto
 
@@ -46,7 +46,7 @@ No es un MCP: es la herramienta `DesignSync`, integrada en Claude Code, así que
 |---|---|
 | **Para qué** | Publicar y revisar el design system del frontend: tokens y componentes como previews HTML + Tailwind, en un proyecto de design system de `claude.ai/design` |
 | **Requiere** | Autorización única con `/design-login`, contra la cuenta de claude.ai. Funciona aunque la sesión se autentique con API key o token de proveedor |
-| **Decisión** | #130. La fuente de verdad de los tokens sigue siendo el diseño (#118); lo que cambió es dónde vive |
+| **Decisión** | ADR-21 §1. La fuente de verdad de los tokens sigue siendo el diseño (ADR-21 §1); lo que cambió es dónde vive |
 
 ## 8. Skills externas (globales, `~/.claude/skills/`)
 

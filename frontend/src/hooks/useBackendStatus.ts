@@ -10,7 +10,7 @@ interface HealthResponse {
 const POLL_INTERVAL_MS = 15_000
 
 /**
- * Polls GET /api/v1/health, which is public and has no dependencies (docs/adr #146) - so
+ * Polls GET /api/v1/health, which is public and has no dependencies (ADR-02 §6) - so
  * it works on /login too, before there is a session. `retry: false` on purpose: one failed fetch is
  * already enough to say "offline", and retrying quietly underneath would only delay the notice. The
  * periodic poll is the real retry.

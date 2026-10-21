@@ -6,7 +6,7 @@ import { gameTablesApi } from './gameTablesApi'
 import type { ChangeTableStatusRequest } from '../types'
 
 /**
- * The master **asking** for a pause (#32, F3.4).
+ * The master **asking** for a pause (ADR-07 §2, F3.4).
  *
  * **Asking is not pausing, and the screen has to keep the two apart.** The table moves to
  * `PauseRequested` and a `TablePause` request lands in the admin tray; the agenda keeps promising
@@ -14,7 +14,7 @@ import type { ChangeTableStatusRequest } from '../types'
  * anybody freeze the sessions their players are already committed to.
  *
  * `PauseRequested` was a status nothing produced — one of the three orphans F1.7 surveyed and could
- * not close (#163). This is its producer.
+ * not close (ADR-07 §1). This is its producer.
  *
  * **It invalidates the shared tray too**: the request it just created is work waiting on an admin,
  * and the master is not the only person looking at it.
@@ -28,7 +28,7 @@ export function useRequestTablePause(tableId: string) {
     mutationFn: (request: ChangeTableStatusRequest) => gameTablesApi.requestPause(tableId, request),
     /**
      * The dialog is still open over the button, so the refusal belongs there and not in a toast
-     * (#197). `PAUSE_ALREADY_REQUESTED` is the one worth the sentence: it means somebody else
+     * (ADR-23 §3). `PAUSE_ALREADY_REQUESTED` is the one worth the sentence: it means somebody else
      * already asked, which the reader resolves by reloading rather than by pressing again.
      */
     meta: { showsItsOwnError: true },
@@ -38,7 +38,7 @@ export function useRequestTablePause(tableId: string) {
       // The table changed status, so every listing that shows one is now describing the past.
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.lists() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
-      // And a new request is waiting on somebody: it belongs in the shared tray (#100).
+      // And a new request is waiting on somebody: it belongs in the shared tray (ADR-16 §5).
       void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.adminAll() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.mineAll() })

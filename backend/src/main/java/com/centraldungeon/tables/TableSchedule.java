@@ -14,13 +14,13 @@ import org.jspecify.annotations.Nullable;
  * One slot of a table's weekly agenda: "Tuesday at 20:00, every week". Table
  * {@code table_schedules}.
  *
- * <p><b>Everything here is UTC</b> (#22). The conversion to and from the reader's own time happens
+ * <p><b>Everything here is UTC</b> (ADR-03 §6). The conversion to and from the reader's own time happens
  * once, in the frontend; a slot the players think of as Tuesday night in America is stored as
  * Wednesday in the small hours, and nothing on this side of the API pretends otherwise.
  *
  * <p>The slot carries no duration of its own. How long a session lasts is
  * {@link GameTable#getDuration()}, a property of the table, and it is what turns this row into the
- * interval the clash rules of #178 compare - see {@link WeeklyInterval}.
+ * interval the clash rules of ADR-08 §2 compare - see {@link WeeklyInterval}.
  *
  * <p>No {@code @ManyToOne} to the table: the id is half the composite key already, and the agenda is
  * always read for a table whose id the caller is holding. The database still enforces the FK.
@@ -34,8 +34,8 @@ public class TableSchedule {
     private TableScheduleId id;
 
     /**
-     * How long <em>this</em> session lasts (#228). Null when the slot commits nobody to anything: an
-     * agenda without a length has no interval to compare, and #178 leaves it alone.
+     * How long <em>this</em> session lasts (ADR-08 §1). Null when the slot commits nobody to anything: an
+     * agenda without a length has no interval to compare, and ADR-08 §2 leaves it alone.
      *
      * <p>It lives here and not on the table because a table can legitimately run three hours midweek
      * and six on a Saturday, and one column for both meant lying about one of them.
@@ -60,7 +60,7 @@ public class TableSchedule {
      * Adds a slot to a table's agenda, live from the start.
      *
      * @param gameTableId the table
-     * @param weekday     the day of the week, in UTC (#22)
+     * @param weekday     the day of the week, in UTC (ADR-03 §6)
      * @param hourtime    the time of day it starts, in UTC and truncated to the minute
      */
     public TableSchedule(String gameTableId, Weekday weekday, LocalTime hourtime) {
@@ -68,10 +68,10 @@ public class TableSchedule {
     }
 
     /**
-     * Adds a slot that says how long it runs (#228).
+     * Adds a slot that says how long it runs (ADR-08 §1).
      *
      * @param gameTableId the table
-     * @param weekday     the day, in UTC (#22)
+     * @param weekday     the day, in UTC (ADR-03 §6)
      * @param hourtime    the time it starts, in UTC
      * @param duration    how long this session lasts, or null for a slot that claims no interval
      */
@@ -110,7 +110,7 @@ public class TableSchedule {
     /**
      * Returns the day of the week the slot falls on.
      *
-     * @return the weekday, in UTC (#22)
+     * @return the weekday, in UTC (ADR-03 §6)
      */
     public Weekday getWeekday() {
         return id.weekday();
@@ -119,7 +119,7 @@ public class TableSchedule {
     /**
      * Returns the time of day the slot starts.
      *
-     * @return the start time, in UTC (#22)
+     * @return the start time, in UTC (ADR-03 §6)
      */
     public LocalTime getHourtime() {
         return id.hourtime();

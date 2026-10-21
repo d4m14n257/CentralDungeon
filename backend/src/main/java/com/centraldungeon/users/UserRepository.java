@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
      * have, so the only thing left is to make two submits by the same person take turns.
      *
      * <p><b>A single, always-present row</b>, which is what makes it safe. It is the same shape
-     * {@code RoleRepository.lockByName} has in the last-owner invariant (#252), and for the same
+     * {@code RoleRepository.lockByName} has in the last-owner invariant (ADR-06 §2), and for the same
      * reason: one row means no lock cycle is even expressible, and it covers the case a locking read
      * over the rows being counted cannot - when there are no rows yet, which is exactly the state an
      * insert starts from. Locking an empty result set in InnoDB means gap locks, whose reach depends

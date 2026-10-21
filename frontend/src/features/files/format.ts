@@ -20,10 +20,10 @@ export interface FormattedSize {
  * Turns a byte count into something a person reads.
  *
  * **The locale is a parameter, never a constant read from inside** — same rule `lib/date.ts` follows
- * and the same reason (#111, #192): a module that reaches for the browser's locale on its own cannot
+ * and the same reason (ADR-19 §7): a module that reaches for the browser's locale on its own cannot
  * be tested and cannot be reused for anybody but the current reader.
  *
- * The number it is given is the size **as uploaded**, before compression (#75): what is shown has to
+ * The number it is given is the size **as uploaded**, before compression (ADR-13 §3): what is shown has to
  * be what the person recognises, not what the disk happens to hold.
  *
  * @param sizeBytes the size in bytes

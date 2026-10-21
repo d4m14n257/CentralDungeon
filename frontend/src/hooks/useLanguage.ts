@@ -11,7 +11,7 @@ export interface LanguageControl {
 }
 
 /**
- * Reading and changing the application's language (#198) — the counterpart of `next-themes`'
+ * Reading and changing the application's language (ADR-23 §2) — the counterpart of `next-themes`'
  * `useTheme`, which the theme switch already uses.
  *
  * It changes the language and remembers the choice. Keeping `<html lang>` in step is deliberately

@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
  * Builds the refresh cookie. Shared by the OAuth2 success handler and AuthController - both set the
  * same cookie, and two places writing the same attributes by hand is how they drift apart.
  *
- * <p>The attributes are the security decision of #125, not preferences: {@code httpOnly} keeps the
- * refresh token out of reach of any script that gets injected through the rich text editor (#62),
+ * <p>The attributes are the security decision of ADR-05 §2, not preferences: {@code httpOnly} keeps the
+ * refresh token out of reach of any script that gets injected through the rich text editor (ADR-03 §8),
  * and {@code SameSite=Strict} is what stops a third-party site from forcing a rotation - the attack
- * the CSRF token on {@code /auth/refresh} covers for agents that ignore the attribute (#127).
+ * the CSRF token on {@code /auth/refresh} covers for agents that ignore the attribute (ADR-05 §2).
  */
 @Component
 public class RefreshCookieFactory {

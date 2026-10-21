@@ -29,7 +29,7 @@ export const APPROVAL_REQUEST_TYPES = [
  * in another person's name (F3.2 §0d). The three below are *about whoever is asking*, and who that
  * is comes from the token. The two F3.4 added are about something else — a table, an application —
  * so each got a route of its own hanging off the entity, where "being the master of **this** table"
- * can be checked against the thing in the path (#121).
+ * can be checked against the thing in the path (ADR-05 §5).
  *
  * It is what the submit form validates against, so a screen cannot offer a kind whose only possible
  * outcome is a refusal (principle 2).
@@ -44,7 +44,7 @@ export const APPROVAL_STATUSES = ['Pending', 'Approved', 'Rejected'] as const sa
  *
  * **Built with `serializeSearchQuery` rather than written by hand**, because it is read by two
  * parsers and has to mean the same thing to both. It is what `/admin/requests` opens filtered by
- * (#136) and what the request sections ask `/requests/mine` for, so the string leaves the frontend
+ * (ADR-20 §4) and what the request sections ask `/requests/mine` for, so the string leaves the frontend
  * and is parsed by `SearchQueryParser.java` — one hand-typed space or a label where a value belongs
  * and the filter silently matches nothing. The serializer is the same one the search box writes its
  * `?q=` with, which is exactly what keeps the two in step.

@@ -38,7 +38,7 @@ export interface CatalogValueActionsProps {
 }
 
 /**
- * Everything that can be done to one value of the catalog canvas (#275), as a menu.
+ * Everything that can be done to one value of the catalog canvas (ADR-12 §7), as a menu.
  *
  * **It is the keyboard's way to do what the canvas does by dragging**, and it is why the canvas is
  * usable without a mouse: accepting into a group, moving to another and merging are gestures on the
@@ -75,7 +75,7 @@ export function CatalogValueActions({ kind, value, onBecameGroup }: CatalogValue
   const isHead = value.canonicalId === null
 
   async function handleAcceptAsGroup() {
-    // A review before anything is written (#283), like the dialogs: one click on a menu item is
+    // A review before anything is written (ADR-21 §9), like the dialogs: one click on a menu item is
     // exactly the kind that goes wrong by accident.
     const confirmed = await confirm({
       title: t('admin.acceptConfirmTitle', { name: value.name }),

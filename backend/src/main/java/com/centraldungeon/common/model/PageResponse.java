@@ -14,7 +14,7 @@ import org.springframework.data.domain.Page;
  * @param <T>           the item type of this page
  * @param content       the page's items, in order. Never null; an empty page is an empty list
  * @param page          the zero-based page number that was served
- * @param size          the page size that was applied, capped at 100 (#173)
+ * @param size          the page size that was applied, capped at 100 (ADR-04 §6)
  * @param totalElements how many items match the query across every page
  * @param totalPages    how many pages that adds up to at the current size
  */

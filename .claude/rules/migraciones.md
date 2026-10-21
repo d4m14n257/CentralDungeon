@@ -9,7 +9,7 @@ paths:
 
 **9.** Todo cambio de schema es una migración Flyway nueva (`V<n+1>__snake_case.sql`). **Nunca se edita una migración aplicada, ni siquiera sus comentarios**: el checksum cubre el archivo entero y el arranque falla. Nunca `ddl-auto: update`. Toda búsqueda y reemplazo masivo sobre `backend/src` **excluye `db/migration/`**.
 
-**8.** Nada de lógica de negocio en la base: ni triggers ni stored procedures (#3). Lo que era trigger vive en el service layer (`arquitectura` §4.5).
+**8.** Nada de lógica de negocio en la base: ni triggers ni stored procedures (ADR-03 §1). Lo que era trigger vive en el service layer (`arquitectura` §4.5).
 
 **10.** La migración llega en el mismo commit que la `@Entity`, el modelo de `arquitectura` §4 y el diagrama ER de `arquitectura` §4.3.
 

@@ -1,6 +1,6 @@
 /**
  * Mirror of the backend's pagination envelope. Instantiated per item type
- * (`PageResponse<GameTableSummary>`), never re-declared per feature (#3.2 regla 8).
+ * (`PageResponse<GameTableSummary>`), never re-declared per feature (arquitectura §3.2, rule 8).
  */
 export interface PageResponse<T> {
   content: T[]
@@ -15,7 +15,7 @@ export interface ProblemDetail {
   title: string
   status: number
   /**
-   * The backend's own words, in English and for a log (#197). **Never shown to a person**: what they
+   * The backend's own words, in English and for a log (ADR-23 §3). **Never shown to a person**: what they
    * read is rendered here from `errorCode` and `errorParams`, in the language they chose.
    */
   detail: string
@@ -28,7 +28,7 @@ export interface ProblemDetail {
 }
 
 /**
- * Mirror of the backend's `AttendanceSummaryResponse` (#137): somebody's historical attendance,
+ * Mirror of the backend's `AttendanceSummaryResponse` (ADR-08 §5): somebody's historical attendance,
  * as three counts and the denominator that goes with them.
  *
  * Lives here and not in `features/tables/types.ts` because a second feature needs the exact same
@@ -71,12 +71,12 @@ export class ApiError extends Error {
  * entity at all — it is platform configuration, which is what this layer is for.
  *
  * **Never the authority.** The server applies the same cap on upload and answers `FILE_TOO_LARGE`
- * with the real number (#197), and the release job is what actually hands a stale reservation back.
+ * with the real number (ADR-23 §3), and the release job is what actually hands a stale reservation back.
  * These only make the rule sayable before it is met.
  */
 export interface ClientLimits {
   /** The per-file cap in bytes, so no client has to know which unit the setting is stored in. */
   maxFileSizeBytes: number
-  /** How long a reservation of the shared admin tray lasts, in minutes (#100). */
+  /** How long a reservation of the shared admin tray lasts, in minutes (ADR-16 §5). */
   claimTimeoutMinutes: number
 }

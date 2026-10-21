@@ -6,7 +6,7 @@ import { gameTablesApi } from './gameTablesApi'
 import type { CreateGameTableRequest } from '../types'
 
 /**
- * Creates a table. The creator becomes its master, which is what makes it theirs (#73, #135).
+ * Creates a table. The creator becomes its master, which is what makes it theirs (ADR-06 §3, §4).
  *
  * @returns the mutation, taking the draft
  */

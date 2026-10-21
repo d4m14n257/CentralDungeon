@@ -25,13 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
  * carries what somebody sent back. They also answer to two different authorization questions, and
  * keeping them apart is what stops those from being mixed up.
  *
- * <p><b>There is no update and no delete here, and that is the design</b> (#76): answers accumulate,
+ * <p><b>There is no update and no delete here, and that is the design</b> (ADR-15 §2): answers accumulate,
  * a second version is a second {@code POST}, and nothing overwrites what somebody already sent.
  * There is no accept or reject either - the system delivers, the people judge.
  *
  * <p>Every method is {@code isAuthenticated()} and none names a role: handing in is authorized by
- * being <b>addressed</b> by the task, and reading everything by <b>running the table</b> (#17, #121,
- * #135). The annotation is written out on each method and never inherited (regla dura 4,
+ * being <b>addressed</b> by the task, and reading everything by <b>running the table</b> (ADR-11 §1, ADR-05 §5,
+ * ADR-06 §4). The annotation is written out on each method and never inherited (regla dura 4,
  * CVE-2025-41248).
  */
 @RestController
@@ -66,12 +66,12 @@ public class TaskSubmissionController {
     /**
      * Handing in an answer.
      *
-     * <p>Every call inserts a new one (#76). Sending a second version leaves the first exactly where
+     * <p>Every call inserts a new one (ADR-15 §2). Sending a second version leaves the first exactly where
      * it was, which is why this is a {@code POST} to a collection and not a {@code PUT} on a resource.
      *
      * @param taskId      the task being answered
      * @param request     the written answer, the files, or both
-     * @param currentUser the actor, from the token - the submitter is never named in the body (#121)
+     * @param currentUser the actor, from the token - the submitter is never named in the body (ADR-05 §5)
      * @return 201 with the recorded answer. 403 when the task is not addressed to the actor or a file
      *         is somebody else's, 409 {@code TASK_CLOSED} when the master closed the intake, 400 when
      *         the answer uses a channel the task does not take or is empty on both
@@ -93,7 +93,7 @@ public class TaskSubmissionController {
      *
      * @param taskId      the task
      * @param currentUser the actor, from the token. The query is keyed on them, so there is no
-     *                    parameter that could point at somebody else's answers (#121)
+     *                    parameter that could point at somebody else's answers (ADR-05 §5)
      * @return 200 with their answers, oldest first. Empty when they have not answered
      */
     @GetMapping("/mine")

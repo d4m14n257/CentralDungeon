@@ -571,7 +571,7 @@
     },
     {
       "dot": "violet",
-      "title": "Guardias de contexto (#269)",
+      "title": "Guardias de contexto (ADR-20 §2)",
       "items": [
         "/player, /master y /admin se cierran a quien no tiene el contexto",
         "Redirigen a / sin 403; / despacha al hogar propio"

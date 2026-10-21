@@ -21,7 +21,7 @@ public enum ApprovalStatus {
     /** An admin said yes, with a reason. Whatever effect the type has already happened. */
     Approved,
 
-    /** An admin said no, with a reason. Rejecting without saying why is half the mechanism (#42). */
+    /** An admin said no, with a reason. Rejecting without saying why is half the mechanism (ADR-16 §1). */
     Rejected;
 
     /**

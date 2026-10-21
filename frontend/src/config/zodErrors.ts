@@ -11,7 +11,7 @@ function translated(key: string, values?: Record<string, unknown>): string | und
 }
 
 /**
- * Makes zod speak the reader's language (#226).
+ * Makes zod speak the reader's language (ADR-07 §3).
  *
  * Out of the box a failed rule reads "Too small: expected string to have >=1 characters" — English,
  * written by the library, and shown straight to whoever is filling in the form by `FormMessage`.
@@ -32,7 +32,7 @@ export function installZodErrorMap(): void {
   z.config({
     customError: (issue) => {
       // A `.refine()` that names its own key, which is the only way a rule zod has no code for can
-      // still speak the reader's language (#198). It came in with F3.5: `/admin/settings` validates
+      // still speak the reader's language (ADR-23 §2). It came in with F3.5: `/admin/settings` validates
       // against a range that is different for every setting, so the message has to carry the two
       // numbers - and `validation.invalid` would tell somebody their input is wrong without saying
       // what would be right. Everything in `params` is handed to `t()` as interpolation values.

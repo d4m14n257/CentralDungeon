@@ -10,11 +10,11 @@ function iconForMimeType(mimeType: string): LucideIcon {
 }
 
 interface FileCardProps {
-  /** The original filename — metadata, and the only thing most people remember about a file (#80). */
+  /** The original filename — metadata, and the only thing most people remember about a file (ADR-13 §6). */
   name: string
   /** The declared MIME type, which decides the icon. */
   mimeType: string
-  /** The size **as uploaded**, before compression (#75) — the number the person recognises. */
+  /** The size **as uploaded**, before compression (ADR-13 §3) — the number the person recognises. */
   sizeBytes: number
   /** Extra lines under the name: badges, uses, when it was last touched. */
   meta?: ReactNode
@@ -27,8 +27,8 @@ interface FileCardProps {
  *
  * **The replacement for a two-line `<li>`**, and what it adds is the context that makes a list of
  * files navigable instead of a list of filenames: an icon that says what kind of thing this is
- * before anything is read, and room under the name for what the caller knows — the category (#233),
- * where it is used (#232), how long since anybody touched it.
+ * before anything is read, and room under the name for what the caller knows — the category (ADR-14 §4),
+ * where it is used (ADR-14 §3), how long since anybody touched it.
  *
  * The name truncates and the row does not: a long filename must not push the actions off the side
  * of a phone. The size sits beside the name rather than under it, so the vertical space belongs to

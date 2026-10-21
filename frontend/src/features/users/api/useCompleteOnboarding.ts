@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { usersApi } from './usersApi'
 
 /**
- * Saves the display name and country that onboarding blocks on (#134), and refreshes the profile so
+ * Saves the display name and country that onboarding blocks on (ADR-10 §4), and refreshes the profile so
  * the app stops redirecting back to it.
  *
  * @returns the onboarding mutation

@@ -36,7 +36,7 @@ vi.mock('@/features/tables', () => ({
 function renderDialog() {
   return render(
     // The provider is real and not a stub: FormDialog asks it before discarding a dirty form
-    // (#231), so a dialog rendered without it throws rather than rendering.
+    // (ADR-20 §5), so a dialog rendered without it throws rather than rendering.
     <MemoryRouter>
       <ConfirmDialogProvider>
         <AssignMastersDialog tableId="table-1" tableName="Curse of Strahd" open onOpenChange={vi.fn()} />

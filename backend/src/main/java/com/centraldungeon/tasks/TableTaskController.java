@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Every method is {@code isAuthenticated()} and none names a role. Who may publish on a concrete
  * table is <b>pertenencia</b> - a row in {@code masters} - which a {@code @PreAuthorize} cannot see,
- * so the service checks it before touching anything (#17, #121, #135). The annotation is still
+ * so the service checks it before touching anything (ADR-11 §1, ADR-05 §5, ADR-06 §4). The annotation is still
  * written out on each method and never inherited (regla dura 4, CVE-2025-41248).
  */
 @RestController
@@ -62,7 +62,7 @@ public class TableTaskController {
     }
 
     /**
-     * Publishing a task, which is also what notifies the people it is addressed to (#77).
+     * Publishing a task, which is also what notifies the people it is addressed to (ADR-15 §5).
      *
      * @param tableId     the table doing the asking
      * @param request     what is being asked, of whom
@@ -88,14 +88,14 @@ public class TableTaskController {
      * (F1.3) and the shared files (F1.4) travel. Those are the same for everybody who may see the
      * table; this list is not - it depends on whether the reader plays there and on who a
      * {@code Single} task names. Keeping an actor-shaped answer out of a response that is also served
-     * without an actor is what stops the two from being confused for one another (#121).
+     * without an actor is what stops the two from being confused for one another (ADR-05 §5).
      *
      * @param tableId     the table
      * @param currentUser the actor, from the token. The whole answer is about them and there is no
-     *                    parameter that could name anybody else (#121)
+     *                    parameter that could name anybody else (ADR-05 §5)
      * @return 200 with the tasks that apply to them, oldest first. Somebody who has not applied still
      *         gets the {@code Candidates} ones: what will be asked of you is half of deciding whether
-     *         to apply (#206). 404 when the table is not there
+     *         to apply (ADR-14 §2). 404 when the table is not there
      */
     @GetMapping("/api/v1/game-tables/{tableId}/tasks/applicable")
     @PreAuthorize("isAuthenticated()")
@@ -107,11 +107,11 @@ public class TableTaskController {
     /**
      * A master correcting a task.
      *
-     * <p>It does not notify again: #77 puts the notification at publication, and a task fixed three
+     * <p>It does not notify again: ADR-15 §5 puts the notification at publication, and a task fixed three
      * times ringing three times is how people learn to ignore the bell.
      *
      * @param taskId      the task
-     * @param request     the whole state it should end in (#189)
+     * @param request     the whole state it should end in (ADR-04 §7)
      * @param currentUser the actor, from the token
      * @return 200 with the task after the correction. 403 when the actor does not run the table, 400
      *         on the same three incoherences publishing refuses, 404 when the task is not there
@@ -129,7 +129,7 @@ public class TableTaskController {
      * A master closing the intake.
      *
      * <p>What was already handed in stays readable - closing ends the intake, it does not erase the
-     * history (#76).
+     * history (ADR-15 §2).
      *
      * @param taskId      the task
      * @param currentUser the actor, from the token

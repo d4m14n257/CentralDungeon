@@ -4,9 +4,9 @@ import { filesApi } from './filesApi'
 
 /**
  * Hiding a published file: it stays in the platform's library, offered to nobody, and can be published
- * again (#282).
+ * again (ADR-14 §7).
  *
- * Tables that already attached it keep it — hiding is not a delete (#79).
+ * Tables that already attached it keep it — hiding is not a delete (ADR-14 §1).
  *
  * @returns the mutation, taking the id of the file to hide
  */

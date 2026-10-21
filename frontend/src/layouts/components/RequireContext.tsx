@@ -15,13 +15,13 @@ interface RequireContextProps {
 }
 
 /**
- * Keeps an account out of a context it does not have (#269): a Player who types `/admin/users`, or
+ * Keeps an account out of a context it does not have (ADR-20 §2): a Player who types `/admin/users`, or
  * a master without the `Player` role who types `/player`, never sees that context's navigation or
- * screens - they are sent to `/`, which dispatches them to the home of a context they do have (#222).
+ * screens - they are sent to `/`, which dispatches them to the home of a context they do have (ADR-20 §2).
  *
  * **A redirect, not a 403 on screen**: the reader forced a door that is not theirs, and the useful
  * answer is to put them back where they can work, not to explain the door. **It is still not the
- * security**: the backend authorizes endpoint by endpoint and answers `403` regardless (#103, #121);
+ * security**: the backend authorizes endpoint by endpoint and answers `403` regardless (ADR-20 §1, ADR-05 §5);
  * this only decides what the interface shows. `ForbiddenState` stays for the other refusal - a
  * concrete resource inside a context the reader does have, but that is not theirs.
  *

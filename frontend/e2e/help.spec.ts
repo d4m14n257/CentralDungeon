@@ -2,8 +2,8 @@ import { test, expect, type APIRequestContext, type Page } from '@playwright/tes
 import { acceptReview } from './helpers/review'
 
 /**
- * The help as dialogs raised in place (docs/adr #231), which replaced the `/help` routes of
- * #167 and #168.
+ * The help as dialogs raised in place (ADR-20 §5), which replaced the `/help` routes of
+ * ADR-20 §5 and ADR-20 §6.
  *
  * It is tested here and not in a component test because what the change is *for* only exists in a
  * real browser: that asking a question does not cost the screen you asked it from. A MemoryRouter
@@ -45,7 +45,7 @@ test('the help is read without leaving the screen, and the screen is still there
     await dialog.getByRole('button', { name: 'Cómo funciona' }).click()
 
     // The help for assigning masters, on top of the dialog that asked for it - and the URL did not
-    // move, which is the whole point (#231).
+    // move, which is the whole point (ADR-20 §5).
     await expect(page.getByRole('heading', { name: 'Mesas sin master' })).toBeVisible()
     await expect(page).toHaveURL(/\/admin\/tables$/)
 
@@ -68,7 +68,7 @@ test('the help teaches with steps rather than only describing', async ({ browser
 
     const helpDialog = page.getByRole('dialog')
     // The steps are an ordered list: that is what separates "teaching how to use it" from
-    // "describing it" (#170, kept by #231).
+    // "describing it" (ADR-20 §6, kept by ADR-20 §5).
     await expect(helpDialog.getByRole('heading', { name: 'Cómo se hace' })).toBeVisible()
     await expect(helpDialog.locator('ol > li')).toHaveCount(3)
   } finally {
@@ -84,12 +84,12 @@ test('/help is no longer the help: it is the support screen the reservation desc
 
     await page.goto('/help')
 
-    // **Until F3.2 this was a 404 on purpose**: #231 took the help screen away and left the route
+    // **Until F3.2 this was a 404 on purpose**: ADR-20 §5 took the help screen away and left the route
     // reserved in so many words for «pedir asistencia, reportar un bug», with nothing behind it. The
-    // `General` request of #42 is that behind, so the reservation was cashed in and the screen exists.
+    // `General` request of ADR-16 §1 is that behind, so the reservation was cashed in and the screen exists.
     await expect(page.getByRole('heading', { name: 'Ayuda' })).toBeVisible()
     // And what it does is ask, not go back to being an index: the explanations are still dialogs on
-    // the screen that provokes them (#231), and it says so out loud rather than letting the reader
+    // the screen that provokes them (ADR-20 §5), and it says so out loud rather than letting the reader
     // believe the help was lost.
     await expect(page.getByRole('button', { name: 'Escribirle a un admin' })).toBeVisible()
     await expect(page.getByText('Las explicaciones están en cada pantalla')).toBeVisible()

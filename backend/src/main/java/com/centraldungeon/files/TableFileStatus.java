@@ -5,7 +5,7 @@ package com.centraldungeon.files;
  *
  * <p>Separate from {@link FileStatus} on purpose, because they answer different questions: this one
  * is about the link, that one about the file. Detaching a file from one table says nothing about the
- * file, which may well still be attached to three others (#79).
+ * file, which may well still be attached to three others (ADR-14 §1).
  *
  * <p>A link is never physically dropped. The primary key of {@code table_files} is the pair
  * {@code (game_table_id, file_id)}, so a master who detaches a map and puts it back a minute later

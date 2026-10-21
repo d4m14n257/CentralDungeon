@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * One thing waiting for an answer, on one table.
  *
- * <p>It carries a code and its parameters, never a sentence (#197). The reader's language decides
+ * <p>It carries a code and its parameters, never a sentence (ADR-23 §3). The reader's language decides
  * how "three people have been waiting since Tuesday" is written, and that decision belongs to the
  * frontend - the same reason {@code NotificationParams} exists.
  *
@@ -20,8 +20,8 @@ import org.jspecify.annotations.Nullable;
  *                  a table in ChangesRequested is entirely described by its own name
  * @param count     how many of them. Always at least 1; it is 1 for the kinds that describe the
  *                  table itself rather than a set of rows
- * @param since     when the wait started, in UTC (#22). It is what orders the whole tray: urgency
- *                  here is time waited, not volume (#136)
+ * @param since     when the wait started, in UTC (ADR-03 §6). It is what orders the whole tray: urgency
+ *                  here is time waited, not volume (ADR-20 §4)
  */
 public record MasterWorkItem(
         String tableId,

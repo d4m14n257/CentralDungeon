@@ -57,7 +57,7 @@ beforeEach(() => {
 
 describe('BanRequestsSection', () => {
   /**
-   * **The `Primary` resolves it, not an admin** (#39 over #90): a veto between a co-master and a
+   * **The `Primary` resolves it, not an admin** (ADR-09 §5 over ADR-16 §1): a veto between a co-master and a
    * player of *that* table is decided by whoever runs it. So the answer is here, on the table's own
    * screen, and never in the shared tray.
    */
@@ -114,7 +114,7 @@ describe('BanRequestsSection', () => {
     await waitFor(() => expect(container).toBeEmptyDOMElement())
   })
 
-  /** #42: the note is required at both ends, and here it is what the co-master receives. */
+  /** ADR-16 §1: the note is required at both ends, and here it is what the co-master receives. */
   it('grants the request with the note that was written', async () => {
     list.mockResolvedValue([request()])
     approve.mockResolvedValue(undefined)

@@ -10,7 +10,7 @@ import { filesApi } from './filesApi'
  *
  * Its own query and not part of the table's detail: what a master sees includes what the table keeps
  * private, while the detail carries only what it shares. Two different answers, and sharing a cache
- * entry between them is how a player ends up reading a master's notes (#79).
+ * entry between them is how a player ends up reading a master's notes (ADR-14 §1).
  *
  * @param tableId the table
  * @returns the query for its attachments

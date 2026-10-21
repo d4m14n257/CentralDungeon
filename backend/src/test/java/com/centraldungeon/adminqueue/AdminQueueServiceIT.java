@@ -54,11 +54,11 @@ import org.testcontainers.mysql.MySQLContainer;
 
 /**
  * The shared tray against a real database: the reservation race, the release job and the cost of
- * reading the tray (#100).
+ * reading the tray (ADR-16 §5).
  *
  * <p><b>Two admins reserving the same item at the same instant is the race this whole slice exists
  * for</b>, and it is the third check-then-act of this phase to be tested seriously rather than
- * argued about - the last owner (#252) and resolving a request (#256) both turned out to be real.
+ * argued about - the last owner (ADR-06 §2) and resolving a request (ADR-16 §4) both turned out to be real.
  * Here it is the ordinary case and not the exotic one: the tray is shared, every admin sees the same
  * oldest row first, and the item at the top is the one two people click.
  *
@@ -345,8 +345,8 @@ class AdminQueueServiceIT {
     }
 
     /**
-     * {@code Preparation} and nothing else (arquitectura §4.5, #245). The four statuses excluded
-     * here are the ones a loose reading of #176 would have let in, and each of them would be showing
+     * {@code Preparation} and nothing else (arquitectura §4.5, ADR-07 §1). The four statuses excluded
+     * here are the ones a loose reading of ADR-16 §7 would have let in, and each of them would be showing
      * an admin work that is not theirs to do.
      */
     @Test
@@ -364,7 +364,7 @@ class AdminQueueServiceIT {
 
     /**
      * The merge pages in memory, so the total has to count the whole tray and not the slice - which
-     * is the number the frontend's pager reads (#173).
+     * is the number the frontend's pager reads (ADR-04 §6).
      */
     @Test
     @DisplayName("the page total counts the whole merged tray, across both sources")
@@ -386,7 +386,7 @@ class AdminQueueServiceIT {
                 .hasSize(2);
     }
 
-    /** Oldest first is the tray's whole promise (#136), and it holds across the two sources. */
+    /** Oldest first is the tray's whole promise (ADR-20 §4), and it holds across the two sources. */
     @Test
     @DisplayName("the one who has been waiting longest comes first, whichever table it lives in")
     void theOldestItemComesFirstAcrossSources() {
@@ -407,14 +407,14 @@ class AdminQueueServiceIT {
      * <b>The timeout comes from {@code system_settings} and the job uses it.</b>
      *
      * <p>It used to assert that {@code app.admin-queue.claim-timeout} bound from the yaml, and F3.5
-     * moved the value out of that file (#141). The thing worth testing did not change: whether the
+     * moved the value out of that file (ADR-17 §3). The thing worth testing did not change: whether the
      * job reads the number from where the platform actually keeps it. With nothing overridden, that
-     * is {@code SettingKey}'s default, which is #100's fifteen minutes - and with the table empty,
+     * is {@code SettingKey}'s default, which is ADR-16 §5's fifteen minutes - and with the table empty,
      * this also proves the "no row means the shipped default" contract holds against real MySQL and
      * not only against a mock.
      */
     @Test
-    @DisplayName("the claim timeout comes from system_settings, defaulting to the fifteen minutes of #100")
+    @DisplayName("the claim timeout comes from system_settings, defaulting to the fifteen minutes of ADR-16 §5")
     void theTimeoutComesFromTheSettings() {
         assertThat(settingsService.claimTimeout()).isEqualTo(Duration.ofMinutes(15));
     }

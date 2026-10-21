@@ -55,7 +55,7 @@ async function newAuthenticatedPage(browser: Browser, discordId: string, asMaste
  *
  * @param page     the tab, authenticated as a master
  * @param name     the table's name
- * @param hourtime the weekly slot, so two tables in one spec do not collide under R1 (#178)
+ * @param hourtime the weekly slot, so two tables in one spec do not collide under R1 (ADR-08 §2)
  */
 async function createTable(page: Page, name: string, hourtime: string): Promise<string> {
   await page.goto('/master/tables/new')
@@ -68,7 +68,7 @@ async function createTable(page: Page, name: string, hourtime: string): Promise<
   await addScheduleSlot(page, hourtime)
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
-  // The files step (#228): nothing is required there, so it is walked past.
+  // The files step (ADR-08 §1): nothing is required there, so it is walked past.
   await page.getByRole('button', { name: 'Siguiente' }).click()
 
   await page.getByRole('button', { name: 'Crear mesa' }).click()
@@ -122,7 +122,7 @@ test('a table that ends leaves «mis mesas» and lands in the history with its a
     await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
     await expect(master.page.getByText('Finalizada', { exact: true })).toBeVisible()
 
-    // And now it has swapped sides, carrying what only the history shows: when it closed (#180).
+    // And now it has swapped sides, carrying what only the history shows: when it closed (ADR-07 §7).
     await player.page.goto('/player/my-tables')
     await expect(player.page.getByText(new RegExp(tableName))).toBeHidden()
 

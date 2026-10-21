@@ -96,7 +96,7 @@ describe('AdminRequestsPage', () => {
     expect(screen.getByRole('button', { name: /Quitar/ })).toBeInTheDocument()
   })
 
-  /** A `?q=` in the URL wins over the default: a filtered tray is something one admin sends another (#185). */
+  /** A `?q=` in the URL wins over the default: a filtered tray is something one admin sends another (ADR-12 §7). */
   it('respects a query restored from the URL instead of forcing its own', async () => {
     list.mockResolvedValue(page([]))
 
@@ -106,7 +106,7 @@ describe('AdminRequestsPage', () => {
   })
 
   /**
-   * #136: the empty tray is good news. "Nothing is waiting for an answer" is a fact about the
+   * ADR-20 §4: the empty tray is good news. "Nothing is waiting for an answer" is a fact about the
    * platform; "nothing matched" is a fact about what was typed, and telling somebody who just
    * filtered by `Rejected` that everything is caught up would answer a question they did not ask.
    */
@@ -127,7 +127,7 @@ describe('AdminRequestsPage', () => {
     await waitFor(() => expect(screen.getByText('Ningún pedido coincide con esa búsqueda')).toBeInTheDocument())
   })
 
-  /** #103: no guard in the router, so the 403 has to land somewhere that explains itself. */
+  /** ADR-20 §1: no guard in the router, so the 403 has to land somewhere that explains itself. */
   it('paints the forbidden state when the backend refuses the listing', async () => {
     list.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Access denied', errorCode: 'FORBIDDEN' }))
 
@@ -169,7 +169,7 @@ describe('AdminRequestsPage', () => {
     expect(row.getByText('Pendiente')).toBeInTheDocument()
   })
 
-  /** #42: the note is required on both acts, and the form refuses an empty one without a round trip. */
+  /** ADR-16 §1: the note is required on both acts, and the form refuses an empty one without a round trip. */
   it('refuses to resolve without a note', async () => {
     list.mockResolvedValue(page([request()]))
 
@@ -228,7 +228,7 @@ describe('AdminRequestsPage', () => {
   })
 
   /**
-   * #197: each of the four refusals is answered with a sentence of its own, rendered **over the
+   * ADR-23 §3: each of the four refusals is answered with a sentence of its own, rendered **over the
    * button that was just pressed** and not in a toast that disappears in four seconds — the form is
    * still open and the answer belongs where the reader is looking.
    *
@@ -252,7 +252,7 @@ describe('AdminRequestsPage', () => {
     expect(alert.textContent?.length ?? 0).toBeGreaterThan(10)
   })
 
-  /** Point 8 of plan-desarrollo.md §6 (#231): the help is raised from the screen that prompts it. */
+  /** Point 8 of plan-desarrollo.md §6 (ADR-20 §5): the help is raised from the screen that prompts it. */
   it('offers the help of the tray from the screen itself', async () => {
     list.mockResolvedValue(page([request()]))
 
@@ -263,7 +263,7 @@ describe('AdminRequestsPage', () => {
     expect(dialog.getByText(/no crea la mesa/i)).toBeInTheDocument()
   })
 
-  /** #240: the search help documents **this** box's commands rather than a fixed list. */
+  /** ADR-22 §3: the search help documents **this** box's commands rather than a fixed list. */
   it('documents its own search commands', async () => {
     list.mockResolvedValue(page([request()]))
 

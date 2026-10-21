@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Renewing a session. It is the moment the system re-asks "is this person still allowed in", because
  * a refresh is the only regular point where the answer can change without the user doing anything
- * (#122, #125).
+ * (ADR-05 §3, §2).
  *
  * <p>Rotating: every refresh issues a new refresh token, so a leaked one has a short useful life and
  * a reused one is detectable.
@@ -34,7 +34,7 @@ public class AuthService {
         this.userService = userService;
     }
 
-    /** The refresh is the re-affirmation point: status and roles are re-read from the database, never trusted from the old token (docs/adr #122). */
+    /** The refresh is the re-affirmation point: status and roles are re-read from the database, never trusted from the old token (ADR-05 §3). */
     @Transactional(readOnly = true)
     public RefreshResult refresh(@Nullable String refreshCookie) {
         if (refreshCookie == null || refreshCookie.isBlank()) {

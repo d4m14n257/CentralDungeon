@@ -19,7 +19,7 @@ const STATE_TONES: Record<TaskStatus, StatusTone> = {
  * new status cannot be added without deciding how it looks (§3.2 regla 9).
  *
  * Closed reads as *done*, not as *cancelled*: what was handed in is still there and still readable
- * (#76), so a red badge would say something untrue about it.
+ * (ADR-15 §2), so a red badge would say something untrue about it.
  *
  * @param props.status the task's status
  */

@@ -5,7 +5,7 @@ package com.centraldungeon.catalogs;
  * tables to {@code Used} (arquitectura §4.4).
  *
  * <p>A link is never deleted, only unlinked: the row is what says the master once chose that alias
- * (#56, #58), and disabling the catalog value it points at must not break it (#81).
+ * (ADR-12 §4), and disabling the catalog value it points at must not break it (ADR-12 §5).
  */
 public enum TableCatalogLinkStatus {
 

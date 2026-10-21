@@ -18,7 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * What the wizard's selector reads. The one rule worth pinning is #225: a type the application
+ * What the wizard's selector reads. The one rule worth pinning is ADR-23 §4: a type the application
  * shipped travels with its {@code code} so the reader sees it in their own language, and a type a
  * person named travels without one so its label is read exactly as typed.
  */

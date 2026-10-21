@@ -16,7 +16,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @param id              the person's identifier
  * @param discordUsername their Discord handle, as of their last login
- * @param name            their display name, or null while onboarding is incomplete (#134)
+ * @param name            their display name, or null while onboarding is incomplete (ADR-10 §4)
  * @param country         ISO 3166-1 alpha-2, or null while onboarding is incomplete
  * @param status          whether the account may be used: {@code Allowed}, {@code Blocked} or
  *                        {@code Deleted}, as a string like every other enum on the wire

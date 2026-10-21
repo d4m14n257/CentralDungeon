@@ -26,7 +26,7 @@ export function AppHeader() {
   const { contexts, activeContext } = useAvailableContexts()
   const setActiveContext = useContextStore((state) => state.setActiveContext)
 
-  // The URL is what says which context is on screen (#222), so the remembered value follows it
+  // The URL is what says which context is on screen (ADR-20 §2), so the remembered value follows it
   // rather than the other way round. That is what keeps `/notifications` and `/help` - which belong
   // to no context - showing the one the reader came from instead of resetting it.
   //

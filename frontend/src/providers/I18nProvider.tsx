@@ -4,7 +4,7 @@ import { I18nextProvider } from 'react-i18next'
 import i18n from './i18n'
 
 /**
- * Mounts i18next. Every visible string goes through `t()` from the first component (#117): only `es`
+ * Mounts i18next. Every visible string goes through `t()` from the first component (ADR-23 §1): only `es`
  * exists in v1, but retrofitting the indirection later would mean walking every screen already
  * written, which is exactly what makes that change expensive.
  *

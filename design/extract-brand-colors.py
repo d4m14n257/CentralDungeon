@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Minimal PNG decoder + dominant-colour report. No third-party deps.
 
-Reproduces the measurement behind decision #132: run it against the community's
+Reproduces the measurement behind decision ADR-21 §2: run it against the community's
 logo and favicon to re-derive the two brand hue clusters (~218deg and ~250deg).
 
     python3 extract-brand-colors.py logo.png "LOGO"

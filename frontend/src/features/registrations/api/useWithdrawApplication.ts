@@ -7,7 +7,7 @@ import { registrationsApi } from './registrationsApi'
 /**
  * Takes back one's own pending application.
  *
- * It is the action R4's clash notice points at (#178): being told that two of your tables now fall
+ * It is the action R4's clash notice points at (ADR-08 §2): being told that two of your tables now fall
  * at the same hour is only useful if there is something you can do about it.
  *
  * @returns the mutation, taking the application's id
@@ -20,7 +20,7 @@ export function useWithdrawApplication() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.mine() })
       // The explorer's cards carry "ya te postulaste" and the clash warning, and both just changed.
       // The whole branch and not one entry: since the box arrived, the explorer keys by what was
-      // searched, and this mutation has no idea what that was (#246).
+      // searched, and this mutation has no idea what that was (ADR-12 §8).
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.lists() })
     },
   })

@@ -1,7 +1,7 @@
 import type { GameTableStatus } from './types'
 
 /**
- * The statuses in which a table is still its master's to rewrite (#245).
+ * The statuses in which a table is still its master's to rewrite (ADR-07 §1).
  *
  * **Mirror of `GameTableService.EDITABLE_STATUSES`**, and written once here rather than in each
  * screen that asks: it used to be a literal repeated in three of them — the edit page, the detail
@@ -14,7 +14,7 @@ import type { GameTableStatus } from './types'
 export const MASTER_EDITABLE_STATUSES: readonly GameTableStatus[] = ['Draft', 'ChangesRequested']
 
 /**
- * The statuses in which an admin may still rewrite somebody else's table (#284).
+ * The statuses in which an admin may still rewrite somebody else's table (ADR-06 §8).
  *
  * **Mirror of `GameTableService.ADMIN_EDITABLE_STATUSES`**: every status but the three that close a
  * table. Wider than the master's on purpose - the admin's edit exists for the table that is already
@@ -33,14 +33,14 @@ export const ADMIN_EDITABLE_STATUSES: readonly GameTableStatus[] = [
 ]
 
 /**
- * Every status a table can be shown in, in the order of its life (#245).
+ * Every status a table can be shown in, in the order of its life (ADR-07 §1).
  *
  * A written-out tuple rather than something derived from the union, for the same reason as
  * `PLATFORM_ROLES`: a union of literals has no runtime value to iterate, and `satisfies` is what
  * turns a typo here into a compile error.
  *
  * **`Deleted` is not one of them and never reaches this side.** The backend's enum has it, and a
- * deleted table is gone for everybody (#175) — so the union does not carry it, `/admin/tables`
+ * deleted table is gone for everybody (ADR-07 §6) — so the union does not carry it, `/admin/tables`
  * excludes it by default, and `/table_status` cannot offer it. A command that offers a value no row
  * can have is a filter that always answers nothing.
  */

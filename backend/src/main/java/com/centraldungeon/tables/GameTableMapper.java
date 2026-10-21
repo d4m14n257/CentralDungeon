@@ -41,7 +41,7 @@ public interface GameTableMapper {
      * cupo stopped mattering the moment it stopped recruiting.
      *
      * @param gameTable  the table, {@code Finished} or {@code Canceled}
-     * @param attendance the actor's own historical attendance on it, the aggregate of #137
+     * @param attendance the actor's own historical attendance on it, the aggregate of ADR-08 §5
      * @return its history card
      */
     @Mapping(target = "status", expression = "java(gameTable.getStatus().name())")
@@ -51,7 +51,7 @@ public interface GameTableMapper {
 
     /**
      * The three rich-text fields arrive as parameters rather than being read off the entity: they are
-     * sanitized on the way out as well as on the way in (#62), and passing the cleaned strings in
+     * sanitized on the way out as well as on the way in (ADR-03 §8), and passing the cleaned strings in
      * keeps that from turning a read into a write on the managed entity.
      */
     @Mapping(target = "status", expression = "java(gameTable.getStatus().name())")
@@ -80,7 +80,7 @@ public interface GameTableMapper {
      *
      * <p>The roster arrives as a parameter and is not read off the entity: it is the table's active
      * players joined with whatever was recorded, which is a question about two tables and not about
-     * this row (#36).
+     * this row (ADR-08 §4).
      *
      * @param session    the session
      * @param attendance the roster, one line per active player of the table
@@ -98,7 +98,7 @@ public interface GameTableMapper {
 
     /**
      * One session as the player sitting at the table sees it: no notes, and only their own attendance
-     * (#121).
+     * (ADR-05 §5).
      *
      * @param session      the session
      * @param myAttendance what was recorded for the actor of the token, or {@code Unknown}
@@ -124,7 +124,7 @@ public interface GameTableMapper {
      * One line of a session's roster.
      *
      * @param player     the player the line is about
-     * @param attendance what was recorded for them, or {@code Unknown} when nothing was (#137)
+     * @param attendance what was recorded for them, or {@code Unknown} when nothing was (ADR-08 §5)
      * @return the roster line
      */
     default SessionAttendanceEntry toAttendanceEntry(User player, AttendanceStatus attendance) {

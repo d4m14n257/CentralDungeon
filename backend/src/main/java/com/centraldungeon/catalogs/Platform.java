@@ -13,7 +13,7 @@ public class Platform extends CatalogValue {
     }
 
     /**
-     * Builds a platform that has not been reviewed yet: no group, status {@code Created} (#55).
+     * Builds a platform that has not been reviewed yet: no group, status {@code Created} (ADR-12 §3).
      *
      * @param name the platform as its author wrote it
      */

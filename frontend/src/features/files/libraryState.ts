@@ -2,12 +2,12 @@ import type { AdminFile } from './types'
 import { PUBLISHABLE_CATEGORIES } from './categories'
 
 /**
- * Where a file stands in the platform's library (#282).
+ * Where a file stands in the platform's library (ADR-14 §7).
  *
  * - `Unpublished`: uploaded and never published — no master sees it yet.
- * - `Published`: offered in the pickers; tables can attach it (#79).
+ * - `Published`: offered in the pickers; tables can attach it (ADR-14 §1).
  * - `Hidden`: published once, offered to nobody now. Tables that attached it keep it.
- * - `Removed`: marked gone (#25).
+ * - `Removed`: marked gone (ADR-03 §7).
  *
  * A union of literals (arquitectura §3.2), so every `Record` over it has to decide all four.
  */
@@ -15,7 +15,7 @@ export type LibraryState = 'Unpublished' | 'Published' | 'Hidden' | 'Removed'
 
 /**
  * Derives the library state of a file from what the server sends, rather than the server sending a
- * fourth field saying the same thing twice (#11, #232): `Public` is published, `Library` with a first
+ * fourth field saying the same thing twice (ADR-03 §1, ADR-14 §3): `Public` is published, `Library` with a first
  * publication is hidden, `Library` without one has never been published.
  *
  * @param file the row of /admin/files
@@ -28,11 +28,11 @@ export function libraryStateOf(file: Pick<AdminFile, 'fileType' | 'publishedAt' 
 }
 
 /**
- * Whether a library file says where it would be offered, which is what publishing needs (#282).
+ * Whether a library file says where it would be offered, which is what publishing needs (ADR-14 §7).
  *
  * The same rule the server enforces with `FILE_NEEDS_CATEGORY`: at least one of the cajones a file can
  * be published into. The upload always asks for one, so a file failing this is one whose cajón was lost
- * along the way - an upload from before #282, for instance. Knowing it on this side is what lets the
+ * along the way - an upload from before ADR-14 §7, for instance. Knowing it on this side is what lets the
  * row say "choose what it is first" instead of offering a button the server would turn down.
  *
  * @param file the row of /admin/files

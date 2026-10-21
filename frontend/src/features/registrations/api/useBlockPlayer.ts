@@ -9,14 +9,14 @@ interface BlockVariables {
 }
 
 /**
- * The veto, applied by the table's `Primary` (#29, #39).
+ * The veto, applied by the table's `Primary` (ADR-09 §4, §5).
  *
  * **What it does is bigger than the row it changes**: the person stops seeing this table anywhere —
  * the explorer, the detail, the sessions, the requests, and the files they used to download. Which
  * is why it invalidates far more than the roster (see `invalidateAfterVeto`).
  *
  * **It is per table and not per person.** The same account may be playing at four other tables and
- * nothing about those changes; #29 chose it that way on purpose, and it is what makes a veto a
+ * nothing about those changes; ADR-09 §4 chose it that way on purpose, and it is what makes a veto a
  * master's decision rather than a moderation one.
  *
  * Refused with `NOT_PRIMARY_MASTER` (403) to a co-master, `REGISTRATION_ALREADY_BLOCKED` (409) on
@@ -31,7 +31,7 @@ export function useBlockPlayer(tableId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ registrationId, justification }: BlockVariables) => registrationsApi.block(tableId, registrationId, justification),
-    /** The dialog stays open over the refusal, so it is shown there and not in a toast (#197). */
+    /** The dialog stays open over the refusal, so it is shown there and not in a toast (ADR-23 §3). */
     meta: { showsItsOwnError: true },
     onSuccess: () => invalidateAfterVeto(queryClient, tableId),
   })

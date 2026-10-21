@@ -11,7 +11,7 @@ import org.jspecify.annotations.Nullable;
  * hides the reason forces a click per request to find the one worth answering.
  *
  * <p>It does <b>not</b> carry {@code entityType} / {@code entityId}. Those are machinery of the
- * polymorphic reference (#78), and in F3.2 they always say "the person who asked" - a fact the row
+ * polymorphic reference (ADR-16 §2), and in F3.2 they always say "the person who asked" - a fact the row
  * already states by naming them. {@link ApprovalRequestDetailResponse} publishes them because the
  * detail is where somebody goes to understand what a request points at.
  *
@@ -21,7 +21,7 @@ import org.jspecify.annotations.Nullable;
  * @param requestedByName   the requester's display name, already resolved. Never an id: a screen
  *                          shows a person
  * @param justification     why they asked
- * @param claimedByName     the admin who reserved this item (#100). <b>Always null in F3.2</b> -
+ * @param claimedByName     the admin who reserved this item (ADR-16 §5). <b>Always null in F3.2</b> -
  *                          nothing writes the column until the shared queue lands in F3.3. It is
  *                          published now so the field does not appear later and change the shape
  * @param createdAt         when it was asked, in UTC

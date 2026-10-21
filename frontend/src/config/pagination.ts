@@ -1,5 +1,5 @@
 /**
- * The page size of each kind of listing (docs/adr #173). It lives here rather than in each hook
+ * The page size of each kind of listing (ADR-04 §6). It lives here rather than in each hook
  * so that "how much a page brings" is a decision and not a loose number repeated in ten places.
  */
 export const pageSize = {
@@ -8,7 +8,7 @@ export const pageSize = {
   /** Single-column reading lists: my tables, my applications, notifications. */
   list: 20,
   /**
-   * An admin's working lists, before the reader picks another size (#271): denser, and with the
+   * An admin's working lists, before the reader picks another size (ADR-21 §11): denser, and with the
    * total in view. Serves every admin table, not only the tray it was once named after.
    */
   admin: 25,
@@ -17,14 +17,14 @@ export const pageSize = {
 } as const
 
 /**
- * The sizes an admin's working list lets the reader pick (#271). The last one is the backend's cap
- * (`spring.data.web.pageable.max-page-size`, #173): offering more would be offering a size the
+ * The sizes an admin's working list lets the reader pick (ADR-21 §11). The last one is the backend's cap
+ * (`spring.data.web.pageable.max-page-size`, ADR-04 §6): offering more would be offering a size the
  * server silently shrinks.
  */
 export const adminPageSizeOptions = [10, 25, 50, 100] as const
 
 /**
- * Reads the `?size=` of an admin listing (#185, #271).
+ * Reads the `?size=` of an admin listing (ADR-12 §7, ADR-21 §11).
  *
  * Anything that is not one of the offered sizes - a hand-edited URL, an old link - falls back to the
  * default instead of reaching the API: the selector could not show it, and the reader would be on a

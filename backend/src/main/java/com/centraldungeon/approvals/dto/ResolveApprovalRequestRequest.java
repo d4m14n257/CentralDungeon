@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
  * The body of {@code POST /admin/requests/{id}/approve} and of {@code .../reject}. One record for
  * both, because the two carry exactly the same thing: a reason.
  *
- * <p><b>Mandatory in both directions</b> (#42). Approving without a note loses the only trace of why
+ * <p><b>Mandatory in both directions</b> (ADR-16 §1). Approving without a note loses the only trace of why
  * somebody was given something, and rejecting without one is half the mechanism - the person is told
  * no and learns nothing they can act on.
  *

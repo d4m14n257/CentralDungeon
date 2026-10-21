@@ -18,7 +18,7 @@ export interface FileListItem {
   fileId: string
   name: string
   mimeType: string
-  /** The size as uploaded, before compression (#75) — the number the person recognises. */
+  /** The size as uploaded, before compression (ADR-13 §3) — the number the person recognises. */
   sizeBytes: number
 }
 

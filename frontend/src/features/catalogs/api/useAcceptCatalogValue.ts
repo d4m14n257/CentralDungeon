@@ -7,7 +7,7 @@ import type { CatalogKind } from '../types'
 
 /**
  * Accepts a proposal and classifies it in the same step: a canonical entry of its own, or an alias
- * of a group that already exists (#55).
+ * of a group that already exists (ADR-12 §3).
  *
  * @param kind which catalog
  * @returns the mutation, taking the value and the group to join (null for a group of its own)

@@ -6,7 +6,7 @@ import '@/providers/i18n'
 import { FileDropzone } from './FileDropzone'
 
 /**
- * The cap is a setting since F3.5 (#141), so the zone asks the server for it. Mocked to the shipped
+ * The cap is a setting since F3.5 (ADR-17 §3), so the zone asks the server for it. Mocked to the shipped
  * default rather than wrapped in a `QueryClientProvider`: what these cases are about is the rule the
  * dropzone applies, not where the number came from, and every assertion below is the same assertion
  * against the same two megabytes it always was.
@@ -35,7 +35,7 @@ describe('FileDropzone', () => {
   })
 
   /**
-   * **Nothing reaches the server here** (#238). The zone stages; the confirm that creates the table
+   * **Nothing reaches the server here** (ADR-13 §5). The zone stages; the confirm that creates the table
    * or sends the answer is what uploads, so abandoning a flow halfway leaves nothing behind.
    */
   it('stages what was picked instead of uploading it', async () => {
@@ -73,7 +73,7 @@ describe('FileDropzone', () => {
     expect(onStaged).not.toHaveBeenCalled()
   })
 
-  /** Only the library asks which cajón; inside a flow the system already knows (#233). */
+  /** Only the library asks which cajón; inside a flow the system already knows (ADR-14 §4). */
   it('does not ask what the file is unless the caller says there is no flow', () => {
     const { rerender } = render(<FileDropzone onStaged={vi.fn()} />)
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument()
@@ -86,7 +86,7 @@ describe('FileDropzone', () => {
    * Chips and not a `<Select>`: this is a decision somebody makes before sending, so seeing every
    * option at once is what lets them make it without exploring a dropdown.
    */
-  it('offers the cajones as chips, and only the ones it was given (#237)', () => {
+  it('offers the cajones as chips, and only the ones it was given (ADR-14 §5)', () => {
     render(<FileDropzone onStaged={vi.fn()} askForCategory categories={['PlayerApplication', 'PlayerSubmission']} />)
 
     const group = screen.getByRole('radiogroup', { name: 'En qué cajón va' })

@@ -6,7 +6,7 @@ import { staleTime } from '@/config/query'
 import { banRequestsApi } from './approvalsApi'
 
 /**
- * The veto requests waiting on one table (#39, F3.4).
+ * The veto requests waiting on one table (ADR-09 §5, F3.4).
  *
  * **The whole list, never paginated**: it is the pending work of one table, which is a handful of
  * rows at most and usually none. Paging a list that is empty nine times out of ten would be paging

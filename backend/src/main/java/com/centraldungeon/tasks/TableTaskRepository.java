@@ -15,7 +15,7 @@ public interface TableTaskRepository extends JpaRepository<TableTask, String> {
      * one board, the same criterion the calendar and the attachments use.
      *
      * @param gameTableId the table
-     * @param status      the status to leave out, always {@link TaskStatus#Deleted} (#25)
+     * @param status      the status to leave out, always {@link TaskStatus#Deleted} (ADR-03 §7)
      * @return its tasks, oldest first - the order they were published, which is the order somebody
      *         who published them remembers
      */
@@ -38,14 +38,14 @@ public interface TableTaskRepository extends JpaRepository<TableTask, String> {
 
     /**
      * Tasks whose deadline went by while they were still open, across several tables at once - the
-     * second probe of the master dashboard (#136).
+     * second probe of the master dashboard (ADR-20 §4).
      *
-     * <p>Missing a deadline neither blocks nor expels anybody (#70): it becomes something the
+     * <p>Missing a deadline neither blocks nor expels anybody (ADR-15 §2): it becomes something the
      * master can see and act on, which is the whole of what the rule asks for.
      *
      * @param gameTableIds the tables somebody runs
      * @param status       the status that means still open, always {@link TaskStatus#Open}
-     * @param before       the cutoff, in UTC (#22) - in practice now
+     * @param before       the cutoff, in UTC (ADR-03 §6) - in practice now
      * @return the overdue tasks, the longest overdue first
      */
     List<TableTask> findByGameTable_IdInAndStatusAndDueAtBeforeOrderByDueAtAsc(

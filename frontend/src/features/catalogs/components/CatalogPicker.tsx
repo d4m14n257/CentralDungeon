@@ -10,12 +10,12 @@ interface CatalogPickerProps {
   kind: CatalogKind
   /** The block's label, already passed through `t()`. */
   label: string
-  /** What is chosen so far. Each value keeps the alias its author gave it (#58). */
+  /** What is chosen so far. Each value keeps the alias its author gave it (ADR-12 §4). */
   selected: CatalogValue[]
-  /** Called with the new set. It is a set, not a diff: the whole selection is replaced (#190). */
+  /** Called with the new set. It is a set, not a diff: the whole selection is replaced (ADR-04 §7). */
   onChange: (values: CatalogValue[]) => void
   /**
-   * What is missing from this block, already translated, or null when it is fine (#228).
+   * What is missing from this block, already translated, or null when it is fine (ADR-08 §1).
    *
    * Given it, the block marks *itself* — label, border and message. A single sentence at the foot of
    * a form with three of these says something is wrong without saying which one, and the reader has
@@ -28,7 +28,7 @@ interface CatalogPickerProps {
  * One catalog block of a table form: the chips already chosen plus the combobox that adds another.
  *
  * A master who does not find their system proposes it here and keeps going; what comes back is
- * marked as pending, because the table publishes while the value waits for an admin (#55, #57).
+ * marked as pending, because the table publishes while the value waits for an admin (ADR-12 §3).
  *
  * It lives in `features/catalogs` because it composes only that feature's own two components — and
  * because both the wizard and the edit form need it, which is what makes it a component rather than

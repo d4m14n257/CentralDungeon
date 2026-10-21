@@ -45,7 +45,7 @@ public class RegistrationRejection {
     @Column(name = "rejected_at", nullable = false)
     private @Nullable LocalDateTime rejectedAt;
 
-    /** Who rejected it. Null means an automatic rejection because the table filled up (#34). */
+    /** Who rejected it. Null means an automatic rejection because the table filled up (ADR-09 §3). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rejected_by")
     private @Nullable User rejectedBy;
@@ -60,7 +60,7 @@ public class RegistrationRejection {
      * @param registration the application being turned down
      * @param description  the reason, written for the applicant
      * @param rejectedBy   the master who rejected it, or null when the system did because the table
-     *                     filled up (#34)
+     *                     filled up (ADR-09 §3)
      */
     public RegistrationRejection(TableRegistration registration, String description, @Nullable User rejectedBy) {
         this.registration = registration;
@@ -98,7 +98,7 @@ public class RegistrationRejection {
     /**
      * Returns who rejected it.
      *
-     * @return the master, or null when the system did because the table filled up (#34)
+     * @return the master, or null when the system did because the table filled up (ADR-09 §3)
      */
     public @Nullable User getRejectedBy() {
         return rejectedBy;

@@ -6,13 +6,13 @@ import { approvalsApi } from './approvalsApi'
 import type { SubmitApprovalRequestInput } from '../types'
 
 /**
- * Asks for something (#42).
+ * Asks for something (ADR-16 §1).
  *
- * **It notifies nobody.** An admin work item is not duplicated as a notification (#100): the tray is
+ * **It notifies nobody.** An admin work item is not duplicated as a notification (ADR-16 §5): the tray is
  * where it appears, and a notice per request would be the copy that decision went to avoid. What
  * does notify is the resolution, and it reaches whoever asked.
  *
- * `meta.showsItsOwnError`: the dialog renders the refusal inline (#197), because the form that was
+ * `meta.showsItsOwnError`: the dialog renders the refusal inline (ADR-23 §3), because the form that was
  * refused is still open and the answer belongs above its button.
  *
  * It invalidates the reader's own list and nothing else: the tray is another audience's cache entry,

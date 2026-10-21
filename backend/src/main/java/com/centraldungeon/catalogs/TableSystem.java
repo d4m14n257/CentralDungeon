@@ -21,7 +21,7 @@ public class TableSystem extends TableCatalogLink {
      * Links a table to a system, live from the start.
      *
      * @param gameTableId the table being tagged
-     * @param systemId    the system it is tagged with, as the master picked it (#56)
+     * @param systemId    the system it is tagged with, as the master picked it (ADR-12 §4)
      */
     public TableSystem(String gameTableId, String systemId) {
         this.id = new TableSystemId(gameTableId, systemId);

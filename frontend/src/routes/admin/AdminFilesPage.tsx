@@ -38,26 +38,26 @@ import { browserTimeZone, formatDate } from '@/lib/date'
 import { ApiError } from '@/types/api'
 
 /**
- * /admin/files — the platform's library: what the community publishes for every table (#64, #79,
- * #278).
+ * /admin/files — the platform's library: what the community publishes for every table (ADR-13 §2, ADR-14 §1,
+ * ADR-14 §7).
  *
  * The screen exists for one capability the rest of the file story depends on: **publishing**. Once
  * the community's default character sheet is here, masters attach *that* file instead of uploading
  * their own copy, so correcting it corrects every table at once and the same bytes are stored once
- * rather than once per master. Without this screen, #79 would be a rule nothing could exercise.
+ * rather than once per master. Without this screen, ADR-14 §1 would be a rule nothing could exercise.
  *
- * **The library and its lifecycle** (#278, #282). A file here is unpublished, published or hidden,
+ * **The library and its lifecycle** (ADR-14 §7). A file here is unpublished, published or hidden,
  * and the column says which; publishing and hiding are row actions, each confirmed with what it does
  * to masters. Uploading happens on its own page, /admin/files/upload, where each file gets the cajón
  * it goes into and the admin chooses whether it goes out now. Somebody's private file
  * — what a player applied with or handed in — never shows up, because it is theirs and not the
  * library's. That is also why the screen speaks of three cajones and not five: the two player-side
- * ones hold people's answers, and nothing is ever published into them (#233).
+ * ones hold people's answers, and nothing is ever published into them (ADR-14 §4).
  *
  * The `uses` column is not decoration either: one file showing "3 tables" is what makes "linking is
  * not copying" something an admin can see rather than something a document claims.
  *
- * **What was searched and which page are in the URL**, like /admin/catalogs (#185): a row is
+ * **What was searched and which page are in the URL**, like /admin/catalogs (ADR-12 §7): a row is
  * something one admin sends to another, and state that only lives in `useState` cannot be linked to.
  *
  * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
@@ -69,21 +69,21 @@ export function AdminFilesPage() {
   const confirm = useConfirm()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
   const timeZone = browserTimeZone()
 
   // The search box holds a structured value, but what travels - to the URL and to the API - is the
-  // raw string of #164. Hydrating from the URL on mount is what makes a filtered view linkable
-  // (#185), the same property /admin/catalogs has. One list of commands, given to the box, used to
-  // read `?q=` and shown in the help; the wiring is the shared hook (#240).
+  // raw string of ADR-22 §1. Hydrating from the URL on mount is what makes a filtered view linkable
+  // (ADR-12 §7), the same property /admin/catalogs has. One list of commands, given to the box, used to
+  // read `?q=` and shown in the help; the wiring is the shared hook (ADR-22 §3).
   const fields = useMemo(() => adminFileSearchFields(t), [t])
   const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
-  // isLoadingError, not isError: see docs/adr #150.
-  // The category is a filter and not a search term (#233): three known values are chosen from, never
+  // isLoadingError, not isError: see ADR-19 §4.
+  // The category is a filter and not a search term (ADR-14 §4): three known values are chosen from, never
   // typed at. A hand-edited URL naming one of the player-side cajones is dropped rather than sent,
-  // since the library has no such shelf and the server would refuse it (#278).
+  // since the library has no such shelf and the server would refuse it (ADR-14 §7).
   const requestedCategory = searchParams.get('category')
   const category = PUBLISHABLE_CATEGORIES.find((value) => value === requestedCategory) ?? null
   const { data, isPending, isLoadingError, error, refetch } = useAdminFiles(search.query, undefined, category ?? undefined, page, size)
@@ -97,7 +97,7 @@ export function AdminFilesPage() {
    *
    * It builds on the **previous** params rather than the ones this render read: «clear filters» writes
    * the query and the category in the same click, and the second write would otherwise start from a
-   * copy that does not have the first one yet (#268).
+   * copy that does not have the first one yet (ADR-22 §4).
    */
   function updateParams(changes: Record<string, string>) {
     setSearchParams(
@@ -150,7 +150,7 @@ export function AdminFilesPage() {
 
   const columns: DataTableColumn<AdminFile>[] = [
     { id: 'name', header: t('admin.columns.name'), role: 'title', cell: (file) => file.name },
-    // Where it stands in the library (#282): whether masters can see it is the first thing to know.
+    // Where it stands in the library (ADR-14 §7): whether masters can see it is the first thing to know.
     {
       id: 'state',
       header: t('admin.columns.state'),
@@ -160,7 +160,7 @@ export function AdminFilesPage() {
     {
       id: 'category',
       header: t('admin.columns.category'),
-      // Plural: a published blank can serve more than one flow at once (#233).
+      // Plural: a published blank can serve more than one flow at once (ADR-14 §4).
       cell: (file) => (
         <div className="flex flex-wrap gap-1">
           {file.categories.map((category) => (
@@ -170,7 +170,7 @@ export function AdminFilesPage() {
       ),
     },
     { id: 'owner', header: t('admin.columns.owner'), cell: (file) => file.ownerName },
-    // The number that makes #79 visible: one file, three tables.
+    // The number that makes ADR-14 §1 visible: one file, three tables.
     { id: 'uses', header: t('admin.columns.uses'), cell: (file) => t('admin.usesValue', { count: file.uses }) },
     {
       id: 'size',

@@ -14,14 +14,14 @@ import org.jspecify.annotations.Nullable;
  *                      {@code Rejected}, {@code Disabled}); it is what the review screen filters and
  *                      sorts by
  * @param canonicalId   the group this value belongs to, or null when this row <em>is</em> its
- *                      group's canonical entry (#59)
+ *                      group's canonical entry (ADR-12 §2)
  * @param canonicalName the canonical entry's name, so the table can show "DANDD -> D&amp;D 5e"
  *                      without a second request per row. Null exactly when {@code canonicalId} is
  * @param uses          how many tables currently link to <em>this</em> value, not to its group -
- *                      disabling a value is decided on what it holds by itself (#81)
+ *                      disabling a value is decided on what it holds by itself (ADR-12 §5)
  * @param aliasCount    how many values point at this one as their canonical entry, whatever their
- *                      status. Always 0 for an alias, since depth is 1 (#59). It is what lets the
- *                      groups-only listing say how big each group is without reading it (#275)
+ *                      status. Always 0 for an alias, since depth is 1 (ADR-12 §2). It is what lets the
+ *                      groups-only listing say how big each group is without reading it (ADR-12 §7)
  * @param createdAt     when the value was proposed, in UTC. It is what orders a review queue: the
  *                      oldest proposal is the one that has been waiting longest
  */

@@ -1,6 +1,6 @@
 # 5. Testing
 
-> Parte de la skill `arquitectura` (#274). Junta lo que estaba repartido en tres lugares: la estrategia del backend (el viejo `arquitectura-backend` §2.7), el cómo de la skill `tests-java`, y el testing del frontend (el viejo `arquitectura-frontend` §3.4).
+> Parte de la skill `arquitectura` (ADR-01 §5). Junta lo que estaba repartido en tres lugares: la estrategia del backend (el viejo `arquitectura-backend` §2.7), el cómo de la skill `tests-java`, y el testing del frontend (el viejo `arquitectura-frontend` §3.4).
 
 **Toda regla de negocio nueva llega con su test unitario** (regla dura 7). No hay tests en ninguno de los dos repos viejos, y ese patrón no se repite. Lo que depende del motor real —concurrencia, locks, constraints— también lleva su IT.
 
@@ -21,7 +21,7 @@ Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontain
 - `<Clase>Test` para los unitarios y `<Clase>IT` para los de integración.
 - **Todo en inglés, incluido el nombre del test.** El nombre describe el caso, no el método: `rejectsApplicationFromBlockedUser()`, no `testRegister2()`.
 - Las aserciones van con AssertJ (`assertThat`), no con `assertEquals`.
-- La clase de test lleva su Javadoc: qué regla prueba y qué decisión `#n` la pide (§6.1).
+- La clase de test lleva su Javadoc: qué regla prueba y qué `ADR-NN §k` la pide (§6.1).
 
 **Patrón unitario de un service**
 1. **Arrange**: `@Mock` para los repositories, y el service **se arma con su constructor en `@BeforeEach`** (`new SettingsService(...)`), igual que lo inyecta Spring (§2.2). `@InjectMocks` existe en tres tests viejos; no se sigue.
@@ -31,13 +31,13 @@ Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontain
    - usuario `Blocked`;
    - mesa en un estado que no admite la acción;
    - transiciones inválidas;
-   - **pertenencia**: el rol correcto sobre un recurso ajeno (#121), y `Primary` frente a `Secondary`.
+   - **pertenencia**: el rol correcto sobre un recurso ajeno (ADR-05 §5), y `Primary` frente a `Secondary`.
 
 **Patrón de integración**
 1. `@Testcontainers` + `@SpringBootTest`, con MySQL 8 (la misma versión que producción) y el perfil `test`.
 2. Flyway aplica **todas** las migraciones de `db/migration/`, de `V1__baseline.sql` en adelante, con `ddl-auto: validate`. Nunca `create-drop`: ocultaría justo el desfase entre la entidad y el schema real que este test tiene que detectar.
 3. Se prueba el caso de uso completo, no una query aislada. Por ejemplo: se acepta un candidato → su estado pasa a `Player` → el conteo derivado de jugadores de la mesa sube en 1 → se generó la notificación.
-4. Si el test crea datos que el e2e también limpia, la tabla nueva entra en el orden de borrado de `TestDataService`. Olvidarlo rompió la limpieza cinco veces (#171, #172).
+4. Si el test crea datos que el e2e también limpia, la tabla nueva entra en el orden de borrado de `TestDataService`. Olvidarlo rompió la limpieza cinco veces (ADR-07 §9, ADR-24 §3).
 
 ## 5.2 Frontend
 
@@ -45,8 +45,8 @@ Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontain
 - Los tests viven junto al archivo que prueban: `Foo.tsx` → `Foo.test.tsx`.
 - **Corren en `es`**, así que un texto se busca por su traducción en español. Por eso el inglés renderizado es deuda propia de F4 (`fase-4-revision.md` §2.1).
 - Lo que no es el sujeto del test se mockea en el límite del módulo (`vi.mock('@/hooks/useAvailableContexts', …)`), no por dentro: la guardia se prueba con la respuesta del hook, y el hook tiene su propio test.
-- **Toda escritura pasa por una revisión** (#283), así que un test que envía un formulario la acepta con `acceptReview()` de `src/test/review.ts` —busca el diálogo cuyo título pregunta, «¿…?», y aprieta el botón que no es «Cancelar»— dentro de un `ConfirmDialogProvider`. Un test de validación, donde el formulario no llega a enviarse, **no** la espera: la revisión solo se abre para algo que se puede escribir.
-- Una pantalla que lee la URL (#185) se monta dentro de `MemoryRouter` con la URL de entrada. Una que hace queries, dentro de un `QueryClient` nuevo con `retry: false` para cada test.
+- **Toda escritura pasa por una revisión** (ADR-21 §9), así que un test que envía un formulario la acepta con `acceptReview()` de `src/test/review.ts` —busca el diálogo cuyo título pregunta, «¿…?», y aprieta el botón que no es «Cancelar»— dentro de un `ConfirmDialogProvider`. Un test de validación, donde el formulario no llega a enviarse, **no** la espera: la revisión solo se abre para algo que se puede escribir.
+- Una pantalla que lee la URL (ADR-12 §7) se monta dentro de `MemoryRouter` con la URL de entrada. Una que hace queries, dentro de un `QueryClient` nuevo con `retry: false` para cada test.
 
 ## 5.3 E2E
 
@@ -54,5 +54,5 @@ Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontain
 
 - Cubre los flujos críticos: login con Discord, crear una mesa (master), postularse a una mesa (jugador), subir un archivo. Además, cada cruce de roles o de actores que ningún unitario puede ver por su cuenta.
 - Cada actor se crea con `test-login`, que le deja **exactamente** los roles que se piden. Un actor sin `asMaster` pierde el `Master` que le haya dado un paso anterior.
-- Después de cada envío que escribe, `acceptReview(page)` de `e2e/helpers/review.ts` acepta la revisión (#283), con la misma regla que en Vitest: no se espera donde el formulario se rechaza solo.
+- Después de cada envío que escribe, `acceptReview(page)` de `e2e/helpers/review.ts` acepta la revisión (ADR-21 §9), con la misma regla que en Vitest: no se espera donde el formulario se rechaza solo.
 - Toda pantalla nueva que alguien alcanza navegando necesita un e2e que la visite; si no, puede romperse sin que nadie se entere (F4.1).

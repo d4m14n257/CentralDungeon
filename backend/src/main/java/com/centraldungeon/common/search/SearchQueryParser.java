@@ -8,7 +8,7 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Parses the one-line search language every search box of the app speaks (docs/adr #164):
+ * Parses the one-line search language every search box of the app speaks (ADR-22 §1):
  *
  * <pre>
  *   juan                                     -> the endpoint's default criterion

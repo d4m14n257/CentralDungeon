@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** The master's work tray, {@code /master} (#136). */
+/** The master's work tray, {@code /master} (ADR-20 §4). */
 @RestController
 @RequestMapping("/api/v1/master")
 public class MasterDashboardController {
@@ -27,9 +27,9 @@ public class MasterDashboardController {
      * Everything waiting for the caller's answer, across every table they run.
      *
      * <p>{@code isAuthenticated()} and no role, deliberately: running a table is a row in
-     * {@code masters}, not the {@code Master} role (#135), so a role check here would hide the
+     * {@code masters}, not the {@code Master} role (ADR-06 §4), so a role check here would hide the
      * screen from a co-master who legitimately has it. There is nothing to authorize beyond that -
-     * the answer is keyed on the token's own actor and can never describe somebody else (#121).
+     * the answer is keyed on the token's own actor and can never describe somebody else (ADR-05 §5).
      *
      * @param currentUser the actor, from the token
      * @return 200 with their work items, longest wait first. An empty list is a success: it means

@@ -19,7 +19,7 @@ export interface TableErrorMessage {
 const GENERIC: TableErrorMessage = { key: 'tables.errors.generic', params: {} }
 
 /**
- * The sentence to show over a refused pause or resume (#193, #197).
+ * The sentence to show over a refused pause or resume (ADR-08 §2, ADR-23 §3).
  *
  * **`SCHEDULE_CONFLICT` is why this exists.** Resuming re-checks the clash before moving anything,
  * because the master may have committed to another table while this one was frozen — and the backend
@@ -52,7 +52,7 @@ export function tableActionErrorMessage(error: unknown): TableErrorMessage | nul
 }
 
 /**
- * The sentence to show over a refused **request** for a pause (#32, #197).
+ * The sentence to show over a refused **request** for a pause (ADR-07 §2, ADR-23 §3).
  *
  * **Its own function, in the `master` namespace**, because it answers a different person on a
  * different screen: `tableActionErrorMessage` above speaks to the admin pausing from `/admin/tables`

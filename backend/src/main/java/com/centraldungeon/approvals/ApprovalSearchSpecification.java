@@ -21,7 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
  * runtime - how many criteria, over which fields, joined by which connectors (arquitectura §2.2).
  *
  * <p>Connectors fold left to right with no precedence, so {@code a or b and c} is
- * {@code (a or b) and c} - which is how the chip row reads on screen (#164).
+ * {@code (a or b) and c} - which is how the chip row reads on screen (ADR-22 §1).
  *
  * <p><b>Two audiences, two entry points</b>, the same shape {@code UserSearchSpecification} uses for
  * the same reason. {@link #forAdmin(SearchQuery)} has no implicit filter at all: an empty query lists
@@ -44,7 +44,7 @@ final class ApprovalSearchSpecification {
      *
      * <p><b>{@code PlayerBan} is listed here, and that is deliberate</b> - it is the one place it is.
      * F3.4 took it out of {@code /admin/queue} because the tray is work waiting on <em>you</em> and a
-     * veto is the table's {@code Primary}'s to answer (#39). This screen is not a tray: it is the
+     * veto is the table's {@code Primary}'s to answer (ADR-09 §5). This screen is not a tray: it is the
      * record of every request there is, and an admin being able to see that a veto is in progress on
      * some table is exactly what a record is for. Seeing is not resolving -
      * {@code ApprovalService.requireMayResolve} answers a {@code 403 NOT_PRIMARY_MASTER} to an admin
@@ -67,7 +67,7 @@ final class ApprovalSearchSpecification {
      * here rather than by translating some {@code /requested_by} into the actor, because a filter the
      * caller can express is a filter the caller can express differently: the whole reason this
      * endpoint cannot leak somebody else's requests is that no string arriving over HTTP reaches this
-     * predicate. The id comes from the token and from nowhere else (#121, arquitectura §2.6).
+     * predicate. The id comes from the token and from nowhere else (ADR-05 §5, arquitectura §2.6).
      *
      * <p>The rest of the language works exactly as it does for an admin, which is the point of
      * routing it through the same builder. The screen needs {@code /status Pending} to be able to ask
@@ -129,7 +129,7 @@ final class ApprovalSearchSpecification {
         return connector == SearchConnector.OR ? builder.or(left, right) : builder.and(left, right);
     }
 
-    /** The values of one criterion are alternatives: any of them satisfies it (#164). */
+    /** The values of one criterion are alternatives: any of them satisfies it (ADR-22 §1). */
     private static Predicate termPredicate(
             Root<ApprovalRequest> root, CriteriaBuilder builder, Joins joins, SearchTerm term) {
         Predicate matched = null;
@@ -200,7 +200,7 @@ final class ApprovalSearchSpecification {
         return builder.like(lowered, "%" + escapeLikeWildcards(value.toLowerCase(Locale.ROOT)) + "%", LIKE_ESCAPE);
     }
 
-    /** Somebody typing "100%" is searching for that text, not for "anything" (#124 in spirit: never build SQL by hand). */
+    /** Somebody typing "100%" is searching for that text, not for "anything" (ADR-03 §2 in spirit: never build SQL by hand). */
     private static String escapeLikeWildcards(String value) {
         return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }

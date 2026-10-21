@@ -12,7 +12,7 @@ public interface RegistrationMapper {
 
     /**
      * @param registration the application to describe
-     * @param attachedFiles what the applicant attached (#60 uso 2), resolved by the caller - a
+     * @param attachedFiles what the applicant attached (ADR-13 §1 uso 2), resolved by the caller - a
      *                      mapper never touches a repository (arquitectura §2.2). Empty when
      *                      nothing was attached
      * @return the application as its reader sees it

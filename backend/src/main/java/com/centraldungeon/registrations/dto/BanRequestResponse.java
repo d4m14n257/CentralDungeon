@@ -3,7 +3,7 @@ package com.centraldungeon.registrations.dto;
 import java.time.LocalDateTime;
 
 /**
- * One pending veto request on a table, as the {@code Primary} who has to answer it reads it (#39).
+ * One pending veto request on a table, as the {@code Primary} who has to answer it reads it (ADR-09 §5).
  *
  * <p><b>A record of its own rather than {@code ApprovalRequestSummaryResponse}</b>, and the reason is
  * the one thing that DTO cannot say: <em>who</em> is going to be vetoed. It carries who asked and
@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
  * @param targetUserId    the person who would be vetoed
  * @param targetUserName  their display name. <b>The field this record exists for</b>: a decision
  *                        about a person is made by name, not by id
- * @param requestedByName the co-master who asked. They are the one the answer is written to (#42)
+ * @param requestedByName the co-master who asked. They are the one the answer is written to (ADR-16 §1)
  * @param justification   why they are asking, verbatim. It is the whole of what the {@code Primary}
  *                        is deciding on
  * @param createdAt       when it was asked, in UTC. Oldest first, like every other queue

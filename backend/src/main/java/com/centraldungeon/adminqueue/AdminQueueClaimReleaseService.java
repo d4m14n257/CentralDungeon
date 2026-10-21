@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Hands back the reservations nobody finished (#100).
+ * Hands back the reservations nobody finished (ADR-16 §5).
  *
  * <p><b>Without it the tray leaks.</b> An admin takes an item, closes the tab, and that piece of work
  * is invisible to every other admin for ever - the reservation that exists to stop two people doing
@@ -69,12 +69,12 @@ public class AdminQueueClaimReleaseService {
 
     /**
      * Where the timeout comes from: {@code admin_queue.claim_timeout_minutes} in
-     * {@code system_settings} (#100, #141).
+     * {@code system_settings} (ADR-16 §5, ADR-17 §3).
      *
      * <p><b>It stopped being {@code app.admin-queue.claim-timeout} in F3.5</b>, which arquitectura skill
      * §4.5 named as this slice's job. The difference is not where the number is stored but who may
      * change it: how long a review actually takes on this platform is an operational judgement the
-     * people running it make, and making them ask for a deploy to tighten it is what #141 removed.
+     * people running it make, and making them ask for a deploy to tighten it is what ADR-17 §3 removed.
      *
      * <p>Read on every pass rather than cached in a field: a job that captured the timeout at startup
      * would go on using the old one until the process restarted, which is the exact thing the setting
@@ -85,7 +85,7 @@ public class AdminQueueClaimReleaseService {
     /**
      * @param approvalRequestRepository the {@code approval_requests} reservations
      * @param gameTableRepository       the {@code game_tables} reservations
-     * @param settingsService           where the timeout comes from (#141)
+     * @param settingsService           where the timeout comes from (ADR-17 §3)
      */
     public AdminQueueClaimReleaseService(
             ApprovalRequestRepository approvalRequestRepository,

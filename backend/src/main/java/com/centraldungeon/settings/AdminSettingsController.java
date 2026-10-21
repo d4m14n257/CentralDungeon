@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * {@code /admin/settings}: the values the community changes without a deploy (#141).
+ * {@code /admin/settings}: the values the community changes without a deploy (ADR-17 §3).
  *
  * <p>Admin and Owner are enumerated on every method, as they are on every other administrative
  * endpoint: there is no {@code RoleHierarchy} in this project and an owner can do what an admin can
- * by being listed, not by inheriting (#37, #89, #123). <b>Editing settings is where the two roles
+ * by being listed, not by inheriting (ADR-06 §1, ADR-05 §4). <b>Editing settings is where the two roles
  * are the same</b> - the matrix of roles-y-alcance.md §3 says so in one line, and the only
  * difference F3 draws between them is who may grant the rank.
  *
@@ -64,11 +64,11 @@ public class AdminSettingsController {
      * is an assignment - the same call with the same value twice leaves the platform in the same
      * state - where {@code grant-role} and {@code block} are acts that happen once. The reason
      * travels in the body all the same, because a change nobody explained is a change nobody can
-     * review (#141).
+     * review (ADR-17 §3).
      *
      * @param key         which setting to change, as {@link SettingKey#wireName()} spells it
      * @param request     the new value and why
-     * @param currentUser the actor, from the token (#121)
+     * @param currentUser the actor, from the token (ADR-05 §5)
      * @return 200 with the setting afterwards. 400 when the value is outside the key's range, 404
      *         when no setting has that name
      */

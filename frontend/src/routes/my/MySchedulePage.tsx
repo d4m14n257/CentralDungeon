@@ -20,14 +20,14 @@ function destinationOf(commitment: WeeklyCommitment): string {
 }
 
 /**
- * `/my/schedule` — the reader's whole week, as a grid (#227).
+ * `/my/schedule` — the reader's whole week, as a grid (ADR-08 §6).
  *
  * **It belongs to no context, and that is the point.** A person's week is not a master's week or a
  * player's week: the evenings they run and the evenings they play are the same evenings, and the
  * only screen worth having is the one that shows them colliding. Splitting it by context would hide
- * exactly what somebody opens it to see, so it sits beside `/notifications` and `/help` (#222).
+ * exactly what somebody opens it to see, so it sits beside `/notifications` and `/help` (ADR-20 §2).
  *
- * It draws the same intervals #178 compares to refuse a clash, so a gap here is a gap the server
+ * It draws the same intervals ADR-08 §2 compares to refuse a clash, so a gap here is a gap the server
  * will accept — which is what makes it usable for finding room for a new table.
  *
  * **Every block is a shortcut**: clicking a rectangle opens its table. Looking at your week and
@@ -43,7 +43,7 @@ export function MySchedulePage() {
   const { t, i18n } = useTranslation('tables')
   const timeZone = useMemo(() => browserTimeZone(), [])
   // isLoadingError, not isError: a background refetch that fails must not blank a week that already
-  // loaded (#150).
+  // loaded (ADR-19 §4).
   const { data, isPending, isLoadingError, refetch } = useMySchedule()
 
   if (isPending) {

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 /**
- * A master recording who was at one session (#36).
+ * A master recording who was at one session (ADR-08 §4).
  *
  * <p>The whole roster travels at once because that is how it is filled in on screen - a master looks
  * at the list and says what happened - and because sending it as a set keeps a half-saved roster

@@ -1,11 +1,11 @@
 import type { AdminCatalogValue } from '../types'
 
 /**
- * What connecting one value to another means on the catalog canvas (#275, #276):
+ * What connecting one value to another means on the catalog canvas (ADR-12 §7, §6):
  *
- * - `accept` - a proposal nobody classified yet joins the group (#55)
- * - `reassign` - an alias leaves its group for this one (#276)
- * - `merge` - a whole group, head and aliases, folds into this one (#55)
+ * - `accept` - a proposal nobody classified yet joins the group (ADR-12 §3)
+ * - `reassign` - an alias leaves its group for this one (ADR-12 §6)
+ * - `merge` - a whole group, head and aliases, folds into this one (ADR-12 §3)
  */
 export type CatalogConnectionIntent = 'accept' | 'reassign' | 'merge'
 
@@ -18,9 +18,9 @@ export type CatalogConnectionIntent = 'accept' | 'reassign' | 'merge'
  * button principle 2 forbids, avoided.
  *
  * - The target has to head a group and be accepted: depth is always 1, so nothing hangs from an
- *   alias (#59), and nothing joins what is out of circulation.
+ *   alias (ADR-12 §2), and nothing joins what is out of circulation.
  * - A value never connects to itself, nor to the group it is already in.
- * - A proposal (`Created` or `Rejected`, which #55 lets an admin reconsider) is accepted into it.
+ * - A proposal (`Created` or `Rejected`, which ADR-12 §3 lets an admin reconsider) is accepted into it.
  * - An alias moves; a head carries its group and merges - only if it is accepted, like the server's
  *   merge asks.
  *

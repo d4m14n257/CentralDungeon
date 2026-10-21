@@ -10,7 +10,7 @@ import java.util.Optional;
  * reservation routes.
  *
  * <p><b>The spelling is not invented here.</b> It is the vocabulary {@code approval_requests
- * .entity_type} already uses (#78) and that {@code Notification.relatedEntityType} publishes: the
+ * .entity_type} already uses (ADR-16 §2) and that {@code Notification.relatedEntityType} publishes: the
  * singular of the table, in snake case - {@code game_table}, never {@code gameTable} or
  * {@code table}. A second vocabulary for the same things is how a frontend ends up with two maps
  * saying the same thing and a bug living between them.

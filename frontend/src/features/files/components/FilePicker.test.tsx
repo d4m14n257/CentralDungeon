@@ -35,14 +35,14 @@ function dropzoneInput(): HTMLInputElement {
 
 describe('FilePicker', () => {
   beforeEach(() => {
-    // The mutation answers with the file *and* whether it was recognised rather than written (#234).
+    // The mutation answers with the file *and* whether it was recognised rather than written (ADR-13 §4).
     upload.mockReset().mockResolvedValue({ file: { id: 'file-new', name: 'ficha.pdf' }, deduplicated: false })
     listMine.mockReset().mockResolvedValue(emptyPage)
     listPublic.mockReset().mockResolvedValue(emptyPage)
   })
 
   /**
-   * #65 and #75's whole strategy: reuse only reduces anything if it is as reachable as uploading.
+   * ADR-13 §2 and ADR-13 §3's whole strategy: reuse only reduces anything if it is as reachable as uploading.
    * If it were a link tucked under an upload box, everybody would upload.
    */
   it('offers uploading and reusing as peers', () => {
@@ -59,7 +59,7 @@ describe('FilePicker', () => {
     expect(screen.getByText(/2 MB/)).toBeInTheDocument()
   })
 
-  /** The published tab is what makes #79 reachable — and it is absent when nothing offers it. */
+  /** The published tab is what makes ADR-14 §1 reachable — and it is absent when nothing offers it. */
   it('offers the published files only when the caller asks for them', () => {
     const { rerender } = render(wrap(<FilePicker onPick={vi.fn()} />))
     expect(screen.queryByRole('tab', { name: 'Publicados' })).not.toBeInTheDocument()
@@ -69,7 +69,7 @@ describe('FilePicker', () => {
   })
 
   /**
-   * #233: the published tab is asked for the cajón the picker stands in, and never for an audience.
+   * ADR-14 §4: the published tab is asked for the cajón the picker stands in, and never for an audience.
    * A master attaching to their table wants what the community published for tables; the same master
    * writing a request wants what it published for requests. One control, two answers.
    */
@@ -79,12 +79,12 @@ describe('FilePicker', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Publicados' }))
 
     // The cajón is the flow, so a master attaching to their table gets the blanks published *for*
-    // that moment - which is what the audience of #64 could never express (#233).
+    // that moment - which is what the audience of ADR-13 §2 could never express (ADR-14 §4).
     await waitFor(() => expect(listPublic).toHaveBeenCalledWith('TableMaterial'))
   })
 
   /**
-   * **Picking stages, it does not upload** (#238). The confirm that creates the table or sends the
+   * **Picking stages, it does not upload** (ADR-13 §5). The confirm that creates the table or sends the
    * answer is what puts bytes on the server, so abandoning the flow leaves nothing behind.
    */
   it('stages what was picked and uploads nothing', async () => {
@@ -124,7 +124,7 @@ describe('FilePicker', () => {
     // The name travels with the id: a caller that gathers several files before sending them shows
     // them back by name, and looking that up again for something the picker just had is a round trip
     // for nothing.
-    // Something reused arrives already carrying its id: there is nothing to upload for it (#65).
+    // Something reused arrives already carrying its id: there is nothing to upload for it (ADR-13 §2).
     expect(onPick).toHaveBeenCalledWith({ kind: 'existing', fileId: 'file-old', name: 'ficha-vieja.pdf' })
     expect(upload).not.toHaveBeenCalled()
   })

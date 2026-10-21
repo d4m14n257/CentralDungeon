@@ -18,24 +18,24 @@ import {
 } from '@/features/files'
 
 /**
- * /admin/files/upload — putting files into the platform's library (#278).
+ * /admin/files/upload — putting files into the platform's library (ADR-14 §7).
  *
  * **Its own page and not a panel toggled open over the list.** Uploading and browsing are two things
  * an admin does one at a time, and a page is what the rest of the application uses for "go do this
  * one thing and come back": it has its own URL, the browser's back button leaves it, and the list
  * underneath does not have to carry the state of a half-finished upload.
  *
- * **The upload list is the same one every flow uses** (`StagedFileList`, #238), with one addition: a
+ * **The upload list is the same one every flow uses** (`StagedFileList`, ADR-13 §5), with one addition: a
  * select on each row saying what that file is. Each file is its own document — the blank sheet is
  * table material, the rules are an announcement — so they can go up together, each into its own
  * cajón, and nothing lands in the library without saying which flow it is for.
  *
- * **Two ways to send, and both are confirmed** (#282). «Subir sin publicar» leaves the files in the
+ * **Two ways to send, and both are confirmed** (ADR-14 §7). «Subir sin publicar» leaves the files in the
  * library for later; «Subir y publicar» puts them in front of masters at once — and since a table that
- * attaches a file keeps it even if it is hidden afterwards (#79), the confirmation says so before it
+ * attaches a file keeps it even if it is hidden afterwards (ADR-14 §1), the confirmation says so before it
  * happens, not after.
  *
- * Nothing is sent until one of the two is confirmed (#238). What failed stays listed with its cajón,
+ * Nothing is sent until one of the two is confirmed (ADR-13 §5). What failed stays listed with its cajón,
  * to try again; when everything went up, the page goes back to the library, where the new rows are.
  */
 export function AdminFileUploadPage() {
@@ -88,7 +88,7 @@ export function AdminFileUploadPage() {
           if (published.length > 0) {
             toast.success(t(publish ? 'upload.published' : 'upload.savedDraft', { count: published.length }))
           }
-          // Reuse is worth saying (#234): the admin already had that content, so no second copy exists.
+          // Reuse is worth saying (ADR-13 §4): the admin already had that content, so no second copy exists.
           if (reused.length > 0) {
             toast.info(t('upload.reused', { names: reused.join(', ') }))
           }

@@ -8,13 +8,13 @@ import { acceptReview } from './helpers/review'
  *
  * Three things only a real round trip proves, and each one is a claim a mock would happily fake:
  *
- * - **Deduplication is visible** (#234, #75). Uploading the same bytes twice answers 200 with the
+ * - **Deduplication is visible** (ADR-13 §4, §3). Uploading the same bytes twice answers 200 with the
  *   row that already existed, and the screen says so. A mock can assert the call; only the real
  *   backend decides the status.
- * - **The uses are real** (#232). The chip that says "Mesa Biblioteca" appears because the file is
+ * - **The uses are real** (ADR-14 §3). The chip that says "Mesa Biblioteca" appears because the file is
  *   attached to that table, resolved by two JPQL queries against MySQL — not because a screen
  *   remembered where it came from.
- * - **Letting go of a file marks it and does not erase it** (#25, #66).
+ * - **Letting go of a file marks it and does not erase it** (ADR-03 §7, ADR-13 §8).
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
  */
@@ -61,7 +61,7 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     const tableId = page.url().split('/master/tables/')[1] as string
 
     // Uploaded from the library, which is the one place with no flow to observe — so it is also the
-    // one place that asks which cajón (#233).
+    // one place that asks which cajón (ADR-14 §4).
     await page.goto('/my/files')
     await page.getByRole('button', { name: 'Subir archivo' }).click()
     await page.locator('input[type="file"]').setInputFiles(pdf(`ficha-${runId}.pdf`, runId))
@@ -73,10 +73,10 @@ test('the library shows what each file is, where it is used, and reuses an uploa
     const row = page.getByRole('listitem').filter({ hasText: `ficha-${runId}.pdf` })
     await expect(row).toBeVisible()
     await expect(row.getByText('De mesa')).toBeVisible()
-    // Nothing uses it yet, and saying so is what warns before the purge does (#75, #232).
+    // Nothing uses it yet, and saying so is what warns before the purge does (ADR-13 §3, ADR-14 §3).
     await expect(row.getByText('Sin usar')).toBeVisible()
 
-    // Attach it to the table, reusing it from the history — never uploading it again (#65).
+    // Attach it to the table, reusing it from the history — never uploading it again (ADR-13 §2).
     await page.goto(`/master/tables/${tableId}/files`)
     await page.getByRole('button', { name: 'Agregar un archivo' }).click()
     const dialog = page.getByRole('dialog')
@@ -86,7 +86,7 @@ test('the library shows what each file is, where it is used, and reuses an uploa
       .filter({ hasText: `ficha-${runId}.pdf` })
       .getByRole('button', { name: 'Usar' })
       .click()
-    // Reusing stages it too (#238): it already has an id, so there is nothing to upload for it - but
+    // Reusing stages it too (ADR-13 §5): it already has an id, so there is nothing to upload for it - but
     // the attach still waits for the confirm, like everything else in this dialog.
     await dialog.getByRole('button', { name: /Agregar \d+ archivos?/ }).click()
     await acceptReview(page)
@@ -94,19 +94,19 @@ test('the library shows what each file is, where it is used, and reuses an uploa
 
     // The use now shows, resolved from the link and not remembered by the screen. Attaching it put
     // it in the cajón it was already declared under, and the pair being the key means that wrote no
-    // second row - putting a file in a cajón it is already in is a no-op (#233).
+    // second row - putting a file in a cajón it is already in is a no-op (ADR-14 §4).
     await page.goto('/my/files')
     await expect(row.getByText(tableName)).toBeVisible()
     await expect(row.getByText('Sin usar')).toBeHidden()
     await expect(row.getByText('De mesa')).toHaveCount(1)
 
-    // The same bytes again: recognised, not stored twice, and the screen says so (#234).
+    // The same bytes again: recognised, not stored twice, and the screen says so (ADR-13 §4).
     await page.getByRole('button', { name: 'Subir archivo' }).click()
     await page.locator('input[type="file"]').setInputFiles(pdf(`otra-copia-${runId}.pdf`, runId))
     await page.getByRole('button', { name: /Subir \d+ archivos?/ }).click()
     await acceptReview(page)
     // The server recognised the bytes, and now it says so at the confirm rather than at the pick,
-    // because that is where the upload happens (#234, #238).
+    // because that is where the upload happens (ADR-13 §4, §5).
     await expect(page.getByText(/ya lo tenías subido/)).toBeVisible()
     // The name that survives is the first one: the row was recognised, not rewritten.
     await expect(page.getByRole('listitem').filter({ hasText: `otra-copia-${runId}.pdf` })).toHaveCount(0)
@@ -116,13 +116,13 @@ test('the library shows what each file is, where it is used, and reuses an uploa
 })
 
 /**
- * The cajones offered are the reader's own (#237).
+ * The cajones offered are the reader's own (ADR-14 §5).
  *
  * `/my/files` is the **personal** library: a plain member of the community never files table
  * material, and an announcement is nobody's — it is the community's, always published, and it lives
  * only in `/admin/files`. Whoever runs tables gets the master-side ones as well.
  *
- * **Asserted on the upload panel and not on a row of filters.** #242 took the cajón toggles off this
+ * **Asserted on the upload panel and not on a row of filters.** ADR-14 §6 took the cajón toggles off this
  * screen — the search box narrows by cajón from the same line and each row carries its own badge —
  * so what is left that names the reader's cajones is the one place that has to ask: the panel where
  * a file with no flow behind it gets filed.
@@ -147,7 +147,7 @@ test('the library offers only the cajones that are the reader’s own', async ({
     await expect(master.page.getByRole('radio', { name: 'De mesa' })).toBeVisible()
     await expect(master.page.getByRole('radio', { name: 'Petición del master' })).toBeVisible()
     // And not the player-side ones: this account holds Master and not Player, so those two cajones
-    // are filled by flows it cannot enter. Each side follows the role that fills it (#237).
+    // are filled by flows it cannot enter. Each side follows the role that fills it (ADR-14 §5).
     await expect(master.page.getByRole('radio', { name: 'Solicitud de jugador' })).toHaveCount(0)
     await expect(master.page.getByRole('radio', { name: 'Entrega del jugador' })).toHaveCount(0)
     await expect(master.page.getByRole('radio', { name: 'Anuncios de la comunidad' })).toHaveCount(0)
@@ -169,7 +169,7 @@ test('a file can be renamed and let go of', async ({ browser }) => {
     await acceptReview(page)
     await expect(page.getByRole('listitem').filter({ hasText: `mapa-${runId}.pdf` })).toBeVisible()
 
-    // Renaming touches metadata only — the content lives under a generated key (#80). There is no
+    // Renaming touches metadata only — the content lives under a generated key (ADR-13 §6). There is no
     // cajón to correct here: a membership is what the file's uses made true and is never revoked.
     await page
       .getByRole('listitem')
@@ -185,7 +185,7 @@ test('a file can be renamed and let go of', async ({ browser }) => {
     const renamed = page.getByRole('listitem').filter({ hasText: `El pantano ${runId}.pdf` })
     await expect(renamed).toBeVisible()
 
-    // Letting go marks the row; the bytes wait for the platform owner, which is F5 (#25, #66).
+    // Letting go marks the row; the bytes wait for the platform owner, which is F5 (ADR-03 §7, ADR-13 §8).
     await renamed.getByRole('button', { name: 'Dar de baja' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Dar de baja' }).click()
     await expect(page.getByRole('listitem').filter({ hasText: `El pantano ${runId}.pdf` })).toHaveCount(0)

@@ -1,5 +1,5 @@
 /**
- * The public surface of `features/files` (#114).
+ * The public surface of `features/files` (ADR-19 §1).
  *
  * From outside, this is the only path: `@/features/files`, never a route inside it. What is not
  * exported here is private to the feature — the api module, the format helper and the query hooks

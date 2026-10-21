@@ -17,7 +17,7 @@ interface SessionListProps {
   /** The sessions to show, already in the order they are played. */
   sessions: SessionListItem[]
   /**
-   * The zone to show them in. A parameter and not a constant (#111, #192): a caller can pass the
+   * The zone to show them in. A parameter and not a constant (ADR-19 §7): a caller can pass the
    * one from the profile, and `browserTimeZone()` is only the default — somebody travelling has not
    * moved their table.
    */
@@ -27,7 +27,7 @@ interface SessionListProps {
 /**
  * A table's calendar, read-only — what `/player/tables/:id` and `/player/my-tables/:id` show.
  *
- * **The dates are shown in the reader's own time** (#22). What arrives from the server is UTC and
+ * **The dates are shown in the reader's own time** (ADR-03 §6). What arrives from the server is UTC and
  * the conversion happens once, here, through `lib/date.ts`. The footer names the zone it is showing,
  * because a time with no zone is a date everybody reads differently.
  *

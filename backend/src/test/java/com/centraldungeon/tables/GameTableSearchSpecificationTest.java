@@ -51,7 +51,7 @@ class GameTableSearchSpecificationTest {
             List.of(GameTableStatus.Preparation, GameTableStatus.Opened);
 
     /**
-     * The rule of #176 that a join would have quietly broken. {@code exists} is called; {@code join}
+     * The rule of ADR-16 §7 that a join would have quietly broken. {@code exists} is called; {@code join}
      * on the root is not.
      */
     @Test
@@ -84,7 +84,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * Solo masters vivos: a quien lo sacaron de co-master (#216) ya no dirige la mesa, y encontrarla
+     * Solo masters vivos: a quien lo sacaron de co-master (ADR-07 §8) ya no dirige la mesa, y encontrarla
      * by their name would be answering a question about the past. It is the <b>opposite</b> decision to
      * {@code notMasteredBy}'s, on purpose, which is why it is pinned here.
      */
@@ -129,7 +129,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * {@code notMasteredBy} belongs to the explorer and not to the admin listing (#155): an
+     * {@code notMasteredBy} belongs to the explorer and not to the admin listing (ADR-06 §5): an
      * admin is not applying to anything, and hiding the tables they run would be a filter nobody asked
      * for and nobody could explain.
      */
@@ -146,7 +146,7 @@ class GameTableSearchSpecificationTest {
 
     /**
      * And the status filter is always there: whatever is typed in the box narrows what the listing
-     * already showed and never widens it - no {@code ?q=} reaches a deleted table (#25).
+     * already showed and never widens it - no {@code ?q=} reaches a deleted table (ADR-03 §7).
      */
     @Test
     void theBoxNarrowsWhatTheListingAlreadyShowed() {
@@ -170,7 +170,7 @@ class GameTableSearchSpecificationTest {
      * <p>That it is in the {@code WHERE} and not a filter in memory over the page that came back is
      * the whole point: dropping rows after the query returns a page of seventeen where twenty were
      * asked for, with a {@code totalElements} counting the tables the reader has no right to know
-     * exist. That is a broken pager (#171, #173) and, on top of it, a leak of the very number the veto
+     * exist. That is a broken pager (ADR-07 §9, ADR-04 §6) and, on top of it, a leak of the very number the veto
      * exists to hide.
      */
     @Test
@@ -180,7 +180,7 @@ class GameTableSearchSpecificationTest {
         GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS, "player-1")
                 .toPredicate(criteria.root, criteria.query, criteria.builder);
 
-        // Two negated subqueries: «no dirijo esta mesa» (#154) and «no estoy vetado en ella» (#29).
+        // Two negated subqueries: «no dirijo esta mesa» (ADR-18 §4) and «no estoy vetado en ella» (ADR-09 §4).
         verify(criteria.query, times(2)).subquery(String.class);
         verify(criteria.builder, times(2)).not(any(Predicate.class));
         verify(criteria.builder, times(2)).exists(any(Subquery.class));
@@ -189,7 +189,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * And it looks at {@code Blocked} <b>only</b>. A rejection is not a veto: #23 allows applying
+     * And it looks at {@code Blocked} <b>only</b>. A rejection is not a veto: ADR-09 §1 allows applying
      * again, and a {@code Rejected} or {@code Deleted} registration leaves the table perfectly
      * visible.
      */
@@ -206,7 +206,7 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * The actor enters the subquery from the token and never from the URL (#121): what is hidden are
+     * The actor enters the subquery from the token and never from the URL (ADR-05 §5): what is hidden are
      * the tables <b>this</b> reader is vetoed on, not anybody else's.
      */
     @Test
@@ -241,10 +241,10 @@ class GameTableSearchSpecificationTest {
         /** {@code masters.user} inside the subquery - where the two names are read from. */
         private final Path<Object> masterUser = mock(Path.class);
 
-        /** {@code table_registrations.status} inside the veto subquery (#29). */
+        /** {@code table_registrations.status} inside the veto subquery (ADR-09 §4). */
         private final Path<Object> registrationStatus = mock(Path.class);
 
-        /** {@code table_registrations.user.id} inside the veto subquery - the actor of the token (#121). */
+        /** {@code table_registrations.user.id} inside the veto subquery - the actor of the token (ADR-05 §5). */
         private final Path<Object> registrationUserId = mock(Path.class);
 
         private Criteria() {
@@ -259,7 +259,7 @@ class GameTableSearchSpecificationTest {
             Root<Master> master = mock(Root.class);
             when(subquery.from(Master.class)).thenReturn(master);
 
-            // The veto subquery of F3.4 (#29): the same Subquery mock, rooted at TableRegistration.
+            // The veto subquery of F3.4 (ADR-09 §4): the same Subquery mock, rooted at TableRegistration.
             Root<TableRegistration> registration = mock(Root.class);
             when(subquery.from(TableRegistration.class)).thenReturn(registration);
             Path<Object> registrationTable = mock(Path.class);

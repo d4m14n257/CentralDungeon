@@ -35,7 +35,7 @@ export interface TaskSubmitDialogProps {
  * no editor at all, rather than an editor that is refused on send. What the master asked for is what
  * the person is shown.
  *
- * **Sending never replaces anything** (#76). The dialog says so, because "entregar" reads like
+ * **Sending never replaces anything** (ADR-15 §2). The dialog says so, because "entregar" reads like
  * "reemplazar lo anterior" unless something says otherwise — and what actually happens is that the
  * earlier answer stays exactly where it was, next to this one.
  *
@@ -62,7 +62,7 @@ export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFileP
 
   function send() {
     // The staged list travels, not ids: nothing has been uploaded yet, and the screen that owns the
-    // send is the one that uploads and then submits (#238).
+    // send is the one that uploads and then submits (ADR-13 §5).
     onSubmit({ content: hasText ? content : null, staged: files })
   }
 
@@ -98,14 +98,14 @@ export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFileP
                 ))}
               </ul>
             )}
-            {/* Uploading a new one and reusing one from the history end in the same place (#65). */}
+            {/* Uploading a new one and reusing one from the history end in the same place (ADR-13 §2). */}
             {renderFilePicker((file) =>
               setFiles((current) => (current.some((picked) => stagedKey(picked) === stagedKey(file)) ? current : [...current, file])),
             )}
           </div>
         )}
 
-        {/* #76 said before the button is pressed, not discovered afterwards. */}
+        {/* ADR-15 §2 said before the button is pressed, not discovered afterwards. */}
         <p className="text-fg-muted text-xs">{t('submit.accumulatesHint')}</p>
 
         <div className="flex justify-end gap-2">

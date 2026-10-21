@@ -10,6 +10,6 @@ public enum UserRoleChangeAction {
     /** The role was given. The grant's status is {@code Allowed} from this moment on. */
     Granted,
 
-    /** The role was taken away. The row of {@code users_roles} stays, marked {@code Deleted} (#25). */
+    /** The role was taken away. The row of {@code users_roles} stays, marked {@code Deleted} (ADR-03 §7). */
     Revoked
 }

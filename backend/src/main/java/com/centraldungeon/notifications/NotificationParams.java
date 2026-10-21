@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The names a notification's sentence needs filled in, stored alongside the row rather than baked
- * into it (#197).
+ * into it (ADR-23 §3).
  *
  * <p><b>Why a notification does not store its own text.</b> A row is written once and read for
  * months, and the person reading it can change the language of the application in between. Storing
@@ -24,11 +24,11 @@ import org.jspecify.annotations.Nullable;
  * before it existed simply has no such key, and reads back with it null.
  *
  * @param tableName      the table the notification is about, for every type that names one
- * @param otherTableName the second table, for a clash that has to name both (#178)
+ * @param otherTableName the second table, for a clash that has to name both (ADR-08 §2)
  * @param actorName      the person who did the thing, for the types where somebody acted
  * @param taskTitle      what the table is asking for, so the bell can say <em>which</em> request
- *                       arrived (#77). "The table is asking you for something" is a worse headline
- *                       than "Ficha de personaje", for the same reason #156 gives for naming the
+ *                       arrived (ADR-15 §5). "The table is asking you for something" is a worse headline
+ *                       than "Ficha de personaje", for the same reason ADR-18 §5 gives for naming the
  *                       applicant
  */
 public record NotificationParams(

@@ -11,17 +11,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Lets go of the files nobody has used in months (#75).
+ * Lets go of the files nobody has used in months (ADR-13 §3).
  *
- * <p><b>This is the biggest cost lever the platform has</b>, and the reason #75 could repeal the
- * per-user quota of #61 without giving anything up: a quota limits the person while the bill keeps
+ * <p><b>This is the biggest cost lever the platform has</b>, and the reason ADR-13 §3 could repeal the
+ * per-user quota of ADR-13 §3 without giving anything up: a quota limits the person while the bill keeps
  * growing - 20 MB each is 20 GB across a thousand players - whereas purging what nobody needs
- * actually removes volume. The other two levers are reuse (#65) and compression, both in
+ * actually removes volume. The other two levers are reuse (ADR-13 §2) and compression, both in
  * {@code FileService} and {@code LocalDiskStorageService}.
  *
- * <p><b>It marks, it does not erase</b> (#25). Not a limitation to be fixed later: freeing the actual
+ * <p><b>It marks, it does not erase</b> (ADR-03 §7). Not a limitation to be fixed later: freeing the actual
  * bytes is a deliberate maintenance operation, run by the platform owner from the administration
- * menu, and that is F5 (#66). Marking gives a wide margin to notice a mistake before anything becomes
+ * menu, and that is F5 (ADR-13 §8). Marking gives a wide margin to notice a mistake before anything becomes
  * irreversible.
  *
  * <p>Which files qualify is {@link StoredFileRepository#findPurgeCandidates} - published files are
@@ -45,7 +45,7 @@ public class FileRetentionService {
     /** The {@code files} rows, and the query that decides which of them have gone unused. */
     private final StoredFileRepository fileRepository;
 
-    /** The platform's library, published or not: never the purge's to take (#64, #282). */
+    /** The platform's library, published or not: never the purge's to take (ADR-13 §2, ADR-14 §7). */
     private static final List<FileType> LIBRARY_TYPES = List.of(FileType.Public, FileType.Library);
 
     /** Where the retention window comes from - configuration, so it can be tightened without a migration. */
@@ -64,7 +64,7 @@ public class FileRetentionService {
      * Runs the purge once a day, in the small hours.
      *
      * <p>The time is not arbitrary: the community plays at night in the Americas, which is the early
-     * morning of the next day in UTC (#22), so 05:00 UTC is roughly when the fewest people are around
+     * morning of the next day in UTC (ADR-03 §6), so 05:00 UTC is roughly when the fewest people are around
      * to notice a batch of writes.
      *
      * <p>⚠️ <b>{@code @Transactional} has to be on <em>this</em> method, not only on the one it

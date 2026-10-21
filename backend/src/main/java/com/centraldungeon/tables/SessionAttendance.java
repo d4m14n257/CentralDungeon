@@ -19,12 +19,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * Whether one player was at one session. Table {@code session_attendance}.
  *
- * <p>It exists for two things (#36): letting a master see who actually turns up, and proving that
- * somebody who comments about a person really shared a table with them (#31) - evidence that is
+ * <p>It exists for two things (ADR-08 §4): letting a master see who actually turns up, and proving that
+ * somebody who comments about a person really shared a table with them (ADR-11 §2) - evidence that is
  * <b>used and not persisted</b> when the comment is written.
  *
- * <p><b>Nothing is cached from these rows</b> (#137). The historical counts are a {@code GROUP BY}
- * over them, following the precedent of #11 that removed a trigger-maintained counter: a cached
+ * <p><b>Nothing is cached from these rows</b> (ADR-08 §5). The historical counts are a {@code GROUP BY}
+ * over them, following the precedent of ADR-03 §1 that removed a trigger-maintained counter: a cached
  * total is a class of inconsistency, not an optimization. The baseline's covering index
  * {@code (user_id, attendance)} is what keeps that aggregate index-only.
  */
@@ -48,7 +48,7 @@ public class SessionAttendance {
     @JoinColumn(name = "user_id")
     private User user;
 
-    /** Present, Absent, Excused or Unknown (#36). The four never collapse into fewer (#137). */
+    /** Present, Absent, Excused or Unknown (ADR-08 §4). The four never collapse into fewer (ADR-08 §5). */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private AttendanceStatus attendance = AttendanceStatus.Unknown;
@@ -123,7 +123,7 @@ public class SessionAttendance {
      * Returns what was recorded.
      *
      * @return the attendance, never null. {@code Unknown} means nobody recorded anything and stays
-     *         out of every denominator (#137)
+     *         out of every denominator (ADR-08 §5)
      */
     public AttendanceStatus getAttendance() {
         return attendance;

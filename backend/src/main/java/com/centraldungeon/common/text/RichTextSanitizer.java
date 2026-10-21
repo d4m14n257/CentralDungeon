@@ -7,12 +7,12 @@ import org.springframework.stereotype.Component;
 
 /**
  * The one gate every piece of user-written rich text passes through, on the way in and on the way
- * out (#62).
+ * out (ADR-03 §8).
  *
  * <p>Rich text is the system's most direct XSS surface: a table's description, its house rules and
  * its requirements are written by one person and rendered in everybody else's browser. Sanitizing
  * only on write would leave whatever was stored before this class existed - or by any path that
- * ever bypasses it - to reach the page intact, so #62 asks for both ends and both ends is what this
+ * ever bypasses it - to reach the page intact, so ADR-03 §8 asks for both ends and both ends is what this
  * gives.
  *
  * <p>The policy is an <b>allowlist</b>: anything not named below is dropped, which is what makes a

@@ -80,7 +80,7 @@ beforeEach(() => {
 
 describe('AdminTablesPage', () => {
   /**
-   * #176: the screen stopped being a queue. It used to default to the review statuses, which made it
+   * ADR-16 §7: the screen stopped being a queue. It used to default to the review statuses, which made it
    * a second tray with rules of its own — so it opens asking for **everything**, with no `q` of its
    * own and no status narrowing, and the reader does the narrowing.
    */
@@ -92,7 +92,7 @@ describe('AdminTablesPage', () => {
     await waitFor(() => expect(admin).toHaveBeenCalledWith(undefined, undefined, 0, 25))
   })
 
-  /** #185: what was searched and which page are in the URL, not in `useState`. */
+  /** ADR-12 §7: what was searched and which page are in the URL, not in `useState`. */
   it('restores the search and the page from the URL', async () => {
     admin.mockResolvedValue(page([]))
 
@@ -101,7 +101,7 @@ describe('AdminTablesPage', () => {
     await waitFor(() => expect(admin).toHaveBeenCalledWith('/table_status Preparation', undefined, 2, 25))
   })
 
-  /** #271: the rows per page travel in the URL too, and only an offered size reaches the API. */
+  /** ADR-21 §11: the rows per page travel in the URL too, and only an offered size reaches the API. */
   it('asks for the page size the URL names, and ignores one it does not offer', async () => {
     admin.mockResolvedValue(page([]))
 
@@ -115,7 +115,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * The mudanza of #176, from the side that loses: reviewing is the tray's, so these two buttons are
+   * The mudanza of ADR-16 §7, from the side that loses: reviewing is the tray's, so these two buttons are
    * **gone** from here rather than offered in both places under different rules. A `Preparation`
    * table is exactly the row that used to carry them.
    */
@@ -163,7 +163,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * #100: a table somebody is reviewing right now says so, even though this screen offers no action
+   * ADR-16 §5: a table somebody is reviewing right now says so, even though this screen offers no action
    * that needs the reservation. Without it an admin sees a `Preparation` table, goes to the tray to
    * review it, and finds it is not there.
    */
@@ -177,7 +177,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * #136 read the other way round: "there are no tables" is a fact about the platform and "nothing
+   * ADR-20 §4 read the other way round: "there are no tables" is a fact about the platform and "nothing
    * matched" is a fact about what was typed. Telling somebody who just filtered by `Canceled` that
    * the platform has no tables would answer a question they did not ask.
    */
@@ -192,7 +192,7 @@ describe('AdminTablesPage', () => {
     expect(await screen.findByText('Ninguna mesa coincide con esa búsqueda')).toBeInTheDocument()
   })
 
-  /** #103: no guard in the router, so the 403 has to land somewhere that explains itself. */
+  /** ADR-20 §1: no guard in the router, so the 403 has to land somewhere that explains itself. */
   it('paints the forbidden state when the backend refuses the listing', async () => {
     admin.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Access denied', errorCode: 'FORBIDDEN' }))
 
@@ -214,12 +214,12 @@ describe('AdminTablesPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Cómo funciona' }))
 
     const dialog = within(await screen.findByRole('dialog'))
-    // Since #286 a review is resolved from the tray or from the table's own status tab: both are said.
+    // Since ADR-21 §10 a review is resolved from the tray or from the table's own status tab: both are said.
     expect(dialog.getByText(/se resuelve desde dos lugares: la «Bandeja»/)).toBeInTheDocument()
     expect(dialog.getByText(/«Mesas» tiene todas las mesas/)).toBeInTheDocument()
   })
 
-  /** #240: the search help documents **this** box's commands rather than a fixed list. */
+  /** ADR-22 §3: the search help documents **this** box's commands rather than a fixed list. */
   it('documents its own six search commands', async () => {
     admin.mockResolvedValue(page([table()]))
 
@@ -235,7 +235,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * #163, from the side that had been missing: `pause()` and `resume()` have had an endpoint since
+   * ADR-07 §1, from the side that had been missing: `pause()` and `resume()` have had an endpoint since
    * E2 and no button on any screen. Each is offered on exactly the status it applies to — pausing a
    * running table, resuming a paused one — because principle 2 shows an action only where it works.
    */
@@ -266,7 +266,7 @@ describe('AdminTablesPage', () => {
     expect(row.queryByRole('button', { name: 'Reanudar' })).not.toBeInTheDocument()
   })
 
-  /** #32: `Pause` demands a justification, and it is the master who will read it. */
+  /** ADR-07 §2: `Pause` demands a justification, and it is the master who will read it. */
   it('sends the pause with the reason that was written', async () => {
     admin.mockResolvedValue(page([table({ status: 'InProgress' })]))
     pause.mockResolvedValue(table({ status: 'Pause' }))
@@ -285,7 +285,7 @@ describe('AdminTablesPage', () => {
   })
 
   /**
-   * #193 and #197, which is the whole reason this refusal was worth building a message for.
+   * ADR-08 §2 and ADR-23 §3, which is the whole reason this refusal was worth building a message for.
    *
    * Resuming re-checks the master's agenda, because they may have taken another table while this one
    * was frozen. The backend answers naming that table in `errorParams`, and the screen has to say
@@ -312,7 +312,7 @@ describe('AdminTablesPage', () => {
 
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1))
     expect(toastError).toHaveBeenCalledWith(expect.stringContaining('Las minas de Phandelver'))
-    // And never the backend's own English, which is written for a log (#197).
+    // And never the backend's own English, which is written for a log (ADR-23 §3).
     expect(toastError).not.toHaveBeenCalledWith(expect.stringContaining('Cannot resume'))
   })
 

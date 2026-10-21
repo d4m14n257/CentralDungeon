@@ -35,7 +35,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 /**
- * {@code /admin/settings} over HTTP (#141), and the row of the matrix it belongs to.
+ * {@code /admin/settings} over HTTP (ADR-17 §3), and the row of the matrix it belongs to.
  *
  * <p><b>Row "Editar {@code system_settings}: sí / sí".</b> roles-y-alcance.md §3 puts editing
  * settings among the capabilities the two ranks share, and §7 names the way that gets broken:
@@ -46,7 +46,7 @@ import org.testcontainers.mysql.MySQLContainer;
  *
  * <p>It has to go over HTTP because four things exist nowhere else: the {@code @PreAuthorize} on
  * each method, {@code SettingKey}'s {@code @JsonValue} in both directions, the {@code ProblemDetail}
- * the frontend branches on (#197), and {@code SettingKey.from} turning an unknown path segment into
+ * the frontend branches on (ADR-23 §3), and {@code SettingKey.from} turning an unknown path segment into
  * a 404 rather than a 500.
  *
  * <p><b>And the acceptance criterion of the slice, end to end</b>: «un admin cambia el tope por
@@ -258,7 +258,7 @@ class AdminSettingsApiIT {
 
     // ---------------------------------------------------------------- what it refuses
 
-    /** Out of range is a 400 carrying both bounds: "too big" without the numbers says nothing (#197). */
+    /** Out of range is a 400 carrying both bounds: "too big" without the numbers says nothing (ADR-23 §3). */
     @Test
     void aValueOutsideTheKeysRangeIsRefusedWithItsBounds() throws Exception {
         update(owner, FILE_CAP, 500, "enorme")
@@ -280,7 +280,7 @@ class AdminSettingsApiIT {
         as(get(BASE + "/files.max_file_size/history"), owner).andExpect(status().isNotFound());
     }
 
-    /** A blank reason is a 400: a change nobody explained is a change nobody can review (#141). */
+    /** A blank reason is a 400: a change nobody explained is a change nobody can review (ADR-17 §3). */
     @Test
     void aBlankJustificationIsRefused() throws Exception {
         update(owner, FILE_CAP, 3, "   ")

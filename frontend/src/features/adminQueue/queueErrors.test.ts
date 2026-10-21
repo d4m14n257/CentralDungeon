@@ -12,7 +12,7 @@ function refusal(errorCode: string): ApiError {
 }
 
 /**
- * The two refusals the reservation adds (#100). Both are races between two admins, which is the
+ * The two refusals the reservation adds (ADR-16 §5). Both are races between two admins, which is the
  * normal case here and not the edge one — the shared tray exists **because** that happens — so both
  * have a sentence of their own rather than the generic one.
  */
@@ -34,7 +34,7 @@ describe('adminQueueErrorKey', () => {
   })
 
   /**
-   * #197: every key resolves to real text in the reader's language. A key that is not in the bundle
+   * ADR-23 §3: every key resolves to real text in the reader's language. A key that is not in the bundle
    * renders as itself, which is how an English log line ends up on screen by another route.
    */
   it.each([...ADMIN_QUEUE_ERROR_CODES, 'generic'])('has %s written in the admin bundle', (code) => {

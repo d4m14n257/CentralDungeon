@@ -5,7 +5,7 @@ description: CentralDungeon's whole architecture in one place — the pinned sta
 
 # Arquitectura
 
-Cómo se escribe CentralDungeon, de punta a punta. **Es la fuente de sus reglas**: el código y las ADRs de `docs/adr/` citan estas secciones por número (`arquitectura §2.3`). Hasta #274 eran siete skills —`arquitectura-backend`, `arquitectura-frontend`, `modelo-datos`, `tests-java`, `nuevo-endpoint-java`, `nuevo-componente-react` y `er-diagram-sync`—; se juntaron porque ninguna se entendía sin las otras, y **los números viejos se conservaron**, de modo que una cita antigua sigue encontrando su sección:
+Cómo se escribe CentralDungeon, de punta a punta. **Es la fuente de sus reglas**: el código y las ADRs de `docs/adr/` citan estas secciones por número (`arquitectura §2.3`). Hasta ADR-01 §5 eran siete skills —`arquitectura-backend`, `arquitectura-frontend`, `modelo-datos`, `tests-java`, `nuevo-endpoint-java`, `nuevo-componente-react` y `er-diagram-sync`—; se juntaron porque ninguna se entendía sin las otras, y **los números viejos se conservaron**, de modo que una cita antigua sigue encontrando su sección:
 
 - el backend sigue siendo §2 y el frontend §3;
 - el modelo de datos lleva el prefijo `4.`: el viejo `modelo-datos` §5 es §4.5;
@@ -13,9 +13,9 @@ Cómo se escribe CentralDungeon, de punta a punta. **Es la fuente de sus reglas*
 - la documentación del código pasó a §6 (el viejo §2.8 es §6.1);
 - los procedimientos son §7.
 
-Y desde #292 absorbió tres documentos de `docs/`, también con su numeración: **`docs/arquitectura.md` §1** (el stack) es §1, su §5 (la deuda del proyecto viejo) es §1.4 y su §6 (configuración y despliegue) es §8; **`docs/modelo-datos.md` §2 y §3** (lo que cambió del schema heredado y el ER) son §4.2 y §4.3, con el mismo prefijo `4.`.
+Y desde ADR-01 §5 absorbió tres documentos de `docs/`, también con su numeración: **`docs/arquitectura.md` §1** (el stack) es §1, su §5 (la deuda del proyecto viejo) es §1.4 y su §6 (configuración y despliegue) es §8; **`docs/modelo-datos.md` §2 y §3** (lo que cambió del schema heredado y el ER) son §4.2 y §4.3, con el mismo prefijo `4.`.
 
-El stack y sus versiones fijadas son §1; el porqué de cada regla, en la decisión `#n` que se cita al lado. **Lo visual —tokens, componentes, clases de patrón— es de la skill `diseno`**, y **el entorno local y sus trampas, de `entorno-local`**.
+El stack y sus versiones fijadas son §1; el porqué de cada regla, en la `ADR-NN §k` que se cita al lado. **Lo visual —tokens, componentes, clases de patrón— es de la skill `diseno`**, y **el entorno local y sus trampas, de `entorno-local`**.
 
 ## Reglas fijas — backend (§2)
 
@@ -23,40 +23,40 @@ El stack y sus versiones fijadas son §1; el porqué de cada regla, en la decisi
 2. **El controller nunca llama a un repository.** Siempre pasa por un service, aunque sea una lectura trivial. → §2.2
 3. **Una `@Entity` nunca cruza la frontera HTTP.** Entrada y salida son `record` en `dto/`, con sufijo `Request` o `Response`. **Nada de tipos abiertos**: ni `Map<String, Object>`, ni `Object`, ni `ResponseEntity<?>`. Listado y detalle son DTOs distintos (`…SummaryResponse` / `…DetailResponse`). → §2.3
 4. **El service es dueño de la transacción** (`@Transactional`, o `readOnly = true` en lectura) y de la lógica de negocio, incluida la que antes vivía en triggers (§4.5). → §2.2
-5. **El repository es una interfaz `JpaRepository<Entity, String>`** —o `<Entity, XxxId>` en las tablas puente con clave compuesta (`MasterId`, `TableTagId`…)—, sin lógica y sin `@Transactional`. Todo `@Query` lleva **parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales ni concatenación (#124). **Una página se arma con un número fijo de consultas, nunca con una por fila** (sin N+1), y se mide en el IT. → §2.2
-6. **Errores**: excepciones de `common/exception`, nunca `null` para decir «no existe». El `GlobalExceptionHandler` las traduce a `ProblemDetail` con **un código y sus parámetros**, nunca con una frase: la frase la arma el frontend (#197). → §2.5
-7. **Las colecciones van siempre paginadas** (`?page=&size=&sort=`) y devuelven `PageResponse`, con orden por defecto y desempate por `id` (#173). → §2.5
-8. **El actor sale del JWT** vía `@AuthenticationPrincipal`, **nunca** de un parámetro de ruta (#121). → §2.6
-9. **El rol no es la pertenencia** (#121, #135). Todo acceso a un recurso concreto filtra por el actor: o el actor va en el `WHERE`, o el service verifica la pertenencia **antes** de tocar nada. Roles y `status` se releen de la base en cada request (#122). → §2.6
-10. **No se abstrae por parecido.** Una interfaz, solo si hay más de una implementación real; una clase abstracta, solo si la misma forma ya se vio repetida idéntica en 3+ features. **El controller es concreto** (#119), y su `@PreAuthorize` va en el método y enumera sus roles, sin `RoleHierarchy` (#123). → §2.4, §2.6
-11. **La respuesta exitosa es el DTO desnudo**, sin envoltura (#120). → §2.5
+5. **El repository es una interfaz `JpaRepository<Entity, String>`** —o `<Entity, XxxId>` en las tablas puente con clave compuesta (`MasterId`, `TableTagId`…)—, sin lógica y sin `@Transactional`. Todo `@Query` lleva **parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales ni concatenación (ADR-03 §2). **Una página se arma con un número fijo de consultas, nunca con una por fila** (sin N+1), y se mide en el IT. → §2.2
+6. **Errores**: excepciones de `common/exception`, nunca `null` para decir «no existe». El `GlobalExceptionHandler` las traduce a `ProblemDetail` con **un código y sus parámetros**, nunca con una frase: la frase la arma el frontend (ADR-23 §3). → §2.5
+7. **Las colecciones van siempre paginadas** (`?page=&size=&sort=`) y devuelven `PageResponse`, con orden por defecto y desempate por `id` (ADR-04 §6). → §2.5
+8. **El actor sale del JWT** vía `@AuthenticationPrincipal`, **nunca** de un parámetro de ruta (ADR-05 §5). → §2.6
+9. **El rol no es la pertenencia** (ADR-05 §5, ADR-06 §4). Todo acceso a un recurso concreto filtra por el actor: o el actor va en el `WHERE`, o el service verifica la pertenencia **antes** de tocar nada. Roles y `status` se releen de la base en cada request (ADR-05 §3). → §2.6
+10. **No se abstrae por parecido.** Una interfaz, solo si hay más de una implementación real; una clase abstracta, solo si la misma forma ya se vio repetida idéntica en 3+ features. **El controller es concreto** (ADR-04 §2), y su `@PreAuthorize` va en el método y enumera sus roles, sin `RoleHierarchy` (ADR-05 §4). → §2.4, §2.6
+11. **La respuesta exitosa es el DTO desnudo**, sin envoltura (ADR-04 §3). → §2.5
 12. **Stack**: Java 25 / Spring Boot 4.1, Jackson **3** (`tools.jackson.*`) y **JSpecify** para lo nullable (`arquitectura` §1.1).
 
 ## Reglas fijas — frontend (§3)
 
 13. **Feature-first, con las pantallas aparte.** Lo de dominio va en `src/features/<dominio>/`; **las páginas van en `src/routes/`**. Algo sube a la capa transversal de la raíz recién **cuando una segunda feature lo necesita**. → §3.1.1, §3.1.2
 14. **Una feature nunca importa de otra.** Una pantalla compone dominios con bloques `…Section` que reciben un **id**, no la entidad. → §3.1.5
-15. **Superficie pública** en `features/<dominio>/index.ts`, que es el único barrel (#114). El `components/` de una feature es plano y va con sufijo. → §3.1.3, §3.1.4
-16. **Ruteo**: la página exporta `Component`, se registra con `lazy` bajo su layout, y **todo enlace sale de un builder de `config/paths.ts`**. Cada layout de contexto se cierra con `RequireContext`, que redirige a `/` a quien no tiene el contexto (#269). Eso decide qué se ve, no qué se permite: la autorización es del backend (#103). → §3.1.6
+15. **Superficie pública** en `features/<dominio>/index.ts`, que es el único barrel (ADR-19 §1). El `components/` de una feature es plano y va con sufijo. → §3.1.3, §3.1.4
+16. **Ruteo**: la página exporta `Component`, se registra con `lazy` bajo su layout, y **todo enlace sale de un builder de `config/paths.ts`**. Cada layout de contexto se cierra con `RequireContext`, que redirige a `/` a quien no tiene el contexto (ADR-20 §2). Eso decide qué se ve, no qué se permite: la autorización es del backend (ADR-20 §1). → §3.1.6
 17. **Tipos**: un tipo base por entidad, espejo del `…Response`; las variantes se derivan, nunca se re-declaran. Los enums son uniones de literales. Nunca `any`. → §3.2
 18. **Datos de servidor, solo con TanStack Query**, con query keys de la fábrica y `staleTime` de `config/query.ts`. Nada de `useEffect` + `fetch`, y ninguna respuesta de la API en Context o Zustand. **HTTP**, solo por `api/client.ts`. → §3.3
-19. **Estado de UI**: local por defecto; Zustand solo si es global y plano (#105). **Formularios**: react-hook-form + zod, con el formulario puro y el diálogo como dueño de la mutación (#110). **Fechas**: `lib/date.ts` (#111). → §3.3
-20. **Textos**: ningún string visible en el JSX. Todo pasa por `t()`, con la clave en `es` **y** en `en` en el mismo commit (#117, #198). → §3.3
-21. **Estilos**: tokens del `@theme` y **patrones con nombre** (#273). Ningún valor suelto, y ninguna combinación de utilidades que cumpla un papel de diseño escrita a mano en una pantalla. El catálogo es de la skill `diseno`. → §3.3
+19. **Estado de UI**: local por defecto; Zustand solo si es global y plano (ADR-19 §5). **Formularios**: react-hook-form + zod, con el formulario puro y el diálogo como dueño de la mutación (ADR-19 §6). **Fechas**: `lib/date.ts` (ADR-19 §7). → §3.3
+20. **Textos**: ningún string visible en el JSX. Todo pasa por `t()`, con la clave en `es` **y** en `en` en el mismo commit (ADR-23 §1, §2). → §3.3
+21. **Estilos**: tokens del `@theme` y **patrones con nombre** (ADR-21 §5). Ningún valor suelto, y ninguna combinación de utilidades que cumpla un papel de diseño escrita a mano en una pantalla. El catálogo es de la skill `diseno`. → §3.3
 
 ## Reglas fijas — modelo de datos (§4)
 
-22. **Ninguna regla de negocio vive en la base** (regla dura 8, #3): ni triggers ni stored procedures. §4.5 dice en qué service vive cada una.
-23. **Las invariantes que MySQL no puede expresar las sostiene el service con un lock**: un solo `Primary` vivo por mesa (#73), una postulación activa por par (#28), el cupo (#34), la plataforma nunca sin `Owner`. Antes de escribir una, se mira cómo lo hace la que ya existe.
-24. **Una fila `Deleted` es invisible en todos los caminos de lectura** (#25), y **lo derivado no se guarda** (#11, #232).
+22. **Ninguna regla de negocio vive en la base** (regla dura 8, ADR-03 §1): ni triggers ni stored procedures. §4.5 dice en qué service vive cada una.
+23. **Las invariantes que MySQL no puede expresar las sostiene el service con un lock**: un solo `Primary` vivo por mesa (ADR-06 §3), una postulación activa por par (ADR-09 §1), el cupo (ADR-09 §3), la plataforma nunca sin `Owner`. Antes de escribir una, se mira cómo lo hace la que ya existe.
+24. **Una fila `Deleted` es invisible en todos los caminos de lectura** (ADR-03 §7), y **lo derivado no se guarda** (ADR-03 §1, ADR-14 §3).
 25. **Todo cambio de schema es una migración Flyway nueva** (regla dura 9), con el procedimiento de §7.3. **Una migración aplicada no se toca ni en sus comentarios**: el checksum cubre el archivo entero. Toda búsqueda y reemplazo masivo sobre `backend/src` **excluye `db/migration/`**.
-26. **Dos «owner» que no son lo mismo**: el rol de plataforma `Owner` y `masters.master_type = 'Primary'` (#67, #71, #89). La línea entre `Admin` y `Owner` está en `references/modelo-datos/roles-y-alcance.md` §3.
-27. **Campañas y Temporadas están fuera de v1** (regla dura 13, #7); lo que falta resolver está en §4.7.1.
+26. **Dos «owner» que no son lo mismo**: el rol de plataforma `Owner` y `masters.master_type = 'Primary'` (ADR-06 §1, §3). La línea entre `Admin` y `Owner` está en `references/modelo-datos/roles-y-alcance.md` §3.
+27. **Campañas y Temporadas están fuera de v1** (regla dura 13, ADR-07 §10); lo que falta resolver está en §4.7.1.
 
 ## Reglas fijas — testing y documentación (§5, §6)
 
 28. **Toda regla de negocio llega con su test unitario**, y lo que depende del motor real, con su IT de Testcontainers. Las pantallas llevan Vitest si tienen lógica, y los flujos críticos, Playwright contra el backend real. → §5
-29. **Todo lo público lleva su bloque, en inglés**: Javadoc en el backend (getters y cada componente de un `record` incluidos) y JSDoc en todo `export` del frontend. Dice qué hace y por qué, cita el `#n`, y se actualiza en el mismo cambio que la firma. → §6
+29. **Todo lo público lleva su bloque, en inglés**: Javadoc en el backend (getters y cada componente de un `record` incluidos) y JSDoc en todo `export` del frontend. Dice qué hace y por qué, cita la `ADR-NN §k`, y se actualiza en el mismo cambio que la firma. → §6
 
 ## El detalle, por sección
 
@@ -93,13 +93,13 @@ El diagrama entidad-relación general es §4.3, y los de cada subsistema en `doc
 |---|---|---|
 | Nombre de tabla | `snake_case`, plural, minúsculas | — |
 | Nombre de columna | `snake_case` singular. FK = `<entidad_singular>_id` | — |
-| Clave primaria | Siempre `id`, `VARCHAR(64)`, UUID v7 generado en la aplicación | #9 |
-| Enums | Columna `VARCHAR(32)` + `enum` de Java con `@Enumerated(EnumType.STRING)`. Nunca el tipo `ENUM` de MySQL | #10 |
-| Borrado | **Soft delete**: columna `status` con el valor `Deleted` **y** `deleted_at DATETIME NULL` con la fecha. Toda lectura filtra por estado | #25 |
-| Cascadas | Se resuelven en el **service layer**, nunca con `ON DELETE CASCADE`. Un borrado arrastra a sus dependientes con la **misma** marca de tiempo, en una transacción | #25 |
-| Fechas y horas | **Todo en UTC.** No existe ninguna columna `timezone`: la conversión a hora local la hace el frontend | #22 |
-| Timestamps | `created_at DATETIME NOT NULL`, `updated_at DATETIME NULL`, `deleted_at DATETIME NULL` donde aplique | #25 |
-| Texto enriquecido | `LONGTEXT` en la tabla que lo necesita. **Nunca** una fila de `files`. Se sanitiza al guardar y al servir | #62 |
+| Clave primaria | Siempre `id`, `VARCHAR(64)`, UUID v7 generado en la aplicación | ADR-03 §4 |
+| Enums | Columna `VARCHAR(32)` + `enum` de Java con `@Enumerated(EnumType.STRING)`. Nunca el tipo `ENUM` de MySQL | ADR-03 §5 |
+| Borrado | **Soft delete**: columna `status` con el valor `Deleted` **y** `deleted_at DATETIME NULL` con la fecha. Toda lectura filtra por estado | ADR-03 §7 |
+| Cascadas | Se resuelven en el **service layer**, nunca con `ON DELETE CASCADE`. Un borrado arrastra a sus dependientes con la **misma** marca de tiempo, en una transacción | ADR-03 §7 |
+| Fechas y horas | **Todo en UTC.** No existe ninguna columna `timezone`: la conversión a hora local la hace el frontend | ADR-03 §6 |
+| Timestamps | `created_at DATETIME NOT NULL`, `updated_at DATETIME NULL`, `deleted_at DATETIME NULL` donde aplique | ADR-03 §7 |
+| Texto enriquecido | `LONGTEXT` en la tabla que lo necesita. **Nunca** una fila de `files`. Se sanitiza al guardar y al servir | ADR-03 §8 |
 | Charset | `utf8mb4` / `utf8mb4_unicode_ci` | — |
 
-**Las referencias polimórficas** (`approval_requests.entity_id`) no tienen FK: su integridad es del service y de la verificación periódica que exige #78.
+**Las referencias polimórficas** (`approval_requests.entity_id`) no tienen FK: su integridad es del service y de la verificación periódica que exige ADR-16 §2.

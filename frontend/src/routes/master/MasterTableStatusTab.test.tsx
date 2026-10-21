@@ -57,7 +57,7 @@ beforeEach(() => {
 })
 
 describe('MasterTableStatusTab · requesting a pause', () => {
-  /** #32: there is nothing to pause before the table is running, so the act is absent (principle 2). */
+  /** ADR-07 §2: there is nothing to pause before the table is running, so the act is absent (principle 2). */
   it('offers the pause request only on a table that is running', () => {
     const { unmount } = render(<span />)
     unmount()
@@ -99,7 +99,7 @@ describe('MasterTableStatusTab · requesting a pause', () => {
     expect(screen.queryByRole('button', { name: 'Cancelar mesa' })).not.toBeInTheDocument()
   })
 
-  /** #32 asks for a reason on a pause, and it is what the admin reads to decide. */
+  /** ADR-07 §2 asks for a reason on a pause, and it is what the admin reads to decide. */
   it('sends the reason that was written', async () => {
     const user = userEvent.setup()
     renderTab('InProgress')

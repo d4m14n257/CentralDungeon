@@ -15,13 +15,13 @@ import org.jspecify.annotations.Nullable;
 /**
  * One session of a table: "the third Tuesday, at 23:00 UTC". Table {@code table_sessions}.
  *
- * <p><b>Sessions are materialized rows, not a calculation</b> (#33). Deriving them from
+ * <p><b>Sessions are materialized rows, not a calculation</b> (ADR-08 §3). Deriving them from
  * {@code start_date} + the weekly agenda + {@code total_sessions} would only work if nothing could
  * ever move them, and {@code Pause} moves them: resuming re-lays what was still pending, which
  * needs to know what was actually played and what was not. Materializing is also what makes it
- * possible to correct one date, cancel one session, and hang notes and comments off it (#31).
+ * possible to correct one date, cancel one session, and hang notes and comments off it (ADR-11 §2).
  *
- * <p><b>{@code scheduledAt} is UTC</b> (#22), like everything else that crosses this API. It starts
+ * <p><b>{@code scheduledAt} is UTC</b> (ADR-03 §6), like everything else that crosses this API. It starts
  * out on one of the table's agenda slots and stops being tied to it the moment a master corrects it:
  * a correction is about one evening, not about the week.
  *
@@ -40,13 +40,13 @@ public class TableSession extends BaseEntity {
 
     /**
      * Which session of the run this is, from 1. Unique per table, and it never moves: a cancelled
-     * session keeps its number as the record that it was planned, and the replacement of #194 takes
+     * session keeps its number as the record that it was planned, and the replacement of ADR-08 §3 takes
      * the next one.
      */
     @Column(name = "sequence_number", nullable = false)
     private int sequenceNumber;
 
-    /** When it happens, in UTC (#22). */
+    /** When it happens, in UTC (ADR-03 §6). */
     @Column(name = "scheduled_at", nullable = false)
     private LocalDateTime scheduledAt;
 
@@ -59,7 +59,7 @@ public class TableSession extends BaseEntity {
     @Column(columnDefinition = "LONGTEXT")
     private @Nullable String notes;
 
-    /** Soft delete (#25), for when a session falls with its table. Null for a live row. */
+    /** Soft delete (ADR-03 §7), for when a session falls with its table. Null for a live row. */
     @Column(name = "deleted_at")
     private @Nullable LocalDateTime deletedAt;
 
@@ -72,7 +72,7 @@ public class TableSession extends BaseEntity {
      *
      * @param gameTable      the table it belongs to
      * @param sequenceNumber which session of the run this is, from 1
-     * @param scheduledAt    when it happens, in UTC (#22)
+     * @param scheduledAt    when it happens, in UTC (ADR-03 §6)
      */
     public TableSession(GameTable gameTable, int sequenceNumber, LocalDateTime scheduledAt) {
         this.gameTable = gameTable;
@@ -101,7 +101,7 @@ public class TableSession extends BaseEntity {
     /**
      * Returns when the session happens.
      *
-     * @return the instant, in UTC (#22)
+     * @return the instant, in UTC (ADR-03 §6)
      */
     public LocalDateTime getScheduledAt() {
         return scheduledAt;
@@ -109,9 +109,9 @@ public class TableSession extends BaseEntity {
 
     /**
      * Moves the session to another instant - a master correcting one date, or the re-laying that
-     * follows a resume (#33).
+     * follows a resume (ADR-08 §3).
      *
-     * @param scheduledAt the new instant, in UTC (#22)
+     * @param scheduledAt the new instant, in UTC (ADR-03 §6)
      */
     public void setScheduledAt(LocalDateTime scheduledAt) {
         this.scheduledAt = scheduledAt;
@@ -166,7 +166,7 @@ public class TableSession extends BaseEntity {
     }
 
     /**
-     * Stamps or clears the logical delete (#25).
+     * Stamps or clears the logical delete (ADR-03 §7).
      *
      * @param deletedAt when it was deleted, or null to bring it back
      */

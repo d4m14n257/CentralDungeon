@@ -12,7 +12,7 @@ public interface TaskSubmissionRepository extends JpaRepository<TaskSubmission, 
     /**
      * Every live answer to a task, oldest first.
      *
-     * <p>Oldest first and not newest first on purpose: answers accumulate (#76), so the list is a
+     * <p>Oldest first and not newest first on purpose: answers accumulate (ADR-15 §2), so the list is a
      * history and a history reads forwards. The last row is the latest version.
      *
      * @param taskId the task
@@ -24,7 +24,7 @@ public interface TaskSubmissionRepository extends JpaRepository<TaskSubmission, 
      * One person's own answers to a task - what they see when they look at what they handed in.
      *
      * @param taskId the task
-     * @param userId the submitter, always the actor of the token (#121)
+     * @param userId the submitter, always the actor of the token (ADR-05 §5)
      * @return their answers, oldest first
      */
     List<TaskSubmission> findByTask_IdAndUser_IdAndDeletedAtIsNullOrderByCreatedAtAsc(String taskId, String userId);
@@ -33,7 +33,7 @@ public interface TaskSubmissionRepository extends JpaRepository<TaskSubmission, 
      * Counts, in one grouped query, the answers of every given task - so a board of fifteen tasks
      * costs one round trip instead of fifteen.
      *
-     * <p>Named parameters only, never positional (#124).
+     * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param taskIds the tasks to count. A task nobody answered is absent from the result rather than
      *                reported as zero

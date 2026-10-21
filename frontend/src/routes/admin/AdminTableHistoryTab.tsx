@@ -9,7 +9,7 @@ interface OutletContext {
 }
 
 /**
- * The History tab of `/admin/tables/:id` (#287): every step of the table's life, who took it and why.
+ * The History tab of `/admin/tables/:id` (ADR-21 §10): every step of the table's life, who took it and why.
  *
  * **Reading, not deciding.** It was the "Status" tab and carried the admin's actions too, often as a
  * heading over a single button; the decisions moved to the status notice above the tabs

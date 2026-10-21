@@ -15,9 +15,9 @@ import type { SubmittedFile, TableTask } from '../types'
 export interface TaskBoardListProps {
   /** The table's tasks, oldest first. */
   tasks: TableTask[]
-  /** Called with the task to correct. Absent for a reader who may not change it - an admin (#284). */
+  /** Called with the task to correct. Absent for a reader who may not change it - an admin (ADR-06 §8). */
   onEdit?: ((task: TableTask) => void) | undefined
-  /** Called with the task whose intake should end. Absent for a reader who may not end it (#284). */
+  /** Called with the task whose intake should end. Absent for a reader who may not end it (ADR-06 §8). */
   onClose?: ((task: TableTask) => void) | undefined
   /** Whether a mutation is in flight, so the row actions can say so. */
   isBusy: boolean

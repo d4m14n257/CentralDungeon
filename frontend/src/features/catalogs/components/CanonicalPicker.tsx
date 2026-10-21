@@ -27,7 +27,7 @@ export interface CanonicalPickerProps {
  * Picks a **canonical entry** - a synonym group - out of a catalog.
  *
  * It exists because four of the eight admin operations take a group rather than a value, and a group
- * is exactly a canonical entry (#59). Offering aliases here would let an admin build the second
+ * is exactly a canonical entry (ADR-12 §2). Offering aliases here would let an admin build the second
  * level the flat model forbids: the server would answer 409, but a control that offers a choice it
  * knows will be refused is the grey button that does not say why it is grey
  * (diseno §1, principle 2).
@@ -46,7 +46,7 @@ export function CanonicalPicker({ kind, selectedId, onSelect, excludeId, noneLab
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 250)
 
-  // groupsOnly (#275): the server answers with group heads only, so a group whose name sorts after
+  // groupsOnly (ADR-12 §7): the server answers with group heads only, so a group whose name sorts after
   // the first page of aliases is still offered, and searching an alias finds its group.
   const { data, isPending } = useAdminCatalog(kind, debouncedSearch, ['Accepted'], 0, pageSize.admin, { groupsOnly: true })
 

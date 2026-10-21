@@ -102,7 +102,7 @@ describe('RoleChangeDialog', () => {
     expect(grantRole).not.toHaveBeenCalled()
   })
 
-  /** Every audit row carries a reason (#169): the server enforces it, and so does the form. */
+  /** Every audit row carries a reason (ADR-06 §1): the server enforces it, and so does the form. */
   it('refuses to send without a role or without a reason', async () => {
     renderDialog(ADMIN_GRANTABLE_ROLES)
 
@@ -117,8 +117,8 @@ describe('RoleChangeDialog', () => {
   })
 
   /**
-   * The invariante global of the phase (#3 of roles-y-alcance.md §3), read back in the
-   * reader's own language from the code and not from the backend's English `detail` (#197).
+   * The invariante global of the phase (ADR-03 §1 of roles-y-alcance.md §3), read back in the
+   * reader's own language from the code and not from the backend's English `detail` (ADR-23 §3).
    */
   it.each([
     ['LAST_OWNER', 'La plataforma no puede quedarse sin ningún Owner. Dale el rol a otra persona antes de quitar este.'],

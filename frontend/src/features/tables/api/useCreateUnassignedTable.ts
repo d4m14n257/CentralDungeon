@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { gameTablesApi } from './gameTablesApi'
 import type { CreateGameTableRequest } from '../types'
 
-/** An admin can create a table without running it (#72); assignMasters is what opens it. */
+/** An admin can create a table without running it (ADR-06 §7); assignMasters is what opens it. */
 export function useCreateUnassignedTable() {
   const queryClient = useQueryClient()
   return useMutation({

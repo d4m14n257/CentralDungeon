@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 /**
- * The audit trail of {@code /admin/settings} (#141). Append-only: nothing here is ever updated or
+ * The audit trail of {@code /admin/settings} (ADR-17 §3). Append-only: nothing here is ever updated or
  * deleted, so the repository has no method that could.
  */
 public interface SystemSettingChangeRepository extends JpaRepository<SystemSettingChange, String> {

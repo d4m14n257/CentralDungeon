@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-/** Reads and writes {@code table_schedules}, a table's weekly agenda in UTC (#22). */
+/** Reads and writes {@code table_schedules}, a table's weekly agenda in UTC (ADR-03 §6). */
 public interface TableScheduleRepository extends JpaRepository<TableSchedule, TableScheduleId> {
 
     /**
@@ -28,7 +28,7 @@ public interface TableScheduleRepository extends JpaRepository<TableSchedule, Ta
     List<TableSchedule> findById_GameTableIdAndStatus(String gameTableId, TableScheduleStatus status);
 
     /**
-     * The agendas of several tables in one round trip - what the clash check of #178 needs, since it
+     * The agendas of several tables in one round trip - what the clash check of ADR-08 §2 needs, since it
      * compares one table against every other table a person is committed to.
      *
      * @param gameTableIds the tables to read the agenda of. An empty collection returns nothing

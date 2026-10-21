@@ -13,7 +13,7 @@ public class Tag extends CatalogValue {
     }
 
     /**
-     * Builds a tag that has not been reviewed yet: no group, status {@code Created} (#55).
+     * Builds a tag that has not been reviewed yet: no group, status {@code Created} (ADR-12 §3).
      *
      * @param name the tag as its author wrote it
      */

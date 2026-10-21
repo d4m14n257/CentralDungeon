@@ -1,6 +1,6 @@
 # 2.1 Patrón: paquete por feature, capas adentro
 
-> Parte de la skill `arquitectura` (#274). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
+> Parte de la skill `arquitectura` (ADR-01 §5). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 El árbol se organiza **por dominio de negocio primero, por capa técnica después**. Un `com.centraldungeon.controller` con 9 controllers de dominios distintos obliga a saltar entre 6 carpetas para tocar una sola funcionalidad; con paquete por feature, agregar o borrar una feature es agregar o borrar una carpeta.
@@ -18,37 +18,37 @@ backend/src/main/java/com/centraldungeon/
 │   │   └── SchedulingConfig.java        habilita los jobs (@Scheduled)
 │   ├── security/
 │   │   ├── SecurityConfig.java          filter chain: permitAll de lo público y nada más —
-│   │   │                                la autorización es @PreAuthorize en cada método (#123)
+│   │   │                                la autorización es @PreAuthorize en cada método (ADR-05 §4)
 │   │   ├── JwtService.java  JwtAuthenticationFilter.java  InvalidJwtException.java  TokenType.java
-│   │   ├── DiscordOAuth2UserService.java  valida membresía al guild + alta de usuario (#38)
+│   │   ├── DiscordOAuth2UserService.java  valida membresía al guild + alta de usuario (ADR-05 §1)
 │   │   ├── OAuth2LoginSuccessHandler.java  OAuth2LoginFailureHandler.java
-│   │   ├── RefreshCookieFactory.java    la cookie httpOnly del refresh (#125)
+│   │   ├── RefreshCookieFactory.java    la cookie httpOnly del refresh (ADR-05 §2)
 │   │   ├── RestAuthenticationEntryPoint.java  401 como ProblemDetail
 │   │   └── CurrentUser.java             @AuthenticationPrincipal tipado
 │   ├── exception/
-│   │   ├── ApiException.java            base (sealed): HttpStatus + código de error (#197)
+│   │   ├── ApiException.java            base (sealed): HttpStatus + código de error (ADR-23 §3)
 │   │   ├── NotFoundException.java  ConflictException.java  ForbiddenActionException.java
 │   │   ├── InvalidRequestException.java  UnauthorizedException.java
 │   │   └── GlobalExceptionHandler.java  @RestControllerAdvice → RFC 7807 ProblemDetail
 │   ├── storage/
-│   │   ├── StorageService.java          interfaz (#15)
+│   │   ├── StorageService.java          interfaz (ADR-13 §6)
 │   │   └── LocalDiskStorageService.java implementación por defecto
-│   ├── search/                          el lenguaje de los buscadores (#164), sin dominio
+│   ├── search/                          el lenguaje de los buscadores (ADR-22 §1), sin dominio
 │   │   ├── SearchQueryParser.java       `/campo valor or /campo valor` → SearchQuery
 │   │   └── SearchQuery.java  SearchTerm.java  SearchConnector.java
 │   │                                    ⚠ su espejo del frontend es lib/searchQuery.ts:
 │   │                                      los dos cubren los mismos casos con tests
 │   ├── text/
-│   │   └── RichTextSanitizer.java       lista blanca del texto enriquecido (#62, #186)
+│   │   └── RichTextSanitizer.java       lista blanca del texto enriquecido (ADR-03 §8, ADR-05 §6)
 │   └── model/
 │       ├── BaseEntity.java              @MappedSuperclass: id String, created_at, updated_at
-│       ├── IdGenerator.java             UUID v7 como String (#9)
+│       ├── IdGenerator.java             UUID v7 como String (ADR-03 §4)
 │       └── PageResponse.java            envoltorio de paginación de la API
 │
 ├── settings/                            una feature entera, como ejemplo de la forma
 │   ├── SettingsController.java          lectura de los límites que ve el cliente
 │   ├── AdminSettingsController.java     el Admin* de la misma feature: otra superficie, otro @PreAuthorize
-│   ├── SettingsService.java             transacción y reglas (#141, #263)
+│   ├── SettingsService.java             transacción y reglas (ADR-17 §3)
 │   ├── SystemSettingRepository.java  SystemSettingChangeRepository.java
 │   ├── SystemSetting.java  SystemSettingChange.java          @Entity
 │   ├── SettingKey.java  SettingCategory.java  SettingValueType.java   enums
@@ -63,13 +63,13 @@ backend/src/main/java/com/centraldungeon/
 ├── catalogs/                            systems, tags, platforms + tablas puente (AbstractCatalogService, §2.4)
 ├── files/                               files, file_categories, table_files, registration_files
 ├── tasks/                               table_tasks, task_submissions, submission_files
-├── approvals/                           approval_requests (#42, #78)
-├── adminqueue/                          la bandeja compartida, sin tabla propia (#100)
-├── dashboard/                           el dashboard del master, solo lectura (#136)
-├── profiles/                            perfiles públicos y su visibilidad (#41, #44)
+├── approvals/                           approval_requests (ADR-16 §1, §2)
+├── adminqueue/                          la bandeja compartida, sin tabla propia (ADR-16 §5)
+├── dashboard/                           el dashboard del master, solo lectura (ADR-20 §4)
+├── profiles/                            perfiles públicos y su visibilidad (ADR-10 §1, §2)
 ├── notifications/                       notifications
 ├── auth/                                login, refresh, logout; y los dobles de prueba
-│                                        (Test*Controller), solo con el perfil `test` (#143, #223)
+│                                        (Test*Controller), solo con el perfil `test` (ADR-24 §1, §2)
 └── health/                              /health
 ```
 

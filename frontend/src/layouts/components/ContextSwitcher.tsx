@@ -20,17 +20,17 @@ const CHIP_CLASSES = 'border-border-strong text-fg-muted h-auto gap-1.5 rounded-
 interface ContextSwitcherProps {
   /** The contexts this account can enter. With one there is nothing to choose; with none there is no chip. */
   availableContexts: AppContext[]
-  /** The context on screen, resolved from the URL by the header (#222). This is what the chip reads. */
+  /** The context on screen, resolved from the URL by the header (ADR-20 §2). This is what the chip reads. */
   activeContext: AppContext
 }
 
 /**
- * UI organization only, never authorization (#103) - the backend authorizes every endpoint on
+ * UI organization only, never authorization (ADR-20 §1) - the backend authorizes every endpoint on
  * its own. With a single context there is nothing to choose, so the chip has neither a caret nor a
- * menu (#144) - it still says which context you are in, without suggesting an interaction that does
+ * menu (ADR-21 §3) - it still says which context you are in, without suggesting an interaction that does
  * not exist.
  *
- * The chip reports **where the reader is**, not what they last picked (#222). Those two used to be
+ * The chip reports **where the reader is**, not what they last picked (ADR-20 §2). Those two used to be
  * the same value and drifted apart the moment somebody in the Master context opened a player screen:
  * the chip kept saying "Master" while the navigation underneath was the player's.
  *

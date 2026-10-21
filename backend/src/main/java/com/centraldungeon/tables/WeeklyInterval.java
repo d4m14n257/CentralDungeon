@@ -5,19 +5,19 @@ import java.util.List;
 
 /**
  * One occupied stretch of the week, in UTC minutes counted from Monday 00:00. The unit every
- * schedule clash of #178 is decided in.
+ * schedule clash of ADR-08 §2 is decided in.
  *
  * <p>Why an interval and not the {@code (weekday, hourtime)} pair the table stores: a three-hour
  * table at 20:00 and another at 22:00 do not share an {@code hourtime} and collide anyway, so
- * comparing the pair for equality let through precisely the common case (#178). What is compared is
+ * comparing the pair for equality let through precisely the common case (ADR-08 §2). What is compared is
  * {@code [start, start + duration)}.
  *
  * <p><b>Half-open on purpose.</b> A table that begins exactly when another one ends does not clash:
  * chaining two sessions is something people do, and refusing it would be a false positive nobody
- * could explain to themselves (#178).
+ * could explain to themselves (ADR-08 §2).
  *
  * <p><b>It wraps.</b> The community plays at night in America, which is the small hours of the next
- * day in UTC (#22), so Tuesday 23:00 plus three hours is a stretch that ends Wednesday 02:00 - and a
+ * day in UTC (ADR-03 §6), so Tuesday 23:00 plus three hours is a stretch that ends Wednesday 02:00 - and a
  * Sunday-night slot runs past the end of the week into Monday. An interval that runs off the end
  * continues from Monday 00:00, which is why this is a record with its own overlap test rather than
  * two numbers compared inline.
@@ -49,7 +49,7 @@ public record WeeklyInterval(int startMinute, int durationMinutes) {
     /**
      * Builds the interval one row of {@code table_schedules} occupies.
      *
-     * @param weekday  the day the slot falls on, in UTC (#22)
+     * @param weekday  the day the slot falls on, in UTC (ADR-03 §6)
      * @param hourtime the time of day it starts, in UTC
      * @param duration how long one session of the table lasts. It is a property of the table, not of
      *                 the slot: every slot of a table lasts the same
@@ -66,7 +66,7 @@ public record WeeklyInterval(int startMinute, int durationMinutes) {
      *
      * @param other the interval to compare against
      * @return true when they overlap. False when they merely touch - the intervals are half-open, so
-     *         one ending exactly where the other begins is not a clash (#178)
+     *         one ending exactly where the other begins is not a clash (ADR-08 §2)
      */
     public boolean overlaps(WeeklyInterval other) {
         for (int[] mine : segments()) {

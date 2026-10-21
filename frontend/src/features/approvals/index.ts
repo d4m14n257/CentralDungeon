@@ -1,6 +1,6 @@
 /**
- * Public surface of the approvals feature (#114): the one mechanism behind every request somebody
- * makes of an admin (#42), from the three screens that raise one to the tray that resolves them.
+ * Public surface of the approvals feature (ADR-19 §1): the one mechanism behind every request somebody
+ * makes of an admin (ADR-16 §1), from the three screens that raise one to the tray that resolves them.
  * Anything not listed here is private to it.
  */
 

@@ -21,7 +21,7 @@ interface RoleChangeDialogProps {
   /** The account being changed, or null when the dialog is closed. */
   user: AdminUserSummary | null
   /**
-   * The roles this reader may move, from `useUserAdminCapabilities` — in the order of #165.
+   * The roles this reader may move, from `useUserAdminCapabilities` — in the order of ADR-07 §8.
    *
    * It arrives as a prop rather than being read here, so the dialog cannot disagree with the button
    * that opened it: the screen asks the capability question once and both sides of it use the answer.
@@ -42,7 +42,7 @@ interface RoleChangeDialogProps {
 }
 
 /**
- * Grants or takes away one platform role, with a reason (#169).
+ * Grants or takes away one platform role, with a reason (ADR-06 §1).
  *
  * **One role and one direction per press, not a checklist of four.** Grant and revoke are two
  * endpoints and each writes its own audit row with its own justification; a dialog that submitted a
@@ -53,9 +53,9 @@ interface RoleChangeDialogProps {
  * **It only ever offers `grantableRoles`.** An admin finds no way at all to hand out `Admin` or
  * `Owner` here — not a disabled button, not one that fails when pressed: the rank is simply not on
  * the list (principle 2 of diseno §1). The server refuses it too, with
- * `ROLE_GRANT_FORBIDDEN`, which is what makes this a display decision rather than the security (#103).
+ * `ROLE_GRANT_FORBIDDEN`, which is what makes this a display decision rather than the security (ADR-20 §1).
  *
- * It owns the two mutations, as every `…Dialog` does (arquitectura §3.3, #110). The refusals it
+ * It owns the two mutations, as every `…Dialog` does (arquitectura §3.3, ADR-19 §6). The refusals it
  * can get are specific — the last owner, an owner unmaking themselves — so they are rendered inline,
  * above the button that was pressed, instead of as a toast.
  *
@@ -96,7 +96,7 @@ export function RoleChangeDialog({ user, grantableRoles, open, onOpenChange, hel
 
   async function onSubmit(values: ChangeUserRoleForm) {
     if (!user) return
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t(isHeld(values.role) ? 'users.confirmRevokeTitle' : 'users.confirmGrantTitle', {
         role: t(`users.roles.${values.role}`),
@@ -135,7 +135,7 @@ export function RoleChangeDialog({ user, grantableRoles, open, onOpenChange, hel
               <FormItem>
                 <FormLabel>{t('users.roleFieldLabel')}</FormLabel>
                 {/* Buttons and not a <Select>: there are at most four and seeing them all at once is
-                    what lets somebody notice which ones this account already holds (#233's reasoning
+                    what lets somebody notice which ones this account already holds (ADR-14 §4's reasoning
                     for the cajones, and the same shape). */}
                 <div className="flex flex-wrap gap-2">
                   {grantableRoles.map((role) => (
@@ -156,7 +156,7 @@ export function RoleChangeDialog({ user, grantableRoles, open, onOpenChange, hel
                 </div>
                 {/* Right under the list, because this is where the question is born: an admin sees
                     two of the four roles and needs to know that the absence is the rule working,
-                    not the screen failing (#231 - the help is raised where it is asked for). */}
+                    not the screen failing (ADR-20 §5 - the help is raised where it is asked for). */}
                 {help}
                 <FormMessage />
               </FormItem>

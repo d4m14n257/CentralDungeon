@@ -114,7 +114,7 @@ describe('MasterTablePlayersTab', () => {
   })
 
   /**
-   * #284: an admin reads the same tab from /admin/tables/:id and changes nothing on it - neither the
+   * ADR-06 §8: an admin reads the same tab from /admin/tables/:id and changes nothing on it - neither the
    * masters nor the roster. Seeing a veto is theirs; applying or asking for one is not.
    */
   it('read by an admin, shows the masters and the roster with no button to act on them', () => {
@@ -128,7 +128,7 @@ describe('MasterTablePlayersTab', () => {
     expect(screen.queryByRole('button', { name: 'Quitar a Beto' })).not.toBeInTheDocument()
   })
 
-  /** #284: the tab does not decide what a person's card is - the screen that mounts it does. */
+  /** ADR-06 §8: the tab does not decide what a person's card is - the screen that mounts it does. */
   it('opens the card the screen handed down, for a master and for a player alike', async () => {
     const onOpenPerson = vi.fn()
     outletContext = { tableId: 'table-1', isPrimary: true, masters: MASTERS, onOpenPerson }
@@ -142,7 +142,7 @@ describe('MasterTablePlayersTab', () => {
     expect(onOpenPerson).toHaveBeenNthCalledWith(2, 'user-9')
   })
 
-  /** On screen these are "master" and "co-master" — the wire words never reach a reader (#166). */
+  /** On screen these are "master" and "co-master" — the wire words never reach a reader (ADR-06 §3). */
   it('names the two roles in the words the interface uses, not the ones the API sends', () => {
     renderTab()
 
@@ -200,7 +200,7 @@ describe('MasterTablePlayersTab', () => {
     expect(screen.queryByRole('button', { name: 'Elegir carla' })).not.toBeInTheDocument()
   })
 
-  /** The roster was a list with no action at all until F3.4. The veto is what it gained (#29, #39). */
+  /** The roster was a list with no action at all until F3.4. The veto is what it gained (ADR-09 §4, §5). */
   it('offers the veto on each player of the roster', () => {
     renderTab()
 
@@ -234,7 +234,7 @@ describe('MasterTablePlayersTab', () => {
 
   /**
    * **A veto that disappears from the screen is not reversible in practice** — which is the whole of
-   * why #39 asks for a reason. The row stays, marked, saying whose decision it was and when, with the
+   * why ADR-09 §5 asks for a reason. The row stays, marked, saying whose decision it was and when, with the
    * act that undoes it attached to it.
    */
   it('keeps a vetoed row in the roster, with who vetoed it and when', () => {
@@ -246,7 +246,7 @@ describe('MasterTablePlayersTab', () => {
     const row = rowFor('Diego')
     expect(row.getByText('Vetado')).toBeInTheDocument()
     expect(row.getByText(/Ana/)).toBeInTheDocument()
-    // The reason is on the row: it is what whoever weighs lifting the veto decides on (#39).
+    // The reason is on the row: it is what whoever weighs lifting the veto decides on (ADR-09 §5).
     expect(row.getByText(/Falta sin avisar/)).toBeInTheDocument()
     expect(row.getByRole('button', { name: 'Levantar el veto' })).toBeInTheDocument()
     // And not the veto again: it is already applied (principle 2).

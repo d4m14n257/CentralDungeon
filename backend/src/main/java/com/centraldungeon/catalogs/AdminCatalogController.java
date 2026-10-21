@@ -25,16 +25,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * /admin/catalogs: the nine operations that make the synonym groups an admin's job (#55, #179,
- * #276, #280).
+ * /admin/catalogs: the nine operations that make the synonym groups an admin's job (ADR-12 §3,
+ * ADR-12 §6, ADR-21 §5).
  *
  * <p>One controller for the three catalogs, with the catalog as a typed path variable, because the
  * operations are identical on all three and writing them out three times would mean fixing every bug
  * three times. What is <b>not</b> shared is the authorization: every method below declares its own
- * {@code @PreAuthorize}, none of it comes from a base class or a route list (#123).
+ * {@code @PreAuthorize}, none of it comes from a base class or a route list (ADR-05 §4).
  *
  * <p>Admin and Owner are enumerated explicitly on each one. There is no {@code RoleHierarchy} in
- * this project: Owner can do everything Admin can by being listed, not by inheriting (#169).
+ * this project: Owner can do everything Admin can by being listed, not by inheriting (ADR-06 §1).
  */
 @RestController
 @RequestMapping("/api/v1/admin/catalogs/{type}")
@@ -53,14 +53,14 @@ public class AdminCatalogController {
     /**
      * Everything, whatever its status - reviewing what was proposed is the point of this screen.
      * {@code ?status=} narrows it; with nothing, the admin sees the whole catalog.
-     * {@code ?groupsOnly=true} is what the screen's table asks for (#275): one row per group, found
+     * {@code ?groupsOnly=true} is what the screen's table asks for (ADR-12 §7): one row per group, found
      * by the name of any of its members.
      *
      * @param type       which catalog, from the path
      * @param query      the search box, or null for everything
      * @param statuses   the statuses to keep, or null for no status filter
      * @param groupsOnly true for only the rows that head a group; false, the default, for every row
-     * @param pageable   page, size and sort; by name, with a tie-break by id (#171)
+     * @param pageable   page, size and sort; by name, with a tie-break by id (ADR-07 §9)
      * @return 200 with one page of values, each with its group, its usage count and its alias count
      */
     @GetMapping
@@ -79,7 +79,7 @@ public class AdminCatalogController {
      *
      * <p>What the screen needs before it can offer two of the six operations: it is where the merge
      * dialog reads the groups from, and where disabling a canonical entry finds the candidates that
-     * could take it over (#59).
+     * could take it over (ADR-12 §2).
      *
      * @param type which catalog, from the path
      * @param id   any member of the group
@@ -92,7 +92,7 @@ public class AdminCatalogController {
     }
 
     /**
-     * An admin adding a value, already accepted as a group of its own (#280).
+     * An admin adding a value, already accepted as a group of its own (ADR-21 §5).
      *
      * <p>Not the propose endpoint of {@code /systems}, {@code /tags} and {@code /platforms}: that one
      * leaves the value in {@code Created} for an admin to accept, and here the admin is that person.
@@ -111,7 +111,7 @@ public class AdminCatalogController {
     }
 
     /**
-     * Accept a proposal and classify it in one step: new canonical entry, or alias of a group (#55).
+     * Accept a proposal and classify it in one step: new canonical entry, or alias of a group (ADR-12 §3).
      *
      * @param type    which catalog, from the path
      * @param id      the proposal to accept
@@ -127,7 +127,7 @@ public class AdminCatalogController {
     }
 
     /**
-     * A rejected value never shows and never filters (#57).
+     * A rejected value never shows and never filters (ADR-12 §3).
      *
      * @param type which catalog, from the path
      * @param id   the proposal to turn down
@@ -168,7 +168,7 @@ public class AdminCatalogController {
     }
 
     /**
-     * Move an alias to another group in one step (#276).
+     * Move an alias to another group in one step (ADR-12 §6).
      *
      * @param type    which catalog, from the path
      * @param id      the alias that moves
@@ -184,7 +184,7 @@ public class AdminCatalogController {
     }
 
     /**
-     * Make an alias the head of its own group; every member stays (#276).
+     * Make an alias the head of its own group; every member stays (ADR-12 §6).
      *
      * @param type which catalog, from the path
      * @param id   the alias that becomes the canonical entry
@@ -197,12 +197,12 @@ public class AdminCatalogController {
     }
 
     /**
-     * Out of circulation, without breaking a single link (#81).
+     * Out of circulation, without breaking a single link (ADR-12 §5).
      *
      * @param type    which catalog, from the path
      * @param id      the value to disable
      * @param request the successor, needed only when the value is a canonical entry with live
-     *                aliases (#59)
+     *                aliases (ADR-12 §2)
      * @return 200 with the disabled value. 409 if a successor is needed and none was given, or the
      *         one given is not a live member of the group
      */
@@ -214,7 +214,7 @@ public class AdminCatalogController {
     }
 
     /**
-     * Back in circulation, in the group it was in (#81).
+     * Back in circulation, in the group it was in (ADR-12 §5).
      *
      * @param type which catalog, from the path
      * @param id   the value to bring back

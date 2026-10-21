@@ -12,12 +12,12 @@ import { PersonSummaryDialog, useMe } from '@/features/users'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { ApiError } from '@/types/api'
 
-/** The two states where the backend still accepts a rewrite of the table (#189). */
+/** The two states where the backend still accepts a rewrite of the table (ADR-04 §7). */
 
 /**
  * /master/tables/:id - the table as the people running it see it, with its tabs.
  *
- * The tabs are child routes rather than `useState` (#3.1.6 regla 5), so each has a URL, can be
+ * The tabs are child routes rather than `useState` (arquitectura §3.1.6, rule 5), so each has a URL, can be
  * linked, and the back button behaves.
  */
 export function MasterTableDetailPage() {
@@ -26,7 +26,7 @@ export function MasterTableDetailPage() {
   const tableId = id ?? ''
   // useManagedTable and not useGameTable: the backend checks membership before reading anything and
   // answers 403 with no body when the actor does not run this table - useGameTable is the public
-  // detail any player reads on /player/tables/:id (docs/adr #152).
+  // detail any player reads on /player/tables/:id (ADR-06 §6).
   const { data: table, isPending, error, isLoadingError } = useManagedTable(tableId)
   const { data: me } = useMe()
   const personDialog = useDisclosure<string>()
@@ -78,7 +78,7 @@ export function MasterTableDetailPage() {
           schedule: table.schedule,
           startDate: table.startDate,
           totalSessions: table.totalSessions,
-          // The master's card of a person is the short one (#284): who they are on the server and
+          // The master's card of a person is the short one (ADR-06 §8): who they are on the server and
           // how many tables they saw through. The full record is the admin's.
           onOpenPerson: (userId: string) => personDialog.open(userId),
         }}

@@ -1,25 +1,25 @@
 package com.centraldungeon.dashboard;
 
 /**
- * What kind of work a table is waiting on. The vocabulary of the master's tray (#136).
+ * What kind of work a table is waiting on. The vocabulary of the master's tray (ADR-20 §4).
  *
- * <p>It is a code and not a sentence on purpose (#197): the backend says <em>what</em> is waiting
+ * <p>It is a code and not a sentence on purpose (ADR-23 §3): the backend says <em>what</em> is waiting
  * and hands over the numbers, and the frontend writes the phrase in the reader's language.
  *
- * <p>Every value here is something the master can act on today. That is the line #136 draws
+ * <p>Every value here is something the master can act on today. That is the line ADR-20 §4 draws
  * between a tray and a dashboard of metrics: "twelve candidates across three tables" changes
  * nothing about what to do next, "this table has somebody waiting since Tuesday" does.
  */
 public enum MasterWorkItemKind {
 
-    /** People applied and nobody answered them yet. Answered oldest first, which is the rule (#28). */
+    /** People applied and nobody answered them yet. Answered oldest first, which is the rule (ADR-09 §1). */
     CandidatesWaiting,
 
     /**
      * A task's deadline went by and some of the people it was addressed to did not hand anything in.
      *
-     * <p>It is not the system judging the answers, which #76 forbids, and it does not expel anybody,
-     * which #70 forbids: it is the failure being <em>visible to the master</em>, which is what #70
+     * <p>It is not the system judging the answers, which ADR-15 §2 forbids, and it does not expel anybody,
+     * which ADR-15 §2 forbids: it is the failure being <em>visible to the master</em>, which is what ADR-15 §2
      * asks for. There is no "reviewed" marker anywhere in the model, so "submissions I have not
      * looked at" is not a thing that could be reported here.
      */
@@ -27,7 +27,7 @@ public enum MasterWorkItemKind {
 
     /**
      * A session's date went by and it is still open. Marking a session held is an explicit act
-     * (#195), so time passing closes nothing on its own.
+     * (ADR-08 §4), so time passing closes nothing on its own.
      */
     SessionToRecord,
 

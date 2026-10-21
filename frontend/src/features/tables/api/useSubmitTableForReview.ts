@@ -5,7 +5,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { gameTablesApi } from './gameTablesApi'
 
 /**
- * The master sending their draft to review for the first time (#245).
+ * The master sending their draft to review for the first time (ADR-07 §1).
  *
  * It is the act that makes the table exist for anybody else — and the one that takes it out of their
  * hands until an admin answers, which is why the screen asks before doing it.

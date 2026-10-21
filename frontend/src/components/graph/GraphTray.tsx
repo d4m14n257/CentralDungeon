@@ -11,7 +11,7 @@ export interface GraphTrayProps {
 }
 
 /**
- * The side panel of a node canvas (skill `diseno` §5, #275): what the canvas needs next to it and
+ * The side panel of a node canvas (skill `diseno` §5, ADR-12 §7): what the canvas needs next to it and
  * cannot draw as a node - bringing another group in, a legend, what floating means.
  *
  * Next to the canvas from `md` up and above it below, like every two-column layout (skill `diseno`

@@ -19,19 +19,19 @@ import org.jspecify.annotations.Nullable;
  * @param audience              who is being asked, as a string (arquitectura §2.3). The screen uses
  *                              it to say whether this is asked of candidates, of players, or of them
  *                              in particular
- * @param tableSessionId        the session this is tied to, or null for "at any point" (#63)
+ * @param tableSessionId        the session this is tied to, or null for "at any point" (ADR-15 §1)
  * @param sessionSequenceNumber which session of the run that is, from 1. Null together with the id
  * @param title                 the headline
- * @param description           the detail, as sanitized rich text (#62), or null
+ * @param description           the detail, as sanitized rich text (ADR-03 §8), or null
  * @param acceptsText           whether a written answer is expected - it decides what the form offers
  * @param acceptsFiles          whether files are expected
  * @param isMandatory           whether the master labelled it indispensable. It is a label: missing it
- *                              does not block anything and never evicts anybody (#70)
- * @param dueAt                 when the master would like it by, in UTC (#22), or null
+ *                              does not block anything and never evicts anybody (ADR-15 §2)
+ * @param dueAt                 when the master would like it by, in UTC (ADR-03 §6), or null
  * @param canSubmit             whether this reader may answer right now: they are in the audience and
  *                              the task is still open. False for somebody who has not applied yet
  * @param mySubmissionCount     how many times <b>this</b> reader has answered. Answers accumulate and
- *                              none replaces another (#76), so it is a count and not a boolean
+ *                              none replaces another (ADR-15 §2), so it is a count and not a boolean
  * @param createdAt             when it was published, in UTC
  */
 public record ApplicableTaskResponse(

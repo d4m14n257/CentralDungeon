@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
  * @param id          the type's identifier, what a table stores in {@code table_type_id}
  * @param code        the identifier the frontend translates by, for a type the application shipped
  *                    ({@code PUBLIC}, {@code FIRST_CLASS}). Null for one a person created, whose
- *                    {@code name} is then read verbatim (#225)
+ *                    {@code name} is then read verbatim (ADR-23 §4)
  * @param name        the type's label ("Public", "First class"). What a reader sees when there is no
  *                    code to translate
  * @param description what the type means. Null when the row never got one - "Public" alone does not

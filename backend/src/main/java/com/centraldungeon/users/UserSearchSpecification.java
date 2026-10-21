@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.Specification;
  * joined by which connectors (arquitectura §2.2).
  *
  * <p>Connectors are folded left to right, no precedence - {@code a or b and c} is {@code (a or b) and c},
- * which is what the chip row reads like on screen (docs/adr #164).
+ * which is what the chip row reads like on screen (ADR-22 §1).
  *
  * <p><b>Two audiences, two entry points</b>, the same shape {@code CatalogSearchSpecification} uses
  * for the same reason. {@link #matching(SearchQuery)} is the picker's: it forces
@@ -84,7 +84,7 @@ final class UserSearchSpecification {
         return connector == SearchConnector.OR ? builder.or(left, right) : builder.and(left, right);
     }
 
-    /** The values of one criterion are alternatives: any of them satisfies it (docs/adr #164). */
+    /** The values of one criterion are alternatives: any of them satisfies it (ADR-22 §1). */
     private static Predicate termPredicate(
             Root<User> root, @Nullable CriteriaQuery<?> criteriaQuery, CriteriaBuilder builder, SearchTerm term) {
         Predicate matched = null;
@@ -119,7 +119,7 @@ final class UserSearchSpecification {
      * {@code /role Admin}: the person holds that role and the grant is live.
      *
      * <p>An EXISTS and not a join, because {@code User} deliberately does not map its roles - they
-     * are rows of {@code users_roles} read on demand (#122), and a join would multiply the page's
+     * are rows of {@code users_roles} read on demand (ADR-05 §3), and a join would multiply the page's
      * rows for anyone holding two roles.
      *
      * <p>A role name outside the four matches nothing rather than answering 400: an unknown value is
@@ -161,7 +161,7 @@ final class UserSearchSpecification {
         return builder.like(column, "%" + escapeLikeWildcards(value.toLowerCase(Locale.ROOT)) + "%", LIKE_ESCAPE);
     }
 
-    /** A user typing "100%" is searching for that text, not for "anything" (#124 in spirit: never build SQL by hand). */
+    /** A user typing "100%" is searching for that text, not for "anything" (ADR-03 §2 in spirit: never build SQL by hand). */
     private static String escapeLikeWildcards(@Nullable String value) {
         return value == null ? "" : value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }

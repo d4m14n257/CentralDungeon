@@ -9,15 +9,15 @@ import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The fields the explorer's search box accepts behind a {@code /prefix} (#164).
+ * The fields the explorer's search box accepts behind a {@code /prefix} (ADR-22 §1).
  *
  * <p><b>Every wire name is prefixed with the entity</b>, like {@code UserSearchField} and
- * {@code FileSearchField} before it (#239). Two screens both offering a bare {@code /name} would mean
+ * {@code FileSearchField} before it (ADR-22 §2). Two screens both offering a bare {@code /name} would mean
  * the same command searched different things depending on where it was typed.
  *
  * <p>The default criterion is the table's name, because it is what somebody half-remembers about a
  * table they saw last week. The other three are the reason the search language was designed at all:
- * #164 was written thinking of {@code /tag}, and until F2.1 the command existed in no box.
+ * ADR-22 §1 was written thinking of {@code /tag}, and until F2.1 the command existed in no box.
  *
  * <p><b>Six commands, and only two of them are plain columns.</b> {@code /table_name} and
  * {@code /table_status} are; the three catalog ones are resolved through synonym groups, and
@@ -26,13 +26,13 @@ import org.jspecify.annotations.Nullable;
  *
  * <p><b>Three of the six are not columns</b>, and that is the whole difficulty of this enum. A
  * table's systems, tags and platforms live in bridge tables, and the value they point at is the alias
- * its master chose rather than the group's canonical entry (#56). So the text is resolved to a set of
+ * its master chose rather than the group's canonical entry (ADR-12 §4). So the text is resolved to a set of
  * catalog ids first - {@code AbstractCatalogService.resolveGroupIdsByName} - and only then does the
  * specification ask whether the table links to any of them. Which catalog to resolve against is
  * {@link #catalog()}; a field with none is plain text on the table itself.
  *
- * <p><b>They are free text and not a closed list</b> (#246), unlike {@code /file_type}: catalog
- * values are hundreds, they grow whenever a master proposes one (#55), and they are exactly the words
+ * <p><b>They are free text and not a closed list</b> (ADR-12 §8), unlike {@code /file_type}: catalog
+ * values are hundreds, they grow whenever a master proposes one (ADR-12 §3), and they are exactly the words
  * people use. The synonym group is what forgives typing them differently, so a list of options would
  * be offering a service the grouping already provides.
  */
@@ -41,10 +41,10 @@ public enum GameTableSearchField {
     /** The table's name. Also what a criterion with no {@code /field} prefix searches. */
     NAME("table_name", "name", null),
 
-    /** The game system, resolved through its synonym group (#54, #56). */
+    /** The game system, resolved through its synonym group (ADR-12 §2, §4). */
     SYSTEM("table_system", null, CatalogType.SYSTEMS),
 
-    /** The tag, resolved through its synonym group. The command #164 was designed for. */
+    /** The tag, resolved through its synonym group. The command ADR-22 §1 was designed for. */
     TAG("table_tag", null, CatalogType.TAGS),
 
     /** Where the table is played, resolved through its synonym group. */
@@ -56,13 +56,13 @@ public enum GameTableSearchField {
      * {@code ApprovalSearchField.STATUS} has - so the frontend declares it with {@code values:} and
      * nobody has to remember the spelling.
      *
-     * <p>Free text everywhere else in this enum is a decision about catalogs (#246), not a style: a
+     * <p>Free text everywhere else in this enum is a decision about catalogs (ADR-12 §8), not a style: a
      * catalog has hundreds of values that grow whenever a master proposes one, and the nine states of
      * a table are neither. An unknown state still matches nothing rather than answering 400
      * (arquitectura §2.5).
      *
-     * <p>Useful on {@code /admin/tables}, where the listing spans every state (#176). The explorer
-     * accepts it too, because the search language belongs to the entity and not to the screen (#239),
+     * <p>Useful on {@code /admin/tables}, where the listing spans every state (ADR-16 §7). The explorer
+     * accepts it too, because the search language belongs to the entity and not to the screen (ADR-22 §2),
      * and <b>that opens no hole</b> - for a structural reason and not a hopeful one. The visible
      * statuses are a top-level {@code AND} in {@code forExplorer} and are never folded into what the
      * reader typed, so the worst a player can write is
@@ -79,7 +79,7 @@ public enum GameTableSearchField {
      * display name and the Discord handle, because whoever is searching knows one of the two and not
      * which one the system keeps where.
      *
-     * <p>Live master rows only: somebody removed as a co-master (#216) does not run the table any
+     * <p>Live master rows only: somebody removed as a co-master (ADR-07 §8) does not run the table any
      * more, and finding it by their name would be answering a question about the past.
      */
     MASTER("table_master", null, null);
@@ -149,7 +149,7 @@ public enum GameTableSearchField {
      *
      * @param wireName the text between the slash and the space, in any case
      * @return the field it names, or empty when it names none - which the parser turns into literal
-     *         text rather than an error (#164)
+     *         text rather than an error (ADR-22 §1)
      */
     public static Optional<GameTableSearchField> fromWireName(String wireName) {
         String normalized = wireName.trim().toLowerCase(Locale.ROOT);

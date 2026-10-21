@@ -36,7 +36,7 @@ function combineGroups(results: UseQueryResult<AdminCatalogValue[]>[]): CatalogG
 }
 
 /**
- * Several synonym groups at once - every group the catalog canvas has open (#275).
+ * Several synonym groups at once - every group the catalog canvas has open (ADR-12 §7).
  *
  * One query per group, under the same key `useCatalogGroup` uses, so a group already read by a
  * dialog is not read again, and an admin mutation (which invalidates the whole catalog branch)

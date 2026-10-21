@@ -1,0 +1,51 @@
+---
+adr: 18
+titulo: Notificaciones y tiempo real
+estado: Vigente
+actualizada: 2026-10-20
+absorbe: [14, 101, 116, 153, 154, 156, 157, 244]
+---
+
+# ADR-18: Notificaciones y tiempo real
+
+> Qué es una notificación, qué eventos la producen, cómo se ve y se usa la campanita, y cómo llegará el tiempo real. Las reglas de código están en `arquitectura` §2 y §3.3 (`staleTime`), y la forma visual en `diseno`. La skill dice *cómo* se escribe; esta ADR, *qué* se decidió y *por qué*.
+
+## §1 Las notificaciones son solo in-app: la fila es la notificación
+
+**Decisión.** En v1 una notificación es una fila en `notifications`, sin email ni Discord DM, sin preferencias ni suscripciones: todo destinatario de un evento recibe su fila. La fila guarda el tipo y sus parámetros, y el frontend arma la frase en el idioma elegido (ADR-23 §3).
+
+**Por qué.** Es lo mínimo que cubre el caso y no cierra ninguna puerta: si se agrega otro canal, es una tabla de canal aparte sin tocar la existente.
+
+*Antes: #14.*
+
+## §2 El tiempo real es WebSocket + STOMP, y el mensaje es una señal de invalidación
+
+**Decisión.** `/ws` con STOMP, el JWT en el frame `CONNECT` y no en la query string. Destinos: `/user/queue/notifications` para lo personal, `/topic/admin-queue` para la bandeja y `/topic/tables` para el explorador de mesas. **El mensaje trae tipo e id, no el contenido**: el cliente invalida solo esa rama de `queryKeys`, confía en que `invalidateQueries` refetchea solo las queries activas, y **al reconectar invalida todo lo activo**. Toda query lleva `staleTime` explícito, según la tabla de `arquitectura` §3.3. Mientras no exista, la bandeja se refresca por intervalo (ADR-16 §8).
+
+**Por qué.** WebSocket sobre SSE deja abierta la puerta a lo bidireccional (chat, presencia) sin cambiar de transporte, a cambio de handshake, heartbeat y reconexión. El token va en el frame porque el navegador no manda headers en el handshake y la query string queda en los logs de acceso. Mandar la señal y refetchear mantiene la caché de TanStack Query como única fuente (regla dura 11), y un mensaje perdido no deja a la UI inventando datos. Invalidar solo una rama evita que cada publicación mueva media caché de cada cliente conectado; invalidar todo al reconectar tapa los mensajes perdidos mientras el socket estuvo caído. El default de `staleTime` es `0`, así que sin decidirlo cada montaje vuelve a pedir todo. **Límite conocido**: el broker en memoria de Spring sirve para una sola instancia; con más hace falta un broker externo.
+
+*Antes: #101, #116.*
+
+## §3 Notifica lo que alguien tiene que saber y no tiene otra forma de enterarse
+
+**Decisión.** Una postulación nueva notifica `NewCandidate` a **todos** los masters de la mesa, `Primary` y `Secondary`, con el nombre del postulante (`name`, o `discordUsername` si no hay). `MasterAssigned` avisa a quien un admin hace master de una mesa o suma como co-master; promover a quien ya la dirigía no notifica. El ciclo de revisión notifica `TableApproved`, `TableApprovedWithChanges` y `TableChangesRequested`. La razón de un pedido de cambios **no** viaja en la notificación: vive en el historial de estados.
+
+**Por qué.** Cualquiera de los dos masters puede aceptar o rechazar candidatos, así que avisar solo al `Primary` dejaría afuera a quien también puede resolver. Asignar un master es la única notificación cuyo destinatario no hizo nada para provocarla, y sin ella se enteraba solo si entraba a un contexto que nunca había visto. La revisión era una espera sin otro lado visible. Aprobada y aprobada-con-cambios se distinguen porque que te editen lo que escribiste es otra noticia. La razón no se copia porque una segunda copia puede discrepar de la primera (ADR-23 §3).
+
+*Antes: #153, #244.*
+
+## §4 La campanita muestra las últimas 5, con el diseño del mock
+
+**Decisión.** El panel sigue `sc_comp_shell` de `design/build.py`: encabezado «Notificaciones · N sin leer»; cada fila con título y hora relativa, punto lleno y fondo `raised` si no está leída, punto hueco y texto atenuado si ya se leyó; separador y «Ver todas» al pie. El panel no muestra el mensaje; `/notifications` sí. `notificationsApi.list()` pide `size=5` siempre, así que panel y página coinciden sin recortar en el cliente. La hora relativa la calcula `lib/relativeTime.ts`, que devuelve unidad y conteo y deja el texto a `t()`. El hover de una notificación usa `border-strong` (forzado sobre el `focus:bg-accent` de base) y `cursor-pointer`, en el panel, en «Ver todas» y en `/notifications`.
+
+**Por qué.** El mock ya traía la distinción leída/no leída y la hora relativa; el panel nunca se había construido contra él. El límite va en la fuente para no duplicar la lógica. El hover necesita un tono propio porque `--color-accent` **es** `--color-raised`: sobre una fila no leída, el resaltado de base no cambiaba nada visible, y `cursor-default` tampoco decía que la fila se puede clickear.
+
+*Antes: #154, #157.*
+
+## §5 Clickear una notificación la marca leída, cambia de contexto si hace falta y navega
+
+**Decisión.** `features/notifications/lib/notificationTarget.ts` mapea cada tipo a una ruta y a un contexto (`RegistrationAccepted`/`RegistrationRejected` → Jugador, detalle público; `NewCandidate` → Master, detalle de master), y `useNotificationClick()` marca como leída, cambia `useContextStore` y navega, en el panel y en `/notifications`. `/notifications` sigue `sc_notifications`: fila entera clickeable, punto de leído, badge solo para los desenlaces cerrados (aceptada, rechazada), hora con «hace». `PATCH /api/v1/notifications/read-all` respalda «Marcar todo como leído», visible solo si hay algo sin leer. El contexto persistido se acota contra los contextos disponibles de la cuenta actual, con `player` por defecto.
+
+**Por qué.** Una fila puramente informativa no dice cómo deja de estar sin leer ni lleva a ningún lado, y una notificación de Master vista en contexto Jugador tiene que resolver el cambio de contexto además de la navegación. El contexto persistido en `localStorage` no está atado a la cuenta: en un navegador compartido quedaba el de la sesión anterior. No es una brecha —el backend reverifica la pertenencia en cada endpoint y el chip sale de `me.roles`—, pero el logo apuntaba a `/master/tables` para una cuenta sin ese contexto.
+
+*Antes: #156.*

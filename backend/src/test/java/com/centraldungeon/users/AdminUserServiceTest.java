@@ -187,7 +187,7 @@ class AdminUserServiceTest {
         verify(userStatusChangeRepository, never()).save(any());
     }
 
-    // ---------------------------------------------------------------- the happy paths, with #84
+    // ---------------------------------------------------------------- the happy paths, with ADR-05 §7
 
     @Test
     void blockingKeepsTheDataAndLeavesARowWithTheReason() {
@@ -201,7 +201,7 @@ class AdminUserServiceTest {
         assertThat(target.getStatus()).isEqualTo(UserStatus.Blocked);
         assertThat(response.status()).isEqualTo("Blocked");
         assertThat(response.roles()).containsExactly("Player");
-        // #84: el bloqueo cierra la puerta, no borra nada.
+        // ADR-05 §7: el bloqueo cierra la puerta, no borra nada.
         verify(userRepository, never()).delete(any(User.class));
         verify(userRepository, never()).deleteById(any());
 
@@ -213,7 +213,7 @@ class AdminUserServiceTest {
         assertThat(saved.getValue().getChangedBy().getId()).isEqualTo("actor-admin");
     }
 
-    /** «Un bloqueo que tarda 60 s en aplicar es un bloqueo que no bloquea» (#128). */
+    /** «Un bloqueo que tarda 60 s en aplicar es un bloqueo que no bloquea» (ADR-05 §3). */
     @Test
     void bloquearInvalidaLaCacheDeAutorizacionDelObjetivo() {
         User target = persistedUser("target", UserStatus.Allowed);

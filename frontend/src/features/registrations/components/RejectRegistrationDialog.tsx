@@ -39,7 +39,7 @@ export function RejectRegistrationDialog({ tableId, registrationId, candidateNam
   })
 
   async function onSubmit(values: RejectRegistrationForm) {
-    // A review before anything is written (#283): what is about to change, and what follows.
+    // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({
       title: t('candidates.rejectConfirmTitle', { name: candidateName }),
       description: t('candidates.rejectConfirmDescription'),

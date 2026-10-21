@@ -33,7 +33,7 @@ public interface TableFileRepository extends JpaRepository<TableFile, TableFileI
     /**
      * Which tables currently hold a given file.
      *
-     * <p>This is what answers "may this person download this" without asking about roles (#17, #121):
+     * <p>This is what answers "may this person download this" without asking about roles (ADR-11 §1, ADR-05 §5):
      * a file is reachable through the tables it is attached to, and whether the reader belongs to any
      * of them is a membership question.
      *
@@ -47,7 +47,7 @@ public interface TableFileRepository extends JpaRepository<TableFile, TableFileI
      * Counts, in one grouped query, how many tables hold each of the given files - so a page of
      * twenty files on /admin/files costs one round trip instead of twenty.
      *
-     * <p>Named parameters only, never positional (#124).
+     * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param fileIds the files to count. A file nothing points at is absent from the result rather
      *                than reported as zero
@@ -66,15 +66,15 @@ public interface TableFileRepository extends JpaRepository<TableFile, TableFileI
      * Which tables hold each of the given files, <b>named</b>, in one query for the whole page.
      *
      * <p>The difference from {@link #countUsesByFileIds} is who is asking. An admin wants the number
-     * - one file, three tables - because the point is that linking is not copying (#79). An owner
+     * - one file, three tables - because the point is that linking is not copying (ADR-14 §1). An owner
      * looking at their own list wants the names, because "the sheet I use on Hijos del Vacío" is how
-     * a person recognises their own file (#232).
+     * a person recognises their own file (ADR-14 §3).
      *
      * <p>Joined against {@code GameTable} rather than reading the id off the key: the name is the
      * whole reason this exists, and the alternative - collect ids here, fetch tables in a second
      * round trip - is the N+1 this method is shaped to avoid.
      *
-     * <p>Named parameters only, never positional (#124).
+     * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param fileIds the files to resolve uses for
      * @return one row per live attachment. A file nothing points at is simply absent

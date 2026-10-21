@@ -8,7 +8,7 @@ package com.centraldungeon.tasks;
  * is where the first half of that comes from. Same shape and same reason as {@code AttendanceCount}
  * and {@code FileUsageCount}.
  *
- * <p>The two numbers are not the same and both are needed: answers accumulate (#76), so one player
+ * <p>The two numbers are not the same and both are needed: answers accumulate (ADR-15 §2), so one player
  * handing in three versions is three rows and one person. What "has this been handed in" means is
  * the second number.
  *

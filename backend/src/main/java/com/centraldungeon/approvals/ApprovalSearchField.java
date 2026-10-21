@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The fields the admin request search accepts behind a {@code /prefix} (docs/adr #164). The
+ * The fields the admin request search accepts behind a {@code /prefix} (ADR-22 §1). The
  * wire name is what the person types and what the chip shows.
  *
  * <p>Typing nothing in particular searches the <b>justification and the requester's name at once</b>.

@@ -14,7 +14,7 @@ import org.jspecify.annotations.Nullable;
  * of F1.2 needs and what did not exist before.
  *
  * <p>{@code code} is what separates a row the application shipped from one a person will type
- * (#225). The seeded pair carries {@code PUBLIC} and {@code FIRST_CLASS} and the frontend renders
+ * (ADR-23 §4). The seeded pair carries {@code PUBLIC} and {@code FIRST_CLASS} and the frontend renders
  * their translation; a type an admin adds later has none, and its {@code name} is read verbatim -
  * the same rule that already governs {@code systems}, {@code tags} and {@code platforms}.
  *
@@ -31,7 +31,7 @@ public class TableType extends BaseEntity {
 
     /**
      * The stable identifier of a type the application shipped, or null for one a person created
-     * (#225). Never shown: it is what the frontend translates by.
+     * (ADR-23 §4). Never shown: it is what the frontend translates by.
      */
     @Column(unique = true, length = 32)
     private @Nullable String code;

@@ -13,10 +13,10 @@ import { ApiError } from '@/types/api'
 import { AdminTableStatusNotice } from './AdminTableStatusNotice'
 
 /**
- * `/admin/tables/:id` — one table, whole, as an admin reads it (#284).
+ * `/admin/tables/:id` — one table, whole, as an admin reads it (ADR-06 §8).
  *
- * **The admin has no visibility limits** (#45) — the authorship of a comment is the only thing
- * withheld — and until #284 the only part of a table an admin could open was its status history.
+ * **The admin has no visibility limits** (ADR-06 §8) — the authorship of a comment is the only thing
+ * withheld — and until ADR-06 §8 the only part of a table an admin could open was its status history.
  * This screen is the rest: the same tabs its master works in, fed by the same management reads, which
  * the backend now answers for an admin too (`MasterService.canOversee`).
  *
@@ -24,10 +24,10 @@ import { AdminTableStatusNotice } from './AdminTableStatusNotice'
  * the admin. The context below carries `readOnly`, and each tab hides what is the master's to press -
  * accepting a candidate, recording attendance, publishing a request, attaching a file. What the admin
  * *does* to a table is its own: rewriting it (the header's action) and the actions of the status tab.
- * Every one of them tells the table's masters (#284).
+ * Every one of them tells the table's masters (ADR-06 §8).
  *
  * **Where the table stands is said above the tabs**, with every decision an admin can take about it
- * (`AdminTableStatusNotice`, #287): reviewing, cancelling, assigning, removing, pausing, resuming.
+ * (`AdminTableStatusNotice`, ADR-21 §10): reviewing, cancelling, assigning, removing, pausing, resuming.
  * They first lived on a "Status" tab, the last one, often as a heading over a single button.
  *
  * Two tabs are the admin's and not the master's: **Details** goes first, because the master wrote
@@ -40,7 +40,7 @@ export function AdminTableDetailPage() {
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   // The management read, not the public one: it carries what only the people running a table see,
-  // and the backend checks the admin rank before mapping anything (#152, #284).
+  // and the backend checks the admin rank before mapping anything (ADR-06 §6, §8).
   const { data: table, isPending, error, isLoadingError, refetch } = useManagedTable(tableId)
 
   if (isPending) {
@@ -81,7 +81,7 @@ export function AdminTableDetailPage() {
         action={canEdit ? { label: t('tables.detail.edit'), to: adminTableEditPath(tableId) } : undefined}
       />
       {/* Where the table stands and what can be decided about it, above the tabs and visible from
-          all of them (#287). */}
+          all of them (ADR-21 §10). */}
       <AdminTableStatusNotice table={table} />
       <TabNav
         label={tMaster('detail.tabs.label')}
@@ -111,7 +111,7 @@ export function AdminTableDetailPage() {
           startDate: table.startDate,
           totalSessions: table.totalSessions,
           readOnly: true,
-          // A person on a table opens their whole record (#284): the admin is the one who reads
+          // A person on a table opens their whole record (ADR-06 §8): the admin is the one who reads
           // everything about an account and acts on it.
           onOpenPerson: (userId: string) => void navigate(adminUserDetailPath(userId)),
         }}

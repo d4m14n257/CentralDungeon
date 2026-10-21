@@ -10,7 +10,7 @@ import { CATALOG_STATUS_TONES } from './catalogStatusTones'
  * else the only status a player can even encounter is `Accepted`.
  *
  * Its variants come from a `Record` over `CatalogStatus`, so a new state cannot be added without
- * deciding how it looks (#3.2 regla 9).
+ * deciding how it looks (arquitectura §3.2, rule 9).
  *
  * @param props.status the value's status
  */

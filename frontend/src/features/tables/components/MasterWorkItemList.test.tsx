@@ -27,8 +27,8 @@ function renderTray(items: MasterWorkItem[]) {
 
 describe('MasterWorkItemList', () => {
   /**
-   * The whole point of #136: the row says what to do, not how many of something there are. The
-   * backend sends a code and the numbers (#197) and the phrase is built here.
+   * The whole point of ADR-20 §4: the row says what to do, not how many of something there are. The
+   * backend sends a code and the numbers (ADR-23 §3) and the phrase is built here.
    */
   it('turns each kind of work into a sentence rather than a counter', () => {
     renderTray([
@@ -75,7 +75,7 @@ describe('MasterWorkItemList', () => {
     ])
   })
 
-  /** The tray never re-sorts: the order is the server's, and it is the rule (#136). */
+  /** The tray never re-sorts: the order is the server's, and it is the rule (ADR-20 §4). */
   it('renders the items in the order it was given them', () => {
     renderTray([
       item({ kind: 'SessionToRecord', tableId: 'table-2', tableName: 'Hijos del Vacio' }),

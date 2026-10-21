@@ -1,10 +1,10 @@
 package com.centraldungeon.tables.dto;
 
 /**
- * One occupied stretch of the week, as it travels (#227).
+ * One occupied stretch of the week, as it travels (ADR-08 §6).
  *
  * <p>Minutes from Monday 00:00 <b>UTC</b>, not a weekday and a time: the reader's week does not
- * start where UTC's does, and a Tuesday-night table in America is Wednesday in UTC (#22). Sending
+ * start where UTC's does, and a Tuesday-night table in America is Wednesday in UTC (ADR-03 §6). Sending
  * the pair would make the frontend undo a conversion the backend had already half-made. A single
  * offset is unambiguous, and turning it into the reader's own day and hour is one subtraction.
  *

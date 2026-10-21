@@ -12,12 +12,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * A person. Table {@code users}.
  *
- * <p>There is no sign-up of our own: membership of the Discord guild is the front door (#38), so a
+ * <p>There is no sign-up of our own: membership of the Discord guild is the front door (ADR-05 §1), so a
  * user row is created by {@code DiscordOAuth2UserService} on first login and never by a form. That
  * is why {@code discordId} is the natural key and why there is no password anywhere in this class.
  *
  * <p>Roles are not here either: they are rows in {@code users_roles}, they stack, and they are read
- * from the database on every request rather than carried in a token (#37, #67, #122).
+ * from the database on every request rather than carried in a token (ADR-06 §1, ADR-05 §3).
  */
 @Entity
 @Table(name = "users")
@@ -31,11 +31,11 @@ public class User extends BaseEntity {
     @Column(name = "discord_username", nullable = false, length = 64)
     private String discordUsername;
 
-    /** The display name they chose during onboarding. Null until they complete it (#134). */
+    /** The display name they chose during onboarding. Null until they complete it (ADR-10 §4). */
     @Column(length = 64)
     private @Nullable String name;
 
-    /** Community reputation (#97). Everyone starts at the same 8000; comments move it. */
+    /** Community reputation (ADR-11 §9). Everyone starts at the same 8000; comments move it. */
     @Column(nullable = false)
     private int karma = 8000;
 
@@ -47,7 +47,7 @@ public class User extends BaseEntity {
     @Column(length = 2)
     private @Nullable String country;
 
-    /** Whether the account may be used. Re-read from here on every request, never from a token (#122). */
+    /** Whether the account may be used. Re-read from here on every request, never from a token (ADR-05 §3). */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private UserStatus status = UserStatus.Allowed;
@@ -98,7 +98,7 @@ public class User extends BaseEntity {
     /**
      * Returns the display name they chose.
      *
-     * @return the name, or null while onboarding is incomplete (#134)
+     * @return the name, or null while onboarding is incomplete (ADR-10 §4)
      */
     public @Nullable String getName() {
         return name;
@@ -116,7 +116,7 @@ public class User extends BaseEntity {
     /**
      * Returns their community reputation.
      *
-     * @return the karma, recalculated when a comment is approved or by the weekly job (#97)
+     * @return the karma, recalculated when a comment is approved or by the weekly job (ADR-11 §9)
      */
     public int getKarma() {
         return karma;
@@ -153,14 +153,14 @@ public class User extends BaseEntity {
      * Blocks, unblocks or soft-deletes the account.
      *
      * @param status the new status. Changing it has to evict the security cache, or the old value
-     *               stays live for up to its TTL (#128)
+     *               stays live for up to its TTL (ADR-05 §3)
      */
     public void setStatus(UserStatus status) {
         this.status = status;
     }
 
     /**
-     * Onboarding is complete once both display name and country are set (#134).
+     * Onboarding is complete once both display name and country are set (ADR-10 §4).
      *
      * @return true when the person can be let past the onboarding screen
      */

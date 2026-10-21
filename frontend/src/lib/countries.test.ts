@@ -16,7 +16,7 @@ describe('countriesIn', () => {
     expect(countriesIn('es').find((country) => country.code === 'DE')?.name).toBe('Alemania')
   })
 
-  /** #198: the same country has a different name per language, which is the point of the parameter. */
+  /** ADR-23 §2: the same country has a different name per language, which is the point of the parameter. */
   it('names each country in the language it is asked for', () => {
     expect(countriesIn('en').find((country) => country.code === 'DE')?.name).toBe('Germany')
   })

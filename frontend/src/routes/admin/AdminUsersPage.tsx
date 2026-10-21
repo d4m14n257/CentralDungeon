@@ -42,19 +42,19 @@ import { ApiError } from '@/types/api'
  * a loose `if` in this JSX. An admin finds no way at all to hand out `Admin` or `Owner`, and nobody
  * is offered a block on an account that holds either: not a greyed-out button, not one that fails
  * when pressed — the button is not there (principle 2 of diseno §1). The backend refuses
- * the same things independently, endpoint by endpoint (#103), which is what makes this a display
+ * the same things independently, endpoint by endpoint (ADR-20 §1), which is what makes this a display
  * decision rather than the security.
  *
- * **What was searched and which page are in the URL** (#185), like `/admin/catalogs` and
+ * **What was searched and which page are in the URL** (ADR-12 §7), like `/admin/catalogs` and
  * `/admin/files`: a row is something one admin sends to another, and state that only lives in
  * `useState` cannot be linked to.
  *
  * One of the wide tables of skill `diseno` §5.b: below `md` it stops being a table and each row
  * becomes a card, built from the same column definitions — never horizontal scroll.
  *
- * **Behind the admin context's guard** (#269): an account without `Admin` or `Owner` is sent home by
+ * **Behind the admin context's guard** (ADR-20 §2): an account without `Admin` or `Owner` is sent home by
  * `AdminLayout` before this paints. `ForbiddenState` stays for a `403` that still arrives - the
- * backend authorizes on its own (#103) and the page must not go blank if it refuses.
+ * backend authorizes on its own (ADR-20 §1) and the page must not go blank if it refuses.
  */
 export function AdminUsersPage() {
   const { t, i18n } = useTranslation('admin')
@@ -62,12 +62,12 @@ export function AdminUsersPage() {
   const timeZone = browserTimeZone()
 
   const page = Number(searchParams.get('page') ?? '0')
-  // Rows per page (#271): in the URL like the page, so a link carries the view it was sent from.
+  // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
-  // of #164. Hydrating from `?q=` on mount is what makes a filtered view linkable (#185). One list
-  // of commands, given to the box, used to read the URL and to build the help (#240).
+  // of ADR-22 §1. Hydrating from `?q=` on mount is what makes a filtered view linkable (ADR-12 §7). One list
+  // of commands, given to the box, used to read the URL and to build the help (ADR-22 §3).
   const fields = useMemo(() => adminUserSearchFields(t), [t])
   const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
@@ -94,7 +94,7 @@ export function AdminUsersPage() {
   }
 
   const columns: DataTableColumn<AdminUserSummary>[] = [
-    // The handle opens the account (#284): the row is where an admin finds somebody, the record is where they read them.
+    // The handle opens the account (ADR-06 §8): the row is where an admin finds somebody, the record is where they read them.
     {
       id: 'discordUsername',
       header: t('users.columns.discordUsername'),
@@ -137,7 +137,7 @@ export function AdminUsersPage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
-          already showing rows (#150). */}
+          already showing rows (ADR-19 §4). */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && data.content.length === 0 && (
         <EmptyState
@@ -169,7 +169,7 @@ export function AdminUsersPage() {
                 )}
                 {/* Reading the record is not an action on the account, so it is offered on every row
                     - including the ones nobody may touch. It used to open the history alone; the
-                    history now lives on the record with everything else (#284). */}
+                    history now lives on the record with everything else (ADR-06 §8). */}
                 <IconAction
                   icon={<IdCard className="size-4" />}
                   label={t('users.viewRecord')}
@@ -194,7 +194,7 @@ export function AdminUsersPage() {
       {/* The two dialogs get their help as a node rather than raising it themselves: `HelpLink`
           lives in `features/help`, and a feature never imports another one (§3.1.5). The screen is
           what may compose the two, so the explanation still sits inside the dialog that prompts it
-          (#231) instead of in an index nobody opens. */}
+          (ADR-20 §5) instead of in an index nobody opens. */}
       <RoleChangeDialog
         user={roleDialog.item ?? null}
         grantableRoles={grantableRoles}

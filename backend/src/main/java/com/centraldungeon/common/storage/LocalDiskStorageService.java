@@ -18,15 +18,15 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * {@link StorageService} over a directory on local disk (#15).
+ * {@link StorageService} over a directory on local disk (ADR-13 §6).
  *
  * <p><b>Content is gzipped on the way in and expanded on the way out</b>, which is the compression
- * lever of #75 and is invisible above this class: what callers hand over and get back are the
+ * lever of ADR-13 §3 and is invisible above this class: what callers hand over and get back are the
  * original bytes, and {@code files.size_bytes} records the original size - that is the number shown
  * on screen and the one checked against the cap.
  *
  * <p><b>A key is a single path segment and is validated as one.</b> Every key the application passes
- * is an id it generated (#80), so the check can never fail in practice - which is exactly why it is
+ * is an id it generated (ADR-13 §6), so the check can never fail in practice - which is exactly why it is
  * here. The legacy built its paths from the filename the user typed (M21.5); the guarantee that no
  * user-supplied text reaches the filesystem is worth asserting rather than assuming.
  */
@@ -74,7 +74,7 @@ public class LocalDiskStorageService implements StorageService {
      * a fallback the application uses: every caller of this method is inside a {@code @Transactional}
      * service method.
      *
-     * @param key     the name to store under - the file's id (#80)
+     * @param key     the name to store under - the file's id (ADR-13 §6)
      * @param content the bytes exactly as they were uploaded, uncompressed
      */
     @Override

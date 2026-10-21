@@ -33,7 +33,7 @@ function renderDialog(user: AdminUserSummary) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   function wrap(children: ReactNode) {
     // The confirm provider is real and not a stub: FormDialog asks it before discarding a dirty
-    // form (#231), so a dialog rendered without it throws rather than rendering.
+    // form (ADR-20 §5), so a dialog rendered without it throws rather than rendering.
     return (
       <QueryClientProvider client={queryClient}>
         <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
@@ -50,7 +50,7 @@ beforeEach(() => {
 
 describe('BlockUserDialog', () => {
   /**
-   * #84, and the reason this is a dialog and not a confirm: "block" is a word people read as
+   * ADR-05 §7, and the reason this is a dialog and not a confirm: "block" is a word people read as
    * "delete", so the two consequences are on screen before the button is pressed.
    */
   it('says what a block means before it is pressed: no access, and nothing removed', () => {
@@ -82,7 +82,7 @@ describe('BlockUserDialog', () => {
   })
 
   /**
-   * #283: the review names who is affected and what follows, and backing out of it writes nothing -
+   * ADR-21 §9: the review names who is affected and what follows, and backing out of it writes nothing -
    * the form stays as it was, ready to send or to close.
    */
   it('names the account in the review, and cancelling it blocks nobody', async () => {
@@ -115,7 +115,7 @@ describe('BlockUserDialog', () => {
   })
 
   /**
-   * #197: the sentence comes from `errorCode`, never from `detail` - which is English and written
+   * ADR-23 §3: the sentence comes from `errorCode`, never from `detail` - which is English and written
    * for a log. The screen does not offer this button for a privileged account, so the code only
    * arrives when somebody reached the API another way; it still has to read as an explanation.
    */

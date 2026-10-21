@@ -15,11 +15,11 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * One change to one setting: what it was, what it became, who did it and why. Table
- * {@code system_setting_changes} (#141).
+ * {@code system_setting_changes} (ADR-17 §3).
  *
  * <p><b>Why a table and not the two columns next door.</b> {@link SystemSetting} already carries
  * {@code updated_by} and {@code updated_at}, and they answer a different question: who has it like
- * this <em>now</em>. #141 asks that «cada cambio se audita», and a pair of columns that the next
+ * this <em>now</em>. ADR-17 §3 asks that «cada cambio se audita», and a pair of columns that the next
  * edit overwrites cannot say a value was raised on Tuesday and put back on Wednesday - which is
  * exactly the pattern worth seeing. Same distinction {@code user_status_changes} makes against
  * {@code users.status}, and the row is copied from it.
@@ -29,7 +29,7 @@ import org.jspecify.annotations.Nullable;
  * may upload, with no notification and no visible event: without the reason, the only trace of a
  * platform-wide change is a number that used to be different.
  *
- * <p><b>{@code setting_key} has no foreign key</b>, and this is not #78's polymorphic reference
+ * <p><b>{@code setting_key} has no foreign key</b>, and this is not ADR-16 §2's polymorphic reference
  * coming back. What it points at is a constant of {@link SettingKey}, checked at compile time and
  * resolved before anything is written - it cannot be deleted, renamed behind the code's back or left
  * dangling. The reason there is no constraint is the opposite one: {@code system_settings} holds
@@ -65,12 +65,12 @@ public class SystemSettingChange {
     @Column(name = "to_value", nullable = false, length = 512)
     private String toValue;
 
-    /** Who made the change - always the actor from the token (#121). */
+    /** Who made the change - always the actor from the token (ADR-05 §5). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "changed_by", nullable = false)
     private User changedBy;
 
-    /** Why. Required: a platform-wide change nobody explained is one nobody can review (#141). */
+    /** Why. Required: a platform-wide change nobody explained is one nobody can review (ADR-17 §3). */
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String justification;
 
@@ -88,7 +88,7 @@ public class SystemSettingChange {
      * @param key           which setting changed
      * @param fromValue     what it was, or null when it had never been overridden
      * @param toValue       what it became
-     * @param changedBy     who made the change, always the actor from the token (#121)
+     * @param changedBy     who made the change, always the actor from the token (ADR-05 §5)
      * @param justification why, never blank
      */
     public SystemSettingChange(

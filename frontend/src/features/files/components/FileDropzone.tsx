@@ -11,7 +11,7 @@ import type { FileCategory, StagedFile } from '../types'
 
 interface FileDropzoneProps {
   /**
-   * Called with the file that was picked, **which is not on the server yet** (#238).
+   * Called with the file that was picked, **which is not on the server yet** (ADR-13 §5).
    *
    * Nothing uploads here any more: the confirm that creates the table, sends the answer or publishes
    * the request is what uploads, through `useCommitStagedFiles`. Picking a file stages it, and
@@ -21,7 +21,7 @@ interface FileDropzoneProps {
   /** True while the caller is doing something with the result, to keep the zone from firing twice. */
   isBusy?: boolean
   /**
-   * Whether to ask which cajón the file goes in (#233).
+   * Whether to ask which cajón the file goes in (ADR-14 §4).
    *
    * **False everywhere but `/my/files`**, and that is the whole point of the redesign: in a flow the
    * system already knows — attaching to a table makes it table material, answering a request makes it
@@ -30,13 +30,13 @@ interface FileDropzoneProps {
    */
   askForCategory?: boolean
   /**
-   * Which cajones to offer when it asks (#237). Only somebody's own: a plain member of the community
+   * Which cajones to offer when it asks (ADR-14 §5). Only somebody's own: a plain member of the community
    * gets the two player-side ones, whoever runs a table also gets the two master-side ones, and
    * `Announcement` is nobody's — it lives only in the platform's library.
    */
   categories?: readonly FileCategory[]
   /**
-   * Whether several files can be dropped or picked at once, each staged on its own (#278). Only where
+   * Whether several files can be dropped or picked at once, each staged on its own (ADR-14 §7). Only where
    * the caller's list gives each file what it needs — /admin/files/upload, where every row says what
    * its file is. False keeps the one-at-a-time zone every flow was built around.
    */
@@ -51,28 +51,28 @@ interface FileDropzoneProps {
  *
  * - **The limits are stated before they are broken.** A cap somebody only discovers by hitting it
  *   reads as a bug rather than a rule (principle 2 of diseno §1). Since F3.5 the cap is
- *   asked for instead of hardcoded, because an admin can change it without a deploy (#141) and a
+ *   asked for instead of hardcoded, because an admin can change it without a deploy (ADR-17 §3) and a
  *   stale mirror would refuse files the server would have taken.
  * - **A failure is answered where the person is looking.** The error sits under the zone and stays
  *   there while they pick another file — a toast that vanishes in four seconds is the wrong place
  *   for "that type is not accepted". The mutation opts out of the global toast through
  *   `meta.showsItsOwnError` so the same sentence is not delivered twice.
- * - **Deduplication is said out loud** (#234). Uploading something this person already had returns
+ * - **Deduplication is said out loud** (ADR-13 §4). Uploading something this person already had returns
  *   the row they had, and until the status told the two apart it happened in complete silence —
- *   which made the cheapest lever of #75 invisible to the only person who could learn from it.
+ *   which made the cheapest lever of ADR-13 §3 invisible to the only person who could learn from it.
  *
  * **A real `<input>`, hidden but focusable**, with the surrounding area as its `<label>`. A `<div>`
  * with an `onClick` looks identical and cannot be reached by keyboard, and the file dialog is the one
  * thing a browser will not open for a synthetic click from an untrusted context.
  *
- * **It does not ask what the file is** (#233). The flow it was uploaded from is what classifies it,
+ * **It does not ask what the file is** (ADR-14 §4). The flow it was uploaded from is what classifies it,
  * and in the four real flows that answer is already known — so the cajón select appears only when the
  * caller says there is no flow to observe, which today is `/my/files` and nothing else.
  *
  * @param props.onStaged       called with the file that was picked, not yet on the server
  * @param props.isBusy         true while the caller is acting on the result
  * @param props.askForCategory whether to ask which cajón it goes in — only where there is no flow
- * @param props.categories     which cajones to offer when it asks; only the actor's own (#237)
+ * @param props.categories     which cajones to offer when it asks; only the actor's own (ADR-14 §5)
  * @param props.multiple       whether several files can be taken at once, each staged on its own
  */
 export function FileDropzone({
@@ -83,7 +83,7 @@ export function FileDropzone({
   multiple = false,
 }: FileDropzoneProps) {
   const { t } = useTranslation('files')
-  // The cap is a setting since F3.5 (#141), so it is asked for rather than assumed. The hook always
+  // The cap is a setting since F3.5 (ADR-17 §3), so it is asked for rather than assumed. The hook always
   // answers - with the shipped default while the request is in flight - so the zone is never waiting
   // on a fetch to be able to refuse something.
   const { maxFileSizeBytes } = useClientLimits()
@@ -104,7 +104,7 @@ export function FileDropzone({
    * **The cap and the whitelist are checked here now**, which they have to be: with the upload
    * deferred to the confirm, the server's refusal would arrive after four wizard steps. The rule is
    * the same rule and the message is the same message - `rejectionOf` returns the error code the
-   * backend would have used - so a file refused now and one refused later read identically (#197).
+   * backend would have used - so a file refused now and one refused later read identically (ADR-23 §3).
    */
   function handleFiles(files: File[]) {
     const refusals: string[] = []
@@ -162,7 +162,7 @@ export function FileDropzone({
         </span>
         <span className="text-sm font-medium">{t(multiple ? 'dropzone.promptMultiple' : 'dropzone.prompt')}</span>
         {/* The cap is interpolated rather than written into the sentence: it is a setting now, and a
-            hardcoded "2 MB" in the copy would go on saying 2 the day an admin raises it (#141). */}
+            hardcoded "2 MB" in the copy would go on saying 2 the day an admin raises it (ADR-17 §3). */}
         <span className="text-fg-muted text-xs">{t('dropzone.limits', { maxMb: Math.floor(maxFileSizeBytes / (1024 * 1024)) })}</span>
         <input
           ref={input}

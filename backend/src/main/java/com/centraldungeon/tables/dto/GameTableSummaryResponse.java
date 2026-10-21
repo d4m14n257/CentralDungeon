@@ -12,14 +12,14 @@ import org.jspecify.annotations.Nullable;
  * @param status           where the table is in its lifecycle, as a string
  * @param tableTypeName    how the table is run, resolved to its label. Null when none was chosen
  * @param tableTypeCode    the identifier the frontend translates by, when the application shipped
- *                         that type. Null for one a person named, whose label is read verbatim (#225)
- * @param maxPlayers       the player cap (#24), or null for no cap
+ *                         that type. Null for one a person named, whose label is read verbatim (ADR-23 §4)
+ * @param maxPlayers       the player cap (ADR-07 §5), or null for no cap
  * @param playerCount      how many people are accepted right now, so the card can show "3/5"
- * @param schedule         the weekly agenda, in UTC (#22). The card converts it to the reader's own
+ * @param schedule         the weekly agenda, in UTC (ADR-03 §6). The card converts it to the reader's own
  *                         time with {@code lib/date.ts}; the API never sends a local time
  * @param scheduleConflict whether this table's agenda overlaps something the <b>actor of the
- *                         token</b> is already committed to (#178). Derived per request and never
- *                         for an id taken from the URL (#121), which is what makes it impossible to
+ *                         token</b> is already committed to (ADR-08 §2). Derived per request and never
+ *                         for an id taken from the URL (ADR-05 §5), which is what makes it impossible to
  *                         ask on somebody else's behalf. False on listings where the question does
  *                         not arise - a table you already play at cannot clash with itself
  * @param primaryMaster    who runs the table. Non-null here because every table this endpoint lists

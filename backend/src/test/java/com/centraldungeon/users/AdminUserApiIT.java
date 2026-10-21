@@ -35,11 +35,11 @@ import org.testcontainers.mysql.MySQLContainer;
  *
  * <p>It goes over HTTP because that is the only place four things exist at all: the
  * {@code @PreAuthorize} on each method, Jackson's binding of {@code PlatformRole} from the body,
- * the shape of the {@code ProblemDetail} the frontend branches on (#197), and the
+ * the shape of the {@code ProblemDetail} the frontend branches on (ADR-23 §3), and the
  * {@code @PageableDefault}. None of them is reachable from a service test.
  *
  * <p>Real tokens through the real {@link JwtService} and the real filter chain, so the roles are
- * read from the database the way {@code JwtAuthenticationFilter} reads them on every request (#122)
+ * read from the database the way {@code JwtAuthenticationFilter} reads them on every request (ADR-05 §3)
  * - which is also what makes the Testcontainers MySQL necessary here.
  */
 @SpringBootTest
@@ -239,7 +239,7 @@ class AdminUserApiIT {
     }
 
     /**
-     * The demotion takes effect on the very next request, which is the eviction of #128 seen from
+     * The demotion takes effect on the very next request, which is the eviction of ADR-05 §3 seen from
      * outside: the owner who was just demoted comes back holding nothing, and the
      * {@code @PreAuthorize} - not the service - is what turns them away. A cache that had not been
      * dropped would have let them through for the rest of the TTL.
@@ -305,7 +305,7 @@ class AdminUserApiIT {
                 .andExpect(status().isNotFound());
     }
 
-    /** {@code @PageableDefault}: twenty per page, ordered by Discord handle with a tie-break by id (#171, #173). */
+    /** {@code @PageableDefault}: twenty per page, ordered by Discord handle with a tie-break by id (ADR-07 §9, ADR-04 §6). */
     @Test
     void theListingDefaultsToTwentyPerPageSortedByHandle() throws Exception {
         for (int i = 0; i < 25; i++) {
