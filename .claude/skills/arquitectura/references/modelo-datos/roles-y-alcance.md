@@ -80,7 +80,7 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 
 **Backend** — paquete `approvals/`:
 
-- `ApprovalRequest` (`@Entity`), `ApprovalRequestType`, `ApprovalStatus`, `ApprovalService`, `ApprovalController`.
+- `ApprovalRequest` (`@Entity`), `ApprovalRequestType`, `ApprovalStatus`, `ApprovalService`, `ApprovalRequestController` y `AdminApprovalRequestController`.
 - **Referencia polimórfica** `entity_type` + `entity_id`, **sin FK real** (#78). El precio está escrito en la decisión y hay que pagarlo entero: **el service valida que la entidad exista antes de insertar**, no se mapea como `@ManyToOne`, y hace falta **una verificación periódica de referencias huérfanas** — es la clase de problema que este proyecto ya sufrió con `table_files` apuntando a archivos borrados.
 - Los cuatro tipos de #42 y #90: pausa de mesa pedida por un master, veto pedido por un `Secondary`, pedido del rol de master, pedido de que se abra una mesa, y la petición general al equipo.
 - **Justificación obligatoria** en el pedido y en la resolución (#42).

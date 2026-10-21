@@ -66,4 +66,4 @@
 
 - El handle de React Flow mide 6 px y lo dibuja su propia hoja **sin capa**, que le gana a todo `@layer`. Por eso su tamaño (`calc(var(--spacing) * 3)`) es una regla sin capa en `base.css`, junto a las correcciones de shadcn: no es deuda, pero es la única excepción del lienzo a «todo en `@layer components`».
 
-- `NotificationBell` y `WizardSteps` usan `text-[11px]`, un valor suelto fuera del `@theme` (regla dura 18). Está anotado en `fase-4-revision.md` §2.3 para triar en F4.1.
+- Valores sueltos fuera del `@theme` (regla dura 18): `text-[11px]` en `NotificationBell` y `WizardSteps`, `text-[13px]` en `NotificationBell` y `text-[10px]` en `WeeklyScheduleGrid`. Está anotado en `fase-4-revision.md` §2.3 para triar en F4.1.

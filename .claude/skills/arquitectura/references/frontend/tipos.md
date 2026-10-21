@@ -96,7 +96,9 @@ type _CheckCreatePayload = Expect<Equals<CreateGameTableForm, CreateGameTableInp
 9. **Los enums son uniones de literales, no `enum` de TypeScript.** El backend los serializa como string (§2.3):
 
 ```ts
-export type GameTableStatus = 'Open' | 'InProgress' | 'Closed' | 'Finished';
+export type GameTableStatus =
+  | 'Draft' | 'Unassigned' | 'Preparation' | 'ChangesRequested' | 'Opened'
+  | 'InProgress' | 'PauseRequested' | 'Pause' | 'Finished' | 'Canceled';
 ```
 
 Un `enum` de TS genera código en runtime, no es tree-shakeable y no coincide estructuralmente con el string que llega por la red. Con la unión, además, `Record<GameTableStatus, string>` obliga a cubrir todos los casos al mapear a labels o a variantes de badge.

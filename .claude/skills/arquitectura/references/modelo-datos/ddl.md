@@ -63,80 +63,18 @@ CREATE TABLE users_roles (
     CONSTRAINT fk_users_roles_role FOREIGN KEY (role_id) REFERENCES roles (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- V11 (F3.1): el rastro de quién movió los roles de quién, y por qué.
--- `users_roles` dice qué tiene alguien AHORA; esto dice cómo llegó ahí. La exclusión de #169
--- escribe DOS filas, no una: otorgar Admin a un owner es un alta de Admin y una baja de Owner.
-CREATE TABLE user_role_changes (
-    id            VARCHAR(64) NOT NULL,
-    user_id       VARCHAR(64) NOT NULL,
-    role_id       VARCHAR(64) NOT NULL,
-    action        VARCHAR(32) NOT NULL,   -- 'Granted' | 'Revoked'
-    changed_by    VARCHAR(64) NOT NULL,
-    justification LONGTEXT    NOT NULL,   -- siempre obligatoria (#169)
-    created_at    DATETIME    NOT NULL,
-    CONSTRAINT pk_user_role_changes PRIMARY KEY (id),
-    CONSTRAINT fk_urc_user       FOREIGN KEY (user_id)    REFERENCES users (id),
-    CONSTRAINT fk_urc_role       FOREIGN KEY (role_id)    REFERENCES roles (id),
-    CONSTRAINT fk_urc_changed_by FOREIGN KEY (changed_by) REFERENCES users (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX ix_urc_user ON user_role_changes (user_id, created_at);
-
--- V11 (F3.1): bloqueos y desbloqueos de cuenta (#84).
--- A diferencia de `table_status_changes`, acá la justificación es NOT NULL: el bloqueado no puede
--- entrar a preguntar por qué, así que el motivo es el único registro que queda.
-CREATE TABLE user_status_changes (
-    id            VARCHAR(64) NOT NULL,
-    user_id       VARCHAR(64) NOT NULL,
-    from_status   VARCHAR(32) NOT NULL,
-    to_status     VARCHAR(32) NOT NULL,
-    changed_by    VARCHAR(64) NOT NULL,
-    justification LONGTEXT    NOT NULL,   -- siempre obligatoria (#84)
-    created_at    DATETIME    NOT NULL,
-    CONSTRAINT pk_user_status_changes PRIMARY KEY (id),
-    CONSTRAINT fk_usc_user       FOREIGN KEY (user_id)    REFERENCES users (id),
-    CONSTRAINT fk_usc_changed_by FOREIGN KEY (changed_by) REFERENCES users (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX ix_usc_user ON user_status_changes (user_id, created_at);
-
--- V13 (F3.5): cada cambio de un ajuste de `system_settings`, con su motivo (#141).
--- `system_settings` ya trae `updated_by`/`updated_at` y contestan otra pregunta: quién lo tiene así
--- *ahora*. Un par de columnas que la próxima edición pisa no puede contar que un límite se subió el
--- martes y se volvió a bajar el miércoles, que es justo el patrón que interesa ver.
--- `setting_key` NO tiene FK, y esto no es #78 volviendo: apunta a una constante del enum `SettingKey`,
--- resuelta en compilación y validada antes de escribir nada, así que no puede quedar colgada. La
--- restricción falta por lo contrario: `system_settings` guarda solo overrides, así que el primer
--- cambio de un ajuste registra legítimamente una clave que todavía no tiene fila (#263).
--- `from_value` NULL significa "venía con el valor de fábrica", que es distinto de "ya era ese número".
-CREATE TABLE system_setting_changes (
-    id            VARCHAR(64)  NOT NULL,
-    setting_key   VARCHAR(64)  NOT NULL,
-    from_value    VARCHAR(512) NULL,       -- NULL = seguía con el valor de fábrica
-    to_value      VARCHAR(512) NOT NULL,
-    changed_by    VARCHAR(64)  NOT NULL,
-    justification LONGTEXT     NOT NULL,   -- siempre obligatoria (#141)
-    created_at    DATETIME     NOT NULL,
-    CONSTRAINT pk_system_setting_changes PRIMARY KEY (id),
-    CONSTRAINT fk_ssc_changed_by FOREIGN KEY (changed_by) REFERENCES users (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX ix_ssc_setting ON system_setting_changes (setting_key, created_at);
-
 -- ---------------------------------------------------------------- game table
 
 CREATE TABLE table_types (
     id          VARCHAR(64)  NOT NULL,
     name        VARCHAR(64)  NOT NULL,
-    code        VARCHAR(32)  NULL,                   -- #225: lo trajo la aplicación -> se traduce; NULL -> lo escribió una persona
     description VARCHAR(256) NULL,
     status      VARCHAR(32)  NOT NULL DEFAULT 'Created',
     created_at  DATETIME     NOT NULL,
     updated_at  DATETIME     NULL,
     deleted_at  DATETIME     NULL,
     CONSTRAINT pk_table_types PRIMARY KEY (id),
-    CONSTRAINT uk_table_types_name UNIQUE (name),
-    CONSTRAINT uk_table_types_code UNIQUE (code)
+    CONSTRAINT uk_table_types_name UNIQUE (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE game_tables (
@@ -146,13 +84,14 @@ CREATE TABLE game_tables (
     description    LONGTEXT      NULL,
     permitted      LONGTEXT      NULL,
     requirements   LONGTEXT      NULL,   -- rich text (#62)
-    start_date     DATE          NULL,   -- el día desde el que corre la mesa; sin hora ni zona (#230)
+    start_date     DATETIME      NULL,   -- UTC (#22)
+    duration       TIME          NULL,   -- duration of ONE session
     total_sessions INT           NULL,   -- planned number of sessions (#26)
     max_players    INT           NULL,   -- player cap (#24)
-    status         VARCHAR(32)   NOT NULL DEFAULT 'Draft',
+    status         VARCHAR(32)   NOT NULL DEFAULT 'Preparation',
     created_by     VARCHAR(64)   NOT NULL, -- master or admin (#72)
-    claimed_by     VARCHAR(64)   NULL,     -- admin who reserved the review (#100). Mapped and written
-    claimed_at     DATETIME      NULL,     -- by AdminQueueService since F3.3; no migration was needed
+    claimed_by     VARCHAR(64)   NULL,     -- admin who reserved the review (#100)
+    claimed_at     DATETIME      NULL,
     closed_at      DATETIME      NULL,   -- set when entering Finished or Canceled (#44)
     created_at     DATETIME      NOT NULL,
     updated_at     DATETIME      NULL,
@@ -186,7 +125,6 @@ CREATE TABLE table_schedules (
     game_table_id VARCHAR(64) NOT NULL,
     weekday       VARCHAR(16) NOT NULL,
     hourtime      TIME        NOT NULL,   -- UTC (#22)
-    duration      TIME        NULL,       -- de ESTA sesión, no de la mesa (#228)
     status        VARCHAR(32) NOT NULL DEFAULT 'Created',
     deleted_at    DATETIME    NULL,
     CONSTRAINT pk_table_schedules PRIMARY KEY (game_table_id, weekday, hourtime),
@@ -248,9 +186,6 @@ CREATE TABLE table_registrations (
     game_table_id VARCHAR(64) NOT NULL,
     user_id       VARCHAR(64) NOT NULL,
     status        VARCHAR(32) NOT NULL DEFAULT 'Candidate',
-                        -- Candidate | Player | Rejected | Blocked (#39, F3.4) | Deleted (#25).
-                        -- `Blocked` no necesitó ALTER: la columna ya es VARCHAR(32) y nunca el tipo
-                        -- ENUM de MySQL (§1), así que es un valor nuevo del enum de la aplicación.
     description   LONGTEXT    NULL,   -- rich text, optional (#62, #69)
     created_at    DATETIME    NOT NULL,
     updated_at    DATETIME    NULL,
@@ -265,29 +200,6 @@ CREATE TABLE table_registrations (
 -- RegistrationService, since MySQL has no partial unique indexes (#28).
 CREATE INDEX ix_table_registrations_status ON table_registrations (game_table_id, status);
 CREATE INDEX ix_table_registrations_user   ON table_registrations (user_id, status);
-
--- F3.4: el veto y su levantamiento (#29, #39). Calcada de `table_status_changes` por vía de `V11`.
---
--- Por qué una tabla y no una columna, que es la tensión entre dos decisiones: #29 dice que `Blocked`
--- «no necesita tabla propia» -cierto, es un **estado** de `table_registrations`- y #39 pide que «el
--- veto y su levantamiento queden registrados». Lo que se guarda acá no es el veto sino el **cambio**:
--- un `blocked_reason` no puede contar que se levantó, ni cuántas veces, ni quién. `from_status` es
--- además lo que hace posible levantarlo: devuelve a la persona a donde estaba, no a `Player` por
--- defecto. `registration_rejections` no sirve: está modelada como «un rechazo», sin from/to.
-CREATE TABLE registration_status_changes (
-    id              VARCHAR(64) NOT NULL,
-    registration_id VARCHAR(64) NOT NULL,
-    from_status     VARCHAR(32) NOT NULL,
-    to_status       VARCHAR(32) NOT NULL,
-    changed_by      VARCHAR(64) NOT NULL,
-    justification   LONGTEXT    NOT NULL,   -- always required (#39)
-    created_at      DATETIME    NOT NULL,
-    CONSTRAINT pk_registration_status_changes PRIMARY KEY (id),
-    CONSTRAINT fk_rsc_registration FOREIGN KEY (registration_id) REFERENCES table_registrations (id),
-    CONSTRAINT fk_rsc_changed_by   FOREIGN KEY (changed_by)      REFERENCES users (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX ix_rsc_registration ON registration_status_changes (registration_id, created_at);
 
 CREATE TABLE registration_rejections (
     id              VARCHAR(64) NOT NULL,
@@ -354,6 +266,7 @@ CREATE TABLE files (
     mime_type       VARCHAR(128) NOT NULL,
     size_bytes      BIGINT       NOT NULL,
     file_type       VARCHAR(32)  NOT NULL DEFAULT 'Single-use', -- Public|Private|Single-use (#68)
+    public_audience VARCHAR(32)  NULL,      -- Masters|Players|Announcements (#64)
     user_created_id VARCHAR(64)  NOT NULL,
     last_used_at    DATETIME     NULL,      -- drives the unused-file purge (#75)
     status          VARCHAR(32)  NOT NULL DEFAULT 'Current',
@@ -367,32 +280,6 @@ CREATE TABLE files (
 CREATE INDEX ix_files_owner    ON files (user_created_id, file_type, status);
 CREATE INDEX ix_files_hash     ON files (content_hash);
 CREATE INDEX ix_files_lastused ON files (last_used_at);
-
--- Los cajones de un archivo (#233). Relación y no columna: pertenece a todos los flujos en los que
--- se usó, y la deduplicación (#75) vuelve eso el caso normal. Add-only: no hay status ni deleted_at.
-CREATE TABLE file_categories (
-    file_id    VARCHAR(64) NOT NULL,
-    category   VARCHAR(32) NOT NULL,  -- TableMaterial|MasterRequest|PlayerApplication|PlayerSubmission|Announcement
-    created_at DATETIME    NOT NULL,
-    CONSTRAINT pk_file_categories PRIMARY KEY (file_id, category),
-    CONSTRAINT fk_file_categories_file FOREIGN KEY (file_id) REFERENCES files (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX ix_file_categories_category ON file_categories (category);
-
--- Los formularios que un master adjunta a su pedido (#236). La mitad del pedido que faltaba.
-CREATE TABLE task_files (
-    task_id    VARCHAR(64) NOT NULL,
-    file_id    VARCHAR(64) NOT NULL,
-    status     VARCHAR(32) NOT NULL DEFAULT 'Current',
-    created_at DATETIME    NOT NULL,
-    deleted_at DATETIME    NULL,
-    CONSTRAINT pk_task_files PRIMARY KEY (task_id, file_id),
-    CONSTRAINT fk_task_files_task FOREIGN KEY (task_id) REFERENCES table_tasks (id),
-    CONSTRAINT fk_task_files_file FOREIGN KEY (file_id) REFERENCES files (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX ix_task_files_file ON task_files (file_id, status);
 
 CREATE TABLE table_files (
     game_table_id   VARCHAR(64) NOT NULL,
@@ -479,16 +366,6 @@ CREATE INDEX ix_platforms_canonical ON platforms (canonical_id);
 -- Always depth 1: an alias points at the canonical entry, never at another
 -- alias (#59). CatalogService enforces it: the target canonical_id must
 -- itself have canonical_id NULL.
---
--- Vocabulario de `status` en los tres catálogos (F1.1, `CatalogStatus`):
---   Created   propuesto por un master o un admin, sin revisar (#55)
---   Accepted  en circulación: se muestra y filtra (#57)
---   Rejected  revisado y descartado; no se muestra ni filtra nunca (#57)
---   Disabled  dado de baja sin romper vínculos; restaurable (#81)
---
--- Vocabulario de `status` en las tres tablas puente (`TableCatalogLinkStatus`):
---   Used      la mesa está etiquetada con ese valor
---   Removed   el master lo quitó; la fila queda como registro
 
 CREATE TABLE table_systems (
     game_table_id VARCHAR(64) NOT NULL,
@@ -614,38 +491,24 @@ CREATE INDEX ix_feedback_quotas_created ON feedback_quotas (created_at);
 
 -- ---------------------------------------------------------------- cross-cutting
 
--- Single mechanism for every request that needs approval (#42). **The table is part of
--- V1__baseline.sql and has been since before there was a backend**: F3.2 gave it its code, not its
--- DDL, so there is no migration of its own and there must not be one.
+-- Single mechanism for every request that needs approval (#42).
 -- Polymorphic reference with no FK: ApprovalService validates entity_id exists,
--- and that check ships with its unit test (#78, #126). The price of #78 is three
--- things and all three are in `approvals/`: the validation before the insert, the
--- reference never mapped as a @ManyToOne, and ApprovalOrphanCheckService, which
--- sweeps the unresolved rows on a schedule and logs what stopped resolving.
+-- and that check ships with its unit test (#78, #126).
 CREATE TABLE approval_requests (
     id              VARCHAR(64)  NOT NULL,
-    request_type    VARCHAR(32)  NOT NULL, -- MasterGrant | TableOpen | General (#90)
-                                           -- TablePause and PlayerBan arrive with F3.4, which brings
-                                           -- the producer of each. The column is a VARCHAR, so that
-                                           -- is adding a value to an enum and never an ALTER TABLE (#78)
+    request_type    VARCHAR(32)  NOT NULL, -- TablePause | PlayerBan | MasterGrant | TableOpen | General (#90)
     entity_type     VARCHAR(32)  NOT NULL, -- game_table | table_registration | user
-                                           -- the three types of F3.2 all point at `user`: the request
-                                           -- is about the person who made it
-    entity_id       VARCHAR(64)  NOT NULL, -- no FK: the reference is polymorphic (#78, #126)
+    entity_id       VARCHAR(64)  NOT NULL,
     requested_by    VARCHAR(64)  NOT NULL,
-    justification   LONGTEXT     NOT NULL, -- required in the request and in the resolution (#42)
+    justification   LONGTEXT     NOT NULL,
     status          VARCHAR(32)  NOT NULL DEFAULT 'Pending', -- Pending | Approved | Rejected
-    claimed_by      VARCHAR(64)  NULL,  -- admin who reserved this item (#100). Written only by
-    claimed_at      DATETIME     NULL,  -- AdminQueueService since F3.3 - claim, release, and the
-                                        -- timeout job. The columns were in the baseline from day one,
-                                        -- so the queue needed no migration to arrive
+    claimed_by      VARCHAR(64)  NULL,  -- admin who reserved this item (#100)
+    claimed_at      DATETIME     NULL,  -- auto-released after a timeout (#100)
     resolved_by     VARCHAR(64)  NULL,
-    resolution_note LONGTEXT     NULL,  -- mandatory when resolving, so NULL only while Pending (#42)
+    resolution_note LONGTEXT     NULL,
     resolved_at     DATETIME     NULL,
     created_at      DATETIME     NOT NULL,
-    deleted_at      DATETIME     NULL,  -- F3.2 does NOT soft-delete requests: nothing maps or writes
-                                        -- this column. A request is the record of something somebody
-                                        -- asked; it stops being pending by being resolved, not hidden
+    deleted_at      DATETIME     NULL,
     CONSTRAINT pk_approval_requests PRIMARY KEY (id),
     CONSTRAINT fk_ar_claimed   FOREIGN KEY (claimed_by)   REFERENCES users (id),
     CONSTRAINT fk_ar_requested FOREIGN KEY (requested_by) REFERENCES users (id),

@@ -1,6 +1,6 @@
 # 1 y 2 Principios y navegación
 
-> Parte de la skill `diseno`. Hasta #292 eran `diseno` §1 y §2, y conservan su numeración: «principio 2 de `diseno` §1» es el principio 2 de `diseno` §1. Cómo se implementan el ruteo y las guardias está en `arquitectura` §3.1.6; el mapa dibujado, un nodo por ruta, en `docs/diagramas/21`–`24`.
+> Parte de la skill `diseno`. Hasta #292 eran `docs/frontend-diseno.md` §1 y §2, y conservan su numeración: «principio 2 de `frontend-diseno.md` §1» es el principio 2 de `diseno` §1. Cómo se implementan el ruteo y las guardias está en `arquitectura` §3.1.6; el mapa dibujado, un nodo por ruta, en `docs/diagramas/21`–`24`.
 
 ## 1. Principios
 

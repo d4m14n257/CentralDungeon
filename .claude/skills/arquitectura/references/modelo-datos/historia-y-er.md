@@ -1,6 +1,6 @@
 # 4.2 y 4.3 El schema heredado y el diagrama entidad-relación
 
-> Parte de la skill `arquitectura`, sección 4. Hasta #292 eran `arquitectura` §4.2 y §3, con el mismo prefijo `4.` que el resto del modelo. **El ER de §4.3 se actualiza en el mismo cambio que la `@Entity`** (regla dura 10, procedimiento §7.3).
+> Parte de la skill `arquitectura`, sección 4. Hasta #292 eran `docs/modelo-datos.md` §2 y §3, hoy §4.2 y §4.3, con el mismo prefijo `4.` que el resto del modelo. **El ER de §4.3 se actualiza en el mismo cambio que la `@Entity`** (regla dura 10, procedimiento §7.3).
 
 ## 4.2 Qué cambió respecto al schema heredado
 

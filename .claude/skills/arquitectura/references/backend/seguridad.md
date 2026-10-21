@@ -7,9 +7,9 @@ Flujo: el frontend inicia el login OAuth2 de Discord → Spring Security complet
 
 **No hay registro propio: la membresía al servidor de Discord es la puerta de entrada** (#38). Si el usuario autentica pero no es miembro del guild, no se responde con un error seco: se le ofrece la invitación para unirse y solo se corta el login si la declina. El id del guild es configuración (`DiscordProperties`), nunca una constante en el código.
 
-- Filter chain **stateless**, sin sesión de servidor.
-- Dos capas de autorización, igual que el modelo de datos: rol global (`users_roles`: **Player / Master / Admin / Owner**) vía `@PreAuthorize("hasRole(...)")`, y rol por mesa (`masters.master_type`: Owner/Master) verificado en el service, porque depende del recurso concreto.
-- ⚠️ **Los dos `Owner` son cosas distintas** (#67): el rol global `Owner` es el dueño de la plataforma y puede todo; `masters.master_type = 'Owner'` es el dueño de **una mesa**. En el código no pueden llamarse igual — `PlatformRole.OWNER` y `MasterType.OWNER`, o se renombra el segundo.
+- Filter chain **sin sesión de servidor, salvo la del intercambio OAuth2**: `SessionCreationPolicy.IF_REQUIRED`, porque `oauth2Login` necesita una sesión corta para el `state` del intercambio. Pasado el callback, todo va por JWT.
+- Dos capas de autorización, igual que el modelo de datos: rol global (`users_roles`: **Player / Master / Admin / Owner**) vía `@PreAuthorize("hasRole(...)")`, y rol por mesa (`masters.master_type`: `Primary`/`Secondary`, #71) verificado en el service, porque depende del recurso concreto.
+- ⚠️ **Dos «dueños» que no son lo mismo** (#67, #89): el rol global `Owner` es el dueño de la plataforma y puede todo; el master principal de **una mesa** es `masters.master_type = 'Primary'`. Por eso en el código no se llaman igual: `PlatformRole.OWNER` y `MasterType.Primary` / `Secondary` (#71).
 - **Los roles globales son funciones acumulables, no niveles** (#37, #67). Un usuario puede ser `Master` y `Player` a la vez, o `Master` sin ser `Player`. **No hay jerarquía ni herencia**: `Admin` no hereda lo de `Master`, ni `Master` lo de `Player`, y `Owner` puede todo por definición, no por heredar de `Admin`. En consecuencia **no se registra un `RoleHierarchy`** y cada endpoint enumera explícitamente los roles que lo alcanzan — `@PreAuthorize("hasAnyRole('MASTER','ADMIN')")`, nunca el "mínimo" de una escala que no existe.
 - CORS restringido al origen del frontend por perfil, nunca `*`.
 - Ningún endpoint acepta el `user_id` del usuario autenticado como parámetro de ruta — sale del token. Este era el agujero central del backend Node.
@@ -18,7 +18,7 @@ Flujo: el frontend inicia el login OAuth2 de Discord → Spring Security complet
 
 **Horizontal — el rol no es la pertenencia** (#121). `hasRole('MASTER')` afirma "es master de algo", no "es master de *esta* mesa". Con el actor sacado del token, el id que el atacante todavía controla es el **del recurso**. Por eso:
 
-> **Toda lectura o mutación de un recurso concreto filtra por el actor.** O el actor entra en el `WHERE` (`findByIdAndOwnerId`), o el service comprueba la pertenencia **antes** de tocar nada y lanza si no corresponde. Nunca un `findById(id)` seguido de `save()` sin verificar.
+> **Toda lectura o mutación de un recurso concreto filtra por el actor.** O el actor entra en el `WHERE` (`findByGameTable_IdAndUser_IdAndStatus`, `existsByGameTable_IdAndUser_IdAndStatusIn`), o el service comprueba la pertenencia **antes** de tocar nada y lanza si no corresponde. Nunca un `findById(id)` seguido de `save()` sin verificar.
 
 Es el agujero que tenía el Node: `UPDATE Tables SET … WHERE id = ?`, sin un solo predicado de pertenencia. Quien conociera el id de una mesa podía editarla o borrarla. Y ojo: que los ids sean impredecibles (§4.1, UUID v7) es **defensa en profundidad, nunca autorización** — un id filtrado en un link no puede ser lo único que separa a alguien de un recurso ajeno.
 
@@ -46,7 +46,7 @@ El de Discord no se guarda: después del login no se usa para nada, y conservarl
 
 **El refresh es el punto de re-afirmación**: al renovar se releen `status` y roles desde la base. Es el momento en que el sistema vuelve a preguntar "¿esta persona sigue estando bien?" — lo que el legacy nunca hacía.
 
-**CSRF: activo solo en `/auth/refresh`** (#127). El resto de la API va con `csrf.disable()`, y eso es correcto, no un descuido: se autentica con `Authorization: Bearer`, un header que el navegador nunca adjunta por su cuenta, así que no existe la credencial automática de la que vive el ataque. El refresh es el único endpoint que se autentica con **cookie**, y las cookies sí viajan solas hacia su destino sin importar quién originó la petición.
+**CSRF: activo solo en `/auth/refresh`** (#127). `SecurityConfig` lo arma con `csrf.spa().requireCsrfProtectionMatcher(refreshOnly)`, donde `refreshOnly` es `POST /auth/refresh`: el resto de la API no exige token CSRF, y eso es correcto, no un descuido: se autentica con `Authorization: Bearer`, un header que el navegador nunca adjunta por su cuenta, así que no existe la credencial automática de la que vive el ataque. El refresh es el único endpoint que se autentica con **cookie**, y las cookies sí viajan solas hacia su destino sin importar quién originó la petición.
 
 Qué se protege exactamente: un sitio ajeno no podría leer la respuesta —lo impide CORS—, así que no hay robo de sesión; lo que sí podría es **forzar la rotación** del refresh y dejar al cliente legítimo con un token viejo, cerrándole la sesión al usuario y disparando falsas alarmas de reuso. El `SameSite=Strict` de #125 ya bloquea eso, pero lo aplica el **navegador**: si el agente lo ignora, del lado del servidor no se entera nadie. El token CSRF es la comprobación que sí ocurre acá.
 - **Filtro de visibilidad por veto**: toda lectura de mesas excluye aquellas donde el usuario tenga una solicitud `Blocked`, y el detalle por id responde `404`, no `403` (#29).

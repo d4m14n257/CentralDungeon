@@ -24,7 +24,7 @@ Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontain
 - La clase de test lleva su Javadoc: qué regla prueba y qué decisión `#n` la pide (§6.1).
 
 **Patrón unitario de un service**
-1. **Arrange**: `@Mock` para los repositories y `@InjectMocks` para el service.
+1. **Arrange**: `@Mock` para los repositories, y el service **se arma con su constructor en `@BeforeEach`** (`new SettingsService(...)`), igual que lo inyecta Spring (§2.2). `@InjectMocks` existe en tres tests viejos; no se sigue.
 2. **Act**: se llama al método de negocio.
 3. **Assert**: se verifica el resultado. Cuando la regla es «no debe hacer X», se verifica con `verify(repo, never())` que no se persistió nada.
 4. Se cubren los caminos de error, no solo el feliz:

@@ -99,7 +99,7 @@ Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, 
 
 Las dos piden lo mismo —que el perfil deje de colgar del contexto Jugador o que cada contexto tenga el suyo— y es una decisión, no un bug.
 
-**Deuda de estilo que dejó a la vista #273, para triar en F4.1**: `text-[11px]` en `NotificationBell` y `WizardSteps` es un valor suelto fuera del `@theme` (regla dura 18) — o se agrega el tamaño a `design/build.py`, o se usa `text-xs`.
+**Deuda de estilo que dejó a la vista #273, para triar en F4.1**: `text-[11px]` en `NotificationBell` y `WizardSteps`, `text-[13px]` en `NotificationBell` y `text-[10px]` en `WeeklyScheduleGrid` son valores sueltos fuera del `@theme` (regla dura 18) — o se agrega el tamaño a `design/build.py`, o se usa `text-xs`.
 
 ## 3. Las seis rebanadas
 

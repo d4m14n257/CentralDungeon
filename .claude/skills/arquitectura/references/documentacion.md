@@ -1,6 +1,6 @@
 # 6. Documentación del código
 
-> Parte de la skill `arquitectura` (#274). Junta el Javadoc (el viejo `arquitectura-backend` §2.8) y su contraparte JSDoc (que estaba en `arquitectura-frontend` §3.3), que son una misma regla aplicada a dos lenguajes. La regla en sí es la dura 19 de `CLAUDE.md`; acá está el cómo.
+> Parte de la skill `arquitectura` (#274). Junta el Javadoc (el viejo `arquitectura-backend` §2.8) y su contraparte JSDoc (que estaba en `arquitectura-frontend` §3.3), que son una misma regla aplicada a dos lenguajes. La regla en sí es la dura 19, en `.claude/rules/documentacion-codigo.md` (#290); el índice está en `CLAUDE.md`; acá está el cómo.
 
 El proyecto se entrega para que el cliente lo use y lo siga mejorando. Eso pone la documentación **en el código**, no solo en `docs/`: quien abra una clase tiene que entender qué hace sin reconstruirlo leyendo su cuerpo.
 

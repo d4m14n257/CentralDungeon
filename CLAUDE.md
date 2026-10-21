@@ -139,7 +139,7 @@ En `.claude/rules/`, versionadas (#290). Cada una se carga sola al tocar un arch
 
 ## Agentes
 
-En `.claude/agents/`, versionados (#291). Cada uno precarga la skill del repo que le toca. **Se lanzan cuando el usuario o la tarea lo piden**, no por iniciativa propia. Los revisores no editan: devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3 (bug, alcance de F5 o F6, decisión nueva).
+En `.claude/agents/`, versionados (#291). Cada uno precarga la skill del repo que le toca. **Se lanzan cuando el usuario o la tarea lo piden**, no por iniciativa propia. Los revisores no editan: devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3 (bug, alcance de F5 o F6, decisión nueva); el auditor, en las suyas (corrección directa, decisión nueva, limpieza).
 
 | Agente | Cuándo |
 |---|---|

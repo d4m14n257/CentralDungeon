@@ -10,7 +10,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Regla | Dónde | Ref. |
 |---|---|---|
 | Login exige cuenta de Discord y membresía al servidor; si no es miembro se ofrece la invitación antes de cortar | `DiscordOAuth2UserService` | #38 |
-| Todo usuario nuevo se crea con rol `Player` | `UserRegistrationService` | #38 |
+| Todo usuario nuevo se crea con rol `Player` | `UserService` | #38 |
 | Los cuatro roles son acumulables. Única excepción: `Owner` puede todo lo que puede `Admin`. Se escribe `hasAnyRole('ADMIN','OWNER')` en cada endpoint, sin `RoleHierarchy` | `SecurityConfig` | #37, #67, #89 |
 | `Owner` y `Admin` **no** implican `Player` ni `Master`: para jugar o dirigir hay que tener ese rol | `SecurityConfig` | #89 |
 | **`Admin` y `Owner` son excluyentes**: nadie tiene los dos. Otorgar uno quita el otro — son el mismo rol con distinto alcance, y `Owner` está por encima. La quita deja **su propia fila** en `user_role_changes` | `UserRoleService` | #169 |
@@ -141,24 +141,24 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| Solo una mesa `Finished` habilita comentar; una `Canceled` no genera comentarios ni karma | `CommentService` | #46 |
-| El comentario se escribe como borrador y se confirma al cerrar la mesa; ahí se crea la fila anónima y se borra el borrador | `CommentService` | #48, #49 |
-| Un comentario por autor sobre la misma persona por mesa, verificado con el token de `comment_quotas` | `CommentService` | #35, #82 |
-| Solo puede comentar quien coincidió con el comentado en la mesa, validado contra la asistencia. **La evidencia se usa y no se persiste** | `CommentService` | #31, #36 |
-| El borrador no confirmado expira, con dos avisos previos, y se le purgan autor y contenido | `CommentService` | #50, #52 |
-| Todo comentario confirmado pasa por moderación de un admin, que ve contenido y destinatario pero nunca al autor | `CommentModerationService` | #51 |
-| El karma se mueve solo con los comentarios aprobados | `CommentModerationService` | #51 |
-| **Fórmula**: `karma = 10000 × (W·m + Σ wᵢ·vᵢ) / (W + Σ wᵢ)` con `m=0.8`, `W=20`, `wᵢ=2^(−antigüedad/12 meses)`; `v` vale `1.0` positivo, `0.8` neutro, `0.0` negativo | `KarmaService` | #96 |
-| El **neutro vale igual que el prior**: no mueve el promedio pero acumula confianza y amortigua un negativo aislado | `KarmaService` | #96 |
-| `users.karma` es una **proyección cacheada**, no la fuente de verdad. La fuente son las filas de `comments` | `KarmaService` | #97 |
-| Se recalcula al aprobar un comentario (solo esa persona) y en un **job semanal nocturno** (todos) | `KarmaService` | #97 |
-| La asistencia **no** entra en el cálculo: se muestra como métrica aparte | `KarmaService` | #98 |
+| Solo una mesa `Finished` habilita comentar; una `Canceled` no genera comentarios ni karma | `CommentService` *(F5, sin construir)* | #46 |
+| El comentario se escribe como borrador y se confirma al cerrar la mesa; ahí se crea la fila anónima y se borra el borrador | `CommentService` *(F5, sin construir)* | #48, #49 |
+| Un comentario por autor sobre la misma persona por mesa, verificado con el token de `comment_quotas` | `CommentService` *(F5, sin construir)* | #35, #82 |
+| Solo puede comentar quien coincidió con el comentado en la mesa, validado contra la asistencia. **La evidencia se usa y no se persiste** | `CommentService` *(F5, sin construir)* | #31, #36 |
+| El borrador no confirmado expira, con dos avisos previos, y se le purgan autor y contenido | `CommentService` *(F5, sin construir)* | #50, #52 |
+| Todo comentario confirmado pasa por moderación de un admin, que ve contenido y destinatario pero nunca al autor | `CommentModerationService` *(F5, sin construir)* | #51 |
+| El karma se mueve solo con los comentarios aprobados | `CommentModerationService` *(F5, sin construir)* | #51 |
+| **Fórmula**: `karma = 10000 × (W·m + Σ wᵢ·vᵢ) / (W + Σ wᵢ)` con `m=0.8`, `W=20`, `wᵢ=2^(−antigüedad/12 meses)`; `v` vale `1.0` positivo, `0.8` neutro, `0.0` negativo | `KarmaService` *(F5, sin construir)* | #96 |
+| El **neutro vale igual que el prior**: no mueve el promedio pero acumula confianza y amortigua un negativo aislado | `KarmaService` *(F5, sin construir)* | #96 |
+| `users.karma` es una **proyección cacheada**, no la fuente de verdad. La fuente son las filas de `comments` | `KarmaService` *(F5, sin construir)* | #97 |
+| Se recalcula al aprobar un comentario (solo esa persona) y en un **job semanal nocturno** (todos) | `KarmaService` *(F5, sin construir)* | #97 |
+| La asistencia **no** entra en el cálculo: se muestra como métrica aparte | `KarmaService` *(F5, sin construir)* | #98 |
 | Se muestra el puntaje y los comentarios recibidos, sin desglose agregado. El master ve lo mismo que el dueño del perfil | `UserService` | #99 |
-| Llegar a 0 o 10000 no dispara ninguna acción automática | `CommentModerationService` | #74 |
-| El feedback del sistema vive en `system_feedback`, es anónimo y no guarda autor en ningún momento. Sin destinatario, sin karma y sin mesa | `FeedbackService` | #91, #93 |
-| Uno cada 24 h reales: se comprueban los tokens de las últimas 24 franjas horarias en `feedback_quotas` | `FeedbackService` | #94 |
-| Las filas de `feedback_quotas` se purgan pasadas 24 h; el token rota por hora y nunca es un identificador estable del usuario | `FeedbackService` | #94 |
-| No pasa por moderación: va directo a la bandeja de lectura de admins y owner | `FeedbackService` | #95 |
+| Llegar a 0 o 10000 no dispara ninguna acción automática | `CommentModerationService` *(F5, sin construir)* | #74 |
+| El feedback del sistema vive en `system_feedback`, es anónimo y no guarda autor en ningún momento. Sin destinatario, sin karma y sin mesa | `FeedbackService` *(F5, sin construir)* | #91, #93 |
+| Uno cada 24 h reales: se comprueban los tokens de las últimas 24 franjas horarias en `feedback_quotas` | `FeedbackService` *(F5, sin construir)* | #94 |
+| Las filas de `feedback_quotas` se purgan pasadas 24 h; el token rota por hora y nunca es un identificador estable del usuario | `FeedbackService` *(F5, sin construir)* | #94 |
+| No pasa por moderación: va directo a la bandeja de lectura de admins y owner | `FeedbackService` *(F5, sin construir)* | #95 |
 
 ### Visibilidad de perfiles
 
@@ -212,7 +212,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (#3). Cada una lle
 | Publicar solo lo hace un admin; el archivo sigue siendo de quien lo subió. ~~La audiencia~~ la reemplazó el cajón (#233) | `FileService` | #55, ~~#64~~ |
 | Lo que una mesa comparte lo lee cualquiera que pueda ver la mesa; lo privado, solo quien la dirige. **Al llegar el veto (F3) hay que excluir al vetado acá también** | `FileService` | #17, #29, #121 |
 | El borrado físico lo ejecuta el owner desde el menú de administración | `StorageService` | #66 |
-| `comments` y `comment_drafts` **nunca** se auditan | `AuditService` | #43 |
+| `comments` y `comment_drafts` **nunca** se auditan | `AuditService` *(F6, sin construir)* | #43 |
 
 ### Bandeja compartida de admins
 
@@ -220,7 +220,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| La bandeja une `approval_requests` (`Pending`), `comments` (`Under review`), `system_feedback` (`New`) y `game_tables` (`Preparation`), normalizado a un DTO común. **`Draft` nunca entra**: nadie la envió todavía. **`ChangesRequested` tampoco** — la pelota está en el master. **`Unassigned` tampoco**: le falta un master, no una revisión | `AdminQueueService` | #100, #245 |
+| La bandeja une `approval_requests` (`Pending`), `comments` (`Under review`), `system_feedback` (`New`) y `game_tables` (`Preparation`), normalizado a un DTO común. **Hoy `AdminQueueService.list` une solo las dos primeras**: `comments` y `system_feedback` entran con F5. **`Draft` nunca entra**: nadie la envió todavía. **`ChangesRequested` tampoco** — la pelota está en el master. **`Unassigned` tampoco**: le falta un master, no una revisión | `AdminQueueService` | #100, #245 |
 | El `UNION ALL` de #100 se construye como **una consulta por fuente y el merge en Java**, no como SQL nativo: no hay un solo `nativeQuery` en el proyecto, y el precedente propio del mismo problema es `MasterDashboardService`. Sumar la fuente de F5 es escribir un método privado más | `AdminQueueService` | #100, #11 |
 | Cada fuente trae como mucho **200 filas**, y tocar el techo se loguea en `WARN` con el nombre de la fuente: un merge sin tope es una carga de memoria que nadie declaró | `AdminQueueService` | #100 |
 | La bandeja se ordena por **el que espera hace más tiempo primero**, con desempate por id, y pagina con el total exacto — el merge ya está en memoria. **No lleva `?q=`**: la pantalla que busca es `/admin/tables` | `AdminQueueService` | #136, #171, #173, #176 |
@@ -240,7 +240,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 | Una notificación guarda **tipo + parámetros**, nunca la frase. El texto lo arma quien la lee, en su idioma. Las filas anteriores a #197 conservan su texto congelado y se muestran así | `NotificationService` · `notificationText.ts` | #197, #198 |
 | Se entregan en tiempo real por WebSocket+STOMP a `/user/queue/notifications`; la bandeja de admins va a `/topic/admin-queue` | `NotificationService` | #101 |
 | El mensaje que viaja es una **señal de invalidación**, no el contenido: el cliente refetchea con TanStack Query | `NotificationService` | #101 |
-| La suscripción a `/topic/admin-queue` se rechaza si el usuario no tiene `Admin` u `Owner` | `WebSocketConfig` | #101 |
+| La suscripción a `/topic/admin-queue` se rechaza si el usuario no tiene `Admin` u `Owner` | `WebSocketConfig` *(F6, sin construir)* | #101 |
 | Una notificación de comentario recibido **nunca** nombra a su autor | `NotificationService` | #43 |
 | **Todo lo que un admin cambia de una mesa ajena se le avisa a sus masters**: editarla, pausarla directo, reanudarla, cancelarla y darla de baja (`Table…ByAdmin`). No nombra al admin ni copia el motivo, que está en el historial; la baja no enlaza. **No se avisa si el admin también dirige esa mesa** | `GameTableService.announceAdminAction` · `NotificationService.notifyAdminActedOnTable` | #140, #197, #284 |
 
@@ -262,7 +262,7 @@ Los ítems de trabajo de admin **no se duplican como notificaciones**: la bandej
 
 | Regla | Dónde | Ref. |
 |---|---|---|
-| Se registra qué entidad cambió, su id, quién y cuándo. No se registra navegación ni clics | `AuditService` | #92 |
-| `before_data` y `after_data` guardan **solo las columnas que cambiaron**, no la fila completa | `AuditService` | #92 |
-| La consulta del historial de auditoría es exclusiva del rol `Owner` | `AuditService` | #92 |
-| **Excepción deliberada**: `comments` y `comment_drafts` quedan fuera de la auditoría. Auditarlos guardaría autor y contenido juntos y anularía el anonimato | `AuditService` | #43, #92 |
+| Se registra qué entidad cambió, su id, quién y cuándo. No se registra navegación ni clics | `AuditService` *(F6, sin construir)* | #92 |
+| `before_data` y `after_data` guardan **solo las columnas que cambiaron**, no la fila completa | `AuditService` *(F6, sin construir)* | #92 |
+| La consulta del historial de auditoría es exclusiva del rol `Owner` | `AuditService` *(F6, sin construir)* | #92 |
+| **Excepción deliberada**: `comments` y `comment_drafts` quedan fuera de la auditoría. Auditarlos guardaría autor y contenido juntos y anularía el anonimato | `AuditService` *(F6, sin construir)* | #43, #92 |

@@ -12,77 +12,88 @@ frontend/
 ├── index.html
 ├── vite.config.ts                   incluye el plugin @tailwindcss/vite
 ├── components.json                  config de shadcn/ui (aliases por defecto)
-├── tsconfig.json                    strict + alias "@/*" → "src/*"
-├── e2e/                             specs de Playwright
+├── tsconfig.json                    tsconfig de solución ("files": []): el typecheck real es `npx tsc -b`
+├── e2e/                             specs de Playwright y sus helpers (acceptReview, test-login)
 └── src/
     ├── main.tsx                     bootstrap: providers + RouterProvider
     ├── styles/
-    │   └── globals.css              @import "tailwindcss" + bloque @theme (Tailwind 4: la config vive acá, no en un .ts)
+    │   ├── globals.css              @import "tailwindcss" + @theme, transcripto de design/build.py (#130)
+    │   └── base.css                 las clases de patrón (`diseno` §5.c, #273)
     ├── assets/                      imágenes, íconos propios, fuentes
     │
     ├── config/                      configuración de la app, sin lógica
-    │   ├── paths.ts                 constantes de rutas ('/tables/:id'), únicas en todo el proyecto
+    │   ├── paths.ts                 builders de URL para los enlaces (§3.1.6)
     │   ├── env.ts                   variables de entorno, leídas y validadas en un solo lugar
-    │   └── query.ts                 defaults del QueryClient y política de staleTime (§3.3)
+    │   ├── query.ts                 defaults del QueryClient, política de staleTime y el único polling (§3.3)
+    │   ├── pagination.ts            tamaños de página (#271)   limits.ts   los topes que se dicen antes (#264)
+    │   ├── language.ts              idiomas soportados (#198)  zodErrors.ts  mensajes de zod por clave i18n
     │
     ├── routes/                      TODAS las pantallas + el árbol de rutas (§3.1.6)
     │   ├── router.tsx               createBrowserRouter: URLs, layouts anidados y lazy
-    │   ├── TableListPage.tsx        /
-    │   ├── TableDetailPage.tsx      /tables/:id
-    │   ├── my/                      /my/*
-    │   ├── master/                  /master/*
+    │   ├── RootRedirect.tsx         `/`: no es pantalla, despacha a la home del contexto (#222)
+    │   ├── LoginPage.tsx  OAuthCallbackPage.tsx  OnboardingPage.tsx  NotificationsPage.tsx  NotFoundPage.tsx
+    │   ├── player/                  /player/*
+    │   ├── master/                  /master/*  (las pestañas de una mesa son …Tab.tsx)
     │   ├── admin/                   /admin/*
-    │   └── owner/                   /owner/*
+    │   └── my/                      /my/* — transversales, de ningún contexto
     │
     ├── layouts/                     cáscaras de página, montadas por el router
     │   ├── RootLayout.tsx           sesión y guard de autenticación
-    │   ├── PublicLayout.tsx
-    │   ├── PlayerLayout.tsx  MasterLayout.tsx  AdminLayout.tsx  OwnerLayout.tsx
-    │   └── components/              piezas del shell: AppHeader, AppSidebar, ContextSwitcher, UserMenu
+    │   ├── PublicLayout.tsx         la tarjeta centrada de callback y onboarding
+    │   ├── ShellLayout.tsx          el shell sin nav de sección, para las transversales
+    │   ├── PlayerLayout.tsx  MasterLayout.tsx  AdminLayout.tsx   cada uno cerrado con RequireContext (#269)
+    │   └── components/              AppHeader, ContextSwitcher, UserMenu, BrandMark, RequireContext,
+    │                                PlayerSectionNav, MasterSectionNav, AdminSectionNav
     │
-    ├── providers/                   QueryProvider, ThemeProvider, AuthProvider, StompProvider, I18nProvider
-    ├── stores/                      Zustand global: contexto de rol activo, preferencias
+    ├── providers/                   QueryProvider, ThemeProvider, AuthProvider, I18nProvider (+ i18n.ts)
+    ├── stores/                      Zustand global: contextStore (contexto de rol de respaldo, #222)
     │
     ├── features/                    los dominios. Sin páginas adentro
-    │   ├── auth/
-    │   ├── tables/
+    │   ├── tables/                  el ejemplo de la forma completa:
     │   │   ├── api/
-    │   │   │   ├── gameTablesApi.ts       las llamadas, sobre api/client
-    │   │   │   ├── useGameTables.ts       queries
-    │   │   │   └── useCreateGameTable.ts  mutations (una por archivo)
-    │   │   ├── components/          plano, con sufijo (§3.1.3):
-    │   │   │                        GameTableCard.tsx, GameTableForm.tsx,
-    │   │   │                        CreateGameTableDialog.tsx, EditGameTableDialog.tsx,
-    │   │   │                        TableSchedulesSection.tsx, TableStatusBadge.tsx
-    │   │   ├── hooks/               hooks de UI propios de la feature (opcional)
+    │   │   │   ├── gameTablesApi.ts   sessionsApi.ts    las llamadas, sobre api/client
+    │   │   │   ├── useGameTables.ts   useGameTable.ts   queries
+    │   │   │   └── useCreateTable.ts  useUpdateTable.ts …  mutations, una por archivo
+    │   │   ├── components/          plano, con sufijo (§3.1.3): GameTableCard, TableStatusBadge,
+    │   │   │                        ScheduleEditor, SessionList, AttendanceEditor,
+    │   │   │                        JustifiedTableActionDialog, WeeklyScheduleGrid…
+    │   │   ├── lib/                 utilidades puras del dominio (tableTypeLabel.ts)
     │   │   ├── schemas.ts           esquemas zod de los formularios
-    │   │   ├── constants.ts         labels y opciones del dominio (opcional)
-    │   │   ├── types.ts             tipo base del dominio + derivados (§3.2)
+    │   │   ├── searchFields.ts      los campos del buscador (#164)   tableErrors.ts   códigos → claves i18n (#197)
+    │   │   ├── lifecycle.ts         qué acción admite cada estado de la mesa
+    │   │   ├── types.ts             los tipos del dominio (§3.2)
     │   │   └── index.ts             la superficie pública de la feature (§3.1.3)
-    │   ├── registrations/  files/  catalogs/  comments/  notifications/  users/
+    │   ├── adminQueue/  approvals/  auth/  catalogs/  comments/  feedback/  files/
+    │   └── help/  notifications/  registrations/  settings/  tasks/  users/
     │
     ├── components/                  sin dominio, para toda la app
     │   ├── ui/                      primitivas shadcn/ui generadas (button.tsx, dialog.tsx…)
-    │   └── …                        compuestos propios: FormDialog, DataTable, EmptyState,
-    │                                ErrorState, SearchQueryInput, LoadMore,
-    │                                PaginationControls…
+    │   ├── graph/                   el lienzo de nodos sobre React Flow (`diseno` §5, #275)
+    │   ├── dev/                     DevPanel, solo en desarrollo (#158)
+    │   └── …                        compuestos propios: PageHeader, SectionHeader, DataTable,
+    │                                FormDialog, ConfirmDialog, StatusBadge, StatusNotice, IconAction,
+    │                                EmptyState, ErrorState, ForbiddenState, SearchQueryInput,
+    │                                LoadMore, PaginationControls… (inventario: `diseno` §5)
     ├── hooks/                       useDisclosure, useDebounce, useUnsavedChanges, useLanguage,
     │                                useBackendStatus, useAvailableContexts (#222),
     │                                useSearchQuery (#240), useHasPersonalLibrary (#241),
-    │                                useConfirm (#243) — su Context vive acá con el hook y
-    │                                components/ConfirmDialog.tsx solo exporta el provider
+    │                                useClientLimits (#264), useConfirm (#243) — su Context vive
+    │                                acá con el hook y components/ConfirmDialog.tsx solo exporta el provider
     ├── lib/
     │   ├── utils.ts                 cn() — la ruta que shadcn/ui espera por defecto
     │   ├── date.ts                  formateo de fechas y horas con Intl (§3.3)
+    │   ├── relativeTime.ts          «hace 2 h»   countries.ts   países del onboarding
     │   └── searchQuery.ts           el lenguaje de los buscadores (#164) — espejo de common/search/
     ├── api/
     │   ├── client.ts                fetch tipado: base URL, JWT, parseo de ProblemDetail
     │   └── queryKeys.ts             fábrica central de query keys
     ├── types/
     │   ├── api.ts                   PageResponse<T>, ProblemDetail, ApiError
+    │   ├── catalog.ts  file.ts      los tipos que comparte más de una feature
     │   └── utils.ts                 helpers de tipos propios: StrictOmit, Expect, Equals (§3.2)
     └── locales/
-        └── es/                      un JSON por espacio de nombres (§3.3)
+        ├── es/                      un JSON por espacio de nombres (§3.3)
+        └── en/                      las mismas claves, en el mismo commit (#198)
 ```
 
 Dos notas sobre `components/`: las primitivas de shadcn/ui caen en `components/ui/` porque es el alias que su CLI usa por defecto, y `lib/utils.ts` es donde espera encontrar `cn()` — respetar ambos evita reconfigurar el generador en cada componente nuevo.
@@ -165,15 +176,18 @@ Por eso las páginas viven en `routes/` y no dentro de una feature: **componer d
 **Lo que la página le pasa a cada bloque es un identificador, no una entidad.** Cada bloque es un componente `…Section` que vive en **su** feature, lanza **su** propia query y monta **sus** propios diálogos:
 
 ```tsx
-// routes/TableDetailPage.tsx — compone; su única query es la mesa
-<GameTableHeader table={table} />
-<TableSchedulesSection tableId={id} />       {/* features/tables        */}
-<TableFilesSection tableId={id} />           {/* features/files         */}
-<TableCatalogsSection tableId={id} />        {/* features/catalogs      */}
-<TableRegistrationsSection tableId={id} />   {/* features/registrations */}
+// routes/player/MyTableDetailPage.tsx — compone; su query propia es la mesa
+const { data: table } = useGameTable(tableId)              // features/tables
+<TableStatusBadge status={table.status} />                 // features/tables
+<TableTasksSection                                          // features/tasks: su query, sus diálogos
+  tableId={tableId}
+  renderFiles={(files) => <FileList files={files} />}      // features/files, inyectado por la pantalla
+  renderFilePicker={(onPick) => <FilePicker onPick={onPick} … />}
+  renderHelp={() => <HelpButton section="players.tasks" />} // features/help
+/>
 ```
 
-`TableFilesSection` recibe un `tableId` y nada más: no conoce el tipo `GameTable`, así que `features/files` no depende de `features/tables`. Toda la dependencia entre dos features cabe en una prop. Si un `…Section` necesitara la entidad entera, es señal de que el bloque está en la feature equivocada.
+`TableTasksSection` recibe un `tableId` y nada más: no conoce el tipo `GameTable`, así que `features/tasks` no depende de `features/tables`. **Y cuando un bloque necesita pintar algo de otro dominio** —los archivos de una entrega, el selector de archivos, la ayuda—, no lo importa: lo recibe como *render prop* que la pantalla llena (`renderFiles`, `renderFilePicker`, `renderHelp`). Es la segunda forma que tiene una dependencia entre features de caber en una prop. Toda la dependencia entre dos features cabe en una prop. Si un `…Section` necesitara la entidad entera, es señal de que el bloque está en la feature equivocada.
 
 La página tampoco concentra el estado de los diálogos: cada `…Section` tiene el suyo. Los seis `useModal` en paralelo del legacy eran el síntoma de que un solo componente estaba haciendo el trabajo de seis.
 
@@ -182,34 +196,36 @@ La página tampoco concentra el estado de los diálogos: cada `…Section` tiene
 React Router **no tiene convención de archivos**: la URL no sale de dónde está el archivo, sale de un árbol de objetos declarado a mano. Es la diferencia de fondo con Next.js, donde `pages/tables/[id].js` *era* `/tables/:id`. Por eso el router es una lista central y no algo distribuido por feature: una ruta dentro de `features/` no se registraría sola.
 
 ```tsx
-// routes/router.tsx
+// routes/router.tsx (abreviado)
 export const router = createBrowserRouter([
   {
-    Component: RootLayout,                    // sesión y guard; ErrorBoundary global
-    ErrorBoundary: RootErrorBoundary,
+    Component: RootLayout,                    // sesión y guard de autenticación
     children: [
+      { path: '/login', lazy: () => import('./LoginPage') },   // pantalla completa, sin layout
       {
         Component: PublicLayout,              // sin path: solo agrupa
         children: [
-          { path: paths.login,        lazy: () => import('./LoginPage') },
-          { path: paths.authCallback, lazy: () => import('./OAuthCallbackPage') },
+          { path: '/auth/callback', lazy: () => import('./OAuthCallbackPage') },
+          { path: '/onboarding',    lazy: () => import('./OnboardingPage') },
         ],
       },
+      { index: true, lazy: () => import('./RootRedirect') },  // `/` despacha al contexto (#222)
       {
+        path: 'player',                       // cada contexto es dueño de su prefijo (#222)
         Component: PlayerLayout,
         children: [
-          { index: true,        lazy: () => import('./TableListPage') },
-          { path: 'tables/:id', lazy: () => import('./TableDetailPage') },
+          { index: true,        lazy: () => import('./player/TableListPage') },
+          { path: 'tables/:id', lazy: () => import('./player/TableDetailPage') },
           // …el resto del contexto Jugador
         ],
       },
+      { Component: ShellLayout, children: [ /* notifications, my/schedule, my/files */ ] },
       { path: 'master', Component: MasterLayout, children: [ /* … */ ] },
       { path: 'admin',  Component: AdminLayout,  children: [ /* … */ ] },
-      { path: 'owner',  Component: OwnerLayout,  children: [ /* … */ ] },
-      { path: '*', Component: NotFoundPage },
+      { path: '*', lazy: () => import('./NotFoundPage') },
     ],
   },
-]);
+])
 ```
 
 Cinco reglas:
@@ -224,7 +240,7 @@ export function TableDetailPage() { /* … */ }
 export { TableDetailPage as Component };   // lo que consume router.tsx
 ```
 
-5. **Las pestañas de una pantalla son rutas hijas, no `useState`.** Las siete de `/master/tables/:id` (candidatos, jugadores, agenda, sesiones, peticiones, archivos, estado) se declaran como `children`, así cada una tiene URL propia, se comparte por link y el botón de atrás funciona.
+5. **Las pestañas de una pantalla son rutas hijas, no `useState`.** Las siete de `/master/tables/:id` (`candidates`, `players`, `schedule`, `sessions`, `tasks`, `files`, `status`) se declaran como `children`, así cada una tiene URL propia, se comparte por link y el botón de atrás funciona.
 
 **Guards: en el layout, no por ruta.** `RootLayout` redirige a `/login` si no hay sesión, y con eso cubre todo lo que cuelga de él. Cada layout de contexto (`PlayerLayout`, `MasterLayout`, `AdminLayout`) se envuelve en **`RequireContext`** (#269): quien no tiene ese contexto —misma regla que `useAvailableContexts`— es redirigido a `/`, que lo despacha a su home; nunca ve la nav ajena ni un 403. Una pantalla **no** repite ese chequeo. ⚠️ Sigue sin ser la seguridad: el backend autoriza endpoint por endpoint (#103), y `ForbiddenState` queda para el `403` por pertenencia a un recurso concreto (#121).
 

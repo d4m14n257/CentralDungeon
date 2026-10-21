@@ -1,6 +1,6 @@
 # 6–8 Las herramientas de Claude en este repo
 
-> Parte de la skill `entorno-local`. Hasta #292 era `entorno-local` §6. Lo que son las skills, las rules y los agentes del repo, y cuándo se usa cada uno, está en `CLAUDE.md`.
+> Parte de la skill `entorno-local`. Hasta #292 era `docs/mcp-y-skills.md`. Lo que son las skills, las rules y los agentes del repo, y cuándo se usa cada uno, está en `CLAUDE.md`.
 
 ## 6. MCP servers (`.mcp.json`, raíz del repo)
 

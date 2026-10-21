@@ -50,7 +50,7 @@ Todo lo demás —el estado de un modal, los filtros de una pantalla— es estad
 
 **Contexto activo**: la navegación se organiza por contexto de rol (`diseno` §2). ⚠️ **El contexto es organización de UI, no autorización.** Estar "en contexto Admin" no habilita nada: el backend autoriza endpoint por endpoint (§2.6) y una ruta forzada sin el rol devuelve `403`. Ningún componente decide qué puede hacer el usuario mirando el contexto activo; lo decide el rol que trae el token.
 
-**Tiempo real**: un único `StompProvider` mantiene la conexión WebSocket. Los mensajes que llegan son **señales de invalidación**, no datos: el handler hace `queryClient.invalidateQueries(...)` y TanStack Query refetchea. Nunca se escribe una respuesta de servidor en la caché a partir de un mensaje — eso reintroduciría por la ventana el estado de servidor fuera de TanStack Query que la regla de arriba prohíbe.
+**Tiempo real — diseño para F6, no construido** (#260). **Hoy no hay WebSocket en ningún lado**: la bandeja de admins se mantiene al día con `refetchInterval` (`liveQuery.adminQueue` en `config/query.ts`), y es la única query que hace polling además de `useBackendStatus`. Lo que sigue es cómo se construye en F6, y por qué se escribió antes: un único `StompProvider` mantendrá la conexión WebSocket. Los mensajes que llegan son **señales de invalidación**, no datos: el handler hace `queryClient.invalidateQueries(...)` y TanStack Query refetchea. Nunca se escribe una respuesta de servidor en la caché a partir de un mensaje — eso reintroduciría por la ventana el estado de servidor fuera de TanStack Query que la regla de arriba prohíbe.
 
 Tres reglas para que eso no se convierta en una tormenta de peticiones (#116):
 
@@ -65,11 +65,13 @@ Tres destinos (#101 y #116): `/user/queue/notifications` para lo personal, `/top
 | Dato | `staleTime` | Por qué |
 |---|---|---|
 | Catálogos (sistemas, tags, plataformas) | 1 h | Solo los cambia un admin desde `/admin/catalogs` |
-| Listado de mesas | 30 s | El WS cubre lo urgente; el `staleTime` cubre el resto |
+| Listado de mesas | 30 s | Es también el default del `QueryClient`: una query sin `staleTime` propio hereda este. Alcanza para datos que cambian por acción de otros a ritmo humano; lo que no, declara el suyo |
 | Detalle de mesa | 1 min | |
-| Notificaciones | `Infinity` | El WS es su única fuente de cambio; pedirlas por tiempo es ruido puro |
+| Notificaciones | `Infinity` | Se invalidan al leerlas y al llegar una nueva; pedirlas por tiempo es ruido puro (con F6, el WS será su única fuente de cambio) |
 | Perfil y karma | 5 min | El karma se recalcula al aprobar un comentario o en el job semanal (#97) |
-| Bandeja de admins | 30 s | La reserva de #100 se libera sola a los 15 min |
+| Archivos y adjuntos de una mesa | 1 min | Cambian cuando alguien actúa, no solos |
+| Peticiones y entregas | 1 min | Ídem |
+| Bandeja de admins | 10 s, más `refetchInterval` de 15 s (#260) | Es lo único que se pide por tiempo hasta que exista el WS. La reserva de #100 se libera sola al vencer `admin_queue.claim_timeout_minutes` de `system_settings` (15 min por defecto, #263) |
 
 **Sesión**: el access token vive **en memoria**, nunca en `localStorage` ni en `sessionStorage`; el refresh viaja en una cookie `httpOnly` + `SameSite=Strict` que el frontend no lee ni escribe. `client.ts` es el único que conoce el token: lo inyecta, y ante un `401` intenta el refresh una vez y reintenta la llamada; si el refresh también falla, limpia y manda a `/login`. La razón es concreta: hay editor de texto enriquecido renderizado en el navegador (#62), que es la superficie de XSS más directa del sistema, y un token en `localStorage` es legible por cualquier script que se cuele por ahí.
 
@@ -126,19 +128,7 @@ export function EditGameTableDialog({ table, open, onOpenChange }: EditGameTable
 
 **Estilos** (#109): Tailwind en el JSX. Los tokens del tema —colores, tipografía, radios, y los estados de mesa y postulación— se definen en el bloque `@theme` de `styles/globals.css`; no hay `tailwind.config.ts` en Tailwind 4.
 
-Las variantes por props se resuelven con `class-variance-authority`, que es lo que shadcn/ui ya usa internamente, y la composición condicional con el helper `cn()`:
-
-```ts
-const badge = cva('inline-flex items-center rounded-md px-2 py-1 text-xs font-medium', {
-  variants: {
-    state: {
-      Opened:     'bg-state-open/15 text-state-open',
-      InProgress: 'bg-state-active/15 text-state-active',
-      Canceled:   'bg-state-canceled/15 text-state-canceled',
-    },
-  },
-});
-```
+Las variantes por props se resuelven con `class-variance-authority` —lo que shadcn/ui ya usa internamente— y la composición condicional con el helper `cn()`. **Hoy `cva` lo usan solo las primitivas de `components/ui/`**, y un estado de mesa o de postulación **nunca** es un `cva` propio: es `StatusBadge`, con los tokens `--color-state-<familia>-dot/-bg/-fg` de `globals.css` (#261, `diseno` §3 y §5). Si una pieza propia necesita variantes, ese es el lugar.
 
 **Nada de CSS-in-JS, archivos CSS por componente ni objetos de estilo en JavaScript** — el frontend viejo tenía los estilos en `styles/*.js` y cuatro motores conviviendo. Estilos inline solo para valores calculados en runtime.
 

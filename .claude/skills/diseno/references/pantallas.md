@@ -1,6 +1,6 @@
 # 4 y 6 Pantallas clave y qué se rescata del frontend viejo
 
-> Parte de la skill `diseno`. Hasta #292 eran `diseno` §4 y §6, y conservan su numeración. **Los wireframes en ASCII de §4 no se trajeron**: habían quedado viejos —rutas anteriores a #222, los filtros que reemplazó el buscador (#242), la pestaña Estado que quitó #287— y lo que se dibuja de verdad son las previews de las pantallas, `design/out/screen-*.html`, en los dos temas, que se regeneran con `python3 design/build.py`. Siguen en git. Quedan las reglas que vivían debajo de cada uno, que son las que una pantalla tiene que cumplir.
+> Parte de la skill `diseno`. Hasta #292 eran `docs/frontend-diseno.md` §4 y §6, y conservan su numeración. **Los wireframes en ASCII de §4 no se trajeron**: habían quedado viejos —rutas anteriores a #222, los filtros que reemplazó el buscador (#242), la pestaña Estado que quitó #287— y lo que se dibuja de verdad son las previews de las pantallas, `design/out/screen-*.html`, en los dos temas, que se regeneran con `python3 design/build.py`. Siguen en git. Quedan las reglas que vivían debajo de cada uno, que son las que una pantalla tiene que cumplir.
 
 ## 4. Pantallas clave
 

@@ -12,15 +12,15 @@ El objetivo no es ceremonia: es que el contrato de la API esté escrito en algú
 | Sufijo | Rol | Ejemplo |
 |---|---|---|
 | `...Request` | entrada de creación o actualización | `CreateGameTableRequest` |
-| `...Response` | salida estándar de un recurso | `GameTableResponse` |
+| `...Response` | salida estándar de un recurso | `ProfileResponse` |
 | `...SummaryResponse` | versión reducida, para listados y referencias anidadas | `GameTableSummaryResponse` |
 | `...DetailResponse` | versión ampliada, para la vista de detalle | `GameTableDetailResponse` |
-| `...Command` | entrada de un service cuando no coincide con el `Request` HTTP | `RegisterPlayerCommand` |
+| `...Command` | entrada de un service cuando no coincide con el `Request` HTTP. **Disponible, sin uso hoy**: ningún service lo necesitó todavía | — |
 
 **Reglas**
 
 - **Entrada y salida son records distintos**, aunque hoy tengan los mismos campos. Se separan porque evolucionan por motivos distintos: al `Request` se le agregan validaciones, al `Response` se le agregan campos derivados.
-- **Un `Response` no expone nada que su consumidor no deba ver.** `UserResponse` no lleva `discordId` ni `status`, porque el listado público de jugadores de una mesa no los necesita; `UserDetailResponse` sí.
+- **Un `Response` no expone nada que su consumidor no deba ver.** `UserSummaryResponse(id, discordUsername, name)` no lleva `discordId` ni `status`, porque el listado público de jugadores de una mesa no los necesita; `UserDetailResponse` sí.
 - **Listado y detalle son DTOs distintos.** Devolver el detalle completo en una página de 50 mesas es cargar 50 veces relaciones que nadie va a mirar.
 - **Nada de entidades anidadas dentro de un DTO.** Si `GameTableResponse` necesita a su master, lleva un `MasterSummaryResponse`, no un `User`.
 - **Las colecciones nunca son `null`**: `List.of()` vacía. El frontend no debería tener que distinguir "sin tags" de "tags no cargados".

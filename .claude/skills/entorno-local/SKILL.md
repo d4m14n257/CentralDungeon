@@ -13,7 +13,7 @@ Cada una de estas cosas costó una sesión entera la primera vez, y **todas se v
 
 - **Por qué:** un backend paralelo arrastra una cadena de overrides —origen CORS, URL del frontend, URIs del proveedor OAuth2— que apuntan todas al puerto equivocado, y cada una pide su propio arreglo. La sesión termina depurando el andamio de diagnóstico en vez de la tarea.
 - **Si hay que reiniciar para tomar un cambio**, se mata y se relanza en 8080, o se le pide al usuario. Reiniciar su proceso no le cuesta nada.
-- **Spring Boot no toma los cambios solo; Vite sí.** El proceso en 8080 suele ser un `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,test` lanzado por una sesión anterior, y lleva el código que se compiló entonces. Todo cambio de backend exige relanzarlo antes de que Playwright ejercite lo nuevo. Se confirma pegándole a un endpoint nuevo: un `404` en vez de un `401` significa que la ruta existe.
+- **Spring Boot no toma un cambio de fuente hasta que algo recompila `target/classes`; Vite sí, solo.** El proceso en 8080 suele ser un `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,test` lanzado por una sesión anterior, con `spring-boot-devtools`: un `./mvnw compile` o `test` recompila y devtools reinicia la app (§2). Sin eso, el proceso sigue con el código de cuando arrancó. Después de cualquiera de los dos, se mira el health antes de que Playwright ejercite lo nuevo. Se confirma pegándole a un endpoint nuevo: un `404` en vez de un `401` significa que la ruta existe.
 
 ## 2. Nunca `./mvnw clean` con el backend levantado
 

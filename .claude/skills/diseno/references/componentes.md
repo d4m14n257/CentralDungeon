@@ -1,6 +1,6 @@
 # 5. Componentes
 
-> Parte de la skill `diseno` (#273). Se movió desde `diseno` §5 y §5.b y **conserva su numeración**. Se lee antes de crear cualquier componente: dice qué existe ya (#261). Las clases y componentes de patrón —lo que una pantalla nunca vuelve a escribir a mano— están en §5.c, `patrones.md`.
+> Parte de la skill `diseno` (#273). Se movió desde `docs/frontend-diseno.md` §5 y §5.b y **conserva su numeración**. Se lee antes de crear cualquier componente: dice qué existe ya (#261). Las clases y componentes de patrón —lo que una pantalla nunca vuelve a escribir a mano— están en §5.c, `patrones.md`.
 
 ### Primitivas shadcn/ui
 
@@ -8,7 +8,7 @@ Se generan en `components/ui/`. Antes de crear cualquiera se consulta el MCP `sh
 
 **Construidas hoy, 21**: `alert` · `avatar` · `badge` · `button` · `card` · `checkbox` · `command` · `dialog` · `dropdown-menu` · `form` · `input` · `label` · `popover` · `select` · `separator` · `skeleton` · `sonner` · `table` · `tabs` · `textarea` · `tooltip`. Las que este documento previó y todavía no se necesitaron: `sheet`, `pagination`, `calendar` y `combobox` — el combobox se resolvió con `command` + `popover`, que es lo que shadcn genera para eso.
 
-**Son las únicas piezas del frontend sin JSDoc, y es la excepción declarada** en `CLAUDE.md` (*Documentación del código*): es código que escribe el CLI de shadcn y no se edita a mano, así que documentarlo sería documentar algo que la próxima regeneración pisa. Verificado y no asumido: los 21 archivos siguen tal como entraron en su commit, con comillas dobles y clases `bg-primary`/`text-primary-foreground` en vez de los tokens del `@theme` — ninguno pasó por una mano. Si alguno alguna vez se edita, deja de ser generado y entra en la regla dura 19 como cualquier otro archivo.
+**Son las únicas piezas del frontend sin JSDoc, y es la excepción declarada** en `.claude/rules/documentacion-codigo.md` (regla dura 19): es código que escribe el CLI de shadcn y no se edita a mano, así que documentarlo sería documentar algo que la próxima regeneración pisa. Verificado y no asumido: los 21 archivos siguen tal como entraron en su commit, con comillas dobles y clases `bg-primary`/`text-primary-foreground` en vez de los tokens del `@theme` — ninguno pasó por una mano. Si alguno alguna vez se edita, deja de ser generado y entra en la regla dura 19 como cualquier otro archivo.
 
 #### Las tres que se apartan del default
 

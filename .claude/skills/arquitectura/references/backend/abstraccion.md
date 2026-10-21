@@ -13,28 +13,30 @@ Lo que **no** se hace: `UserServiceImpl implements UserService` con una sola imp
 
 **2. Clase abstracta genérica — cuando la misma forma se repite idéntica en tres o más features.**
 
-El caso real del proyecto son los catálogos. `systems`, `tags` y `platforms` tienen la misma estructura (id, nombre, descripción, `parent_id`) y el mismo CRUD. Escribir tres veces el mismo service es mantener tres veces el mismo bug.
+El caso real del proyecto son los catálogos. `systems`, `tags` y `platforms` tienen la misma estructura (`id`, `name`, `canonical_id`: un grupo de sinónimos de profundidad 1, #59) y el mismo ciclo de vida —proponer, aceptar, rechazar, fusionar, separar, promover, dar de baja (#275)—. Escribir tres veces el mismo service es mantener tres veces el mismo bug.
 
 ```java
-public abstract class AbstractCatalogService<E extends CatalogEntity, R extends CatalogResponse> {
+// catalogs/AbstractCatalogService.java (abreviado)
+public abstract class AbstractCatalogService<E extends CatalogValue> {
 
-    protected final JpaRepository<E, String> repository;
-    protected final CatalogMapper<E, R> mapper;
+    /** Which catalog this is — the one thing every shared method needs to know. */
+    public abstract CatalogType type();
+
+    /** The only construction that differs: `new GameSystem(name)`, `new Tag(name)`… */
+    protected abstract E newValue(String name);
+
+    /** How many tables use each value; the bridge table is different for each catalog. */
+    protected abstract List<CatalogUsageCount> countUses(Collection<String> valueIds);
 
     @Transactional(readOnly = true)
-    public PageResponse<R> findAll(Pageable pageable) { /* igual para los tres */ }
+    public PageResponse<CatalogValueResponse> search(@Nullable String query, Pageable pageable) { /* igual para los tres */ }
 
     @Transactional
-    public R create(CatalogRequest request) {
-        requireNameIsUnique(request.name());
-        return mapper.toResponse(repository.save(newEntity(request)));
-    }
+    public CatalogValueResponse propose(String rawName) { /* igual para los tres */ }
 
-    /** Cada catálogo construye su propia entidad. */
-    protected abstract E newEntity(CatalogRequest request);
-
-    /** Gancho opcional: por defecto no valida nada extra. */
-    protected void validateBeforeDelete(E entity) { }
+    @Transactional
+    public AdminCatalogValueResponse merge(String sourceCanonicalId, String targetCanonicalId) { /* … */ }
+    // accept, reject, split, reassign, promote, disable, restore: idénticos para los tres
 }
 ```
 

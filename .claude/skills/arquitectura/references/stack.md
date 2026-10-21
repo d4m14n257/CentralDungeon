@@ -1,6 +1,6 @@
 # 1 Stack y versiones
 
-> Parte de la skill `arquitectura`. Hasta #292 era `arquitectura` §1, y conserva su numeración: una cita a `arquitectura` §1.1 es `arquitectura` §1.1. La deuda del proyecto viejo, que era el §5 de ese documento, es §1.4.
+> Parte de la skill `arquitectura`. Hasta #292 era `docs/arquitectura.md` §1, y conserva su numeración: una cita a su §1.1 es `arquitectura` §1.1. La deuda del proyecto viejo, que era el §5 de ese documento, es §1.4.
 
 Las versiones de abajo son las **fijadas para el proyecto**: son las que se escriben en `pom.xml` y `package.json` al scaffoldear, y las que asume el resto de esta skill. Se fijaron en agosto de 2026, al retomar el proyecto. La política para cambiarlas está en §1.3.
 
@@ -29,8 +29,9 @@ Las versiones de abajo son las **fijadas para el proyecto**: son las que se escr
 Consecuencias de Boot 4 que este documento da por sentadas, y que conviene tener presentes al leer cualquier tutorial escrito para Boot 3:
 
 - **Jackson 3**: los imports son `tools.jackson.*`, no `com.fasterxml.jackson.*` (excepción: las anotaciones siguen en `com.fasterxml.jackson.annotation`). `JacksonConfig` configura el `JsonMapper`. Cuidado con el drift silencioso en formatos de fecha, nulos y `BigDecimal` si se comparan JSON carácter por carácter en un test.
-- **JSpecify**: los paquetes se marcan `@NullMarked` y lo nullable se anota explícitamente. Las anotaciones de `org.springframework.lang` están deprecadas en Framework 7.
+- **JSpecify**: lo nullable se anota con `org.jspecify.annotations.Nullable`. **Los paquetes no se marcan `@NullMarked`** (no hay ningún `package-info.java`): adoptarlo sería una ADR. Las anotaciones de `org.springframework.lang` están deprecadas en Framework 7.
 - **JUnit 6**: JUnit 4 y el motor Vintage quedan fuera. Ningún test lleva `@RunWith` ni `SpringRunner`.
+- **`@MockBean` no existe**: en un test de Spring se usa `@MockitoBean`.
 - **Testcontainers 2.x**: módulos con prefijo `testcontainers-` y clases reubicadas por módulo (`org.testcontainers.mysql.MySQLContainer`).
 - **`RestTemplate` ya no se autoconfigura**. Para llamadas salientes (la API de Discord) se usa `RestClient` o una interfaz `@HttpExchange`.
 - **Versionado de API nativo**: Framework 7 trae versionado de API de primera clase (path, header, query, media type). Acá **no se usa por ahora**: la versión va en el path (§2.5) y mientras exista una sola versión viva no se agrega maquinaria. Si algún día hay v2, se usa ese soporte nativo, no controllers duplicados.

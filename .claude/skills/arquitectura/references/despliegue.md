@@ -1,6 +1,6 @@
 # 8 Configuración y despliegue
 
-> Parte de la skill `arquitectura`. Hasta #292 era `arquitectura` §8: una cita a `arquitectura` §8.1 es `arquitectura` §8.1, y §6.2 es §8.2. Los comandos de arranque están en `CLAUDE.md` y los requisitos locales en `backend/README.md`.
+> Parte de la skill `arquitectura`. Hasta #292 era `docs/arquitectura.md` §6: una cita a su §6.1 es `arquitectura` §8.1, y su §6.2 es §8.2. Los comandos de arranque están en `CLAUDE.md` y los requisitos locales en `backend/README.md`.
 
 Solo la base de datos vive en Docker. El backend corre nativo (`./mvnw spring-boot:run`), sin contenedor propio ni `Dockerfile` — dockerizarlo alenta el ciclo de guardar-y-ver-el-cambio, que `spring-boot-devtools` resuelve reiniciando en caliente (`entorno-local` §2).
 

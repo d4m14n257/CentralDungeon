@@ -22,7 +22,7 @@
 - Es la única capa que se testea obligatoriamente con unitarios.
 
 **Repository** (`*Repository.java`)
-- Interfaz `JpaRepository<Entity, String>` (los IDs son `String`, ver skill `arquitectura` §4.1).
+- Interfaz `JpaRepository<Entity, String>` (los IDs son `String`, §4.1), o `JpaRepository<Entity, XxxId>` con un `@Embeddable` en las tablas puente de clave compuesta (`MasterId`, `UserRoleId`, `TableTagId`…).
 - Query methods derivados por defecto; `@Query` (JPQL) solo cuando el derivado no alcanza. SQL nativo solo si JPQL no puede expresarlo, y con un comentario que diga por qué.
 - **Todo `@Query` usa parámetros nombrados** (`:tableId` + `@Param`), nunca posicionales y **nunca concatenación de strings** (#124). Los posicionales fueron una fuente real de bugs en el intento previo: una consulta pasaba cinco argumentos para seis placeholders y todos quedaban corridos una posición, sin que nada lo detectara.
 - Sin lógica. Sin `@Transactional`.
