@@ -9,3 +9,28 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     show-sql: false
+  security:
+    oauth2:
+      client:
+        registration:
+          discord:
+            # No defaults here either: the placeholders of application.yml let a local machine boot,
+            # and in production they would boot an application nobody can log into.
+            client-id: ${DISCORD_CLIENT_ID}
+            client-secret: ${DISCORD_CLIENT_SECRET}
+
+discord:
+  # Empty would fail closed (nobody is a member), but it would fail at every login instead of at startup.
+  guild-id: ${DISCORD_GUILD_ID}
+
+app:
+  cors:
+    allowed-origin: ${APP_CORS_ALLOWED_ORIGIN}
+  frontend:
+    url: ${APP_FRONTEND_URL}
+  jwt:
+    # The base default is a secret committed to the repository: anybody holding it could sign their
+    # own tokens. Production must fail to start without its own (ADR-02 §5, ADR-05 §2).
+    secret: ${APP_JWT_SECRET}
+  storage:
+    root: ${APP_STORAGE_ROOT}
