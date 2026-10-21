@@ -165,7 +165,7 @@ export function AdminRequestsPage() {
               <>
                 {/* Absent on anything already resolved, never greyed out: a resolution is not
                     re-resolved, and a button that can only answer `REQUEST_ALREADY_RESOLVED` is a
-                    button that should not be there (principio 2). */}
+                    button that should not be there (principle 2). */}
                 {request.status === 'Pending' && (
                   <>
                     <IconAction

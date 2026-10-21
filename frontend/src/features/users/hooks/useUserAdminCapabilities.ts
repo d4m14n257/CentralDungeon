@@ -23,7 +23,7 @@ export interface UserAdminCapabilities {
  * Who may do what on `/admin/users`, written once (§3 of roles-y-alcance.md).
  *
  * **It exists so that no screen has a loose `if` about roles in its JSX.** The rule it carries is
- * principle 2 of frontend-diseno.md §1 taken literally: an admin does not find a greyed-out "make
+ * principle 2 of diseno §1 taken literally: an admin does not find a greyed-out "make
  * this person an admin" button, and does not find one that fails when pressed — there is no button.
  * The owner sees all four roles.
  *

@@ -8,8 +8,8 @@ import { approvalsApi } from './approvalsApi'
 /**
  * What the reader has asked for, and how each one went.
  *
- * **Every screen that can raise a request reads this first** (#42, principio 2 de
- * `frontend-diseno.md` §1): with a request of that kind already waiting, the button is not offered
+ * **Every screen that can raise a request reads this first** (#42, principle 2 of
+ * diseno §1): with a request of that kind already waiting, the button is not offered
  * at all — what is shown instead is that it is pending, and since when. A button whose only possible
  * outcome is a `409` is a button that should not be there.
  *

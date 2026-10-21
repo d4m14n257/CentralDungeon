@@ -39,8 +39,8 @@ interface SettingValueDialogProps {
  * configuration screen and a box of numbers:
  *
  * - **The range**, as a hint and as validation built from that setting's own bounds. A cap somebody
- *   only discovers by hitting it reads as a bug rather than a rule (principio 2 de
- *   frontend-diseno.md §1), and every setting here has a different range — so one shared "must be a
+ *   only discovers by hitting it reads as a bug rather than a rule (principle 2 of
+ *   diseno §1), and every setting here has a different range — so one shared "must be a
  *   number" would be exactly that bug.
  * - **The default**, beside the current value, so putting something back never means finding the
  *   number in the source (#141 asks for both on screen).

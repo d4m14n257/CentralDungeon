@@ -530,7 +530,7 @@ for n, v in sorted(graphics, key=lambda x: x[1]):
     print(f"  {'OK ' if v >= 3 else 'XX '}{v:5.2f}:1  {n}")
 
 
-# ============ 7. screens (frontend-diseno.md section 4) ============
+# ============ 7. screens (diseno §4) ============
 ACC = ACCENTS["violet"]
 def acc_solid(t): return ACC["500"] if t is DARK else ACC["600"]
 def acc_text(t):  return ACC["400"] if t is DARK else ACC["700"]

@@ -27,7 +27,7 @@ function fileInput(): HTMLInputElement {
 const pdf = (name = 'ficha.pdf') => new File(['hoja'], name, { type: 'application/pdf' })
 
 describe('FileDropzone', () => {
-  /** A limit somebody only meets by breaking it reads as a bug (principio 2 de frontend-diseno.md §1). */
+  /** A limit somebody only meets by breaking it reads as a bug (principle 2 of diseno §1). */
   it('states the limits before anything is picked', () => {
     render(<FileDropzone onStaged={vi.fn()} />)
 

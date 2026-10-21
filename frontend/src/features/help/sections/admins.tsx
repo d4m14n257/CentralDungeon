@@ -136,7 +136,7 @@ export function OwnerHelp() {
  * Who may hand out which role, and the two invariants around it (F3.1).
  *
  * **`whoGrants` is the reason this section exists.** An admin opens the role dialog and finds two of
- * the four roles simply absent — that is principio 2 working as intended (a button that cannot be
+ * the four roles simply absent — that is principle 2 working as intended (a button that cannot be
  * used is not shown), but from the reader's side an absence and a bug look identical until something
  * says which it is. The rest of the list is what they will ask next: why the other chip vanished
  * (#169), and why the platform refused to let them unmake the last owner.

@@ -100,7 +100,7 @@ test('a master builds a table with a real weekly agenda through the wizard', asy
 /**
  * R1 of #178, with the reason on screen: the same master's second table in the same slot is refused
  * with a 409 that **names** the table it collides with. A "could not save" here would be exactly the
- * unexplained grey button that principio 2 of `frontend-diseno.md` forbids.
+ * unexplained grey button that principle 2 of diseno §1 forbids.
  */
 test('a master cannot run two tables in the same slot, and is told which one it clashes with', async ({ browser }) => {
   const firstName = `Mesa Choque A E2E ${runId}`

@@ -140,7 +140,7 @@ describe('AdminTablesPage', () => {
     expect(row.getByRole('button', { name: 'Eliminar' })).toBeInTheDocument()
   })
 
-  /** And offers neither on a table that already has one: principio 2, absent rather than disabled. */
+  /** And offers neither on a table that already has one: principle 2, absent rather than disabled. */
   it('offers neither on a table that already has a master', async () => {
     admin.mockResolvedValue(page([table({ status: 'Opened' })]))
 
@@ -237,7 +237,7 @@ describe('AdminTablesPage', () => {
   /**
    * #163, from the side that had been missing: `pause()` and `resume()` have had an endpoint since
    * E2 and no button on any screen. Each is offered on exactly the status it applies to — pausing a
-   * running table, resuming a paused one — because principio 2 shows an action only where it works.
+   * running table, resuming a paused one — because principle 2 shows an action only where it works.
    */
   it('offers pausing on a running table and resuming on a paused one', async () => {
     admin.mockResolvedValue(page([table({ status: 'InProgress' })]))

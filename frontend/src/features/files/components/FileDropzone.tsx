@@ -50,7 +50,7 @@ interface FileDropzoneProps {
  * that were missing rather than decoration:
  *
  * - **The limits are stated before they are broken.** A cap somebody only discovers by hitting it
- *   reads as a bug rather than a rule (principio 2 de frontend-diseno.md §1). Since F3.5 the cap is
+ *   reads as a bug rather than a rule (principle 2 of diseno §1). Since F3.5 the cap is
  *   asked for instead of hardcoded, because an admin can change it without a deploy (#141) and a
  *   stale mirror would refuse files the server would have taken.
  * - **A failure is answered where the person is looking.** The error sits under the zone and stays

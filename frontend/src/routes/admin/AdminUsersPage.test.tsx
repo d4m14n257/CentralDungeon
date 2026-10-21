@@ -72,7 +72,7 @@ beforeEach(() => {
 
 describe('AdminUsersPage', () => {
   /**
-   * The proof of §3's matrix on the screen, and of principio 2: **absent, not disabled**. An admin
+   * The proof of §3's matrix on the screen, and of principle 2: **absent, not disabled**. An admin
    * opening this page has a way to make somebody a master and no way at all to make somebody an
    * admin — the dialog's role list is the whole of what is on offer, and it does not contain the rank.
    */

@@ -147,7 +147,7 @@ export function AdminUserDetailPage() {
           title={t('users.detail.standingTitle')}
           actions={
             <>
-              {/* Absent, never greyed out: the same two checks the list's row applies (principio 2). */}
+              {/* Absent, never greyed out: the same two checks the list's row applies (principle 2). */}
               {grantableRoles.length > 0 && (
                 <Button type="button" size="sm" variant="outline" onClick={() => roleDialog.open()}>
                   {t('users.changeRoles')}

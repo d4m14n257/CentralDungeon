@@ -25,7 +25,7 @@ const GENERIC: TableErrorMessage = { key: 'tables.errors.generic', params: {} }
  * because the master may have committed to another table while this one was frozen — and the backend
  * answers naming that table in `errorParams.otherTableName`. A generic "no pudimos completar la
  * acción" would throw away the single fact that makes the problem solvable: the admin has to know
- * *which* table to look at before they can do anything about it (principio 2).
+ * *which* table to look at before they can do anything about it (principle 2).
  *
  * **It is not the sentence `config/query.ts` already has for that code**, deliberately. The global
  * one is written for the person whose own week clashed — *"donde ya estás comprometido"* — and the

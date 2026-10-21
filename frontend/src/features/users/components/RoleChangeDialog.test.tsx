@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe('RoleChangeDialog', () => {
   /**
-   * Principio 2 de frontend-diseno.md §1, taken literally: **absent, not disabled**. An admin does
+   * Principio 2 de diseno §1, taken literally: **absent, not disabled**. An admin does
    * not find a greyed-out "make this person an admin" and does not find one that fails when pressed.
    */
   it('an admin finds no way at all to hand out Admin or Owner', () => {

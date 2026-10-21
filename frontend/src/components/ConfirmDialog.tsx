@@ -12,7 +12,7 @@ interface PendingConfirm {
 
 /**
  * The one dialog every irreversible action goes through, never a generic "are you sure?"
- * (frontend-diseno.md principio 3).
+ * (diseno §1, principle 3).
  *
  * **Only components are exported from here**; `useConfirm` and its Context live in `hooks/`, which is
  * where a hook belongs (arquitectura §3.1) and which is also what keeps fast refresh working — a

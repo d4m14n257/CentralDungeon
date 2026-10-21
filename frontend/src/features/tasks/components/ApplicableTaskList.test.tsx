@@ -57,7 +57,7 @@ describe('ApplicableTaskList', () => {
   /**
    * Somebody who has not applied still sees what will be asked of them — half of deciding whether to
    * apply (#206) — and the screen says why they cannot answer yet rather than just not offering a
-   * button (principio 2 de frontend-diseno.md §1).
+   * button (principle 2 of diseno §1).
    */
   it('explains why a request cannot be answered instead of hiding the reason', async () => {
     const onAnswer = renderList([task({ canSubmit: false })])

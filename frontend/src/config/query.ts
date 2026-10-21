@@ -54,7 +54,7 @@ export const live = {
  * A short list on purpose: a person only reads a specific message when the backend committed to a
  * code for it. `SCHEDULE_CONFLICT` (#178) is the first — a clash is refused naming the table it
  * collides with, and answering "could not save" there would hide the one thing the person can
- * actually resolve (principio 2 de frontend-diseno.md §1).
+ * actually resolve (principle 2 of diseno §1).
  *
  * Before #197 the backend's own `detail` was shown verbatim, which meant a Spanish sentence no
  * matter what language the reader had picked.

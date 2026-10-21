@@ -992,7 +992,7 @@ public class GameTableService {
      *
      * <p>It carries the clash flag of #178 computed for the actor: the apply button on that screen
      * has to be able to say <em>why</em> it is disabled, and R2 is the one reason the reader can do
-     * something about (principio 2 de frontend-diseno.md 1).
+     * something about (principle 2 of diseno §1).
      *
      * <p><b>The veto of #29 is applied here and nowhere below it.</b> The gate is
      * {@link TableVisibilityService#requireVisible}, which answers {@code 404} - never {@code 403},

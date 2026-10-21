@@ -17,7 +17,7 @@ paths:
 
 **7.** Toda regla de negocio nueva llega con su test unitario (`arquitectura` §5.1); lo que depende del motor real, con su IT de Testcontainers. No hay tests en ninguno de los dos repos viejos; ese patrón no se repite.
 
-**10.** Un cambio en una `@Entity` actualiza el modelo de la skill `arquitectura` (§4) y el diagrama ER de `docs/modelo-datos.md` en el mismo commit (procedimiento en `arquitectura` §7.3).
+**10.** Un cambio en una `@Entity` actualiza el modelo de la skill `arquitectura` (§4) y el diagrama ER de `arquitectura` §4.3 en el mismo commit (procedimiento en `arquitectura` §7.3).
 
 **14.** Nada de código copiado literal de `CentralDungeonBackend` (`/Users/d4m14n257/Personal/CentralDungeonBackend`). Solo se rescata la forma conceptual de su capa de config y seguridad; qué se rescata y qué se descarta, en `docs/adr/README.md`.
 

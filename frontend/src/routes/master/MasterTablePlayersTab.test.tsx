@@ -160,7 +160,7 @@ describe('MasterTablePlayersTab', () => {
     expect(screen.getByRole('button', { name: 'Quitar a Beto' })).toBeInTheDocument()
   })
 
-  /** Removing somebody takes their access away at once: it asks first (principio 3). */
+  /** Removing somebody takes their access away at once: it asks first (principle 3). */
   it('confirms before removing a co-master', async () => {
     const user = userEvent.setup()
     renderTab()
@@ -249,7 +249,7 @@ describe('MasterTablePlayersTab', () => {
     // The reason is on the row: it is what whoever weighs lifting the veto decides on (#39).
     expect(row.getByText(/Falta sin avisar/)).toBeInTheDocument()
     expect(row.getByRole('button', { name: 'Levantar el veto' })).toBeInTheDocument()
-    // And not the veto again: it is already applied (principio 2).
+    // And not the veto again: it is already applied (principle 2).
     expect(row.queryByRole('button', { name: 'Vetar' })).not.toBeInTheDocument()
   })
 

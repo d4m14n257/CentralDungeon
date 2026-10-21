@@ -64,7 +64,7 @@ function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletCon
 
   async function handlePromote(master: MasterSummary) {
     // Handing the table over demotes whoever holds it — including the person doing it. Saying so
-    // before it happens is the point of the confirmation, not the click itself (principio 3).
+    // before it happens is the point of the confirmation, not the click itself (principle 3).
     const confirmed = await confirm({
       title: t('masters.promoteConfirmTitle', { name: master.name }),
       description: t('masters.promoteConfirmDescription'),

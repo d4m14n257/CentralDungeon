@@ -45,7 +45,7 @@ export function MasterTableDetailPage() {
 
   const isPrimary = table.masters.some((master) => master.userId === me?.id && master.masterType === 'Primary')
   // The edit form is offered only where the backend would accept it. A button that appears when it
-  // cannot work is worse than no button (principio 2 de frontend-diseno.md 1).
+  // cannot work is worse than no button (principle 2 of diseno §1).
   const canEdit = isPrimary && MASTER_EDITABLE_STATUSES.includes(table.status)
 
   return (

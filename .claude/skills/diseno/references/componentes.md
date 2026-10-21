@@ -1,6 +1,6 @@
 # 5. Componentes
 
-> Parte de la skill `diseno` (#273). Se movió desde `docs/frontend-diseno.md` §5 y §5.b y **conserva su numeración**. Se lee antes de crear cualquier componente: dice qué existe ya (#261). Las clases y componentes de patrón —lo que una pantalla nunca vuelve a escribir a mano— están en §5.c, `patrones.md`.
+> Parte de la skill `diseno` (#273). Se movió desde `diseno` §5 y §5.b y **conserva su numeración**. Se lee antes de crear cualquier componente: dice qué existe ya (#261). Las clases y componentes de patrón —lo que una pantalla nunca vuelve a escribir a mano— están en §5.c, `patrones.md`.
 
 ### Primitivas shadcn/ui
 

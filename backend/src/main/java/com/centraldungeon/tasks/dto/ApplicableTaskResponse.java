@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  * <p><b>{@code canSubmit} is what lets the button explain itself.</b> Somebody reading a table they
  * have not applied to sees what will be asked of them - which is half of deciding whether to apply -
  * and the button says why they cannot answer yet, rather than being grey for no stated reason
- * (principio 2 de frontend-diseno.md 1).
+ * (principle 2 of diseno §1).
  *
  * @param taskId                the task's identifier
  * @param audience              who is being asked, as a string (arquitectura §2.3). The screen uses

@@ -16,7 +16,7 @@ public final class ConflictException extends ApiException {
      * A schedule clash of #178. It gets a code of its own because it is the one conflict the
      * interface has to <b>explain</b> rather than merely report: the message names the table the
      * agenda collides with, and a screen that cannot tell this 409 from any other has nothing to
-     * show but a generic failure (principio 2 de frontend-diseno.md 1).
+     * show but a generic failure (principle 2 of diseno §1).
      */
     public static final String SCHEDULE_CONFLICT = "SCHEDULE_CONFLICT";
 
@@ -65,7 +65,7 @@ public final class ConflictException extends ApiException {
      *
      * <p>Its own code because the screen has something specific to do with it: stop offering the
      * button and show the pending request instead. A button whose only possible answer is this 409
-     * is a button that should not be there (principio 2 de frontend-diseno.md 1) - which is also why
+     * is a button that should not be there (principle 2 of diseno §1) - which is also why
      * {@code GET /requests/mine} exists.
      */
     public static final String REQUEST_ALREADY_PENDING = "REQUEST_ALREADY_PENDING";

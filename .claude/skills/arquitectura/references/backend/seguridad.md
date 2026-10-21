@@ -20,7 +20,7 @@ Flujo: el frontend inicia el login OAuth2 de Discord → Spring Security complet
 
 > **Toda lectura o mutación de un recurso concreto filtra por el actor.** O el actor entra en el `WHERE` (`findByIdAndOwnerId`), o el service comprueba la pertenencia **antes** de tocar nada y lanza si no corresponde. Nunca un `findById(id)` seguido de `save()` sin verificar.
 
-Es el agujero que tenía el Node: `UPDATE Tables SET … WHERE id = ?`, sin un solo predicado de pertenencia. Quien conociera el id de una mesa podía editarla o borrarla. Y ojo: que los ids sean impredecibles (`modelo-datos.md`, UUID v7) es **defensa en profundidad, nunca autorización** — un id filtrado en un link no puede ser lo único que separa a alguien de un recurso ajeno.
+Es el agujero que tenía el Node: `UPDATE Tables SET … WHERE id = ?`, sin un solo predicado de pertenencia. Quien conociera el id de una mesa podía editarla o borrarla. Y ojo: que los ids sean impredecibles (§4.1, UUID v7) es **defensa en profundidad, nunca autorización** — un id filtrado en un link no puede ser lo único que separa a alguien de un recurso ajeno.
 
 **Temporal — el token es una foto vieja** (#122). Si los roles viajan como claims, el JWT afirma lo que era cierto cuando se emitió: un admin degradado sigue siendo admin, y alguien marcado `Blocked` (#84, #86) sigue entrando, hasta que el token expire. Por eso:
 

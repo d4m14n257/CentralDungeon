@@ -25,7 +25,7 @@ export const ConfirmContext = createContext<ConfirmFn | null>(null)
  * Asks for confirmation from anywhere, without each caller mounting its own dialog.
  *
  * Every irreversible action goes through this, never a generic "are you sure?" — the question names
- * what is about to happen (frontend-diseno.md principio 3).
+ * what is about to happen (diseno §1, principle 3).
  *
  * @returns a function that opens the dialog and resolves to whether the person confirmed
  * @throws when called outside `ConfirmDialogProvider`, which is a wiring mistake and not a state

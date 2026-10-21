@@ -12,7 +12,7 @@ import { ContextSwitcher } from './ContextSwitcher'
 import { UserMenu } from './UserMenu'
 
 /**
- * The shell's bar (frontend-diseno.md 2): wordmark, context, notifications and avatar.
+ * The shell's bar (diseno §2): wordmark, context, notifications and avatar.
  * It sits on `surface` rather than on the canvas — that is what separates it from the content
  * without a shadow.
  *

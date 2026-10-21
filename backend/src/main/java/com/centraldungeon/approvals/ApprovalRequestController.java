@@ -77,8 +77,8 @@ public class ApprovalRequestController {
      * <p><b>This endpoint is why a request does not vanish.</b> Without it somebody sends a
      * justification into a hole: the screen that provoked the request has no way to say "you already
      * asked, it is pending since Tuesday" and offers the button again, where its only possible answer
-     * is a 409. A button that can only fail is a button that should not be drawn (principio 2 de
-     * frontend-diseno.md 1).
+     * is a 409. A button that can only fail is a button that should not be drawn (principle 2 of
+     * diseno §1).
      *
      * <p>Which is also why it takes a {@code ?q=}: reading page one of everything and inferring the
      * answer from it is how the button comes back anyway, the moment an old pending request is pushed

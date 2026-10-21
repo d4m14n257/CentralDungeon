@@ -1,6 +1,6 @@
 ---
 name: entorno-local
-description: How CentralDungeon's local environment behaves and the traps that make a healthy codebase look broken — the user's own running backend and frontend, never mvn clean under a live JVM, VS Code's Java autobuild, and the colima variables Testcontainers needs. Use before running, restarting or verifying anything against the backend, frontend, Playwright or Testcontainers, and before blaming a failing suite on the code.
+description: How CentralDungeon's local environment behaves and the traps that make a healthy codebase look broken — the user's own running backend and frontend, never mvn clean under a live JVM, VS Code's Java autobuild, the colima variables Testcontainers needs, and the Claude tooling of this repo — the MCP servers with their environment variables, Claude Design and the external archify skill. Use before running, restarting or verifying anything against the backend, frontend, Playwright or Testcontainers, before blaming a failing suite on the code, and before configuring or troubleshooting an MCP server.
 ---
 
 # El entorno local y sus trampas
@@ -47,3 +47,7 @@ Para iterar sobre pocas clases sin pagar la corrida completa: `./mvnw verify -Di
 ## 5. Verificar que algo no existe
 
 Bajo zsh, `ls backend/*.md` sin coincidencias imprime `no matches found` como **error de glob del shell**, y se lee como si el archivo faltara. Antes de afirmar que algo no existe: `git cat-file -e HEAD:<ruta>` o `ls <ruta exacta>`.
+
+## 6–8. Las herramientas de Claude
+
+Los MCP servers de `.mcp.json` con sus variables de entorno y su aprobación (§6), Claude Design (§7) y la skill externa `archify` (§8) están en [`references/herramientas.md`](references/herramientas.md). Hasta #292 eran `docs/mcp-y-skills.md`.

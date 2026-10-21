@@ -12,7 +12,7 @@ import { tableTypeLabel } from '../lib/tableTypeLabel'
 import { TableStatusBadge } from './TableStatusBadge'
 
 /**
- * The explorer's card (frontend-diseno.md 4). The status goes under the title rather than beside
+ * The explorer's card (diseno §4). The status goes under the title rather than beside
  * it: it is the first thing read after the name, and this way it does not compete with it for
  * width. The footer separates what describes the table from what describes whoever runs it.
  *
@@ -24,7 +24,7 @@ import { TableStatusBadge } from './TableStatusBadge'
  * The agenda is shown **in local time** (#22): what travels is UTC and the conversion belongs to
  * `lib/date.ts`. And when the table clashes with something the reader is already committed to, the
  * card warns with the reason in view (#178) - a warning that does not explain itself is as useless
- * as a grey button with no stated reason (principio 2 de frontend-diseno.md 1).
+ * as a grey button with no stated reason (principle 2 of diseno §1).
  */
 export function GameTableCard({ table, linkTo, alreadyApplied }: { table: GameTableSummary; linkTo?: string; alreadyApplied?: boolean }) {
   const { t, i18n } = useTranslation('tables')

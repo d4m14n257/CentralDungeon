@@ -2,6 +2,7 @@
 adr: 290
 estado: Aceptada
 fecha: 2026-10-20
+modificada-por: [292]
 ---
 
 # ADR-0290: Las reglas duras se cargan por ruta desde `.claude/rules/`, y las rules de ECC se versionan

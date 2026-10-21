@@ -17,7 +17,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Path alias — arquitectura.md 3.1 */
+    /* Path alias — arquitectura §3.1 */
     "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] },
 

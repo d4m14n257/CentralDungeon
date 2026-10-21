@@ -11,6 +11,6 @@ paths:
 
 **8.** Nada de lógica de negocio en la base: ni triggers ni stored procedures (#3). Lo que era trigger vive en el service layer (`arquitectura` §4.5).
 
-**10.** La migración llega en el mismo commit que la `@Entity`, el modelo de `arquitectura` §4 y el diagrama ER de `docs/modelo-datos.md`.
+**10.** La migración llega en el mismo commit que la `@Entity`, el modelo de `arquitectura` §4 y el diagrama ER de `arquitectura` §4.3.
 
 Los comentarios SQL van en inglés, como todo el código. Motor: **MySQL 8** — un consejo escrito para PostgreSQL se verifica antes de aplicarlo (`ecc:mysql-patterns`).

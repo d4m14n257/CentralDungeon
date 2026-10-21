@@ -3,8 +3,8 @@ package com.centraldungeon.settings.dto;
 /**
  * The limits the interface has to know <em>before</em> it lets somebody break one.
  *
- * <p><b>Why this endpoint exists at all.</b> «Los límites se dicen antes de romperlos» (principio 2
- * de frontend-diseno.md §1) is why {@code FileDropzone} refuses an oversized file on the spot
+ * <p><b>Why this endpoint exists at all.</b> «Los límites se dicen antes de romperlos» (principle 2
+ * de diseno §1) is why {@code FileDropzone} refuses an oversized file on the spot
  * instead of letting somebody fill in four wizard steps first - and to do that it needs the number.
  * Until F3.5 the number was a constant in two places that happened to agree; the moment an admin can
  * change one of them without a deploy, a hardcoded mirror is a client that refuses files the server

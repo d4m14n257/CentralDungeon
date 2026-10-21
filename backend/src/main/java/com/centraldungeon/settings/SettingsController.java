@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * {@code /settings}: the part of the configuration the interface has to know in order to state a
- * limit before somebody breaks it (principio 2 de frontend-diseno.md §1).
+ * limit before somebody breaks it (principle 2 of diseno §1).
  *
  * <p><b>A second controller and not a method on {@link AdminSettingsController}</b>, for the same
  * reason {@code UserController} and {@code AdminUserController} are two: the audience is different.

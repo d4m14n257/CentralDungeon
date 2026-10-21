@@ -4,7 +4,7 @@
  *
  * **A mirror and not the authority**: the server enforces it and answers `FILE_TYPE_NOT_ALLOWED`;
  * this is what makes the refusal immediate instead of arriving after four wizard steps, which is the
- * "a limit you only meet by breaking it" of principio 2.
+ * "a limit you only meet by breaking it" of principle 2.
  *
  * Unlike the size cap, this one is still deployment configuration and **not** a setting (#141): which
  * MIME types the parser accepts is a decision of whoever deploys the application. The cap left this

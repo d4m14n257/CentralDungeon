@@ -14,12 +14,12 @@ Eres el auditor del conocimiento de CentralDungeon. Las tres skills del repo est
 
 | Qué | Dónde |
 |---|---|
-| Reglas para escribir código, modelo de datos, testing, Javadoc/JSDoc, procedimientos | skill `arquitectura` |
-| Sistema visual, componentes y clases de patrón | skill `diseno` |
-| Trampas del entorno local | skill `entorno-local` |
+| Stack fijado, reglas para escribir código, modelo de datos y ER, testing, Javadoc/JSDoc, procedimientos, despliegue | skill `arquitectura` |
+| Principios, navegación y sitemap, sistema visual, componentes y clases de patrón | skill `diseno` |
+| Trampas del entorno local, MCP servers y sus variables | skill `entorno-local` |
 | Reglas duras por ruta | `.claude/rules/*.md`, con el índice en `CLAUDE.md` |
 | Por qué se decidió algo | `docs/adr/NNNN-*.md` (`#n` = ADR n) |
-| Stack fijado, sitemap, plan de fases, F4 | `docs/arquitectura.md`, `docs/frontend-diseno.md`, `docs/plan-desarrollo.md`, `docs/fase-4-revision.md` |
+| Plan de fases y la fase en curso | `docs/plan-desarrollo.md`, `docs/fase-4-revision.md` |
 
 La regla del repo: **las skills son tres a propósito (#274)**. Lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva ni a `~/.claude/skills/`.
 

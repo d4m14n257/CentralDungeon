@@ -14,7 +14,7 @@ interface IconActionProps extends Omit<ComponentProps<typeof Button>, 'children'
    * shown switched off and its tooltip says this instead of `label`.
    *
    * It exists because a row's action is either absent or explained, never silently greyed out
-   * (principio 2 de frontend-diseno.md §1). A native `disabled` cannot carry the explanation: the
+   * (principle 2 of diseno §1). A native `disabled` cannot carry the explanation: the
    * button stops receiving the pointer and the tooltip never opens. So this one stays focusable and
    * hoverable, is marked `aria-disabled`, and ignores clicks.
    */

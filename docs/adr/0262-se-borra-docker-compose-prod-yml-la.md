@@ -10,7 +10,7 @@ fecha: 2026-09-20
 
 ## Decisión
 
-Docker se usa para **una sola cosa: la MySQL de desarrollo**. Queda un único `backend/docker-compose.yml`, y no hay `Dockerfile` de la aplicación — el jar corre nativo. Lo que sobrevive es lo que **no** presupone entorno: el perfil `prod` con `${DB_URL}` **sin default**, los mismos nombres de variable para dev y prod, y la regla de que los secretos reales llegan como variables del sistema y nunca como un archivo del repo. `arquitectura.md` §6.2 pasa de describir un despliegue a enunciar lo que la aplicación exige de cualquiera, y el ejemplo de `systemd` queda marcado como ejemplo
+Docker se usa para **una sola cosa: la MySQL de desarrollo**. Queda un único `backend/docker-compose.yml`, y no hay `Dockerfile` de la aplicación — el jar corre nativo. Lo que sobrevive es lo que **no** presupone entorno: el perfil `prod` con `${DB_URL}` **sin default**, los mismos nombres de variable para dev y prod, y la regla de que los secretos reales llegan como variables del sistema y nunca como un archivo del repo. `arquitectura` §8.2 pasa de describir un despliegue a enunciar lo que la aplicación exige de cualquiera, y el ejemplo de `systemd` queda marcado como ejemplo
 
 ## Por qué
 

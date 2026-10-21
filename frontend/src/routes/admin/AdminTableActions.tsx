@@ -156,7 +156,7 @@ export function AdminTableActions({ table, onDeleted, presentation = 'row', only
   return (
     <>
       {/* Only on a table with no master: everything else already has one, and the two acts are about
-          giving it one or admitting it will never have one (principio 2). */}
+          giving it one or admitting it will never have one (principle 2). */}
       {table.status === 'Unassigned' && (
         <>
           {showSafe && (

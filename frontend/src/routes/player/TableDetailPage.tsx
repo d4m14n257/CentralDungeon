@@ -21,8 +21,8 @@ import type { CatalogValue } from '@/types/catalog'
 
 /**
  * Why the button is the way it is. Every branch returns the reason and not only the state: a grey
- * button that does not say why it is grey is worse than no button (principio 2 de
- * frontend-diseno.md 1).
+ * button that does not say why it is grey is worse than no button (principle 2 of
+ * diseno §1).
  *
  * The schedule clash (R2 of #178) comes **before** the cap: it is the block the backend will apply
  * anyway with a 409, and it is the only one on the list the reader can resolve on their own - by
@@ -53,7 +53,7 @@ function applyState(
   return { disabled: false, label: t('detail.apply') }
 }
 
-/** The lead one: any co-master is relegated to the masters line (frontend-diseno.md 4). */
+/** The lead one: any co-master is relegated to the masters line (diseno §4). */
 function primaryMasterOf(masters: MasterSummary[]) {
   return masters.find((master) => master.masterType === 'Primary') ?? masters[0]
 }
@@ -64,7 +64,7 @@ function primaryMasterOf(masters: MasterSummary[]) {
  * **The standard header** (#280): the status next to the name, the masters as the line under it,
  * «Volver a explorar» above, and on the right «Cómo funciona» and **«Postularme»** — which used to sit
  * at the foot of the card, after everything, where the one thing this screen is for was the last
- * thing on it. Its label is also its reason when it cannot run (principio 2), so a disabled button
+ * thing on it. Its label is also its reason when it cannot run (principle 2), so a disabled button
  * still says why; the schedule clash, the one refusal the reader can fix, is explained right under
  * the header, next to the button it blocks.
  *

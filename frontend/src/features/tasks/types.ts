@@ -104,7 +104,7 @@ export type ApplicableTask = Pick<
   /**
    * Whether this reader may answer right now: they are in the audience and the task is still open.
    * It is what lets the button say *why* it is not offered, instead of being absent for no stated
-   * reason (principio 2 de frontend-diseno.md §1).
+   * reason (principle 2 of diseno §1).
    */
   canSubmit: boolean
   /** How many times **this** reader already answered. A count, because answers accumulate (#76). */

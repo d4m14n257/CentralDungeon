@@ -2,7 +2,7 @@
 
 > En qué orden se construye, qué se rescata del legacy y cuándo una fase está terminada.
 >
-> El *qué* del schema está en `modelo-datos.md`, el *cómo* del código en `arquitectura.md`, las pantallas en `frontend-diseno.md` y el *por qué* de todo en las ADRs de `docs/adr/`.
+> El *qué* del schema y el *cómo* del código están en la skill `arquitectura`, las pantallas en la skill `diseno` y el *por qué* de todo en las ADRs de `docs/adr/`.
 
 ## 1. Criterio
 
@@ -30,13 +30,13 @@ Express + TypeScript, 6 routers, ~35 endpoints, 1735 líneas de handlers (`table
 
 **Se rescata**: el inventario de endpoints como **checklist funcional** —dice qué necesitaban las pantallas reales— y algunas queries como referencia de intención, como el CTE recursivo de catálogos que quedó comentado en `app.ts` y reveló que `parent_id` eran sinónimos (#53).
 
-**No se rescata código.** El stack es otro y el que había arrastraba los problemas del inventario de `arquitectura.md` §5.
+**No se rescata código.** El stack es otro y el que había arrastraba los problemas del inventario de `arquitectura` §1.4.
 
 ### Frontend — `legacy/frontend-next/`
 
 **Es JavaScript con MUI, no TypeScript**: `jsconfig.json`, archivos `.js` y `.jsx`. 13 páginas, ~45 componentes, 5 contexts con datos de servidor adentro, 7 wrappers de API.
 
-**Se rescata**: el mapa de pantallas, que es el punto de partida del sitemap nuevo, y la descomposición en modales por acción. Mapeo pantalla por pantalla y componente por componente en `frontend-diseno.md` §6.
+**Se rescata**: el mapa de pantallas, que es el punto de partida del sitemap nuevo, y la descomposición en modales por acción. Mapeo pantalla por pantalla y componente por componente en `diseno` §6.
 
 **No se rescata código.** Dos cosas ya presentes sí son continuidad y no novedad: `react-hook-form` + `zod` (siguen) y `@tinymce/tinymce-react`, que confirma que el texto enriquecido de #62 ya estaba en camino aunque se cambie de editor.
 

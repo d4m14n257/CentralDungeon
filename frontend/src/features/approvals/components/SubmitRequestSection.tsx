@@ -25,7 +25,7 @@ interface SubmitRequestSectionProps {
 /**
  * The way a screen offers a request: one button, or the news that one is already waiting.
  *
- * **This is where principio 2 of `frontend-diseno.md` §1 is paid.** A second request of the same
+ * **This is where principle 2 of diseno §1 is paid.** A second request of the same
  * kind is refused with `REQUEST_ALREADY_PENDING`, so a button offered while one is pending is a
  * button whose only possible outcome is a `409`. `GET /requests/mine?q=/status Pending` is what lets
  * the screen know the difference, and what is shown instead is the fact and its date — an answer,

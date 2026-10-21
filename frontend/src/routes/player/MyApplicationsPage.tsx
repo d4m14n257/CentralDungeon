@@ -25,7 +25,7 @@ export function MyApplicationsPage() {
   const { t, i18n } = useTranslation('registrations')
   const withdraw = useWithdrawApplication()
   // Withdrawing has no way back: the row is marked and applying again is a new application, so it
-  // goes through ConfirmDialog explaining the consequence (principio 3 de frontend-diseno.md 1).
+  // goes through ConfirmDialog explaining the consequence (principle 3 of diseno §1).
   const confirm = useConfirm()
 
   async function onWithdraw(registration: Registration) {

@@ -16,8 +16,8 @@ import { acceptReview } from './helpers/review'
  *
  * Three more things only a run like this can answer, and none of them had ever been exercised:
  *
- * - **The button is not offered while a request of that kind is pending** (principio 2 de
- *   `frontend-diseno.md` §1). The rule just changed shape: the hook now asks for
+ * - **The button is not offered while a request of that kind is pending** (principle 2 of
+ *   diseno §1). The rule just changed shape: the hook now asks for
  *   `?q=/status Pending` instead of reading page one, so the string the frontend builds has to be
  *   the string `SearchQueryParser` reads on the other side. That agreement was the fragile point of
  *   F3.1 and there is no test on either side that can check it alone.
@@ -164,7 +164,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     await expect(player.page.getByText('¿Querés dirigir mesas?')).toBeVisible()
     await ask(player.page, 'Pedir el rol de master', justification)
 
-    // ---- 2. **The button is gone and the pending request is shown instead** (principio 2).
+    // ---- 2. **The button is gone and the pending request is shown instead** (principle 2).
     //
     // This is the assertion that crosses the two `?q=` implementations: the section asks the backend
     // for `/status Pending`, a string the frontend builds from its own field list, and

@@ -52,7 +52,7 @@ describe('FilePicker', () => {
     expect(screen.getByRole('tab', { name: 'Mis archivos' })).toBeInTheDocument()
   })
 
-  /** A limit somebody only meets by breaking it reads as a bug (principio 2). */
+  /** A limit somebody only meets by breaking it reads as a bug (principle 2). */
   it('states the per-file limit before anything is uploaded', () => {
     render(wrap(<FilePicker onPick={vi.fn()} />))
 

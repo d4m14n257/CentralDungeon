@@ -41,7 +41,7 @@ import { ApiError } from '@/types/api'
  * **Which buttons exist is a capability question, asked once** (`useUserAdminCapabilities`) and never
  * a loose `if` in this JSX. An admin finds no way at all to hand out `Admin` or `Owner`, and nobody
  * is offered a block on an account that holds either: not a greyed-out button, not one that fails
- * when pressed — the button is not there (principio 2 de frontend-diseno.md §1). The backend refuses
+ * when pressed — the button is not there (principle 2 of diseno §1). The backend refuses
  * the same things independently, endpoint by endpoint (#103), which is what makes this a display
  * decision rather than the security.
  *

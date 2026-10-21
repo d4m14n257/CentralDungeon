@@ -45,7 +45,7 @@ export interface CatalogValueActionsProps {
  * canvas and entries here, each opening the dialog that already did it from the table. The rest -
  * promote, split, disable, restore, reject - are not gestures at all and live only here.
  *
- * What a value's state would make the server refuse is not in the menu (principio 2):
+ * What a value's state would make the server refuse is not in the menu (principle 2):
  *
  * - **pending** - accept as a group of its own, accept into a group, reject
  * - **accepted head** - merge into another group, disable

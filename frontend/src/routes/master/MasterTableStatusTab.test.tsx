@@ -57,7 +57,7 @@ beforeEach(() => {
 })
 
 describe('MasterTableStatusTab · requesting a pause', () => {
-  /** #32: there is nothing to pause before the table is running, so the act is absent (principio 2). */
+  /** #32: there is nothing to pause before the table is running, so the act is absent (principle 2). */
   it('offers the pause request only on a table that is running', () => {
     const { unmount } = render(<span />)
     unmount()

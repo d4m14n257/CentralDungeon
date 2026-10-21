@@ -24,8 +24,8 @@ export interface ApplicableTaskListProps {
  *
  * **A request you cannot answer yet still says why.** Somebody who has not applied sees what will be
  * asked of them - which is half of deciding whether to apply (#206) - with a line explaining that
- * answering comes after applying, rather than a button that is simply missing (principio 2 de
- * `frontend-diseno.md` §1).
+ * answering comes after applying, rather than a button that is simply missing (principle 2 of
+ * diseno §1).
  *
  * **Mandatory is shown as a label and never as a threat** (#70): the copy says the master considers
  * it important, and nothing on this screen suggests that missing it costs a seat, because it does not.

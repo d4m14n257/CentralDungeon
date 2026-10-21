@@ -89,7 +89,7 @@ function resolutionErrorKey(error: unknown): string | null {
  * other admin's tray, so two people cannot spend the evening on the same request without knowing —
  * which is the whole of what #100 buys. It is **not** a precondition for resolving: every row this
  * screen can show is either free or already the reader's, and resolving a free one takes it
- * implicitly. So the resolution buttons are offered on **every** row, and principio 2 is satisfied by
+ * implicitly. So the resolution buttons are offered on **every** row, and principle 2 is satisfied by
  * that rather than violated: there is no row here whose resolution could only answer a refusal. The
  * rule the reservation does enforce — you cannot resolve what a colleague holds — is invisible on
  * this screen precisely because such a row is filtered out of it, and shows up on `/admin/requests`,

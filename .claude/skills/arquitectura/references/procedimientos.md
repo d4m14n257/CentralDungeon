@@ -49,7 +49,7 @@ El proyecto viejo terminó con dos `database.sql` desactualizados en dos repos d
 
 1. **Migración Flyway nueva** en `backend/src/main/resources/db/migration/`, con el número siguiente al último que exista (hacer `ls` antes de elegirlo). Nunca se edita una migración aplicada (regla dura 9). El comentario SQL de cabecera dice **por qué**, con su `#n`, en inglés.
 2. **Actualizar `references/modelo-datos/ddl.md`** con **una fila nueva** en la tabla de migraciones: qué cambió y por qué. El bloque DDL de ese archivo es el `V1__baseline.sql` literal y no se toca, igual que la migración.
-3. **Actualizar el diagrama entidad-relación**: el bloque Mermaid de `docs/modelo-datos.md` §3 (los atributos de la entidad, y la línea de relación si cambió una FK) **y** el `.mmd` del subsistema en `docs/diagramas/11`–`16`.
+3. **Actualizar el diagrama entidad-relación**: el bloque Mermaid de `arquitectura` §4.3 (los atributos de la entidad, y la línea de relación si cambió una FK) **y** el `.mmd` del subsistema en `docs/diagramas/11`–`16`.
 4. **Respetar las convenciones** de §4.1:
    - tablas en `snake_case` y plural;
    - PK `id` `VARCHAR(64)`, generada en la aplicación;

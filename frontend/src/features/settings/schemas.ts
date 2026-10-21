@@ -6,7 +6,7 @@ import { z } from 'zod'
  * **A factory and not a constant schema**, which is the whole shape of this screen: the bound belongs
  * to the key, and every key has a different one — 1 to 25 megabytes, 1 to 1440 minutes, 1 to 3650
  * days. A single schema could only check "a whole number", and the person would learn the real limit
- * from a `400` after pressing, which is the "a limit you only meet by breaking it" principio 2
+ * from a `400` after pressing, which is the "a limit you only meet by breaking it" principle 2
  * refuses.
  *
  * The server checks the same range again in `SettingsService` and answers `SETTING_OUT_OF_RANGE`

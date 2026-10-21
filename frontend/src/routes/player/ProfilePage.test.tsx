@@ -79,7 +79,7 @@ describe('ProfilePage', () => {
   /**
    * And never to somebody who already runs tables: the backend refuses it with
    * `MASTER_ROLE_ALREADY_HELD`, and a button whose only possible outcome is a `409` is a button that
-   * should not be there (principio 2 de frontend-diseno.md §1).
+   * should not be there (principle 2 of diseno §1).
    */
   it('offers nothing of the sort to somebody who already is one', async () => {
     queryResult = { data: PROFILE, isPending: false, isLoadingError: false, refetch: vi.fn() }

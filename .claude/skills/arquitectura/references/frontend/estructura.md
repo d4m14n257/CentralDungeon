@@ -214,7 +214,7 @@ export const router = createBrowserRouter([
 
 Cinco reglas:
 
-1. **El árbol espeja el sitemap** de `frontend-diseno.md` §2. Si dejan de parecerse, uno de los dos está desactualizado.
+1. **El árbol espeja el sitemap** de `diseno` §2. Si dejan de parecerse, uno de los dos está desactualizado.
 2. **Los paths salen de `config/paths.ts`**, nunca strings sueltos repartidos entre el router y los `<Link>`.
 3. **Anidar es cómo se comparte un layout.** Una ruta sin `path` agrupa; una con `path` además prefija a sus hijas. Las hijas se pintan en el `<Outlet />` del layout.
 4. **Cada página se carga con `lazy`**, y para eso su módulo exporta `Component`:

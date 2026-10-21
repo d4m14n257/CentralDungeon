@@ -8,7 +8,7 @@ import { RootLayout } from '@/layouts/RootLayout'
 import { ShellLayout } from '@/layouts/ShellLayout'
 
 /**
- * The tree mirrors the sitemap of frontend-diseno.md 2 - E1 registers only its subset of the 28
+ * The tree mirrors the sitemap of diseno §2 - E1 registers only its subset of the 28
  * routes; the later stages add the rest here, and nowhere else.
  */
 export const router = createBrowserRouter([

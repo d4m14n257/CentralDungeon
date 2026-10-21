@@ -44,7 +44,7 @@ interface OutletContext {
  *   table; the toggle acts on the attachment, never on the file.
  * - **Removing is about this table too.** Taking a file off does not delete it — it stays in the
  *   owner's own list and on every other table that has it. The confirmation says so, because
- *   "remove" reads like "delete" unless something says otherwise (principio 3 de frontend-diseno.md §1).
+ *   "remove" reads like "delete" unless something says otherwise (principle 3 of diseno §1).
  *
  * A child route rather than local state (§3.1.6 regla 5), so the tab has its own URL, survives a
  * refresh and can be linked to.

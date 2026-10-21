@@ -30,7 +30,7 @@ export interface CanonicalPickerProps {
  * is exactly a canonical entry (#59). Offering aliases here would let an admin build the second
  * level the flat model forbids: the server would answer 409, but a control that offers a choice it
  * knows will be refused is the grey button that does not say why it is grey
- * (frontend-diseno.md 1, principio 2).
+ * (diseno §1, principle 2).
  *
  * So the list is filtered twice on purpose - accepted by the server, canonical by us - and what is
  * left is exactly what the operation accepts.

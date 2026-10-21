@@ -72,7 +72,7 @@ export function MasterTableTasksTab() {
    * anything that treats the whole list as "who is at this table" quietly widened with it.
    *
    * Without this filter the picker offers somebody the backend refuses with `400`: an option whose
-   * only possible outcome is an error, which is principio 2 exactly backwards. And the person has
+   * only possible outcome is an error, which is principle 2 exactly backwards. And the person has
    * stopped seeing the table at all (#29), so a request addressed to them could never be answered.
    */
   const addressablePlayers = (players ?? []).filter((player) => player.status === 'Player')

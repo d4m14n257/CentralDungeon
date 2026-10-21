@@ -81,7 +81,7 @@ describe('SettingValueDialog', () => {
 
   /**
    * The range and the default, said before the value is saved. A cap somebody only discovers by
-   * hitting it reads as a bug rather than a rule (principio 2 de frontend-diseno.md §1), and every
+   * hitting it reads as a bug rather than a rule (principle 2 of diseno §1), and every
    * setting here has a range of its own — so a shared "must be a number" would be exactly that bug.
    */
   it('states the range and the default before anything is typed', () => {

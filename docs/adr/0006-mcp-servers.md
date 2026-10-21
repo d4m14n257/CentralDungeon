@@ -13,4 +13,4 @@ modificada-por: [130]
 
 ## Por qué
 
-No fue solicitado. Detalle en `mcp-y-skills.md`.
+No fue solicitado. Detalle en `entorno-local` §6.

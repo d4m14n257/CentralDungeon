@@ -6,7 +6,7 @@ Los diagramas del **modelo heredado** (`00`–`04`) ya cumplieron su función y 
 
 ## Modelo objetivo (ER)
 
-Reflejan el schema de `../modelo-datos.md`, resultado de las decisiones #1–#95. Sin columnas de auditoría repetitivas: el DDL completo está en el documento.
+Reflejan el schema de la skill `arquitectura` §4, resultado de las decisiones #1–#95. Sin columnas de auditoría repetitivas: el DDL completo está en la skill (§4.4).
 
 | Diagrama | Qué cubre |
 |---|---|

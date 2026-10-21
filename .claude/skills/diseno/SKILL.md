@@ -1,11 +1,11 @@
 ---
 name: diseno
-description: CentralDungeon's visual system — where every design value comes from (design/build.py → @theme), the named pattern classes and components a screen must use instead of spelling utilities out (page-title, section-label, row-actions, PageHeader…), the component inventory, work lists with icon actions and pagination, the node canvas (React Flow) for editing relationships — grouping, connecting, moving between groups —, the four mandatory states and the responsive rules. Use before writing the JSX of any screen or component in frontend/, before adding a style, a color or a class, when a screen edits how entities relate to each other rather than their data, and whenever code or an ADR in docs/adr cites "diseno §n".
+description: CentralDungeon's screens and visual system — the four design principles, context navigation and the full sitemap, where every design value comes from (design/build.py → @theme), the named pattern classes and components a screen must use instead of spelling utilities out (page-title, section-label, row-actions, PageHeader…), the component inventory, work lists with icon actions and pagination, the node canvas (React Flow) for editing relationships — grouping, connecting, moving between groups —, the four mandatory states and the responsive rules. Use before writing the JSX of any screen or component in frontend/, before adding a style, a color or a class, when a screen edits how entities relate to each other rather than their data, and whenever code or an ADR in docs/adr cites "diseno §n".
 ---
 
 # Diseño
 
-El sistema visual de CentralDungeon. **Es la fuente de todo lo visual** desde #273: antes estaba repartido entre `docs/frontend-diseno.md` y lo que cada pantalla escribía por su cuenta, y eso fue lo que produjo veinticinco copias del mismo título. Conserva la numeración que tenía en `frontend-diseno.md` (§3 y §5), así las citas viejas siguen encontrando su sección. Lo que el documento conserva —principios, navegación, sitemap y wireframes— se lee allá; **cómo se escribe el código**, en la skill `arquitectura`.
+El sistema visual de CentralDungeon, **y las pantallas que se construyen con él**. Es la fuente de todo lo visual desde #273 —antes estaba repartido entre `docs/frontend-diseno.md` y lo que cada pantalla escribía por su cuenta, y eso fue lo que produjo veinticinco copias del mismo título—, y desde #292 también de los principios, la navegación, el sitemap y las pantallas clave, que eran lo que quedaba de aquel documento. **Conserva su numeración** (§1 a §6): una cita a `frontend-diseno.md` §n es `diseno` §n. **Cómo se escribe el código** —ruteo, guardias, datos— es de la skill `arquitectura` (§3).
 
 ## Reglas fijas
 
@@ -15,7 +15,7 @@ El sistema visual de CentralDungeon. **Es la fuente de todo lo visual** desde #2
 4. **Se reusa antes de crear** (#261). El inventario dice qué existe; un décimo badge de estado o un segundo diálogo con motivo obligatorio es un bug de diseño. → §5
 5. **Las acciones de una fila o de una ficha son `IconAction`** (#272): el ícono, un tooltip con el nombre y el mismo nombre como `aria-label`. Van **en una sola línea, sin wrap** (`.row-actions`, que pone `DataTable` por la pantalla). Las destructivas llevan `text-destructive`. El ícono de cada acción sale del **vocabulario fijo**, no se inventa por pantalla. → §5, «Listas de trabajo»
 6. **Una lista de trabajo pagina con `PaginationControls`** (#271): tira numerada, «Ir a…» y tamaño 10 · 25 · 50 · 100 en `?size=`. Una lista de lectura trae más con `LoadMore` (#173). Nunca scroll infinito. → §5
-7. **Lo que no se puede hacer no aparece** (principio 2): ni gris ni deshabilitado sin decir por qué. **Todo lo que crea, cambia o borra se confirma antes de escribirse** (principio 3, #283): el envío de un formulario abre una revisión con `useConfirm` que dice qué cambia, a quién afecta y qué sigue, con título en pregunta («¿…?»); una acción de un clic, igual. `JustifiedTableActionDialog` la trae obligatoria (`review`). Las excepciones —descargar, cerrar sesión, marcar leído, asistencia, tomar/soltar en la bandeja— están en el principio 3 y no se amplían sin decisión. → `docs/frontend-diseno.md` §1
+7. **Lo que no se puede hacer no aparece** (principio 2): ni gris ni deshabilitado sin decir por qué. **Todo lo que crea, cambia o borra se confirma antes de escribirse** (principio 3, #283): el envío de un formulario abre una revisión con `useConfirm` que dice qué cambia, a quién afecta y qué sigue, con título en pregunta («¿…?»); una acción de un clic, igual. `JustifiedTableActionDialog` la trae obligatoria (`review`). Las excepciones —descargar, cerrar sesión, marcar leído, asistencia, tomar/soltar en la bandeja— están en el principio 3 y no se amplían sin decisión. → `diseno` §1
 8. **Toda pantalla que lee datos cubre los cuatro estados**: cargando (skeleton), vacío (`EmptyState`), error (`ErrorState`, con reintento) y sin permiso (`ForbiddenState`, solo para un recurso concreto: un contexto ajeno redirige, #269). → §5
 9. **Funciona a 375 px**, diseñado de menor a mayor con los cortes de Tailwind. Una tabla ancha **deja de ser tabla** en móvil y nunca scrollea en horizontal. **La página no se sale de la pantalla en ningún ancho, de 320 px a un ultrawide** (#277): el contenido y el header se acotan a `max-w-5xl`, la navegación de secciones baja de línea (`SectionNav`) y el header cede el logo antes que un control. → §5.b
 10. **El color nunca es el único portador de información**: un estado es punto + etiqueta (`StatusBadge`, #261). Los catorce colores de estado se reparten en nueve familias. → §3
@@ -29,9 +29,13 @@ El sistema visual de CentralDungeon. **Es la fuente de todo lo visual** desde #2
 
 | § | Qué cubre | Archivo |
 |---|---|---|
+| 1 | **Los cuatro principios** que resuelven una discusión de diseño sin volver a tenerla | [`references/navegacion.md`](references/navegacion.md) |
+| 2 | **Navegación**: el selector de contexto, a dónde cae cada uno, qué se cierra a quién, y **el sitemap** de todas las rutas | [`references/navegacion.md`](references/navegacion.md) |
 | 3 | Dirección visual, cómo se trabaja la paleta y su contraste, tema claro y oscuro, idioma, colores de estado, karma | [`references/sistema.md`](references/sistema.md) |
+| 4 | **Pantallas clave**: las reglas de explorar, detalle, gestión de mesa, bandeja y perfil | [`references/pantallas.md`](references/pantallas.md) |
 | 5 | Primitivas shadcn y las tres que se apartan del default, compuestos con y sin dominio, inventario completo, **listas de trabajo**, **lienzo de nodos**, hooks compartidos, estados obligatorios | [`references/componentes.md`](references/componentes.md) |
 | 5.b | Responsive: cortes, la regla de la tabla ancha | [`references/componentes.md`](references/componentes.md) |
 | 5.c | **Clases y componentes de patrón**: la regla, clase o componente, cuándo se crea uno, el catálogo | [`references/patrones.md`](references/patrones.md) |
+| 6 | Qué se rescata del frontend viejo: pantallas, componentes y hooks del legacy y su equivalente | [`references/pantallas.md`](references/pantallas.md) |
 
 Las previews de todo esto se generan con `python3 design/build.py` en `design/out/` (ignorado por git): tokens, componentes (`components-*.html`, incluida la sección «Clases de patrón»), estados y las pantallas del sitemap.

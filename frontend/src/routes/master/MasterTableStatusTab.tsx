@@ -217,7 +217,7 @@ function PauseRequest({ tableId, status }: Pick<OutletContext, 'tableId' | 'stat
   const dialog = useDisclosure()
 
   // Only from a table that is actually running: there is nothing to pause before it started, and
-  // `Pause`/`PauseRequested` are already on the other side of this act (principio 2).
+  // `Pause`/`PauseRequested` are already on the other side of this act (principle 2).
   if (status !== 'InProgress' && status !== 'PauseRequested') {
     return null
   }

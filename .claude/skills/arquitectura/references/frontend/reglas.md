@@ -48,7 +48,7 @@ Si el backend cambia el contrato, esto **no compila** — que es el objetivo. Po
 
 Todo lo demás —el estado de un modal, los filtros de una pantalla— es estado local del componente que lo posee. Ninguno de los tres guarda **datos de servidor**: eso es siempre TanStack Query.
 
-**Contexto activo**: la navegación se organiza por contexto de rol (`frontend-diseno.md` §2). ⚠️ **El contexto es organización de UI, no autorización.** Estar "en contexto Admin" no habilita nada: el backend autoriza endpoint por endpoint (§2.6) y una ruta forzada sin el rol devuelve `403`. Ningún componente decide qué puede hacer el usuario mirando el contexto activo; lo decide el rol que trae el token.
+**Contexto activo**: la navegación se organiza por contexto de rol (`diseno` §2). ⚠️ **El contexto es organización de UI, no autorización.** Estar "en contexto Admin" no habilita nada: el backend autoriza endpoint por endpoint (§2.6) y una ruta forzada sin el rol devuelve `403`. Ningún componente decide qué puede hacer el usuario mirando el contexto activo; lo decide el rol que trae el token.
 
 **Tiempo real**: un único `StompProvider` mantiene la conexión WebSocket. Los mensajes que llegan son **señales de invalidación**, no datos: el handler hace `queryClient.invalidateQueries(...)` y TanStack Query refetchea. Nunca se escribe una respuesta de servidor en la caché a partir de un mensaje — eso reintroduciría por la ventana el estado de servidor fuera de TanStack Query que la regla de arriba prohíbe.
 
@@ -114,7 +114,7 @@ export function EditGameTableDialog({ table, open, onOpenChange }: EditGameTable
 
 `confirmOnDirtyClose` es lo único que se rescata del `ModalBase` viejo, que ya preguntaba antes de cerrar un modal a medio llenar. Lo que no se rescata es el resto de aquel reparto: allá el formulario recibía `handleCloseModal` y `reloadAction`, hacía él mismo el `PUT` y decidía cuándo cerrarse — por eso no se podía usar fuera de un modal, que es justo lo que #106 corrige.
 
-**Fechas y horas** (#111): el backend manda ISO-8601 UTC (§2.5) y la conversión a hora local es del frontend, con **`Intl.DateTimeFormat` nativo** desde `lib/date.ts`. Sin librería de fechas: no hay aritmética de calendario en la aplicación —los horarios son día de semana más hora (`modelo-datos.md`)— y el `useDate` del legacy ya resolvía esto con `Intl`. La zona horaria sale del perfil del usuario, y solo si no está, del navegador; nunca se asume la del navegador cuando el perfil dice otra cosa. El locale y la zona son parámetros de las funciones de `date.ts`, nunca constantes incrustadas: el legacy tenía `'es-ES'` fijo en el hook.
+**Fechas y horas** (#111): el backend manda ISO-8601 UTC (§2.5) y la conversión a hora local es del frontend, con **`Intl.DateTimeFormat` nativo** desde `lib/date.ts`. Sin librería de fechas: no hay aritmética de calendario en la aplicación —los horarios son día de semana más hora (§4.4)— y el `useDate` del legacy ya resolvía esto con `Intl`. La zona horaria sale del perfil del usuario, y solo si no está, del navegador; nunca se asume la del navegador cuando el perfil dice otra cosa. El locale y la zona son parámetros de las funciones de `date.ts`, nunca constantes incrustadas: el legacy tenía `'es-ES'` fijo en el hook.
 
 **Tipos**: un tipo base por entidad y derivados con utility types (§3.2). Ningún componente declara a mano una variante de un tipo que ya existe.
 

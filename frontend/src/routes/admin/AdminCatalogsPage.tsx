@@ -54,7 +54,7 @@ function toKind(value: string | null): CatalogKind {
  * - **disabled** - restore
  * - **every group** - open its canvas
  *
- * Absent rather than greyed out when the status would make the server refuse it (principio 2).
+ * Absent rather than greyed out when the status would make the server refuse it (principle 2).
  *
  * @param props.kind  which catalog
  * @param props.value the group's head

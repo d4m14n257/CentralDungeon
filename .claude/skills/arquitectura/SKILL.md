@@ -1,6 +1,6 @@
 ---
 name: arquitectura
-description: CentralDungeon's whole architecture in one place — backend layers, DTOs, API contract and security (§2), frontend structure, types, state, i18n and forms (§3), the data model, DDL, migrations and business rules (§4), how both sides are tested (§5), how the code is documented with Javadoc and JSDoc (§6), and the step-by-step procedures for a new endpoint, a new component or screen, and an @Entity change (§7). Use before writing, changing or reviewing any code in backend/ or frontend/, before touching an @Entity, a migration, a query or a business rule, before writing tests, and whenever code or an ADR in docs/adr cites "arquitectura §n" or roles-y-alcance.md.
+description: CentralDungeon's whole architecture in one place — the pinned stack and its versions (§1), backend layers, DTOs, API contract and security (§2), frontend structure, types, state, i18n and forms (§3), the data model, DDL, migrations and business rules (§4), how both sides are tested (§5), how the code is documented with Javadoc and JSDoc (§6), the step-by-step procedures for a new endpoint, a new component or screen, and an @Entity change (§7), and configuration with .env and production deployment (§8). Use before writing, changing or reviewing any code in backend/ or frontend/, before touching an @Entity, a migration, a query or a business rule, before writing tests, and whenever code or an ADR in docs/adr cites "arquitectura §n" or roles-y-alcance.md.
 ---
 
 # Arquitectura
@@ -13,7 +13,9 @@ Cómo se escribe CentralDungeon, de punta a punta. **Es la fuente de sus reglas*
 - la documentación del código pasó a §6 (el viejo §2.8 es §6.1);
 - los procedimientos son §7.
 
-El stack y sus versiones están en `docs/arquitectura.md` §1; el porqué de cada regla, en la decisión `#n` que se cita al lado. **Lo visual —tokens, componentes, clases de patrón— es de la skill `diseno`**, y **el entorno local y sus trampas, de `entorno-local`**.
+Y desde #292 absorbió tres documentos de `docs/`, también con su numeración: **`docs/arquitectura.md` §1** (el stack) es §1, su §5 (la deuda del proyecto viejo) es §1.4 y su §6 (configuración y despliegue) es §8; **`docs/modelo-datos.md` §2 y §3** (lo que cambió del schema heredado y el ER) son §4.2 y §4.3, con el mismo prefijo `4.`.
+
+El stack y sus versiones fijadas son §1; el porqué de cada regla, en la decisión `#n` que se cita al lado. **Lo visual —tokens, componentes, clases de patrón— es de la skill `diseno`**, y **el entorno local y sus trampas, de `entorno-local`**.
 
 ## Reglas fijas — backend (§2)
 
@@ -28,7 +30,7 @@ El stack y sus versiones están en `docs/arquitectura.md` §1; el porqué de cad
 9. **El rol no es la pertenencia** (#121, #135). Todo acceso a un recurso concreto filtra por el actor: o el actor va en el `WHERE`, o el service verifica la pertenencia **antes** de tocar nada. Roles y `status` se releen de la base en cada request (#122). → §2.6
 10. **No se abstrae por parecido.** Una interfaz, solo si hay más de una implementación real; una clase abstracta, solo si la misma forma ya se vio repetida idéntica en 3+ features. **El controller es concreto** (#119), y su `@PreAuthorize` va en el método y enumera sus roles, sin `RoleHierarchy` (#123). → §2.4, §2.6
 11. **La respuesta exitosa es el DTO desnudo**, sin envoltura (#120). → §2.5
-12. **Stack**: Java 25 / Spring Boot 4.1, Jackson **3** (`tools.jackson.*`) y **JSpecify** para lo nullable (`docs/arquitectura.md` §1.1).
+12. **Stack**: Java 25 / Spring Boot 4.1, Jackson **3** (`tools.jackson.*`) y **JSpecify** para lo nullable (`arquitectura` §1.1).
 
 ## Reglas fijas — frontend (§3)
 
@@ -62,6 +64,7 @@ Se lee la referencia de la sección que se está tocando; no hace falta leerlas 
 
 | § | Qué cubre | Archivo |
 |---|---|---|
+| 1 | **Stack y versiones fijadas**: backend (1.1), frontend (1.2), política de versiones (1.3), deuda del proyecto viejo (1.4) | [`references/stack.md`](references/stack.md) |
 | 2.1 | El árbol de paquetes, qué va en cada capa y qué en `common/` | [`references/backend/paquetes.md`](references/backend/paquetes.md) |
 | 2.2 | Reglas por capa: controller, service, repository, entity, mapper | [`references/backend/capas.md`](references/backend/capas.md) |
 | 2.3 | DTOs: tipado explícito, validación, nombres | [`references/backend/dtos.md`](references/backend/dtos.md) |
@@ -72,6 +75,7 @@ Se lee la referencia de la sección que se está tocando; no hace falta leerlas 
 | 3.2 | Modelo de tipos | [`references/frontend/tipos.md`](references/frontend/tipos.md) |
 | 3.3 | Datos, paginación, query keys, cliente, estado, caché, sesión, i18n, formularios, fechas, estilos | [`references/frontend/reglas.md`](references/frontend/reglas.md) |
 | 4.1 | Convenciones del schema | abajo |
+| 4.2 y 4.3 | Qué cambió respecto del schema heredado, y **el diagrama entidad-relación**, que se actualiza con cada `@Entity` | [`references/modelo-datos/historia-y-er.md`](references/modelo-datos/historia-y-er.md) |
 | 4.4 y 4.6 | El DDL de `V1__baseline.sql`, literal, la tabla de migraciones posteriores y el seed | [`references/modelo-datos/ddl.md`](references/modelo-datos/ddl.md) |
 | 4.5 | Reglas de negocio por subsistema y el service donde vive cada una | [`references/modelo-datos/reglas-negocio.md`](references/modelo-datos/reglas-negocio.md) |
 | 4.7 | Fuera de v1; §4.7.1, Campañas y Temporadas | [`references/modelo-datos/fuera-de-v1.md`](references/modelo-datos/fuera-de-v1.md) |
@@ -79,8 +83,9 @@ Se lee la referencia de la sección que se está tocando; no hace falta leerlas 
 | 5 | Testing: backend (5.1), frontend (5.2), e2e (5.3) | [`references/testing.md`](references/testing.md) |
 | 6 | Documentación del código: Javadoc (6.1), JSDoc (6.2) | [`references/documentacion.md`](references/documentacion.md) |
 | 7 | Procedimientos: nuevo endpoint (7.1), nuevo componente o pantalla (7.2), cambio de `@Entity` (7.3) | [`references/procedimientos.md`](references/procedimientos.md) |
+| 8 | Configuración con `.env` (8.1) y despliegue en producción (8.2) | [`references/despliegue.md`](references/despliegue.md) |
 
-El diagrama entidad-relación está en `docs/modelo-datos.md` §3, y los de cada subsistema en `docs/diagramas/11`–`16`.
+El diagrama entidad-relación general es §4.3, y los de cada subsistema en `docs/diagramas/11`–`16`.
 
 ## 4.1 Convenciones del schema
 

@@ -32,7 +32,7 @@ export const APPROVAL_REQUEST_TYPES = [
  * can be checked against the thing in the path (#121).
  *
  * It is what the submit form validates against, so a screen cannot offer a kind whose only possible
- * outcome is a refusal (principio 2).
+ * outcome is a refusal (principle 2).
  */
 export const SUBMITTABLE_REQUEST_TYPES = ['MasterGrant', 'TableOpen', 'General'] as const satisfies readonly SubmittableRequestType[]
 

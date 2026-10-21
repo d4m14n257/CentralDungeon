@@ -47,6 +47,20 @@ Existió un intento previo de migración a Java en un repo aparte, `CentralDunge
 
 Las dos secciones de razonamiento que estaban acá se borraron en F4.0: las dos cosas están **construidas** (F1), y lo que decían vive donde se aplica. Las reglas, en la skill `arquitectura` §4.5; los estados, en [`diagramas/05-ciclo-mesa.mmd`](../diagramas/05-ciclo-mesa.mmd) y [`diagramas/06-ciclo-solicitud.mmd`](../diagramas/06-ciclo-solicitud.mmd); las peticiones y sus archivos, en [`diagramas/14-objetivo-peticiones-archivos.mmd`](../diagramas/14-objetivo-peticiones-archivos.mmd). Las decisiones que las produjeron son #27 y #63. El texto original queda en git. El razonamiento del **karma**, que todavía no está construido (F5), vive en la [ADR-0096](0096-parametros-del-karma.md).
 
+## Documentos que ya no existen
+
+Las ADRs no se reescriben, así que muchas nombran documentos que después se disolvieron en las skills. **La numeración se conservó en cada mudanza**, así que una cita vieja se resuelve con esta tabla:
+
+| Documento | Dónde está ahora | Cómo se traduce la cita |
+|---|---|---|
+| `docs/decisiones.md` | `docs/adr/` (#289) | `#n` es la ADR n |
+| `docs/arquitectura.md` | Skill `arquitectura` (#292) | §1 → §1; §5 → §1.4; §6 → §8. Sus antiguos §2 y §3 ya eran de la skill desde F4.0, con §2.7 → §5.1, §3.4 → §5.2 y §2.8 → §6.1 |
+| `docs/modelo-datos.md` | Skill `arquitectura` §4 (F4.0 y #292) | §n → §4.n |
+| `docs/frontend-diseno.md` | Skill `diseno` (#273 y #292) | §n → `diseno` §n |
+| `docs/mcp-y-skills.md` | Skill `entorno-local` §6–§8 (#292); skills, rules y agentes, en `CLAUDE.md` | — |
+| Las skills `arquitectura-backend`, `arquitectura-frontend`, `modelo-datos`, `tests-java`, `nuevo-endpoint-java`, `nuevo-componente-react`, `er-diagram-sync` | Skill `arquitectura` (#274) | La tabla de la cabecera de su `SKILL.md` |
+| `docs/fase-1-*` a `docs/fase-3-*` | Borrados en F4.0; lo normativo, en `arquitectura`, `references/modelo-datos/roles-y-alcance.md` | — |
+
 ## Índice
 
 | # | Decisión | Estado |
@@ -342,6 +356,7 @@ Las dos secciones de razonamiento que estaban acá se borraron en F4.0: las dos 
 | 289 | [Las decisiones pasan a ADRs, un archivo por decisión, con el número conservado](0289-las-decisiones-pasan-a-adrs-un-archivo-por.md) | Aceptada |
 | 290 | [Las reglas duras se cargan por ruta desde .claude/rules/, y las rules de ECC se versionan](0290-las-reglas-duras-se-cargan-por-ruta-desde-claude-rules.md) | Aceptada |
 | 291 | [Agentes propios en .claude/agents/, que precargan las skills del repo y devuelven hallazgos](0291-agentes-propios-en-claude-agents-que-precargan-las.md) | Aceptada |
+| 292 | [Los documentos de referencia se disuelven en las skills, con su numeración](0292-los-documentos-de-referencia-se-disuelven-en-las-skills.md) | Aceptada |
 
 ## Abierto
 

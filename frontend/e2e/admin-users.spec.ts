@@ -143,7 +143,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     // Master, yes.
     await expect(adminDialog.getByRole('button', { name: /^Master\b/ })).toBeVisible()
     await expect(adminDialog.getByRole('button', { name: /^Jugador\b/ })).toBeVisible()
-    // Admin and Owner: **no way at all**. Not disabled - absent (principio 2 de frontend-diseno.md §1).
+    // Admin and Owner: **no way at all**. Not disabled - absent (principle 2 of diseno §1).
     await expect(adminDialog.getByRole('button', { name: /^Admin\b/ })).toHaveCount(0)
     await expect(adminDialog.getByRole('button', { name: /^Owner\b/ })).toHaveCount(0)
 

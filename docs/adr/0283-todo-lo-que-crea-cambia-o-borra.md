@@ -6,7 +6,7 @@ fecha: 2026-09-30
 
 # ADR-0283: Todo lo que crea, cambia o borra se confirma antes de escribirse, con un paso de revisión que dice qué cambia, a quién afecta y qué sigue
 
-> Amplía el principio 3 de `frontend-diseno.md` («lo irreversible se confirma», #27, #39, #40)
+> Amplía el principio 3 de `diseno` §1 («lo irreversible se confirma», #27, #39, #40)
 
 ## Decisión
 

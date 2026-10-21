@@ -96,7 +96,7 @@ describe('PlayerHistoryPage', () => {
 
   /**
    * The empty state has to read as neutral news - "you have not finished a table yet" - and not as
-   * an error or as something missing, per frontend-diseno.md §1.
+   * an error or as something missing, per diseno §1.
    */
   it('reads the empty state as neutral news, not as an error', () => {
     queryResult = {

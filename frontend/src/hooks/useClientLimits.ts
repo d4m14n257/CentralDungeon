@@ -6,8 +6,8 @@ import { DEFAULT_CLAIM_TIMEOUT_MINUTES, DEFAULT_MAX_FILE_BYTES } from '@/config/
 import type { ClientLimits } from '@/types/api'
 
 /**
- * The platform limits the interface states **before** somebody breaks one (principio 2 de
- * frontend-diseno.md §1).
+ * The platform limits the interface states **before** somebody breaks one (principle 2 of
+ * diseno §1).
  *
  * **Why it exists.** Until F3.5 the per-file cap and the tray's reservation timeout were constants on
  * both sides that happened to agree. Now an admin can change either from `/admin/settings` without a

@@ -76,21 +76,21 @@ Al dibujar los diagramas 21–24 (#267) se barrieron `router.tsx`, cada `Link`, 
 | Dos tipos del frontend que no coinciden con lo que devuelve el backend: `requestBlock` tipado `void` (devuelve `ApprovalRequestDetailResponse`) y `banRequestsApi.approve` tipado `UnreadBody` (devuelve `RegistrationResponse`) | `registrationsApi.ts`, `approvalsApi.ts` |
 | Valores de enum que ningún código produce: `TableApprovedWithChanges`, `SubmissionStatus.Pending`, `UserStatus.Deleted`, `RegistrationFileStatus.Removed`, `SubmissionFileStatus.Deleted` | los enums del backend y sus espejos |
 | **117 alertas de Dependabot** en la rama por defecto (6 críticas, 59 altas) | aviso de GitHub al hacer push |
-| **Los diagramas ER quedaron atrás de las migraciones.** El de `modelo-datos.md` §3 no tiene `file_categories` ni `task_files` (V9), y los `.mmd` por subsistema no tienen `user_role_changes`, `user_status_changes` (V11) ni `registration_status_changes` (V12). La tabla de migraciones del DDL llegaba hasta V9; F4.0 la completó hasta V13 | `docs/modelo-datos.md`, `docs/diagramas/11`–`16` |
+| **Los diagramas ER quedaron atrás de las migraciones.** El de `arquitectura` §4.3 no tiene `file_categories` ni `task_files` (V9), y los `.mmd` por subsistema no tienen `user_role_changes`, `user_status_changes` (V11) ni `registration_status_changes` (V12). La tabla de migraciones del DDL llegaba hasta V9; F4.0 la completó hasta V13 | `docs/modelo-datos.md`, `docs/diagramas/11`–`16` |
 | `er-diagram-sync` pedía que el DDL «refleje el estado final acumulado», pero el DDL es el `V1__baseline.sql` literal más una tabla de migraciones. Corregido en F4.0 | la skill |
 
 ### 2.3 Cambios de la revisión mano a mano
 
-**Registro vivo** de lo que el usuario cambia mientras recorre las pantallas. Cada fila ya viene triada —casi siempre como **decisión nueva**, porque lo que se corrige es una regla que nadie había cuestionado— y lo estético queda además en `frontend-diseno.md`, donde se lee antes de construir la próxima pantalla. Una fila nueva por cambio; lo que cambia de nuevo se tacha y se agrega, no se reescribe.
+**Registro vivo** de lo que el usuario cambia mientras recorre las pantallas. Cada fila ya viene triada —casi siempre como **decisión nueva**, porque lo que se corrige es una regla que nadie había cuestionado— y lo estético queda además en la skill `diseno`, donde se lee antes de construir la próxima pantalla. Una fila nueva por cambio; lo que cambia de nuevo se tacha y se agrega, no se reescribe.
 
 | Cambio | Triaje | Dónde quedó |
 |---|---|---|
-| **Cada contexto se cierra a quien no lo tiene y lo devuelve a su home**, sin mostrar un 403: un Player que escribe `/admin/users` o `/master` vuelve a `/player`; una cuenta solo-master que escribe `/player` vuelve a `/master`. `/master/tables/new` sin el rol `Master` vuelve a `/master`. Sin ningún contexto, `/` explica en vez de hacer bucle | Decisión nueva: **#269**, corrige #103 y #222 | `RequireContext` en los tres layouts; `frontend-diseno.md` §2; skill `arquitectura` §3.1.6 |
-| **`/admin` es la home de Admin**: bienvenida sin métricas, donde cae un admin al entrar, primer ítem «Inicio» de la nav | Decisión nueva: **#270**, corrige la home de F3.3 | `AdminHomePage`; sitemap de `frontend-diseno.md` §2; diagrama 24 |
+| **Cada contexto se cierra a quien no lo tiene y lo devuelve a su home**, sin mostrar un 403: un Player que escribe `/admin/users` o `/master` vuelve a `/player`; una cuenta solo-master que escribe `/player` vuelve a `/master`. `/master/tables/new` sin el rol `Master` vuelve a `/master`. Sin ningún contexto, `/` explica en vez de hacer bucle | Decisión nueva: **#269**, corrige #103 y #222 | `RequireContext` en los tres layouts; `diseno` §2; skill `arquitectura` §3.1.6 |
+| **`/admin` es la home de Admin**: bienvenida sin métricas, donde cae un admin al entrar, primer ítem «Inicio» de la nav | Decisión nueva: **#270**, corrige la home de F3.3 | `AdminHomePage`; sitemap de `diseno` §2; diagrama 24 |
 | **Paginación de las tablas de trabajo**: tira numerada compacta, «Ir a…» para saltar de la 1 a la 900, y «Por página» con 10 · 25 · 50 · 100 en `?size=` | Decisión nueva: **#271**, precisa #173 | `PaginationControls`; skill `diseno` §5 «Listas de trabajo»; `design/build.py` |
 | **Acciones de fila como íconos con tooltip** en las seis tablas de admin, con un vocabulario de íconos fijo | Decisión nueva: **#272** | `IconAction` en cada `renderActions`; skill `diseno` §5 «Listas de trabajo»; `design/build.py` |
 | **Las acciones de fila van en una línea, sin wrap, y un patrón de estilo tiene nombre**: cambiar el contenedor de `/admin/users` no cambiaba las otras tablas porque cada pantalla escribía el suyo. Se nombraron `.row-actions` (que ponen `DataTable`, `CollapsibleSection` y `FileCard`), `.page-title`, `.section-title`, `.section-label`, `.list-divided`, `.list-divided-bare`, `.inline-error` y `PageHeader`, y se barrió todo el frontend | Decisión nueva: **#273** | `styles/base.css`, `components/PageHeader.tsx`; skill nueva `diseno` §5.c; `design/build.py` |
-| **La arquitectura es una sola skill**, que incluye el modelo de datos, el testing, la documentación con Javadoc/JSDoc y los procedimientos | Decisión nueva: **#274** | skill `arquitectura`; `CLAUDE.md`, `mcp-y-skills.md` |
+| **La arquitectura es una sola skill**, que incluye el modelo de datos, el testing, la documentación con Javadoc/JSDoc y los procedimientos | Decisión nueva: **#274** | skill `arquitectura`; `CLAUDE.md`, `entorno-local` §6 |
 
 **Consecuencias de #269, para triar en F4.1** — dos cruces de contexto de §2.2 que antes llevaban a una pantalla del prefijo ajeno y ahora **redirigen**:
 
@@ -138,7 +138,7 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 
 **Qué se produce:**
 
-- **El ledger de rutas**: cada ruta del sitemap de `frontend-diseno.md` §2 con cinco columnas — su guard, **desde qué pantalla se llega navegando** (no escribiendo la URL), qué enlaces salen de ella, si está construida, y **qué e2e la visita**. Una ruta que ningún e2e recorre puede romperse sin que nadie se entere.
+- **El ledger de rutas**: cada ruta del sitemap de `diseno` §2 con cinco columnas — su guard, **desde qué pantalla se llega navegando** (no escribiendo la URL), qué enlaces salen de ella, si está construida, y **qué e2e la visita**. Una ruta que ningún e2e recorre puede romperse sin que nadie se entere.
 - **El mapa de navegación**, por contexto: Jugador, Master, Admin y las transversales. Dibujado, no listado: lo que se busca son los nodos sin arista de entrada. **Ya existe**: los diagramas 21–24 de `docs/diagramas/` (#267), un nodo por ruta.
 - **Las guardias como objeto de revisión**, no como supuesto: la de sesión, la de onboarding, qué hace `/login` con sesión, y qué pinta un prefijo de contexto sin ruta índice.
 - **El inventario de lo que quedó flotando**, en las dos direcciones:

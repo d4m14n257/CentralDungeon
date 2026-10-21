@@ -15,7 +15,7 @@ interface ContextState {
   setActiveContext: (context: AppContext) => void
 }
 
-/** Which role the ContextSwitcher currently shows (frontend-diseno.md 2) - UI organization only, never authorization (#103). */
+/** Which role the ContextSwitcher currently shows (diseno §2) - UI organization only, never authorization (#103). */
 export const useContextStore = create<ContextState>()(
   persist(
     (set) => ({

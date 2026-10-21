@@ -24,26 +24,22 @@ Existe otro repo, `CentralDungeonBackend` (intento previo de migración a Java),
 
 ## Dónde vive cada cosa
 
-Sin redundancia: cada cosa se dice en un solo lugar, y los demás remiten.
+Sin redundancia: cada cosa se dice en un solo lugar, y los demás remiten. Desde #292, `docs/` solo guarda lo que no es una regla: las ADRs, el plan de fases, la fase en curso y los diagramas.
 
 | Qué | Dónde |
 |---|---|
-| **Cómo se escribe el código**: backend, frontend, modelo de datos y schema, testing, Javadoc/JSDoc, procedimientos | Skill `arquitectura` |
-| **Lo visual**: tokens, inventario de componentes, clases de patrón, responsive | Skill `diseno` |
-| **El entorno local** y sus trampas | Skill `entorno-local` |
+| **El stack fijado** (§1), **cómo se escribe el código** —backend (§2), frontend (§3), modelo de datos con su DDL y su ER (§4), testing (§5), Javadoc/JSDoc (§6), procedimientos (§7)— y **configuración y despliegue** (§8) | Skill `arquitectura` |
+| **Las pantallas y lo visual**: principios (§1), navegación y sitemap (§2), tokens y temas (§3), pantallas clave (§4), componentes, responsive y clases de patrón (§5) | Skill `diseno` |
+| **El entorno local** y sus trampas (§1–§5), los MCP servers con sus variables (§6), Claude Design (§7) y las skills externas (§8) | Skill `entorno-local` |
 | **Las reglas duras**, cargadas por ruta | `.claude/rules/*.md` (índice abajo) |
 | **Qué se decidió y por qué** | `docs/adr/`, una ADR por archivo; `#n` es la ADR n (#289). El README es el índice, lo abierto y cómo se escribe una nueva |
-| El stack con sus versiones fijadas (§1), la deuda del proyecto viejo (§5), arranque y despliegue (§6) | `docs/arquitectura.md` |
-| Qué cambió respecto del schema heredado y el ER (Mermaid) | `docs/modelo-datos.md` |
-| Principios, sitemap por contexto, navegación y wireframes | `docs/frontend-diseno.md` |
 | Fases de construcción, qué se rescata del legacy, definición de terminado | `docs/plan-desarrollo.md` |
 | **La fase en curso (F4): cómo se revisa lo construido** y la deuda que dejaron F1–F3 | `docs/fase-4-revision.md` |
 | Diagramas: ER por subsistema (11–16), ciclos de vida (05–07), navegación real de la UI (21–24) | `docs/diagramas/` (fuentes `.mmd` y `.architecture.json`; se regeneran con los comandos de su README) |
-| MCP servers, skills, rules, agentes y variables de entorno | `docs/mcp-y-skills.md` |
 
 ## Stack
 
-Versiones **fijadas** en `docs/arquitectura.md` §1 (agosto 2026). Subir una major es una decisión, no un mantenimiento (regla dura 15).
+Versiones **fijadas** en `arquitectura` §1 (agosto 2026). Subir una major es una decisión, no un mantenimiento (regla dura 15).
 
 **Backend** — Java 25 (LTS), Spring Boot 4.1.1, Maven, Spring Data JPA + Hibernate 7.4, MySQL 8, Flyway, Spring Security 7.1 + OAuth2 (Discord) + JWT, Bean Validation, MapStruct, springdoc-openapi 3.1, Caffeine (caché en proceso). Tests: JUnit 6 + Mockito + AssertJ + Testcontainers 2.x. **Es Boot 4**: Jackson 3, JSpecify, JUnit 6 — el detalle de lo que cambia respecto de Boot 3, en `.claude/rules/stack.md`.
 
@@ -116,7 +112,7 @@ Requisitos locales: JDK 25 vía **SDKMAN**, Node 24 LTS vía **nvm**, contenedor
 
 ## MCP servers
 
-Configurados en `.mcp.json`, sin secretos literales. Detalle y variables de entorno en `docs/mcp-y-skills.md`.
+Configurados en `.mcp.json`, sin secretos literales. Detalle y variables de entorno en `entorno-local` §6.
 
 | Server | Uso |
 |---|---|
@@ -129,13 +125,13 @@ El diseño **no** va por MCP: se usa `DesignSync` contra Claude Design, autoriza
 
 ## Skills
 
-En `.claude/skills/`, versionadas con el repo. **Son la forma en que se guarda cómo se hace cada cosa**, y el código las cita por sección (`arquitectura §2.3`, `diseno §5.c`). Son tres, a propósito (#274): lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva. Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` (detalle en `docs/mcp-y-skills.md`).
+En `.claude/skills/`, versionadas con el repo. **Son la forma en que se guarda cómo se hace cada cosa**, y el código las cita por sección (`arquitectura §2.3`, `diseno §5.c`). Son tres, a propósito (#274): lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva. Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` (detalle en `entorno-local` §8).
 
 | Skill | Cuándo |
 |---|---|
-| `arquitectura` | Antes de escribir o revisar cualquier código, de tocar una `@Entity`, una migración o una regla de negocio, o de escribir tests. Backend (§2), frontend (§3), modelo de datos (§4), testing (§5), Javadoc y JSDoc (§6), y los procedimientos: nuevo endpoint, nuevo componente o pantalla, cambio de schema (§7) |
-| `diseno` | Antes de escribir el JSX de una pantalla o componente, o de agregar un estilo: de dónde sale cada valor (§3), el inventario de componentes (§5), el responsive (§5.b) y **las clases y componentes de patrón** que una pantalla no vuelve a escribir (§5.c, #273) |
-| `entorno-local` | Antes de correr, reiniciar o verificar algo contra el backend, el frontend, Playwright o Testcontainers — y antes de culpar al código por una suite entera en rojo |
+| `arquitectura` | Antes de escribir o revisar cualquier código, de tocar una `@Entity`, una migración o una regla de negocio, o de escribir tests. El stack fijado (§1), backend (§2), frontend (§3), modelo de datos con su DDL y su ER (§4), testing (§5), Javadoc y JSDoc (§6), los procedimientos —nuevo endpoint, nuevo componente o pantalla, cambio de schema— (§7) y configuración y despliegue (§8) |
+| `diseno` | Antes de diseñar o escribir una pantalla o un componente, o de agregar un estilo: los principios (§1), la navegación y el sitemap (§2), de dónde sale cada valor (§3), las pantallas clave (§4), el inventario de componentes (§5), el responsive (§5.b) y **las clases y componentes de patrón** que una pantalla no vuelve a escribir (§5.c, #273) |
+| `entorno-local` | Antes de correr, reiniciar o verificar algo contra el backend, el frontend, Playwright o Testcontainers — y antes de culpar al código por una suite entera en rojo. También los MCP servers y sus variables (§6), Claude Design (§7) y `archify` (§8) |
 
 ## Rules
 

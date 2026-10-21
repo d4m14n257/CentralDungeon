@@ -6,7 +6,7 @@
 backend/storage/
 
 # Configuración personal de Claude Code. Las skills de .claude/skills/ SÍ se versionan:
-# codifican las convenciones de docs/arquitectura.md y valen para quien clone el repo.
+# codifican las convenciones de la skill arquitectura y valen para quien clone el repo.
 .claude/settings.local.json
 
 # .mcp.json se versiona a propósito y va en la raíz: es donde Claude Code lo busca.

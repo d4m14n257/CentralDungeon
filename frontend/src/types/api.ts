@@ -63,8 +63,8 @@ export class ApiError extends Error {
 }
 
 /**
- * The platform limits the interface mirrors, so a rule is stated before it is broken (principio 2 de
- * frontend-diseno.md §1). Mirror of `ClientLimitsResponse`.
+ * The platform limits the interface mirrors, so a rule is stated before it is broken (principle 2 of
+ * diseno §1). Mirror of `ClientLimitsResponse`.
  *
  * **Here and not in `features/settings`** (regla dura 16): `features/files` is what reads it and
  * `features/settings` is what edits it, so the shared shape cannot live in either. It is not a domain

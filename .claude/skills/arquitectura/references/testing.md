@@ -8,7 +8,7 @@
 
 ## 5.1 Backend
 
-Versiones fijadas en `docs/arquitectura.md` §1.1: **JUnit 6** (Jupiter) y **Testcontainers 2.x**. JUnit 4 y el motor Vintage están fuera, así que nada de `@RunWith` ni `SpringRunner`. En Testcontainers 2.x las clases están reubicadas por módulo (`org.testcontainers.mysql.MySQLContainer`).
+Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontainers 2.x**. JUnit 4 y el motor Vintage están fuera, así que nada de `@RunWith` ni `SpringRunner`. En Testcontainers 2.x las clases están reubicadas por módulo (`org.testcontainers.mysql.MySQLContainer`).
 
 | Tipo | Herramienta | Cuándo |
 |---|---|---|

@@ -32,7 +32,7 @@ export interface ReassignCatalogValueDialogProps {
  * some admins have.
  *
  * The picker offers group heads only and leaves out the group the alias is already in: both would
- * be refused, and a choice that is going to be refused is not offered (principio 2).
+ * be refused, and a choice that is going to be refused is not offered (principle 2).
  *
  * @param props.kind         which catalog
  * @param props.value        the alias that moves

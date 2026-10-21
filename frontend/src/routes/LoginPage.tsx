@@ -8,7 +8,7 @@ import { useBackendStatus } from '@/hooks/useBackendStatus'
 import { BrandMark } from '@/layouts/components/BrandMark'
 
 /**
- * The front door (frontend-diseno.md 4). Over the community's own gradient, the one place it shows
+ * The front door (diseno §4). Over the community's own gradient, the one place it shows
  * in full (#132). The small print is not decoration: it explains why there is no sign-up and no
  * password, which is the first question anybody arriving asks (#38).
  *
@@ -31,7 +31,7 @@ export function LoginPage() {
           </Button>
         ) : (
           // With no backend, a real <a> would lead to the browser's own connection error instead of
-          // an explained one (principio 2, frontend-diseno.md 1) - an <a> takes no `disabled`, so in
+          // an explained one (principle 2, diseno §1) - an <a> takes no `disabled`, so in
           // this state it is replaced by a button with no href rather than a disabled link.
           <Button size="lg" className="mt-6 w-full" disabled>
             {t('login.cta')}

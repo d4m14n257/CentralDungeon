@@ -13,4 +13,4 @@ modificada-por: [275]
 
 ## Por qué
 
-Una fila de un catálogo es algo que un admin le pasa a otro, y un estado que solo vive en memoria no se puede enlazar. Rutas hijas darían URLs (`/admin/catalogs/tags`) que el sitemap de `frontend-diseno.md` §2 no tiene; los query params dan lo mismo que la regla de las pestañas busca —URL propia, compartible, botón de atrás— sin inventar rutas
+Una fila de un catálogo es algo que un admin le pasa a otro, y un estado que solo vive en memoria no se puede enlazar. Rutas hijas darían URLs (`/admin/catalogs/tags`) que el sitemap de `diseno` §2 no tiene; los query params dan lo mismo que la regla de las pestañas busca —URL propia, compartible, botón de atrás— sin inventar rutas

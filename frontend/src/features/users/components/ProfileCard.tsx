@@ -15,7 +15,7 @@ interface ProfileCardProps {
 }
 
 /**
- * A profile's upper half (frontend-diseno.md §4): initials, name, Discord handle, country, roles,
+ * A profile's upper half (diseno §4): initials, name, Discord handle, country, roles,
  * aggregate attendance and how many tables they played to the end (#284). `/player/profile` and `/player/users/:id` both mount this and nothing else yet.
  *
  * **The "Comentarios recibidos" heading of the wireframe is never drawn** (docs/adr #248): it

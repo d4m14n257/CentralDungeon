@@ -1,6 +1,6 @@
 # CentralDungeon backend
 
-Java 25 (Temurin) + Spring Boot 4.1.1. Versiones fijadas en `docs/arquitectura.md` §1.1.
+Java 25 (Temurin) + Spring Boot 4.1.1. Versiones fijadas en `arquitectura` §1.1.
 
 ## Entorno local
 
@@ -27,7 +27,7 @@ Verificar: `java -version` (debe decir 25) y `docker info` (debe responder, runt
 
 ```bash
 cd backend
-cp .env.example .env          # completar con tus propias credenciales (arquitectura.md §6.1)
+cp .env.example .env          # completar con tus propias credenciales (`arquitectura` §8.1)
 docker compose up -d          # MySQL 8 en localhost:3306
 ./mvnw spring-boot:run         # perfil dev por defecto; Flyway aplica V1__baseline.sql + V2__seed.sql
 ```

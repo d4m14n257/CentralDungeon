@@ -80,7 +80,7 @@
             <!-- Loads backend/.env into the Environment before property resolution, so the
                  same ${VAR:default} placeholders in application*.yml work from a local .env
                  file, real OS env vars on a server, or a developer's own .env - no code change
-                 needed for either case (arquitectura.md §6.1). No-ops silently if no .env is
+                 needed for either case (arquitectura §8.1). No-ops silently if no .env is
                  present, so it is harmless once real env vars are injected in production. -->
             <groupId>me.paulschwarz</groupId>
             <artifactId>springboot4-dotenv</artifactId>
@@ -170,7 +170,7 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            <!-- *IT classes are integration tests (arquitectura.md 2.7): failsafe runs them
+            <!-- *IT classes are integration tests (arquitectura §5.1): failsafe runs them
                  against the Testcontainers MySQL, separately from the *Test unit suite. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

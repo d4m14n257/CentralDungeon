@@ -19,7 +19,7 @@ import { ProfileCard, useMyProfile } from '@/features/users'
  * (roles-y-alcance.md §4, F3.2): this is where somebody sees which roles they have, so it is where the
  * absence of one is noticed. It is offered only to somebody who does not already hold it — the
  * backend refuses the rest with `MASTER_ROLE_ALREADY_HELD`, and a button whose only outcome is a
- * `409` is a button that should not be there (principio 2 de frontend-diseno.md §1). The same rule
+ * `409` is a button that should not be there (principle 2 of diseno §1). The same rule
  * hides it while a request of the reader's own is still pending, which the section resolves itself.
  */
 export function ProfilePage() {

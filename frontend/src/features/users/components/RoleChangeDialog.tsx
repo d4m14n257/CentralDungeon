@@ -52,7 +52,7 @@ interface RoleChangeDialogProps {
  *
  * **It only ever offers `grantableRoles`.** An admin finds no way at all to hand out `Admin` or
  * `Owner` here — not a disabled button, not one that fails when pressed: the rank is simply not on
- * the list (principio 2 de frontend-diseno.md §1). The server refuses it too, with
+ * the list (principle 2 of diseno §1). The server refuses it too, with
  * `ROLE_GRANT_FORBIDDEN`, which is what makes this a display decision rather than the security (#103).
  *
  * It owns the two mutations, as every `…Dialog` does (arquitectura §3.3, #110). The refusals it

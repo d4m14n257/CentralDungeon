@@ -3,7 +3,7 @@ import type { AppContext } from '@/stores/contextStore'
 /**
  * Route path patterns for router.tsx registration, plus small builders for links. This is the
  * only place path strings are written (arquitectura §3.1.6 regla 2) - E1's subset of the full
- * 28-route sitemap (frontend-diseno.md 2). Future fases add the rest here, not somewhere else.
+ * 28-route sitemap (diseno §2). Future fases add the rest here, not somewhere else.
  *
  * Every context owns a prefix and nothing sits outside one (#222): `/player`, `/master`, `/admin`,
  * plus the entry screens and the two transversal ones. `/` is not a screen - it dispatches to the

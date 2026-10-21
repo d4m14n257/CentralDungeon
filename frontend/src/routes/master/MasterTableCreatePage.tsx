@@ -39,7 +39,7 @@ import type { CatalogValue } from '@/types/catalog'
 import { useConfirm } from '@/hooks/useConfirm'
 
 /**
- * The create-table wizard, `/master/tables/new` (frontend-diseno.md sitemap).
+ * The create-table wizard, `/master/tables/new` (diseno §2 sitemap).
  *
  * **Four steps, one decision each**: identity → catalogs → agenda and duration → capacity and
  * review. It is not decoration: a complete table asks for fifteen values of five different kinds,

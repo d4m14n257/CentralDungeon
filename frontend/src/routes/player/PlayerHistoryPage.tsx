@@ -16,7 +16,7 @@ import { TableStatusBadge, useTableHistory } from '@/features/tables'
  * It exists because `/player/my-tables` stopped answering for these the moment it was scoped to
  * live tables only: a table does not vanish from someone's record the day it closes, it moves here.
  *
- * **An empty list reads as news, not as a problem** (frontend-diseno.md §1 principio 2 read the
+ * **An empty list reads as news, not as a problem** (diseno §1, principle 2 read the
  * other way round): nobody who has never finished a table did anything wrong, so the empty state
  * says exactly that and nothing that could be mistaken for an error.
  */

@@ -1,14 +1,10 @@
-# Modelo de datos — v1
+# 4.2 y 4.3 El schema heredado y el diagrama entidad-relación
 
-> **La fuente de verdad del schema es la skill `arquitectura` §4** (`.claude/skills/arquitectura/`) desde F4.0, y dentro de ella desde #274: convenciones (§4.1), el DDL baseline y las migraciones posteriores (§4.4, §4.6), las reglas de negocio que reemplazaron a los triggers (§4.5), lo que queda fuera de v1 (§4.7) y la línea entre `Admin` y `Owner`. Los números son los que tenían acá con el prefijo `4.`.
->
-> Este documento conserva lo que se lee para entender el modelo y no se aplica al escribirlo: qué cambió respecto del schema heredado (§2) y el diagrama entidad-relación (§3), que se actualiza en el mismo cambio que la `@Entity` (skill `arquitectura` §7.3).
->
-> El **porqué** de cada cosa está en las ADRs de `docs/adr/`. **Alcance v1**: el schema heredado consolidado, corregido y ampliado. **Campañas y Temporadas quedan fuera a propósito** (#7), igual que la integración profunda con Discord.
+> Parte de la skill `arquitectura`, sección 4. Hasta #292 eran `arquitectura` §4.2 y §3, con el mismo prefijo `4.` que el resto del modelo. **El ER de §4.3 se actualiza en el mismo cambio que la `@Entity`** (regla dura 10, procedimiento §7.3).
 
-## 2. Qué cambió respecto al schema heredado
+## 4.2 Qué cambió respecto al schema heredado
 
-El detalle y el razonamiento están en las ADRs de `docs/adr/`. Resumen de lo estructural:
+El razonamiento de cada fila está en la ADR que cita. Resumen de lo estructural:
 
 | Área | Cambio | Ref. |
 |---|---|---|
@@ -32,11 +28,11 @@ El detalle y el razonamiento están en las ADRs de `docs/adr/`. Resumen de lo es
 | Bandeja de admins | `claimed_by` / `claimed_at` en `approval_requests`, `comments`, `system_feedback` y `game_tables` | #100 |
 | PK y tipos rotos | Se corrigen los PK inválidos de `Platforms`/`Tags`/`Systems`, se agregan PK a `registration_rejections` y `audit_logs`, y `Files.mine` pasa a `mime_type VARCHAR(128)` | — |
 
-## 3. Diagrama entidad-relación
+## 4.3 Diagrama entidad-relación
 
-Vista general, sin columnas — están en el DDL de la skill `arquitectura` (§4.4).
+Vista general, sin columnas — están en el DDL (§4.4, `ddl.md`).
 
-Para verlo por subsistema y con columnas: `diagramas/11` a `16`. Los ciclos de vida (mesa, postulación, comentario) están en `diagramas/05`, `06` y `07`.
+Para verlo por subsistema y con columnas: `docs/diagramas/11` a `16`. Los ciclos de vida (mesa, postulación, comentario) están en `docs/diagramas/05`, `06` y `07`.
 
 ```mermaid
 erDiagram
@@ -101,13 +97,3 @@ erDiagram
 ```
 
 `comment_quotas`, `feedback_quotas` y `system_feedback` no aparecen: no tienen relación con ninguna tabla, a propósito — son las piezas anónimas del modelo (#82, #93, #94).
-
-
-## 1, 4, 5, 6 y 7 — en la skill `arquitectura` §4
-
-| § | Qué es | Dónde |
-|---|---|---|
-| 4.1 | Convenciones | `SKILL.md` |
-| 4.4 y 4.6 | DDL de `V1__baseline.sql`, tabla de migraciones posteriores y seed | `references/modelo-datos/ddl.md` |
-| 4.5 | Reglas de negocio por subsistema | `references/modelo-datos/reglas-negocio.md` |
-| 4.7 | Fuera de alcance de v1, y §4.7.1 Campañas y Temporadas | `references/modelo-datos/fuera-de-v1.md` |

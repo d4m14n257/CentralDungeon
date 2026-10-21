@@ -69,7 +69,7 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 **Frontend** — `routes/admin/AdminUsersPage.tsx`:
 
 - La tabla ancha de skill `diseno` §5.b: en móvil deja de ser tabla.
-- Los roles como chips, con el orden que #165 fijó. **Los botones que un admin no puede usar no se muestran** — principio 2 de `frontend-diseno.md` §1 — y el owner ve los cuatro.
+- Los roles como chips, con el orden que #165 fijó. **Los botones que un admin no puede usar no se muestran** — principio 2 de `diseno` §1 — y el owner ve los cuatro.
 - Bloquear pide motivo, y el diálogo dice qué implica: la persona no entra más, y sus datos se conservan (#84).
 
 **Se prueba:** un owner asciende a alguien a admin; ese admin abre `/admin/users`, puede dar el rol de master y **no encuentra ninguna forma** de dar el de admin; el owner intenta quitarse su propio rol y recibe el `409`.

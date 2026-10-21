@@ -8,7 +8,7 @@ fecha: 2026-08-29
 
 ## Decisión
 
-**Se fijan explícitamente en `arquitectura.md` §1**: Java 25 LTS + Spring Boot 4.1.1; React 19.2 + Vite 8 + TypeScript 5.9 + Tailwind 4 + React Router 8
+**Se fijan explícitamente en `arquitectura` §1**: Java 25 LTS + Spring Boot 4.1.1; React 19.2 + Vite 8 + TypeScript 5.9 + Tailwind 4 + React Router 8
 
 ## Por qué
 
