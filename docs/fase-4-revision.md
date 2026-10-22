@@ -126,6 +126,99 @@ D4 (`TestLoginController` sin repositories) y D11 («Ver más» en notificacione
 
 **Queda abierto**: cinco e2e que fallan igual en `2ba6c5e`, antes de este trabajo. Una ya tenía explicación: `profile-visibility.spec.ts:102` se dejó en rojo a propósito en §2.3, porque ADR-20 «Navegación, contextos y ayuda» §2 «Cada contexto se cierra a quien no lo tiene» devuelve a `/master` al master sin `Player` que abre un perfil, y espera la decisión de dónde vive el perfil. Las otras cuatro están **para triar**: `admin-requests.spec.ts:149`, `admin-users.spec.ts:95`, `master-dashboard.spec.ts:67` (el co-master quitado debería ver «No tenés permiso») y `profile-visibility.spec.ts:159` (no encuentra el encabezado «Asistencia» en el perfil que abre el admin).
 
+### 2.5 La reunión con el cliente del 2026-10-21
+
+El usuario le mostró al cliente lo construido en F1–F3. La grabación tiene dos pistas, cada una con una sola voz: en una está el cliente, que revisa y corrige, y en la otra el usuario, que hace la demo. A la mitad, revisaron juntos [StartPlaying](https://startplaying.games/search) como referencia **para rescatar ideas, no para copiar su vista**. Las tareas van separadas por quién las dijo: **C**, el cliente; **U**, el usuario; **S**, lo que se rescata de StartPlaying; y **P**, las preguntas que quedan para el cliente.
+
+Cada fila ya viene triada con las tres categorías de §3. Casi todo es **decisión nueva**, porque el cliente corrige reglas que nadie había cuestionado. Las decisiones **no están escritas en sus ADRs todavía**: cada una pasa por `escriba-adr` cuando el usuario la confirme y, si depende de una P, cuando el cliente la responda.
+
+**Orden sugerido**, porque las de la agenda se encadenan:
+
+1. C1, S1, C2 con S2, y C3: agenda, frecuencia, duración y cupo.
+2. C8 a C10: primera clase.
+3. C11 y U8: cierre con revisión.
+4. C13 y U1: zona horaria.
+5. C7: idioma.
+6. El resto.
+
+**Los bugs, siguientes en F4.5 «La revisión mano a mano»**, cada uno con su test de regresión (regla dura 7 «Toda regla de negocio nueva llega con su test»): C14, U2, U3, U5, la parte de bug de U8 y U10.
+
+#### Lo que pidió u observó el cliente
+
+| # | Tarea | Qué hay hoy | Triaje |
+|---|---|---|---|
+| C1 «La agenda manda sobre la fecha de inicio» | Primero se define la agenda, y el selector de fecha de inicio ofrece solo los días que caen en ella: si se juega los lunes, la mesa no puede empezar un martes | El form no cruza `start_date` con los días de la agenda (`MasterTableCreatePage.tsx`, `schemas.ts`); el service toma el primer slot posterior | Decisión nueva: ADR-08 «Agenda, sesiones y asistencia», con la validación en el backend y en el schema zod |
+| C2 «Duración abstracta en vez de sesiones planeadas» | En vez de "sesiones planeadas", una **clase de duración**: One-shot (1–2 sesiones), Corta (4–6), Mediana (hasta unos 6 meses, ~24 sesiones) y Larga (más de 6 meses), más un texto opcional del tipo "de 1 a 4 sesiones aprox." | Solo `total_sessions` (`GameTable`), y es el que decide cuándo termina la mesa | Decisión nueva: ADR-07 «Mesas: ciclo de vida» y ADR-08 «Agenda, sesiones y asistencia» §3 «Las sesiones se materializan como filas» — sin `total_sessions`, falta decidir hasta dónde se generan las sesiones (ver S2) |
+| C3 «Cupo mínimo y máximo» | La mesa tiene mínimo y máximo. Al llegar al mínimo, el master puede **cerrar las postulaciones** y aceptar cualquier número entre el mínimo y el máximo | Solo `max_players` | Decisión nueva: ADR-07 «Mesas: ciclo de vida» §5 «El cupo es `max_players`» y ADR-09 «Postulaciones y veto» §3 «Al llenarse el cupo, los candidatos restantes se rechazan» (el cierre manual) |
+| C4 «Preview de archivos» | Al darle «usar» a un archivo de la biblioteca, el master tiene que poder verlo antes, porque no recuerda qué tiene | No hay preview, el archivo solo se descarga (`FilePicker.tsx`, `FileController`) | Decisión nueva: ADR-14 «Archivos: lectura y bibliotecas» §2 «Leer un archivo pasa por una sola puerta». Falta decidir qué tipos se previsualizan (¿imagen y PDF?) |
+| C5 «Peticiones divididas por destinatario» | La lista de peticiones se separa en las de candidatos y las de jugadores. El form lo aprobó tal como está | `TaskAudience` ya distingue `Candidates`, `Players` y `Single`; la lista no agrupa | Ajuste de UI en F4.5 «La revisión mano a mano»: agrupar por audiencia |
+| C6 «"Lo que espera tu respuesta" no se entiende» | Confunde la etiqueta de arriba a la izquierda, junto a «Mis mesas» | `locales/es/master.json`, `help.json` | Entra en C7 |
+| C7 «El español está mal» | Hay que pasar todos los textos a un español correcto | No es español de España, como creyeron en la reunión: es **voseo rioplatense** («tenés», «agregá», «podés») | Decisión nueva: ADR-23 «Textos e idiomas» §2 «Hay dos idiomas» fija la variante, y se barre `frontend/src/locales/es/*.json`. Depende de P5 |
+| C8 «Ocultar el master es una configuración de la mesa» | Toda mesa tiene sus configuraciones, y una de ellas es **no mostrar el nombre del master a los candidatos**: cualquier master puede activarla y en primera clase va siempre activa. El nombre se ve recién al ser jugador | El tipo `FIRST_CLASS` no cambia ningún comportamiento; las respuestas de lista llevan siempre `primaryMaster` (`GameTableSummaryResponse`) | Decisión nueva: ADR-07 «Mesas: ciclo de vida» y ADR-06 «Roles y alcance». **Es de seguridad**: el nombre se omite en el backend, no se esconde en la UI, y pasa por `revisor-seguridad`. Depende de P1 |
+| C9 «Primera clase con o sin master, y pedirla» | Una mesa de primera clase la crea un admin, sin master o asignándolo, o la crea un master que pide "quiero que sea de primera clase" al mandarla a revisión, y el admin decide si va | Crearla sin master y asignar existe (ADR-06 «Roles y alcance» §7 «Un admin crea una mesa sin ser su master»); no hay forma de pedir primera clase | Decisión nueva: ADR-07 «Mesas: ciclo de vida» y ADR-16 «Pedidos con aprobación y bandeja» |
+| C10 «Vista del jugador más sencilla» | El jugador ve dos grupos: **mesas públicas**, de cualquier master, y **mesas de primera clase** | El explorador no filtra por tipo (`GameTableSearchField`) | Decisión nueva: ADR-22 «Buscadores», con la pantalla en la skill `diseno` §4 |
+| C11 «Finalizar también pasa por revisión» | Finalizar pide motivo y revisión del admin, "por si alguien la finaliza solo para no pedírselo al admin" | Se finaliza directo y sin motivo (`GameTableService`) | Decisión nueva: ADR-07 «Mesas: ciclo de vida» §1 «La mesa tiene una máquina de estados formal», con el patrón de §2 «La pausa del master necesita aprobación» |
+| C12 «Se califica al terminar, también si se cancela» | Al finalizar **y al cancelar**, los jugadores pueden calificar la mesa | Comentarios y karma son de F5 «Comunidad», y ADR-11 «Comentarios, karma y feedback» §4 «Una mesa cancelada no genera comentarios ni mueve karma» dice lo contrario | Alcance de F5 «Comunidad» **y** decisión nueva que corrige ADR-11 §4. Depende de P3 |
+| C13 «País y zona horaria los elige el usuario» | La del navegador no sirve: falla con una VPN. El usuario elige su país, que se muestra con su bandera, y su zona; el selector pone primero las zonas de ese país, y la zona se puede cambiar si vive en otro lado. El país sirve para que los demás vean de dónde es sin mirar la zona | Existe `users.country`; no hay zona en el perfil, solo la del navegador (`lib/date.ts`) | Decisión nueva: ADR-10 «Perfiles» §4 «Nombre y país se piden una vez» y ADR-08 «Agenda, sesiones y asistencia» §1 (la zona del perfil manda sobre la del navegador), con su migración |
+| C14 «El doble modal» | Error clásico: al cerrar la confirmación se cierra también el modal de abajo. Pide interceptar el cierre y preguntar "¿seguro que quieres salir?", **sin** guardar borradores | `FormDialog` abre un `ConfirmDialog` encima | Bug: reproducirlo, test de regresión y corregirlo en `FormDialog` |
+| C15 «Despliegue» | En Linux, Ubuntu en concreto; la base le da igual. Quiere CI/CD | ADR-02 «Stack, herramientas y despliegue» §5 deja la topología de producción sin decidir; el usuario pensaba en Terraform sobre Oracle Cloud | Decisión nueva: ADR-02 §5, con Ubuntu como destino y el pipeline |
+| C16 «Tags y temas separados», a futuro | "Tal vez después" separar los tags en tags y temas, con la misma lógica y otra clasificación | Una sola lista, sin categoría ni descripción | Decisión nueva: ADR-12 «Catálogos» §1 «Hay tres catálogos». Se trata junto con S6 |
+
+**Lo que el cliente aprobó sin cambios**:
+
+- La mesa nace en borrador y nadie la ve hasta que se manda.
+- El form de peticiones, con fecha límite y el aviso de que no pasa nada si vence.
+- Las mesas sin master.
+- El rol dinámico: todos son jugadores de base, master es quien dirige una mesa, y aparte está el permiso de crear mesas (la regla dura 17 «El rol no es la pertenencia»).
+- El polling de notificaciones y el indicador de conexión.
+- El botón «Cómo funciona».
+- El login con Discord.
+
+#### Lo que el usuario reconoció como pendiente en la demo
+
+| # | Tarea | Triaje |
+|---|---|---|
+| U1 «Las horas sin AM/PM y sin zona» | "Falta especificar las zonas horarias, que no marque AM/PM": cada hora se muestra con su zona y en el formato del idioma | Bug de UI en F4.5 «La revisión mano a mano»; qué zona se muestra depende de C13 |
+| U2 «El seguimiento de la revisión sale en UTC» | En el seguimiento de la revisión, la fecha no se pasaba a la zona local | Bug: encontrar dónde se formatea sin `lib/date.ts`, con su test |
+| U3 «Un botón que no hace nada» | En los archivos de la mesa | Bug: identificarlo en el recorrido |
+| U4 «Archivos publicados» | Falta definir la sección «publicados», que según el cliente son los archivos que publican los admins | Verificar contra ADR-14 «Archivos: lectura y bibliotecas» §7 «La biblioteca de la plataforma»; probablemente sea una decisión |
+| U5 «Restos del legacy en pantalla» | «Mesa / petición de master / solicitud de jugador» y el tipo «lista» de las peticiones vienen del legacy y no deberían aparecer | Bug: quitarlos |
+| U6 «La petición no muestra su detalle sin editarla» | Mostrar más del contenido de la petición sin entrar a editarla, y ocultar el botón según el estado | Ajuste de UI en F4.5 «La revisión mano a mano» |
+| U7 «La pantalla de revisión está mezclada» | Lo que ve el admin al revisar se mezcla con una solicitud y hay que reordenarlo | Ajuste de UI en F4.5 «La revisión mano a mano» |
+| U8 «Cancelar una mesa en curso sin motivo» | Una mesa en progreso se canceló sin justificación, y no debía. La regla que propuso el usuario: en `Draft` y `Preparation` se cancela libre; desde `Opened` o `InProgress`, con motivo y revisión del admin, porque ahí es fuerza mayor. Además, una mesa cancelada seguía apareciendo en la lista | Bug, porque el motivo ya es obligatorio y no se cumplió, **y** decisión nueva en ADR-07 «Mesas: ciclo de vida» §1 (la revisión al cancelar). Se trata junto con C11 |
+| U9 «Pedir ser master y pedir una mesa» | Son dos pedidos distintos, y falta el flujo desde el jugador: uno sin el rol `Master` no tiene cómo crear una mesa | `MasterGrant` ya otorga el rol al aprobarse; `TableOpen` se registra, pero aprobarlo no produce nada (`ApprovalService`). Verificar la UI del jugador y decidir qué produce aprobar `TableOpen` (ADR-16 «Pedidos con aprobación y bandeja») |
+| U10 «Algo se ve mal en el tema claro» | Durante el flujo de solicitudes | Bug visual: corregirlo con tokens (regla dura 18 «Ningún texto ni valor de estilo suelto») |
+| U11 «Las métricas y los logs del Owner» | El Owner es el único que crea admins, y un admin no puede actuar sobre otro. Falta preguntarle al cliente qué quiere medir: uso del sistema, logs del servidor | Alcance de F6 «Operación». Depende de P2 |
+| U12 «Selección múltiple con Shift» | Para borrar varios a la vez. El hook existe en `hooks/`, sin usar | Decisión nueva chica: ADR-21 «Diseño visual e interacción» §11 «Una lista de trabajo actúa con íconos por fila» (dónde aplica) |
+| U13 «Un catálogo de sistemas para probar» | Usar la lista de sistemas y plataformas de StartPlaying como datos de prueba | Tarea: sembrarla en `TestDataService`, no en una migración |
+| U14 «Notificaciones push» | No hay service worker: hoy todo es polling | Alcance de F6 «Operación» (ADR-18 «Notificaciones y tiempo real» §2 «El tiempo real es WebSocket + STOMP») |
+
+#### Lo que se rescata de StartPlaying
+
+Revisado en el sitio el 2026-10-21.
+
+| # | Qué hace StartPlaying | Para nosotros |
+|---|---|---|
+| S1 «Frecuencia» | La tarjeta dice `Weekly / Thursday - 12:00 AM CST`; también hay `Biweekly` (cada dos semanas) y `Once` (una sola sesión) | Hoy todo es semanal (`TableSessionService.occurrencesFrom`, `plusWeeks(1)`). Decisión nueva en ADR-08 «Agenda, sesiones y asistencia»: semanal, quincenal o única |
+| S2 «Cómo termina» | `Campaign Length / 9–15 Sessions` (un rango, no un número), `Session Duration / 3 hours`, y la próxima fecha con su número: `Oct 22 / Session 12` | Encaja con C2: la clase de duración más un rango opcional. El número de sesión se calcula, y la mesa termina cuando el master la finaliza (C11), no al llegar a un número |
+| S3 «Cupo y arranque» | `3 NEEDED TO START`, `2 SEATS LEFT` y `0 / 6 Seats Filled`; "la partida empieza cuando se sumen 3 jugadores" | Es como se ve C3. Los lugares que quedan se calculan, sin columna nueva (`GameTableCard`) |
+| S4 «Estado en el buscador» | El filtro *Status* separa las listas para jugar de las que todavía buscan el mínimo | Sale de C3 |
+| S5 «Tipo de juego» | One-Shot, Campaign y Play by Post (por texto, asíncrono) | *Play by post* entra como plataforma («Por texto») o como tipo de mesa; se decide con C2 |
+| S6 «Catálogos con categoría y definición» | Temas (Anime, Cosmic Horror…), estilos de juego con su definición, content warnings, herramientas de seguridad, idioma, experiencia y edad (18+) | Con C16: los tags llevan **categoría** y **descripción** (ADR-12 «Catálogos»). Los content warnings y el nivel de experiencia son lo que más se rescata |
+| S7 «Plataformas» | D&D Beyond, Roll20, Foundry y Discord, cada una con su descripción | Discord, primera; al seed se suman «Por texto» y Obsidian (U13) |
+| S8 «Filtros prehechos» | Chips de un clic: *Play Today*, *Few Seats Left*, *New Campaigns*, *For Beginners*, *Exclude D&D* | Ideas para C10, sin cambiar el lenguaje de ADR-22 «Buscadores» §1 «Todo buscador habla el mismo lenguaje de una línea» |
+| S9 «La ficha del master» | Años jugando, partidas dirigidas, tiempo de respuesta y reseñas | Alcance de F5 «Comunidad» |
+| S10 «Las secciones de la mesa» | Creación de personaje, qué esperar, equipo necesario, plataformas, seguridad y content warnings | Campos de texto de la mesa: una decisión en ADR-07 «Mesas: ciclo de vida», con cuidado de no inflar el form |
+| S11 «Lo que no se copia» | El diálogo de filtros pierde lo elegido al cerrarse (el cliente se quejó de eso), y el modelo de pago | Nuestros filtros viven en la URL y no se pierden. El precio no se pidió: queda como idea, fuera de alcance |
+
+#### Preguntas para el cliente
+
+- **P1 «Ocultar el master»**: cuando el nombre se oculta, ¿el candidato ve un alias, algo como "Master de primera clase", o nada? (C8)
+- **P2 «Las métricas del Owner»**: ¿qué quiere medir? (U11)
+- **P3 «Calificar al cancelar»**: ¿califican todos los jugadores, o solo quienes llegaron a jugar alguna sesión? (C12)
+- **P4 «Los datos actuales»**: dijo que hoy el sistema "es un archivo de texto plano". ¿Hay datos que migrar a la base nueva?
+- **P5 «La variante del español»**: ¿español de México, tuteando? (C7)
+
 ## 3. Las seis rebanadas
 
 F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porque no se construye producto—. Lo que sí conserva, y es lo que importa, es el corte: **una rebanada no arranca sin que la anterior tenga sus hallazgos escritos y triados.**
