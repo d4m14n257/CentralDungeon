@@ -38,6 +38,7 @@ Y hay un recurso escaso que es **la atención del cliente**. Gastarla tres veces
 | El inglés renderizado: la paridad de claves está verificada, pero los tests corren en `es` | F3.3, F3.5 | F4.1 |
 | `/admin/requests` pone su default `Pending` en la caja y no en la URL: se aparta de ADR-12 §7, y un criterio tipeado se **suma** al chip | F3.2 | F4.1 — es decisión de producto |
 | `PlayerBan` visible en `/admin/requests` pero no resoluble ahí: que la pantalla **no ofrezca** los botones a un admin no se miró | F3.4 | F4.1 |
+| **Crear y editar una mesa son dos pantallas que repiten lo mismo a mano**: el asistente `MasterTableCreatePage` y el formulario `MasterTableEditPage` comparten el esquema de validación, pero cada uno escribe los mismos ocho campos y la lógica de la agenda (`MasterTableCreatePage.tsx:142-152` es `MasterTableEditPage.tsx:123-130`). No se fusionan —uno va por pasos y el otro en una página—: se proponen bloques compartidos de campos y agenda que usen los dos. El usuario pidió no tocarlo todavía | F1.2 «Agenda, horarios y wizard completo» | F4.5 «La revisión mano a mano» |
 | `tables.max_players_cap` no se enuncia al escribir el cupo: el formulario no lo pide a `useClientLimits` (principio 2, ADR-17 §4) | F3.5 | F4.1 |
 | ~~`pageSize.adminQueue` sirve a dos pantallas y el nombre quedó significando la otra~~ — **resuelto en §2.3**: ahora es `pageSize.admin` y sirve a las seis (ADR-21 §11) | F3.3 | F4.1 — cosmético |
 | `GET /api/v1/files/{fileId}` —solo se consume `/content`— y los hooks montados en cero lugares (`useCatalogValue`, `useUploadFile`) | F1.7, confirmado por el barrido de F4 | F4.1 |
@@ -123,7 +124,7 @@ El 2026-10-20, tres agentes `auditor-conocimiento` contrastaron las 24 ADRs con 
 
 D4 (`TestLoginController` sin repositories) y D11 («Ver más» en notificaciones y mis mesas, ADR-04 §6) eran código que no cumplía una regla vigente, y la regla no cambió.
 
-**Queda abierto, para triar**: cinco e2e que fallan igual en `2ba6c5e`, antes de este trabajo — `admin-requests.spec.ts:149`, `admin-users.spec.ts:95`, `master-dashboard.spec.ts:67` (el co-master quitado debería ver «No tenés permiso») y `profile-visibility.spec.ts:102` y `:159` (no encuentra el encabezado «Asistencia» en el perfil que abre el admin).
+**Queda abierto**: cinco e2e que fallan igual en `2ba6c5e`, antes de este trabajo. Una ya tenía explicación: `profile-visibility.spec.ts:102` se dejó en rojo a propósito en §2.3, porque ADR-20 «Navegación, contextos y ayuda» §2 «Cada contexto se cierra a quien no lo tiene» devuelve a `/master` al master sin `Player` que abre un perfil, y espera la decisión de dónde vive el perfil. Las otras cuatro están **para triar**: `admin-requests.spec.ts:149`, `admin-users.spec.ts:95`, `master-dashboard.spec.ts:67` (el co-master quitado debería ver «No tenés permiso») y `profile-visibility.spec.ts:159` (no encuentra el encabezado «Asistencia» en el perfil que abre el admin).
 
 ## 3. Las seis rebanadas
 

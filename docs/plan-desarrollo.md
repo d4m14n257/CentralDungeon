@@ -80,6 +80,16 @@ Para leer las decisiones ya escritas, que citan la numeración anterior:
 | **F5 — Comunidad** | Comentarios y karma, con anonimato real | ⏳ |
 | **F6 — Operación** | Tiempo real, auditoría y el panel exclusivo del owner | ⏳ |
 
+**Las rebanadas, con su nombre.** Se citan siempre con él —`F3.4 «Pausa y veto»`, nunca `F3.4` solo— (ADR-01 «Proyecto, proceso y conocimiento» §11). Los documentos de implementación de F1, F2 y F3 se borraron en F4.0 «Documentación y conocimiento», así que esta es la única lista de los nombres:
+
+| Fase | Rebanadas |
+|---|---|
+| F1 «Master» | F1.1 «Catálogos» · F1.2 «Agenda, horarios y wizard completo» · F1.3 «Sesiones y asistencia» · F1.4 «Archivos» · F1.5 «Peticiones» · F1.6 «Co-masters y dashboard del master» · F1.7 «Cierre de fase» |
+| F2 «Jugador» | F2.1 «El explorador encuentra» · F2.2 «Postularse con la hoja de personaje» · F2.3 «El perfil» · F2.4 «Mi historial y las notificaciones» · F2.5 «Cierre de fase» |
+| F3 «Admin y Owner» | F3.1 «Roles, bloqueo y `/admin/users`» · F3.2 «Pedidos con aprobación» · F3.3 «La bandeja compartida» · F3.4 «Pausa y veto» · F3.5 «Configuración del sistema» |
+| F4 «Revisión» | F4.0 «Documentación y conocimiento» · F4.1 «El mapa de la interfaz» · F4.2 «La matriz de roles» · F4.3 «Integridad» · F4.4 «Seguridad» · F4.5 «La revisión mano a mano» |
+| F5 «Comunidad» y F6 «Operación» | Todavía sin rebanadas |
+
 **«Hecha, sin revisar» es un estado real y no un eufemismo.** Quiere decir: sus reglas están implementadas, cada una con su test, las suites en verde, y **nadie miró todavía el producto terminado** — si cada pantalla es alcanzable navegando, si tiene sus cuatro estados, si la matriz de roles dice lo que promete. Eso es F4, y cada fase llega ahí con su deuda de revisión escrita (§6, punto 5).
 
 ### F1 — Master

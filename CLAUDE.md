@@ -179,3 +179,5 @@ Lo único en español dentro del repo son los `docs/`, `.claude/` y este archivo
 - un hallazgo o decisión de una lista: `B6 «Una mesa nunca pública se leía por id»`, `D3 «Las acciones del master van en un aviso de estado»`.
 
 El número se conserva, porque es lo que se busca y lo que no es ambiguo: se le suma el nombre. Lo ya escrito se corrige al tocar cada archivo, no en bloque. El código sigue citando `ADR-NN §k` a secas.
+
+**Dónde está cada nombre**: el de una ADR, en el índice de `docs/adr/README.md`, y el de una sección, en su título `## §k`; los de las fases y todas sus rebanadas, en la tabla de `docs/plan-desarrollo.md` §4 «Fases»; los de las reglas duras, en la tabla de arriba.
