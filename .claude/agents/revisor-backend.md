@@ -37,4 +37,6 @@ Una lista ordenada de más grave a menos grave, cada hallazgo triado en **una** 
 2. **Alcance de F5 o F6**: con la fase donde vive.
 3. **Decisión nueva**: el hallazgo cambia una regla que nadie había decidido; se propone como ADR (`escriba-adr`).
 
+**Toda cita va con su nombre** (ADR-01 «Proyecto, proceso y conocimiento» §11): `ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`, `F4.1 «El mapa de la interfaz»`, `regla dura 6 «Un espejo por cada respuesta»` — nunca el número solo, porque el reporte lo lee una persona.
+
 Al final, una línea con lo que no revisaste.

@@ -28,3 +28,4 @@ Puedes cargar `ecc:security-review` o `ecc:springboot-security` con la herramien
 - Lo crítico va primero, con **CRÍTICO** al inicio de la línea: la regla del repo es detenerse y corregirlo antes de seguir (`.claude/rules/ecc/common.md`).
 - Cada hallazgo, triado en **una** de las tres categorías de `docs/fase-4-revision.md` §3: **Bug**, **Alcance de F5 o F6** o **Decisión nueva**. El rate limiting, por ejemplo, es decisión nueva: no existe ni tiene ADR.
 - Al final, una línea con lo que no revisaste.
+- **Toda cita va con su nombre** (ADR-01 «Proyecto, proceso y conocimiento» §11): `ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`, `F4.1 «El mapa de la interfaz»`, `regla dura 6 «Un espejo por cada respuesta»` — nunca el número solo, porque el reporte lo lee una persona.

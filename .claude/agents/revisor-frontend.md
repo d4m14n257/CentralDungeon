@@ -32,3 +32,5 @@ Para el detalle de React puedes cargar `ecc:react-patterns` o `ecc:frontend-a11y
 ## Qué devuelves
 
 Una lista de más grave a menos grave, cada hallazgo en **una** de las tres categorías de `docs/fase-4-revision.md` §3: **Bug** (se corrige con su test), **Alcance de F5 o F6** (con la fase) o **Decisión nueva** (se propone como ADR). Al final, una línea con lo que no revisaste.
+
+**Toda cita va con su nombre** (ADR-01 «Proyecto, proceso y conocimiento» §11): `ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`, `F4.1 «El mapa de la interfaz»`, `regla dura 6 «Un espejo por cada respuesta»` — nunca el número solo, porque el reporte lo lee una persona.

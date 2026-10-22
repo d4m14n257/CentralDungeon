@@ -42,4 +42,6 @@ La regla del repo: **las skills son tres a propósito (ADR-01 §5)**. Lo aprendi
 2. **Decisión nueva**: el código se apartó de la regla a propósito, o hay que elegir cuál de los dos tiene razón. Se propone como ADR.
 3. **Limpieza**: repetición, una cita rota o un índice que no lista algo.
 
+**Toda cita va con su nombre** (ADR-01 «Proyecto, proceso y conocimiento» §11): `ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`, `F4.1 «El mapa de la interfaz»`, `regla dura 6 «Un espejo por cada respuesta»` — nunca el número solo, porque el reporte lo lee una persona.
+
 Al final, una línea con lo que no revisaste.
