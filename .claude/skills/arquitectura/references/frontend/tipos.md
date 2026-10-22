@@ -1,18 +1,18 @@
-# 3.2 Modelo de tipos: un tipo base por entidad, el resto derivado
+# 3.2 Modelo de tipos: un espejo por cada `…Response`, lo demás derivado
 
 > Parte de la skill `arquitectura` (ADR-01 §5). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
 Esta sección es la contraparte frontend de §2.3 y la razón principal por la que se conserva TypeScript al migrar de Next.js a React puro.
 
-La regla es: **por cada entidad del dominio se escribe a mano un único tipo base, y todas las variantes se derivan de él con utility types.** El problema que resuelve es concreto: si `GameTable`, `CreateGameTableInput`, `UpdateGameTableInput` y `GameTableCardProps` se declaran cada una por separado, son cuatro copias del mismo modelo que se desincronizan en silencio — el día que el backend renombra un campo, tres de las cuatro siguen compilando y el bug aparece en runtime.
+La regla es (ADR-02 §3): **por cada `…Response` del backend se escribe a mano su espejo, y lo que arma el frontend se deriva con utility types del tipo que ya existe.** Listado y detalle son `record` distintos en el backend (§2.3), así que cada uno tiene su `interface`: derivar el detalle del listado afirmaría una relación que el backend no garantiza. Lo que sí se desincroniza en silencio son las copias a mano de lo que el frontend arma —`CreateGameTableInput`, `UpdateGameTableInput`, `GameTableCardProps` declarados cada uno por separado—: el día que el backend renombra un campo, siguen compilando y el bug aparece en runtime.
 
-**El tipo base** vive en `features/<dominio>/types.ts` y es el espejo exacto del `...Response` del backend:
+**El espejo** vive en `features/<dominio>/types.ts` y repite exacto su `…Response`:
 
 ```ts
 // features/tables/types.ts
 
-/** Espejo de GameTableResponse. Único tipo de esta feature escrito a mano. */
+/** Espejo de GameTableResponse. */
 export interface GameTable {
   id: string;
   name: string;
@@ -25,7 +25,7 @@ export interface GameTable {
 }
 ```
 
-**Todo lo demás se deriva**, en el mismo archivo, debajo del base:
+**Lo que arma el frontend se deriva**, en el mismo archivo, debajo del espejo. Una respuesta que es literalmente un recorte de otra ya espejada también puede derivarse de ella (`PublicSession = Pick<TableSession, …>`); si sus campos o sus reglas de visibilidad no son un recorte, lleva su propia `interface`:
 
 ```ts
 // Payload de creación: sin lo que genera el servidor.
@@ -34,15 +34,11 @@ export type CreateGameTableInput = StrictOmit<GameTable, 'id' | 'ownerId' | 'sta
 // PATCH: los mismos campos, todos opcionales.
 export type UpdateGameTableInput = Partial<CreateGameTableInput>;
 
-// Lo que necesita una card de listado, y nada más.
-export type GameTableSummary = Pick<GameTable, 'id' | 'name' | 'status' | 'tableTypeId'>;
+// Lo que necesita una card, y nada más: una vista que arma el frontend, no una respuesta.
+export type GameTableCardData = Pick<GameTable, 'id' | 'name' | 'status' | 'tableTypeId'>;
 
-// El detalle: la base más las relaciones que solo trae ese endpoint.
-export type GameTableDetail = GameTable & {
-  schedules: TableSchedule[];
-  masters: MasterSummary[];
-  tags: Tag[];
-};
+// GameTableSummaryResponse y GameTableDetailResponse son records distintos en el backend:
+// cada uno tiene su propia interface arriba, no se derivan de GameTable.
 
 // Formulario a medio llenar: todo opcional menos la identidad.
 export type GameTableDraft = Partial<GameTable> & Pick<GameTable, 'id'>;
@@ -66,10 +62,10 @@ export type GameTableDraft = Partial<GameTable> & Pick<GameTable, 'id'>;
 
 **Reglas**
 
-1. **Un tipo base por entidad**, en `features/<dominio>/types.ts`. Si el backend agrega un campo, se agrega ahí y todos los derivados se actualizan solos.
+1. **Un espejo por cada `…Response`**, en `features/<dominio>/types.ts`. Si el backend agrega un campo, se agrega ahí y todos los derivados se actualizan solos. Un payload cuyos campos no existen en ningún tipo declarado lleva su `interface`, espejo de su `…Request` (`CreateGameTableRequest`).
 2. **Prohibido re-declarar a mano un tipo que sea subconjunto o variante de otro.** Si es "lo mismo pero sin X", es `Omit`. Si es "lo mismo pero opcional", es `Partial`. Si es "solo estos tres campos", es `Pick`.
 3. **Los derivados se declaran junto al base**, no dispersos por los componentes. Un componente importa el tipo que necesita; no lo inventa en sus props.
-4. **`interface` para el base** (extensible, mejores mensajes de error), **`type` para los derivados** (los utility types devuelven types).
+4. **`interface` para los espejos** (extensible, mejores mensajes de error), **`type` para los derivados** (los utility types devuelven types).
 5. **Nunca `any`.** Para lo genuinamente desconocido, `unknown`, y se estrecha antes de usarlo.
 6. **`Omit` no valida sus claves**: `Omit<GameTable, 'createdAtt'>` compila y no quita nada. Por eso los payloads de escritura usan el helper propio, que sí las verifica:
 
@@ -105,4 +101,4 @@ Un `enum` de TS genera código en runtime, no es tree-shakeable y no coincide es
 
 10. **`tsconfig.json`**: `strict: true` más `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` y `verbatimModuleSyntax`. Sin `strict` toda esta sección es decorativa.
 
-> El tipo base se escribe a mano y se mantiene sincronizado con el `...Response` de Java por disciplina. Generarlo desde el OpenAPI que ya publica springdoc (§1.1) eliminaría ese trabajo manual; está anotado como candidato en la sección «Abierto» de `docs/adr/README.md`, pero **hoy no está adoptado** y las reglas de arriba asumen tipos escritos a mano.
+> El espejo se escribe a mano y se mantiene sincronizado con el `...Response` de Java por disciplina. Generarlo desde el OpenAPI que ya publica springdoc (§1.1) eliminaría ese trabajo manual; está anotado como candidato en la sección «Abierto» de `docs/adr/README.md`, pero **hoy no está adoptado** y las reglas de arriba asumen tipos escritos a mano.

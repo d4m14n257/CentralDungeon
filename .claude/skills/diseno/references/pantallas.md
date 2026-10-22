@@ -29,7 +29,7 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 ### Perfil — `/player/profile` y `/player/users/:id`
 
 - **Los comentarios no muestran autor. Nunca, para nadie** (ADR-11 §5): ni al dueño del perfil, ni al master, ni a un admin, ni al owner. Lo único visible es la dirección (jugador → jugador, master → jugador…) y el impacto.
-- La asistencia va al lado del karma pero **no está incluida en él** (ADR-11 §10): son dos señales distintas, y mezclarlas haría el número inexplicable.
+- La asistencia va al lado del karma —que llega con F5 (ADR-10 §5)— pero **no está incluida en él** (ADR-11 §10): son dos señales distintas, y mezclarlas haría el número inexplicable.
 - Al mirar el perfil de otra persona, la visibilidad caduca a las dos semanas del cierre de la mesa que los vinculó (ADR-10 §2).
 
 ## 6. Qué se rescata del frontend viejo

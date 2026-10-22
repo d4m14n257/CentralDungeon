@@ -2,7 +2,7 @@
 adr: 9
 titulo: Postulaciones y veto
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 ---
 
@@ -60,8 +60,8 @@ absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 
 ## §7 El jugador ve a qué mesas se postuló y por qué lo rechazaron
 
-**Decisión.** En el explorador, la card de una mesa muestra un chip neutro de «ya te postulaste» cuando hay una postulación no rechazada; `GameTableCard` recibe un booleano `alreadyApplied` que resuelve la ruta (`TableListPage`) cruzando mesas con `useMyApplications()`. En «Mis postulaciones», cada fila dice **a qué mesa** (`gameTableName`, denormalizado en `RegistrationResponse`), enlaza a `/player/tables/:id` y muestra el **motivo del rechazo** (`rejectionJustification`, que solo llena `listMine()` con una consulta extra por página, sin N+1).
+**Decisión.** En el explorador, la card de una mesa muestra un chip neutro de «ya te postulaste» cuando hay una postulación no rechazada; el booleano es **del servidor**: `GameTableSummaryResponse` y `GameTableDetailResponse` traen `applied` para el actor del token (`Candidate` o `Player`, ADR-09 §1), calculado con una consulta por página igual que `scheduleConflict` (ADR-08 §2), y `GameTableCard` lee `table.applied`. «Mis postulaciones» pagina como cualquier listado. En «Mis postulaciones», cada fila dice **a qué mesa** (`gameTableName`, denormalizado en `RegistrationResponse`), enlaza a `/player/tables/:id` y muestra el **motivo del rechazo** (`rejectionJustification`, que solo llena `listMine()` con una consulta extra por página, sin N+1).
 
-**Por qué.** La lista tiene que explicar sin entrar a cada mesa. El booleano y no el estado real porque una feature no importa de otra (regla dura 16) y porque «ya te postulaste» es cierto tanto en `Candidate` como en `Player`. El chip es neutro porque el acento se reserva para acciones y karma, y esto no es ni una acción ni un estado de la mesa. Una fila de postulación sin el nombre de la mesa no distinguía una de otra, y un rechazo sin motivo no existe en el modelo.
+**Por qué.** La lista tiene que explicar sin entrar a cada mesa. El booleano y no el estado real porque «ya te postulaste» es cierto tanto en `Candidate` como en `Player`. Del servidor y no cruzado en el frontend, porque cruzar contra la primera página de las postulaciones propias daba la marca mal a quien tiene más de una página, y traerlas todas para cruzar es justo la consulta que el servidor hace mejor. El chip es neutro porque el acento se reserva para acciones y karma, y esto no es ni una acción ni un estado de la mesa. Una fila de postulación sin el nombre de la mesa no distinguía una de otra, y un rechazo sin motivo no existe en el modelo.
 
 *Antes: #149, #160.*

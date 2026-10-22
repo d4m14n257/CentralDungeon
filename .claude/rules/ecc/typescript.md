@@ -10,7 +10,7 @@ paths:
 ## Tipos
 
 - Todo `export` (función, hook, utilidad) lleva **tipos explícitos de parámetros y retorno**. Lo local y obvio se deja inferir.
-- `interface` para el tipo base y `type` para los derivados y las uniones (§3.2). Se prefieren uniones de literales a `enum`.
+- `interface` para el espejo de cada `…Response` y `type` para los derivados y las uniones (§3.2). Se prefieren uniones de literales a `enum`.
 - **`unknown` en vez de `any`** para lo externo o lo que no es de confianza, con narrowing antes de usarlo (`instanceof`, zod). Nunca `any`, como dice la regla dura 6.
 - Las props se tipan con una `interface` con nombre, campo por campo, incluidos los callbacks. Nada de `React.FC`.
 

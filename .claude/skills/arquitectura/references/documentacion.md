@@ -26,6 +26,6 @@ El proyecto se entrega para que el cliente lo use y lo siga mejorando. Eso pone 
 **Todo `export` lleva su bloque**: componentes, hooks, funciones, tipos, interfaces, constantes y esquemas zod.
 
 - Los `props` de un componente se documentan **campo por campo en su `interface` o `type`**, y además con `@param props.x` en el bloque del componente.
-- Un hook dice qué pregunta contesta, qué hace mientras la respuesta viaja, y qué `staleTime` usa y por qué (§3.3).
+- Un hook dice qué pregunta contesta, qué hace mientras la respuesta viaja, y qué `staleTime` usa y por qué cuando no es el default (§3.3).
 - **La única excepción del proyecto es `components/ui/`**: lo genera el CLI de shadcn y no se edita a mano.
 - Una clase de patrón de `styles/base.css` también lleva su comentario: qué papel cumple y dónde está en el catálogo (skill `diseno` §5.c).

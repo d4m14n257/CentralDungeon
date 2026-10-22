@@ -12,12 +12,11 @@ Se generan en `components/ui/`. Antes de crear cualquiera se consulta el MCP `sh
 
 #### Las tres que se apartan del default
 
-Todo lo demás se usa tal como viene: los tokens del `@theme` ya lo tiñen solo. Estas tres **cambian de estructura**, no de color, y por eso hay que saberlo antes de generarlas:
+Todo lo demás se usa tal como viene: los tokens del `@theme` ya lo tiñen solo. Estas dos **cambian de estructura**, no de color, y por eso hay que saberlo antes de generarlas:
 
 | Primitiva | Qué cambia | Por qué |
 |---|---|---|
 | `badge` | Lleva **punto de color + etiqueta de texto**, no solo texto | El color nunca es el único portador de información (§3). `Pause` y `PauseRequested` comparten familia y solo se distinguen leyendo |
-| `dialog` | En móvil es un **sheet desde abajo** con asa, no un modal centrado | Un diálogo centrado en 375 px queda pegado a los bordes (ADR-21 §7) |
 | `table` | En móvil **deja de ser tabla**: cada fila pasa a ficha. Nunca scroll horizontal | Los listados de Admin y Owner tienen cinco o más columnas (ADR-21 §7) |
 
 `button` no cambia de estructura, pero su color de texto **se calcula**: se elige entre casi-negro y blanco el que da AA sobre el relleno del acento, en cada tema. No es un valor fijo.
@@ -79,9 +78,9 @@ Viven en su feature, no en las capas transversales de la raíz, aunque se usen e
 | `FileCategoryFilter` — los cajones como fila de toggles, no como `<Select>` (ADR-14 §4). **Solo en `/admin/files`**, y ahí con los tres publicables (ADR-14 §7): en `/my/files` el cajón se narrowea desde el buscador con `/file_categories` (ADR-14 §6) | `features/files/` |
 | `PublishCategorySelect` — qué es **un** archivo, como `<Select>` de los tres cajones publicables, **en su fila** de la lista de subida de `/admin/files/upload` (ADR-14 §8). Nada preseleccionado (M24.1); sin elegir, «Subir» no manda nada y lo dice | `features/files/` |
 | `FileUsageChips` — dónde se usa un archivo, o «sin usar», que es el aviso de la purga (ADR-14 §3, ADR-13 §3) | `features/files/` |
-| `KarmaBadge` — número + indicador cualitativo. **Nunca se construyó**, y el karma no se pinta en el perfil hasta F5 (ADR-10 §5); hoy aparece como texto en las cards y padrones | `features/users/` |
+| `KarmaBadge` — número + indicador cualitativo. **Nunca se construyó**: el karma no se pinta en ninguna pantalla hasta que F5 lo calcule (ADR-10 §5) | `features/users/` |
 | `UserPicker` — buscar una persona y elegirla, sobre `SearchQueryInput`; el criterio básico es el nombre de Discord **o** el del sistema (ADR-22 §1) | `features/users/` |
-| `NotificationBell` — contador y panel, alimentado por WebSocket | `features/notifications/` |
+| `NotificationBell` — contador y panel; se refresca cada 60 s y al volver a la pestaña hasta que llegue el WebSocket de F6 (ADR-18 §2) | `features/notifications/` |
 | `CatalogGraph` — el lienzo de un catálogo (ADR-12 §7): los grupos abiertos como estrellas y las propuestas flotando a la izquierda. Conectar es clasificar; debajo de `md` es una lista con el mismo menú | `features/catalogs/` |
 | `CatalogValueActions` — el menú «…» de un valor del catálogo: el equivalente de teclado de cada gesto del lienzo, más lo que no es gesto (hacer principal, dar de baja, restaurar) | `features/catalogs/` |
 | `ContextSwitcher` — el selector de rol de §2 | `layouts/components/` (es shell, no dominio) |
@@ -107,7 +106,7 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 | `users` (7) | `AdminUserRolesCell` · `BlockUserDialog` · `ProfileCard` · `RoleChangeDialog` · `UserAdminHistory` · `UserPicker` · `UserStatusBadge` |
 | shell (7) | `AdminSectionNav` · `AppHeader` · `BrandMark` · `ContextSwitcher` · `MasterSectionNav` · `PlayerSectionNav` · `UserMenu` — en `layouts/components/` |
 
-**Tres que este documento prometió y no existen**: `KarmaBadge` (el karma no se pinta en el perfil hasta F5, y en las listas va como texto, nunca como badge propio), `SystemFeedbackDialog` (F5, ya anotado) y el hook `useTableSelection` (ninguna tabla pide selección múltiple todavía, ya anotado). `KarmaBadge` no estaba anotado y ahora lo está: un componente prometido que nadie construyó es una pieza que la próxima fase cree que puede reusar.
+**Tres que este documento prometió y no existen**: `KarmaBadge` (el karma no se pinta en ninguna pantalla hasta F5, ADR-10 §5), `SystemFeedbackDialog` (F5, ya anotado) y el hook `useTableSelection` (ninguna tabla pide selección múltiple todavía, ya anotado). `KarmaBadge` no estaba anotado y ahora lo está: un componente prometido que nadie construyó es una pieza que la próxima fase cree que puede reusar.
 
 #### El badge de estado estaba escrito diez veces — resuelto en ADR-21 §6
 
@@ -221,7 +220,7 @@ Lo único que cada pantalla define por su cuenta es **el texto del vacío y qué
 
 | Prefijo | Ancho | Qué cambia |
 |---|---|---|
-| *(sin prefijo)* | ≥ 375 px | Una columna. Los filtros se van a un `sheet`. Los modales son *sheet* desde abajo |
+| *(sin prefijo)* | ≥ 375 px | Una columna. Los filtros se van a un `sheet` |
 | `md` | ≥ 768 px | Dos columnas. Los filtros vuelven a la barra |
 | `lg` | ≥ 1024 px | Tres columnas. Barra lateral donde la haya |
 

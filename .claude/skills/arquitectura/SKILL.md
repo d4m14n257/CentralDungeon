@@ -35,12 +35,12 @@ El stack y sus versiones fijadas son §1; el porqué de cada regla, en la `ADR-N
 ## Reglas fijas — frontend (§3)
 
 13. **Feature-first, con las pantallas aparte.** Lo de dominio va en `src/features/<dominio>/`; **las páginas van en `src/routes/`**. Algo sube a la capa transversal de la raíz recién **cuando una segunda feature lo necesita**. → §3.1.1, §3.1.2
-14. **Una feature nunca importa de otra.** Una pantalla compone dominios con bloques `…Section` que reciben un **id**, no la entidad. → §3.1.5
+14. **Una feature nunca importa de otra.** Una pantalla compone dominios con bloques `…Section` que reciben un **id**, no la entidad. La raíz puede importar el barrel de una feature, nunca una ruta interna, y `features/help` solo `import type` (ADR-19 §1). → §3.1, §3.1.5
 15. **Superficie pública** en `features/<dominio>/index.ts`, que es el único barrel (ADR-19 §1). El `components/` de una feature es plano y va con sufijo. → §3.1.3, §3.1.4
-16. **Ruteo**: la página exporta `Component`, se registra con `lazy` bajo su layout, y **todo enlace sale de un builder de `config/paths.ts`**. Cada layout de contexto se cierra con `RequireContext`, que redirige a `/` a quien no tiene el contexto (ADR-20 §2). Eso decide qué se ve, no qué se permite: la autorización es del backend (ADR-20 §1). → §3.1.6
-17. **Tipos**: un tipo base por entidad, espejo del `…Response`; las variantes se derivan, nunca se re-declaran. Los enums son uniones de literales. Nunca `any`. → §3.2
-18. **Datos de servidor, solo con TanStack Query**, con query keys de la fábrica y `staleTime` de `config/query.ts`. Nada de `useEffect` + `fetch`, y ninguna respuesta de la API en Context o Zustand. **HTTP**, solo por `api/client.ts`. → §3.3
-19. **Estado de UI**: local por defecto; Zustand solo si es global y plano (ADR-19 §5). **Formularios**: react-hook-form + zod, con el formulario puro y el diálogo como dueño de la mutación (ADR-19 §6). **Fechas**: `lib/date.ts` (ADR-19 §7). → §3.3
+16. **Ruteo**: la página exporta `Component`, se registra con `lazy` bajo su layout con su segmento literal, y **todo enlace sale de un builder de `config/paths.ts`** (ADR-19 §10). Cada layout de contexto se cierra con `RequireContext`, que redirige a `/` a quien no tiene el contexto (ADR-20 §2). Eso decide qué se ve, no qué se permite: la autorización es del backend (ADR-20 §1). → §3.1.6
+17. **Tipos**: un espejo escrito a mano por cada `…Response` (ADR-02 §3); lo que arma el frontend se deriva del tipo que ya existe, nunca se re-declara. Los enums son uniones de literales. Nunca `any`. → §3.2
+18. **Datos de servidor, solo con TanStack Query**, con query keys de la fábrica; el `staleTime` es el default del `QueryClient` y una query declara el suyo, de `config/query.ts`, solo cuando es otro (ADR-18 §2). Nada de `useEffect` + `fetch`, y ninguna respuesta de la API en Context o Zustand. **HTTP**, solo por `api/client.ts`. → §3.3
+19. **Estado de UI**: local por defecto; Zustand solo si es global y plano (ADR-19 §5). **Formularios**: react-hook-form + zod; el `…Dialog` monta su formulario y es dueño de su mutación (ADR-19 §6). **Fechas**: `lib/date.ts` (ADR-19 §7). → §3.3
 20. **Textos**: ningún string visible en el JSX. Todo pasa por `t()`, con la clave en `es` **y** en `en` en el mismo commit (ADR-23 §1, §2). → §3.3
 21. **Estilos**: tokens del `@theme` y **patrones con nombre** (ADR-21 §5). Ningún valor suelto, y ninguna combinación de utilidades que cumpla un papel de diseño escrita a mano en una pantalla. El catálogo es de la skill `diseno`. → §3.3
 

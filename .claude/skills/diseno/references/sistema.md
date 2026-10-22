@@ -107,6 +107,8 @@ Los nueve estados de mesa y los cinco de postulación aparecen en toda la aplica
 
 ### Karma
 
+**Hoy no se pinta en ninguna pantalla**: ninguna respuesta lo trae hasta que F5 lo calcule (ADR-10 §5), y lo que sigue es cómo se va a ver entonces.
+
 Escala 0–10000 con 8000 por defecto (ADR-11 §1). Se muestra como número con un indicador cualitativo, **sin** desglose agregado (ADR-11 §10):
 
 ```

@@ -2,7 +2,7 @@
 adr: 10
 titulo: Perfiles
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [41, 44, 47, 134, 248, 249, 285]
 ---
 
@@ -42,11 +42,11 @@ absorbe: [41, 44, 47, 134, 248, 249, 285]
 
 *Antes: #134.*
 
-## §5 El perfil no promete karma ni comentarios hasta que existan
+## §5 Ni el perfil ni ninguna otra respuesta prometen karma o comentarios hasta que existan
 
-**Decisión.** `/player/profile` y `/player/users/:id` muestran nombre, usuario de Discord, país, roles, mesas terminadas (§6) y la asistencia agregada (ADR-08 §5). **La respuesta no lleva `karma` ni `comments`** —ni siquiera en `null`— y la pantalla **no dibuja** la sección «Comentarios recibidos». Las dos llegan en F5 con `KarmaService` y `comments` (ADR-01 §3), y entonces van en todas las fichas.
+**Decisión.** `/player/profile` y `/player/users/:id` muestran nombre, usuario de Discord, país, roles, mesas terminadas (§6) y la asistencia agregada (ADR-08 §5). **La respuesta no lleva `karma` ni `comments`** —ni siquiera en `null`— y la pantalla **no dibuja** la sección «Comentarios recibidos». **Lo mismo vale para toda respuesta**: `MasterSummaryResponse`, `TablePlayerResponse`, `RegistrationResponse` y `UserDetailResponse` (`/users/me`) no llevan `karma`, y el explorador, el detalle de mesa, los jugadores y los candidatos del master no lo pintan. La columna `users.karma` y `User.karma` se quedan: el schema no cambia. Las dos llegan en F5 con `KarmaService` y `comments` (ADR-01 §3), y entonces vuelven en todas esas respuestas a la vez.
 
-**Por qué.** El perfil se construyó antes que el karma para estrenar las reglas de visibilidad (§1–§3), que hacen falta funcionando para decidir quién puede comentar a quién, en vez de construir el karma sobre una puerta que nadie abrió. El bloque vacío no se dibuja porque una sección titulada «Comentarios recibidos» sin nada abajo no dice «todavía nadie te comentó» sino «esto debería tener algo» (`diseno` §5). Y el campo no viaja en `null` porque un DTO que promete `karma` le enseña al frontend a preguntarlo.
+**Por qué.** El perfil se construyó antes que el karma para estrenar las reglas de visibilidad (§1–§3), que hacen falta funcionando para decidir quién puede comentar a quién, en vez de construir el karma sobre una puerta que nadie abrió. El bloque vacío no se dibuja porque una sección titulada «Comentarios recibidos» sin nada abajo no dice «todavía nadie te comentó» sino «esto debería tener algo» (`diseno` §5). Y el campo no viaja en `null` porque un DTO que promete `karma` le enseña al frontend a preguntarlo. En las demás respuestas el número era peor que un hueco: nada escribe la columna hasta F5, así que siempre valía 8000, el default, y un número que no se mueve se lee como una reputación real sin decir nada.
 
 *Antes: #248.*
 

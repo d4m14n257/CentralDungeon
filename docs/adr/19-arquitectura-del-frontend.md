@@ -2,7 +2,7 @@
 adr: 19
 titulo: Arquitectura del frontend
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [104, 105, 106, 108, 110, 111, 112, 113, 114, 115, 133, 150, 158, 161, 192, 243]
 ---
 
@@ -10,11 +10,11 @@ absorbe: [104, 105, 106, 108, 110, 111, 112, 113, 114, 115, 133, 150, 158, 161, 
 
 > Cómo se organiza y se escribe el código de `frontend/`: carpetas, fronteras entre features, cliente HTTP, datos de servidor, estado de UI, formularios, fechas y el panel de desarrollo. La skill `arquitectura` §3 lo aplica como reglas (estructura en §3.1, tipos en §3.2, datos, estado, formularios y fechas en §3.3). La skill dice *cómo* se escribe; esta ADR, *qué* se decidió y *por qué*.
 
-## §1 Se agrupa por dominio, y una feature no importa de otra
+## §1 Se agrupa por dominio, una feature no importa de otra, y la raíz entra a una feature solo por su barrel
 
-**Decisión.** El frontend se organiza por dominio, nunca por tipo de archivo: `features/<dominio>/` con un `components/` **plano y con sufijos** (`Form`, `Dialog`, `Card`, `Badge`, `Page`…), y lo que no tiene dominio en las capas de la raíz (`components/`, `hooks/`, `lib/`, `api/`, `types/`, `config/`, `providers/`). Una feature no importa de otra: una pieza sube a la raíz **cuando una segunda feature ya la necesita**, y al subir pierde el dominio. Cada feature declara su superficie en un `index.ts` en su raíz; desde afuera se importa `@/features/tables`, nunca una ruta interna, y ese es el **único** barrel del proyecto. Cada capa guarda lo suyo: un hook vive en `hooks/` aunque su diálogo esté en `components/` (`useConfirm` en `hooks/useConfirm.ts`); un Context global junto a su provider, en `providers/` (`useAuth`); un store de Zustand, en su propia capa. Los tests van junto al archivo que prueban.
+**Decisión.** El frontend se organiza por dominio, nunca por tipo de archivo: `features/<dominio>/` con un `components/` **plano y con sufijos** (`Dialog`, `Section`, `Card`, `Badge`, `List`…), y lo que no tiene dominio en las capas de la raíz (`components/`, `hooks/`, `lib/`, `api/`, `types/`, `config/`, `providers/`). Una feature no importa de otra: una pieza sube a la raíz **cuando una segunda feature ya la necesita**, y al subir pierde el dominio. Cada feature declara su superficie en un `index.ts` en su raíz; desde afuera se importa `@/features/tables`, nunca una ruta interna, y ese es el **único** barrel del proyecto. **Las capas de la raíz** (`components/`, `hooks/`, `layouts/`…) **pueden importar el barrel de una feature, nunca una ruta interna**: `PageHeader` y `SectionHeader` montan el `HelpButton` de `features/help`, `AppHeader` la campana, `useAvailableContexts` lee `useMe`. **`features/help` es la excepción a la regla de no cruzar features, y solo con `import type`**: nombra los estados de mesa y de postulación que explica sin importar nada que corra. Cada capa guarda lo suyo: un hook vive en `hooks/` aunque su diálogo esté en `components/` (`useConfirm` en `hooks/useConfirm.ts`); un Context global junto a su provider, en `providers/` (`useAuth`); un store de Zustand, en su propia capa. Los tests van junto al archivo que prueban.
 
-**Por qué.** Agrupar por tipo, como el legacy (`forms/`, `contexts/`, `normalize/`, `helper/`…), obligaba a abrir siete carpetas para tocar una mesa y mezclaba dominios sin relación. El umbral de dos usos es más bajo que las tres repeticiones del backend (`arquitectura` §2.4) porque acá la alternativa a subir no es duplicar un poco: es un import entre features, prohibido por la regla dura 16. Plano con sufijos y no subcarpetas por tipo, porque eso dejó en el legacy carpetas de un solo archivo. El barrel vuelve verificable la frontera —sin él nada distingue lo público de lo interno y un refactor rompe consumidores que no se sabía que existían—; uno por carpeta reintroduciría ciclos sin aportar frontera. Y un módulo que exporta un componente y un hook pierde el fast refresh.
+**Por qué.** Agrupar por tipo, como el legacy (`forms/`, `contexts/`, `normalize/`, `helper/`…), obligaba a abrir siete carpetas para tocar una mesa y mezclaba dominios sin relación. El umbral de dos usos es más bajo que las tres repeticiones del backend (`arquitectura` §2.4) porque acá la alternativa a subir no es duplicar un poco: es un import entre features, prohibido por la regla dura 16. Plano con sufijos y no subcarpetas por tipo, porque eso dejó en el legacy carpetas de un solo archivo. El barrel vuelve verificable la frontera —sin él nada distingue lo público de lo interno y un refactor rompe consumidores que no se sabía que existían—; uno por carpeta reintroduciría ciclos sin aportar frontera. Y un módulo que exporta un componente y un hook pierde el fast refresh. Prohibirle a la raíz todo import de una feature obligaría a pasar por props cosas que el shell entero necesita —la sesión, la ayuda, la campana— en cada pantalla; por el barrel la frontera sigue siendo verificable. La ayuda solo nombra tipos porque explica los estados de otros dominios, y un `import type` se borra al compilar: no crea dependencia en runtime ni ciclo.
 
 *Antes: #112, #114, #243.*
 
@@ -28,7 +28,7 @@ absorbe: [104, 105, 106, 108, 110, 111, 112, 113, 114, 115, 133, 150, 158, 161, 
 
 ## §3 Un solo cliente HTTP genérico y tipado, y ninguna capa de normalización
 
-**Decisión.** Un cliente en `api/client.ts`, genérico y tipado, con las operaciones como métodos (`get`, `post`, `put`, `patch`, `delete`, `upload`, `getPage`) parametrizados por el tipo de respuesta y el de cuerpo; cada feature arma su `<dominio>Api.ts` encima. El manejo del `401`, el `ProblemDetail` y el JWT vive solo ahí. **No hay capa de normalización**: el tipo base de cada entidad (ADR-02 §3, `arquitectura` §3.2) es el contrato. Si la forma de la API y la de la UI difieren de verdad (una fecha ISO que se quiere como objeto), eso es un **mapeo** y vive en el `api/` de su feature.
+**Decisión.** Un cliente en `api/client.ts`, genérico y tipado, con las operaciones como métodos (`get`, `post`, `put`, `patch`, `delete`, `upload`, `getPage`) parametrizados por el tipo de respuesta y el de cuerpo; cada feature arma su `<dominio>Api.ts` encima. El manejo del `401`, el `ProblemDetail` y el JWT vive solo ahí. **No hay capa de normalización**: el espejo de cada `…Response` (ADR-02 §3, `arquitectura` §3.2) es el contrato. Si la forma de la API y la de la UI difieren de verdad (una fecha ISO que se quiere como objeto), eso es un **mapeo** y vive en el `api/` de su feature.
 
 **Por qué.** Tener las operaciones nombradas y reutilizables era lo bueno del legacy; lo malo, siete archivos sueltos (`getter`, `setter`, `patcher`…) sin tipos, cada uno repitiendo el manejo de errores. Al ser genérico, el tipo derivado viaja hasta la llamada: `api.post<GameTableResponse, CreateGameTableInput>(...)` no compila si el payload no coincide. La normalización existía para que un renombre en el backend no rompiera el frontend, y con TypeScript estricto eso es justo lo que no se quiere: si el backend renombra un campo, la compilación tiene que fallar. Una capa que traduce nombres esconde la ruptura y la convierte en un bug de runtime.
 
@@ -50,11 +50,11 @@ absorbe: [104, 105, 106, 108, 110, 111, 112, 113, 114, 115, 133, 150, 158, 161, 
 
 *Antes: #105.*
 
-## §6 El formulario es puro, y el diálogo que lo aloja es el dueño de la mutación
+## §6 El diálogo es dueño de su formulario y de su mutación
 
-**Decisión.** Un formulario recibe valores iniciales y un `onSubmit`, valida, y no sabe si vive en un modal, un panel o una página; va en `features/<dominio>/components/` junto a lo que usa. El envoltorio de modal es `FormDialog`, en `components/`: título, descripción y la pregunta antes de cerrar con cambios sin guardar (ADR-20 §5); no recibe entidades del dominio. El diálogo de cada feature compone `FormDialog` + el formulario y **es el dueño de la mutación**.
+**Decisión.** No hay un `*Form.tsx` puro aparte. Cada `…Dialog` de una feature monta su propio `useForm` con el esquema zod de `schemas.ts`, pinta los campos y **es el dueño de la mutación**: la llama, cierra al terminar y avisa (`RejectRegistrationDialog`, `ApplyToTableDialog`, `RoleChangeDialog`…). Cuando un mismo diálogo sirve a varias acciones —`JustifiedTableActionDialog` para cada transición con motivo, `TaskFormDialog` para crear y para editar— recibe `onSubmit` y la mutación es de quien lo monta. Un formulario de pantalla completa (crear y editar mesa) vive en su página de `routes/`. El envoltorio de modal es `FormDialog`, en `components/`: título, descripción y la pregunta antes de cerrar con cambios sin guardar (ADR-20 §5); no recibe entidades del dominio.
 
-**Por qué.** Con la mutación en el diálogo, el mismo `GameTableForm` sirve para crear en un modal y para editar en una página sin tocarlo. En el legacy el reparto estaba invertido —`EditTableForm` recibía `handleCloseModal` y `reloadAction`, hacía él mismo el `PUT` y decidía cuándo cerrarse— y por eso no se podía usar fuera de un modal. De `ModalBase` se rescata solo la pregunta antes de cerrar un modal a medio llenar. `FormDialog` no recibe entidades porque, si las recibiera, no tendría por qué ser transversal.
+**Por qué.** Un formulario puro aparte sirve cuando el mismo formulario vive en un modal y en una página, y ese caso no existe: cada formulario del frontend vive en un solo contenedor, y separar los campos del diálogo agrega un archivo y una interfaz de props por formulario sin que nadie la reusara. Lo que se conserva del reparto es lo que corregía al legacy, donde `EditTableForm` recibía `handleCloseModal` y `reloadAction` y hacía él mismo el `PUT`: la mutación tiene un solo dueño, que es quien sabe cuándo cerrar. De `ModalBase` se rescata solo la pregunta antes de cerrar un modal a medio llenar. `FormDialog` no recibe entidades porque, si las recibiera, no tendría por qué ser transversal. Si un formulario llega a necesitar dos contenedores, ese es el momento de extraerlo.
 
 *Antes: #106, #110.*
 
@@ -81,3 +81,9 @@ absorbe: [104, 105, 106, 108, 110, 111, 112, 113, 114, 115, 133, 150, 158, 161, 
 **Por qué.** Reemplaza los `fetch()` escritos a mano en la consola para cambiar de cuenta. Las cuentas son las compartidas porque ya tienen datos armados; una inventada no tiene mesas ni notificaciones. El gateo de queries no es cosmético: sin sesión, `useMe()` recibía `401`, `client.ts` fallaba el refresh y hacía `window.location.assign('/login')`, que remontaba el panel y repetía el ciclo — `/login` se recargaba sola indefinidamente en `npm run dev`.
 
 *Antes: #158, #161.*
+
+## §10 El router declara sus segmentos; `config/paths.ts` construye los enlaces
+
+**Decisión.** `routes/router.tsx` escribe sus segmentos literales (`'tables/:id'`, `'history'`), anidados bajo el prefijo de cada contexto. **Todo enlace, `navigate` y `Navigate` sale de un builder de `config/paths.ts`** (`masterTableHistoryPath(id)`), o de una de sus constantes para las rutas sin parámetros (`paths.login`). Las constantes de patrón de `paths.ts` no son la fuente del router: lo espejan, y si dejan de coincidir el que manda es `router.tsx`.
+
+**Por qué.** En un árbol anidado cada hija se declara relativa a su padre, así que el patrón completo de `paths.ts` no es lo que el router escribe, y partirlo en pedazos para dárselo era la misma cadena dos veces. Los enlaces, en cambio, se escriben en decenas de lugares y es donde un string suelto se rompe sin que nada falle al compilar; ahí un builder con parámetros tipados es lo que evita el error.

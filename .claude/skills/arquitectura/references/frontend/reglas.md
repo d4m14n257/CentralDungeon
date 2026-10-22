@@ -50,7 +50,7 @@ Todo lo demás —el estado de un modal, los filtros de una pantalla— es estad
 
 **Contexto activo**: la navegación se organiza por contexto de rol (`diseno` §2). ⚠️ **El contexto es organización de UI, no autorización.** Estar "en contexto Admin" no habilita nada: el backend autoriza endpoint por endpoint (§2.6) y una ruta forzada sin el rol devuelve `403`. Ningún componente decide qué puede hacer el usuario mirando el contexto activo; lo decide el rol que trae el token.
 
-**Tiempo real — diseño para F6, no construido** (ADR-16 §8). **Hoy no hay WebSocket en ningún lado**: la bandeja de admins se mantiene al día con `refetchInterval` (`liveQuery.adminQueue` en `config/query.ts`), y es la única query que hace polling además de `useBackendStatus`. Lo que sigue es cómo se construye en F6, y por qué se escribió antes: un único `StompProvider` mantendrá la conexión WebSocket. Los mensajes que llegan son **señales de invalidación**, no datos: el handler hace `queryClient.invalidateQueries(...)` y TanStack Query refetchea. Nunca se escribe una respuesta de servidor en la caché a partir de un mensaje — eso reintroduciría por la ventana el estado de servidor fuera de TanStack Query que la regla de arriba prohíbe.
+**Tiempo real — diseño para F6, no construido** (ADR-16 §8). **Hoy no hay WebSocket en ningún lado**: lo que cambia por actos ajenos se pide por tiempo con `refetchInterval` más `refetchOnWindowFocus`, desde el objeto `live` de `config/query.ts` —la bandeja de admins cada 15 s (`live.adminQueue`, ADR-16 §8) y la campana cada 60 s (`live.notifications`, ADR-18 §2)—, y son las únicas queries que hacen polling además de `useBackendStatus`. Lo que sigue es cómo se construye en F6, y por qué se escribió antes: un único `StompProvider` mantendrá la conexión WebSocket. Los mensajes que llegan son **señales de invalidación**, no datos: el handler hace `queryClient.invalidateQueries(...)` y TanStack Query refetchea. Nunca se escribe una respuesta de servidor en la caché a partir de un mensaje — eso reintroduciría por la ventana el estado de servidor fuera de TanStack Query que la regla de arriba prohíbe.
 
 Tres reglas para que eso no se convierta en una tormenta de peticiones (ADR-18 §2):
 
@@ -60,18 +60,18 @@ Tres reglas para que eso no se convierta en una tormenta de peticiones (ADR-18 �
 
 Tres destinos (ADR-18 §2): `/user/queue/notifications` para lo personal, `/topic/admin-queue` para la bandeja compartida, y `/topic/tables` para los cambios del catálogo público — que es lo que hace que a alguien navegando el explorador le aparezca una mesa recién publicada.
 
-**Caché**: `staleTime` **explícito en toda query**, tomado de la política de `config/query.ts`. El default de TanStack Query es `0` —todo se considera viejo al instante— y dejarlo así es lo que produce el goteo de peticiones que se quiere evitar:
+**Caché** (ADR-18 §2): el default de TanStack Query es `0` —todo se considera viejo al instante— y dejarlo así es lo que produce el goteo de peticiones que se quiere evitar. Por eso el `QueryClient` fija **un default de 30 s** (`staleTime.tableList`), y **ese default es la política**: una query declara su `staleTime`, tomado de `config/query.ts`, **solo cuando es otro**:
 
 | Dato | `staleTime` | Por qué |
 |---|---|---|
 | Catálogos (sistemas, tags, plataformas) | 1 h | Solo los cambia un admin desde `/admin/catalogs` |
 | Listado de mesas | 30 s | Es también el default del `QueryClient`: una query sin `staleTime` propio hereda este. Alcanza para datos que cambian por acción de otros a ritmo humano; lo que no, declara el suyo |
 | Detalle de mesa | 1 min | |
-| Notificaciones | `Infinity` | Se invalidan al leerlas y al llegar una nueva; pedirlas por tiempo es ruido puro (con F6, el WS será su única fuente de cambio) |
+| Notificaciones | `Infinity`, más `refetchInterval` de 60 s y al volver a la pestaña (`live.notifications`) | Se invalidan al leerlas. Una notificación nueva la escribe el acto de otra persona, que ninguna mutación propia ve: hasta F6 la campana la trae por tiempo, y con el WS ese aviso será su única fuente de cambio (ADR-18 §2) |
 | Perfil y karma | 5 min | El karma se recalcula al aprobar un comentario o en el job semanal (ADR-11 §9) |
 | Archivos y adjuntos de una mesa | 1 min | Cambian cuando alguien actúa, no solos |
 | Peticiones y entregas | 1 min | Ídem |
-| Bandeja de admins | 10 s, más `refetchInterval` de 15 s (ADR-16 §8) | Es lo único que se pide por tiempo hasta que exista el WS. La reserva de ADR-16 §5 se libera sola al vencer `admin_queue.claim_timeout_minutes` de `system_settings` (15 min por defecto, ADR-17 §3) |
+| Bandeja de admins | 10 s, más `refetchInterval` de 15 s (ADR-16 §8) | Se pide por tiempo hasta que exista el WS, como la campana. La reserva de ADR-16 §5 se libera sola al vencer `admin_queue.claim_timeout_minutes` de `system_settings` (15 min por defecto, ADR-17 §3) |
 
 **Sesión**: el access token vive **en memoria**, nunca en `localStorage` ni en `sessionStorage`; el refresh viaja en una cookie `httpOnly` + `SameSite=Strict` que el frontend no lee ni escribe. `client.ts` es el único que conoce el token: lo inyecta, y ante un `401` intenta el refresh una vez y reintenta la llamada; si el refresh también falla, limpia y manda a `/login`. La razón es concreta: hay editor de texto enriquecido renderizado en el navegador (ADR-03 §8), que es la superficie de XSS más directa del sistema, y un token en `localStorage` es legible por cualquier script que se cuele por ahí.
 
@@ -85,40 +85,38 @@ Tres destinos (ADR-18 §2): `/user/queue/notifications` para lo personal, `/topi
 
 **Formularios**: react-hook-form + zod, con el esquema en `schemas.ts` de la feature. El mismo esquema tipa el formulario y valida el submit, y queda atado al tipo del payload (§3.2, regla 7).
 
-El formulario es un **componente puro, desacoplado de su contenedor** (ADR-19 §6): recibe valores iniciales y `onSubmit`, y no sabe si lo van a mostrar en un modal, en un panel lateral o en una página. El modal es un envoltorio aparte. Así el mismo `GameTableForm` sirve para crear en un diálogo y para editar en pantalla completa sin tocarlo.
-
-El reparto es fijo (ADR-19 §6):
+**El diálogo es dueño de su formulario y de su mutación** (ADR-19 §6). No hay un `*Form.tsx` puro aparte: el `…Dialog` de la feature monta `useForm` con su esquema, pinta los campos, llama a la mutación y cierra al terminar.
 
 | Pieza | Qué hace | Qué **no** hace |
 |---|---|---|
-| `GameTableForm` | Monta `useForm` con su esquema zod, pinta los campos, valida y llama `onSubmit(values)` | No conoce la mutación, no invalida queries, no cierra nada, no muestra toasts |
-| `EditGameTableDialog` | Compone `FormDialog` + el formulario, **posee la mutación** (`useUpdateGameTable`), cierra al terminar y avisa | No declara campos ni validación |
-| `FormDialog` (`components/`) | El envoltorio: título, descripción, y confirmación al cerrar con cambios sin guardar | No sabe de dominio: no recibe entidades, solo `children` |
+| `RejectRegistrationDialog` (en su feature) | Monta `useForm` con su esquema zod, pinta los campos, confirma si hace falta (ADR-21 §9), **posee la mutación** (`useRejectRegistration`), avisa y cierra | No es transversal: nombra su dominio |
+| `FormDialog` (`components/`) | El envoltorio: título, descripción, y la pregunta antes de cerrar con cambios sin guardar (`isDirty`, ADR-20 §5) | No sabe de dominio: no recibe entidades, solo `children` |
 
 ```tsx
-// features/tables/components/EditGameTableDialog.tsx
-export function EditGameTableDialog({ table, open, onOpenChange }: EditGameTableDialogProps) {
-  const updateTable = useUpdateGameTable(table.id);
+// features/registrations/components/RejectRegistrationDialog.tsx (abreviado)
+export function RejectRegistrationDialog({ tableId, registrationId, open, onOpenChange }: RejectRegistrationDialogProps) {
+  const rejectRegistration = useRejectRegistration(tableId)
+  const form = useForm<RejectRegistrationForm>({ resolver: zodResolver(rejectRegistrationSchema), defaultValues: { justification: '' } })
+
+  function onSubmit(values: RejectRegistrationForm) {
+    rejectRegistration.mutate({ registrationId, justification: values.justification }, {
+      onSuccess: () => { form.reset(); onOpenChange(false) },
+    })
+  }
 
   return (
-    <FormDialog open={open} onOpenChange={onOpenChange} title="Editar mesa" confirmOnDirtyClose>
-      <GameTableForm
-        defaultValues={table}
-        onSubmit={async (values) => {
-          await updateTable.mutateAsync(values);
-          onOpenChange(false);
-        }}
-      />
+    <FormDialog isDirty={form.formState.isDirty} open={open} onOpenChange={onOpenChange} title={t('…')}>
+      <Form {...form}><form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}>{/* campos */}</form></Form>
     </FormDialog>
-  );
+  )
 }
 ```
 
-`confirmOnDirtyClose` es lo único que se rescata del `ModalBase` viejo, que ya preguntaba antes de cerrar un modal a medio llenar. Lo que no se rescata es el resto de aquel reparto: allá el formulario recibía `handleCloseModal` y `reloadAction`, hacía él mismo el `PUT` y decidía cuándo cerrarse — por eso no se podía usar fuera de un modal, que es justo lo que ADR-19 §6 corrige.
+Dos casos fuera del molde, y son los únicos: **un diálogo que sirve a varias acciones** —`JustifiedTableActionDialog` para cada transición con motivo, `TaskFormDialog` para crear y editar— recibe `onSubmit` y la mutación es de quien lo monta; y **un formulario de pantalla completa** (crear y editar mesa) vive en su página de `routes/`. Del `ModalBase` viejo se rescata solo la pregunta antes de cerrar un modal a medio llenar; del resto de aquel reparto —el formulario recibía `handleCloseModal` y `reloadAction` y hacía él mismo el `PUT`— no se rescata nada: la mutación tiene un solo dueño.
 
 **Fechas y horas** (ADR-19 §7): el backend manda ISO-8601 UTC (§2.5) y la conversión a hora local es del frontend, con **`Intl.DateTimeFormat` nativo** desde `lib/date.ts`. Sin librería de fechas: no hay aritmética de calendario en la aplicación —los horarios son día de semana más hora (§4.4)— y el `useDate` del legacy ya resolvía esto con `Intl`. La zona horaria sale del perfil del usuario, y solo si no está, del navegador; nunca se asume la del navegador cuando el perfil dice otra cosa. El locale y la zona son parámetros de las funciones de `date.ts`, nunca constantes incrustadas: el legacy tenía `'es-ES'` fijo en el hook.
 
-**Tipos**: un tipo base por entidad y derivados con utility types (§3.2). Ningún componente declara a mano una variante de un tipo que ya existe.
+**Tipos**: un espejo por cada `…Response` y derivados con utility types (§3.2, ADR-02 §3). Ningún componente declara a mano una variante de un tipo que ya existe.
 
 **Documentación**: JSDoc en todo `export`, con los `props` campo por campo. El detalle, junto con el Javadoc del backend, está en §6.2.
 

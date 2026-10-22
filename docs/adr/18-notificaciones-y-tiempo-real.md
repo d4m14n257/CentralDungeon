@@ -2,7 +2,7 @@
 adr: 18
 titulo: Notificaciones y tiempo real
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [14, 101, 116, 153, 154, 156, 157, 244]
 ---
 
@@ -20,11 +20,11 @@ absorbe: [14, 101, 116, 153, 154, 156, 157, 244]
 
 ## §2 El tiempo real es WebSocket + STOMP, y el mensaje es una señal de invalidación
 
-*Diseño para F6, no construido: hoy no hay WebSocket; solo la bandeja de admins se mantiene al día por polling (ADR-16 §8), y la campana se refresca al abrirla o tras una mutación.*
+*El WebSocket es diseño para F6, no construido. Hasta entonces, lo que cambia por actos ajenos se pide por tiempo: la bandeja de admins cada 15 s (ADR-16 §8) y la campana cada 60 s.*
 
-**Decisión.** `/ws` con STOMP, el JWT en el frame `CONNECT` y no en la query string. Destinos: `/user/queue/notifications` para lo personal, `/topic/admin-queue` para la bandeja y `/topic/tables` para el explorador de mesas. **El mensaje trae tipo e id, no el contenido**: el cliente invalida solo esa rama de `queryKeys`, confía en que `invalidateQueries` refetchea solo las queries activas, y **al reconectar invalida todo lo activo**. Toda query lleva `staleTime` explícito, según la tabla de `arquitectura` §3.3. Mientras no exista, la bandeja se refresca por intervalo (ADR-16 §8).
+**Decisión.** `/ws` con STOMP, el JWT en el frame `CONNECT` y no en la query string. Destinos: `/user/queue/notifications` para lo personal, `/topic/admin-queue` para la bandeja y `/topic/tables` para el explorador de mesas. **El mensaje trae tipo e id, no el contenido**: el cliente invalida solo esa rama de `queryKeys`, confía en que `invalidateQueries` refetchea solo las queries activas, y **al reconectar invalida todo lo activo**. **El `staleTime` del `QueryClient` (30 s, `staleTime.tableList`) es la política**: una query declara el suyo, de la tabla de `arquitectura` §3.3, solo cuando es otro. Mientras no exista el WebSocket, la bandeja se refresca por intervalo (ADR-16 §8) y **la campana también: cada 60 s y al volver a la pestaña** (`live.notifications` en `config/query.ts`); el polling se borra cuando llegue el socket.
 
-**Por qué.** WebSocket sobre SSE deja abierta la puerta a lo bidireccional (chat, presencia) sin cambiar de transporte, a cambio de handshake, heartbeat y reconexión. El token va en el frame porque el navegador no manda headers en el handshake y la query string queda en los logs de acceso. Mandar la señal y refetchear mantiene la caché de TanStack Query como única fuente (regla dura 11), y un mensaje perdido no deja a la UI inventando datos. Invalidar solo una rama evita que cada publicación mueva media caché de cada cliente conectado; invalidar todo al reconectar tapa los mensajes perdidos mientras el socket estuvo caído. El default de `staleTime` es `0`, así que sin decidirlo cada montaje vuelve a pedir todo. **Límite conocido**: el broker en memoria de Spring sirve para una sola instancia; con más hace falta un broker externo.
+**Por qué.** WebSocket sobre SSE deja abierta la puerta a lo bidireccional (chat, presencia) sin cambiar de transporte, a cambio de handshake, heartbeat y reconexión. El token va en el frame porque el navegador no manda headers en el handshake y la query string queda en los logs de acceso. Mandar la señal y refetchear mantiene la caché de TanStack Query como única fuente (regla dura 11), y un mensaje perdido no deja a la UI inventando datos. Invalidar solo una rama evita que cada publicación mueva media caché de cada cliente conectado; invalidar todo al reconectar tapa los mensajes perdidos mientras el socket estuvo caído. El default de la librería para `staleTime` es `0`, así que sin decidirlo cada montaje vuelve a pedir todo; un default propio en el cliente lo decide una vez, y declararlo además en cada query que coincide con él solo repetía el número. La campana guarda sus datos con `staleTime` `Infinity`, y una notificación la escribe el acto de otra persona, que ninguna mutación del lector ve: sin polling no se refrescaba hasta recargar la página. Un minuto alcanza para avisos que no son urgentes, y el refetch al volver a la pestaña atrapa al que regresa. **Límite conocido**: el broker en memoria de Spring sirve para una sola instancia; con más hace falta un broker externo.
 
 *Antes: #101, #116.*
 

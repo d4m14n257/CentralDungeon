@@ -3,7 +3,7 @@
 > Parte de la skill `arquitectura` (ADR-01 §5). Se movió desde `docs/` en F4.0 y conserva su numeración original, que es la que citan el código y las ADRs.
 
 
-El dominio manda, igual que en el backend. Una feature es autocontenida —sus llamadas a la API, sus hooks, sus componentes, sus tipos— y **nunca importa de otra feature**: solo depende de las capas transversales de la raíz de `src/`.
+El dominio manda, igual que en el backend. Una feature es autocontenida —sus llamadas a la API, sus hooks, sus componentes, sus tipos— y **nunca importa de otra feature**: solo depende de las capas transversales de la raíz de `src/`. La dirección inversa sí existe, acotada (ADR-19 §1): **una capa de la raíz puede importar el barrel de una feature, nunca una ruta interna** (`PageHeader` monta el `HelpButton` de `@/features/help`), y `features/help` puede nombrar tipos de otras features **solo con `import type`**.
 
 Las **pantallas viven fuera de las features**, en `routes/`. Es lo que hace que esa regla no tenga excepciones (§3.1.5).
 
@@ -24,7 +24,7 @@ frontend/
     ├── config/                      configuración de la app, sin lógica
     │   ├── paths.ts                 builders de URL para los enlaces (§3.1.6)
     │   ├── env.ts                   variables de entorno, leídas y validadas en un solo lugar
-    │   ├── query.ts                 defaults del QueryClient, política de staleTime y el único polling (§3.3)
+    │   ├── query.ts                 defaults del QueryClient, política de staleTime y los dos polling, `live` (§3.3)
     │   ├── pagination.ts            tamaños de página (ADR-21 §11)   limits.ts   los topes que se dicen antes (ADR-17 §4)
     │   ├── language.ts              idiomas soportados (ADR-23 §2)  zodErrors.ts  mensajes de zod por clave i18n
     │
@@ -124,8 +124,7 @@ Una feature **nunca importa de otra feature**. Esa es la regla que fuerza el cri
 | Sufijo | Qué es |
 |---|---|
 | `Page` | Pantalla montada por el router. Solo en `routes/` |
-| `Form` | Formulario puro: recibe valores iniciales y `onSubmit` (§3.3) |
-| `Dialog` | Envoltorio que aloja un formulario o una acción en un modal |
+| `Dialog` | Un modal con su formulario o su acción: monta su `useForm` y es dueño de su mutación (§3.3, ADR-19 §6) |
 | `Section` | Bloque de una pantalla compuesta: trae sus propios datos a partir de un id (§3.1.5) |
 | `Card` | Ficha de una entidad en un listado |
 | `Badge` | Etiqueta de estado |
@@ -159,13 +158,13 @@ El frontend viejo agrupaba **por tipo de archivo** en la raíz de `src/`, mezcla
 | `src/contexts/` | `providers/` si es global; junto al componente que envuelve si es de subárbol | Un Context de una tabla no es global (ADR-19 §5) |
 | `src/api/` con un archivo por verbo | `api/client.ts` + `features/<dominio>/api/` | Eran siete wrappers sin tipos (ADR-19 §3) |
 | `src/constants/` | `config/paths.ts` las rutas; `features/<dominio>/constants.ts` los labels del dominio | Un archivo global de constantes termina siendo el cajón de todo |
-| `src/normalize/` | No existe (ADR-19 §3) | El tipo base es el contrato (§3.2) |
+| `src/normalize/` | No existe (ADR-19 §3) | El espejo del `…Response` es el contrato (§3.2) |
 | `src/styles/*.js` | Clases de Tailwind en el JSX (ADR-21 §1) | — |
 | `src/helper/` | `lib/` si es puro y sin dominio; si no, su feature | "helper" no dice nada sobre qué hay adentro |
 | `src/language/*.xml` | `locales/es/*.json` con i18next (ADR-23 §1) | — |
 | `pages/` de Next.js | `routes/` (§3.1.6) | La carpeta ya no define la URL; el router la declara |
 
-Los tests van **junto al archivo que prueban** (`GameTableForm.test.tsx`), no en un `__tests__/` aparte. Los de Playwright son la excepción: viven en `e2e/`.
+Los tests van **junto al archivo que prueban** (`TaskFormDialog.test.tsx`), no en un `__tests__/` aparte. Los de Playwright son la excepción: viven en `e2e/`.
 
 #### 3.1.5 Una feature no es una pantalla
 
@@ -231,7 +230,7 @@ export const router = createBrowserRouter([
 Cinco reglas:
 
 1. **El árbol espeja el sitemap** de `diseno` §2. Si dejan de parecerse, uno de los dos está desactualizado.
-2. **Los paths salen de `config/paths.ts`**, nunca strings sueltos repartidos entre el router y los `<Link>`.
+2. **El router escribe sus segmentos; los enlaces salen de `config/paths.ts`** (ADR-19 §10). `router.tsx` declara cada segmento literal relativo a su padre. Todo `<Link>`, `navigate` y `<Navigate>` usa un builder (`masterTableHistoryPath(id)`) o una constante sin parámetros (`paths.login`), nunca un string suelto. Las constantes de patrón de `paths.ts` espejan al router, no lo alimentan: si difieren, manda `router.tsx`.
 3. **Anidar es cómo se comparte un layout.** Una ruta sin `path` agrupa; una con `path` además prefija a sus hijas. Las hijas se pintan en el `<Outlet />` del layout.
 4. **Cada página se carga con `lazy`**, y para eso su módulo exporta `Component`:
 
@@ -240,7 +239,7 @@ export function TableDetailPage() { /* … */ }
 export { TableDetailPage as Component };   // lo que consume router.tsx
 ```
 
-5. **Las pestañas de una pantalla son rutas hijas, no `useState`.** Las siete de `/master/tables/:id` (`candidates`, `players`, `schedule`, `sessions`, `tasks`, `files`, `status`) se declaran como `children`, así cada una tiene URL propia, se comparte por link y el botón de atrás funciona.
+5. **Las pestañas de una pantalla son rutas hijas, no `useState`.** Las siete de `/master/tables/:id` (candidatos en el índice, `players`, `schedule`, `sessions`, `tasks`, `files`, `history`) se declaran como `children`, así cada una tiene URL propia, se comparte por link y el botón de atrás funciona.
 
 **Guards: en el layout, no por ruta.** `RootLayout` redirige a `/login` si no hay sesión, y con eso cubre todo lo que cuelga de él. Cada layout de contexto (`PlayerLayout`, `MasterLayout`, `AdminLayout`) se envuelve en **`RequireContext`** (ADR-20 §2): quien no tiene ese contexto —misma regla que `useAvailableContexts`— es redirigido a `/`, que lo despacha a su home; nunca ve la nav ajena ni un 403. Una pantalla **no** repite ese chequeo. ⚠️ Sigue sin ser la seguridad: el backend autoriza endpoint por endpoint (ADR-20 §1), y `ForbiddenState` queda para el `403` por pertenencia a un recurso concreto (ADR-05 §5).
 

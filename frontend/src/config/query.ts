@@ -141,9 +141,9 @@ function reportMutationError(
 /**
  * The application's single QueryClient.
  *
- * Two decisions live in it. Queries get an explicit `staleTime` instead of the library's default of
- * 0, which is what produces the steady drip of refetches; and every mutation without its own
- * `onError` gets a toast, so a failed write never ends in silence.
+ * Two decisions live in it. Its default `staleTime` is the policy (ADR-18 §2) instead of the library's
+ * 0, which is what produces the steady drip of refetches - a query declares one only when it differs;
+ * and every mutation without its own `onError` gets a toast, so a failed write never ends in silence.
  */
 export const queryClient = new QueryClient({
   defaultOptions: {

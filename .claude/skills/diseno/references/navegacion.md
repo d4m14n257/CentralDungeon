@@ -62,7 +62,7 @@ Los roles son acumulables y sin jerarquía (ADR-06 §1): alguien puede ser `Play
 | **Master** | `/master` | Dashboard: qué necesita tu atención hoy, en todas tus mesas (ADR-20 §4) |
 | | `/master/tables` | Mis mesas como master |
 | | `/master/tables/new` | Wizard de creación — **solo con el rol `Master`** (ADR-06 §4) |
-| | `/master/tables/:id` | Gestión, con pestañas: candidatos · jugadores · agenda · sesiones · peticiones · archivos · estado. Cada persona tiene «Ver ficha»: un modal corto con usuario de Discord, nombre y mesas terminadas (ADR-10 §6) |
+| | `/master/tables/:id` | Gestión, con pestañas: candidatos · jugadores · agenda · sesiones · peticiones · archivos · historial. **Arriba de las pestañas, el aviso de estado** (ADR-21 §10) dice en qué situación está la mesa y trae las decisiones de sus masters: enviar a revisión, reenviar, empezar, terminar, pedir pausa, cancelar, borrar. Cada persona tiene «Ver ficha»: un modal corto con usuario de Discord, nombre y mesas terminadas (ADR-10 §6) |
 | **Admin** | `/admin` | **Home del contexto** (ADR-20 §3): una bienvenida, sin métricas hasta que se decida cuáles le sirven a un admin. Es donde cae un admin al entrar y el primer ítem de la nav («Inicio») |
 | | `/admin/queue` | Bandeja compartida con reserva (ADR-16 §5): **solo lo que pide una acción**, no un listado de consulta (ADR-16 §7) |
 | | `/admin/tables` | **Todas** las mesas, en cualquier estado, con filtros y buscador: el listado de administración, no una cola (ADR-16 §7). La revisión se resuelve en la bandeja o en el aviso de estado de la mesa (ADR-21 §10). Cada fila abre su mesa por el nombre y por el ícono del ojo (ADR-06 §8) |

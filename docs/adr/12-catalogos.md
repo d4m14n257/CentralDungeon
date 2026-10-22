@@ -2,7 +2,7 @@
 adr: 12
 titulo: Catálogos
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 ---
 
@@ -26,11 +26,11 @@ absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 
 *Antes: #54, #59.*
 
-## §3 Masters y admins proponen; solo un admin acepta y clasifica, y eso existe desde F1
+## §3 Propone quien escribe una mesa; solo un admin acepta y clasifica, y eso existe desde F1
 
-**Decisión.** Masters y admins pueden proponer un valor nuevo; **solo un admin lo acepta y lo clasifica**: decide si es un canónico nuevo o un alias de un grupo existente. Mientras el valor está en `Created`, la mesa se publica igual y conserva el tag, pero **el tag no lo ven los jugadores ni filtra**; al aceptarse se muestra y filtra, y si se rechaza no aparece ni filtra nunca. La interfaz le deja claro al master que su tag está pendiente. La administración completa de catálogos (`/admin/catalogs`) se construyó en F1, junto con la propuesta, y no en F3.
+**Decisión.** Puede proponer un valor nuevo **quien escribe una mesa**: el rol `Master`, `Admin` u `Owner`, **o una fila viva en `masters`** (ADR-06 §4). Los tres endpoints de propuesta (sistemas, tags, plataformas) son `isAuthenticated()` y la decisión es del service: `AbstractCatalogService.propose(name, actorId)` pregunta `MasterService.writesAnyTable` y, si no, responde `403`. **Solo un admin lo acepta y lo clasifica**: decide si es un canónico nuevo o un alias de un grupo existente. Mientras el valor está en `Created`, la mesa se publica igual y conserva el tag, pero **el tag no lo ven los jugadores ni filtra**; al aceptarse se muestra y filtra, y si se rechaza no aparece ni filtra nunca. La interfaz le deja claro al master que su tag está pendiente. La administración completa de catálogos (`/admin/catalogs`) se construyó en F1, junto con la propuesta, y no en F3.
 
-**Por qué.** Es otra instancia del patrón de pedido con aprobación (ADR-16 §1). La clasificación tiene que ser del admin: si cada master decidiera a qué grupo pertenece su tag, los grupos se fragmentan y la equivalencia pierde su propósito; por eso fusionar y separar grupos son parte del producto, no un caso borde. El estado `Created` desacopla el ritmo del master del ritmo del admin: proponer no bloquea publicar, y un valor sin revisar no ensucia la búsqueda de los jugadores. Y como en `Created` el valor no sirve para nada, proponer sin que exista aceptar dejaba a F1 con media capacidad: es el criterio que ordenó las fases (ADR-01 §3), la fase arrastra lo que su actor necesita.
+**Por qué.** Es otra instancia del patrón de pedido con aprobación (ADR-16 §1). La clasificación tiene que ser del admin: si cada master decidiera a qué grupo pertenece su tag, los grupos se fragmentan y la equivalencia pierde su propósito; por eso fusionar y separar grupos son parte del producto, no un caso borde. El estado `Created` desacopla el ritmo del master del ritmo del admin: proponer no bloquea publicar, y un valor sin revisar no ensucia la búsqueda de los jugadores. Proponer sigue a la pertenencia porque es parte de escribir la mesa: un `Player` asignado a dirigir una veía «proponer» en el `CatalogPicker` y recibía un `403` (ADR-06 §4). La regla va en el service, como las categorías personales de `FileService`, y no en un bean SpEL del `@PreAuthorize`, para que las anotaciones sigan enumerando roles y nada más (ADR-05 §4). Y como en `Created` el valor no sirve para nada, proponer sin que exista aceptar dejaba a F1 con media capacidad: es el criterio que ordenó las fases (ADR-01 §3), la fase arrastra lo que su actor necesita.
 
 *Antes: #55, #57, #179.*
 

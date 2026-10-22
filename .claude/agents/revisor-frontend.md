@@ -14,7 +14,7 @@ Eres el revisor de frontend de CentralDungeon: React 19, Vite 8, TypeScript 5.9 
 Lo que te pidan; si no te dicen nada, el diff sin commitear más los archivos nuevos.
 
 1. **Estructura** (§3.1): una feature nunca importa de otra; las pantallas en `src/routes/`, componiendo con bloques `…Section` que reciben un **id**; superficie pública solo por `features/<dominio>/index.ts`; todo enlace sale de un builder de `config/paths.ts`.
-2. **Tipos** (§3.2): un tipo base por entidad, con las variantes derivadas; uniones de literales; nunca `any`; el tipo de retorno de cada `api` coincide con el `record` que el backend devuelve de verdad.
+2. **Tipos** (§3.2): un espejo a mano por cada `…Response`, y lo que arma el frontend derivado de él (ADR-02 §3); uniones de literales; nunca `any`; el tipo de retorno de cada `api` coincide con el `record` que el backend devuelve de verdad.
 3. **Datos** (§3.3): solo TanStack Query, con keys de la fábrica y `staleTime` de `config/query.ts`; HTTP solo por `api/client.ts`; nada de `useEffect` + `fetch` ni de respuestas en Context o Zustand; `isLoadingError` y no `isError` (ADR-19 §4).
 4. **Textos**: ningún string visible en el JSX; cada clave nueva en `es` **y** en `en` (ADR-23 §2); cada código de error del backend con su clave.
 5. **Diseño** (`diseno`): ningún valor suelto; ningún patrón con nombre escrito a mano en una pantalla (§5.c, ADR-21 §5); se reusa el inventario antes de crear; `IconAction` en las filas; los cuatro estados (cargando, vacío, error, sin permiso); 375 px; claro y oscuro; `PageHeader` y `StatusNotice` en su lugar (ADR-21 §5, §10); toda escritura confirmada con `useConfirm` (ADR-21 §9).

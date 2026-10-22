@@ -2,7 +2,7 @@
 adr: 2
 titulo: Stack, herramientas y despliegue
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [5, 19, 20, 142, 146, 174, 262]
 ---
 
@@ -26,11 +26,11 @@ absorbe: [5, 19, 20, 142, 146, 174, 262]
 
 *Antes: #5.*
 
-## §3 El frontend es TypeScript `strict`, con un tipo base por entidad
+## §3 El frontend es TypeScript `strict`, con un espejo escrito a mano por cada `…Response`
 
-**Decisión.** TypeScript con `strict`, y un solo tipo base por entidad del que las variantes se derivan con utility types (`Pick`, `Omit`, `Partial`…); nunca se re-declaran a mano (regla dura 6, `arquitectura` §3.2).
+**Decisión.** TypeScript con `strict`. Cada `…Response` del backend tiene **su espejo**, una `interface` escrita a mano en el `types.ts` de su feature, con los mismos campos y los mismos nombres; una respuesta que es literalmente un recorte de otra ya espejada puede derivarse de ella (`PublicSession`). Lo que arma el frontend —el payload de una escritura, la vista reducida de una card, el borrador de un formulario— **se deriva** con utility types (`Pick`, `Omit`, `Partial`…) cuando sus campos ya existen en un tipo declarado, y lleva `interface` propia, espejo de su `…Request`, cuando no. Nada que ya exista se re-declara a mano. Nunca `any` (regla dura 6, `arquitectura` §3.2).
 
-**Por qué.** El frontend viejo era JavaScript: TypeScript no se conserva, se introduce. Su valor está en que un cambio de contrato del backend se detecte compilando. Declarar a mano un tipo por variante —crear, actualizar, listar, detalle— es tener N copias del mismo modelo que se desincronizan en silencio, porque cada copia sigue siendo válida por separado; derivando, el tipo base es el único punto de verdad.
+**Por qué.** El frontend viejo era JavaScript: TypeScript no se conserva, se introduce. Su valor está en que un cambio de contrato del backend se detecte compilando. El backend no tiene un tipo por entidad: listado y detalle son `record` distintos con campos distintos (`arquitectura` §2.3), y dos respuestas sobre la misma persona pueden contestar preguntas con reglas de visibilidad distintas. Derivar una de otra afirmaría una relación que el backend no garantiza; el espejo uno a uno, en cambio, deja de compilar en cuanto su `record` cambia. Es la forma que ya tenían todas las features. Lo prohibido es lo que de verdad se desincroniza: varias copias a mano de lo mismo que arma el frontend, cada una válida por separado.
 
 *Antes: #20.*
 

@@ -33,7 +33,7 @@ Y hay un recurso escaso que es **la atención del cliente**. Gastarla tres veces
 |---|---|---|
 | Los cuatro estados de cada pantalla de F1, F2 y F3, el viewport de 375 px y el contraste de lo nuevo, verificados y no asumidos | punto 5 viejo de §6, que ADR-01 §3 movió acá; repetido en cada rebanada de F3 | F4.1 |
 | Que cada pantalla sea alcanzable **navegando**. F2 solo lo comprobó para `/player/history` | F1.7, F2 | F4.1 — resuelto como mapa en 21–24 (ADR-01 §10); falta el triaje |
-| El `<Dialog>` del historial de roles en móvil, que según ADR-21 §7 debería ser sheet desde abajo | F3.1 | F4.1 |
+| ~~El `<Dialog>` del historial de roles en móvil, que según ADR-21 §7 debería ser sheet desde abajo~~ — **resuelto en §2.4**: ADR-21 §7 retiró el *sheet* | F3.1 | F4.1 |
 | El badge `Vetado` y el aviso de retroactividad **renderizados** en los dos temas: los tokens están medidos, la pantalla no | F3.4, F3.5 | F4.1 |
 | El inglés renderizado: la paridad de claves está verificada, pero los tests corren en `es` | F3.3, F3.5 | F4.1 |
 | `/admin/requests` pone su default `Pending` en la caja y no en la URL: se aparta de ADR-12 §7, y un criterio tipeado se **suma** al chip | F3.2 | F4.1 — es decisión de producto |
@@ -66,14 +66,15 @@ Al dibujar los diagramas 21–24 (ADR-01 §10) se barrieron `router.tsx`, cada `
 | **No hay guardia de onboarding.** Solo el callback manda a `/onboarding`; cualquier otra entrada lo salta. Y el JSDoc de `OnboardingPage` afirma que el redirect vive en la guardia de sesión | `RootLayout.tsx`, `OAuthCallbackPage.tsx` |
 | `/login` no redirige a quien ya tiene sesión | `LoginPage.tsx` |
 | ~~`/admin` a secas pinta el layout con un `Outlet` vacío: ni índice, ni redirect, ni 404~~ — **resuelto en §2.3** (ADR-20 §2, §3) | `router.tsx` |
-| `TableChangesRequested` y `TableApproved` caen en la pestaña Candidatos, aunque el comentario promete la de estado (ADR-18 §3) | `notificationTarget.ts` |
+| ~~`TableChangesRequested` y `TableApproved` caen en la pestaña Candidatos, aunque el comentario promete la de estado (ADR-18 §3)~~ — **resuelto en §2.4**: la pestaña Estado ya no existe y las decisiones están en el aviso, visible desde cualquier pestaña (ADR-21 §10) | `notificationTarget.ts` |
 | Un `PlayerBan` resuelto manda al co-master a `/player/profile`; un `TablePause` resuelto manda al master a la vista de jugador de su mesa | `notificationTarget.ts` |
 | Las pestañas del master enlazan a `/player/users/:id`, y el `UserMenu` manda a `/player/profile` a una cuenta que solo es admin: cruces de contexto | `MasterTableCandidatesTab`, `MasterTablePlayersTab`, `UserMenu` |
 | Ninguna de las siete pantallas de admin tiene un `Link` hacia afuera: un admin no puede abrir el detalle de una mesa, el perfil de un usuario ni la entidad de un pedido. La única salida es de `/admin/catalogs` a su propio lienzo de grupo (ADR-12 §7), que no cierra este hallazgo | `routes/admin/*` |
 | Las filas de `/player/history` no enlazan a la mesa terminada | `PlayerHistoryPage` |
 | `/my/files` se esconde sin biblioteca: una cuenta solo admin u owner no tiene puerta | `UserMenu` |
-| Tres builders de `paths.ts` sin llamador; las constantes de patrón que el router ignora aunque el JSDoc diga que son para él; `helpPlayers`/`helpMasters`/`helpAdmins` sin ruta; tres URL escritas a mano | `config/paths.ts`, `NotificationBell`, `api/client.ts`, `devApi.ts` |
+| Tres builders de `paths.ts` sin llamador; ~~las constantes de patrón que el router ignora aunque el JSDoc diga que son para él~~ (resuelto en §2.4, ADR-19 §10); `helpPlayers`/`helpMasters`/`helpAdmins` sin ruta; tres URL escritas a mano | `config/paths.ts`, `NotificationBell`, `api/client.ts`, `devApi.ts` |
 | Dos tipos del frontend que no coinciden con lo que devuelve el backend: `requestBlock` tipado `void` (devuelve `ApprovalRequestDetailResponse`) y `banRequestsApi.approve` tipado `UnreadBody` (devuelve `RegistrationResponse`) | `registrationsApi.ts`, `approvalsApi.ts` |
+| **El texto de la postulación no lo muestra ninguna pantalla**: se pide, se guarda como texto plano (ADR-03 §8) y el master no lo lee en ningún lado | `ApplyToTableDialog`, `MasterTableCandidatesTab` |
 | Valores de enum que ningún código produce: `TableApprovedWithChanges`, `SubmissionStatus.Pending`, `UserStatus.Deleted`, `RegistrationFileStatus.Removed`, `SubmissionFileStatus.Deleted` | los enums del backend y sus espejos |
 | **117 alertas de Dependabot** en la rama por defecto (6 críticas, 59 altas) | aviso de GitHub al hacer push |
 | **Los diagramas ER quedaron atrás de las migraciones.** El de `arquitectura` §4.3 no tiene `file_categories` ni `task_files` (V9), y los `.mmd` por subsistema no tienen `user_role_changes`, `user_status_changes` (V11) ni `registration_status_changes` (V12). La tabla de migraciones del DDL llegaba hasta V9; F4.0 la completó hasta V13 | `docs/modelo-datos.md`, `docs/diagramas/11`–`16` |
@@ -99,38 +100,30 @@ Al dibujar los diagramas 21–24 (ADR-01 §10) se barrieron `router.tsx`, cada `
 
 Las dos piden lo mismo —que el perfil deje de colgar del contexto Jugador o que cada contexto tenga el suyo— y es una decisión, no un bug.
 
-**Deuda de estilo que dejó a la vista ADR-21 §5, para triar en F4.1**: `text-[11px]` en `NotificationBell` y `WizardSteps`, `text-[13px]` en `NotificationBell` y `text-[10px]` en `WeeklyScheduleGrid` son valores sueltos fuera del `@theme` (regla dura 18) — o se agrega el tamaño a `design/build.py`, o se usa `text-xs`.
+**Deuda de estilo que dejó a la vista ADR-21 §5, para triar en F4.1**: `text-[11px]` en `WizardSteps` y `text-[10px]` en `WeeklyScheduleGrid` (los de `NotificationBell` se corrigieron en `34884c2`) son valores sueltos fuera del `@theme` (regla dura 18) — o se agrega el tamaño a `design/build.py`, o se usa `text-xs`.
 
 ### 2.4 Lo que encontró la auditoría de las ADRs
 
-El 2026-10-20, tres agentes `auditor-conocimiento` contrastaron las 24 ADRs con el código (89 hallazgos). Lo crítico —producción arrancaba con el secreto JWT de desarrollo— se corrigió en el acto (`1ebd72f`), y el texto que mentía, en `afb16f1`. Quedan estos, **pendientes de que el usuario apruebe la recomendación** (o la cambie). Al resolverse, cada decisión pasa a una sección de su ADR (agente `escriba-adr`) y sale de acá; cada bug, a un commit con su test.
+El 2026-10-20, tres agentes `auditor-conocimiento` contrastaron las 24 ADRs con el código (89 hallazgos). Lo crítico —producción arrancaba con el secreto JWT de desarrollo— se corrigió en el acto (`1ebd72f`), y el texto que mentía, en `afb16f1`. **Lo que quedó se resolvió el mismo día**: los cinco bugs B1–B5, uno nuevo (B6: una mesa que nunca fue pública se leía por id) y las diecisiete decisiones D1–D17, aprobadas por el usuario, en `bbca625`, `def5f07`, `27e6d0a` y `34884c2`. Cada decisión vive ahora en su ADR, con su regla en la skill:
 
-**Bugs**
+| Dónde | Decisiones |
+|---|---|
+| ADR-02 §3 | D1 — un espejo a mano por cada `…Response` (regla dura 6) |
+| ADR-19 §1, §6, §10 | D5 — la raíz importa el barrel de una feature, la ayuda solo `import type`; D6 — el diálogo es dueño de su formulario; D2 — el router escribe segmentos, `paths.ts` los enlaces |
+| ADR-21 §7, §10 | D14 — sin *sheet* en móvil; D3 — `MasterTableStatusNotice` y la pestaña Historial del master |
+| ADR-10 §5 | D7 — sin karma en ninguna respuesta hasta F5 |
+| ADR-12 §3, ADR-06 §4 | D8 — propone quien escribe una mesa (cierra B2) |
+| ADR-08 §2, ADR-06 §8 | D9 — la agenda se mide contra todos los masters, `MASTER_SCHEDULE_CONFLICT` |
+| ADR-07 §1 | D10 y B6 — el admin ve los `Draft`; lo nunca público es `404` para el resto |
+| ADR-05 §6 | D12 — enlaces solo `http(s)` |
+| ADR-03 §8 | D13 — el texto de la postulación es plano |
+| ADR-18 §2 | D15 — la campana hace polling de 60 s; D16 — el `staleTime` del cliente es la política |
+| ADR-09 §7 | B1 — la marca «ya te postulaste» la calcula el servidor |
+| «Abierto» de `docs/adr/README.md` | D17 — `Confirmed` de `comment_drafts` (F5) y el estado del job de Temporadas (fase 2) |
 
-| # | Bug | Arreglo propuesto |
-|---|---|---|
+D4 (`TestLoginController` sin repositories) y D11 («Ver más» en notificaciones y mis mesas, ADR-04 §6) eran código que no cumplía una regla vigente, y la regla no cambió.
 
-**Decisiones**
-
-| # | Qué decidir | Recomendación |
-|---|---|---|
-| D1 | Regla dura 6 («un tipo base por entidad»): cada feature declara una interfaz por `…Response` | La regla sigue al código: una interfaz espejo por `…Response`; `Pick`/`Omit` solo para lo que arma el frontend |
-| D2 | `router.tsx` escribe segmentos literales; `paths.ts` dice ser el único lugar de las rutas | La regla sigue al código: el router declara segmentos, `paths.ts` da los builders de los enlaces |
-| D3 | Pestaña «Estado» del master frente a la regla 15 de `diseno` (ADR-21 §10 la dejó afuera) | Extender la regla: `MasterTableStatusTab` pasa a `StatusNotice` |
-| D4 | `TestLoginController` inyecta repositories (regla dura 1) | Mover la lógica a `TestDataService` |
-| D5 | Capas raíz (`PageHeader`, `SectionHeader`, layouts, `useAvailableContexts`, `DevPanel`) y `features/help` importan de features | Regla: la raíz puede importar el barrel de una feature; la ayuda, solo `import type` |
-| D6 | #110 (formulario puro + diálogo dueño de la mutación): no existe ningún `*Form.tsx` | La regla sigue al código: el diálogo es dueño de su formulario |
-| D7 | El karma se pinta en cards y padrones (`GameTableCard`, `TableDetailPage`, `MasterTablePlayersTab`) y siempre vale 8000 | Sacarlo de esas pantallas y de sus tres DTOs hasta F5 (coherente con ADR-10 §5) |
-| D8 | Proponer un valor de catálogo: ¿por rol o por pertenencia? | Por pertenencia: quien dirige una mesa puede proponer (resuelve B2) |
-| D9 | El choque de horario (ADR-08 §2) no se mide al sumar un co-master, y al editar se mide contra quien edita, no contra todos los masters | Medir contra todos los masters, en el código |
-| D10 | El admin ve y edita los `Draft`, y ADR-07 §1 dice que nadie más los ve | El admin los ve; corregir ADR-07 §1 |
-| D11 | «Ver más» en notificaciones y en mis mesas (ADR-04 §6) no existe: solo la primera página | Construirlo |
-| D12 | `RichTextSanitizer` deja pasar `mailto:` (`allowStandardUrlProtocols`) | Quitarlo: solo http(s) |
-| D13 | El texto de la postulación se guarda sin sanitizar y se muestra como texto | Declararlo texto plano en ADR-03 §8 |
-| D14 | Los diálogos no pasan a *sheet* en móvil (ADR-21 §7, `diseno` §5) | Retirar la regla hasta que haga falta |
-| D15 | La campana no se refresca sola hasta F6 | Polling de 60 s (`live.notifications`) hasta que llegue el WebSocket |
-| D16 | `staleTime` explícito en toda query, o el default del cliente | El default es la política; se declara solo lo distinto (`arquitectura` §3.3) |
-| D17 | Estado `Confirmed` de `comment_drafts`, y desde qué estado publica el job de Temporadas | Postergar a F5 / fase 2, anotado en «Abierto» de `docs/adr/README.md` |
+**Queda abierto, para triar**: cinco e2e que fallan igual en `2ba6c5e`, antes de este trabajo — `admin-requests.spec.ts:149`, `admin-users.spec.ts:95`, `master-dashboard.spec.ts:67` (el co-master quitado debería ver «No tenés permiso») y `profile-visibility.spec.ts:102` y `:159` (no encuentra el encabezado «Asistencia» en el perfil que abre el admin).
 
 ## 3. Las seis rebanadas
 

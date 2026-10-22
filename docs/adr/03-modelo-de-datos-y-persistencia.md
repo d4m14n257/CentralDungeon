@@ -2,7 +2,7 @@
 adr: 3
 titulo: Modelo de datos y persistencia
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [2, 3, 8, 9, 10, 11, 12, 22, 25, 62, 124, 182, 208]
 ---
 
@@ -66,11 +66,11 @@ absorbe: [2, 3, 8, 9, 10, 11, 12, 22, 25, 62, 124, 182, 208]
 
 *Antes: #25.*
 
-## §8 El texto enriquecido es `LONGTEXT` en su propia fila, y el adjunto es opcional
+## §8 El texto vive en su propia fila y no en `files`; el de la mesa es enriquecido, el de la postulación es plano
 
-**Decisión.** El texto con que el jugador se postula va en `table_registrations` y los requisitos de la mesa, en la mesa, como `LONGTEXT`; nunca es una fila de `files`. El archivo adjunto pasa a ser opcional: según el master, una postulación pide archivos, solo texto o ambas cosas, y las dos vías conviven en la misma solicitud. El texto se sanitiza al guardar y al servir (ADR-05 §6).
+**Decisión.** Los textos de la mesa —`description`, `permitted`, `requirements`— son **texto enriquecido** en la mesa, como `LONGTEXT`, y se sanitizan al guardar y al servir (ADR-05 §6). **El texto con que el jugador se postula** (`table_registrations.description`) es **texto plano, nunca HTML**: no pasa por el sanitizador, se pinta como texto y se topa en **2000 caracteres** (`@Size` en `CreateRegistrationRequest`, el mismo tope que el formulario); la columna sigue siendo `LONGTEXT`. Ninguno es una fila de `files`. El archivo adjunto es opcional: según el master, una postulación pide archivos, solo texto o ambas cosas, y las dos vías conviven en la misma solicitud.
 
-**Por qué.** El texto enriquecido no es un archivo: no ocupa disco, no se descarga y no participa de la cuota (ADR-13 §3). Como se renderiza en el navegador, es la superficie de XSS más directa del sistema.
+**Por qué.** El texto no es un archivo: no ocupa disco, no se descarga y no participa de la cuota (ADR-13 §3). El enriquecido se renderiza en el navegador como HTML y es la superficie de XSS más directa del sistema, por eso pasa por la lista blanca en las dos puntas. La nota de una postulación no necesita formato —es lo que alguien le dice al master sobre sí mismo— y el código ya la guardaba sin sanitizar y la mostraba como texto: declararla plana es más seguro que sanitizarla, porque lo que se pinta como texto no puede ejecutar nada, y el tope evita que el campo sea un vertedero. La columna no cambia: el tope lo pone el DTO, sin migración.
 
 *Antes: #62.*
 

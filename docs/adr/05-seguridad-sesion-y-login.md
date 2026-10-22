@@ -2,7 +2,7 @@
 adr: 5
 titulo: Seguridad, sesión y login
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 ---
 
@@ -52,9 +52,9 @@ absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 
 ## §6 El texto enriquecido se sanitiza con OWASP, por lista blanca, al guardar y al servir
 
-**Decisión.** `owasp-java-html-sanitizer` detrás de `RichTextSanitizer` en `common/text/`, con lista blanca: `p`, `br`, `strong`, `em`, `u`, `s`, `code`, `pre`, `blockquote`, `h1`–`h3`, `ul`/`ol`/`li` y `a` con `href` `http(s)` y `rel=nofollow`. Todo lo demás cae, incluidos `img`, `style` y cualquier `on*`. Se aplica al guardar y al servir sobre `description`, `permitted` y `requirements` de la mesa (ADR-03 §8), y sobre la descripción de una petición y el contenido de una entrega (ADR-15). Nulo entra, nulo sale, y lo que queda vacío tras sanitizar vuelve nulo.
+**Decisión.** `owasp-java-html-sanitizer` detrás de `RichTextSanitizer` en `common/text/`, con lista blanca: `p`, `br`, `strong`, `em`, `u`, `s`, `code`, `pre`, `blockquote`, `h1`–`h3`, `ul`/`ol`/`li` y `a` con `href` **solo `http` o `https`** —ni `mailto` ni ningún otro protocolo (`allowUrlProtocols("http", "https")`)— y `rel=nofollow`. Todo lo demás cae, incluidos `img`, `style` y cualquier `on*`. Se aplica al guardar y al servir sobre `description`, `permitted` y `requirements` de la mesa (ADR-03 §8), y sobre la descripción de una petición y el contenido de una entrega (ADR-15). Nulo entra, nulo sale, y lo que queda vacío tras sanitizar vuelve nulo.
 
-**Por qué.** Es la superficie de XSS más directa del sistema, y escapar a mano es la forma habitual de publicar un XSS: entidades, protocolos de `href`, atributos de evento y comentarios condicionales, cualquiera alcanza. Lista blanca porque una etiqueta que nadie previó tiene que ser inofensiva por defecto. Al servir además de al guardar porque una fila escrita antes de la puerta, o por un camino que la saltee, llega igual al navegador.
+**Por qué.** Es la superficie de XSS más directa del sistema, y escapar a mano es la forma habitual de publicar un XSS: entidades, protocolos de `href`, atributos de evento y comentarios condicionales, cualquiera alcanza. Lista blanca porque una etiqueta que nadie previó tiene que ser inofensiva por defecto. Al servir además de al guardar porque una fila escrita antes de la puerta, o por un camino que la saltee, llega igual al navegador. Los protocolos se enumeran a mano y no se toman los «estándar» de la librería (`allowStandardUrlProtocols`), que suman `mailto`: la lista blanca vale también para los protocolos, y lo que nadie nombró no pasa.
 
 *Antes: #186.*
 

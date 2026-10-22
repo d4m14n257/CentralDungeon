@@ -1,9 +1,10 @@
 import type { AppContext } from '@/stores/contextStore'
 
 /**
- * Route path patterns for router.tsx registration, plus small builders for links. This is the
- * only place path strings are written (arquitectura §3.1.6 regla 2) - E1's subset of the full
- * 28-route sitemap (diseno §2). Future fases add the rest here, not somewhere else.
+ * Builders for every link, navigate and Navigate, plus the patterns of the routes. Links are the
+ * only place a path is built (ADR-19 §10, arquitectura §3.1.6 regla 2): router.tsx declares its own
+ * literal segments, nested under each context, and these patterns mirror it rather than feed it -
+ * when the two differ, router.tsx is right.
  *
  * Every context owns a prefix and nothing sits outside one (ADR-20 §2): `/player`, `/master`, `/admin`,
  * plus the entry screens and the two transversal ones. `/` is not a screen - it dispatches to the
