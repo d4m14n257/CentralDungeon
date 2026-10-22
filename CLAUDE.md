@@ -58,7 +58,7 @@ Se citan por número desde el código y los docs, y **el número no cambia** (AD
 | 3 | Ningún endpoint devuelve un tipo abierto: todo es un `record` con nombre | `rules/backend.md` |
 | 4 | No se abstrae por parecido; controllers concretos, `@PreAuthorize` en cada método | `rules/backend.md` |
 | 5 | Cuatro roles, `Admin` y `Owner` excluyentes, sin `RoleHierarchy` | abajo |
-| 6 | Un tipo base por entidad en el frontend, variantes derivadas, nunca `any` | `rules/frontend.md` |
+| 6 | Un espejo a mano por cada `…Response` en el frontend; lo que arma el frontend, derivado; nunca `any` | `rules/frontend.md` |
 | 7 | Toda regla de negocio nueva llega con su test | `rules/backend.md`, `rules/frontend.md` |
 | 8 | Nada de lógica de negocio en la base | abajo |
 | 9 | Todo cambio de schema es una migración nueva; una aplicada no se toca | `rules/migraciones.md` |
@@ -168,3 +168,14 @@ Documentación y conversación en **español**.
 **Todo el código en inglés, sin excepciones — incluidos los comentarios.** Eso cubre identificadores, nombres de tabla y columna, endpoints, comentarios de código, Javadoc, mensajes de log, comentarios SQL de las migraciones y mensajes de commit. Un archivo de código no debería tener una sola palabra en español.
 
 Lo único en español dentro del repo son los `docs/`, `.claude/` y este archivo.
+
+## Cómo se nombran las cosas
+
+**Ningún número va solo** (ADR-01 «Proyecto, proceso y conocimiento» §11). Al hablarle al usuario, y en todo texto nuevo de `docs/`, `.claude/` y los mensajes de commit, cada identificador numerado lleva su nombre descriptivo al lado:
+
+- una ADR, con su título, y la sección con el suyo: `ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`;
+- una fase o rebanada: `F4 «Revisión»`, `F4.1 «El mapa de la interfaz»`;
+- una regla dura: `regla dura 6 «Un espejo por cada respuesta»`;
+- un hallazgo o decisión de una lista: `B6 «Una mesa nunca pública se leía por id»`, `D3 «Las acciones del master van en un aviso de estado»`.
+
+El número se conserva, porque es lo que se busca y lo que no es ambiguo: se le suma el nombre. Lo ya escrito se corrige al tocar cada archivo, no en bloque. El código sigue citando `ADR-NN §k` a secas.

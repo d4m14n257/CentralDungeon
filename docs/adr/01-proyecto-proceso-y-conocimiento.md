@@ -2,7 +2,7 @@
 adr: 1
 titulo: Proyecto, proceso y conocimiento
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-10-21
 absorbe: [1, 6, 18, 102, 162, 177, 181, 250, 266, 267, 274, 289, 290, 291, 292]
 ---
 
@@ -89,3 +89,9 @@ absorbe: [1, 6, 18, 102, 162, 177, 181, 250, 266, 267, 274, 289, 290, 291, 292]
 **Por qué.** Un diagrama «vivo» mantenido a mano se quedó atrás sin que nada lo detectara, y un diagrama que miente es peor que ninguno porque se lee como cierto. Con `sources` verificados, una ruta que deja de existir hace **fallar** la entrega. Un nodo por ruta, y no cajas que agrupen pantallas, porque la pregunta que el diagrama responde es cuál pantalla es huérfana, y un huérfano es un nodo sin arista de entrada. Cuatro y no uno porque 38 rutas no pasan la legibilidad de Archify (texto ≥ 6 px a 1440×900); las fichas repetidas permiten dibujar todas las aristas sin cruces.
 
 *Antes: #162, #266, #267.*
+
+## §11 Todo número va con su nombre: `ADR-19 «Arquitectura del frontend»`, no `ADR-19` a secas
+
+**Decisión.** Al hablarle al dueño del proyecto, y en todo texto nuevo de `docs/`, de las skills, de las rules y de los mensajes de commit, cada identificador numerado lleva al lado su nombre descriptivo: una ADR con su título (`ADR-19 «Arquitectura del frontend»`), y con el de la sección cuando se cita una (`ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`); una fase o rebanada con el suyo (`F4.1 «El mapa de la interfaz»`); una regla dura con lo que dice (`regla dura 6 «Un espejo por cada respuesta»`); un hallazgo o una decisión de una lista de trabajo con lo que trata (`D3 «Las acciones del master van en un aviso de estado»`). El número no se abandona —sigue siendo lo que se busca con `grep` y lo que identifica sin ambigüedad (§6, §8)—: se le suma el nombre. Lo ya escrito no se reescribe en bloque; se corrige al tocar el archivo. El código —comentarios, Javadoc, JSDoc— sigue citando `ADR-NN §k` a secas.
+
+**Por qué.** El dueño del proyecto no retiene qué es cada número: `ADR-19 §6`, `F4.1` o `D3` solos no le dicen nada, y obligan a abrir otro archivo para entender una frase. El número es una dirección y el nombre es el contenido; quien lee necesita las dos. En el código se conserva la cita corta porque quien lo lee es quien lo mantiene y tiene la ADR a un salto, y porque reescribir miles de citas no aporta.

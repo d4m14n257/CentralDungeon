@@ -67,14 +67,14 @@ export function notificationTarget(notification: Notification): string | null {
     case 'MasterAssigned':
       return masterTableDetailPath(relatedEntityId)
     // The master's screen again, and for the same reason: what came out of review is a table they
-    // run. A rejection has to land where the admin's reason is readable, which is its status tab
-    // (ADR-18 §3) — the notification does not carry the reason, the history does.
+    // run. Any tab of it shows the status notice (ADR-21 §10), which says what follows and, for a
+    // table sent back, points at the history where the admin's reason is (ADR-18 §3).
     case 'TableApproved':
     case 'TableApprovedWithChanges':
     case 'TableChangesRequested':
       return masterTableDetailPath(relatedEntityId)
     // An admin changed somebody else's table (ADR-06 §8). The rewrite and the return to play land on the
-    // table; the pause and the cancellation on its status tab, because that is where the admin's
+    // table; the pause and the cancellation on its history tab, because that is where the admin's
     // reason is - the notification does not carry it (ADR-23 §3). A removed table travels with no id at all
     // and stops at the guard above: there is nothing left to open.
     case 'TableEditedByAdmin':

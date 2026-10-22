@@ -7,7 +7,7 @@
     "repository": {
       "url": "https://github.com/d4m14n257/CentralDungeon",
       "provider": "github",
-      "revision": "bc5fca57b17a3d198243eedd0cbba0688224e795"
+      "revision": "13334357895d0a59ac9d0cac07567e96e2e1c524"
     },
     "legend": {
       "entries": {
@@ -203,7 +203,7 @@
       "id": "detail",
       "type": "frontend",
       "label": "/master/tables/:id",
-      "sublabel": "índice = Candidatos",
+      "sublabel": "índice + aviso",
       "pos": [
         406,
         170
@@ -217,12 +217,17 @@
         {
           "path": "frontend/src/routes/master/MasterTableDetailPage.tsx",
           "label": "NavLink relativos",
-          "line": 69
+          "line": 66
         },
         {
           "path": "frontend/src/routes/master/MasterTableDetailPage.tsx",
           "label": "cabecera → editar",
-          "line": 62
+          "line": 58
+        },
+        {
+          "path": "frontend/src/routes/master/MasterTableStatusNotice.tsx",
+          "label": "aviso de estado",
+          "line": 68
         }
       ]
     },
@@ -277,7 +282,7 @@
       "id": "wCand",
       "type": "messagebus",
       "label": "Bandeja",
-      "sublabel": "CandidatesWaiting",
+      "sublabel": "Candidates · Ready",
       "pos": [
         30,
         540
@@ -290,7 +295,12 @@
         {
           "path": "frontend/src/features/tables/components/MasterWorkItemList.tsx",
           "label": "→ detalle",
-          "line": 22
+          "line": 16
+        },
+        {
+          "path": "frontend/src/features/tables/components/MasterWorkItemList.tsx",
+          "label": "iniciar → aviso",
+          "line": 21
         }
       ]
     },
@@ -486,10 +496,10 @@
       ]
     },
     {
-      "id": "tStatus",
+      "id": "tHistory",
       "type": "frontend",
-      "label": "status",
-      "sublabel": "Estado",
+      "label": "history",
+      "sublabel": "Historial",
       "pos": [
         1158,
         400
@@ -500,9 +510,9 @@
       ],
       "sources": [
         {
-          "path": "frontend/src/routes/master/MasterTableStatusTab.tsx",
-          "label": "borrar → listado",
-          "line": 129
+          "path": "frontend/src/routes/master/MasterTableHistoryTab.tsx",
+          "label": "StatusTimeline",
+          "line": 57
         }
       ]
     },
@@ -533,6 +543,27 @@
       "label": "/master/tables",
       "sublabel": "tras borrar",
       "pos": [
+        782,
+        40
+      ],
+      "size": [
+        160,
+        66
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/routes/master/MasterTableStatusNotice.tsx",
+          "label": "borrar → listado",
+          "line": 95
+        }
+      ]
+    },
+    {
+      "id": "nHist",
+      "type": "messagebus",
+      "label": "Notificación",
+      "sublabel": "pausa · cancelación",
+      "pos": [
         1158,
         540
       ],
@@ -542,30 +573,9 @@
       ],
       "sources": [
         {
-          "path": "frontend/src/routes/master/MasterTableStatusTab.tsx",
-          "label": "navigate",
-          "line": 129
-        }
-      ]
-    },
-    {
-      "id": "wStatus",
-      "type": "messagebus",
-      "label": "Bandeja",
-      "sublabel": "ReadyToStart",
-      "pos": [
-        970,
-        540
-      ],
-      "size": [
-        160,
-        66
-      ],
-      "sources": [
-        {
-          "path": "frontend/src/features/tables/components/MasterWorkItemList.tsx",
-          "label": "→ estado",
-          "line": 26
+          "path": "frontend/src/features/notifications/lib/notificationTarget.ts",
+          "label": "→ historial",
+          "line": 85
         }
       ]
     },
@@ -585,9 +595,9 @@
       "sources": [
         {
           "path": "frontend/src/routes/master/MasterTableDetailPage.tsx",
-          "line": 68,
-          "end_line": 90,
-          "label": "to=\".\" … to=\"status\""
+          "line": 63,
+          "end_line": 74,
+          "label": "to=\".\" … to=\"history\""
         }
       ]
     }
@@ -604,7 +614,7 @@
         "tSess",
         "tTasks",
         "tFiles",
-        "tStatus"
+        "tHistory"
       ],
       "pad": 14
     }
@@ -701,14 +711,16 @@
       "to": "editChip"
     },
     {
-      "id": "tStatus-listChip",
-      "from": "tStatus",
-      "to": "listChip"
+      "id": "detail-listChip",
+      "from": "detail",
+      "to": "listChip",
+      "fromSide": "top",
+      "toSide": "bottom"
     },
     {
-      "id": "wStatus-tStatus",
-      "from": "wStatus",
-      "to": "tStatus",
+      "id": "nHist-tHistory",
+      "from": "nHist",
+      "to": "tHistory",
       "variant": "dashed"
     },
     {
@@ -763,9 +775,9 @@
       "toSide": "top"
     },
     {
-      "id": "tabBar-tStatus",
+      "id": "tabBar-tHistory",
       "from": "tabBar",
-      "to": "tStatus",
+      "to": "tHistory",
       "fromSide": "bottom",
       "toSide": "top"
     }
@@ -773,10 +785,10 @@
   "cards": [
     {
       "dot": "rose",
-      "title": "Destino equivocado",
+      "title": "Destino sin emisor",
       "items": [
-        "TableChangesRequested y TableApproved caen en Candidatos, no en Estado (ADR-18 §3)",
-        "TableApprovedWithChanges: ningún código la emite"
+        "TableApprovedWithChanges: ningún código la emite",
+        "Las decisiones están en el aviso de estado, visible desde toda pestaña"
       ]
     },
     {
