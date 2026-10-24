@@ -141,7 +141,7 @@ Cada fila ya viene triada con las tres categorías de §3. Casi todo es **decisi
 5. C7: idioma.
 6. El resto.
 
-**Los bugs, siguientes en F4.5 «La revisión mano a mano»**, cada uno con su test de regresión (regla dura 7 «Toda regla de negocio nueva llega con su test»): C14, U2, U3, U5, la parte de bug de U8 y U10.
+**Los bugs, siguientes en F4.5 «La revisión mano a mano»**, cada uno con su test de regresión (regla dura 7 «Toda regla de negocio nueva llega con su test»): C14, U2, U3 y U10. U4, U5 y U8 se anotaron como bugs, pero al contrastarlos con el código resultó que no lo son, o no del todo (ver «Dudas y puntos por afinar»).
 
 #### Lo que pidió u observó el cliente
 
@@ -181,11 +181,11 @@ Cada fila ya viene triada con las tres categorías de §3. Casi todo es **decisi
 | U1 «Las horas sin AM/PM y sin zona» | "Falta especificar las zonas horarias, que no marque AM/PM": cada hora se muestra con su zona y en el formato del idioma | Bug de UI en F4.5 «La revisión mano a mano»; qué zona se muestra depende de C13 |
 | U2 «El seguimiento de la revisión sale en UTC» | En el seguimiento de la revisión, la fecha no se pasaba a la zona local | Bug: encontrar dónde se formatea sin `lib/date.ts`, con su test |
 | U3 «Un botón que no hace nada» | En los archivos de la mesa | Bug: identificarlo en el recorrido |
-| U4 «Archivos publicados» | Falta definir la sección «publicados», que según el cliente son los archivos que publican los admins | Verificar contra ADR-14 «Archivos: lectura y bibliotecas» §7 «La biblioteca de la plataforma»; probablemente sea una decisión |
-| U5 «Restos del legacy en pantalla» | «Mesa / petición de master / solicitud de jugador» y el tipo «lista» de las peticiones vienen del legacy y no deberían aparecer | Bug: quitarlos |
+| U4 «Archivos publicados» | Falta definir la sección «publicados», que según el cliente son los archivos que publican los admins | **Ya está diseñado**: es ADR-14 «Archivos: lectura y bibliotecas» §7 «La biblioteca de la plataforma solo tiene lo de la plataforma», y salió vacío porque no había nada publicado. A lo sumo, sembrar un archivo publicado en los datos de prueba |
+| U5 «Lo que parecía legacy en pantalla» | En la reunión se dijo que «De mesa / Petición del master / Solicitud de jugador» y una «lista» de las peticiones venían del legacy | **No es legacy**: son los cajones de ADR-14 «Archivos: lectura y bibliotecas» §4 y §5 (`files.json` → `category`), usados como filtro. Y el form de peticiones ya acepta varios archivos. Queda como duda, no como bug |
 | U6 «La petición no muestra su detalle sin editarla» | Mostrar más del contenido de la petición sin entrar a editarla, y ocultar el botón según el estado | Ajuste de UI en F4.5 «La revisión mano a mano» |
 | U7 «La pantalla de revisión está mezclada» | Lo que ve el admin al revisar se mezcla con una solicitud y hay que reordenarlo | Ajuste de UI en F4.5 «La revisión mano a mano» |
-| U8 «Cancelar una mesa en curso sin motivo» | Una mesa en progreso se canceló sin justificación, y no debía. La regla que propuso el usuario: en `Draft` y `Preparation` se cancela libre; desde `Opened` o `InProgress`, con motivo y revisión del admin, porque ahí es fuerza mayor. Además, una mesa cancelada seguía apareciendo en la lista | Bug, porque el motivo ya es obligatorio y no se cumplió, **y** decisión nueva en ADR-07 «Mesas: ciclo de vida» §1 (la revisión al cancelar). Se trata junto con C11 |
+| U8 «Cancelar una mesa en curso sin motivo» | Una mesa en progreso se canceló sin justificación, y no debía. La regla que propuso el usuario: en `Draft` y `Preparation` se cancela libre; desde `Opened` o `InProgress`, con motivo y revisión del admin, porque ahí es fuerza mayor. Además, una mesa cancelada seguía apareciendo en la lista | Decisión nueva en ADR-07 «Mesas: ciclo de vida» §1: la revisión del admin al cancelar. **Probablemente no hay bug**, porque el motivo ya es obligatorio (`ChangeTableStatusRequest`, `@NotBlank`) y en la grabación el cliente dice «pero ahí pusiste la justificación»; lo que faltaba era la revisión. Se trata junto con C11 |
 | U9 «Pedir ser master y pedir una mesa» | Son dos pedidos distintos, y falta el flujo desde el jugador: uno sin el rol `Master` no tiene cómo crear una mesa | `MasterGrant` ya otorga el rol al aprobarse; `TableOpen` se registra, pero aprobarlo no produce nada (`ApprovalService`). Verificar la UI del jugador y decidir qué produce aprobar `TableOpen` (ADR-16 «Pedidos con aprobación y bandeja») |
 | U10 «Algo se ve mal en el tema claro» | Durante el flujo de solicitudes | Bug visual: corregirlo con tokens (regla dura 18 «Ningún texto ni valor de estilo suelto») |
 | U11 «Las métricas y los logs del Owner» | El Owner es el único que crea admins, y un admin no puede actuar sobre otro. Falta preguntarle al cliente qué quiere medir: uso del sistema, logs del servidor | Alcance de F6 «Operación». Depende de P2 |
@@ -218,6 +218,76 @@ Revisado en el sitio el 2026-10-21.
 - **P3 «Calificar al cancelar»**: ¿califican todos los jugadores, o solo quienes llegaron a jugar alguna sesión? (C12)
 - **P4 «Los datos actuales»**: dijo que hoy el sistema "es un archivo de texto plano". ¿Hay datos que migrar a la base nueva?
 - **P5 «La variante del español»**: ¿español de México, tuteando? (C7)
+
+#### Dudas y puntos por afinar
+
+Lo que no quedó claro de la grabación o lo que hay que precisar antes de escribir cada decisión. Al lado de cada duda va quién la resuelve: el **cliente** (se suma a las P cuando se le pregunte), el **usuario**, o el **recorrido**, que es verificarlo en la app. Una duda resuelta se tacha y se anota la respuesta, no se borra.
+
+**Agenda, duración y cupo (C1, C2, C3, S1–S5)**
+
+- **C1** — Si la fecha elegida no cae en un día de la agenda, ¿el selector **oculta** esos días o el sistema **corre** el inicio al próximo día válido? Si la agenda se edita después de elegir la fecha, ¿se vuelve a validar? *Usuario.*
+- **C1** — En tu parte de la grabación: «cuando seleccionas esto, la mesa ya cierra solicitudes, o sea, ya inicia». ¿Llegar a la fecha de inicio cierra las postulaciones solo, o el cierre es siempre manual (C3)? *Cliente.*
+- **C2** — Los rangos se pisan o dejan huecos: One-shot 1–2, Corta 4–6, Mediana hasta ~24 y Larga más de 6 meses. ¿Dónde caen 3 sesiones, o 7 a 23? ¿Las clases se definen en sesiones o en meses? *Cliente.*
+- **C2** — ¿La lista de clases es fija (un enum en el código) o la configura un admin (`system_settings`, ADR-17 «Configuración del sistema y auditoría»)? *Usuario.*
+- **C2 + S2** — Sin `total_sessions`, ¿hasta dónde se generan las filas de sesión? Opción: una ventana móvil (las próximas N semanas) que se renueva sola. ¿Y `total_sessions` desaparece o queda opcional para quien sí sabe cuántas son? *Usuario.*
+- **C2** — El texto libre ("de 1 a 4 sesiones aprox."), ¿es opcional? ¿Reemplaza a la clase o la acompaña? *Cliente.*
+- **C3** — ¿El mínimo es obligatorio? Hoy el máximo puede ser `null` (sin tope); ¿se admite un mínimo sin máximo? *Usuario.*
+- **C3** — Cerrar las postulaciones, ¿se puede deshacer? ¿Cerrarlas rechaza a los candidatos que quedan, como pasa hoy al llenarse el cupo (ADR-09 «Postulaciones y veto» §3)? *Cliente.*
+- **C3** — Si un jugador se va y la mesa queda por debajo del mínimo, ¿pasa algo, o es solo informativo? ¿Una mesa puede arrancar (`InProgress`) sin llegar al mínimo? *Cliente.*
+- **S1** — ¿La frecuencia es de la mesa entera o de cada franja (los lunes semanal, los jueves quincenal)? Lo simple es de la mesa. ¿Hace falta mensual? *Cliente.*
+- **S1** — En una quincenal, ¿qué semana es la "1"? Lo natural: la de la fecha de inicio. *Usuario.*
+- **S1** — El choque de agendas (ADR-08 «Agenda, sesiones y asistencia» §2 «Dos compromisos chocan si sus intervalos se solapan en la semana UTC») hoy mide sobre una semana. Dos quincenales en semanas alternas no chocan de verdad. ¿Se acepta el falso positivo o se mide sobre dos semanas? *Usuario.*
+- **S2** — El contador `Session 12`, ¿cuenta las sesiones jugadas o las programadas? *Usuario.*
+- **S5** — Una mesa por texto (*play by post*) no tiene horario, y ADR-07 «Mesas: ciclo de vida» §3 «Una mesa no se crea sin decir qué, dónde y cuándo» exige el «cuándo». ¿Se admite una mesa sin agenda? *Cliente.*
+
+**Primera clase y visibilidad del master (C8, C9, C10)**
+
+- **C8** — El cliente habló de «Table Settings», las configuraciones de la mesa, y de que «son roles que activan ciertas características». ¿Qué otras configuraciones hay, además de ocultar al master? ¿Qué otras características activa la primera clase? *Cliente.*
+- **C8** — ¿"Candidatos" incluye a cualquiera que mira el explorador sin postularse? Se asume que sí: el nombre lo ve solo un jugador de la mesa. *Cliente.*
+- **C8** — ¿También se ocultan los co-masters (`Secondary`)? ¿Y el enlace al perfil del master, su nombre en las notificaciones al candidato y en la postulación rechazada? *Cliente.*
+- **C8** — Un jugador que deja la mesa, ¿deja de ver el nombre? El admin lo ve siempre (ADR-06 «Roles y alcance» §8). *Usuario.*
+- **C9** — Si el admin rechaza la primera clase pero la mesa está bien, ¿se publica como mesa normal o vuelve a cambios solicitados? ¿Una mesa normal se puede pasar a primera clase después? *Cliente.*
+- **C10** — ¿Dos listas separadas, dos pestañas, o una lista con un filtro por tipo? ¿La primera clase se destaca visualmente? *Usuario*, con la skill `diseno`.
+
+**Cierre de la mesa y calificación (C11, C12, U8)**
+
+- **C11 + U8** — ¿Hacen falta estados nuevos (`FinishRequested`, `CancelRequested`), como existe `PauseRequested`? Si el admin rechaza, ¿la mesa sigue como estaba? *Usuario.*
+- **U8** — ¿Desde qué estado exacto cancelar pasa a necesitar revisión? Tu propuesta: libre en `Draft` y `Preparation`, con revisión desde `Opened`. ¿Y `Unassigned` y `ChangesRequested`, que hoy también se cancelan? *Usuario.*
+- **U8** — «La de Star sigue apareciendo»: ¿en qué lista? Las mesas canceladas están a propósito en el Historial (`HISTORY_STATUSES`), y puede que fuera eso. *Recorrido.*
+- **C12** — **La duda más grande**: "calificar la mesa", ¿es una calificación de la mesa o del master (estrellas, reseña), o son los comentarios y el karma de ADR-11 «Comentarios, karma y feedback», que evalúan **a personas** con las que se jugó? Son modelos distintos. *Cliente.*
+- **C12** — Si se califica al cancelar, ¿mueve karma? ADR-11 §4 dice que no justamente para que una cancelación no castigue. *Cliente* (es P3).
+
+**Zona horaria y horas (C13, U1, U2)**
+
+- **U1** — «Que no marque AM/PM», ¿significa que **falta** el AM/PM o que **no debe** aparecer? En México se usa el reloj de 12 horas; la otra opción es seguir el formato del idioma. *Usuario.*
+- **C13** — ¿La zona se pide en el onboarding junto con el país (ADR-10 «Perfiles» §4), con la del navegador como sugerencia, o se elige después en el perfil? *Usuario.*
+- **C13** — En una mesa con gente de varios países, ¿cada uno ve las horas en su zona, o también la zona del master como referencia (como el `CST` de StartPlaying)? *Cliente.*
+- **U2** — ¿Qué pantalla exacta es el «seguimiento» de la revisión: el historial de la mesa en el lado del master o la ficha del pedido en el lado del admin? *Recorrido.*
+
+**Archivos y peticiones (C4, C5, U3–U6)**
+
+- **C4** — ¿Qué se previsualiza? Lo razonable: imágenes y PDF dentro de la app, y lo demás (`.docx`) solo se descarga. ¿La preview va solo en «Usar» o en todos los lugares donde aparece un archivo? *Usuario.*
+- **C5** — Las peticiones a una sola persona (`Single`), ¿van con las de los jugadores o en un grupo propio? *Usuario.*
+- **U3** — No se identifica en la grabación qué botón no hacía nada; fue justo antes de hablar de la preview, en la pantalla de archivos. *Recorrido.*
+- **U5** — Ver el cajón de origen en el selector, ¿le sirve al master o lo confunde? Lo que confundió al cliente fue ver cajones de jugador («Solicitud de jugador») donde el master elige un archivo. *Usuario.*
+- **U5** — El cliente dijo «ahí solo puedes utilizar uno». El form de la petición acepta varios archivos; ¿era la entrega del jugador, la postulación o el selector? *Recorrido.*
+- **U6** — ¿Qué se muestra de una petición sin abrirla (descripción, fecha límite, a quién va, archivos, cuántos respondieron)? ¿Qué botón se oculta y en qué estado? *Usuario.*
+
+**Pantallas que hay que señalar (U7, U10)**
+
+- **U7** — ¿Qué se mezcla con qué en la pantalla de revisión? En la grabación solo queda «se mezcló con una solicitud». *Usuario.*
+- **U10** — ¿Qué pantalla se ve mal en el tema claro? *Recorrido.*
+
+**Roles, pedidos y operación (U9, U11–U14, C14, C15)**
+
+- **U9** — Aprobar `TableOpen`, ¿qué tiene que producir? Opciones: un `Draft` de una sola mesa a nombre de quien la pidió, sin darle el rol `Master` (encaja con la regla dura 17 «El rol no es la pertenencia»), u otorgar el rol. *Cliente.*
+- **U9** — ¿El jugador ya tiene en su UI dónde pedir ser master? El backend lo soporta (`MasterGrant`). *Recorrido.*
+- **U12** — ¿En qué listas va la selección múltiple, y para qué acciones además de borrar? *Usuario.*
+- **U13** — El catálogo de sistemas y plataformas, ¿es solo de prueba (`TestDataService`, perfiles `dev,test`) o el catálogo real de producción? El real iría en una migración de datos. *Usuario.*
+- **U14** — El cliente nombró el service worker, que es notificación **del navegador**, fuera de la app. ADR-18 «Notificaciones y tiempo real» §1 dice «solo in-app», así que es otra decisión, distinta del tiempo real de §2. *Cliente.*
+- **C14** — En la grabación, el cliente leía algo en pantalla («esto dice que el código va a cometer un error y cuando lo cierres se va a cerrar el anterior modal»), probablemente una respuesta de Claude, no la app. Hay que reproducir el bug antes de corregirlo. ¿Y hacer clic fuera de un form con datos debería cerrarlo, o solo el botón Cancelar? *Recorrido* y *usuario.*
+- **C15** — ¿El servidor Ubuntu es del cliente o es una nube (Oracle)? ¿Quién paga y administra la infraestructura? ¿El CI/CD sobre GitHub Actions? ¿Hay dominio? *Cliente.*
+- **C16 + S6** — ¿Qué categorías arrancan (temas, estilo de juego, content warnings, experiencia, idioma, edad)? ¿Un tag puede estar en varias? ¿Quién escribe las definiciones? *Cliente.*
 
 ## 3. Las seis rebanadas
 
