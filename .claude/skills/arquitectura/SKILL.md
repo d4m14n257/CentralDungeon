@@ -5,7 +5,7 @@ description: CentralDungeon's whole architecture in one place — the pinned sta
 
 # Arquitectura
 
-Cómo se escribe CentralDungeon, de punta a punta. **Es la fuente de sus reglas**: el código y las ADRs de `docs/adr/` citan estas secciones por número (`arquitectura §2.3`). Hasta ADR-01 §5 eran siete skills —`arquitectura-backend`, `arquitectura-frontend`, `modelo-datos`, `tests-java`, `nuevo-endpoint-java`, `nuevo-componente-react` y `er-diagram-sync`—; se juntaron porque ninguna se entendía sin las otras, y **los números viejos se conservaron**, de modo que una cita antigua sigue encontrando su sección:
+Cómo se escribe CentralDungeon, de punta a punta. **Es la fuente de sus reglas**: las ADRs de `docs/adr/` y los docs citan estas secciones por número (`arquitectura §2.3`); el código no las cita (ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»). Hasta ADR-01 §5 eran siete skills —`arquitectura-backend`, `arquitectura-frontend`, `modelo-datos`, `tests-java`, `nuevo-endpoint-java`, `nuevo-componente-react` y `er-diagram-sync`—; se juntaron porque ninguna se entendía sin las otras, y **los números viejos se conservaron**, de modo que una cita antigua sigue encontrando su sección:
 
 - el backend sigue siendo §2 y el frontend §3;
 - el modelo de datos lleva el prefijo `4.`: el viejo `modelo-datos` §5 es §4.5;
@@ -56,7 +56,7 @@ El stack y sus versiones fijadas son §1; el porqué de cada regla, en la `ADR-N
 ## Reglas fijas — testing y documentación (§5, §6)
 
 28. **Toda regla de negocio llega con su test unitario**, y lo que depende del motor real, con su IT de Testcontainers. Las pantallas llevan Vitest si tienen lógica, y los flujos críticos, Playwright contra el backend real. → §5
-29. **Todo lo público lleva su bloque, en inglés**: Javadoc en el backend (getters y cada componente de un `record` incluidos) y JSDoc en todo `export` del frontend. Dice qué hace y por qué, cita la `ADR-NN §k`, y se actualiza en el mismo cambio que la firma. → §6
+29. **Todo lo público lleva su bloque, en inglés**: Javadoc en el backend (getters y cada componente de un `record` incluidos) y JSDoc en todo `export` del frontend. Dice qué hace y por qué con palabras propias, sin citar ADRs, skills, reglas ni fases (ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»), y se actualiza en el mismo cambio que la firma. → §6
 
 ## El detalle, por sección
 

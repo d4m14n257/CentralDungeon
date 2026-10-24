@@ -19,7 +19,7 @@ Lo que te pidan; si no te dicen nada, el diff sin commitear más los archivos nu
 4. **Textos**: ningún string visible en el JSX; cada clave nueva en `es` **y** en `en` (ADR-23 §2); cada código de error del backend con su clave.
 5. **Diseño** (`diseno`): ningún valor suelto; ningún patrón con nombre escrito a mano en una pantalla (§5.c, ADR-21 §5); se reusa el inventario antes de crear; `IconAction` en las filas; los cuatro estados (cargando, vacío, error, sin permiso); 375 px; claro y oscuro; `PageHeader` y `StatusNotice` en su lugar (ADR-21 §5, §10); toda escritura confirmada con `useConfirm` (ADR-21 §9).
 6. **Tests** (§5.2, §5.3): Vitest para la lógica; Playwright para los flujos críticos, con los helpers de `frontend/e2e/` (`acceptReview`, `test-login`).
-7. **JSDoc** (§6.2): todo `export` documentado en inglés, con las props campo por campo; ningún bloque que mienta.
+7. **JSDoc** (§6.2): todo `export` documentado en inglés, con las props campo por campo; ningún bloque que mienta, y ninguno que cite ADRs, skills, reglas duras, fases ni hallazgos (ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»).
 
 Para el detalle de React puedes cargar `ecc:react-patterns` o `ecc:frontend-a11y` con la herramienta Skill, sin aceptar nada que salte TanStack Query, `api/client.ts` o la regla de feature ≠ pantalla. **Nada de `ecc:frontend-design-direction` ni de skills que inventen dirección visual.**
 

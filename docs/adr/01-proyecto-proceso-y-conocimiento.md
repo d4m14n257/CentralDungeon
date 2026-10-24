@@ -2,7 +2,7 @@
 adr: 1
 titulo: Proyecto, proceso y conocimiento
 estado: Vigente
-actualizada: 2026-10-21
+actualizada: 2026-10-24
 absorbe: [1, 6, 18, 102, 162, 177, 181, 250, 266, 267, 274, 289, 290, 291, 292]
 ---
 
@@ -92,6 +92,39 @@ absorbe: [1, 6, 18, 102, 162, 177, 181, 250, 266, 267, 274, 289, 290, 291, 292]
 
 ## §11 Todo número va con su nombre: `ADR-19 «Arquitectura del frontend»`, no `ADR-19` a secas
 
-**Decisión.** Al hablarle al dueño del proyecto, y en todo texto nuevo de `docs/`, de las skills, de las rules y de los mensajes de commit, cada identificador numerado lleva al lado su nombre descriptivo: una ADR con su título (`ADR-19 «Arquitectura del frontend»`), y con el de la sección cuando se cita una (`ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`); una fase o rebanada con el suyo (`F4.1 «El mapa de la interfaz»`); una regla dura con lo que dice (`regla dura 6 «Un espejo por cada respuesta»`); un hallazgo o una decisión de una lista de trabajo con lo que trata (`D3 «Las acciones del master van en un aviso de estado»`). El número no se abandona —sigue siendo lo que se busca con `grep` y lo que identifica sin ambigüedad (§6, §8)—: se le suma el nombre. Lo ya escrito no se reescribe en bloque; se corrige al tocar el archivo. El código —comentarios, Javadoc, JSDoc— sigue citando `ADR-NN §k` a secas.
+**Decisión.** Al hablarle al dueño del proyecto, y en todo texto nuevo de `docs/`, de las skills, de las rules y de los mensajes de commit, cada identificador numerado lleva al lado su nombre descriptivo: una ADR con su título (`ADR-19 «Arquitectura del frontend»`), y con el de la sección cuando se cita una (`ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`); una fase o rebanada con el suyo (`F4.1 «El mapa de la interfaz»`); una regla dura con lo que dice (`regla dura 6 «Un espejo por cada respuesta»`); un hallazgo o una decisión de una lista de trabajo con lo que trata (`D3 «Las acciones del master van en un aviso de estado»`). El número no se abandona —sigue siendo lo que se busca con `grep` y lo que identifica sin ambigüedad (§6, §8)—: se le suma el nombre. Lo ya escrito no se reescribe en bloque; se corrige al tocar el archivo. El código no cita ninguno de estos números, ni corto ni con nombre (§12).
 
-**Por qué.** El dueño del proyecto no retiene qué es cada número: `ADR-19 §6`, `F4.1` o `D3` solos no le dicen nada, y obligan a abrir otro archivo para entender una frase. El número es una dirección y el nombre es el contenido; quien lee necesita las dos. En el código se conserva la cita corta porque quien lo lee es quien lo mantiene y tiene la ADR a un salto, y porque reescribir miles de citas no aporta.
+**Por qué.** El dueño del proyecto no retiene qué es cada número: `ADR-19 §6`, `F4.1` o `D3` solos no le dicen nada, y obligan a abrir otro archivo para entender una frase. El número es una dirección y el nombre es el contenido; quien lee necesita las dos. El código queda fuera porque su documentación también se lee sin el repo (§12).
+
+## §12 La documentación del código se explica sola: no cita ADRs, skills, rules ni fases
+
+**Decisión.** Ningún comentario de código cita la documentación con la que se trabaja junto al modelo agéntico. Eso incluye el Javadoc, el JSDoc, los comentarios de línea, `@DisplayName` y los nombres de test, los mensajes de log y los comentarios SQL de una migración nueva. Lo que no se cita:
+
+- una ADR (`ADR-07 §1`);
+- una sección de skill (`arquitectura §2.3`, `diseno §5.c`);
+- una regla dura por número, ni una rule;
+- una fase o rebanada (`F4.5`);
+- un hallazgo de una lista de trabajo (`B6`, `D3`);
+- la numeración vieja (`#n`).
+
+Si el comentario ya explicaba el porqué, la cita se borra. Si la cita era la única explicación, el porqué se escribe en el comentario, en inglés y con palabras propias. Las migraciones Flyway ya aplicadas quedan como están, porque su checksum cubre los comentarios (regla dura 9 «Todo cambio de schema es una migración nueva»).
+
+La trazabilidad va al revés: la ADR, la skill y la rule nombran las clases y archivos que las aplican, y el mensaje del commit cita la decisión.
+
+A 2026-10-24 el código tiene unas 5.400 citas: 3.118 en Java y 2.248 en TypeScript, en unos 830 archivos. Se quitan en un barrido de F4 «Revisión» (`docs/fase-4-revision.md` §2.1). Hasta entonces, el código nuevo o tocado ya no agrega ninguna.
+
+**Por qué.** El Javadoc y el JSDoc se publican y se leen fuera del repo: en un sitio de documentación, o en el IDE de quien hereda el proyecto. Ahí `ADR-07 §1` no lleva a ningún lado, porque es la dirección de un documento que no está. Las ADRs, las skills, las rules y las fases son la forma en que se trabaja con un modelo agéntico, no parte del producto, y el código tiene que poder leerse sin ellas. Además, una cita envejece: se renumera una fase o se funde una skill, y el comentario pasa a apuntar a otra cosa sin que nada falle.
+
+Esto corrige lo que §11 decidía para el código, que conservaba la cita corta porque quien lo mantiene tiene la ADR a un salto. Eso vale para quien trabaja dentro del repo, no para quien lee la documentación publicada.
+
+## §13 Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta
+
+**Decisión.** Todo plan, el de plan mode y las listas de trabajo de `docs/`, dice en cada tarea dos modelos: con cuál **se planea** y con cuál **se ejecuta**. Se trabaja en ese orden: primero se planea cada punto, y con el plan aprobado se cambia de modelo (`/model`) para ejecutarlo. El criterio:
+
+- **Fable 5.1** planea lo de mayor complejidad: decisiones que cruzan varias ADRs, el modelo de datos y la seguridad.
+- **Opus 5.5** planea lo demás, diagnostica los bugs y escribe las ADRs.
+- **Sonnet 5.5** ejecuta lo de volumen que ya no tiene decisiones abiertas: barridos, renombres, mover paquetes, traducciones y ajustes de UI ya decididos. Si el volumen lo pide, en paralelo por feature.
+
+Una tarea chica y ya decidida puede planearse y ejecutarse con el mismo modelo, y el plan lo dice.
+
+**Por qué.** No todo es Opus. El costo y la latencia de un modelo grande se justifican al decidir, no al repetir la misma edición en cientos de archivos con la decisión ya tomada. Separar el plan de la ejecución deja corta la parte cara y hace explícito, antes de empezar, qué pide cada tarea.

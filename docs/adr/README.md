@@ -4,7 +4,7 @@
 
 ## Cómo se cita
 
-**`ADR-NN §k`**: la sección `k` de la ADR `NN` (`docs/adr/NN-*.md`). Así citan el código, las skills, las rules y los docs. **Fuera del código, el número va con su nombre** (ADR-01 «Proyecto, proceso y conocimiento» §11): `ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`, y lo mismo una fase (`F4.1 «El mapa de la interfaz»`) o una regla dura (`regla dura 6 «Un espejo por cada respuesta»`).
+**`ADR-NN §k`**: la sección `k` de la ADR `NN` (`docs/adr/NN-*.md`). Así citan las skills, las rules y los docs; **el código no cita ADRs** (ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»). **Fuera del código, el número va con su nombre** (ADR-01 «Proyecto, proceso y conocimiento» §11): `ADR-19 «Arquitectura del frontend» §6 «El diálogo es dueño de su formulario y de su mutación»`, y lo mismo una fase (`F4.1 «El mapa de la interfaz»`) o una regla dura (`regla dura 6 «Un espejo por cada respuesta»`).
 
 Hasta el 2026-10-20 las decisiones eran 292 entradas sueltas, `#1`–`#292` (ADR-01 §8). Se fundieron en estos temas, y **las citas `#n` que quedan en el repo —las de las migraciones Flyway aplicadas, que no se pueden editar (regla dura 9)— y las de los mensajes de commit se resuelven con la [tabla de equivalencias](#equivalencias-de-la-numeración-anterior)** del final. Cada sección cierra además con su línea *Antes* con los números viejos que absorbió.
 
@@ -41,7 +41,7 @@ El agente `escriba-adr` (`.claude/agents/`) hace estos pasos.
 
 | ADR | Tema | Secciones |
 |---|---|---|
-| ADR-01 | [Proyecto, proceso y conocimiento](01-proyecto-proceso-y-conocimiento.md) | 11 |
+| ADR-01 | [Proyecto, proceso y conocimiento](01-proyecto-proceso-y-conocimiento.md) | 13 |
 | ADR-02 | [Stack, herramientas y despliegue](02-stack-herramientas-y-despliegue.md) | 6 |
 | ADR-03 | [Modelo de datos y persistencia](03-modelo-de-datos-y-persistencia.md) | 10 |
 | ADR-04 | [Backend y contrato de la API](04-backend-y-contrato-de-la-api.md) | 7 |

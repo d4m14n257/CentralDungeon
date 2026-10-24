@@ -49,7 +49,7 @@ Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<f
 
 ## Reglas duras
 
-Se citan por número desde el código y los docs, y **el número no cambia** (ADR-01 §6). Las del dominio están completas acá porque valen al planificar cualquier cosa; el resto se carga desde su rule al tocar los archivos de su ruta, con el detalle en la skill.
+Se citan por número desde los docs —el código no las cita (ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»)— y **el número no cambia** (ADR-01 §6). Las del dominio están completas acá porque valen al planificar cualquier cosa; el resto se carga desde su rule al tocar los archivos de su ruta, con el detalle en la skill.
 
 | # | Regla | Dónde |
 |---|---|---|
@@ -125,7 +125,7 @@ El diseño **no** va por MCP: se usa `DesignSync` contra Claude Design, autoriza
 
 ## Skills
 
-En `.claude/skills/`, versionadas con el repo. **Son la forma en que se guarda cómo se hace cada cosa**, y el código las cita por sección (`arquitectura §2.3`, `diseno §5.c`). Son tres, a propósito (ADR-01 §5): lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva. Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` (detalle en `entorno-local` §8).
+En `.claude/skills/`, versionadas con el repo. **Son la forma en que se guarda cómo se hace cada cosa**, y los docs las citan por sección (`arquitectura §2.3`, `diseno §5.c`); el código no. Son tres, a propósito (ADR-01 §5): lo aprendido va a la sección que corresponde de una de ellas, nunca a una skill nueva. Hay además una skill **externa y global**, `archify`, para los diagramas interactivos de `docs/diagramas/` (detalle en `entorno-local` §8).
 
 | Skill | Cuándo |
 |---|---|
@@ -148,6 +148,10 @@ En `.claude/agents/`, versionados (ADR-01 §7). Cada uno precarga la skill del r
 | `revisor-seguridad` | Endpoints nuevos, cambios de autorización o de archivos, la rebanada F4.4 |
 | `auditor-conocimiento` | Periódicamente, al cerrar una rebanada o cuando una skill parezca vieja: reglas que el código ya no cumple, citas rotas, repetición, comentarios que mienten |
 | `escriba-adr` | Al cerrar una decisión: escribe la ADR, marca la que corrige y actualiza la regla en su skill |
+
+## Planes
+
+Todo plan dice, **en cada tarea, con qué modelo se planea y con cuál se ejecuta** (ADR-01 «Proyecto, proceso y conocimiento» §13 «Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta»): **Fable 5.1** planea lo más complejo —decisiones que cruzan varias ADRs, modelo de datos, seguridad—; **Opus 5.5** planea lo demás, diagnostica bugs y escribe ADRs; **Sonnet 5.5** ejecuta lo de volumen ya decidido —barridos, renombres, traducciones, ajustes de UI—, en paralelo por feature si hace falta. Primero se planea cada punto; con el plan aprobado se cambia de modelo (`/model`) para ejecutarlo.
 
 ## Git
 
@@ -178,6 +182,6 @@ Lo único en español dentro del repo son los `docs/`, `.claude/` y este archivo
 - una regla dura: `regla dura 6 «Un espejo por cada respuesta»`;
 - un hallazgo o decisión de una lista: `B6 «Una mesa nunca pública se leía por id»`, `D3 «Las acciones del master van en un aviso de estado»`.
 
-El número se conserva, porque es lo que se busca y lo que no es ambiguo: se le suma el nombre. Lo ya escrito se corrige al tocar cada archivo, no en bloque. El código sigue citando `ADR-NN §k` a secas.
+El número se conserva, porque es lo que se busca y lo que no es ambiguo: se le suma el nombre. Lo ya escrito se corrige al tocar cada archivo, no en bloque. **El código no cita ninguno de estos números**: ni ADRs, ni skills, ni reglas, ni fases, ni hallazgos (ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»). Su documentación se publica y tiene que entenderse sin el repo.
 
 **Dónde está cada nombre**: el de una ADR, en el índice de `docs/adr/README.md`, y el de una sección, en su título `## §k`; los de las fases y todas sus rebanadas, en la tabla de `docs/plan-desarrollo.md` §4 «Fases»; los de las reglas duras, en la tabla de arriba.

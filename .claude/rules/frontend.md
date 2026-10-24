@@ -5,7 +5,7 @@ paths:
 
 # Frontend — reglas duras
 
-> Se cargan al tocar `frontend/`. Conservan el número de regla dura que les da `CLAUDE.md`, que es el que cita el código. El detalle y el porqué están en la skill `arquitectura` §3, §5.2 y §6.2, y lo visual en la skill `diseno`: las dos se leen antes de escribir una pantalla o un componente. Lo que suma ECC para TypeScript, en `ecc/typescript.md`.
+> Se cargan al tocar `frontend/`. Conservan el número de regla dura que les da `CLAUDE.md`, que es el que citan los docs (el código no, ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»). El detalle y el porqué están en la skill `arquitectura` §3, §5.2 y §6.2, y lo visual en la skill `diseno`: las dos se leen antes de escribir una pantalla o un componente. Lo que suma ECC para TypeScript, en `ecc/typescript.md`.
 
 **6.** **Un espejo escrito a mano por cada `…Response`**, en el `types.ts` de su feature; lo que arma el frontend (payloads, vistas, borradores) se deriva con utility types (`Pick`, `Omit`, `Partial`, `Record`…) del tipo que ya existe, nunca se re-declara a mano (ADR-02 §3, `arquitectura` §3.2). Nunca `any`.
 

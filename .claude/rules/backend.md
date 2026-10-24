@@ -5,7 +5,7 @@ paths:
 
 # Backend — reglas duras
 
-> Se cargan al tocar `backend/`. Conservan el número de regla dura que les da `CLAUDE.md`, que es el que cita el código. El detalle y el porqué están en la skill `arquitectura` §2, §5.1 y §6.1, que se lee antes de escribir; las reglas de Java moderno que suma ECC, en `ecc/java.md`.
+> Se cargan al tocar `backend/`. Conservan el número de regla dura que les da `CLAUDE.md`, que es el que citan los docs (el código no, ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»). El detalle y el porqué están en la skill `arquitectura` §2, §5.1 y §6.1, que se lee antes de escribir; las reglas de Java moderno que suma ECC, en `ecc/java.md`.
 
 **1.** Un controller nunca llama a un repository — siempre pasa por un service, incluso para una lectura trivial.
 

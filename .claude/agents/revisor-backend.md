@@ -19,7 +19,7 @@ Lo que te pidan; si no te dicen nada, el diff sin commitear (`git diff` y `git d
 4. **Modelo** (§4): invariantes que MySQL no expresa sostenidas con lock como las que ya existen; `Deleted` invisible en toda lectura (ADR-03 §7); nada derivado guardado (ADR-03 §1); un cambio de `@Entity` llega con migración nueva, §4 y el ER actualizados (regla dura 10).
 5. **Abstracción** (§2.4): ni interfaces de una sola implementación ni bases abstractas por parecido.
 6. **Tests** (§5.1): cada regla de negocio nueva con su unitario; lo que depende del motor, con IT de Testcontainers.
-7. **Javadoc** (§6.1): todo lo público documentado, en inglés, diciendo qué y por qué y citando su `ADR-NN §k`; ningún bloque que mienta respecto de la firma actual.
+7. **Javadoc** (§6.1): todo lo público documentado, en inglés, diciendo qué y por qué con palabras propias, sin citar ADRs, skills, reglas duras, fases ni hallazgos (ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»); ningún bloque que mienta respecto de la firma actual.
 
 Para el detalle de Java moderno puedes cargar `ecc:java-coding-standards` o `ecc:jpa-patterns` con la herramienta Skill, **pero su código es de Boot 3**: no propongas `@MockBean`, JUnit 5, `com.fasterxml.jackson` ni la envoltura `{success, data, error}`.
 
