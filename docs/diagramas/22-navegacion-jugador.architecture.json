@@ -7,7 +7,7 @@
     "repository": {
       "url": "https://github.com/d4m14n257/CentralDungeon",
       "provider": "github",
-      "revision": "bc5fca57b17a3d198243eedd0cbba0688224e795"
+      "revision": "3c80e0797438ff3d45593c0d13dcff94ba4e7b21"
     },
     "legend": {
       "entries": {
@@ -51,7 +51,6 @@
         "id": "cruce",
         "label": "Cruces de contexto",
         "focus": [
-          "masterTabs",
           "profile",
           "nOther"
         ]
@@ -281,33 +280,6 @@
       ]
     },
     {
-      "id": "masterTabs",
-      "type": "external",
-      "label": "Pestañas del master",
-      "sublabel": "cruce de contexto",
-      "pos": [
-        1110,
-        300
-      ],
-      "size": [
-        200,
-        66
-      ],
-      "tag": "Candidatos · Jugadores",
-      "sources": [
-        {
-          "path": "frontend/src/routes/master/MasterTableCandidatesTab.tsx",
-          "label": "candidato",
-          "line": 68
-        },
-        {
-          "path": "frontend/src/routes/master/MasterTablePlayersTab.tsx",
-          "label": "master y jugador",
-          "line": 88
-        }
-      ]
-    },
-    {
       "id": "schedule",
       "type": "external",
       "label": "/my/schedule",
@@ -469,12 +441,6 @@
       "to": "users"
     },
     {
-      "id": "masterTabs-users",
-      "from": "masterTabs",
-      "to": "users",
-      "variant": "dashed"
-    },
-    {
       "id": "nConflict-applications",
       "from": "nConflict",
       "to": "applications",
@@ -531,7 +497,6 @@
       "dot": "violet",
       "title": "Cruces de contexto",
       "items": [
-        "Pestañas del master → /player/users/:id",
         "UserMenu → /player/profile también para admin",
         "PlayerBan resuelto → perfil del co-master"
       ]

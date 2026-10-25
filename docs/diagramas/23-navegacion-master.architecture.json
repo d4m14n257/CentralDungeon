@@ -7,7 +7,7 @@
     "repository": {
       "url": "https://github.com/d4m14n257/CentralDungeon",
       "provider": "github",
-      "revision": "13334357895d0a59ac9d0cac07567e96e2e1c524"
+      "revision": "3c80e0797438ff3d45593c0d13dcff94ba4e7b21"
     },
     "legend": {
       "entries": {
@@ -47,13 +47,6 @@
           "tSess",
           "tTasks",
           "tFiles"
-        ]
-      },
-      {
-        "id": "cruce",
-        "label": "Cruces de contexto",
-        "focus": [
-          "users"
         ]
       },
       {
@@ -362,8 +355,8 @@
       "sources": [
         {
           "path": "frontend/src/routes/master/MasterTableCandidatesTab.tsx",
-          "label": "→ perfil ajeno",
-          "line": 68
+          "label": "abre PersonSummaryDialog",
+          "line": 75
         }
       ]
     },
@@ -384,8 +377,8 @@
       "sources": [
         {
           "path": "frontend/src/routes/master/MasterTablePlayersTab.tsx",
-          "label": "→ perfil ajeno",
-          "line": 88
+          "label": "abre PersonSummaryDialog",
+          "line": 104
         }
       ]
     },
@@ -450,27 +443,6 @@
         {
           "path": "frontend/src/routes/master/MasterTableTasksTab.tsx",
           "label": "sin enlaces"
-        }
-      ]
-    },
-    {
-      "id": "users",
-      "type": "external",
-      "label": "/player/users/:id",
-      "sublabel": "cruce de contexto",
-      "pos": [
-        218,
-        540
-      ],
-      "size": [
-        160,
-        66
-      ],
-      "tag": "perfil de Jugador",
-      "sources": [
-        {
-          "path": "frontend/src/routes/player/UserProfilePage.tsx",
-          "label": "pantalla de /player"
         }
       ]
     },
@@ -694,18 +666,6 @@
       "variant": "dashed"
     },
     {
-      "id": "tCand-users",
-      "from": "tCand",
-      "to": "users",
-      "variant": "dashed"
-    },
-    {
-      "id": "tPlayers-users",
-      "from": "tPlayers",
-      "to": "users",
-      "variant": "dashed"
-    },
-    {
       "id": "tSched-editChip",
       "from": "tSched",
       "to": "editChip"
@@ -801,9 +761,9 @@
     },
     {
       "dot": "violet",
-      "title": "Cruces y callejones",
+      "title": "Diálogo y callejones",
       "items": [
-        "Candidatos y Jugadores → /player/users/:id",
+        "Candidatos y Jugadores abren la ficha corta en un diálogo (PersonSummaryDialog), sin salir de la pestaña",
         "sessions, tasks y files no enlazan a nada"
       ]
     }

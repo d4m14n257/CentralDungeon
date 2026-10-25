@@ -7,7 +7,7 @@
     "repository": {
       "url": "https://github.com/d4m14n257/CentralDungeon",
       "provider": "github",
-      "revision": "bc5fca57b17a3d198243eedd0cbba0688224e795"
+      "revision": "3c80e0797438ff3d45593c0d13dcff94ba4e7b21"
     },
     "legend": {
       "entries": {
@@ -24,13 +24,6 @@
       590
     ],
     "views": [
-      {
-        "id": "home",
-        "label": "Home",
-        "focus": [
-          "bare"
-        ]
-      },
       {
         "id": "unica",
         "label": "Entrada única",
@@ -73,20 +66,13 @@
       },
       {
         "id": "mesa",
-        "label": "Detalle de mesa",
+        "label": "Detalle de mesa y ficha de persona",
         "focus": [
           "tables",
           "tableDetail",
-          "tableEdit"
-        ]
-      },
-      {
-        "id": "ficha",
-        "label": "Ficha de persona",
-        "focus": [
+          "tableEdit",
           "users",
-          "userDetail",
-          "tableDetail"
+          "userDetail"
         ]
       }
     ]
@@ -229,7 +215,7 @@
       "id": "files",
       "type": "frontend",
       "label": "/admin/files",
-      "sublabel": "biblioteca publicada · abre la subida",
+      "sublabel": "biblioteca · abre la subida",
       "pos": [
         840,
         150
@@ -315,7 +301,7 @@
       "label": "/admin/catalogs/:kind/:id",
       "sublabel": "lienzo de nodos (ADR-12 §7)",
       "pos": [
-        40,
+        290,
         450
       ],
       "size": [
@@ -370,6 +356,11 @@
         {
           "path": "frontend/src/routes/admin/AdminTableDetailPage.tsx",
           "label": "pestañas del master en solo lectura"
+        },
+        {
+          "path": "frontend/src/routes/admin/AdminTableStatusNotice.tsx",
+          "label": "pausa pedida → bandeja",
+          "line": 42
         }
       ]
     },
@@ -412,6 +403,11 @@
         {
           "path": "frontend/src/routes/admin/AdminUserDetailPage.tsx",
           "label": "datos, roles, estado, mesas, historial"
+        },
+        {
+          "path": "frontend/src/routes/admin/AdminUserDetailPage.tsx",
+          "label": "mesa → detalle",
+          "line": 60
         }
       ]
     }
@@ -543,7 +539,41 @@
       "from": "tableDetail",
       "to": "userDetail",
       "fromSide": "bottom",
-      "toSide": "bottom"
+      "toSide": "bottom",
+      "via": [
+        [
+          150,
+          525
+        ],
+        [
+          1200,
+          525
+        ]
+      ]
+    },
+    {
+      "id": "userdetail-table",
+      "from": "userDetail",
+      "to": "tableDetail",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "via": [
+        [
+          1200,
+          537
+        ],
+        [
+          150,
+          537
+        ]
+      ]
+    },
+    {
+      "id": "tabledetail-queue",
+      "from": "tableDetail",
+      "to": "queue",
+      "fromSide": "right",
+      "toSide": "left"
     }
   ],
   "cards": [
@@ -552,7 +582,7 @@
       "title": "El admin casi no sale",
       "items": [
         "Catálogos abre un lienzo (ADR-12 §7); archivos, su subida (ADR-14 §7); mesas, su detalle (ADR-06 §8); usuarios, su ficha (ADR-10 §6)",
-        "Una persona de una mesa abre su ficha; la entidad de un pedido no se abre"
+        "Una persona de una mesa abre su ficha y viceversa; la pausa pedida lleva a la bandeja"
       ]
     },
     {
