@@ -24,9 +24,9 @@ Son guías para revisar, no topes que justifiquen partir algo cohesivo:
 
 ## Delegación a subagentes
 
-Cuando se delega (y solo cuando la tarea lo justifica):
+Se delega cuando el plan asigna la tarea a otro modelo —con el modelo, quién la ejecuta y el paralelo de ADR-01 «Proyecto, proceso y conocimiento» §13 «Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta»— o cuando la tarea lo justifica. Al delegar:
 
 1. **El mensaje final es el entregable.** Un agente nunca termina su turno con "esperando a los subagentes": una tarea lanzada no es una tarea terminada.
 2. **Quien delega recoge.** Espera los resultados, los integra y recién después responde.
-3. **Se descompone solo lo que no cabe en un contexto.** No se vuelve a delegar una tarea que ya tiene el tamaño de un solo agente.
+3. **Fuera de lo que el plan asigna a otro modelo, se descompone solo lo que no cabe en un contexto.** No se vuelve a delegar una tarea que ya tiene el tamaño de un solo agente.
 4. Al delegar se pasa el **objetivo** además de la consulta, y se evalúa lo que vuelve: si falta algo, se repregunta (hasta 3 ciclos) antes de aceptarlo.

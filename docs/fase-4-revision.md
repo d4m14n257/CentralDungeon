@@ -293,7 +293,7 @@ Lo que no quedó claro de la grabación o lo que hay que precisar antes de escri
 
 ### 2.6 Con qué modelo se planea y se ejecuta cada tarea
 
-Lo pide ADR-01 «Proyecto, proceso y conocimiento» §13 «Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta»: primero se planea cada punto con el modelo de la columna «Planea», y con el plan aprobado se cambia al de «Ejecuta». Fable 5.1 planea lo más complejo, Opus 5.5 lo demás, y Sonnet 5.5 ejecuta lo de volumen ya decidido. Escribir la ADR de cada decisión, con `escriba-adr`, es siempre Opus 5.5.
+Lo pide ADR-01 «Proyecto, proceso y conocimiento» §13 «Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta»: primero se planea cada punto con el modelo de la columna «Planea», y con el plan aprobado la sesión principal, que es siempre Opus 5.5, delega la ejecución a subagentes con el modelo de «Ejecuta», en paralelo las tareas que no dependen entre sí. Fable 5.1 planea lo más complejo, Opus 5.5 lo demás, y Sonnet 5.5 ejecuta lo de volumen ya decidido. Escribir la ADR de cada decisión, con `escriba-adr`, es siempre Opus 5.5.
 
 **La reunión con el cliente (§2.5)**
 

@@ -119,12 +119,14 @@ Esto corrige lo que §11 decidía para el código, que conservaba la cita corta 
 
 ## §13 Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta
 
-**Decisión.** Todo plan, el de plan mode y las listas de trabajo de `docs/`, dice en cada tarea dos modelos: con cuál **se planea** y con cuál **se ejecuta**. Se trabaja en ese orden: primero se planea cada punto, y con el plan aprobado se cambia de modelo (`/model`) para ejecutarlo. El criterio:
+**Decisión.** Todo plan, el de plan mode y las listas de trabajo de `docs/`, dice en cada tarea dos modelos: con cuál **se planea** y con cuál **se ejecuta**. Primero se planea cada punto, y con el plan aprobado se ejecuta. El criterio:
 
 - **Fable 5.1** planea lo de mayor complejidad: decisiones que cruzan varias ADRs, el modelo de datos y la seguridad.
-- **Opus 5.5** planea lo demás, diagnostica los bugs y escribe las ADRs.
-- **Sonnet 5.5** ejecuta lo de volumen que ya no tiene decisiones abiertas: barridos, renombres, mover paquetes, traducciones y ajustes de UI ya decididos. Si el volumen lo pide, en paralelo por feature.
+- **Opus 5.5** planea lo demás, diagnostica los bugs, escribe las ADRs y tría lo que vuelve de los agentes.
+- **Sonnet 5.5** ejecuta lo de volumen que ya no tiene decisiones abiertas: barridos, renombres, mover paquetes, traducciones y ajustes de UI ya decididos.
 
-Una tarea chica y ya decidida puede planearse y ejecutarse con el mismo modelo, y el plan lo dice.
+**La sesión principal es siempre Opus 5.5 y no cambia de modelo**: `/model` no se usa para ejecutar un plan. Lo que el plan asigna a otro modelo se delega a un subagente con ese modelo en el parámetro `model` de la herramienta Agent: lo que «ejecuta Sonnet 5.5», a subagentes con `model: sonnet`; lo que «planea Fable 5.1», a un agente de planificación con `model: fable`. Lo que es de Opus 5.5 lo hace la sesión principal o un subagente que hereda su modelo. **Las tareas independientes se lanzan siempre en paralelo**: varios agentes en un mismo mensaje, uno por feature, por contexto o por bloque sin dependencias entre sí; la que depende de otra espera a que esa vuelva. La columna «Ejecuta» del plan es el pedido que autoriza lanzar ese agente, y no autoriza ningún otro. La sesión principal sigue siendo dueña del resultado, con las reglas de `.claude/rules/ecc/common.md` §«Delegación a subagentes».
 
-**Por qué.** No todo es Opus. El costo y la latencia de un modelo grande se justifican al decidir, no al repetir la misma edición en cientos de archivos con la decisión ya tomada. Separar el plan de la ejecución deja corta la parte cara y hace explícito, antes de empezar, qué pide cada tarea.
+Una tarea chica y ya decidida puede planearse y ejecutarse con el mismo modelo, y el plan lo dice; si ese modelo es Opus 5.5, la hace la sesión principal sin delegar.
+
+**Por qué.** No todo es Opus. El costo y la latencia de un modelo grande se justifican al decidir, no al repetir la misma edición en cientos de archivos con la decisión ya tomada. Separar el plan de la ejecución deja corta la parte cara y hace explícito, antes de empezar, qué pide cada tarea. Ejecutar cambiando la sesión de modelo con `/model` la fragmentaba y le hacía perder contexto; con subagentes la sesión no cambia, el costo de Opus queda en decidir e integrar, y el volumen corre en paralelo y más barato.

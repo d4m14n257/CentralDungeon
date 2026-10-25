@@ -139,7 +139,7 @@ En `.claude/rules/`, versionadas (ADR-01 §6). Cada una se carga sola al tocar u
 
 ## Agentes
 
-En `.claude/agents/`, versionados (ADR-01 §7). Cada uno precarga la skill del repo que le toca. **Se lanzan cuando el usuario o la tarea lo piden**, no por iniciativa propia. Los revisores no editan: devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3 (bug, alcance de F5 o F6, decisión nueva); el auditor, en las suyas (corrección directa, decisión nueva, limpieza).
+En `.claude/agents/`, versionados (ADR-01 §7). Cada uno precarga la skill del repo que le toca. **Se lanzan cuando el usuario o la tarea lo piden**, no por iniciativa propia; la columna «Ejecuta» de un plan es un pedido (ADR-01 «Proyecto, proceso y conocimiento» §13 «Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta»). Los revisores no editan: devuelven hallazgos triados en las tres categorías de `fase-4-revision.md` §3 (bug, alcance de F5 o F6, decisión nueva); el auditor, en las suyas (corrección directa, decisión nueva, limpieza).
 
 | Agente | Cuándo |
 |---|---|
@@ -151,7 +151,7 @@ En `.claude/agents/`, versionados (ADR-01 §7). Cada uno precarga la skill del r
 
 ## Planes
 
-Todo plan dice, **en cada tarea, con qué modelo se planea y con cuál se ejecuta** (ADR-01 «Proyecto, proceso y conocimiento» §13 «Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta»): **Fable 5.1** planea lo más complejo —decisiones que cruzan varias ADRs, modelo de datos, seguridad—; **Opus 5.5** planea lo demás, diagnostica bugs y escribe ADRs; **Sonnet 5.5** ejecuta lo de volumen ya decidido —barridos, renombres, traducciones, ajustes de UI—, en paralelo por feature si hace falta. Primero se planea cada punto; con el plan aprobado se cambia de modelo (`/model`) para ejecutarlo.
+Todo plan dice, **en cada tarea, con qué modelo se planea y con cuál se ejecuta** (ADR-01 «Proyecto, proceso y conocimiento» §13 «Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta»): **Fable 5.1** planea lo más complejo —decisiones que cruzan varias ADRs, modelo de datos, seguridad—; **Opus 5.5** planea lo demás, diagnostica bugs y escribe ADRs; **Sonnet 5.5** ejecuta lo de volumen ya decidido —barridos, renombres, traducciones, ajustes de UI—, en paralelo por feature si hace falta. Primero se planea cada punto. Con el plan aprobado, **la sesión principal —siempre Opus 5.5, sin cambiar de modelo con `/model`— delega** lo que es de otro modelo a subagentes con ese `model` (`sonnet`, `fable`), y lanza **en paralelo**, en un mismo mensaje, todas las tareas sin dependencias entre sí.
 
 ## Git
 

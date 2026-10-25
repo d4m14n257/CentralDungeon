@@ -31,7 +31,7 @@
 ## Agentes de ECC
 
 - **Primero el agente del repo** (ADR-01 §7): `revisor-backend` en vez de `ecc:java-reviewer`, `revisor-frontend` en vez de `ecc:react-reviewer` y `ecc:typescript-reviewer`, `revisor-seguridad` en vez de `ecc:security-reviewer`, y `auditor-conocimiento` en vez de `ecc:comment-analyzer` y `ecc:doc-updater`. Ya cargan la skill y devuelven el triaje de F4. El de ECC se usa solo para lo que esos no cubren (`ecc:silent-failure-hunter`, `ecc:pr-test-analyzer`, `ecc:type-design-analyzer`, `ecc:performance-optimizer`…).
-- **Se lanzan cuando la tarea o el usuario lo piden, no por iniciativa propia.** El «use PROACTIVELY» de sus descripciones no aplica en este repo.
+- **Se lanzan cuando la tarea o el usuario lo piden, no por iniciativa propia.** La columna «Ejecuta» de un plan cuenta como pedido, y solo para esa tarea (ADR-01 «Proyecto, proceso y conocimiento» §13 «Cada tarea de un plan dice con qué modelo se planea y con cuál se ejecuta»). El «use PROACTIVELY» de sus descripciones no aplica en este repo.
 - El prompt de un agente de ECC incluye el objetivo, que lea `CLAUDE.md` y la sección de `arquitectura` que toca, y que el stack es Boot 4, JUnit 6, MySQL 8 y React 19.
 - En F4, lo que devuelve es un **hallazgo**, no una corrección: se tría en las tres categorías de `fase-4-revision.md` §3 antes de tocar código.
 
