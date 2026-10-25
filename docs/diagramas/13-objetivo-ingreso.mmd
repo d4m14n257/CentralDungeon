@@ -35,6 +35,16 @@ erDiagram
         varchar rejected_by FK "NULL = rechazo automatico por cupo"
     }
 
+    registration_status_changes {
+        varchar id PK
+        varchar registration_id FK
+        varchar from_status
+        varchar to_status "el veto y su levantamiento"
+        varchar changed_by FK
+        longtext justification "obligatoria"
+        datetime created_at
+    }
+
     registration_files {
         varchar registration_id PK,FK
         varchar file_id PK,FK
@@ -52,5 +62,7 @@ erDiagram
     users               ||--o{ table_registrations     : "se postula N veces"
     table_registrations ||--o{ registration_rejections : "cada rechazo con motivo"
     users               ||--o{ registration_rejections : "rechaza"
+    table_registrations ||--o{ registration_status_changes : "historial del veto"
+    users               ||--o{ registration_status_changes : "veta o levanta"
     table_registrations ||--o{ registration_files      : "adjunta"
     files               ||--o{ registration_files      : "vinculado, no duplicado"

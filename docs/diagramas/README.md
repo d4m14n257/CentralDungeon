@@ -10,10 +10,10 @@ Reflejan el schema de la skill `arquitectura` §4, resultado de las decisiones d
 
 | Diagrama | Qué cubre |
 |---|---|
-| [`11-objetivo-identidad.mmd`](11-objetivo-identidad.mmd) | `users`, `roles`, `users_roles`, `approval_requests`, `notifications`, `audit_logs`. Los cuatro roles y el mecanismo único de aprobaciones. |
+| [`11-objetivo-identidad.mmd`](11-objetivo-identidad.mmd) | `users`, `roles`, `users_roles`, `user_role_changes`, `user_status_changes`, `approval_requests`, `notifications`, `impersonation_sessions`, `system_settings`, `system_setting_changes`, `audit_logs`. Los cuatro roles y el mecanismo único de aprobaciones. |
 | [`12-objetivo-mesa.mmd`](12-objetivo-mesa.mmd) | `game_tables`, `table_types`, `masters`, `table_schedules`, `table_sessions`, `session_attendance`, `table_status_changes`. |
-| [`13-objetivo-ingreso.mmd`](13-objetivo-ingreso.mmd) | `table_registrations` sin `UNIQUE`, `registration_rejections`, `registration_files`. |
-| [`14-objetivo-peticiones-archivos.mmd`](14-objetivo-peticiones-archivos.mmd) | `table_tasks`, `task_submissions`, `submission_files`, `files` rediseñada y `table_files`. |
+| [`13-objetivo-ingreso.mmd`](13-objetivo-ingreso.mmd) | `table_registrations` sin `UNIQUE`, `registration_rejections`, `registration_status_changes`, `registration_files`. |
+| [`14-objetivo-peticiones-archivos.mmd`](14-objetivo-peticiones-archivos.mmd) | `table_tasks`, `task_submissions`, `submission_files`, `task_files`, `files` rediseñada, `file_categories` y `table_files`. |
 | [`15-objetivo-catalogos.mmd`](15-objetivo-catalogos.mmd) | `systems`, `tags`, `platforms` con `canonical_id`, sus tres puentes, y `table_types` sin sinónimos. |
 | [`16-objetivo-comentarios.mmd`](16-objetivo-comentarios.mmd) | `comment_drafts` (con autor) → `comments` (anónima), más `comment_quotas`, `system_feedback` y `feedback_quotas`. **Se ve dónde se corta el anonimato.** |
 

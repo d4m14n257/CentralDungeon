@@ -35,7 +35,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The block, the unblock and the history of {@code /admin/users} (contrato F3.1, 3).
+ * The block, the unblock and the history of {@code /admin/users}.
  *
  * <p>The rule that carries the screen is that nobody holding Admin or Owner can be blocked - by
  * anybody, including themselves. Stated about the target rather than as a comparison between actor

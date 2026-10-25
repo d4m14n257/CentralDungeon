@@ -15,8 +15,8 @@ import { countriesIn } from '@/lib/countries'
 import { useConfirm } from '@/hooks/useConfirm'
 
 /**
- * The blocking first step: display name and country (ADR-10 §4). Nothing else in the app is reachable
- * until it is done, which is why the redirect lives in the session guard and not in each screen.
+ * The first step of a new account: display name and country, asked once. The OAuth callback sends
+ * here every account that has not completed it; no other entry point redirects here.
  */
 export function OnboardingPage() {
   const { t, i18n } = useTranslation('onboarding')

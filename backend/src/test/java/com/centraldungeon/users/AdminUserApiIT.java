@@ -265,12 +265,6 @@ class AdminUserApiIT {
      * {@code PlatformRole} is the one enum whose constants are not spelled the way the wire spells
      * them, so its {@code @JsonValue} carries the binding in both directions. The API publishes
      * {@code "Master"}; a body that sends back {@code "MASTER"} is a 400 and not a silent success.
-     *
-     * <p><b>Currently red, and on purpose.</b> The contract of F3.1 lists {@code VALIDATION_ERROR}
-     * for an invalid role, and the answer is a 500 {@code INTERNAL_ERROR}: nothing in
-     * {@code GlobalExceptionHandler} handles {@code HttpMessageNotReadableException}, so a body
-     * Jackson cannot bind falls through to {@code handleUnexpected} - the very hole its own
-     * {@code handleTypeMismatch} was written to close for query parameters.
      */
     @Test
     void theRoleIsBoundFromTheSpellingTheApiPublishes() throws Exception {

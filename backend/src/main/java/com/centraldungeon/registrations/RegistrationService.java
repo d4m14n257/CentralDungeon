@@ -83,9 +83,9 @@ public class RegistrationService {
     /**
      * What {@code /my/applications} never shows (ADR-03 §7, ADR-09 §4).
      *
-     * <p>{@code Blocked} sits beside {@code Deleted} by decision of the F3.4 contract: the row
-     * carries {@code gameTableName}, so leaving it in would be the single crack through which a
-     * vetoed person keeps seeing the table the rest of the slice answers them 404 about.
+     * <p>{@code Blocked} sits beside {@code Deleted} because the row carries {@code gameTableName}:
+     * leaving it in would be the single crack through which a vetoed person keeps seeing the table
+     * every other read answers them 404 about.
      */
     private static final List<TableRegistrationStatus> HIDDEN_FROM_MINE =
             List.of(TableRegistrationStatus.Deleted, TableRegistrationStatus.Blocked);

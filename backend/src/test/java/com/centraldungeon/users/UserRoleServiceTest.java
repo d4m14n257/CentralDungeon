@@ -28,7 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * The six rules of {@code grantRole} and the six of {@code revokeRole} (contrato F3.1, 3).
+ * The six rules of {@code grantRole} and the six of {@code revokeRole}.
  *
  * <p>Unit and not integration because every one of them is a decision the service makes before it
  * touches anything: who may move which rank, what the exclusion of ADR-06 §1 drags along, and when the

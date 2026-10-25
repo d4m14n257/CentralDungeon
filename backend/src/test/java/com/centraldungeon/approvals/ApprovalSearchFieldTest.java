@@ -7,7 +7,7 @@ import com.centraldungeon.common.search.SearchQueryParser;
 import org.junit.jupiter.api.Test;
 
 /**
- * The vocabulary of the admin request search (contrato F3.2, 2).
+ * The vocabulary of the admin request search.
  *
  * <p>It is tested at the level of the parser rather than of the SQL because the interesting rules are
  * about what counts as a command and what counts as text: the frontend declares the same three names

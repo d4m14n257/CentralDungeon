@@ -726,17 +726,15 @@ public class ApprovalService {
     /**
      * Who is entitled to answer this request, decided by its type.
      *
-     * <p>{@code PlayerBan} is the exception the F3.4 contract spent its longest paragraph on. ADR-16 §1 is
-     * generic - {@code approval_requests} covers «todo pedido dirigido a los admins» - and ADR-09 §5 is
-     * specific: a co-master «necesita aprobación del {@code Primary}», and the slice's own "se
-     * prueba" reads «un {@code Secondary} pide un veto y <b>el {@code Primary} lo resuelve</b>». The
-     * specific decision wins: a veto between a co-master and a player of <em>that</em> table is
-     * decided by whoever runs it, not by the platform.
+     * <p>{@code PlayerBan} is the exception. Every other request is addressed to the platform's
+     * admins, but a veto asked by a co-master ({@code Secondary}) against a player of <em>that</em>
+     * table is a matter inside the table: it is decided by its {@code Primary}, who runs it, not by
+     * the platform.
      *
      * <p><b>Only the exception is written here, and that is the point.</b> «Admin or owner» is
-     * exactly what {@code hasAnyRole('ADMIN','OWNER')} says, and roles-y-alcance.md §3 is explicit
-     * that each endpoint enumerates its roles in the annotation rather than in a configuration far
-     * away (ADR-06 §1, ADR-05 §4) - so {@code AdminApprovalRequestController} keeps that half. What an
+     * exactly what {@code hasAnyRole('ADMIN','OWNER')} says, and each endpoint enumerates its roles
+     * in the annotation rather than in a configuration far away - so
+     * {@code AdminApprovalRequestController} keeps that half. What an
      * annotation <em>cannot</em> say is «the Primary of the table this registration belongs to», and
      * that is the half that lives here.
      *

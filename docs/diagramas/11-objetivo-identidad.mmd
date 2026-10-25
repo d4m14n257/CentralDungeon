@@ -85,6 +85,26 @@ erDiagram
         datetime created_at
     }
 
+    user_role_changes {
+        varchar id PK
+        varchar user_id FK
+        varchar role_id FK
+        varchar action "Granted | Revoked"
+        varchar changed_by FK
+        longtext justification "obligatoria"
+        datetime created_at
+    }
+
+    user_status_changes {
+        varchar id PK
+        varchar user_id FK
+        varchar from_status
+        varchar to_status "el bloqueo y el desbloqueo"
+        varchar changed_by FK
+        longtext justification "obligatoria"
+        datetime created_at
+    }
+
     audit_logs {
         varchar id PK
         varchar entity_type
@@ -99,6 +119,11 @@ erDiagram
 
     users ||--o{ users_roles       : "tiene rol"
     roles ||--o{ users_roles       : "asignado a"
+    users ||--o{ user_role_changes : "historial de roles"
+    roles ||--o{ user_role_changes : "otorgado o quitado"
+    users ||--o{ user_role_changes : "otorga o quita"
+    users ||--o{ user_status_changes : "historial de cuenta"
+    users ||--o{ user_status_changes : "bloquea o desbloquea"
     users ||--o{ approval_requests : "solicita"
     users ||--o{ approval_requests : "resuelve"
     users ||--o{ notifications     : "recibe"

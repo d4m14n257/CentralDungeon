@@ -49,7 +49,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * Every rule of the single approval mechanism (contrato F3.2, 3), one test each.
+ * Every rule of the single approval mechanism, one test each.
  *
  * <p>Two of them are what the slice is actually about and the rest exists so they cannot be broken
  * quietly:
