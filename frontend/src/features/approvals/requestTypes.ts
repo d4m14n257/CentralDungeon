@@ -54,3 +54,17 @@ export const APPROVAL_STATUSES = ['Pending', 'Approved', 'Rejected'] as const sa
  * of the screen.
  */
 export const PENDING_REQUESTS_QUERY = serializeSearchQuery([{ field: 'status', values: ['Pending'], connector: 'and' }])
+
+/**
+ * The kinds an admin can approve or reject. A `PlayerBan` is the one that is not: it is decided by
+ * the `Primary` master of the table it is about, and the backend refuses an admin who tries.
+ */
+export const ADMIN_UNRESOLVABLE_REQUEST_TYPES = ['PlayerBan'] as const satisfies readonly ApprovalRequestType[]
+
+/**
+ * @param type the kind of a request
+ * @returns whether an admin may approve or reject it, so a screen offers the two acts only where they can succeed
+ */
+export function isResolvableByAdmin(type: ApprovalRequestType): boolean {
+  return !(ADMIN_UNRESOLVABLE_REQUEST_TYPES as readonly ApprovalRequestType[]).includes(type)
+}

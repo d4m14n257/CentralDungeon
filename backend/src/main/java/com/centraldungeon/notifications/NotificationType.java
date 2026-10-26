@@ -24,7 +24,7 @@ public enum NotificationType {
     ScheduleConflict,
 
     /**
-     * To the people signed up to a table: one of its sessions moved, or the whole pending calendar
+     * To the players of a table (not its candidates, who cannot see sessions): one of its sessions moved, or the whole pending calendar
      * was re-laid after a pause (ADR-08 §3).
      *
      * <p>A calendar that changes without saying so is a calendar nobody can plan around, which is why
@@ -33,7 +33,7 @@ public enum NotificationType {
     SessionScheduled,
 
     /**
-     * To the people signed up to a table: one of its sessions was called off.
+     * To the players of a table (not its candidates): one of its sessions was called off.
      *
      * <p>The table gets the session back at the end (ADR-08 §3), so this is news about one evening and not
      * about the run being shorter.

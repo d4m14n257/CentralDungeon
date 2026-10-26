@@ -6,6 +6,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
+import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
@@ -139,7 +140,14 @@ export function AdminUsersPage() {
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
           already showing rows (ADR-19 §4). */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && (
+      {data && data.content.length === 0 && data.totalElements > 0 && (
+        <PageOutOfRangeState
+          totalPages={data.totalPages}
+          totalElements={data.totalElements}
+          onPageChange={(next) => updateParams({ page: String(next) })}
+        />
+      )}
+      {data && data.totalElements === 0 && (
         <EmptyState
           title={search.query ? t('users.noResultsTitle') : t('users.emptyTitle')}
           description={search.query ? t('users.noResultsDescription') : t('users.emptyDescription')}

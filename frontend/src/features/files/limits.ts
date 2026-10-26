@@ -18,6 +18,27 @@ export const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ] as const
 
+/** The name a person knows each accepted type by. Word has two MIME types and one name. */
+const TYPE_NAMES: Record<(typeof ALLOWED_MIME_TYPES)[number], string> = {
+  'image/png': 'PNG',
+  'image/jpeg': 'JPG',
+  'application/pdf': 'PDF',
+  'application/msword': 'Word',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word',
+}
+
+/**
+ * The accepted types as a sentence fragment in the reader's language ("PNG, JPG, PDF y Word"), derived
+ * from {@link ALLOWED_MIME_TYPES} so the text can never list a type the whitelist does not carry.
+ *
+ * @param language the language the list is joined in
+ * @returns the type names, deduplicated and joined with that language's "and"
+ */
+export function allowedTypesLabel(language: string): string {
+  const names = [...new Set(ALLOWED_MIME_TYPES.map((mime) => TYPE_NAMES[mime]))]
+  return new Intl.ListFormat(language, { style: 'long', type: 'conjunction' }).format(names)
+}
+
 /**
  * Why a file cannot be staged, or null when it can.
  *

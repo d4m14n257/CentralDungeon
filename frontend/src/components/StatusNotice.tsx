@@ -44,7 +44,7 @@ export function StatusNotice({ title, description, actions, destructiveActions }
       <AlertDescription className="space-y-3">
         <p>{description}</p>
         {(actions || destructiveActions) && (
-          <div className="flex w-full flex-wrap items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-4">
             {actions}
             {destructiveActions && <div className="ml-auto flex flex-wrap gap-2">{destructiveActions}</div>}
           </div>

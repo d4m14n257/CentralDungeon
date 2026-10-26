@@ -2,7 +2,8 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useConfirm } from '@/hooks/useConfirm'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogContent } from '@/components/DialogContent'
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface FormDialogProps {
   open: boolean
@@ -65,7 +66,7 @@ export function FormDialog({ open, onOpenChange, title, description, isDirty = f
 
   return (
     <Dialog open={open} onOpenChange={(next) => void requestChange(next)}>
-      <DialogContent className="max-h-[85svh] grid-rows-[auto_minmax(0,1fr)]">
+      <DialogContent className="dialog-panel-scroll">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

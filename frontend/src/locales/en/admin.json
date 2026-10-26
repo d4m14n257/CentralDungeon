@@ -110,6 +110,9 @@
     "detailDialogTitle": "{{name}}’s request",
     "detailDialogDescription": "What they asked for, and how it was resolved.",
     "detailStillPending": "It has not been resolved yet.",
+    "detailPrimaryOnly": "The table's master resolves it, not an admin.",
+    "viewPerson": "View who asked",
+    "viewTable": "View the table",
     "errors": {
       "REQUEST_ALREADY_PENDING": "You already have a request of this kind waiting for an answer. That one has to be resolved before you make another.",
       "REQUEST_ALREADY_RESOLVED": "Somebody has already resolved this request. Refresh the screen to see how it went.",

@@ -130,7 +130,7 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     const history = owner.page.getByRole('dialog')
     await expect(history).toContainText('Promoción de prueba E2E de F3.1')
     await expect(history).toContainText(ownerId)
-    await history.getByRole('button', { name: 'Close' }).click()
+    await history.getByRole('button', { name: 'Cerrar' }).click()
     await expect(history).toBeHidden()
 
     // ---- 3. That admin opens /admin/users. The sign-in is a no-op: step 1 already granted Admin.

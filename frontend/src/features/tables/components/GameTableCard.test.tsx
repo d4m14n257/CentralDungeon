@@ -17,6 +17,7 @@ const baseTable: GameTableSummary = {
   schedule: [],
   scheduleConflict: false,
   applied: false,
+  joined: false,
   primaryMaster: { userId: 'master-1', name: 'BrowserTester', masterType: 'Primary' },
 }
 
@@ -76,6 +77,14 @@ describe('GameTableCard', () => {
     renderCard({ ...baseTable, applied: true })
 
     expect(screen.getByText('Ya te postulaste')).toBeInTheDocument()
+  })
+
+  /** An accepted player is no longer an applicant: the chip says they play there. */
+  it('says the reader plays at the table, not that they applied, once accepted', () => {
+    renderCard({ ...baseTable, applied: true, joined: true })
+
+    expect(screen.getByText('Ya sos jugador')).toBeInTheDocument()
+    expect(screen.queryByText('Ya te postulaste')).not.toBeInTheDocument()
   })
 
   it('omits the already-applied chip by default', () => {

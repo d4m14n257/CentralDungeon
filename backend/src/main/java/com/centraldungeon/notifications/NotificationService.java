@@ -7,6 +7,7 @@ import com.centraldungeon.notifications.dto.NotificationResponse;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -91,7 +92,7 @@ public class NotificationService {
     @Transactional
     public void notifyNewCandidate(String masterUserId, GameTable table, String applicantName) {
         User recipient = userRepository.getReferenceById(masterUserId);
-        NotificationParams params = new NotificationParams(table.getName(), null, applicantName, null);
+        NotificationParams params = new NotificationParams(table.getName(), null, applicantName, null, null);
         notificationRepository.save(
                 new Notification(recipient, NotificationType.NewCandidate, params, "game_table", table.getId()));
     }
@@ -179,20 +180,20 @@ public class NotificationService {
     @Transactional
     public void notifyScheduleConflict(String userId, GameTable table, String otherTableName) {
         User recipient = userRepository.getReferenceById(userId);
-        NotificationParams params = new NotificationParams(table.getName(), otherTableName, null, null);
+        NotificationParams params = new NotificationParams(table.getName(), otherTableName, null, null, null);
         notificationRepository.save(
                 new Notification(recipient, NotificationType.ScheduleConflict, params, "game_table", table.getId()));
     }
 
     /**
-     * Tells the people signed up to a table that its calendar moved (ADR-08 §3).
+     * Tells the players of a table that its calendar moved.
      *
      * <p>It names no date. One notification covers a single correction and a whole re-laying after a
      * pause alike, and carrying an instant would mean handing the reader a UTC time to convert in
      * their head - the conversion belongs on the screen it links to, where {@code lib/date.ts} does
      * it (ADR-03 §6).
      *
-     * @param userId the person signed up to the table
+     * @param userId the player of the table
      * @param table  the table whose calendar moved; the notification links to it
      */
     @Transactional
@@ -204,12 +205,12 @@ public class NotificationService {
     }
 
     /**
-     * Tells the people signed up to a table that one of its sessions was called off.
+     * Tells the players of a table that one of its sessions was called off.
      *
      * <p>The rendered message says the run is not shorter, because that is the first thing a player
      * wonders: the table gets the session back at the end (ADR-08 §3).
      *
-     * @param userId the person signed up to the table
+     * @param userId the player of the table
      * @param table  the table the session belonged to
      */
     @Transactional
@@ -240,7 +241,7 @@ public class NotificationService {
     @Transactional
     public void notifyTaskPublished(String userId, GameTable table, String taskTitle) {
         User recipient = userRepository.getReferenceById(userId);
-        NotificationParams params = new NotificationParams(table.getName(), null, null, taskTitle);
+        NotificationParams params = new NotificationParams(table.getName(), null, null, taskTitle, null);
         notificationRepository.save(
                 new Notification(recipient, NotificationType.TaskPublished, params, "game_table", table.getId()));
     }
@@ -257,11 +258,10 @@ public class NotificationService {
      * request, which is where it is read in full; a copy would be a second one free to disagree with
      * the first (ADR-23 §3).
      *
-     * <p><b>It carries no parameters at all</b>, which makes it the first notification that does not.
-     * A field naming the request type was written and then taken back out: the rendered sentences say
-     * "aprobaron tu pedido" without naming which, so the value would have been stored on every row
-     * and read by nobody - the same orphan this slice refused to create when it declared three
-     * request types instead of five. It goes back in the day a sentence asks for it.
+     * <p><b>It names nothing in its sentence</b>: the rendered text says "aprobaron tu pedido" without
+     * saying which request, so no name is stored for it. The one value it may carry is the table's id,
+     * and only for a veto, whose related entity is an application: that value is not for the sentence
+     * but for the click, which has to land on the table's players.
      *
      * <p>Where it links is the request's own polymorphic reference, passed in by the caller. For the
      * three types of F3.2 that is {@code user} and the requester themselves, so a click lands on
@@ -274,13 +274,20 @@ public class NotificationService {
      *                          pieces of news, the same shape {@link #notifyReviewOutcome} has
      * @param relatedEntityType what the request is about, so the click knows where to go
      * @param relatedEntityId   the id of that thing
+     * @param tableId           the table the request belongs to when the entity is not the table
+     *                          itself (a veto points at an application), so the click can land on it;
+     *                          null otherwise
      */
     @Transactional
     public void notifyApprovalResolved(
-            String userId, NotificationType type, String relatedEntityType, String relatedEntityId) {
+            String userId,
+            NotificationType type,
+            String relatedEntityType,
+            String relatedEntityId,
+            @Nullable String tableId) {
         User recipient = userRepository.getReferenceById(userId);
-        notificationRepository.save(
-                new Notification(recipient, type, NotificationParams.none(), relatedEntityType, relatedEntityId));
+        NotificationParams params = tableId == null ? NotificationParams.none() : NotificationParams.ofTableId(tableId);
+        notificationRepository.save(new Notification(recipient, type, params, relatedEntityType, relatedEntityId));
     }
 
     /**

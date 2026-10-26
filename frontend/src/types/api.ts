@@ -79,4 +79,6 @@ export interface ClientLimits {
   maxFileSizeBytes: number
   /** How long a reservation of the shared admin tray lasts, in minutes (ADR-16 §5). */
   claimTimeoutMinutes: number
+  /** The largest `maxPlayers` a table may declare, stated beside the seat field before it is broken. */
+  maxPlayersCap: number
 }

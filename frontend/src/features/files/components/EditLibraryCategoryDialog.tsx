@@ -80,7 +80,7 @@ export function EditLibraryCategoryDialog({ file, onOpenChange }: EditLibraryCat
             />
           )}
         </div>
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             {t('libraryEdit.cancel')}
           </Button>

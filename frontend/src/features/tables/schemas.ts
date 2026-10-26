@@ -1,6 +1,13 @@
 import { z } from 'zod'
 
 /**
+ * Builds the create/edit table form's validation, bounded by the seat cap the platform currently allows.
+ *
+ * **A factory and not a constant schema** for the same reason as the settings form: the cap is an
+ * admin-editable setting, so the form states it (`useClientLimits`) and refuses a number above it on the
+ * spot instead of letting the master learn it from a refused save. The server checks the cap again
+ * and answers `MAX_PLAYERS_ABOVE_CAP`.
+ *
  * The form uses undefined/"" for "empty"; the API expects null - the conversion happens on submit.
  * maxPlayers/totalSessions stay strings (not z.coerce.number()): mixing coerce with .optional()
  * under exactOptionalPropertyTypes breaks the resolver's type inference.
@@ -8,24 +15,35 @@ import { z } from 'zod'
  * The catalogs and the agenda are **not** here: they are not text fields but collections the wizard
  * keeps in its own state and the server validates - catalog depth (ADR-12 §2), schedule clashes (ADR-08 §2).
  * Putting them in the schema would duplicate rules only the backend can decide.
+ *
+ * @param maxPlayersCap the largest seat count a table may declare, inclusive
+ * @returns the schema for that form
  */
-export const createGameTableSchema = z.object({
-  name: z.string().min(1).max(128),
-  description: z.string().max(10000).optional(),
-  permitted: z.string().max(10000).optional(),
-  requirements: z.string().max(10000).optional(),
-  tableTypeId: z.string().optional(),
-  /** `YYYY-MM-DDTHH:mm` exactly as an `<input type="datetime-local">` gives it, in local time. */
-  startDate: z.string().optional(),
-  maxPlayers: z.string().optional(),
-  totalSessions: z.string().optional(),
-})
+export function createGameTableSchema(maxPlayersCap: number) {
+  return z.object({
+    name: z.string().min(1).max(128),
+    description: z.string().max(10000).optional(),
+    permitted: z.string().max(10000).optional(),
+    requirements: z.string().max(10000).optional(),
+    tableTypeId: z.string().optional(),
+    /** `YYYY-MM-DDTHH:mm` exactly as an `<input type="datetime-local">` gives it, in local time. */
+    startDate: z.string().optional(),
+    maxPlayers: z
+      .string()
+      .optional()
+      .refine((raw) => !raw || /^\d+$/.test(raw.trim()), { params: { i18n: 'validation.wholeNumber' } })
+      .refine((raw) => !raw || (Number(raw.trim()) >= 1 && Number(raw.trim()) <= maxPlayersCap), {
+        params: { i18n: 'validation.between', minValue: 1, maxValue: maxPlayersCap },
+      }),
+    totalSessions: z.string().optional(),
+  })
+}
 
 /**
  * The create-table form's values, inferred from its schema and tied to `CreateGameTableRequest` by a
  * compile-time assertion (arquitectura §3.2, rule 7).
  */
-export type CreateGameTableForm = z.infer<typeof createGameTableSchema>
+export type CreateGameTableForm = z.infer<ReturnType<typeof createGameTableSchema>>
 
 /**
  * The wizard's five steps, in order: identity → catalogs → agenda → files → capacity and review.

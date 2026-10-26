@@ -22,6 +22,14 @@ export interface AvailableContexts {
    * are a guess - anything that *acts* on the answer, rather than displaying it, has to wait.
    */
   isPending: boolean
+  /**
+   * Whether the account's roles could not be read. Then `contexts` is empty for a reason that has
+   * nothing to do with the account - telling the reader they have no section would be a lie, so the
+   * caller shows the failure instead.
+   */
+  isError: boolean
+  /** Asks for the roles again. */
+  retry: () => void
 }
 
 /**
@@ -37,7 +45,7 @@ export interface AvailableContexts {
  * @returns the contexts this account has, the one on screen, and the one to fall back to
  */
 export function useAvailableContexts(): AvailableContexts {
-  const { data: me, isPending } = useMe()
+  const { data: me, isPending, isLoadingError, refetch } = useMe()
   const { pathname } = useLocation()
   const remembered = useContextStore((state) => state.activeContext)
 
@@ -48,5 +56,12 @@ export function useAvailableContexts(): AvailableContexts {
 
   const preferredContext = contexts.includes(remembered) ? remembered : (contexts[0] ?? 'player')
 
-  return { contexts, activeContext: contextOfPath(pathname) ?? preferredContext, preferredContext, isPending }
+  return {
+    contexts,
+    activeContext: contextOfPath(pathname) ?? preferredContext,
+    preferredContext,
+    isPending,
+    isError: isLoadingError,
+    retry: () => void refetch(),
+  }
 }

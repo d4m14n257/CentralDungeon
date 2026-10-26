@@ -193,7 +193,8 @@ export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPick
                 const shape = cn(
                   'absolute inset-x-0.5 overflow-hidden rounded-sm px-1 py-0.5 text-[10px] leading-tight',
                   piece.role === 'Master' && 'bg-brand-500/85 text-white',
-                  piece.role === 'Player' && 'bg-state-active-bg text-state-active-fg',
+                  // The ring is what keeps it a shape: the soft fill alone is almost the colour of the page in either theme.
+                  piece.role === 'Player' && 'bg-state-active-bg text-state-active-fg ring-state-active-dot ring-1 ring-inset',
                   piece.role === 'new' && 'bg-state-open-bg text-state-open-fg ring-state-open-dot ring-1',
                 )
                 // A block with nowhere to go must not eat the click of the free hour underneath it,

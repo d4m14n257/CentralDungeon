@@ -70,6 +70,8 @@ export interface GameTableSummary {
   scheduleConflict: boolean
   /** Whether the reader holds a live application on it - Candidate or Player (ADR-09 §1). The server's, for the whole page. */
   applied: boolean
+  /** Whether the reader is already a Player of the table - a stronger state than `applied`, and the one the card names. */
+  joined: boolean
   primaryMaster: MasterSummary
 }
 
@@ -88,8 +90,15 @@ export interface GameTableHistoryEntry {
   name: string
   /** Always `Finished` or `Canceled` - the only two statuses `/mine/history` ever returns. */
   status: GameTableStatus
-  /** When it entered that status (ADR-07 §7). Always set: a row only exists here once one of them has. */
-  closedAt: string
+  /** The table's type code, to translate its label by. Null for a type an admin created, or a table with none. */
+  tableTypeCode: string | null
+  /** The type's own label: what a reader sees when there is no code to translate. Null when the table has no type. */
+  tableTypeName: string | null
+  /**
+   * When it entered that status. Null only for a row that predates the migration that
+   * records it, so the screen must read it as "unknown" and not as a date.
+   */
+  closedAt: string | null
   /** The reader's own attendance across the whole run, frozen the day it closed. */
   attendance: AttendanceSummary
 }
@@ -166,6 +175,8 @@ export interface GameTableDetail {
   scheduleConflict: boolean
   /** Whether the reader holds a live application on it - Candidate or Player (ADR-09 §1). */
   applied: boolean
+  /** Whether the reader is already a Player of the table - the apply button says so instead of "application in progress". */
+  joined: boolean
 }
 
 /**
@@ -273,7 +284,6 @@ export interface TableType {
  * is what the rule measures, so a gap on screen is a gap the server will accept.
  */
 export interface WeeklyCommitment {
-  id: string
   /** The table, so a block can link to it. */
   tableId: string
   /** Its name, which is what the block is labelled with. */
@@ -304,7 +314,7 @@ export interface ChangeTableStatusRequest {
 /** Mirror of AssignMastersRequest. */
 export interface AssignMastersRequest {
   primaryUserId: string
-  secondaryUserIds: string[]
+  secondaryUserIds?: string[] | null
 }
 
 /**

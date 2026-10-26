@@ -18,7 +18,8 @@ Es el entregable que F3 tiene y ninguna otra fase: **dónde termina uno y empiez
 |---|---|---|---|
 | Toda la superficie de administración de F1–F3: mesas, catálogos, archivos, bandeja, solicitudes, configuración | sí | sí | F1 y F3 |
 | Otorgar y quitar `Player` y `Master` | sí | sí | F3.1 |
-| **Otorgar y quitar `Admin` y `Owner`** | **no** | sí | F3.1 |
+| **Otorgar y quitar `Admin`, y quitar `Owner`** | **no** | sí | F3.1 |
+| **Otorgar `Owner`**: ni la interfaz lo ofrece ni la API lo acepta; por ahora se da solo desde la base de datos (ADR-06 «Roles y alcance» §1 «Cuatro roles de plataforma, acumulables y sin jerarquía, salvo `Admin`/`Owner`») | **no** | **no** | F4 |
 | Bloquear y desbloquear una cuenta (ADR-05 §7) | sí | sí | F3.1 |
 | **Bloquear a un `Admin` o a un `Owner`** | **no** | **no** | F3.1 |
 | Aprobar un pedido de `approval_requests` (ADR-16 §1) | sí | sí | F3.2 |
@@ -43,7 +44,7 @@ Se contestan **antes** de escribir F3.1, que es el paso 0 de `plan-desarrollo.md
 |---|---|---|
 | **¿Un `Admin` puede crear otro `Admin`?** | **No**: `Admin` y `Owner` los otorga y los quita solo un `Owner` | ADR-06 §1 los hace un rango con dos alcances. Un rango que se replica a sí mismo sin nadie por encima no es un rango: el primer admin comprometido puede fabricar los que quiera, y no queda ninguna autoridad que lo deshaga |
 | **¿Un `Admin` puede bloquear a otro `Admin`?** | **No**, y un `Owner` tampoco puede bloquear a un `Owner` | Es la misma forma que el límite (a) de ADR-06 §9, que ya prohíbe «ver como» sobre `Admin` y `Owner`: entre pares no hay autoridad, y el bloqueo es irreversible desde el lado del bloqueado — no puede entrar a pedir que lo desbloqueen |
-| **¿Puede quedar la plataforma sin `Owner`?** | **No**: quitarse el propio `Owner`, o quitárselo al último que queda, responde `409` | Un sistema sin nadie que pueda otorgar `Owner` no tiene forma de recuperarse desde adentro. Es la única invariante global de roles, y como MySQL no la puede expresar, va con test de integración igual que el `Primary` único de ADR-06 §3 |
+| **¿Puede quedar la plataforma sin `Owner`?** | **No**: quitarse el propio `Owner`, o quitárselo al último que queda, responde `409` | Sin `Owner` nadie puede otorgar ni quitar `Admin`, y como `Owner` no se otorga desde la aplicación (ADR-06 §1), recuperarse exigiría tocar la base a mano. Es la única invariante global de roles, y como MySQL no la puede expresar, va con test de integración igual que el `Primary` único de ADR-06 §3 |
 
 ## 4. Las cinco rebanadas
 
@@ -60,7 +61,7 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 **Backend** — en `users/`:
 
 - `UserRoleService`: otorgar y quitar roles, con **la exclusión `Admin`/`Owner`** (ADR-06 §1) aplicada acá y no en el controller — el otorgamiento es la regla, no la puerta.
-- **Quién otorga qué**, según §3: un `Owner` mueve los cuatro roles; un `Admin` mueve `Player` y `Master` y nada más. El intento de un admin sobre `Admin` u `Owner` es `403`, no `400`: es una cuestión de quién sos, no de qué mandaste.
+- **Quién otorga qué**, según §3: un `Owner` otorga `Player`, `Master` y `Admin` y quita los cuatro; un `Admin` mueve `Player` y `Master` y nada más. **`Owner` no lo otorga nadie desde la aplicación** (ADR-06 «Roles y alcance» §1 «Cuatro roles de plataforma, acumulables y sin jerarquía, salvo `Admin`/`Owner`»): el backend lo rechaza, no solo la interfaz lo esconde. El intento de un admin sobre `Admin` u `Owner` es `403`, no `400`: es una cuestión de quién sos, no de qué mandaste.
 - **La plataforma nunca se queda sin `Owner`**: `409` con código propio al quitar el último. Es la invariante global de la fase.
 - Bloqueo y desbloqueo de cuentas (ADR-05 §7), con `@CacheEvict` sobre la caché de ADR-05 §3 — un bloqueo que tarda 60 s en aplicar es un bloqueo que no bloquea.
 - `UserSearchSpecification` ya existe desde ADR-22 §1; `/admin/users` la reusa y le suma el filtro por rol y por estado.
@@ -69,7 +70,7 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 **Frontend** — `routes/admin/AdminUsersPage.tsx`:
 
 - La tabla ancha de skill `diseno` §5.b: en móvil deja de ser tabla.
-- Los roles como chips, con el orden que ADR-07 §8 fijó. **Los botones que un admin no puede usar no se muestran** — principio 2 de `diseno` §1 — y el owner ve los cuatro.
+- Los roles como chips, con el orden que ADR-07 §8 fijó. **Los botones que un admin no puede usar no se muestran** — principio 2 de `diseno` §1 — y el owner ve tres: `Owner` no se ofrece (ADR-06 §1).
 - Bloquear pide motivo, y el diálogo dice qué implica: la persona no entra más, y sus datos se conservan (ADR-05 §7).
 
 **Se prueba:** un owner asciende a alguien a admin; ese admin abre `/admin/users`, puede dar el rol de master y **no encuentra ninguna forma** de dar el de admin; el owner intenta quitarse su propio rol y recibe el `409`.

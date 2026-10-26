@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router'
 import { AttendanceSummaryView } from '@/components/AttendanceSummaryView'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
-import { ForbiddenState } from '@/components/ForbiddenState'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { PageHeader } from '@/components/PageHeader'
 import { PaginationControls } from '@/components/PaginationControls'
 import { SectionHeader } from '@/components/SectionHeader'
@@ -27,7 +27,6 @@ import {
 } from '@/features/users'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { browserTimeZone, formatDate } from '@/lib/date'
-import { ApiError } from '@/types/api'
 
 /** Narrows the status the backend sent to one the tables feature knows how to badge. */
 function isTableStatus(value: string): value is GameTableStatus {
@@ -105,11 +104,8 @@ export function AdminUserDetailPage() {
   if (account.isPending) {
     return <Skeleton className="h-48 w-full" />
   }
-  if (account.error instanceof ApiError && account.error.status === 403) {
-    return <ForbiddenState />
-  }
   if (account.isLoadingError || !account.data) {
-    return <ErrorState onRetry={() => void account.refetch()} />
+    return <QueryErrorState error={account.error} onRetry={() => void account.refetch()} />
   }
 
   const user = account.data

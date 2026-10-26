@@ -2,7 +2,7 @@
 adr: 10
 titulo: Perfiles
 estado: Vigente
-actualizada: 2026-10-21
+actualizada: 2026-10-24
 absorbe: [41, 44, 47, 134, 248, 249, 285]
 ---
 
@@ -34,11 +34,11 @@ absorbe: [41, 44, 47, 134, 248, 249, 285]
 
 *Antes: #249.*
 
-## §4 Nombre y país se piden una vez, en un onboarding bloqueante
+## §4 Nombre y país se piden la primera vez en un onboarding bloqueante, y después se editan en la configuración del perfil
 
-**Decisión.** No hay pantalla de edición de perfil en v1. `name` y `country` se piden **una sola vez**, en `/onboarding`, un paso bloqueante después del primer login e inmediatamente después de la invitación al servidor (ADR-05 §1). `name` arranca vacío, con un placeholder que pide cómo te conocen en la mesa; `country` es `CHAR(2)` ISO 3166-1 alpha-2; `discord_username` se conserva siempre. Editar después queda fuera de v1, no descartado: sería una pantalla que reusa el mismo formulario, sin tocar el schema.
+**Decisión.** `name` y `country` se piden en `/onboarding` **la primera vez**, después del primer login e inmediatamente después de la invitación al servidor (ADR-05 §1). El paso **bloquea**: una guardia de ruta manda a `/onboarding` a toda sesión que todavía no lo completó, entre por donde entre, y no solo el retorno de OAuth (`OAuthCallbackPage`). **Quien ya lo completó no vuelve ahí**: la guardia lo saca de `/onboarding`, y la escritura del onboarding no vale como edición. **Después, nombre y país se editan en la configuración del perfil**, que reusa el mismo formulario sin tocar el schema; su ruta y su endpoint los fija el plan de implementación. `name` arranca vacío, con un placeholder que pide cómo te conocen en la mesa; `country` es `CHAR(2)` ISO 3166-1 alpha-2; `discord_username` se conserva siempre. La zona horaria, si C13 «País y zona horaria los elige el usuario» (`fase-4-revision.md` §2.5) se decide por pedirla, se suma a esa misma configuración; esta sección no decide C13 ni si la zona entra también en el onboarding.
 
-**Por qué.** Ninguna de las dos columnas tenía quién la llenara: Discord no expone país y el legacy nunca tuvo un endpoint de escritura de usuarios. Una ruta entera para dos campos no se paga, y eliminarlos perdía un objetivo legítimo: que cada quien se llame como quiera **sin perder el rastro de cuál es su Discord**, que queda como identidad verificable. El paso bloquea a propósito: si se pudiera saltar, las columnas volverían a quedar nulas. `CHAR(2)` evita *México* / *Mexico* / *MX* y deriva la bandera del ISO sin llamar a ningún servicio externo.
+**Por qué.** Ninguna de las dos columnas tenía quién la llenara: Discord no expone país y el legacy nunca tuvo un endpoint de escritura de usuarios. Eliminarlas perdía un objetivo legítimo: que cada quien se llame como quiera **sin perder el rastro de cuál es su Discord**, que queda como identidad verificable. El paso bloquea a propósito: si se pudiera saltar, las columnas volverían a quedar nulas, y una guardia que vive solo en el callback de OAuth se salta con cualquier otra entrada (M26 «El onboarding no bloquea y se puede repetir», F4.1 «El mapa de la interfaz»). El usuario decidió el 2026-10-24 que los dos datos se puedan cambiar después, y que la puerta sea la configuración del perfil y no `/onboarding`, que hoy funciona como edición escribiendo la URL sin haberse diseñado para eso. `CHAR(2)` evita *México* / *Mexico* / *MX* y deriva la bandera del ISO sin llamar a ningún servicio externo.
 
 *Antes: #134.*
 

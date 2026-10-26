@@ -120,7 +120,7 @@ test('an admin raises the file cap, the next upload screen respects it, and the 
     await expect(refusing.getByText('Tiene que estar entre 1 y 25')).toBeVisible()
     // Closing a half-filled form asks first (ADR-19 §6), which is `FormDialog` doing its job and not
     // something this dialog had to remember. Confirming the discard is part of the path.
-    await refusing.getByRole('button', { name: 'Close' }).click()
+    await refusing.getByRole('button', { name: 'Cerrar' }).click()
     await admin.page.getByRole('button', { name: 'Descartar lo hecho' }).click()
     await expect(refusing).toBeHidden()
 
@@ -146,7 +146,7 @@ test('an admin raises the file cap, the next upload screen respects it, and the 
     // The first change says it replaced the shipped default, which is a different fact from
     // "it was already 2".
     await expect(history).toContainText('sobre el valor de fábrica')
-    await history.getByRole('button', { name: 'Close' }).click()
+    await history.getByRole('button', { name: 'Cerrar' }).click()
     await expect(history).toBeHidden()
 
     // ---- 7. And a second change records what it replaced, which is what makes a value raised and

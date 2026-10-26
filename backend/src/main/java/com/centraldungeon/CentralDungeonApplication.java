@@ -3,6 +3,8 @@ package com.centraldungeon;
 import com.centraldungeon.common.config.DiscordProperties;
 import com.centraldungeon.common.config.JwtProperties;
 import com.centraldungeon.common.config.StorageProperties;
+import java.time.ZoneOffset;
+import java.util.TimeZone;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -20,11 +22,23 @@ import org.springframework.cache.annotation.EnableCaching;
  * <p>There were four records until F3.5. {@code AdminQueueProperties} is gone because its one value
  * moved to {@code system_settings}, which is what arquitectura §4.5 said this slice would do: a
  * value the people running the platform adjust does not belong in a file only a deploy can change.
+ *
+ * <p><b>The JVM's clock runs in UTC</b>, whatever zone the host is in. Every timestamp is a
+ * {@code LocalDateTime} taken with {@code now()} and serialized without an offset, and the browser
+ * reads it as UTC. On a host in any other zone, {@code now()} would be sent hours off, and a UTC value
+ * computed here - a session's start, from a weekly slot - would be shifted by the driver on its way
+ * into the database. The pin
+ * lives in a static initializer rather than in {@link #main} so that it also holds in every test
+ * that boots the context, which never goes through {@code main}.
  */
 @SpringBootApplication
 @EnableConfigurationProperties({DiscordProperties.class, JwtProperties.class, StorageProperties.class})
 @EnableCaching
 public class CentralDungeonApplication {
+
+    static {
+        TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
+    }
 
     /**
      * Boots the application.

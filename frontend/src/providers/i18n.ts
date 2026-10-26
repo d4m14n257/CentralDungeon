@@ -70,6 +70,10 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 })
 
+// A size the backend sends in bytes, rendered in the whole megabytes the interface speaks: the sentence
+// can state the cap without anyone writing it into the text.
+i18n.services.formatter?.add('megabytes', (value) => String(Math.floor(Number(value) / (1024 * 1024))))
+
 /**
  * Keeps `<html lang>` in step with the language in use (ADR-23 §2).
  *

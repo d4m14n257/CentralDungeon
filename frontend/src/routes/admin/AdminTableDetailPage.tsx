@@ -1,14 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useNavigate, useParams } from 'react-router'
 
-import { ErrorState } from '@/components/ErrorState'
-import { ForbiddenState } from '@/components/ForbiddenState'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { PageHeader } from '@/components/PageHeader'
 import { TabNav } from '@/components/TabNav'
 import { Skeleton } from '@/components/ui/skeleton'
 import { adminTableEditPath, adminTablesPath, adminUserDetailPath } from '@/config/paths'
 import { ADMIN_EDITABLE_STATUSES, TableStatusBadge, useManagedTable } from '@/features/tables'
-import { ApiError } from '@/types/api'
 
 import { AdminTableStatusNotice } from './AdminTableStatusNotice'
 
@@ -47,12 +45,8 @@ export function AdminTableDetailPage() {
     return <Skeleton className="h-32 w-full" />
   }
 
-  if (error instanceof ApiError && error.status === 403) {
-    return <ForbiddenState />
-  }
-
   if (isLoadingError || !table) {
-    return <ErrorState onRetry={() => void refetch()} />
+    return <QueryErrorState error={error} onRetry={() => void refetch()} />
   }
 
   // Offered only where the backend would take it: a closed table is a record and nobody rewrites it.

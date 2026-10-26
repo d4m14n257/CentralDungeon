@@ -388,7 +388,7 @@
       "shared": "Un archivo compartido lo ven tus jugadores y tus candidatos, en el detalle público de la mesa y en «Mis mesas».",
       "private": "Marcado como «solo para quienes dirigen la mesa», lo ven únicamente vos y tus co-masters. No aparece en ningún lado para el resto: no está bloqueado, directamente no está.",
       "detach": "Quitar un archivo lo saca de esta mesa y nada más. Sigue en tu lista y en las otras mesas donde lo hayas puesto.",
-      "limits": "Hasta 2 MB por archivo, y se aceptan PDF, Word, PNG y JPG. Si un archivo se pasa o no es de esos tipos, la pantalla te dice cuál es el problema antes de guardar nada.",
+      "limits": "Hasta {{maxMb}} MB por archivo, y solo se aceptan los tipos que la zona de carga enumera. Si un archivo se pasa o no es de esos tipos, la pantalla te dice cuál es el problema antes de guardar nada.",
       "steps": {
         "step1": "Entrá a tu mesa desde «Mis mesas» como master y abrí la pestaña Archivos.",
         "step2": "Tocá «Agregar un archivo» y elegí si es material de preparación o algo de una sesión.",

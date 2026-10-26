@@ -173,7 +173,7 @@ public class ScheduleConflictService {
         if (tables.isEmpty()) {
             return Set.of();
         }
-        Collection<List<WeeklyInterval>> commitments = commitmentsOf(userId, null).values();
+        Map<CommittedTable, List<WeeklyInterval>> commitments = commitmentsOf(userId, null);
         if (commitments.isEmpty()) {
             return Set.of();
         }
@@ -181,8 +181,12 @@ public class ScheduleConflictService {
         Map<String, List<WeeklyInterval>> byTable = intervalsByTable(tables);
         Set<String> clashing = new HashSet<>();
         for (Map.Entry<String, List<WeeklyInterval>> candidate : byTable.entrySet()) {
-            for (List<WeeklyInterval> committed : commitments) {
-                if (anyOverlap(candidate.getValue(), committed)) {
+            for (Map.Entry<CommittedTable, List<WeeklyInterval>> committed : commitments.entrySet()) {
+                // A table the person already runs or plays at is the commitment, not a clash with it.
+                if (committed.getKey().id().equals(candidate.getKey())) {
+                    continue;
+                }
+                if (anyOverlap(candidate.getValue(), committed.getValue())) {
                     clashing.add(candidate.getKey());
                     break;
                 }

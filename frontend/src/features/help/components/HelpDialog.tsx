@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogContent } from '@/components/DialogContent'
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 import { HELP_SECTIONS, type HelpSectionBodyProps, type HelpSectionId } from '../sections/registry'
 
@@ -30,7 +31,7 @@ export function HelpDialog({ section, open, onOpenChange, ...context }: HelpDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85svh] grid-rows-[auto_minmax(0,1fr)] sm:max-w-2xl">
+      <DialogContent className="dialog-panel-scroll sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-serif">{t(titleKey)}</DialogTitle>
         </DialogHeader>

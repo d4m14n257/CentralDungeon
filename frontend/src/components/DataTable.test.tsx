@@ -65,6 +65,17 @@ describe('DataTable', () => {
     expect(within(cards[0] as HTMLElement).getByText('Mesas')).toBeInTheDocument()
   })
 
+  /** A card line is a label and its value: a column that has nothing for this row leaves no orphan label. */
+  it('drops the card line of a column with no value for that row', () => {
+    renderTable([{ id: 'note', header: 'Nota', cell: (row) => (row.id === 'r-1' ? null : 'con nota') }])
+
+    const [first, second] = screen.getAllByRole('listitem') as HTMLElement[]
+    expect(within(first as HTMLElement).queryByText('Nota')).not.toBeInTheDocument()
+    expect(within(second as HTMLElement).getByText('Nota')).toBeInTheDocument()
+    // The wide table keeps its column: there an empty cell is just an empty cell.
+    expect(screen.getByRole('columnheader', { name: 'Nota' })).toBeInTheDocument()
+  })
+
   /**
    * The rule is about the narrow screen: a table nobody can read without dragging it sideways
    * (skill `diseno` §5.b). The card list is what a phone gets, and it must not scroll - the

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 
 import { AttendanceSummaryView } from '@/components/AttendanceSummaryView'
 import { EmptyState } from '@/components/EmptyState'
@@ -6,6 +7,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { LoadMore } from '@/components/LoadMore'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
+import { tableDetailPath } from '@/config/paths'
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { TableStatusBadge, useTableHistory } from '@/features/tables'
 
@@ -49,12 +51,19 @@ export function PlayerHistoryPage() {
             {entries.map((entry) => (
               <li key={entry.id} className="flex flex-wrap items-start justify-between gap-4 px-4 py-3">
                 <div className="min-w-0 space-y-1">
-                  <p className="truncate font-medium">{entry.name}</p>
-                  <p className="text-fg-subtle text-xs">
-                    {/* The date goes through lib/date.ts: locale and zone are parameters, never
-                        constants (ADR-19 §7). */}
-                    {t('history.closedOn', { date: formatDate(entry.closedAt, i18n.language, browserTimeZone()) })}
+                  <p className="truncate font-medium">
+                    <Link to={tableDetailPath(entry.id)} className="hover:underline">
+                      {entry.name}
+                    </Link>
                   </p>
+                  {/* A row that predates the migration recording when it closed has no date to show. */}
+                  {entry.closedAt && (
+                    <p className="text-fg-subtle text-xs">
+                      {/* The date goes through lib/date.ts: locale and zone are parameters, never
+                          constants. */}
+                      {t('history.closedOn', { date: formatDate(entry.closedAt, i18n.language, browserTimeZone()) })}
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <TableStatusBadge status={entry.status} />

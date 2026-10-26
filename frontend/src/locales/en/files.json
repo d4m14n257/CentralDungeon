@@ -135,7 +135,7 @@
   "dropzone": {
     "prompt": "Drag a file here, or click to pick one",
     "promptMultiple": "Drag the files here, or click to pick them",
-    "limits": "Up to {{maxMb}} MB per file. PDF, Word, PNG and JPG are accepted.",
+    "limits": "Up to {{maxMb}} MB per file. {{types}} are accepted.",
     "categoryLabel": "Which drawer it goes in",
     "reused": "You already had “{{name}}”: it was reused and takes no extra space.",
     "categoryHint": "Only needed here: when you upload from a table or an answer, the drawer follows from where you uploaded it.",
@@ -143,8 +143,8 @@
   },
   "errors": {
     "uploadFailed": "The file could not be uploaded. Try again.",
-    "FILE_TYPE_NOT_ALLOWED": "That file type is not accepted. You can upload PDF, Word, PNG and JPG.",
-    "FILE_TOO_LARGE": "The file is larger than allowed. The maximum is 2 MB per file.",
+    "FILE_TYPE_NOT_ALLOWED": "That file type is not accepted. You can upload {{types}}.",
+    "FILE_TOO_LARGE": "The file is larger than allowed. The maximum is {{maxBytes, megabytes}} MB per file.",
     "FILE_EMPTY": "The file is empty. Pick another one."
   },
   "mine": {

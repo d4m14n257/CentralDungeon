@@ -1,3 +1,5 @@
+import { utcInstant } from './date'
+
 /** The coarse buckets a relative time falls into. `now` means less than a minute ago. */
 export type RelativeTimeUnit = 'now' | 'minutes' | 'hours' | 'days' | 'months'
 
@@ -10,9 +12,15 @@ export interface RelativeTime {
   count: number
 }
 
-/** A simple scale for notifications - minutes, hours, days or months since createdAt, with no library. */
+/**
+ * A simple scale for notifications - minutes, hours, days or months since createdAt, with no library.
+ *
+ * @param iso the instant, as the API sends it - UTC, even without an offset
+ * @param now the instant to measure against; a parameter so the result is testable
+ * @returns the elapsed time, reduced to a unit and a count
+ */
 export function relativeTimeFrom(iso: string, now: Date = new Date()): RelativeTime {
-  const minutes = Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000)
+  const minutes = Math.floor((now.getTime() - utcInstant(iso).getTime()) / 60_000)
   if (minutes < 1) return { unit: 'now', count: 0 }
   if (minutes < 60) return { unit: 'minutes', count: minutes }
   const hours = Math.floor(minutes / 60)

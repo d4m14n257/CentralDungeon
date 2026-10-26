@@ -42,11 +42,11 @@ function signedInAs(...roles: string[]) {
   me.mockResolvedValue(profile)
 }
 
-function renderPage() {
+function renderPage(url = '/') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   function wrap(children: ReactNode) {
     return (
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[url]}>
         <QueryClientProvider client={queryClient}>
           <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
         </QueryClientProvider>
@@ -213,5 +213,17 @@ describe('AdminUsersPage', () => {
     // The order of ADR-07 §8, whatever order the server sent them in.
     expect(row.getAllByRole('listitem').map((chip) => chip.textContent)).toEqual(['Jugador', 'Master'])
     expect(row.getByText('Bloqueada')).toBeInTheDocument()
+  })
+
+  /** A `?page=` past the end of a list that has rows is not «there are no accounts»: the way back must be on screen. */
+  it('says a page past the end does not exist instead of claiming the list is empty', async () => {
+    signedInAs('Admin')
+    list.mockResolvedValue({ content: [], page: 7, size: 20, totalElements: 3, totalPages: 1 })
+
+    renderPage('/?page=7')
+
+    expect(await screen.findByText('Esa página no existe')).toBeInTheDocument()
+    expect(screen.queryByText('Todavía no hay cuentas')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ir a la última página' })).toBeInTheDocument()
   })
 })

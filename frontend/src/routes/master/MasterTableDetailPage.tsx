@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Outlet, useParams } from 'react-router'
 
-import { ErrorState } from '@/components/ErrorState'
-import { ForbiddenState } from '@/components/ForbiddenState'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { TabNav } from '@/components/TabNav'
@@ -10,7 +9,6 @@ import { masterTableEditPath } from '@/config/paths'
 import { MASTER_EDITABLE_STATUSES, TableStatusBadge, useManagedTable } from '@/features/tables'
 import { PersonSummaryDialog, useMe } from '@/features/users'
 import { useDisclosure } from '@/hooks/useDisclosure'
-import { ApiError } from '@/types/api'
 
 import { MasterTableStatusNotice } from './MasterTableStatusNotice'
 
@@ -29,7 +27,7 @@ export function MasterTableDetailPage() {
   // useManagedTable and not useGameTable: the backend checks membership before reading anything and
   // answers 403 with no body when the actor does not run this table - useGameTable is the public
   // detail any player reads on /player/tables/:id (ADR-06 §6).
-  const { data: table, isPending, error, isLoadingError } = useManagedTable(tableId)
+  const { data: table, isPending, error, isLoadingError, refetch } = useManagedTable(tableId)
   const { data: me } = useMe()
   const personDialog = useDisclosure<string>()
 
@@ -37,12 +35,8 @@ export function MasterTableDetailPage() {
     return <Skeleton className="h-32 w-full" />
   }
 
-  if (error instanceof ApiError && error.status === 403) {
-    return <ForbiddenState />
-  }
-
   if (isLoadingError || !table) {
-    return <ErrorState />
+    return <QueryErrorState error={error} onRetry={() => void refetch()} />
   }
 
   const isPrimary = table.masters.some((master) => master.userId === me?.id && master.masterType === 'Primary')

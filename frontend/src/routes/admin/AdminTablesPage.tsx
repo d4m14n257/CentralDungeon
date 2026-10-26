@@ -6,6 +6,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
+import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
@@ -161,7 +162,14 @@ export function AdminTablesPage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && (
+      {data && data.content.length === 0 && data.totalElements > 0 && (
+        <PageOutOfRangeState
+          totalPages={data.totalPages}
+          totalElements={data.totalElements}
+          onPageChange={(next) => updateParams({ page: String(next) })}
+        />
+      )}
+      {data && data.totalElements === 0 && (
         <EmptyState
           title={showsEverything ? t('tables.emptyTitle') : t('tables.noResultsTitle')}
           description={showsEverything ? t('tables.emptyDescription') : t('tables.noResultsDescription')}

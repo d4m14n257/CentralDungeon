@@ -6,11 +6,13 @@ import { useSearchParams } from 'react-router'
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
+import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogContent } from '@/components/DialogContent'
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
@@ -21,6 +23,7 @@ import {
   RequestTypeBadge,
   ResolveRequestDialog,
   approvalRequestSearchFields,
+  isResolvableByAdmin,
   useAdminRequests,
   type ApprovalRequestSummary,
   type ResolveAction,
@@ -148,7 +151,14 @@ export function AdminRequestsPage() {
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
           already showing rows (ADR-19 §4). */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && (
+      {data && data.content.length === 0 && data.totalElements > 0 && (
+        <PageOutOfRangeState
+          totalPages={data.totalPages}
+          totalElements={data.totalElements}
+          onPageChange={(next) => updateParams({ page: String(next) })}
+        />
+      )}
+      {data && data.totalElements === 0 && (
         <EmptyState
           title={showsWhatIsWaiting ? t('requests.emptyPendingTitle') : t('requests.noResultsTitle')}
           description={showsWhatIsWaiting ? t('requests.emptyPendingDescription') : t('requests.noResultsDescription')}
@@ -165,8 +175,9 @@ export function AdminRequestsPage() {
               <>
                 {/* Absent on anything already resolved, never greyed out: a resolution is not
                     re-resolved, and a button that can only answer `REQUEST_ALREADY_RESOLVED` is a
-                    button that should not be there (principle 2). */}
-                {request.status === 'Pending' && (
+                    button that should not be there (principle 2). The same goes for a player veto,
+                    which only the table's `Primary` resolves: an admin reads it and nothing more. */}
+                {request.status === 'Pending' && isResolvableByAdmin(request.type) && (
                   <>
                     <IconAction
                       icon={<Check className="size-4" />}

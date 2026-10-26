@@ -39,17 +39,17 @@ export function CollapsibleSection({ title, summary, actions, defaultOpen = fals
 
   return (
     <section className="border-border rounded-lg border">
-      <div className="flex items-center gap-2 px-3 py-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2">
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
           aria-expanded={open}
           aria-controls={contentId}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          className="flex min-w-0 flex-1 basis-40 flex-wrap items-center gap-x-2 gap-y-0.5 text-left"
         >
           <ChevronDown aria-hidden="true" className={cn('size-4 shrink-0 transition-transform', open ? 'rotate-0' : '-rotate-90')} />
-          <span className="truncate text-sm font-medium">{title}</span>
-          {summary && <span className="text-fg-muted truncate text-xs">{summary}</span>}
+          <span className="min-w-0 text-sm font-medium wrap-anywhere">{title}</span>
+          {summary && <span className="text-fg-muted min-w-0 text-xs wrap-anywhere">{summary}</span>}
         </button>
         {actions && <div className="row-actions shrink-0">{actions}</div>}
       </div>

@@ -17,10 +17,9 @@ package com.centraldungeon.settings.dto;
  * the refusal immediate. It carries no setting whose value is a decision about somebody else, which
  * is why it is readable by anybody signed in and lives outside {@code /admin}.
  *
- * <p><b>Two fields, and both are rendered</b> - a response carrying a limit nothing shows would be
- * the orphan ADR-16 §1 warns about. {@code tables.max_players_cap} is deliberately not here: no screen
- * states it before it is broken today, and the day one does it is one field here and one in the
- * service.
+ * <p><b>Three fields, and all are rendered</b> - a response carrying a limit nothing shows would be
+ * a limit that is sent and never read, which only drifts out of date. The seat cap is here because the table forms state it next to the
+ * field instead of waiting for the server to refuse the number.
  *
  * @param maxFileSizeBytes    the per-file cap in bytes, so the client never has to know which unit
  *                            the setting is stored in (ADR-13 §3, ADR-17 §3)
@@ -29,6 +28,8 @@ package com.centraldungeon.settings.dto;
  *                            both say the number out loud, and {@code config/adminQueue.ts} wrote in
  *                            so many words that the day it stopped being a constant here it would
  *                            stop being one there and arrive from the server instead
+ * @param maxPlayersCap       the largest {@code max_players} a table may declare, stated
+ *                            beside the seat field of the wizard and of the table edit form
  */
-public record ClientLimitsResponse(long maxFileSizeBytes, int claimTimeoutMinutes) {
+public record ClientLimitsResponse(long maxFileSizeBytes, int claimTimeoutMinutes, int maxPlayersCap) {
 }

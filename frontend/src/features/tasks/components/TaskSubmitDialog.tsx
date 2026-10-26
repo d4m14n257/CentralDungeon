@@ -108,7 +108,7 @@ export function TaskSubmitDialog({ open, onOpenChange, task, isBusy, renderFileP
         {/* ADR-15 §2 said before the button is pressed, not discovered afterwards. */}
         <p className="text-fg-muted text-xs">{t('submit.accumulatesHint')}</p>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t('form.cancel')}
           </Button>

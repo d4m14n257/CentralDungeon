@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EyeOff, Globe, Pencil, Trash2 } from 'lucide-react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
@@ -9,6 +9,7 @@ import { useDisclosure } from '@/hooks/useDisclosure'
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
+import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
@@ -16,7 +17,7 @@ import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
-import { adminFileUploadPath } from '@/config/paths'
+import { adminFileUploadPath, adminUserDetailPath } from '@/config/paths'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
 import {
   FileCategoryBadge,
@@ -169,7 +170,15 @@ export function AdminFilesPage() {
         </div>
       ),
     },
-    { id: 'owner', header: t('admin.columns.owner'), cell: (file) => file.ownerName },
+    {
+      id: 'owner',
+      header: t('admin.columns.owner'),
+      cell: (file) => (
+        <Link to={adminUserDetailPath(file.ownerId)} className="hover:underline">
+          {file.ownerName}
+        </Link>
+      ),
+    },
     // The number that makes ADR-14 §1 visible: one file, three tables.
     { id: 'uses', header: t('admin.columns.uses'), cell: (file) => t('admin.usesValue', { count: file.uses }) },
     {
@@ -213,7 +222,14 @@ export function AdminFilesPage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && (
+      {data && data.content.length === 0 && data.totalElements > 0 && (
+        <PageOutOfRangeState
+          totalPages={data.totalPages}
+          totalElements={data.totalElements}
+          onPageChange={(next) => updateParams({ page: String(next) })}
+        />
+      )}
+      {data && data.totalElements === 0 && (
         <EmptyState
           title={search.query ? t('admin.noResultsTitle') : t('admin.emptyTitle')}
           description={search.query ? t('admin.noResultsDescription') : t('admin.emptyDescription')}

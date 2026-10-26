@@ -90,12 +90,12 @@ function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletCon
       <div className="space-y-4">
         <ul className="list-divided-bare">
           {masters.map((master) => (
-            <li key={master.userId} className="flex items-center gap-3 py-2">
+            <li key={master.userId} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
               <Crown
                 aria-hidden="true"
                 className={cn('size-4 shrink-0', master.masterType === 'Primary' ? 'text-state-active-fg' : 'text-fg-subtle')}
               />
-              <span className="min-w-0 flex-1 truncate text-sm">{master.name}</span>
+              <span className="min-w-0 flex-1 basis-32 text-sm wrap-anywhere">{master.name}</span>
               <span className="text-fg-muted shrink-0 text-xs">
                 {t(master.masterType === 'Primary' ? 'masters.roleMaster' : 'masters.roleCoMaster')}
               </span>
@@ -178,7 +178,7 @@ function PlayerRow({
         <div className="flex min-w-0 items-center gap-2">
           {/* ADR-10 §1: a master already sees the roster to run the table, and ADR-10 §1's asymmetry does
               not apply between a master and a player who is sitting at their own table. */}
-          <span className="min-w-0 truncate">{player.userName}</span>
+          <span className="min-w-0 wrap-anywhere">{player.userName}</span>
           {isBlocked && <RegistrationStatusBadge status={player.status} />}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">

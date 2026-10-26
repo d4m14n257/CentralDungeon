@@ -1,20 +1,32 @@
 import { useTranslation } from 'react-i18next'
 
+import { useClientLimits } from '@/hooks/useClientLimits'
+
 import { HelpList, HelpSteps } from '../components/HelpBlocks'
 
 /** The help of somebody running a table. Bodies only - the heading lives in the registry (ADR-20 §5). */
 
 /** A section that is a list of facts plus its numbered steps, which most of these are. */
-function ListAndSteps({ block, keys, stepCount }: { block: string; keys: string[]; stepCount: number }) {
+function ListAndSteps({
+  block,
+  keys,
+  stepCount,
+  values,
+}: {
+  block: string
+  keys: string[]
+  stepCount: number
+  values?: Record<string, unknown>
+}) {
   const { t } = useTranslation('help')
 
   return (
     <>
-      <HelpList items={keys.map((key) => t(`masters.${block}.${key}`))} />
+      <HelpList items={keys.map((key) => t(`masters.${block}.${key}`, values ?? {}))} />
       {stepCount > 0 && (
         <HelpSteps
           title={t('stepsTitle')}
-          items={Array.from({ length: stepCount }, (_, index) => t(`masters.${block}.steps.step${index + 1}`))}
+          items={Array.from({ length: stepCount }, (_, index) => t(`masters.${block}.steps.step${index + 1}`, values ?? {}))}
         />
       )}
     </>
@@ -70,8 +82,12 @@ export function MasterTasksHelp() {
 
 /** How files are attached to a table, what each one is, and who ends up seeing them. */
 export function MasterFilesHelp() {
+  // The per-file cap is an admin setting, so the help reads it instead of quoting a number.
+  const { maxFileSizeBytes } = useClientLimits()
+
   return (
     <ListAndSteps
+      values={{ maxMb: Math.floor(maxFileSizeBytes / (1024 * 1024)) }}
       block="files"
       keys={['what', 'category', 'reuse', 'dedup', 'library', 'published', 'shared', 'private', 'detach', 'limits', 'commands']}
       stepCount={4}

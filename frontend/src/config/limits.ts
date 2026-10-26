@@ -25,3 +25,6 @@ export const DEFAULT_MAX_FILE_BYTES = 2 * 1024 * 1024
  * treating this as a constant it would stop being one here too — and F3.5 is that day.
  */
 export const DEFAULT_CLAIM_TIMEOUT_MINUTES = 15
+
+/** The seat cap to assume until the server says otherwise: the shipped default of `tables.max_players_cap`. */
+export const DEFAULT_MAX_PLAYERS_CAP = 12

@@ -1,19 +1,21 @@
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, BookmarkX, Check, MessageSquareWarning, X } from 'lucide-react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { useClientLimits } from '@/hooks/useClientLimits'
 import { EmptyState } from '@/components/EmptyState'
+import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
+import { adminTableDetailPath } from '@/config/paths'
 import {
   ADMIN_QUEUE_ERROR_CODES,
   ClaimBadge,
@@ -230,7 +232,20 @@ export function AdminQueuePage() {
   }
 
   const columns: DataTableColumn<AdminQueueItem>[] = [
-    { id: 'item', header: t('queue.columns.item'), role: 'title', cell: (item) => itemTitle(item, t) },
+    {
+      id: 'item',
+      header: t('queue.columns.item'),
+      role: 'title',
+      // A table waiting for review is a table with its own admin screen; a request has none of its own.
+      cell: (item) =>
+        item.kind === 'TableWaitingReview' ? (
+          <Link to={adminTableDetailPath(item.id)} className="hover:underline">
+            {itemTitle(item, t)}
+          </Link>
+        ) : (
+          itemTitle(item, t)
+        ),
+    },
     { id: 'kind', header: t('queue.columns.kind'), role: 'badge', cell: (item) => <QueueItemKindBadge kind={item.kind} /> },
     // The reservation is the one thing on this row that changes under the reader's feet, so it is
     // what gets the colour (skill `diseno` §3: a dot and a label, never colour alone).
@@ -270,7 +285,14 @@ export function AdminQueuePage() {
       {/* isLoadingError, not isError: a failed background refetch must not blank a table that is
           already showing rows (ADR-19 §4) — and this table refetches every fifteen seconds. */}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && <EmptyState title={t('queue.emptyTitle')} description={t('queue.emptyDescription')} />}
+      {data && data.content.length === 0 && data.totalElements > 0 && (
+        <PageOutOfRangeState
+          totalPages={data.totalPages}
+          totalElements={data.totalElements}
+          onPageChange={(next) => updateParams({ page: String(next) })}
+        />
+      )}
+      {data && data.totalElements === 0 && <EmptyState title={t('queue.emptyTitle')} description={t('queue.emptyDescription')} />}
       {data && data.content.length > 0 && (
         <>
           <DataTable

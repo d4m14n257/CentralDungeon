@@ -81,7 +81,7 @@ export function MergeCatalogGroupsDialog({ kind, source, open, onOpenChange }: M
         </div>
         <CanonicalPicker kind={kind} selectedId={target?.id ?? null} onSelect={setTarget} excludeId={source.id} />
         <p className="text-fg-muted text-sm">{t('admin.mergeHint', { source: source.name })}</p>
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('admin.cancel')}
           </Button>

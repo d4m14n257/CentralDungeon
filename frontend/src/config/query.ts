@@ -100,6 +100,15 @@ const EXPLAINED_ERROR_CODES = new Set([
   // make the number fit, so the only way out is a bigger number - and saying how many players there
   // are is what tells the admin which one.
   'CAPACITY_BELOW_PLAYERS',
+  // A seat count above the platform's cap (an admin setting). The form states the cap beforehand, so this
+  // only surfaces when the cap moved while the form was open - and then the number is the answer.
+  'MAX_PLAYERS_ABOVE_CAP',
+  // Refusals only a direct call to the API can provoke, because the screens offer just what is allowed.
+  // They still get a sentence of their own: "could not complete the action" would hide which rule it was.
+  'FILE_CATEGORY_NOT_YOURS',
+  'FILE_CATEGORY_NOT_PUBLISHABLE',
+  'FILE_CANNOT_SELF_PUBLISH',
+  'REQUEST_TYPE_NOT_ACCEPTED_HERE',
 ])
 
 /**

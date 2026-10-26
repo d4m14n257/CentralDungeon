@@ -120,7 +120,8 @@ async function acceptAsPlayer(master: Page, player: Page, tableId: string, playe
 test('a master asks for a pause, an admin grants it, and the player calendar freezes', async ({ browser }) => {
   const tableName = `Mesa Pausa E2E ${runId}`
   const playerDiscordId = `e2e-pause-player-${runId}`
-  const master = await newAuthenticatedPage(browser, `e2e-pause-master-${runId}`, true, false)
+  const masterDiscordId = `e2e-pause-master-${runId}`
+  const master = await newAuthenticatedPage(browser, masterDiscordId, true, false)
   const admin = await newAuthenticatedPage(browser, `e2e-pause-admin-${runId}`, false, true)
   const player = await newAuthenticatedPage(browser, playerDiscordId, false, false)
 
@@ -159,7 +160,8 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
 
     // It reached the admins as work waiting on them, which is the half `PauseRequested` never had.
     await admin.page.goto('/admin/queue')
-    const pauseRow = admin.page.getByRole('row').filter({ hasText: 'Pausa de mesa' })
+    // Narrowed to this run's master: the tray is shared with whatever else is waiting in the database.
+    const pauseRow = admin.page.getByRole('row').filter({ hasText: 'Pausa de mesa' }).filter({ hasText: masterDiscordId })
     await expect(pauseRow).toBeVisible()
     await expect(pauseRow).toContainText('Me operan y no puedo dirigir por un mes')
 
@@ -261,9 +263,9 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
     await expect(player.page.getByRole('link', { name: new RegExp(tableName) })).toBeHidden()
 
     await player.page.goto(`/player/tables/${tableId}`)
-    // The `ErrorState` of a 404 detail, which is the same sentence a deleted table gets: from this
+    // The not-found state of a 404 detail, which is the same sentence a deleted table gets: from this
     // person's side the table stopped existing, and telling the two apart would be the 403 (ADR-09 §4).
-    await expect(player.page.getByText('Puede que ya no esté disponible.')).toBeVisible()
+    await expect(player.page.getByText('Lo que buscás no existe o ya no está disponible.')).toBeVisible()
     await expect(player.page.getByRole('heading', { name: tableName })).toBeHidden()
 
     expect(await fileStatusFor(player.page, player.accessToken, fileId)).toBe(404)

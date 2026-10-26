@@ -2,8 +2,10 @@ import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router'
 
 import { EmptyState } from '@/components/EmptyState'
+import { ErrorState } from '@/components/ErrorState'
 import { homePathFor } from '@/config/paths'
 import { useAvailableContexts } from '@/hooks/useAvailableContexts'
+import { SignOutButton } from '@/layouts/components/SignOutButton'
 
 /**
  * `/` has no screen of its own (ADR-20 §2). Every context owns a prefix, so the root is a dispatcher:
@@ -23,7 +25,7 @@ import { useAvailableContexts } from '@/hooks/useAvailableContexts'
  */
 export function RootRedirect() {
   const { t } = useTranslation('common')
-  const { contexts, preferredContext, isPending } = useAvailableContexts()
+  const { contexts, preferredContext, isPending, isError, retry } = useAvailableContexts()
 
   if (isPending) {
     return (
@@ -33,12 +35,22 @@ export function RootRedirect() {
     )
   }
 
+  // The roles could not be read: that is a failure with a retry, not an account without a section.
+  if (isError) {
+    return (
+      <div className="flex min-h-svh flex-col items-center justify-center gap-3 px-4">
+        <ErrorState onRetry={retry} />
+        <SignOutButton />
+      </div>
+    )
+  }
+
   // An account with no context at all - every role revoked (ADR-14 §5) - has no home to go to. Navigating
   // anyway would send it to `/player`, whose guard sends it back here (ADR-20 §2): a loop, not an answer.
   if (contexts.length === 0) {
     return (
       <div className="flex min-h-svh items-center justify-center px-4">
-        <EmptyState title={t('states.noContextTitle')} description={t('states.noContextDescription')} />
+        <EmptyState title={t('states.noContextTitle')} description={t('states.noContextDescription')} action={<SignOutButton />} />
       </div>
     )
   }

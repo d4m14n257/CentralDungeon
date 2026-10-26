@@ -333,8 +333,13 @@ export function formatPlainDate(value: string, locale: string): string {
  * reads a bare date-time like that as **local** time — so a session at 01:00 UTC rendered as 01:00
  * to a reader three hours behind, which is the exact bug the conversion exists to prevent. Appending
  * the `Z` is what makes the string mean what the server meant by it.
+ *
+ * Every timestamp from the server is parsed here, never with a bare `new Date(iso)`.
+ *
+ * @param iso the instant, as the API sends it
+ * @returns the instant as a `Date`
  */
-function utcInstant(iso: string): Date {
+export function utcInstant(iso: string): Date {
   // An instant that already carries an offset (`Z`, `+03:00`) is left alone: it said its zone.
   return /(?:Z|[+-]\d{2}:?\d{2})$/.test(iso) ? new Date(iso) : new Date(`${iso}Z`)
 }

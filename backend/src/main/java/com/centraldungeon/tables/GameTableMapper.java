@@ -33,7 +33,8 @@ public interface GameTableMapper {
             MasterSummaryResponse primaryMaster,
             List<TableScheduleEntry> schedule,
             boolean scheduleConflict,
-            boolean applied);
+            boolean applied,
+            boolean joined);
 
     /**
      * A table as the player's history shows it (ADR-19 §8) - a card with when it closed and the actor's
@@ -75,7 +76,8 @@ public interface GameTableMapper {
             @Nullable String permitted,
             @Nullable String requirements,
             boolean scheduleConflict,
-            boolean applied);
+            boolean applied,
+            boolean joined);
 
     /**
      * One session as its master sees it, with the roster the service assembled.

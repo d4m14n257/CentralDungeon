@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { api } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
-import { DEFAULT_CLAIM_TIMEOUT_MINUTES, DEFAULT_MAX_FILE_BYTES } from '@/config/limits'
+import { DEFAULT_CLAIM_TIMEOUT_MINUTES, DEFAULT_MAX_FILE_BYTES, DEFAULT_MAX_PLAYERS_CAP } from '@/config/limits'
 import type { ClientLimits } from '@/types/api'
 
 /**
@@ -39,5 +39,11 @@ export function useClientLimits(): ClientLimits {
     staleTime: 60 * 60 * 1000,
   })
 
-  return data ?? { maxFileSizeBytes: DEFAULT_MAX_FILE_BYTES, claimTimeoutMinutes: DEFAULT_CLAIM_TIMEOUT_MINUTES }
+  return (
+    data ?? {
+      maxFileSizeBytes: DEFAULT_MAX_FILE_BYTES,
+      claimTimeoutMinutes: DEFAULT_CLAIM_TIMEOUT_MINUTES,
+      maxPlayersCap: DEFAULT_MAX_PLAYERS_CAP,
+    }
+  )
 }

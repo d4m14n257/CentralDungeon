@@ -135,7 +135,7 @@
   "dropzone": {
     "prompt": "Arrastrá un archivo acá o hacé clic para elegirlo",
     "promptMultiple": "Arrastrá los archivos acá o hacé clic para elegirlos",
-    "limits": "Hasta {{maxMb}} MB por archivo. Se aceptan PDF, Word, PNG y JPG.",
+    "limits": "Hasta {{maxMb}} MB por archivo. Se aceptan {{types}}.",
     "categoryLabel": "En qué cajón va",
     "reused": "«{{name}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo.",
     "categoryHint": "Solo hace falta acá: cuando subís un archivo desde una mesa o una entrega, el cajón sale solo de dónde lo subiste.",
@@ -143,8 +143,8 @@
   },
   "errors": {
     "uploadFailed": "No se pudo subir el archivo. Probá de nuevo.",
-    "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Se pueden subir PDF, Word, PNG y JPG.",
-    "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es 2 MB por archivo.",
+    "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Se pueden subir {{types}}.",
+    "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es {{maxBytes, megabytes}} MB por archivo.",
     "FILE_EMPTY": "El archivo está vacío. Elegí otro."
   },
   "mine": {

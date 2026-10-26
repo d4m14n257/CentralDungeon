@@ -57,6 +57,8 @@ import org.jspecify.annotations.Nullable;
  * @param applied       whether the <b>actor of the token</b> holds a live application on it - Candidate or
  *                      Player (ADR-09 §1) - so the apply button can say they already did. False where no
  *                      actor is involved
+ * @param joined        whether the actor of the token is already a Player of the table - the apply button
+ *                      says they are in instead of "you applied". False where no actor is involved
  */
 public record GameTableDetailResponse(
         String id,
@@ -81,5 +83,6 @@ public record GameTableDetailResponse(
         LocalDateTime createdAt,
         @Nullable LocalDateTime closedAt,
         boolean scheduleConflict,
-        boolean applied) {
+        boolean applied,
+        boolean joined) {
 }

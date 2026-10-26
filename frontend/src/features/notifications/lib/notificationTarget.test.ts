@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { masterTableDetailPath, masterTableHistoryPath } from '@/config/paths'
+import { masterTableDetailPath, masterTableHistoryPath, masterTablePlayersPath } from '@/config/paths'
 
 import { notificationTarget } from './notificationTarget'
 import { NOTIFICATION_TYPES, type Notification } from '../types'
@@ -62,13 +62,51 @@ describe('notificationTarget', () => {
   })
 
   /**
-   * A `TableOpen` whose table the admin already created points at the table instead, and then that
-   * is where it leads: the public detail, because whoever asked is a player there and not its master.
+   * A resolved `TablePause` points at the table, and whoever asked is a master of it: their own view of
+   * the table shows the outcome, the public detail is the player's.
    */
-  it('sends a resolved request about a table to the table', () => {
-    const resolved = notification({ notificationType: 'ApprovalRequestApproved', relatedEntityType: 'game_table', relatedEntityId: 't9' })
+  it.each(['ApprovalRequestApproved', 'ApprovalRequestRejected'] as const)('sends %s about a table to the master’s view of it', (type) => {
+    const resolved = notification({ notificationType: type, relatedEntityType: 'game_table', relatedEntityId: 't9' })
 
-    expect(notificationTarget(resolved)).toBe('/player/tables/t9')
+    expect(notificationTarget(resolved)).toBe(masterTableDetailPath('t9'))
+  })
+
+  /** A resolved veto points at the application; the table travels in the params so the click lands on its players. */
+  it.each(['ApprovalRequestApproved', 'ApprovalRequestRejected'] as const)(
+    'sends %s about a veto to the players tab of its table',
+    (type) => {
+      const resolved = notification({
+        notificationType: type,
+        params: { tableId: 't4' },
+        relatedEntityType: 'table_registration',
+        relatedEntityId: 'reg-1',
+      })
+
+      expect(notificationTarget(resolved)).toBe(masterTablePlayersPath('t4'))
+    },
+  )
+
+  it('opens nothing for a veto outcome written before the table travelled with it', () => {
+    const old = notification({
+      notificationType: 'ApprovalRequestApproved',
+      params: null,
+      relatedEntityType: 'table_registration',
+      relatedEntityId: 'reg-1',
+    })
+
+    expect(notificationTarget(old)).toBeNull()
+  })
+
+  /** Now a player: what is theirs lives in their own table screen, not in the public detail. */
+  it('sends an acceptance to the player’s own table detail', () => {
+    expect(notificationTarget(notification({ notificationType: 'RegistrationAccepted', relatedEntityId: 't3' }))).toBe(
+      '/player/my-tables/t3',
+    )
+  })
+
+  /** The reason for the rejection is shown in the applications list and nowhere else. */
+  it('sends a rejection to the applications list, where the reason is', () => {
+    expect(notificationTarget(notification({ notificationType: 'RegistrationRejected' }))).toBe('/player/applications')
   })
 
   /**
@@ -77,8 +115,13 @@ describe('notificationTarget', () => {
    */
   it('never sends whoever asked to the admin tray', () => {
     for (const type of ['ApprovalRequestApproved', 'ApprovalRequestRejected']) {
-      for (const entityType of ['user', 'game_table']) {
-        const resolved = notification({ notificationType: type, relatedEntityType: entityType, relatedEntityId: 'x1' })
+      for (const entityType of ['user', 'game_table', 'table_registration']) {
+        const resolved = notification({
+          notificationType: type,
+          params: { tableId: 't1' },
+          relatedEntityType: entityType,
+          relatedEntityId: 'x1',
+        })
         expect(notificationTarget(resolved)).not.toContain('/admin')
       }
     }

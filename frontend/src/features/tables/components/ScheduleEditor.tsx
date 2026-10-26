@@ -70,7 +70,7 @@ export function ScheduleEditor({ value, onChange, timeZone }: ScheduleEditorProp
                 list of round numbers cannot hold them (ADR-07 §3). */}
             <Input
               type="time"
-              className="w-32"
+              className="w-40"
               aria-label={t('schedule.durationOf', { slot: formatSlot(local, i18n.language) })}
               value={(entry.duration ?? DEFAULT_SLOT_DURATION).slice(0, 5)}
               onChange={(event) => setDuration(index, event.target.value)}

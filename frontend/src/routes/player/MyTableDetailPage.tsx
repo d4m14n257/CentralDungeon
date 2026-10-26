@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { PageHeader } from '@/components/PageHeader'
 import { ForbiddenState } from '@/components/ForbiddenState'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { playerMyTablesPath, tableDetailPath } from '@/config/paths'
 import { HelpButton } from '@/features/help'
@@ -80,7 +81,12 @@ export function MyTableDetailPage() {
   const { t: tFiles } = useTranslation('files')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
-  const { data: table, isPending, isLoadingError } = useGameTable(tableId)
+  const { data: table, isPending: tablePending, isLoadingError, error, refetch } = useGameTable(tableId)
+  // The table read is public, so it succeeds for anybody; what says whether this table is *mine* is
+  // the read of my own sessions. It is asked here, and shared by key with the section below, so a table
+  // that is not mine is refused as a whole instead of painting empty blocks that claim there is nothing.
+  const mine = useMySessions(tableId)
+  const isPending = tablePending || mine.isPending
 
   if (isPending) {
     return (
@@ -92,7 +98,11 @@ export function MyTableDetailPage() {
   }
 
   if (isLoadingError || !table) {
-    return <ErrorState message={t('detail.notFoundDescription')} />
+    return <QueryErrorState error={error} onRetry={() => void refetch()} />
+  }
+
+  if (mine.error instanceof ApiError && mine.error.status === 403) {
+    return <ForbiddenState />
   }
 
   const timeZone = browserTimeZone()

@@ -205,7 +205,7 @@ public class SettingsService {
      */
     @Transactional(readOnly = true)
     public ClientLimitsResponse clientLimits() {
-        return new ClientLimitsResponse(maxFileSizeBytes(), (int) claimTimeout().toMinutes());
+        return new ClientLimitsResponse(maxFileSizeBytes(), (int) claimTimeout().toMinutes(), maxPlayersCap());
     }
 
     /**

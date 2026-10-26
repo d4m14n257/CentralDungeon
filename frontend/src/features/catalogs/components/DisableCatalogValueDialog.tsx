@@ -105,7 +105,7 @@ export function DisableCatalogValueDialog({ kind, value, open, onOpenChange }: D
           </>
         )}
         {!isPending && !needsSuccessor && <p className="text-fg-muted text-sm">{t('admin.disableKeepsLinks')}</p>}
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('admin.cancel')}
           </Button>

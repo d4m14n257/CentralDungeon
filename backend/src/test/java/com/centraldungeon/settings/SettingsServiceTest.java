@@ -127,6 +127,7 @@ class SettingsServiceTest {
         assertThat(service.clientLimits().maxFileSizeBytes()).isEqualTo(service.maxFileSizeBytes());
         assertThat(service.clientLimits().maxFileSizeBytes()).isEqualTo(7L * 1024 * 1024);
         assertThat(service.clientLimits().claimTimeoutMinutes()).isEqualTo(15);
+        assertThat(service.clientLimits().maxPlayersCap()).isEqualTo(service.maxPlayersCap());
     }
 
     // ---------------------------------------------------------------- the listing

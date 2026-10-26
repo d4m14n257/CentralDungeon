@@ -28,6 +28,8 @@ async function openAssignMastersDialog(page: Page, label: string) {
   await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
   await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
   await acceptReview(page)
+  // The listing is paged oldest first, so a new table can land past the first page: search for it.
+  await page.goto(`/admin/tables?q=${encodeURIComponent(tableName)}`)
 
   // `/admin/tables` is one of the wide tables of skill `diseno` §5.b since F3.3: a `<tr>`.
   const row = page.getByRole('row').filter({ hasText: tableName })
@@ -47,9 +49,9 @@ test('the help is read without leaving the screen, and the screen is still there
     // The help for assigning masters, on top of the dialog that asked for it - and the URL did not
     // move, which is the whole point (ADR-20 §5).
     await expect(page.getByRole('heading', { name: 'Mesas sin master' })).toBeVisible()
-    await expect(page).toHaveURL(/\/admin\/tables$/)
+    await expect(page).toHaveURL(/\/admin\/tables\?q=[^/]*$/)
 
-    await page.getByRole('button', { name: 'Close' }).first().click()
+    await page.getByRole('button', { name: 'Cerrar' }).first().click()
     // The dialog underneath is still open with what was typed in it.
     await expect(page.getByRole('heading', { name: 'Asignar masters' })).toBeVisible()
   } finally {

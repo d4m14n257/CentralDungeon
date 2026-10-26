@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { EmptyState } from '@/components/EmptyState'
-import { ErrorState } from '@/components/ErrorState'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { masterTableDetailPath, myTableDetailPath } from '@/config/paths'
@@ -44,21 +44,34 @@ export function MySchedulePage() {
   const timeZone = useMemo(() => browserTimeZone(), [])
   // isLoadingError, not isError: a background refetch that fails must not blank a week that already
   // loaded (ADR-19 §4).
-  const { data, isPending, isLoadingError, refetch } = useMySchedule()
+  const { data, isPending, isLoadingError, error, refetch } = useMySchedule()
+
+  // The header is there in every state: the screen keeps its shape while it loads and when it fails.
+  const header = <PageHeader title={t('schedule.title')} description={t('schedule.subtitle', { timeZone })} help="basics.my-schedule" />
 
   if (isPending) {
-    return <Skeleton className="h-96 w-full" />
+    return (
+      <div className="space-y-6">
+        {header}
+        <Skeleton className="h-96 w-full" />
+      </div>
+    )
   }
 
   if (isLoadingError || !data) {
-    return <ErrorState onRetry={() => void refetch()} />
+    return (
+      <div className="space-y-6">
+        {header}
+        <QueryErrorState error={error} onRetry={() => void refetch()} />
+      </div>
+    )
   }
 
   const scheduled = data.filter((commitment) => commitment.blocks.length > 0)
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('schedule.title')} description={t('schedule.subtitle', { timeZone })} help="basics.my-schedule" />
+      {header}
 
       {data.length === 0 ? (
         <EmptyState title={t('schedule.emptyTitle')} description={t('schedule.emptyDescription')} />
@@ -73,7 +86,7 @@ export function MySchedulePage() {
               {t('schedule.legendMaster')}
             </span>
             <span className="flex items-center gap-2">
-              <span aria-hidden className="bg-state-active-bg inline-block size-3 rounded-sm" />
+              <span aria-hidden className="bg-state-active-bg ring-state-active-dot inline-block size-3 rounded-sm ring-1 ring-inset" />
               {t('schedule.legendPlayer')}
             </span>
           </div>
@@ -83,7 +96,7 @@ export function MySchedulePage() {
             <ul className="list-divided">
               {data.map((commitment) => (
                 <li key={commitment.tableId} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
-                  <Link to={destinationOf(commitment)} className="min-w-0 flex-1 truncate hover:underline">
+                  <Link to={destinationOf(commitment)} className="min-w-0 flex-1 basis-40 wrap-anywhere hover:underline">
                     {commitment.tableName}
                   </Link>
                   <span className="text-fg-subtle shrink-0 text-xs">{t(`schedule.role.${commitment.role}`)}</span>

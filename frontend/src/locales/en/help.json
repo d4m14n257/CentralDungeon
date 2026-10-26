@@ -388,7 +388,7 @@
       "shared": "A shared file is visible to your players and candidates, on the table's public page and under \"My tables\".",
       "private": "Marked \"only for whoever runs the table\", it is visible to you and your co-masters and nobody else. It does not appear elsewhere at all: it is not locked, it is simply not there.",
       "detach": "Removing a file takes it off this table and nothing more. It stays in your own list and on any other table you put it on.",
-      "limits": "Up to 2 MB per file, and PDF, Word, PNG and JPG are accepted. If a file is too big or is not one of those, the screen tells you what the problem is before anything is saved.",
+      "limits": "Up to {{maxMb}} MB per file, and only the types the drop zone lists are accepted. If a file is too big or is not one of those, the screen tells you what the problem is before anything is saved.",
       "steps": {
         "step1": "Open your table from \"My tables\" as a master and go to the Files tab.",
         "step2": "Hit \"Add a file\" and pick whether it is preparation material or something from a session.",

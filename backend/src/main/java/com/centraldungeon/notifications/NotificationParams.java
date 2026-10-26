@@ -26,6 +26,9 @@ import org.jspecify.annotations.Nullable;
  * @param tableName      the table the notification is about, for every type that names one
  * @param otherTableName the second table, for a clash that has to name both (ADR-08 §2)
  * @param actorName      the person who did the thing, for the types where somebody acted
+ * @param tableId        the table, for a notification whose related entity is not the table itself - the
+ *                       veto outcome points at an application, and the click has to land on the table's
+ *                       players. Null for every other type
  * @param taskTitle      what the table is asking for, so the bell can say <em>which</em> request
  *                       arrived (ADR-15 §5). "The table is asking you for something" is a worse headline
  *                       than "Ficha de personaje", for the same reason ADR-18 §5 gives for naming the
@@ -35,7 +38,8 @@ public record NotificationParams(
         @Nullable String tableName,
         @Nullable String otherTableName,
         @Nullable String actorName,
-        @Nullable String taskTitle) {
+        @Nullable String taskTitle,
+        @Nullable String tableId) {
 
     /**
      * The common case: a notification that only has to name the table it is about.
@@ -44,7 +48,17 @@ public record NotificationParams(
      * @return the parameters, with nothing else set
      */
     public static NotificationParams ofTable(String tableName) {
-        return new NotificationParams(tableName, null, null, null);
+        return new NotificationParams(tableName, null, null, null, null);
+    }
+
+    /**
+     * A notification that names no one but must say which table it belongs to.
+     *
+     * @param tableId the table
+     * @return the parameters, with only the table id set
+     */
+    public static NotificationParams ofTableId(String tableId) {
+        return new NotificationParams(null, null, null, null, tableId);
     }
 
     /**
@@ -59,6 +73,6 @@ public record NotificationParams(
      * @return the parameters, with nothing set
      */
     public static NotificationParams none() {
-        return new NotificationParams(null, null, null, null);
+        return new NotificationParams(null, null, null, null, null);
     }
 }

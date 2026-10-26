@@ -304,8 +304,12 @@ export function SearchQueryInput({
    * again. Waiting made choosing `/and` look like it had done nothing - the chip appeared later, out
    * of nowhere - and it made `or` behave differently from `and` for no reason a reader could see.
    * Showing it says what the next criterion will be joined with, and the chip is how that is changed.
+   *
+   * **Not while the box is empty and the connector is the default `and`**: a lone «and» after the last
+   * chip joins nothing yet and reads as a stray word. It appears the moment there is something to
+   * join (text is typed) or the connector is something other than the default.
    */
-  const showPendingConnector = value.terms.length > 0
+  const showPendingConnector = value.terms.length > 0 && (value.draft.trim() !== '' || pendingConnector !== 'and')
 
   return (
     <div className="space-y-1">

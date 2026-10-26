@@ -13,7 +13,7 @@ export async function acceptReview(page: Page): Promise<void> {
   const review = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: /^¿/ }) })
   await review
     .getByRole('button')
-    .filter({ hasNotText: /^(Cancelar|Close)$/ })
+    .filter({ hasNotText: /^(Cancelar|Close|Cerrar)$/ })
     .last()
     .click()
 }

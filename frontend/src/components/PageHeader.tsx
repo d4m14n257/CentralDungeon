@@ -90,7 +90,7 @@ export function PageHeader({ title, description, badge, back, help, action }: Pa
           {description && <p className="text-fg-muted text-sm">{description}</p>}
         </div>
         {(help || action) && (
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center gap-2 sm:shrink-0">
             {help && <HelpButton section={help} />}
             {action && <PageActionButton action={action} />}
           </div>
@@ -100,17 +100,24 @@ export function PageHeader({ title, description, badge, back, help, action }: Pa
   )
 }
 
+/**
+ * A button never wraps its label, and the label of this one can be a sentence - a disabled «Ya tenés una
+ * postulación en curso» says why instead of hiding. It wraps, and the button grows a line, rather than
+ * pushing the page wider than the screen.
+ */
+const ACTION_LABEL_WRAPS = 'h-auto min-h-9 max-w-full whitespace-normal'
+
 /** The main action as a button: a link when it goes somewhere, a click when it happens here. */
 function PageActionButton({ action }: { action: PageAction }) {
   if (action.to !== undefined && !action.disabled) {
     return (
-      <Button asChild>
+      <Button asChild className={ACTION_LABEL_WRAPS}>
         <Link to={action.to}>{action.label}</Link>
       </Button>
     )
   }
   return (
-    <Button type="button" disabled={action.disabled ?? false} onClick={action.onClick}>
+    <Button type="button" disabled={action.disabled ?? false} onClick={action.onClick} className={ACTION_LABEL_WRAPS}>
       {action.label}
     </Button>
   )

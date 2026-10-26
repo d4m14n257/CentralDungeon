@@ -1,6 +1,7 @@
 import {
   masterTableDetailPath,
   masterTableHistoryPath,
+  masterTablePlayersPath,
   myTableDetailPath,
   playerApplicationsPath,
   playerProfilePath,
@@ -37,13 +38,22 @@ export function notificationTarget(notification: Notification): string | null {
     return null
   }
 
-  // A request that was resolved (ADR-16 §1). Its reference is the requester - `entityType = 'user'` - for
-  // `MasterGrant` and `General`, and it is a `game_table` for a `TableOpen` whose table the admin
-  // has already created. The destination follows the reference: the table when there is one, and
-  // otherwise the reader's own profile, which is where a granted role becomes visible.
+  // A request that was resolved. Its reference says where the requester finds the outcome:
+  // - `user` (`MasterGrant`, `TableOpen`, `General`): their own profile, where a granted role becomes visible.
+  // - `game_table` (`TablePause`): the requester is a master of that table, so their own view of it,
+  //   whose status notice shows the outcome. Never the public detail, which is the player's view.
+  // - `table_registration` (`PlayerBan`): the veto was asked from the table's players tab, so that is where
+  //   it lands, through the table id the notification carries. A row written before it travelled has none
+  //   and opens nothing, which is better than the wrong place.
   // **Never `/admin/requests`**: whoever asked is not an admin and cannot enter it.
   if (notification.notificationType === 'ApprovalRequestApproved' || notification.notificationType === 'ApprovalRequestRejected') {
-    return relatedEntityType === 'game_table' ? tableDetailPath(relatedEntityId) : playerProfilePath()
+    if (relatedEntityType === 'game_table') {
+      return masterTableDetailPath(relatedEntityId)
+    }
+    if (relatedEntityType === 'table_registration') {
+      return notification.params?.tableId ? masterTablePlayersPath(notification.params.tableId) : null
+    }
+    return playerProfilePath()
   }
 
   // Everything else is about one table, and a row pointing at anything else is one nothing can open.
@@ -51,9 +61,12 @@ export function notificationTarget(notification: Notification): string | null {
     return null
   }
   switch (notification.notificationType) {
+    // Now a player there: what is theirs (calendar, sessions, attendance) lives in their own table screen.
     case 'RegistrationAccepted':
+      return myTableDetailPath(relatedEntityId)
+    // The reason for the rejection is only shown in the applications list.
     case 'RegistrationRejected':
-      return tableDetailPath(relatedEntityId)
+      return playerApplicationsPath()
     // The public detail and not `/player/my-tables/:id`, because the same notice reaches a candidate
     // and a player alike: a candidate has no entry under their own tables for one they are not in
     // yet, and the public detail shows both of them what the table is asking of them (ADR-15 §5, ADR-14 §2).
@@ -89,10 +102,10 @@ export function notificationTarget(notification: Notification): string | null {
     // offering the one thing this notification is asking the reader to do about it.
     case 'ScheduleConflict':
       return playerApplicationsPath()
-    // Both reach only the people already signed up to play there (NotificationType.java): what
-    // changed is a date on their own calendar, not the table's standing. The player's own table
-    // screen is where the sessions and the reader's attendance live, already converted to their
-    // local time (ADR-03 §6) - the public detail has neither.
+    // Both reach only the players of the table (candidates cannot see sessions, so the backend does not
+    // send them): what changed is a date on their own calendar. The player's own table screen is where
+    // the sessions and the reader's attendance live, already converted to their local time - the public
+    // detail has neither.
     case 'SessionScheduled':
     case 'SessionCanceled':
       return myTableDetailPath(relatedEntityId)

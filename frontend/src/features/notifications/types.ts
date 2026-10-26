@@ -10,6 +10,8 @@ export interface NotificationParams {
   actorName?: string | null
   /** What a table is asking for, so the bell names the request rather than announcing one (ADR-15 §5). */
   taskTitle?: string | null
+  /** The table a veto outcome belongs to, since its related entity is an application (`PlayerBan`). */
+  tableId?: string | null
 }
 
 /**

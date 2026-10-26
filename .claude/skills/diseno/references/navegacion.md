@@ -45,7 +45,7 @@ Los roles son acumulables y sin jerarquía (ADR-06 §1): alguien puede ser `Play
 |---|---|---|
 | Público | `/login` | Entrar con Discord |
 | | `/auth/callback` | Retorno del OAuth, incluye el paso de invitación al servidor (ADR-05 §1) |
-| | `/onboarding` | **Solo la primera vez**: nombre a mostrar y país. Bloquea hasta completarse (ADR-10 §4) |
+| | `/onboarding` | **Solo la primera vez**: nombre a mostrar y país. Bloquea hasta completarse, entre por donde entre, y quien ya lo completó no vuelve: después los dos se editan en la configuración del perfil (ADR-10 «Perfiles» §4 «Nombre y país se piden la primera vez en un onboarding bloqueante, y después se editan en la configuración del perfil») |
 | | `/` | **No es una pantalla**: despacha a la home del contexto de quien entra (ADR-20 §2) |
 | **Jugador** | `/player` | Explorar mesas. **Home del contexto**. **El buscador es su único filtro** (ADR-14 §6, misma lectura que `/my/files`): los filtros por sistema, tag y plataforma que esta fila describía son los comandos `/table_system`, `/table_tag` y `/table_platform`, que acotan desde la misma línea y se combinan entre sí — y un término sin comando busca el nombre de la mesa. **Los tres son texto libre** (ADR-12 §8): el backend resuelve el grupo de sinónimos, así que buscar por uno encuentra las mesas etiquetadas con cualquier otro (ADR-12 §2, §4). Lo buscado vive en `?q=` (ADR-12 §7); la página no, porque el listado se acumula con «Ver más» (ADR-04 §6) |
 | | `/player/tables/:id` | Detalle de una mesa y postulación. Cabecera estándar (ADR-21 §5): estado junto al nombre, masters como descripción, «Volver a explorar», y **«Postularme» a la derecha** —antes al pie de la tarjeta—; el choque de horario se explica justo debajo |

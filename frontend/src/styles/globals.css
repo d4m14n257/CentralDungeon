@@ -61,6 +61,7 @@
   --color-raised: #1b2438;
   --color-border: #1b2438;
   --color-border-strong: #2b3854;
+  --color-skeleton: #3a4a6b;
   --color-fg: #eef2f9;
   --color-fg-muted: #9aa9c4;
   --color-fg-subtle: #6c7c99;
@@ -144,6 +145,7 @@
   --color-raised: #f1f5f9;
   --color-border: #e2e8f0;
   --color-border-strong: #cbd5e1;
+  --color-skeleton: #cbd5e1;
   --color-fg: #0f172a;
   --color-fg-muted: #475569;
   --color-fg-subtle: #64748b;

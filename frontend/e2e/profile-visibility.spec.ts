@@ -126,11 +126,12 @@ test('the asymmetry of ADR-10 §1: a player reads the master first, the master r
     await applyToTable(player.page)
 
     await master.page.goto(`/master/tables/${tableId}`)
-    await master.page
-      .getByRole('link', { name: /e2e-prof-player/ })
-      .first()
-      .click()
-    await expect(master.page).toHaveURL(new RegExp(`/player/users/${player.id}$`))
+    // A master need not be a player, so the candidate opens as a summary dialog and not as a profile page.
+    await master.page.getByRole('button', { name: /Ver la ficha de .*e2e-prof-player/ }).click()
+    const summary = master.page.getByRole('dialog')
+    await expect(summary.getByText('Usuario de Discord')).toBeVisible()
+    await expect(summary.getByText(/e2e-prof-player/).first()).toBeVisible()
+    await expect(master.page).toHaveURL(new RegExp(`/master/tables/${tableId}$`))
   } finally {
     await player.context.close()
     await admin.context.close()

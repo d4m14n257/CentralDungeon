@@ -12,7 +12,7 @@ import { FileDropzone } from './FileDropzone'
  * against the same two megabytes it always was.
  */
 vi.mock('@/hooks/useClientLimits', () => ({
-  useClientLimits: () => ({ maxFileSizeBytes: 2 * 1024 * 1024, claimTimeoutMinutes: 15 }),
+  useClientLimits: () => ({ maxFileSizeBytes: 2 * 1024 * 1024, claimTimeoutMinutes: 15, maxPlayersCap: 12 }),
 }))
 
 /** The input is `sr-only`, not absent: it is what makes the zone reachable by keyboard. */
@@ -61,6 +61,17 @@ describe('FileDropzone', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('pesa más de lo permitido')
     expect(onStaged).not.toHaveBeenCalled()
+  })
+
+  /** The sentence states the limit that applied, not a number written into the copy. */
+  it('says the real cap in the refusal and lists the accepted types from the whitelist', async () => {
+    render(<FileDropzone onStaged={vi.fn()} />)
+
+    await userEvent.upload(fileInput(), new File([new Uint8Array(3 * 1024 * 1024)], 'mapa.png', { type: 'image/png' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('El máximo es 2 MB')
+
+    await userEvent.upload(fileInput(), new File(['MZ'], 'cheat.exe', { type: 'application/x-msdownload' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('PNG, JPG, PDF y Word')
   })
 
   it('refuses a type that is not on the whitelist, in the reader’s language', async () => {

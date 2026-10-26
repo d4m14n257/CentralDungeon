@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
 import { EmptyState } from '@/components/EmptyState'
+import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { ErrorState } from '@/components/ErrorState'
 import { IconAction } from '@/components/IconAction'
 import { PaginationControls } from '@/components/PaginationControls'
@@ -292,7 +293,14 @@ export function MyFilesPage() {
 
           {isPending && <Skeleton className="h-64 w-full" />}
           {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-          {data && data.content.length === 0 && (
+          {data && data.content.length === 0 && data.totalElements > 0 && (
+            <PageOutOfRangeState
+              totalPages={data.totalPages}
+              totalElements={data.totalElements}
+              onPageChange={(next) => updateParams({ page: String(next) })}
+            />
+          )}
+          {data && data.totalElements === 0 && (
             <EmptyState
               title={isFiltered ? t('mine.noResultsTitle') : t('mine.emptyTitle')}
               description={isFiltered ? t('mine.noResultsDescription') : t('mine.emptyDescription')}

@@ -36,6 +36,7 @@ import type { CreateGameTableForm, TableScheduleEntry, WizardStep } from '@/feat
 import { useMe } from '@/features/users'
 import { WEEKDAYS, browserTimeZone, formatMinutes, formatSlot, minutesOfDay, utcSlotToLocal } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
+import { useClientLimits } from '@/hooks/useClientLimits'
 import { useConfirm } from '@/hooks/useConfirm'
 
 /**
@@ -59,12 +60,13 @@ export function MasterTableCreatePage() {
   // A second namespace rather than copying the labels into `master`: the words belong to the
   // tables domain and are the same ones the explorer's card shows (regla dura 18).
   const { t: tTables } = useTranslation('tables')
+  const { t: tCommon } = useTranslation('common')
   const navigate = useNavigate()
   const createTable = useCreateTable()
   const attachFiles = useAttachFilesToTable()
   const commit = useCommitStagedFiles()
   const { data: me } = useMe()
-  const { data: tableTypes } = useTableTypes()
+  const { data: tableTypes, isLoadingError: typesFailed, refetch: refetchTypes } = useTableTypes()
   const [step, setStep] = useState<WizardStep>('identity')
   const [systems, setSystems] = useState<CatalogValue[]>([])
   const [tags, setTags] = useState<CatalogValue[]>([])
@@ -86,8 +88,9 @@ export function MasterTableCreatePage() {
   // changes and nothing else (ADR-19 §7).
   const timeZone = useMemo(() => browserTimeZone(), [])
 
+  const { maxPlayersCap } = useClientLimits()
   const form = useForm<CreateGameTableForm>({
-    resolver: zodResolver(createGameTableSchema),
+    resolver: zodResolver(createGameTableSchema(maxPlayersCap)),
     // **Every field, not only the text ones.** A field missing from here registers as `''`
     // against a default of `undefined`, which react-hook-form reads as dirty - and on the edit
     // page `keepDirtyValues` then defended that emptiness against the value the table actually
@@ -363,6 +366,15 @@ export function MasterTableCreatePage() {
                         })}
                       </SelectContent>
                     </Select>
+                    {/* A failed read must not look like a select that simply has nothing to offer. */}
+                    {typesFailed && (
+                      <p role="alert" className="text-state-canceled-fg flex flex-wrap items-center gap-2 text-sm">
+                        {tCommon('states.errorDescription')}
+                        <Button type="button" variant="outline" size="sm" onClick={() => void refetchTypes()}>
+                          {tCommon('actions.retry')}
+                        </Button>
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -520,8 +532,9 @@ export function MasterTableCreatePage() {
                     <FormItem>
                       <FormLabel>{t('create.maxPlayersLabel')}</FormLabel>
                       <FormControl>
-                        <Input type="number" min={1} {...field} value={field.value ?? ''} />
+                        <Input type="number" min={1} max={maxPlayersCap} {...field} value={field.value ?? ''} />
                       </FormControl>
+                      <FormDescription>{t('create.maxPlayersHint', { cap: maxPlayersCap })}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -121,6 +121,18 @@ beforeEach(() => {
 })
 
 describe('AdminQueuePage', () => {
+  /** A table waiting for review is the admin's screen for that table; a request is not linked anywhere. */
+  it('links a table waiting for review to its admin detail and a request to nothing', async () => {
+    list.mockResolvedValue(page([table(), item()]))
+
+    renderPage()
+
+    const tableRow = await rowFor('La maldición de Strahd')
+    expect(tableRow.getByRole('link', { name: 'La maldición de Strahd' })).toHaveAttribute('href', '/admin/tables/table-1')
+    const requestRow = await rowFor('Rol de master')
+    expect(requestRow.queryByRole('link')).not.toBeInTheDocument()
+  })
+
   /**
    * ADR-20 §4, the same reading as `/master` and `/admin/requests`: an empty tray is a fact about the
    * platform and it is good news. There is no second empty state to tell it apart from, because the

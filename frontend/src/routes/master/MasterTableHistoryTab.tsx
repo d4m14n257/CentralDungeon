@@ -5,6 +5,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { EmptyState } from '@/components/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTableStatusHistory } from '@/features/tables'
+import { browserTimeZone, formatDateTime } from '@/lib/date'
 
 /**
  * A table's lifecycle history, oldest first: who moved it, where to, and why.
@@ -17,6 +18,7 @@ import { useTableStatusHistory } from '@/features/tables'
 export function StatusTimeline({ tableId }: { tableId: string }) {
   const { t, i18n } = useTranslation('master')
   const { data, isPending, isLoadingError, refetch } = useTableStatusHistory(tableId)
+  const timeZone = browserTimeZone()
 
   if (isPending) {
     return <Skeleton className="h-24 w-full" />
@@ -37,7 +39,7 @@ export function StatusTimeline({ tableId }: { tableId: string }) {
               {t(`status.${change.fromStatus}` as const, { ns: 'tables', defaultValue: change.fromStatus })} →{' '}
               {t(`status.${change.toStatus}` as const, { ns: 'tables', defaultValue: change.toStatus })}
             </span>
-            <span className="text-fg-subtle text-xs">{new Date(change.createdAt).toLocaleString(i18n.language)}</span>
+            <span className="text-fg-subtle text-xs">{formatDateTime(change.createdAt, i18n.language, timeZone)}</span>
           </div>
           <p className="text-fg-muted text-xs">{t('status.changedBy', { name: change.changedByName })}</p>
           {change.justification && <p className="text-fg text-xs italic">"{change.justification}"</p>}

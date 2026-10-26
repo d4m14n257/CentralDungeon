@@ -38,8 +38,10 @@ En `components/`. Ninguno recibe una entidad del dominio: si la recibiera, estar
 | `CollapsibleSection` | Bloque plegable con título y acciones en la cabecera — el patrón que el legacy repetía en `CardComponent` y `ListComponent` |
 | `IconAction` | Botón de icono con tooltip para las acciones de una fila o una ficha. **Es la forma de toda acción de fila en una tabla** (ADR-21 §11): ver «Listas de trabajo», abajo. Una acción que el servidor rechazaría no aparece; si el arreglo está a un paso, aparece apagada con `disabledReason`, que el tooltip muestra en lugar del nombre. Nunca `disabled` a secas: no dice por qué y el tooltip no abre |
 | `EmptyState` | Listas vacías, con la acción que corresponde |
-| `ErrorState` | Error de carga: mensaje del `ProblemDetail` y botón de reintento |
-| `ForbiddenState` | El `403` explicado (el `404` por veto se ve como "no existe", que es intencional) |
+| `QueryErrorState` | **El estado de error de toda lectura** (§5.c): elige entre los tres siguientes según el `ApiError` — `403` → `ForbiddenState`, `404` → `NotFoundState`, otro → `ErrorState` con reintento. Una pantalla lo usa en vez de decidir ella |
+| `ErrorState` | Error de carga: mensaje del `ProblemDetail` y botón de reintento. Lo pinta `QueryErrorState` |
+| `ForbiddenState` | El `403` explicado. Lo pinta `QueryErrorState` |
+| `NotFoundState` | El `404`: «no existe», sin reintento (el `404` por veto se ve así, que es intencional). Lo pinta `QueryErrorState` |
 | `RichTextEditor` | Texto enriquecido (ADR-03 §8), sanitizado al enviar y al mostrar |
 | `RichTextView` | Render sanitizado de lo guardado |
 | `LoadMore` | Paginación de un listado de lectura: trae la página siguiente y siempre dice cuántos de cuántos se están viendo. Botón explícito, nunca scroll infinito (ADR-04 §6) |
@@ -208,7 +210,7 @@ En `hooks/`:
 
 ### Estados obligatorios
 
-Toda pantalla que lea datos define los cuatro: **cargando** (`skeleton`, no spinner suelto), **vacío** (`EmptyState`), **error** (mensaje del `ProblemDetail`, con reintento) y **sin permiso** (`403` con explicación; el `404` por veto se ve como "no existe", que es intencional).
+Toda pantalla que lea datos define los cuatro: **cargando** (`skeleton`, no spinner suelto), **vacío** (`EmptyState`), **error** (mensaje del `ProblemDetail`, con reintento) y **sin permiso** (`403` con explicación; el `404` por veto se ve como "no existe", que es intencional). Los tres últimos los elige `QueryErrorState` (§5.c) a partir del error de la query: la pantalla no ramifica por código HTTP.
 
 **No se especifican pantalla por pantalla** (ADR-21 §8). Hay **cuatro arquetipos** —listado, detalle, formulario y dashboard— y cada pantalla hereda los cuatro estados del suyo, porque el skeleton, el error y el 403 son idénticos entre pantallas del mismo tipo.
 

@@ -59,10 +59,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class TableSessionService {
 
-    /** The statuses in which somebody is affected by a change to the calendar - they are in, or waiting to be. */
-    private static final List<TableRegistrationStatus> NOTIFIED_STATUSES =
-            List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
-
     /** The materialized calendar. */
     private final TableSessionRepository sessionRepository;
 
@@ -616,10 +612,14 @@ public class TableSessionService {
                 .toList();
     }
 
-    /** Tells everybody signed up that the calendar moved. Nobody is removed and nothing is refused (ADR-15 §2). */
+    /**
+     * Tells the players of the table that the calendar moved. Candidates are left out on purpose: the
+     * sessions are visible to the players of the table only, so a candidate would be sent to a screen
+     * that shows them nothing of what the notice announces. Nobody is removed and nothing is refused.
+     */
     private void notifyPlayers(GameTable table, boolean scheduled) {
         for (TableRegistration registration : registrationRepository.findByGameTable_Id(table.getId())) {
-            if (!NOTIFIED_STATUSES.contains(registration.getStatus())) {
+            if (registration.getStatus() != TableRegistrationStatus.Player) {
                 continue;
             }
             String userId = registration.getUser().getId();

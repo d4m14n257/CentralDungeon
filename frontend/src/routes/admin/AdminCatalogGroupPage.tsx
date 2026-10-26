@@ -5,6 +5,7 @@ import { Navigate, useParams, useSearchParams } from 'react-router'
 import { GraphTray } from '@/components/graph/GraphTray'
 import { IconAction } from '@/components/IconAction'
 import { PageHeader } from '@/components/PageHeader'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { adminCatalogsPath } from '@/config/paths'
 import { CanonicalPicker, CatalogGraph, useCatalogGroup, type CatalogKind } from '@/features/catalogs'
 
@@ -56,7 +57,7 @@ export function AdminCatalogGroupPage() {
   const kind = toKind(params.kind)
   const id = params.id ?? ''
   const withIds = withIdsFrom(searchParams.get('with'), id)
-  const { data: group } = useCatalogGroup(kind ?? 'systems', kind ? id : null)
+  const { data: group, error, isLoadingError, refetch } = useCatalogGroup(kind ?? 'systems', kind ? id : null)
 
   if (!kind || id === '') {
     return <Navigate to={adminCatalogsPath()} replace />
@@ -76,6 +77,22 @@ export function AdminCatalogGroupPage() {
   }
 
   const head = group?.[0]
+
+  // The group the canvas is about could not be read (it does not exist, or it is not the reader's to
+  // see): the screen is that answer, with nothing to drag onto and no tray offering to open more groups.
+  if (isLoadingError) {
+    return (
+      <div className="space-y-4">
+        <PageHeader
+          title={t('admin.groupTitle')}
+          description={t('admin.groupDescription')}
+          back={{ to: `${adminCatalogsPath()}?kind=${kind}`, label: t('admin.backToCatalogs') }}
+          help="admins.catalogs"
+        />
+        <QueryErrorState error={error} onRetry={() => void refetch()} />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">

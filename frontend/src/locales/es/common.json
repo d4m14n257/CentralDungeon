@@ -2,6 +2,7 @@
   "actions": {
     "save": "Guardar",
     "cancel": "Cancelar",
+    "close": "Cerrar",
     "confirm": "Confirmar",
     "accept": "Aceptar",
     "reject": "Rechazar",
@@ -16,6 +17,8 @@
     "errorDescription": "No pudimos cargar esto. Probá de nuevo.",
     "forbiddenTitle": "No tenés permiso",
     "forbiddenDescription": "Tu cuenta no puede ver esta sección.",
+    "notFoundTitle": "No existe",
+    "notFoundDescription": "Lo que buscás no existe o ya no está disponible.",
     "noContextTitle": "Tu cuenta no tiene ninguna sección",
     "noContextDescription": "Ninguno de tus roles abre una parte de la plataforma. Si creés que es un error, hablá con un admin en Discord."
   },
@@ -84,8 +87,8 @@
       "SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde ya estás comprometido.",
       "CANDIDATE_SCHEDULE_CONFLICT": "No se lo puede aceptar: ya juega en «{{otherTableName}}», que se pisa con el horario de esta mesa.",
       "MASTER_SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde {{masterName}} ya está comprometido.",
-      "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Se pueden subir PDF, Word, PNG y JPG.",
-      "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es 2 MB por archivo.",
+      "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Los tipos admitidos se leen junto a la zona donde se sueltan los archivos.",
+      "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es {{maxBytes, megabytes}} MB por archivo.",
       "FILE_EMPTY": "El archivo está vacío. Elegí otro.",
       "TABLE_NEEDS_SYSTEM": "La mesa tiene que decir qué sistema se juega. Elegí uno o proponé el tuyo.",
       "TABLE_NEEDS_PLATFORM": "La mesa tiene que decir dónde se juega. Elegí una plataforma o proponé la tuya.",
@@ -93,7 +96,12 @@
       "TABLE_NEEDS_TAG": "La mesa tiene que llevar al menos un tag. Elegí uno o proponé el tuyo.",
       "FILE_NEEDS_CATEGORY": "Antes de publicarlo, elegí qué es el archivo con «Cambiar qué es». Así los masters saben dónde encontrarlo.",
       "TASK_CLOSED": "Este pedido ya se cerró y el master no recibe más respuestas.",
-      "CAPACITY_BELOW_PLAYERS": "El cupo no puede quedar por debajo de los {{playerCount}} jugadores que ya tiene la mesa."
+      "CAPACITY_BELOW_PLAYERS": "El cupo no puede quedar por debajo de los {{playerCount}} jugadores que ya tiene la mesa.",
+      "MAX_PLAYERS_ABOVE_CAP": "El cupo no puede pasar de {{maxPlayersCap}} jugadores en esta plataforma.",
+      "FILE_CATEGORY_NOT_YOURS": "Ese archivo no puede guardarse en esa categoría: no es una de las tuyas. Elegí otra.",
+      "FILE_CATEGORY_NOT_PUBLISHABLE": "Esa categoría guarda lo que respondió cada persona y no se puede publicar para toda la comunidad.",
+      "FILE_CANNOT_SELF_PUBLISH": "Los archivos de la biblioteca de la plataforma los sube un admin desde la biblioteca, no desde acá.",
+      "REQUEST_TYPE_NOT_ACCEPTED_HERE": "Ese pedido se abre desde el recurso del que trata, no desde esta pantalla."
     }
   },
   "pagination": {
@@ -108,7 +116,10 @@
     "pageSize": "Por página",
     "pageNumber": "Página {{page}}",
     "goTo": "Ir a…",
-    "goToLabel": "Ir a la página (de 1 a {{pages}})"
+    "goToLabel": "Ir a la página (de 1 a {{pages}})",
+    "outOfRangeTitle": "Esa página no existe",
+    "outOfRangeDescription": "La lista tiene {{total}} en total, en {{pages}} páginas.",
+    "goToLast": "Ir a la última página"
   },
   "richText": {
     "bold": "Negrita",

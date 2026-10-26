@@ -17,8 +17,8 @@ import { TableStatusBadge } from './TableStatusBadge'
  * width. The footer separates what describes the table from what describes whoever runs it.
  *
  * "You already applied" is the table's own `applied`, computed by the server for the reader (ADR-09 §1):
- * a plain boolean and not the application's status, because it is true whether it is still pending or
- * you were accepted - nothing more is needed.
+ * true whether it is still pending or you were accepted. Once accepted, `joined` makes the mark say
+ * so instead of claiming an application that is no longer one.
  *
  * The agenda is shown **in local time** (ADR-03 §6): what travels is UTC and the conversion belongs to
  * `lib/date.ts`. And when the table clashes with something the reader is already committed to, the
@@ -38,7 +38,7 @@ export function GameTableCard({ table, linkTo }: { table: GameTableSummary; link
           {table.applied && (
             <span className="bg-raised text-fg-muted inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium">
               <Check className="size-3" />
-              {t('explorer.alreadyApplied')}
+              {table.joined ? t('explorer.joined') : t('explorer.alreadyApplied')}
             </span>
           )}
         </div>

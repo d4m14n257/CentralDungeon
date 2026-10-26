@@ -2,8 +2,8 @@ import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 
-import { ErrorState } from '@/components/ErrorState'
 import { PageHeader } from '@/components/PageHeader'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { RichTextView } from '@/components/RichTextView'
 import { Skeleton } from '@/components/ui/skeleton'
 import { playerHomePath, playerUserProfilePath } from '@/config/paths'
@@ -37,6 +37,9 @@ function applyState(
 ) {
   if (!roles.includes('Player')) {
     return { disabled: true, label: t('detail.needsPlayerRole') }
+  }
+  if (table.joined) {
+    return { disabled: true, label: t('detail.alreadyJoined') }
   }
   if (table.status !== 'Opened') {
     return { disabled: true, label: t('detail.notOpen') }
@@ -82,7 +85,7 @@ export function TableDetailPage() {
   // isLoadingError, not isError: once the table has loaded, a background refetch that fails must not
   // replace the screen with an error - it would take away something that was working a second ago
   // (ADR-19 §4).
-  const { data: table, isPending, isLoadingError } = useGameTable(tableId)
+  const { data: table, isPending, isLoadingError, error, refetch } = useGameTable(tableId)
   const { data: me } = useMe()
   const applyDialog = useDisclosure()
 
@@ -96,7 +99,7 @@ export function TableDetailPage() {
   }
 
   if (isLoadingError || !table) {
-    return <ErrorState message={t('detail.notFoundDescription')} />
+    return <QueryErrorState error={error} onRetry={() => void refetch()} />
   }
 
   // The server's, for the actor of the token (ADR-09 §1): a Rejected application does not count, applying again is what makes sense there.

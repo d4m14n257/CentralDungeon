@@ -297,11 +297,21 @@ describe('SearchQueryInput', () => {
     expect(screen.getByRole('button', { name: 'o' })).toBeInTheDocument()
   })
 
-  /** And the one waiting is «y» by default, so the next criterion says how it will be joined. */
-  it('shows the waiting connector as soon as there is a criterion to join', async () => {
+  /** The default «y» waiting after the last chip joins nothing yet, so it is not drawn as a stray word. */
+  it('does not draw a lone default connector after the only chip', async () => {
     render(<Harness />)
 
-    await userEvent.type(searchBox(), 'juan{Enter}')
+    await userEvent.type(searchBox(), 'zzzzqq{Enter}')
+
+    expect(screen.getByText('zzzzqq')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'y' })).not.toBeInTheDocument()
+  })
+
+  /** Once there is something to join, the waiting one is «y» by default and says how it will be joined. */
+  it('shows the waiting connector once the next criterion is being typed', async () => {
+    render(<Harness />)
+
+    await userEvent.type(searchBox(), 'juan{Enter}pab')
 
     expect(screen.getByRole('button', { name: 'y' })).toBeInTheDocument()
   })

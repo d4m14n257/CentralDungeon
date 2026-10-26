@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -281,6 +282,23 @@ class TableSessionServiceTest {
         assertThat(target.getScheduledAt()).isEqualTo(LocalDateTime.parse("2026-09-16T20:00"));
         assertThat(target.getNotes()).isEqualTo("Se movió un día");
         verify(notificationService).notifySessionScheduled("player-1", table);
+    }
+
+    /** A candidate cannot see the sessions, so a notice about one would lead them to a screen that shows nothing of it. */
+    @Test
+    void doesNotTellCandidatesWhenASessionMoves() {
+        GameTable table = table("t13b", LocalDate.parse("2026-09-08"), 3);
+        lockedSession(table, "s7b", 2, "2026-09-15T20:00", TableSessionStatus.Scheduled);
+        emptyRoster("t13b", "s7b");
+        when(registrationRepository.findByGameTable_Id("t13b"))
+                .thenReturn(List.of(
+                        registration(table, "player-1", TableRegistrationStatus.Player),
+                        registration(table, "candidate-1", TableRegistrationStatus.Candidate)));
+
+        service().update("s7b", new UpdateSessionRequest(LocalDateTime.parse("2026-09-16T20:00"), null), "master-1");
+
+        verify(notificationService).notifySessionScheduled("player-1", table);
+        verify(notificationService, never()).notifySessionScheduled(eq("candidate-1"), any());
     }
 
     /** Writing a note is not moving a date, and does not wake anybody's notification bell. */

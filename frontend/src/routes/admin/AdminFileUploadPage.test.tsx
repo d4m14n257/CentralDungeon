@@ -16,7 +16,7 @@ const uploadToLibrary = vi.hoisted(() => vi.fn())
 vi.mock('@/features/files/api/filesApi', () => ({ filesApi: { uploadToLibrary } }))
 // The dropzone asks the server for the size cap; the shipped default is enough here.
 vi.mock('@/hooks/useClientLimits', () => ({
-  useClientLimits: () => ({ maxFileSizeBytes: 2 * 1024 * 1024, claimTimeoutMinutes: 15 }),
+  useClientLimits: () => ({ maxFileSizeBytes: 2 * 1024 * 1024, claimTimeoutMinutes: 15, maxPlayersCap: 12 }),
 }))
 
 function renderPage() {

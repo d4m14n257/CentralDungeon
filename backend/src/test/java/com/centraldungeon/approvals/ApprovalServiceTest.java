@@ -495,7 +495,7 @@ class ApprovalServiceTest {
 
         // To the requester, pointed at their own profile - never at /admin/requests, which they cannot open.
         verify(notificationService)
-                .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestApproved, "user", "user-1");
+                .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestApproved, "user", "user-1", null);
     }
 
     @Test
@@ -506,7 +506,7 @@ class ApprovalServiceTest {
         service().reject("req-1", NOTE, ADMIN);
 
         verify(notificationService)
-                .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestRejected, "user", "user-1");
+                .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestRejected, "user", "user-1", null);
     }
 
     // ----------------------------------------------------------------- lectura
@@ -651,6 +651,23 @@ class ApprovalServiceTest {
         service().approve("req-1", NOTE, primary);
 
         verify(registrationService).applyApprovedBlock("reg-1", "primary-1", NOTE);
+    }
+
+    /** The veto points at an application, so the outcome carries the table for the co-master's click to land on. */
+    @Test
+    void theVetoOutcomeTravelsWithTheTableOfTheApplication() {
+        ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
+        CurrentUser primary = new CurrentUser("primary-1", Set.of("Master"));
+        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
+        when(entityResolver.exists(request.getEntityType(), "reg-1")).thenReturn(true);
+        when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
+        when(masterService.isPrimaryOf("table-1", "primary-1")).thenReturn(true);
+        when(userService.getById("primary-1")).thenReturn(user("primary-1", "primary"));
+
+        service().reject("req-1", NOTE, primary);
+
+        verify(notificationService)
+                .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestRejected, request.getEntityType(), "reg-1", "table-1");
     }
 
     /** Rejecting a veto request moves nothing: nothing had moved when it was asked for. */

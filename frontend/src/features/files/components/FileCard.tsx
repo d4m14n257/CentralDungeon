@@ -30,8 +30,9 @@ interface FileCardProps {
  * before anything is read, and room under the name for what the caller knows — the category (ADR-14 §4),
  * where it is used (ADR-14 §3), how long since anybody touched it.
  *
- * The name truncates and the row does not: a long filename must not push the actions off the side
- * of a phone. The size sits beside the name rather than under it, so the vertical space belongs to
+ * The name wraps, even in the middle of a word, and the row does not grow: a long filename must not push
+ * the actions off the side of a phone, and a name cut with an ellipsis could not be read at all. The
+ * size sits beside the name rather than under it, so the vertical space belongs to
  * `meta`, which is the part that differs between screens.
  *
  * @param props.name      the original filename
@@ -53,7 +54,7 @@ export function FileCard({ name, mimeType, sizeBytes, meta, actions }: FileCardP
 
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <p className="text-fg min-w-0 truncate text-sm font-medium">{name}</p>
+          <p className="text-fg min-w-0 text-sm font-medium wrap-anywhere">{name}</p>
           <p className="text-fg-muted shrink-0 text-xs">{t(`size.${size.unit}`, { value: size.value })}</p>
         </div>
         {meta}

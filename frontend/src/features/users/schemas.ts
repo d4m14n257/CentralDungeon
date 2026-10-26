@@ -7,7 +7,11 @@ import type { Equals, Expect } from '@/types/utils'
 /** Validates the onboarding form: a display name and a country, both required (ADR-10 §4). */
 export const completeOnboardingSchema = z.object({
   name: z.string().min(1).max(64),
-  country: z.string().regex(/^[A-Z]{2}$/),
+  // min(1) first: an empty country reads as "required", not as a malformed code.
+  country: z
+    .string()
+    .min(1)
+    .regex(/^[A-Z]{2}$/),
 })
 
 /**

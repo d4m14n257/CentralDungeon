@@ -12,6 +12,7 @@
     "descriptionLabel": "Description",
     "requirementsLabel": "Requirements",
     "maxPlayersLabel": "Maximum seats",
+    "maxPlayersHint": "Up to {{cap}} players: the limit the platform sets.",
     "totalSessionsLabel": "Planned sessions",
     "reviewNotice": "An admin will review the table before it opens to applications.",
     "submit": "Create table",
@@ -119,7 +120,6 @@
     "utcEquivalent": "In UTC: {{slot}}",
     "timeZoneHint": "Times are typed in your zone ({{timeZone}}) and stored in UTC.",
     "startDate": "Start date",
-    "duration": "One session lasts",
     "totalSessions": "Planned sessions",
     "notSet": "Not set",
     "emptyTitle": "This table has no agenda",
@@ -292,7 +292,7 @@
     },
     "InProgress": {
       "title": "Being played",
-      "description": "It is being played. Finish it when it ends. If it has to stop, ask for a pause: an admin decides."
+      "description": "Finish it when it ends. If it has to stop, ask for a pause: an admin decides."
     },
     "PauseRequested": {
       "title": "You asked to pause it",
@@ -307,7 +307,7 @@
       "description": "It was played to the end and stays on the record. There is nothing to decide."
     },
     "Canceled": {
-      "title": "Canceled before the end",
+      "title": "Cancelled before the end",
       "description": "It was closed before the end and stays on the record. The reason is in the history."
     }
   }

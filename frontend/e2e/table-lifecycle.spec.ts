@@ -84,6 +84,8 @@ test('an admin searches for people and assigns the masters of an unassigned tabl
     await createDialog.getByRole('textbox', { name: 'Nombre' }).fill(tableName)
     await createDialog.getByRole('button', { name: 'Crear mesa sin master' }).click()
     await acceptReview(admin.page)
+    // The listing is paged oldest first, so a new table can land past the first page: search for it.
+    await admin.page.goto(`/admin/tables?q=${encodeURIComponent(tableName)}`)
 
     // `/admin/tables` is one of the wide tables of skill `diseno` §5.b since F3.3: a `<tr>`.
     const row = admin.page.getByRole('row').filter({ hasText: tableName })

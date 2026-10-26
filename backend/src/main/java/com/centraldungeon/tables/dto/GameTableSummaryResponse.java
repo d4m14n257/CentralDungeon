@@ -26,6 +26,9 @@ import org.jspecify.annotations.Nullable;
  *                         Player (ADR-09 §1) - which is the explorer's "you already applied" mark. Computed
  *                         here for the whole page instead of crossed on the client against a paginated
  *                         list that only ever held its first page. False where no actor is involved
+ * @param joined           whether the actor of the token is already a Player of the table, which is a stronger
+ *                         state than {@code applied}: the card says they are in instead of "you applied".
+ *                         False where no actor is involved
  * @param primaryMaster    who runs the table. Non-null here because every table this endpoint lists
  *                         already has a Primary - the Unassigned case has its own shape,
  *                         {@link AdminTableSummaryResponse}
@@ -41,5 +44,6 @@ public record GameTableSummaryResponse(
         List<TableScheduleEntry> schedule,
         boolean scheduleConflict,
         boolean applied,
+        boolean joined,
         MasterSummaryResponse primaryMaster) {
 }

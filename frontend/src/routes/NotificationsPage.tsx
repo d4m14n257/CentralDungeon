@@ -76,12 +76,12 @@ export function NotificationsPage() {
                     type="button"
                     onClick={() => handleClick(notification)}
                     className={cn(
-                      'hover:bg-accent flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left',
+                      'hover:bg-accent flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left',
                       unread ? 'bg-raised' : 'bg-transparent',
                     )}
                   >
                     <span className={cn('size-2 shrink-0 rounded-full', unread ? 'bg-brand-fg' : 'bg-transparent')} aria-hidden />
-                    <span className={cn('flex-1 truncate text-sm', unread ? 'text-fg font-medium' : 'text-fg-muted')}>
+                    <span className={cn('min-w-0 flex-1 basis-40 text-sm wrap-anywhere', unread ? 'text-fg font-medium' : 'text-fg-muted')}>
                       {notificationText(notification, t).title}
                     </span>
                     {outcome && <StatusBadge tone={outcome.tone} label={t(outcome.labelKey)} />}

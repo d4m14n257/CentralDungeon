@@ -85,7 +85,7 @@ export function ReassignCatalogValueDialog({ kind, value, open, onOpenChange }: 
           onSelect={setTarget}
           {...(value.canonicalId ? { excludeId: value.canonicalId } : {})}
         />
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('admin.cancel')}
           </Button>

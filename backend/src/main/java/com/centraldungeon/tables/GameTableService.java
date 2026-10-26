@@ -1252,6 +1252,10 @@ public class GameTableService {
         Set<String> applied = conflictActorId == null || ids.isEmpty()
                 ? Set.of()
                 : Set.copyOf(tableRegistrationRepository.findTableIdsWithRegistration(conflictActorId, ids, ACTIVE_REGISTRATION_STATUSES));
+        Set<String> joined = conflictActorId == null || ids.isEmpty()
+                ? Set.of()
+                : Set.copyOf(tableRegistrationRepository.findTableIdsWithRegistration(
+                        conflictActorId, ids, List.of(TableRegistrationStatus.Player)));
 
         return PageResponse.from(page.map(gameTable -> gameTableMapper.toSummary(
                 gameTable,
@@ -1259,7 +1263,8 @@ public class GameTableService {
                 findPrimaryMaster(gameTable.getId()),
                 schedules.getOrDefault(gameTable.getId(), List.of()),
                 clashing.contains(gameTable.getId()),
-                applied.contains(gameTable.getId()))));
+                applied.contains(gameTable.getId()),
+                joined.contains(gameTable.getId()))));
     }
 
     /**
@@ -1394,7 +1399,9 @@ public class GameTableService {
                 richTextSanitizer.sanitize(gameTable.getRequirements()),
                 conflictActorId != null && scheduleConflictService.findClashWith(conflictActorId, gameTable) != null,
                 conflictActorId != null && tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
-                        gameTable.getId(), conflictActorId, ACTIVE_REGISTRATION_STATUSES));
+                        gameTable.getId(), conflictActorId, ACTIVE_REGISTRATION_STATUSES),
+                conflictActorId != null && tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        gameTable.getId(), conflictActorId, List.of(TableRegistrationStatus.Player)));
     }
 
     private int countPlayers(String gameTableId) {

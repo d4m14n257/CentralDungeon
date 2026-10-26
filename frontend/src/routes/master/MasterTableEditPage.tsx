@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
-import { ErrorState } from '@/components/ErrorState'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { Button } from '@/components/ui/button'
@@ -37,7 +37,7 @@ import type { CreateGameTableForm, TableScheduleEntry } from '@/features/tables'
 import { useMe } from '@/features/users'
 import { WEEKDAYS, browserTimeZone, formatMinutes, minutesOfDay } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
-import { ApiError } from '@/types/api'
+import { useClientLimits } from '@/hooks/useClientLimits'
 import { useConfirm } from '@/hooks/useConfirm'
 
 /** The two states where the backend still accepts a rewrite of the table (ADR-04 §7). */
@@ -172,8 +172,9 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
    * `keepDirtyValues` is what the old effect was really after: a refetch refreshes the fields nobody
    * is editing and leaves the ones somebody is.
    */
+  const { maxPlayersCap } = useClientLimits()
   const form = useForm<CreateGameTableForm>({
-    resolver: zodResolver(createGameTableSchema),
+    resolver: zodResolver(createGameTableSchema(maxPlayersCap)),
     // **Every field, not only the text ones.** A field missing from here registers as `''`
     // against a default of `undefined`, which react-hook-form reads as dirty - and on the edit
     // page `keepDirtyValues` then defended that emptiness against the value the table actually
@@ -230,12 +231,8 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
     return <Skeleton className="h-96 w-full" />
   }
 
-  if (error instanceof ApiError && error.status === 403) {
-    return <ForbiddenState />
-  }
-
   if (isLoadingError || !table) {
-    return <ErrorState onRetry={() => void refetch()} />
+    return <QueryErrorState error={error} onRetry={() => void refetch()} />
   }
 
   const isPrimary = table.masters.some((master) => master.userId === me?.id && master.masterType === 'Primary')
@@ -462,8 +459,9 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
                   <FormItem>
                     <FormLabel>{t('create.maxPlayersLabel')}</FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} {...field} value={field.value ?? ''} />
+                      <Input type="number" min={1} max={maxPlayersCap} {...field} value={field.value ?? ''} />
                     </FormControl>
+                    <FormDescription>{t('create.maxPlayersHint', { cap: maxPlayersCap })}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -22,7 +22,9 @@ export function BackendStatusIndicator() {
       )}
     >
       <span className={cn('size-1.5 rounded-full', isOnline ? 'bg-state-open-dot' : 'bg-state-canceled-dot')} />
-      {isOnline ? t('connection.online') : t('connection.offline')}
+      {/* Below `sm` it is only the dot: the whole pill sat over the text and the «Anterior» button at the
+          foot of a page, and the dot says the same with the label still read aloud. */}
+      <span className="max-sm:sr-only">{isOnline ? t('connection.online') : t('connection.offline')}</span>
     </div>
   )
 }

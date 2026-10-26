@@ -2,6 +2,14 @@ import { api } from '@/api/client'
 
 import type { CreateRegistrationInput, Registration, TablePlayer } from '../types'
 
+/**
+ * A body this feature deliberately does not read: `request-block` answers with an
+ * `ApprovalRequestDetailResponse`, which is `features/approvals`' vocabulary and a feature never
+ * imports from another. `unknown` and not `void`, because `void` would claim the wire is empty when
+ * it is not; callers re-read the list they render instead.
+ */
+type UnreadBody = unknown
+
 /** The calls about applications: applying, reading the queue, and answering it. */
 export const registrationsApi = {
   apply: (tableId: string, input: CreateRegistrationInput) =>
@@ -73,7 +81,7 @@ export const registrationsApi = {
    * @param justification  why, required — it is what the `Primary` reads to decide
    */
   requestBlock: (tableId: string, registrationId: string, justification: string) =>
-    api.post<void, { justification: string }>(`/api/v1/game-tables/${tableId}/registrations/${registrationId}/request-block`, {
+    api.post<UnreadBody, { justification: string }>(`/api/v1/game-tables/${tableId}/registrations/${registrationId}/request-block`, {
       justification,
     }),
 }

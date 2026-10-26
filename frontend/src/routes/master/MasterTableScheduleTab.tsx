@@ -17,13 +17,13 @@ interface OutletContext {
   isPrimary: boolean
   schedule: TableScheduleEntry[]
   startDate: string | null
-  duration: string | null
   totalSessions: number | null
 }
 
 /**
  * The agenda tab of `/master/tables/:id` — the weekly shape of the table, plus when it starts, how
- * long a session runs and how many there are.
+ * how many sessions there are. How long a session runs is a property of each slot, so it closes each
+ * slot's range ("Tuesday 14:00–17:00") rather than being one figure for the whole table.
  *
  * **Read-only, and shown in the reader's own time** (ADR-03 §6): the agenda travels in UTC and is
  * converted once, here, through `lib/date.ts`. Editing it is the same act as editing the table —
@@ -32,7 +32,7 @@ interface OutletContext {
  */
 export function MasterTableScheduleTab() {
   const { t, i18n } = useTranslation('master')
-  const { tableId, status, isPrimary, schedule, startDate, duration, totalSessions } = useOutletContext<OutletContext>()
+  const { tableId, status, isPrimary, schedule, startDate, totalSessions } = useOutletContext<OutletContext>()
   // ADR-03 §6 took `users.timezone` out of the model, so the browser is the only source today (ADR-19 §7).
   const timeZone = useMemo(() => browserTimeZone(), [])
 
@@ -40,14 +40,10 @@ export function MasterTableScheduleTab() {
 
   return (
     <div className="space-y-4">
-      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <dt className="text-fg-subtle text-xs">{t('schedule.startDate')}</dt>
           <dd className="text-sm">{startDate ? formatPlainDate(startDate, i18n.language) : t('schedule.notSet')}</dd>
-        </div>
-        <div>
-          <dt className="text-fg-subtle text-xs">{t('schedule.duration')}</dt>
-          <dd className="text-sm">{duration ? duration.slice(0, 5) : t('schedule.notSet')}</dd>
         </div>
         <div>
           <dt className="text-fg-subtle text-xs">{t('schedule.totalSessions')}</dt>
@@ -61,7 +57,7 @@ export function MasterTableScheduleTab() {
         <ul className="list-divided">
           {schedule.map((entry) => (
             <li key={`${entry.weekday}-${entry.hourtime}`} className="px-4 py-2 text-sm">
-              {formatSlot(utcSlotToLocal({ weekday: entry.weekday, hourtime: entry.hourtime }, timeZone), i18n.language, duration)}
+              {formatSlot(utcSlotToLocal({ weekday: entry.weekday, hourtime: entry.hourtime }, timeZone), i18n.language, entry.duration)}
             </li>
           ))}
         </ul>

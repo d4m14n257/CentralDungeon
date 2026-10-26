@@ -110,6 +110,9 @@
     "detailDialogTitle": "Pedido de {{name}}",
     "detailDialogDescription": "Lo que pidió, y cómo se resolvió.",
     "detailStillPending": "Todavía no se resolvió.",
+    "detailPrimaryOnly": "Lo resuelve el master de la mesa, no un admin.",
+    "viewPerson": "Ver a quien lo pidió",
+    "viewTable": "Ver la mesa",
     "errors": {
       "REQUEST_ALREADY_PENDING": "Ya tenés un pedido de este tipo esperando respuesta. Hay que resolver ese antes de hacer otro.",
       "REQUEST_ALREADY_RESOLVED": "Este pedido ya lo resolvió alguien. Actualizá la pantalla para ver cómo quedó.",

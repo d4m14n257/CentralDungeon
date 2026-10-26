@@ -95,7 +95,7 @@ export function CreateCatalogValueDialog({ kind, open, onOpenChange }: CreateCat
             onChange={(event) => setName(event.target.value)}
           />
         </div>
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => close(false)}>
             {t('admin.cancel')}
           </Button>

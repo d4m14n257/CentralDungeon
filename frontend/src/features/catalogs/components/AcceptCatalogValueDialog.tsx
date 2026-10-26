@@ -79,7 +79,7 @@ export function AcceptCatalogValueDialog({ kind, value, open, onOpenChange }: Ac
         <p className="text-fg-muted text-sm">
           {canonicalId === null ? t('admin.acceptAsNewGroupHint') : t('admin.acceptAsAliasHint', { name: value.name })}
         </p>
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('admin.cancel')}
           </Button>

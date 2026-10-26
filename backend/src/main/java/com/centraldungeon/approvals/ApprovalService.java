@@ -713,8 +713,12 @@ public class ApprovalService {
 
     /** The resolution is the only thing that rings a bell, and only for the person who asked (ADR-16 §5). */
     private void notifyRequester(ApprovalRequest request, NotificationType type) {
+        // A veto points at an application; the requester's click has to land on the table, so it travels too.
+        String tableId = request.getRequestType() == ApprovalRequestType.PlayerBan
+                ? registrationService.tableIdOf(request.getEntityId())
+                : null;
         notificationService.notifyApprovalResolved(
-                request.getRequestedBy().getId(), type, request.getEntityType(), request.getEntityId());
+                request.getRequestedBy().getId(), type, request.getEntityType(), request.getEntityId(), tableId);
     }
 
     private ApprovalRequest getById(String requestId) {

@@ -44,12 +44,13 @@ export interface CatalogComboboxProps {
  */
 export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }: CatalogComboboxProps) {
   const { t } = useTranslation('catalogs')
+  const { t: tCommon } = useTranslation('common')
   const confirm = useConfirm()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 250)
 
-  const { data, isPending } = useCatalogValues(kind, debouncedSearch)
+  const { data, isPending, isLoadingError, refetch } = useCatalogValues(kind, debouncedSearch)
   const propose = useProposeCatalogValue(kind)
 
   const selectedIds = new Set(selected.map((value) => value.id))
@@ -59,7 +60,7 @@ export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }
   // Only offer to propose something that is not already an option: an exact match, however it is
   // cased, is the value that already exists - the server would answer 409 anyway.
   const alreadyExists = options.some((option) => option.name.toLowerCase() === trimmed.toLowerCase())
-  const showPropose = canPropose && trimmed.length > 0 && !alreadyExists && !isPending
+  const showPropose = canPropose && trimmed.length > 0 && !alreadyExists && !isPending && !isLoadingError
 
   function handleSelect(value: CatalogValue) {
     onSelect(value)
@@ -91,7 +92,18 @@ export function CatalogCombobox({ kind, selected, onSelect, canPropose = false }
           <CommandInput placeholder={t(`kind.${kind}.searchPlaceholder`)} value={search} onValueChange={setSearch} />
           <CommandList>
             {isPending && <CommandEmpty>{t('combobox.loading')}</CommandEmpty>}
-            {!isPending && options.length === 0 && !showPropose && <CommandEmpty>{t('combobox.noResults')}</CommandEmpty>}
+            {/* A failed read says so and offers the retry: «no results» would claim the catalog has nothing. */}
+            {isLoadingError && (
+              <div role="alert" className="flex flex-col items-center gap-2 px-3 py-6 text-center text-sm">
+                <p>{tCommon('states.errorDescription')}</p>
+                <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
+                  {tCommon('actions.retry')}
+                </Button>
+              </div>
+            )}
+            {!isPending && !isLoadingError && options.length === 0 && !showPropose && (
+              <CommandEmpty>{t('combobox.noResults')}</CommandEmpty>
+            )}
             {options.length > 0 && (
               <CommandGroup>
                 {options.map((option) => (

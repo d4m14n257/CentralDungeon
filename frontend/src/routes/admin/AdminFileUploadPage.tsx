@@ -130,7 +130,7 @@ export function AdminFileUploadPage() {
 
       {showMissing && missing.length > 0 && <p className="inline-error">{t('upload.missingCategory', { count: missing.length })}</p>}
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button variant="ghost" asChild>
           <Link to={adminFilesPath()}>{t('upload.cancel')}</Link>
         </Button>

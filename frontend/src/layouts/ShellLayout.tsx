@@ -13,7 +13,7 @@ export function ShellLayout() {
   return (
     <div className="bg-background min-h-svh">
       <AppHeader />
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="page-content">
         <Outlet />
       </main>
     </div>

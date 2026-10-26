@@ -12,6 +12,7 @@
     "descriptionLabel": "Descripción",
     "requirementsLabel": "Requisitos",
     "maxPlayersLabel": "Cupo máximo",
+    "maxPlayersHint": "Hasta {{cap}} jugadores: es el tope que fija la plataforma.",
     "totalSessionsLabel": "Sesiones planeadas",
     "reviewNotice": "Un admin va a revisar la mesa antes de que quede abierta a postulaciones.",
     "submit": "Crear mesa",
@@ -119,7 +120,6 @@
     "utcEquivalent": "En UTC: {{slot}}",
     "timeZoneHint": "Las horas se escriben en tu zona ({{timeZone}}) y se guardan en UTC.",
     "startDate": "Fecha de inicio",
-    "duration": "Duración de una sesión",
     "totalSessions": "Sesiones previstas",
     "notSet": "Sin definir",
     "emptyTitle": "La mesa no tiene agenda",
@@ -292,7 +292,7 @@
     },
     "InProgress": {
       "title": "Se está jugando",
-      "description": "Se está jugando. Cuando termine, finalizala. Si hay que frenar, pedí una pausa: la decide un admin."
+      "description": "Cuando termine, finalizala. Si hay que frenar, pedí una pausa: la decide un admin."
     },
     "PauseRequested": {
       "title": "Pediste pausarla",

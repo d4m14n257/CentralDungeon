@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -6,11 +7,19 @@ import type { AppContext } from '@/stores/contextStore'
 import { RootRedirect } from './RootRedirect'
 
 let contexts: AppContext[] = []
+let isError = false
+const retry = vi.fn()
+
+// The sign-out button is not under test here; it only needs a session to close.
+vi.mock('@/features/auth', () => ({ useLogout: () => ({ mutate: vi.fn(), isPending: false }) }))
+vi.mock('@/providers/AuthProvider', () => ({ useAuth: () => ({ signOut: vi.fn() }) }))
 
 vi.mock('@/hooks/useAvailableContexts', () => ({
   useAvailableContexts: () => ({
     contexts,
     isPending: false,
+    isError,
+    retry,
     activeContext: contexts[0] ?? 'player',
     preferredContext: contexts[0] ?? 'player',
   }),
@@ -31,6 +40,8 @@ function renderRoot() {
 describe('RootRedirect', () => {
   beforeEach(() => {
     contexts = []
+    isError = false
+    retry.mockClear()
   })
 
   /** ADR-20 §3: the admin context's home is `/admin` itself, not the tray. */
@@ -47,5 +58,24 @@ describe('RootRedirect', () => {
 
     expect(screen.queryByText('player home')).not.toBeInTheDocument()
     expect(screen.getByText('Tu cuenta no tiene ninguna sección')).toBeInTheDocument()
+  })
+
+  it('offers a way to sign out from the screen of an account with no context', () => {
+    renderRoot()
+
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
+  })
+
+  /** A failed read of the roles leaves `contexts` empty too, and that must not read as «no section». */
+  it('shows an error with a retry, and not «no section», when the roles could not be read', async () => {
+    isError = true
+    renderRoot()
+
+    expect(screen.getByText('Algo salió mal')).toBeInTheDocument()
+    expect(screen.queryByText('Tu cuenta no tiene ninguna sección')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+    expect(retry).toHaveBeenCalledOnce()
   })
 })

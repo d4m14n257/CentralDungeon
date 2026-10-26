@@ -7,6 +7,7 @@ import { useConfirm } from '@/hooks/useConfirm'
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
 import { EmptyState } from '@/components/EmptyState'
+import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
@@ -239,7 +240,14 @@ export function AdminCatalogsPage() {
 
       {isPending && <Skeleton className="h-64 w-full" />}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && (
+      {data && data.content.length === 0 && data.totalElements > 0 && (
+        <PageOutOfRangeState
+          totalPages={data.totalPages}
+          totalElements={data.totalElements}
+          onPageChange={(next) => updateParams({ page: String(next) })}
+        />
+      )}
+      {data && data.totalElements === 0 && (
         <EmptyState title={t('admin.emptyTitle')} description={query ? t('admin.emptySearchDescription') : t('admin.emptyDescription')} />
       )}
       {data && data.content.length > 0 && (

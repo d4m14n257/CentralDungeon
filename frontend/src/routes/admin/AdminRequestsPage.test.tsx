@@ -157,6 +157,49 @@ describe('AdminRequestsPage', () => {
     expect(resolved.getByRole('button', { name: 'Ver detalle' })).toBeInTheDocument()
   })
 
+  /** A player veto is the table Primary's to resolve: the backend answers 403, so an admin is not offered the acts. */
+  it('offers no approve or reject on a player veto, only the detail', async () => {
+    list.mockResolvedValue(page([request({ type: 'PlayerBan', requestedByName: 'beto' })]))
+    byId.mockResolvedValue({
+      ...request({ type: 'PlayerBan', requestedByName: 'beto' }),
+      entityType: 'table_registration',
+      entityId: 'reg-1',
+      resolvedByName: null,
+      resolutionNote: null,
+      resolvedAt: null,
+    })
+
+    renderPage()
+    const row = await rowFor('beto')
+
+    expect(row.queryByRole('button', { name: 'Aprobar' })).not.toBeInTheDocument()
+    expect(row.queryByRole('button', { name: 'Rechazar' })).not.toBeInTheDocument()
+    await userEvent.click(row.getByRole('button', { name: 'Ver detalle' }))
+    const dialog = within(await screen.findByRole('dialog'))
+    expect(await dialog.findByText('Lo resuelve el master de la mesa, no un admin.')).toBeInTheDocument()
+    expect(dialog.queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  /** The detail points at what the request is about, with the screens an admin already has. */
+  it('links the person or the table a request points at from its detail', async () => {
+    list.mockResolvedValue(page([request({ type: 'TablePause' })]))
+    byId.mockResolvedValue({
+      ...request({ type: 'TablePause' }),
+      entityType: 'game_table',
+      entityId: 'table-7',
+      resolvedByName: null,
+      resolutionNote: null,
+      resolvedAt: null,
+    })
+
+    renderPage()
+    const row = await rowFor('dami')
+    await userEvent.click(row.getByRole('button', { name: 'Ver detalle' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+    expect(await dialog.findByRole('link', { name: 'Ver la mesa' })).toHaveAttribute('href', '/admin/tables/table-7')
+  })
+
   /** The reason is the row: an admin decides on it and on nothing else. */
   it('shows what was asked and by whom', async () => {
     list.mockResolvedValue(page([request()]))
@@ -297,5 +340,6 @@ describe('AdminRequestsPage', () => {
     const dialog = within(await screen.findByRole('dialog'))
     expect(await dialog.findByText('Todavía no tenés mesas jugadas acá')).toBeInTheDocument()
     expect(dialog.getByText(/Resuelto por ana/)).toBeInTheDocument()
+    expect(dialog.getByRole('link', { name: 'Ver a quien lo pidió' })).toHaveAttribute('href', '/admin/users/user-1')
   })
 })

@@ -234,7 +234,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     const history = admin.page.getByRole('dialog')
     await expect(history).toContainText(resolutionNote)
     await expect(history).toContainText(adminId)
-    await history.getByRole('button', { name: 'Close' }).click()
+    await history.getByRole('button', { name: 'Cerrar' }).click()
 
     // ---- 6. The requester is told, once, and the notice opens something.
     //

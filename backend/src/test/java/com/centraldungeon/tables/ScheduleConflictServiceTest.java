@@ -228,6 +228,24 @@ class ScheduleConflictServiceTest {
         assertThat(clash).isNull();
     }
 
+    /** The explorer lists a table the person already plays at: it is their commitment, not a clash with it. */
+    @Test
+    void aListedTableThePersonAlreadyPlaysAtDoesNotClashWithItself() {
+        GameTable played = table("played", GameTableStatus.InProgress);
+        GameTable other = table("other", GameTableStatus.Opened);
+        when(gameTableRepository.findMasteredByUserInStatuses(anyString(), any())).thenReturn(List.of());
+        when(registrationRepository.findTablesPlayedByUserInStatuses(anyString(), any())).thenReturn(List.of(played));
+        when(scheduleRepository.findById_GameTableIdInAndStatus(any(), any()))
+                // First read: the person's commitments. Second: the agendas of the listed page.
+                .thenReturn(List.of(new TableSchedule("played", Weekday.Saturday, LocalTime.of(18, 0), LocalTime.of(4, 0))))
+                .thenReturn(List.of(
+                        new TableSchedule("played", Weekday.Saturday, LocalTime.of(18, 0), LocalTime.of(4, 0)),
+                        new TableSchedule("other", Weekday.Saturday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
+
+        assertThat(scheduleConflictService.clashingAmong("player-1", List.of(played, other)))
+                .containsExactly("other");
+    }
+
     @Test
     void anEmptyAgendaNeverClashes() {
         assertThat(scheduleConflictService.findClash("master-1", null, List.of())).isNull();

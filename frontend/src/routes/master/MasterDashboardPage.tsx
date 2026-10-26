@@ -2,14 +2,12 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { EmptyState } from '@/components/EmptyState'
-import { ErrorState } from '@/components/ErrorState'
-import { ForbiddenState } from '@/components/ForbiddenState'
+import { QueryErrorState } from '@/components/QueryErrorState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { masterTablesPath } from '@/config/paths'
 import { MasterWorkItemList, useMasterDashboard } from '@/features/tables'
-import { ApiError } from '@/types/api'
 
 /**
  * `/master` — the work tray: what needs an answer today, across every table the reader runs (ADR-20 §4).
@@ -27,21 +25,30 @@ export function MasterDashboardPage() {
   // loaded (ADR-19 §4).
   const { data, isPending, error, isLoadingError, refetch } = useMasterDashboard()
 
-  if (isPending) {
-    return <Skeleton className="h-48 w-full" />
-  }
+  // The header is there in every state: the screen keeps its shape while it loads and when it fails.
+  const header = <PageHeader title={t('dashboard.title')} description={t('dashboard.subtitle')} help="masters.dashboard" />
 
-  if (error instanceof ApiError && error.status === 403) {
-    return <ForbiddenState />
+  if (isPending) {
+    return (
+      <div className="space-y-4">
+        {header}
+        <Skeleton className="h-48 w-full" />
+      </div>
+    )
   }
 
   if (isLoadingError || !data) {
-    return <ErrorState onRetry={() => void refetch()} />
+    return (
+      <div className="space-y-4">
+        {header}
+        <QueryErrorState error={error} onRetry={() => void refetch()} />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('dashboard.title')} description={t('dashboard.subtitle')} help="masters.dashboard" />
+      {header}
 
       {data.items.length === 0 ? (
         <EmptyState

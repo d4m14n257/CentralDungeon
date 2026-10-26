@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 
 import { ErrorState } from '@/components/ErrorState'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogContent } from '@/components/DialogContent'
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { useUserProfile } from '../api/useUserProfile'

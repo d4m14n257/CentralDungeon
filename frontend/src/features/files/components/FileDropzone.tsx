@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useClientLimits } from '@/hooks/useClientLimits'
 import { cn } from '@/lib/utils'
 import { FILE_CATEGORIES } from '../categories'
-import { rejectionOf } from '../limits'
+import { allowedTypesLabel, rejectionOf } from '../limits'
 import { FileCategoryChoice } from './FileCategoryChoice'
 import type { FileCategory, StagedFile } from '../types'
 
@@ -82,7 +82,7 @@ export function FileDropzone({
   categories = FILE_CATEGORIES,
   multiple = false,
 }: FileDropzoneProps) {
-  const { t } = useTranslation('files')
+  const { t, i18n } = useTranslation('files')
   // The cap is a setting since F3.5 (ADR-17 §3), so it is asked for rather than assumed. The hook always
   // answers - with the shipped default while the request is in flight - so the zone is never waiting
   // on a fetch to be able to refuse something.
@@ -111,7 +111,11 @@ export function FileDropzone({
     for (const file of multiple ? files : files.slice(0, 1)) {
       const rejection = rejectionOf(file, maxFileSizeBytes)
       if (rejection !== null) {
-        const reason = t([`errors.${rejection}`, 'errors.uploadFailed'], { maxBytes: maxFileSizeBytes, sizeBytes: file.size })
+        const reason = t([`errors.${rejection}`, 'errors.uploadFailed'], {
+          maxBytes: maxFileSizeBytes,
+          sizeBytes: file.size,
+          types: allowedTypesLabel(i18n.language),
+        })
         // Several at once: a refusal has to say which file it is about, or it names nothing.
         refusals.push(multiple ? t('dropzone.refusedFile', { name: file.name, reason }) : reason)
         continue
@@ -163,7 +167,9 @@ export function FileDropzone({
         <span className="text-sm font-medium">{t(multiple ? 'dropzone.promptMultiple' : 'dropzone.prompt')}</span>
         {/* The cap is interpolated rather than written into the sentence: it is a setting now, and a
             hardcoded "2 MB" in the copy would go on saying 2 the day an admin raises it (ADR-17 §3). */}
-        <span className="text-fg-muted text-xs">{t('dropzone.limits', { maxMb: Math.floor(maxFileSizeBytes / (1024 * 1024)) })}</span>
+        <span className="text-fg-muted text-xs">
+          {t('dropzone.limits', { maxMb: Math.floor(maxFileSizeBytes / (1024 * 1024)), types: allowedTypesLabel(i18n.language) })}
+        </span>
         <input
           ref={input}
           id={inputId}

@@ -2,6 +2,7 @@
   "actions": {
     "save": "Save",
     "cancel": "Cancel",
+    "close": "Close",
     "confirm": "Confirm",
     "accept": "Accept",
     "reject": "Reject",
@@ -16,6 +17,8 @@
     "errorDescription": "We could not load this. Try again.",
     "forbiddenTitle": "You do not have access",
     "forbiddenDescription": "Your account cannot see this section.",
+    "notFoundTitle": "It does not exist",
+    "notFoundDescription": "What you are looking for does not exist or is no longer available.",
     "noContextTitle": "Your account has no section",
     "noContextDescription": "None of your roles opens a part of the platform. If you think this is a mistake, talk to an admin on Discord."
   },
@@ -84,8 +87,8 @@
       "SCHEDULE_CONFLICT": "It clashes with “{{otherTableName}}”, where you are already committed.",
       "CANDIDATE_SCHEDULE_CONFLICT": "They cannot be accepted: they already play at “{{otherTableName}}”, which clashes with this table’s agenda.",
       "MASTER_SCHEDULE_CONFLICT": "It clashes with “{{otherTableName}}”, where {{masterName}} is already committed.",
-      "FILE_TYPE_NOT_ALLOWED": "That file type is not accepted. PDF, Word, PNG and JPG can be uploaded.",
-      "FILE_TOO_LARGE": "The file is over the limit. The maximum is 2 MB per file.",
+      "FILE_TYPE_NOT_ALLOWED": "That file type is not accepted. The accepted types are listed next to the place where files are dropped.",
+      "FILE_TOO_LARGE": "The file is over the limit. The maximum is {{maxBytes, megabytes}} MB per file.",
       "FILE_EMPTY": "The file is empty. Pick another one.",
       "TABLE_NEEDS_SYSTEM": "The table has to say what system is played. Pick one or propose your own.",
       "TABLE_NEEDS_PLATFORM": "The table has to say where it is played. Pick a platform or propose your own.",
@@ -93,7 +96,12 @@
       "TABLE_NEEDS_TAG": "The table has to carry at least one tag. Pick one or propose your own.",
       "FILE_NEEDS_CATEGORY": "Before publishing it, choose what the file is with “Change what it is”. That is how masters know where to find it.",
       "TASK_CLOSED": "This request is already closed and the master is not taking more answers.",
-      "CAPACITY_BELOW_PLAYERS": "The seats cannot go below the {{playerCount}} players the table already has."
+      "CAPACITY_BELOW_PLAYERS": "The seats cannot go below the {{playerCount}} players the table already has.",
+      "MAX_PLAYERS_ABOVE_CAP": "The seats cannot go above {{maxPlayersCap}} players on this platform.",
+      "FILE_CATEGORY_NOT_YOURS": "That file cannot be filed under that category: it is not one of yours. Pick another.",
+      "FILE_CATEGORY_NOT_PUBLISHABLE": "That category holds what each person answered and cannot be published to the whole community.",
+      "FILE_CANNOT_SELF_PUBLISH": "Files of the platform's library are uploaded by an admin from the library, not from here.",
+      "REQUEST_TYPE_NOT_ACCEPTED_HERE": "That request is opened from the resource it is about, not from this screen."
     }
   },
   "pagination": {
@@ -108,7 +116,10 @@
     "pageSize": "Per page",
     "pageNumber": "Page {{page}}",
     "goTo": "Go to…",
-    "goToLabel": "Go to page (1 to {{pages}})"
+    "goToLabel": "Go to page (1 to {{pages}})",
+    "outOfRangeTitle": "That page does not exist",
+    "outOfRangeDescription": "The list has {{total}} in total, across {{pages}} pages.",
+    "goToLast": "Go to the last page"
   },
   "richText": {
     "bold": "Bold",

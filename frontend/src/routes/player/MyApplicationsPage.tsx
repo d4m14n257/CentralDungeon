@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
 import { EmptyState } from '@/components/EmptyState'
+import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
@@ -60,14 +61,21 @@ export function MyApplicationsPage() {
         </div>
       )}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
-      {data && data.content.length === 0 && (
+      {data && data.content.length === 0 && data.totalElements > 0 && (
+        <PageOutOfRangeState
+          totalPages={data.totalPages}
+          totalElements={data.totalElements}
+          onPageChange={(next) => setSearchParams({ page: String(next) })}
+        />
+      )}
+      {data && data.totalElements === 0 && (
         <EmptyState title={t('myApplications.emptyTitle')} description={t('myApplications.emptyDescription')} />
       )}
       {data && data.content.length > 0 && (
         <ul className="list-divided">
           {data.content.map((registration) => (
-            <li key={registration.id} className="flex items-center justify-between gap-4 px-4 py-3">
-              <div className="space-y-1">
+            <li key={registration.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+              <div className="min-w-0 flex-1 basis-56 space-y-1 wrap-anywhere">
                 <p className="text-sm font-medium">{registration.gameTableName}</p>
                 <p className="text-fg-subtle text-xs">
                   {/* The date goes through lib/date.ts: locale and zone are parameters, never constants (ADR-19 §7). */}
@@ -87,7 +95,7 @@ export function MyApplicationsPage() {
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <RegistrationStatusBadge status={registration.status} />
                 {/* Only while it is pending: once accepted there is a table counting on you, and
                     leaving is a conversation with the master, not a button (ADR-08 §2). */}

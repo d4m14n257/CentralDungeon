@@ -74,7 +74,7 @@ export function NotificationBell() {
               <span className={cn('w-4 shrink-0 text-center', unread ? 'text-brand-fg' : 'text-fg-subtle')} aria-hidden>
                 {unread ? '●' : '○'}
               </span>
-              <span className="flex-1 truncate">{notificationText(notification, t).title}</span>
+              <span className="min-w-0 flex-1 wrap-anywhere">{notificationText(notification, t).title}</span>
               <span className="text-fg-subtle shrink-0 text-xs">{relativeTimeLabel(notification.createdAt)}</span>
             </DropdownMenuItem>
           )

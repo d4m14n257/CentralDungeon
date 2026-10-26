@@ -173,7 +173,8 @@ class AdminSettingsApiIT {
         as(get("/api/v1/settings/limits"), plainPlayer)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.maxFileSizeBytes").value(2 * 1024 * 1024))
-                .andExpect(jsonPath("$.claimTimeoutMinutes").value(15));
+                .andExpect(jsonPath("$.claimTimeoutMinutes").value(15))
+                .andExpect(jsonPath("$.maxPlayersCap").value(12));
     }
 
     // ---------------------------------------------------------------- the listing

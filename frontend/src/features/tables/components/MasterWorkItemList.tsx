@@ -45,8 +45,8 @@ export function MasterWorkItemList({ items }: MasterWorkItemListProps) {
     <ul className="list-divided">
       {items.map((item) => (
         <li key={`${item.tableId}-${item.kind}-${item.subject ?? ''}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <span className="min-w-0 flex-1">
-            <span className="block truncate font-serif font-semibold">{item.tableName}</span>
+          <span className="min-w-0 flex-1 basis-48 wrap-anywhere">
+            <span className="block font-serif font-semibold">{item.tableName}</span>
             <span className="text-fg-muted block text-sm">
               {t(`dashboard.item.${item.kind}`, { count: item.count, subject: item.subject ?? '' })}
             </span>

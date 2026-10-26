@@ -16,7 +16,7 @@ export function MasterLayout() {
     <RequireContext context="master">
       <div className="bg-background min-h-svh">
         <AppHeader />
-        <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+        <main className="page-content space-y-6">
           <MasterSectionNav />
           <Outlet />
         </main>

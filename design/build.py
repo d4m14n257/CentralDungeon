@@ -86,6 +86,9 @@ STATES = [
 DARK = {
     "canvas": "#070c12", "surface": "#0f1626", "raised": "#1b2438",
     "border": "#1b2438", "border-strong": "#2b3854",
+    # The loading placeholder: decorative, so no contrast pair is measured, but it has to read as a
+    # shape on both the canvas and a surface - border-strong (what it used) was 1.7:1 against the canvas.
+    "skeleton": "#3a4a6b",
     "fg": "#eef2f9", "fg-muted": "#9aa9c4", "fg-subtle": "#6c7c99",
     "state": {
         "draft":    {"dot": "#94a3b8", "bg": "#1e293b", "fg": "#cbd5e1"},
@@ -103,6 +106,7 @@ DARK = {
 LIGHT = {
     "canvas": "#f8fafc", "surface": "#ffffff", "raised": "#f1f5f9",
     "border": "#e2e8f0", "border-strong": "#cbd5e1",
+    "skeleton": "#cbd5e1",
     "fg": "#0f172a", "fg-muted": "#475569", "fg-subtle": "#64748b",
     "state": {
         "draft":    {"dot": "#64748b", "bg": "#f1f5f9", "fg": "#475569"},
@@ -426,7 +430,7 @@ lines += ["", "  /* -- neutrals -- */"] + [f"  --color-neutral-{k}: {v};" for k,
 lines += ["", "  /* -- brand accent (candidate B: violet, from the logo) -- */"] + \
          [f"  --color-brand-{k}: {v};" for k, v in ACCENTS["violet"].items() if k.isdigit()]
 lines += ["", "  /* -- semantic surfaces, dark (default theme) -- */"]
-for k in ["canvas", "surface", "raised", "border", "border-strong", "fg", "fg-muted", "fg-subtle"]:
+for k in ["canvas", "surface", "raised", "border", "border-strong", "skeleton", "fg", "fg-muted", "fg-subtle"]:
     lines.append(f"  --color-{k}: {DARK[k]};")
 lines += ["", "  /* -- state tokens: 9 table states + 5 registration states -- */"]
 for key, meaning, _ in STATES:
@@ -496,7 +500,7 @@ lines += ["}", "",
           ":root { color-scheme: dark; }", "",
           "/* Light theme overrides the semantic layer only; primitives never change. */",
           ':root[data-theme="light"] {', "  color-scheme: light;"]
-for k in ["canvas", "surface", "raised", "border", "border-strong", "fg", "fg-muted", "fg-subtle"]:
+for k in ["canvas", "surface", "raised", "border", "border-strong", "skeleton", "fg", "fg-muted", "fg-subtle"]:
     lines.append(f"  --color-{k}: {LIGHT[k]};")
 lines.append("  --color-brand-500: " + ACCENTS["violet"]["600"] + ";  /* darker on light for AA */")
 lines.append("  --color-brand-fg: " + ACCENTS["violet"]["700"] + ";  /* 400 only reaches 3.29:1 here */")

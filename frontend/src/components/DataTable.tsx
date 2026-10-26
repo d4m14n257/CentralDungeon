@@ -54,6 +54,12 @@ export interface DataTableProps<T> {
  * identity and state at the top, the rest as labelled lines, actions at the foot - and **there is
  * never horizontal scroll**. A table you have to drag sideways on a phone is a table nobody reads.
  *
+ * **The wide table fits its container instead of scrolling inside it**: the generated cells are
+ * `whitespace-nowrap`, so a table of eight columns measured more than its container and the actions
+ * column - the last one - sat out of view behind a hidden scroll. Cells wrap here, and the
+ * title column also breaks a word with no spaces, which is what lets a 128-character name shrink to
+ * fit. The actions cell keeps `nowrap`: its icons stay on one line.
+ *
  * Both layouts are built from the same column definitions, which is the point: there is one
  * description of what a row contains, not a table and a card list that drift apart.
  *
@@ -81,7 +87,7 @@ export function DataTable<T>({ columns, rows, getRowId, renderActions, label }: 
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
-                <TableHead key={column.id} className={cn(column.headerClassName)}>
+                <TableHead key={column.id} className={cn('whitespace-normal', column.headerClassName)}>
                   {column.header}
                 </TableHead>
               ))}
@@ -92,7 +98,9 @@ export function DataTable<T>({ columns, rows, getRowId, renderActions, label }: 
             {rows.map((row) => (
               <TableRow key={getRowId(row)}>
                 {columns.map((column) => (
-                  <TableCell key={column.id}>{column.cell(row)}</TableCell>
+                  <TableCell key={column.id} className={cn('whitespace-normal', column.role === 'title' && 'wrap-anywhere')}>
+                    {column.cell(row)}
+                  </TableCell>
                 ))}
                 {renderActions && (
                   <TableCell>
@@ -110,18 +118,25 @@ export function DataTable<T>({ columns, rows, getRowId, renderActions, label }: 
         {rows.map((row) => (
           <li key={getRowId(row)} className="border-border space-y-3 rounded-lg border p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              {titleColumn && <span className="min-w-0 font-medium">{titleColumn.cell(row)}</span>}
+              {titleColumn && <span className="min-w-0 font-medium wrap-anywhere">{titleColumn.cell(row)}</span>}
               {badgeColumns.map((column) => (
                 <span key={column.id}>{column.cell(row)}</span>
               ))}
             </div>
             <dl className="space-y-1 text-sm">
-              {metaColumns.map((column) => (
-                <div key={column.id} className="flex justify-between gap-4">
-                  <dt className="text-fg-muted">{column.header}</dt>
-                  <dd className="min-w-0 text-right">{column.cell(row)}</dd>
-                </div>
-              ))}
+              {metaColumns.map((column) => {
+                const content = column.cell(row)
+                // A label with no value beside it is noise: a card drops the line instead.
+                if (content === null || content === undefined || content === false || content === '') {
+                  return null
+                }
+                return (
+                  <div key={column.id} className="flex justify-between gap-4">
+                    <dt className="text-fg-muted">{column.header}</dt>
+                    <dd className="min-w-0 text-right wrap-anywhere">{content}</dd>
+                  </div>
+                )
+              })}
             </dl>
             {renderActions && <div className="row-actions pt-1">{renderActions(row)}</div>}
           </li>

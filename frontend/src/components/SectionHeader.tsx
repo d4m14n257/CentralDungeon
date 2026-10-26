@@ -16,6 +16,9 @@ interface SectionHeaderProps {
  * The top of a section inside a screen — a tab of a table, a block of a detail — with its
  * «Cómo funciona» at the right end, the same place `PageHeader` puts it for a whole screen (ADR-21 §5).
  *
+ * On a phone the label keeps a line of its own width and the help and the actions go under it, right-aligned,
+ * rather than squeezing it to a few letters.
+ *
  * It exists because a section's help used to land wherever the section ended: at the bottom of the
  * files tab, under the tasks board, next to a title on one tab and below the list on the next.
  *
@@ -25,10 +28,10 @@ interface SectionHeaderProps {
  */
 export function SectionHeader({ title, help, actions }: SectionHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <h2 className="section-label min-w-0">{title}</h2>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <h2 className="section-label min-w-0 flex-1 basis-40">{title}</h2>
       {(help || actions) && (
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {help && <HelpButton section={help} size="sm" />}
           {actions}
         </div>
