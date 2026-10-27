@@ -19,7 +19,13 @@
     },
     "loadErrorDescription": "We could not load this profile. Try again.",
     "expiredDescription": "You can no longer view this profile.",
-    "discordHandle": "Discord: {{handle}}"
+    "discordHandle": "Discord: {{handle}}",
+    "edit": "Edit profile",
+    "editDescription": "Change how the rest of the community sees you.",
+    "save": "Save",
+    "confirmTitle": "Save your profile as “{{name}}”?",
+    "confirmDescription": "This is how the rest of the community will see you.",
+    "saved": "Profile updated"
   },
   "summary": {
     "title": "Card",
@@ -29,5 +35,11 @@
     "finishedTables": "Finished tables",
     "finishedTablesValue_one": "{{count}} finished table",
     "finishedTablesValue_other": "{{count}} finished tables"
+  },
+  "profileForm": {
+    "nameLabel": "Display name",
+    "namePlaceholder": "What they call you at the table",
+    "countryLabel": "Country",
+    "countryPlaceholder": "Select your country"
   }
 }

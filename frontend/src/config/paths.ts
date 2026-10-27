@@ -1,10 +1,10 @@
 import type { AppContext } from '@/stores/contextStore'
 
 /**
- * Builders for every link, navigate and Navigate, plus the patterns of the routes. Links are the
- * only place a path is built (ADR-19 §10, arquitectura §3.1.6 regla 2): router.tsx declares its own
- * literal segments, nested under each context, and these patterns mirror it rather than feed it -
- * when the two differ, router.tsx is right.
+ * Builders for every link, navigate and Navigate, plus the four absolute paths of the entry screens.
+ * Links are the only place a path is built (ADR-19 §10, arquitectura §3.1.6 regla 2): router.tsx
+ * declares its own literal segments, nested under each context, and these builders mirror it rather
+ * than feed it - when the two differ, router.tsx is right.
  *
  * Every context owns a prefix and nothing sits outside one (ADR-20 §2): `/player`, `/master`, `/admin`,
  * plus the entry screens and the two transversal ones. `/` is not a screen - it dispatches to the
@@ -15,45 +15,6 @@ export const paths = {
   authCallback: '/auth/callback',
   onboarding: '/onboarding',
   root: '/',
-  playerHome: 'player',
-  playerTableDetail: 'player/tables/:id',
-  playerApplications: 'player/applications',
-  playerMyTables: 'player/my-tables',
-  playerMyTableDetail: 'player/my-tables/:id',
-  playerHistory: 'player/history',
-  playerProfile: 'player/profile',
-  playerUserProfile: 'player/users/:id',
-  mySchedule: 'my/schedule',
-  myFiles: 'my/files',
-  notifications: 'notifications',
-  help: 'help',
-  helpPlayers: 'players',
-  helpMasters: 'masters',
-  helpAdmins: 'admins',
-  masterDashboard: 'master',
-  masterTables: 'master/tables',
-  masterTableNew: 'master/tables/new',
-  masterTableDetail: 'master/tables/:id',
-  masterTableEdit: 'master/tables/:id/edit',
-  masterTablePlayers: 'master/tables/:id/players',
-  masterTableSchedule: 'master/tables/:id/schedule',
-  masterTableSessions: 'master/tables/:id/sessions',
-  masterTableTasks: 'master/tables/:id/tasks',
-  masterTableFiles: 'master/tables/:id/files',
-  masterTableHistory: 'master/tables/:id/history',
-  adminHome: 'admin',
-  adminQueue: 'admin/queue',
-  adminTables: 'admin/tables',
-  adminTableDetail: 'admin/tables/:id',
-  adminTableEdit: 'admin/tables/:id/edit',
-  adminCatalogs: 'admin/catalogs',
-  adminCatalogGroup: 'admin/catalogs/:kind/:id',
-  adminFiles: 'admin/files',
-  adminFileUpload: 'admin/files/upload',
-  adminUsers: 'admin/users',
-  adminUserDetail: 'admin/users/:id',
-  adminRequests: 'admin/requests',
-  adminSettings: 'admin/settings',
 } as const
 
 /**
@@ -144,14 +105,6 @@ export function masterTablePlayersPath(id: string): string {
 
 /**
  * @param id the table
- * @returns the absolute path to its agenda tab — the weekly shape, in the reader's time (ADR-03 §6)
- */
-export function masterTableSchedulePath(id: string): string {
-  return `/master/tables/${id}/schedule`
-}
-
-/**
- * @param id the table
  * @returns the absolute path to its sessions tab
  */
 export function masterTableSessionsPath(id: string): string {
@@ -164,14 +117,6 @@ export function masterTableSessionsPath(id: string): string {
  */
 export function masterTableTasksPath(id: string): string {
   return `/master/tables/${id}/tasks`
-}
-
-/**
- * @param id the table
- * @returns the absolute path to its files tab
- */
-export function masterTableFilesPath(id: string): string {
-  return `/master/tables/${id}/files`
 }
 
 /**
@@ -343,6 +288,11 @@ export function homePathFor(context: AppContext): string {
   // tray is one click away, first in the section nav after it.
   if (context === 'admin') return adminHomePath()
   return playerHomePath()
+}
+
+/** @returns the absolute path to the reader's notification inbox - transversal, it belongs to no context */
+export function notificationsPath(): string {
+  return '/notifications'
 }
 
 /**

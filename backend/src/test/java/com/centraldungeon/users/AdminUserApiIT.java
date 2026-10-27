@@ -173,14 +173,14 @@ class AdminUserApiIT {
     /**
      * <b>The whole difference between the two ranks in F3</b>: who may hand out the rank. An admin
      * reaching for Admin or Owner is a 403 and not a 400 - the request is well formed and what makes
-     * it fail is who sent it.
+     * it fail is who sent it. (Granting Owner answers {@code OWNER_NOT_GRANTABLE} to everybody.)
      */
     @Test
     void anAdminCannotGrantOrRevokeTheRank() throws Exception {
         for (String rank : new String[] {"Admin", "Owner"}) {
             grantRole(admin, target, rank, "trying to make another one")
                     .andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.errorCode").value("ROLE_GRANT_FORBIDDEN"));
+                    .andExpect(jsonPath("$.errorCode").value(rank.equals("Owner") ? "OWNER_NOT_GRANTABLE" : "ROLE_GRANT_FORBIDDEN"));
             revokeRole(admin, target, rank, "trying to unmake one")
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.errorCode").value("ROLE_GRANT_FORBIDDEN"));
@@ -193,6 +193,16 @@ class AdminUserApiIT {
         grantRole(owner, target, "Admin", "promoting")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.roles", org.hamcrest.Matchers.hasItem("Admin")));
+    }
+
+    /** Owner is given from the database only: the API refuses it to the owner too, and nothing changes. */
+    @Test
+    void nobodyCanGrantOwnerThroughTheApi() throws Exception {
+        grantRole(owner, target, "Owner", "succession")
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("OWNER_NOT_GRANTABLE"));
+        as(get(BASE + "/" + target.getId()), owner)
+                .andExpect(jsonPath("$.roles", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("Owner"))));
     }
 
     // ---------------------------------------------------------------- blocking

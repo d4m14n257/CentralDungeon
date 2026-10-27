@@ -66,4 +66,41 @@ describe('notificationText', () => {
 
     expect(notificationText(unknown, t).title).toBe('SomethingNew')
   })
+
+  /** An admin edit says what changed, in the reader's language, with the list joined the way that language joins one. */
+  it('lists the fields an admin changed, in each language', () => {
+    const edited = notification({
+      notificationType: 'TableEditedByAdmin',
+      params: { tableName: 'La Cripta', membership: 'Master', changes: ['name', 'schedule'] },
+    })
+
+    expect(notificationText(edited, i18n.getFixedT('es', 'notifications')).title).toBe(
+      'Un admin cambió el nombre y la agenda de tu mesa La Cripta',
+    )
+    expect(notificationText(edited, i18n.getFixedT('en', 'notifications')).title).toBe(
+      'An admin changed the name and the schedule of your table La Cripta',
+    )
+  })
+
+  it('reads an edit written before the list existed with the plain sentence', () => {
+    const old = notification({ notificationType: 'TableEditedByAdmin', params: { tableName: 'La Cripta' } })
+
+    expect(notificationText(old, i18n.getFixedT('es', 'notifications')).title).toBe('Un admin editó tu mesa La Cripta')
+  })
+
+  /** The reason is in the history, which only a master can open: the player's pause notice says something else. */
+  it('words a pause differently for a master and for a player', () => {
+    const es = i18n.getFixedT('es', 'notifications')
+    const master = notification({ notificationType: 'TablePaused', params: { tableName: 'La Cripta', membership: 'Master' } })
+    const player = notification({ notificationType: 'TablePaused', params: { tableName: 'La Cripta', membership: 'Player' } })
+
+    expect(notificationText(master, es).message).toContain('historial')
+    expect(notificationText(player, es).message).toContain('sesiones pendientes')
+  })
+
+  it('leaves a cancellation without a message for a player, who cannot open the history', () => {
+    const player = notification({ notificationType: 'TableCanceled', params: { tableName: 'La Cripta', membership: 'Player' } })
+
+    expect(notificationText(player, i18n.getFixedT('es', 'notifications')).message).toBeNull()
+  })
 })

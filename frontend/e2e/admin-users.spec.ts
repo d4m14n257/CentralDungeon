@@ -109,10 +109,12 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await search(owner.page, `/discord_name ${futureAdminId}`)
 
     const dialog = await openRoleDialog(owner.page, futureAdminId)
-    // The owner sees all four ranks. This is the assertion a `hasRole('ADMIN')` would not reach.
-    for (const role of ['Jugador', 'Master', 'Admin', 'Owner']) {
+    // The owner sees Admin besides the two anybody can hold - the assertion a `hasRole('ADMIN')` would
+    // not reach - and no Owner to give: the application grants it to nobody (ADR-06 §1).
+    for (const role of ['Jugador', 'Master', 'Admin']) {
       await expect(dialog.getByRole('button', { name: new RegExp(`^${role}\\b`) })).toBeVisible()
     }
+    await expect(dialog.getByRole('button', { name: /^Owner\b/ })).toHaveCount(0)
     await dialog.getByRole('button', { name: /^Admin\b/ }).click()
     await dialog.getByLabel('Motivo').fill('Promoción de prueba E2E de F3.1')
     await dialog.getByRole('button', { name: 'Dar el rol' }).click()

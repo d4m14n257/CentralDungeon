@@ -162,20 +162,6 @@ public class FileController {
     }
 
     /**
-     * One file's metadata.
-     *
-     * @param fileId      the file
-     * @param currentUser the reader, from the token
-     * @return 200 with the file. 404 when it does not exist, was marked gone, or the reader has no
-     *         way to reach it - all three answer the same, so an id nobody should have learns nothing
-     */
-    @GetMapping("/{fileId}")
-    @PreAuthorize("isAuthenticated()")
-    public FileResponse findById(@PathVariable String fileId, @AuthenticationPrincipal CurrentUser currentUser) {
-        return fileService.findById(fileId, currentUser.userId());
-    }
-
-    /**
      * Downloading the content.
      *
      * <p><b>{@code ResponseEntity<Resource>} is not the open type regla dura 3 forbids.</b> That rule

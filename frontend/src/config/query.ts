@@ -109,6 +109,10 @@ const EXPLAINED_ERROR_CODES = new Set([
   'FILE_CATEGORY_NOT_PUBLISHABLE',
   'FILE_CANNOT_SELF_PUBLISH',
   'REQUEST_TYPE_NOT_ACCEPTED_HERE',
+  // The two doors of ADR-10 §4 stay distinct: the screens only reach the right one, so these surface
+  // when a stale tab or a direct call hits the wrong door - and then the sentence says which.
+  'ONBOARDING_PENDING',
+  'ONBOARDING_ALREADY_COMPLETED',
 ])
 
 /**

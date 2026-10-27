@@ -43,7 +43,6 @@
     "searchLabel": "Search the catalog",
     "searchPlaceholder": "Search by name…",
     "tableLabel": "Catalog {{kind}}",
-    "columnName": "Name",
     "columnStatus": "Status",
     "columnUses": "Tables",
     "emptyTitle": "There is nothing in this catalog yet",

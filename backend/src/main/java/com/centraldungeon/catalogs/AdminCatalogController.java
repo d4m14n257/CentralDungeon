@@ -9,11 +9,11 @@ import com.centraldungeon.catalogs.dto.ReassignCatalogValueRequest;
 import com.centraldungeon.catalogs.dto.SplitCatalogGroupRequest;
 import com.centraldungeon.common.model.PageResponse;
 import jakarta.validation.Valid;
-import java.net.URI;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -99,15 +99,14 @@ public class AdminCatalogController {
      *
      * @param type    which catalog, from the path
      * @param request the name to add
-     * @return 201 with the created value and its Location. 409 if the name is already taken
+     * @return 201 with the created value. 409 if the name is already taken
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public ResponseEntity<AdminCatalogValueResponse> create(
             @PathVariable CatalogType type, @Valid @RequestBody CreateCatalogValueRequest request) {
         AdminCatalogValueResponse created = catalogServices.of(type).create(request.name());
-        return ResponseEntity.created(URI.create("/api/v1/admin/catalogs/" + type.wireName() + "/" + created.id()))
-                .body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**

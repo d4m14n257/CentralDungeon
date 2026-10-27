@@ -167,6 +167,9 @@ public class TableSessionService {
      * their own, and the run's numbering is untouched: the fifth session is still the fifth, it just
      * happens later than it was going to.
      *
+     * <p>It tells nobody: the resume that calls it announces the whole change to everyone joined to the
+     * table in one notification, and one more per player here would be the same news twice.
+     *
      * <p>A table whose agenda was emptied while it was paused keeps the dates it had - there is
      * nothing to lay the sessions on, and inventing instants would be worse than leaving stale ones a
      * master can correct.
@@ -191,7 +194,6 @@ public class TableSessionService {
         for (int index = 0; index < pending.size() && index < instants.size(); index++) {
             pending.get(index).setScheduledAt(instants.get(index));
         }
-        notifyPlayers(table, true);
     }
 
     /**

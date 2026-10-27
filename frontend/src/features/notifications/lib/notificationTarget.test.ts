@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { masterTableDetailPath, masterTableHistoryPath, masterTablePlayersPath } from '@/config/paths'
+import { masterTableDetailPath, masterTableHistoryPath, masterTablePlayersPath, myTableDetailPath } from '@/config/paths'
 
 import { notificationTarget } from './notificationTarget'
 import { NOTIFICATION_TYPES, type Notification } from '../types'
@@ -148,6 +148,41 @@ describe('notificationTarget', () => {
   })
 
   /**
+   * The same plain type reaches masters and players, so the row says which one the reader is. A pause
+   * and a cancellation send a master to the history, where the reason is; everything else to the table.
+   */
+  it.each([
+    ['TablePaused', masterTableHistoryPath('t5')],
+    ['TableCanceled', masterTableHistoryPath('t5')],
+    ['TableResumed', masterTableDetailPath('t5')],
+    ['TableFinished', masterTableDetailPath('t5')],
+    ['TableScheduleChanged', masterTableDetailPath('t5')],
+  ] as const)('sends %s to a master on their own screens', (type, expected) => {
+    const row = notification({ notificationType: type, relatedEntityId: 't5', params: { tableName: 'X', membership: 'Master' } })
+
+    expect(notificationTarget(row)).toBe(expected)
+  })
+
+  /** A player has no history tab and no master screen: all five land on their own table, which still opens once it is closed. */
+  it.each(['TablePaused', 'TableCanceled', 'TableResumed', 'TableFinished', 'TableScheduleChanged'] as const)(
+    'sends %s to a player on their own table screen',
+    (type) => {
+      const row = notification({ notificationType: type, relatedEntityId: 't5', params: { tableName: 'X', membership: 'Player' } })
+
+      expect(notificationTarget(row)).toBe(myTableDetailPath('t5'))
+    },
+  )
+
+  /** Nothing writes these without a membership, so one without it is not a row this build can place. */
+  it.each(['TablePaused', 'TableCanceled', 'TableResumed', 'TableFinished', 'TableScheduleChanged'] as const)(
+    'opens nothing for a %s row with no membership',
+    (type) => {
+      expect(notificationTarget(notification({ notificationType: type, params: { tableName: 'X' } }))).toBeNull()
+      expect(notificationTarget(notification({ notificationType: type, params: null }))).toBeNull()
+    },
+  )
+
+  /**
    * Regression guard: every type the backend can send today has to resolve to a real path. A type
    * silently falling through to the `default` branch is exactly the bug this feature was built to
    * fix - a notification that reads, marks itself read, and opens nothing.
@@ -156,8 +191,10 @@ describe('notificationTarget', () => {
     // The one deliberate dead end: a removed table cannot be opened (ADR-03 §7), so the backend sends it with
     // no id at all - tested on its own below.
     for (const type of ALL_TYPES.filter((candidate) => candidate !== 'TableDeletedByAdmin')) {
-      const row = notification({ notificationType: type })
-      expect(notificationTarget(row), `${type} should not resolve to null`).not.toBeNull()
+      for (const membership of ['Master', 'Player'] as const) {
+        const row = notification({ notificationType: type, params: { tableName: 'La Cripta', membership } })
+        expect(notificationTarget(row), `${type} for a ${membership} should not resolve to null`).not.toBeNull()
+      }
     }
   })
 })

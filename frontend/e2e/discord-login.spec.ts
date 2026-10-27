@@ -44,6 +44,28 @@ test('a member of the server signs in with Discord and stays signed in', async (
   // The onboarding lands on `/`, which is a dispatcher and not a screen: it forwards to the home of
   // the context this account has, which for a fresh Player account is the explorer (ADR-20 §2).
   await expect(page).toHaveURL(/\/player$/)
+
+  // The step does not repeat: going back to it bounces to the home (ADR-10 §4).
+  await page.goto('/onboarding')
+  await expect(page).toHaveURL(/\/player$/)
+
+  // Afterwards the same two fields are edited from the profile.
+  await page.goto('/player/profile')
+  await page.getByRole('button', { name: 'Editar perfil' }).click()
+  await page.getByLabel('Nombre a mostrar').fill(`Vecna II ${runId}`)
+  await page.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click()
+  await acceptReview(page)
+  await expect(page.getByRole('heading', { name: `Vecna II ${runId}` })).toBeVisible()
+})
+
+test('an account that has not completed the onboarding is held there from any route', async ({ page, request }) => {
+  await nextDiscordLogin(request, `e2e-held-${runId}`, `Strahd ${runId}`, true)
+  await page.goto('/login')
+  await page.getByRole('link', { name: 'Entrar con Discord' }).click()
+  await expect(page).toHaveURL(/\/onboarding$/)
+
+  await page.goto('/player/profile')
+  await expect(page).toHaveURL(/\/onboarding$/)
 })
 
 test('somebody not in the server does not get in and is handed the invitation', async ({ page, request }) => {

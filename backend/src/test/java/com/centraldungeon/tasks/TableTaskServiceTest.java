@@ -336,15 +336,6 @@ class TableTaskServiceTest {
         verify(submissionRepository, never()).delete(any());
     }
 
-    /** A marked task stops existing, and 404 rather than 403: "it was deleted" is not a caller's business (ADR-03 §7). */
-    @Test
-    void aDeletedTaskIsNotFound() {
-        TableTask task = givenTask("task-1", "table-1", TaskAudience.Players);
-        task.setStatus(TaskStatus.Deleted);
-
-        assertThatThrownBy(() -> service().getLiveTask("task-1")).isInstanceOf(NotFoundException.class);
-    }
-
     // ---------------------------------------------------------------- what a reader sees
 
     /**

@@ -3,7 +3,7 @@ import { createContext, use } from 'react'
 import type { CatalogKind } from '../types'
 
 /** What every node of one catalog canvas shares, and cannot receive through React Flow's `data`. */
-export interface CatalogGraphContextValue {
+interface CatalogGraphContextValue {
   /** Which catalog the canvas draws. */
   kind: CatalogKind
   /** Called with a value that has just become a group of its own, so the canvas draws it. */

@@ -34,14 +34,16 @@ describe('useUserAdminCapabilities', () => {
     expect(result.current.grantableRoles).toEqual(['Player', 'Master'])
     expect(result.current.grantableRoles).not.toContain('Admin')
     expect(result.current.grantableRoles).not.toContain('Owner')
+    expect(result.current.isOwner).toBe(false)
   })
 
-  /** And the owner sees the four, in the order of ADR-07 §8. */
-  it('an owner may move all four roles, in the order of ADR-07 §8', () => {
+  /** The owner grants three, in the order of ADR-07 §8: Owner is not granted from the application (ADR-06 §1). */
+  it('an owner may grant Player, Master and Admin but not Owner', () => {
     signedInAs('Owner')
     const { result } = renderHook(() => useUserAdminCapabilities())
 
-    expect(result.current.grantableRoles).toEqual(['Player', 'Master', 'Admin', 'Owner'])
+    expect(result.current.grantableRoles).toEqual(['Player', 'Master', 'Admin'])
+    expect(result.current.isOwner).toBe(true)
   })
 
   it('somebody who is neither may move nothing', () => {
@@ -76,13 +78,5 @@ describe('useUserAdminCapabilities', () => {
 
     expect(result.current.canChangeStatus(account(['Player', 'Master']))).toBe(true)
     expect(result.current.canChangeStatus(account(['Player'], 'Blocked'))).toBe(true)
-  })
-
-  /** F3.1 neither produces `Deleted` nor undoes it, so the screen never offers a way into it. */
-  it('leaves a deleted account alone in both directions', () => {
-    signedInAs('Owner')
-    const { result } = renderHook(() => useUserAdminCapabilities())
-
-    expect(result.current.canChangeStatus(account(['Player'], 'Deleted'))).toBe(false)
   })
 })

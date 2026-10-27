@@ -24,7 +24,6 @@
     "TaskPublished": "Nueva petición",
     "MasterAssigned": "Sos master de una mesa",
     "TableApproved": "Mesa aprobada",
-    "TableApprovedWithChanges": "Mesa aprobada con cambios",
     "TableChangesRequested": "Te piden cambios",
     "ApprovalRequestApproved": "Pedido aprobado",
     "ApprovalRequestRejected": "Pedido rechazado",
@@ -32,7 +31,12 @@
     "TablePausedByAdmin": "Mesa pausada por un admin",
     "TableResumedByAdmin": "Mesa reanudada",
     "TableCanceledByAdmin": "Mesa cancelada por un admin",
-    "TableDeletedByAdmin": "Mesa dada de baja"
+    "TableDeletedByAdmin": "Mesa dada de baja",
+    "TablePaused": "Mesa pausada",
+    "TableResumed": "Mesa reanudada",
+    "TableCanceled": "Mesa cancelada",
+    "TableFinished": "Mesa terminada",
+    "TableScheduleChanged": "Cambió la agenda"
   },
   "badge": {
     "accepted": "Aceptada",
@@ -70,9 +74,6 @@
     "TableApproved": {
       "title": "Tu mesa {{tableName}} fue aprobada y ya está abierta"
     },
-    "TableApprovedWithChanges": {
-      "title": "Aprobaron {{tableName}} con cambios de un admin"
-    },
     "TableChangesRequested": {
       "title": "Te piden cambios en {{tableName}}"
     },
@@ -86,7 +87,8 @@
     },
     "TableEditedByAdmin": {
       "title": "Un admin editó tu mesa {{tableName}}",
-      "message": "Entrá para ver cómo quedó."
+      "message": "Entrá para ver cómo quedó.",
+      "title_changes": "Un admin cambió {{changes, list}} de tu mesa {{tableName}}"
     },
     "TablePausedByAdmin": {
       "title": "Un admin pausó tu mesa {{tableName}}",
@@ -102,6 +104,40 @@
     },
     "TableDeletedByAdmin": {
       "title": "Un admin dio de baja tu mesa {{tableName}}"
+    },
+    "TablePaused": {
+      "title": "La mesa {{tableName}} fue pausada",
+      "message_Master": "El motivo está en el historial de la mesa.",
+      "message_Player": "Mientras esté pausada, no vas a ver sus sesiones pendientes."
+    },
+    "TableResumed": {
+      "title": "La mesa {{tableName}} se reanudó",
+      "message": "Las sesiones pendientes se volvieron a programar desde hoy."
+    },
+    "TableCanceled": {
+      "title": "La mesa {{tableName}} fue cancelada",
+      "message_Master": "El motivo está en el historial de la mesa."
+    },
+    "TableFinished": {
+      "title": "La mesa {{tableName}} terminó"
+    },
+    "TableScheduleChanged": {
+      "title": "Cambió la agenda de {{tableName}}",
+      "message": "Entrá para ver los nuevos horarios en tu hora local."
     }
+  },
+  "field": {
+    "name": "el nombre",
+    "description": "la descripción",
+    "permitted": "lo permitido",
+    "requirements": "los requisitos",
+    "startDate": "la fecha de inicio",
+    "totalSessions": "la cantidad de sesiones",
+    "maxPlayers": "el cupo",
+    "tableType": "el tipo de mesa",
+    "systems": "los sistemas",
+    "tags": "las etiquetas",
+    "platforms": "las plataformas",
+    "schedule": "la agenda"
   }
 }

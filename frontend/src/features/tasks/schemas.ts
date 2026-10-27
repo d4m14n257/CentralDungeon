@@ -37,17 +37,3 @@ export const taskFormSchema = z
 
 /** The task form's values, inferred from its schema. */
 export type TaskForm = z.infer<typeof taskFormSchema>
-
-/**
- * Validates an answer before it is handed in.
- *
- * It only checks that something is being sent: whether *this* task takes text or files is the task's
- * own shape, and the dialog already offers only the channels it opened. An answer empty on both
- * counts would be a row claiming somebody responded when they did not (ADR-15 §2).
- */
-export const submissionFormSchema = z.object({
-  content: z.string().optional(),
-})
-
-/** The answer form's values, inferred from its schema. */
-export type SubmissionForm = z.infer<typeof submissionFormSchema>

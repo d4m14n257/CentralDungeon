@@ -1,7 +1,6 @@
 {
   "howItWorks": "Cómo funciona",
   "title": "Ayuda",
-  "intro": "Cómo funciona CentralDungeon y cómo se usa cada cosa. Crece con la aplicación: acá está lo que ya se puede hacer hoy.",
   "nav": {
     "basics": "Para todos",
     "players": "Jugadores",
@@ -557,7 +556,7 @@
     "roles": {
       "title": "Roles: quién otorga qué",
       "what": "Hay cuatro roles —Jugador, Master, Admin y Owner— y se acumulan: alguien puede ser Jugador y Master a la vez. Cada cuenta nace con Jugador.",
-      "whoGrants": "Un admin mueve Jugador y Master, y nada más. Admin y Owner los da y los quita solo un owner. Si sos admin y en el diálogo solo ves dos roles, no es un error: es que esos dos no son tuyos para dar.",
+      "whoGrants": "Un admin mueve Jugador y Master, y nada más. El rol Admin lo da y lo quita solo un owner, y el de Owner no se da desde la aplicación: se da desde la base de datos, y solo un owner puede quitarlo. Si sos admin y en el diálogo solo ves dos roles, no es un error: es que el resto no es tuyo para dar.",
       "exclusive": "Admin y Owner son excluyentes: al dar uno se quita el otro, en el mismo acto. Son el mismo rango con distinto alcance, y tenerlos juntos no suma un solo permiso — por eso al ascender a un admin a owner vas a ver desaparecer su chip de Admin.",
       "lastOwner": "La plataforma nunca se queda sin owner. No podés quitarte tu propio rol de Owner ni quitárselo al último que queda: un sistema donde ya nadie puede otorgar Owner no tiene forma de recuperarse desde adentro.",
       "reason": "Todo cambio de rol pide un motivo, y es obligatorio. Queda guardado con quién lo hizo y cuándo.",

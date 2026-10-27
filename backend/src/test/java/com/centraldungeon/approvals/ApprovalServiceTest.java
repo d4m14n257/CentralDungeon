@@ -581,7 +581,7 @@ class ApprovalServiceTest {
 
         service().approve("req-1", NOTE, ADMIN);
 
-        verify(gameTableService).applyApprovedPause("table-1", "admin-1", NOTE);
+        verify(gameTableService).applyApprovedPause("table-1", "admin-1", "user-1", NOTE);
     }
 
     /**

@@ -125,7 +125,7 @@ Los diez renderizaban **el mismo bloque, byte a byte**: `<span class="inline-fle
 | `TableStatusBadge` | `tables` | `tables` | `status.${status}` | 10 |
 | `SessionStatusBadge` | `tables` | `tables` | `sessions.status.${status}` | 3 |
 | `RegistrationStatusBadge` | `registrations` | `registrations` | `status.${status}` | 4 |
-| `UserStatusBadge` | `users` | `admin` | `users.status.${status}` | 3 |
+| `UserStatusBadge` | `users` | `admin` | `users.status.${status}` | 2 |
 | `RequestStatusBadge` | `approvals` | `admin` | `requests.status.${status}` | 3 |
 | `CatalogStatusBadge` | `catalogs` | `catalogs` | `status.${status}` | 4 |
 | `TaskStatusBadge` | `tasks` | `tasks` | `status.${status}` | 2 |

@@ -1,18 +1,13 @@
 {
   "actions": {
-    "save": "Guardar",
     "cancel": "Cancelar",
     "close": "Cerrar",
     "confirm": "Confirmar",
-    "accept": "Aceptar",
-    "reject": "Rechazar",
     "retry": "Reintentar",
-    "back": "Volver",
     "logout": "Cerrar sesión"
   },
   "states": {
     "loading": "Cargando...",
-    "emptyTitle": "No hay nada por acá",
     "errorTitle": "Algo salió mal",
     "errorDescription": "No pudimos cargar esto. Probá de nuevo.",
     "forbiddenTitle": "No tenés permiso",
@@ -101,7 +96,9 @@
       "FILE_CATEGORY_NOT_YOURS": "Ese archivo no puede guardarse en esa categoría: no es una de las tuyas. Elegí otra.",
       "FILE_CATEGORY_NOT_PUBLISHABLE": "Esa categoría guarda lo que respondió cada persona y no se puede publicar para toda la comunidad.",
       "FILE_CANNOT_SELF_PUBLISH": "Los archivos de la biblioteca de la plataforma los sube un admin desde la biblioteca, no desde acá.",
-      "REQUEST_TYPE_NOT_ACCEPTED_HERE": "Ese pedido se abre desde el recurso del que trata, no desde esta pantalla."
+      "REQUEST_TYPE_NOT_ACCEPTED_HERE": "Ese pedido se abre desde el recurso del que trata, no desde esta pantalla.",
+      "ONBOARDING_PENDING": "Primero completá el paso inicial para poder editar tu perfil.",
+      "ONBOARDING_ALREADY_COMPLETED": "Ya completaste el paso inicial. Tu nombre y país se editan desde tu perfil."
     }
   },
   "pagination": {

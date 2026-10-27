@@ -11,6 +11,7 @@ import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -104,6 +105,70 @@ class NotificationServiceTest {
         verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification -> notification.getParams() != null
                 && "El Faro".equals(notification.getParams().tableName())
                 && "La Cripta".equals(notification.getParams().otherTableName())));
+    }
+
+    /** The same plain type reaches masters and players, so the row says which one the recipient is. */
+    @Test
+    void aTableChangeNoticeRecordsHowTheRecipientIsJoinedAndLinksToTheTable() {
+        when(userRepository.getReferenceById("player-5")).thenReturn(persistedUser("player-5"));
+        GameTable table = persistedTable("table-11", "El Faro");
+
+        notificationService.notifyTableChanged("player-5", table, NotificationType.TablePaused, TableMembership.Player);
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification
+                -> notification.getNotificationType() == NotificationType.TablePaused
+                        && notification.getParams() != null
+                        && "El Faro".equals(notification.getParams().tableName())
+                        && notification.getParams().membership() == TableMembership.Player
+                        && "game_table".equals(notification.getRelatedEntityType())
+                        && "table-11".equals(notification.getRelatedEntityId())));
+    }
+
+    @Test
+    void anAdminEditNoticeCarriesTheCodesOfWhatChanged() {
+        when(userRepository.getReferenceById("master-2")).thenReturn(persistedUser("master-2"));
+        GameTable table = persistedTable("table-12", "El Faro");
+
+        notificationService.notifyTableEditedByAdmin("master-2", table, List.of("name", "schedule"));
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification
+                -> notification.getNotificationType() == NotificationType.TableEditedByAdmin
+                        && notification.getParams() != null
+                        && List.of("name", "schedule").equals(notification.getParams().changes())
+                        && notification.getParams().membership() == TableMembership.Master));
+    }
+
+    /** A removed table cannot be opened, so the notice points nowhere. */
+    @Test
+    void aDeletedTableNoticeLinksNowhere() {
+        when(userRepository.getReferenceById("master-3")).thenReturn(persistedUser("master-3"));
+
+        notificationService.notifyTableDeleted("master-3", persistedTable("table-13", "El Faro"));
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification
+                -> notification.getNotificationType() == NotificationType.TableDeletedByAdmin
+                        && notification.getRelatedEntityType() == null
+                        && notification.getRelatedEntityId() == null));
+    }
+
+    /** Rows written before {@code membership} and {@code changes} existed have neither key, and must still be readable. */
+    @Test
+    void paramsStoredBeforeTheNewFieldsExistedReadBackWithThemNull() {
+        NotificationParams params = new NotificationParamsConverter()
+                .convertToEntityAttribute("{\"tableName\":\"La Cripta\",\"tableId\":null}");
+
+        assertThat(params).isNotNull();
+        assertThat(params.tableName()).isEqualTo("La Cripta");
+        assertThat(params.membership()).isNull();
+        assertThat(params.changes()).isNull();
+    }
+
+    @Test
+    void paramsRoundTripThroughTheirJsonColumn() {
+        NotificationParamsConverter converter = new NotificationParamsConverter();
+        NotificationParams edit = NotificationParams.ofEdit("La Cripta", List.of("name", "tags"));
+
+        assertThat(converter.convertToEntityAttribute(converter.convertToDatabaseColumn(edit))).isEqualTo(edit);
     }
 
     @Test

@@ -465,23 +465,6 @@ public class FileService {
     }
 
     /**
-     * One file's metadata, for whoever is allowed to reach it.
-     *
-     * @param fileId  the file
-     * @param actorId the reader, from the token
-     * @return the file
-     * @throws NotFoundException if it does not exist, was marked gone, or the reader has no way to
-     *                           reach it - the three answer the same, so an id nobody should have
-     *                           learns nothing from asking (ADR-03 §4, ADR-09 §4)
-     */
-    @Transactional(readOnly = true)
-    public FileResponse findById(String fileId, String actorId) {
-        // No cajones and no uses resolved: this answers "what is this file", and the reader is often
-        // somebody with no business knowing which other tables hold it (ADR-14 §3).
-        return fileMapper.toResponse(requireReadable(fileId, actorId), List.of(), List.of());
-    }
-
-    /**
      * Hands the bytes over, and records that the file was used.
      *
      * <p>Not {@code readOnly}: every download stamps {@code lastUsedAt}, which is what keeps a file

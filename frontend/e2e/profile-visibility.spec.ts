@@ -177,7 +177,7 @@ test('the account menu leads to your own profile', async ({ browser }) => {
 
   try {
     await me.page.goto('/player')
-    await me.page.getByRole('button', { name: 'Mi cuenta' }).click()
+    await me.page.getByRole('button', { name: `e2e-prof-self-${runId}` }).click()
     await me.page.getByRole('menuitem', { name: 'Mi perfil' }).click()
 
     await expect(me.page).toHaveURL(/\/player\/profile$/)

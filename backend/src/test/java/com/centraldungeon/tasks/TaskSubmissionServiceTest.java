@@ -293,7 +293,7 @@ class TaskSubmissionServiceTest {
         task.setAcceptsFiles(acceptsFiles);
         ReflectionTestUtils.setField(task, "id", taskId);
         ReflectionTestUtils.setField(task, "createdAt", LocalDateTime.now());
-        when(tableTaskService.getLiveTask(taskId)).thenReturn(task);
+        when(tableTaskService.getTask(taskId)).thenReturn(task);
         return task;
     }
 

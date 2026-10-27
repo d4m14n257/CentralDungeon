@@ -1,7 +1,7 @@
 import { useMe } from '@/features/users'
 
 /** Whether this account has a library of its own, and whether the answer has arrived yet. */
-export interface PersonalLibraryAccess {
+interface PersonalLibraryAccess {
   hasPersonalLibrary: boolean
   /** Until the profile lands the answer is a guess: anything that *acts* on it has to wait. */
   isPending: boolean

@@ -43,7 +43,6 @@
     "searchLabel": "Buscar en el catálogo",
     "searchPlaceholder": "Buscar por nombre…",
     "tableLabel": "{{kind}} del catálogo",
-    "columnName": "Nombre",
     "columnStatus": "Estado",
     "columnUses": "Mesas",
     "emptyTitle": "Todavía no hay nada en este catálogo",

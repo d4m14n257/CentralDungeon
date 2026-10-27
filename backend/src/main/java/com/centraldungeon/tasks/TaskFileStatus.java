@@ -3,8 +3,8 @@ package com.centraldungeon.tasks;
 /**
  * Whether a file is still attached to the request that asks for it.
  *
- * <p>Two values and a soft delete, like {@code SubmissionFileStatus}: taking the blank off a request
- * is a decision worth keeping a record of, and it never touches the file (ADR-03 §7, ADR-14 §1).
+ * <p>Two values and a soft delete: taking the blank off a request is a decision worth keeping a
+ * record of, and it never touches the file (ADR-03 §7, ADR-14 §1).
  */
 public enum TaskFileStatus {
 

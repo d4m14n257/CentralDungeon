@@ -70,7 +70,7 @@ public final class ConflictException extends ApiException {
     /** Blocking an account that cannot be blocked because it is not usable already (ADR-05 §7). */
     public static final String USER_ALREADY_BLOCKED = "USER_ALREADY_BLOCKED";
 
-    /** Unblocking an account that is not blocked. A Deleted account answers this too: F3.1 never moves one back to Allowed. */
+    /** Unblocking an account that is not blocked. */
     public static final String USER_NOT_BLOCKED = "USER_NOT_BLOCKED";
 
     /**
@@ -169,6 +169,15 @@ public final class ConflictException extends ApiException {
 
     /** The parameter of {@link #CAPACITY_BELOW_PLAYERS}: how many players the table has right now. */
     public static final String PARAM_PLAYER_COUNT = "playerCount";
+
+    /**
+     * Completing onboarding twice (ADR-10 §4). The step is blocking and happens once; editing the
+     * name and country afterwards has its own endpoint, so this door refuses instead of working as an edit.
+     */
+    public static final String ONBOARDING_ALREADY_COMPLETED = "ONBOARDING_ALREADY_COMPLETED";
+
+    /** Editing the profile before onboarding is done (ADR-10 §4): the first fill-in has its own endpoint. */
+    public static final String ONBOARDING_PENDING = "ONBOARDING_PENDING";
 
     /**
      * @param message what state made the request impossible, in English and for a log (ADR-23 §3)

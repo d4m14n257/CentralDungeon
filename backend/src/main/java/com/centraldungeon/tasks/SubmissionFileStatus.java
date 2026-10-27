@@ -1,15 +1,11 @@
 package com.centraldungeon.tasks;
 
 /**
- * Whether a file is still part of a submission. Same two values, and the same reason, as
- * {@code TableFileStatus}: the pair is the primary key, so detaching marks the row instead of
- * dropping it and re-attaching the same file revives it rather than colliding.
+ * Whether a file is part of a submission. A submitted file is never taken off, so the only value is
+ * {@link #Current}; the column stays so a link's state can grow without a schema change.
  */
 public enum SubmissionFileStatus {
 
-    /** Still attached to the submission. */
-    Current,
-
-    /** Taken off. The file itself is untouched (ADR-14 §1), and the bytes are never freed here (ADR-03 §7, ADR-13 §8). */
-    Deleted
+    /** Attached to the submission. */
+    Current
 }

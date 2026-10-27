@@ -8,9 +8,7 @@ import type { ChangeUserStatusInput } from '../types'
 /**
  * Reopens a blocked account, with the reason recorded next to the block it undoes.
  *
- * It only applies to `Blocked`: an account that is `Allowed` answers `USER_NOT_BLOCKED`, and a
- * `Deleted` one is not brought back here either — F3.1 does not touch that status in either
- * direction.
+ * It only applies to `Blocked`: an account that is `Allowed` answers `USER_NOT_BLOCKED`.
  *
  * `meta.showsItsOwnError`: the dialog renders the refusal inline (ADR-23 §3).
  *

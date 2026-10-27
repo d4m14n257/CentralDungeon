@@ -1,7 +1,7 @@
 package com.centraldungeon.tasks;
 
 /**
- * Where a task is in its short life: taking answers, done taking them, or gone.
+ * Where a task is in its short life: taking answers or done taking them.
  *
  * <p>There is no {@code Draft}. <b>Creating a task is publishing it</b>, because ADR-15 §5 makes
  * publication the moment the recipients are told, and a draft nobody was told about is a row that
@@ -18,8 +18,5 @@ public enum TaskStatus {
      * <p>What was already submitted stays readable - closing ends the intake, it does not erase the
      * history (ADR-15 §2).
      */
-    Closed,
-
-    /** Soft delete (ADR-03 §7). The row survives; every read filters it out. */
-    Deleted
+    Closed
 }

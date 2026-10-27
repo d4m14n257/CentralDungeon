@@ -37,7 +37,7 @@ public enum UserSearchField {
     ROLE("role", null),
 
     /**
-     * The account's status, matched whole: {@code Allowed}, {@code Blocked} or {@code Deleted}.
+     * The account's status, matched whole: {@code Allowed} or {@code Blocked}.
      * Admin vocabulary only. It maps to a real column, but to an equality and not to a LIKE, so it
      * does not travel through {@link #attribute()} either.
      */

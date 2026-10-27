@@ -1,7 +1,7 @@
 import { ApiError } from '@/types/api'
 
 /**
- * The six refusals F3.1 added, each with a sentence of its own (ADR-23 §3).
+ * The seven refusals F3.1 added, each with a sentence of its own (ADR-23 §3).
  *
  * **The message a person reads is built here from the code, never from the `ProblemDetail`'s
  * `detail`**: that field is English and written for a log, so showing it would put an English
@@ -16,6 +16,8 @@ import { ApiError } from '@/types/api'
 export const USER_ADMIN_ERROR_CODES = [
   /** An `Admin` reached for `Admin` or `Owner`. Not `400`: it is who you are, not what you sent. */
   'ROLE_GRANT_FORBIDDEN',
+  /** Somebody asked to grant `Owner`; the application grants it to nobody, an owner included. */
+  'OWNER_NOT_GRANTABLE',
   /** The target holds `Admin` or `Owner`. Refused to everybody, the owner included. */
   'CANNOT_BLOCK_PRIVILEGED',
   /** The operation would leave the platform with no active owner. */
@@ -24,7 +26,7 @@ export const USER_ADMIN_ERROR_CODES = [
   'CANNOT_REVOKE_OWN_OWNER',
   /** Blocking an account that is already blocked. */
   'USER_ALREADY_BLOCKED',
-  /** Unblocking an account that is not blocked — a `Deleted` one included. */
+  /** Unblocking an account that is not blocked. */
   'USER_NOT_BLOCKED',
 ] as const
 
@@ -33,7 +35,7 @@ const KNOWN_CODES: ReadonlySet<string> = new Set(USER_ADMIN_ERROR_CODES)
 /**
  * The translation key for whatever a `/admin/users` mutation failed with.
  *
- * Everything that is not one of the six — a `404`, a `500`, a backend that never answered — falls
+ * Everything that is not one of the seven — a `404`, a `500`, a backend that never answered — falls
  * back to one generic sentence. Guessing at a message for a code nobody committed to is how an
  * interface ends up asserting something the server never said.
  *

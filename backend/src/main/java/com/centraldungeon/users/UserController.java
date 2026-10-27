@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * People. Deliberately small: reading the caller's own profile, the picker that admins use to assign
- * masters, and the onboarding step.
+ * masters, the onboarding step and the later profile edit.
  *
  * <p>There is no "get user by id" here. Public profiles and their visibility window (ADR-10 §1, §2)
  * are F2, and a user directory is not opened wider than the screens that need it (ADR-07 §8).
@@ -75,17 +76,33 @@ public class UserController {
     }
 
     /**
-     * Onboarding is a blocking step the first time: name and country (ADR-10 §4).
+     * Completes onboarding, the blocking first-time step: name and country (ADR-10 §4).
      *
      * @param request     the name and country they chose
      * @param currentUser the actor, from the token. This endpoint can only edit the caller's own
      *                    profile - there is no id to point somewhere else (ADR-05 §5)
-     * @return 200 with their profile, now past onboarding
+     * @return 200 with their profile, now past onboarding. 409 {@code ONBOARDING_ALREADY_COMPLETED}
+     *         if they were already past it: this door does not work as an edit
      */
-    @PatchMapping("/me")
+    @PostMapping("/me/onboarding")
     @PreAuthorize("isAuthenticated()")
     public UserDetailResponse completeOnboarding(
             @Valid @RequestBody UpdateUserRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
         return userService.completeOnboarding(currentUser.userId(), request);
+    }
+
+    /**
+     * Edits the caller's name and country once onboarding is done (ADR-10 §4).
+     *
+     * @param request     the new name and country
+     * @param currentUser the actor, from the token (ADR-05 §5)
+     * @return 200 with their profile. 409 {@code ONBOARDING_PENDING} if they have not completed
+     *         onboarding yet: that step has its own endpoint
+     */
+    @PatchMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public UserDetailResponse updateProfile(
+            @Valid @RequestBody UpdateUserRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        return userService.updateProfile(currentUser.userId(), request);
     }
 }

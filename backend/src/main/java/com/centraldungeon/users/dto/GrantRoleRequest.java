@@ -8,8 +8,9 @@ import jakarta.validation.constraints.NotNull;
  * The body of {@code POST /admin/users/{id}/grant-role}.
  *
  * <p>Who may grant which role is <b>not</b> decided here: a request that names Owner is well formed
- * whoever sends it, and an admin sending it gets a 403 and not a 400 - it is a question of who you
- * are, not of what you sent (roles-y-alcance.md §3).
+ * whoever sends it, and gets a 403 and not a 400 - the application does not grant Owner to anybody,
+ * and an admin reaching for Admin gets a 403 too, because it is a question of who you are, not of
+ * what you sent (roles-y-alcance.md §3).
  *
  * @param role          the role to grant. A name outside the four is a 400 from Jackson, which is
  *                      correct: it is not a role

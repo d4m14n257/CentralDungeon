@@ -113,12 +113,8 @@
     "requestPauseConfirmDescription": "An admin decides, reading your reason. Until they answer, the table carries on as it is."
   },
   "schedule": {
-    "weekdayLabel": "Day",
-    "hourLabel": "Time",
-    "add": "Add",
     "remove": "Remove {{slot}}",
     "utcEquivalent": "In UTC: {{slot}}",
-    "timeZoneHint": "Times are typed in your zone ({{timeZone}}) and stored in UTC.",
     "startDate": "Start date",
     "totalSessions": "Planned sessions",
     "notSet": "Not set",

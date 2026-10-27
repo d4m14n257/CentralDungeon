@@ -88,9 +88,12 @@ describe('AdminUsersPage', () => {
     expect(dialog.getByRole('button', { name: /Master/ })).toBeInTheDocument()
     expect(dialog.queryByRole('button', { name: /Admin/ })).not.toBeInTheDocument()
     expect(dialog.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
+    // The hint speaks to the admin: only an owner moves Admin.
+    expect(dialog.getByText(/el rol Admin lo mueve solo un owner/)).toBeInTheDocument()
   })
 
-  it('the owner is offered the four roles', async () => {
+  /** Owner is not granted from the application (ADR-06 §1): the owner is offered three and told so. */
+  it('the owner is offered Player, Master and Admin and never Owner to grant', async () => {
     signedInAs('Owner')
     list.mockResolvedValue(page([account()]))
     renderPage()
@@ -98,9 +101,23 @@ describe('AdminUsersPage', () => {
     await userEvent.click(row.getByRole('button', { name: 'Cambiar roles' }))
 
     const dialog = within(await screen.findByRole('dialog'))
-    for (const label of ['Jugador', 'Master', 'Admin', 'Owner']) {
+    for (const label of ['Jugador', 'Master', 'Admin']) {
       expect(dialog.getByRole('button', { name: new RegExp(label) })).toBeInTheDocument()
     }
+    expect(dialog.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
+    expect(dialog.getByText(/El rol Owner no se da desde la aplicación/)).toBeInTheDocument()
+    expect(dialog.queryByText(/solo un owner/)).not.toBeInTheDocument()
+  })
+
+  it('the owner can take Owner away from an account that holds it', async () => {
+    signedInAs('Owner')
+    list.mockResolvedValue(page([account({ roles: ['Owner'] })]))
+    renderPage()
+    const row = await rowFor('dami')
+    await userEvent.click(row.getByRole('button', { name: 'Cambiar roles' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+    expect(dialog.getByRole('button', { name: /Owner/ })).toHaveTextContent('lo tiene')
   })
 
   /**

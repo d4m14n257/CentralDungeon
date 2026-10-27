@@ -14,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
  * that does not describe a playable week (ADR-08 §2). Only then is it compared against the rest of the
  * master's life, which is R1 and a {@code 409}.
  *
- * <p>Editing the agenda of a table that already has players <b>warns and does not expel</b> (ADR-15 §2,
- * ADR-08 §2): the people it now clashes with are notified, and what to do about it is theirs and their
+ * <p>Editing the agenda of a table that already has candidates <b>warns and does not expel</b> (ADR-15 §2,
+ * ADR-08 §2): the candidates it now clashes with are notified, and what to do about it is theirs and their
  * master's to sort out. The system says what happened; it does not decide for them.
  */
 @Service
@@ -47,9 +48,12 @@ public class TableScheduleService {
             .comparingInt((TableScheduleEntry entry) -> entry.weekday().ordinalFromMonday())
             .thenComparing(TableScheduleEntry::hourtime);
 
-    /** The players a schedule change can affect - the ones already in, and the ones still waiting. */
-    private static final List<TableRegistrationStatus> AFFECTED_STATUSES =
-            List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
+    /**
+     * Who a clash warning goes to: the candidates, who have an application to withdraw on
+     * {@code /player/applications}. A player has nothing to resolve there, and already hears the
+     * agenda changed through {@code TableScheduleChanged}.
+     */
+    private static final TableRegistrationStatus AFFECTED_STATUS = TableRegistrationStatus.Candidate;
 
     /** The {@code table_schedules} rows this service owns. */
     private final TableScheduleRepository scheduleRepository;
@@ -141,12 +145,14 @@ public class TableScheduleService {
      *                 clash it reads as. A table with no master yet - an admin creating an Unassigned
      *                 one (ADR-06 §7) - has nobody to measure, so only its own coherence is checked and
      *                 R1 waits for the masters to be assigned
+     * @return whether the agenda changed - a slot was added, removed, or kept with another length. The
+     *         caller decides whom that is news for; this method only warns the candidates it clashes with
      * @throws InvalidRequestException if two of the given slots overlap each other (ADR-08 §2)
      * @throws ConflictException       if the agenda overlaps another live table one of its masters runs
      *                                 or plays at - R1 of ADR-08 §2
      */
     @Transactional
-    public void replace(GameTable table, List<TableScheduleEntry> entries, @Nullable String actorId) {
+    public boolean replace(GameTable table, List<TableScheduleEntry> entries, @Nullable String actorId) {
         List<TableScheduleEntry> normalized = normalize(entries);
         List<WeeklyInterval> intervals = intervalsOf(normalized);
 
@@ -156,8 +162,10 @@ public class TableScheduleService {
         List<User> masters = masterService.findByGameTable(table.getId()).stream().map(Master::getUser).toList();
         requireNoClash(masters, table.getId(), intervals, actorId);
 
+        boolean changed = !new HashSet<>(findByTable(table.getId())).equals(new HashSet<>(normalized));
         applyTo(table.getId(), normalized);
         warnAffectedPeople(table);
+        return changed;
     }
 
     /**
@@ -236,7 +244,7 @@ public class TableScheduleService {
      */
     private void warnAffectedPeople(GameTable table) {
         for (TableRegistration registration : registrationRepository.findByGameTable_Id(table.getId())) {
-            if (!AFFECTED_STATUSES.contains(registration.getStatus())) {
+            if (registration.getStatus() != AFFECTED_STATUS) {
                 continue;
             }
             String userId = registration.getUser().getId();

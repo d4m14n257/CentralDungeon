@@ -83,7 +83,6 @@ export function notificationTarget(notification: Notification): string | null {
     // run. Any tab of it shows the status notice (ADR-21 §10), which says what follows and, for a
     // table sent back, points at the history where the admin's reason is (ADR-18 §3).
     case 'TableApproved':
-    case 'TableApprovedWithChanges':
     case 'TableChangesRequested':
       return masterTableDetailPath(relatedEntityId)
     // An admin changed somebody else's table (ADR-06 §8). The rewrite and the return to play land on the
@@ -109,6 +108,42 @@ export function notificationTarget(notification: Notification): string | null {
     case 'SessionScheduled':
     case 'SessionCanceled':
       return myTableDetailPath(relatedEntityId)
+    // The table changed under someone joined to it. The same type reaches masters and players, so the
+    // row says which one the reader is (`membership`) and each lands on their own screen: a master on
+    // the history tab for a pause or a cancellation, because that is where the reason is, and on the
+    // table for the rest; a player on their own table screen, which still opens once the table is
+    // finished or cancelled (it asks only whether they played there). A row without `membership` is
+    // one this build cannot place, and opens nothing rather than the wrong screen.
+    case 'TablePaused':
+    case 'TableCanceled':
+      return byMembership(notification, masterTableHistoryPath, myTableDetailPath)
+    case 'TableResumed':
+    case 'TableFinished':
+    case 'TableScheduleChanged':
+      return byMembership(notification, masterTableDetailPath, myTableDetailPath)
+    default:
+      return null
+  }
+}
+
+/**
+ * Picks between the master's screen and the player's by how the reader is joined to the table.
+ *
+ * @param notification the one that was clicked; its `relatedEntityId` is the table
+ * @param master       the master's destination
+ * @param player       the player's destination
+ * @returns the path for the reader's membership, or null when the row does not say
+ */
+function byMembership(notification: Notification, master: (tableId: string) => string, player: (tableId: string) => string): string | null {
+  const tableId = notification.relatedEntityId
+  if (!tableId) {
+    return null
+  }
+  switch (notification.params?.membership) {
+    case 'Master':
+      return master(tableId)
+    case 'Player':
+      return player(tableId)
     default:
       return null
   }

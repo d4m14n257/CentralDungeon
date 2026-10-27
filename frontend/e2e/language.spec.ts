@@ -83,7 +83,7 @@ test('choosing a language sticks, and outlasts a reload', async ({ browser }) =>
     await page.goto('/player')
     await expect(page.getByRole('heading', { name: 'Explorar mesas' })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Mi cuenta' }).click()
+    await page.getByRole('button', { name: `e2e-lang-switch-${runId}` }).click()
     await page.getByRole('menuitem', { name: 'English' }).click()
 
     // The labels follow immediately, without a reload.

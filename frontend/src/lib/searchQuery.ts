@@ -106,7 +106,7 @@ export const OPEN_FIELD_PREFIX = /(^|\s)\/([\w-]*)$/
 const CONNECTOR_TOKENS: Record<string, SearchConnector> = { '/and': 'and', '/or': 'or' }
 
 /** Splits a criterion's alternatives and drops the gaps: `damian, ,carlos,` is two of them. */
-export function splitValues(raw: string): string[] {
+function splitValues(raw: string): string[] {
   return raw
     .split(',')
     .map((value) => value.trim())

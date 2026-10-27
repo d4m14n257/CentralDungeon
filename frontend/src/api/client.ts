@@ -1,4 +1,5 @@
 import { env } from '@/config/env'
+import { paths } from '@/config/paths'
 import { ApiError, type PageResponse, type ProblemDetail } from '@/types/api'
 
 /**
@@ -111,7 +112,7 @@ async function send(method: string, path: string, options: RequestOptions = {}, 
       return send(method, path, options, true)
     }
     setAccessToken(null)
-    window.location.assign('/login')
+    window.location.assign(paths.login)
     throw new ApiError(401, { title: 'Unauthorized', status: 401, detail: 'Session expired', errorCode: 'UNAUTHORIZED' })
   }
 
@@ -141,7 +142,7 @@ async function request<TRes>(method: string, path: string, options: RequestOptio
  *
  * @template TRes the response body's type
  */
-export interface WithStatus<TRes> {
+interface WithStatus<TRes> {
   data: TRes
   status: number
 }

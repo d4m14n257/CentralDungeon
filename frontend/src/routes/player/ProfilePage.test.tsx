@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -27,7 +28,13 @@ let queryResult: { data: Profile | undefined; isPending: boolean; isLoadingError
 
 vi.mock('@/features/users', () => ({
   useMyProfile: () => queryResult,
-  ProfileCard: ({ profile }: { profile: Profile }) => <div>{profile.name}</div>,
+  EditProfileDialog: ({ open }: { open: boolean }) => (open ? <div>edit dialog</div> : null),
+  ProfileCard: ({ profile, actions }: { profile: Profile; actions: ReactNode }) => (
+    <div>
+      {profile.name}
+      {actions}
+    </div>
+  ),
 }))
 
 // The approvals API is mocked and its hooks are not: the rule about when the request is offered is
@@ -116,6 +123,17 @@ describe('ProfilePage', () => {
 
     await waitFor(() => expect(screen.getByText(/Ya pediste el rol de master/)).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'Pedir el rol de master' })).not.toBeInTheDocument()
+  })
+
+  /** ADR-10 §4: after onboarding, name and country are edited from here. */
+  it('opens the profile edit from the header action', async () => {
+    queryResult = { data: PROFILE, isPending: false, isLoadingError: false, refetch: vi.fn() }
+    renderPage()
+
+    expect(screen.queryByText('edit dialog')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }))
+
+    expect(screen.getByText('edit dialog')).toBeInTheDocument()
   })
 
   it('shows a skeleton while loading', () => {

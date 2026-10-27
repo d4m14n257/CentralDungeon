@@ -88,7 +88,6 @@
     "applyReviewNoMessage": "No message",
     "applyReviewNoFiles": "No files attached",
     "applyFilesFailed": "Could not upload: {{names}}. The application was still sent with what did upload.",
-    "notFoundTitle": "This table does not exist",
     "permitted": "What is allowed",
     "schedule": "Agenda",
     "scheduleTimeZone": "Times in your zone ({{timeZone}}).",

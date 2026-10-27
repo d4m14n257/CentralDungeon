@@ -1,5 +1,6 @@
 package com.centraldungeon.notifications;
 
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -13,14 +14,14 @@ import org.jspecify.annotations.Nullable;
  * accepted into La Cripta" depending on who is looking and when.
  *
  * <p>A named record and not a free map, because the set of values is small, closed and known: every
- * notification type in {@link NotificationType} fills in some subset of these four. A fifth one
- * arrives with the notification that needs it - {@code taskTitle} is the fourth, and arrived exactly
- * that way with F1.5.
+ * notification type in {@link NotificationType} fills in some subset of these. A new one
+ * arrives with the notification that needs it - {@code taskTitle} arrived exactly that way with
+ * the task notifications, and {@code membership} and {@code changes} with the table-change ones.
  *
  * <p>Persisted as JSON in a single column by {@link NotificationParamsConverter}. That is a
  * deliberate exception to "a column per field": these values are never filtered, sorted or joined
  * on - they are the arguments of a sentence - so a column each would be schema churn every time a
- * message changes shape. It is also why adding this fourth field needed no migration: a row written
+ * message changes shape. It is also why adding a field needs no migration: a row written
  * before it existed simply has no such key, and reads back with it null.
  *
  * @param tableName      the table the notification is about, for every type that names one
@@ -33,13 +34,21 @@ import org.jspecify.annotations.Nullable;
  *                       arrived (ADR-15 §5). "The table is asking you for something" is a worse headline
  *                       than "Ficha de personaje", for the same reason ADR-18 §5 gives for naming the
  *                       applicant
+ * @param membership     how the recipient is joined to the table, for the table-change notifications
+ *                       that reach both its masters and its players, so the click lands on the right
+ *                       screen. Null for every other type, and for rows written before it existed
+ * @param changes        for {@link NotificationType#TableEditedByAdmin}, the fields the admin actually
+ *                       changed, as stable codes ({@code name}, {@code description}, {@code schedule}...)
+ *                       the frontend renders in the reader's language. Null for every other type
  */
 public record NotificationParams(
         @Nullable String tableName,
         @Nullable String otherTableName,
         @Nullable String actorName,
         @Nullable String taskTitle,
-        @Nullable String tableId) {
+        @Nullable String tableId,
+        @Nullable TableMembership membership,
+        @Nullable List<String> changes) {
 
     /**
      * The common case: a notification that only has to name the table it is about.
@@ -48,7 +57,7 @@ public record NotificationParams(
      * @return the parameters, with nothing else set
      */
     public static NotificationParams ofTable(String tableName) {
-        return new NotificationParams(tableName, null, null, null, null);
+        return new NotificationParams(tableName, null, null, null, null, null, null);
     }
 
     /**
@@ -58,7 +67,29 @@ public record NotificationParams(
      * @return the parameters, with only the table id set
      */
     public static NotificationParams ofTableId(String tableId) {
-        return new NotificationParams(null, null, null, null, tableId);
+        return new NotificationParams(null, null, null, null, tableId, null, null);
+    }
+
+    /**
+     * A table-change notification: it names the table and says how the recipient is joined to it.
+     *
+     * @param tableName  the table
+     * @param membership how the recipient is joined to the table
+     * @return the parameters, with only those two set
+     */
+    public static NotificationParams ofTable(String tableName, TableMembership membership) {
+        return new NotificationParams(tableName, null, null, null, null, membership, null);
+    }
+
+    /**
+     * An admin's edit of a table, with what they changed.
+     *
+     * @param tableName the table
+     * @param changes   the codes of the fields that changed, never empty
+     * @return the parameters, addressed to a master
+     */
+    public static NotificationParams ofEdit(String tableName, List<String> changes) {
+        return new NotificationParams(tableName, null, null, null, null, TableMembership.Master, List.copyOf(changes));
     }
 
     /**
@@ -73,6 +104,6 @@ public record NotificationParams(
      * @return the parameters, with nothing set
      */
     public static NotificationParams none() {
-        return new NotificationParams(null, null, null, null, null);
+        return new NotificationParams(null, null, null, null, null, null, null);
     }
 }

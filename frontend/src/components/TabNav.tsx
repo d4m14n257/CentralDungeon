@@ -3,7 +3,7 @@ import { NavLink } from 'react-router'
 import { cn } from '@/lib/utils'
 
 /** One tab of a {@link TabNav}. */
-export interface TabNavItem {
+interface TabNavItem {
   /** Where the tab goes, relative to the screen that owns the tabs: `.` for the first, then each child route. */
   to: string
   /** What the tab is called, already passed through `t()`. */

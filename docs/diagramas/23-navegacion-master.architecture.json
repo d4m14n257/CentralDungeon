@@ -745,9 +745,8 @@
   "cards": [
     {
       "dot": "rose",
-      "title": "Destino sin emisor",
+      "title": "Las decisiones del master",
       "items": [
-        "TableApprovedWithChanges: ningún código la emite",
         "Las decisiones están en el aviso de estado, visible desde toda pestaña"
       ]
     },

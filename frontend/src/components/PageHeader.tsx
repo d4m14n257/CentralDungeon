@@ -9,7 +9,7 @@ import { HelpButton, type HelpSectionId } from '@/features/help'
  * The one main action of a screen (ADR-21 §5). An object and not a node, so every screen's button comes
  * out the same: violet, normal size, at the right edge.
  */
-export interface PageAction {
+interface PageAction {
   /** What the button says, already translated. */
   label: string
   /** Where it goes, for an action that is a page of its own. Exactly one of `to` and `onClick`. */
@@ -21,7 +21,7 @@ export interface PageAction {
 }
 
 /** Where «Volver» goes and what it says. */
-export interface PageBack {
+interface PageBack {
   /** The screen it returns to. */
   to: string
   /** What it says, already translated — «Volver a archivos», naming where it leads. */

@@ -1,29 +1,22 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { paths } from '@/config/paths'
-import { completeOnboardingSchema, useCompleteOnboarding, type CompleteOnboardingForm } from '@/features/users'
-import { countriesIn } from '@/lib/countries'
+import { Form } from '@/components/ui/form'
+import { completeOnboardingSchema, ProfileFields, useCompleteOnboarding, type CompleteOnboardingForm } from '@/features/users'
 import { useConfirm } from '@/hooks/useConfirm'
 
 /**
- * The first step of a new account: display name and country, asked once. The OAuth callback sends
- * here every account that has not completed it; no other entry point redirects here.
+ * The first step of a new account: display name and country, asked once (ADR-10 §4).
+ *
+ * It blocks, whatever the entry point: the session guard in `RootLayout` sends every account that
+ * has not completed it here, and takes out of here every account that has. This screen only asks.
  */
 export function OnboardingPage() {
-  const { t, i18n } = useTranslation('onboarding')
+  const { t } = useTranslation('onboarding')
   const confirm = useConfirm()
-  // Named and sorted in the reader's language: the alphabet changes with it (ADR-23 §2).
-  const countries = useMemo(() => countriesIn(i18n.language), [i18n.language])
-  const navigate = useNavigate()
   const completeOnboarding = useCompleteOnboarding()
   const form = useForm<CompleteOnboardingForm>({
     resolver: zodResolver(completeOnboardingSchema),
@@ -34,9 +27,9 @@ export function OnboardingPage() {
     // A review before anything is written (ADR-21 §9): what is about to change, and what follows.
     const confirmed = await confirm({ title: t('confirmTitle', { name: values.name }), description: t('confirmDescription') })
     if (!confirmed) return
-    completeOnboarding.mutate(values, {
-      onSuccess: () => navigate(paths.root),
-    })
+    // No navigation here: the answer lands in the `/users/me` cache and the session guard takes the
+    // reader out of `/onboarding` by itself.
+    completeOnboarding.mutate(values)
   }
 
   return (
@@ -48,43 +41,7 @@ export function OnboardingPage() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('nameLabel')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={t('namePlaceholder')} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('countryLabel')}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={t('countryPlaceholder')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country.code} value={country.code}>
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <ProfileFields form={form} />
             <Button type="submit" disabled={completeOnboarding.isPending} className="w-full">
               {t('submit')}
             </Button>

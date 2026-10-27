@@ -24,7 +24,6 @@
     "TaskPublished": "New request",
     "MasterAssigned": "You are a master",
     "TableApproved": "Table approved",
-    "TableApprovedWithChanges": "Approved with changes",
     "TableChangesRequested": "Changes requested",
     "ApprovalRequestApproved": "Request approved",
     "ApprovalRequestRejected": "Request rejected",
@@ -32,7 +31,12 @@
     "TablePausedByAdmin": "Table paused by an admin",
     "TableResumedByAdmin": "Table resumed",
     "TableCanceledByAdmin": "Table cancelled by an admin",
-    "TableDeletedByAdmin": "Table removed"
+    "TableDeletedByAdmin": "Table removed",
+    "TablePaused": "Table paused",
+    "TableResumed": "Table resumed",
+    "TableCanceled": "Table cancelled",
+    "TableFinished": "Table finished",
+    "TableScheduleChanged": "Schedule changed"
   },
   "badge": {
     "accepted": "Accepted",
@@ -70,9 +74,6 @@
     "TableApproved": {
       "title": "Your table {{tableName}} was approved and is now open"
     },
-    "TableApprovedWithChanges": {
-      "title": "{{tableName}} was approved with an admin’s changes"
-    },
     "TableChangesRequested": {
       "title": "Changes were requested on {{tableName}}"
     },
@@ -86,7 +87,8 @@
     },
     "TableEditedByAdmin": {
       "title": "An admin edited your table {{tableName}}",
-      "message": "Open it to see how it looks now."
+      "message": "Open it to see how it looks now.",
+      "title_changes": "An admin changed {{changes, list}} of your table {{tableName}}"
     },
     "TablePausedByAdmin": {
       "title": "An admin paused your table {{tableName}}",
@@ -102,6 +104,40 @@
     },
     "TableDeletedByAdmin": {
       "title": "An admin removed your table {{tableName}}"
+    },
+    "TablePaused": {
+      "title": "The table {{tableName}} was paused",
+      "message_Master": "The reason is in the table's history.",
+      "message_Player": "While it is paused, you won't see its pending sessions."
+    },
+    "TableResumed": {
+      "title": "The table {{tableName}} has resumed",
+      "message": "The pending sessions were rescheduled from today."
+    },
+    "TableCanceled": {
+      "title": "The table {{tableName}} was cancelled",
+      "message_Master": "The reason is in the table's history."
+    },
+    "TableFinished": {
+      "title": "The table {{tableName}} has finished"
+    },
+    "TableScheduleChanged": {
+      "title": "{{tableName}}'s schedule changed",
+      "message": "Open it to see the new times in your local time."
     }
+  },
+  "field": {
+    "name": "the name",
+    "description": "the description",
+    "permitted": "the house rules",
+    "requirements": "the requirements",
+    "startDate": "the start date",
+    "totalSessions": "the number of sessions",
+    "maxPlayers": "the player cap",
+    "tableType": "the table type",
+    "systems": "the systems",
+    "tags": "the tags",
+    "platforms": "the platforms",
+    "schedule": "the schedule"
   }
 }

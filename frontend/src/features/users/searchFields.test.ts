@@ -20,7 +20,7 @@ describe('adminUserSearchFields', () => {
     const byName = Object.fromEntries(fields.map((field) => [field.name, field]))
 
     expect(byName.role?.values?.map((choice) => choice.value)).toEqual(['Player', 'Master', 'Admin', 'Owner'])
-    expect(byName.status?.values?.map((choice) => choice.value)).toEqual(['Allowed', 'Blocked', 'Deleted'])
+    expect(byName.status?.values?.map((choice) => choice.value)).toEqual(['Allowed', 'Blocked'])
     expect(byName.discord_name?.values).toBeUndefined()
     expect(byName.user_name?.values).toBeUndefined()
   })

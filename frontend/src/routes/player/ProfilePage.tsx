@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ErrorState } from '@/components/ErrorState'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SubmitRequestSection } from '@/features/approvals'
 import { HelpButton, HelpLink } from '@/features/help'
-import { ProfileCard, useMyProfile } from '@/features/users'
+import { EditProfileDialog, ProfileCard, useMyProfile } from '@/features/users'
 
 /**
  * `/player/profile` — the reader's own profile: name, country, roles and aggregate attendance
@@ -12,6 +14,8 @@ import { ProfileCard, useMyProfile } from '@/features/users'
  *
  * There is no "sin permiso" state here: nobody can be locked out of their own profile, which is
  * exactly what tells this screen apart from {@link import('./UserProfilePage').UserProfilePage}.
+ * **Name and country are edited from here** (ADR-10 §4), in a dialog that reuses the onboarding
+ * fields; the first fill-in is the blocking `/onboarding` step, not this.
  * The lower half of the wireframe, "Comentarios recibidos", is F5 and this screen never draws it
  * (§ ProfileCard).
  *
@@ -26,6 +30,7 @@ export function ProfilePage() {
   const { t } = useTranslation('users')
   const { t: tAdmin } = useTranslation('admin')
   const { data, isPending, isLoadingError, refetch } = useMyProfile()
+  const [editing, setEditing] = useState(false)
 
   if (isPending) {
     return (
@@ -46,7 +51,18 @@ export function ProfilePage() {
     <div className="space-y-3">
       {/* «Quién ve esto» is the question the screen raises and cannot answer alone (ADR-20 §5): the expiry
           of ADR-10 §2 is not something anybody guesses by looking at a profile they can see today. */}
-      <ProfileCard profile={data} actions={<HelpButton section="players.profile" />} />
+      <ProfileCard
+        profile={data}
+        actions={
+          <div className="flex items-center gap-1">
+            <HelpButton section="players.profile" />
+            <Button type="button" onClick={() => setEditing(true)}>
+              {t('profile.edit')}
+            </Button>
+          </div>
+        }
+      />
+      <EditProfileDialog profile={data} open={editing} onOpenChange={setEditing} />
       {/* Nothing at all for somebody who already runs tables: the role is not something you can hold
           twice, so there is no request to make and nothing to explain. */}
       {!isMaster && (

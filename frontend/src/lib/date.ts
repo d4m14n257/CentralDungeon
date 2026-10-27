@@ -18,7 +18,7 @@ export type Weekday = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday'
 export const WEEKDAYS: readonly Weekday[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const
 
 /** One slot of a weekly agenda: a day and a `HH:mm` time, in whichever zone the caller is holding. */
-export interface WeeklySlot {
+interface WeeklySlot {
   weekday: Weekday
   /** `HH:mm`, or `HH:mm:ss` as the API sends it — the seconds are ignored everywhere. */
   hourtime: string
@@ -104,9 +104,6 @@ export function utcSlotToLocal(slot: WeeklySlot, timeZone: string): WeeklySlot {
 export function localSlotToUtc(slot: WeeklySlot, timeZone: string): WeeklySlot {
   return shiftSlot(slot, -offsetMinutes(slot, timeZone))
 }
-
-/** How many minutes a week has. What a week-minute is reduced modulo, and what a block can run past. */
-export const MINUTES_PER_WEEK_TOTAL = MINUTES_PER_WEEK
 
 /**
  * A stretch of the week as the API sends it: minutes from Monday 00:00 **UTC**, and a length (ADR-08 §6).

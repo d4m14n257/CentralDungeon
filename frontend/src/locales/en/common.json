@@ -1,18 +1,13 @@
 {
   "actions": {
-    "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
     "confirm": "Confirm",
-    "accept": "Accept",
-    "reject": "Reject",
     "retry": "Try again",
-    "back": "Back",
     "logout": "Sign out"
   },
   "states": {
     "loading": "Loading...",
-    "emptyTitle": "There is nothing here",
     "errorTitle": "Something went wrong",
     "errorDescription": "We could not load this. Try again.",
     "forbiddenTitle": "You do not have access",
@@ -101,7 +96,9 @@
       "FILE_CATEGORY_NOT_YOURS": "That file cannot be filed under that category: it is not one of yours. Pick another.",
       "FILE_CATEGORY_NOT_PUBLISHABLE": "That category holds what each person answered and cannot be published to the whole community.",
       "FILE_CANNOT_SELF_PUBLISH": "Files of the platform's library are uploaded by an admin from the library, not from here.",
-      "REQUEST_TYPE_NOT_ACCEPTED_HERE": "That request is opened from the resource it is about, not from this screen."
+      "REQUEST_TYPE_NOT_ACCEPTED_HERE": "That request is opened from the resource it is about, not from this screen.",
+      "ONBOARDING_PENDING": "Finish the first step before editing your profile.",
+      "ONBOARDING_ALREADY_COMPLETED": "You already completed the first step. Edit your name and country from your profile."
     }
   },
   "pagination": {

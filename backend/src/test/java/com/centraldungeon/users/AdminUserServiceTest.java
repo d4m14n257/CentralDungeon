@@ -144,22 +144,6 @@ class AdminUserServiceTest {
         verify(userStatusChangeRepository, never()).save(any());
     }
 
-    /** F3.1 does not touch Deleted: a deleted account is neither blocked nor unblocked, it stays put. */
-    @Test
-    void bloquearUnaCuentaDeletedEs409YNoLaMueve() {
-        User target = persistedUser("target", UserStatus.Deleted);
-        when(userService.getById("target")).thenReturn(target);
-        when(userRoleRepository.findActiveRoleNames("target")).thenReturn(Set.of());
-
-        assertThatThrownBy(() -> adminUserService.block("target", "x", ADMIN_ACTOR))
-                .isInstanceOf(ConflictException.class)
-                .asInstanceOf(InstanceOfAssertFactories.type(ConflictException.class))
-                .extracting(ConflictException::getErrorCode)
-                .isEqualTo(ConflictException.USER_ALREADY_BLOCKED);
-
-        assertThat(target.getStatus()).isEqualTo(UserStatus.Deleted);
-    }
-
     @Test
     void desbloquearUnaCuentaQueNoEstaBloqueadaEs409() {
         User target = persistedUser("target", UserStatus.Allowed);
@@ -170,21 +154,6 @@ class AdminUserServiceTest {
                 .asInstanceOf(InstanceOfAssertFactories.type(ConflictException.class))
                 .extracting(ConflictException::getErrorCode)
                 .isEqualTo(ConflictException.USER_NOT_BLOCKED);
-    }
-
-    @Test
-    void desbloquearUnaCuentaDeletedEs409YNuncaLaPasaAAllowed() {
-        User target = persistedUser("target", UserStatus.Deleted);
-        when(userService.getById("target")).thenReturn(target);
-
-        assertThatThrownBy(() -> adminUserService.unblock("target", "x", OWNER_ACTOR))
-                .isInstanceOf(ConflictException.class)
-                .asInstanceOf(InstanceOfAssertFactories.type(ConflictException.class))
-                .extracting(ConflictException::getErrorCode)
-                .isEqualTo(ConflictException.USER_NOT_BLOCKED);
-
-        assertThat(target.getStatus()).isEqualTo(UserStatus.Deleted);
-        verify(userStatusChangeRepository, never()).save(any());
     }
 
     // ---------------------------------------------------------------- the happy paths, with ADR-05 §7

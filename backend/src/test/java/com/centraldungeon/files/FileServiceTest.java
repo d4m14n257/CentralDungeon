@@ -490,8 +490,6 @@ class FileServiceTest {
 
         assertThatThrownBy(() -> fileService().download("file-1", "vetado"))
                 .isInstanceOf(NotFoundException.class);
-        assertThatThrownBy(() -> fileService().findById("file-1", "vetado"))
-                .isInstanceOf(NotFoundException.class);
     }
 
     /**

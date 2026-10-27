@@ -97,8 +97,9 @@ public class AdminUserController {
      * @param id          the person the role is given to
      * @param request     which role, and why
      * @param currentUser the actor, from the token (ADR-05 §5)
-     * @return 200 with the person afterwards. 403 when an admin reaches for Admin or Owner, 404 when
-     *         the person does not exist, 409 when the exclusion of ADR-06 §1 would leave no owner
+     * @return 200 with the person afterwards. 403 when the role is Owner (nobody is granted it
+     *         here) or when an admin reaches for Admin, 404 when the person does not exist, 409
+     *         when the exclusion of ADR-06 §1 would leave no owner
      */
     @PostMapping("/{id}/grant-role")
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")

@@ -9,9 +9,7 @@ import type { StagedFile } from '@/types/file'
 export type TaskAudience = 'Candidates' | 'Players' | 'Single'
 
 /**
- * Where a task is in its life. `Deleted` exists in the database as a soft-delete marker but no
- * response ever carries it, so the union deliberately does not mirror it — the same choice
- * `RegistrationStatus` made.
+ * Where a task is in its life: taking answers, or closed.
  */
 export type TaskStatus = 'Open' | 'Closed'
 

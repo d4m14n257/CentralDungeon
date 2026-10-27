@@ -29,11 +29,16 @@ export function notificationText(notification: Notification, t: TFunction<'notif
     return { title: notification.title ?? '', message: notification.message }
   }
 
+  const changes = params.changes?.map((code) => t(`field.${code}`, { defaultValue: code })) ?? []
   const values = {
     tableName: params.tableName ?? '',
     otherTableName: params.otherTableName ?? '',
     actorName: params.actorName ?? '',
     taskTitle: params.taskTitle ?? '',
+    changes,
+    // i18next picks `title_changes` / `message_Master` when it exists and the plain key otherwise: an
+    // edit lists what changed, and the same type reads differently to a master than to a player.
+    context: changes.length > 0 ? 'changes' : (params.membership ?? undefined),
   }
   // A type this build does not know about still has to render as something readable, so it falls
   // back to its own label rather than showing a raw key.

@@ -58,7 +58,6 @@
     "emptyDescription": "Preparation material, maps and anything you want to share with your players goes here.",
     "detachTitle": "Remove the file from this table?",
     "detachDescription": "It stops showing on this table. The file still exists, in your own list and on any other table using it.",
-    "detachConfirm": "Remove",
     "readOnlyTitle": "Files",
     "readOnlyEmptyTitle": "No files",
     "readOnlyEmptyDescription": "Nothing has been shared on this table yet.",
@@ -137,7 +136,6 @@
     "promptMultiple": "Drag the files here, or click to pick them",
     "limits": "Up to {{maxMb}} MB per file. {{types}} are accepted.",
     "categoryLabel": "Which drawer it goes in",
-    "reused": "You already had “{{name}}”: it was reused and takes no extra space.",
     "categoryHint": "Only needed here: when you upload from a table or an answer, the drawer follows from where you uploaded it.",
     "refusedFile": "“{{name}}”: {{reason}}"
   },
@@ -177,7 +175,6 @@
     "title": "Edit file",
     "description": "Change what it is called, what it is, and whether you are keeping it. The content is untouched.",
     "nameLabel": "Name",
-    "categoryLabel": "What it is",
     "keepLabel": "Keep it to reuse",
     "keepHint": "Unchecked, it stays tied to where you used it and is released after a long time unused.",
     "cancel": "Cancel",

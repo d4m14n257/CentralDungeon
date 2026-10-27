@@ -22,21 +22,27 @@ export const PLATFORM_ROLES = ['Player', 'Master', 'Admin', 'Owner'] as const sa
 export const ADMIN_GRANTABLE_ROLES = ['Player', 'Master'] as const satisfies readonly PlatformRole[]
 
 /**
+ * The roles an `Owner` may grant: the same three an admin cannot all reach, without `Owner` itself.
+ *
+ * `Owner` is not granted from the application at all, not even by an owner (ADR-06 §1): for now it is
+ * given from the database only. An owner may still take it away, which is a revocation and not part
+ * of this list.
+ */
+export const OWNER_GRANTABLE_ROLES = ['Player', 'Master', 'Admin'] as const satisfies readonly PlatformRole[]
+
+/**
  * The roles that make an account privileged — the ones that cannot be blocked, by anybody.
  *
  * Between peers there is no authority (§3): an admin does not block an admin and an owner does not
  * block an owner, and generalising it to "nobody blocks anybody holding these" covers self-blocking
  * for free, since the actor always holds one of the two.
  */
-export const PRIVILEGED_ROLES = ['Admin', 'Owner'] as const satisfies readonly PlatformRole[]
+const PRIVILEGED_ROLES = ['Admin', 'Owner'] as const satisfies readonly PlatformRole[]
 
 /**
  * Every account status, in the order of the account's life.
- *
- * `Deleted` is offered to the `/status` search command because `/admin/users` can see one, and
- * withheld from every action: F3.1 neither produces it nor undoes it.
  */
-export const ACCOUNT_STATUSES = ['Allowed', 'Blocked', 'Deleted'] as const satisfies readonly AccountStatus[]
+export const ACCOUNT_STATUSES = ['Allowed', 'Blocked'] as const satisfies readonly AccountStatus[]
 
 /**
  * Whether an account holds a role that puts it out of reach of a block.

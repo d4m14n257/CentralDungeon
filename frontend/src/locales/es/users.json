@@ -19,7 +19,13 @@
     },
     "loadErrorDescription": "No pudimos cargar este perfil. Probá de nuevo.",
     "expiredDescription": "Ya no podés ver este perfil.",
-    "discordHandle": "Discord: {{handle}}"
+    "discordHandle": "Discord: {{handle}}",
+    "edit": "Editar perfil",
+    "editDescription": "Cambiá cómo te ve el resto de la comunidad.",
+    "save": "Guardar",
+    "confirmTitle": "¿Guardar tu perfil como «{{name}}»?",
+    "confirmDescription": "Así te va a ver el resto de la comunidad.",
+    "saved": "Perfil actualizado"
   },
   "summary": {
     "title": "Ficha",
@@ -29,5 +35,11 @@
     "finishedTables": "Mesas terminadas",
     "finishedTablesValue_one": "{{count}} mesa terminada",
     "finishedTablesValue_other": "{{count}} mesas terminadas"
+  },
+  "profileForm": {
+    "nameLabel": "Nombre a mostrar",
+    "namePlaceholder": "Como te conocen en la mesa",
+    "countryLabel": "País",
+    "countryPlaceholder": "Selecciona tu país"
   }
 }

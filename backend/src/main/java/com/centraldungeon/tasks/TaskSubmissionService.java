@@ -126,7 +126,7 @@ public class TaskSubmissionService {
      */
     @Transactional
     public TaskSubmissionResponse submit(String taskId, CreateSubmissionRequest request, String actorId) {
-        TableTask task = tableTaskService.getLiveTask(taskId);
+        TableTask task = tableTaskService.getTask(taskId);
         if (!tableTaskService.isRecipient(task, actorId)) {
             throw new ForbiddenActionException("Task " + taskId + " is not addressed to user " + actorId);
         }
@@ -174,7 +174,7 @@ public class TaskSubmissionService {
      */
     @Transactional(readOnly = true)
     public TaskSubmissionsResponse listForTask(String taskId, String actorId) {
-        TableTask task = tableTaskService.getLiveTask(taskId);
+        TableTask task = tableTaskService.getTask(taskId);
         // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
         if (!masterService.canOversee(task.getGameTable().getId(), actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can view what was handed in");
@@ -207,7 +207,7 @@ public class TaskSubmissionService {
      */
     @Transactional(readOnly = true)
     public List<TaskSubmissionResponse> listMine(String taskId, String actorId) {
-        tableTaskService.getLiveTask(taskId);
+        tableTaskService.getTask(taskId);
         return describe(submissionRepository.findByTask_IdAndUser_IdAndDeletedAtIsNullOrderByCreatedAtAsc(taskId, actorId));
     }
 

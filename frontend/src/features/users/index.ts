@@ -6,7 +6,9 @@
 
 export { AdminUserRolesCell } from './components/AdminUserRolesCell'
 export { BlockUserDialog } from './components/BlockUserDialog'
+export { EditProfileDialog } from './components/EditProfileDialog'
 export { ProfileCard } from './components/ProfileCard'
+export { ProfileFields } from './components/ProfileFields'
 export { RoleChangeDialog } from './components/RoleChangeDialog'
 export { UserAdminHistory } from './components/UserAdminHistory'
 export { UserPicker } from './components/UserPicker'

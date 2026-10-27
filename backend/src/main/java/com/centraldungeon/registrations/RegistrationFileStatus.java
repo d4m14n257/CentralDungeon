@@ -1,15 +1,11 @@
 package com.centraldungeon.registrations;
 
 /**
- * Whether a file is still part of an application. Same two values, and the same reason, as
- * {@code TableFileStatus}: the pair is the primary key, so detaching marks the row instead of
- * dropping it and re-attaching the same file revives it rather than colliding.
+ * Whether a file is part of an application. A file is never taken off an application on its own, so
+ * the only value is {@link #Current}; the column stays so a link's state can grow without a schema change.
  */
 public enum RegistrationFileStatus {
 
-    /** Still attached to the application. */
-    Current,
-
-    /** Taken off. The file itself is untouched (ADR-14 §1), and the bytes are never freed here (ADR-03 §7, ADR-13 §8). */
-    Removed
+    /** Attached to the application. */
+    Current
 }

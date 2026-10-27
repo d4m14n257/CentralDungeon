@@ -45,7 +45,7 @@ final class UserSearchSpecification {
      */
     static Specification<User> matching(SearchQuery query) {
         return (root, criteriaQuery, builder) -> {
-            // Blocked and Deleted people are never offered: nobody should be picked as a master here.
+            // Blocked people are never offered: nobody should be picked as a master here.
             Predicate visible = builder.equal(root.get("status"), UserStatus.Allowed);
             Predicate matched = matching(root, criteriaQuery, builder, query);
             return matched == null ? visible : builder.and(visible, matched);

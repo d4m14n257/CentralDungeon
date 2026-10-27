@@ -7,6 +7,7 @@ import com.centraldungeon.notifications.dto.NotificationResponse;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -92,7 +93,7 @@ public class NotificationService {
     @Transactional
     public void notifyNewCandidate(String masterUserId, GameTable table, String applicantName) {
         User recipient = userRepository.getReferenceById(masterUserId);
-        NotificationParams params = new NotificationParams(table.getName(), null, applicantName, null, null);
+        NotificationParams params = new NotificationParams(table.getName(), null, applicantName, null, null, null, null);
         notificationRepository.save(
                 new Notification(recipient, NotificationType.NewCandidate, params, "game_table", table.getId()));
     }
@@ -142,26 +143,57 @@ public class NotificationService {
     }
 
     /**
-     * Tells a master that an admin changed their table (ADR-06 §8): rewrote it, paused it, resumed it,
-     * cancelled it or removed it.
+     * Tells somebody joined to a table that it changed under them: paused, resumed, cancelled,
+     * finished, or its agenda moved - or, for a master, that an admin did one of the first three
+     * (ADR-06 §8).
      *
-     * <p>One method for the five because they are the same message with a different verb: who acted
-     * is "an admin", never named, the way ADR-06 §9 shows any change an admin makes on somebody else's
-     * behalf. What the admin wrote as a reason is not copied in - it is already kept with the status
-     * change, which is where the master reads it in full (ADR-23 §3).
+     * <p>One method for all of them because they are the same message with a different verb. Who
+     * acted is never named, the way ADR-06 §9 shows any change an admin makes on somebody else's
+     * behalf, and the reason is not copied in: it is mandatory on the transition and kept with the
+     * status change, which is where it is read in full (ADR-23 §3).
      *
-     * @param userId one master of the table; the caller loops over all of them
-     * @param table  the table the admin acted on
-     * @param type   what the admin did. {@link NotificationType#TableDeletedByAdmin} links nowhere,
-     *               since a removed table cannot be opened (ADR-03 §7); the rest link to the table
+     * @param userId     one person joined to the table; the caller loops over all of them
+     * @param table      the table that changed; the notification links to it
+     * @param type       what happened. One of the plain types or a {@code …ByAdmin} variant, never
+     *                   {@link NotificationType#TableDeletedByAdmin}, which links nowhere
+     * @param membership how the recipient is joined, so the click lands on their own screen
      */
     @Transactional
-    public void notifyAdminActedOnTable(String userId, GameTable table, NotificationType type) {
+    public void notifyTableChanged(String userId, GameTable table, NotificationType type, TableMembership membership) {
         User recipient = userRepository.getReferenceById(userId);
-        boolean removed = type == NotificationType.TableDeletedByAdmin;
         notificationRepository.save(new Notification(
-                recipient, type, NotificationParams.ofTable(table.getName()),
-                removed ? null : "game_table", removed ? null : table.getId()));
+                recipient, type, NotificationParams.ofTable(table.getName(), membership), "game_table", table.getId()));
+    }
+
+    /**
+     * Tells a master that an admin rewrote their table, and which parts (ADR-06 §8).
+     *
+     * @param userId  one master of the table; the caller loops over all of them
+     * @param table   the table the admin rewrote; the notification links to it
+     * @param changes the codes of the fields that changed, never empty
+     */
+    @Transactional
+    public void notifyTableEditedByAdmin(String userId, GameTable table, List<String> changes) {
+        User recipient = userRepository.getReferenceById(userId);
+        notificationRepository.save(new Notification(
+                recipient, NotificationType.TableEditedByAdmin, NotificationParams.ofEdit(table.getName(), changes),
+                "game_table", table.getId()));
+    }
+
+    /**
+     * Tells a master that an admin removed their table (ADR-06 §8).
+     *
+     * <p>It links nowhere: a removed table cannot be opened (ADR-03 §7), so the name in the message
+     * is the whole of what is left to tell.
+     *
+     * @param userId one master the table had; the caller loops over all of them
+     * @param table  the table that was removed
+     */
+    @Transactional
+    public void notifyTableDeleted(String userId, GameTable table) {
+        User recipient = userRepository.getReferenceById(userId);
+        notificationRepository.save(new Notification(
+                recipient, NotificationType.TableDeletedByAdmin, NotificationParams.ofTable(table.getName()), null, null));
     }
 
     /**
@@ -180,7 +212,7 @@ public class NotificationService {
     @Transactional
     public void notifyScheduleConflict(String userId, GameTable table, String otherTableName) {
         User recipient = userRepository.getReferenceById(userId);
-        NotificationParams params = new NotificationParams(table.getName(), otherTableName, null, null, null);
+        NotificationParams params = new NotificationParams(table.getName(), otherTableName, null, null, null, null, null);
         notificationRepository.save(
                 new Notification(recipient, NotificationType.ScheduleConflict, params, "game_table", table.getId()));
     }
@@ -188,8 +220,7 @@ public class NotificationService {
     /**
      * Tells the players of a table that its calendar moved.
      *
-     * <p>It names no date. One notification covers a single correction and a whole re-laying after a
-     * pause alike, and carrying an instant would mean handing the reader a UTC time to convert in
+     * <p>It names no date. Carrying an instant would mean handing the reader a UTC time to convert in
      * their head - the conversion belongs on the screen it links to, where {@code lib/date.ts} does
      * it (ADR-03 §6).
      *
@@ -241,7 +272,7 @@ public class NotificationService {
     @Transactional
     public void notifyTaskPublished(String userId, GameTable table, String taskTitle) {
         User recipient = userRepository.getReferenceById(userId);
-        NotificationParams params = new NotificationParams(table.getName(), null, null, taskTitle, null);
+        NotificationParams params = new NotificationParams(table.getName(), null, null, taskTitle, null, null, null);
         notificationRepository.save(
                 new Notification(recipient, NotificationType.TaskPublished, params, "game_table", table.getId()));
     }

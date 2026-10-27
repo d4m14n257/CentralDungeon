@@ -204,11 +204,11 @@ public class TableTaskService {
      * @return the task after the correction
      * @throws ForbiddenActionException if the actor does not run the table
      * @throws InvalidRequestException  same three cases as publishing
-     * @throws NotFoundException        if the task is not there or was marked gone
+     * @throws NotFoundException        if the task is not there
      */
     @Transactional
     public TaskResponse update(String taskId, UpdateTaskRequest request, String actorId) {
-        TableTask task = getLiveTask(taskId);
+        TableTask task = getTask(taskId);
         requireMasterOf(task.getGameTable().getId(), actorId);
         requireAnswerable(request.acceptsText(), request.acceptsFiles());
 
@@ -239,11 +239,11 @@ public class TableTaskService {
      * @param actorId the actor, from the token
      * @return the task, now closed
      * @throws ForbiddenActionException if the actor does not run the table
-     * @throws NotFoundException        if the task is not there or was marked gone
+     * @throws NotFoundException        if the task is not there
      */
     @Transactional
     public TaskResponse close(String taskId, String actorId) {
-        TableTask task = getLiveTask(taskId);
+        TableTask task = getTask(taskId);
         requireMasterOf(task.getGameTable().getId(), actorId);
         task.setStatus(TaskStatus.Closed);
         return describe(task);
@@ -266,8 +266,7 @@ public class TableTaskService {
         if (!masterService.canOversee(gameTableId, actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can view its requests");
         }
-        List<TableTask> tasks =
-                taskRepository.findByGameTable_IdAndStatusNotOrderByCreatedAtAsc(gameTableId, TaskStatus.Deleted);
+        List<TableTask> tasks = taskRepository.findByGameTable_IdOrderByCreatedAtAsc(gameTableId);
         if (tasks.isEmpty()) {
             return List.of();
         }
@@ -349,25 +348,18 @@ public class TableTaskService {
     }
 
     /**
-     * The single lookup every task read goes through, so it is the single place where a marked task
-     * stops existing (ADR-03 §7).
+     * The single lookup every task read goes through.
      *
-     * <p>Public because {@code TaskSubmissionService} needs the same entity under the same rule, and
-     * a second copy of "and it must not be Deleted" is a second thing to remember. It is an internal
-     * read and never exposed raw over HTTP (arquitectura §2.2, 2.3).
+     * <p>Public because {@code TaskSubmissionService} needs the same entity under the same rule. It is
+     * an internal read and never exposed raw over HTTP (arquitectura §2.2, 2.3).
      *
      * @param taskId the task
-     * @return the live task
-     * @throws NotFoundException if it does not exist or was marked gone - 404 and not 403, because
-     *                           "it was deleted" is not something a caller is entitled to learn
+     * @return the task
+     * @throws NotFoundException if it does not exist
      */
     @Transactional(readOnly = true)
-    public TableTask getLiveTask(String taskId) {
-        TableTask task = taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("Task not found: " + taskId));
-        if (task.getStatus() == TaskStatus.Deleted) {
-            throw new NotFoundException("Task not found: " + taskId);
-        }
-        return task;
+    public TableTask getTask(String taskId) {
+        return taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("Task not found: " + taskId));
     }
 
     /**

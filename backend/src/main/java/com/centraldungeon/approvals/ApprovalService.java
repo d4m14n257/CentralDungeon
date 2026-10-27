@@ -471,7 +471,7 @@ public class ApprovalService {
             // copy of it and not a second reason invented here: the admin already wrote why, and
             // asking them twice would produce two answers to one question.
             case TablePause -> gameTableService.applyApprovedPause(
-                    request.getEntityId(), actor.userId(), resolutionNote);
+                    request.getEntityId(), actor.userId(), request.getRequestedBy().getId(), resolutionNote);
             // Through RegistrationService and never a second write of `Blocked`: the same reasoning
             // MasterGrant records above, and the reason a veto applied this way still lands in
             // `registration_status_changes` with the Primary's name on it.

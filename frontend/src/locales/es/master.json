@@ -113,12 +113,8 @@
     "requestPauseConfirmDescription": "Lo decide un admin, que lee tu motivo. Hasta que responda, la mesa sigue como está."
   },
   "schedule": {
-    "weekdayLabel": "Día",
-    "hourLabel": "Hora",
-    "add": "Agregar",
     "remove": "Quitar {{slot}}",
     "utcEquivalent": "En UTC: {{slot}}",
-    "timeZoneHint": "Las horas se escriben en tu zona ({{timeZone}}) y se guardan en UTC.",
     "startDate": "Fecha de inicio",
     "totalSessions": "Sesiones previstas",
     "notSet": "Sin definir",

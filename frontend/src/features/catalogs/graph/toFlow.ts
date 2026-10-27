@@ -6,7 +6,7 @@ import { radialLayout, radiusFor } from '@/components/graph/radialLayout'
 import type { AdminCatalogValue } from '../types'
 
 /** What a catalog node carries: the value it draws and the place it holds in its star. */
-export interface CatalogNodeData extends Record<string, unknown> {
+interface CatalogNodeData extends Record<string, unknown> {
   /** The value, exactly as the server sent it. */
   value: AdminCatalogValue
   /** Head of a group, member of one, or floating - a proposal nobody classified yet. */
@@ -20,7 +20,7 @@ export type CatalogFlowNode = Node<CatalogNodeData, 'catalog'>
 export type CatalogFlowEdge = Edge
 
 /** The edge type's name: the pattern's centre-to-centre spoke, registered by `GraphCanvas`. */
-export const GRAPH_EDGE_TYPE = 'straight-center'
+const GRAPH_EDGE_TYPE = 'straight-center'
 
 /** The node type's name, shared by `toFlow` and the canvas that registers it. */
 export const CATALOG_NODE_TYPE = 'catalog'

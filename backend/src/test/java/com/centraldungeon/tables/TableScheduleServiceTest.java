@@ -166,19 +166,89 @@ class TableScheduleServiceTest {
         assertThat(dropped.getDeletedAt()).isNotNull();
     }
 
-    /** Moving an agenda under people who are already in warns them; it never expels anybody (ADR-15 §2, ADR-08 §2). */
+    /** Moving an agenda under candidates warns them; it never expels anybody (ADR-15 §2, ADR-08 §2). */
     @Test
-    void warnsThePeopleTheNewAgendaNowClashesFor() {
+    void warnsTheCandidatesTheNewAgendaNowClashesFor() {
         GameTable table = table("table-7");
         when(scheduleRepository.findById_GameTableId("table-7")).thenReturn(List.of());
-        TableRegistration player = registration(table, "player-1", TableRegistrationStatus.Player);
-        when(registrationRepository.findByGameTable_Id("table-7")).thenReturn(List.of(player));
-        when(scheduleConflictService.findClashWith("player-1", table)).thenReturn(new CommittedTable("other", "El faro"));
+        TableRegistration candidate = registration(table, "candidate-1", TableRegistrationStatus.Candidate);
+        when(registrationRepository.findByGameTable_Id("table-7")).thenReturn(List.of(candidate));
+        when(scheduleConflictService.findClashWith("candidate-1", table)).thenReturn(new CommittedTable("other", "El faro"));
 
         tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1");
 
-        verify(notificationService).notifyScheduleConflict("player-1", table, "El faro");
-        assertThat(player.getStatus()).isEqualTo(TableRegistrationStatus.Player);
+        verify(notificationService).notifyScheduleConflict("candidate-1", table, "El faro");
+        assertThat(candidate.getStatus()).isEqualTo(TableRegistrationStatus.Candidate);
+    }
+
+    /**
+     * A player has nothing to withdraw on their applications screen, and already hears the agenda
+     * changed through its own notice, so the clash warning is for candidates only.
+     */
+    @Test
+    void doesNotSendTheClashWarningToAPlayer() {
+        GameTable table = table("table-7b");
+        when(scheduleRepository.findById_GameTableId("table-7b")).thenReturn(List.of());
+        when(registrationRepository.findByGameTable_Id("table-7b"))
+                .thenReturn(List.of(registration(table, "player-1", TableRegistrationStatus.Player)));
+
+        tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1");
+
+        verify(scheduleConflictService, never()).findClashWith(anyString(), any());
+        verify(notificationService, never()).notifyScheduleConflict(anyString(), any(), anyString());
+    }
+
+    @Test
+    void reportsAChangeWhenASlotIsAdded() {
+        GameTable table = table("table-10");
+        when(scheduleRepository.findById_GameTableIdAndStatus("table-10", TableScheduleStatus.Created))
+                .thenReturn(List.of(slot("table-10", Weekday.Tuesday, "20:00", "03:00")));
+        when(scheduleRepository.findById_GameTableId("table-10"))
+                .thenReturn(List.of(slot("table-10", Weekday.Tuesday, "20:00", "03:00")));
+
+        boolean changed = tableScheduleService.replace(
+                table, List.of(entry(Weekday.Tuesday, "20:00"), entry(Weekday.Friday, "21:00")), "master-1");
+
+        assertThat(changed).isTrue();
+    }
+
+    @Test
+    void reportsAChangeWhenASlotIsRemoved() {
+        GameTable table = table("table-11");
+        when(scheduleRepository.findById_GameTableIdAndStatus("table-11", TableScheduleStatus.Created))
+                .thenReturn(List.of(slot("table-11", Weekday.Tuesday, "20:00", "03:00"), slot("table-11", Weekday.Friday, "21:00", "03:00")));
+        when(scheduleRepository.findById_GameTableId("table-11"))
+                .thenReturn(List.of(slot("table-11", Weekday.Tuesday, "20:00", "03:00"), slot("table-11", Weekday.Friday, "21:00", "03:00")));
+
+        assertThat(tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1")).isTrue();
+    }
+
+    @Test
+    void reportsAChangeWhenOnlyTheDurationOfASlotChanges() {
+        GameTable table = table("table-12");
+        when(scheduleRepository.findById_GameTableIdAndStatus("table-12", TableScheduleStatus.Created))
+                .thenReturn(List.of(slot("table-12", Weekday.Tuesday, "20:00", "03:00")));
+        when(scheduleRepository.findById_GameTableId("table-12"))
+                .thenReturn(List.of(slot("table-12", Weekday.Tuesday, "20:00", "03:00")));
+
+        assertThat(tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00", "04:00")), "master-1")).isTrue();
+    }
+
+    /** Sending back the week it already has is not news for anybody, whatever order or seconds it arrives with. */
+    @Test
+    void reportsNoChangeWhenTheSameWeekIsSentBack() {
+        GameTable table = table("table-13");
+        when(scheduleRepository.findById_GameTableIdAndStatus("table-13", TableScheduleStatus.Created))
+                .thenReturn(List.of(slot("table-13", Weekday.Tuesday, "20:00", "03:00"), slot("table-13", Weekday.Friday, "21:00", "03:00")));
+        when(scheduleRepository.findById_GameTableId("table-13"))
+                .thenReturn(List.of(slot("table-13", Weekday.Tuesday, "20:00", "03:00"), slot("table-13", Weekday.Friday, "21:00", "03:00")));
+
+        boolean changed = tableScheduleService.replace(
+                table,
+                List.of(entry(Weekday.Friday, "21:00"), new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0, 30), LocalTime.of(3, 0))),
+                "master-1");
+
+        assertThat(changed).isFalse();
     }
 
     @Test
@@ -186,7 +256,7 @@ class TableScheduleServiceTest {
         GameTable table = table("table-8");
         when(scheduleRepository.findById_GameTableId("table-8")).thenReturn(List.of());
         when(registrationRepository.findByGameTable_Id("table-8"))
-                .thenReturn(List.of(registration(table, "player-2", TableRegistrationStatus.Player)));
+                .thenReturn(List.of(registration(table, "player-2", TableRegistrationStatus.Candidate)));
         when(scheduleConflictService.findClashWith("player-2", table)).thenReturn(null);
 
         tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1");
@@ -219,6 +289,10 @@ class TableScheduleServiceTest {
      */
     private static TableScheduleEntry entry(Weekday weekday, String hourtime, String duration) {
         return new TableScheduleEntry(weekday, LocalTime.parse(hourtime), LocalTime.parse(duration));
+    }
+
+    private static TableSchedule slot(String tableId, Weekday weekday, String hourtime, String duration) {
+        return new TableSchedule(tableId, weekday, LocalTime.parse(hourtime), LocalTime.parse(duration));
     }
 
     private static GameTable table(String id) {

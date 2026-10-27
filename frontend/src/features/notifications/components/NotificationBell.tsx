@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { notificationsPath } from '@/config/paths'
 import { relativeTimeFrom } from '@/lib/relativeTime'
 import { cn } from '@/lib/utils'
 
@@ -81,7 +82,7 @@ export function NotificationBell() {
         })}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="justify-center px-3 py-2 text-sm">
-          <Link to="/notifications" className="text-brand-fg">
+          <Link to={notificationsPath()} className="text-brand-fg">
             {t('viewAll')}
           </Link>
         </DropdownMenuItem>

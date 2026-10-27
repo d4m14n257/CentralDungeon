@@ -135,8 +135,7 @@ public class AdminUserService {
      * @throws ForbiddenActionException 403 {@code CANNOT_BLOCK_PRIVILEGED} when the target holds
      *                                  Admin or Owner - which includes the actor themselves
      * @throws ConflictException        409 {@code USER_ALREADY_BLOCKED} when the account is not
-     *                                  Allowed. A Deleted account answers this too: F3.1 does not
-     *                                  move one anywhere
+     *                                  Allowed
      */
     @Transactional
     public AdminUserDetailResponse block(String targetId, String justification, CurrentUser actor) {
@@ -160,8 +159,7 @@ public class AdminUserService {
      * @param actor         the actor, from the token (ADR-05 §5)
      * @return the account afterwards
      * @throws NotFoundException 404 when nobody has that id
-     * @throws ConflictException 409 {@code USER_NOT_BLOCKED} when the account is not Blocked. A
-     *                           Deleted account answers this: unblocking is not undeleting
+     * @throws ConflictException 409 {@code USER_NOT_BLOCKED} when the account is not Blocked
      */
     @Transactional
     public AdminUserDetailResponse unblock(String targetId, String justification, CurrentUser actor) {

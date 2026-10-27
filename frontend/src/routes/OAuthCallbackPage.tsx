@@ -41,7 +41,8 @@ function CallbackCard({ tone, title, children }: { tone?: 'pending' | 'canceled'
 /**
  * Backend redirect target after the OAuth2 handshake (ADR-05 §1, §2). A full page
  * reload, not an SPA navigation: AuthProvider remounts and picks up the refresh cookie the
- * backend just set - no chicken-and-egg 401 needed to discover the session.
+ * backend just set - no chicken-and-egg 401 needed to discover the session. Whoever still owes the
+ * onboarding is sent there by the session guard in `RootLayout`, not by this screen.
  */
 export function OAuthCallbackPage() {
   const { t } = useTranslation('auth')
@@ -108,10 +109,6 @@ export function OAuthCallbackPage() {
 
   if (!isAuthenticated) {
     return <Navigate to={paths.login} replace />
-  }
-
-  if (meQuery.data?.needsOnboarding) {
-    return <Navigate to={paths.onboarding} replace />
   }
 
   return <Navigate to={paths.root} replace />

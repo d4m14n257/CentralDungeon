@@ -193,8 +193,7 @@
     },
     "status": {
       "Allowed": "Activa",
-      "Blocked": "Bloqueada",
-      "Deleted": "Dada de baja"
+      "Blocked": "Bloqueada"
     },
     "columns": {
       "discordUsername": "Discord",
@@ -240,7 +239,8 @@
     "historyRoleRevoked": "Se quitó el rol {{role}}",
     "historyStatusChanged": "{{from}} → {{to}}",
     "errors": {
-      "ROLE_GRANT_FORBIDDEN": "Solo un Owner puede dar o quitar los roles de Admin y de Owner.",
+      "ROLE_GRANT_FORBIDDEN": "Solo un Owner puede mover los roles de Admin y de Owner.",
+      "OWNER_NOT_GRANTABLE": "El rol de Owner no se da desde la aplicación.",
       "CANNOT_BLOCK_PRIVILEGED": "No se puede bloquear a una cuenta con rol de Admin o de Owner.",
       "LAST_OWNER": "La plataforma no puede quedarse sin ningún Owner. Dale el rol a otra persona antes de quitar este.",
       "CANNOT_REVOKE_OWN_OWNER": "No podés quitarte tu propio rol de Owner. Tiene que hacerlo otro Owner.",
@@ -248,7 +248,8 @@
       "USER_NOT_BLOCKED": "Esta cuenta no está bloqueada.",
       "generic": "No pudimos aplicar el cambio. Probá de nuevo."
     },
-    "roleHelpHint": "Un admin mueve Jugador y Master; Admin y Owner los mueve solo un owner.",
+    "roleHelpHintAdmin": "Un admin mueve Jugador y Master; el rol Admin lo mueve solo un owner.",
+    "roleHelpHintOwner": "El rol Owner no se da desde la aplicación; sí podés quitarlo.",
     "roleHelpLink": "Por qué",
     "blockHelpHint": "No se puede bloquear a una cuenta con Admin u Owner, ni a la propia.",
     "blockHelpLink": "Por qué",

@@ -8,7 +8,7 @@ import type { ChangeUserRoleInput } from '../types'
 /**
  * Gives somebody a platform role (ADR-06 §1).
  *
- * Granting `Admin` removes `Owner` and granting `Owner` removes `Admin`, in the same transaction and
+ * Granting `Admin` to an `Owner` removes `Owner` (nobody grants `Owner` from the application), in the same transaction and
  * on the server — so one press can move a role this screen never asked about, and the listing has no
  * way to know which rows that touched. That is why the whole admin branch is re-read rather than the
  * pressed row being patched with what came back.

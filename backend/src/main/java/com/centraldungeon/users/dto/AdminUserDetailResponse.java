@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
  * @param discordUsername their Discord handle, as of their last login
  * @param name            their display name, or null while onboarding is incomplete (ADR-10 §4)
  * @param country         ISO 3166-1 alpha-2, or null while onboarding is incomplete
- * @param status          {@code Allowed}, {@code Blocked} or {@code Deleted}, as a string
+ * @param status          {@code Allowed} or {@code Blocked}, as a string
  * @param roles           the roles they hold right now, in the declaration order of
  *                        {@code PlatformRole}: Player, Master, Admin, Owner
  * @param createdAt       when they first logged in, in UTC

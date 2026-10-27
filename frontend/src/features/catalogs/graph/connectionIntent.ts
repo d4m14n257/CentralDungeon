@@ -7,7 +7,7 @@ import type { AdminCatalogValue } from '../types'
  * - `reassign` - an alias leaves its group for this one (ADR-12 §6)
  * - `merge` - a whole group, head and aliases, folds into this one (ADR-12 §3)
  */
-export type CatalogConnectionIntent = 'accept' | 'reassign' | 'merge'
+type CatalogConnectionIntent = 'accept' | 'reassign' | 'merge'
 
 /**
  * Decides what dropping `source` on `target` does, or that it does nothing.

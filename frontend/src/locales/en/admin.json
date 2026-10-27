@@ -193,8 +193,7 @@
     },
     "status": {
       "Allowed": "Active",
-      "Blocked": "Blocked",
-      "Deleted": "Closed"
+      "Blocked": "Blocked"
     },
     "columns": {
       "discordUsername": "Discord",
@@ -240,7 +239,8 @@
     "historyRoleRevoked": "The {{role}} role was taken away",
     "historyStatusChanged": "{{from}} → {{to}}",
     "errors": {
-      "ROLE_GRANT_FORBIDDEN": "Only an Owner can give or take away the Admin and Owner roles.",
+      "ROLE_GRANT_FORBIDDEN": "Only an Owner can move the Admin and Owner roles.",
+      "OWNER_NOT_GRANTABLE": "The Owner role is not given from the application.",
       "CANNOT_BLOCK_PRIVILEGED": "An account holding Admin or Owner cannot be blocked.",
       "LAST_OWNER": "The platform cannot be left without an Owner. Give the role to somebody else before taking this one away.",
       "CANNOT_REVOKE_OWN_OWNER": "You cannot take away your own Owner role. Another Owner has to do it.",
@@ -248,7 +248,8 @@
       "USER_NOT_BLOCKED": "This account is not blocked.",
       "generic": "We could not apply the change. Try again."
     },
-    "roleHelpHint": "An admin moves Player and Master; Admin and Owner are moved by an owner only.",
+    "roleHelpHintAdmin": "An admin moves Player and Master; the Admin role is moved by an owner only.",
+    "roleHelpHintOwner": "The Owner role is not given from the application; you can still take it away.",
     "roleHelpLink": "Why",
     "blockHelpHint": "An account holding Admin or Owner cannot be blocked, and neither can your own.",
     "blockHelpLink": "Why",

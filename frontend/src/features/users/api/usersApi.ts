@@ -5,7 +5,9 @@ import type { CompleteOnboardingInput, Profile, User, UserSummary, UserTable } f
 /** The calls about people: the caller's own profile, the picker search, onboarding, and F2.3's profile screens. */
 export const usersApi = {
   me: () => api.get<User>('/api/v1/users/me'),
-  completeOnboarding: (input: CompleteOnboardingInput) => api.patch<User, CompleteOnboardingInput>('/api/v1/users/me', input),
+  completeOnboarding: (input: CompleteOnboardingInput) => api.post<User, CompleteOnboardingInput>('/api/v1/users/me/onboarding', input),
+  /** The later edit of the same two fields (ADR-10 §4); refused while onboarding is still pending. */
+  updateProfile: (input: CompleteOnboardingInput) => api.patch<User, CompleteOnboardingInput>('/api/v1/users/me', input),
   /** `q` speaks the search language of lib/searchQuery.ts; the backend parses it again (ADR-22 §1). */
   search: (query: string, size = 8) => api.getPage<UserSummary>('/api/v1/users/search', { q: query, size }),
   /** `/player/profile` (ADR-10 §5). A separate endpoint from {@link usersApi.me}, not a field of it: this

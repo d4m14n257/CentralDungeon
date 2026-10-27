@@ -4,6 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.notifications.Notification;
+import com.centraldungeon.notifications.NotificationRepository;
+import com.centraldungeon.notifications.NotificationType;
+import com.centraldungeon.notifications.TableMembership;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
@@ -79,6 +83,9 @@ class TableSessionIT {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     private User master;
 
@@ -177,6 +184,40 @@ class TableSessionIT {
         // The three pending ones now start from the first Tuesday at or after today, not from 2026.
         assertThat(calendar.get(1).scheduledAt()).isAfter(LocalDateTime.now());
         assertThat(calendar.getFirst().scheduledAt()).isEqualTo(LocalDateTime.parse("2026-09-08T20:00"));
+    }
+
+    /**
+     * Pausing and resuming tell everybody joined, once each, through the real notifications table:
+     * the master hears the by-admin variant because the admin does not run the table, the player hears
+     * the plain type, and the resume no longer sends the old per-player calendar notice on top.
+     */
+    @Test
+    void pausingAndResumingTellTheMasterAndThePlayerOnceEach() {
+        gameTableService.approve(table.getId(), admin.getId());
+        gameTableService.start(table.getId(), master.getId());
+        User player = userRepository.save(new User(randomDiscordId(), "Session Player"));
+        joinAsPlayer(player);
+
+        gameTableService.pauseDirect(table.getId(), admin.getId(), new ChangeTableStatusRequest("Se enfermó"));
+        gameTableService.resume(table.getId(), admin.getId());
+
+        assertThat(notificationsOf(master))
+                .extracting(Notification::getNotificationType)
+                .containsExactlyInAnyOrder(NotificationType.TablePausedByAdmin, NotificationType.TableResumedByAdmin);
+        assertThat(notificationsOf(player))
+                .extracting(Notification::getNotificationType)
+                .containsExactlyInAnyOrder(NotificationType.TablePaused, NotificationType.TableResumed);
+        assertThat(notificationsOf(master)).allSatisfy(n -> assertThat(n.getParams().membership()).isEqualTo(TableMembership.Master));
+        assertThat(notificationsOf(player)).allSatisfy(n -> assertThat(n.getParams().membership()).isEqualTo(TableMembership.Player));
+        assertThat(notificationsOf(admin)).isEmpty();
+    }
+
+    /** What this user was told about the pause and the resume; approving the table sent its own review notice. */
+    private List<Notification> notificationsOf(User user) {
+        return notificationRepository.findAll().stream()
+                .filter(n -> n.getUser().getId().equals(user.getId()))
+                .filter(n -> n.getNotificationType() != NotificationType.TableApproved)
+                .toList();
     }
 
     /** ADR-08 §2: coming back is when the slot is claimed again, and a taken slot refuses the resume. */

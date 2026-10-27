@@ -18,8 +18,8 @@ import org.jspecify.annotations.Nullable;
  * @param discordUsername their Discord handle, as of their last login
  * @param name            their display name, or null while onboarding is incomplete (ADR-10 §4)
  * @param country         ISO 3166-1 alpha-2, or null while onboarding is incomplete
- * @param status          whether the account may be used: {@code Allowed}, {@code Blocked} or
- *                        {@code Deleted}, as a string like every other enum on the wire
+ * @param status          whether the account may be used: {@code Allowed} or
+ *                        {@code Blocked}, as a string like every other enum on the wire
  * @param roles           the roles they hold right now, ordered Player, Master, Admin, Owner - the
  *                        declaration order of {@code PlatformRole}, so the chips never reshuffle
  *                        between two rows of the same table

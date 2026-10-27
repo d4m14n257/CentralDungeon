@@ -33,14 +33,6 @@ export const catalogsApi = {
   list: (kind: CatalogKind, query?: string, size = pageSize.picker) => api.getPage<CatalogValue>(`/api/v1/${kind}`, { q: query, size }),
 
   /**
-   * One value whatever its status, so a pending proposal can be shown as pending (ADR-12 §3).
-   *
-   * @param kind which catalog
-   * @param id   the value to read
-   */
-  byId: (kind: CatalogKind, id: string) => api.get<CatalogValue>(`/api/v1/${kind}/${id}`),
-
-  /**
    * Proposes a value. Masters and admins may; it is born `Created` and shows to nobody until an
    * admin accepts it (ADR-12 §3).
    *

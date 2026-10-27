@@ -17,15 +17,17 @@ public enum NotificationType {
      * another one they are in (ADR-08 §2).
      *
      * <p>It is a warning and never an eviction. R4 sends it when accepting somebody makes their
-     * other pending applications clash, and {@code TableScheduleService} sends it when a master
-     * moves an agenda under people who were already signed up. In both cases the system says what
+     * other pending applications clash, and {@code TableScheduleService} sends it when an agenda
+     * moves under candidates who have applications to resolve. Players are not sent it: they hear
+     * the agenda changed through {@link #TableScheduleChanged} and have nothing to withdraw. In both cases the system says what
      * happened and the person decides - the same principle as ADR-15 §2.
      */
     ScheduleConflict,
 
     /**
-     * To the players of a table (not its candidates, who cannot see sessions): one of its sessions moved, or the whole pending calendar
-     * was re-laid after a pause (ADR-08 §3).
+     * To the players of a table (not its candidates, who cannot see sessions): one of its sessions moved (ADR-08 §3).
+     * Re-laying the calendar when a paused table resumes is announced by {@link #TableResumed}, not by
+     * one of these per session.
      *
      * <p>A calendar that changes without saying so is a calendar nobody can plan around, which is why
      * this exists at all - the same reasoning as ADR-15 §5 for tasks.
@@ -65,20 +67,10 @@ public enum NotificationType {
      * The admin approved a master's draft and the table is open (ADR-07 §1, ADR-18 §3).
      *
      * <p>The end of a wait the master cannot see the other side of: the table sat in review and only
-     * the bell says it came out. It does not distinguish an untouched approval from one the admin
-     * corrected on the way - {@link #TableApprovedWithChanges} is that one, because being told your
-     * text was edited is different news from being told it passed.
+     * the bell says it came out. An admin who corrected the draft on the way reaches the masters as
+     * {@link #TableEditedByAdmin}, which says what changed.
      */
     TableApproved,
-
-    /**
-     * The admin corrected the draft themselves and approved it (ADR-18 §3).
-     *
-     * <p>Separate from {@link #TableApproved} on purpose: the table is open either way, but somebody
-     * else's hand is now in what the master wrote, and finding that out by re-reading their own table
-     * is worse than being told.
-     */
-    TableApprovedWithChanges,
 
     /**
      * The admin sent the draft back for changes (ADR-07 §1, ADR-18 §3).
@@ -91,7 +83,8 @@ public enum NotificationType {
 
     /**
      * To every master of the table: an admin rewrote it - its text, catalogs, agenda or capacity
-     * (ADR-06 §8).
+     * (ADR-06 §8). The parameters list the fields the admin actually changed ({@code changes}); an
+     * edit that changed nothing sends nothing.
      *
      * <p>The rule behind this one and the four that follow is the same: whenever an admin changes
      * something that is not theirs, the people it belongs to are told (ADR-06 §8). The table keeps
@@ -101,24 +94,61 @@ public enum NotificationType {
     TableEditedByAdmin,
 
     /**
-     * To every master of the table: an admin paused it directly, without the master having asked
-     * (ADR-07 §2, ADR-06 §8). A pause the master requested and an admin approved reaches them as
-     * {@link #ApprovalRequestApproved} instead. The reason is not copied in: it is mandatory on the
-     * transition and the status history is where it is read whole (ADR-23 §3).
+     * To a master of the table: an admin paused it, and the master is not the admin (ADR-07 §2,
+     * ADR-06 §8). It covers a direct pause and the approval of a pause another master asked for;
+     * the master who asked hears it as {@link #ApprovalRequestApproved} instead. The reason is not
+     * copied in: it is mandatory on the transition and the status history is where it is read whole
+     * (ADR-23 §3).
      */
     TablePausedByAdmin,
 
     /**
-     * To every master of the table: an admin resumed it (ADR-07 §2, ADR-06 §8). The players hear about it
-     * separately, through {@link #SessionScheduled}, because what changes for them is the calendar.
+     * To a master of the table: an admin resumed it (ADR-07 §2, ADR-06 §8). The players hear it as
+     * {@link #TableResumed}.
      */
     TableResumedByAdmin,
 
     /**
-     * To every master of the table: an admin cancelled it (ADR-07 §1, ADR-06 §8). The reason lives in the status
-     * history, as for a pause.
+     * To a master of the table: an admin cancelled it (ADR-07 §1, ADR-06 §8). The reason lives in the status
+     * history, as for a pause. The players hear it as {@link #TableCanceled}.
      */
     TableCanceledByAdmin,
+
+    /**
+     * To everybody joined to the table - its live masters and its accepted players - except whoever
+     * paused it: the table was paused (ADR-07 §2). A master receives {@link #TablePausedByAdmin}
+     * instead when the one who paused it was an admin who does not run the table. The reason lives in
+     * the status history.
+     */
+    TablePaused,
+
+    /**
+     * To everybody joined to the table except whoever resumed it: the table is back in play and its
+     * pending sessions were re-laid (ADR-07 §2, ADR-08 §3). A master receives
+     * {@link #TableResumedByAdmin} instead when an admin who does not run the table resumed it.
+     */
+    TableResumed,
+
+    /**
+     * To everybody joined to the table except whoever cancelled it: the table was cancelled (ADR-07 §1).
+     * A master receives {@link #TableCanceledByAdmin} instead when an admin who does not run the table
+     * cancelled it. The reason lives in the status history.
+     */
+    TableCanceled,
+
+    /**
+     * To everybody joined to the table except its Primary, who finished it: the run is over
+     * (ADR-07 §7). Only the Primary finishes a table, so there is no by-admin variant.
+     */
+    TableFinished,
+
+    /**
+     * To everybody joined to the table except whoever changed it: its weekly agenda changed - a slot
+     * was added, removed or lengthened (ADR-08 §2). It tells people the hours moved without naming
+     * them; the table's screen shows the new week. An admin's edit tells the masters through
+     * {@link #TableEditedByAdmin} instead, and only the players receive this one.
+     */
+    TableScheduleChanged,
 
     /**
      * To every master the table had: an admin removed it (ADR-03 §7, ADR-06 §8).

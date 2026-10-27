@@ -6,7 +6,7 @@ import { filesApi } from './filesApi'
 import type { LinkTableFileInput } from '../types'
 
 /** What attaching a batch needs: the table it goes to, and the files. */
-export interface AttachFilesInput {
+interface AttachFilesInput {
   /** The table, known only once it exists. */
   tableId: string
   /** The attachments, in the order they were picked. */

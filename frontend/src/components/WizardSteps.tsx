@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
  * @typeParam Id - the caller's own union of step names, so `onGoTo` hands back that union and not a
  * bare `string` the caller has to cast (regla dura 6)
  */
-export interface WizardStepDescriptor<Id extends string> {
+interface WizardStepDescriptor<Id extends string> {
   /** Stable identifier, used as the React key and handed back by `onGoTo`. */
   id: Id
   /** What the step is called, already translated. */

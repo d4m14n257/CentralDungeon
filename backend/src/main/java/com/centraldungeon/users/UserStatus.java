@@ -11,8 +11,5 @@ public enum UserStatus {
     Allowed,
 
     /** Banned by an admin (ADR-05 §7). Login is refused and every listing skips them. */
-    Blocked,
-
-    /** Soft delete (ADR-03 §7). The rows stay so history keeps making sense. */
-    Deleted
+    Blocked
 }

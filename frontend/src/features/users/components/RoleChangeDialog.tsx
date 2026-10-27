@@ -27,6 +27,12 @@ interface RoleChangeDialogProps {
    * that opened it: the screen asks the capability question once and both sides of it use the answer.
    */
   grantableRoles: readonly PlatformRole[]
+  /**
+   * Whether the reader may take `Owner` away. `Owner` is never on `grantableRoles` — the application
+   * does not grant it (ADR-06 §1) — so it is offered only to take away, and only where the account
+   * holds it.
+   */
+  canRevokeOwner?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   /**
@@ -50,22 +56,25 @@ interface RoleChangeDialogProps {
  * What direction a press means is not a second choice either — it is read off the account: a role
  * somebody has is taken away, one they do not have is given.
  *
- * **It only ever offers `grantableRoles`.** An admin finds no way at all to hand out `Admin` or
- * `Owner` here — not a disabled button, not one that fails when pressed: the rank is simply not on
- * the list (principle 2 of diseno §1). The server refuses it too, with
- * `ROLE_GRANT_FORBIDDEN`, which is what makes this a display decision rather than the security (ADR-20 §1).
+ * **It only ever offers `grantableRoles`, plus `Owner` to take away.** An admin finds no way at all to
+ * hand out `Admin`, and nobody finds a way to hand out `Owner` — not a disabled button, not one that
+ * fails when pressed: the role is simply not on the list (principle 2 of diseno §1). `Owner` shows up
+ * only for an owner, and only on an account that holds it, because that is the one thing that can be
+ * done with it. The server refuses the rest too, with `ROLE_GRANT_FORBIDDEN` and `OWNER_NOT_GRANTABLE`,
+ * which is what makes this a display decision rather than the security (ADR-20 §1).
  *
  * It owns the two mutations, as every `…Dialog` does (arquitectura §3.3, ADR-19 §6). The refusals it
  * can get are specific — the last owner, an owner unmaking themselves — so they are rendered inline,
  * above the button that was pressed, instead of as a toast.
  *
  * @param props.user           the account being changed
- * @param props.grantableRoles the roles this reader may move
+ * @param props.grantableRoles the roles this reader may give and take away
+ * @param props.canRevokeOwner whether the reader may take `Owner` away from an account that holds it
  * @param props.open           whether the dialog is showing
  * @param props.onOpenChange   called when it is dismissed
  * @param props.help           the explanation of who may grant what, shown under the role list
  */
-export function RoleChangeDialog({ user, grantableRoles, open, onOpenChange, help }: RoleChangeDialogProps) {
+export function RoleChangeDialog({ user, grantableRoles, canRevokeOwner = false, open, onOpenChange, help }: RoleChangeDialogProps) {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
   const grant = useGrantRole()
@@ -84,6 +93,8 @@ export function RoleChangeDialog({ user, grantableRoles, open, onOpenChange, hel
   function isHeld(role: PlatformRole): boolean {
     return user?.roles.includes(role) ?? false
   }
+
+  const offeredRoles = canRevokeOwner && isHeld('Owner') ? [...grantableRoles, 'Owner' as const] : grantableRoles
 
   function handleOpenChange(next: boolean) {
     if (!next) {
@@ -138,7 +149,7 @@ export function RoleChangeDialog({ user, grantableRoles, open, onOpenChange, hel
                     what lets somebody notice which ones this account already holds (ADR-14 §4's reasoning
                     for the cajones, and the same shape). */}
                 <div className="flex flex-wrap gap-2">
-                  {grantableRoles.map((role) => (
+                  {offeredRoles.map((role) => (
                     <button
                       key={role}
                       type="button"

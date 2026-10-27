@@ -52,8 +52,9 @@ export const adminUsersApi = {
    * Gives somebody a role. A `POST` with a body and not a `PUT`, because the justification is part
    * of the act: a grant nobody explained is a grant nobody can review (ADR-06 §1).
    *
-   * Refused with `ROLE_GRANT_FORBIDDEN` when an admin reaches for `Admin` or `Owner` — which this
-   * screen never offers them, so it only surfaces for somebody calling the API another way.
+   * Refused with `OWNER_NOT_GRANTABLE` for `Owner`, whoever asks, and with `ROLE_GRANT_FORBIDDEN` when
+   * an admin reaches for `Admin` — which this screen never offers, so they only surface for somebody
+   * calling the API another way.
    *
    * @param id    the account to promote
    * @param input the role and the reason

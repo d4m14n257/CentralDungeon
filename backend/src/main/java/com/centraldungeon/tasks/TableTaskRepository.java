@@ -9,17 +9,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TableTaskRepository extends JpaRepository<TableTask, String> {
 
     /**
-     * Every task a table ever asked, minus the ones marked gone - the master's Peticiones tab.
+     * Every task a table ever asked - the master's Peticiones tab.
      *
      * <p>A list and not a page: it is bounded by what one table's masters chose to ask and is read as
      * one board, the same criterion the calendar and the attachments use.
      *
      * @param gameTableId the table
-     * @param status      the status to leave out, always {@link TaskStatus#Deleted} (ADR-03 §7)
      * @return its tasks, oldest first - the order they were published, which is the order somebody
      *         who published them remembers
      */
-    List<TableTask> findByGameTable_IdAndStatusNotOrderByCreatedAtAsc(String gameTableId, TaskStatus status);
+    List<TableTask> findByGameTable_IdOrderByCreatedAtAsc(String gameTableId);
 
     /**
      * A table's tasks in the given audiences and status, for resolving what applies to one reader.

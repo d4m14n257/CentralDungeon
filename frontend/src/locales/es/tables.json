@@ -88,7 +88,6 @@
     "applyReviewNoMessage": "Sin mensaje",
     "applyReviewNoFiles": "Sin archivos adjuntos",
     "applyFilesFailed": "No se pudieron subir: {{names}}. La postulación se envió igual con lo que sí se subió.",
-    "notFoundTitle": "Esta mesa no existe",
     "permitted": "Qué se permite",
     "schedule": "Agenda",
     "scheduleTimeZone": "Horarios en tu zona ({{timeZone}}).",

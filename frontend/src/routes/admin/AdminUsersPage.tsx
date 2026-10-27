@@ -73,7 +73,7 @@ export function AdminUsersPage() {
   const search = useSearchQuery({ fields, initialQuery: searchParams.get('q') ?? '', onQueryChange: (query) => updateParams({ q: query }) })
 
   const { data, isPending, isLoadingError, error, refetch } = useAdminUsers(search.query, page, size)
-  const { grantableRoles, canChangeStatus } = useUserAdminCapabilities()
+  const { grantableRoles, isOwner, canChangeStatus } = useUserAdminCapabilities()
 
   const roleDialog = useDisclosure<AdminUserSummary>()
   const statusDialog = useDisclosure<AdminUserSummary>()
@@ -206,11 +206,13 @@ export function AdminUsersPage() {
       <RoleChangeDialog
         user={roleDialog.item ?? null}
         grantableRoles={grantableRoles}
+        canRevokeOwner={isOwner}
         open={roleDialog.isOpen}
         onOpenChange={(open) => !open && roleDialog.close()}
         help={
           <p className="text-fg-subtle text-xs">
-            {t('users.roleHelpHint')} <HelpLink section="admins.roles">{t('users.roleHelpLink')}</HelpLink>
+            {t(isOwner ? 'users.roleHelpHintOwner' : 'users.roleHelpHintAdmin')}{' '}
+            <HelpLink section="admins.roles">{t('users.roleHelpLink')}</HelpLink>
           </p>
         }
       />

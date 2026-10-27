@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.files.FileDownload;
 import com.centraldungeon.files.FileService;
 import com.centraldungeon.files.FileType;
 import com.centraldungeon.files.dto.FileResponse;
@@ -173,9 +174,9 @@ class RegistrationFileIT {
     void theTablesMasterReadsTheCandidatesAttachedFile() {
         String fileId = givenAnApplicationWithAFile();
 
-        FileResponse read = fileService.findById(fileId, master.getId());
+        FileDownload read = fileService.download(fileId, master.getId());
 
-        assertThat(read.id()).isEqualTo(fileId);
+        assertThat(read.name()).isEqualTo("ficha.pdf");
     }
 
     /** Wide as the table applied to, and no wider: a stranger table's master gets 404, not the file. */
@@ -183,7 +184,7 @@ class RegistrationFileIT {
     void theMasterOfAnotherTableGets404OnTheCandidatesFile() {
         String fileId = givenAnApplicationWithAFile();
 
-        assertThatThrownBy(() -> fileService.findById(fileId, otherMaster.getId())).isInstanceOf(NotFoundException.class);
+        assertThatThrownBy(() -> fileService.download(fileId, otherMaster.getId())).isInstanceOf(NotFoundException.class);
     }
 
     /** Somebody else applying elsewhere has no door into a candidate's own attached file. */
@@ -191,7 +192,7 @@ class RegistrationFileIT {
     void anotherCandidateGets404OnSomebodyElsesAttachedFile() {
         String fileId = givenAnApplicationWithAFile();
 
-        assertThatThrownBy(() -> fileService.findById(fileId, otherCandidate.getId())).isInstanceOf(NotFoundException.class);
+        assertThatThrownBy(() -> fileService.download(fileId, otherCandidate.getId())).isInstanceOf(NotFoundException.class);
     }
 
     private String givenAnApplicationWithAFile() {

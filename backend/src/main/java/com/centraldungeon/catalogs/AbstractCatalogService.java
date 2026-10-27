@@ -122,9 +122,8 @@ public abstract class AbstractCatalogService<E extends CatalogValue> {
     }
 
     /**
-     * One value by id, whatever its status. Not filtered to accepted like {@link #search}, because
-     * this is how a master reads back the value he just proposed - and ADR-12 §3 asks the interface to say
-     * "pending", which it can only do if it gets the value and its status instead of a 404.
+     * One value by id, whatever its status. Not filtered to accepted like {@link #search}: linking a
+     * value to a table has to see a pending, rejected or disabled one to refuse it with its own reason.
      *
      * @param id the value to read
      * @return the value with its status

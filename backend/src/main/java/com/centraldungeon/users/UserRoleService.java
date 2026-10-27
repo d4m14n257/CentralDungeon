@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -27,12 +26,15 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * F3.2 approves a "please make me a master" request, it calls this service; it does not grow a
  * second way to write the same row.
  *
- * <p>Four rules are worth naming because none of them is obvious from the table:
+ * <p>Five rules are worth naming because none of them is obvious from the table:
  *
  * <ul>
- *   <li><b>Admin and Owner never coexist</b> (ADR-06 §1). Granting one revokes the other, in the same
- *       transaction, and the revocation gets an audit row of its own - burying it inside the grant
- *       would lose exactly the event somebody would go looking for.</li>
+ *   <li><b>Owner is not granted from the application</b> (ADR-06 §1). {@link #grantRole} refuses it
+ *       for every actor, an Owner included; for now the role is given from the database only.
+ *       Taking it away is still possible, with the guards below.</li>
+ *   <li><b>Admin and Owner never coexist</b> (ADR-06 §1). Granting Admin to an Owner revokes Owner,
+ *       in the same transaction, and the revocation gets an audit row of its own - burying it inside
+ *       the grant would lose exactly the event somebody would go looking for.</li>
  *   <li><b>The platform is never left without an Owner.</b> The only global invariant of roles, and
  *       MySQL cannot express it, so it is checked here - <em>before</em> anything is written, so a
  *       refused operation leaves no half of itself behind.</li>
@@ -88,19 +90,27 @@ public class UserRoleService {
      * and answers 200. A screen that fires the same click twice must not produce two entries in a
      * history that is supposed to read as a record of what happened.
      *
+     * <p>Owner cannot be granted through here at all: it is refused first, before the actor's rank,
+     * the target or any state is looked at, so the answer is the same for everybody who asks.
+     *
      * @param targetId      the person the role is given to
      * @param role          the role to grant
      * @param justification why, for the audit row. Never blank - the request validates it
      * @param actor         the actor, from the token (ADR-05 §5)
      * @return the person afterwards, so the screen does not have to re-fetch
-     * @throws ForbiddenActionException 403 {@code ROLE_GRANT_FORBIDDEN} when an admin reaches for
-     *                                  Admin or Owner
+     * @throws ForbiddenActionException 403 {@code OWNER_NOT_GRANTABLE} when the role is Owner, whoever
+     *                                  asks; 403 {@code ROLE_GRANT_FORBIDDEN} when an admin reaches
+     *                                  for Admin
      * @throws NotFoundException        404 when nobody has that id
      * @throws ConflictException        409 {@code LAST_OWNER} when the exclusion of ADR-06 §1 would take
      *                                  Owner away from the last one left
      */
     @Transactional
     public AdminUserDetailResponse grantRole(String targetId, PlatformRole role, String justification, CurrentUser actor) {
+        if (role == PlatformRole.OWNER) {
+            throw new ForbiddenActionException(
+                    "The Owner role is not granted from the application", ForbiddenActionException.OWNER_NOT_GRANTABLE);
+        }
         requireRankAuthority(role, actor);
         User target = userService.getById(targetId);
         List<UserRole> grants = new ArrayList<>(userRoleRepository.findAllGrants(targetId));
@@ -108,17 +118,17 @@ public class UserRoleService {
         Optional<UserRole> existing = grantOf(grants, role);
         boolean alreadyHeld = existing.filter(UserRoleService::isLive).isPresent();
 
-        PlatformRole counterpart = exclusiveCounterpartOf(role);
-        Optional<UserRole> heldCounterpart = counterpart == null
-                ? Optional.empty()
-                : grantOf(grants, counterpart).filter(UserRoleService::isLive);
+        // Only Admin has a counterpart here: Owner never gets this far (see the first line).
+        Optional<UserRole> heldCounterpart = role == PlatformRole.ADMIN
+                ? grantOf(grants, PlatformRole.OWNER).filter(UserRoleService::isLive)
+                : Optional.empty();
 
         if (alreadyHeld && heldCounterpart.isEmpty()) {
             return userMapper.toAdminDetailResponse(target, activeRoleNames(grants));
         }
 
         // Checked before the first write: the operation is refused whole, never half-applied.
-        if (heldCounterpart.isPresent() && counterpart == PlatformRole.OWNER && isLastActiveOwner(target)) {
+        if (heldCounterpart.isPresent() && isLastActiveOwner(target)) {
             throw new ConflictException(
                     "Granting Admin to " + targetId + " would take Owner away from the last active owner",
                     ConflictException.LAST_OWNER);
@@ -221,15 +231,6 @@ public class UserRoleService {
                     "Only an Owner can grant or revoke the " + role.roleName() + " role",
                     ForbiddenActionException.ROLE_GRANT_FORBIDDEN);
         }
-    }
-
-    /** Admin and Owner are the same rank at two scopes, so holding one excludes the other (ADR-06 §1). */
-    private static @Nullable PlatformRole exclusiveCounterpartOf(PlatformRole role) {
-        return switch (role) {
-            case ADMIN -> PlatformRole.OWNER;
-            case OWNER -> PlatformRole.ADMIN;
-            case PLAYER, MASTER -> null;
-        };
     }
 
     /**

@@ -6,6 +6,7 @@ import com.centraldungeon.common.security.RefreshCookieFactory;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserService;
+import com.centraldungeon.users.dto.UpdateUserRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.EnumSet;
 import java.util.Set;
@@ -25,6 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 @Profile("test")
 public class TestLoginController {
+
+    /** The country every fixture user gets when onboarding is completed for them. */
+    private static final String FIXTURE_COUNTRY = "AR";
 
     /** Creates the test user, or reuses them across runs. */
     private final UserService userService;
@@ -74,7 +78,8 @@ public class TestLoginController {
      * also repairs an account that a previous run left with two.
      *
      * @param discordId the identity to log in as. Also used as the display name, since the suite only
-     *                  needs someone distinguishable
+     *                  needs someone distinguishable. Onboarding is completed for them (a fixed country,
+     *                  only if they had not done it), because it blocks every route until it is
      * @param asMaster  whether the actor is a Master. Their only role, unless {@code asAdmin} too
      * @param asAdmin   whether the actor is an Admin. Their only role, unless {@code asMaster} too
      * @param asOwner   whether the actor is the platform Owner. Never together with {@code asAdmin}:
@@ -90,6 +95,10 @@ public class TestLoginController {
             @RequestParam(defaultValue = "false") boolean asOwner,
             HttpServletResponse response) {
         User user = userService.findOrCreateByDiscordId(discordId, discordId);
+        if (!user.hasCompletedOnboarding()) {
+            // Onboarding blocks every route (ADR-10 §4): a fixture without it would land every spec on /onboarding.
+            userService.completeOnboarding(user.getId(), new UpdateUserRequest(discordId, FIXTURE_COUNTRY));
+        }
         testDataService.setRolesExactly(user, wantedRoles(asMaster, asAdmin, asOwner));
 
         String accessToken = jwtService.issueAccessToken(user.getId());

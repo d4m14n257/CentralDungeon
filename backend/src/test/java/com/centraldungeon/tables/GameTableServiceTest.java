@@ -10,7 +10,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import com.centraldungeon.catalogs.CatalogType;
 import com.centraldungeon.catalogs.TableCatalogService;
+import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.notifications.NotificationType;
 import com.centraldungeon.tables.dto.AddMasterRequest;
@@ -104,6 +106,9 @@ class GameTableServiceTest {
     private NotificationService notificationService;
 
     @Mock
+    private TableChangeNotifier tableChangeNotifier;
+
+    @Mock
     private GameTableSearchResolver gameTableSearchResolver;
 
     /**
@@ -123,7 +128,7 @@ class GameTableServiceTest {
                 gameTableRepository, tableTypeRepository, tableRegistrationRepository, tableStatusChangeRepository, masterService,
                 gameTableMapper, userService, tableScheduleService, scheduleConflictService, tableCatalogService,
                 tableSessionService, tableFileService, new RichTextSanitizer(), settingsService, notificationService,
-                gameTableSearchResolver,
+                tableChangeNotifier, gameTableSearchResolver,
                 // The real one over the same mocked repositories: every read of a concrete table in
                 // these tests goes through it, and a mock would hide whether it does (ADR-03 §7, ADR-09 §4).
                 new TableVisibilityService(gameTableRepository, tableRegistrationRepository, masterService));
@@ -827,13 +832,15 @@ class GameTableServiceTest {
                         "table-pause-4", "Test", null, null, null, null, null, "Pause", null, 0, null, null,
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false));
 
-        gameTableService.applyApprovedPause("table-pause-4", "admin-1", "The master is moving house");
+        gameTableService.applyApprovedPause("table-pause-4", "admin-1", "master-1", "The master is moving house");
 
         assertThat(table.getStatus()).isEqualTo(GameTableStatus.Pause);
         ArgumentCaptor<TableStatusChange> change = ArgumentCaptor.forClass(TableStatusChange.class);
         verify(tableStatusChangeRepository).save(change.capture());
         assertThat(change.getValue().getJustification()).isEqualTo("The master is moving house");
         assertThat(change.getValue().getFromStatus()).isEqualTo(GameTableStatus.PauseRequested);
+        // The requester is passed on so they are not told twice: they already get the answer to their request.
+        verify(tableChangeNotifier).announceTransition(table, NotificationType.TablePaused, "admin-1", "master-1");
     }
 
     /**
@@ -1370,22 +1377,62 @@ class GameTableServiceTest {
 
     /** The admin's door is for the table that is already open or running and needs correcting (ADR-06 §8). */
     @Test
-    @DisplayName("an admin rewrites an open table and every master is told")
-    void anAdminRewritesAnOpenTableAndItsMastersAreTold() {
+    @DisplayName("an admin rewrites an open table and the notifier is handed exactly what changed")
+    void anAdminRewritesAnOpenTableAndTheNotifierIsHandedWhatChanged() {
         GameTable table = persistedTable("table-admin-edit", GameTableStatus.Opened);
         when(gameTableRepository.findByIdForUpdate("table-admin-edit")).thenReturn(Optional.of(table));
         when(tableRegistrationRepository.countByGameTable_IdAndStatus("table-admin-edit", TableRegistrationStatus.Player)).thenReturn(2L);
-        Master primary = new Master(table, persistedUser("primary-1"), MasterType.Primary);
-        Master coMaster = new Master(table, persistedUser("co-master-1"), MasterType.Secondary);
-        when(masterService.findByGameTable("table-admin-edit")).thenReturn(List.of(primary, coMaster));
+        when(tableScheduleService.replace(eq(table), any(), eq("admin-1"))).thenReturn(true);
         when(anyDetailMapping()).thenReturn(detailOf("table-admin-edit", "Opened"));
 
         gameTableService.adminUpdate("table-admin-edit", runnableUpdate("Corregida", 4), "admin-1");
 
         assertThat(table.getName()).isEqualTo("Corregida");
         assertThat(table.getMaxPlayers()).isEqualTo(4);
-        verify(notificationService).notifyAdminActedOnTable("primary-1", table, NotificationType.TableEditedByAdmin);
-        verify(notificationService).notifyAdminActedOnTable("co-master-1", table, NotificationType.TableEditedByAdmin);
+        // Exactly the fields that differ, in a stable order, with the agenda last because the schedule
+        // service is the one that knows whether it moved. The description, permitted and requirements
+        // were null and stay null, so they are not reported.
+        verify(tableChangeNotifier).announceEdit(
+                table, "admin-1", List.of("name", "maxPlayers", "systems", "tags", "platforms", "schedule"));
+    }
+
+    @Test
+    @DisplayName("an admin edit that changes nothing hands the notifier an empty list, which tells nobody")
+    void anAdminEditThatChangesNothingReportsNoChanges() {
+        GameTable table = persistedTable("table-admin-same", GameTableStatus.Opened);
+        table.setName("Same");
+        when(gameTableRepository.findByIdForUpdate("table-admin-same")).thenReturn(Optional.of(table));
+        when(tableCatalogService.findLinks("table-admin-same")).thenReturn(Map.of(
+                CatalogType.SYSTEMS, List.of(new CatalogValueResponse("system-1", "S", "Accepted")),
+                CatalogType.TAGS, List.of(new CatalogValueResponse("tag-1", "T", "Accepted")),
+                CatalogType.PLATFORMS, List.of(new CatalogValueResponse("platform-1", "P", "Accepted"))));
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-same", "Opened"));
+
+        gameTableService.adminUpdate("table-admin-same", runnableUpdate("Same", null), "admin-1");
+
+        verify(tableChangeNotifier).announceEdit(table, "admin-1", List.of());
+    }
+
+    @Test
+    @DisplayName("a description that only differs by markup the sanitizer strips is not reported as changed")
+    void aDescriptionTheSanitizerNormalizesIsNotReported() {
+        GameTable table = persistedTable("table-admin-html", GameTableStatus.Opened);
+        table.setName("Same");
+        table.setDescription("<p>Hola</p>");
+        when(gameTableRepository.findByIdForUpdate("table-admin-html")).thenReturn(Optional.of(table));
+        when(tableCatalogService.findLinks("table-admin-html")).thenReturn(Map.of(
+                CatalogType.SYSTEMS, List.of(new CatalogValueResponse("system-1", "S", "Accepted")),
+                CatalogType.TAGS, List.of(new CatalogValueResponse("tag-1", "T", "Accepted")),
+                CatalogType.PLATFORMS, List.of(new CatalogValueResponse("platform-1", "P", "Accepted"))));
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-html", "Opened"));
+        UpdateGameTableRequest request = new UpdateGameTableRequest(
+                "Same", "<p>Hola</p><script>alert(1)</script>", null, null, null, List.of("system-1"), List.of("tag-1"),
+                List.of("platform-1"), null, null, null,
+                List.of(new TableScheduleEntry(Weekday.Friday, LocalTime.of(20, 0), LocalTime.of(3, 0))));
+
+        gameTableService.adminUpdate("table-admin-html", request, "admin-1");
+
+        verify(tableChangeNotifier).announceEdit(table, "admin-1", List.of());
     }
 
     /**
@@ -1417,7 +1464,7 @@ class GameTableServiceTest {
         assertThatThrownBy(() -> gameTableService.adminUpdate("table-admin-cap", runnableUpdate("Mesa", 3), "admin-1"))
                 .isInstanceOf(ConflictException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ConflictException.CAPACITY_BELOW_PLAYERS);
-        verify(notificationService, never()).notifyAdminActedOnTable(any(), any(), any());
+        verify(tableChangeNotifier, never()).announceEdit(any(), any(), any());
     }
 
     /** A finished, cancelled or removed table is a record of what happened; nobody rewrites it (ADR-06 §8). */
@@ -1441,58 +1488,50 @@ class GameTableServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ConflictException.ITEM_ALREADY_CLAIMED);
     }
 
-    /** An admin who also runs the table is editing their own: telling them what they just did is noise. */
     @Test
-    void anAdminEditingATableTheyRunIsNotToldAboutIt() {
-        GameTable table = persistedTable("table-admin-own", GameTableStatus.Opened);
-        when(gameTableRepository.findByIdForUpdate("table-admin-own")).thenReturn(Optional.of(table));
-        when(masterService.findByGameTable("table-admin-own"))
-                .thenReturn(List.of(new Master(table, persistedUser("admin-1"), MasterType.Primary)));
-        when(anyDetailMapping()).thenReturn(detailOf("table-admin-own", "Opened"));
-
-        gameTableService.adminUpdate("table-admin-own", runnableUpdate("Mesa", null), "admin-1");
-
-        verify(notificationService, never()).notifyAdminActedOnTable(any(), any(), any());
-    }
-
-    @Test
-    void pausingATableDirectlyTellsItsMasters() {
+    void pausingATableDirectlyAnnouncesItWithNobodyExcludedButTheActor() {
         GameTable table = persistedTable("table-admin-pause", GameTableStatus.InProgress);
         when(gameTableRepository.findByIdForUpdate("table-admin-pause")).thenReturn(Optional.of(table));
-        when(masterService.findByGameTable("table-admin-pause"))
-                .thenReturn(List.of(new Master(table, persistedUser("primary-3"), MasterType.Primary)));
         when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
         when(anyDetailMapping()).thenReturn(detailOf("table-admin-pause", "Pause"));
 
         gameTableService.pauseDirect("table-admin-pause", "admin-1", new ChangeTableStatusRequest("Conflicto entre jugadores"));
 
-        verify(notificationService).notifyAdminActedOnTable("primary-3", table, NotificationType.TablePausedByAdmin);
+        verify(tableChangeNotifier).announceTransition(table, NotificationType.TablePaused, "admin-1", null);
     }
 
-    /** The Primary cancelling their own table hears nothing; an admin doing it is news (ADR-06 §8). */
     @Test
-    void cancellingTellsTheMastersOnlyWhenAnAdminDidIt() {
+    void cancellingAnnouncesItWhoeverDidIt() {
         GameTable own = persistedTable("table-cancel-own", GameTableStatus.Opened);
         when(gameTableRepository.findByIdForUpdate("table-cancel-own")).thenReturn(Optional.of(own));
         when(masterService.isPrimaryOf("table-cancel-own", "primary-4")).thenReturn(true);
-        when(masterService.findByGameTable("table-cancel-own"))
-                .thenReturn(List.of(new Master(own, persistedUser("primary-4"), MasterType.Primary)));
         when(userService.getById(anyString())).thenAnswer(invocation -> persistedUser(invocation.getArgument(0)));
         when(anyDetailMapping()).thenReturn(detailOf("table-cancel-own", "Canceled"));
 
         gameTableService.cancel("table-cancel-own", "primary-4", new ChangeTableStatusRequest("Ya no puedo dirigirla"));
 
-        verify(notificationService, never()).notifyAdminActedOnTable(any(), any(), any());
+        verify(tableChangeNotifier).announceTransition(own, NotificationType.TableCanceled, "primary-4", null);
 
         GameTable other = persistedTable("table-cancel-admin", GameTableStatus.Opened);
         when(gameTableRepository.findByIdForUpdate("table-cancel-admin")).thenReturn(Optional.of(other));
         when(userService.loadAuthSnapshot("admin-1")).thenReturn(adminSnapshot("admin-1"));
-        when(masterService.findByGameTable("table-cancel-admin"))
-                .thenReturn(List.of(new Master(other, persistedUser("primary-5"), MasterType.Primary)));
 
         gameTableService.cancel("table-cancel-admin", "admin-1", new ChangeTableStatusRequest("Incumple las reglas"));
 
-        verify(notificationService).notifyAdminActedOnTable("primary-5", other, NotificationType.TableCanceledByAdmin);
+        verify(tableChangeNotifier).announceTransition(other, NotificationType.TableCanceled, "admin-1", null);
+    }
+
+    @Test
+    void finishingATableAnnouncesItToTheOthersJoinedToIt() {
+        GameTable table = persistedTable("table-finish", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-finish")).thenReturn(Optional.of(table));
+        when(masterService.isPrimaryOf("table-finish", "primary-7")).thenReturn(true);
+        when(userService.getById("primary-7")).thenReturn(persistedUser("primary-7"));
+        when(anyDetailMapping()).thenReturn(detailOf("table-finish", "Finished"));
+
+        gameTableService.finish("table-finish", "primary-7");
+
+        verify(tableChangeNotifier).announceTransition(table, NotificationType.TableFinished, "primary-7", null);
     }
 
     /** The masters are read before the removal marks them gone, or there would be nobody left to tell. */
@@ -1502,12 +1541,12 @@ class GameTableServiceTest {
         when(gameTableRepository.findByIdForUpdate("table-admin-delete")).thenReturn(Optional.of(table));
         when(userService.loadAuthSnapshot("admin-1")).thenReturn(adminSnapshot("admin-1"));
         when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
-        when(masterService.findByGameTable("table-admin-delete"))
-                .thenReturn(List.of(new Master(table, persistedUser("primary-6"), MasterType.Primary)));
+        List<Master> masters = List.of(new Master(table, persistedUser("primary-6"), MasterType.Primary));
+        when(masterService.findByGameTable("table-admin-delete")).thenReturn(masters);
 
         gameTableService.delete("table-admin-delete", "admin-1");
 
-        verify(notificationService).notifyAdminActedOnTable("primary-6", table, NotificationType.TableDeletedByAdmin);
+        verify(tableChangeNotifier).announceDeleted(table, "admin-1", masters);
     }
 
     /** What every rewrite in these tests sends: the three catalogs and an agenda, as ADR-07 §3 requires. */

@@ -11,13 +11,11 @@ import type { AccountStatus } from '../types'
 const STATE_TONES: Record<AccountStatus, StatusTone> = {
   Allowed: 'open',
   Blocked: 'blocked',
-  Deleted: 'draft',
 }
 
 /**
  * An account's status, as a badge. Only `/admin/users` ever shows one: everywhere else the only
- * status anybody can encounter is `Allowed`, because a blocked account cannot sign in and a deleted
- * one is not returned.
+ * status anybody can encounter is `Allowed`, because a blocked account cannot sign in.
  *
  * Its variants come from a `Record` over `AccountStatus`, so a new status cannot be added without
  * deciding how it looks (arquitectura §3.2, regla 9). `Blocked` gets its own token family rather

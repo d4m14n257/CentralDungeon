@@ -39,21 +39,17 @@ export function userSearchFields(t: TFunction): SearchField[] {
  * @param t the translator of the `admin` namespace
  * @returns the choices, in the order they are offered
  */
-export function roleChoices(t: TFunction): SearchChoice[] {
+function roleChoices(t: TFunction): SearchChoice[] {
   return PLATFORM_ROLES.map((role) => ({ value: role, label: t(`users.roles.${role}`) }))
 }
 
 /**
- * What `/status` offers: the three states an account can be in.
- *
- * `Deleted` is offered even though F3.1 neither produces it nor undoes it — `/admin/users` is the one
- * screen that can see such an account, and a search that cannot name what it shows is a search with
- * a hole in it.
+ * What `/status` offers: the two states an account can be in.
  *
  * @param t the translator of the `admin` namespace
  * @returns the choices, in the order they are offered
  */
-export function accountStatusChoices(t: TFunction): SearchChoice[] {
+function accountStatusChoices(t: TFunction): SearchChoice[] {
   return ACCOUNT_STATUSES.map((status) => ({ value: status, label: t(`users.status.${status}`) }))
 }
 

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.tables.MasterRepository;
 import com.centraldungeon.tables.MasterRowStatus;
@@ -102,6 +103,48 @@ class UserServiceTest {
         assertThat(user.getName()).isEqualTo("Onboarded Name");
         assertThat(user.getCountry()).isEqualTo("AR");
         assertThat(response.needsOnboarding()).isFalse();
+    }
+
+    @Test
+    void completingOnboardingAgainIsRefusedAndLeavesTheProfileUntouched() {
+        User user = persistedUser("user-6", "discord-6", "X");
+        user.setName("Kept");
+        user.setCountry("AR");
+        when(userRepository.findById("user-6")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> userService.completeOnboarding("user-6", new UpdateUserRequest("Other", "CL")))
+                .isInstanceOfSatisfying(ConflictException.class, e ->
+                        assertThat(e.getErrorCode()).isEqualTo(ConflictException.ONBOARDING_ALREADY_COMPLETED));
+        assertThat(user.getName()).isEqualTo("Kept");
+        assertThat(user.getCountry()).isEqualTo("AR");
+    }
+
+    @Test
+    void updatesTheProfileOfSomebodyPastOnboarding() {
+        User user = persistedUser("user-7", "discord-7", "X");
+        user.setName("Old");
+        user.setCountry("AR");
+        when(userRepository.findById("user-7")).thenReturn(Optional.of(user));
+        when(userRoleRepository.findActiveRoleNames("user-7")).thenReturn(Set.of("Player"));
+        when(masterRepository.existsByUser_IdAndStatus("user-7", MasterRowStatus.Created)).thenReturn(false);
+        when(userMapper.toDetailResponse(user, Set.of("Player"), false))
+                .thenReturn(new UserDetailResponse("user-7", "New", "CL", false, Set.of("Player"), false));
+
+        userService.updateProfile("user-7", new UpdateUserRequest("New", "CL"));
+
+        assertThat(user.getName()).isEqualTo("New");
+        assertThat(user.getCountry()).isEqualTo("CL");
+    }
+
+    @Test
+    void editingTheProfileBeforeOnboardingIsRefused() {
+        User user = persistedUser("user-8", "discord-8", "X");
+        when(userRepository.findById("user-8")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> userService.updateProfile("user-8", new UpdateUserRequest("New", "CL")))
+                .isInstanceOfSatisfying(ConflictException.class, e ->
+                        assertThat(e.getErrorCode()).isEqualTo(ConflictException.ONBOARDING_PENDING));
+        assertThat(user.getName()).isNull();
     }
 
     @Test

@@ -126,8 +126,6 @@ export const queryKeys = {
     all: () => ['catalogs'] as const,
     /** The accepted values a combobox offers. Keyed by catalog and by what was typed. */
     list: (kind: string, query?: string) => ['catalogs', 'list', kind, query] as const,
-    /** One value by id, whatever its status - how a pending proposal is read back (ADR-12 §3). */
-    detail: (kind: string, id: string) => ['catalogs', 'detail', kind, id] as const,
     /** One value's whole synonym group - what the merge and disable dialogs are built on. */
     group: (kind: string, id: string) => ['catalogs', 'group', kind, id] as const,
     /** The /admin/catalogs table, by value or by group (ADR-12 §7). Every admin mutation invalidates the whole branch. */

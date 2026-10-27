@@ -12,6 +12,18 @@ export interface NotificationParams {
   taskTitle?: string | null
   /** The table a veto outcome belongs to, since its related entity is an application (`PlayerBan`). */
   tableId?: string | null
+  /**
+   * How the reader is joined to the table, on the notices that reach both its masters and its players:
+   * the same type opens a different screen for each. Null on every other type and on rows written
+   * before it existed.
+   */
+  membership?: 'Master' | 'Player' | null
+  /**
+   * For `TableEditedByAdmin`, the fields the admin actually changed, as stable codes (`name`,
+   * `description`, `permitted`, `requirements`, `startDate`, `totalSessions`, `maxPlayers`, `tableType`,
+   * `systems`, `tags`, `platforms`, `schedule`). Null on rows written before it existed.
+   */
+  changes?: string[] | null
 }
 
 /**
@@ -36,7 +48,6 @@ export const NOTIFICATION_TYPES = [
   'TaskPublished',
   'MasterAssigned',
   'TableApproved',
-  'TableApprovedWithChanges',
   'TableChangesRequested',
   // What an admin did to somebody else's table, told to its masters (ADR-06 §8).
   'TableEditedByAdmin',
@@ -44,6 +55,13 @@ export const NOTIFICATION_TYPES = [
   'TableResumedByAdmin',
   'TableCanceledByAdmin',
   'TableDeletedByAdmin',
+  // What happened to a table the reader is joined to, told to its masters and its players alike. A
+  // master hears the `…ByAdmin` variant above instead when an admin who does not run the table acted.
+  'TablePaused',
+  'TableResumed',
+  'TableCanceled',
+  'TableFinished',
+  'TableScheduleChanged',
   'ApprovalRequestApproved',
   'ApprovalRequestRejected',
 ] as const

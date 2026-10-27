@@ -87,7 +87,7 @@ class UserRoleServiceTest {
                 .isInstanceOf(ForbiddenActionException.class)
                 .asInstanceOf(InstanceOfAssertFactories.type(ForbiddenActionException.class))
                 .extracting(ForbiddenActionException::getErrorCode)
-                .isEqualTo(ForbiddenActionException.ROLE_GRANT_FORBIDDEN);
+                .isEqualTo(ForbiddenActionException.OWNER_NOT_GRANTABLE);
     }
 
     @Test
@@ -162,20 +162,18 @@ class UserRoleServiceTest {
         assertThat(savedRoleChanges()).allSatisfy(change -> assertThat(change.getJustification()).isEqualTo("baja de rango"));
     }
 
+    /** Owner is given from the database only (ADR-06 §1): not even an owner grants it, and nothing is read or written. */
     @Test
-    void otorgarOwnerAUnAdminLeQuitaAdminEnLaMismaTransaccion() {
-        User target = persistedUser("target");
-        when(userService.getById("target")).thenReturn(target);
-        when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants(target, PlatformRole.ADMIN));
-        when(roleRepository.findByName("Owner")).thenReturn(Optional.of(role(PlatformRole.OWNER)));
+    void anOwnerCannotGrantTheOwnerRoleEither() {
+        assertThatThrownBy(() -> userRoleService.grantRole("target", PlatformRole.OWNER, "sucesion", OWNER_ACTOR))
+                .isInstanceOf(ForbiddenActionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(ForbiddenActionException.class))
+                .extracting(ForbiddenActionException::getErrorCode)
+                .isEqualTo(ForbiddenActionException.OWNER_NOT_GRANTABLE);
 
-        AdminUserDetailResponse response = userRoleService.grantRole("target", PlatformRole.OWNER, "sucesion", OWNER_ACTOR);
-
-        assertThat(response.roles()).containsExactly("Owner");
-        assertThat(savedRoleChanges())
-                .extracting(change -> change.getRole().getName() + ":" + change.getAction())
-                .containsExactly("Admin:Revoked", "Owner:Granted");
+        verify(userService, never()).getById(any());
+        verify(userRoleRepository, never()).save(any());
+        verify(userRoleChangeRepository, never()).save(any());
     }
 
     // ---------------------------------------------------------------- rule 3: the last owner
@@ -244,7 +242,7 @@ class UserRoleServiceTest {
     @Test
     void quitarOwnerAUnaCuentaNoActivaNoCuentaComoElUltimoOwner() {
         User target = persistedUser("deleted-owner");
-        target.setStatus(UserStatus.Deleted);
+        target.setStatus(UserStatus.Blocked);
         List<UserRole> grants = grants(target, PlatformRole.OWNER);
         when(userService.getById("deleted-owner")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));

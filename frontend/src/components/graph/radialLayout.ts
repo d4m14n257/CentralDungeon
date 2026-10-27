@@ -1,5 +1,5 @@
 /** A point on the canvas, in flow coordinates. */
-export interface GraphPoint {
+interface GraphPoint {
   x: number
   y: number
 }

@@ -80,10 +80,9 @@ export interface UserTable {
 export type PlatformRole = 'Player' | 'Master' | 'Admin' | 'Owner'
 
 /**
- * The state of an account, as `users.status` spells it. `Deleted` is not something F3.1 produces or
- * undoes: it is here because `/admin/users` is the one screen that can see every account.
+ * The state of an account, as `users.status` spells it.
  */
-export type AccountStatus = 'Allowed' | 'Blocked' | 'Deleted'
+export type AccountStatus = 'Allowed' | 'Blocked'
 
 /**
  * Mirror of `AdminUserDetailResponse` — a person as `/admin/users` sees them, which is the only

@@ -61,7 +61,7 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 **Backend** — en `users/`:
 
 - `UserRoleService`: otorgar y quitar roles, con **la exclusión `Admin`/`Owner`** (ADR-06 §1) aplicada acá y no en el controller — el otorgamiento es la regla, no la puerta.
-- **Quién otorga qué**, según §3: un `Owner` otorga `Player`, `Master` y `Admin` y quita los cuatro; un `Admin` mueve `Player` y `Master` y nada más. **`Owner` no lo otorga nadie desde la aplicación** (ADR-06 «Roles y alcance» §1 «Cuatro roles de plataforma, acumulables y sin jerarquía, salvo `Admin`/`Owner`»): el backend lo rechaza, no solo la interfaz lo esconde. El intento de un admin sobre `Admin` u `Owner` es `403`, no `400`: es una cuestión de quién sos, no de qué mandaste.
+- **Quién otorga qué**, según §3: un `Owner` otorga `Player`, `Master` y `Admin` y quita los cuatro; un `Admin` mueve `Player` y `Master` y nada más. **`Owner` no lo otorga nadie desde la aplicación** (ADR-06 «Roles y alcance» §1 «Cuatro roles de plataforma, acumulables y sin jerarquía, salvo `Admin`/`Owner`»): el backend lo rechaza, no solo la interfaz lo esconde. El intento de un admin sobre `Admin` es `403 ROLE_GRANT_FORBIDDEN` y el de cualquiera sobre `Owner`, `403 OWNER_NOT_GRANTABLE`; ninguno es `400`: es una cuestión de quién sos, no de qué mandaste.
 - **La plataforma nunca se queda sin `Owner`**: `409` con código propio al quitar el último. Es la invariante global de la fase.
 - Bloqueo y desbloqueo de cuentas (ADR-05 §7), con `@CacheEvict` sobre la caché de ADR-05 §3 — un bloqueo que tarda 60 s en aplicar es un bloqueo que no bloquea.
 - `UserSearchSpecification` ya existe desde ADR-22 §1; `/admin/users` la reusa y le suma el filtro por rol y por estado.

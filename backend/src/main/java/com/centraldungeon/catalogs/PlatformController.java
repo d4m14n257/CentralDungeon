@@ -5,15 +5,14 @@ import com.centraldungeon.catalogs.dto.CreateCatalogValueRequest;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
 import jakarta.validation.Valid;
-import java.net.URI;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,24 +50,12 @@ public class PlatformController {
     }
 
     /**
-     * One platform, whatever its status, so a pending proposal can be shown as pending (ADR-12 §3).
-     *
-     * @param id the platform to read
-     * @return 200 with the platform, or 404 if it does not exist
-     */
-    @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public CatalogValueResponse find(@PathVariable String id) {
-        return platformService.find(id);
-    }
-
-    /**
      * Whoever writes a table proposes - a Master, an admin, or somebody assigned to run one (ADR-06 §4);
      * only an admin accepts and classifies (ADR-12 §3).
      *
      * @param request     the name to add to the catalog
      * @param currentUser the proposer, from the token (ADR-05 §5)
-     * @return 201 with the created platform, in {@code Created}, and its Location header. 409 if the
+     * @return 201 with the created platform, in {@code Created}. 409 if the
      *         name is already taken, 403 if the proposer writes no table
      */
     @PostMapping
@@ -77,6 +64,6 @@ public class PlatformController {
     public ResponseEntity<CatalogValueResponse> propose(
             @Valid @RequestBody CreateCatalogValueRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
         CatalogValueResponse created = platformService.propose(request.name(), currentUser.userId());
-        return ResponseEntity.created(URI.create("/api/v1/platforms/" + created.id())).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }

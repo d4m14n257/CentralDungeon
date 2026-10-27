@@ -231,9 +231,11 @@ class TableSessionServiceTest {
         when(sessionRepository.findByGameTable_IdAndStatusOrderBySequenceNumberAsc("t10", TableSessionStatus.Scheduled))
                 .thenReturn(List.of(fourth, fifth));
         agenda("t10", entry(Weekday.Tuesday, "20:00"));
-        when(registrationRepository.findByGameTable_Id("t10")).thenReturn(List.of());
 
         service().rescheduleAfterPause(table, LocalDateTime.parse("2026-11-02T09:00"));
+
+        // The resume announces itself once to everybody joined; a calendar notice per player on top would be the same news twice.
+        verify(notificationService, never()).notifySessionScheduled(anyString(), any());
 
         assertThat(fourth.getScheduledAt()).isEqualTo(LocalDateTime.parse("2026-11-03T20:00"));
         assertThat(fifth.getScheduledAt()).isEqualTo(LocalDateTime.parse("2026-11-10T20:00"));

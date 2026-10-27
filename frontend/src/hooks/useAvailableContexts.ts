@@ -5,7 +5,7 @@ import { useMe } from '@/features/users'
 import { useContextStore, type AppContext } from '@/stores/contextStore'
 
 /** What the shell needs to know about contexts: which ones exist for this account, and which one is on screen. */
-export interface AvailableContexts {
+interface AvailableContexts {
   /** The contexts this account can enter, in the order the switcher lists them. */
   contexts: AppContext[]
   /**

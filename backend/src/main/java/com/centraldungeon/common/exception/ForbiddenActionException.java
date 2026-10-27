@@ -25,6 +25,17 @@ public final class ForbiddenActionException extends ApiException {
     public static final String ROLE_GRANT_FORBIDDEN = "ROLE_GRANT_FORBIDDEN";
 
     /**
+     * Granting the Owner role through the application. Nobody can, not even an owner: for now the
+     * role is given from the database only (ADR-06 §1), and revoking it is untouched.
+     *
+     * <p>403 like its siblings - it is a question of what the application offers, not of what the
+     * body said, and no rewrite of the body would make it succeed. Its own code because the reader
+     * of the refusal is whoever hand-wrote the call or holds a stale tab: the screen never offers
+     * Owner, so a generic "no permission" would read as a bug.
+     */
+    public static final String OWNER_NOT_GRANTABLE = "OWNER_NOT_GRANTABLE";
+
+    /**
      * Blocking somebody who holds Admin or Owner. Nobody can, not even an owner: among peers there
      * is no authority, and the same limit already governs "ver como" (ADR-06 §9).
      *
@@ -60,8 +71,8 @@ public final class ForbiddenActionException extends ApiException {
 
     /**
      * @param message   what the actor is not allowed to do, in English and for a log (ADR-23 §3)
-     * @param errorCode the stable code the frontend branches on. Use {@link #ROLE_GRANT_FORBIDDEN}
-     *                  or {@link #CANNOT_BLOCK_PRIVILEGED} where the screen has to say something
+     * @param errorCode the stable code the frontend branches on. Use {@link #ROLE_GRANT_FORBIDDEN},
+     *                  {@link #OWNER_NOT_GRANTABLE} or {@link #CANNOT_BLOCK_PRIVILEGED} where the screen has to say something
      *                  specific; anything else has no reason not to be the default
      */
     public ForbiddenActionException(String message, String errorCode) {

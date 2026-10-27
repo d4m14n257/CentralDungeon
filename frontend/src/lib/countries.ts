@@ -4,7 +4,7 @@
  * its key set is calendar/collation/currency/numberingSystem/timeZone/unit only), so the
  * codes are the one static piece: a stable, rarely-changing ISO standard, not app data.
  */
-export interface Country {
+interface Country {
   code: string
   name: string
 }

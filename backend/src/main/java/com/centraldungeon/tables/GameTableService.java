@@ -166,6 +166,7 @@ public class GameTableService {
      */
     private final SettingsService settingsService;
     private final NotificationService notificationService;
+    private final TableChangeNotifier tableChangeNotifier;
     private final GameTableSearchResolver gameTableSearchResolver;
     private final TableVisibilityService tableVisibilityService;
 
@@ -187,6 +188,7 @@ public class GameTableService {
      * @param richTextSanitizer          cleans the rich text on the way in and on the way out (ADR-03 §8)
      * @param settingsService            the largest allowed player cap, editable without a deploy (ADR-17 §3)
      * @param notificationService        tells the masters how the review ended (ADR-18 §3)
+     * @param tableChangeNotifier        tells everybody joined to a table that it changed (ADR-06 §8)
      * @param gameTableSearchResolver    expands the explorer's catalog criteria into synonym groups
      *                                   before the query is built (ADR-12 §2, §4, §8)
      * @param tableVisibilityService     the one gate every read of a concrete table goes through -
@@ -208,6 +210,7 @@ public class GameTableService {
             RichTextSanitizer richTextSanitizer,
             SettingsService settingsService,
             NotificationService notificationService,
+            TableChangeNotifier tableChangeNotifier,
             GameTableSearchResolver gameTableSearchResolver,
             TableVisibilityService tableVisibilityService) {
         this.gameTableRepository = gameTableRepository;
@@ -225,6 +228,7 @@ public class GameTableService {
         this.richTextSanitizer = richTextSanitizer;
         this.settingsService = settingsService;
         this.notificationService = notificationService;
+        this.tableChangeNotifier = tableChangeNotifier;
         this.gameTableSearchResolver = gameTableSearchResolver;
         this.tableVisibilityService = tableVisibilityService;
     }
@@ -292,6 +296,7 @@ public class GameTableService {
         }
         // Authorized first, then the draft itself: somebody who does not run this table gets a 403,
         // not a complaint about its agenda.
+        // Nobody is told: a master only edits a table that has not gone public yet.
         rewrite(gameTable, request, actorId);
         return toDetail(gameTable);
     }
@@ -312,9 +317,9 @@ public class GameTableService {
      *       is checked only for its own coherence, as when an admin creates it (ADR-06 §7).
      *   <li><b>The capacity</b> cannot drop below the players already in: nobody is removed to make a
      *       number fit (ADR-09 §3, ADR-15 §2).
-     *   <li><b>Every master is told</b>, unless the admin is one of them and is editing their own
-     *       table - the rule of ADR-06 §8: an admin's change to something that is not theirs reaches the
-     *       people it belongs to.
+     *   <li><b>The masters are told what changed</b> - one notification listing the fields - and the
+     *       players only when the agenda moved. The admin is never told about their own edit, and an
+     *       edit that changed nothing tells nobody (ADR-06 §8).
      * </ul>
      *
      * @param gameTableId the table to rewrite
@@ -345,9 +350,8 @@ public class GameTableService {
             }
         }
 
-        List<Master> masters = masterService.findByGameTable(gameTableId);
-        rewrite(gameTable, request, actorId);
-        announceAdminAction(gameTable, actorId, NotificationType.TableEditedByAdmin, masters);
+        List<String> changes = rewrite(gameTable, request, actorId);
+        tableChangeNotifier.announceEdit(gameTable, actorId, changes);
         return toDetail(gameTable);
     }
 
@@ -362,40 +366,35 @@ public class GameTableService {
      *
      * @param actorId who is rewriting, from the token: the agenda is measured against every master of the
      *                table (R1, ADR-08 §2), and this only decides whose clash it reads as
+     * @return the codes of the fields the rewrite actually changed, compared against the values that
+     *         are stored (the sanitized text, not what was typed); empty when nothing changed
      */
-    private void rewrite(GameTable gameTable, UpdateGameTableRequest request, String actorId) {
+    private List<String> rewrite(GameTable gameTable, UpdateGameTableRequest request, String actorId) {
         requireRunnableDraft(request.systemIds(), request.tagIds(), request.platformIds(), request.schedule());
 
+        String description = richTextSanitizer.sanitize(request.description());
+        String permitted = richTextSanitizer.sanitize(request.permitted());
+        String requirements = richTextSanitizer.sanitize(request.requirements());
+        Integer maxPlayers = requireWithinPlayerCap(request.maxPlayers());
+        TableType tableType = resolveTableType(request.tableTypeId());
+        List<String> changes = new ArrayList<>(TableEditDiff.of(
+                gameTable, request, description, permitted, requirements, maxPlayers,
+                tableCatalogService.findLinks(gameTable.getId())));
+
         gameTable.setName(request.name());
-        gameTable.setDescription(richTextSanitizer.sanitize(request.description()));
-        gameTable.setPermitted(richTextSanitizer.sanitize(request.permitted()));
-        gameTable.setRequirements(richTextSanitizer.sanitize(request.requirements()));
+        gameTable.setDescription(description);
+        gameTable.setPermitted(permitted);
+        gameTable.setRequirements(requirements);
         gameTable.setStartDate(request.startDate());
         gameTable.setTotalSessions(request.totalSessions());
-        gameTable.setMaxPlayers(requireWithinPlayerCap(request.maxPlayers()));
-        gameTable.setTableType(resolveTableType(request.tableTypeId()));
+        gameTable.setMaxPlayers(maxPlayers);
+        gameTable.setTableType(tableType);
 
         applyCatalogs(gameTable.getId(), request.systemIds(), request.tagIds(), request.platformIds());
-        tableScheduleService.replace(gameTable, orEmpty(request.schedule()), actorId);
-    }
-
-    /**
-     * Tells every master of a table that an admin changed it (ADR-06 §8), unless the actor is one of them.
-     *
-     * <p>An admin who also runs this table and acts on it is acting on their own table, and telling
-     * them what they just did is noise. Otherwise every live master hears it, co-masters included,
-     * for the same reason {@link #announceReviewOutcome} reaches all of them.
-     *
-     * @param masters the masters to tell - passed in rather than read here because a removal reads
-     *                them before it marks them gone
-     */
-    private void announceAdminAction(GameTable gameTable, String actorId, NotificationType type, List<Master> masters) {
-        if (masters.stream().anyMatch(master -> master.getUser().getId().equals(actorId))) {
-            return;
+        if (tableScheduleService.replace(gameTable, orEmpty(request.schedule()), actorId)) {
+            changes.add(TableEditDiff.SCHEDULE);
         }
-        for (Master master : masters) {
-            notificationService.notifyAdminActedOnTable(master.getUser().getId(), gameTable, type);
-        }
+        return changes;
     }
 
     /**
@@ -593,6 +592,8 @@ public class GameTableService {
      * (ADR-10 §2), and a phase that delivers the end of a table without recording when it ended has not
      * delivered it.
      *
+     * <p>Everybody else joined to the table is told it is over: its co-masters and its players.
+     *
      * @param gameTableId the table
      * @param actorId     the actor, from the token; has to be the table's Primary
      * @return the table after the change
@@ -609,6 +610,7 @@ public class GameTableService {
         }
         sealClosedAt(gameTable);
         recordStatusChange(gameTable, GameTableStatus.InProgress, GameTableStatus.Finished, actorId, null);
+        tableChangeNotifier.announceTransition(gameTable, NotificationType.TableFinished, actorId, null);
         return toDetail(gameTable);
     }
 
@@ -616,7 +618,9 @@ public class GameTableService {
      * Either the table's own Primary or a platform admin may cancel it (ADR-07 §1) - the only transition
      * either can trigger.
      *
-     * <p>When an admin does it, every master of the table is told ({@code TableCanceledByAdmin}, ADR-06 §8).
+     * <p>Everybody else joined to the table is told: its co-masters and its players. A master hears
+     * {@code TableCanceledByAdmin} when the one who cancelled is an admin who does not run the table
+     * (ADR-06 §8).
      *
      * @param gameTableId the table
      * @param actorId     the Primary or an admin, from the token (ADR-05 §5)
@@ -637,8 +641,7 @@ public class GameTableService {
         }
         sealClosedAt(gameTable);
         recordStatusChange(gameTable, from, GameTableStatus.Canceled, actorId, request.justification());
-        // The Primary cancelling their own table hears nothing; an admin cancelling it is news (ADR-06 §8).
-        announceAdminAction(gameTable, actorId, NotificationType.TableCanceledByAdmin, masterService.findByGameTable(gameTableId));
+        tableChangeNotifier.announceTransition(gameTable, NotificationType.TableCanceled, actorId, null);
         return toDetail(gameTable);
     }
 
@@ -684,7 +687,7 @@ public class GameTableService {
         masterService.softDeleteAllOfTable(gameTableId, deletedAt);
         gameTable.setDeletedAt(deletedAt);
         recordStatusChange(gameTable, from, GameTableStatus.Deleted, actorId, null);
-        announceAdminAction(gameTable, actorId, NotificationType.TableDeletedByAdmin, masters);
+        tableChangeNotifier.announceDeleted(gameTable, actorId, masters);
     }
 
     /**
@@ -694,7 +697,8 @@ public class GameTableService {
      * {@code approval_requests} and lands in F3. Freezing the agenda while paused (ADR-07 §2, ADR-08 §3) is
      * F1.3.
      *
-     * <p>Every master of the table is told ({@code TablePausedByAdmin}, ADR-06 §8): nothing they did caused it.
+     * <p>Everybody joined to the table is told: its masters ({@code TablePausedByAdmin} unless the admin
+     * is one of them, ADR-06 §8) and its players.
      *
      * @param gameTableId the table
      * @param actorId     the admin, from the token
@@ -709,7 +713,7 @@ public class GameTableService {
             throw new ConflictException("Cannot pause a table in status " + gameTable.getStatus());
         }
         recordStatusChange(gameTable, GameTableStatus.InProgress, GameTableStatus.Pause, actorId, request.justification());
-        announceAdminAction(gameTable, actorId, NotificationType.TablePausedByAdmin, masterService.findByGameTable(gameTableId));
+        tableChangeNotifier.announceTransition(gameTable, NotificationType.TablePaused, actorId, null);
         return toDetail(gameTable);
     }
 
@@ -768,19 +772,26 @@ public class GameTableService {
      * ({@code TableSessionService.visibleSessionsOf}) and has to be, because the pause is reversible:
      * a pause that deleted the pending sessions could not put them back.
      *
+     * <p>Everybody joined to the table is told except the admin and the master who asked: the
+     * requester already hears the answer through {@code ApprovalRequestApproved}, while their
+     * co-masters and the players learn of it here.
+     *
      * @param gameTableId    the table
      * @param actorId        the admin, from the token
+     * @param requesterId    the master who asked for the pause, who is not notified twice
      * @param resolutionNote why they approved it - recorded as the pause's justification
      * @return the table, now Pause
      * @throws ConflictException if the table was not waiting on a pause
      */
     @Transactional
-    public GameTableDetailResponse applyApprovedPause(String gameTableId, String actorId, String resolutionNote) {
+    public GameTableDetailResponse applyApprovedPause(
+            String gameTableId, String actorId, String requesterId, String resolutionNote) {
         GameTable gameTable = lockTable(gameTableId);
         if (gameTable.getStatus() != GameTableStatus.PauseRequested) {
             throw new ConflictException("Cannot grant a pause to a table in status " + gameTable.getStatus());
         }
         recordStatusChange(gameTable, GameTableStatus.PauseRequested, GameTableStatus.Pause, actorId, resolutionNote);
+        tableChangeNotifier.announceTransition(gameTable, NotificationType.TablePaused, actorId, requesterId);
         return toDetail(gameTable);
     }
 
@@ -827,7 +838,9 @@ public class GameTableService {
      * <p><b>The pending sessions are re-laid</b> from this instant (ADR-08 §3). What was played and what
      * was called off keep their dates; the run's numbering does not move.
      *
-     * <p>Every master of the table is told ({@code TableResumedByAdmin}, ADR-06 §8).
+     * <p>Everybody joined to the table is told once, and that one notice replaces the per-player
+     * calendar notice the re-laying used to send: its masters ({@code TableResumedByAdmin} unless the
+     * admin is one of them, ADR-06 §8) and its players.
      *
      * @param gameTableId the table
      * @param actorId     the admin, from the token
@@ -848,7 +861,7 @@ public class GameTableService {
 
         recordStatusChange(gameTable, GameTableStatus.Pause, GameTableStatus.InProgress, actorId, null);
         tableSessionService.rescheduleAfterPause(gameTable, LocalDateTime.now());
-        announceAdminAction(gameTable, actorId, NotificationType.TableResumedByAdmin, masterService.findByGameTable(gameTableId));
+        tableChangeNotifier.announceTransition(gameTable, NotificationType.TableResumed, actorId, null);
         return toDetail(gameTable);
     }
 

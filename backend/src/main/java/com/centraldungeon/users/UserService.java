@@ -1,5 +1,6 @@
 package com.centraldungeon.users;
 
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.search.SearchQuery;
@@ -166,22 +167,56 @@ public class UserService {
     /**
      * Fills in the display name and country that onboarding blocks on (ADR-10 §4).
      *
-     * <p>The actor comes from the token, never from the body: this endpoint can only ever edit the
-     * caller's own profile (ADR-05 §5).
+     * <p>The actor comes from the token, never from the body: this can only ever edit the caller's
+     * own profile (ADR-05 §5). It is not an edit: somebody who already completed onboarding is
+     * refused, so the step cannot be repeated (see {@link #updateProfile} for the edit).
      *
      * @param userId  the actor, from the token
      * @param request the name and country they chose
      * @return their profile afterwards, with {@code needsOnboarding} now false
      * @throws NotFoundException if the user does not exist
+     * @throws ConflictException with {@link ConflictException#ONBOARDING_ALREADY_COMPLETED} if they
+     *                           had already completed onboarding
      */
     @Transactional
     public UserDetailResponse completeOnboarding(String userId, UpdateUserRequest request) {
         User user = getById(userId);
+        if (user.hasCompletedOnboarding()) {
+            throw new ConflictException(
+                    "Onboarding already completed by user " + userId, ConflictException.ONBOARDING_ALREADY_COMPLETED);
+        }
+        return writeProfile(user, request);
+    }
+
+    /**
+     * Edits the display name and country of somebody who already completed onboarding (ADR-10 §4).
+     *
+     * <p>Same actor rule as {@link #completeOnboarding}. It is a separate door so the first-time step
+     * and the later edit cannot be confused: while onboarding is pending this is refused.
+     *
+     * @param userId  the actor, from the token
+     * @param request the new name and country
+     * @return their profile afterwards
+     * @throws NotFoundException if the user does not exist
+     * @throws ConflictException with {@link ConflictException#ONBOARDING_PENDING} if they have not
+     *                           completed onboarding yet
+     */
+    @Transactional
+    public UserDetailResponse updateProfile(String userId, UpdateUserRequest request) {
+        User user = getById(userId);
+        if (!user.hasCompletedOnboarding()) {
+            throw new ConflictException(
+                    "Onboarding still pending for user " + userId, ConflictException.ONBOARDING_PENDING);
+        }
+        return writeProfile(user, request);
+    }
+
+    private UserDetailResponse writeProfile(User user, UpdateUserRequest request) {
         user.setName(request.name());
         user.setCountry(request.country());
         return userMapper.toDetailResponse(
                 user,
-                userRoleRepository.findActiveRoleNames(userId),
-                masterRepository.existsByUser_IdAndStatus(userId, MasterRowStatus.Created));
+                userRoleRepository.findActiveRoleNames(user.getId()),
+                masterRepository.existsByUser_IdAndStatus(user.getId(), MasterRowStatus.Created));
     }
 }

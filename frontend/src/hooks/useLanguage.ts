@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { DEFAULT_LANGUAGE, isLanguage, LANGUAGE_STORAGE_KEY, type Language } from '@/config/language'
 
 /** What {@link useLanguage} hands back: the language in use and the way to change it. */
-export interface LanguageControl {
+interface LanguageControl {
   /** The language currently being rendered. */
   language: Language
   /** Switches language, remembers the choice, and updates the document for assistive technology. */

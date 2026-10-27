@@ -9,7 +9,7 @@ import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
 import { ApiError } from '@/types/api'
 
 import { RoleChangeDialog } from './RoleChangeDialog'
-import { ADMIN_GRANTABLE_ROLES, PLATFORM_ROLES } from '../roles'
+import { ADMIN_GRANTABLE_ROLES, OWNER_GRANTABLE_ROLES } from '../roles'
 import type { AdminUserSummary, PlatformRole } from '../types'
 import { acceptReview } from '@/test/review'
 
@@ -28,7 +28,7 @@ const PLAYER: AdminUserSummary = {
   createdAt: '2026-01-01T12:00:00',
 }
 
-function renderDialog(grantableRoles: readonly PlatformRole[], user: AdminUserSummary = PLAYER) {
+function renderDialog(grantableRoles: readonly PlatformRole[], user: AdminUserSummary = PLAYER, canRevokeOwner = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   function wrap(children: ReactNode) {
     return (
@@ -37,7 +37,9 @@ function renderDialog(grantableRoles: readonly PlatformRole[], user: AdminUserSu
       </QueryClientProvider>
     )
   }
-  return render(wrap(<RoleChangeDialog user={user} grantableRoles={grantableRoles} open onOpenChange={vi.fn()} />))
+  return render(
+    wrap(<RoleChangeDialog user={user} grantableRoles={grantableRoles} canRevokeOwner={canRevokeOwner} open onOpenChange={vi.fn()} />),
+  )
 }
 
 beforeEach(() => {
@@ -60,12 +62,26 @@ describe('RoleChangeDialog', () => {
     expect(screen.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
   })
 
-  it('the owner sees the four', () => {
-    renderDialog(PLATFORM_ROLES)
+  /** Owner is not granted from the application, not even by an owner (ADR-06 §1). */
+  it('the owner is offered three roles and never Owner to grant', () => {
+    renderDialog(OWNER_GRANTABLE_ROLES)
 
-    for (const label of ['Jugador', 'Master', 'Admin', 'Owner']) {
+    for (const label of ['Jugador', 'Master', 'Admin']) {
       expect(screen.getByRole('button', { name: new RegExp(label) })).toBeInTheDocument()
     }
+    expect(screen.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
+  })
+
+  /** The one thing an owner can do with Owner is take it away, so it shows up only where it is held. */
+  it('offers Owner to take away, only to an owner and only where the account holds it', () => {
+    const holder = { ...PLAYER, roles: ['Owner' as const] }
+
+    const { unmount } = renderDialog(OWNER_GRANTABLE_ROLES, holder, true)
+    expect(screen.getByRole('button', { name: /Owner/ })).toHaveTextContent('lo tiene')
+    unmount()
+
+    renderDialog(OWNER_GRANTABLE_ROLES, holder, false)
+    expect(screen.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
   })
 
   /** The direction is read off the account, never chosen twice: what they lack is given. */
@@ -123,10 +139,10 @@ describe('RoleChangeDialog', () => {
   it.each([
     ['LAST_OWNER', 'La plataforma no puede quedarse sin ningún Owner. Dale el rol a otra persona antes de quitar este.'],
     ['CANNOT_REVOKE_OWN_OWNER', 'No podés quitarte tu propio rol de Owner. Tiene que hacerlo otro Owner.'],
-    ['ROLE_GRANT_FORBIDDEN', 'Solo un Owner puede dar o quitar los roles de Admin y de Owner.'],
+    ['ROLE_GRANT_FORBIDDEN', 'Solo un Owner puede mover los roles de Admin y de Owner.'],
   ])('explains %s from its code', async (errorCode, sentence) => {
     revokeRole.mockRejectedValue(new ApiError(409, { title: 'Conflict', status: 409, detail: 'English, for the log', errorCode }))
-    renderDialog(PLATFORM_ROLES, { ...PLAYER, roles: ['Player', 'Owner'] })
+    renderDialog(OWNER_GRANTABLE_ROLES, { ...PLAYER, roles: ['Player', 'Owner'] }, true)
 
     await userEvent.click(screen.getByRole('button', { name: /Owner/ }))
     await userEvent.type(screen.getByLabelText('Motivo'), 'Se va del proyecto')
@@ -135,5 +151,20 @@ describe('RoleChangeDialog', () => {
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(sentence))
     expect(screen.queryByText('English, for the log')).not.toBeInTheDocument()
+  })
+
+  /** The stale tab or the hand-written call: Owner was asked for, and the sentence says the application does not give it. */
+  it('explains OWNER_NOT_GRANTABLE from its code', async () => {
+    grantRole.mockRejectedValue(
+      new ApiError(403, { title: 'Forbidden', status: 403, detail: 'English, for the log', errorCode: 'OWNER_NOT_GRANTABLE' }),
+    )
+    renderDialog(OWNER_GRANTABLE_ROLES)
+
+    await userEvent.click(screen.getByRole('button', { name: /Admin/ }))
+    await userEvent.type(screen.getByLabelText('Motivo'), 'Asciende')
+    await userEvent.click(screen.getByRole('button', { name: 'Dar el rol' }))
+    await acceptReview()
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('El rol de Owner no se da desde la aplicación.'))
   })
 })
