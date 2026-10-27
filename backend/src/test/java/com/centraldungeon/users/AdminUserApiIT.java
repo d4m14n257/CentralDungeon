@@ -248,6 +248,14 @@ class AdminUserApiIT {
                 .andExpect(jsonPath("$.errorCode").value("CANNOT_REVOKE_OWN_OWNER"));
     }
 
+    /** Granting Admin to oneself is taking away one's own Owner: same conflict as the direct revocation. */
+    @Test
+    void anOwnerGrantingThemselvesAdminGetsTheConflict() throws Exception {
+        grantRole(owner, owner, "Admin", "stepping down")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("CANNOT_REVOKE_OWN_OWNER"));
+    }
+
     /**
      * The demotion takes effect on the very next request, which is the eviction of ADR-05 §3 seen from
      * outside: the owner who was just demoted comes back holding nothing, and the

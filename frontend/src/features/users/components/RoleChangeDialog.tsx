@@ -33,6 +33,12 @@ interface RoleChangeDialogProps {
    * holds it.
    */
   canRevokeOwner?: boolean
+  /**
+   * The reader's own id, to recognise their own account. On it `Admin` is not offered to an
+   * `Owner`: Admin and Owner are one rank (ADR-06 §1), so giving oneself Admin is taking one's own
+   * Owner away, which the server refuses as `CANNOT_REVOKE_OWN_OWNER`.
+   */
+  actorId?: string | undefined
   open: boolean
   onOpenChange: (open: boolean) => void
   /**
@@ -70,11 +76,20 @@ interface RoleChangeDialogProps {
  * @param props.user           the account being changed
  * @param props.grantableRoles the roles this reader may give and take away
  * @param props.canRevokeOwner whether the reader may take `Owner` away from an account that holds it
+ * @param props.actorId        the reader's own id, to withhold `Admin` from an owner looking at their own account
  * @param props.open           whether the dialog is showing
  * @param props.onOpenChange   called when it is dismissed
  * @param props.help           the explanation of who may grant what, shown under the role list
  */
-export function RoleChangeDialog({ user, grantableRoles, canRevokeOwner = false, open, onOpenChange, help }: RoleChangeDialogProps) {
+export function RoleChangeDialog({
+  user,
+  grantableRoles,
+  canRevokeOwner = false,
+  actorId,
+  open,
+  onOpenChange,
+  help,
+}: RoleChangeDialogProps) {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
   const grant = useGrantRole()
@@ -94,7 +109,9 @@ export function RoleChangeDialog({ user, grantableRoles, canRevokeOwner = false,
     return user?.roles.includes(role) ?? false
   }
 
-  const offeredRoles = canRevokeOwner && isHeld('Owner') ? [...grantableRoles, 'Owner' as const] : grantableRoles
+  const ownAccountAsOwner = user !== null && user.id === actorId && isHeld('Owner')
+  const grantable = ownAccountAsOwner ? grantableRoles.filter((role) => role !== 'Admin') : grantableRoles
+  const offeredRoles = canRevokeOwner && isHeld('Owner') ? [...grantable, 'Owner' as const] : grantable
 
   function handleOpenChange(next: boolean) {
     if (!next) {

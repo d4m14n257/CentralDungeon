@@ -44,7 +44,7 @@ Se contestan **antes** de escribir F3.1, que es el paso 0 de `plan-desarrollo.md
 |---|---|---|
 | **¿Un `Admin` puede crear otro `Admin`?** | **No**: `Admin` y `Owner` los otorga y los quita solo un `Owner` | ADR-06 §1 los hace un rango con dos alcances. Un rango que se replica a sí mismo sin nadie por encima no es un rango: el primer admin comprometido puede fabricar los que quiera, y no queda ninguna autoridad que lo deshaga |
 | **¿Un `Admin` puede bloquear a otro `Admin`?** | **No**, y un `Owner` tampoco puede bloquear a un `Owner` | Es la misma forma que el límite (a) de ADR-06 §9, que ya prohíbe «ver como» sobre `Admin` y `Owner`: entre pares no hay autoridad, y el bloqueo es irreversible desde el lado del bloqueado — no puede entrar a pedir que lo desbloqueen |
-| **¿Puede quedar la plataforma sin `Owner`?** | **No**: quitarse el propio `Owner`, o quitárselo al último que queda, responde `409` | Sin `Owner` nadie puede otorgar ni quitar `Admin`, y como `Owner` no se otorga desde la aplicación (ADR-06 §1), recuperarse exigiría tocar la base a mano. Es la única invariante global de roles, y como MySQL no la puede expresar, va con test de integración igual que el `Primary` único de ADR-06 §3 |
+| **¿Puede quedar la plataforma sin `Owner`?** | **No**: quitarse el propio `Owner` —directo, o dándose `Admin` a uno mismo—, o quitárselo al último que queda, responde `409` | Sin `Owner` nadie puede otorgar ni quitar `Admin`, y como `Owner` no se otorga desde la aplicación (ADR-06 §1), recuperarse exigiría tocar la base a mano. Es la única invariante global de roles, y como MySQL no la puede expresar, va con test de integración igual que el `Primary` único de ADR-06 §3 |
 
 ## 4. Las cinco rebanadas
 

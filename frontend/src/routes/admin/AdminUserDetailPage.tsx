@@ -97,7 +97,7 @@ export function AdminUserDetailPage() {
   const userId = id ?? ''
   const account = useAdminUser(userId, userId.length > 0)
   const { data: profile } = useUserProfile(userId)
-  const { grantableRoles, isOwner, canChangeStatus } = useUserAdminCapabilities()
+  const { grantableRoles, isOwner, userId: actorId, canChangeStatus } = useUserAdminCapabilities()
   const roleDialog = useDisclosure()
   const statusDialog = useDisclosure()
 
@@ -181,6 +181,7 @@ export function AdminUserDetailPage() {
         user={roleDialog.isOpen ? user : null}
         grantableRoles={grantableRoles}
         canRevokeOwner={isOwner}
+        actorId={actorId}
         open={roleDialog.isOpen}
         onOpenChange={(open) => !open && roleDialog.close()}
         help={

@@ -54,7 +54,9 @@ export const adminUsersApi = {
    *
    * Refused with `OWNER_NOT_GRANTABLE` for `Owner`, whoever asks, and with `ROLE_GRANT_FORBIDDEN` when
    * an admin reaches for `Admin` — which this screen never offers, so they only surface for somebody
-   * calling the API another way.
+   * calling the API another way. Also refused with `CANNOT_REVOKE_OWN_OWNER` when an owner grants
+   * `Admin` to themselves (it takes their own `Owner` away) and with `LAST_OWNER` when the target is
+   * the last owner.
    *
    * @param id    the account to promote
    * @param input the role and the reason

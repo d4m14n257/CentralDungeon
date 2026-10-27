@@ -15,6 +15,8 @@ export interface UserAdminCapabilities {
    * the one role that can be revoked here without being grantable.
    */
   isOwner: boolean
+  /** The reader's own id, so a screen can tell when the account in front of them is theirs. Undefined until the profile arrives. */
+  userId: string | undefined
   /**
    * Whether this reader may change the given account's status at all — block it or unblock it.
    *
@@ -59,5 +61,5 @@ export function useUserAdminCapabilities(): UserAdminCapabilities {
     return !isPrivileged(user.roles)
   }
 
-  return { grantableRoles, isOwner, canChangeStatus, isPending }
+  return { grantableRoles, isOwner, userId: me?.id, canChangeStatus, isPending }
 }

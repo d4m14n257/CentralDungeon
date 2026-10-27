@@ -28,7 +28,7 @@ const PLAYER: AdminUserSummary = {
   createdAt: '2026-01-01T12:00:00',
 }
 
-function renderDialog(grantableRoles: readonly PlatformRole[], user: AdminUserSummary = PLAYER, canRevokeOwner = false) {
+function renderDialog(grantableRoles: readonly PlatformRole[], user: AdminUserSummary = PLAYER, canRevokeOwner = false, actorId?: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   function wrap(children: ReactNode) {
     return (
@@ -38,7 +38,16 @@ function renderDialog(grantableRoles: readonly PlatformRole[], user: AdminUserSu
     )
   }
   return render(
-    wrap(<RoleChangeDialog user={user} grantableRoles={grantableRoles} canRevokeOwner={canRevokeOwner} open onOpenChange={vi.fn()} />),
+    wrap(
+      <RoleChangeDialog
+        user={user}
+        grantableRoles={grantableRoles}
+        canRevokeOwner={canRevokeOwner}
+        actorId={actorId}
+        open
+        onOpenChange={vi.fn()}
+      />,
+    ),
   )
 }
 
@@ -82,6 +91,19 @@ describe('RoleChangeDialog', () => {
 
     renderDialog(OWNER_GRANTABLE_ROLES, holder, false)
     expect(screen.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
+  })
+
+  /** Admin and Owner are one rank: giving oneself Admin is taking one's own Owner away, so it is absent, not disabled. */
+  it('does not offer Admin to an owner looking at their own account, but does on another owner', () => {
+    const holder = { ...PLAYER, roles: ['Owner' as const] }
+
+    const { unmount } = renderDialog(OWNER_GRANTABLE_ROLES, holder, true, 'user-1')
+    expect(screen.queryByRole('button', { name: /Admin/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Master/ })).toBeInTheDocument()
+    unmount()
+
+    renderDialog(OWNER_GRANTABLE_ROLES, holder, true, 'someone-else')
+    expect(screen.getByRole('button', { name: /Admin/ })).toBeInTheDocument()
   })
 
   /** The direction is read off the account, never chosen twice: what they lack is given. */

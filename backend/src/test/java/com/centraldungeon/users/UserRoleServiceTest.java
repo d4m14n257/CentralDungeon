@@ -162,6 +162,26 @@ class UserRoleServiceTest {
         assertThat(savedRoleChanges()).allSatisfy(change -> assertThat(change.getJustification()).isEqualTo("baja de rango"));
     }
 
+    /** Admin is the same rank with less reach: granting it to oneself is stepping down, and nothing is written. */
+    @Test
+    void anOwnerCannotGiveThemselvesAdmin() {
+        User self = persistedUser("actor-owner");
+        when(userService.getById("actor-owner")).thenReturn(self);
+        when(userRoleRepository.findAllGrants("actor-owner")).thenReturn(grants(self, PlatformRole.OWNER));
+
+        assertThatThrownBy(() -> userRoleService.grantRole("actor-owner", PlatformRole.ADMIN, "me bajo", OWNER_ACTOR))
+                .isInstanceOf(ConflictException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(ConflictException.class))
+                .extracting(ConflictException::getErrorCode)
+                .isEqualTo(ConflictException.CANNOT_REVOKE_OWN_OWNER);
+
+        // The more specific conflict wins, as in the direct revocation: the count is never asked for.
+        verify(userRoleRepository, never()).lockActiveHolders(any());
+        verify(userRoleRepository, never()).save(any());
+        verify(userRoleChangeRepository, never()).save(any());
+        verify(userService, never()).evictAuthCache(any());
+    }
+
     /** Owner is given from the database only (ADR-06 §1): not even an owner grants it, and nothing is read or written. */
     @Test
     void anOwnerCannotGrantTheOwnerRoleEither() {

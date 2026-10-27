@@ -61,7 +61,8 @@ public final class ConflictException extends ApiException {
     public static final String LAST_OWNER = "LAST_OWNER";
 
     /**
-     * An owner taking their own Owner role away. Separate from {@link #LAST_OWNER} on purpose: the
+     * An owner taking their own Owner role away - directly, or by granting themselves Admin, which
+     * the exclusion of the two ranks turns into the same thing. Separate from {@link #LAST_OWNER} on purpose: the
      * two are different sentences even when they fire on the same person, and the more specific one
      * is checked first so the reader is told what they actually did.
      */

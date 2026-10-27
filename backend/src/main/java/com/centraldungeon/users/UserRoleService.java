@@ -102,8 +102,10 @@ public class UserRoleService {
      *                                  asks; 403 {@code ROLE_GRANT_FORBIDDEN} when an admin reaches
      *                                  for Admin
      * @throws NotFoundException        404 when nobody has that id
-     * @throws ConflictException        409 {@code LAST_OWNER} when the exclusion of ADR-06 §1 would take
-     *                                  Owner away from the last one left
+     * @throws ConflictException        409 {@code CANNOT_REVOKE_OWN_OWNER} when an Owner grants Admin to
+     *                                  themselves, which the exclusion of ADR-06 §1 turns into
+     *                                  taking away their own Owner; 409 {@code LAST_OWNER} when the
+     *                                  same exclusion would take Owner away from the last one left
      */
     @Transactional
     public AdminUserDetailResponse grantRole(String targetId, PlatformRole role, String justification, CurrentUser actor) {
@@ -128,6 +130,13 @@ public class UserRoleService {
         }
 
         // Checked before the first write: the operation is refused whole, never half-applied.
+        // Admin is the same rank as Owner with less reach, so an Owner granting it to themselves is
+        // taking their own Owner away - refused with the rule and code of the direct revocation.
+        if (heldCounterpart.isPresent() && targetId.equals(actor.userId())) {
+            throw new ConflictException(
+                    "An Owner cannot give themselves Admin: it would take away their own Owner role",
+                    ConflictException.CANNOT_REVOKE_OWN_OWNER);
+        }
         if (heldCounterpart.isPresent() && isLastActiveOwner(target)) {
             throw new ConflictException(
                     "Granting Admin to " + targetId + " would take Owner away from the last active owner",

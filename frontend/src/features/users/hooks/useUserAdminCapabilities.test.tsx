@@ -44,6 +44,7 @@ describe('useUserAdminCapabilities', () => {
 
     expect(result.current.grantableRoles).toEqual(['Player', 'Master', 'Admin'])
     expect(result.current.isOwner).toBe(true)
+    expect(result.current.userId).toBe('me')
   })
 
   it('somebody who is neither may move nothing', () => {
