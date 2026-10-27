@@ -11,8 +11,8 @@ import { acceptReview } from './helpers/review'
  * It is the one check that crosses both halves: the capability rule lives in the frontend
  * (`useUserAdminCapabilities`) and the refusal lives in the backend (`UserRoleService`), and only a
  * run like this one can say that the two agree — that the button an admin does not get is the same
- * action the server would have refused, and that the owner's `409` arrives as a sentence rather than
- * as a toast saying nothing.
+ * action the server would have refused, and that the owner finds no way to step down on their own
+ * account (the server's `409` for it is covered by the backend integration tests).
  *
  * It also walks `?q=` end to end, which nobody had: the box builds the query, the URL carries it and
  * `SearchQueryParser` on the other side has to read the very same string.
@@ -128,12 +128,12 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await expect(rowOf(owner.page, futureAdminId)).toContainText('Admin', { timeout: 15_000 })
 
     // ---- 2. The audit trail is readable, which is what keeps the two tables from being write-only.
-    await rowOf(owner.page, futureAdminId).getByRole('button', { name: 'Historial' }).click()
-    const history = owner.page.getByRole('dialog')
+    // It lives on the account's record, not in a dialog of the list.
+    await rowOf(owner.page, futureAdminId).getByRole('link', { name: futureAdminId }).click()
+    const history = owner.page.getByRole('main')
+    await expect(history.getByRole('heading', { name: 'Lo que hicieron los admins con esta cuenta' })).toBeVisible()
     await expect(history).toContainText('Promoción de prueba E2E de F3.1')
     await expect(history).toContainText(ownerId)
-    await history.getByRole('button', { name: 'Cerrar' }).click()
-    await expect(history).toBeHidden()
 
     // ---- 3. That admin opens /admin/users. The sign-in is a no-op: step 1 already granted Admin.
     await testLogin(futureAdmin.context.request, futureAdminId, { asAdmin: true })
@@ -157,21 +157,14 @@ test('an owner promotes an admin, that admin cannot promote anybody, and the own
     await expect(adminDialog).toBeHidden()
     await expect(rowOf(futureAdmin.page, playerId)).toContainText('Master', { timeout: 15_000 })
 
-    // ---- 4. The owner cannot take their own Owner away: the 409, said in words.
+    // ---- 4. The owner cannot step down: on their own account neither Owner nor Admin is offered.
+    // Absent, not disabled (principle 2 of diseno §1); the server's 409 stays as the real guard.
     await owner.page.goto('/admin/users')
     await search(owner.page, `/discord_name ${ownerId}`)
     const ownOwnDialog = await openRoleDialog(owner.page, ownerId)
-    await ownOwnDialog.getByRole('button', { name: /^Owner\b/ }).click()
-    // The dialog says what the press will do before it is pressed.
-    await expect(ownOwnDialog).toContainText('Se le va a quitar el rol Owner')
-    await ownOwnDialog.getByLabel('Motivo').fill('Intento de renuncia')
-    await ownOwnDialog.getByRole('button', { name: 'Quitar el rol' }).click()
-    await acceptReview(owner.page)
-
-    // The refusal is rendered from the error code, not from the backend's English detail (ADR-23 §3).
-    await expect(ownOwnDialog.getByRole('alert')).toContainText('No podés quitarte tu propio rol de Owner')
-    // And the dialog stays open with the account untouched: nothing was half-applied.
-    await expect(ownOwnDialog).toBeVisible()
+    await expect(ownOwnDialog.getByRole('button', { name: /^Jugador\b/ })).toBeVisible()
+    await expect(ownOwnDialog.getByRole('button', { name: /^Owner\b/ })).toHaveCount(0)
+    await expect(ownOwnDialog.getByRole('button', { name: /^Admin\b/ })).toHaveCount(0)
   } finally {
     await owner.context.close()
     await futureAdmin.context.close()

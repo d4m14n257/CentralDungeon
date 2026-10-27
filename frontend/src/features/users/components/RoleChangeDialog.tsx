@@ -29,14 +29,14 @@ interface RoleChangeDialogProps {
   grantableRoles: readonly PlatformRole[]
   /**
    * Whether the reader may take `Owner` away. `Owner` is never on `grantableRoles` — the application
-   * does not grant it (ADR-06 §1) — so it is offered only to take away, and only where the account
-   * holds it.
+   * does not grant it — so it is offered only to take away, only where the account holds it, and
+   * never on the reader's own account (see `actorId`).
    */
   canRevokeOwner?: boolean
   /**
-   * The reader's own id, to recognise their own account. On it `Admin` is not offered to an
-   * `Owner`: Admin and Owner are one rank (ADR-06 §1), so giving oneself Admin is taking one's own
-   * Owner away, which the server refuses as `CANNOT_REVOKE_OWN_OWNER`.
+   * The reader's own id, to recognise their own account. On it an `Owner` is offered neither `Owner`
+   * nor `Admin`: Admin and Owner are one rank, so taking one's own Owner away, directly or by giving
+   * oneself Admin, is refused by the server as `CANNOT_REVOKE_OWN_OWNER`. Another owner has to do it.
    */
   actorId?: string | undefined
   open: boolean
@@ -65,8 +65,8 @@ interface RoleChangeDialogProps {
  * **It only ever offers `grantableRoles`, plus `Owner` to take away.** An admin finds no way at all to
  * hand out `Admin`, and nobody finds a way to hand out `Owner` — not a disabled button, not one that
  * fails when pressed: the role is simply not on the list (principle 2 of diseno §1). `Owner` shows up
- * only for an owner, and only on an account that holds it, because that is the one thing that can be
- * done with it. The server refuses the rest too, with `ROLE_GRANT_FORBIDDEN` and `OWNER_NOT_GRANTABLE`,
+ * only for an owner, and only on another owner's account, because that is the one thing that can be
+ * done with it; on their own account an owner sees neither `Owner` nor `Admin`. The server refuses the rest too, with `ROLE_GRANT_FORBIDDEN` and `OWNER_NOT_GRANTABLE`,
  * which is what makes this a display decision rather than the security (ADR-20 §1).
  *
  * It owns the two mutations, as every `…Dialog` does (arquitectura §3.3, ADR-19 §6). The refusals it
@@ -76,7 +76,7 @@ interface RoleChangeDialogProps {
  * @param props.user           the account being changed
  * @param props.grantableRoles the roles this reader may give and take away
  * @param props.canRevokeOwner whether the reader may take `Owner` away from an account that holds it
- * @param props.actorId        the reader's own id, to withhold `Admin` from an owner looking at their own account
+ * @param props.actorId        the reader's own id, to withhold `Owner` and `Admin` from an owner looking at their own account
  * @param props.open           whether the dialog is showing
  * @param props.onOpenChange   called when it is dismissed
  * @param props.help           the explanation of who may grant what, shown under the role list
@@ -111,7 +111,7 @@ export function RoleChangeDialog({
 
   const ownAccountAsOwner = user !== null && user.id === actorId && isHeld('Owner')
   const grantable = ownAccountAsOwner ? grantableRoles.filter((role) => role !== 'Admin') : grantableRoles
-  const offeredRoles = canRevokeOwner && isHeld('Owner') ? [...grantable, 'Owner' as const] : grantable
+  const offeredRoles = canRevokeOwner && isHeld('Owner') && !ownAccountAsOwner ? [...grantable, 'Owner' as const] : grantable
 
   function handleOpenChange(next: boolean) {
     if (!next) {

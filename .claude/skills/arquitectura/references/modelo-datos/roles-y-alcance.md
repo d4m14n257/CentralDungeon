@@ -73,7 +73,7 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 - Los roles como chips, con el orden que ADR-07 §8 fijó. **Los botones que un admin no puede usar no se muestran** — principio 2 de `diseno` §1 — y el owner ve tres: `Owner` no se ofrece (ADR-06 §1).
 - Bloquear pide motivo, y el diálogo dice qué implica: la persona no entra más, y sus datos se conservan (ADR-05 §7).
 
-**Se prueba:** un owner asciende a alguien a admin; ese admin abre `/admin/users`, puede dar el rol de master y **no encuentra ninguna forma** de dar el de admin; el owner intenta quitarse su propio rol y recibe el `409`.
+**Se prueba:** un owner asciende a alguien a admin; ese admin abre `/admin/users`, puede dar el rol de master y **no encuentra ninguna forma** de dar el de admin; el owner no encuentra en su propia cuenta ninguna forma de quitarse `Owner` ni de darse `Admin`, y la API rechaza las dos con el `409`.
 
 ### F3.2 — `approval_requests`: un mecanismo, cuatro pedidos
 

@@ -93,17 +93,20 @@ describe('RoleChangeDialog', () => {
     expect(screen.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
   })
 
-  /** Admin and Owner are one rank: giving oneself Admin is taking one's own Owner away, so it is absent, not disabled. */
-  it('does not offer Admin to an owner looking at their own account, but does on another owner', () => {
+  /** Admin and Owner are one rank: on their own account an owner can neither give themselves Admin nor drop Owner, so both are absent, not disabled. */
+  it('offers neither Owner nor Admin to an owner on their own account, but both on another owner', () => {
     const holder = { ...PLAYER, roles: ['Owner' as const] }
 
     const { unmount } = renderDialog(OWNER_GRANTABLE_ROLES, holder, true, 'user-1')
     expect(screen.queryByRole('button', { name: /Admin/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Owner/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Jugador/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Master/ })).toBeInTheDocument()
     unmount()
 
     renderDialog(OWNER_GRANTABLE_ROLES, holder, true, 'someone-else')
     expect(screen.getByRole('button', { name: /Admin/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Owner/ })).toBeInTheDocument()
   })
 
   /** The direction is read off the account, never chosen twice: what they lack is given. */
