@@ -2,7 +2,7 @@
 adr: 20
 titulo: Navegación, contextos y ayuda
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-11-01
 absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 ---
 
@@ -20,7 +20,7 @@ absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 
 ## §2 Cada contexto es dueño de un prefijo y se cierra a quien no lo tiene
 
-**Decisión.** Cada contexto tiene su prefijo: **`/player/*`** (explorar en `/player`, `/player/tables/:id`, `/player/applications`, `/player/my-tables`, `/player/history`, `/player/profile`…), **`/master/*`** y **`/admin/*`**. Cada layout monta `RequireContext`: `/player/*` exige el rol `Player`; `/master/*`, el rol `Master` o una fila viva en `masters` (ADR-06 §4); `/admin/*`, `Admin` u `Owner`. Quien no tiene el contexto no ve su header ni su nav ni un «sin permiso»: se lo manda a `/`. **`/` no es una pantalla**: es un despachador que mira los contextos de la cuenta y reenvía a la home del que tenga; el retorno del OAuth, el onboarding y el 404 apuntan ahí. Sin ningún contexto, `RootRedirect` lo explica en pantalla en vez de navegar. `/master/tables/new`, que pide el rol `Master` y no solo pertenencia, redirige a `/master`. **El chip reporta el contexto de la URL**, no uno elegido antes; las transversales (`/notifications`, `/my/*`, `/help`) no son de ningún contexto, no se cierran y conservan el que traía quien las abrió. La regla de la puerta es la misma que calcula `useAvailableContexts` para el chip. `ForbiddenState` queda para un recurso concreto, dentro de un contexto propio, que no es del lector (ADR-05 §5).
+**Decisión.** Cada contexto tiene su prefijo: **`/player/*`** (explorar en `/player`, `/player/tables/:id`, `/player/applications`, `/player/my-tables`, `/player/history`…), **`/master/*`** y **`/admin/*`**. Cada layout monta `RequireContext`: `/player/*` exige el rol `Player`; `/master/*`, el rol `Master` o una fila viva en `masters` (ADR-06 §4); `/admin/*`, `Admin` u `Owner`. Quien no tiene el contexto no ve su header ni su nav ni un «sin permiso»: se lo manda a `/`. **`/` no es una pantalla**: es un despachador que mira los contextos de la cuenta y reenvía a la home del que tenga; el retorno del OAuth, el onboarding y el 404 apuntan ahí. Sin ningún contexto, `RootRedirect` lo explica en pantalla en vez de navegar. `/master/tables/new`, que pide el rol `Master` y no solo pertenencia, redirige a `/master`. **El chip reporta el contexto de la URL**, no uno elegido antes; las transversales (`/notifications`, `/my/*`, `/help`, y el perfil en `/profile` y `/users/:id`, §7) no son de ningún contexto, no se cierran y conservan el que traía quien las abrió. La regla de la puerta es la misma que calcula `useAvailableContexts` para el chip. `ForbiddenState` queda para un recurso concreto, dentro de un contexto propio, que no es del lector (ADR-05 §5).
 
 **Por qué.** El chip leía un valor guardado mientras la navegación era de otro contexto: un master en `/` exploraba mesas con el chip diciendo «Master». Con prefijos, el contexto sale de la URL y al entrar se cae siempre en lo propio. La puerta existe porque cualquier rol veía las pantallas de los demás aunque el backend respondiera `403`, y el usuario decidió que forzar una puerta ajena se contesta devolviéndote a tu zona. Compartir la regla con el chip impide que discrepen y deja entrar a su mesa a un co-master asignado sin el rol.
 
@@ -28,9 +28,9 @@ absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 
 ## §3 La home de cada contexto es la dirección de su prefijo
 
-**Decisión.** El `ContextSwitcher` y el logo llevan a la home del contexto activo (ADR-06 §6), y esa home es su prefijo: `/player` (explorar), **`/master`** (la bandeja, §4) y **`/admin`**. `/master` encabeza `MasterSectionNav` con *Lo que espera* y *Mis mesas*. `/admin` es una ruta índice con título y una línea de bienvenida, sin métricas; es donde cae un admin al entrar (`homePathFor('admin')`) y el primer ítem de `AdminSectionNav` («Inicio», con `end`); la bandeja va segunda.
+**Decisión.** El `ContextSwitcher` y el logo llevan a la home del contexto activo (ADR-06 §6), y esa home es su prefijo: `/player` (explorar), **`/master`** (la bandeja, §4) y **`/admin`**. `/master` encabeza `MasterSectionNav` con *Lo que espera* y *Mis mesas*. `/admin` es una ruta índice con título, una línea de bienvenida y **un acceso a la Bandeja con el contador de ítems que esperan**, sin métricas; es donde cae un admin al entrar (`homePathFor('admin')`) y el primer ítem de `AdminSectionNav` («Inicio», con `end`); la bandeja va segunda.
 
-**Por qué.** La home es la pantalla que dice qué hacer a continuación; en Master eso es la bandeja, no el listado. La barra de secciones existe porque, con dos pantallas en un contexto, sin una forma de cruzar entre ellas una queda alcanzable solo con una URL escrita a mano. Un prefijo sin índice era una página huérfana. Y todavía no se sabe qué métricas le sirven a un admin: una página de números que nadie lee es peor que un saludo. **Cuando esa decisión exista, reemplaza el cuerpo** de `/admin`; la ruta y su lugar en la nav ya son de la home.
+**Por qué.** La home es la pantalla que dice qué hacer a continuación; en Master eso es la bandeja, no el listado. La barra de secciones existe porque, con dos pantallas en un contexto, sin una forma de cruzar entre ellas una queda alcanzable solo con una URL escrita a mano. Un prefijo sin índice era una página huérfana. Y todavía no se sabe qué métricas le sirven a un admin: una página de números que nadie lee es peor que un saludo. El contador de la Bandeja no es una de ellas: es lo que el admin tiene que hacer a continuación, y sin él la home de admin no llevaba a ningún lado (M25 «Lo que el jugador no tiene adónde ir», F4.1 «El mapa de la interfaz»). **Cuando la decisión de las métricas exista, reemplaza el resto del cuerpo** de `/admin`; la ruta, su lugar en la nav y el acceso a la Bandeja ya son de la home.
 
 *Antes: #220, #270.*
 
@@ -57,3 +57,19 @@ absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 **Por qué.** El buscador (ADR-22 §1) y los conceptos de la comunidad —cuatro roles acumulables, una mesa con nueve estados, master frente a co-master— no se adivinan, y sin un lugar donde leerlos cada pantalla repetiría media explicación. Una ayuda que solo define contesta «qué es» cuando la pregunta real es «cómo se hace»: el paso numerado es lo que se sigue con la pantalla detrás. El id enlazado contesta la pregunta que se acaba de hacer en vez de obligar a buscar. Y la ayuda que se escribe «después» no se escribe: es parte de la funcionalidad.
 
 *Antes: #168, #170.*
+
+## §7 El perfil es de la cuenta y vive fuera de los contextos
+
+**Decisión.** El perfil propio vive en **`/profile`** y el de otra persona en **`/users/:id`**, colgados de la raíz con el header común, como `/notifications` y `/help`: son transversales (§2), de ningún contexto, no se cierran y conservan el chip de quien llega. Llega cualquier cuenta con sesión, tenga o no `Player`. El `UserMenu` manda a `/profile`. Reemplazan a `/player/profile` y `/player/users/:id`, que dejan de existir. La edición de nombre y país (ADR-10 «Perfiles» §4 «Nombre y país se piden la primera vez en un onboarding bloqueante, y después se editan en la configuración del perfil») vive en `/profile`. Qué perfil ajeno se puede ver sigue siendo de ADR-10 §1–§3: la ruta no abre nada que el backend no conteste.
+
+**Por qué.** El perfil es de la cuenta, no de un rol. Bajo `/player/*`, una cuenta sin `Player` —un admin puro, un master sin `Player`— no llegaba a ninguno de los dos: el `UserMenu` le ofrecía su perfil y §2 la rebotaba a su home, y el perfil ajeno que el detalle público enlaza le quedaba igual de cerrado (M30 «Dónde vive el perfil», F4.1 «El mapa de la interfaz»).
+
+## §8 La sesión decide a dónde se entra: `/login` no se muestra con sesión, el destino se guarda y el 404 tiene header
+
+**Decisión.** Tres guardias:
+
+1. **`/login` con sesión redirige a la home de la cuenta** (el despacho de `/`, §2) en vez de mostrar el botón de Discord.
+2. **La guardia de sesión guarda el destino**: un enlace profundo abierto sin sesión —el de una notificación, por ejemplo— lleva a `/login` y, al entrar, vuelve a esa URL, no a la home. Dónde se guarda el destino lo fija el plan de implementación.
+3. **El 404 se pinta dentro del layout, con el header** —cerrar sesión, idioma, tema—, también bajo un prefijo de contexto (`/master/tables/x/y`). Su salida sigue siendo `/` (§2).
+
+**Por qué.** Las tres son huecos que dejó la guardia de sesión (M27 «Las guardias que faltan», F4.1 «El mapa de la interfaz»). Con sesión, el botón de Discord ofrece entrar a quien ya entró. Sin el destino guardado, el enlace de una notificación abierto con la sesión vencida termina en la home y el lector tiene que volver a buscar lo que le avisaron. Y un 404 sin header deja a quien se equivocó de URL sin cerrar sesión, sin idioma y sin tema, en una pantalla que no parece de la aplicación.

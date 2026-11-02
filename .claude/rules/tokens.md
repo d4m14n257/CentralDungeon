@@ -19,6 +19,7 @@ paths:
   { printf '@import "tailwindcss";\n\n'; cat design/out/theme.css; } > frontend/src/styles/globals.css
   ```
 
+- **Va al `@theme` todo tamaño de texto y todo color**, aunque lo use un solo componente: el texto más chico que `text-xs` es `text-2xs`, y un color propio de una pieza —la franja de la grilla semanal— es un token con su par de contraste medido. **No va la geometría de un componente** —el alto de una hora de la grilla, `PX_PER_HOUR`—: es una constante con nombre en ese componente (ADR-21 «Diseño visual e interacción» §1 «Manda el diseño, que vive en `design/build.py` y Claude Design, y el JSX solo usa sus tokens»).
 - Las clases de patrón (`styles/base.css`) sí se escriben a mano, y cada una se cataloga en `diseno` §5.c (ADR-21 §5).
 - Todo cambio visual se mira en los dos temas, claro y oscuro.
 - El modo oscuro cuelga de `data-theme` (next-themes), no de `prefers-color-scheme`: las clases `dark:` de `components/ui/` dependen de la línea `@custom-variant dark` que `build.py` escribe al inicio de `theme.css`. Sin ella siguen al sistema operativo (M37), así que no se borra al transcribir; `e2e/theme-variant.spec.ts` lo vigila.

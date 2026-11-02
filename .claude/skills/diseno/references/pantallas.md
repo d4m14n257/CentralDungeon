@@ -14,6 +14,7 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 ### Detalle de mesa — `/player/tables/:id`
 
 - «Postularme» cambia según el caso y **siempre dice por qué** (principio 2): *«Ya tenés una postulación en curso»* · *«La mesa está llena»* · *«No está abierta a postulaciones»* · *«Necesitás el rol Jugador»* (ADR-06 §3). El choque de horario se explica justo debajo (ADR-21 §5).
+- **Quien fue rechazado lo ve** (ADR-09 «Postulaciones y veto» §7 «El jugador ve a qué mesas se postuló y por qué lo rechazaron»): si su última postulación es `Rejected`, un aviso «Te rechazaron en esta mesa» con el motivo y la fecha, y debajo **«Postularme de nuevo»**, con las mismas condiciones que la primera vez. Un rechazo automático por cupo se dice desde su código (`TABLE_FULL`), nunca con el motivo vacío.
 - Las fechas se guardan en UTC y se muestran en la hora local del navegador (ADR-03 §6).
 
 ### Gestión de mesa — `/master/tables/:id`
@@ -26,8 +27,10 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 - Al reservar, el ítem desaparece de la bandeja del resto en el momento, vía `admin-queue.changed` (ADR-16 §5, ADR-18 §2).
 - Una reserva sin resolver se libera sola —a los 15 minutos por defecto, configurable en `/admin/settings`— y el ítem reaparece para todos.
 
-### Perfil — `/player/profile` y `/player/users/:id`
+### Perfil — `/profile` y `/users/:id`
 
+- **Es de la cuenta, no de un contexto** (ADR-20 «Navegación, contextos y ayuda» §7 «El perfil es de la cuenta y vive fuera de los contextos»): lo abre cualquier cuenta con sesión, tenga o no `Player`.
+- **«Mesas terminadas» se abre** (ADR-10 «Perfiles» §7 «Las mesas terminadas de un perfil se pueden abrir»): en el propio lleva a `/player/history`; en el ajeno, a un listado de las suyas con lo público de cada mesa, y cada fila al detalle público.
 - **Los comentarios no muestran autor. Nunca, para nadie** (ADR-11 §5): ni al dueño del perfil, ni al master, ni a un admin, ni al owner. Lo único visible es la dirección (jugador → jugador, master → jugador…) y el impacto.
 - La asistencia va al lado del karma —que llega con F5 (ADR-10 §5)— pero **no está incluida en él** (ADR-11 §10): son dos señales distintas, y mezclarlas haría el número inexplicable.
 - Al mirar el perfil de otra persona, la visibilidad caduca a las dos semanas del cierre de la mesa que los vinculó (ADR-10 §2).

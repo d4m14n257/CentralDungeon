@@ -2,7 +2,7 @@
 adr: 22
 titulo: Buscadores
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-11-01
 absorbe: [164, 221, 239, 240, 268]
 ---
 
@@ -49,3 +49,9 @@ absorbe: [164, 221, 239, 240, 268]
 **Por qué.** Abrir el directorio con `hasAnyRole('MASTER', …)` lo dejaría accesible a cualquiera con el rol, tenga o no una mesa que administrar, y fallaría a un `Primary` asignado por un admin que nunca tuvo el rol (ADR-06 §7, §4). Acotado a la mesa solo responde a quien efectivamente puede agregar un master. El directorio y la búsqueda de una mesa son respuestas distintas a las mismas palabras y no pueden compartir caché.
 
 *Antes: #221.*
+
+## §6 El filtro por defecto de una pantalla es un chip más, y viaja en la URL
+
+**Decisión.** Una pantalla que abre filtrada lo dice en la URL: si se entra sin `?q=`, **redirige** a la misma ruta con la consulta por defecto en `?q=`, reemplazando la entrada del historial para que «atrás» no vuelva a la URL sin filtro. Hoy es solo `/admin/requests`, que redirige a `?q=/status Pending` (`PENDING_REQUESTS_QUERY`). El filtro por defecto es **un chip normal**: se ve, se quita como cualquier otro, y lo tipeado se compone con él igual que en cualquier buscador (§1, §3). La redirección es solo para la entrada sin `q`: quitar el chip y buscar deja `?q=` vacío, que es «todos», y no vuelve a filtrar. «Limpiar filtros» vuelve a la consulta por defecto (`defaultQuery`, §4). El enlace se comparte tal cual: quien lo abre ve lo mismo.
+
+**Por qué.** `/admin/requests` ponía `Pending` en la caja y no en la URL: la pantalla mostraba un filtro que el enlace no llevaba, contra la regla de que el estado de una lista vive en la URL para poder mandarlo (ADR-12 «Catálogos» §7 «`/admin/catalogs` lista un grupo por fila, guarda su estado en la URL y abre cada grupo como un lienzo de nodos»), y lo tipeado se sumaba a un chip que no era como los demás. Con el filtro en la URL hay una sola consulta —la que se ve, la que se busca y la que se comparte— y el chip por defecto no necesita reglas propias.

@@ -50,7 +50,7 @@ El agente `escriba-adr` (`.claude/agents/`) hace estos pasos.
 | ADR-07 | ["Mesas: ciclo de vida"](07-mesas-ciclo-de-vida.md) | 10 |
 | ADR-08 | [Agenda, sesiones y asistencia](08-agenda-sesiones-y-asistencia.md) | 6 |
 | ADR-09 | [Postulaciones y veto](09-postulaciones-y-veto.md) | 7 |
-| ADR-10 | [Perfiles](10-perfiles.md) | 6 |
+| ADR-10 | [Perfiles](10-perfiles.md) | 7 |
 | ADR-11 | [Comentarios, karma y feedback](11-comentarios-karma-y-feedback.md) | 12 |
 | ADR-12 | [Catálogos](12-catalogos.md) | 9 |
 | ADR-13 | ["Archivos: modelo y almacenamiento"](13-archivos-modelo-y-almacenamiento.md) | 8 |
@@ -60,9 +60,9 @@ El agente `escriba-adr` (`.claude/agents/`) hace estos pasos.
 | ADR-17 | [Configuración del sistema y auditoría](17-configuracion-y-auditoria.md) | 4 |
 | ADR-18 | [Notificaciones y tiempo real](18-notificaciones-y-tiempo-real.md) | 5 |
 | ADR-19 | [Arquitectura del frontend](19-arquitectura-del-frontend.md) | 10 |
-| ADR-20 | [Navegación, contextos y ayuda](20-navegacion-contextos-y-ayuda.md) | 6 |
+| ADR-20 | [Navegación, contextos y ayuda](20-navegacion-contextos-y-ayuda.md) | 8 |
 | ADR-21 | [Diseño visual e interacción](21-diseno-visual-e-interaccion.md) | 13 |
-| ADR-22 | [Buscadores](22-buscadores.md) | 5 |
+| ADR-22 | [Buscadores](22-buscadores.md) | 6 |
 | ADR-23 | [Textos e idiomas](23-textos-e-idiomas.md) | 4 |
 | ADR-24 | [Testing](24-testing.md) | 3 |
 

@@ -2,7 +2,7 @@
 adr: 8
 titulo: Agenda, sesiones y asistencia
 estado: Vigente
-actualizada: 2026-10-21
+actualizada: 2026-11-01
 absorbe: [26, 33, 36, 137, 178, 191, 193, 194, 195, 227, 228]
 ---
 
@@ -52,7 +52,7 @@ absorbe: [26, 33, 36, 137, 178, 191, 193, 194, 195, 227, 228]
 
 ## §6 Mi horario: la semana entera de una persona, y la misma grilla elige la franja
 
-**Decisión.** `GET /api/v1/users/me/schedule` devuelve todo lo que la persona tiene comprometido en la semana —lo que **dirige** y lo que **juega**, con su rol— como bloques en **minutos desde el lunes 00:00 UTC**, servido por `ScheduleConflictService.weekOf()` con las mismas consultas del choque (§2). `/my/schedule` es transversal, bajo `/my` y no bajo un contexto: siete columnas por veinticuatro filas, un bloque que cruza medianoche se dibuja partido, cada hora libre es un `<button>`, la grilla se desplaza sola hasta la primera hora ocupada, cada bloque abre su mesa, y la leyenda tiene dos ítems fijos (el rol) más **una** lista con todas las mesas y su horario. La misma grilla va en el wizard, donde **hacer clic en una hora libre la agrega** y la hora que otra mesa ocupa no se ofrece; ahí los bloques **no navegan**. Queda abierto si `/my/schedule` sigue la regla de ADR-14 §5 para cuentas sin `Player` ni `Master`.
+**Decisión.** `GET /api/v1/users/me/schedule` devuelve todo lo que la persona tiene comprometido en la semana —lo que **dirige** y lo que **juega**, con su rol— como bloques en **minutos desde el lunes 00:00 UTC**, servido por `ScheduleConflictService.weekOf()` con las mismas consultas del choque (§2). `/my/schedule` es transversal, bajo `/my` y no bajo un contexto. Desde `md` es una grilla —debajo, una lista por día (ADR-21 «Diseño visual e interacción» §7 «Todo funciona en teléfono, y la página no se sale de la pantalla en ningún ancho»)—: siete columnas por veinticuatro filas, un bloque que cruza medianoche se dibuja partido, cada hora libre es un `<button>`, la grilla se desplaza sola hasta la primera hora ocupada, cada bloque abre su mesa, y la leyenda tiene dos ítems fijos (el rol) más **una** lista con todas las mesas y su horario. La misma grilla va en el wizard, donde **hacer clic en una hora libre la agrega** y la hora que otra mesa ocupa no se ofrece; ahí los bloques **no navegan**. Queda abierto si `/my/schedule` sigue la regla de ADR-14 §5 para cuentas sin `Player` ni `Master`.
 
 **Por qué.** Para saber si tenía lugar, quien creaba una mesa solo contaba con texto. La grilla dibuja lo que la regla compara: un hueco en pantalla es un hueco que el servidor acepta, y una segunda consulta habría dejado que las dos se desincronizaran. La semana de alguien no es la de un contexto: partirla escondería justo el cruce. Minutos desde el lunes UTC porque la semana del lector no empieza donde la de UTC (ADR-03 §6). Es la semana que se repite y no las sesiones, porque una mesa en preparación todavía no las tiene (§3). Botones reales para teclado y lectores de pantalla; navegar desde el wizard tiraría el formulario. Prevenir la franja ocupada es mejor que rechazarla.
 
