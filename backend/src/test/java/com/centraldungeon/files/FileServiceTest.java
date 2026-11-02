@@ -626,7 +626,7 @@ class FileServiceTest {
                         eq("admin-1"), anyString(), eq(FileStatus.Current)))
                 .thenReturn(Optional.of(existing));
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(existing));
-        when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
 
         LibraryUpload result = fileService().uploadToLibrary(
                 pdf("ficha.pdf", "hoja"),
@@ -672,7 +672,7 @@ class FileServiceTest {
         LocalDateTime firstPublished = LocalDateTime.now().minusDays(3);
         file.setPublishedAt(firstPublished);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
-        when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
 
         var response = fileService().unpublish("file-1");
 
@@ -786,7 +786,7 @@ class FileServiceTest {
     void theCajonOfALibraryFileChangesOnlyWhileUnpublished() {
         StoredFile waiting = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(waiting));
-        when(tableFileRepository.countUsesByFileIds(List.of("file-1"))).thenReturn(List.of());
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
 
         fileService().changeLibraryCategory("file-1", new UpdateLibraryCategoryRequest(FileCategory.Announcement));
 
@@ -819,7 +819,7 @@ class FileServiceTest {
                         eq(owner.getId()), anyString(), eq(FileStatus.Current)))
                 .thenReturn(Optional.of(existing));
         when(fileRepository.findByIdAndStatus(existing.getId(), FileStatus.Current)).thenReturn(Optional.of(existing));
-        when(tableFileRepository.countUsesByFileIds(List.of(existing.getId()))).thenReturn(List.of());
+        when(tableFileRepository.findUsagesByFileIds(List.of(existing.getId()))).thenReturn(List.of());
     }
 
     /** Stubs a live file of the library that is already filed under one cajón. */
@@ -827,7 +827,7 @@ class FileServiceTest {
         when(fileRepository.findByIdAndStatus(file.getId(), FileStatus.Current)).thenReturn(Optional.of(file));
         when(categoryRepository.findByFileIds(List.of(file.getId())))
                 .thenReturn(List.of(new FileCategoryLink(file.getId(), category)));
-        when(tableFileRepository.countUsesByFileIds(List.of(file.getId()))).thenReturn(List.of());
+        when(tableFileRepository.findUsagesByFileIds(List.of(file.getId()))).thenReturn(List.of());
     }
 
     // ---------------------------------------------------------------- attaching

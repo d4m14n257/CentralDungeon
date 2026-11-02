@@ -11,6 +11,9 @@ import com.centraldungeon.common.security.JwtService;
 import com.centraldungeon.notifications.Notification;
 import com.centraldungeon.notifications.NotificationRepository;
 import com.centraldungeon.notifications.NotificationType;
+import com.centraldungeon.registrations.TableRegistration;
+import com.centraldungeon.registrations.TableRegistrationRepository;
+import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.Role;
@@ -125,6 +128,10 @@ class ApprovalRequestApiIT {
     /** Only ever asked how many rows it has: approving a {@code TableOpen} must not add one. */
     @Autowired
     private GameTableRepository gameTableRepository;
+
+    /** Only to give the veto of {@code aVetoAndAPauseNameTheirTableInTheListing} a real application to point at. */
+    @Autowired
+    private TableRegistrationRepository registrationRepository;
 
     /** Used once, to put a row into a state no endpoint of F3.2 can produce - see {@code breakTheReferenceOf}. */
     @Autowired
@@ -572,6 +579,7 @@ class ApprovalRequestApiIT {
         // /request_type
         as(get(ADMIN).param("q", "/request_type MasterGrant"), admin)
                 .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].requestedById").value(player.getId()))
                 .andExpect(jsonPath("$.content[0].requestedByName").value(player.getName()));
         // /requested_by, by display name and by Discord handle - both, because whoever searches knows
         // one of the two and not which one the system keeps where.
@@ -659,6 +667,35 @@ class ApprovalRequestApiIT {
         as(get(ADMIN), admin)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].claimedByName").value(admin.getName()));
+    }
+
+    /**
+     * The listing says which table each request is about so the screen can link it: a pause carries its
+     * table, a veto reaches it through the application it points at, and a request about a person has
+     * none. The veto goes through the real query that resolves a page of applications at once.
+     */
+    @Test
+    void aVetoAndAPauseNameTheirTableInTheListing() throws Exception {
+        GameTable table = gameTableRepository.save(new GameTable("La Cripta", admin));
+        TableRegistration registration = registrationRepository.save(new TableRegistration(table, player, null));
+        approvalRequestRepository.save(new ApprovalRequest(
+                ApprovalRequestType.TablePause, "game_table", table.getId(), other, "una pausa"));
+        approvalRequestRepository.save(new ApprovalRequest(
+                ApprovalRequestType.PlayerBan, "table_registration", registration.getId(), other, "un veto"));
+        approvalRequestRepository.save(new ApprovalRequest(
+                ApprovalRequestType.General, "user", other.getId(), other, "una consulta"));
+        try {
+            as(get(ADMIN).param("q", "/request_type TablePause"), admin)
+                    .andExpect(jsonPath("$.content[0].gameTableId").value(table.getId()));
+            as(get(ADMIN).param("q", "/request_type PlayerBan"), admin)
+                    .andExpect(jsonPath("$.content[0].gameTableId").value(table.getId()));
+            as(get(ADMIN).param("q", "/request_type General"), admin)
+                    .andExpect(jsonPath("$.content[0].gameTableId").doesNotExist());
+        } finally {
+            approvalRequestRepository.deleteAll();
+            registrationRepository.delete(registration);
+            gameTableRepository.delete(table);
+        }
     }
 
     // ---------------------------------------------------------------- helpers

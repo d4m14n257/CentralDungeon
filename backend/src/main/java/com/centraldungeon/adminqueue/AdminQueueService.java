@@ -302,6 +302,7 @@ public class AdminQueueService {
                 // The kind of request is the title: it is what the reader needs to know before opening
                 // it, the way a table's name is.
                 request.getRequestType().wireName(),
+                request.getRequestedBy().getId(),
                 displayNameOf(request.getRequestedBy()),
                 request.getJustification(),
                 request.getCreatedAt(),
@@ -323,6 +324,7 @@ public class AdminQueueService {
                 table.getId(),
                 AdminQueueItemKind.TableWaitingReview.wireName(),
                 table.getName(),
+                waiting.getId(),
                 displayNameOf(waiting),
                 // No detail, and not an omission: a table's justification is the table, and it is read
                 // by opening it. A truncated description here would be a worse version of that.

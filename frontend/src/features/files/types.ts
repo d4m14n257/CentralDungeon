@@ -87,11 +87,17 @@ export interface UploadedFile {
   deduplicated: boolean
 }
 
+/** Mirror of `AdminFileTableResponse` — a table using a file, named so the screen can link it. */
+export interface AdminFileTable {
+  id: string
+  name: string
+}
+
 /**
  * Mirror of `AdminFileResponse` — the /admin/files row.
  *
  * It extends the base shape rather than restating it: an admin sees what an owner sees plus the four
- * fields nobody else has business seeing — whose it is, how many tables use it, and whether it was
+ * fields nobody else has business seeing — whose it is, which tables use it, and whether it was
  * marked gone.
  */
 export interface AdminFile extends StoredFile {
@@ -99,10 +105,11 @@ export interface AdminFile extends StoredFile {
   /** How to name the uploader on screen — their Discord username, which everybody has. */
   ownerName: string
   /**
-   * How many tables hold a live link to it. **This is where ADR-14 §1 stops being a claim**: one file used
-   * by three tables reads as one row with three uses, not as three files.
+   * The tables that hold a live link to it. **This is where ADR-14 §1 stops being a claim**: one file
+   * used by three tables reads as one row with three tables, not as three files. The number of uses is
+   * its length.
    */
-  uses: number
+  tables: AdminFileTable[]
   status: FileStatus
   /**
    * When it was first published into the platform's library, or null if it never was. With

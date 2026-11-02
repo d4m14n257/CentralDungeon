@@ -64,13 +64,22 @@ export interface ApprovalRequestDetail {
  * Mirror of `ApprovalRequestSummaryResponse`: one row of `/admin/requests` and one entry of the
  * reader's own list.
  *
- * Derived from {@link ApprovalRequestDetail} because it is exactly the narrower view of the same
- * thing — the listing carries no resolution and no polymorphic reference, and nothing else differs.
+ * Derived from {@link ApprovalRequestDetail} because it is the narrower view of the same thing — the
+ * listing carries no resolution and no polymorphic reference — plus the two ids it needs to link out:
+ * the requester's, and the table the request concerns.
  */
 export type ApprovalRequestSummary = StrictOmit<
   ApprovalRequestDetail,
   'entityType' | 'entityId' | 'resolvedByName' | 'resolutionNote' | 'resolvedAt'
->
+> & {
+  /** Only so the requester's name can link to their page; what the row shows is `requestedByName`. */
+  requestedById: string
+  /**
+   * The table the request is about, or null when it is about none. A pause names its table and a veto
+   * reaches it through its application; the other kinds concern a person.
+   */
+  gameTableId: string | null
+}
 
 /**
  * Mirror of `BanRequestResponse` — one veto a co-master is asking for (ADR-09 §5, F3.4).

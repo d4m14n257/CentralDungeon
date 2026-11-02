@@ -11,6 +11,7 @@ import com.centraldungeon.common.search.SearchQuery;
 import com.centraldungeon.common.search.SearchQueryParser;
 import com.centraldungeon.common.storage.StorageService;
 import com.centraldungeon.files.dto.AdminFileResponse;
+import com.centraldungeon.files.dto.AdminFileTableResponse;
 import com.centraldungeon.files.dto.FileResponse;
 import com.centraldungeon.files.dto.FileUsageResponse;
 import com.centraldungeon.files.dto.PublicFileResponse;
@@ -538,15 +539,15 @@ public class FileService {
 
     /**
      * /admin/files: the platform's library - published, unpublished and hidden - searchable, with the
-     * usage count that makes ADR-14 §1 visible (ADR-14 §7).
+     * tables that make ADR-14 §1 visible (ADR-14 §7).
      *
      * <p><b>Only the library</b>, and that is a predicate in the query rather than a filter the screen
      * may drop. Somebody's private upload - the sheet a player applied with, what they handed in - is
      * theirs and not the platform's, and seeing or removing it is not this screen's job: that belongs
      * to acting as that person, not to administering the library (ADR-14 §7).
      *
-     * <p>The count comes from one grouped query for the whole page rather than one per row, the same
-     * shape /admin/catalogs uses.
+     * <p>The tables of the whole page come from one query rather than one per row, the shape
+     * /admin/catalogs uses for its counts.
      *
      * @param query      the search box, in the language of ADR-22 §1. Null or blank matches everything
      * @param statuses   the statuses to keep, or empty for all of them
@@ -569,11 +570,11 @@ public class FileService {
         SearchQuery parsed = SearchQueryParser.parse(query, FileSearchField.wireNames());
         Page<StoredFile> page = fileRepository.findAll(
                 FileSearchSpecification.forAdmin(parsed, statuses, category), pageable);
-        Map<String, Long> uses = usesByFileId(page.getContent());
+        Map<String, List<AdminFileTableResponse>> tables = tablesByFileId(page.getContent());
         Map<String, List<String>> cajones = categoriesByFileId(page.getContent());
         return PageResponse.from(page.map(file -> fileMapper.toAdminResponse(
                 file,
-                uses.getOrDefault(file.getId(), 0L),
+                tables.getOrDefault(file.getId(), List.of()),
                 publishableOnly(cajones.getOrDefault(file.getId(), List.of())))));
     }
 
@@ -736,7 +737,8 @@ public class FileService {
 
     /** One file of the library as /admin/files shows it. */
     private AdminFileResponse toLibraryResponse(StoredFile file) {
-        return fileMapper.toAdminResponse(file, usesOf(file.getId()), publishableOnly(categoriesOf(file.getId())));
+        return fileMapper.toAdminResponse(
+                file, tablesOf(file.getId()), publishableOnly(categoriesOf(file.getId())));
     }
 
     /**
@@ -834,26 +836,27 @@ public class FileService {
     }
 
     /**
-     * How many tables hold a live link to each of the given files, in one grouped query.
+     * The tables that hold a live link to each of the given files, named, in one query.
      *
-     * @param files the files to count for
-     * @return the count per file id; a file nothing points at is absent, which reads as zero
+     * @param files the files to resolve tables for
+     * @return the tables per file id; a file nothing points at is absent, which reads as none
      */
-    Map<String, Long> usesByFileId(List<StoredFile> files) {
+    Map<String, List<AdminFileTableResponse>> tablesByFileId(List<StoredFile> files) {
         if (files.isEmpty()) {
             return Map.of();
         }
         List<String> ids = files.stream().map(StoredFile::getId).toList();
-        return tableFileRepository.countUsesByFileIds(ids).stream()
-                .collect(Collectors.toMap(FileUsageCount::fileId, FileUsageCount::uses));
+        return tableFileRepository.findUsagesByFileIds(ids).stream()
+                .collect(Collectors.groupingBy(
+                        FileUsage::fileId,
+                        Collectors.mapping(fileMapper::toAdminTableResponse, Collectors.toList())));
     }
 
-    /** How many tables hold a live link to one file. */
-    private long usesOf(String fileId) {
-        return tableFileRepository.countUsesByFileIds(List.of(fileId)).stream()
-                .findFirst()
-                .map(FileUsageCount::uses)
-                .orElse(0L);
+    /** The tables that hold a live link to one file. */
+    private List<AdminFileTableResponse> tablesOf(String fileId) {
+        return tableFileRepository.findUsagesByFileIds(List.of(fileId)).stream()
+                .map(fileMapper::toAdminTableResponse)
+                .toList();
     }
 
     /** Marks a file gone and stamps when. The bytes stay until F5 (ADR-03 §7, ADR-13 §8). */

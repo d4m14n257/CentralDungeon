@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Eye, X } from 'lucide-react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
@@ -16,6 +16,7 @@ import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/componen
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
+import { adminTableDetailPath, adminUserDetailPath } from '@/config/paths'
 import {
   PENDING_REQUESTS_QUERY,
   RequestDetailPanel,
@@ -110,14 +111,37 @@ export function AdminRequestsPage() {
   const showsWhatIsWaiting = search.query.trim() === PENDING_REQUESTS_QUERY
 
   const columns: DataTableColumn<ApprovalRequestSummary>[] = [
-    { id: 'requestedBy', header: t('requests.columns.requestedBy'), role: 'title', cell: (request) => request.requestedByName },
+    {
+      id: 'requestedBy',
+      header: t('requests.columns.requestedBy'),
+      role: 'title',
+      cell: (request) => (
+        <Link to={adminUserDetailPath(request.requestedById)} className="hover:underline">
+          {request.requestedByName}
+        </Link>
+      ),
+    },
     {
       id: 'status',
       header: t('requests.columns.status'),
       role: 'badge',
       cell: (request) => <RequestStatusBadge status={request.status} />,
     },
-    { id: 'type', header: t('requests.columns.type'), cell: (request) => <RequestTypeBadge type={request.type} /> },
+    {
+      id: 'type',
+      header: t('requests.columns.type'),
+      // A pause or a veto is about a table, and the table has its own admin screen.
+      cell: (request) => (
+        <div className="flex flex-col items-start gap-1">
+          <RequestTypeBadge type={request.type} />
+          {request.gameTableId !== null && (
+            <Link to={adminTableDetailPath(request.gameTableId)} className="text-xs underline-offset-2 hover:underline">
+              {t('requests.viewTable')}
+            </Link>
+          )}
+        </div>
+      ),
+    },
     {
       id: 'justification',
       header: t('requests.columns.justification'),

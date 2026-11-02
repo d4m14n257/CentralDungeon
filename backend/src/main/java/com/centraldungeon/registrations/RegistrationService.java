@@ -654,6 +654,24 @@ public class RegistrationService {
     }
 
     /**
+     * The table of each of several applications, in one query - {@link #tableIdOf} for a whole page.
+     *
+     * <p>{@code ApprovalService} is the caller, for the same reason as {@link #tableIdOf}: a page of
+     * requests includes vetoes, and the listing links each to the table it concerns.
+     *
+     * @param registrationIds the applications
+     * @return table id by application id; an application that does not exist is absent
+     */
+    @Transactional(readOnly = true)
+    public Map<String, String> tableIdsOf(java.util.Collection<String> registrationIds) {
+        if (registrationIds.isEmpty()) {
+            return Map.of();
+        }
+        return registrationRepository.findTablesByRegistrationIds(registrationIds).stream()
+                .collect(Collectors.toMap(RegistrationTable::registrationId, RegistrationTable::gameTableId));
+    }
+
+    /**
      * One application as its readers see it, with its veto described when it has one.
      *
      * <p>Read by {@code ApprovalService} after a {@code Primary} grants a veto request: the screen

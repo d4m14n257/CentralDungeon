@@ -23,9 +23,11 @@ function request(overrides: Partial<ApprovalRequestSummary> = {}): ApprovalReque
     id: 'req-1',
     type: 'MasterGrant',
     status: 'Pending',
+    requestedById: 'user-1',
     requestedByName: 'dami',
     justification: 'Quiero dirigir',
     claimedByName: null,
+    gameTableId: null,
     createdAt: '2026-03-04T12:00:00',
     ...overrides,
   }

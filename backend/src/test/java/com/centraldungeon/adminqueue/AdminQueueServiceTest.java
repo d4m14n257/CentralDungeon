@@ -244,6 +244,7 @@ class AdminQueueServiceTest {
         assertThat(item.kind()).isEqualTo("ApprovalRequest");
         assertThat(item.title()).isEqualTo("MasterGrant");
         assertThat(item.detail()).isEqualTo("quiero dirigir");
+        assertThat(item.requestedById()).isEqualTo("user-1");
         assertThat(item.requestedByName()).isEqualTo("carla");
         assertThat(item.waitingSince()).isEqualTo(LocalDateTime.parse("2026-09-01T09:00"));
         assertThat(item.claimedByName()).isNull();
@@ -266,6 +267,7 @@ class AdminQueueServiceTest {
         assertThat(item.type()).isEqualTo("game_table");
         assertThat(item.kind()).isEqualTo("TableWaitingReview");
         assertThat(item.title()).isEqualTo("La Cripta");
+        assertThat(item.requestedById()).isEqualTo("master-1");
         assertThat(item.requestedByName()).isEqualTo("ana");
         assertThat(item.detail()).isNull();
     }
@@ -282,6 +284,7 @@ class AdminQueueServiceTest {
 
         AdminQueueItemResponse item = service().list(ACTOR, FIRST_PAGE).content().getFirst();
 
+        assertThat(item.requestedById()).isEqualTo("creator-1");
         assertThat(item.requestedByName()).isEqualTo("quien-la-creo");
     }
 

@@ -13,7 +13,7 @@ public interface FileCategoryLinkRepository extends JpaRepository<FileCategoryLi
     /**
      * Every cajón each of the given files belongs to, in one query for a whole page.
      *
-     * <p>One round trip and never one per row, the same rule {@code countUsesByFileIds} follows: a
+     * <p>One round trip and never one per row, the same rule {@code TableFileRepository.findUsagesByFileIds} follows: a
      * page of twenty files in somebody's library costs one query, not twenty.
      *
      * <p>Named parameters only, never positional (ADR-03 §2).

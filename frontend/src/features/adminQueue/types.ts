@@ -31,8 +31,9 @@ export type AdminQueueItemKind = 'ApprovalRequest' | 'TableWaitingReview'
  * `id` is the id of the row **in its own table**, not an id of the tray: there is no `admin_queue`
  * table and there is not going to be one (ADR-03 §1). The pair `(type, id)` is what addresses an item.
  *
- * Names and never ids on the people involved, like every other admin listing: a tray nobody can read
- * without a second lookup is a tray nobody reads.
+ * The people involved are shown by name, like every other admin listing: a tray nobody can read
+ * without a second lookup is a tray nobody reads. The requester's id travels beside the name only so
+ * the name can be a link.
  */
 export interface AdminQueueItem {
   type: AdminQueueItemType
@@ -41,6 +42,8 @@ export interface AdminQueueItem {
   /** The table's name, or what the request is asking for. Already a sentence a person can read. */
   title: string
   /** Who provoked the item — the requester, or the master who sent the table in. */
+  requestedById: string
+  /** Their display name; the id only exists so the name can link to their page. */
   requestedByName: string
   /** The justification of a request. Null for a table: sending one in carries no words. */
   detail: string | null

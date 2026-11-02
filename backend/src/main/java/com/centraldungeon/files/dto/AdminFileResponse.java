@@ -5,12 +5,12 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A file as /admin/files shows it: everything {@link FileResponse} has, plus who owns it, how many
+ * A file as /admin/files shows it: everything {@link FileResponse} has, plus who owns it, which
  * tables use it and whether it is still live.
  *
  * <p>A separate record rather than three nullable fields on {@link FileResponse}, because those
  * three are exactly what nobody but an admin should see (arquitectura §2.3): the owner's name on
- * somebody else's upload, the usage count, and the fact that a file was marked gone.
+ * somebody else's upload, the tables using it, and the fact that a file was marked gone.
  *
  * @param id             the file's identifier
  * @param name           the original filename
@@ -21,9 +21,10 @@ import org.jspecify.annotations.Nullable;
  *                       they are the one who declares them when publishing
  * @param ownerId        who uploaded it. Publishing a file changes what it is for, never whose it is
  * @param ownerName      how to name them on screen - their Discord username, which everybody has
- * @param uses           how many tables hold a live link to it. <b>This is where ADR-14 §1 stops being a
- *                       claim</b>: one file used by three tables reads as one row with three uses,
- *                       which is what makes "linking is not copying" visible rather than asserted
+ * @param tables         the tables that hold a live link to it, named so the screen can link each one.
+ *                       <b>This is where ADR-14 §1 stops being a claim</b>: one file used by three tables
+ *                       reads as one row with three tables, which is what makes "linking is not copying"
+ *                       visible rather than asserted. The number of uses is its size
  * @param status         live or marked gone, as a string. Marking never freed a byte (ADR-03 §7, ADR-13 §8)
  * @param lastUsedAt     when it was last used, in UTC. Null when it never was, which the purge reads
  *                       as its creation date (ADR-13 §3)
@@ -42,7 +43,7 @@ public record AdminFileResponse(
         List<String> categories,
         String ownerId,
         String ownerName,
-        long uses,
+        List<AdminFileTableResponse> tables,
         String status,
         @Nullable LocalDateTime lastUsedAt,
         LocalDateTime createdAt,

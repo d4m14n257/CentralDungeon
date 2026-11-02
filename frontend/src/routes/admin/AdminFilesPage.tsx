@@ -17,7 +17,7 @@ import { SearchQueryInput } from '@/components/SearchQueryInput'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
-import { adminFileUploadPath, adminUserDetailPath } from '@/config/paths'
+import { adminFileUploadPath, adminTableDetailPath, adminUserDetailPath } from '@/config/paths'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
 import {
   FileCategoryBadge,
@@ -38,6 +38,9 @@ import {
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { ApiError } from '@/types/api'
 
+/** How many tables of a file the row names before it only counts the rest. */
+const MAX_LINKED_TABLES = 3
+
 /**
  * /admin/files — the platform's library: what the community publishes for every table (ADR-13 §2, ADR-14 §1,
  * ADR-14 §7).
@@ -55,8 +58,9 @@ import { ApiError } from '@/types/api'
  * library's. That is also why the screen speaks of three cajones and not five: the two player-side
  * ones hold people's answers, and nothing is ever published into them (ADR-14 §4).
  *
- * The `uses` column is not decoration either: one file showing "3 tables" is what makes "linking is
- * not copying" something an admin can see rather than something a document claims.
+ * The tables column is not decoration either: one file naming its three tables, each linked to its
+ * admin page, is what makes "linking is not copying" something an admin can see rather than something
+ * a document claims.
  *
  * **What was searched and which page are in the URL**, like /admin/catalogs (ADR-12 §7): a row is
  * something one admin sends to another, and state that only lives in `useState` cannot be linked to.
@@ -179,8 +183,29 @@ export function AdminFilesPage() {
         </Link>
       ),
     },
-    // The number that makes ADR-14 §1 visible: one file, three tables.
-    { id: 'uses', header: t('admin.columns.uses'), cell: (file) => t('admin.usesValue', { count: file.uses }) },
+    // The tables that make ADR-14 §1 visible: one file, three tables, each one a link. Past a few the
+    // rest are only counted: a published sheet can serve many tables and a cell is not a list.
+    {
+      id: 'uses',
+      header: t('admin.columns.uses'),
+      cell: (file) =>
+        file.tables.length === 0 ? (
+          t('admin.usesValue', { count: 0 })
+        ) : (
+          <ul className="space-y-0.5">
+            {file.tables.slice(0, MAX_LINKED_TABLES).map((table) => (
+              <li key={table.id}>
+                <Link to={adminTableDetailPath(table.id)} className="hover:underline">
+                  {table.name}
+                </Link>
+              </li>
+            ))}
+            {file.tables.length > MAX_LINKED_TABLES && (
+              <li className="text-fg-muted">{t('admin.usesMore', { count: file.tables.length - MAX_LINKED_TABLES })}</li>
+            )}
+          </ul>
+        ),
+    },
     {
       id: 'size',
       header: t('admin.columns.size'),

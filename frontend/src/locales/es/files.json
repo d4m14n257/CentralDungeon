@@ -85,6 +85,8 @@
     },
     "usesValue_one": "{{count}} mesa",
     "usesValue_other": "{{count}} mesas",
+    "usesMore_one": "y {{count}} más",
+    "usesMore_other": "y {{count}} más",
     "emptyTitle": "La biblioteca está vacía",
     "emptyDescription": "Cuando subas la hoja en blanco de la comunidad o el reglamento, va a aparecer acá.",
     "noResultsTitle": "Sin resultados",

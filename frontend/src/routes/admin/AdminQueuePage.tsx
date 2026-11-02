@@ -15,7 +15,7 @@ import { PaginationControls } from '@/components/PaginationControls'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
-import { adminTableDetailPath } from '@/config/paths'
+import { adminTableDetailPath, adminUserDetailPath } from '@/config/paths'
 import {
   ADMIN_QUEUE_ERROR_CODES,
   ClaimBadge,
@@ -250,7 +250,15 @@ export function AdminQueuePage() {
     // The reservation is the one thing on this row that changes under the reader's feet, so it is
     // what gets the colour (skill `diseno` §3: a dot and a label, never colour alone).
     { id: 'claim', header: t('queue.columns.claim'), role: 'badge', cell: (item) => <ClaimBadge item={item} /> },
-    { id: 'requestedBy', header: t('queue.columns.requestedBy'), cell: (item) => item.requestedByName },
+    {
+      id: 'requestedBy',
+      header: t('queue.columns.requestedBy'),
+      cell: (item) => (
+        <Link to={adminUserDetailPath(item.requestedById)} className="hover:underline">
+          {item.requestedByName}
+        </Link>
+      ),
+    },
     {
       id: 'detail',
       header: t('queue.columns.detail'),

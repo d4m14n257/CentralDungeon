@@ -1,6 +1,7 @@
 package com.centraldungeon.files;
 
 import com.centraldungeon.files.dto.AdminFileResponse;
+import com.centraldungeon.files.dto.AdminFileTableResponse;
 import com.centraldungeon.files.dto.FileResponse;
 import com.centraldungeon.files.dto.FileUsageResponse;
 import com.centraldungeon.files.dto.PublicFileResponse;
@@ -62,13 +63,13 @@ public interface FileMapper {
     /**
      * The /admin/files view.
      *
-     * <p>{@code uses} is resolved by the service, not here: it needs a query, and a mapper never
+     * <p>{@code tables} is resolved by the service, not here: it needs a query, and a mapper never
      * touches a repository (arquitectura §2.2).
      *
      * @param file       the entity to describe
-     * @param uses       how many tables hold a live link to it (ADR-14 §1)
+     * @param tables     the tables that hold a live link to it (ADR-14 §1)
      * @param categories the cajones it belongs to (ADR-14 §4)
-     * @return the file as an admin sees it, owner and usage count included
+     * @return the file as an admin sees it, owner and tables included
      */
     @Mapping(target = "id", source = "file.id")
     @Mapping(target = "name", source = "file.name")
@@ -81,7 +82,17 @@ public interface FileMapper {
     @Mapping(target = "status", expression = "java(file.getStatus().name())")
     @Mapping(target = "fileType", expression = "java(file.getFileType().name())")
     @Mapping(target = "categories", source = "categories")
-    AdminFileResponse toAdminResponse(StoredFile file, long uses, List<String> categories);
+    AdminFileResponse toAdminResponse(StoredFile file, List<AdminFileTableResponse> tables, List<String> categories);
+
+    /**
+     * One table of a file's uses, named for /admin/files.
+     *
+     * @param usage the projection the repository produced
+     * @return the table's id and name, which for a table use are the context's
+     */
+    @Mapping(target = "id", source = "contextId")
+    @Mapping(target = "name", source = "contextName")
+    AdminFileTableResponse toAdminTableResponse(FileUsage usage);
 
     /**
      * One row of the master's Archivos tab: the file and the link that put it there.

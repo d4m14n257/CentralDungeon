@@ -13,21 +13,26 @@ public interface ApprovalMapper {
     /**
      * One row of the admin listing, and of "my requests".
      *
-     * <p>Written by hand rather than generated: three of the seven fields are a person resolved to a
+     * <p>Written by hand rather than generated: three of the nine fields are a person resolved to a
      * display name and two are enums flattened to strings, which is more mapping than there is
      * copying.
      *
-     * @param request the request
+     * @param request     the request
+     * @param gameTableId the table it is about, resolved by the service for the whole page, or null
+     *                    when it is about none
      * @return the summary the listing renders
      */
-    default ApprovalRequestSummaryResponse toSummaryResponse(ApprovalRequest request) {
+    default ApprovalRequestSummaryResponse toSummaryResponse(
+            ApprovalRequest request, @Nullable String gameTableId) {
         return new ApprovalRequestSummaryResponse(
                 request.getId(),
                 request.getRequestType().wireName(),
                 request.getStatus().name(),
+                request.getRequestedBy().getId(),
                 displayNameOf(request.getRequestedBy()),
                 request.getJustification(),
                 displayNameOrNull(request.getClaimedBy()),
+                gameTableId,
                 request.getCreatedAt());
     }
 

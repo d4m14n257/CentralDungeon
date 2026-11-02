@@ -8,6 +8,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.files.dto.AdminFileResponse;
+import com.centraldungeon.files.dto.AdminFileTableResponse;
 import com.centraldungeon.files.dto.FileResponse;
 import com.centraldungeon.files.dto.FileUsageResponse;
 import com.centraldungeon.files.dto.LinkTableFileRequest;
@@ -122,10 +123,7 @@ class FileIT {
         attach(secondTable, sheet.id(), false);
 
         assertThat(fileRepository.findById(sheet.id())).isPresent();
-        assertThat(tableFileRepository.countUsesByFileIds(List.of(sheet.id())))
-                .singleElement()
-                .extracting(FileUsageCount::uses)
-                .isEqualTo(2L);
+        assertThat(tableFileRepository.findUsagesByFileIds(List.of(sheet.id()))).hasSize(2);
     }
 
     /**
@@ -465,9 +463,9 @@ class FileIT {
         assertThat(fileRepository.findById(stale.id()).orElseThrow().getDeletedAt()).isNotNull();
     }
 
-    /** /admin/files shows the usage count, which is what makes ADR-14 §1 visible instead of merely true. */
+    /** /admin/files names the tables using each file, which is what makes ADR-14 §1 visible and linkable. */
     @Test
-    void theAdminListingCountsHowManyTablesUseEachFile() {
+    void theAdminListingNamesTheTablesThatUseEachFile() {
         AdminFileResponse sheet = fileService
                 .uploadToLibrary(
                         pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true), master.getId())
@@ -481,7 +479,10 @@ class FileIT {
                 .filteredOn(file -> file.id().equals(sheet.id()))
                 .singleElement()
                 .satisfies(file -> {
-                    assertThat(file.uses()).isEqualTo(2L);
+                    assertThat(file.tables())
+                            .containsExactlyInAnyOrder(
+                                    new AdminFileTableResponse(firstTable.getId(), firstTable.getName()),
+                                    new AdminFileTableResponse(secondTable.getId(), secondTable.getName()));
                     assertThat(file.ownerName()).isEqualTo("File Master");
                 });
     }

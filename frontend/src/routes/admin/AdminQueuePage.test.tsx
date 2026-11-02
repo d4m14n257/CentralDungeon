@@ -46,6 +46,7 @@ function item(overrides: Partial<AdminQueueItem> = {}): AdminQueueItem {
     // normalizes four sources into one shape and cannot translate for a vocabulary it does not own.
     // Every `rowFor('Rol de master')` below is therefore an assertion that the screen translates it.
     title: 'MasterGrant',
+    requestedById: 'user-1',
     requestedByName: 'dami',
     detail: 'Quiero dirigir una mesa de terror',
     waitingSince: '2026-03-04T12:00:00',
@@ -61,6 +62,7 @@ function table(overrides: Partial<AdminQueueItem> = {}): AdminQueueItem {
     id: 'table-1',
     kind: 'TableWaitingReview',
     title: 'La maldición de Strahd',
+    requestedById: 'user-2',
     requestedByName: 'ana',
     detail: null,
     ...overrides,
@@ -121,16 +123,25 @@ beforeEach(() => {
 })
 
 describe('AdminQueuePage', () => {
-  /** A table waiting for review is the admin's screen for that table; a request is not linked anywhere. */
-  it('links a table waiting for review to its admin detail and a request to nothing', async () => {
+  /**
+   * A table waiting for review is the admin's screen for that table; a request has none of its own. In
+   * both, the requester is a person with an admin screen of their own, in the table and in the phone card.
+   */
+  it('links a table waiting for review to its admin detail and the requester to their account', async () => {
     list.mockResolvedValue(page([table(), item()]))
 
     renderPage()
 
     const tableRow = await rowFor('La maldición de Strahd')
     expect(tableRow.getByRole('link', { name: 'La maldición de Strahd' })).toHaveAttribute('href', '/admin/tables/table-1')
+    expect(tableRow.getByRole('link', { name: 'ana' })).toHaveAttribute('href', '/admin/users/user-2')
     const requestRow = await rowFor('Rol de master')
-    expect(requestRow.queryByRole('link')).not.toBeInTheDocument()
+    expect(requestRow.getAllByRole('link')).toHaveLength(1)
+    expect(requestRow.getByRole('link', { name: 'dami' })).toHaveAttribute('href', '/admin/users/user-1')
+    // The narrow layout is another render of the same columns, and has to link as well.
+    const links = screen.getAllByRole('link', { name: 'dami' })
+    expect(links).toHaveLength(2)
+    links.forEach((link) => expect(link).toHaveAttribute('href', '/admin/users/user-1'))
   })
 
   /**

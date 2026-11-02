@@ -395,7 +395,7 @@ public class ApprovalService {
         SearchQuery query = SearchQueryParser.parse(rawQuery, ApprovalSearchField.wireNames());
         Page<ApprovalRequest> page =
                 approvalRequestRepository.findAll(ApprovalSearchSpecification.mine(query, actorId), pageable);
-        return PageResponse.from(page.map(approvalMapper::toSummaryResponse));
+        return summariesOf(page);
     }
 
     /**
@@ -417,7 +417,32 @@ public class ApprovalService {
         SearchQuery query = SearchQueryParser.parse(rawQuery, ApprovalSearchField.wireNames());
         Page<ApprovalRequest> page =
                 approvalRequestRepository.findAll(ApprovalSearchSpecification.forAdmin(query), pageable);
-        return PageResponse.from(page.map(approvalMapper::toSummaryResponse));
+        return summariesOf(page);
+    }
+
+    /**
+     * A page of requests as rows, each with the table it is about.
+     *
+     * <p>A pause points at its table; a veto points at an application, whose table is read for the
+     * whole page in one query ({@code RegistrationService.tableIdsOf}) instead of one per row.
+     *
+     * @param page the requests of one page
+     * @return the same page as summaries
+     */
+    private PageResponse<ApprovalRequestSummaryResponse> summariesOf(Page<ApprovalRequest> page) {
+        List<String> registrationIds = page.getContent().stream()
+                .filter(request -> ApprovalEntityResolver.TABLE_REGISTRATION.equals(request.getEntityType()))
+                .map(ApprovalRequest::getEntityId)
+                .toList();
+        Map<String, String> tableByRegistration = registrationService.tableIdsOf(registrationIds);
+        return PageResponse.from(page.map(request -> approvalMapper.toSummaryResponse(
+                request,
+                switch (request.getEntityType()) {
+                    case ApprovalEntityResolver.GAME_TABLE -> request.getEntityId();
+                    case ApprovalEntityResolver.TABLE_REGISTRATION ->
+                            tableByRegistration.get(request.getEntityId());
+                    default -> null;
+                })));
     }
 
     /**

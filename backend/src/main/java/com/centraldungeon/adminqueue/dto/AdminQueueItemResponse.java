@@ -13,9 +13,10 @@ import org.jspecify.annotations.Nullable;
  * a piece of feedback, all answering the same five questions. What is it, who is waiting, since when,
  * and whether somebody already took it.
  *
- * <p>The two people are <b>names and never ids</b>, resolved by the service: a tray that printed
+ * <p>The two people are <b>shown as names</b>, resolved by the service: a tray that printed
  * {@code 0192f3...} would be asking the reader to go look somebody up before they can decide what to
- * do, which is the opposite of a work tray (ADR-20 §4).
+ * do, which is the opposite of a work tray (ADR-20 §4). The requester's id travels beside the name
+ * only so the name can be a link to the person; the claiming admin is always the reader and needs none.
  *
  * @param type            which table the row came from, as {@code AdminQueueSource} spells it:
  *                        {@code approval_request} or {@code game_table}. It is half of the address of
@@ -26,6 +27,7 @@ import org.jspecify.annotations.Nullable;
  * @param kind            the fine discriminator, as {@code AdminQueueItemKind} spells it. What the
  *                        frontend picks the icon and the sentence from (ADR-23 §3)
  * @param title           what the item is about at a glance: the table's name, or the kind of request
+ * @param requestedById   the id of that person, so the screen can link the name to their page
  * @param requestedByName who provoked it - the person who asked, or the master whose table is in
  *                        review. A display name, always
  * @param detail          the justification the requester wrote. Null for a table, which has none: the
@@ -44,6 +46,7 @@ public record AdminQueueItemResponse(
         String id,
         String kind,
         String title,
+        String requestedById,
         String requestedByName,
         @Nullable String detail,
         LocalDateTime waitingSince,

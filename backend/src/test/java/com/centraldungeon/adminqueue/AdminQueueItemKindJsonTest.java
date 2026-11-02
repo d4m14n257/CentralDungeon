@@ -58,6 +58,7 @@ class AdminQueueItemKindJsonTest {
                 "table-1",
                 AdminQueueItemKind.TableWaitingReview.wireName(),
                 "La Cripta",
+                "master-1",
                 "ana",
                 null,
                 LocalDateTime.parse("2026-09-01T10:00"),

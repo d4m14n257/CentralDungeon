@@ -529,6 +529,27 @@ class ApprovalServiceTest {
     }
 
     /**
+     * A row carries who asked (to link their name) and the table it concerns (to link that too): the
+     * pause names its table directly, the veto through its application - resolved for the whole page in
+     * one call - and a request about a person names none.
+     */
+    @Test
+    void aPageSaysWhoAskedAndWhichTableEachRequestIsAbout() {
+        ApprovalRequest pause = pendingAbout(ApprovalRequestType.TablePause, "table-1");
+        ApprovalRequest veto = pendingAbout(ApprovalRequestType.PlayerBan, "registration-1");
+        ApprovalRequest grant = pending(ApprovalRequestType.MasterGrant);
+        when(approvalRequestRepository.findAll(ArgumentMatchers.<Specification<ApprovalRequest>>any(), eq(FIRST_PAGE)))
+                .thenReturn(new PageImpl<>(List.of(pause, veto, grant)));
+        when(registrationService.tableIdsOf(List.of("registration-1"))).thenReturn(Map.of("registration-1", "table-2"));
+
+        var rows = service().search(null, FIRST_PAGE).content();
+
+        assertThat(rows).extracting("requestedById").containsOnly("user-1");
+        assertThat(rows).extracting("gameTableId").containsExactly("table-1", "table-2", null);
+        verify(registrationService).tableIdsOf(List.of("registration-1"));
+    }
+
+    /**
      * That the requester's filter is forced and cannot be widened from the box is proven
      * against the specification itself, in {@code ApprovalSearchSpecificationTest}: that is where the
      * rule. Here it is enough that the read goes through it.

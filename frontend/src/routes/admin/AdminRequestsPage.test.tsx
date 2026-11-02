@@ -27,9 +27,11 @@ function request(overrides: Partial<ApprovalRequestSummary> = {}): ApprovalReque
     id: 'req-1',
     type: 'MasterGrant',
     status: 'Pending',
+    requestedById: 'user-1',
     requestedByName: 'dami',
     justification: 'Quiero dirigir una mesa de terror',
     claimedByName: null,
+    gameTableId: null,
     createdAt: '2026-03-04T12:00:00',
     ...overrides,
   }
@@ -198,6 +200,32 @@ describe('AdminRequestsPage', () => {
 
     const dialog = within(await screen.findByRole('dialog'))
     expect(await dialog.findByRole('link', { name: 'Ver la mesa' })).toHaveAttribute('href', '/admin/tables/table-7')
+  })
+
+  /**
+   * The row leads to the person who asked and, when the request is about a table (a pause, or a veto
+   * through its application), to the table — in the table and in the phone card alike.
+   */
+  it('links the requester and the table from the row', async () => {
+    list.mockResolvedValue(
+      page([
+        request({ type: 'PlayerBan', gameTableId: 'table-9' }),
+        request({ id: 'req-2', requestedById: 'user-2', requestedByName: 'ana' }),
+      ]),
+    )
+
+    renderPage()
+
+    const row = await rowFor('dami')
+    expect(row.getByRole('link', { name: 'dami' })).toHaveAttribute('href', '/admin/users/user-1')
+    expect(row.getByRole('link', { name: 'Ver la mesa' })).toHaveAttribute('href', '/admin/tables/table-9')
+    // Both layouts render: a veto's table is linked in the card too, and a request about a person has none.
+    const tableLinks = screen.getAllByRole('link', { name: 'Ver la mesa' })
+    expect(tableLinks).toHaveLength(2)
+    tableLinks.forEach((link) => expect(link).toHaveAttribute('href', '/admin/tables/table-9'))
+    const other = await rowFor('ana')
+    expect(other.getByRole('link', { name: 'ana' })).toHaveAttribute('href', '/admin/users/user-2')
+    expect(other.queryByRole('link', { name: 'Ver la mesa' })).not.toBeInTheDocument()
   })
 
   /** The reason is the row: an admin decides on it and on nothing else. */

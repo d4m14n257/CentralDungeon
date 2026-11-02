@@ -1,7 +1,7 @@
 package com.centraldungeon.files;
 
 /**
- * One place a file is being used, right now. Internal projection, like {@link FileUsageCount}: it
+ * One place a file is being used, right now. Internal projection, not a DTO: it
  * never crosses HTTP - {@code FileUsageResponse} is what does.
  *
  * <p><b>Not the same question as {@link FileCategory}, though it carries one.</b> A cajón says the

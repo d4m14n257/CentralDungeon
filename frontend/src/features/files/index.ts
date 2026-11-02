@@ -48,6 +48,7 @@ export { stagedKey } from '@/types/file'
 
 export type {
   AdminFile,
+  AdminFileTable,
   AdminUploadedFile,
   CommitResult,
   FileCategory,

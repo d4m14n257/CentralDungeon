@@ -191,6 +191,19 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     boolean existsByGameTable_IdAndStatusIn(String gameTableId, Collection<TableRegistrationStatus> statuses);
 
     /**
+     * The table of each of these applications, in one query for the whole page.
+     *
+     * <p>Named parameters only, never positional (ADR-03 §2).
+     *
+     * @param registrationIds the applications
+     * @return one row per application that exists. Soft-deleted ones are included: the question is
+     *         where a request pointed, not whether the application is still alive
+     */
+    @Query("select new com.centraldungeon.registrations.RegistrationTable(r.id, r.gameTable.id) "
+            + "from TableRegistration r where r.id in :registrationIds")
+    List<RegistrationTable> findTablesByRegistrationIds(@Param("registrationIds") Collection<String> registrationIds);
+
+    /**
      * Every registration of a table, whatever its status - what the delete cascade walks (ADR-03 §7, ADR-07 §6).
      *
      * @param gameTableId the table

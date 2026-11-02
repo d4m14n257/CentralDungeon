@@ -44,31 +44,12 @@ public interface TableFileRepository extends JpaRepository<TableFile, TableFileI
     List<TableFile> findById_FileIdAndStatus(String fileId, TableFileStatus status);
 
     /**
-     * Counts, in one grouped query, how many tables hold each of the given files - so a page of
-     * twenty files on /admin/files costs one round trip instead of twenty.
-     *
-     * <p>Named parameters only, never positional (ADR-03 §2).
-     *
-     * @param fileIds the files to count. A file nothing points at is absent from the result rather
-     *                than reported as zero
-     * @return one row per file that has at least one live link
-     */
-    @Query("""
-            select new com.centraldungeon.files.FileUsageCount(link.id.fileId, count(link))
-            from TableFile link
-            where link.id.fileId in :fileIds
-              and link.status = com.centraldungeon.files.TableFileStatus.Current
-            group by link.id.fileId
-            """)
-    List<FileUsageCount> countUsesByFileIds(@Param("fileIds") Collection<String> fileIds);
-
-    /**
      * Which tables hold each of the given files, <b>named</b>, in one query for the whole page.
      *
-     * <p>The difference from {@link #countUsesByFileIds} is who is asking. An admin wants the number
-     * - one file, three tables - because the point is that linking is not copying (ADR-14 §1). An owner
-     * looking at their own list wants the names, because "the sheet I use on Hijos del Vacío" is how
-     * a person recognises their own file (ADR-14 §3).
+     * <p>Two readers ask it. An owner looking at their own list wants the names, because "the sheet I
+     * use on Hijos del Vacío" is how a person recognises their own file (ADR-14 §3). An admin looking
+     * at the library wants them too - one file, three tables, the point being that linking is not
+     * copying (ADR-14 §1) - and each one as a link to its admin page.
      *
      * <p>Joined against {@code GameTable} rather than reading the id off the key: the name is the
      * whole reason this exists, and the alternative - collect ids here, fetch tables in a second
