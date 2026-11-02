@@ -125,7 +125,10 @@ SPACING = [("1", "4px"), ("2", "8px"), ("3", "12px"), ("4", "16px"),
            ("5", "20px"), ("6", "24px"), ("8", "32px"), ("10", "40px"),
            ("12", "48px"), ("16", "64px")]
 RADII = [("sm", "4px"), ("md", "6px"), ("lg", "8px"), ("xl", "12px"), ("2xl", "16px")]
-SIZES = [("xs", "12px", "16px"), ("sm", "14px", "20px"), ("base", "16px", "24px"),
+# `2xs` is the smallest text the app allows (the wizard rail, the weekly grid's blocks and hours):
+# 11px reads on a phone where 10px did not, and the 14px line height keeps two lines of a block
+# label from touching. Nothing smaller than `xs` is written as an arbitrary value (ADR-21 §1).
+SIZES = [("2xs", "11px", "14px"), ("xs", "12px", "16px"), ("sm", "14px", "20px"), ("base", "16px", "24px"),
          ("lg", "18px", "28px"), ("xl", "20px", "28px"), ("2xl", "24px", "32px"),
          ("3xl", "30px", "36px"), ("4xl", "36px", "40px")]
 
@@ -496,6 +499,24 @@ for surface_name, surface_hex in [("canvas", DARK["canvas"]), ("surface", DARK["
 for surface_name, surface_hex in [("canvas", LIGHT["canvas"]), ("surface", LIGHT["surface"])]:
     report.append((f"brand-fg / light text on {surface_name}", r2(ACCENTS["violet"]["700"], surface_hex)))
 
+# The weekly grid's own block (the master's role stripe) is neither a button nor a badge, so it has
+# its own pair. The fill is the accent at 85% laid over the canvas it sits on, mixed into one opaque
+# colour so the contrast is measured on what is really painted, and the text is whichever of white
+# or near-black reads better on it, as for the primary button.
+def mix(fg_hex, bg_hex, alpha):
+    a, b = (tuple(int(h.lstrip("#")[i:i+2], 16) for i in (0, 2, 4)) for h in (fg_hex, bg_hex))
+    return "#" + "".join(f"{round(x * alpha + y * (1 - alpha)):02x}" for x, y in zip(a, b))
+
+SLOT_ALPHA = 0.85
+slot = {}
+for theme_name, t_, brand in (("dark", DARK, ACCENTS["violet"]["500"]), ("light", LIGHT, ACCENTS["violet"]["600"])):
+    bg = mix(brand, t_["canvas"], SLOT_ALPHA)
+    slot[theme_name] = (bg, on_solid(bg))
+    report.append((f"slot master / {theme_name} text on block", r2(slot[theme_name][1], bg)))
+lines += ["", "  /* -- weekly grid: the block of a table the reader directs -- */",
+          f"  --color-slot-master-bg: {slot['dark'][0]};",
+          f"  --color-slot-master-fg: {slot['dark'][1]};"]
+
 lines += ["}", "",
           "/* Native UI - scrollbars, form controls, the overscroll gutter - follows the theme too.",
           "   Without it the browser paints them light while the app is dark. */",
@@ -510,6 +531,8 @@ for key, _, _ in STATES:
     s = LIGHT["state"][key]
     for part in ["dot", "bg", "fg"]:
         lines.append(f"  --color-state-{key}-{part}: {s[part]};")
+lines.append(f"  --color-slot-master-bg: {slot['light'][0]};")
+lines.append(f"  --color-slot-master-fg: {slot['light'][1]};")
 lines.append(f"  --color-primary-foreground: {on_solid(light_primary)};")
 lines.append(f"  --color-destructive-foreground: {on_solid(light_destructive)};")
 lines.append("}")

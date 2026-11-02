@@ -82,7 +82,7 @@ export function MySchedulePage() {
           {/* Two items, because two is how much the colour says. */}
           <div className="text-fg-muted flex flex-wrap gap-x-5 gap-y-2 text-sm">
             <span className="flex items-center gap-2">
-              <span aria-hidden className="bg-brand-500/85 inline-block size-3 rounded-sm" />
+              <span aria-hidden className="bg-slot-master-bg inline-block size-3 rounded-sm" />
               {t('schedule.legendMaster')}
             </span>
             <span className="flex items-center gap-2">

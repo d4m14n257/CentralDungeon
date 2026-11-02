@@ -18,6 +18,14 @@ import type { WeeklyCommitment } from '../types'
 /** How tall one hour is. The whole day fits without scrolling inside the grid's own container. */
 const PX_PER_HOUR = 26
 
+/** Colours of a block by who it belongs to: the reader directs it, plays at it, or is building it now. */
+const ROLE_CLASSES = {
+  Master: 'bg-slot-master-bg text-slot-master-fg',
+  // The ring is what keeps it a shape: the soft fill alone is almost the colour of the page in either theme.
+  Player: 'bg-state-active-bg text-state-active-fg ring-state-active-dot ring-1 ring-inset',
+  new: 'bg-state-open-bg text-state-open-fg ring-state-open-dot ring-1',
+} as const
+
 /** Hours in a day, which is how many rows the grid has and how many cells a day column offers. */
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour)
 
@@ -25,6 +33,9 @@ const HOURS = Array.from({ length: 24 }, (_, hour) => hour)
 interface Piece {
   key: string
   dayIndex: number
+  /** Minutes from midnight to where it starts, in the reader's zone. */
+  startMinuteOfDay: number
+  durationMinutes: number
   top: number
   height: number
   label: string
@@ -97,6 +108,8 @@ export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPick
         pieces.push({
           key: `${commitment.tableId}-${block.startMinute}-${index}`,
           dayIndex: part.dayIndex,
+          startMinuteOfDay: part.startMinuteOfDay,
+          durationMinutes: part.durationMinutes,
           top: (part.startMinuteOfDay / 60) * PX_PER_HOUR,
           height: (part.durationMinutes / 60) * PX_PER_HOUR,
           label: commitment.tableName,
@@ -113,6 +126,8 @@ export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPick
       pieces.push({
         key: `pending-${blockIndex}-${index}`,
         dayIndex: part.dayIndex,
+        startMinuteOfDay: part.startMinuteOfDay,
+        durationMinutes: part.durationMinutes,
         top: (part.startMinuteOfDay / 60) * PX_PER_HOUR,
         height: (part.durationMinutes / 60) * PX_PER_HOUR,
         label: t('schedule.thisTable'),
@@ -144,87 +159,145 @@ export function WeeklyScheduleGrid({ commitments, timeZone, pending = [], onPick
   }, [firstBusyHour])
 
   return (
-    <div ref={viewport} className="border-border max-h-[70vh] overflow-auto rounded-lg border">
-      <div className="grid min-w-[42rem] grid-cols-[3.5rem_repeat(7,1fr)]">
-        <span aria-hidden className="border-border bg-raised sticky top-0 z-10 border-r border-b" />
-        {WEEKDAYS.map((day) => (
-          <span
-            key={day}
-            className="border-border bg-raised text-fg-muted sticky top-0 z-10 border-b px-1 py-1.5 text-center text-xs font-medium"
-          >
-            {weekdayName(day, i18n.language, 'short')}
-          </span>
-        ))}
-
-        <div className="border-border border-r">
-          {HOURS.map((hour) => (
-            <div
-              key={hour}
-              className="text-fg-subtle border-border flex items-start justify-end border-b pr-1.5 text-[10px] tabular-nums"
-              style={{ height: PX_PER_HOUR }}
+    <>
+      {/* From `md` up, the grid; below it, the same week as a list by day (ADR-21 §7). */}
+      <div ref={viewport} className="border-border hidden max-h-[70vh] overflow-auto rounded-lg border md:block">
+        {/* 42rem: seven day columns that still fit a block label, plus the hour gutter of 3.5rem. */}
+        <div className="grid min-w-[42rem] grid-cols-[3.5rem_repeat(7,1fr)]">
+          <span aria-hidden className="border-border bg-raised sticky top-0 z-10 border-r border-b" />
+          {WEEKDAYS.map((day) => (
+            <span
+              key={day}
+              className="border-border bg-raised text-fg-muted sticky top-0 z-10 border-b px-1 py-1.5 text-center text-xs font-medium"
             >
-              {formatMinutes(hour * 60)}
+              {weekdayName(day, i18n.language, 'short')}
+            </span>
+          ))}
+
+          <div className="border-border border-r">
+            {HOURS.map((hour) => (
+              <div
+                key={hour}
+                className="text-fg-subtle border-border flex items-start justify-end border-b pr-1.5 text-2xs tabular-nums"
+                style={{ height: PX_PER_HOUR }}
+              >
+                {formatMinutes(hour * 60)}
+              </div>
+            ))}
+          </div>
+
+          {WEEKDAYS.map((day, dayIndex) => (
+            <div key={day} className="border-border relative border-r last:border-r-0">
+              {HOURS.map((hour) => {
+                const isTaken = taken.has(`${dayIndex}-${hour}`)
+                const label = `${weekdayName(day, i18n.language)} ${formatMinutes(hour * 60)}`
+                return onPickHour && !isTaken ? (
+                  <button
+                    key={hour}
+                    type="button"
+                    aria-label={t('schedule.pickHour', { slot: label })}
+                    onClick={() => onPickHour(localWeekMinuteToUtc(dayIndex * 24 * 60 + hour * 60, timeZone))}
+                    className="border-border hover:bg-accent block w-full border-b"
+                    style={{ height: PX_PER_HOUR }}
+                  />
+                ) : (
+                  <div key={hour} className="border-border border-b" style={{ height: PX_PER_HOUR }} />
+                )
+              })}
+
+              {pieces
+                .filter((piece) => piece.dayIndex === dayIndex)
+                .map((piece) => {
+                  const shape = cn(
+                    'text-2xs absolute inset-x-0.5 overflow-hidden rounded-sm px-1 py-0.5 leading-tight',
+                    ROLE_CLASSES[piece.role],
+                  )
+                  // A block with nowhere to go must not eat the click of the free hour underneath it,
+                  // which is what `pointer-events-none` is for. One that leads somewhere is a link and
+                  // has to take it.
+                  return piece.href ? (
+                    <Link
+                      key={piece.key}
+                      to={piece.href}
+                      title={piece.title}
+                      aria-label={piece.title}
+                      className={cn(shape, 'hover:ring-brand-fg block hover:ring-2')}
+                      style={{ top: piece.top, height: piece.height }}
+                    >
+                      {piece.label}
+                    </Link>
+                  ) : (
+                    <span
+                      key={piece.key}
+                      title={piece.title}
+                      className={cn(shape, 'pointer-events-none')}
+                      style={{ top: piece.top, height: piece.height }}
+                    >
+                      {piece.label}
+                    </span>
+                  )
+                })}
             </div>
           ))}
         </div>
-
-        {WEEKDAYS.map((day, dayIndex) => (
-          <div key={day} className="border-border relative border-r last:border-r-0">
-            {HOURS.map((hour) => {
-              const isTaken = taken.has(`${dayIndex}-${hour}`)
-              const label = `${weekdayName(day, i18n.language)} ${formatMinutes(hour * 60)}`
-              return onPickHour && !isTaken ? (
-                <button
-                  key={hour}
-                  type="button"
-                  aria-label={t('schedule.pickHour', { slot: label })}
-                  onClick={() => onPickHour(localWeekMinuteToUtc(dayIndex * 24 * 60 + hour * 60, timeZone))}
-                  className="border-border hover:bg-accent block w-full border-b"
-                  style={{ height: PX_PER_HOUR }}
-                />
-              ) : (
-                <div key={hour} className="border-border border-b" style={{ height: PX_PER_HOUR }} />
-              )
-            })}
-
-            {pieces
-              .filter((piece) => piece.dayIndex === dayIndex)
-              .map((piece) => {
-                const shape = cn(
-                  'absolute inset-x-0.5 overflow-hidden rounded-sm px-1 py-0.5 text-[10px] leading-tight',
-                  piece.role === 'Master' && 'bg-brand-500/85 text-white',
-                  // The ring is what keeps it a shape: the soft fill alone is almost the colour of the page in either theme.
-                  piece.role === 'Player' && 'bg-state-active-bg text-state-active-fg ring-state-active-dot ring-1 ring-inset',
-                  piece.role === 'new' && 'bg-state-open-bg text-state-open-fg ring-state-open-dot ring-1',
-                )
-                // A block with nowhere to go must not eat the click of the free hour underneath it,
-                // which is what `pointer-events-none` is for. One that leads somewhere is a link and
-                // has to take it.
-                return piece.href ? (
-                  <Link
-                    key={piece.key}
-                    to={piece.href}
-                    title={piece.title}
-                    aria-label={piece.title}
-                    className={cn(shape, 'hover:ring-brand-fg block hover:ring-2')}
-                    style={{ top: piece.top, height: piece.height }}
-                  >
-                    {piece.label}
-                  </Link>
-                ) : (
-                  <span
-                    key={piece.key}
-                    title={piece.title}
-                    className={cn(shape, 'pointer-events-none')}
-                    style={{ top: piece.top, height: piece.height }}
-                  >
-                    {piece.label}
-                  </span>
-                )
-              })}
-          </div>
-        ))}
       </div>
+      <WeeklyScheduleDayList pieces={pieces} />
+    </>
+  )
+}
+
+/** Compact length of a block: "3 h", "45 min", "2 h 45 min", in the reader's language. */
+function formatDuration(minutes: number, locale: string): string {
+  const unit = (value: number, name: 'hour' | 'minute') =>
+    new Intl.NumberFormat(locale, { style: 'unit', unit: name, unitDisplay: 'short' }).format(value)
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return [hours > 0 && unit(hours, 'hour'), rest > 0 && unit(rest, 'minute')].filter(Boolean).join(' ')
+}
+
+/**
+ * The same week as {@link WeeklyScheduleGrid}'s pieces, written out by day for a phone (ADR-21 §7).
+ *
+ * Each day that has something on it gets its blocks in order — hour, length and table — readable
+ * whole, without scrolling sideways or cutting a name short. **Days with nothing on them are
+ * left out**: seven headings with "nothing" under most of them is the grid's emptiness all over
+ * again. Hours are not claimed here: in the wizard the slot is added with the editor beside it.
+ *
+ * @param props.pieces the drawn pieces of the week, which carry their day, start and length
+ */
+function WeeklyScheduleDayList({ pieces }: { pieces: Piece[] }) {
+  const { t, i18n } = useTranslation('tables')
+
+  return (
+    <div className="space-y-4 md:hidden">
+      {WEEKDAYS.map((day, dayIndex) => {
+        const ofDay = pieces.filter((piece) => piece.dayIndex === dayIndex).sort((a, b) => a.startMinuteOfDay - b.startMinuteOfDay)
+        if (ofDay.length === 0) return null
+        return (
+          <section key={day} className="space-y-2">
+            <h3 className="section-label">{weekdayName(day, i18n.language)}</h3>
+            <ul className="list-divided">
+              {ofDay.map((piece) => (
+                <li key={piece.key} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+                  <span aria-hidden className={cn('inline-block size-3 shrink-0 rounded-sm', ROLE_CLASSES[piece.role])} />
+                  <span className="shrink-0 text-sm tabular-nums">
+                    {formatMinutes(piece.startMinuteOfDay)}–{formatMinutes(piece.startMinuteOfDay + piece.durationMinutes)}
+                  </span>
+                  <span className="text-fg-muted shrink-0 text-xs">{formatDuration(piece.durationMinutes, i18n.language)}</span>
+                  {piece.href ? (
+                    <Link to={piece.href} className="min-w-0 flex-1 basis-40 wrap-anywhere hover:underline">
+                      {piece.label}
+                    </Link>
+                  ) : (
+                    <span className="min-w-0 flex-1 basis-40 wrap-anywhere">{piece.label}</span>
+                  )}
+                  {piece.role !== 'new' && <span className="text-fg-subtle shrink-0 text-xs">{t(`schedule.role.${piece.role}`)}</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })}
     </div>
   )
 }

@@ -47,7 +47,7 @@ Express + TypeScript, 6 routers, ~35 endpoints, 1735 líneas de handlers (`table
 | Etapa | Qué entregó |
 |---|---|
 | **E0** — Diseño del frontend | `frontend-diseno.md`: principios, navegación por contexto, sitemap, wireframes, inventario de componentes y mapeo legacy→nuevo. Sin código |
-| **E0.5** — Sistema de diseño | Los tokens en `design/build.py`, transcriptos al `@theme` (ADR-21 §1, §2); las 28 rutas del sitemap diseñadas en los dos temas; el contraste medido en cada build (hoy 34 pares de texto y 6 gráficos, WCAG AA) |
+| **E0.5** — Sistema de diseño | Los tokens en `design/build.py`, transcriptos al `@theme` (ADR-21 §1, §2); las 28 rutas del sitemap diseñadas en los dos temas; el contraste medido en cada build (hoy 36 pares de texto y 6 gráficos, WCAG AA) |
 | **E1** — Rebanada usable | Los dos scaffolds; **toda la seguridad** (OAuth2 con Discord y membresía al guild, access token corto + refresh rotativo en cookie `httpOnly`, CSRF solo en `/auth/refresh`, JWT que afirma identidad y no autorización, pertenencia en cada recurso — ADR-05 §5, §3, §2); y el primer flujo de punta a punta: entrar, ver mesas, postularse, ser aceptado o rechazado. **Estrenó el doble de login de pruebas** (`TestLoginController`, `TestDiscordController`, ADR-24 §1): no hay una aplicación de Discord registrada para desarrollo, y sin el doble no se puede probar nada autenticado |
 | **E2** — Ciclo de vida de la mesa (parcial) | La máquina de estados de la mesa con su historial, el wizard de creación y la pestaña de estado, y el lenguaje de búsqueda de toda la app (ADR-22 §1). El resto de lo que prometía se redistribuyó en las fases |
 

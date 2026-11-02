@@ -73,4 +73,3 @@
 
 - El handle de React Flow mide 6 px y lo dibuja su propia hoja **sin capa**, que le gana a todo `@layer`. Por eso su tamaño (`calc(var(--spacing) * 3)`) es una regla sin capa en `base.css`, junto a las correcciones de shadcn: no es deuda, pero es la única excepción del lienzo a «todo en `@layer components`».
 
-- Valores sueltos fuera del `@theme` (regla dura 18 «Ningún texto ni valor de estilo suelto»): `text-[11px]` en `WizardSteps`, y `text-[10px]`, `text-white` y `bg-brand-500/85` en `WeeklyScheduleGrid`. Ya están decididos (ADR-21 «Diseño visual e interacción» §1 «Manda el diseño, que vive en `design/build.py` y Claude Design, y el JSX solo usa sus tokens»): los tamaños pasan a `text-2xs` y los colores de la franja a tokens de `build.py`; `PX_PER_HOUR` se queda como constante del componente. Falta hacerlo.

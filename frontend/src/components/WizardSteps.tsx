@@ -92,7 +92,7 @@ export function WizardSteps<Id extends string>({ steps, currentIndex, label, sta
               </span>
               <span
                 className={cn(
-                  'text-center text-[11px] leading-tight',
+                  'text-2xs text-center leading-tight',
                   current ? 'text-fg font-medium' : done ? 'text-fg-muted' : 'text-fg-subtle',
                 )}
               >

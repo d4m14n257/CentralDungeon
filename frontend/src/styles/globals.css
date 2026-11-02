@@ -13,6 +13,8 @@
   --font-serif: 'Spectral', ui-serif, Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
+  --text-2xs: 11px;
+  --text-2xs--line-height: 14px;
   --text-xs: 12px;
   --text-xs--line-height: 16px;
   --text-sm: 14px;
@@ -132,6 +134,10 @@
 
   /* -- accent used as text (karma, links, the wordmark's second half) -- */
   --color-brand-fg: #8e7ce0;
+
+  /* -- weekly grid: the block of a table the reader directs -- */
+  --color-slot-master-bg: #5f4db3;
+  --color-slot-master-fg: #ffffff;
 }
 
 /* Native UI - scrollbars, form controls, the overscroll gutter - follows the theme too.
@@ -181,6 +187,8 @@
   --color-state-blocked-dot: #db2777;
   --color-state-blocked-bg: #fce7f3;
   --color-state-blocked-fg: #be185d;
+  --color-slot-master-bg: #6d5eb7;
+  --color-slot-master-fg: #ffffff;
   --color-primary-foreground: #ffffff;
   --color-destructive-foreground: #ffffff;
 }
