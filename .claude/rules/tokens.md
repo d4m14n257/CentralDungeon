@@ -21,3 +21,4 @@ paths:
 
 - Las clases de patrón (`styles/base.css`) sí se escriben a mano, y cada una se cataloga en `diseno` §5.c (ADR-21 §5).
 - Todo cambio visual se mira en los dos temas, claro y oscuro.
+- El modo oscuro cuelga de `data-theme` (next-themes), no de `prefers-color-scheme`: las clases `dark:` de `components/ui/` dependen de la línea `@custom-variant dark` que `build.py` escribe al inicio de `theme.css`. Sin ella siguen al sistema operativo (M37), así que no se borra al transcribir; `e2e/theme-variant.spec.ts` lo vigila.

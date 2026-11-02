@@ -415,7 +415,9 @@ cp_body = ["<h1>Componentes base</h1>",
 open(f"{OUT}/components.html", "w").write(page("Componentes", "Components", "".join(cp_body)))
 
 # ============ 6. theme.css ============
-lines = ["/* CentralDungeon design tokens — Tailwind 4 @theme block.",
+lines = ["/* The theme lives on `data-theme` (next-themes), not on the OS preference `dark:` follows by default. */",
+         "@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));", "",
+         "/* CentralDungeon design tokens — Tailwind 4 @theme block.",
          "   Source of truth: the design system (decision ADR-21 §1).",
          "   Transcribed into frontend/src/styles/globals.css. */", "", "@theme {",
          "  /* -- typography -- */",

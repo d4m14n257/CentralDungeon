@@ -194,8 +194,8 @@
 /* The destructive button ships with `text-white` on `bg-destructive`: in the dark theme that is white on
    #e57373, about 3:1. `--color-destructive-foreground` is the text colour measured against the fill in
    each theme by design/build.py, and the generated button ignores it - so it is applied here, on its
-   own `data-slot`, UNLAYERED for the same reason as the rules above. The `dark:` variant of that button
-   follows the OS preference and not the theme, so the fill is pinned too. */
+   own `data-slot`, UNLAYERED for the same reason as the rules above. The fill is pinned too: the
+   button's `dark:bg-destructive/60` would lighten it, and the measured contrast is against the full fill. */
 [data-slot='button'][data-variant='destructive'] {
   background-color: var(--color-destructive);
   color: var(--color-destructive-foreground);

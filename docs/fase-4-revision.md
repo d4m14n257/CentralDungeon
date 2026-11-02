@@ -454,6 +454,10 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 - **M33, implementada**: otorgar `Owner` responde `403 OWNER_NOT_GRANTABLE` para todo actor, y el diálogo de roles no lo ofrece. Un Owner solo puede quitarlo. **M38**, nuevo, decidido e implementado el mismo día: un Owner no puede darse `Admin` a sí mismo.
 - **Dos de los e2e de §2.4 ya tienen causa** y siguen en rojo, sin relación con estas decisiones. `admin-users.spec.ts:95` hacía clic en un botón «Historial» de la fila de `/admin/users`, que ya no existe: el historial vive en la ficha (ADR-06 «Roles y alcance» §8). **Se corrigió el test y pasa.** Su último paso comprueba ahora que el owner no encuentra en su propia cuenta ni `Owner` ni `Admin`. `profile-visibility.spec.ts:159` falla porque el admin sin `Player` que abre `/player/users/:id` vuelve a `/admin`, y espera M30 «Dónde vive el perfil».
 
+**Avance de los bugs que quedaban — 2026-11-01.**
+
+- **M37, corregido**: `@custom-variant dark` sobre `data-theme`. Sale de `design/build.py`, para que la próxima transcripción no lo pierda, y lo vigila `e2e/theme-variant.spec.ts`, que emula la preferencia del sistema contraria al tema. El parche de M6 en `base.css` se queda: el `dark:bg-destructive/60` de shadcn aclararía el relleno sobre el que `build.py` mide el contraste de 6,75:1. Quedan para una pasada visual en los dos temas los componentes de `components/ui/` que ahora cambian de verdad, entre ellos el `badge` destructivo, con `text-white` sobre `dark:bg-destructive/60`.
+
 
 ---
 
