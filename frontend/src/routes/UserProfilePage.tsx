@@ -4,11 +4,11 @@ import { useParams } from 'react-router'
 import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ProfileCard, useUserProfile } from '@/features/users'
+import { ProfileCard, useMe, useUserProfile } from '@/features/users'
 import { ApiError } from '@/types/api'
 
 /**
- * `/player/users/:id` — somebody else's profile, subject to the visibility rules of ADR-10 §1, §2 and
+ * `/users/:id` — somebody else's profile, subject to the visibility rules of ADR-10 §1, §2 and
  * ADR-10 §1.
  *
  * The backend answers **404** both when the id never existed and when the two-week window of ADR-10 §2
@@ -24,6 +24,7 @@ export function UserProfilePage() {
   const { id } = useParams<{ id: string }>()
   const userId = id ?? ''
   const { data, isPending, error, isLoadingError, refetch } = useUserProfile(userId)
+  const me = useMe()
 
   if (isPending) {
     return (
@@ -44,7 +45,7 @@ export function UserProfilePage() {
     return <ErrorState message={t('profile.loadErrorDescription')} onRetry={() => void refetch()} />
   }
 
-  return <ProfileCard profile={data} />
+  return <ProfileCard profile={data} viewerIsPlayer={me.data?.roles.includes('Player') ?? false} />
 }
 
 export { UserProfilePage as Component }

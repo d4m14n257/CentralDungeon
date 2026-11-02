@@ -10,6 +10,7 @@ import com.centraldungeon.files.StoredFile;
 import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.registrations.dto.BlockRegistrationRequest;
 import com.centraldungeon.registrations.dto.CreateRegistrationRequest;
+import com.centraldungeon.registrations.dto.MyRejectionResponse;
 import com.centraldungeon.registrations.dto.RegistrationFileResponse;
 import com.centraldungeon.registrations.dto.RegistrationResponse;
 import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
@@ -423,6 +424,36 @@ public class RegistrationService {
                 filesByRegistrationIds(page.getContent().stream().map(TableRegistration::getId).toList());
         return PageResponse.from(page.map(registration ->
                 registrationMapper.toResponse(registration, filesByRegistration.getOrDefault(registration.getId(), List.of()))));
+    }
+
+    /**
+     * The rejection the actor is still living under at a table, for the notice on that table's detail
+     * (ADR-09 §7): present only when their <b>latest</b> application there was rejected, so applying
+     * again - or withdrawing the new one - clears it. Two small reads for one table, nothing per row.
+     *
+     * <p>The lookup is keyed by the actor, who comes from the token (ADR-05 §5): it can only ever
+     * return their own rejection, never another applicant's.
+     *
+     * @param gameTableId the table whose detail is being read
+     * @param actorId     the reader, from the token
+     * @return their rejection, or null when they never applied, their latest application is not a
+     *         rejection, or it carries no rejection row
+     */
+    @Transactional(readOnly = true)
+    public @Nullable MyRejectionResponse findMyRejection(String gameTableId, String actorId) {
+        return registrationRepository.findFirstByGameTable_IdAndUser_IdOrderByCreatedAtDescIdDesc(gameTableId, actorId)
+                .filter(registration -> registration.getStatus() == TableRegistrationStatus.Rejected)
+                .flatMap(registration -> rejectionRepository.findByRegistration_Id(registration.getId()))
+                .map(rejection -> {
+                    // Same split as listMine: rejected_by null marks the system's own rejection, whose
+                    // stored text is a code and not words anybody wrote.
+                    boolean automatic = rejection.getRejectedBy() == null;
+                    return new MyRejectionResponse(
+                            automatic ? null : rejection.getDescription(),
+                            automatic ? rejection.getDescription() : null,
+                            rejection.getRejectedAt());
+                })
+                .orElse(null);
     }
 
     /**

@@ -45,6 +45,7 @@ function table(): GameTableDetail {
     scheduleConflict: false,
     applied: false,
     joined: true,
+    myRejection: null,
   }
 }
 

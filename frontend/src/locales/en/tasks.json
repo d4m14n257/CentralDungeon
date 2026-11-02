@@ -73,6 +73,7 @@
     "blanksFailed": "Could not upload: {{names}}. The request was saved; add them by editing it."
   },
   "submissions": {
+    "viewRecord": "View {{name}}'s card",
     "title": "Answers",
     "emptyTitle": "Nobody has answered yet",
     "emptyDescription": "When somebody hands something in, it will show up here with whatever they sent.",

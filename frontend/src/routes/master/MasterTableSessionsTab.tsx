@@ -32,6 +32,8 @@ interface OutletContext {
   status: GameTableStatus
   /** Set by /admin/tables/:id (ADR-06 §8): the calendar, its notes and who came, with nothing to change. */
   readOnly?: boolean
+  /** Opens a player's card (ADR-10 §6); the screen that mounts the tab decides what that is. */
+  onOpenPerson?: (userId: string) => void
 }
 
 /**
@@ -41,7 +43,17 @@ interface OutletContext {
  * It is collapsed by default: a calendar of twelve open sessions is a screen nobody can read, and
  * the header already says the only thing that gets read at a glance — when it is and how it went.
  */
-function SessionRow({ session, tableId, readOnly }: { session: TableSession; tableId: string; readOnly: boolean }) {
+function SessionRow({
+  session,
+  tableId,
+  readOnly,
+  onOpenPerson,
+}: {
+  session: TableSession
+  tableId: string
+  readOnly: boolean
+  onOpenPerson: ((userId: string) => void) | undefined
+}) {
   const { t, i18n } = useTranslation('master')
   const timeZone = browserTimeZone()
   const confirm = useConfirm()
@@ -160,6 +172,7 @@ function SessionRow({ session, tableId, readOnly }: { session: TableSession; tab
               roster={session.attendance}
               readOnly={readOnly}
               isSaving={recordAttendance.isPending}
+              onOpenPerson={onOpenPerson}
               onSave={(attendance) =>
                 recordAttendance.mutate(
                   { sessionId: session.id, request: { attendance } },
@@ -174,7 +187,7 @@ function SessionRow({ session, tableId, readOnly }: { session: TableSession; tab
   )
 }
 
-function SessionsPanel({ tableId, status, readOnly }: OutletContext) {
+function SessionsPanel({ tableId, status, readOnly, onOpenPerson }: OutletContext) {
   const { t } = useTranslation('master')
   // isLoadingError, not isError: see ADR-19 §4.
   const { data, isPending, isLoadingError, refetch } = useTableSessions(tableId)
@@ -204,7 +217,7 @@ function SessionsPanel({ tableId, status, readOnly }: OutletContext) {
       {status === 'Pause' && <p className="text-fg-muted text-sm">{t('sessions.pausedDescription')}</p>}
       <div className="space-y-2">
         {data.map((session) => (
-          <SessionRow key={session.id} session={session} tableId={tableId} readOnly={readOnly ?? false} />
+          <SessionRow key={session.id} session={session} tableId={tableId} readOnly={readOnly ?? false} onOpenPerson={onOpenPerson} />
         ))}
       </div>
     </div>

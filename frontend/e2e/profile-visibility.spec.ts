@@ -115,7 +115,7 @@ test('the asymmetry of ADR-10 §1: a player reads the master first, the master r
       .getByRole('link', { name: /e2e-prof-master/ })
       .first()
       .click()
-    await expect(player.page).toHaveURL(new RegExp(`/player/users/${master.id}$`))
+    await expect(player.page).toHaveURL(new RegExp(`/users/${master.id}$`))
     await expect(player.page.getByRole('heading', { name: 'Asistencia' })).toBeVisible()
 
     // ADR-10 §5 — karma and comments are F5, so the wireframe's lower half is not drawn at all.
@@ -148,7 +148,7 @@ test('somebody with no table in common cannot read another profile', async ({ br
   const other = await newAuthenticatedPage(browser, `e2e-prof-stranger-b-${runId}`, false, false)
 
   try {
-    await one.page.goto(`/player/users/${other.id}`)
+    await one.page.goto(`/users/${other.id}`)
     await expect(one.page.getByText('Ya no podés ver este perfil')).toBeVisible()
   } finally {
     await one.context.close()
@@ -162,7 +162,7 @@ test('an admin reads a profile nobody else could', async ({ browser }) => {
   const stranger = await newAuthenticatedPage(browser, `e2e-prof-stranger-c-${runId}`, false, false)
 
   try {
-    await admin.page.goto(`/player/users/${stranger.id}`)
+    await admin.page.goto(`/users/${stranger.id}`)
     await expect(admin.page.getByText('Ya no podés ver este perfil')).toBeHidden()
     await expect(admin.page.getByRole('heading', { name: 'Asistencia' })).toBeVisible()
   } finally {
@@ -180,8 +180,23 @@ test('the account menu leads to your own profile', async ({ browser }) => {
     await me.page.getByRole('button', { name: `e2e-prof-self-${runId}` }).click()
     await me.page.getByRole('menuitem', { name: 'Mi perfil' }).click()
 
-    await expect(me.page).toHaveURL(/\/player\/profile$/)
+    await expect(me.page).toHaveURL(/\/profile$/)
     await expect(me.page.getByRole('heading', { name: 'Asistencia' })).toBeVisible()
+  } finally {
+    await me.context.close()
+  }
+})
+
+/** An address that matches nothing keeps the header, at the root and under a context prefix. */
+test('a 404 is drawn inside the header, also under a context prefix', async ({ browser }) => {
+  const me = await newAuthenticatedPage(browser, `e2e-prof-404-${runId}`, false, false)
+
+  try {
+    for (const path of ['/nowhere', '/player/nowhere/deeper']) {
+      await me.page.goto(path)
+      await expect(me.page.getByRole('heading', { name: '404' })).toBeVisible()
+      await expect(me.page.getByRole('button', { name: `e2e-prof-404-${runId}` })).toBeVisible()
+    }
   } finally {
     await me.context.close()
   }

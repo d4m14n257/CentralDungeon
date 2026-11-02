@@ -1,6 +1,8 @@
+import { IdCard } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { IconAction } from '@/components/IconAction'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -21,6 +23,8 @@ interface AttendanceEditorProps {
    * /admin/tables/:id (ADR-06 §8). Attendance is the master's to record (ADR-08 §4).
    */
   readOnly?: boolean
+  /** Opens a player's card (ADR-10 §6). The screen that mounts the editor decides what that is; absent, no action. */
+  onOpenPerson?: ((userId: string) => void) | undefined
 }
 
 /**
@@ -35,9 +39,10 @@ interface AttendanceEditorProps {
  * @param props.roster   the roster the server returned
  * @param props.isSaving whether a save is in flight
  * @param props.onSave   what to do with the complete roster
- * @param props.readOnly show the roster as recorded, with no control (ADR-06 §8)
+ * @param props.readOnly     show the roster as recorded, with no control (ADR-06 §8)
+ * @param props.onOpenPerson opens a player's card
  */
-export function AttendanceEditor({ roster, isSaving, onSave, readOnly }: AttendanceEditorProps) {
+export function AttendanceEditor({ roster, isSaving, onSave, readOnly, onOpenPerson }: AttendanceEditorProps) {
   const { t } = useTranslation('tables')
   // The roster lives in local state while it is edited: it is a form, not server data.
   const [draft, setDraft] = useState<Record<string, AttendanceStatus>>(() =>
@@ -53,7 +58,16 @@ export function AttendanceEditor({ roster, isSaving, onSave, readOnly }: Attenda
       <ul className="list-divided-bare">
         {roster.map((line) => (
           <li key={line.userId} className="flex items-center justify-between gap-4 py-2">
-            <span className="truncate text-sm">{line.userName}</span>
+            <span className="flex min-w-0 items-center gap-1">
+              <span className="truncate text-sm">{line.userName}</span>
+              {onOpenPerson && (
+                <IconAction
+                  icon={<IdCard className="size-4" />}
+                  label={t('sessions.attendance.viewRecord', { name: line.userName })}
+                  onClick={() => onOpenPerson(line.userId)}
+                />
+              )}
+            </span>
             {readOnly ? (
               <span className="text-fg-muted text-sm">{t(`sessions.attendance.${line.attendance}`)}</span>
             ) : (

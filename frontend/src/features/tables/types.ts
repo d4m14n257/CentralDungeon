@@ -177,6 +177,24 @@ export interface GameTableDetail {
   applied: boolean
   /** Whether the reader is already a Player of the table - the apply button says so instead of "application in progress". */
   joined: boolean
+  /**
+   * Why the reader was turned down here, when their latest application to this table was rejected (ADR-09 §7).
+   * The server's, for the actor of the token; null when they never applied or applied again.
+   */
+  myRejection: MyRejection | null
+}
+
+/**
+ * Mirror of MyRejectionResponse (ADR-09 §7): the reader's own rejection at one table. Exactly one of
+ * `justification` and `reasonCode` is set, so the notice never has an empty reason.
+ */
+export interface MyRejection {
+  /** The master's own words, shown exactly as typed. Null when the system did the rejecting. */
+  justification: string | null
+  /** The code of a rejection the application wrote itself, today only `TABLE_FULL` (ADR-09 §3). Null when a person rejected. */
+  reasonCode: string | null
+  /** When it happened, as the API sends it (UTC). */
+  rejectedAt: string
 }
 
 /**
@@ -301,6 +319,7 @@ export interface TableStatusChange {
   id: string
   fromStatus: GameTableStatus
   toStatus: GameTableStatus
+  changedById: string
   changedByName: string
   justification: string | null
   createdAt: string

@@ -2,6 +2,7 @@ package com.centraldungeon.tables.dto;
 
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.files.dto.SharedFileResponse;
+import com.centraldungeon.registrations.dto.MyRejectionResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -59,6 +60,11 @@ import org.jspecify.annotations.Nullable;
  *                      actor is involved
  * @param joined        whether the actor of the token is already a Player of the table - the apply button
  *                      says they are in instead of "you applied". False where no actor is involved
+ * @param myRejection   why the <b>actor of the token</b> was turned down here, when their latest
+ *                      application to this table was rejected (ADR-09 §7), so the screen can say so and
+ *                      offer to apply again. Computed for the actor and never for an id from the URL
+ *                      (ADR-05 §5). Null when they never applied, when they applied again, and where no
+ *                      actor is involved
  */
 public record GameTableDetailResponse(
         String id,
@@ -84,5 +90,6 @@ public record GameTableDetailResponse(
         @Nullable LocalDateTime closedAt,
         boolean scheduleConflict,
         boolean applied,
-        boolean joined) {
+        boolean joined,
+        @Nullable MyRejectionResponse myRejection) {
 }

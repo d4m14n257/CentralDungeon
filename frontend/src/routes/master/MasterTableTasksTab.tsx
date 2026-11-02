@@ -28,6 +28,8 @@ interface OutletContext {
   tableId: string
   /** Set by /admin/tables/:id (ADR-06 §8): what the table asked and what came back, with nothing to publish or close. */
   readOnly?: boolean
+  /** Opens a person's card (ADR-10 §6); the screen that mounts the tab decides what that is. */
+  onOpenPerson?: (userId: string) => void
 }
 
 /**
@@ -56,7 +58,7 @@ interface OutletContext {
 export function MasterTableTasksTab() {
   const commit = useCommitStagedFiles()
   const { t } = useTranslation('tasks')
-  const { tableId, readOnly } = useOutletContext<OutletContext>()
+  const { tableId, readOnly, onOpenPerson } = useOutletContext<OutletContext>()
   const confirm = useConfirm()
 
   // isLoadingError, not isError: see ADR-19 §4.
@@ -170,6 +172,7 @@ export function MasterTableTasksTab() {
           onEdit={readOnly ? undefined : openEdit}
           onClose={readOnly ? undefined : (task) => void handleClose(task)}
           isBusy={update.isPending || close.isPending}
+          onOpenPerson={onOpenPerson}
           // The file list lives in `features/files`; this screen is where the two domains meet.
           renderFiles={(files) => <FileList files={files} />}
         />

@@ -87,6 +87,8 @@
     "usesValue_other": "{{count}} tables",
     "usesMore_one": "and {{count}} more",
     "usesMore_other": "and {{count}} more",
+    "usesDialogTitle": "Tables using {{name}}",
+    "usesDialogDescription": "Every table that uses this file, each linked to its admin page.",
     "emptyTitle": "The library is empty",
     "emptyDescription": "Once you upload the community's blank sheet or its rules, they will show up here.",
     "noResultsTitle": "No results",

@@ -2,6 +2,7 @@ package com.centraldungeon.registrations;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /** Reads and writes {@code registration_rejections} - the reason attached to a turned-down application. */
@@ -15,4 +16,12 @@ public interface RegistrationRejectionRepository extends JpaRepository<Registrat
      * @return their rejections. Never null; registrations that were not rejected simply have none
      */
     List<RegistrationRejection> findByRegistration_IdIn(Collection<String> registrationIds);
+
+    /**
+     * The reason behind one application, for the single-table read that has no page to batch over.
+     *
+     * @param registrationId the registration
+     * @return its rejection, or empty when it was not rejected
+     */
+    Optional<RegistrationRejection> findByRegistration_Id(String registrationId);
 }

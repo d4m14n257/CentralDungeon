@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { peekDestination } from '@/lib/postLoginDestination'
 import type { AppContext } from '@/stores/contextStore'
 import { RootRedirect } from './RootRedirect'
 
@@ -32,6 +33,7 @@ function renderRoot() {
         <Route path="/" element={<RootRedirect />} />
         <Route path="/player" element={<p>player home</p>} />
         <Route path="/admin" element={<p>admin home</p>} />
+        <Route path="/master/tables/:id" element={<p>deep link</p>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -42,6 +44,25 @@ describe('RootRedirect', () => {
     contexts = []
     isError = false
     retry.mockClear()
+    sessionStorage.clear()
+  })
+
+  /** The deep link followed before logging in is honoured once, and the home is only the fallback. */
+  it('sends the account to the page it was headed to before logging in, and forgets it', () => {
+    contexts = ['player', 'master']
+    sessionStorage.setItem('postLoginDestination', '/master/tables/t-1')
+    renderRoot()
+
+    expect(screen.getByText('deep link')).toBeInTheDocument()
+    expect(peekDestination()).toBeNull()
+  })
+
+  it('ignores a remembered destination that is not an in-app path', () => {
+    contexts = ['player']
+    sessionStorage.setItem('postLoginDestination', '//evil.example/x')
+    renderRoot()
+
+    expect(screen.getByText('player home')).toBeInTheDocument()
   })
 
   /** ADR-20 §3: the admin context's home is `/admin` itself, not the tray. */

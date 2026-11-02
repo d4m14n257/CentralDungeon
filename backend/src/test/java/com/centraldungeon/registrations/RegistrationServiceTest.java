@@ -324,6 +324,67 @@ class RegistrationServiceTest {
     }
 
     @Test
+    void myRejectionShowsAMasterJustificationAndTheDate() {
+        TableRegistration registration = persistedRegistration("reg-r1", "table-r1", TableRegistrationStatus.Rejected, null);
+        when(registrationRepository.findFirstByGameTable_IdAndUser_IdOrderByCreatedAtDescIdDesc("table-r1", "player-1"))
+                .thenReturn(Optional.of(registration));
+        RegistrationRejection rejection = rejectionAt(registration, "No encaja con el tono", persistedUser("master-9"));
+        when(rejectionRepository.findByRegistration_Id("reg-r1")).thenReturn(Optional.of(rejection));
+
+        var mine = registrationService.findMyRejection("table-r1", "player-1");
+
+        assertThat(mine).isNotNull();
+        assertThat(mine.justification()).isEqualTo("No encaja con el tono");
+        assertThat(mine.reasonCode()).isNull();
+        assertThat(mine.rejectedAt()).isEqualTo(LocalDateTime.of(2026, 10, 1, 12, 0));
+    }
+
+    @Test
+    void myRejectionReportsTheAutomaticOneAsACode() {
+        TableRegistration registration = persistedRegistration("reg-r2", "table-r2", TableRegistrationStatus.Rejected, null);
+        when(registrationRepository.findFirstByGameTable_IdAndUser_IdOrderByCreatedAtDescIdDesc("table-r2", "player-1"))
+                .thenReturn(Optional.of(registration));
+        when(rejectionRepository.findByRegistration_Id("reg-r2"))
+                .thenReturn(Optional.of(rejectionAt(registration, "TABLE_FULL", null)));
+
+        var mine = registrationService.findMyRejection("table-r2", "player-1");
+
+        assertThat(mine).isNotNull();
+        assertThat(mine.reasonCode()).isEqualTo("TABLE_FULL");
+        assertThat(mine.justification()).isNull();
+    }
+
+    @Test
+    void myRejectionIsNullOnceTheActorAppliedAgain() {
+        TableRegistration reapplied = persistedRegistration("reg-r3", "table-r3", TableRegistrationStatus.Candidate, null);
+        when(registrationRepository.findFirstByGameTable_IdAndUser_IdOrderByCreatedAtDescIdDesc("table-r3", "player-1"))
+                .thenReturn(Optional.of(reapplied));
+
+        assertThat(registrationService.findMyRejection("table-r3", "player-1")).isNull();
+        verifyNoInteractions(rejectionRepository);
+    }
+
+    @Test
+    void myRejectionIsNullForSomebodyWhoNeverApplied() {
+        when(registrationRepository.findFirstByGameTable_IdAndUser_IdOrderByCreatedAtDescIdDesc("table-r4", "player-1"))
+                .thenReturn(Optional.empty());
+
+        assertThat(registrationService.findMyRejection("table-r4", "player-1")).isNull();
+        verifyNoInteractions(rejectionRepository);
+    }
+
+    /** Somebody else's rejection never shows: the lookup is keyed by the reader, so a stranger gets nothing. */
+    @Test
+    void myRejectionNeverShowsAnotherPersonsRejection() {
+        when(registrationRepository.findFirstByGameTable_IdAndUser_IdOrderByCreatedAtDescIdDesc("table-r5", "stranger"))
+                .thenReturn(Optional.empty());
+
+        assertThat(registrationService.findMyRejection("table-r5", "stranger")).isNull();
+        verify(registrationRepository).findFirstByGameTable_IdAndUser_IdOrderByCreatedAtDescIdDesc("table-r5", "stranger");
+        verifyNoInteractions(rejectionRepository);
+    }
+
+    @Test
     void listCandidatesForTableRequiresBeingAMaster() {
         when(masterService.canOversee("table-11", "stranger")).thenReturn(false);
 
@@ -778,5 +839,11 @@ class RegistrationServiceTest {
         ReflectionTestUtils.setField(registration, "id", id);
         registration.setStatus(status);
         return registration;
+    }
+
+    private static RegistrationRejection rejectionAt(TableRegistration registration, String description, User rejectedBy) {
+        RegistrationRejection rejection = new RegistrationRejection(registration, description, rejectedBy);
+        ReflectionTestUtils.setField(rejection, "rejectedAt", LocalDateTime.of(2026, 10, 1, 12, 0));
+        return rejection;
     }
 }

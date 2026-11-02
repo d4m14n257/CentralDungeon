@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '@/providers/i18n'
@@ -41,6 +41,11 @@ function page(content: ApprovalRequestSummary[]) {
   return { content, page: 0, size: 25, totalElements: content.length, totalPages: 1 }
 }
 
+/** Prints the router's search string, so a test can read what the screen wrote into the URL. */
+function LocationSearch() {
+  return <output data-testid="search">{decodeURIComponent(useLocation().search.replaceAll('+', ' '))}</output>
+}
+
 function renderPage(url = '/admin/requests') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   function wrap(children: ReactNode) {
@@ -48,6 +53,7 @@ function renderPage(url = '/admin/requests') {
       <MemoryRouter initialEntries={[url]}>
         <QueryClientProvider client={queryClient}>
           <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+          <LocationSearch />
         </QueryClientProvider>
       </MemoryRouter>
     )
@@ -83,6 +89,15 @@ describe('AdminRequestsPage', () => {
     renderPage()
 
     await waitFor(() => expect(list).toHaveBeenCalledWith('/status Pending', 0, 25))
+  })
+
+  /** ADR-22 §6: the default is in the URL, so the link carries what the screen shows. */
+  it('redirects an entry without a query to the default one', async () => {
+    list.mockResolvedValue(page([]))
+
+    renderPage()
+
+    await waitFor(() => expect(screen.getByTestId('search')).toHaveTextContent('?q=/status Pending'))
   })
 
   /** And the filter is visible and removable, not hidden in the hook: it is a chip like any other. */
@@ -369,5 +384,49 @@ describe('AdminRequestsPage', () => {
     expect(await dialog.findByText('Todavía no tenés mesas jugadas acá')).toBeInTheDocument()
     expect(dialog.getByText(/Resuelto por ana/)).toBeInTheDocument()
     expect(dialog.getByRole('link', { name: 'Ver a quien lo pidió' })).toHaveAttribute('href', '/admin/users/user-1')
+  })
+})
+
+describe('AdminRequestsPage default filter', () => {
+  async function searchBox() {
+    return screen.findByRole('combobox', { name: 'Buscar pedidos' })
+  }
+
+  /** Removing the chip and searching leaves an empty `?q=`: «all», not a reason to redirect back. */
+  it('leaves an empty q, which shows everything, when the chip is removed', async () => {
+    list.mockResolvedValue(page([request({ status: 'Approved' })]))
+    renderPage()
+    await searchBox()
+
+    await userEvent.click(screen.getByRole('button', { name: /Quitar/ }))
+    await userEvent.type(await searchBox(), '{Enter}')
+
+    await waitFor(() => expect(list).toHaveBeenCalledWith(undefined, 0, 25))
+    expect(screen.getByTestId('search')).toHaveTextContent(/^\?q=$/)
+    expect(await screen.findByRole('table', { name: 'Pedidos' })).toBeInTheDocument()
+    expect(screen.queryByText('No hay nada esperando una respuesta')).not.toBeInTheDocument()
+  })
+
+  /** What is typed joins the default chip like in any search. */
+  it('composes a typed criterion with the default chip', async () => {
+    list.mockResolvedValue(page([]))
+    renderPage()
+
+    await userEvent.type(await searchBox(), '/requested_by ana{Enter}{Enter}')
+
+    await waitFor(() => expect(list).toHaveBeenCalledWith('/status Pending /and /requested_by ana', 0, 25))
+    expect(screen.getByTestId('search')).toHaveTextContent('?q=/status Pending /and /requested_by ana')
+  })
+
+  /** «Limpiar filtros» goes back to the default, not to the empty search. */
+  it('returns to the default query when the filters are cleared', async () => {
+    list.mockResolvedValue(page([]))
+    renderPage('/admin/requests?q=')
+    await waitFor(() => expect(list).toHaveBeenCalledWith(undefined, 0, 25))
+
+    await userEvent.click(await screen.findByRole('button', { name: /Limpiar filtros/ }))
+
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith('/status Pending', 0, 25))
+    expect(screen.getByTestId('search')).toHaveTextContent('?q=/status Pending')
   })
 })

@@ -146,9 +146,10 @@ class FileIT {
                 .filteredOn(file -> file.id().equals(sheet.id()))
                 .singleElement()
                 .extracting(FileResponse::usages, list(FileUsageResponse.class))
-                .extracting(FileUsageResponse::category, FileUsageResponse::contextName)
+                .extracting(FileUsageResponse::category, FileUsageResponse::contextName, FileUsageResponse::membership)
                 .containsExactlyInAnyOrder(
-                        tuple("TableMaterial", "Mesa de los martes"), tuple("TableMaterial", "Mesa de los jueves"));
+                        tuple("TableMaterial", "Mesa de los martes", "Master"),
+                        tuple("TableMaterial", "Mesa de los jueves", "Master"));
     }
 
     /** A file nothing points at reports no uses, which is what the purge of ADR-13 §3 is about to notice. */

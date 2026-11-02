@@ -9,7 +9,7 @@ import { HelpButton, HelpLink } from '@/features/help'
 import { EditProfileDialog, ProfileCard, useMyProfile } from '@/features/users'
 
 /**
- * `/player/profile` — the reader's own profile: name, country, roles and aggregate attendance
+ * `/profile` — the reader's own profile: name, country, roles and aggregate attendance
  * (ADR-10 §5).
  *
  * There is no "sin permiso" state here: nobody can be locked out of their own profile, which is
@@ -53,6 +53,8 @@ export function ProfilePage() {
           of ADR-10 §2 is not something anybody guesses by looking at a profile they can see today. */}
       <ProfileCard
         profile={data}
+        isOwn
+        viewerIsPlayer={data.roles.includes('Player')}
         actions={
           <div className="flex items-center gap-1">
             <HelpButton section="players.profile" />

@@ -39,13 +39,10 @@ export const router = createBrowserRouter([
           // Every table of theirs that stopped being active (ADR-19 §8): `my-tables` above now answers
           // only for the live ones, and this is where the rest went.
           { path: 'history', lazy: () => import('./player/PlayerHistoryPage') },
-          // The two profile screens of F2.3 (ADR-10 §5): the reader's own, and anybody else's, subject
-          // to the visibility rules of ADR-10 §1, §2 and ADR-10 §1.
-          { path: 'profile', lazy: () => import('./player/ProfilePage') },
-          { path: 'users/:id', lazy: () => import('./player/UserProfilePage') },
+          { path: '*', lazy: () => import('./NotFoundPage') },
         ],
       },
-      // The two transversal screens: they belong to no context and get the bare shell, without any
+      // The transversal screens: they belong to no context and get the bare shell, without any
       // section nav. Which is why they keep the chip on whatever context the reader came from
       // (ADR-20 §2) instead of flipping it.
       {
@@ -63,6 +60,15 @@ export const router = createBrowserRouter([
           // question. This is the "ask for assistance" half, which had no backend until the
           // `General` request of F3.2 gave it one (ADR-16 §1).
           { path: 'help', lazy: () => import('./SupportPage') },
+          // The two profile screens (ADR-10 §5): the reader's own, and anybody else's, subject to the
+          // visibility rules of ADR-10 §1, §2. They belong to the account and not to a context, so any
+          // account with a session reaches them - an admin without Player included.
+          { path: 'profile', lazy: () => import('./ProfilePage') },
+          { path: 'users/:id', lazy: () => import('./UserProfilePage') },
+          // An address that matches nothing renders here, under the header, so the reader can find their
+          // way back. Under a context prefix the same screen is the last child of that context (below),
+          // and shows up inside its own navigation.
+          { path: '*', lazy: () => import('./NotFoundPage') },
         ],
       },
       {
@@ -88,6 +94,7 @@ export const router = createBrowserRouter([
               { path: 'history', lazy: () => import('./master/MasterTableHistoryTab') },
             ],
           },
+          { path: '*', lazy: () => import('./NotFoundPage') },
         ],
       },
       {
@@ -134,9 +141,9 @@ export const router = createBrowserRouter([
           { path: 'requests', lazy: () => import('./admin/AdminRequestsPage') },
           // The editable configuration of ADR-17 §3 (F3.5).
           { path: 'settings', lazy: () => import('./admin/AdminSettingsPage') },
+          { path: '*', lazy: () => import('./NotFoundPage') },
         ],
       },
-      { path: '*', lazy: () => import('./NotFoundPage') },
     ],
   },
 ])

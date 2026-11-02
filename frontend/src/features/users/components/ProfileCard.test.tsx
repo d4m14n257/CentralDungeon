@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
+import { describe, expect, it, vi } from 'vitest'
 
 import '@/providers/i18n'
 import type { Profile } from '../types'
@@ -14,6 +16,12 @@ const BASE_PROFILE: Profile = {
   attendance: { present: 8, excused: 2, absent: 1, registered: 11 },
   finishedTables: 2,
 }
+
+vi.mock('./FinishedTablesDialog', () => ({
+  FinishedTablesDialog: ({ userId, canOpenTables }: { userId: string; canOpenTables: boolean }) => (
+    <div>{`finished tables of ${userId}, links ${canOpenTables}`}</div>
+  ),
+}))
 
 describe('ProfileCard', () => {
   /** ADR-08 §5: the three counts, never collapsed into a ratio. */
@@ -76,5 +84,43 @@ describe('ProfileCard', () => {
     render(<ProfileCard profile={noName} />)
 
     expect(screen.getByText('Sin nombre')).toBeInTheDocument()
+  })
+
+  /** Own profile: the count leads to the history, but only where that screen is reachable. */
+  it('links the own count to the player history for an account with Player', () => {
+    render(
+      <MemoryRouter>
+        <ProfileCard profile={BASE_PROFILE} isOwn viewerIsPlayer />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('link', { name: '2 mesas terminadas' })).toHaveAttribute('href', '/player/history')
+  })
+
+  it('keeps the own count a plain number without Player, since the history would bounce it', () => {
+    render(
+      <MemoryRouter>
+        <ProfileCard profile={BASE_PROFILE} isOwn viewerIsPlayer={false} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('2 mesas terminadas')).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '2 mesas terminadas' })).not.toBeInTheDocument()
+  })
+
+  /** Somebody else's profile: the count opens the list, whose names link only for a Player. */
+  it("opens the list of finished tables from somebody else's count", async () => {
+    render(<ProfileCard profile={BASE_PROFILE} viewerIsPlayer />)
+
+    await userEvent.click(screen.getByRole('button', { name: '2 mesas terminadas' }))
+
+    expect(screen.getByText('finished tables of user-1, links true')).toBeInTheDocument()
+  })
+
+  it('does not offer to open a count of zero', () => {
+    render(<ProfileCard profile={{ ...BASE_PROFILE, finishedTables: 0 }} />)
+
+    expect(screen.queryByRole('button', { name: /terminadas/ })).not.toBeInTheDocument()
   })
 })

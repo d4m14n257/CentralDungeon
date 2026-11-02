@@ -4,7 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.centraldungeon.catalogs.GameSystem;
+import com.centraldungeon.catalogs.SystemRepository;
+import com.centraldungeon.catalogs.TableSystem;
+import com.centraldungeon.catalogs.TableSystemRepository;
 import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.profiles.dto.FinishedTableResponse;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
@@ -25,6 +31,7 @@ import com.centraldungeon.users.UserRole;
 import com.centraldungeon.users.UserRoleRepository;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +91,12 @@ class ProfileServiceIT {
     @Autowired
     private SessionAttendanceRepository attendanceRepository;
 
+    @Autowired
+    private SystemRepository systemRepository;
+
+    @Autowired
+    private TableSystemRepository tableSystemRepository;
+
     private Role playerRole;
 
     @BeforeEach
@@ -133,6 +146,52 @@ class ProfileServiceIT {
         assertThat(profile.attendance().absent()).isEqualTo(1);
         assertThat(profile.attendance().excused()).isEqualTo(0);
         assertThat(profile.attendance().registered()).isEqualTo(3);
+    }
+
+    /**
+     * The list and the count behind it agree on real SQL: a {@code Player} on a {@code Finished} table, nothing
+     * else; newest closing first; a vetoed viewer does not see the table they are vetoed on.
+     */
+    @Test
+    void finishedTablesAgreeWithTheCountAndHideWhatTheViewerIsVetoedOn() {
+        User master = givenAPlayer("Master");
+        User player = givenAPlayer("Player");
+        User viewer = givenAPlayer("Viewer");
+        GameSystem system = systemRepository.save(new GameSystem("System " + UUID.randomUUID()));
+
+        GameTable older = givenATableRunBy(master, GameTableStatus.Finished, LocalDateTime.now().minusDays(5));
+        GameTable newer = givenATableRunBy(master, GameTableStatus.Finished, LocalDateTime.now().minusDays(1));
+        GameTable vetoed = givenATableRunBy(master, GameTableStatus.Finished, LocalDateTime.now().minusDays(3));
+        GameTable canceled = givenATableRunBy(master, GameTableStatus.Canceled, LocalDateTime.now().minusDays(2));
+        GameTable stillRunning = givenATableRunBy(master, GameTableStatus.InProgress, null);
+        for (GameTable table : new GameTable[] {older, newer, vetoed, canceled, stillRunning}) {
+            registrationRepository.save(playerRegistrationOf(table, player));
+        }
+        tableSystemRepository.save(new TableSystem(newer.getId(), system.getId()));
+        TableRegistration veto = new TableRegistration(vetoed, viewer, null);
+        veto.setStatus(TableRegistrationStatus.Blocked);
+        registrationRepository.save(veto);
+        // The viewer plays at one of the tables, which is what makes the profile readable to them.
+        registrationRepository.save(playerRegistrationOf(older, viewer));
+
+        assertThat(profileService.getProfile(player.getId(), viewer.getId()).finishedTables()).isEqualTo(3);
+        PageResponse<FinishedTableResponse> page =
+                profileService.listFinishedTables(player.getId(), viewer.getId(), PageRequest.of(0, 10));
+
+        assertThat(page.content()).extracting(FinishedTableResponse::id).containsExactly(newer.getId(), older.getId());
+        assertThat(page.totalElements()).isEqualTo(2);
+        assertThat(page.content().get(0).systems()).containsExactly(system.getName());
+        assertThat(page.content().get(0).masters()).containsExactly(master.getDiscordUsername());
+    }
+
+    /** An actor who cannot read the profile cannot read the list either, over the real visibility SQL. */
+    @Test
+    void finishedTablesAreRefusedToWhoeverCannotReadTheProfile() {
+        User player = givenAPlayer("Player");
+        User stranger = givenAPlayer("Stranger");
+
+        assertThatThrownBy(() -> profileService.listFinishedTables(player.getId(), stranger.getId(), PageRequest.of(0, 10)))
+                .isInstanceOf(NotFoundException.class);
     }
 
     private GameTable givenATableRunBy(User master, GameTableStatus status, LocalDateTime closedAt) {

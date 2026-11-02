@@ -41,5 +41,14 @@
     "namePlaceholder": "Como te conocen en la mesa",
     "countryLabel": "País",
     "countryPlaceholder": "Selecciona tu país"
+  },
+  "finishedTables": {
+    "title": "Mesas terminadas",
+    "description": "Las mesas que terminó como jugador, de la más reciente a la más antigua.",
+    "emptyTitle": "Ninguna que puedas ver",
+    "emptyDescription": "No hay mesas terminadas para mostrar.",
+    "systems": "Sistema: {{systems}}",
+    "masters": "Master: {{masters}}",
+    "closedOn": "Terminó el {{date}}"
   }
 }

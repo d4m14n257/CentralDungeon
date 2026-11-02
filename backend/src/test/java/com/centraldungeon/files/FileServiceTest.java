@@ -27,7 +27,11 @@ import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.registrations.RegistrationFileRepository;
 import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.registrations.TableRegistrationRepository;
+import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.tables.GameTable;
+import com.centraldungeon.tables.Master;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tables.MasterType;
 import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
 import com.centraldungeon.tasks.TaskFileRepository;
@@ -416,6 +420,47 @@ class FileServiceTest {
         var page = fileService().listMine("player-1", null, null, PageRequest.of(0, 20));
 
         assertThat(page.content()).singleElement().extracting(FileResponse::usages, list(FileUsageResponse.class)).isEmpty();
+    }
+
+    /**
+     * Each use says how the reader is joined to its table (ADR-14 §3): a live master row, an accepted
+     * registration, or neither - and master wins when both hold. Two reads for the whole page.
+     */
+    @Test
+    void eachUseSaysHowTheReaderIsJoinedToItsTable() {
+        User owner = persistedUser("player-1");
+        StoredFile sheet = persistedFile("file-1", owner, FileType.Private);
+        when(fileRepository.findAll(ArgumentMatchers.<Specification<StoredFile>>any(), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(sheet)));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1")))
+                .thenReturn(List.of(
+                        new FileUsage("file-1", FileCategory.TableMaterial, "table-run", "Corrida"),
+                        new FileUsage("file-1", FileCategory.TableMaterial, "table-both", "Ambas"),
+                        new FileUsage("file-1", FileCategory.TableMaterial, "table-none", "Ajena")));
+        when(submissionFileRepository.findUsagesByFileIds(List.of("file-1")))
+                .thenReturn(List.of(new FileUsage("file-1", FileCategory.PlayerSubmission, "table-played", "Jugada")));
+        GameTable run = tableWithId("table-run");
+        GameTable both = tableWithId("table-both");
+        when(masterService.findLiveByUser("player-1"))
+                .thenReturn(List.of(
+                        new Master(run, owner, MasterType.Primary), new Master(both, owner, MasterType.Secondary)));
+        when(registrationRepository.findTableIdsWithRegistration(
+                        eq("player-1"), any(), eq(List.of(TableRegistrationStatus.Player))))
+                .thenReturn(List.of("table-played", "table-both"));
+
+        var page = fileService().listMine("player-1", null, null, PageRequest.of(0, 20));
+
+        assertThat(page.content())
+                .singleElement()
+                .extracting(FileResponse::usages, list(FileUsageResponse.class))
+                .extracting(FileUsageResponse::contextName, FileUsageResponse::membership)
+                .containsExactlyInAnyOrder(
+                        tuple("Corrida", "Master"),
+                        tuple("Ambas", "Master"),
+                        tuple("Jugada", "Player"),
+                        tuple("Ajena", null));
+        verify(masterService, times(1)).findLiveByUser("player-1");
+        verify(registrationRepository, times(1)).findTableIdsWithRegistration(eq("player-1"), any(), any());
     }
 
     // ---------------------------------------------------------------- reading
@@ -863,6 +908,12 @@ class FileServiceTest {
 
     private static MockMultipartFile pdf(String filename, String content) {
         return new MockMultipartFile("file", filename, "application/pdf", content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static GameTable tableWithId(String id) {
+        GameTable table = new GameTable("Test table", persistedUser("creator-of-" + id));
+        ReflectionTestUtils.setField(table, "id", id);
+        return table;
     }
 
     private static User persistedUser(String id) {

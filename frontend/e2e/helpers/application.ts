@@ -25,7 +25,8 @@ interface AttachedFile {
  *                with neither is valid and is what most specs want
  */
 export async function applyToTable(page: Page, options: { message?: string; files?: AttachedFile[] } = {}): Promise<void> {
-  await page.getByRole('button', { name: 'Postularme' }).click()
+  // A rejected reader has no header button: the way back in is «Postularme de nuevo», in the notice.
+  await page.getByRole('button', { name: /^Postularme( de nuevo)?$/ }).click()
   const dialog = page.getByRole('dialog')
 
   if (options.message !== undefined) {

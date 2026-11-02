@@ -4,6 +4,7 @@ import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableStatus;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,6 +41,16 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
             @Param("userId") String userId,
             @Param("gameTableIds") Collection<String> gameTableIds,
             @Param("statuses") Collection<TableRegistrationStatus> statuses);
+
+    /**
+     * The newest application of a person to a table, whatever state it is in - the one that says where
+     * they stand with it now (a rejected application followed by a new one is no longer a rejection). The id breaks a tie inside the second {@code created_at} stores: UUID v7 ids sort by creation time.
+     *
+     * @param gameTableId the table
+     * @param userId      the applicant, from the token (ADR-05 §5)
+     * @return their latest registration there, or empty when they never applied
+     */
+    Optional<TableRegistration> findFirstByGameTable_IdAndUser_IdOrderByCreatedAtDescIdDesc(String gameTableId, String userId);
 
     /**
      * How many people hold a given status on a table. With {@code Player} it is the seat count the
@@ -291,4 +302,43 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     @Query("select r from TableRegistration r join fetch r.gameTable where r.user.id = :userId and r.status in :statuses")
     List<TableRegistration> findWithTableByUserAndStatusIn(
             @Param("userId") String userId, @Param("statuses") Collection<TableRegistrationStatus> statuses);
+
+    /**
+     * The tables somebody played to the end, newest closing first: the rows behind the profile's
+     * {@link #countByUser_IdAndStatusAndGameTable_Status finished-tables count}, with the same
+     * criteria (a {@code Player} registration on a {@code Finished} table).
+     *
+     * <p>A table the viewer is vetoed on is left out: the veto means they do not see that table
+     * (ADR-09 §4), and a third person's profile must not be the way around it.
+     *
+     * @param userId   the person whose finished tables are listed
+     * @param viewerId who is reading, always from the token (ADR-05 §5)
+     * @param pageable page and size; the order is fixed by the query
+     * @return one page of their registrations, table already fetched
+     */
+    @Query(value = """
+            select r from TableRegistration r join fetch r.gameTable t
+            where r.user.id = :userId
+              and r.status = com.centraldungeon.registrations.TableRegistrationStatus.Player
+              and t.status = com.centraldungeon.tables.GameTableStatus.Finished
+              and not exists (
+                  select v.id from TableRegistration v
+                  where v.gameTable = t
+                    and v.user.id = :viewerId
+                    and v.status = com.centraldungeon.registrations.TableRegistrationStatus.Blocked)
+            order by t.closedAt desc, t.id
+            """,
+            countQuery = """
+            select count(r) from TableRegistration r join r.gameTable t
+            where r.user.id = :userId
+              and r.status = com.centraldungeon.registrations.TableRegistrationStatus.Player
+              and t.status = com.centraldungeon.tables.GameTableStatus.Finished
+              and not exists (
+                  select v.id from TableRegistration v
+                  where v.gameTable = t
+                    and v.user.id = :viewerId
+                    and v.status = com.centraldungeon.registrations.TableRegistrationStatus.Blocked)
+            """)
+    Page<TableRegistration> findFinishedPlayedBy(
+            @Param("userId") String userId, @Param("viewerId") String viewerId, Pageable pageable);
 }

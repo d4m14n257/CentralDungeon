@@ -14,6 +14,9 @@ import { ErrorState } from '@/components/ErrorState'
 import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { SearchQueryInput } from '@/components/SearchQueryInput'
+import { Button } from '@/components/ui/button'
+import { DialogContent } from '@/components/DialogContent'
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
@@ -60,7 +63,8 @@ const MAX_LINKED_TABLES = 3
  *
  * The tables column is not decoration either: one file naming its three tables, each linked to its
  * admin page, is what makes "linking is not copying" something an admin can see rather than something
- * a document claims.
+ * a document claims. Past the third, «and N more» is a button that opens every table of the file,
+ * each one linked (ADR-14 §7): the row already carries them all.
  *
  * **What was searched and which page are in the URL**, like /admin/catalogs (ADR-12 §7): a row is
  * something one admin sends to another, and state that only lives in `useState` cannot be linked to.
@@ -96,6 +100,7 @@ export function AdminFilesPage() {
   const unpublish = useUnpublishFile()
   const remove = useDeleteFileAsAdmin()
   const editDialog = useDisclosure<AdminFile>()
+  const tablesDialog = useDisclosure<AdminFile>()
 
   /**
    * Writes the screen's state into the URL, resetting the page whenever the search changes.
@@ -201,7 +206,11 @@ export function AdminFilesPage() {
               </li>
             ))}
             {file.tables.length > MAX_LINKED_TABLES && (
-              <li className="text-fg-muted">{t('admin.usesMore', { count: file.tables.length - MAX_LINKED_TABLES })}</li>
+              <li>
+                <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => tablesDialog.open(file)}>
+                  {t('admin.usesMore', { count: file.tables.length - MAX_LINKED_TABLES })}
+                </Button>
+              </li>
             )}
           </ul>
         ),
@@ -323,6 +332,24 @@ export function AdminFilesPage() {
       )}
 
       <EditLibraryCategoryDialog file={editDialog.item ?? null} onOpenChange={(open) => !open && editDialog.close()} />
+
+      <Dialog open={tablesDialog.isOpen} onOpenChange={(open) => !open && tablesDialog.close()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.usesDialogTitle', { name: tablesDialog.item?.name ?? '' })}</DialogTitle>
+            <DialogDescription>{t('admin.usesDialogDescription')}</DialogDescription>
+          </DialogHeader>
+          <ul className="list-divided-bare">
+            {tablesDialog.item?.tables.map((table) => (
+              <li key={table.id} className="py-2">
+                <Link to={adminTableDetailPath(table.id)} className="hover:underline">
+                  {table.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

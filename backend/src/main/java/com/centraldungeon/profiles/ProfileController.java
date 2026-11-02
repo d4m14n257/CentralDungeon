@@ -2,6 +2,7 @@ package com.centraldungeon.profiles;
 
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
+import com.centraldungeon.profiles.dto.FinishedTableResponse;
 import com.centraldungeon.profiles.dto.ProfileResponse;
 import com.centraldungeon.profiles.dto.UserTableResponse;
 import org.springframework.data.domain.Pageable;
@@ -75,5 +76,24 @@ public class ProfileController {
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public PageResponse<UserTableResponse> tablesOf(@PathVariable String id, @PageableDefault(size = 20) Pageable pageable) {
         return profileService.listTablesForAdmin(id, pageable);
+    }
+
+    /**
+     * The tables a person played to the end, behind the «finished tables» count of their profile.
+     *
+     * <p>Readable by exactly whoever may read that person's profile (the same rules, the same gate).
+     *
+     * @param id          whose finished tables these are
+     * @param pageable    page and size; newest closing first, always
+     * @param currentUser the actor, from the token
+     * @return 200 with one page of them
+     * @throws com.centraldungeon.common.exception.NotFoundException 404 if the person does not exist,
+     *         or the actor may not see their profile - the two never distinguish themselves
+     */
+    @GetMapping("/{id}/finished-tables")
+    @PreAuthorize("isAuthenticated()")
+    public PageResponse<FinishedTableResponse> finishedTablesOf(
+            @PathVariable String id, @PageableDefault(size = 10) Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+        return profileService.listFinishedTables(id, currentUser.userId(), pageable);
     }
 }

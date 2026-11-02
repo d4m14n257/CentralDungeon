@@ -75,6 +75,10 @@
     "tableFull": "La mesa está llena",
     "notOpen": "No está abierta a postulaciones",
     "needsPlayerRole": "Necesitás el rol Jugador",
+    "rejectedHereTitle": "Te rechazaron en esta mesa",
+    "rejectedHereDescription": "Motivo: {{reason}}",
+    "rejectedHereDate": "El {{date}}.",
+    "applyAgain": "Postularme de nuevo",
     "applySuccess": "¡Postulación enviada!",
     "applyDialogTitle": "Postularme a {{name}}",
     "applyDialogDescription": "Contale al master por qué querés sumarte (opcional).",
@@ -134,6 +138,7 @@
       "nothingRecorded": "Todavía no hay asistencia registrada.",
       "noPlayers": "La mesa todavía no tiene jugadores aceptados.",
       "forPlayer": "Asistencia de {{name}}",
+      "viewRecord": "Ver la ficha de {{name}}",
       "save": "Guardar asistencia"
     }
   },

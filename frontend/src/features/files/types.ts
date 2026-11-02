@@ -39,6 +39,12 @@ export interface FileUsage {
   contextId: string
   /** The table's name, which is what a person actually recognises their own file by. */
   contextName: string
+  /**
+   * How the reader is joined to that table, said by the backend because directing a table is not
+   * deduced from the role (ADR-14 §3). `Master` wins when both hold; `null` means the name has no
+   * view of its own to open.
+   */
+  membership: 'Master' | 'Player' | null
 }
 
 /** Whether a file still counts. Marking is the only delete F1 has — the bytes wait for F5 (ADR-03 §7, ADR-13 §8). */

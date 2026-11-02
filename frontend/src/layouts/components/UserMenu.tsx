@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LANGUAGES } from '@/config/language'
-import { helpPath, myFilesPath, mySchedulePath, paths, playerProfilePath } from '@/config/paths'
+import { helpPath, myFilesPath, mySchedulePath, paths, profilePath } from '@/config/paths'
 import { useLogout } from '@/features/auth'
 import { useHasPersonalLibrary } from '@/hooks/useHasPersonalLibrary'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -73,7 +73,7 @@ export function UserMenu({ displayName }: { displayName: string | null }) {
         {/* Name, country, roles and attendance (ADR-10 §5) — the entry point the sitemap otherwise left
             unreachable. In the account menu and not in a context's nav because it belongs to the
             person, the same reason `mySchedule` and `myFiles` are here and not in a context tab. */}
-        <DropdownMenuItem onSelect={() => void navigate(playerProfilePath())}>
+        <DropdownMenuItem onSelect={() => void navigate(profilePath())}>
           <CircleUser className="size-4" />
           {t('nav.myProfile')}
         </DropdownMenuItem>

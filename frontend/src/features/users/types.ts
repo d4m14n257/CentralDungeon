@@ -29,8 +29,8 @@ export interface CompleteOnboardingInput {
 }
 
 /**
- * Mirror of ProfileResponse — the upper half of a profile screen, for both `/player/profile` and
- * `/player/users/:id` (ADR-10 §5). Not derived from `User` with a utility type even though
+ * Mirror of ProfileResponse — the upper half of a profile screen, for both `/profile` and
+ * `/users/:id` (ADR-10 §5). Not derived from `User` with a utility type even though
  * `id`/`name`/`country`/`roles` line up: the two are answers to different questions with different
  * visibility rules (ADR-10 §1, §2, §3) and `User` is only ever the caller describing themselves
  * (arquitectura §2.3) — a `Pick<User, …>` here would quietly imply this shape is also
@@ -50,6 +50,21 @@ export interface Profile {
   attendance: AttendanceSummary
   /** How many tables they played to the end, as a player (ADR-06 §8). Their track record without karma (ADR-10 §5). */
   finishedTables: number
+}
+
+/**
+ * Mirror of `FinishedTableResponse`: one table a person played to the end, as the list behind their
+ * profile's finished-tables count shows it - only what the table's public detail already says.
+ */
+export interface FinishedTable {
+  id: string
+  name: string
+  /** The names of its game systems, alphabetical. */
+  systems: string[]
+  /** The display names of the people who run it, the primary master first. */
+  masters: string[]
+  /** When it finished (UTC); null only for a row that predates that being recorded. */
+  closedAt: string | null
 }
 
 /** What a person is to a table, as an admin reads it on their record (ADR-06 §8). Mirror of `UserTableResponse.relation`. */

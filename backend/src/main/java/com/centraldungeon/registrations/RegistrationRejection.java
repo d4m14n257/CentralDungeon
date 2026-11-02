@@ -103,4 +103,13 @@ public class RegistrationRejection {
     public @Nullable User getRejectedBy() {
         return rejectedBy;
     }
+
+    /**
+     * Returns when it was rejected.
+     *
+     * @return the moment the rejection was stored, in UTC. Null only before the row is persisted
+     */
+    public @Nullable LocalDateTime getRejectedAt() {
+        return rejectedAt;
+    }
 }

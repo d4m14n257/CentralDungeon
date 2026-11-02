@@ -1,10 +1,13 @@
+import { IdCard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useOutletContext } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
 import { EmptyState } from '@/components/EmptyState'
+import { IconAction } from '@/components/IconAction'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTableStatusHistory } from '@/features/tables'
+import type { MasterSummary } from '@/features/tables'
 import { browserTimeZone, formatDateTime } from '@/lib/date'
 
 /**
@@ -13,9 +16,20 @@ import { browserTimeZone, formatDateTime } from '@/lib/date'
  * Exported for the admin's history tab (ADR-06 §8), which shows the same history next to the admin's own
  * actions instead of the master's transitions.
  *
- * @param props.tableId the table
+ * @param props.tableId        the table
+ * @param props.onOpenPerson opens the card of whoever made a change; the screen that mounts the tab decides
+ *                           what that is (ADR-10 §6). Absent, the name is plain text
+ * @param props.canOpen      which of those people the reader may open. Absent, every one of them
  */
-export function StatusTimeline({ tableId }: { tableId: string }) {
+export function StatusTimeline({
+  tableId,
+  onOpenPerson,
+  canOpen,
+}: {
+  tableId: string
+  onOpenPerson?: ((userId: string) => void) | undefined
+  canOpen?: ((userId: string) => boolean) | undefined
+}) {
   const { t, i18n } = useTranslation('master')
   const { data, isPending, isLoadingError, refetch } = useTableStatusHistory(tableId)
   const timeZone = browserTimeZone()
@@ -41,7 +55,16 @@ export function StatusTimeline({ tableId }: { tableId: string }) {
             </span>
             <span className="text-fg-subtle text-xs">{formatDateTime(change.createdAt, i18n.language, timeZone)}</span>
           </div>
-          <p className="text-fg-muted text-xs">{t('status.changedBy', { name: change.changedByName })}</p>
+          <div className="flex items-center gap-1">
+            <p className="text-fg-muted text-xs">{t('status.changedBy', { name: change.changedByName })}</p>
+            {onOpenPerson && (canOpen?.(change.changedById) ?? true) && (
+              <IconAction
+                icon={<IdCard className="size-4" />}
+                label={t('people.viewRecord', { name: change.changedByName })}
+                onClick={() => onOpenPerson(change.changedById)}
+              />
+            )}
+          </div>
           {change.justification && <p className="text-fg text-xs italic">"{change.justification}"</p>}
         </li>
       ))}
@@ -57,8 +80,15 @@ export function StatusTimeline({ tableId }: { tableId: string }) {
  * left is the history - the same split the admin's detail already had.
  */
 export function MasterTableHistoryTab() {
-  const { tableId } = useOutletContext<{ tableId: string }>()
-  return <StatusTimeline tableId={tableId} />
+  const { tableId, masters, onOpenPerson } = useOutletContext<{
+    tableId: string
+    masters: MasterSummary[]
+    onOpenPerson?: (userId: string) => void
+  }>()
+  // A master may read the card of a co-master, but not of an admin who acted on the table without running it:
+  // that card answers "not found", so its name stays plain text instead of opening an error.
+  const runsTable = (userId: string) => masters.some((master) => master.userId === userId)
+  return <StatusTimeline tableId={tableId} onOpenPerson={onOpenPerson} canOpen={runsTable} />
 }
 
 export { MasterTableHistoryTab as Component }

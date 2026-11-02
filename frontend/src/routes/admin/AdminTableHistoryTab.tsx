@@ -6,6 +6,7 @@ import { StatusTimeline } from '../master/MasterTableHistoryTab'
 
 interface OutletContext {
   table: GameTableDetail
+  onOpenPerson?: (userId: string) => void
 }
 
 /**
@@ -16,8 +17,8 @@ interface OutletContext {
  * (`AdminTableStatusNotice`), where they are seen from every tab, and what was left is the history.
  */
 export function AdminTableHistoryTab() {
-  const { table } = useOutletContext<OutletContext>()
-  return <StatusTimeline tableId={table.id} />
+  const { table, onOpenPerson } = useOutletContext<OutletContext>()
+  return <StatusTimeline tableId={table.id} onOpenPerson={onOpenPerson} />
 }
 
 export { AdminTableHistoryTab as Component }

@@ -498,6 +498,10 @@
   },
   "home": {
     "title": "Welcome to administration",
-    "description": "The sections above are where you resolve what waits in the tray and manage tables, catalogs, files, users, requests and settings."
+    "description": "The sections above are where you resolve what waits in the tray and manage tables, catalogs, files, users, requests and settings.",
+    "queueTitle": "Tray",
+    "queueCount_one": "{{count}} item is waiting for an action",
+    "queueCount_other": "{{count}} items are waiting for an action",
+    "queueEmpty": "Nothing is waiting"
   }
 }

@@ -2,6 +2,7 @@ package com.centraldungeon.tables;
 
 import com.centraldungeon.catalogs.dto.CatalogValueResponse;
 import com.centraldungeon.files.dto.SharedFileResponse;
+import com.centraldungeon.registrations.dto.MyRejectionResponse;
 import com.centraldungeon.tables.dto.AttendanceSummaryResponse;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableHistoryResponse;
@@ -77,7 +78,8 @@ public interface GameTableMapper {
             @Nullable String requirements,
             boolean scheduleConflict,
             boolean applied,
-            boolean joined);
+            boolean joined,
+            @Nullable MyRejectionResponse myRejection);
 
     /**
      * One session as its master sees it, with the roster the service assembled.
@@ -146,7 +148,7 @@ public interface GameTableMapper {
         User changedBy = change.getChangedBy();
         String displayName = changedBy.getName() != null ? changedBy.getName() : changedBy.getDiscordUsername();
         return new TableStatusChangeResponse(
-                change.getId(), change.getFromStatus().name(), change.getToStatus().name(), displayName, change.getJustification(),
+                change.getId(), change.getFromStatus().name(), change.getToStatus().name(), changedBy.getId(), displayName, change.getJustification(),
                 change.getCreatedAt());
     }
 }

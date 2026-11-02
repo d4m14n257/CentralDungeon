@@ -87,6 +87,8 @@
     "usesValue_other": "{{count}} mesas",
     "usesMore_one": "y {{count}} más",
     "usesMore_other": "y {{count}} más",
+    "usesDialogTitle": "Mesas de {{name}}",
+    "usesDialogDescription": "Cada mesa que usa este archivo, con su página de admin.",
     "emptyTitle": "La biblioteca está vacía",
     "emptyDescription": "Cuando subas la hoja en blanco de la comunidad o el reglamento, va a aparecer acá.",
     "noResultsTitle": "Sin resultados",

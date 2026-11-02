@@ -1,22 +1,29 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 
 import { AttendanceSummaryView } from '@/components/AttendanceSummaryView'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { playerHistoryPath } from '@/config/paths'
 
 import type { Profile } from '../types'
+import { FinishedTablesDialog } from './FinishedTablesDialog'
 
 interface ProfileCardProps {
   /** The profile to show. */
   profile: Profile
   /** What sits at the right end of the card's header — on one's own profile, its «Cómo funciona» (ADR-21 §5). */
   actions?: ReactNode
+  /** Whether this is the reader's own profile: the finished-tables count then leads to their history. */
+  isOwn?: boolean
+  /** Whether the reader holds the Player role, which is what lets them open a table's public detail. */
+  viewerIsPlayer?: boolean
 }
 
 /**
  * A profile's upper half (diseno §4): initials, name, Discord handle, country, roles,
- * aggregate attendance and how many tables they played to the end (ADR-06 §8). `/player/profile` and `/player/users/:id` both mount this and nothing else yet.
+ * aggregate attendance and how many tables they played to the end (ADR-06 §8). `/profile` and `/users/:id` both mount this and nothing else yet.
  *
  * **The "Comentarios recibidos" heading of the wireframe is never drawn** (ADR-10 §5): it
  * belongs to F5, and a section titled that way with nothing underneath would read as a broken page
@@ -32,10 +39,19 @@ interface ProfileCardProps {
  * of that is an error: onboarding guarantees a name, but a profile the reader is only now allowed to
  * see can still legitimately have nothing else to say about itself yet.
  *
- * @param props.profile the profile to show
+ * **The finished-tables count opens** what it counts. On one's own profile it links to the player history,
+ * but only for an account with the Player role (without it that screen would bounce them, so it stays a
+ * plain number). On somebody else's it opens a dialog listing their finished tables, whose names link to
+ * the public detail under the same condition.
+ *
+ * @param props.profile        the profile to show
+ * @param props.actions        what sits at the right end of the header
+ * @param props.isOwn          whether it is the reader's own profile
+ * @param props.viewerIsPlayer whether the reader holds the Player role
  */
-export function ProfileCard({ profile, actions }: ProfileCardProps) {
+export function ProfileCard({ profile, actions, isOwn = false, viewerIsPlayer = false }: ProfileCardProps) {
   const { t } = useTranslation('users')
+  const [tablesOpen, setTablesOpen] = useState(false)
   const label = profile.name ?? t('profile.noName')
   const initials = label
     .split(' ')
@@ -44,6 +60,8 @@ export function ProfileCard({ profile, actions }: ProfileCardProps) {
     .slice(0, 2)
     .join('')
     .toUpperCase()
+
+  const finishedTablesText = t('summary.finishedTablesValue', { count: profile.finishedTables })
 
   return (
     <div className="border-border-strong bg-surface rounded-xl border p-6">
@@ -78,7 +96,22 @@ export function ProfileCard({ profile, actions }: ProfileCardProps) {
         <div className="mt-1.5">
           <AttendanceSummaryView summary={profile.attendance} />
         </div>
-        <p className="text-fg-muted mt-2 text-sm">{t('summary.finishedTablesValue', { count: profile.finishedTables })}</p>
+        <p className="text-fg-muted mt-2 text-sm">
+          {profile.finishedTables === 0 || (isOwn && !viewerIsPlayer) ? (
+            finishedTablesText
+          ) : isOwn ? (
+            <Link to={playerHistoryPath()} className="hover:text-fg underline">
+              {finishedTablesText}
+            </Link>
+          ) : (
+            <button type="button" className="hover:text-fg cursor-pointer underline" onClick={() => setTablesOpen(true)}>
+              {finishedTablesText}
+            </button>
+          )}
+        </p>
+        {!isOwn && tablesOpen && (
+          <FinishedTablesDialog userId={profile.id} canOpenTables={viewerIsPlayer} open onOpenChange={setTablesOpen} />
+        )}
       </div>
     </div>
   )

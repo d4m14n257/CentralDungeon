@@ -50,7 +50,7 @@ test('a member of the server signs in with Discord and stays signed in', async (
   await expect(page).toHaveURL(/\/player$/)
 
   // Afterwards the same two fields are edited from the profile.
-  await page.goto('/player/profile')
+  await page.goto('/profile')
   await page.getByRole('button', { name: 'Editar perfil' }).click()
   await page.getByLabel('Nombre a mostrar').fill(`Vecna II ${runId}`)
   await page.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click()
@@ -64,7 +64,7 @@ test('an account that has not completed the onboarding is held there from any ro
   await page.getByRole('link', { name: 'Entrar con Discord' }).click()
   await expect(page).toHaveURL(/\/onboarding$/)
 
-  await page.goto('/player/profile')
+  await page.goto('/profile')
   await expect(page).toHaveURL(/\/onboarding$/)
 })
 

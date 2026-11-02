@@ -1,5 +1,7 @@
 package com.centraldungeon.files.dto;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * One place a file is being used, as its owner sees it in their own list (ADR-14 §3).
  *
@@ -16,6 +18,11 @@ package com.centraldungeon.files.dto;
  * @param category    the cajón this use puts the file in (ADR-14 §4), as a string
  * @param contextId   the table the use belongs to, so the screen can link to it
  * @param contextName the table's name, which is what the reader actually recognises
+ * @param membership  how the reader is joined to that table - {@code Master} (a live row in
+ *                    {@code masters}), {@code Player} (an accepted registration) or null for neither.
+ *                    The screen cannot guess it: directing a table is not deduced from the role (hard
+ *                    rule 17), and the view each one opens is a different screen. Master wins when both
+ *                    hold, and null means the name has nowhere to link to
  */
-public record FileUsageResponse(String category, String contextId, String contextName) {
+public record FileUsageResponse(String category, String contextId, String contextName, @Nullable String membership) {
 }

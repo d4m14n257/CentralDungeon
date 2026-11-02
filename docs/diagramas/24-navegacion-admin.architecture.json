@@ -598,7 +598,7 @@
       "title": "El shell para un admin",
       "items": [
         "Sin Admin u Owner: redirige a / (ADR-20 §2), sin 403",
-        "UserMenu → /player/profile sin rol Player: ahora redirige",
+        "UserMenu → /profile sin rol Player: ya no redirige, el perfil vive fuera de los contextos",
         "/my/files oculto sin biblioteca"
       ]
     }

@@ -41,5 +41,14 @@
     "namePlaceholder": "What they call you at the table",
     "countryLabel": "Country",
     "countryPlaceholder": "Select your country"
+  },
+  "finishedTables": {
+    "title": "Finished tables",
+    "description": "The tables they played to the end, newest first.",
+    "emptyTitle": "None you can see",
+    "emptyDescription": "There are no finished tables to show.",
+    "systems": "System: {{systems}}",
+    "masters": "Master: {{masters}}",
+    "closedOn": "Finished on {{date}}"
   }
 }

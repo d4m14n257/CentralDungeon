@@ -5,8 +5,10 @@ import { Link, useParams } from 'react-router'
 import { PageHeader } from '@/components/PageHeader'
 import { QueryErrorState } from '@/components/QueryErrorState'
 import { RichTextView } from '@/components/RichTextView'
+import { StatusNotice } from '@/components/StatusNotice'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { playerHomePath, playerUserProfilePath } from '@/config/paths'
+import { playerHomePath, userProfilePath } from '@/config/paths'
 import { HelpButton, HelpLink } from '@/features/help'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
@@ -16,7 +18,7 @@ import { SessionList, TableStatusBadge, useGameTable } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
 import { useMe } from '@/features/users'
 import type { GameTableDetail, MasterSummary } from '@/features/tables'
-import { browserTimeZone, formatPlainDate, formatSlot, utcSlotToLocal } from '@/lib/date'
+import { browserTimeZone, formatDate, formatPlainDate, formatSlot, utcSlotToLocal } from '@/lib/date'
 import type { CatalogValue } from '@/types/catalog'
 
 /**
@@ -80,6 +82,8 @@ export function TableDetailPage() {
   // A second namespace rather than copying the file labels into `tables`: the words belong to the
   // files domain and are the same ones the master's tab shows (regla dura 18).
   const { t: tFiles } = useTranslation('files')
+  // The text of a rejection the application wrote itself lives with the registrations (ADR-23 §3).
+  const { t: tRegistrations } = useTranslation('registrations')
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   // isLoadingError, not isError: once the table has loaded, a background refetch that fails must not
@@ -122,14 +126,15 @@ export function TableDetailPage() {
         badge={<TableStatusBadge status={table.status} />}
         back={{ to: playerHomePath(), label: t('detail.backToExplorer') }}
         help="players.applying"
-        action={{ label: state.label, onClick: () => applyDialog.open(), disabled: state.disabled }}
+        // After a rejection the way back in is the notice's own button; a second one here would do the same.
+        action={table.myRejection ? undefined : { label: state.label, onClick: () => applyDialog.open(), disabled: state.disabled }}
         description={
           primaryMaster && (
             <span className="flex flex-wrap items-center gap-x-1">
               <span>{t('detail.masterLabel')}:</span>
               {/* ADR-10 §1: a master's profile is visible to anyone looking at their table, no
                   application required — the asymmetry that makes this link always safe to show. */}
-              <Link to={playerUserProfilePath(primaryMaster.userId)} className="hover:text-fg underline">
+              <Link to={userProfilePath(primaryMaster.userId)} className="hover:text-fg underline">
                 {primaryMaster.name}
               </Link>
               {coMasters.length > 0 && (
@@ -138,7 +143,7 @@ export function TableDetailPage() {
                   <span>{t('detail.coMasterLabel')}:</span>
                   {coMasters.map((master, index) => (
                     <span key={master.userId}>
-                      <Link to={playerUserProfilePath(master.userId)} className="hover:text-fg underline">
+                      <Link to={userProfilePath(master.userId)} className="hover:text-fg underline">
                         {master.name}
                       </Link>
                       {index < coMasters.length - 1 && ', '}
@@ -160,6 +165,37 @@ export function TableDetailPage() {
             <HelpLink section="players.schedule-conflicts">{t('detail.scheduleConflictHelp')}</HelpLink>
           </span>
         </p>
+      )}
+
+      {/* ADR-09 §7: a rejection the reader would otherwise never hear about again. The master's words are
+          shown as typed; the system's own (the table filled up) is a code, so the reason is never empty. */}
+      {table.myRejection && (
+        <StatusNotice
+          title={t('detail.rejectedHereTitle')}
+          description={
+            <>
+              {t('detail.rejectedHereDescription', {
+                reason:
+                  table.myRejection.justification ??
+                  (table.myRejection.reasonCode
+                    ? tRegistrations(`rejectionReason.${table.myRejection.reasonCode}`, { defaultValue: table.myRejection.reasonCode })
+                    : ''),
+              })}{' '}
+              <span className="text-fg-subtle">
+                {t('detail.rejectedHereDate', { date: formatDate(table.myRejection.rejectedAt, i18n.language, browserTimeZone()) })}
+              </span>
+            </>
+          }
+          actions={
+            <>
+              <Button size="sm" disabled={state.disabled} onClick={() => applyDialog.open()}>
+                {t('detail.applyAgain')}
+              </Button>
+              {/* Same conditions as the first time; when it cannot be done the notice says why, like the header. */}
+              {state.disabled && <span className="text-fg-muted text-xs">{state.label}</span>}
+            </>
+          }
+        />
       )}
 
       <div className="border-border-strong bg-surface flex flex-col gap-4 rounded-xl border p-6">

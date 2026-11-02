@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Eye, X } from 'lucide-react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, Navigate, useSearchParams } from 'react-router'
 
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
@@ -39,11 +39,12 @@ import { ApiError } from '@/types/api'
  * `/admin/requests` — every request somebody made of an admin, and the two things an admin can do
  * with one: approve it or turn it down, each with a reason (ADR-16 §1, F3.2).
  *
- * **It opens filtered by what is waiting.** A tray that opens showing what is already resolved is
- * not a tray anybody can work from — it is a log. The filter is a `?q=` like any other, put there by
- * this screen and not by the endpoint (`GET /admin/requests` with no `q` answers with everything,
- * like every other listing), so the `/status` chip is visible, editable and removable: seeing what
- * was decided is one click away rather than a different screen.
+ * **It opens filtered by what is waiting, and says so in the URL** (ADR-22 §6). A tray that opens
+ * showing what is already resolved is not a tray anybody can work from — it is a log. Entering with no
+ * `?q=` redirects, replacing the history entry so «back» does not loop, to `?q=/status Pending`; the
+ * endpoint itself answers everything with no `q`, like every other listing. The `/status` chip is then a
+ * normal one: visible, removable, and what is typed composes with it. Removing it leaves an **empty**
+ * `?q=`, which means «all» and does not redirect again; «clear filters» goes back to the default.
  *
  * **The empty tray is good news, not a broken screen** (ADR-20 §4, the same reading as `/master`):
  * nothing is waiting for an action. That is a different sentence from "your search found nothing",
@@ -68,6 +69,15 @@ import { ApiError } from '@/types/api'
  * backend authorizes on its own (ADR-20 §1) and the page must not go blank if it refuses.
  */
 export function AdminRequestsPage() {
+  const [searchParams] = useSearchParams()
+  // `null` is "never chose a filter"; an empty `q` is "chose all" and must not come back here.
+  if (searchParams.get('q') === null) {
+    return <Navigate replace to={{ search: new URLSearchParams({ q: PENDING_REQUESTS_QUERY }).toString() }} />
+  }
+  return <AdminRequestsList />
+}
+
+function AdminRequestsList() {
   const { t, i18n } = useTranslation('admin')
   const [searchParams, setSearchParams] = useSearchParams()
   const timeZone = browserTimeZone()
@@ -77,12 +87,11 @@ export function AdminRequestsPage() {
   const size = adminPageSizeFrom(searchParams.get('size'))
 
   // The box holds a structured value; what travels - to the URL and to the API - is the raw string
-  // of ADR-22 §1. With no `?q=` to restore, the tray starts on what is waiting: the URL says nothing and
-  // the box shows the chip, which is the one state this screen is allowed to open in.
+  // of ADR-22 §1. The entry without `?q=` was already redirected to the default by the screen above.
   const fields = useMemo(() => approvalRequestSearchFields(t), [t])
   const search = useSearchQuery({
     fields,
-    initialQuery: searchParams.get('q') ?? PENDING_REQUESTS_QUERY,
+    initialQuery: searchParams.get('q') ?? '',
     onQueryChange: (query) => updateParams({ q: query }),
   })
 
@@ -91,11 +100,14 @@ export function AdminRequestsPage() {
   const resolveDialog = useDisclosure<{ request: ApprovalRequestSummary; action: ResolveAction }>()
   const detailDialog = useDisclosure<ApprovalRequestSummary>()
 
-  /** Writes the screen's state into the URL, resetting the page whenever the search changes. */
+  /**
+   * Writes the screen's state into the URL, resetting the page whenever the search changes. An empty
+   * `q` is kept as `?q=` and not deleted: its absence is what the screen redirects on (ADR-22 §6).
+   */
   function updateParams(changes: Record<string, string>) {
     const next = new URLSearchParams(searchParams)
     for (const [key, value] of Object.entries(changes)) {
-      if (value === '') next.delete(key)
+      if (value === '' && key !== 'q') next.delete(key)
       else next.set(key, value)
     }
     if (!('page' in changes)) next.delete('page')

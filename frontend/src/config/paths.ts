@@ -45,17 +45,20 @@ export function playerHistoryPath(): string {
   return '/player/history'
 }
 
-/** @returns the absolute path to the reader's own profile (ADR-10 §5) */
-export function playerProfilePath(): string {
-  return '/player/profile'
+/**
+ * @returns the absolute path to the reader's own profile (ADR-10 §5). It belongs to the account and not
+ *          to a context, so any account with a session reaches it
+ */
+export function profilePath(): string {
+  return '/profile'
 }
 
 /**
  * @param id the profile to open
  * @returns the absolute path to somebody else's profile, subject to ADR-10 §1, §2 and ADR-10 §1
  */
-export function playerUserProfilePath(id: string): string {
-  return `/player/users/${id}`
+export function userProfilePath(id: string): string {
+  return `/users/${id}`
 }
 
 /**
@@ -117,6 +120,14 @@ export function masterTableSessionsPath(id: string): string {
  */
 export function masterTableTasksPath(id: string): string {
   return `/master/tables/${id}/tasks`
+}
+
+/**
+ * @param id the table
+ * @returns the absolute path to its files tab — what the table shares and what its masters attached
+ */
+export function masterTableFilesPath(id: string): string {
+  return `/master/tables/${id}/files`
 }
 
 /**

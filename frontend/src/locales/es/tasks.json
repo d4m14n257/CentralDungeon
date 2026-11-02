@@ -73,6 +73,7 @@
     "blanksFailed": "No se pudieron subir: {{names}}. La petición se guardó; agregalos editándola."
   },
   "submissions": {
+    "viewRecord": "Ver la ficha de {{name}}",
     "title": "Entregas",
     "emptyTitle": "Todavía no entregó nadie",
     "emptyDescription": "Cuando alguien entregue algo, va a aparecer acá con lo que haya mandado.",

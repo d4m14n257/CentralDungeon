@@ -10,6 +10,7 @@ import com.centraldungeon.files.dto.TableFileResponse;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Turns file entities into the five response shapes. Wired as a @Bean in
@@ -54,11 +55,15 @@ public interface FileMapper {
     /**
      * One use of a file, on its way out.
      *
-     * @param usage the projection the repositories produced
-     * @return the same thing with its enum flattened to a string, as the contract asks (2.3)
+     * @param usage      the projection the repositories produced
+     * @param membership how the reader is joined to the use's table, resolved by the service; null for none
+     * @return the same thing with its enums flattened to strings, as the contract asks (2.3)
      */
     @Mapping(target = "category", expression = "java(usage.category().name())")
-    FileUsageResponse toUsageResponse(FileUsage usage);
+    @Mapping(target = "contextId", source = "usage.contextId")
+    @Mapping(target = "contextName", source = "usage.contextName")
+    @Mapping(target = "membership", source = "membership")
+    FileUsageResponse toUsageResponse(FileUsage usage, @Nullable String membership);
 
     /**
      * The /admin/files view.

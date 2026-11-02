@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router'
 
@@ -5,6 +6,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { homePathFor } from '@/config/paths'
 import { useAvailableContexts } from '@/hooks/useAvailableContexts'
+import { clearDestination, peekDestination } from '@/lib/postLoginDestination'
 import { SignOutButton } from '@/layouts/components/SignOutButton'
 
 /**
@@ -20,12 +22,22 @@ import { SignOutButton } from '@/layouts/components/SignOutButton'
  * who has no Player role would land in a context they do not have, which is the exact crossing this
  * dispatcher exists to prevent.
  *
+ * It is also where the page a visitor was headed to before logging in is honoured: the login, the
+ * onboarding and the OAuth return all end here, so the remembered path is taken once, here, and the
+ * home is only the fallback. A context the account lacks bounces it back here, by then with nothing
+ * remembered, so that cannot loop.
+ *
  * It is also the one place an account with **no** context lands, since every context guard sends
  * what it refuses here (ADR-20 §2) - so that case is answered on screen instead of redirected.
  */
 export function RootRedirect() {
   const { t } = useTranslation('common')
   const { contexts, preferredContext, isPending, isError, retry } = useAvailableContexts()
+  // Read once and cleared by the effect: reading is pure, so a repeated render cannot lose it.
+  const [destination] = useState(peekDestination)
+  useEffect(() => {
+    if (!isPending && contexts.length > 0) clearDestination()
+  }, [isPending, contexts.length])
 
   if (isPending) {
     return (
@@ -55,7 +67,7 @@ export function RootRedirect() {
     )
   }
 
-  return <Navigate to={homePathFor(preferredContext)} replace />
+  return <Navigate to={destination ?? homePathFor(preferredContext)} replace />
 }
 
 export { RootRedirect as Component }

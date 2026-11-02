@@ -69,6 +69,7 @@ export type {
   ChangeTableStatusRequest,
   CreateGameTableRequest,
   GameTableDetail,
+  MyRejection,
   GameTableHistoryEntry,
   GameTableStatus,
   GameTableSummary,

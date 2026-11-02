@@ -16,6 +16,7 @@ import com.centraldungeon.common.search.SearchQueryParser;
 import com.centraldungeon.common.search.SearchTerm;
 import com.centraldungeon.common.text.RichTextSanitizer;
 import com.centraldungeon.files.TableFileService;
+import com.centraldungeon.registrations.RegistrationService;
 import com.centraldungeon.registrations.TablePlayerCount;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
@@ -169,6 +170,7 @@ public class GameTableService {
     private final TableChangeNotifier tableChangeNotifier;
     private final GameTableSearchResolver gameTableSearchResolver;
     private final TableVisibilityService tableVisibilityService;
+    private final RegistrationService registrationService;
 
     /**
      * @param gameTableRepository        the {@code game_tables} table, and the row everything locks on
@@ -193,6 +195,7 @@ public class GameTableService {
      *                                   before the query is built (ADR-12 §2, §4, §8)
      * @param tableVisibilityService     the one gate every read of a concrete table goes through -
      *                                   soft delete and veto, decided in one place (ADR-03 §7, ADR-09 §4)
+     * @param registrationService        owns the rejections, so the detail can tell a rejected applicant why (ADR-09 §7)
      */
     public GameTableService(
             GameTableRepository gameTableRepository,
@@ -212,7 +215,8 @@ public class GameTableService {
             NotificationService notificationService,
             TableChangeNotifier tableChangeNotifier,
             GameTableSearchResolver gameTableSearchResolver,
-            TableVisibilityService tableVisibilityService) {
+            TableVisibilityService tableVisibilityService,
+            RegistrationService registrationService) {
         this.gameTableRepository = gameTableRepository;
         this.tableTypeRepository = tableTypeRepository;
         this.tableRegistrationRepository = tableRegistrationRepository;
@@ -231,6 +235,7 @@ public class GameTableService {
         this.tableChangeNotifier = tableChangeNotifier;
         this.gameTableSearchResolver = gameTableSearchResolver;
         this.tableVisibilityService = tableVisibilityService;
+        this.registrationService = registrationService;
     }
 
     /**
@@ -1414,7 +1419,8 @@ public class GameTableService {
                 conflictActorId != null && tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
                         gameTable.getId(), conflictActorId, ACTIVE_REGISTRATION_STATUSES),
                 conflictActorId != null && tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
-                        gameTable.getId(), conflictActorId, List.of(TableRegistrationStatus.Player)));
+                        gameTable.getId(), conflictActorId, List.of(TableRegistrationStatus.Player)),
+                conflictActorId == null ? null : registrationService.findMyRejection(gameTable.getId(), conflictActorId));
     }
 
     private int countPlayers(String gameTableId) {

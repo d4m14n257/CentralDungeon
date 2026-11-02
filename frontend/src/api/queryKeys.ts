@@ -213,7 +213,7 @@ export const queryKeys = {
     adminHistory: (id: string) => ['users', 'admin', 'history', id] as const,
   },
   /**
-   * Profile screens (ADR-10 §5): `/player/profile` and `/player/users/:id`. Its own branch and not part
+   * Profile screens (ADR-10 §5): `/profile` and `/users/:id`. Its own branch and not part
    * of `users.me()`: that key backs the app shell (contexts, onboarding, `hasManagedTables`) and
    * never carries attendance, while this one answers a visibility-gated question (ADR-10 §1, §2)
    * that can 404 on purpose (ADR-10 §3) — mixing the two would risk a stale shell surviving a profile
@@ -228,6 +228,8 @@ export const queryKeys = {
     detail: (id: string) => ['profiles', 'detail', id] as const,
     /** The tables a person is linked to, on an admin's view of their record (ADR-06 §8), by page. */
     tables: (id: string, page: number) => ['profiles', 'tables', id, page] as const,
+    /** The tables behind a profile's finished-tables count, by page. */
+    finishedTables: (id: string, page: number) => ['profiles', 'finishedTables', id, page] as const,
   },
   system: {
     health: () => ['system', 'health'] as const,

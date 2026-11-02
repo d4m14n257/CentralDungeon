@@ -19,6 +19,7 @@ import com.centraldungeon.files.dto.LibraryUploadRequest;
 import com.centraldungeon.files.dto.UpdateLibraryCategoryRequest;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
+import com.centraldungeon.notifications.TableMembership;
 import com.centraldungeon.registrations.RegistrationFileRepository;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
@@ -36,6 +37,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -414,7 +416,7 @@ public class FileService {
         SearchQuery parsed = SearchQueryParser.parse(query, FileSearchField.wireNames());
         Page<StoredFile> page =
                 fileRepository.findAll(FileSearchSpecification.forOwner(actorId, parsed, category), pageable);
-        Map<String, List<FileUsageResponse>> usages = usagesByFileId(page.getContent());
+        Map<String, List<FileUsageResponse>> usages = usagesByFileId(page.getContent(), actorId);
         Map<String, List<String>> cajones = categoriesByFileId(page.getContent());
         return PageResponse.from(page.map(file -> fileMapper.toResponse(
                 file, cajones.getOrDefault(file.getId(), List.of()), usages.getOrDefault(file.getId(), List.of()))));
@@ -817,22 +819,56 @@ public class FileService {
      * {@code Player}) - a withdrawn or rejected one does not, which is
      * {@code RegistrationFileRepository.findUsagesByFileIds}'s own filter and ADR-09 §2's whole point.
      *
-     * @param files the files to resolve uses for
+     * <p>Each use also says how the reader is joined to its table (ADR-14 §3), in two more queries for
+     * the whole page and not one per use: the tables they run (a live row in {@code masters}) and, among
+     * the tables the page names, the ones they play at. Master wins when both hold; neither leaves it
+     * null.
+     *
+     * @param files   the files to resolve uses for
+     * @param actorId the reader, from the token (ADR-05 §5)
      * @return the uses per file id; a file nothing points at is absent, which reads as unused
      */
-    Map<String, List<FileUsageResponse>> usagesByFileId(List<StoredFile> files) {
+    Map<String, List<FileUsageResponse>> usagesByFileId(List<StoredFile> files, String actorId) {
         if (files.isEmpty()) {
             return Map.of();
         }
         List<String> ids = files.stream().map(StoredFile::getId).toList();
-        return Stream.of(
+        List<FileUsage> usages = Stream.of(
                         tableFileRepository.findUsagesByFileIds(ids),
                         taskFileRepository.findUsagesByFileIds(ids),
                         submissionFileRepository.findUsagesByFileIds(ids),
                         registrationFileRepository.findUsagesByFileIds(ids))
                 .flatMap(List::stream)
+                .toList();
+        Map<String, TableMembership> membership = membershipOf(actorId, usages);
+        return usages.stream()
                 .collect(Collectors.groupingBy(
-                        FileUsage::fileId, Collectors.mapping(fileMapper::toUsageResponse, Collectors.toList())));
+                        FileUsage::fileId,
+                        Collectors.mapping(
+                                usage -> fileMapper.toUsageResponse(
+                                        usage,
+                                        Optional.ofNullable(membership.get(usage.contextId()))
+                                                .map(TableMembership::name)
+                                                .orElse(null)),
+                                Collectors.toList())));
+    }
+
+    /** How the actor is joined to each table the given uses name; a table they are not joined to is absent. */
+    private Map<String, TableMembership> membershipOf(String actorId, List<FileUsage> usages) {
+        Set<String> tableIds = usages.stream().map(FileUsage::contextId).collect(Collectors.toSet());
+        if (tableIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, TableMembership> result = new HashMap<>();
+        registrationRepository
+                .findTableIdsWithRegistration(actorId, tableIds, List.of(TableRegistrationStatus.Player))
+                .forEach(tableId -> result.put(tableId, TableMembership.Player));
+        masterService.findLiveByUser(actorId).forEach(master -> {
+            if (tableIds.contains(master.getGameTable().getId())) {
+                result.put(master.getGameTable().getId(), TableMembership.Master);
+            }
+        });
+        return result;
     }
 
     /**

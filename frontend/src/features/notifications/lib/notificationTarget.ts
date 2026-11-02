@@ -4,7 +4,7 @@ import {
   masterTablePlayersPath,
   myTableDetailPath,
   playerApplicationsPath,
-  playerProfilePath,
+  profilePath,
   tableDetailPath,
 } from '@/config/paths'
 
@@ -53,7 +53,7 @@ export function notificationTarget(notification: Notification): string | null {
     if (relatedEntityType === 'table_registration') {
       return notification.params?.tableId ? masterTablePlayersPath(notification.params.tableId) : null
     }
-    return playerProfilePath()
+    return profilePath()
   }
 
   // Everything else is about one table, and a row pointing at anything else is one nothing can open.

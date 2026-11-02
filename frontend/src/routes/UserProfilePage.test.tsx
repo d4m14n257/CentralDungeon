@@ -29,14 +29,15 @@ let queryResult: {
 // captured stale, each time a test reassigns it before rendering.
 vi.mock('@/features/users', () => ({
   useUserProfile: () => queryResult,
+  useMe: () => ({ data: { roles: ['Player'] } }),
   ProfileCard: ({ profile }: { profile: Profile }) => <div>{profile.name}</div>,
 }))
 
 function renderPage() {
   return render(
-    <MemoryRouter initialEntries={['/player/users/user-9']}>
+    <MemoryRouter initialEntries={['/users/user-9']}>
       <Routes>
-        <Route path="/player/users/:id" element={<UserProfilePage />} />
+        <Route path="/users/:id" element={<UserProfilePage />} />
       </Routes>
     </MemoryRouter>,
   )

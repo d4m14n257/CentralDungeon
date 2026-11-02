@@ -1,8 +1,10 @@
+import { IdCard } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
+import { IconAction } from '@/components/IconAction'
 import { RichTextView } from '@/components/RichTextView'
 import { Skeleton } from '@/components/ui/skeleton'
 import { browserTimeZone, formatDateTime } from '@/lib/date'
@@ -20,6 +22,8 @@ export interface TaskSubmissionsPanelProps {
    * another: the screen composing the two is where they meet (regla dura 16, §3.1.5).
    */
   renderFiles: (files: SubmittedFile[]) => ReactNode
+  /** Opens a person's card (ADR-10 §6), for whoever answered and whoever has not. Absent, no action. */
+  onOpenPerson?: ((userId: string) => void) | undefined
 }
 
 /**
@@ -39,8 +43,9 @@ export interface TaskSubmissionsPanelProps {
  *
  * @param props.taskId      the task
  * @param props.renderFiles how to render the files of an answer
+ * @param props.onOpenPerson opens a person's card
  */
-export function TaskSubmissionsPanel({ taskId, renderFiles }: TaskSubmissionsPanelProps) {
+export function TaskSubmissionsPanel({ taskId, renderFiles, onOpenPerson }: TaskSubmissionsPanelProps) {
   const { t, i18n } = useTranslation('tasks')
   // isLoadingError, not isError: see ADR-19 §4.
   const { data, isPending, isLoadingError, refetch } = useTaskSubmissions(taskId)
@@ -65,7 +70,16 @@ export function TaskSubmissionsPanel({ taskId, renderFiles }: TaskSubmissionsPan
             {data.submissions.map((submission) => (
               <li key={submission.submissionId} className="space-y-2 py-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <span className="text-sm font-medium">{submission.userName}</span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-sm font-medium">{submission.userName}</span>
+                    {onOpenPerson && (
+                      <IconAction
+                        label={t('submissions.viewRecord', { name: submission.userName })}
+                        icon={<IdCard className="size-4" />}
+                        onClick={() => onOpenPerson(submission.userId)}
+                      />
+                    )}
+                  </span>
                   {submission.submittedAt && (
                     <span className="text-fg-muted text-xs">{formatDateTime(submission.submittedAt, i18n.language, timeZone)}</span>
                   )}
@@ -86,8 +100,15 @@ export function TaskSubmissionsPanel({ taskId, renderFiles }: TaskSubmissionsPan
           <>
             <ul className="flex flex-wrap gap-2">
               {data.missing.map((recipient) => (
-                <li key={recipient.userId} className="border-border bg-raised rounded-md border px-2 py-1 text-xs">
+                <li key={recipient.userId} className="border-border bg-raised flex items-center gap-1 rounded-md border px-2 py-1 text-xs">
                   {recipient.userName}
+                  {onOpenPerson && (
+                    <IconAction
+                      label={t('submissions.viewRecord', { name: recipient.userName })}
+                      icon={<IdCard className="size-4" />}
+                      onClick={() => onOpenPerson(recipient.userId)}
+                    />
+                  )}
                 </li>
               ))}
             </ul>

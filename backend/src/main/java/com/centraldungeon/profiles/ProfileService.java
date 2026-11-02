@@ -1,15 +1,21 @@
 package com.centraldungeon.profiles;
 
+import com.centraldungeon.catalogs.TableSystemName;
+import com.centraldungeon.catalogs.TableSystemRepository;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.profiles.dto.FinishedTableResponse;
 import com.centraldungeon.profiles.dto.ProfileResponse;
 import com.centraldungeon.profiles.dto.UserTableResponse;
+import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableStatus;
+import com.centraldungeon.tables.Master;
 import com.centraldungeon.tables.MasterRepository;
 import com.centraldungeon.tables.MasterRowStatus;
+import com.centraldungeon.tables.MasterType;
 import com.centraldungeon.tables.TableSessionService;
 import com.centraldungeon.tables.dto.AttendanceSummaryResponse;
 import com.centraldungeon.users.User;
@@ -17,8 +23,12 @@ import com.centraldungeon.users.UserRoleRepository;
 import com.centraldungeon.users.UserService;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +66,9 @@ public class ProfileService {
     /** The tables a person applied to or plays at, and how many they finished (ADR-06 §8). */
     private final TableRegistrationRepository registrationRepository;
 
+    /** The systems of the tables a profile lists as finished, by name. */
+    private final TableSystemRepository tableSystemRepository;
+
     /**
      * The registration statuses an admin's view of a person's tables lists: everything but a
      * withdrawn application, which is soft-deleted and invisible on every read path (ADR-03 §7).
@@ -71,6 +84,7 @@ public class ProfileService {
      * @param visibilityService    the visibility rules, all five, in one place
      * @param masterRepository     the tables a person runs
      * @param registrationRepository the tables a person applied to or plays at
+     * @param tableSystemRepository  the systems of the finished tables a profile lists
      */
     public ProfileService(
             UserService userService,
@@ -78,13 +92,15 @@ public class ProfileService {
             TableSessionService tableSessionService,
             ProfileVisibilityService visibilityService,
             MasterRepository masterRepository,
-            TableRegistrationRepository registrationRepository) {
+            TableRegistrationRepository registrationRepository,
+            TableSystemRepository tableSystemRepository) {
         this.userService = userService;
         this.userRoleRepository = userRoleRepository;
         this.tableSessionService = tableSessionService;
         this.visibilityService = visibilityService;
         this.masterRepository = masterRepository;
         this.registrationRepository = registrationRepository;
+        this.tableSystemRepository = tableSystemRepository;
     }
 
     /**
@@ -111,6 +127,57 @@ public class ProfileService {
                 targetId, TableRegistrationStatus.Player, GameTableStatus.Finished);
         return new ProfileResponse(
                 target.getId(), target.getDiscordUsername(), target.getName(), target.getCountry(), roles, attendance, finishedTables);
+    }
+
+    /**
+     * The tables behind a profile's «finished tables» count: the ones the person played at as a
+     * {@code Player} and that ended {@code Finished}, newest closing first, with the name, systems,
+     * masters and closing date that the table's public detail already shows.
+     *
+     * <p><b>Readable by exactly whoever may read the profile</b> - the same gate, {@link
+     * ProfileVisibilityService#requireVisible} - so it adds nothing the profile does not already say.
+     * It uses the same criteria as the count, minus the tables the actor is vetoed on (ADR-09 §4).
+     *
+     * <p>A page costs a fixed number of queries: the registrations with their table, then one for all
+     * the systems and one for all the masters.
+     *
+     * @param targetId whose finished tables these are
+     * @param actorId  who is asking, always from the token (ADR-05 §5)
+     * @param pageable which page, and its size; the sort is fixed
+     * @return one page of their finished tables
+     * @throws NotFoundException if the target does not exist or the actor may not see them - the two
+     *                           answer identically, on purpose (ADR-10 §3)
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<FinishedTableResponse> listFinishedTables(String targetId, String actorId, Pageable pageable) {
+        userService.getById(targetId);
+        visibilityService.requireVisible(targetId, actorId);
+
+        Page<TableRegistration> page = registrationRepository.findFinishedPlayedBy(
+                targetId, actorId, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
+        List<String> tableIds = page.getContent().stream().map(registration -> registration.getGameTable().getId()).toList();
+        if (tableIds.isEmpty()) {
+            return new PageResponse<>(List.of(), page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
+        }
+
+        Map<String, List<String>> systemsByTable = new LinkedHashMap<>();
+        for (TableSystemName system : tableSystemRepository.findNamesByTables(tableIds)) {
+            systemsByTable.computeIfAbsent(system.gameTableId(), id -> new ArrayList<>()).add(system.name());
+        }
+        Map<String, List<Master>> mastersByTable = new LinkedHashMap<>();
+        for (Master master : masterRepository.findByGameTables(tableIds, MasterRowStatus.Created)) {
+            mastersByTable.computeIfAbsent(master.getGameTable().getId(), id -> new ArrayList<>()).add(master);
+        }
+
+        return PageResponse.from(page.map(registration -> {
+            GameTable table = registration.getGameTable();
+            List<String> masters = mastersByTable.getOrDefault(table.getId(), List.of()).stream()
+                    .sorted(Comparator.comparing((Master master) -> master.getMasterType() != MasterType.Primary))
+                    .map(master -> master.getUser().getName() != null ? master.getUser().getName() : master.getUser().getDiscordUsername())
+                    .toList();
+            return new FinishedTableResponse(
+                    table.getId(), table.getName(), systemsByTable.getOrDefault(table.getId(), List.of()), masters, table.getClosedAt());
+        }));
     }
 
     /**

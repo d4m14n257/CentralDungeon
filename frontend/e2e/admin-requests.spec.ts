@@ -160,7 +160,7 @@ test('a player asks for the master role, an admin approves it from /admin/reques
   try {
     // ---- 1. The request is raised from the screen that provokes it, not from a "make a request"
     // screen (roles-y-alcance.md §4, F3.2). For the master role that screen is the reader's own profile.
-    await player.page.goto('/player/profile')
+    await player.page.goto('/profile')
     await expect(player.page.getByText('¿Querés dirigir mesas?')).toBeVisible()
     await ask(player.page, 'Pedir el rol de master', justification)
 
@@ -211,10 +211,12 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     // that string, and `SearchQueryParser` on the other side read it the same way.
     await expect(requestRow(admin.page, playerId)).toHaveCount(0, { timeout: 15_000 })
 
-    // **The screen's default really is Pending**: opened with no query of its own it does not show
+    // **The screen's default really is Pending**: opened with no query of its own it redirects to `?q=/status Pending` and does not show
     // the request that was just resolved, and asking for it by name brings it back with its outcome.
     await admin.page.goto('/admin/requests')
     await expect(admin.page.getByRole('heading', { name: 'Pedidos' })).toBeVisible()
+    // The default travels in the URL (ADR-22 §6): the entry without `q` was redirected to it.
+    await expect.poll(() => new URL(admin.page.url()).searchParams.get('q')).toBe('/status Pending')
     await expect(requestRow(admin.page, playerId)).toHaveCount(0)
     await admin.page.goto(`/admin/requests?q=${encodeURIComponent(`/requested_by ${playerId}`)}`)
     await expect(requestRow(admin.page, playerId)).toContainText('Aprobado')
@@ -241,13 +243,13 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     // Submitting notifies nobody (ADR-16 §5) and the resolution notifies only the person who asked. The
     // guard in `notificationTarget` was rewritten so these two would be clickable at all; this is
     // the first time one is rendered from a real row.
-    await player.page.goto('/player/profile')
+    await player.page.goto('/profile')
     await player.page.getByRole('button', { name: 'Notificaciones' }).click()
     const approved = player.page.getByRole('menuitem').filter({ hasText: 'Aprobaron tu pedido' })
     await expect(approved).toBeVisible()
     await approved.click()
     // Their own profile, and **never** `/admin/requests`: the requester is not an admin.
-    await expect(player.page).toHaveURL(/\/player\/profile/)
+    await expect(player.page).toHaveURL(/\/profile/)
 
     // And the profile now shows no request button at all, because the role is held: there is nothing
     // left to ask for.
@@ -294,12 +296,12 @@ test('a rejected request notifies the person who asked, and the notice opens', a
     await expect(requestRow(admin.page, playerId)).toHaveCount(0, { timeout: 15_000 })
 
     // The requester is told, and the notice opens their profile rather than a screen they cannot enter.
-    await player.page.goto('/player/profile')
+    await player.page.goto('/profile')
     await player.page.getByRole('button', { name: 'Notificaciones' }).click()
     const rejected = player.page.getByRole('menuitem').filter({ hasText: 'Rechazaron tu pedido' })
     await expect(rejected).toBeVisible()
     await rejected.click()
-    await expect(player.page).toHaveURL(/\/player\/profile/)
+    await expect(player.page).toHaveURL(/\/profile/)
 
     // Rejecting frees the way to ask again - the refusal was about this request, not about the person.
     await player.page.goto('/help')

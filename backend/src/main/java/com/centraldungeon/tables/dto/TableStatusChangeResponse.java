@@ -9,11 +9,12 @@ import org.jspecify.annotations.Nullable;
  * @param id            the entry's identifier
  * @param fromStatus    where the table was, as a string
  * @param toStatus      where it went, as a string
+ * @param changedById   who made the change, so the master's History tab can open their card
  * @param changedByName who made the change, already resolved to a display name - the screen shows a
  *                      person, not an id
  * @param justification why, or null for a transition that did not need a reason
  * @param createdAt     when it happened, in UTC
  */
 public record TableStatusChangeResponse(
-        String id, String fromStatus, String toStatus, String changedByName, @Nullable String justification, LocalDateTime createdAt) {
+        String id, String fromStatus, String toStatus, String changedById, String changedByName, @Nullable String justification, LocalDateTime createdAt) {
 }

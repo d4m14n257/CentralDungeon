@@ -8,8 +8,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.centraldungeon.catalogs.TableSystemName;
+import com.centraldungeon.catalogs.TableSystemRepository;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.profiles.dto.FinishedTableResponse;
 import com.centraldungeon.profiles.dto.ProfileResponse;
 import com.centraldungeon.profiles.dto.UserTableResponse;
 import com.centraldungeon.registrations.TableRegistration;
@@ -29,6 +32,7 @@ import com.centraldungeon.users.UserService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,12 +65,16 @@ class ProfileServiceTest {
     @Mock
     private TableRegistrationRepository registrationRepository;
 
+    @Mock
+    private TableSystemRepository tableSystemRepository;
+
     private ProfileService service;
 
     private ProfileService service() {
         if (service == null) {
             service = new ProfileService(
-                    userService, userRoleRepository, tableSessionService, visibilityService, masterRepository, registrationRepository);
+                    userService, userRoleRepository, tableSessionService, visibilityService, masterRepository, registrationRepository,
+                    tableSystemRepository);
         }
         return service;
     }
@@ -148,6 +156,59 @@ class ProfileServiceTest {
 
         assertThat(second.content()).extracting(UserTableResponse::tableId).containsExactly("t-3");
         assertThat(second.totalPages()).isEqualTo(2);
+    }
+
+    /** The list is behind the very same gate as the profile: no visibility, no list, and nothing is read. */
+    @Test
+    void listsNothingForAnActorWhoMayNotSeeTheProfile() {
+        when(userService.getById("target-6")).thenReturn(user("target-6", "Fenn", "UY"));
+        doThrow(new NotFoundException("User not found: target-6")).when(visibilityService).requireVisible("target-6", "stranger");
+
+        assertThatThrownBy(() -> service().listFinishedTables("target-6", "stranger", PageRequest.of(0, 10)))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(registrationRepository, never()).findFinishedPlayedBy(any(), any(), any());
+    }
+
+    /** Systems and masters come in one query each for the page, the primary master is named first. */
+    @Test
+    void assemblesEachFinishedTableWithItsSystemsAndItsMastersPrimaryFirst() {
+        User person = user("target-7", "Gael", "CL");
+        when(userService.getById("target-7")).thenReturn(person);
+        GameTable done = table("t-done", GameTableStatus.Finished, LocalDateTime.of(2026, 1, 1, 0, 0));
+        done.setClosedAt(LocalDateTime.of(2026, 5, 1, 12, 0));
+        TableRegistration played = new TableRegistration(done, person, null);
+        played.setStatus(TableRegistrationStatus.Player);
+        when(registrationRepository.findFinishedPlayedBy("target-7", "actor-1", PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(played), PageRequest.of(0, 10), 1));
+        when(tableSystemRepository.findNamesByTables(List.of("t-done")))
+                .thenReturn(List.of(new TableSystemName("t-done", "Pathfinder 2e"), new TableSystemName("t-done", "D&D 5e")));
+        when(masterRepository.findByGameTables(List.of("t-done"), MasterRowStatus.Created)).thenReturn(List.of(
+                new Master(done, user("co", "Co Master", "AR"), MasterType.Secondary),
+                new Master(done, user("lead", "Lead Master", "AR"), MasterType.Primary)));
+
+        PageResponse<FinishedTableResponse> page = service().listFinishedTables("target-7", "actor-1", PageRequest.of(0, 10));
+
+        assertThat(page.totalElements()).isEqualTo(1);
+        FinishedTableResponse row = page.content().get(0);
+        assertThat(row.id()).isEqualTo("t-done");
+        assertThat(row.systems()).containsExactly("Pathfinder 2e", "D&D 5e");
+        assertThat(row.masters()).containsExactly("Lead Master", "Co Master");
+        assertThat(row.closedAt()).isEqualTo(LocalDateTime.of(2026, 5, 1, 12, 0));
+    }
+
+    /** The client's own sort never reaches the query: the order is the one the list promises. */
+    @Test
+    void ignoresTheSortTheClientAsksFor() {
+        when(userService.getById("target-8")).thenReturn(user("target-8", "Hana", "AR"));
+        when(registrationRepository.findFinishedPlayedBy("target-8", "actor-1", PageRequest.of(2, 5)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(2, 5), 0));
+
+        PageResponse<FinishedTableResponse> page = service().listFinishedTables(
+                "target-8", "actor-1", PageRequest.of(2, 5, org.springframework.data.domain.Sort.by("name")));
+
+        assertThat(page.content()).isEmpty();
+        assertThat(page.page()).isEqualTo(2);
     }
 
     /** The target's existence is checked before its visibility - both answer identically either way (ADR-10 §3). */

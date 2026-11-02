@@ -133,4 +133,24 @@ public interface MasterRepository extends JpaRepository<Master, MasterId> {
             @Param("gameTableIds") Collection<String> gameTableIds,
             @Param("masterType") MasterType masterType,
             @Param("status") MasterRowStatus status);
+
+    /**
+     * Who runs each of a set of tables, whatever their type, in one query: the batched read behind a
+     * profile's list of finished tables.
+     *
+     * <p>The user is fetched with the row, because the caller needs the display name and a lazy
+     * association resolved afterwards would put the N+1 back one layer down.
+     *
+     * @param gameTableIds the tables of the page. An empty collection is the caller's to avoid
+     * @param status       the row status to require, always {@code Created}
+     * @return the matching master rows, user included
+     */
+    @Query("""
+            select m from Master m
+            join fetch m.user
+            where m.gameTable.id in :gameTableIds
+              and m.status = :status
+            """)
+    List<Master> findByGameTables(
+            @Param("gameTableIds") Collection<String> gameTableIds, @Param("status") MasterRowStatus status);
 }

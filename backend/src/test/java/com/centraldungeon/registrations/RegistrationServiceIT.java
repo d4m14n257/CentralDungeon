@@ -75,6 +75,9 @@ class RegistrationServiceIT {
     @Autowired
     private TableRegistrationRepository registrationRepository;
 
+    @Autowired
+    private RegistrationRejectionRepository rejectionRepository;
+
     private GameTable table;
     private User player;
 
@@ -134,5 +137,26 @@ class RegistrationServiceIT {
     /** discord_id is VARCHAR(32); a UUID with the dashes stripped fits exactly. */
     private static String randomDiscordId() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /** The notice on the table's detail lives while the latest application is the rejected one, and ends the moment they apply again. */
+    @Test
+    void myRejectionIsTheLatestApplicationsRejectionAndEndsWhenTheyApplyAgain() {
+        User rejector = userRepository.save(new User(randomDiscordId(), "Rejector"));
+        TableRegistration rejected = new TableRegistration(table, player, null);
+        rejected.setStatus(TableRegistrationStatus.Rejected);
+        rejected = registrationRepository.save(rejected);
+        rejectionRepository.save(new RegistrationRejection(rejected, "Not a fit", rejector));
+
+        var mine = registrationService.findMyRejection(table.getId(), player.getId());
+
+        assertThat(mine).isNotNull();
+        assertThat(mine.justification()).isEqualTo("Not a fit");
+        assertThat(mine.rejectedAt()).isNotNull();
+        assertThat(registrationService.findMyRejection(table.getId(), rejector.getId())).isNull();
+
+        registrationRepository.save(new TableRegistration(table, player, null));
+
+        assertThat(registrationService.findMyRejection(table.getId(), player.getId())).isNull();
     }
 }

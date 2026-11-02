@@ -498,6 +498,10 @@
   },
   "home": {
     "title": "Te damos la bienvenida a la administración",
-    "description": "Desde las secciones de arriba se resuelve lo que espera en la bandeja y se administran mesas, catálogos, archivos, usuarios, pedidos y la configuración."
+    "description": "Desde las secciones de arriba se resuelve lo que espera en la bandeja y se administran mesas, catálogos, archivos, usuarios, pedidos y la configuración.",
+    "queueTitle": "Bandeja",
+    "queueCount_one": "{{count}} ítem espera una acción",
+    "queueCount_other": "{{count}} ítems esperan una acción",
+    "queueEmpty": "No hay nada esperando"
   }
 }

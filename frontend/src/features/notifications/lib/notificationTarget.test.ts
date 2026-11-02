@@ -58,7 +58,7 @@ describe('notificationTarget', () => {
   it.each(['ApprovalRequestApproved', 'ApprovalRequestRejected'] as const)('sends %s about a person to their own profile', (type) => {
     const resolved = notification({ notificationType: type, relatedEntityType: 'user', relatedEntityId: 'user-1' })
 
-    expect(notificationTarget(resolved)).toBe('/player/profile')
+    expect(notificationTarget(resolved)).toBe('/profile')
   })
 
   /**

@@ -261,7 +261,7 @@
     {
       "id": "users",
       "type": "frontend",
-      "label": "/player/users/:id",
+      "label": "/users/:id",
       "sublabel": "callejón",
       "pos": [
         840,
@@ -346,7 +346,7 @@
     {
       "id": "profile",
       "type": "frontend",
-      "label": "/player/profile",
+      "label": "/profile",
       "sublabel": "callejón · también para admin",
       "pos": [
         1110,
@@ -483,7 +483,7 @@
       "title": "Callejones",
       "items": [
         "/player/history: filas sin enlace a la mesa",
-        "/player/profile y /player/users/:id no llevan a nada"
+        "/profile y /users/:id no llevan a nada"
       ]
     },
     {
@@ -497,7 +497,7 @@
       "dot": "violet",
       "title": "Cruces de contexto",
       "items": [
-        "UserMenu → /player/profile también para admin",
+        "UserMenu → /profile también para admin",
         "PlayerBan resuelto → perfil del co-master"
       ]
     }

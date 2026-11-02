@@ -103,3 +103,44 @@ test('a player applies to an open table and the master accepts them', async ({ b
     await player.context.close()
   }
 })
+
+test('a rejected player sees why on the table and can apply again', async ({ browser, request }) => {
+  const masterDiscordId = `e2e-reject-master-${runId}`
+  const playerDiscordId = `e2e-reject-player-${runId}`
+  const tableName = `Mesa Rechazo ${runId}`
+
+  const master = await testLogin(request, masterDiscordId, true)
+  const tableId = await createOpenTable(request, master.accessToken, tableName)
+
+  const player = await newAuthenticatedPage(browser, playerDiscordId, false)
+  try {
+    await player.page.goto(`/player/tables/${tableId}`)
+    await applyToTable(player.page, { message: 'Quiero sumarme' })
+    await expect(player.page.getByText('Te rechazaron en esta mesa')).toHaveCount(0)
+
+    // The master turns the application down through the API: the rejection dialog is covered elsewhere.
+    const candidates = await request.get(`${BACKEND_URL}/api/v1/game-tables/${tableId}/registrations`, {
+      headers: { Authorization: `Bearer ${master.accessToken}` },
+    })
+    expect(candidates.ok()).toBeTruthy()
+    const registrationId = ((await candidates.json()) as { content: { id: string }[] }).content[0].id
+    const rejected = await request.post(`${BACKEND_URL}/api/v1/registrations/${registrationId}/reject`, {
+      headers: { Authorization: `Bearer ${master.accessToken}` },
+      data: { justification: 'No encaja con el tono de la mesa' },
+    })
+    expect(rejected.ok()).toBeTruthy()
+
+    await player.page.reload()
+    await expect(player.page.getByText('Te rechazaron en esta mesa')).toBeVisible()
+    await expect(player.page.getByText(/Motivo: No encaja con el tono de la mesa/)).toBeVisible()
+    await expect(player.page.getByRole('button', { name: 'Postularme de nuevo' })).toBeEnabled()
+
+    await applyToTable(player.page, { message: 'Lo intento otra vez' })
+
+    await expect(player.page.getByRole('button', { name: 'Ya tenés una postulación en curso' }).first()).toBeVisible()
+    await player.page.reload()
+    await expect(player.page.getByText('Te rechazaron en esta mesa')).toHaveCount(0)
+  } finally {
+    await player.context.close()
+  }
+})

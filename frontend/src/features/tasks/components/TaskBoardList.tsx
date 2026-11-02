@@ -1,4 +1,4 @@
-import { LockIcon, PencilIcon } from 'lucide-react'
+import { IdCard, LockIcon, PencilIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -23,6 +23,8 @@ export interface TaskBoardListProps {
   isBusy: boolean
   /** How to render the files of an answer — see `TaskSubmissionsPanel` for why it is a prop. */
   renderFiles: (files: SubmittedFile[]) => ReactNode
+  /** Opens a person's card (ADR-10 §6): the addressee of an individual request, and whoever answered. Absent, no action. */
+  onOpenPerson?: ((userId: string) => void) | undefined
 }
 
 /**
@@ -40,8 +42,9 @@ export interface TaskBoardListProps {
  * @param props.onClose     called with the task whose intake should end; without it, no close
  * @param props.isBusy      whether a mutation is in flight
  * @param props.renderFiles how to render the files of an answer
+ * @param props.onOpenPerson opens a person's card
  */
-export function TaskBoardList({ tasks, onEdit, onClose, isBusy, renderFiles }: TaskBoardListProps) {
+export function TaskBoardList({ tasks, onEdit, onClose, isBusy, renderFiles, onOpenPerson }: TaskBoardListProps) {
   const { t, i18n } = useTranslation('tasks')
   const timeZone = browserTimeZone()
 
@@ -63,6 +66,13 @@ export function TaskBoardList({ tasks, onEdit, onClose, isBusy, renderFiles }: T
             }
             actions={
               <>
+                {onOpenPerson && task.audience === 'Single' && task.targetUserId && task.targetUserName && (
+                  <IconAction
+                    label={t('submissions.viewRecord', { name: task.targetUserName })}
+                    icon={<IdCard className="size-4" />}
+                    onClick={() => onOpenPerson(task.targetUserId!)}
+                  />
+                )}
                 {onEdit && (
                   <IconAction
                     label={t('board.edit')}
@@ -105,7 +115,7 @@ export function TaskBoardList({ tasks, onEdit, onClose, isBusy, renderFiles }: T
                   </div>
                 )}
               </dl>
-              <TaskSubmissionsPanel taskId={task.taskId} renderFiles={renderFiles} />
+              <TaskSubmissionsPanel taskId={task.taskId} renderFiles={renderFiles} onOpenPerson={onOpenPerson} />
             </div>
           </CollapsibleSection>
         </li>
