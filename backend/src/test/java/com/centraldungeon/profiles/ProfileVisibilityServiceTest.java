@@ -2,7 +2,10 @@ package com.centraldungeon.profiles;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.exception.NotFoundException;
@@ -21,10 +24,13 @@ import com.centraldungeon.tables.MasterType;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRoleRepository;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -81,6 +87,25 @@ class ProfileVisibilityServiceTest {
         assertThatCode(() -> service().requireVisible("nobody-related", "admin-1")).doesNotThrowAnyException();
     }
 
+    /** The platform Owner is the same rank as Admin with more reach: nothing narrows their view either. */
+    @Test
+    void anOwnerSeesAnyProfile() {
+        when(userRoleRepository.findActiveRoleNames("owner-1")).thenReturn(Set.of("Owner"));
+
+        assertThatCode(() -> service().requireVisible("nobody-related", "owner-1")).doesNotThrowAnyException();
+    }
+
+    /** The expiry of a table's link never applies to an Admin or an Owner: no table is even consulted. */
+    @ParameterizedTest
+    @ValueSource(strings = {"Admin", "Owner"})
+    void theExpiryOfAFinishedTableDoesNotApplyToAnAdminOrAnOwner(String role) {
+        when(userRoleRepository.findActiveRoleNames("staff-1")).thenReturn(Set.of(role));
+
+        assertThatCode(() -> service().requireVisible("master-of-a-closed-table", "staff-1")).doesNotThrowAnyException();
+
+        verifyNoInteractions(masterRepository, registrationRepository, gameTableRepository);
+    }
+
     /** ADR-10 §1: a master's profile is open to anybody with a session while their table is public. */
     @Test
     void aPlayerSeesTheMasterOfAnOpenedTable() {
@@ -105,7 +130,8 @@ class ProfileVisibilityServiceTest {
         GameTable table = table("table-3", GameTableStatus.Opened, null);
         when(masterRepository.findLiveByUser("master-3", MasterRowStatus.Created)).thenReturn(List.of(masterRow(table, "master-3")));
         when(registrationRepository.findByGameTable_IdInAndUser_IdAndStatusIn(
-                        Set.of("table-3"), "candidate-1", List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player)))
+                        Set.of("table-3"), "candidate-1",
+                        List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player, TableRegistrationStatus.Blocked)))
                 .thenReturn(List.of(registration(table, "candidate-1", TableRegistrationStatus.Candidate)));
 
         assertThatCode(() -> service().requireVisible("candidate-1", "master-3")).doesNotThrowAnyException();
@@ -161,6 +187,52 @@ class ProfileVisibilityServiceTest {
         when(masterRepository.findByUser_Id("master-8")).thenReturn(List.of(deleted));
 
         assertThatThrownBy(() -> service().requireVisible("master-8", "player-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * The veto hides the table from the vetoed person, so running it cannot open the master's
+     * profile to them either.
+     */
+    @Test
+    void aVetoedPlayerDoesNotSeeTheMasterOfTheTableThatVetoedThem() {
+        GameTable table = table("table-9", GameTableStatus.Opened, null);
+        when(masterRepository.findByUser_Id("master-9")).thenReturn(List.of(masterRow(table, "master-9")));
+        when(registrationRepository.findByUser_IdAndStatus("vetoed-1", TableRegistrationStatus.Blocked))
+                .thenReturn(List.of(registration(table, "vetoed-1", TableRegistrationStatus.Blocked)));
+
+        assertThatThrownBy(() -> service().requireVisible("master-9", "vetoed-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    /** The veto closes only the table it names: another visible table of the same master still opens the profile. */
+    @Test
+    void aVetoedPlayerStillSeesTheMasterThroughAnotherVisibleTable() {
+        GameTable vetoedTable = table("table-9b", GameTableStatus.Opened, null);
+        GameTable otherTable = table("table-9c", GameTableStatus.Opened, null);
+        when(masterRepository.findByUser_Id("master-9b"))
+                .thenReturn(List.of(masterRow(vetoedTable, "master-9b"), masterRow(otherTable, "master-9b")));
+        when(registrationRepository.findByUser_IdAndStatus("vetoed-1b", TableRegistrationStatus.Blocked))
+                .thenReturn(List.of(registration(vetoedTable, "vetoed-1b", TableRegistrationStatus.Blocked)));
+
+        assertThatCode(() -> service().requireVisible("master-9b", "vetoed-1b")).doesNotThrowAnyException();
+    }
+
+    /**
+     * The master who vetoed an applicant keeps reading their profile: they need to recognise the
+     * person to lift the veto. The fake repository answers from a stored {@code Blocked} registration,
+     * filtered by the statuses asked for.
+     */
+    @Test
+    void aMasterStillSeesAnApplicantTheyVetoed() {
+        GameTable table = table("table-10", GameTableStatus.Opened, null);
+        TableRegistration veto = registration(table, "vetoed-2", TableRegistrationStatus.Blocked);
+        when(masterRepository.findLiveByUser("master-10", MasterRowStatus.Created)).thenReturn(List.of(masterRow(table, "master-10")));
+        when(registrationRepository.findByGameTable_IdInAndUser_IdAndStatusIn(any(), eq("vetoed-2"), any()))
+                .thenAnswer(call -> {
+                    Collection<TableRegistrationStatus> asked = call.getArgument(2);
+                    return asked.contains(veto.getStatus()) ? List.of(veto) : List.of();
+                });
+
+        assertThatCode(() -> service().requireVisible("vetoed-2", "master-10")).doesNotThrowAnyException();
     }
 
     private static GameTable table(String id, GameTableStatus status, LocalDateTime closedAt) {

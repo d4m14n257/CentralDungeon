@@ -2,7 +2,7 @@
 adr: 5
 titulo: Seguridad, sesión y login
 estado: Vigente
-actualizada: 2026-10-21
+actualizada: 2026-11-10
 absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 ---
 
@@ -28,9 +28,9 @@ absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 
 ## §3 El JWT afirma identidad; roles y `status` se leen de la base con una caché de 60 s
 
-**Decisión.** El token lleva el `sub` y poco más. Roles y `status` se leen de la base en cada request, a través de Caffeine en proceso vía Spring Cache: `expireAfterWrite = 60 s`, `maximumSize = 10 000`, y `@CacheEvict` explícito al bloquear a alguien o cambiarle los roles.
+**Decisión.** El token lleva el `sub` y poco más. Roles y `status` se leen de la base en cada request, a través de Caffeine en proceso vía Spring Cache: `expireAfterWrite = 60 s`, `maximumSize = 10 000`, y `@CacheEvict` explícito al bloquear a alguien o cambiarle los roles. **Una cuenta `Blocked` con un token válido recibe `401` en todo endpoint**, igual que sin sesión: ni `403` ni un código que nombre el bloqueo. El bloqueo se le dice a la persona en el login (§9), no a quien llama con un token.
 
-**Por qué.** Un JWT con roles es una foto del momento en que se emitió, y sin revocación un admin degradado o alguien `Blocked` seguiría entrando hasta que expire. Leyendo de la base, un baneo o una degradación tienen efecto inmediato, y es una lectura por PK cacheada. **El TTL es la ventana de revocación**: 60 s y no cinco minutos porque `Owner` da acceso a la auditoría (ADR-17 §1) y al borrado físico (ADR-13 §8); la evicción explícita hace el efecto inmediato y el TTL es la red para el camino que se olvide de evictar. **Limitación aceptada**: la caché es por JVM; con más de una instancia `@CacheEvict` solo limpia la local, la misma restricción que el broker STOMP en memoria (ADR-18 §2), y hará falta caché compartida o el TTL será la única garantía.
+**Por qué.** Un JWT con roles es una foto del momento en que se emitió, y sin revocación un admin degradado o alguien `Blocked` seguiría entrando hasta que expire. Leyendo de la base, un baneo o una degradación tienen efecto inmediato, y es una lectura por PK cacheada. El `401` es el de sin sesión para no confirmarle el bloqueo a quien solo tiene el token: uno robado o filtrado no tiene por qué enterarse de qué le pasó a la cuenta. Lo decidió el usuario el 2026-11-10, al correr F4.2 «La matriz de roles». **El TTL es la ventana de revocación**: 60 s y no cinco minutos porque `Owner` da acceso a la auditoría (ADR-17 §1) y al borrado físico (ADR-13 §8); la evicción explícita hace el efecto inmediato y el TTL es la red para el camino que se olvide de evictar. **Limitación aceptada**: la caché es por JVM; con más de una instancia `@CacheEvict` solo limpia la local, la misma restricción que el broker STOMP en memoria (ADR-18 §2), y hará falta caché compartida o el TTL será la única garantía.
 
 *Antes: #122, #128.*
 
@@ -60,7 +60,7 @@ absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 
 ## §7 Irse del servidor no borra nada; ser baneado bloquea, y en v1 lo marca un admin
 
-**Decisión.** Salir del servidor de Discord conserva los datos —karma, historial, mesas— por si la persona vuelve. Ser baneado del servidor implica quedar baneado del sistema, sin retorno: un admin le pone `status = 'Blocked'` a mano desde el panel de moderación (ADR-11 §7). Automatizarlo queda para el bot. Con solo OAuth2 (v1) se puede identificar al usuario y verificar si es miembro; **necesitan bot** detectar baneos, crear y borrar canales por mesa y leer la lista de miembros, y se harán juntas. Enlazar a un canal existente no necesita bot: es un link.
+**Decisión.** Salir del servidor de Discord conserva los datos —karma, historial, mesas— por si la persona vuelve. Ser baneado del servidor implica quedar baneado del sistema, sin retorno: un admin le pone `status = 'Blocked'` a mano desde el panel de moderación (ADR-11 §7), y desde ese momento su token recibe `401` en todo endpoint (§3). Automatizarlo queda para el bot. Con solo OAuth2 (v1) se puede identificar al usuario y verificar si es miembro; **necesitan bot** detectar baneos, crear y borrar canales por mesa y leer la lista de miembros, y se harán juntas. Enlazar a un canal existente no necesita bot: es un link.
 
 **Por qué.** Sin la distinción, salirse un mes equivaldría a perder dos años de historial, y quien fue expulsado de la comunidad volvería a entrar. OAuth2 solo responde si alguien es miembro: el que se fue y el baneado devuelven lo mismo, y consultar baneos exige un bot con permisos, fuera de v1. Sin la marca manual, la distinción no la aplicaría nadie. Baneos, canales y su apertura según el estado de la mesa son la misma pieza de trabajo: un bot con permisos sobre el servidor.
 

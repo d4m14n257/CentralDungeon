@@ -1,29 +1,30 @@
 /**
  * Mirror of NotificationParams — the names a notification's sentence needs filled in (ADR-23 §3).
  *
- * Every field is optional because each notification type fills in a different subset: a clash names
- * two tables, a new candidate names a person and a table, an acceptance names only the table.
+ * Every field is always present and null when it does not apply, because each notification type fills
+ * in a different subset: a clash names two tables, a new candidate names a person and a table, an
+ * acceptance names only the table.
  */
 export interface NotificationParams {
-  tableName?: string | null
-  otherTableName?: string | null
-  actorName?: string | null
+  tableName: string | null
+  otherTableName: string | null
+  actorName: string | null
   /** What a table is asking for, so the bell names the request rather than announcing one (ADR-15 §5). */
-  taskTitle?: string | null
+  taskTitle: string | null
   /** The table a veto outcome belongs to, since its related entity is an application (`PlayerBan`). */
-  tableId?: string | null
+  tableId: string | null
   /**
    * How the reader is joined to the table, on the notices that reach both its masters and its players:
    * the same type opens a different screen for each. Null on every other type and on rows written
    * before it existed.
    */
-  membership?: 'Master' | 'Player' | null
+  membership: 'Master' | 'Player' | null
   /**
    * For `TableEditedByAdmin`, the fields the admin actually changed, as stable codes (`name`,
    * `description`, `permitted`, `requirements`, `startDate`, `totalSessions`, `maxPlayers`, `tableType`,
    * `systems`, `tags`, `platforms`, `schedule`). Null on rows written before it existed.
    */
-  changes?: string[] | null
+  changes: string[] | null
 }
 
 /**

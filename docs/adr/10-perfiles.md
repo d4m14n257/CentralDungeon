@@ -2,7 +2,7 @@
 adr: 10
 titulo: Perfiles
 estado: Vigente
-actualizada: 2026-11-01
+actualizada: 2026-11-10
 absorbe: [41, 44, 47, 134, 248, 249, 285]
 ---
 
@@ -12,9 +12,9 @@ absorbe: [41, 44, 47, 134, 248, 249, 285]
 
 ## §1 La visibilidad de perfiles es asimétrica y nace de la relación en una mesa
 
-**Decisión.** El perfil de un **master** es visible para cualquier usuario que mire su mesa. El perfil de un **jugador** se abre para el master **desde que recibe su postulación**. Los **jugadores de una mesa** ven los perfiles de sus compañeros. Las tres reglas caducan igual (§2) y el admin no tiene restricciones de visibilidad salvo la autoría de los comentarios (ADR-06 §8). Es una regla de privacidad, no de UI: el backend la aplica y el frontend la refleja.
+**Decisión.** El perfil de un **master** es visible para cualquier usuario que mire su mesa. El perfil de un **jugador** se abre para el master **desde que recibe su postulación**. Los **jugadores de una mesa** ven los perfiles de sus compañeros. Las tres reglas caducan igual (§2) y el admin no tiene restricciones de visibilidad salvo la autoría de los comentarios (ADR-06 §8). **El veto corta la relación en un solo sentido**: el vetado deja de ver el perfil del master **por esa mesa**, porque el veto se la oculta (ADR-09 «Postulaciones y veto» §4 «El veto se acota a una sola mesa y la hace invisible para el vetado»), y lo sigue viendo si otra mesa se lo abre; el master sigue viendo el perfil de quien vetó. Es una regla de privacidad, no de UI: el backend la aplica y el frontend la refleja.
 
-**Por qué.** El karma existe para evaluar comportamiento, y evaluar requiere ver; pero exponer a todos ante todos convierte la plataforma en un ranking público de personas. La asimetría refleja quién decide qué: el jugador decide **si vale la pena entrar** y mira al master antes de postularse; el master decide **a quién acepta**, y mira al candidato solo cuando ese candidato se le presentó por su cuenta. Los compañeros van a jugar juntos y a comentarse entre ellos (`JJ`), así que necesitan poder evaluarse igual.
+**Por qué.** El karma existe para evaluar comportamiento, y evaluar requiere ver; pero exponer a todos ante todos convierte la plataforma en un ranking público de personas. La asimetría refleja quién decide qué: el jugador decide **si vale la pena entrar** y mira al master antes de postularse; el master decide **a quién acepta**, y mira al candidato solo cuando ese candidato se le presentó por su cuenta. Los compañeros van a jugar juntos y a comentarse entre ellos (`JJ`), así que necesitan poder evaluarse igual. El veto no es simétrico porque las dos partes necesitan cosas distintas: al vetado, el veto le oculta la mesa, y la mesa era lo único que le abría ese perfil; al master, el perfil de quien vetó le hace falta para identificarlo y levantar el veto (ADR-09 §5). Lo decidió el usuario el 2026-11-10, al correr F4.2 «La matriz de roles».
 
 *Antes: #41, #47.*
 

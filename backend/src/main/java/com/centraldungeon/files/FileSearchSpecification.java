@@ -97,9 +97,9 @@ final class FileSearchSpecification {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(builder.equal(root.get("userCreated").get("id"), ownerId));
             predicates.add(builder.equal(root.get("status"), FileStatus.Current));
-            // A file waiting in the platform's library is the platform's, not the admin's who uploaded
-            // it: their own library never lists it (ADR-14 §5, §7).
-            predicates.add(builder.notEqual(root.get("fileType"), FileType.Library));
+            // Public and Library files belong to the platform, not to whoever uploaded them: a person's
+            // own library never lists them.
+            predicates.add(builder.not(root.get("fileType").in(FileType.Public, FileType.Library)));
             Predicate matched = matching(root, criteriaQuery, builder, query);
             if (matched != null) {
                 predicates.add(matched);

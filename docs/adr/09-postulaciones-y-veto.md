@@ -2,7 +2,7 @@
 adr: 9
 titulo: Postulaciones y veto
 estado: Vigente
-actualizada: 2026-11-01
+actualizada: 2026-11-10
 absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 ---
 
@@ -36,9 +36,9 @@ absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 
 ## §4 El veto se acota a una sola mesa y la hace invisible para el vetado
 
-**Decisión.** El veto (`Blocked`) vale **para una sola mesa**: no hay veto a nivel master ni a nivel plataforma por decisión de un master. Es un estado de `table_registrations` y no tiene tabla propia. El vetado no ve esa mesa ni sabe que existe —toda lectura por id responde `404`, nunca `403`, y volver a postularse también es `404`—, pero **puede postularse a una mesa nueva del mismo master**. No confundir con `users.status = 'Blocked'`, el bloqueo global que aplica un admin.
+**Decisión.** El veto (`Blocked`) vale **para una sola mesa**: no hay veto a nivel master ni a nivel plataforma por decisión de un master. Es un estado de `table_registrations` y no tiene tabla propia. El vetado no ve esa mesa ni sabe que existe —toda lectura por id responde `404`, nunca `403`, y volver a postularse también es `404`—, y tampoco ve el perfil del master **por esa mesa**; el master, en cambio, sigue viendo el perfil del vetado (ADR-10 «Perfiles» §1 «La visibilidad de perfiles es asimétrica y nace de la relación en una mesa»). Pero **puede postularse a una mesa nueva del mismo master**. No confundir con `users.status = 'Blocked'`, el bloqueo global que aplica un admin.
 
-**Por qué.** CentralDungeon no discrimina: lo que regula la actitud de una persona es el karma (ADR-11 §1), no una lista negra que la siga por toda la plataforma. Como el veto siempre reacciona a una postulación existente, no necesita otra entidad. El `404` es el mismo que da un perfil caducado (ADR-10 §3): un `403` confirmaría lo que el `404` niega.
+**Por qué.** CentralDungeon no discrimina: lo que regula la actitud de una persona es el karma (ADR-11 §1), no una lista negra que la siga por toda la plataforma. Como el veto siempre reacciona a una postulación existente, no necesita otra entidad. El `404` es el mismo que da un perfil caducado (ADR-10 §3): un `403` confirmaría lo que el `404` niega. El perfil del master se cierra por esa mesa porque era la mesa la que se lo abría. El master conserva el del vetado porque lo necesita para identificarlo y levantar el veto (§5).
 
 *Antes: #29.*
 

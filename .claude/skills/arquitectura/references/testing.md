@@ -21,7 +21,7 @@ Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontain
 - `<Clase>Test` para los unitarios y `<Clase>IT` para los de integración.
 - **Todo en inglés, incluido el nombre del test.** El nombre describe el caso, no el método: `rejectsApplicationFromBlockedUser()`, no `testRegister2()`.
 - Las aserciones van con AssertJ (`assertThat`), no con `assertEquals`.
-- La clase de test lleva su Javadoc: qué regla prueba y qué `ADR-NN §k` la pide (§6.1).
+- La clase de test lleva su Javadoc: qué regla prueba y por qué existe, con palabras propias y sin citar ADRs, skills, reglas ni fases (§6.1, ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»).
 
 **Patrón unitario de un service**
 1. **Arrange**: `@Mock` para los repositories, y el service **se arma con su constructor en `@BeforeEach`** (`new SettingsService(...)`), igual que lo inyecta Spring (§2.2). `@InjectMocks` existe en tres tests viejos; no se sigue.
@@ -38,6 +38,13 @@ Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontain
 2. Flyway aplica **todas** las migraciones de `db/migration/`, de `V1__baseline.sql` en adelante, con `ddl-auto: validate`. Nunca `create-drop`: ocultaría justo el desfase entre la entidad y el schema real que este test tiene que detectar.
 3. Se prueba el caso de uso completo, no una query aislada. Por ejemplo: se acepta un candidato → su estado pasa a `Player` → el conteo derivado de jugadores de la mesa sube en 1 → se generó la notificación.
 4. Si el test crea datos que el e2e también limpia, la tabla nueva entra en el orden de borrado de `TestDataService`. Olvidarlo rompió la limpieza cinco veces (ADR-07 §9, ADR-24 §3).
+
+**La matriz de roles** (`backend/src/test/java/com/centraldungeon/matrix/`, ADR-24 «Testing» §4 «Todo endpoint tiene su fila en la matriz de roles, y el esperado sale de los documentos»)
+1. **Todo endpoint tiene su fila** en el `ROWS` de la clase `*RoleMatrixIT` de su dominio, con una celda por cada columna base de `MatrixActor`. `RoleMatrixCompletenessIT` recorre los mappings reales y falla si falta una fila o sobra una.
+2. **El esperado se escribe desde los documentos**: la ADR, `references/modelo-datos/roles-y-alcance.md` §3 y la regla de §4.5. **Nunca se lee el `@PreAuthorize` para llenar la celda**: si los documentos no alcanzan, la celda es una decisión que falta, no un hueco que se rellena con lo que el código hace.
+3. **Una celda en rojo se tría** en las tres categorías de `fase-4-revision.md` §3. Si es una decisión abierta, va a `KnownDisagreements` con lo observado y una frase de qué choca con qué; la entrada se borra cuando la decisión se aplica, y el test lo pide solo.
+4. **Admin y Owner esperan lo mismo** (`AdminOwnerParityTest`, sin base): una fila que los separa entra en `MAY_DIFFER` con su motivo, y solo si mueve el rango de admin.
+5. Donde la celda es `403` o `404` sobre un recurso ajeno, fija lo que se responde hoy hasta que F4.4 «Seguridad» decida cuál corresponde.
 
 ## 5.2 Frontend
 

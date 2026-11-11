@@ -82,3 +82,11 @@ export interface ClientLimits {
   /** The largest `maxPlayers` a table may declare, stated beside the seat field before it is broken. */
   maxPlayersCap: number
 }
+
+/** Mirror of `TokenResponse`: what a login or a refresh answers with. The refresh token is not in it, it travels as an httpOnly cookie. */
+export interface TokenResponse {
+  /** The token to send as `Authorization: Bearer` on every call. */
+  accessToken: string
+  /** How long the access token lasts, in seconds. */
+  expiresInSeconds: number
+}

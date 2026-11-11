@@ -10,7 +10,7 @@ import { acceptReview } from './helpers/review'
  *
  * That last clause is the one a backend test cannot see from outside and a frontend test cannot see
  * at all. What proves it here is the audit trail: `UserRoleService` is what writes
- * `user_role_changes`, so if the row shows up in `/admin/users` → Historial with the admin's
+ * `user_role_changes`, so if the row shows up in the user's record (`/admin/users/:id`) with the admin's
  * resolution note as its justification, the grant went through that service and not through a second
  * path that wrote `users_roles` on its own.
  *
@@ -217,26 +217,30 @@ test('a player asks for the master role, an admin approves it from /admin/reques
     await expect(admin.page.getByRole('heading', { name: 'Pedidos' })).toBeVisible()
     // The default travels in the URL (ADR-22 §6): the entry without `q` was redirected to it.
     await expect.poll(() => new URL(admin.page.url()).searchParams.get('q')).toBe('/status Pending')
+    // An absence assertion waits for nothing, so first wait for the filtered list to render: either its
+    // table or the empty state.
+    await expect(admin.page.getByRole('table').or(admin.page.getByText('No hay nada esperando una respuesta')).first()).toBeVisible()
     await expect(requestRow(admin.page, playerId)).toHaveCount(0)
     await admin.page.goto(`/admin/requests?q=${encodeURIComponent(`/requested_by ${playerId}`)}`)
     await expect(requestRow(admin.page, playerId)).toContainText('Aprobado')
 
     // ---- 5. **The role was granted by UserRoleService and not by a second route.**
     //
-    // `/admin/users` reads `users_roles`, so the chip proves the role is live. The Historial reads
-    // `user_role_changes`, and *that* table is only ever written by `UserRoleService.grantRole` - so
-    // a row there carrying the admin's resolution note as its justification is the proof that
-    // approving went through F3.1's service rather than writing the grant itself.
+    // `/admin/users` reads `users_roles`, so the chip proves the role is live. The user's record
+    // (opened from the row's link) lists `user_role_changes`, and *that* table is only ever written by
+    // `UserRoleService.grantRole` - so a row there carrying the admin's resolution note as its
+    // justification is the proof that approving went through that service rather than writing the
+    // grant itself.
     await admin.page.goto('/admin/users')
     await search(admin.page, 'Buscar usuarios', `/discord_name ${playerId}`)
     const userRow = admin.page.getByRole('row').filter({ hasText: playerId })
     await expect(userRow).toContainText('Master', { timeout: 15_000 })
 
-    await userRow.getByRole('button', { name: 'Historial' }).click()
-    const history = admin.page.getByRole('dialog')
+    await userRow.getByRole('link', { name: playerId }).click()
+    const history = admin.page.getByRole('main')
+    await expect(history.getByRole('heading', { name: 'Lo que hicieron los admins con esta cuenta' })).toBeVisible()
     await expect(history).toContainText(resolutionNote)
     await expect(history).toContainText(adminId)
-    await history.getByRole('button', { name: 'Cerrar' }).click()
 
     // ---- 6. The requester is told, once, and the notice opens something.
     //

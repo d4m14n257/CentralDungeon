@@ -2,7 +2,7 @@
 adr: 6
 titulo: Roles y alcance
 estado: Vigente
-actualizada: 2026-10-24
+actualizada: 2026-11-10
 absorbe: [16, 37, 45, 67, 71, 72, 73, 89, 135, 140, 151, 152, 155, 159, 166, 169, 252, 284]
 ---
 
@@ -44,7 +44,7 @@ absorbe: [16, 37, 45, 67, 71, 72, 73, 89, 135, 140, 151, 152, 155, 159, 166, 169
 
 ## §5 Nadie es jugador y master de la misma mesa
 
-**Decisión.** Dos validaciones server-side, una por dirección: postularse a una mesa que el actor dirige es `403` (`RegistrationService.apply`), y agregar como `Secondary` a alguien con una postulación activa (`Candidate`/`Player`) en esa mesa es `409` (`MasterService.addOrPromote`, solo en la rama de alta de un master nuevo). El explorador público (`GET /api/v1/game-tables`) **excluye las mesas que el actor dirige** con un `NOT EXISTS` contra `masters`.
+**Decisión.** Dos validaciones server-side, una por dirección: postularse a una mesa que el actor dirige es `403` (`RegistrationService.apply`), y agregar como `Secondary` a alguien con una postulación activa (`Candidate`/`Player`) en esa mesa es `409` (`MasterService.addOrPromote`, solo en la rama de alta de un master nuevo). El explorador (`GET /api/v1/game-tables`, abierto a cualquier sesión, §6) **excluye las mesas que el actor dirige** con un `NOT EXISTS` contra `masters`.
 
 **Por qué.** `masters` y `table_registrations` son tablas independientes y nada lo impedía: un usuario con `Player` y `Master` veía sus propias mesas en el explorador. Postularse a la mesa de **otro** master sigue permitido con el rol `Player` (§3). La promoción no repite el chequeo porque quien ya es master nunca pudo tener una postulación activa ahí. La exclusión del explorador va en el backend y no ocultando en el cliente por el mismo criterio de §6: una regla real se aplica en la fuente de los datos.
 
@@ -52,9 +52,9 @@ absorbe: [16, 37, 45, 67, 71, 72, 73, 89, 135, 140, 151, 152, 155, 159, 166, 169
 
 ## §6 La vista de gestión de una mesa tiene su propio endpoint y verifica pertenencia antes de leer
 
-**Decisión.** `/master/tables/:id` lee de `GET /api/v1/game-tables/{id}/managed`, que verifica la pertenencia (`canOversee`, §8) **antes** de mapear nada y responde `403` sin cuerpo si no corresponde. `GET /api/v1/game-tables/{id}` sigue público para `/tables/:id`, porque cualquier jugador necesita ver una mesa para decidir si postularse. Nunca el mismo path con dos comportamientos según quién pregunta. El logo del header vuelve al home del **contexto activo** (`/master/tables` en Master, `/` en Jugador), con el mismo builder de rutas que usa el `ContextSwitcher`.
+**Decisión.** `/master/tables/:id` lee de `GET /api/v1/game-tables/{id}/managed`, que verifica la pertenencia (`canOversee`, §8) **antes** de mapear nada y responde `403` sin cuerpo si no corresponde. `GET /api/v1/game-tables/{id}` sigue siendo el detalle público, el de `/player/tables/:id`, porque cualquier jugador necesita ver una mesa para decidir si postularse. **«Público» quiere decir «cualquier sesión»**, aquí y en el explorador (§5): sin token, los dos responden `401`, como todo endpoint de mesas (`arquitectura` §2.5); ninguno es anónimo. Nunca el mismo path con dos comportamientos según quién pregunta. El logo del header vuelve al home del **contexto activo** (`/master` en Master, `/player` en Jugador; ADR-20 «Navegación, contextos y ayuda» §3 «La home de cada contexto es la dirección de su prefijo»), con el mismo builder de rutas que usa el `ContextSwitcher`.
 
-**Por qué.** Un chequeo en el cliente cambia qué se pinta, no qué se pide: el cuerpo de la mesa ajena viajaba igual y se veía en la pestaña Network. La regla dura 17 pide la verificación en el service antes de tocar nada, y eso es la lectura, no la pintura. La ruta de **gestión** no debe mostrar ni el encabezado sin pertenencia; mezclar el dato público con la pantalla del master en la misma URL confunde aunque no se filtre nada sensible.
+**Por qué.** Un chequeo en el cliente cambia qué se pinta, no qué se pide: el cuerpo de la mesa ajena viajaba igual y se veía en la pestaña Network. La regla dura 17 pide la verificación en el service antes de tocar nada, y eso es la lectura, no la pintura. La ruta de **gestión** no debe mostrar ni el encabezado sin pertenencia; mezclar el dato público con la pantalla del master en la misma URL confunde aunque no se filtre nada sensible. «Público» se fijó como «cualquier sesión», que es como responde el código, el 2026-11-10, al correr F4.2 «La matriz de roles»: la palabra no estaba definida, `arquitectura` §2.5 ya decía `401` sin token, y la disponibilidad de una mesa para el actor (`applied`, ADR-09 §7) se calcula para el actor del token, que sin sesión no existe.
 
 *Antes: #151, #152.*
 

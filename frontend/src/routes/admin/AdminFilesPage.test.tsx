@@ -22,7 +22,6 @@ const FILE: AdminFile = {
   sizeBytes: 2048,
   fileType: 'Library',
   categories: ['TableMaterial'],
-  usages: [],
   ownerId: 'user-5',
   ownerName: 'ana',
   tables: [

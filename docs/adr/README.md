@@ -64,7 +64,7 @@ El agente `escriba-adr` (`.claude/agents/`) hace estos pasos.
 | ADR-21 | [Diseño visual e interacción](21-diseno-visual-e-interaccion.md) | 13 |
 | ADR-22 | [Buscadores](22-buscadores.md) | 6 |
 | ADR-23 | [Textos e idiomas](23-textos-e-idiomas.md) | 4 |
-| ADR-24 | [Testing](24-testing.md) | 3 |
+| ADR-24 | [Testing](24-testing.md) | 4 |
 
 ## Contexto
 

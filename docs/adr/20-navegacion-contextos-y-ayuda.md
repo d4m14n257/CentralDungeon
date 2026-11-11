@@ -2,7 +2,7 @@
 adr: 20
 titulo: Navegación, contextos y ayuda
 estado: Vigente
-actualizada: 2026-11-01
+actualizada: 2026-11-10
 absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 ---
 
@@ -12,9 +12,9 @@ absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 
 ## §1 Se cambia de contexto explícitamente, y el contexto es organización de UI, no seguridad
 
-**Decisión.** Un chip en el header muestra los contextos que el usuario tiene habilitados —Jugador, Master, Admin; un `Owner` usa el de Admin hasta que F6 construya el suyo— y cada uno tiene su propia navegación. Quien tiene uno solo ve el chip igual, sin caret ni menú (ADR-21 §3). **El contexto no autoriza nada**: el backend sigue autorizando endpoint por endpoint, y estar «en contexto Admin» no habilita absolutamente nada.
+**Decisión.** Un chip en el header muestra los contextos que el usuario tiene habilitados —Jugador, Master, Admin; un `Owner` usa el de Admin hasta que F6 construya el suyo— y cada uno tiene su propia navegación. Quien tiene uno solo ve el chip igual, sin caret ni menú (ADR-21 §3). **El contexto no autoriza nada**: el backend sigue autorizando endpoint por endpoint, y estar «en contexto Admin» no habilita absolutamente nada. **Y el backend tampoco reproduce el contexto**: las listas propias —`GET /game-tables/mine`, `/game-tables/mine/history`, `/game-tables/managed`, `/registrations/mine` y `/master/dashboard`— se filtran por el actor del token y responden `200` a toda sesión, con lo suyo, vacías si no tiene nada, también a quien no tiene el contexto donde la interfaz las muestra. El contexto se cierra en la interfaz (§2). Por estar fuera de un contexto, el backend responde `403` solo donde el permiso es un rol: la superficie de administración y crear una mesa. El `403` sobre un recurso concreto que no es del actor sigue siendo de la pertenencia (ADR-05 «Seguridad, sesión y login» §5 «Toda lectura o mutación de un recurso concreto filtra por el actor»).
 
-**Por qué.** Con roles acumulables y sin jerarquía (ADR-06 §1), un menú único que crece según los roles se vuelve largo y mezcla actividades que no se parecen en nada: explorar mesas para jugar y moderar comentarios. Separar por contexto mantiene cada espacio enfocado. Que la puerta del frontend no sea seguridad es lo que permite que la UI decida qué se muestra (§2) sin que nadie confunda eso con qué se permite.
+**Por qué.** Con roles acumulables y sin jerarquía (ADR-06 §1), un menú único que crece según los roles se vuelve largo y mezcla actividades que no se parecen en nada: explorar mesas para jugar y moderar comentarios. Separar por contexto mantiene cada espacio enfocado. Que la puerta del frontend no sea seguridad es lo que permite que la UI decida qué se muestra (§2) sin que nadie confunda eso con qué se permite. Una lista filtrada por el actor no expone nada ajeno, así que cerrarla por rol no protege nada; y `/game-tables/managed` no puede depender del rol, porque la necesita un co-master sin el rol `Master` (regla dura 17 «El rol no es la pertenencia; el actor sale del token», ADR-06 «Roles y alcance» §4 «Dirigir una mesa se autoriza por la fila viva en `masters`, no por el rol `Master`»). Lo decidió el usuario el 2026-11-10, al correr F4.2 «La matriz de roles».
 
 *Antes: #103.*
 

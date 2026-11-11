@@ -14,6 +14,7 @@ Cada una de estas cosas costó una sesión entera la primera vez, y **todas se v
 - **Por qué:** un backend paralelo arrastra una cadena de overrides —origen CORS, URL del frontend, URIs del proveedor OAuth2— que apuntan todas al puerto equivocado, y cada una pide su propio arreglo. La sesión termina depurando el andamio de diagnóstico en vez de la tarea.
 - **Si hay que reiniciar para tomar un cambio**, se mata y se relanza en 8080, o se le pide al usuario. Reiniciar su proceso no le cuesta nada.
 - **Spring Boot no toma un cambio de fuente hasta que algo recompila `target/classes`; Vite sí, solo.** El proceso en 8080 suele ser un `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,test` lanzado por una sesión anterior, con `spring-boot-devtools`: un `./mvnw compile` o `test` recompila y devtools reinicia la app (§2). Sin eso, el proceso sigue con el código de cuando arrancó. Después de cualquiera de los dos, se mira el health antes de que Playwright ejercite lo nuevo. Se confirma pegándole a un endpoint nuevo: un `404` en vez de un `401` significa que la ruta existe.
+- **Nunca dos corridas de Playwright a la vez, aunque sean specs distintos.** Cada invocación termina en un `globalTeardown` que borra todas las filas `e2e-*` y las mesas «E2E» de la base compartida, también las de otra corrida a mitad de camino: los dos specs fallan sin relación con el código. Con varios agentes, Playwright va bajo el mismo candado de directorio que Maven (`.claude/rules/delegacion.md`).
 
 ## 2. Nunca `./mvnw clean` con el backend levantado
 
@@ -47,6 +48,8 @@ Para iterar sobre pocas clases sin pagar la corrida completa: `./mvnw verify -Di
 ## 5. Verificar que algo no existe
 
 Bajo zsh, `ls backend/*.md` sin coincidencias imprime `no matches found` como **error de glob del shell**, y se lee como si el archivo faltara. Antes de afirmar que algo no existe: `git cat-file -e HEAD:<ruta>` o `ls <ruta exacta>`.
+
+**El scratchpad de una sesión de Claude vive en `/private/tmp`, y macOS borra lo que lleva días sin tocarse.** Una sesión que se retoma después de una pausa larga encuentra sus archivos intermedios desaparecidos —en F4.2, el oráculo de la matriz de roles—, y un agente que no los encuentra no tiene que reconstruirlos de memoria. Lo que tiene que sobrevivir a la sesión se guarda fuera de `/tmp` (por ejemplo, en la carpeta de la sesión bajo `~/.claude/projects/`). Lo que ya se perdió se recupera de la transcripción del agente que lo escribió, que sí vive ahí.
 
 ## 6–8. Las herramientas de Claude
 

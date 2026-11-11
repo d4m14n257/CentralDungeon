@@ -28,9 +28,28 @@ async function testLogin(request: APIRequestContext, discordId: string, asMaster
 
 async function newAuthenticatedPage(browser: Browser, discordId: string, asMaster: boolean, asAdmin: boolean) {
   const context = await browser.newContext()
-  await testLogin(context.request, discordId, asMaster, asAdmin)
+  const { accessToken } = await testLogin(context.request, discordId, asMaster, asAdmin)
   const page = await context.newPage()
-  return { context, page }
+  return { context, page, accessToken }
+}
+
+/** Adds a person as co-master of the table whose Players tab the master is on, and waits for the badge. */
+async function addCoMaster(masterPage: Page, coMasterDiscordId: string) {
+  await masterPage.getByRole('link', { name: 'Jugadores' }).click()
+  const search = masterPage.getByRole('combobox', { name: 'Buscar personas' })
+  await search.fill(coMasterDiscordId)
+  await search.press('Enter')
+  await search.press('Enter')
+  await masterPage.getByRole('button', { name: new RegExp(`^${coMasterDiscordId}\\b`) }).click()
+  await acceptReview(masterPage)
+  await expect(masterPage.getByText('Co-master', { exact: true })).toBeVisible()
+}
+
+/** Removes a co-master from the Players tab and waits for the badge to go. */
+async function removeCoMaster(masterPage: Page, coMasterDiscordId: string) {
+  await masterPage.getByRole('button', { name: `Quitar a ${coMasterDiscordId}` }).click()
+  await masterPage.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+  await expect(masterPage.getByText('Co-master', { exact: true })).toBeHidden()
 }
 
 /** Creates a table through the wizard, walking past the steps that ask for nothing required. */
@@ -80,14 +99,7 @@ test('a master adds a co-master, who sees the table, and loses it when removed',
   try {
     const tableId = await createTableThroughWizard(master.page, tableName)
 
-    await master.page.getByRole('link', { name: 'Jugadores' }).click()
-    const search = master.page.getByRole('combobox', { name: 'Buscar personas' })
-    await search.fill(coMasterDiscordId)
-    await search.press('Enter')
-    await search.press('Enter')
-    await master.page.getByRole('button', { name: new RegExp(`^${coMasterDiscordId}\\b`) }).click()
-    await acceptReview(master.page)
-    await expect(master.page.getByText('Co-master', { exact: true })).toBeVisible()
+    await addCoMaster(master.page, coMasterDiscordId)
 
     // Membership and not the platform role: somebody with no Master role runs this table and sees it.
     await coMaster.page.goto('/master/tables')
@@ -95,14 +107,54 @@ test('a master adds a co-master, who sees the table, and loses it when removed',
     await coMaster.page.goto(`/master/tables/${tableId}`)
     await expect(coMaster.page.getByRole('heading', { name: tableName })).toBeVisible()
 
-    await master.page.getByRole('button', { name: `Quitar a ${coMasterDiscordId}` }).click()
-    await master.page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-    await expect(master.page.getByText('Co-master', { exact: true })).toBeHidden()
+    await removeCoMaster(master.page, coMasterDiscordId)
 
-    // The row survives as a record, but it is no longer a permission: the management screen refuses.
+    // Without the table the person has no Master context left, so the management URL sends them home
+    // to their player area instead of showing a refusal.
     await coMaster.page.goto(`/master/tables/${tableId}`)
-    await expect(coMaster.page.getByText('No tenés permiso')).toBeVisible()
+    await expect(coMaster.page).toHaveURL(/\/player$/)
     await coMaster.page.goto('/master/tables')
+    await expect(coMaster.page).toHaveURL(/\/player$/)
+
+    // The screens no longer ask, so the backend's own refusal is checked with a direct request: the
+    // removed row is a record, not a permission.
+    const managed = await coMaster.context.request.get(`${BACKEND_URL}/api/v1/game-tables/${tableId}/managed`, {
+      headers: { Authorization: `Bearer ${coMaster.accessToken}` },
+    })
+    expect(managed.status()).toBe(403)
+  } finally {
+    await coMaster.context.close()
+    await master.context.close()
+  }
+})
+
+/**
+ * A removed co-master who holds the Master role keeps the Master area but loses the table: their list
+ * must not show it, even though the membership row still exists as a record.
+ */
+test('a removed co-master with the Master role no longer lists the table', async ({ browser }) => {
+  const masterDiscordId = `e2e-cm2-master-${runId}`
+  const coMasterDiscordId = `e2e-cm2-co-${runId}`
+  const tableName = `Mesa Co-master Rol E2E ${runId}`
+
+  const coMasterContext = await browser.newContext()
+  await testLogin(coMasterContext.request, coMasterDiscordId, true)
+  await coMasterContext.close()
+
+  const master = await newAuthenticatedPage(browser, masterDiscordId, true, false)
+  const coMaster = await newAuthenticatedPage(browser, coMasterDiscordId, true, false)
+  try {
+    await createTableThroughWizard(master.page, tableName)
+    await addCoMaster(master.page, coMasterDiscordId)
+
+    await coMaster.page.goto('/master/tables')
+    await expect(coMaster.page.getByText(tableName)).toBeVisible()
+
+    await removeCoMaster(master.page, coMasterDiscordId)
+
+    // The empty state only renders once the list has loaded, so the absence below is not a premature pass.
+    await coMaster.page.goto('/master/tables')
+    await expect(coMaster.page.getByText('Todavía no creaste ninguna mesa')).toBeVisible()
     await expect(coMaster.page.getByText(tableName)).toBeHidden()
   } finally {
     await coMaster.context.close()

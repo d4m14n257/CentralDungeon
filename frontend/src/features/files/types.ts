@@ -102,11 +102,11 @@ export interface AdminFileTable {
 /**
  * Mirror of `AdminFileResponse` — the /admin/files row.
  *
- * It extends the base shape rather than restating it: an admin sees what an owner sees plus the four
- * fields nobody else has business seeing — whose it is, which tables use it, and whether it was
- * marked gone.
+ * It extends the base shape minus `usages` (the owner's own list is the only one that carries it): an
+ * admin sees what an owner sees plus the fields nobody else has business seeing — whose it is, which
+ * tables use it, and whether it was marked gone.
  */
-export interface AdminFile extends StoredFile {
+export interface AdminFile extends Omit<StoredFile, 'usages'> {
   ownerId: string
   /** How to name the uploader on screen — their Discord username, which everybody has. */
   ownerName: string

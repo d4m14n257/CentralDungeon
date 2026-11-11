@@ -3,16 +3,30 @@ import { describe, expect, it } from 'vitest'
 import i18n from '@/providers/i18n'
 
 import { notificationText } from './notificationText'
-import type { Notification } from '../types'
+import type { Notification, NotificationParams } from '../types'
 
 /** The translator bound to the namespace the renderer expects. */
 const t = i18n.getFixedT(null, 'notifications')
+
+/** A notification's params as the backend sends them: every name present, null when it does not apply. */
+function params(filled: Partial<NotificationParams>): NotificationParams {
+  return {
+    tableName: null,
+    otherTableName: null,
+    actorName: null,
+    taskTitle: null,
+    tableId: null,
+    membership: null,
+    changes: null,
+    ...filled,
+  }
+}
 
 function notification(overrides: Partial<Notification>): Notification {
   return {
     id: 'n1',
     notificationType: 'RegistrationAccepted',
-    params: { tableName: 'La Cripta' },
+    params: params({ tableName: 'La Cripta' }),
     title: null,
     message: null,
     relatedEntityType: 'game_table',
@@ -31,7 +45,7 @@ describe('notificationText', () => {
   it('fills in every name a type needs, not only the table', () => {
     const clash = notification({
       notificationType: 'ScheduleConflict',
-      params: { tableName: 'El Faro', otherTableName: 'La Cripta' },
+      params: params({ tableName: 'El Faro', otherTableName: 'La Cripta' }),
     })
     const { title, message } = notificationText(clash, t)
 
@@ -71,7 +85,7 @@ describe('notificationText', () => {
   it('lists the fields an admin changed, in each language', () => {
     const edited = notification({
       notificationType: 'TableEditedByAdmin',
-      params: { tableName: 'La Cripta', membership: 'Master', changes: ['name', 'schedule'] },
+      params: params({ tableName: 'La Cripta', membership: 'Master', changes: ['name', 'schedule'] }),
     })
 
     expect(notificationText(edited, i18n.getFixedT('es', 'notifications')).title).toBe(
@@ -83,7 +97,7 @@ describe('notificationText', () => {
   })
 
   it('reads an edit written before the list existed with the plain sentence', () => {
-    const old = notification({ notificationType: 'TableEditedByAdmin', params: { tableName: 'La Cripta' } })
+    const old = notification({ notificationType: 'TableEditedByAdmin', params: params({ tableName: 'La Cripta' }) })
 
     expect(notificationText(old, i18n.getFixedT('es', 'notifications')).title).toBe('Un admin editó tu mesa La Cripta')
   })
@@ -91,15 +105,15 @@ describe('notificationText', () => {
   /** The reason is in the history, which only a master can open: the player's pause notice says something else. */
   it('words a pause differently for a master and for a player', () => {
     const es = i18n.getFixedT('es', 'notifications')
-    const master = notification({ notificationType: 'TablePaused', params: { tableName: 'La Cripta', membership: 'Master' } })
-    const player = notification({ notificationType: 'TablePaused', params: { tableName: 'La Cripta', membership: 'Player' } })
+    const master = notification({ notificationType: 'TablePaused', params: params({ tableName: 'La Cripta', membership: 'Master' }) })
+    const player = notification({ notificationType: 'TablePaused', params: params({ tableName: 'La Cripta', membership: 'Player' }) })
 
     expect(notificationText(master, es).message).toContain('historial')
     expect(notificationText(player, es).message).toContain('sesiones pendientes')
   })
 
   it('leaves a cancellation without a message for a player, who cannot open the history', () => {
-    const player = notification({ notificationType: 'TableCanceled', params: { tableName: 'La Cripta', membership: 'Player' } })
+    const player = notification({ notificationType: 'TableCanceled', params: params({ tableName: 'La Cripta', membership: 'Player' }) })
 
     expect(notificationText(player, i18n.getFixedT('es', 'notifications')).message).toBeNull()
   })

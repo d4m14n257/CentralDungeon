@@ -4,6 +4,7 @@ import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { approveTableFromQueue } from './helpers/adminQueue'
 import { acceptReview } from './helpers/review'
+import { runnableTableBody } from './helpers/tableApi'
 
 /**
  * F1.2 end to end, against the real backend: the complete wizard with an agenda, and the two rules
@@ -187,5 +188,50 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
     await player.context.close()
     await admin.context.close()
     await master.context.close()
+  }
+})
+
+/**
+ * The agenda tab of a master's own table: the slot with its start and its end, the start date and the
+ * session count, and the way to the edit form while the table is still the master's to rewrite.
+ *
+ * The context is pinned to UTC so that the slot the API stores reads back as the same text on any
+ * machine.
+ */
+test('a master opens the Agenda tab of their table and reads its slots with start and end', async ({ browser }) => {
+  const tableName = `Mesa Agenda Tab E2E ${runId}`
+  const context = await browser.newContext({ timezoneId: 'UTC' })
+
+  try {
+    const login = await context.request.post(`${BACKEND_URL}/api/v1/auth/test-login`, {
+      params: { discordId: `e2e-agenda-master-${runId}`, asMaster: true, asAdmin: false },
+    })
+    expect(login.ok()).toBeTruthy()
+    const { accessToken } = (await login.json()) as { accessToken: string }
+    const created = await context.request.post(`${BACKEND_URL}/api/v1/game-tables`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: runnableTableBody(tableName, {
+        startDate: '2027-03-05',
+        totalSessions: 6,
+        schedule: [
+          { weekday: 'Friday', hourtime: '20:00', duration: '03:00' },
+          { weekday: 'Tuesday', hourtime: '18:30', duration: '02:00' },
+        ],
+      }),
+    })
+    expect(created.ok()).toBeTruthy()
+    const { id } = (await created.json()) as { id: string }
+
+    const page = await context.newPage()
+    await page.goto(`/master/tables/${id}/schedule`)
+
+    await expect(page.getByText('Viernes 20:00–23:00')).toBeVisible()
+    await expect(page.getByText('Martes 18:30–20:30')).toBeVisible()
+    await expect(page.getByText('Sesiones previstas')).toBeVisible()
+    await expect(page.getByText('Fecha de inicio')).toBeVisible()
+    // A draft is still the master's to rewrite, so the tab links to the form.
+    await expect(page.getByRole('link', { name: 'Editar la mesa' })).toBeVisible()
+  } finally {
+    await context.close()
   }
 })

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { masterTableDetailPath, masterTableHistoryPath, masterTablePlayersPath, myTableDetailPath } from '@/config/paths'
 
 import { notificationTarget } from './notificationTarget'
-import { NOTIFICATION_TYPES, type Notification } from '../types'
+import { NOTIFICATION_TYPES, type Notification, type NotificationParams } from '../types'
 
 /**
  * Every type the backend can send today - the regression test walks this list.
@@ -13,11 +13,25 @@ import { NOTIFICATION_TYPES, type Notification } from '../types'
  */
 const ALL_TYPES = NOTIFICATION_TYPES
 
+/** A notification's params as the backend sends them: every name present, null when it does not apply. */
+function params(filled: Partial<NotificationParams>): NotificationParams {
+  return {
+    tableName: null,
+    otherTableName: null,
+    actorName: null,
+    taskTitle: null,
+    tableId: null,
+    membership: null,
+    changes: null,
+    ...filled,
+  }
+}
+
 function notification(overrides: Partial<Notification>): Notification {
   return {
     id: 'n1',
     notificationType: 'RegistrationAccepted',
-    params: { tableName: 'La Cripta' },
+    params: params({ tableName: 'La Cripta' }),
     title: null,
     message: null,
     relatedEntityType: 'game_table',
@@ -77,7 +91,7 @@ describe('notificationTarget', () => {
     (type) => {
       const resolved = notification({
         notificationType: type,
-        params: { tableId: 't4' },
+        params: params({ tableId: 't4' }),
         relatedEntityType: 'table_registration',
         relatedEntityId: 'reg-1',
       })
@@ -118,7 +132,7 @@ describe('notificationTarget', () => {
       for (const entityType of ['user', 'game_table', 'table_registration']) {
         const resolved = notification({
           notificationType: type,
-          params: { tableId: 't1' },
+          params: params({ tableId: 't1' }),
           relatedEntityType: entityType,
           relatedEntityId: 'x1',
         })
@@ -158,7 +172,7 @@ describe('notificationTarget', () => {
     ['TableFinished', masterTableDetailPath('t5')],
     ['TableScheduleChanged', masterTableDetailPath('t5')],
   ] as const)('sends %s to a master on their own screens', (type, expected) => {
-    const row = notification({ notificationType: type, relatedEntityId: 't5', params: { tableName: 'X', membership: 'Master' } })
+    const row = notification({ notificationType: type, relatedEntityId: 't5', params: params({ tableName: 'X', membership: 'Master' }) })
 
     expect(notificationTarget(row)).toBe(expected)
   })
@@ -167,7 +181,7 @@ describe('notificationTarget', () => {
   it.each(['TablePaused', 'TableCanceled', 'TableResumed', 'TableFinished', 'TableScheduleChanged'] as const)(
     'sends %s to a player on their own table screen',
     (type) => {
-      const row = notification({ notificationType: type, relatedEntityId: 't5', params: { tableName: 'X', membership: 'Player' } })
+      const row = notification({ notificationType: type, relatedEntityId: 't5', params: params({ tableName: 'X', membership: 'Player' }) })
 
       expect(notificationTarget(row)).toBe(myTableDetailPath('t5'))
     },
@@ -177,7 +191,7 @@ describe('notificationTarget', () => {
   it.each(['TablePaused', 'TableCanceled', 'TableResumed', 'TableFinished', 'TableScheduleChanged'] as const)(
     'opens nothing for a %s row with no membership',
     (type) => {
-      expect(notificationTarget(notification({ notificationType: type, params: { tableName: 'X' } }))).toBeNull()
+      expect(notificationTarget(notification({ notificationType: type, params: params({ tableName: 'X' }) }))).toBeNull()
       expect(notificationTarget(notification({ notificationType: type, params: null }))).toBeNull()
     },
   )
@@ -192,7 +206,7 @@ describe('notificationTarget', () => {
     // no id at all - tested on its own below.
     for (const type of ALL_TYPES.filter((candidate) => candidate !== 'TableDeletedByAdmin')) {
       for (const membership of ['Master', 'Player'] as const) {
-        const row = notification({ notificationType: type, params: { tableName: 'La Cripta', membership } })
+        const row = notification({ notificationType: type, params: params({ tableName: 'La Cripta', membership }) })
         expect(notificationTarget(row), `${type} for a ${membership} should not resolve to null`).not.toBeNull()
       }
     }

@@ -277,6 +277,45 @@ class AdminUserApiIT {
                 .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));
     }
 
+    /**
+     * Admin and Owner are the same rank with different reach and nobody holds both, so giving Admin to
+     * an Owner takes the Owner role away in the same operation. Seen over HTTP, the proof is what the
+     * former Owner can no longer do: handing out Admin is the Owner's privilege, and the refusal must
+     * apply to a token issued before the change as well as to one issued after it, because the roles
+     * come from the database on every request and not from the token.
+     */
+    @Test
+    void anOwnerGivenAdminLosesTheOwnerRoleAndTheRankToHandItOutOnTheNextRequest() throws Exception {
+        User secondOwner = person("second-owner");
+        grant(secondOwner, PlatformRole.OWNER);
+        User newcomer = person("the-newcomer");
+        grant(newcomer, PlatformRole.PLAYER);
+        userService.evictAuthCache(secondOwner.getId());
+        userService.evictAuthCache(newcomer.getId());
+
+        String tokenBeforeTheChange = jwtService.issueAccessToken(secondOwner.getId());
+
+        grantRole(owner, secondOwner, "Admin", "stepping down to admin")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.roles", org.hamcrest.Matchers.hasItem("Admin")))
+                .andExpect(jsonPath("$.roles", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("Owner"))));
+
+        String tokenAfterTheChange = jwtService.issueAccessToken(secondOwner.getId());
+        for (String token : new String[] {tokenBeforeTheChange, tokenAfterTheChange}) {
+            mockMvc.perform(post(BASE + "/" + newcomer.getId() + "/grant-role")
+                            .header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"role\":\"Admin\",\"justification\":\"no longer allowed\"}"))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.errorCode").value("ROLE_GRANT_FORBIDDEN"));
+        }
+
+        // Control: the very same request, sent by an Owner, is well formed and goes through.
+        grantRole(owner, newcomer, "Admin", "no longer allowed")
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.roles", org.hamcrest.Matchers.hasItem("Admin")));
+    }
+
     // ---------------------------------------------------------------- shape of the wire
 
     /**

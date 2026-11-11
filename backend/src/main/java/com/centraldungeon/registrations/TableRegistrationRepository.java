@@ -266,15 +266,16 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
             @Param("gameTableIds") Collection<String> gameTableIds, @Param("status") TableRegistrationStatus status);
 
     /**
-     * Whether the person holds an active application among a set of tables - the batched read behind
-     * profile visibility's ADR-10 §1 (arquitectura §4.5): checking a master's own tables against one
-     * applicant is one query, not one per table they run.
+     * Whether the person holds an application in one of the given statuses among a set of tables - the
+     * batched read behind profile visibility: checking a master's own tables against one applicant is one
+     * query, not one per table they run.
      *
      * @param gameTableIds the tables to check, in practice the ones the actor runs
      * @param userId       the applicant being looked for
-     * @param statuses     which statuses count as active - Candidate and Player, never Deleted or
-     *                     Rejected (ADR-07 §8)
-     * @return their active applications among those tables
+     * @param statuses     which statuses count. Profile visibility passes Candidate, Player and Blocked: a
+     *                     master keeps seeing whom they vetoed, and a withdrawn or rejected application
+     *                     opens nothing
+     * @return their applications in those statuses among those tables
      */
     List<TableRegistration> findByGameTable_IdInAndUser_IdAndStatusIn(
             Collection<String> gameTableIds, String userId, Collection<TableRegistrationStatus> statuses);

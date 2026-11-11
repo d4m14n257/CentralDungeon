@@ -4,7 +4,7 @@
 
 
 - Base: `/api/v1`. Recursos en plural y kebab-case: `/api/v1/game-tables/{id}/registrations`.
-- Status codes: `200` lectura, `201` + header `Location` en creación, `204` en borrado/actualización sin cuerpo, `400` validación, `401` sin token, `403` sin permiso, `404` inexistente, `409` conflicto de estado.
+- Status codes: `200` lectura, `201` + header `Location` en creación, `204` en borrado/actualización sin cuerpo, `400` validación, `401` sin token **o con la cuenta bloqueada** (ADR-05 §3), `403` sin permiso, `404` inexistente, `409` conflicto de estado.
 - **Éxito: el DTO desnudo, sin envoltura** (ADR-04 §3). Nada de un `ResponseData<T>` con `message`/`status` adentro del cuerpo: el status vive en HTTP y en un solo lugar. El intento en Java tenía esa envoltura y ya se contradecía sola — devolvía `206 Partial Content` en la respuesta HTTP con un `204` escrito en el cuerpo.
 - Errores: siempre `ProblemDetail` (RFC 9457, que obsoleta al 7807) producido por `GlobalExceptionHandler`. Nunca un string suelto, nunca un `418` genérico (el backend Node lo usaba como error comodín).
 - Toda colección va paginada (`?page=&size=&sort=`) y devuelve `PageResponse`. El backend viejo no tenía paginación en ningún endpoint y era un TODO explícito suyo. Dos reglas que la acompañan (ADR-04 §6): **el tamaño de página se topa en 100** (`spring.data.web.pageable.max-page-size`), y **todo endpoint paginado declara su orden por defecto** con `@PageableDefault`, **con desempate por `id`** — sin orden explícito las páginas pueden repetir o saltear filas (ADR-07 §9).

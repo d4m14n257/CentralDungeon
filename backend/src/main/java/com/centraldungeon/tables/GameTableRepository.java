@@ -24,13 +24,16 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
 
     /**
      * /master/tables: every status, including Preparation - a master needs to see and open their own
-     * drafts. Deleted is the exception: a soft-deleted table is gone for everyone (ADR-03 §7, ADR-07 §6).
+     * drafts. Deleted is the exception: a soft-deleted table is gone for everyone.
+     *
+     * <p>Only live master rows count: somebody whose master row was removed no longer runs the table.
      *
      * @param userId   the actor, from the token
      * @param pageable page, size and sort
      * @return one page of the tables they run
      */
     @Query("select m.gameTable from Master m where m.user.id = :userId "
+            + "and m.status = com.centraldungeon.tables.MasterRowStatus.Created "
             + "and m.gameTable.status <> com.centraldungeon.tables.GameTableStatus.Deleted")
     Page<GameTable> findByMasterUserId(@Param("userId") String userId, Pageable pageable);
 

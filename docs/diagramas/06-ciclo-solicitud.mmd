@@ -27,12 +27,12 @@ stateDiagram-v2
     Candidate --> Blocked : veto
     Player --> Blocked : expulsion + veto
     Rejected --> Blocked : veto
-    Blocked --> Rejected : el Owner levanta el veto<br/>(queda en el historial)
+    Blocked --> Rejected : el Primary levanta el veto<br/>(queda en el historial)
 
     note left of Blocked
-        Veta el Owner. Un co-master puede
+        Veta el Primary. Un co-master puede
         PEDIRLO, con justificacion, y el
-        Owner aprueba o rechaza.
+        Primary aprueba o rechaza.
 
         Acotado a ESTA mesa: deja de existir
         para el usuario y no puede volver a

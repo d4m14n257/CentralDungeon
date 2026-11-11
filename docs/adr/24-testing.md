@@ -2,13 +2,13 @@
 adr: 24
 titulo: Testing
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-11-10
 absorbe: [143, 172, 223, 254]
 ---
 
 # ADR-24: Testing
 
-> Los dobles de prueba del backend que hacen posible probar el login real, armar actores con un rol preciso y dejar la base como estaba. La skill `arquitectura` §5 lo aplica (backend en §5.1, e2e en §5.3) y `entorno-local` cubre cómo se corre. La skill dice *cómo* se escribe; esta ADR, *qué* se decidió y *por qué*.
+> Los dobles de prueba del backend que hacen posible probar el login real, armar actores con un rol preciso y dejar la base como estaba, y la matriz de roles que prueba cada endpoint contra cada actor. La skill `arquitectura` §5 lo aplica (backend en §5.1, e2e en §5.3) y `entorno-local` cubre cómo se corre. La skill dice *cómo* se escribe; esta ADR, *qué* se decidió y *por qué*.
 
 ## §1 El login de Discord se prueba en dos niveles, y ninguno habla con discord.com
 
@@ -33,3 +33,16 @@ absorbe: [143, 172, 223, 254]
 **Por qué.** Cada corrida dejaba sus filas, la base de desarrollo se llenó y eso llegó a hacer fallar specs (ADR-07 §9): un test que no limpia lo que ensucia deja de ser repetible. Sin parámetros porque el endpoint también existe en la base de desarrollo del perfil `dev,test`, así que la garantía tiene que estar en el código y no en quien lo llama. La limpieza es una sola transacción: una FK olvidada hace rollback entero y la corrida siguiente arranca con la base llena, con un síntoma que no aparece donde está la causa.
 
 *Antes: #172, #254.*
+
+## §4 Todo endpoint tiene su fila en la matriz de roles, y el esperado sale de los documentos
+
+**Decisión.** La matriz de roles (`backend/src/test/java/com/centraldungeon/matrix/`) prueba por HTTP cada endpoint contra cada actor: sin sesión, cuenta bloqueada, cada rol solo, las combinaciones de roles y cada relación con la mesa (`Primary`, `Secondary`, co-master quitado, candidato, jugador, dueño del recurso), en `MatrixActor`. Las filas viven en la lista `ROWS` de las cuatro clases `*RoleMatrixIT` (`TablesRoleMatrixIT`, `RegistrationsTasksRoleMatrixIT`, `FilesCatalogsRoleMatrixIT`, `PlatformRoleMatrixIT`). Cuatro reglas:
+
+1. **Todo endpoint tiene su fila.** `RoleMatrixCompletenessIT` recorre los mappings reales de los controllers de la aplicación y falla si un endpoint no tiene fila o una fila nombra un endpoint que no existe. Un endpoint nuevo llega con su fila en el mismo cambio.
+2. **El esperado sale de los documentos, nunca de la anotación.** Cada celda se escribe desde las ADRs y las skills, sin leer el `@PreAuthorize` que va a probar; una celda copiada del código no prueba nada.
+3. **Una celda que no coincide se tría** —bug, alcance de otra fase o decisión nueva— y, mientras espera la decisión, vive en `KnownDisagreements` con lo que el código responde hoy. Esa entrada pasa solo si lo observado no cambia: si cambia en cualquier dirección, también hacia lo esperado, falla y pide que se la borre.
+4. **Admin y Owner esperan lo mismo.** `AdminOwnerParityTest` exige que toda fila dé a los dos el mismo resultado, salvo las que mueven el rango de admin, listadas por nombre con su motivo; una excepción que deja de diferir también falla.
+
+Donde una celda fija `403` o `404` sobre un recurso ajeno, fija lo que el código responde hoy: cuál de los dos corresponde en cada caso se decide en F4.4 «Seguridad», y la celda cambia con esa decisión.
+
+**Por qué.** `hasRole('ADMIN')` en vez de `hasAnyRole('ADMIN','OWNER')` deja al owner afuera sin que nadie lo note —el riesgo que `arquitectura`, `roles-y-alcance.md` §7 «Riesgos conocidos», dejó escrito con la exigencia de una prueba que recorra la matriz—, y un endpoint de mesa que pide el rol `Master` deja afuera al co-master sin rol (regla dura 17 «El rol no es la pertenencia; el actor sale del token»): ninguno de los dos errores lo ve un test que escribe su esperado mirando la anotación. Que la lista de endpoints salga de los mappings reales es lo que impide que un endpoint nuevo quede sin mirar. `KnownDisagreements` deja la suite en verde mientras una decisión está abierta sin esconderla: la celda se ve en el nombre del test, y la entrada no puede quedar vieja. La paridad se prueba aparte, sin base, porque una fila editada para uno de los dos y no para el otro es el error más probable al mantener la matriz. Lo decidió el usuario el 2026-11-10, al cerrar la primera corrida de F4.2 «La matriz de roles».

@@ -56,9 +56,13 @@ public class ProfileVisibilityService {
             GameTableStatus.Draft, GameTableStatus.Unassigned, GameTableStatus.Preparation,
             GameTableStatus.ChangesRequested, GameTableStatus.Deleted);
 
-    /** The statuses that mean somebody is actually, actively involved with a table (ADR-10 §1). */
-    private static final List<TableRegistrationStatus> ACTIVE_STATUSES =
-            List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
+    /**
+     * The registrations through which a master can read an applicant's profile (ADR-10 §1): a live
+     * application, an accepted player, and a vetoed applicant - the master who vetoed somebody still
+     * needs to identify them in order to lift the veto.
+     */
+    private static final List<TableRegistrationStatus> APPLICATION_STATUSES =
+            List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player, TableRegistrationStatus.Blocked);
 
     /** Who runs which table, and since when - the source rule ADR-10 §1 both read. */
     private final MasterRepository masterRepository;
@@ -125,7 +129,7 @@ public class ProfileVisibilityService {
             return;
         }
         LocalDateTime now = LocalDateTime.now();
-        if (runsAVisibleTable(targetId, now)) {
+        if (runsAVisibleTable(targetId, actorId, now)) {
             return;
         }
         if (appliedToATableTheActorRuns(targetId, actorId, now)) {
@@ -145,15 +149,23 @@ public class ProfileVisibilityService {
 
     /**
      * ADR-10 §1: the target's profile is visible for anybody with a session while they run at least one
-     * table whose link is still open.
+     * table whose link is still open - except through a table where the reader is vetoed: the veto
+     * hides that table from them, so running it cannot open the master's profile. The master stays
+     * visible if another table the reader can still see, or a table they share, grants it.
      *
      * <p>Reads every master row the target ever held, live and deleted alike, and filters here rather
      * than in the query: a deleted row grants nothing (ADR-07 §8), and that has to be a line of Java
      * somebody can read, not a silent {@code WHERE}.
      */
-    private boolean runsAVisibleTable(String targetId, LocalDateTime now) {
-        for (Master master : masterRepository.findByUser_Id(targetId)) {
-            if (master.getStatus() == MasterRowStatus.Created && isLinkStillOpen(master.getGameTable(), now)) {
+    private boolean runsAVisibleTable(String targetId, String actorId, LocalDateTime now) {
+        List<Master> rows = masterRepository.findByUser_Id(targetId);
+        if (rows.isEmpty()) {
+            return false;
+        }
+        Set<String> vetoedOn = tableIdsOf(registrationRepository.findByUser_IdAndStatus(actorId, TableRegistrationStatus.Blocked));
+        for (Master master : rows) {
+            GameTable table = master.getGameTable();
+            if (master.getStatus() == MasterRowStatus.Created && !vetoedOn.contains(table.getId()) && isLinkStillOpen(table, now)) {
                 return true;
             }
         }
@@ -163,7 +175,8 @@ public class ProfileVisibilityService {
     /**
      * ADR-10 §1: the actor runs a table the target applied to. "Since it receives the application" is
      * literal - {@code Candidate} counts exactly as much as {@code Player}, and there is no
-     * acceptance to wait for.
+     * acceptance to wait for. A {@code Blocked} applicant counts too: the master who vetoed them keeps
+     * reading their profile, because they need to recognise the person to lift the veto.
      */
     private boolean appliedToATableTheActorRuns(String targetId, String actorId, LocalDateTime now) {
         List<Master> run = masterRepository.findLiveByUser(actorId, MasterRowStatus.Created);
@@ -176,7 +189,7 @@ public class ProfileVisibilityService {
         }
 
         List<TableRegistration> applications =
-                registrationRepository.findByGameTable_IdInAndUser_IdAndStatusIn(mastered.keySet(), targetId, ACTIVE_STATUSES);
+                registrationRepository.findByGameTable_IdInAndUser_IdAndStatusIn(mastered.keySet(), targetId, APPLICATION_STATUSES);
         for (TableRegistration application : applications) {
             GameTable table = mastered.get(application.getGameTable().getId());
             if (table != null && isLinkStillOpen(table, now)) {

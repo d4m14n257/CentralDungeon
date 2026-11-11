@@ -194,6 +194,26 @@ class ProfileServiceIT {
                 .isInstanceOf(NotFoundException.class);
     }
 
+    /**
+     * Over the real queries: a vetoed person loses the master's profile through the table that vetoed
+     * them, and the master keeps reading the profile of the person they vetoed.
+     */
+    @Test
+    void aVetoClosesTheMastersProfileToTheVetoedAndLeavesTheVetoedOpenToTheMaster() {
+        User master = givenAPlayer("Master");
+        User vetoed = givenAPlayer("Vetoed");
+        GameTable table = givenATableRunBy(master, GameTableStatus.Opened, null);
+        TableRegistration veto = new TableRegistration(table, vetoed, null);
+        veto.setStatus(TableRegistrationStatus.Blocked);
+        registrationRepository.save(veto);
+
+        assertThatThrownBy(() -> profileService.getProfile(master.getId(), vetoed.getId())).isInstanceOf(NotFoundException.class);
+        assertThatCode(() -> profileService.getProfile(vetoed.getId(), master.getId())).doesNotThrowAnyException();
+
+        givenATableRunBy(master, GameTableStatus.Opened, null);
+        assertThatCode(() -> profileService.getProfile(master.getId(), vetoed.getId())).doesNotThrowAnyException();
+    }
+
     private GameTable givenATableRunBy(User master, GameTableStatus status, LocalDateTime closedAt) {
         GameTable table = gameTableRepository.save(new GameTable("Mesa " + UUID.randomUUID(), master));
         masterService.createPrimary(table, master);

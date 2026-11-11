@@ -1,6 +1,6 @@
 import { env } from '@/config/env'
 import { paths } from '@/config/paths'
-import { ApiError, type PageResponse, type ProblemDetail } from '@/types/api'
+import { ApiError, type PageResponse, type ProblemDetail, type TokenResponse } from '@/types/api'
 
 /**
  * The access token lives only in memory (ADR-05 §2) - never localStorage. AuthProvider
@@ -63,7 +63,7 @@ export async function refreshSession(): Promise<string | null> {
   if (!response.ok) {
     return null
   }
-  const data = (await response.json()) as { accessToken: string }
+  const data = (await response.json()) as TokenResponse
   setAccessToken(data.accessToken)
   return data.accessToken
 }

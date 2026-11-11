@@ -19,8 +19,9 @@
    - status explícito: `201` + `Location` al crear, `204` sin cuerpo;
    - `@PreAuthorize` en el método, enumerando sus roles (§2.5, §2.6).
 9. **Test del service** antes de dar el endpoint por terminado, y su IT si la regla depende del motor real (§5.1).
-10. Si el código de error es nuevo, **su clave va en `es` y en `en`** del frontend en el mismo commit (ADR-23 §3, §2).
-11. Si lo va a llamar el frontend, su tipo en `features/<dominio>/types.ts` tiene que ser el espejo exacto del `record` de respuesta (§3.2).
+10. **Su fila en la matriz de roles**, con el esperado escrito desde los documentos y no desde el `@PreAuthorize` recién puesto (§5.1, ADR-24 «Testing» §4 «Todo endpoint tiene su fila en la matriz de roles, y el esperado sale de los documentos»). Sin ella, `RoleMatrixCompletenessIT` falla.
+11. Si el código de error es nuevo, **su clave va en `es` y en `en`** del frontend en el mismo commit (ADR-23 §3, §2).
+12. Si lo va a llamar el frontend, su tipo en `features/<dominio>/types.ts` tiene que ser el espejo exacto del `record` de respuesta (§3.2).
 
 ## 7.2 Nuevo componente o pantalla (frontend)
 

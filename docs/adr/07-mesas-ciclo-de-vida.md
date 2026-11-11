@@ -2,7 +2,7 @@
 adr: 7
 titulo: "Mesas: ciclo de vida"
 estado: Vigente
-actualizada: 2026-10-21
+actualizada: 2026-11-10
 absorbe: [7, 24, 27, 32, 129, 163, 165, 171, 175, 180, 196, 216, 226, 229, 230, 245, 265]
 ---
 
@@ -20,9 +20,9 @@ absorbe: [7, 24, 27, 32, 129, 163, 165, 171, 175, 180, 196, 216, 226, 229, 230, 
 
 ## §2 La pausa del master necesita aprobación, y las justificaciones de moderación no son comentarios
 
-**Decisión.** Las justificaciones de moderación —mesa rechazada y por qué, pedido de correcciones, motivo de pausa, motivo de cancelación— van en su propia tabla, **separadas de `comments`**. La pausa que pide un master **no es efectiva hasta que un admin la aprueba**: la mesa pasa a `PauseRequested` y sigue corriendo hasta que el admin resuelve (ADR-16 §1). La pausa que inicia un admin es inmediata, pero también se justifica. `Pause` y `Canceled` exigen justificación.
+**Decisión.** Las justificaciones de moderación —mesa rechazada y por qué, pedido de correcciones, motivo de pausa, motivo de cancelación— van en su propia tabla, **separadas de `comments`**. La pausa que pide un master **no es efectiva hasta que un admin la aprueba**: la mesa pasa a `PauseRequested` y sigue corriendo hasta que el admin resuelve (ADR-16 §1). La pausa que inicia un admin es inmediata, pero también se justifica. `Pause` y `Canceled` exigen justificación. **Reanudar es solo del admin** (`POST /game-tables/{id}/resume`, `hasAnyRole('ADMIN','OWNER')`): ningún master, tampoco el `Primary`, reanuda su mesa.
 
-**Por qué.** `comments` es opinión entre personas y alimenta el karma (ADR-11 §1, §2); mezclar actos administrativos lo contaminaría. La pausa del admin se justifica igual para que el resto de los admins vea el motivo.
+**Por qué.** `comments` es opinión entre personas y alimenta el karma (ADR-11 §1, §2); mezclar actos administrativos lo contaminaría. La pausa del admin se justifica igual para que el resto de los admins vea el motivo. Quién reanuda se fijó el 2026-11-10, al correr F4.2 «La matriz de roles», como responde el código: los documentos se contradecían —ADR-18 «Notificaciones y tiempo real» §3 decía que la reanudación la podía hacer un master, y ADR-21 «Diseño visual e interacción» §10 «Las decisiones sobre una entidad van en su aviso de estado, con las destructivas aparte» y la rebanada F3.4 «Pausa y veto» la daban solo al admin—, y el usuario eligió la que ya estaba construida.
 
 *Antes: #32.*
 

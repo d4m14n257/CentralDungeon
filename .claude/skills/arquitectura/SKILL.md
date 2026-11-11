@@ -27,7 +27,7 @@ El stack y sus versiones fijadas son §1; el porqué de cada regla, en la `ADR-N
 6. **Errores**: excepciones de `common/exception`, nunca `null` para decir «no existe». El `GlobalExceptionHandler` las traduce a `ProblemDetail` con **un código y sus parámetros**, nunca con una frase: la frase la arma el frontend (ADR-23 §3). → §2.5
 7. **Las colecciones van siempre paginadas** (`?page=&size=&sort=`) y devuelven `PageResponse`, con orden por defecto y desempate por `id` (ADR-04 §6). → §2.5
 8. **El actor sale del JWT** vía `@AuthenticationPrincipal`, **nunca** de un parámetro de ruta (ADR-05 §5). → §2.6
-9. **El rol no es la pertenencia** (ADR-05 §5, ADR-06 §4). Todo acceso a un recurso concreto filtra por el actor: o el actor va en el `WHERE`, o el service verifica la pertenencia **antes** de tocar nada. Roles y `status` se releen de la base en cada request (ADR-05 §3). → §2.6
+9. **El rol no es la pertenencia** (ADR-05 §5, ADR-06 §4). Todo acceso a un recurso concreto filtra por el actor: o el actor va en el `WHERE`, o el service verifica la pertenencia **antes** de tocar nada. Roles y `status` se releen de la base en cada request, y una cuenta bloqueada recibe `401` en todo endpoint (ADR-05 §3). Las listas propias filtran por el actor y responden `200` también fuera de su contexto: por el contexto, el `403` es solo de lo que pide un rol (ADR-20 §1). → §2.6
 10. **No se abstrae por parecido.** Una interfaz, solo si hay más de una implementación real; una clase abstracta, solo si la misma forma ya se vio repetida idéntica en 3+ features. **El controller es concreto** (ADR-04 §2), y su `@PreAuthorize` va en el método y enumera sus roles, sin `RoleHierarchy` (ADR-05 §4). → §2.4, §2.6
 11. **La respuesta exitosa es el DTO desnudo**, sin envoltura (ADR-04 §3). → §2.5
 12. **Stack**: Java 25 / Spring Boot 4.1, Jackson **3** (`tools.jackson.*`) y **JSpecify** para lo nullable (`arquitectura` §1.1).
@@ -55,7 +55,7 @@ El stack y sus versiones fijadas son §1; el porqué de cada regla, en la `ADR-N
 
 ## Reglas fijas — testing y documentación (§5, §6)
 
-28. **Toda regla de negocio llega con su test unitario**, y lo que depende del motor real, con su IT de Testcontainers. Las pantallas llevan Vitest si tienen lógica, y los flujos críticos, Playwright contra el backend real. → §5
+28. **Toda regla de negocio llega con su test unitario**, y lo que depende del motor real, con su IT de Testcontainers. **Todo endpoint tiene su fila en la matriz de roles**, con el esperado escrito desde los documentos y nunca desde su `@PreAuthorize` (ADR-24 §4). Las pantallas llevan Vitest si tienen lógica, y los flujos críticos, Playwright contra el backend real. → §5
 29. **Todo lo público lleva su bloque, en inglés**: Javadoc en el backend (getters y cada componente de un `record` incluidos) y JSDoc en todo `export` del frontend. Dice qué hace y por qué con palabras propias, sin citar ADRs, skills, reglas ni fases (ADR-01 «Proyecto, proceso y conocimiento» §12 «La documentación del código se explica sola»), y se actualiza en el mismo cambio que la firma. → §6
 
 ## El detalle, por sección
