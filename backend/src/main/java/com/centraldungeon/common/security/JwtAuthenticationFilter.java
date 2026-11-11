@@ -29,6 +29,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /** The scheme every authenticated call uses. A header the browser never attaches on its own (ADR-05 §2). */
     private static final String BEARER_PREFIX = "Bearer ";
 
+    /** Request attribute set when a valid token belongs to a blocked account, so the entry point can say so. */
+    static final String BLOCKED_ACCOUNT_ATTRIBUTE = JwtAuthenticationFilter.class.getName() + ".blockedAccount";
+
     /** Validates the token and reads its subject. */
     private final JwtService jwtService;
 
@@ -50,7 +53,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      *
      * <p>A missing or invalid token is not an error here: the chain continues unauthenticated and
      * whatever the request was aimed at decides. That is what lets the public paths work and what
-     * makes {@code RestAuthenticationEntryPoint} the single place a 401 is written.
+     * makes {@code RestAuthenticationEntryPoint} the single place a 401 is written. A valid token of a
+     * blocked account stays unauthenticated too, but flags the request so that 401 carries its own code.
      *
      * @param request     the incoming request
      * @param response    the response, untouched by this filter
@@ -63,16 +67,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (header != null && header.startsWith(BEARER_PREFIX)) {
-            authenticate(header.substring(BEARER_PREFIX.length()));
+            authenticate(header.substring(BEARER_PREFIX.length()), request);
         }
         filterChain.doFilter(request, response);
     }
 
-    private void authenticate(String token) {
+    private void authenticate(String token, HttpServletRequest request) {
         try {
             String userId = jwtService.verifyAndGetSubject(token, TokenType.ACCESS);
             UserAuthSnapshot snapshot = userService.loadAuthSnapshot(userId);
             if (snapshot.status() != UserStatus.Allowed) {
+                // Cleared, not just left alone: nothing that authenticated the request earlier may outlive the block.
+                SecurityContextHolder.clearContext();
+                request.setAttribute(BLOCKED_ACCOUNT_ATTRIBUTE, true);
                 return;
             }
 

@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -74,9 +75,13 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.spa().requireCsrfProtectionMatcher(refreshOnly))
                 // IF_REQUIRED, not fully stateless: oauth2Login needs a short-lived session to
-                // carry the authorization request across the redirect to Discord and back. Every
-                // other endpoint authenticates with the JWT bearer token and never touches it.
+                // carry the authorization request across the redirect to Discord and back.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                // But the security context never lives in that session. Kept there, a JSESSIONID alone
+                // would authenticate every later request without a token and without re-reading the
+                // account's status and roles - a blocked account or a revoked role would keep working
+                // until the session expired. Identity comes from the bearer token on every request.
+                .securityContext(context -> context.securityContextRepository(new RequestAttributeSecurityContextRepository()))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/oauth2/**",

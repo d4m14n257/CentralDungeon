@@ -54,14 +54,14 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200, (w, body) -> assertThat(body)
                                 .contains(w.recall("free")).doesNotContain(w.recall("reserved"))), ADMIN, OWNER),
                 MatrixRow.of("POST /api/v1/admin-queue/{type}/{id}/claim", w -> MatrixRequest.path("approval_request",
                         w.approval(ApprovalRequestType.General, w.person("asker")).getId()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("claimed by the same admin", "POST /api/v1/admin-queue/{type}/{id}/claim",
@@ -76,7 +76,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                 MatrixRow.of("DELETE /api/v1/admin-queue/{type}/{id}/claim", w -> MatrixRequest.path("approval_request",
                         w.claim(w.approval(ApprovalRequestType.General, w.person("asker")), w.me()).getId()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(204), ADMIN, OWNER),
                 MatrixRow.variant("not reserved", "DELETE /api/v1/admin-queue/{type}/{id}/claim",
@@ -102,20 +102,20 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("general"), w.recall("ban"))),
                                 ADMIN, OWNER),
                 MatrixRow.of("GET /api/v1/admin/requests/{id}",
                         w -> MatrixRequest.path(w.approval(ApprovalRequestType.General, w.user(RESOURCE_OWNER)).getId()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.of("POST /api/v1/admin/requests/{id}/approve",
                         w -> resolution(w, w.approval(ApprovalRequestType.General, w.user(RESOURCE_OWNER)).getId()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("player ban", "POST /api/v1/admin/requests/{id}/approve",
@@ -128,7 +128,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                 MatrixRow.of("POST /api/v1/admin/requests/{id}/reject",
                         w -> resolution(w, w.approval(ApprovalRequestType.General, w.user(RESOURCE_OWNER)).getId()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("player ban", "POST /api/v1/admin/requests/{id}/reject",
@@ -141,7 +141,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                 MatrixRow.of("POST /api/v1/requests", w -> MatrixRequest.path()
                         .json("{\"type\": \"General\", \"justification\": \"I need a hand\"}"))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(201), PLAYER, MASTER, ADMIN, OWNER, PLAYER_MASTER),
                 MatrixRow.variant("another General pending", "POST /api/v1/requests", w -> {
                     w.approval(ApprovalRequestType.General, w.me());
@@ -164,7 +164,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own"))
                                 .doesNotContain(w.recall("foreign"))), PLAYER, MASTER, ADMIN, OWNER, RESOURCE_OWNER));
     }
@@ -175,7 +175,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
         return List.of(
                 MatrixRow.of("POST /api/v1/auth/refresh", MatrixFixtures::refreshRequest)
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER),
                 MatrixRow.variant("bearer without the refresh cookie", "POST /api/v1/auth/refresh", w -> {
                     String csrf = UUID.randomUUID().toString();
@@ -201,7 +201,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(200, (w, body) -> assertThat(body)
                                 .doesNotContain(w.recall("own"), w.recall("foreign"))), PLAYER, ADMIN, OWNER, REMOVED_SECONDARY)
                         .cell(allowed(200), MASTER, MASTER_ADMIN)
@@ -228,13 +228,13 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own"))
                                 .doesNotContain(w.recall("foreign"))), PLAYER, MASTER, ADMIN, OWNER, RESOURCE_OWNER),
                 MatrixRow.of("PATCH /api/v1/notifications/{id}/read",
                         w -> MatrixRequest.path(w.notification(w.user(RESOURCE_OWNER)).getId()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER)
                         .cell(allowed(204), RESOURCE_OWNER),
                 MatrixRow.of("PATCH /api/v1/notifications/read-all", w -> {
@@ -243,7 +243,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(204, (w, body) -> assertThat(w.bean(NotificationRepository.class)
                                 .findById(w.recall("foreign")).orElseThrow().getReadStatus()).isEqualTo(ReadStatus.Unread)),
                                 PLAYER, MASTER, ADMIN, OWNER, RESOURCE_OWNER));
@@ -255,12 +255,12 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
         return List.of(
                 MatrixRow.of("GET /api/v1/users/me/profile", w -> MatrixRequest.path())
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(200, (w, body) -> assertThat(body).doesNotContain("karma").doesNotContain("comments")),
                                 PLAYER, MASTER, ADMIN, OWNER),
                 MatrixRow.of("GET /api/v1/users/{id}/profile", w -> MatrixRequest.path(profileSubject(w).getId()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(404), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE)
                         .cell(allowed(200), ADMIN, OWNER, PRIMARY, SECONDARY, TABLE_PLAYER)
                         .cell(allowed(200), RESOURCE_OWNER),
@@ -278,7 +278,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path(subject.getId());
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER, PRIMARY)
                         .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own table"), w.recall("applied"))),
                                 ADMIN, OWNER),
@@ -289,7 +289,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path(subject.getId());
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(404), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE)
                         .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("finished"))),
                                 ADMIN, OWNER, PRIMARY, SECONDARY, TABLE_PLAYER)
@@ -302,13 +302,13 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
         return List.of(
                 MatrixRow.of("GET /api/v1/admin/settings", w -> MatrixRequest.path())
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.of("PUT /api/v1/admin/settings/{key}", w -> MatrixRequest.path(SETTING_KEY)
                         .json("{\"value\": 20, \"justification\": \"The community grew\"}"))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.of("GET /api/v1/admin/settings/{key}/history", w -> {
@@ -316,12 +316,12 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path(SETTING_KEY);
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.of("GET /api/v1/settings/limits", w -> MatrixRequest.path())
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER));
     }
 
@@ -334,19 +334,19 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, PLAYER_MASTER, PRIMARY)
                         .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("other"))),
                                 ADMIN, OWNER, PLAYER_ADMIN, MASTER_ADMIN, PLAYER_OWNER, MASTER_OWNER),
                 MatrixRow.of("GET /api/v1/admin/users/{id}", w -> MatrixRequest.path(w.person("target").getId()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.of("POST /api/v1/admin/users/{id}/grant-role",
                         w -> MatrixRequest.path(w.person("target").getId()).json(roleBody("Master")))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("role Admin", "POST /api/v1/admin/users/{id}/grant-role",
@@ -366,7 +366,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                         w -> MatrixRequest.path(w.person("target", PlatformRole.PLAYER, PlatformRole.MASTER).getId())
                                 .json(roleBody("Master")))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("role Admin", "POST /api/v1/admin/users/{id}/revoke-role",
@@ -383,7 +383,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                 MatrixRow.of("POST /api/v1/admin/users/{id}/block",
                         w -> MatrixRequest.path(w.person("target").getId()).json(justificationBody()))
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("target Admin", "POST /api/v1/admin/users/{id}/block",
@@ -407,7 +407,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path(target.getId()).json(justificationBody());
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("target not blocked", "POST /api/v1/admin/users/{id}/unblock",
@@ -421,12 +421,12 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path(target.getId());
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.of("GET /api/v1/users/me", w -> MatrixRequest.path())
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(200, (w, body) -> assertThat(body).doesNotContain("karma")),
                                 PLAYER, MASTER, ADMIN, OWNER)
                         .cell(allowed(200, (w, body) -> assertThat((Boolean) JsonPath.read(body, "$.hasManagedTables")).isTrue()),
@@ -440,7 +440,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER, PRIMARY)
                         .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("findable"))
                                 .doesNotContain(w.recall("hidden"))), ADMIN, OWNER),
@@ -451,7 +451,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path().json(profileBody());
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(409, "ONBOARDING_ALREADY_COMPLETED"), PLAYER, MASTER, ADMIN, OWNER)
                         .cell(allowed(200), RESOURCE_OWNER),
                 MatrixRow.of("PATCH /api/v1/users/me", w -> {
@@ -461,7 +461,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path().json(profileBody());
                 })
                         .cell(denied(401), ANONYMOUS)
-                        .cell(denied(401), BLOCKED)
+                        .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER)
                         .cell(denied(409, "ONBOARDING_PENDING"), RESOURCE_OWNER));
     }

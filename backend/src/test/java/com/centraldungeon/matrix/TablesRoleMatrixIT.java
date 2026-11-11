@@ -321,6 +321,6 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
 
     /** The blocked column alone, for the rows whose anonymous cell no document fixes. */
     private static MatrixRow blocked(MatrixRow row) {
-        return row.cell(denied(401), BLOCKED);
+        return row.cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED);
     }
 }

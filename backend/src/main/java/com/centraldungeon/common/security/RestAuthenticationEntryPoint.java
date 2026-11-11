@@ -1,5 +1,6 @@
 package com.centraldungeon.common.security;
 
+import com.centraldungeon.common.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -29,7 +30,9 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
      * Answers 401 with a ProblemDetail body.
      *
      * <p>The detail is deliberately the same whatever went wrong - no token, expired, wrong type.
-     * Telling the caller which check failed only helps someone probing.
+     * Telling the caller which check failed only helps someone probing. The one exception is a valid
+     * token of a blocked account: its bearer already proved who they are, so the code says why they
+     * are refused.
      *
      * @param request       the unauthenticated request
      * @param response      the response to write the 401 into
@@ -39,8 +42,10 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Authentication required");
-        problem.setProperty("errorCode", "UNAUTHORIZED");
+        boolean blocked = request.getAttribute(JwtAuthenticationFilter.BLOCKED_ACCOUNT_ATTRIBUTE) != null;
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,
+                blocked ? "Account is blocked" : "Authentication required");
+        problem.setProperty("errorCode", blocked ? UnauthorizedException.ACCOUNT_BLOCKED : "UNAUTHORIZED");
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

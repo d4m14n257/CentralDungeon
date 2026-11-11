@@ -98,7 +98,8 @@
       "FILE_CANNOT_SELF_PUBLISH": "Files of the platform's library are uploaded by an admin from the library, not from here.",
       "REQUEST_TYPE_NOT_ACCEPTED_HERE": "That request is opened from the resource it is about, not from this screen.",
       "ONBOARDING_PENDING": "Finish the first step before editing your profile.",
-      "ONBOARDING_ALREADY_COMPLETED": "You already completed the first step. Edit your name and country from your profile."
+      "ONBOARDING_ALREADY_COMPLETED": "You already completed the first step. Edit your name and country from your profile.",
+      "ACCOUNT_BLOCKED": "Your account is blocked. Contact an admin if you think this is a mistake."
     }
   },
   "pagination": {

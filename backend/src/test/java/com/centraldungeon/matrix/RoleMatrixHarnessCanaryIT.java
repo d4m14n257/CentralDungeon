@@ -53,7 +53,7 @@ class RoleMatrixHarnessCanaryIT extends AbstractRoleMatrixIT {
     void theBlockedColumnHasItsPositiveControl() throws Exception {
         MatrixRow me = MatrixRow.of("GET /api/v1/users/me", w -> MatrixRequest.path());
 
-        harness().runCell(me, BLOCKED, undocumentedNot2xx(401), null);
+        harness().runCell(me, BLOCKED, denied(401, "ACCOUNT_BLOCKED"), null);
         AssertionError stillPassing = assertThrows(AssertionError.class, () -> harness().runCell(me, BLOCKED, allowed(200), null));
         assertThat(stillPassing).hasMessageContaining("has to pass");
     }

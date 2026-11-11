@@ -49,7 +49,10 @@ class AuthServiceTest {
     void rejectsAnInvalidRefreshToken() {
         when(jwtService.verifyAndGetSubject("bad-token", TokenType.REFRESH)).thenThrow(new InvalidJwtException("expired"));
 
-        assertThatThrownBy(() -> authService.refresh("bad-token")).isInstanceOf(UnauthorizedException.class);
+        assertThatThrownBy(() -> authService.refresh("bad-token"))
+                .isInstanceOf(UnauthorizedException.class)
+                .extracting(e -> ((UnauthorizedException) e).getErrorCode())
+                .isEqualTo("UNAUTHORIZED");
     }
 
     @Test
@@ -57,7 +60,10 @@ class AuthServiceTest {
         when(jwtService.verifyAndGetSubject("token", TokenType.REFRESH)).thenReturn("user-1");
         when(userService.loadAuthSnapshot("user-1")).thenReturn(new UserAuthSnapshot("user-1", UserStatus.Blocked, Set.of()));
 
-        assertThatThrownBy(() -> authService.refresh("token")).isInstanceOf(UnauthorizedException.class);
+        assertThatThrownBy(() -> authService.refresh("token"))
+                .isInstanceOf(UnauthorizedException.class)
+                .extracting(e -> ((UnauthorizedException) e).getErrorCode())
+                .isEqualTo(UnauthorizedException.ACCOUNT_BLOCKED);
     }
 
     @Test

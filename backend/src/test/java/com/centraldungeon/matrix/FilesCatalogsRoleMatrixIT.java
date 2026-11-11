@@ -38,7 +38,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path();
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200, (w, body) -> assertThat(body)
                                     .contains(w.recall("library"), w.recall("public"))
@@ -48,32 +48,32 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                             .filePart("file", w.uniqueBytes())
                             .jsonPart("data", "{\"categories\": [\"TableMaterial\"], \"publish\": false}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(201), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/files/{fileId}/publish",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Library, FileCategory.TableMaterial).getId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/files/{fileId}/unpublish",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Public, FileCategory.TableMaterial).getId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("PUT /api/v1/admin/files/{fileId}/category",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Library, FileCategory.TableMaterial).getId())
                                     .json("{\"category\": \"MasterRequest\"}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("DELETE /api/v1/admin/files/{fileId}",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Library, FileCategory.TableMaterial).getId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                     .cell(allowed(204), ADMIN, OWNER),
             MatrixRow.variant("somebody's private file", "DELETE /api/v1/admin/files/{fileId}",
@@ -85,7 +85,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                             .filePart("file", w.uniqueBytes())
                             .jsonPart("data", "{\"fileType\": \"SingleUse\"}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(201), PLAYER, MASTER, PRIMARY, SECONDARY, PLAYER_MASTER)
                     .cell(allowed(201), ADMIN, OWNER),
             MatrixRow.variant("bytes the actor already has", "POST /api/v1/files", w -> {
@@ -128,7 +128,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                         return MatrixRequest.path();
                     })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(200, (w, body) -> assertThat(body)
                                     .contains(w.recall("private"), w.recall("singleUse"))
                                     .doesNotContain(w.recall("foreign"), w.recall("ownPublic"), w.recall("ownLibrary"))),
@@ -136,7 +136,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("GET /api/v1/files/mine/categories", w -> MatrixRequest.path())
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(200, categories("PlayerApplication", "PlayerSubmission")),
                             PLAYER, REMOVED_SECONDARY, PLAYER_ADMIN, PLAYER_OWNER)
                     .cell(allowed(200, categories("TableMaterial", "MasterRequest")), MASTER, MASTER_ADMIN, MASTER_OWNER)
@@ -150,7 +150,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                         return MatrixRequest.path().query("category", "TableMaterial");
                     })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(200, (w, body) -> assertThat(body)
                                     .contains(w.recall("public"))
                                     .doesNotContain(w.recall("library"))),
@@ -158,7 +158,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
             MatrixRow.of("GET /api/v1/files/{fileId}/content",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Private).getId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(404), PLAYER, MASTER, ADMIN, OWNER)
                     .cell(allowed(200), RESOURCE_OWNER),
             MatrixRow.variant("public file", "GET /api/v1/files/{fileId}/content",
@@ -204,7 +204,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Private).getId())
                                     .json("{\"name\": \"renamed.pdf\", \"keepInLibrary\": true}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, TABLE_PLAYER)
                     .cell(allowed(200), RESOURCE_OWNER),
             MatrixRow.variant("public file of the owner", "PATCH /api/v1/files/{fileId}",
@@ -214,7 +214,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
             MatrixRow.of("DELETE /api/v1/files/{fileId}",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Private).getId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, TABLE_PLAYER)
                     .cell(allowed(204), RESOURCE_OWNER),
 
@@ -226,7 +226,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                         return MatrixRequest.path(w.table().getId());
                     })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("shared"), w.recall("private"))),
                             ADMIN, OWNER, PRIMARY, SECONDARY)
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER),
@@ -236,7 +236,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                                             FileCategory.TableMaterial).getId()
                                             + "\", \"tableFileType\": \"Preparation\", \"isPrivate\": false}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(201), PRIMARY, SECONDARY),
             MatrixRow.of("PATCH /api/v1/game-tables/{tableId}/files/{fileId}", w -> MatrixRequest.path(
@@ -244,14 +244,14 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                                             .getId().fileId())
                             .json("{\"tableFileType\": \"Preparation\", \"isPrivate\": true}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
             MatrixRow.of("DELETE /api/v1/game-tables/{tableId}/files/{fileId}", w -> MatrixRequest.path(
                             w.table().getId(), w.link(w.table(), w.file(w.person("publisher"), FileType.Private), false)
                                     .getId().fileId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(204), PRIMARY, SECONDARY),
 
@@ -264,7 +264,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                         return MatrixRequest.path(CATALOG);
                     })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(
                                     w.recall("created"), w.recall("rejected"), w.recall("disabled"), w.recall("accepted"))),
@@ -276,27 +276,27 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                         return MatrixRequest.path(CATALOG, head.getId());
                     })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("alias"), w.recall("disabledAlias"))),
                             ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}",
                             w -> MatrixRequest.path(CATALOG).json(nameBody(w, "System")))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(201), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}/{id}/accept",
                             w -> MatrixRequest.path(CATALOG, w.catalog(CatalogType.SYSTEMS, CatalogStatus.Created, null).getId())
                                     .json("{}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}/{id}/reject",
                             w -> MatrixRequest.path(CATALOG, w.catalog(CatalogType.SYSTEMS, CatalogStatus.Created, null).getId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}/merge", w -> MatrixRequest.path(CATALOG)
@@ -304,7 +304,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                                     + "\", \"targetCanonicalId\": \""
                                     + w.catalog(CatalogType.SYSTEMS, CatalogStatus.Accepted, null).getId() + "\"}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}/split", w -> {
@@ -313,7 +313,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                         return MatrixRequest.path(CATALOG).json("{\"memberId\": \"" + alias.getId() + "\"}");
                     })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}/{id}/reassign", w -> {
@@ -324,7 +324,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                                 .json("{\"canonicalId\": \"" + otherHead.getId() + "\"}");
                     })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}/{id}/promote", w -> {
@@ -332,20 +332,20 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                         return MatrixRequest.path(CATALOG, w.catalog(CatalogType.SYSTEMS, CatalogStatus.Accepted, head.getId()).getId());
                     })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}/{id}/disable",
                             w -> MatrixRequest.path(CATALOG, w.catalog(CatalogType.SYSTEMS, CatalogStatus.Accepted, null).getId())
                                     .json("{}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/catalogs/{type}/{id}/restore",
                             w -> MatrixRequest.path(CATALOG, w.catalog(CatalogType.SYSTEMS, CatalogStatus.Disabled, null).getId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER)
                     .cell(allowed(200), ADMIN, OWNER),
 
@@ -386,7 +386,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path();
                 })
                 .cell(denied(401), ANONYMOUS)
-                .cell(denied(401), BLOCKED)
+                .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                 .cell(allowed(200, (w, body) -> assertThat(body)
                                 .contains(w.recall("accepted"))
                                 .doesNotContain(w.recall("created"), w.recall("rejected"), w.recall("disabled"))),
@@ -398,7 +398,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
     private static MatrixRow proposal(String endpoint, String prefix) {
         return MatrixRow.of(endpoint, w -> MatrixRequest.path().json(nameBody(w, prefix)))
                 .cell(denied(401), ANONYMOUS)
-                .cell(denied(401), BLOCKED)
+                .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                 .cell(denied(403), PLAYER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                 .cell(allowed(201), MASTER, ADMIN, OWNER, PRIMARY, SECONDARY, PLAYER_MASTER, PLAYER_ADMIN, PLAYER_OWNER);
     }

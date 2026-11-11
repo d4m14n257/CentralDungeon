@@ -268,13 +268,14 @@ test('an account can be blocked and let back in, and one holding a rank is never
 
     await expect(rowOf(owner.page, victimId)).toContainText('Bloqueada', { timeout: 15_000 })
 
-    // The block applies now and not at the end of the cache's TTL (ADR-05 §3): the blocked person's own
-    // tab stops working on its very next load. `AuthService.refresh` re-reads the snapshot and
-    // refuses anything that is not Allowed, so a cache that had not been dropped would have kept
-    // them inside for another minute - "a block that takes sixty seconds to apply is a block that
-    // does not block".
+    // The block applies now and not at the end of the cache's TTL: the blocked person's own tab stops
+    // working on its very next load. `AuthService.refresh` re-reads the snapshot and refuses anything
+    // that is not Allowed, so a cache that had not been dropped would have kept them inside for another
+    // minute - "a block that takes sixty seconds to apply is a block that does not block". And they are
+    // told why: they land on the blocked-account screen, not on a login that would explain nothing.
     await victim.page.goto('/')
-    await expect(victim.page).toHaveURL(/\/login/)
+    await expect(victim.page).toHaveURL(/\/auth\/callback\?error=user_blocked/)
+    await expect(victim.page.getByText('Tu cuenta está bloqueada')).toBeVisible()
 
     // And letting them back in is the same door, the other way.
     await rowOf(owner.page, victimId).getByRole('button', { name: 'Desbloquear' }).click()

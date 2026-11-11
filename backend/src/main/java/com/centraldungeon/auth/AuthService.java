@@ -50,7 +50,7 @@ public class AuthService {
 
         UserAuthSnapshot snapshot = userService.loadAuthSnapshot(userId);
         if (snapshot.status() != UserStatus.Allowed) {
-            throw new UnauthorizedException("User is not allowed to authenticate");
+            throw new UnauthorizedException("Account is blocked", UnauthorizedException.ACCOUNT_BLOCKED);
         }
 
         String accessToken = jwtService.issueAccessToken(userId);

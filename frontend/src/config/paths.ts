@@ -17,6 +17,11 @@ export const paths = {
   root: '/',
 } as const
 
+/** @returns the absolute path to the screen that tells a person their account is blocked */
+export function authBlockedPath(): string {
+  return `${paths.authCallback}?error=user_blocked`
+}
+
 /**
  * @param id the table
  * @returns the absolute path to its public detail

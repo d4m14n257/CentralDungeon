@@ -113,6 +113,9 @@ const EXPLAINED_ERROR_CODES = new Set([
   // when a stale tab or a direct call hits the wrong door - and then the sentence says which.
   'ONBOARDING_PENDING',
   'ONBOARDING_ALREADY_COMPLETED',
+  // A blocked account is sent to its own screen before any toast could matter, but the code is the
+  // backend's to send, so it has its sentence like every other.
+  'ACCOUNT_BLOCKED',
 ])
 
 /**

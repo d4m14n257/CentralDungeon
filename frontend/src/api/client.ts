@@ -1,5 +1,5 @@
 import { env } from '@/config/env'
-import { paths } from '@/config/paths'
+import { authBlockedPath, paths } from '@/config/paths'
 import { ApiError, type PageResponse, type ProblemDetail, type TokenResponse } from '@/types/api'
 
 /**
@@ -48,10 +48,39 @@ function readCookie(name: string): string | null {
   return value !== undefined ? decodeURIComponent(value) : null
 }
 
+const ACCOUNT_BLOCKED = 'ACCOUNT_BLOCKED'
+
+/** Whether a 401 says the account is blocked, as opposed to the session merely being gone. Reads a clone, so the body stays readable. */
+async function isAccountBlocked(response: Response): Promise<boolean> {
+  const problem = (await response
+    .clone()
+    .json()
+    .catch(() => null)) as Partial<ProblemDetail> | null
+  return problem?.errorCode === ACCOUNT_BLOCKED
+}
+
+/**
+ * Ends the session for a blocked account and sends the person to the screen that says so, instead
+ * of to a login that would tell them nothing. Skips the navigation when they are already there, so
+ * the boot refresh of that very screen cannot reload it in a loop.
+ *
+ * @returns the error to throw, so the call that hit the block does not go on as if nothing happened
+ */
+function leaveForBlockedScreen(): ApiError {
+  setAccessToken(null)
+  if (window.location.pathname !== paths.authCallback) {
+    window.location.assign(authBlockedPath())
+  }
+  return new ApiError(401, { title: 'Unauthorized', status: 401, detail: 'Account blocked', errorCode: ACCOUNT_BLOCKED })
+}
+
 /**
  * Only /auth/refresh needs the CSRF header - it is the one endpoint authenticated by cookie
  * (ADR-05 §2). Exported so AuthProvider can call it once on boot to recover a session
  * from the httpOnly refresh cookie, without a chicken-and-egg 401 first.
+ *
+ * @returns the new access token, or null if there is no session to recover
+ * @throws ApiError with `ACCOUNT_BLOCKED` if the account is blocked; the person has already been sent to the blocked screen
  */
 export async function refreshSession(): Promise<string | null> {
   const csrfToken = readCookie('XSRF-TOKEN')
@@ -61,6 +90,9 @@ export async function refreshSession(): Promise<string | null> {
     headers: csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {},
   })
   if (!response.ok) {
+    if (response.status === 401 && (await isAccountBlocked(response))) {
+      throw leaveForBlockedScreen()
+    }
     return null
   }
   const data = (await response.json()) as TokenResponse
@@ -69,7 +101,7 @@ export async function refreshSession(): Promise<string | null> {
 }
 
 /**
- * Sends the call and settles the 401 - refresh once, retry, and give up to /login if that fails too.
+ * Sends the call and settles the 401 - refresh once, retry, and give up to /login if that fails too. A 401 that says the account is blocked skips all that and goes to the blocked screen.
  *
  * Split out of `request` so a download can share it. A binary response is not JSON and must not be
  * parsed as any, but everything up to the body - the bearer token, the credentials, the refresh
@@ -105,6 +137,10 @@ async function send(method: string, path: string, options: RequestOptions = {}, 
     body,
     credentials: 'include',
   })
+
+  if (response.status === 401 && (await isAccountBlocked(response))) {
+    throw leaveForBlockedScreen()
+  }
 
   if (response.status === 401 && !isRetry) {
     const newToken = await refreshSession()

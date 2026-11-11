@@ -31,7 +31,7 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                     w -> MatrixRequest.path(w.table().getId(), applicantRegistration(w, TableRegistrationStatus.Candidate))
                             .json(JUSTIFICATION))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, RESOURCE_OWNER)
                     .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
                     .cell(allowed(200), PRIMARY),
@@ -39,7 +39,7 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                     w -> MatrixRequest.path(w.table().getId(), applicantRegistration(w, TableRegistrationStatus.Blocked))
                             .json(JUSTIFICATION))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
                     .cell(allowed(200), PRIMARY),
@@ -47,7 +47,7 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                     w -> MatrixRequest.path(w.table().getId(), applicantRegistration(w, TableRegistrationStatus.Candidate))
                             .json(JUSTIFICATION))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY)
                     .cell(allowed(200), SECONDARY),
@@ -62,28 +62,28 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(w.table().getId());
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own")).doesNotContain(w.recall("foreign"))),
                             ADMIN, OWNER, PRIMARY, SECONDARY),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/ban-requests/{requestId}/approve",
                     w -> MatrixRequest.path(w.table().getId(), banRequest(w)).json(RESOLUTION))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
                     .cell(allowed(200), PRIMARY),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/ban-requests/{requestId}/reject",
                     w -> MatrixRequest.path(w.table().getId(), banRequest(w)).json(RESOLUTION))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
                     .cell(allowed(200), PRIMARY),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/registrations",
                     w -> MatrixRequest.path(w.table().getId()).json("{\"description\": \"I want to play\", \"fileIds\": []}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(201), PLAYER, REMOVED_SECONDARY, PLAYER_MASTER, PLAYER_ADMIN, PLAYER_OWNER)
                     .cell(denied(403), MASTER, ADMIN, OWNER, PRIMARY, SECONDARY)
                     .cell(denied(409), CANDIDATE, TABLE_PLAYER),
@@ -94,7 +94,7 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(w.table().getId());
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own")).doesNotContain(w.recall("foreign"))),
                             ADMIN, OWNER, PRIMARY, SECONDARY),
@@ -104,26 +104,26 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(w.table().getId());
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("player")).contains(w.recall("blocked"))),
                             ADMIN, OWNER, PRIMARY, SECONDARY),
             MatrixRow.of("POST /api/v1/registrations/{registrationId}/accept",
                     w -> MatrixRequest.path(applicantRegistration(w, TableRegistrationStatus.Candidate)))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, RESOURCE_OWNER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
             MatrixRow.of("POST /api/v1/registrations/{registrationId}/reject",
                     w -> MatrixRequest.path(applicantRegistration(w, TableRegistrationStatus.Candidate)).json(JUSTIFICATION))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, RESOURCE_OWNER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
             MatrixRow.of("DELETE /api/v1/registrations/{registrationId}",
                     w -> MatrixRequest.path(applicantRegistration(w, TableRegistrationStatus.Candidate)))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, SECONDARY)
                     .cell(allowed(204), RESOURCE_OWNER),
             MatrixRow.variant("registration already accepted", "DELETE /api/v1/registrations/{registrationId}",
@@ -145,7 +145,7 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path();
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(200, (w, body) -> assertThat(body)
                             .contains(w.recall("candidate"), w.recall("player"), w.recall("rejected"))
                             .doesNotContain(w.recall("blocked"), w.recall("deleted"), w.recall("foreign"))),
@@ -158,14 +158,14 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(w.table().getId());
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own")).doesNotContain(w.recall("foreign"))),
                             ADMIN, OWNER, PRIMARY, SECONDARY),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/tasks",
                     w -> MatrixRequest.path(w.table().getId()).json(TASK_BODY))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(201), PRIMARY, SECONDARY),
             MatrixRow.of("GET /api/v1/game-tables/{tableId}/tasks/applicable", w -> {
@@ -175,7 +175,7 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(w.table().getId());
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("candidates"))
                             .doesNotContain(w.recall("players"), w.recall("single"))),
                             PLAYER, MASTER, ADMIN, OWNER, PRIMARY, SECONDARY, REMOVED_SECONDARY, CANDIDATE)
@@ -191,13 +191,13 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
             MatrixRow.of("PATCH /api/v1/tasks/{taskId}",
                     w -> MatrixRequest.path(w.task(w.table(), TaskAudience.Players, null).getId()).json(TASK_BODY))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
             MatrixRow.of("POST /api/v1/tasks/{taskId}/close",
                     w -> MatrixRequest.path(w.task(w.table(), TaskAudience.Players, null).getId()))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
             MatrixRow.of("GET /api/v1/tasks/{taskId}/submissions", w -> {
@@ -206,13 +206,13 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(task.getId());
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, RESOURCE_OWNER)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own"))), ADMIN, OWNER, PRIMARY, SECONDARY),
             MatrixRow.of("POST /api/v1/tasks/{taskId}/submissions",
                     w -> MatrixRequest.path(w.task(w.table(), TaskAudience.Players, null).getId()).json("{\"content\": \"My answer\"}"))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, CANDIDATE, PRIMARY, SECONDARY)
                     .cell(allowed(201), TABLE_PLAYER),
             MatrixRow.variant("task for candidates", "POST /api/v1/tasks/{taskId}/submissions",
@@ -232,7 +232,7 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(task.getId());
             })
                     .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401), BLOCKED)
+                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER, PRIMARY)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own")).doesNotContain(w.recall("foreign"))),
                             TABLE_PLAYER, RESOURCE_OWNER));
