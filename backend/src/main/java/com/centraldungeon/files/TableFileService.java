@@ -7,6 +7,9 @@ import com.centraldungeon.files.dto.SharedFileResponse;
 import com.centraldungeon.files.dto.TableFileResponse;
 import com.centraldungeon.files.dto.UpdateTableFileRequest;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tasks.TaskFile;
+import com.centraldungeon.tasks.TaskFileRepository;
+import com.centraldungeon.tasks.TaskFileStatus;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -19,14 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * What a table has attached: putting a file on it, changing who sees it, and taking it off again.
  *
- * <p><b>This links, it never copies</b> (ADR-14 §1), and every method here is written so that stays true.
+ * <p><b>This links, it never copies</b>, and every method here is written so that stays true.
  * Detaching a file leaves the file alone; editing the file changes what every table using it shows.
  * That is the whole reason a master can attach the community's default character sheet rather than
  * uploading their own copy of it, and it is why "remove from this table" and "delete this file" are
  * two different operations living in two different classes.
  *
- * <p><b>Every mutation answers to pertenencia and not to a role</b> (hard rule 17, ADR-05 §5, ADR-06 §4): running
- * <em>this</em> table is what authorizes touching its files. {@code hasRole('MASTER')} says "runs
+ * <p><b>Every mutation answers to membership and not to a role</b>: running
+ * <em>this</em> table, a row in {@code masters}, is what authorizes touching its files. {@code hasRole('MASTER')} says "runs
  * some table", which is a different sentence, and no {@code @PreAuthorize} can tell them apart.
  *
  * <p>Lives in {@code files/} rather than {@code tables/}, the same way {@code TableCatalogService}
@@ -41,33 +44,62 @@ public class TableFileService {
     /** The files themselves, for the metadata each link is shown with. */
     private final StoredFileRepository fileRepository;
 
-    /** Resolves and authorizes the file being attached, and stamps its last use (ADR-13 §3). */
+    /** Resolves and authorizes the file being attached, and stamps its last use. */
     private final FileService fileService;
 
-    /** Answers pertenencia: a row in {@code masters}, never the platform role (ADR-06 §4). */
+    /** Answers whether the actor runs the table: a row in {@code masters}, never the platform role. */
     private final MasterService masterService;
 
     /** Entity to DTO. */
     private final FileMapper fileMapper;
 
+    /** The blank forms a table's requests attach, which leave with the table when it is deleted. */
+    private final TaskFileRepository taskFileRepository;
+
     /**
      * @param tableFileRepository the {@code table_files} rows
      * @param fileRepository      the files each link points at
-     * @param fileService         resolves and authorizes the file being attached (ADR-14 §1)
-     * @param masterService       answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
+     * @param fileService         resolves and authorizes the file being attached
+     * @param masterService       answers whether the actor runs the table
      * @param fileMapper          entity to DTO
+     * @param taskFileRepository  the {@code task_files} rows of the table's requests
      */
     public TableFileService(
             TableFileRepository tableFileRepository,
             StoredFileRepository fileRepository,
             FileService fileService,
             MasterService masterService,
-            FileMapper fileMapper) {
+            FileMapper fileMapper,
+            TaskFileRepository taskFileRepository) {
         this.tableFileRepository = tableFileRepository;
         this.fileRepository = fileRepository;
         this.fileService = fileService;
         this.masterService = masterService;
         this.fileMapper = fileMapper;
+        this.taskFileRepository = taskFileRepository;
+    }
+
+    /**
+     * Detaches every file a deleted table held: its own attachments and the blank forms of its requests.
+     *
+     * <p>Part of deleting the table, in its transaction and with its instant. A link that stayed live
+     * would keep reporting the table as a use of the file - to its owner, who would see a table that is
+     * gone, and to the purge, which would never reach a file only that table held. The rows are marked,
+     * never dropped, like every other link.
+     *
+     * @param gameTableId the table being deleted
+     * @param deletedAt   the table's own deletion instant, stamped on every link it takes with it
+     */
+    @Transactional
+    public void detachAllOfDeletedTable(String gameTableId, LocalDateTime deletedAt) {
+        for (TableFile link : tableFileRepository.findById_GameTableIdAndStatus(gameTableId, TableFileStatus.Current)) {
+            link.setStatus(TableFileStatus.Deleted);
+            link.setDeletedAt(deletedAt);
+        }
+        for (TaskFile link : taskFileRepository.findLiveByGameTableId(gameTableId)) {
+            link.setStatus(TaskFileStatus.Detached);
+            link.setDeletedAt(deletedAt);
+        }
     }
 
     /**

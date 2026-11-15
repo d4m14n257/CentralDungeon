@@ -89,11 +89,15 @@ public interface GameTableRepository extends JpaRepository<GameTable, String>, J
      * approved or sent back is in nobody's tray, and clearing its {@code claimed_by} would be a write
      * with no reader.
      *
+     * <p>A locking read for the same reason as its twin: a table approved while its reservation
+     * expires must not be written back into review by the job.
+     *
      * @param status   the status that means "still waiting", always {@code Preparation}
      * @param cutoff   reservations taken before this instant are expired
      * @param pageable the batch bound
-     * @return the expired reservations, oldest first
+     * @return the expired reservations, oldest first, locked for the rest of the transaction
      */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select t from GameTable t
             where t.status = :status

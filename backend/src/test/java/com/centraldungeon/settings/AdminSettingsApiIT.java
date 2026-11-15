@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.centraldungeon.common.LockGate;
+import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.common.security.JwtService;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.Role;
@@ -15,13 +17,23 @@ import com.centraldungeon.users.UserRepository;
 import com.centraldungeon.users.UserRole;
 import com.centraldungeon.users.UserRoleRepository;
 import com.centraldungeon.users.UserService;
+import java.time.Duration;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -29,6 +41,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -103,6 +116,16 @@ class AdminSettingsApiIT {
 
     @Autowired
     private SettingsService settingsService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private static final String CAP_KEY = SettingKey.TABLES_MAX_PLAYERS_CAP.wireName();
+
+    private static final String EDITED = "EDITED";
 
     private User owner;
     private User admin;
@@ -297,6 +320,92 @@ class AdminSettingsApiIT {
                         .content("{\"justification\":\"sin número\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    // ---------------------------------------------------------------- concurrency
+
+    /**
+     * Two admins changing the same setting at the same moment. The last write wins, on purpose, but
+     * the history has to tell the truth about it: each change records the value it replaced, so the
+     * second one has to have seen the first. Read without a lock, both remember the value from before
+     * either of them, and the trail skips a step nobody can reconstruct afterwards.
+     */
+    @Test
+    void twoAdminsEditingTheSameSettingAtOnceLeaveAHistoryThatChains() throws Exception {
+        settingsService.update(SettingKey.TABLES_MAX_PLAYERS_CAP, 10, "baseline", asAdmin(admin));
+
+        List<Object> outcomes = editTwiceBehindTheGate(11, 12);
+
+        assertThat(outcomes).containsOnly(EDITED);
+        List<SystemSettingChange> raced = changeRepository.findBySettingKeyOrderByCreatedAtAsc(CAP_KEY).stream()
+                .filter(change -> !"baseline".equals(change.getJustification()))
+                .toList();
+        assertThat(raced).hasSize(2);
+        SystemSettingChange first = raced.stream().filter(change -> "10".equals(change.getFromValue())).findFirst()
+                .orElseThrow(() -> new AssertionError("no change recorded the baseline it replaced: " + fromValues(raced)));
+        SystemSettingChange second = raced.stream().filter(change -> change != first).findFirst().orElseThrow();
+        assertThat(second.getFromValue())
+                .as("the second change replaced what the first one wrote, not the baseline")
+                .isEqualTo(first.getToValue());
+        assertThat(settingRepository.findBySettingKey(CAP_KEY).orElseThrow().getValue()).isEqualTo(second.getToValue());
+    }
+
+    /**
+     * The same race on a key nobody has overridden yet: there is no row to lock, so both admins try
+     * to create it and the primary key lets one through. The other is refused as a conflict - a retry
+     * succeeds - and nothing is recorded for it.
+     */
+    @Test
+    void twoAdminsOverridingTheSameDefaultAtOnceLetOneThroughAndRecordOnlyIt() throws Exception {
+        List<Object> outcomes = editTwiceBehindTheGate(11, 12);
+
+        assertThat(outcomes).filteredOn(EDITED::equals).hasSize(1);
+        assertThat(outcomes).filteredOn(outcome -> !EDITED.equals(outcome))
+                .singleElement()
+                .satisfies(refused -> assertThat(refused)
+                        .as("refused with %s", refused)
+                        .isInstanceOfAny(DataIntegrityViolationException.class, PessimisticLockingFailureException.class));
+        assertThat(changeRepository.findBySettingKeyOrderByCreatedAtAsc(CAP_KEY)).hasSize(1);
+    }
+
+    /**
+     * Both edits queue behind a gate that holds the setting's row - or, when there is none yet, the
+     * gap where it would go - so that each has done its reads before either is let through.
+     */
+    private List<Object> editTwiceBehindTheGate(int firstValue, int secondValue) throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try (LockGate gate = LockGate.hold(transactionManager, () -> jdbcTemplate.queryForList(
+                "SELECT setting_key FROM system_settings WHERE setting_key = ? FOR UPDATE", CAP_KEY))) {
+            Future<Object> first = pool.submit(() -> editOutcome(firstValue, admin));
+            Future<Object> second = pool.submit(() -> editOutcome(secondValue, owner));
+            // Two first overrides deadlock on the gap as soon as both reach their insert, and InnoDB
+            // rolls one back at once: by then it is finished rather than waiting, and that is settled too.
+            gate.awaitUntil(LockGate.monitor(mysql),
+                    waiting -> waiting >= 2 || (waiting >= 1 && (first.isDone() || second.isDone())),
+                    Duration.ofSeconds(20));
+            gate.open();
+            return List.of(first.get(30, TimeUnit.SECONDS), second.get(30, TimeUnit.SECONDS));
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(30, TimeUnit.SECONDS);
+        }
+    }
+
+    private Object editOutcome(int value, User actor) {
+        try {
+            settingsService.update(SettingKey.TABLES_MAX_PLAYERS_CAP, value, "concurrent edit", asAdmin(actor));
+            return EDITED;
+        } catch (RuntimeException refused) {
+            return refused;
+        }
+    }
+
+    private static List<String> fromValues(List<SystemSettingChange> changes) {
+        return changes.stream().map(change -> String.valueOf(change.getFromValue())).toList();
+    }
+
+    private CurrentUser asAdmin(User actor) {
+        return new CurrentUser(actor.getId(), Set.of(PlatformRole.ADMIN.roleName()));
     }
 
     // ---------------------------------------------------------------- fixtures

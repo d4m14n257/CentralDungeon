@@ -28,8 +28,11 @@ import org.springframework.transaction.annotation.Transactional;
  * a real table would go too - it cannot happen, because an e2e user only ever touches its own
  * tables, and keeping the foreign keys satisfied matters more than that hypothetical.
  *
- * <p>Deletes run in foreign key order. Each statement's own entity is never named in its subquery:
- * MySQL rejects deleting from a table that the same statement selects from (error 1093).
+ * <p>Deletes run in foreign key order. A statement may name its own entity in its subquery - the tag
+ * update below does: MySQL rejects modifying a table the same statement selects from (error 1093), but
+ * Hibernate wraps every subquery in a derived table ({@code select * from (...)}), which MySQL
+ * materializes first and accepts. {@code TestDataCleanupIT} runs the whole cleanup against MySQL and
+ * fails if the order, or a table that hangs off users or game tables, is missing.
  *
  * <p>Only exists under the "test" profile, like TestLoginController.
  */
@@ -48,7 +51,8 @@ public class TestDataService {
     private static final String E2E_REGISTRATIONS = "select reg.id from TableRegistration reg where reg.gameTable.id in ("
             + E2E_TABLES + ") or reg.user.id in (" + E2E_USERS + ")";
     private static final String E2E_FILES = "select f.id from StoredFile f where f.userCreated.id in (" + E2E_USERS + ")";
-    private static final String E2E_TASKS = "select task.id from TableTask task where task.gameTable.id in (" + E2E_TABLES + ")";
+    private static final String E2E_TASKS = "select task.id from TableTask task where task.gameTable.id in (" + E2E_TABLES
+            + ") or task.targetUser.id in (" + E2E_USERS + ")";
     private static final String E2E_SUBMISSIONS = "select sub.id from TaskSubmission sub where sub.task.id in ("
             + E2E_TASKS + ") or sub.user.id in (" + E2E_USERS + ")";
 
@@ -132,7 +136,9 @@ public class TestDataService {
      */
     @Transactional
     public TestCleanupResponse deleteE2eData() {
-        delete("delete from RegistrationRejection r where r.registration.id in (" + E2E_REGISTRATIONS + ")");
+        // rejected_by points at users too: an e2e master who turned somebody down on a real table.
+        delete("delete from RegistrationRejection r where r.registration.id in (" + E2E_REGISTRATIONS
+                + ") or r.rejectedBy.id in (" + E2E_USERS + ")");
         // The fifth time a foreign key of a bridge table broke this cleanup, after the agenda (F1.2),
         // the calendar (F1.3), the table files (F1.4) and the submissions (F1.5) - ADR-07 §9, ADR-24 §3. The
         // files a candidate attached hang off the application, so they go before it; leaving them
@@ -150,14 +156,6 @@ public class TestDataService {
         delete("delete from Notification n where n.user.id in (" + E2E_USERS + ")");
         delete("delete from TableStatusChange c where c.gameTable.id in (" + E2E_TABLES + ") or c.changedBy.id in (" + E2E_USERS + ")");
         delete("delete from Master m where m.gameTable.id in (" + E2E_TABLES + ") or m.user.id in (" + E2E_USERS + ")");
-        // Attendance hangs off a session and a session off the table, so they go in that order and
-        // before the table itself. Same reason as the agenda and the catalog links below: all of
-        // them are keyed on the table, and deleting the tables first breaks the foreign key. The
-        // cleanup then answers 500, which is what leaves the next run with a full database and
-        // makes it fail on pagination (ADR-07 §9, ADR-24 §3).
-        delete("delete from SessionAttendance a where a.session.gameTable.id in (" + E2E_TABLES + ") or a.id.userId in ("
-                + E2E_USERS + ")");
-        delete("delete from TableSession ses where ses.gameTable.id in (" + E2E_TABLES + ")");
         delete("delete from TableSchedule s where s.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TableSystem ts where ts.id.gameTableId in (" + E2E_TABLES + ")");
         delete("delete from TableTag tt where tt.id.gameTableId in (" + E2E_TABLES + ")");
@@ -187,7 +185,14 @@ public class TestDataService {
         // files, so it unwinds before either. Fifth time this shape has had to be remembered here.
         delete("delete from TaskFile tkf where tkf.id.taskId in (" + E2E_TASKS + ") or tkf.id.fileId in ("
                 + E2E_FILES + ")");
-        delete("delete from TableTask task2 where task2.gameTable.id in (" + E2E_TABLES + ")");
+        delete("delete from TableTask task2 where task2.gameTable.id in (" + E2E_TABLES + ") or task2.targetUser.id in ("
+                + E2E_USERS + ")");
+        // Attendance hangs off a session and a session off the table, and a task can be tied to a
+        // session - so sessions go after the tasks and before the table. Deleting them earlier broke
+        // the cleanup for the first e2e run to tie a task to a session.
+        delete("delete from SessionAttendance a where a.session.gameTable.id in (" + E2E_TABLES + ") or a.id.userId in ("
+                + E2E_USERS + ")");
+        delete("delete from TableSession ses where ses.gameTable.id in (" + E2E_TABLES + ")");
         int gameTables =
                 delete("delete from GameTable gt where gt.name like :tableName or gt.createdBy.id in (" + E2E_USERS + ")");
         // The eleventh: an e2e admin who reserves a real table in the queue (ADR-16 §5) leaves its

@@ -218,6 +218,27 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
 
   const { allowNextNavigation } = useUnsavedChangesGuard(formChanged || catalogsOrAgendaChanged)
 
+  // The catalogs live in state, but the form checks how many of each were linked (the cap the server
+  // also enforces), so the ids are mirrored into it as they change.
+  useEffect(() => {
+    form.setValue(
+      'systemIds',
+      systems.map((value) => value.id),
+      { shouldValidate: true },
+    )
+    form.setValue(
+      'tagIds',
+      tags.map((value) => value.id),
+      { shouldValidate: true },
+    )
+    form.setValue(
+      'platformIds',
+      platforms.map((value) => value.id),
+      { shouldValidate: true },
+    )
+  }, [form, systems, tags, platforms])
+  const { errors } = form.formState
+
   // Only what lives outside the form still needs seeding by hand.
   useEffect(() => {
     if (!table) return
@@ -386,9 +407,27 @@ export function TableEditPage({ asAdmin = false }: TableEditPageProps) {
 
           <section className="space-y-4" aria-label={t('edit.catalogsSection')}>
             <h2 className="section-title">{t('edit.catalogsSection')}</h2>
-            <CatalogPicker kind="systems" label={t('create.systemsLabel')} selected={systems} onChange={setSystems} />
-            <CatalogPicker kind="tags" label={t('create.tagsLabel')} selected={tags} onChange={setTags} />
-            <CatalogPicker kind="platforms" label={t('create.platformsLabel')} selected={platforms} onChange={setPlatforms} />
+            <CatalogPicker
+              kind="systems"
+              label={t('create.systemsLabel')}
+              selected={systems}
+              onChange={setSystems}
+              error={errors.systemIds?.message ?? null}
+            />
+            <CatalogPicker
+              kind="tags"
+              label={t('create.tagsLabel')}
+              selected={tags}
+              onChange={setTags}
+              error={errors.tagIds?.message ?? null}
+            />
+            <CatalogPicker
+              kind="platforms"
+              label={t('create.platformsLabel')}
+              selected={platforms}
+              onChange={setPlatforms}
+              error={errors.platformIds?.message ?? null}
+            />
           </section>
 
           <Separator />

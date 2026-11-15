@@ -47,13 +47,13 @@ Y hay un recurso escaso que es **la atención del cliente**. Gastarla tres veces
 | La matriz de visibilidad de perfiles probada con `Player`, `Master` y `Admin`: falta `Owner` y falta el vetado | F2 | F4.2 — **cerrado**: `Owner` probado como `Admin`, y el vetado decidido (ADR-10 «Perfiles» §1) |
 | Las tres cosas que se llaman «owner» | F3 §7 | F4.2 — **cerrado**: los tres siguen con nombres distintos en el código. Apareció un cuarto, el dueño de un archivo (`owner` en `AdminFileResponse` y `FileService`), que no se confunde con el rol en su contexto: sin cambio |
 | La evicción de las cachés `userAuth` y `systemSettings` observada **como caché**: se probó su efecto por HTTP, no la caché | F3.1, F3.5 | F4.2 — **cerrado**: `AuthCacheIT` |
-| Idempotencia de dos revocaciones simultáneas sobre la misma persona: responde `200` y `409`, aceptado a propósito (ADR-06 §2) | F3.1 | F4.2 — **confirmado** el 2026-11-04: se mantiene, y su test con concurrencia va a F4.3 «Integridad» |
-| `registration_files` frente al borrado lógico: ADR-09 §2 decidió que la fila sobreviva, y no se barrió qué otras lecturas podrían devolverla | F2 | F4.3 |
-| `TestDataService` se rompió por quinta vez. Corregido, pero la clase de error sigue viva | F1.2–F2.2 | F4.3 |
-| Concurrencia del veto contra MySQL real: hay unitario del `409`, no hay IT de dos masters vetando a la vez | F3.4 | F4.3 |
-| Dos admins editando el mismo ajuste: `last write wins` a propósito, sin IT que lo recorra | F3.5 | F4.3 |
-| El cron real del barrido de huérfanas, el `@Scheduled` de la bandeja en una JVM de producción y el guard de multipart en un arranque real: se prueban los métodos, no el despliegue | F3.2, F3.3, F3.5 | F4.3 |
-| La resolución de grupos de catálogo no está acotada | F2.1 | F4.3 |
+| Idempotencia de dos revocaciones simultáneas sobre la misma persona: responde `200` y `409`, aceptado a propósito (ADR-06 §2) | F3.1 | F4.2 — **confirmado** el 2026-11-04: se mantiene. **Cerrado en F4.3**: `UserRoleServiceIT` lo fija con dos owners (`200` + `409`, una fila) y encontró el bug con tres (dos filas) |
+| `registration_files` frente al borrado lógico: ADR-09 §2 decidió que la fila sobreviva, y no se barrió qué otras lecturas podrían devolverla | F2 | F4.3 — **cerrado**: ninguna lectura la lleva a una respuesta |
+| `TestDataService` se rompió por quinta vez. Corregido, pero la clase de error sigue viva | F1.2–F2.2 | F4.3 — **cerrado**: la barrera es `TestDataCleanupIT` (ADR-24 «Testing» §3), y encontró un sexto orden roto |
+| Concurrencia del veto contra MySQL real: hay unitario del `409`, no hay IT de dos masters vetando a la vez | F3.4 | F4.3 — **cerrado**: era un bug (dos vetos, dos filas), `RegistrationConcurrencyIT` |
+| Dos admins editando el mismo ajuste: `last write wins` a propósito, sin IT que lo recorra | F3.5 | F4.3 — **cerrado**: el historial se salteaba un paso; ahora se serializa (ADR-17 «Configuración y auditoría» §3) |
+| El cron real del barrido de huérfanas, el `@Scheduled` de la bandeja en una JVM de producción y el guard de multipart en un arranque real: se prueban los métodos, no el despliegue | F3.2, F3.3, F3.5 | F4.3 — **cerrado**: `ProductionWiringIT` arranca el perfil `prod` |
+| La resolución de grupos de catálogo no está acotada | F2.1 | F4.3 — **cerrado**: `@Size(max = 64)` en las listas de ids al escribir una mesa; el `?q=` lo acota la cabecera de 8 KB |
 | `REQUEST_ENTITY_GONE` en su caso natural, que empezaba a dispararse en F3.4 | F3.2 | F4.4 |
 | Las siete vías de lectura de un archivo, juntas y contra el actor que no debería pasar | F2.2 | F4.4 |
 | La pausa reagendando al reanudar y el veto de un `Secondary` resuelto por el `Primary`, recorridos en el navegador | F3.4 | F4.5 |
@@ -522,6 +522,72 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 - **Lo derivado contra lo guardado** (ADR-03 §1, ADR-14 §3): los conteos de jugadores, la asistencia agregada (ADR-08 §5) y los usos de un archivo se derivan y no se cachean. Se comprueba que ninguna ruta haya introducido una copia.
 
 **Terminada cuando:** cada invariante tiene su test de integración con Testcontainers, y el barrido de borrado lógico cubrió cada entidad con `deleted_at`.
+
+**Avance — terminada el 2026-11-14.** Planeó y ejecutó Opus 5.5, como pide §2.6. La sesión armó el plan con tres exploraciones; los bloques de postulaciones, owners y ajustes, borrado lógico y limpieza corrieron en paralelo como agentes Opus, y el frontend lo hizo Sonnet 5.5. Revisaron `revisor-backend` y `revisor-seguridad`. **No fue una rebanada solo de tests: encontró bugs reales.** Cada uno se vio en rojo con su test antes de corregirse.
+
+- **El método de los IT de concurrencia.** Una carrera entre transacciones se hace determinista con `LockGate` (`backend/src/test/java/com/centraldungeon/common/LockGate.java`):
+  - una transacción de test retiene el lock que el service va a pedir;
+  - espera a que los contendientes estén encolados detrás;
+  - recién entonces lo suelta.
+
+  Así cada contendiente ya hizo su lectura previa, que es justo la que hay que probar. Se cuenta lo que queda en la base, no solo las respuestas. Dos tropiezos quedaron resueltos en el helper:
+  - el usuario `test` del contenedor no puede leer las vistas de locks (`LockGate.monitor` se conecta como `root`);
+  - `innodb_trx` no lista una transacción cuya primera escritura es la que espera, así que se cuenta en `performance_schema.data_lock_waits`.
+
+  La regla quedó en la skill `arquitectura` §5.1.
+- **Bugs de concurrencia** (REPEATABLE READ: la primera lectura de la transacción congela la foto, y quien la hizo antes de esperar el lock despierta con datos viejos):
+  - **El cupo no se controlaba**: postularse y aceptar no miraban `max_players`, y una mesa llena aceptaba a una persona más. Ahora los dos responden `409 TABLE_FULL`, como ya pedía ADR-09 «Postulaciones y veto» §7.
+  - **Dos aceptaciones por el último lugar** daban `200` + `200`. **Dos vetos simultáneos** dejaban dos filas en el historial. Aceptar contra rechazar, y retirarse contra el rechazo automático, terminaban en deadlock, que en HTTP era un `500`. En `accept`, `reject`, `withdraw`, `block` y `unblock`, el lock de la mesa va ahora primero, y los tres primeros corren en `READ COMMITTED`, porque encontrar la mesa a partir de la postulación es una lectura previa.
+  - Aprobar o rechazar un pedido de veto toma el lock de la mesa antes que el del pedido, el mismo orden que el veto directo; el orden inverso daba deadlock.
+  - **Con tres o más owners**, dos revocaciones simultáneas de la misma persona dejaban dos filas `Revoked`. Ahora la segunda es idempotente. Con dos owners sigue siendo `200` + `409 LAST_OWNER`, como se confirmó el 2026-11-04.
+  - **El job que libera reservas vencidas** devolvía a `Pending` un pedido, o a `Preparation` una mesa, que un admin acababa de resolver: leía sin lock y escribía la fila vieja. Ahora lee con lock.
+  - **Dos ediciones del mismo ajuste** dejaban un historial que se salteaba un paso. Ahora se serializan (ADR-17 «Configuración y auditoría» §3). La carrera de la primera edición de una clave termina en un deadlock que MySQL rompe, y responde `409 CONFLICT` en vez de `500`.
+- **Bugs de borrado lógico y visibilidad:**
+  - **El archivo compartido de una mesa nunca pública** lo descargaba cualquiera que tuviera su id. La cuarta vía de `FileService.requireReadable` solo preguntaba por el veto; ahora hace la misma pregunta que el detalle de la mesa (`TableVisibilityService.canSee`).
+  - **Borrar una mesa no arrastraba** sus archivos, las plantillas de sus peticiones ni sus vínculos de catálogo, así que aparecía en los usos de un archivo, inflaba el conteo de usos y dejaba el archivo fuera de la purga. Ahora el borrado los marca con la misma fecha (ADR-07 «Mesas: ciclo de vida» §6).
+  - Una mesa borrada respondía `409 «status Deleted»` a una transición y `200` a un admin en su historial. Ahora es `404`.
+  - En el historial de estados, la primera corrección dejó un hueco que encontró `revisor-seguridad`: el vetado recibía `403`, y eso confirmaba que la mesa existe. Ahora quien no supervisa la mesa recibe el mismo `404` que su detalle.
+  - **El co-master quitado no volvía a encontrar la mesa** en el explorador. El filtro miraba también las filas quitadas, y su Javadoc decía lo contrario de lo que hacía.
+  - **Un valor de catálogo dado de baja o sin aceptar** se mostraba a cualquiera, contra ADR-12 «Catálogos» §5. Ahora solo lo ven quien dirige la mesa y el admin, con su estado, y el formulario lo marca «Dado de baja» (decisión del usuario).
+  - Los pedidos de veto de una postulación retirada seguían listados.
+- **La limpieza del e2e** (`TestDataService`):
+  - Su barrera es `TestDataCleanupIT` (ADR-24 «Testing» §3). Uno de sus tests calcula desde `information_schema` las tablas que cuelgan de `users` o de `game_tables` y falla si alguna no está declarada como limpiada o exenta. El otro puebla las 28 tablas limpiadas y corre la limpieza.
+  - **Encontró un sexto orden roto**: `table_sessions` se borraba antes que `table_tasks`.
+  - Se sumaron dos FKs que faltaban.
+  - Un `500` ahora deja su traza en el log. Lo que el framework ya sabe describir, como una ruta inexistente, va a DEBUG, para que nadie pueda llenar el log sin sesión.
+- **Lo que encontró la revisión, ya corregido y con su test en rojo antes del arreglo:**
+  - **Resolver un `PlayerBan` desde `/admin/requests` tomaba los locks al revés** (pedido antes que mesa). Contra un veto directo daba deadlock, o pisaba con `Approved` un rechazo ya confirmado. Ahora toma la mesa primero, en `READ COMMITTED`, y el veto directo cierra los pedidos abiertos leyéndolos con lock.
+  - **Dos revocaciones u otorgamientos simultáneos de `Master` o `Player`** dejaban dos filas en el historial. Ahora la asignación del target se lee con lock.
+  - **Guardar una mesa con un valor de catálogo dado de baja respondía `409`**, contra la decisión de este mismo día. El estado vinculable se exige ahora solo a los ids nuevos.
+  - Un IT abría la compuerta contando sentencias en curso, no esperas de lock, y podía pasar por azar. Ahora todos usan `LockGate`.
+  - Una falla de lock responde `409` y queda en el log en `WARN`.
+- **Decisión del usuario, el 2026-11-14** (ADR-09 «Postulaciones y veto» §5): **levantar un veto con la mesa llena devuelve como `Candidate`** a quien era `Player`. El veto se levanta siempre y la mesa nunca queda por encima de `max_players`.
+- **El arranque real**: `ProductionWiringIT` levanta el perfil `prod` y verifica los tres jobs con su cron, el tope de `multipart` y el guard de `SettingsService`.
+- **Topes**: las listas de ids de catálogo al escribir una mesa admiten 64 como máximo, con espejo en el zod del formulario.
+- **Lo que estaba bien:**
+  - Lo derivado se deriva: conteos de jugadores, asistencia y usos, sin copias. Las únicas cachés son `userAuth` y `systemSettings`.
+  - `registration_files` no lleva a ninguna respuesta una postulación borrada.
+  - Un solo `Primary` por mesa también se sostiene por la ruta HTTP: el IT con la compuerta pasó verde sin arreglo.
+- **Verificación**:
+  - `./mvnw verify` en verde, con todas las correcciones de la revisión: 735 unitarios y 1.645 IT.
+  - Vitest con 904 tests y `npx tsc -b`, en verde.
+  - Los 27 e2e de postulaciones, veto y pausa, archivos de mesa y de postulación, ciclo de vida, búsqueda, ajustes, pedidos y catálogos. Una primera corrida dio 16 en rojo porque el backend se reinició a mitad de camino por una compilación (`entorno-local` §2); repetida sin compilar, pasó entera.
+  - Al terminar, Surefire avisa que tuvo que matar su JVM porque el hilo `scheduling-1` de los contextos cacheados sigue vivo. No es una falla: la build da `SUCCESS`, y no se verificó si ya pasaba antes de esta rebanada.
+- **Decisiones del usuario, el 2026-11-11**, registradas en ADR-07 §6, ADR-12 §5, ADR-17 §3 y ADR-24 §3 (la regla del lock primero, en ADR-06 «Roles y alcance» §2; el cupo, en ADR-09 §3):
+  - la barrera de completitud;
+  - quién ve un valor de catálogo no aceptado;
+  - serializar los ajustes;
+  - que el borrado de una mesa arrastre lo suyo.
+- **Para F4.4 «Seguridad»:**
+  - `/managed` y las transiciones sobre una mesa nunca pública distinguen «existe» de «no existe» con `403` frente a `404`.
+  - `canOversee` no mira si la mesa está borrada; hoy no es explotable, porque el borrado ahora desvincula los archivos.
+  - Las excepciones del framework siguen respondiendo `500` (`NoResourceFoundException`, método o media type no soportados, parámetro faltante).
+  - Otorgar `Admin` dos veces a la vez a quien no es owner puede dejar dos filas `Granted`, sin test. No se tocó, porque leer antes con lock las filas del target abre un deadlock con la revocación de `Owner`.
+  - Dos primeros otorgamientos simultáneos de un rol que la persona nunca tuvo chocan en los gap locks: uno pasa y el otro recibe `409 CONFLICT`. No se probó.
+  - Aprobar o rechazar un pedido de veto sobre una mesa borrada responde `404` en vez de `409 REQUEST_ENTITY_GONE`, coherente con que una mesa borrada no existe para ninguna lectura. El caso natural de ese código, la postulación retirada, se conserva.
+- **Sin verificar:**
+  - el paso de catálogos del asistente con más de 64 valores;
+  - las mesas ya borradas de la base de desarrollo, que conservan vínculos vivos, sin migración de datos porque el proyecto no es productivo.
 
 ---
 

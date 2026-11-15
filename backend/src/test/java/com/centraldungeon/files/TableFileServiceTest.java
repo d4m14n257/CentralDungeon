@@ -15,6 +15,7 @@ import com.centraldungeon.files.dto.SharedFileResponse;
 import com.centraldungeon.files.dto.TableFileResponse;
 import com.centraldungeon.files.dto.UpdateTableFileRequest;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.users.User;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,10 +49,13 @@ class TableFileServiceTest {
     @Mock
     private MasterService masterService;
 
+    @Mock
+    private TaskFileRepository taskFileRepository;
+
     private final FileMapper fileMapper = org.mapstruct.factory.Mappers.getMapper(FileMapper.class);
 
     private TableFileService tableFileService() {
-        return new TableFileService(tableFileRepository, fileRepository, fileService, masterService, fileMapper);
+        return new TableFileService(tableFileRepository, fileRepository, fileService, masterService, fileMapper, taskFileRepository);
     }
 
     // ---------------------------------------------------------------- pertenencia

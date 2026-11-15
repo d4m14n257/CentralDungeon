@@ -46,6 +46,19 @@ describe('CatalogChip', () => {
     expect(screen.getByText('· pendiente')).toBeInTheDocument()
   })
 
+  it('wears its status when it was disabled after being linked', () => {
+    const { container } = render(<CatalogChip value={value({ status: 'Disabled' })} />)
+
+    expect(screen.getByText('Dado de baja')).toBeInTheDocument()
+    expect(container.querySelector('.border-dashed')).not.toBeNull()
+  })
+
+  it('does not wear a status badge when it is accepted', () => {
+    render(<CatalogChip value={value()} />)
+
+    expect(screen.queryByText('Dado de baja')).not.toBeInTheDocument()
+  })
+
   it('is read-only when no onRemove is given', () => {
     render(<CatalogChip value={value()} />)
 

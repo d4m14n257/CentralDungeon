@@ -2,7 +2,7 @@
 adr: 24
 titulo: Testing
 estado: Vigente
-actualizada: 2026-11-10
+actualizada: 2026-11-11
 absorbe: [143, 172, 223, 254]
 ---
 
@@ -26,11 +26,16 @@ absorbe: [143, 172, 223, 254]
 
 *Antes: #223.*
 
-## §3 Lo que crea un e2e se borra al terminar la corrida, y toda tabla que apunte a `users` entra con su limpieza
+## §3 Lo que crea un e2e se borra al terminar la corrida, y un IT falla si una tabla que cuelga de `users` o `game_tables` queda fuera de la limpieza
 
-**Decisión.** `DELETE /api/v1/test-data/e2e`, solo bajo el perfil `test`, borra en orden de claves foráneas las mesas cuyo nombre contiene «E2E» —o que creó un usuario de prueba— y los usuarios cuyo `discordId` empieza con `e2e-`. **No recibe parámetros**: los patrones están fijos en `TestDataService`. Playwright lo llama en `globalTeardown` y avisa cuántas filas se fueron; si no puede, no rompe la suite. Los specs nombran sus mesas con «E2E» y sus usuarios con `e2e-`, que es lo que los hace borrables. **Toda tabla nueva que referencie `users` entra con su línea de limpieza en el mismo commit**, por cada columna que lo referencie (en `user_role_changes` y `user_status_changes`, por `user_id` **y** por `changed_by`).
+**Decisión.** `DELETE /api/v1/test-data/e2e`, solo bajo el perfil `test`, borra en orden de claves foráneas las mesas cuyo nombre contiene «E2E» —o que creó un usuario de prueba— y los usuarios cuyo `discordId` empieza con `e2e-`. **No recibe parámetros**: los patrones están fijos en `TestDataService`. Playwright lo llama en `globalTeardown` y avisa cuántas filas se fueron; si no puede, **no rompe la suite**: el teardown sigue solo avisando. Los specs nombran sus mesas con «E2E» y sus usuarios con `e2e-`, que es lo que los hace borrables. **Toda tabla nueva que referencie `users` o `game_tables` entra con su línea de limpieza en el mismo commit**, por cada columna que la referencie (en `user_role_changes` y `user_status_changes`, por `user_id` **y** por `changed_by`).
 
-**Por qué.** Cada corrida dejaba sus filas, la base de desarrollo se llenó y eso llegó a hacer fallar specs (ADR-07 §9): un test que no limpia lo que ensucia deja de ser repetible. Sin parámetros porque el endpoint también existe en la base de desarrollo del perfil `dev,test`, así que la garantía tiene que estar en el código y no en quien lo llama. La limpieza es una sola transacción: una FK olvidada hace rollback entero y la corrida siguiente arranca con la base llena, con un síntoma que no aparece donde está la causa.
+La barrera es `TestDataCleanupIT` (`backend/src/test/java/com/centraldungeon/auth/`), con dos pruebas:
+
+1. **Completitud contra el grafo real.** Calcula desde `information_schema.KEY_COLUMN_USAGE` toda tabla que cuelga, directa o transitivamente, de `users` o de `game_tables`, y falla si alguna no está en `CLEANED` ni en `EXEMPT`, si una tabla está en las dos, o si una lista nombra una tabla que ya no existe o ya no cuelga de ninguna de las dos. `EXEMPT` lleva el motivo de cada una; hoy son `comment_drafts`, `comments`, `system_feedback`, `impersonation_sessions` y `audit_logs`, que todavía no tienen entidad ni nada que las escriba.
+2. **La limpieza sobre el grafo poblado.** Llena cada tabla de `CLEANED` con filas e2e —incluido un usuario e2e que actúa sobre una mesa real— y con filas ajenas, corre `deleteE2eData` y exige que cada tabla de `CLEANED` haya perdido filas, que no quede ningún usuario, mesa ni tag e2e, y que las filas ajenas sigan intactas.
+
+**Por qué.** Cada corrida dejaba sus filas, la base de desarrollo se llenó y eso llegó a hacer fallar specs (ADR-07 «Mesas: ciclo de vida» §9 «El explorador ordena por fecha, la mesa nueva primero»): un test que no limpia lo que ensucia deja de ser repetible. Sin parámetros porque el endpoint también existe en la base de desarrollo del perfil `dev,test`, así que la garantía tiene que estar en el código y no en quien lo llama. La limpieza es una sola transacción: una FK olvidada hace rollback entero y la corrida siguiente arranca con la base llena, con un síntoma que no aparece donde está la causa. La barrera la decidió el usuario el 2026-11-11, en F4.3 «Integridad»: la regla del mismo commit se había roto más de diez veces por FKs olvidadas, y cada vez el síntoma apareció en un spec ajeno a la corrida siguiente. Que la lista salga del schema real y no de una lista escrita a mano es lo que impide que una tabla nueva quede sin mirar, el mismo diseño que `RoleMatrixCompletenessIT` (§4). La barrera va en un IT y no en el teardown, que sigue sin romper la suite.
 
 *Antes: #172, #254.*
 

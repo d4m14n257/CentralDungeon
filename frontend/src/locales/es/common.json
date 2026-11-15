@@ -99,7 +99,8 @@
       "REQUEST_TYPE_NOT_ACCEPTED_HERE": "Ese pedido se abre desde el recurso del que trata, no desde esta pantalla.",
       "ONBOARDING_PENDING": "Primero completá el paso inicial para poder editar tu perfil.",
       "ONBOARDING_ALREADY_COMPLETED": "Ya completaste el paso inicial. Tu nombre y país se editan desde tu perfil.",
-      "ACCOUNT_BLOCKED": "Tu cuenta está bloqueada. Contactá a un admin si creés que es un error."
+      "ACCOUNT_BLOCKED": "Tu cuenta está bloqueada. Contactá a un admin si creés que es un error.",
+      "TABLE_FULL": "La mesa ya completó su cupo."
     }
   },
   "pagination": {

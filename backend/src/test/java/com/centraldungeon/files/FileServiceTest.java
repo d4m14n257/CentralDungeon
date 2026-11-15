@@ -501,6 +501,7 @@ class FileServiceTest {
         StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.SingleUse);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
         when(masterService.isMasterOf(anyString(), eq("reader-9"))).thenReturn(false);
+        when(tableVisibilityService.canSee("table-1", "reader-9")).thenReturn(true);
         when(storageService.read(anyString())).thenReturn(new byte[] {1});
 
         when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
@@ -518,7 +519,7 @@ class FileServiceTest {
      *
      * <p>It was real. Until F3.4 the fourth way's condition was {@code !link.isPrivate()} alone, so a
      * shared attachment was opened by <b>any authenticated person</b> - the vetoed included. The fourth
-     * way is now «a table shares it <b>and you are not vetoed on it</b>», asked through the same
+     * way is now «a table shares it <b>and you may see that table</b>», asked through the same
      * {@code TableVisibilityService} that answers {@code GET /game-tables/{id}} rather than through a
      * second copy of the question.
      *
@@ -531,7 +532,7 @@ class FileServiceTest {
         when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
                 .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
         when(masterService.isMasterOf("table-1", "vetado")).thenReturn(false);
-        when(tableVisibilityService.isVetoed("table-1", "vetado")).thenReturn(true);
+        when(tableVisibilityService.canSee("table-1", "vetado")).thenReturn(false);
 
         assertThatThrownBy(() -> fileService().download("file-1", "vetado"))
                 .isInstanceOf(NotFoundException.class);
@@ -551,8 +552,8 @@ class FileServiceTest {
                         new TableFile("table-veto", "file-1", TableFileType.Preparation, false),
                         new TableFile("table-libre", "file-1", TableFileType.Preparation, false)));
         when(masterService.isMasterOf(anyString(), eq("lector"))).thenReturn(false);
-        when(tableVisibilityService.isVetoed("table-veto", "lector")).thenReturn(true);
-        when(tableVisibilityService.isVetoed("table-libre", "lector")).thenReturn(false);
+        when(tableVisibilityService.canSee("table-veto", "lector")).thenReturn(false);
+        when(tableVisibilityService.canSee("table-libre", "lector")).thenReturn(true);
         when(storageService.read(anyString())).thenReturn(new byte[] {1});
 
         assertThat(fileService().download("file-1", "lector")).isNotNull();
@@ -572,7 +573,7 @@ class FileServiceTest {
         when(storageService.read(anyString())).thenReturn(new byte[] {1});
 
         assertThat(fileService().download("file-1", "master-1")).isNotNull();
-        verify(tableVisibilityService, never()).isVetoed(anyString(), anyString());
+        verify(tableVisibilityService, never()).canSee(anyString(), anyString());
     }
 
     /** A published file is published: the audience decides where it is listed, not who may open it. */

@@ -33,6 +33,23 @@ public interface TaskFileRepository extends JpaRepository<TaskFile, TaskFileId> 
     List<TaskFile> findById_TaskId(String taskId);
 
     /**
+     * The live attachments of every request a table ever wrote - what deleting the table detaches.
+     *
+     * <p>Named parameters only, never positional.
+     *
+     * @param gameTableId the table
+     * @return its requests' file links that are still attached
+     */
+    @Query("""
+            select link
+            from TaskFile link, TableTask task
+            where task.id = link.id.taskId
+              and task.gameTable.id = :gameTableId
+              and link.status = com.centraldungeon.tasks.TaskFileStatus.Current
+            """)
+    List<TaskFile> findLiveByGameTableId(@Param("gameTableId") String gameTableId);
+
+    /**
      * Which tables can reach a file through a request that attaches it.
      *
      * <p>The sixth way a file becomes readable, and the reason it has to exist: a master attaches a

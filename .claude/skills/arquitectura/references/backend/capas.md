@@ -18,6 +18,10 @@
 - Dueño de la transacción: `@Transactional` en escritura, `@Transactional(readOnly = true)` en lectura.
 - Dueño de la lógica de negocio, incluida toda la que antes vivía en triggers de MySQL (skill `arquitectura` §4.5).
 - Lanza excepciones de `common/exception`, nunca devuelve `null` para señalar "no existe".
+- **Una invariante que sostiene un lock lo toma antes de leer lo que decide** (ADR-06 «Roles y alcance» §2 «La plataforma nunca se queda sin `Owner`, y toda invariante con lock lo toma antes de leer lo que decide»):
+  - la lectura con bloqueo (`findByIdForUpdate`, `lockById`, `lockByName`) es la primera sentencia de la transacción, y la entidad que la regla mira se carga después;
+  - si la fila a bloquear se encuentra desde otra —la mesa desde la postulación—, esa búsqueda es una proyección y el método lleva `@Transactional(isolation = Isolation.READ_COMMITTED)`, porque bajo `REPEATABLE READ` la primera lectura fija la foto;
+  - dos locks se toman siempre en el mismo orden en todos los caminos; el inverso es un deadlock.
 - Puede llamar a otros services; **no puede llamar a un controller**.
 - Es la única capa que se testea obligatoriamente con unitarios.
 

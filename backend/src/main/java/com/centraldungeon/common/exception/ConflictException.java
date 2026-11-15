@@ -172,6 +172,15 @@ public final class ConflictException extends ApiException {
     public static final String PARAM_PLAYER_COUNT = "playerCount";
 
     /**
+     * Applying to, or accepting a candidate at, a table whose players already fill max_players.
+     *
+     * <p>The same code the automatic rejection stores as its reason, on purpose: it is the same fact,
+     * whether the person hears it from the rejection that closed the table or from the door they
+     * knocked on after it closed.
+     */
+    public static final String TABLE_FULL = "TABLE_FULL";
+
+    /**
      * Completing onboarding twice (ADR-10 §4). The step is blocking and happens once; editing the
      * name and country afterwards has its own endpoint, so this door refuses instead of working as an edit.
      */

@@ -1231,6 +1231,29 @@ class GameTableServiceTest {
     }
 
     @Test
+    void theStatusHistoryOfATableTheReaderIsVetoedFromIsNotFoundNotForbidden() {
+        GameTable table = persistedTable("table-8", GameTableStatus.Opened);
+        when(gameTableRepository.findById("table-8")).thenReturn(Optional.of(table));
+        when(masterService.canOversee("table-8", "vetoed-1")).thenReturn(false);
+        when(tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-8", "vetoed-1", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.getStatusHistory("table-8", "vetoed-1"))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void theStatusHistoryOfAPublicTableStaysForbiddenForAStranger() {
+        GameTable table = persistedTable("table-9", GameTableStatus.Opened);
+        when(gameTableRepository.findById("table-9")).thenReturn(Optional.of(table));
+        when(masterService.canOversee("table-9", "stranger-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> gameTableService.getStatusHistory("table-9", "stranger-1"))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    @Test
     void getEntityByIdThrowsWhenMissing() {
         when(gameTableRepository.findById("missing")).thenReturn(Optional.empty());
 

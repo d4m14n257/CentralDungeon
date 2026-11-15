@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -35,6 +36,9 @@ import com.centraldungeon.users.UserAuthSnapshot;
 import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.UserStatus;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -88,8 +92,22 @@ class RegistrationServiceTest {
 
     private RegistrationService registrationService;
 
+    /** Every table a fixture built, so the lock can hand back the one a test's application belongs to. */
+    private final Map<String, GameTable> tablesById = new HashMap<>();
+
     @BeforeEach
     void setUp() {
+        // The writes resolve an application's table from a projection and lock it before reading the
+        // application; both answer from whatever the test already stubbed, and a test's own stub wins.
+        lenient().when(registrationRepository.findTablesByRegistrationIds(any())).thenAnswer(call -> {
+            Collection<String> ids = call.getArgument(0);
+            return ids.stream()
+                    .flatMap(id -> registrationRepository.findById(id).stream())
+                    .map(registration -> new RegistrationTable(registration.getId(), registration.getGameTable().getId()))
+                    .toList();
+        });
+        lenient().when(gameTableRepository.findByIdForUpdate(anyString()))
+                .thenAnswer(call -> Optional.ofNullable(tablesById.get(call.<String>getArgument(0))));
         registrationService = new RegistrationService(
                 registrationRepository, rejectionRepository, registrationFileRepository, fileService, gameTableRepository, masterService,
                 userService, notificationService, scheduleConflictService, statusChangeRepository,
@@ -238,7 +256,8 @@ class RegistrationServiceTest {
         when(registrationRepository.findById("reg-4")).thenReturn(Optional.of(accepted));
         when(gameTableRepository.findByIdForUpdate("table-8")).thenReturn(Optional.of(table));
         when(masterService.isMasterOf("table-8", "master-1")).thenReturn(true);
-        when(registrationRepository.countByGameTable_IdAndStatus("table-8", TableRegistrationStatus.Player)).thenReturn(1L);
+        // A seat left when asked before accepting, the table full once the candidate takes it.
+        when(registrationRepository.countByGameTable_IdAndStatus("table-8", TableRegistrationStatus.Player)).thenReturn(0L, 1L);
         when(registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc("table-8", TableRegistrationStatus.Candidate))
                 .thenReturn(List.of(otherCandidate));
         when(registrationMapper.toResponse(eq(accepted), any()))
@@ -250,6 +269,54 @@ class RegistrationServiceTest {
         assertThat(otherCandidate.getStatus()).isEqualTo(TableRegistrationStatus.Rejected);
         verify(rejectionRepository).save(any(RegistrationRejection.class));
         verify(notificationService).notifyRegistrationRejected("player-2", table);
+    }
+
+    /** Applying is subject to the seats left: a full table refuses the newcomer with the same code its rejections carry. */
+    @Test
+    void applyingToAFullTableIsRefusedAsTableFull() {
+        GameTable table = persistedTable("table-full-a", GameTableStatus.Opened, 2);
+        when(gameTableRepository.findById("table-full-a")).thenReturn(Optional.of(table));
+        when(userService.loadAuthSnapshot("player-1")).thenReturn(new UserAuthSnapshot("player-1", UserStatus.Allowed, Set.of("Player")));
+        when(registrationRepository.countByGameTable_IdAndStatus("table-full-a", TableRegistrationStatus.Player)).thenReturn(2L);
+
+        assertThatThrownBy(() -> registrationService.apply("table-full-a", "player-1", new CreateRegistrationRequest(null, List.of())))
+                .isInstanceOfSatisfying(ConflictException.class,
+                        conflict -> assertThat(conflict.getErrorCode()).isEqualTo(ConflictException.TABLE_FULL));
+        verify(registrationRepository, never()).save(any(TableRegistration.class));
+    }
+
+    /** Accepting is the other door: a candidate who got in before the table filled cannot push it past its seats. */
+    @Test
+    void acceptingAtAFullTableIsRefusedAsTableFull() {
+        TableRegistration registration = persistedRegistration("reg-full", "table-full-b", TableRegistrationStatus.Candidate, 1);
+        when(registrationRepository.findById("reg-full")).thenReturn(Optional.of(registration));
+        when(masterService.isMasterOf("table-full-b", "master-1")).thenReturn(true);
+        when(registrationRepository.countByGameTable_IdAndStatus("table-full-b", TableRegistrationStatus.Player)).thenReturn(1L);
+
+        assertThatThrownBy(() -> registrationService.accept("reg-full", "master-1"))
+                .isInstanceOfSatisfying(ConflictException.class,
+                        conflict -> assertThat(conflict.getErrorCode()).isEqualTo(ConflictException.TABLE_FULL));
+        assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Candidate);
+    }
+
+    /** A deleted table does not exist for a write either: 404, never a conflict that confirms it is there. */
+    @Test
+    void aWriteOnADeletedTableIsNotFound() {
+        TableRegistration registration = persistedRegistration("reg-gone", "table-gone", TableRegistrationStatus.Candidate, null);
+        registration.getGameTable().setStatus(GameTableStatus.Deleted);
+        when(registrationRepository.findById("reg-gone")).thenReturn(Optional.of(registration));
+
+        assertThatThrownBy(() -> registrationService.accept("reg-gone", "master-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    /** The veto requests are listed against these: a withdrawn application names nobody who is still there. */
+    @Test
+    void theApplicationsOfATableLeaveOutTheWithdrawnOnes() {
+        TableRegistration live = persistedRegistration("reg-live", "table-list", TableRegistrationStatus.Player, null);
+        TableRegistration withdrawn = persistedRegistration("reg-withdrawn", "table-list", TableRegistrationStatus.Deleted, null);
+        when(registrationRepository.findByGameTable_Id("table-list")).thenReturn(List.of(live, withdrawn));
+
+        assertThat(registrationService.registrationsOf("table-list")).containsOnlyKeys("reg-live");
     }
 
     @Test
@@ -714,6 +781,37 @@ class RegistrationServiceTest {
         assertThat(change.getValue().getJustification()).isEqualTo("We talked it through and it is settled");
     }
 
+    /**
+     * <b>A player whose seat was taken while vetoed comes back as a candidate.</b> Lifting the veto
+     * never fails for lack of room, and never pushes the table over its cap either: the trail says
+     * {@code Player}, the table is full, so the person lands where any other applicant waits.
+     */
+    @Test
+    void liftingTheVetoOfAPlayerWhoseSeatWasTakenReturnsThemAsACandidate() {
+        TableRegistration registration = persistedRegistration("reg-b6", "table-b6", TableRegistrationStatus.Blocked, null);
+        registration.getGameTable().setMaxPlayers(1);
+        when(registrationRepository.findById("reg-b6")).thenReturn(Optional.of(registration));
+        when(gameTableRepository.findByIdForUpdate("table-b6")).thenReturn(Optional.of(registration.getGameTable()));
+        when(masterService.isPrimaryOf("table-b6", "primary-1")).thenReturn(true);
+        when(userService.getById("primary-1")).thenReturn(persistedUser("primary-1"));
+        when(statusChangeRepository.findFirstByRegistration_IdAndToStatusOrderByCreatedAtDesc(
+                        "reg-b6", TableRegistrationStatus.Blocked))
+                .thenReturn(Optional.of(new RegistrationStatusChange(
+                        registration, TableRegistrationStatus.Player, TableRegistrationStatus.Blocked,
+                        persistedUser("primary-1"), "Vetoed while playing")));
+        when(registrationRepository.countByGameTable_IdAndStatus("table-b6", TableRegistrationStatus.Player)).thenReturn(1L);
+        when(registrationMapper.toResponse(eq(registration), any()))
+                .thenReturn(new RegistrationResponse("reg-b6", "table-b6", "Test table", "player-1", "P1",
+                        "Candidate", null, null, null, null, List.of(), null, null, null));
+
+        registrationService.unblock("table-b6", "reg-b6", "primary-1", "The veto was a mistake");
+
+        assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Candidate);
+        ArgumentCaptor<RegistrationStatusChange> change = ArgumentCaptor.forClass(RegistrationStatusChange.class);
+        verify(statusChangeRepository).save(change.capture());
+        assertThat(change.getValue().getToStatus()).isEqualTo(TableRegistrationStatus.Candidate);
+    }
+
     /** Lifting a veto that is not there is a 409 with its own code - the mirror of the one above. */
     @Test
     void liftingAVetoThatIsNotThereIs409WithItsOwnCode() {
@@ -824,6 +922,7 @@ class RegistrationServiceTest {
         ReflectionTestUtils.setField(table, "id", id);
         table.setStatus(status);
         table.setMaxPlayers(maxPlayers);
+        tablesById.put(id, table);
         return table;
     }
 

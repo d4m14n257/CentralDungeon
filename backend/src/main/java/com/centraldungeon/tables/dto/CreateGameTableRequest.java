@@ -24,9 +24,10 @@ import org.jspecify.annotations.Nullable;
  * @param requirements  what is asked of a player to be accepted, as rich text. Same sanitization
  * @param tableTypeId   how the table is run, from /api/v1/table-types
  * @param systemIds     the game systems the table uses, as the master picked them (ADR-12 §4). Null
- *                      and empty mean the same thing: nothing chosen
- * @param tagIds        the tags the table is labelled with
- * @param platformIds   where the table is played
+ *                      and empty mean the same thing: nothing chosen. At most 64, like the tags and
+ *                      the platforms - each value costs a lookup when the links are written
+ * @param tagIds        the tags the table is labelled with. At most 64
+ * @param platformIds   where the table is played. At most 64
  * @param startDate     the day the table starts running (ADR-07 §4). A plain date: no session takes
  *                      its hour from here, the weekly agenda does
  * @param totalSessions how many sessions are planned (ADR-08 §3). Positive when present
@@ -40,9 +41,9 @@ public record CreateGameTableRequest(
         @Nullable String permitted,
         @Nullable String requirements,
         @Nullable String tableTypeId,
-        @Nullable List<String> systemIds,
-        @Nullable List<String> tagIds,
-        @Nullable List<String> platformIds,
+        @Size(max = 64) @Nullable List<String> systemIds,
+        @Size(max = 64) @Nullable List<String> tagIds,
+        @Size(max = 64) @Nullable List<String> platformIds,
         @Nullable LocalDate startDate,
         @Positive @Nullable Integer totalSessions,
         @Positive @Nullable Integer maxPlayers,

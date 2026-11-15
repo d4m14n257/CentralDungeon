@@ -4,6 +4,7 @@ import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.registrations.TableRegistrationRepository;
 import com.centraldungeon.registrations.TableRegistrationStatus;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,14 +74,26 @@ public class TableVisibilityService {
     @Transactional(readOnly = true)
     public GameTable requireVisible(String gameTableId, String actorId) {
         GameTable gameTable = load(gameTableId);
-        // A table nobody was shown yet is not there for anyone outside it (ADR-07 §1): same 404 as gone.
-        if (gameTable.getStatus().wasNeverPublic() && !masterService.canOversee(gameTableId, actorId)) {
-            throw notFound(gameTableId);
-        }
-        if (isVetoed(gameTableId, actorId)) {
+        if (!visibleTo(gameTable, gameTableId, actorId)) {
             throw notFound(gameTableId);
         }
         return gameTable;
+    }
+
+    /**
+     * The same question as {@link #requireVisible}, answered rather than thrown.
+     *
+     * <p>For a caller that reaches a table through something attached to it - a file a table shares -
+     * and has to skip that table instead of failing: the attachment is readable exactly when the table
+     * itself would be, so the deleted, the never-public and the vetoed cases all count as "no".
+     *
+     * @param gameTableId the table
+     * @param actorId     who is reading, always from the token
+     * @return true when {@link #requireVisible} would return the table to this reader
+     */
+    @Transactional(readOnly = true)
+    public boolean canSee(String gameTableId, String actorId) {
+        return findLive(gameTableId).map(gameTable -> visibleTo(gameTable, gameTableId, actorId)).orElse(false);
     }
 
     /**
@@ -107,9 +120,8 @@ public class TableVisibilityService {
     /**
      * Whether this person is vetoed on this table (ADR-09 §4, §5).
      *
-     * <p>The question {@link #requireVisible} cannot answer for a caller that already holds the
-     * table - {@code FileService} reaches a file through a link and has the table's id but no
-     * business re-loading it.
+     * <p>Only one part of what {@link #requireVisible} and {@link #canSee} decide: a caller that needs
+     * to know whether somebody may read the table asks one of those, not this.
      *
      * @param gameTableId the table
      * @param actorId     the person, always from the token (ADR-05 §5)
@@ -123,11 +135,22 @@ public class TableVisibilityService {
 
     /** The part every door shares: the row, and the soft delete that makes it gone (ADR-03 §7, ADR-07 §6). */
     private GameTable load(String gameTableId) {
-        GameTable gameTable = gameTableRepository.findById(gameTableId).orElseThrow(() -> notFound(gameTableId));
-        if (gameTable.getStatus() == GameTableStatus.Deleted) {
-            throw notFound(gameTableId);
+        return findLive(gameTableId).orElseThrow(() -> notFound(gameTableId));
+    }
+
+    private Optional<GameTable> findLive(String gameTableId) {
+        return gameTableRepository.findById(gameTableId).filter(gameTable -> gameTable.getStatus() != GameTableStatus.Deleted);
+    }
+
+    /**
+     * A table nobody was shown yet is not there for anyone outside it, and a vetoed reader does not see
+     * the table they were vetoed from - both read as the same absence as a deleted table.
+     */
+    private boolean visibleTo(GameTable gameTable, String gameTableId, String actorId) {
+        if (gameTable.getStatus().wasNeverPublic() && !masterService.canOversee(gameTableId, actorId)) {
+            return false;
         }
-        return gameTable;
+        return !isVetoed(gameTableId, actorId);
     }
 
     /** One sentence for the three ways a table is not there, so none of them can be told apart. */

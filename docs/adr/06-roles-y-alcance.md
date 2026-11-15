@@ -2,7 +2,7 @@
 adr: 6
 titulo: Roles y alcance
 estado: Vigente
-actualizada: 2026-11-10
+actualizada: 2026-11-11
 absorbe: [16, 37, 45, 67, 71, 72, 73, 89, 135, 140, 151, 152, 155, 159, 166, 169, 252, 284]
 ---
 
@@ -18,11 +18,17 @@ absorbe: [16, 37, 45, 67, 71, 72, 73, 89, 135, 140, 151, 152, 155, 159, 166, 169
 
 *Antes: #16, #37, #67, #89, #169.*
 
-## §2 La plataforma nunca se queda sin `Owner`, y la invariante toma dos bloqueos
+## §2 La plataforma nunca se queda sin `Owner`, y toda invariante con lock lo toma antes de leer lo que decide
 
-**Decisión.** Todo camino capaz de quitar un `Owner` —la revocación directa y el otorgamiento de `Admin`, que lo quita por la exclusión de §1— pasa por `UserRoleService.isLastActiveOwner`, que toma **primero** un `PESSIMISTIC_WRITE` sobre la fila `Owner` de `roles` (el mutex) y **después** cuenta los titulares con una **lectura con bloqueo** (`lockActiveHolders`). `countActiveHolders` queda solo para observar; su Javadoc prohíbe enforcar la invariante con él. Borde aceptado: dos revocaciones simultáneas de `Owner` sobre la **misma** persona responden `200` y `409 LAST_OWNER` en vez de `200` y `200`.
+**Decisión.** Todo camino capaz de quitar un `Owner` —la revocación directa y el otorgamiento de `Admin`, que lo quita por la exclusión de §1— pasa por `UserRoleService.lockLiveOwners`, que toma **primero** un `PESSIMISTIC_WRITE` sobre la fila `Owner` de `roles` (el mutex) y **después** lee los titulares con una **lectura con bloqueo** (`lockActiveHolders`). `countActiveHolders` queda solo para observar; su Javadoc prohíbe enforcar la invariante con él. La revocación vuelve a preguntar la idempotencia contra los titulares leídos bajo el lock: si el target ya no está entre ellos, otra revocación de la misma persona ganó mientras esperaba, y responde `200` sin escribir una segunda fila en `user_role_changes`. Borde aceptado: como el control del último owner va antes, **con exactamente dos owners** dos revocaciones simultáneas de la misma persona responden `200` y `409 LAST_OWNER`; con tres o más, `200` y `200`, con una sola fila.
 
-**Por qué.** El conteo optimista se rompía de verdad: dos ITs con concurrencia real contra MySQL dejaron la plataforma en cero owners, por las dos puertas, y ningún test unitario podía verlo. El segundo bloqueo es la mitad que sostiene el arreglo: bajo `REPEATABLE READ`, la transacción que esperó el mutex despierta y un `count(*)` plano le responde desde **su propio snapshot**, contando como vivo al owner que la otra transacción ya degradó; solo una lectura con bloqueo saltea el snapshot. El mutex es una fila única y siempre presente, así que no hay ciclo de locks posible y cubre el caso en que no queda ninguna fila de grants que lockear. Otorgar `Player` o `Master` nunca llega ahí. El borde se acepta porque el `409` es verdadero sobre la plataforma, y evitarlo agrega una rama al camino más delicado.
+**La forma vale para toda invariante que el service sostiene con un lock** (un solo `Primary`, una postulación activa por par, el cupo, el veto, la reserva de la bandeja):
+
+1. **La lectura con bloqueo es la primera sentencia de la transacción**, y lo que la regla decide se lee después de ella, nunca antes. Una entidad cargada antes de la espera conserva su estado viejo en el contexto de persistencia.
+2. **Si la fila a bloquear se encuentra desde otra**, el método corre en `READ COMMITTED`: `RegistrationService.accept`, `reject` y `withdraw` reciben solo la postulación y buscan su mesa (`tableIdOf`, una proyección y no la entidad) antes de `lockTable`. Bajo `REPEATABLE READ` esa primera lectura congelaría la foto.
+3. **Dos locks se toman siempre en el mismo orden.** Aprobar o rechazar un pedido de veto (`ApprovalService.approveBanRequest`, `rejectBanRequest`) toma el lock de la mesa **antes** que el del pedido, el orden del veto directo, que cierra ese mismo pedido. El orden inverso es un deadlock entre los dos caminos.
+
+**Por qué.** El conteo optimista se rompía de verdad: dos ITs con concurrencia real contra MySQL dejaron la plataforma en cero owners, por las dos puertas, y ningún test unitario podía verlo. El segundo bloqueo es la mitad que sostiene el arreglo: bajo `REPEATABLE READ`, la transacción que esperó el mutex despierta y un `count(*)` plano le responde desde **su propio snapshot**, contando como vivo al owner que la otra transacción ya degradó; solo una lectura con bloqueo saltea el snapshot. El mutex es una fila única y siempre presente, así que no hay ciclo de locks posible y cubre el caso en que no queda ninguna fila de grants que lockear. Otorgar `Player` o `Master` nunca llega ahí. El borde se acepta porque el `409` es verdadero sobre la plataforma. Las tres reglas generales salieron de F4.3 «Integridad», el 2026-11-11, que encontró la misma falla en otros caminos: `accept`, `block` y la aprobación de un pedido de veto leían antes del lock, `reject` y `withdraw` no tomaban ninguno, y con tres owners dos revocaciones de la misma persona dejaban dos filas `Revoked`. En `REPEATABLE READ` la foto la fija la primera lectura y no el `BEGIN`, así que una consulta previa al lock —aunque sea solo para encontrar la mesa— basta para que todo lo que se lee después de la espera sea el estado de antes: el último lugar se daba dos veces, o se rechazaba a alguien recién aceptado.
 
 *Antes: #252.*
 

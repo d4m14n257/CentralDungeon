@@ -173,7 +173,7 @@ class SettingsServiceTest {
     /** The happy path, with the three things that have to happen together. */
     @Test
     void anUpdateWritesTheOverrideItsAuditRowAndDropsTheCache() {
-        when(settingRepository.findBySettingKey(SettingKey.TABLES_MAX_PLAYERS_CAP.wireName())).thenReturn(Optional.empty());
+        when(settingRepository.findBySettingKeyForUpdate(SettingKey.TABLES_MAX_PLAYERS_CAP.wireName())).thenReturn(Optional.empty());
 
         SystemSettingResponse after = service.update(SettingKey.TABLES_MAX_PLAYERS_CAP, 20, "una mesa grande", actor);
 
@@ -196,7 +196,7 @@ class SettingsServiceTest {
      */
     @Test
     void theFirstChangeRecordsThatThereWasNoOverrideBefore() {
-        when(settingRepository.findBySettingKey(any())).thenReturn(Optional.empty());
+        when(settingRepository.findBySettingKeyForUpdate(any())).thenReturn(Optional.empty());
 
         service.update(SettingKey.ADMIN_QUEUE_CLAIM_TIMEOUT_MINUTES, 30, "las revisiones tardan", actor);
 
@@ -208,7 +208,8 @@ class SettingsServiceTest {
     /** A later change records where it came from, which is what makes "raised and put back" readable. */
     @Test
     void aLaterChangeRecordsWhatItReplaced() {
-        overridden(SettingKey.ADMIN_QUEUE_CLAIM_TIMEOUT_MINUTES, "30");
+        when(settingRepository.findBySettingKeyForUpdate(SettingKey.ADMIN_QUEUE_CLAIM_TIMEOUT_MINUTES.wireName()))
+                .thenReturn(Optional.of(override(SettingKey.ADMIN_QUEUE_CLAIM_TIMEOUT_MINUTES, "30")));
 
         service.update(SettingKey.ADMIN_QUEUE_CLAIM_TIMEOUT_MINUTES, 15, "volvemos atrás", actor);
 

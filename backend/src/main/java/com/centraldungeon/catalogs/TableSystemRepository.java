@@ -42,12 +42,16 @@ public interface TableSystemRepository extends JpaRepository<TableSystem, TableS
     List<CatalogUsageCount> countUsesByValueIds(@Param("valueIds") Collection<String> valueIds);
 
     /**
-     * The names of the systems each of these tables is live-linked to, in one query for the whole page.
+     * The names of the accepted systems each of these tables is live-linked to, in one query for the
+     * whole page.
+     *
+     * <p>Accepted only: a profile is read by people who do not run those tables, and a proposal nobody
+     * reviewed or a value taken out of service is not shown to them.
      *
      * <p>Named parameters only, never positional (ADR-03 §2).
      *
      * @param gameTableIds the tables of the page. An empty collection is the caller's to avoid
-     * @return one row per live link, by system name. A table with no system is absent
+     * @return one row per live link to an accepted system, by system name. A table with none is absent
      */
     @Query("""
             select new com.centraldungeon.catalogs.TableSystemName(link.id.gameTableId, system.name)
@@ -55,6 +59,7 @@ public interface TableSystemRepository extends JpaRepository<TableSystem, TableS
             join GameSystem system on system.id = link.id.systemId
             where link.id.gameTableId in :gameTableIds
               and link.status = com.centraldungeon.catalogs.TableCatalogLinkStatus.Used
+              and system.status = com.centraldungeon.catalogs.CatalogStatus.Accepted
             order by system.name
             """)
     List<TableSystemName> findNamesByTables(@Param("gameTableIds") Collection<String> gameTableIds);

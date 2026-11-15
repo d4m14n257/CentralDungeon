@@ -26,9 +26,10 @@ import org.jspecify.annotations.Nullable;
  * @param permitted     the house rules. Rich text, same sanitization
  * @param requirements  what is asked of a player to be accepted, as rich text. Same sanitization
  * @param tableTypeId   how the table is run, or null to leave it unclassified
- * @param systemIds     the game systems the table ends up using. Empty clears them
- * @param tagIds        the tags the table ends up labelled with. Empty clears them
- * @param platformIds   where the table ends up being played. Empty clears them
+ * @param systemIds     the game systems the table ends up using. Empty clears them. At most 64: each
+ *                      value costs a lookup when the links are rewritten
+ * @param tagIds        the tags the table ends up labelled with. Empty clears them. At most 64
+ * @param platformIds   where the table ends up being played. Empty clears them. At most 64
  * @param startDate     the day the table starts running (ADR-07 §4). A plain date: no session takes
  *                      its hour from here, the weekly agenda does
  * @param totalSessions how many sessions are planned (ADR-08 §3)
@@ -41,9 +42,9 @@ public record UpdateGameTableRequest(
         @Nullable String permitted,
         @Nullable String requirements,
         @Nullable String tableTypeId,
-        @Nullable List<String> systemIds,
-        @Nullable List<String> tagIds,
-        @Nullable List<String> platformIds,
+        @Size(max = 64) @Nullable List<String> systemIds,
+        @Size(max = 64) @Nullable List<String> tagIds,
+        @Size(max = 64) @Nullable List<String> platformIds,
         @Nullable LocalDate startDate,
         @Positive @Nullable Integer totalSessions,
         @Positive @Nullable Integer maxPlayers,

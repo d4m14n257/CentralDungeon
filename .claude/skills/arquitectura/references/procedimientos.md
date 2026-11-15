@@ -58,6 +58,6 @@ El proyecto viejo terminó con dos `database.sql` desactualizados en dos repos d
    - soft delete con `status` y `deleted_at`, más `created_at` y `updated_at`;
    - cascadas en el service, nunca `ON DELETE CASCADE`.
 5. Si el cambio agrega o modifica una **regla de negocio**, anotarla en `references/modelo-datos/reglas-negocio.md` (§4.5) con el service donde vive, y escribir su test.
-6. Si la tabla nueva la llena el e2e, agregarla al orden de borrado de `TestDataService` (ADR-07 §9, ADR-24 §3).
+6. Si la tabla nueva cuelga de `users` o de `game_tables`, agregarla al orden de borrado de `TestDataService` y a `CLEANED` de `TestDataCleanupIT` —o a `EXEMPT`, con su motivo, si todavía nada la escribe—. Si no, ese IT falla (ADR-24 «Testing» §3 «Lo que crea un e2e se borra al terminar la corrida, y un IT falla si una tabla que cuelga de `users` o `game_tables` queda fuera de la limpieza»).
 7. Si el cambio **contradice una decisión** ya registrada, reescribir la sección de su ADR en `docs/adr/` en el mismo commit (agente `escriba-adr`), para que el registro no quede mintiendo.
 8. Antes de dar el cambio por terminado, verificar que los bloques Mermaid siguen siendo válidos: nombres de entidad consistentes y sin comas sueltas.

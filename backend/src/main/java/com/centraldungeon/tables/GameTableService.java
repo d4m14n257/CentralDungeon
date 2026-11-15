@@ -651,13 +651,15 @@ public class GameTableService {
     }
 
     /**
-     * Soft delete of a table that never went public (ADR-03 §7, ADR-07 §6). Same actors as cancel - the Primary
+     * Soft delete of a table that never went public. Same actors as cancel - the Primary
      * or an admin - and the same lock, but a different meaning: cancel closes a table that existed
      * for other people, this one removes a draft that did not.
      *
-     * <p>The cascade is explicit and in one transaction, as ADR-03 §7 requires: the master rows and the
-     * registrations of the table fall with it, all stamped with the same instant. The status change
-     * is recorded too - the trail survives even when the table does not.
+     * <p>Deleting is logical and the service carries the cascade explicitly, in one transaction: the master rows, the
+     * registrations, the attached files, the blank forms of its requests and the catalog links of the
+     * table fall with it, all stamped with the same instant. A link left live would keep reporting the
+     * table as a use of the file or the catalog value, and keep the file out of the purge. The status
+     * change is recorded too - the trail survives even when the table does not.
      *
      * <p>When an admin does it, every master the table had is told ({@code TableDeletedByAdmin}, ADR-06 §8).
      *
@@ -690,6 +692,8 @@ public class GameTableService {
             registration.setDeletedAt(deletedAt);
         }
         masterService.softDeleteAllOfTable(gameTableId, deletedAt);
+        tableFileService.detachAllOfDeletedTable(gameTableId, deletedAt);
+        tableCatalogService.removeAllLinks(gameTableId, deletedAt);
         gameTable.setDeletedAt(deletedAt);
         recordStatusChange(gameTable, from, GameTableStatus.Deleted, actorId, null);
         tableChangeNotifier.announceDeleted(gameTable, actorId, masters);
@@ -879,14 +883,21 @@ public class GameTableService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token
      * @return the whole history, oldest first
+     * @throws NotFoundException if the table is not there or was deleted - for an admin too - and,
+     *         for anybody who does not oversee it, whenever the table itself would answer 404 to them
      * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor neither runs
-     *         the table nor is an admin
+     *         the table nor is an admin, on a table they may see
      */
     @Transactional(readOnly = true)
     public List<TableStatusChangeResponse> getStatusHistory(String gameTableId, String actorId) {
-        if (!masterService.isMasterOf(gameTableId, actorId) && !isAdmin(actorId)) {
+        if (!masterService.canOversee(gameTableId, actorId)) {
+            // The same 404 the table's own detail gives them - deleted, vetoed or never public - so the
+            // 403 below is only ever said about a table they already know exists.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table or an admin can view its status history");
         }
+        // A deleted or missing table has no history to read, for an admin either.
+        tableVisibilityService.requireExisting(gameTableId);
         return tableStatusChangeRepository.findByGameTable_IdOrderByCreatedAtAsc(gameTableId).stream()
                 .map(gameTableMapper::toStatusChangeResponse)
                 .toList();
@@ -1011,7 +1022,13 @@ public class GameTableService {
      */
     @Transactional(readOnly = true)
     public GameTableDetailResponse getDetail(String gameTableId, String actorId) {
-        return toDetail(tableVisibilityService.requireVisible(gameTableId, actorId), actorId);
+        GameTable gameTable = tableVisibilityService.requireVisible(gameTableId, actorId);
+        // Somebody outside the table sees only accepted catalog values; its masters and the admins read
+        // them all, with their status, so that the next save keeps what is not accepted yet.
+        Map<CatalogType, List<CatalogValueResponse>> catalogs = masterService.canOversee(gameTableId, actorId)
+                ? tableCatalogService.findLinks(gameTableId)
+                : tableCatalogService.findAcceptedLinks(gameTableId);
+        return toDetail(gameTable, actorId, catalogs);
     }
 
     /**
@@ -1380,19 +1397,20 @@ public class GameTableService {
 
     /** Every transition answers with the table; none of them is the read where the clash matters. */
     private GameTableDetailResponse toDetail(GameTable gameTable) {
-        return toDetail(gameTable, null);
+        return toDetail(gameTable, null, tableCatalogService.findLinks(gameTable.getId()));
     }
 
     /**
      * @param conflictActorId whose commitments to measure the agenda against and whose application to look
      *                        for, or null when the read has no actor for whom the questions mean anything
      *                        (ADR-05 §5, ADR-08 §2, ADR-09 §1)
+     * @param catalogs        the catalog values to show, already narrowed to what this reader may see
      */
-    private GameTableDetailResponse toDetail(GameTable gameTable, @Nullable String conflictActorId) {
+    private GameTableDetailResponse toDetail(
+            GameTable gameTable, @Nullable String conflictActorId, Map<CatalogType, List<CatalogValueResponse>> catalogs) {
         int playerCount = countPlayers(gameTable.getId());
         List<MasterSummaryResponse> masters =
                 masterService.findByGameTable(gameTable.getId()).stream().map(gameTableMapper::toMasterSummary).toList();
-        Map<CatalogType, List<CatalogValueResponse>> catalogs = tableCatalogService.findLinks(gameTable.getId());
 
         // Sanitized on the way out as well as on the way in (ADR-03 §8): a row written before this gate
         // existed, or by any path that ever skips it, still reaches the browser through here. The
@@ -1435,7 +1453,10 @@ public class GameTableService {
                 .orElseThrow(() -> new IllegalStateException("Table has no Primary master: " + gameTableId));
     }
 
+    /** The row every transition locks on; a deleted table is not there, so it is a 404 and never a "wrong status" 409. */
     private GameTable lockTable(String gameTableId) {
-        return gameTableRepository.findByIdForUpdate(gameTableId).orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
+        return gameTableRepository.findByIdForUpdate(gameTableId)
+                .filter(gameTable -> gameTable.getStatus() != GameTableStatus.Deleted)
+                .orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
     }
 }

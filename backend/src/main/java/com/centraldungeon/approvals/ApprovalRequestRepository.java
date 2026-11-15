@@ -81,6 +81,22 @@ public interface ApprovalRequestRepository
             ApprovalRequestType requestType, String entityId, ApprovalStatus status);
 
     /**
+     * What a request of one type is about, read as a bare column and never as the entity.
+     *
+     * <p>Resolving a veto request has to take its table's lock before the request's, and finding the
+     * table starts from the request. A request loaded as an entity at that point would stay in the
+     * persistence context with its pre-lock state, and the locking read that follows would hand back
+     * that same stale instance instead of the committed row.
+     *
+     * @param requestId   the request
+     * @param requestType the type it has to be
+     * @return the entity it points at, or empty when there is no such request of that type
+     */
+    @Query("select ar.entityId from ApprovalRequest ar where ar.id = :requestId and ar.requestType = :requestType")
+    Optional<String> findEntityIdOfType(
+            @Param("requestId") String requestId, @Param("requestType") ApprovalRequestType requestType);
+
+    /**
      * The open requests of one type about one entity - what a direct action has to close out.
      *
      * <p>When a {@code Primary} presses the veto button themselves, any {@code PlayerBan} a
@@ -89,11 +105,18 @@ public interface ApprovalRequestRepository
      * {@code REGISTRATION_ALREADY_BLOCKED} for ever, and the co-master who asked never learns what
      * happened.
      *
+     * <p><b>A locking read.</b> Somebody may be answering one of these requests at that same moment.
+     * Read plainly, the row would come back {@code Pending} from this transaction's snapshot, the close
+     * would wait for the other answer to commit and then overwrite it - a {@code Rejected} turned into
+     * {@code Approved}, with the requester told both. With the lock, the status is evaluated again on
+     * the committed row, and a request already answered is not returned.
+     *
      * @param requestType the kind of request
      * @param entityId    what the requests are about
      * @param status      always {@link ApprovalStatus#Pending}
-     * @return the open requests about that entity, oldest first
+     * @return the open requests about that entity, oldest first, locked for the rest of the transaction
      */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<ApprovalRequest> findByRequestTypeAndEntityIdAndStatusOrderByCreatedAtAsc(
             ApprovalRequestType requestType, String entityId, ApprovalStatus status);
 
@@ -192,12 +215,23 @@ public interface ApprovalRequestRepository
      * {@code claimed_by} it had as a record of who was working on it, and it is no longer in anybody's
      * tray, so clearing it would be a write with no reader that also erases a small piece of history.
      *
+     * <p><b>A locking read, and it has to be.</b> An admin may be resolving one of these rows at the
+     * very moment it expires. Read plainly, the job would wait for that resolution and then write back
+     * the row as it was before it - status included - putting an answered request back in the tray.
+     * Read with a lock, the condition is evaluated again on the committed row once the resolution is
+     * done, and a request that is no longer pending is simply not returned.
+     *
+     * <p>The lock is wider than the rows returned: under {@code REPEATABLE READ} the locking read takes
+     * next-key locks on every pending row it walks through the index, expired or not, for the length of
+     * the job's transaction. That transaction is a handful of updates, so the window is milliseconds.
+     *
      * @param status   the status that means "still waiting", always {@link ApprovalStatus#Pending}
      * @param cutoff   reservations taken before this instant are expired
      * @param pageable the batch bound. The job is idempotent, so a leftover tail is taken by the next
      *                 pass a minute later
-     * @return the expired reservations, oldest first
+     * @return the expired reservations, oldest first, locked for the rest of the transaction
      */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select ar from ApprovalRequest ar
             where ar.status = :status

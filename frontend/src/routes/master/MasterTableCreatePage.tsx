@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router'
@@ -107,6 +107,27 @@ export function MasterTableCreatePage() {
     },
   })
 
+  // The catalogs live in state, but the form checks how many of each were linked (the cap the server
+  // also enforces), so the ids are mirrored into it as they change.
+  useEffect(() => {
+    form.setValue(
+      'systemIds',
+      systems.map((value) => value.id),
+      { shouldValidate: true },
+    )
+    form.setValue(
+      'tagIds',
+      tags.map((value) => value.id),
+      { shouldValidate: true },
+    )
+    form.setValue(
+      'platformIds',
+      platforms.map((value) => value.id),
+      { shouldValidate: true },
+    )
+  }, [form, systems, tags, platforms])
+  const { errors } = form.formState
+
   // Everything on this screen counts, not just the text fields: the catalogs, the agenda and the
   // picked files live outside react-hook-form and are most of what gets lost (ADR-20 §5).
   //
@@ -202,6 +223,10 @@ export function MasterTableCreatePage() {
         continue
       }
       if (walked === 'identity' && !(await form.trigger('name'))) {
+        setStep(walked)
+        return
+      }
+      if (walked === 'catalogs' && !(await form.trigger(['systemIds', 'tagIds', 'platformIds']))) {
         setStep(walked)
         return
       }
@@ -429,21 +454,21 @@ export function MasterTableCreatePage() {
                 label={t('create.systemsLabel')}
                 selected={systems}
                 onChange={setSystems}
-                error={stepError && systems.length === 0 ? t('create.missingSystem') : null}
+                error={errors.systemIds?.message ?? (stepError && systems.length === 0 ? t('create.missingSystem') : null)}
               />
               <CatalogPicker
                 kind="tags"
                 label={t('create.tagsLabel')}
                 selected={tags}
                 onChange={setTags}
-                error={stepError && tags.length === 0 ? t('create.missingTag') : null}
+                error={errors.tagIds?.message ?? (stepError && tags.length === 0 ? t('create.missingTag') : null)}
               />
               <CatalogPicker
                 kind="platforms"
                 label={t('create.platformsLabel')}
                 selected={platforms}
                 onChange={setPlatforms}
-                error={stepError && platforms.length === 0 ? t('create.missingPlatform') : null}
+                error={errors.platformIds?.message ?? (stepError && platforms.length === 0 ? t('create.missingPlatform') : null)}
               />
             </>
           )}

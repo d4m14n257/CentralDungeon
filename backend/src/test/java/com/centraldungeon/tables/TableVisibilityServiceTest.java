@@ -155,7 +155,29 @@ class TableVisibilityServiceTest {
         assertThatThrownBy(() -> service().requireExisting("t5")).isInstanceOf(NotFoundException.class);
     }
 
-    /** {@code isVetoed} is the loose question, for a caller that already holds the table - {@code FileService} (ADR-14 §2). */
+    /**
+     * {@code canSee} is the same answer as {@code requireVisible}, without throwing: no for a table that
+     * is not there, was deleted, was never shown to this reader or vetoed them; yes otherwise.
+     */
+    @Test
+    void canSeeGivesTheSameAnswerAsRequireVisibleWithoutThrowing() {
+        when(gameTableRepository.findById("gone")).thenReturn(Optional.empty());
+        when(gameTableRepository.findById("deleted")).thenReturn(Optional.of(table(GameTableStatus.Deleted)));
+        when(gameTableRepository.findById("draft")).thenReturn(Optional.of(table(GameTableStatus.Draft)));
+        when(gameTableRepository.findById("vetoed")).thenReturn(Optional.of(table(GameTableStatus.Opened)));
+        when(gameTableRepository.findById("open")).thenReturn(Optional.of(table(GameTableStatus.Opened)));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "vetoed", "p", List.of(TableRegistrationStatus.Blocked)))
+                .thenReturn(true);
+
+        assertThat(service().canSee("gone", "p")).isFalse();
+        assertThat(service().canSee("deleted", "p")).isFalse();
+        assertThat(service().canSee("draft", "p")).isFalse();
+        assertThat(service().canSee("vetoed", "p")).isFalse();
+        assertThat(service().canSee("open", "p")).isTrue();
+    }
+
+    /** {@code isVetoed} is only the veto part of the question; whoever needs the whole answer asks {@code canSee}. */
     @Test
     void isVetoedAnswersOnlyForBlocked() {
         when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(

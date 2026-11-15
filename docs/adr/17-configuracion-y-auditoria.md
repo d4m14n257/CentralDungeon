@@ -2,7 +2,7 @@
 adr: 17
 titulo: Configuración del sistema y auditoría
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-11-11
 absorbe: [92, 141, 251, 263, 264]
 ---
 
@@ -32,7 +32,9 @@ absorbe: [92, 141, 251, 263, 264]
 
 **Decisión.** El catálogo es el `enum` `SettingKey`, con valor por defecto, rango, categoría y si el cambio es retroactivo. `system_settings` es clave-valor y guarda **solo overrides**: sin fila para un ajuste que nadie tocó, sin seed; cambiar un default es editar el `enum`. Lo editan los admins en `/admin/settings` y cada cambio queda auditado (§2). Dos categorías, `Business` y `Limits`; no hay ajustes de texto. Hoy son cuatro: el timeout de reserva de la bandeja (15 min), el tope por archivo (2 MB), el cupo máximo de jugadores (12) y la ventana de visibilidad de perfiles (14 días, retroactiva, ADR-10 §2). Un ajuste entra cuando hay algo que lo lea: el karma inicial y su ventana de decaimiento (ADR-11 §9) y la ventana del feedback (ADR-11 §12) llegan con sus subsistemas. **Ningún secreto vive acá**: el HMAC de ADR-11 §12 y las credenciales siguen en el entorno.
 
-**Por qué.** La comunidad va a querer mover estos valores sin un despliegue. Clave-valor porque sumar un ajuste no debe ser un `ALTER TABLE` (ADR-03 §5); la regla dura 3 no se rompe porque `SettingsService` expone accesores tipados y el endpoint devuelve su `record`. Sin seed, una base recién vaciada se comporta igual que un alta, y el `enum` es lo que deja a la pantalla mostrar «valor actual y por defecto». No hay textos porque el backend no escribe frases (ADR-23 §3): un ajuste de texto sería una frase en un solo idioma, la regla dura 18 rota por diseño. Un ajuste que nada lee es una perilla que no hace nada. Cambiar una ventana retroactiva altera quién ve a quién de inmediato, y la pantalla tiene que decirlo.
+**Dos admins que editan el mismo ajuste a la vez se serializan** con un bloqueo pesimista sobre su fila: `SettingsService.update` lee el override con `SystemSettingRepository.findBySettingKeyForUpdate` (`PESSIMISTIC_WRITE`). Sigue ganando el último que escribe, pero el historial encadena: el `from_value` de la segunda fila de `system_setting_changes` es el `to_value` de la primera. Un ajuste que todavía está en su default no tiene fila que bloquear, así que dos **primeras** ediciones simultáneas chocan donde iría la fila: MySQL rompe el deadlock abortando una, o la clave primaria rechaza la segunda inserción. Las dos fallas responden `409 CONFLICT` —`GlobalExceptionHandler` traduce `PessimisticLockingFailureException` igual que `DataIntegrityViolationException`—, la rechazada no deja fila de historial, y repetirla funciona.
+
+**Por qué.** La comunidad va a querer mover estos valores sin un despliegue. Clave-valor porque sumar un ajuste no debe ser un `ALTER TABLE` (ADR-03 §5); la regla dura 3 no se rompe porque `SettingsService` expone accesores tipados y el endpoint devuelve su `record`. Sin seed, una base recién vaciada se comporta igual que un alta, y el `enum` es lo que deja a la pantalla mostrar «valor actual y por defecto». No hay textos porque el backend no escribe frases (ADR-23 §3): un ajuste de texto sería una frase en un solo idioma, la regla dura 18 rota por diseño. Un ajuste que nada lee es una perilla que no hace nada. Cambiar una ventana retroactiva altera quién ve a quién de inmediato, y la pantalla tiene que decirlo. El bloqueo lo decidió el usuario el 2026-11-11, en F4.3 «Integridad»: sin él, las dos ediciones leían el valor de antes de ambas y el historial salteaba un paso que nadie podía reconstruir después, y el historial es todo el registro que deja un cambio de configuración (§2). Lo que se arregló es el registro, no quién gana: el último que escribe sigue ganando, como siempre.
 
 *Antes: #141, #263.*
 

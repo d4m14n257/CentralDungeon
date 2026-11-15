@@ -28,3 +28,10 @@ export const DEFAULT_CLAIM_TIMEOUT_MINUTES = 15
 
 /** The seat cap to assume until the server says otherwise: the shipped default of `tables.max_players_cap`. */
 export const DEFAULT_MAX_PLAYERS_CAP = 12
+
+/**
+ * The most values a table may link per catalog (systems, tags or platforms), mirroring the cap the
+ * backend puts on each id list. It stops a form from sending a list the server would refuse, and the
+ * server still checks it.
+ */
+export const MAX_CATALOG_VALUES_PER_KIND = 64

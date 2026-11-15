@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 import type { CatalogValue } from '../types'
+import { CatalogStatusBadge } from './CatalogStatusBadge'
 
 /** What a chip needs to know about the value it shows. */
 export interface CatalogChipProps {
@@ -23,7 +24,8 @@ export interface CatalogChipProps {
  *   screen would erase a choice that said something.
  * - **A value still waiting for review is dimmed and says so** (ADR-12 §3). The master sees their table
  *   with a tag the other players cannot see yet, and an interface that did not admit that would be
- *   lying about what is published.
+ *   lying about what is published. The same goes for one that was rejected or disabled after it
+ *   was linked: it stays on the table, dimmed and wearing its status badge, and the form keeps it.
  *
  * @param props.value    the value to show
  * @param props.onRemove called with its id when removed; omit to render it read-only
@@ -31,17 +33,19 @@ export interface CatalogChipProps {
 export function CatalogChip({ value, onRemove }: CatalogChipProps) {
   const { t } = useTranslation('catalogs')
   const isPending = value.status === 'Created'
+  const isOut = value.status === 'Rejected' || value.status === 'Disabled'
 
   return (
     <span
       className={cn(
         'border-border inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs',
-        isPending && 'border-dashed opacity-70',
+        (isPending || isOut) && 'border-dashed opacity-70',
       )}
       title={isPending ? t('chip.pendingHint') : undefined}
     >
       {value.name}
       {isPending && <span className="text-fg-subtle">{t('chip.pending')}</span>}
+      {isOut && <CatalogStatusBadge status={value.status} />}
       {onRemove && (
         <button
           type="button"

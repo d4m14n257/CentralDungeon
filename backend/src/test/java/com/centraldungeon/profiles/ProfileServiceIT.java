@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.centraldungeon.catalogs.CatalogStatus;
 import com.centraldungeon.catalogs.GameSystem;
 import com.centraldungeon.catalogs.SystemRepository;
 import com.centraldungeon.catalogs.TableSystem;
@@ -150,14 +151,16 @@ class ProfileServiceIT {
 
     /**
      * The list and the count behind it agree on real SQL: a {@code Player} on a {@code Finished} table, nothing
-     * else; newest closing first; a vetoed viewer does not see the table they are vetoed on.
+     * else; newest closing first; a vetoed viewer does not see the table they are vetoed on; and only
+     * the accepted systems of each table are named - one taken out of service is not shown to the viewer.
      */
     @Test
     void finishedTablesAgreeWithTheCountAndHideWhatTheViewerIsVetoedOn() {
         User master = givenAPlayer("Master");
         User player = givenAPlayer("Player");
         User viewer = givenAPlayer("Viewer");
-        GameSystem system = systemRepository.save(new GameSystem("System " + UUID.randomUUID()));
+        GameSystem system = system(CatalogStatus.Accepted);
+        GameSystem disabled = system(CatalogStatus.Disabled);
 
         GameTable older = givenATableRunBy(master, GameTableStatus.Finished, LocalDateTime.now().minusDays(5));
         GameTable newer = givenATableRunBy(master, GameTableStatus.Finished, LocalDateTime.now().minusDays(1));
@@ -168,6 +171,7 @@ class ProfileServiceIT {
             registrationRepository.save(playerRegistrationOf(table, player));
         }
         tableSystemRepository.save(new TableSystem(newer.getId(), system.getId()));
+        tableSystemRepository.save(new TableSystem(newer.getId(), disabled.getId()));
         TableRegistration veto = new TableRegistration(vetoed, viewer, null);
         veto.setStatus(TableRegistrationStatus.Blocked);
         registrationRepository.save(veto);
@@ -232,6 +236,12 @@ class ProfileServiceIT {
         User user = userRepository.save(new User(randomDiscordId(), label + "-" + UUID.randomUUID()));
         userRoleRepository.save(new UserRole(user, playerRole));
         return user;
+    }
+
+    private GameSystem system(CatalogStatus status) {
+        GameSystem system = new GameSystem("System " + UUID.randomUUID());
+        system.setStatus(status);
+        return systemRepository.save(system);
     }
 
     /** discord_id is VARCHAR(32); a UUID with the dashes stripped fits exactly. */

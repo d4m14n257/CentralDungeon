@@ -9,6 +9,7 @@ import com.centraldungeon.settings.SettingsService;
 import com.centraldungeon.approvals.ApprovalRequestType;
 import com.centraldungeon.approvals.ApprovalService;
 import com.centraldungeon.approvals.ApprovalStatus;
+import com.centraldungeon.common.LockGate;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
@@ -34,6 +35,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.SessionFactory;
@@ -48,6 +50,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
@@ -127,6 +130,9 @@ class AdminQueueServiceIT {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private User adminOne;
     private User adminTwo;
@@ -479,6 +485,67 @@ class AdminQueueServiceIT {
         assertThat(claimedByOfRequest(requestId))
                 .as("who answered it is part of what happened")
                 .isEqualTo(adminOne.getId());
+    }
+
+    /**
+     * <b>The job and a resolution racing on the same expired request.</b> An admin resolves a request
+     * whose reservation has just passed the timeout: the resolution holds the row's lock and has
+     * written {@code Approved}, but has not committed. The job picks the row as expired and has to
+     * wait for it. Had it read the row without a lock, it would wake up holding the request as it was
+     * before the resolution and write all of it back - status included - putting an answered request
+     * back in the tray. Read with a lock, the row is re-read once the resolution commits, it no longer
+     * matches "still waiting", and the job leaves it alone.
+     */
+    @Test
+    @DisplayName("the job never puts back in the tray a request resolved while it was running")
+    void theJobDoesNotUndoAResolutionItRacedWith() throws Exception {
+        String requestId = pendingRequest(person("the-asker"), ApprovalRequestType.General, "una consulta");
+        adminQueueService.claim(AdminQueueSource.APPROVAL_REQUEST.wireName(), requestId, adminOne.getId());
+        ageRequestClaim(requestId, 60);
+
+        raceTheJobAgainst(() -> {
+            approvalRequestRepository.lockById(requestId).orElseThrow();
+            jdbcTemplate.update("update approval_requests set status = 'Approved' where id = ?", requestId);
+        });
+
+        assertThat(approvalRequestRepository.findById(requestId).orElseThrow().getStatus())
+                .isEqualTo(ApprovalStatus.Approved);
+        assertThat(claimedByOfRequest(requestId)).isEqualTo(adminOne.getId());
+    }
+
+    /** The same race on the other source: a table approved while the job was releasing its reservation. */
+    @Test
+    @DisplayName("the job never puts back in the tray a table approved while it was running")
+    void theJobDoesNotUndoATableApprovalItRacedWith() throws Exception {
+        GameTable table = tableInReview("Raced", person("the-master"));
+        adminQueueService.claim(AdminQueueSource.GAME_TABLE.wireName(), table.getId(), adminOne.getId());
+        ageTableClaim(table.getId(), 60);
+
+        raceTheJobAgainst(() -> {
+            gameTableRepository.findByIdForUpdate(table.getId()).orElseThrow();
+            jdbcTemplate.update("update game_tables set status = 'Opened' where id = ?", table.getId());
+        });
+
+        assertThat(gameTableRepository.findById(table.getId()).orElseThrow().getStatus())
+                .isEqualTo(GameTableStatus.Opened);
+        assertThat(claimedByOfTable(table.getId())).isEqualTo(adminOne.getId());
+    }
+
+    /**
+     * Runs the release job while a gate stands in for an admin's resolution: it holds the row's lock
+     * with the resolution written but not committed, and commits only once the job is queued on it.
+     */
+    private void raceTheJobAgainst(Runnable uncommittedResolution) throws Exception {
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try (LockGate gate = LockGate.hold(transactionManager, uncommittedResolution)) {
+            Future<Integer> job = pool.submit(claimReleaseService::releaseExpiredClaims);
+            gate.awaitWaiters(LockGate.monitor(mysql), 1, Duration.ofSeconds(20));
+            gate.open();
+            job.get(30, TimeUnit.SECONDS);
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(30, TimeUnit.SECONDS);
+        }
     }
 
     /**

@@ -121,9 +121,10 @@ final class GameTableSearchSpecification {
     /**
      * «the actor does not run this table» (ADR-18 §4).
      *
-     * <p>Deliberately blind to {@code MasterRowStatus}, which is what the JPQL it replaces did too:
-     * somebody who was removed as a co-master (ADR-07 §8) stopped running the table, so the table becomes
-     * one they could apply to. Filtering by live rows here would keep it hidden from them forever.
+     * <p>Live rows only ({@code MasterRowStatus.Created}): somebody who was removed as a co-master
+     * stopped running the table, so for the explorer it is a table like any other, one they can find
+     * and apply to. Their removed row is the record that they once ran it, and counting it here would
+     * keep the table out of their sight forever.
      *
      * @param root          the table being queried
      * @param criteriaQuery the query being built, which owns the subquery
@@ -138,7 +139,8 @@ final class GameTableSearchSpecification {
         mastered.select(master.get("gameTable").get("id"));
         mastered.where(
                 builder.equal(master.get("gameTable").get("id"), root.get("id")),
-                builder.equal(master.get("user").get("id"), actorId));
+                builder.equal(master.get("user").get("id"), actorId),
+                builder.equal(master.get("status"), MasterRowStatus.Created));
         return builder.not(builder.exists(mastered));
     }
 
@@ -302,10 +304,9 @@ final class GameTableSearchSpecification {
      * over both names for the reason {@code ApprovalSearchSpecification.requesterNamed} gives:
      * whoever is searching knows one of the two and not which one the system stores where.
      *
-     * <p>Live rows only ({@code MasterRowStatus.Created}) - and note this is the opposite choice from
-     * {@link #notMasteredBy}, deliberately. There, a removed co-master must stop being excluded, so
-     * the table becomes one they could apply to. Here, a removed co-master does not run the table any
-     * more, so finding it by their name would be answering a question about the past.
+     * <p>Live rows only ({@code MasterRowStatus.Created}), like {@link #notMasteredBy}: a removed
+     * co-master does not run the table any more, so finding it by their name would be answering a
+     * question about the past.
      *
      * @param root          the table being queried
      * @param criteriaQuery the query being built, which owns the subquery

@@ -964,8 +964,11 @@ public class FileService {
      * descarga su archivo es el bug que ADR-14 §2 anticipó por escrito». It was real - until F3.4 the
      * condition was {@code !link.isPrivate()} alone, so <em>any</em> authenticated person reached a
      * shared attachment, the vetoed included. The fourth way is now "a table shares it <b>and you
-     * are not vetoed on that table</b>", asked through {@code TableVisibilityService} so it is the
-     * same question {@code GET /game-tables/{id}} answers and not a second copy of it.
+     * may see that table</b>", asked through {@code TableVisibilityService.canSee} so it is the same
+     * question {@code GET /game-tables/{id}} answers and not a second copy of it. That one question
+     * also covers the two cases a veto check alone missed: a table that was never shown to anyone
+     * outside it, whose shared files were one download away for any signed-in person with the id, and
+     * a deleted table.
      *
      * <p>The other ways need no such clause and it would be noise to add one: the first is the
      * file's owner, the second is a platform publication, the third, fifth and seventh ask for
@@ -990,9 +993,9 @@ public class FileService {
             if (masterService.canOversee(linkedTableId, actorId)) {
                 return file;
             }
-            // The fourth, and the one ADR-14 §2 wrote this method's warning for: a shared attachment is
-            // read by whoever may see the table, and a vetoed person stopped being one of them (ADR-09 §4).
-            if (!link.isPrivate() && !tableVisibilityService.isVetoed(linkedTableId, actorId)) {
+            // The fourth: a shared attachment is read by whoever may see the table - not by a vetoed
+            // person, and not by anyone outside a table nobody was shown yet.
+            if (!link.isPrivate() && tableVisibilityService.canSee(linkedTableId, actorId)) {
                 return file;
             }
         }

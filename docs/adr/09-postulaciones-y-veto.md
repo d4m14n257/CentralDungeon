@@ -2,7 +2,7 @@
 adr: 9
 titulo: Postulaciones y veto
 estado: Vigente
-actualizada: 2026-11-10
+actualizada: 2026-11-14
 absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 ---
 
@@ -26,11 +26,11 @@ absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 
 *Antes: #69, #247.*
 
-## §3 Al llenarse el cupo, los candidatos restantes se rechazan en la misma transacción
+## §3 Una mesa llena no admite a nadie más, y al llenarse los candidatos restantes se rechazan en la misma transacción
 
-**Decisión.** Al aceptar al jugador que completa `max_players`, todas las postulaciones `Candidate` restantes pasan a `Rejected` en la misma transacción, con un motivo por defecto —un código, `TABLE_FULL`, que el frontend traduce (ADR-23 §3)— y su notificación a cada persona.
+**Decisión.** Al aceptar al jugador que completa `max_players`, todas las postulaciones `Candidate` restantes pasan a `Rejected` en la misma transacción, con un motivo por defecto —un código, `TABLE_FULL`, que el frontend traduce (ADR-23 §3)— y su notificación a cada persona. **Postularse y aceptar sobre una mesa cuyos `Player` ya llegan a `max_players` responden `409` con ese mismo código** (`ConflictException.TABLE_FULL`). Los dos lo preguntan bajo el lock de la mesa (`RegistrationService.apply`, `.accept`), que es lo que impide que dos aceptaciones simultáneas den el último lugar dos veces (ADR-06 «Roles y alcance» §2 «La plataforma nunca se queda sin `Owner`, y toda invariante con lock lo toma antes de leer lo que decide»).
 
-**Por qué.** Como un candidato no reserva cupo (§1), sin esta regla quedarían postulaciones colgadas para siempre esperando una respuesta que nunca llega. Rechazar en el momento deja a la persona enterada, le ahorra al master escribir N veces el mismo motivo y aclara que el rechazo es por cupo, no por la persona.
+**Por qué.** Como un candidato no reserva cupo (§1), sin esta regla quedarían postulaciones colgadas para siempre esperando una respuesta que nunca llega. Rechazar en el momento deja a la persona enterada, le ahorra al master escribir N veces el mismo motivo y aclara que el rechazo es por cupo, no por la persona. El `409` lo agregó F4.3 «Integridad»: hasta entonces nada lo controlaba —`apply` solo exigía `Opened` y `accept` no miraba `max_players`— y una mesa llena aceptaba a una persona más. Era un bug y no una decisión nueva: §7 ya decía que postularse está sujeto al cupo. Se reusa el código del rechazo automático porque dice lo mismo y el frontend ya lo traduce.
 
 *Antes: #34.*
 
@@ -44,9 +44,9 @@ absorbe: [23, 28, 29, 34, 39, 69, 149, 160, 213, 247]
 
 ## §5 Veta el `Primary`; un co-master lo pide con justificación, y el veto se deshace con registro
 
-**Decisión.** Solo el **`Primary`** veta. Un co-master puede **pedir** el veto, con justificación, y lo resuelve el `Primary`, no un admin. El veto es **reversible**, y tanto el veto como su levantamiento quedan registrados con motivo obligatorio.
+**Decisión.** Solo el **`Primary`** veta. Un co-master puede **pedir** el veto, con justificación, y lo resuelve el `Primary`, no un admin. El veto es **reversible**, y tanto el veto como su levantamiento quedan registrados con motivo obligatorio. **Levantarlo devuelve a la persona a donde estaba** —el `from_status` del último cambio a `Blocked`—, **salvo que estuviera como `Player` y la mesa ya esté llena**: entonces vuelve como `Candidate` (`RegistrationService.unblock`). El veto se levanta siempre, y nunca deja a la mesa por encima de `max_players` (§3).
 
-**Por qué.** Le da contenido real a la distinción entre master y co-master (ADR-06 §3), que si no quedaba decorativa: quien está a cargo de la mesa responde por quién está y quién no. La reversibilidad es realismo: en una partida la gente se altera y un veto en caliente es esperable, así que tiene que poder deshacerse — pero queda en el historial para que un patrón de vetos impulsivos sea visible.
+**Por qué.** Le da contenido real a la distinción entre master y co-master (ADR-06 §3), que si no quedaba decorativa: quien está a cargo de la mesa responde por quién está y quién no. La reversibilidad es realismo: en una partida la gente se altera y un veto en caliente es esperable, así que tiene que poder deshacerse — pero queda en el historial para que un patrón de vetos impulsivos sea visible. La excepción del cupo la decidió el usuario el 2026-11-14, en F4.3 «Integridad»: al controlar el cupo (§3) apareció que un jugador vetado deja su lugar libre, otro puede ocuparlo, y levantar el veto lo devolvía a `Player` en una mesa ya completa. Se eligió volver a `Candidate` antes que rechazar el levantamiento con `409` o permitir el exceso.
 
 *Antes: #39.*
 

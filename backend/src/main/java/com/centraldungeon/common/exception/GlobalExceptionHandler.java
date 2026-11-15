@@ -1,11 +1,16 @@
 package com.centraldungeon.common.exception;
 
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -23,6 +28,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Everything the application refuses on purpose: 404, 409, 403, 401.
@@ -137,11 +144,20 @@ public class GlobalExceptionHandler {
      * a malformed body (ADR-23 §3): the detail stays English and for the log, and the frontend writes the
      * sentence from the code.
      *
-     * @param exception the constraint violation the persistence layer raised
+     * <p>A lock the database gave up on - a deadlock it broke by aborting one side, as when two first
+     * edits of the same setting both insert under their locking reads - is the same collision seen from
+     * the other end, and gets the same answer.
+     *
+     * @param exception the constraint violation or lock failure the persistence layer raised
      * @return 409 carrying {@code CONFLICT}
      */
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException exception) {
+    @ExceptionHandler({DataIntegrityViolationException.class, PessimisticLockingFailureException.class})
+    public ProblemDetail handleDataIntegrityViolation(DataAccessException exception) {
+        if (exception instanceof PessimisticLockingFailureException) {
+            // A deadlock or a lock timeout is usually two paths taking their locks in different orders:
+            // the person gets an honest 409, and the log keeps what it takes to find the second path.
+            log.warn("Lock failure answered 409", exception);
+        }
         ProblemDetail problem =
                 ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "The request collided with existing data");
         problem.setProperty("errorCode", "CONFLICT");
@@ -176,13 +192,24 @@ public class GlobalExceptionHandler {
      * The last resort: anything not handled above is a bug, and a bug is a 500.
      *
      * <p>The message never reaches the client. A stack trace or a SQL fragment in a response body is
-     * how internals leak.
+     * how internals leak. It goes to the log instead, at ERROR: a 500 that leaves no trace is a failure
+     * nobody can find, and the e2e cleanup failed that way for months.
+     *
+     * <p>Except for what the framework already knows how to describe - an unknown route, a method the
+     * route does not take: anybody can send those without a session, and a full trace at ERROR for each
+     * one would let a loop of them bury the real alarms. They stay at DEBUG.
      *
      * @param exception whatever escaped
      * @return a 500 problem detail with no detail about the cause
      */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception exception) {
+        if (exception instanceof ErrorResponse) {
+            // shortcut: still answered 500 as before, upgrade when each gets its own 404/405/415/400 handler.
+            log.debug("Framework-described request failure, answered 500", exception);
+        } else {
+            log.error("Unhandled exception, answered 500", exception);
+        }
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error");
         problem.setProperty("errorCode", "INTERNAL_ERROR");
         return problem;

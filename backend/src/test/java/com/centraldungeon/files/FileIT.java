@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
 import com.centraldungeon.common.exception.InvalidRequestException;
+import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.files.dto.AdminFileResponse;
 import com.centraldungeon.files.dto.AdminFileTableResponse;
@@ -19,7 +20,15 @@ import com.centraldungeon.files.dto.TableFileResponse;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
+import com.centraldungeon.tables.GameTableService;
+import com.centraldungeon.tables.GameTableStatus;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tasks.TableTask;
+import com.centraldungeon.tasks.TableTaskRepository;
+import com.centraldungeon.tasks.TaskAudience;
+import com.centraldungeon.tasks.TaskFile;
+import com.centraldungeon.tasks.TaskFileRepository;
+import com.centraldungeon.tasks.TaskFileStatus;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
 import java.nio.charset.StandardCharsets;
@@ -94,6 +103,15 @@ class FileIT {
 
     @Autowired
     private MasterService masterService;
+
+    @Autowired
+    private GameTableService gameTableService;
+
+    @Autowired
+    private TableTaskRepository tableTaskRepository;
+
+    @Autowired
+    private TaskFileRepository taskFileRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -541,6 +559,67 @@ class FileIT {
                 .doesNotContain(waiting.id(), hidden.id());
         assertThat(statusOf(waiting.id())).isEqualTo(FileStatus.Current);
         assertThat(statusOf(hidden.id())).isEqualTo(FileStatus.Current);
+    }
+
+    /**
+     * What a table shares is read by whoever may see the table - and a table nobody was shown yet is
+     * seen by nobody outside it.
+     *
+     * <p>The shared attachment of a draft used to be one download away for any signed-in person who had
+     * its id: the check only asked whether the reader was vetoed, never whether the table was there for
+     * them at all. Opening the table is what makes the same file readable to the same stranger.
+     */
+    @Test
+    void aSharedAttachmentOfATableNobodyWasShownYetIsNotThereForAStranger() {
+        FileResponse handout = upload("handout.pdf", "for the players");
+        attach(firstTable, handout.id(), false);
+        User stranger = userRepository.save(new User(randomDiscordId(), "Stranger"));
+
+        assertThatThrownBy(() -> fileService.download(handout.id(), stranger.getId()))
+                .isInstanceOf(NotFoundException.class);
+
+        GameTable opened = gameTableRepository.findById(firstTable.getId()).orElseThrow();
+        opened.setStatus(GameTableStatus.Opened);
+        gameTableRepository.save(opened);
+
+        assertThat(fileService.download(handout.id(), stranger.getId()).name()).isEqualTo("handout.pdf");
+    }
+
+    /**
+     * Deleting a table takes everything it attached with it: its files and the blank forms of its
+     * requests stop counting as uses, so the owner no longer sees a table that is gone, and the purge
+     * can reach a file that only that table held.
+     */
+    @Test
+    void deletingATableDetachesItsFilesSoTheyReportNoUseAndThePurgeReachesThem() {
+        FileResponse notes = upload("notes.pdf", "table draft");
+        FileResponse blank = upload("form.pdf", "blank sheet");
+        attach(firstTable, notes.id(), false);
+        TableTask task = tableTaskRepository.save(new TableTask(firstTable, TaskAudience.Candidates, "Sheet"));
+        taskFileRepository.save(new TaskFile(task.getId(), blank.id()));
+
+        gameTableService.delete(firstTable.getId(), master.getId());
+
+        LocalDateTime deletedAt =
+                gameTableRepository.findById(firstTable.getId()).orElseThrow().getDeletedAt();
+        assertThat(deletedAt).isNotNull();
+        assertThat(tableFileRepository.findUsagesByFileIds(List.of(notes.id()))).isEmpty();
+        assertThat(taskFileRepository.findUsagesByFileIds(List.of(blank.id()))).isEmpty();
+        assertThat(tableFileRepository.findById_GameTableId(firstTable.getId()))
+                .singleElement()
+                .satisfies(link -> assertThat(link.getDeletedAt()).isEqualTo(deletedAt));
+        assertThat(taskFileRepository.findById_TaskId(task.getId()))
+                .singleElement()
+                .satisfies(link -> {
+                    assertThat(link.getStatus()).isEqualTo(TaskFileStatus.Detached);
+                    assertThat(link.getDeletedAt()).isEqualTo(deletedAt);
+                });
+
+        ageOut(notes.id(), blank.id());
+        fileRetentionService.markUnusedFiles();
+
+        assertThat(statusOf(notes.id())).isEqualTo(FileStatus.Deleted);
+        assertThat(statusOf(blank.id())).isEqualTo(FileStatus.Deleted);
     }
 
     // ---------------------------------------------------------------- fixtures

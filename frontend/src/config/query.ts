@@ -116,6 +116,9 @@ const EXPLAINED_ERROR_CODES = new Set([
   // A blocked account is sent to its own screen before any toast could matter, but the code is the
   // backend's to send, so it has its sentence like every other.
   'ACCOUNT_BLOCKED',
+  // Applying to a table, or accepting a candidate, once every seat is taken. The screen may still show
+  // the table as open if the last seat went while it was loaded, so the sentence is the whole answer.
+  'TABLE_FULL',
 ])
 
 /**

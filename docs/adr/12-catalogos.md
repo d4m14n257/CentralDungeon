@@ -2,7 +2,7 @@
 adr: 12
 titulo: Catálogos
 estado: Vigente
-actualizada: 2026-10-21
+actualizada: 2026-11-14
 absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 ---
 
@@ -42,11 +42,16 @@ absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 
 *Antes: #56, #58.*
 
-## §5 Un valor se da de baja aunque esté en uso, y dar de baja un canónico exige elegir sucesor
+## §5 Un valor se da de baja aunque esté en uso, y solo quien gestiona la mesa sigue viendo lo que no está aceptado
 
-**Decisión.** La baja es **lógica y sin restricciones**: un valor se puede dar de baja aunque esté en uso. Deja de mostrarse y de filtrar —igual que un rechazado (§3)—, `table_tags` conserva su fila, y restaurarlo devuelve todo como estaba. `disable` acepta un **`newCanonicalId`, obligatorio solo cuando el valor es canónico y todavía tiene alias vivos**: el sucesor pasa a canónico, el resto le re-apunta, y el valor dado de baja **queda en el grupo como alias del sucesor**.
+**Decisión.** La baja es **lógica y sin restricciones**: un valor se puede dar de baja aunque esté en uso. Deja de filtrar —igual que un rechazado (§3)—, `table_tags` conserva su fila, y restaurarlo devuelve todo como estaba. `disable` acepta un **`newCanonicalId`, obligatorio solo cuando el valor es canónico y todavía tiene alias vivos**: el sucesor pasa a canónico, el resto le re-apunta, y el valor dado de baja **queda en el grupo como alias del sucesor**.
 
-**Por qué.** Prohibir el borrado de valores en uso rompía vínculos o dejaba callejones sin salida; la baja lógica no rompe nada y es coherente con el borrado lógico general (ADR-03 §7). Con `canonical_id` plano, dar de baja el canónico y cambiar el canónico son la misma operación, y el sucesor lo elige el admin: promover «el primer alias» sería una decisión que el sistema no tiene derecho a tomar. Que el valor dado de baja siga en el grupo es lo que mantiene encontrables las mesas etiquetadas con él.
+**Quién ve un valor que no está `Accepted`** —en `Created`, `Rejected` o `Disabled`— depende de quién lee la mesa:
+
+- **Quien no la dirige ni es admin no lo ve.** `GET /game-tables/{id}` le devuelve solo los valores `Accepted` (`TableCatalogService.findAcceptedLinks`, cuando `MasterService.canOversee` dice que no), y el perfil muestra solo los sistemas `Accepted` (`TableSystemRepository.findNamesByTables`).
+- **Sus masters y los admins reciben todos los vínculos vivos, con su estado**: el detalle cuando `canOversee` dice que sí, `GET /game-tables/{id}/managed` y el formulario de edición. El formulario marca el valor que no está aceptado: uno rechazado o dado de baja, con la etiqueta de estado que ya existe (`CatalogStatusBadge`, «Rechazado» y «Dado de baja»); una propuesta sin revisar, con la marca de pendiente de §3. Y **guardar conserva el vínculo**: `TableCatalogService.replaceLinks` exige un estado vinculable (`Created` o `Accepted`) solo a los ids que la mesa no tenía, así que lo que no se puede es vincularlo de nuevo a una mesa que no lo tenía (`reglas-negocio.md` §Catálogos).
+
+**Por qué.** Prohibir el borrado de valores en uso rompía vínculos o dejaba callejones sin salida; la baja lógica no rompe nada y es coherente con el borrado lógico general (ADR-03 «Modelo de datos y persistencia» §7 «El borrado es lógico, con fecha, y la cascada la hace el service»). Con `canonical_id` plano, dar de baja el canónico y cambiar el canónico son la misma operación, y el sucesor lo elige el admin: promover «el primer alias» sería una decisión que el sistema no tiene derecho a tomar. Que el valor dado de baja siga en el grupo es lo que mantiene encontrables las mesas etiquetadas con él. El reparto de quién lo ve lo decidió el usuario el 2026-11-11, en F4.3 «Integridad»: el detalle le mostraba a cualquiera un valor dado de baja o una propuesta sin revisar, contra lo que esta sección y §3 ya decían. Ocultarlo también al master no era opción: el `PUT` de la mesa **reemplaza el conjunto entero** de vínculos (ADR-04 «Backend y contrato de la API» §7 «Editar una mesa reemplaza el conjunto entero, y las filas que sobran se marcan»), así que un valor que el formulario no recibe es un valor que el siguiente guardado borra, y restaurarlo ya no devolvería nada.
 
 *Antes: #81, #183.*
 

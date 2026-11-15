@@ -6,6 +6,16 @@ import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.notifications.NotificationRepository;
 import com.centraldungeon.notifications.NotificationType;
+import com.centraldungeon.registrations.RegistrationService;
+import com.centraldungeon.registrations.TableRegistration;
+import com.centraldungeon.registrations.TableRegistrationRepository;
+import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.tables.GameTable;
+import com.centraldungeon.tables.GameTableRepository;
+import com.centraldungeon.tables.GameTableStatus;
+import com.centraldungeon.tables.Master;
+import com.centraldungeon.tables.MasterRepository;
+import com.centraldungeon.tables.MasterType;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.Role;
 import com.centraldungeon.users.RoleRepository;
@@ -98,10 +108,27 @@ class ApprovalServiceIT {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private RegistrationService registrationService;
+
+    @Autowired
+    private GameTableRepository gameTableRepository;
+
+    @Autowired
+    private MasterRepository masterRepository;
+
+    @Autowired
+    private TableRegistrationRepository registrationRepository;
+
     @BeforeEach
     void setUp() {
         approvalRequestRepository.deleteAll();
         notificationRepository.deleteAll();
+        // The tables the orphan cases below create, children before parents, so the users can go.
+        for (String table : List.of("registration_status_changes", "registration_rejections", "registration_files",
+                "table_registrations", "masters", "table_status_changes", "game_tables")) {
+            jdbcTemplate.update("delete from " + table);
+        }
         userRoleChangeRepository.deleteAll();
         userStatusChangeRepository.deleteAll();
         userRoleRepository.deleteAll();
@@ -321,6 +348,56 @@ class ApprovalServiceIT {
                 .isEqualTo(ApprovalStatus.Pending);
     }
 
+    /**
+     * <b>The orphan a real flow produces: a veto request about an application that was withdrawn.</b>
+     * The application is not deleted, only marked, so the sweep has to read the mark - a request
+     * pointing at a row that still exists but no longer counts is the case a missing-id check misses.
+     * The Primary's list stops naming the person, and answering the request is refused as acting on
+     * something that is gone.
+     */
+    @Test
+    void aVetoRequestAboutAWithdrawnApplicationIsAnOrphanAndCannotBeAnswered() {
+        User primary = person("the-primary");
+        User secondary = person("the-secondary");
+        User applicant = person("the-applicant");
+        grant(applicant, PlatformRole.PLAYER);
+        GameTable table = openTable(primary);
+        masterRepository.save(new Master(table, secondary, MasterType.Secondary));
+        TableRegistration application = registrationRepository.save(new TableRegistration(table, applicant, null));
+        String requestId = approvalService.submitPlayerBan(application.getId(), "asked by the co-master", asMaster(secondary)).id();
+
+        registrationService.withdraw(application.getId(), applicant.getId());
+
+        assertThat(orphanCheckService.reportOrphans()).isEqualTo(1);
+        assertThat(approvalService.listBanRequests(table.getId(), primary.getId()))
+                .as("the list names nobody who already took their application back")
+                .isEmpty();
+        assertThat(conflictCodeOf(() -> approvalService.approveBanRequest(
+                        table.getId(), requestId, "yes", asMaster(primary))))
+                .isEqualTo(ConflictException.REQUEST_ENTITY_GONE);
+        assertThat(registrationRepository.findById(application.getId()).orElseThrow().getStatus())
+                .isEqualTo(TableRegistrationStatus.Deleted);
+    }
+
+    /**
+     * <b>A request about a table that was deleted.</b> The table row is still there, marked; for the
+     * sweep and for the resolution it is gone all the same.
+     */
+    @Test
+    void aRequestAboutADeletedTableIsAnOrphanAndCannotBeAnswered() {
+        User asker = person("the-asker");
+        User admin = admin("the-admin");
+        GameTable table = openTable(asker);
+        String requestId = submitAs(asker, ApprovalRequestType.General, "about a table");
+        jdbcTemplate.update(
+                "update approval_requests set entity_type = 'game_table', entity_id = ? where id = ?", table.getId(), requestId);
+        jdbcTemplate.update("update game_tables set status = 'Deleted', deleted_at = now() where id = ?", table.getId());
+
+        assertThat(orphanCheckService.reportOrphans()).isEqualTo(1);
+        assertThat(conflictCodeOf(() -> approvalService.approve(requestId, "yes", asAdmin(admin))))
+                .isEqualTo(ConflictException.REQUEST_ENTITY_GONE);
+    }
+
     // ---------------------------------------------------------------- the reference, at resolve time
 
     /** Both resolutions check the reference, not only the approval - a rejection is not a free pass. */
@@ -419,6 +496,18 @@ class ApprovalServiceIT {
 
     private CurrentUser asAdmin(User user) {
         return new CurrentUser(user.getId(), Set.of(PlatformRole.ADMIN.roleName()));
+    }
+
+    private CurrentUser asMaster(User user) {
+        return new CurrentUser(user.getId(), Set.of(PlatformRole.MASTER.roleName()));
+    }
+
+    private GameTable openTable(User primary) {
+        GameTable table = new GameTable("Orphan " + UUID.randomUUID(), primary);
+        table.setStatus(GameTableStatus.Opened);
+        GameTable saved = gameTableRepository.save(table);
+        masterRepository.save(new Master(saved, primary, MasterType.Primary));
+        return saved;
     }
 
     private CurrentUser asPlayer(User user) {

@@ -26,6 +26,18 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> 
     List<UserRole> findAllGrants(@Param("userId") String userId);
 
     /**
+     * {@link #findAllGrants}, as a locking read: the person's grant rows, freshly read and held until
+     * the transaction ends. Two changes to the same person's roles queue on these rows, so the second
+     * decides from what the first committed instead of from a snapshot taken before it waited.
+     *
+     * @param userId the person
+     * @return every row they have in {@code users_roles}, whatever its status, locked
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select ur from UserRole ur where ur.user.id = :userId")
+    List<UserRole> lockAllGrants(@Param("userId") String userId);
+
+    /**
      * The roles a person holds right now. Called on every authenticated request by
      * {@code JwtAuthenticationFilter}, which is the whole point of ADR-05 §3: authorization is read from
      * the database, not lifted from the token's claims. The cost is absorbed by the Caffeine cache

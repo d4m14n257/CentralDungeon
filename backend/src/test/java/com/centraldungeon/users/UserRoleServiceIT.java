@@ -3,12 +3,14 @@ package com.centraldungeon.users;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.centraldungeon.common.LockGate;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.users.dto.AdminUserSummaryResponse;
 import com.centraldungeon.users.dto.UserAdminChangeResponse;
 import jakarta.persistence.EntityManagerFactory;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -16,6 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.SessionFactory;
@@ -26,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -88,6 +92,12 @@ class UserRoleServiceIT {
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    private static final String REVOKED = "REVOKED";
+    private static final Duration GATE_TIMEOUT = Duration.ofSeconds(20);
 
     @BeforeEach
     void setUp() {
@@ -165,6 +175,92 @@ class UserRoleServiceIT {
         assertThat(userRoleRepository.countActiveHolders(PlatformRole.OWNER.roleName()))
                 .as("granting Admin revokes Owner (ADR-06 §1); the last owner's grant must be refused whole")
                 .isGreaterThanOrEqualTo(1);
+    }
+
+    /**
+     * One owner clicking "revoke Owner" twice on the only other owner. Both requests read the
+     * target's grant before either takes the Owner lock; the first one revokes, and the second one,
+     * once through, counts a single owner left and says so. The answer to the second click is a 409
+     * about the platform rather than a silent 200, and that was accepted on purpose; what is not
+     * acceptable is a second audit row for one revocation.
+     */
+    @Test
+    void revokingTheSameOwnerTwiceWithTwoOwnersAnswersOnceAndThenLastOwner() throws Exception {
+        User actor = owner("owner-actor");
+        User target = owner("owner-target");
+
+        List<String> outcomes = revokeOwnerTwiceBehindTheGate(target, actor, actor);
+
+        assertThat(outcomes).containsExactlyInAnyOrder(REVOKED, ConflictException.LAST_OWNER);
+        assertThat(userRoleChangeRepository.count())
+                .as("one revocation, one audit row")
+                .isEqualTo(1);
+        assertThat(userRoleRepository.countActiveHolders(PlatformRole.OWNER.roleName())).isEqualTo(1);
+    }
+
+    /**
+     * Two different owners revoking the same third one at the same moment. With three owners the
+     * count never gets near the last one, so the second request must recognise that the grant is
+     * already gone and answer like any repeated revocation: success, and no audit row of its own.
+     * Reading the grant from the snapshot taken before the lock makes it revoke the revoked grant
+     * again and write a second row for a change that happened once.
+     */
+    @Test
+    void revokingTheSameOwnerTwiceWithThreeOwnersWritesASingleAuditRow() throws Exception {
+        User firstActor = owner("owner-first");
+        User secondActor = owner("owner-second");
+        User target = owner("owner-target");
+
+        List<String> outcomes = revokeOwnerTwiceBehindTheGate(target, firstActor, secondActor);
+
+        assertThat(outcomes).containsExactly(REVOKED, REVOKED);
+        assertThat(userRoleChangeRepository.count())
+                .as("repeating a revocation is idempotent and writes no audit row")
+                .isEqualTo(1);
+        assertThat(userRoleRepository.countActiveHolders(PlatformRole.OWNER.roleName())).isEqualTo(2);
+    }
+
+    /**
+     * Two admins taking Master away from the same person at the same moment. Master has no invariant
+     * to lock for, so the only thing that can make the second request see the first one's write is
+     * reading the grant under its row lock; read before waiting, it revokes the revoked grant again and
+     * writes a second audit row for a change that happened once.
+     */
+    @Test
+    void revokingTheSameMasterTwiceAtOnceWritesASingleAuditRow() throws Exception {
+        User firstAdmin = person("admin-first");
+        User secondAdmin = person("admin-second");
+        User target = person("master-target");
+        grant(target, PlatformRole.MASTER);
+
+        List<String> outcomes = changeMasterTwiceBehindTheGate(
+                target, () -> userRoleService.revokeRole(target.getId(), PlatformRole.MASTER, "concurrent revoke", asAdmin(firstAdmin)),
+                () -> userRoleService.revokeRole(target.getId(), PlatformRole.MASTER, "concurrent revoke", asAdmin(secondAdmin)));
+
+        assertThat(outcomes).containsExactly(REVOKED, REVOKED);
+        assertThat(userRoleChangeRepository.count())
+                .as("repeating a revocation is idempotent and writes no audit row")
+                .isEqualTo(1);
+    }
+
+    /** The mirror case: giving Master back twice at once restores the grant once and records it once. */
+    @Test
+    void grantingTheSameMasterTwiceAtOnceWritesASingleAuditRow() throws Exception {
+        User firstAdmin = person("admin-first");
+        User secondAdmin = person("admin-second");
+        User target = person("master-target");
+        grant(target, PlatformRole.MASTER);
+        userRoleService.revokeRole(target.getId(), PlatformRole.MASTER, "set up", asAdmin(firstAdmin));
+        userRoleChangeRepository.deleteAll();
+
+        List<String> outcomes = changeMasterTwiceBehindTheGate(
+                target, () -> userRoleService.grantRole(target.getId(), PlatformRole.MASTER, "concurrent grant", asAdmin(firstAdmin)),
+                () -> userRoleService.grantRole(target.getId(), PlatformRole.MASTER, "concurrent grant", asAdmin(secondAdmin)));
+
+        assertThat(outcomes).containsExactly(REVOKED, REVOKED);
+        assertThat(userRoleChangeRepository.count())
+                .as("repeating a grant is idempotent and writes no audit row")
+                .isEqualTo(1);
     }
 
     /** The sequential case, against the real rows: the last owner is refused with its own code. */
@@ -360,6 +456,69 @@ class UserRoleServiceIT {
             return true;
         } catch (RuntimeException refused) {
             return false;
+        }
+    }
+
+    /**
+     * Both revocations queue behind a gate holding the Owner role's lock, which is the first lock
+     * {@code revokeRole} asks for; by the time the gate opens each one has already read the target's
+     * grants.
+     */
+    private List<String> revokeOwnerTwiceBehindTheGate(User target, User firstActor, User secondActor)
+            throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try (LockGate gate = LockGate.hold(transactionManager,
+                () -> roleRepository.lockByName(PlatformRole.OWNER.roleName()).orElseThrow())) {
+            Future<String> first = pool.submit(() -> revokeOwnerOutcome(target, firstActor));
+            Future<String> second = pool.submit(() -> revokeOwnerOutcome(target, secondActor));
+            gate.awaitWaiters(LockGate.monitor(mysql), 2, GATE_TIMEOUT);
+            gate.open();
+            return List.of(first.get(30, TimeUnit.SECONDS), second.get(30, TimeUnit.SECONDS));
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(30, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * Both changes queue behind a gate holding the target's grant rows, which every change to that
+     * person's roles has to write; by the time the gate opens each one has already read them.
+     *
+     * @return {@code REVOKED} for each change that answered without a conflict, or its error code
+     */
+    private List<String> changeMasterTwiceBehindTheGate(User target, Runnable first, Runnable second) throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try (LockGate gate = LockGate.hold(transactionManager, () -> userRoleRepository.lockAllGrants(target.getId()))) {
+            Future<String> firstOutcome = pool.submit(() -> outcomeOf(first));
+            Future<String> secondOutcome = pool.submit(() -> outcomeOf(second));
+            gate.awaitWaiters(LockGate.monitor(mysql), 2, GATE_TIMEOUT);
+            gate.open();
+            return List.of(firstOutcome.get(30, TimeUnit.SECONDS), secondOutcome.get(30, TimeUnit.SECONDS));
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(30, TimeUnit.SECONDS);
+        }
+    }
+
+    private static String outcomeOf(Runnable change) {
+        try {
+            change.run();
+            return REVOKED;
+        } catch (ConflictException refused) {
+            return refused.getErrorCode();
+        }
+    }
+
+    private CurrentUser asAdmin(User user) {
+        return new CurrentUser(user.getId(), Set.of(PlatformRole.ADMIN.roleName()));
+    }
+
+    private String revokeOwnerOutcome(User target, User actor) {
+        try {
+            userRoleService.revokeRole(target.getId(), PlatformRole.OWNER, "concurrent revoke", asOwner(actor));
+            return REVOKED;
+        } catch (ConflictException refused) {
+            return refused.getErrorCode();
         }
     }
 

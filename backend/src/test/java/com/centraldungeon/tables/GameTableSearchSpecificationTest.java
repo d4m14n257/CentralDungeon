@@ -84,9 +84,8 @@ class GameTableSearchSpecificationTest {
     }
 
     /**
-     * Solo masters vivos: a quien lo sacaron de co-master (ADR-07 §8) ya no dirige la mesa, y encontrarla
-     * by their name would be answering a question about the past. It is the <b>opposite</b> decision to
-     * {@code notMasteredBy}'s, on purpose, which is why it is pinned here.
+     * Live masters only: somebody removed as a co-master no longer runs the table, and finding it by
+     * their name would be answering a question about the past.
      */
     @Test
     void tableMasterOnlyLooksAtLiveRows() {

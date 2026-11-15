@@ -2,10 +2,13 @@ package com.centraldungeon.tables;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.centraldungeon.common.LockGate;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
+import com.centraldungeon.tables.dto.AddMasterRequest;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -59,6 +63,12 @@ class MasterServiceIT {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private GameTableService gameTableService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private GameTable table;
     private User originalPrimary;
@@ -146,6 +156,43 @@ class MasterServiceIT {
 
         List<Master> live = masterRepository.findByGameTable_IdAndStatus(table.getId(), MasterRowStatus.Created);
         assertThat(live).filteredOn(master -> master.getMasterType() == MasterType.Primary).hasSize(1);
+    }
+
+    /**
+     * The same hand-off race, through the door the HTTP endpoint uses. That door reads the table and
+     * the target's membership before {@code MasterService} takes its lock, so both contenders are held
+     * behind a gate on the masters' rows until each has made those reads: whichever goes second wakes
+     * up with a snapshot from before the first one committed, and must still find that the actor is no
+     * longer the Primary.
+     */
+    @Test
+    void handOffsThroughTheTableServiceStillLeaveExactlyOnePrimary() throws Exception {
+        User first = candidates.get(0);
+        User second = candidates.get(1);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        List<Future<Boolean>> futures = new ArrayList<>();
+
+        try (LockGate gate = LockGate.hold(transactionManager, () -> masterRepository.findByGameTableIdForUpdate(table.getId()))) {
+            for (User candidate : List.of(first, second)) {
+                futures.add(pool.submit(() -> {
+                    try {
+                        gameTableService.addOrPromoteMaster(
+                                table.getId(), originalPrimary.getId(), new AddMasterRequest(candidate.getId(), MasterType.Primary));
+                        return true;
+                    } catch (ForbiddenActionException e) {
+                        return false;
+                    }
+                }));
+            }
+            gate.awaitWaiters(LockGate.monitor(mysql), 2, Duration.ofSeconds(20));
+        }
+        pool.shutdown();
+        assertThat(pool.awaitTermination(30, TimeUnit.SECONDS)).isTrue();
+
+        assertThat(futures.stream().filter(this::succeeded).count()).isEqualTo(1);
+        assertThat(masterRepository.findByGameTable_IdAndStatus(table.getId(), MasterRowStatus.Created))
+                .filteredOn(master -> master.getMasterType() == MasterType.Primary)
+                .hasSize(1);
     }
 
     /** Removed rows stay as a record (ADR-07 §6), and re-adding the same person revives that row. */

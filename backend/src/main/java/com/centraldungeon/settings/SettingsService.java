@@ -237,6 +237,11 @@ public class SettingsService {
      * audit row is not optional bookkeeping - a platform-wide change produces no notification and no
      * visible event, so without it the only trace is a number that used to be different.
      *
+     * <p>Two admins changing the same setting at once are serialized on its row: the last write
+     * wins, and each audit row records the value it really replaced. A setting still on its default
+     * has no row to lock, so two simultaneous first overrides collide on the primary key and one of
+     * them fails as a conflict, recording nothing; repeating it succeeds.
+     *
      * @param key           which setting to change
      * @param value         the new value
      * @param justification why, never blank
@@ -252,7 +257,7 @@ public class SettingsService {
         requireWithinRange(key, value);
 
         User changedBy = userService.getById(actor.userId());
-        Optional<SystemSetting> existing = settingRepository.findBySettingKey(key.wireName());
+        Optional<SystemSetting> existing = settingRepository.findBySettingKeyForUpdate(key.wireName());
         String fromValue = existing.map(SystemSetting::getValue).orElse(null);
         String toValue = String.valueOf(value);
 

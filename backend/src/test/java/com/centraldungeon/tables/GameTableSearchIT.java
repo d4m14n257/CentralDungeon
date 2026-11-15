@@ -12,6 +12,7 @@ import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.UserRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -202,6 +203,23 @@ class GameTableSearchIT {
     @DisplayName("a search never reaches a table the actor runs")
     void neverReturnsATableTheActorRuns() {
         assertThat(nameList(gameTableService.list("/table_tag D&D", FIRST_PAGE, master.getId()))).isEmpty();
+    }
+
+    /**
+     * Somebody who was removed as a co-master stopped running the table, so for the explorer it is a
+     * table like any other: one they can find and apply to. Their removed row is the record that they
+     * once ran it, and that record must not keep the table out of their sight forever.
+     */
+    @Test
+    @DisplayName("a co-master who was removed finds the table again")
+    void aRemovedCoMasterFindsTheTableAgain() {
+        GameTable table = opened("Lost Mine of Phandelver");
+        Master removed = new Master(table, player, MasterType.Secondary);
+        removed.setStatus(MasterRowStatus.Deleted);
+        removed.setDeletedAt(LocalDateTime.now());
+        masterRepository.save(removed);
+
+        assertThat(namesOf("/table_name phandelver")).containsExactly("Lost Mine of Phandelver");
     }
 
     @Test

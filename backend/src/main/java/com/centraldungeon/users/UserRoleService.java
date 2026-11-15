@@ -115,7 +115,12 @@ public class UserRoleService {
         }
         requireRankAuthority(role, actor);
         User target = userService.getById(targetId);
-        List<UserRole> grants = new ArrayList<>(userRoleRepository.findAllGrants(targetId));
+        // Player and Master are decided here, so their grants are read under the row lock. Admin is not:
+        // its exclusion takes the Owner lock and then every owner's grant, and holding the target's
+        // rows first would be the opposite order to a concurrent revocation of Owner.
+        List<UserRole> grants = new ArrayList<>(role == PlatformRole.ADMIN
+                ? userRoleRepository.findAllGrants(targetId)
+                : userRoleRepository.lockAllGrants(targetId));
 
         Optional<UserRole> existing = grantOf(grants, role);
         boolean alreadyHeld = existing.filter(UserRoleService::isLive).isPresent();
@@ -185,12 +190,15 @@ public class UserRoleService {
      * @throws NotFoundException        404 when nobody has that id
      * @throws ConflictException        409 {@code CANNOT_REVOKE_OWN_OWNER} when an owner tries to
      *                                  step down, or {@code LAST_OWNER} when they are the last one
-     * @implNote The idempotence check reads the target's grants before the Owner lock is taken, so
-     *           two simultaneous revocations of Owner <em>from the same person</em> answer 200 and
-     *           409 {@code LAST_OWNER} rather than 200 and 200. Left as is: the 409 is a true
-     *           statement about the platform if not about the click, the invariant is untouched, and
-     *           the alternative is a second freshly-locked read of one user's grants on a path where
-     *           extra branching is the likelier source of a real bug.
+     * @implNote Two simultaneous revocations of the same grant must write one audit row, so the
+     *           second has to decide from what the first committed. Every role except Owner on a live
+     *           account reads the target's grants under their row lock, and the waiting request finds
+     *           the grant already gone. Owner on a live account reads them plainly and asks the
+     *           idempotence a second time against the holders read under the Owner lock, which every
+     *           path able to remove an Owner takes first. The last-owner check comes before that second
+     *           question, so with exactly two owners the second of two simultaneous revocations of the
+     *           same person answers 409 {@code LAST_OWNER} rather than 200 - a true statement about the
+     *           platform, if not about the click.
      */
     @Transactional
     public AdminUserDetailResponse revokeRole(String targetId, PlatformRole role, String justification, CurrentUser actor) {
@@ -204,16 +212,30 @@ public class UserRoleService {
                     "An Owner cannot revoke their own Owner role", ConflictException.CANNOT_REVOKE_OWN_OWNER);
         }
 
-        List<UserRole> grants = new ArrayList<>(userRoleRepository.findAllGrants(targetId));
+        // Owner on a live account decides under the Owner lock below; everything else decides here, so
+        // it reads the grants under their own row lock.
+        boolean guardedByOwnerLock = role == PlatformRole.OWNER && target.getStatus() == UserStatus.Allowed;
+        List<UserRole> grants = new ArrayList<>(guardedByOwnerLock
+                ? userRoleRepository.findAllGrants(targetId)
+                : userRoleRepository.lockAllGrants(targetId));
         Optional<UserRole> live = grantOf(grants, role).filter(UserRoleService::isLive);
         if (live.isEmpty()) {
             return userMapper.toAdminDetailResponse(target, activeRoleNames(grants));
         }
 
-        if (role == PlatformRole.OWNER && isLastActiveOwner(target)) {
-            throw new ConflictException(
-                    "Revoking Owner from " + targetId + " would leave the platform without an active owner",
-                    ConflictException.LAST_OWNER);
+        if (guardedByOwnerLock) {
+            List<UserRole> liveOwners = lockLiveOwners();
+            if (liveOwners.size() <= 1) {
+                throw new ConflictException(
+                        "Revoking Owner from " + targetId + " would leave the platform without an active owner",
+                        ConflictException.LAST_OWNER);
+            }
+            // The grant read above predates the lock; the holders do not. Revoked meanwhile: nothing to do.
+            if (liveOwners.stream().noneMatch(holder -> holder.getUser().getId().equals(targetId))) {
+                return userMapper.toAdminDetailResponse(target, activeRoleNames(grants).stream()
+                        .filter(name -> !name.equals(PlatformRole.OWNER.roleName()))
+                        .toList());
+            }
         }
 
         UserRole grant = live.get();
@@ -270,18 +292,23 @@ public class UserRoleService {
      *       transaction it just waited for has already demoted.</li>
      * </ol>
      *
-     * <p>Every path that can remove an Owner comes through here before it writes anything - the
-     * direct revocation and the grant of Admin whose exclusion revokes Owner - so the check and the
-     * write are inside the same held lock. Granting Player or Master never reaches this method, so
-     * the ordinary case pays nothing.
+     * <p>Every path that can remove an Owner takes these two locks through {@link #lockLiveOwners}
+     * before it writes anything - the direct revocation and the grant of Admin whose exclusion
+     * revokes Owner - so the check and the write are inside the same held lock. Granting Player or
+     * Master never reaches it, so the ordinary case pays nothing.
      */
     private boolean isLastActiveOwner(User target) {
         if (target.getStatus() != UserStatus.Allowed) {
             return false;
         }
+        return lockLiveOwners().size() <= 1;
+    }
+
+    /** The two locks described on {@link #isLastActiveOwner}, returning the live owners they read. */
+    private List<UserRole> lockLiveOwners() {
         roleRepository.lockByName(PlatformRole.OWNER.roleName())
                 .orElseThrow(() -> new IllegalStateException("Owner role is missing - check V2__seed.sql"));
-        return userRoleRepository.lockActiveHolders(PlatformRole.OWNER.roleName()).size() <= 1;
+        return userRoleRepository.lockActiveHolders(PlatformRole.OWNER.roleName());
     }
 
     /**

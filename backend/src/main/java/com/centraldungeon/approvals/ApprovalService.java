@@ -34,6 +34,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -485,8 +486,9 @@ public class ApprovalService {
      *                           from the shared queue (ADR-16 §5), or {@code REQUEST_ENTITY_GONE} when
      *                           what it points at no longer exists
      */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public ApprovalRequestDetailResponse approve(String requestId, String resolutionNote, CurrentUser actor) {
+        lockTableFirstIfVeto(requestId);
         ApprovalRequest request = resolve(requestId, ApprovalStatus.Approved, resolutionNote, actor);
 
         switch (request.getRequestType()) {
@@ -527,8 +529,9 @@ public class ApprovalService {
      *                           from the shared queue (ADR-16 §5), or {@code REQUEST_ENTITY_GONE} when
      *                           what it points at no longer exists
      */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public ApprovalRequestDetailResponse reject(String requestId, String resolutionNote, CurrentUser actor) {
+        lockTableFirstIfVeto(requestId);
         ApprovalRequest request = resolve(requestId, ApprovalStatus.Rejected, resolutionNote, actor);
 
         // This switch did not exist before F3.4, and its absence was not an omission: for the three
@@ -622,11 +625,16 @@ public class ApprovalService {
      * @param resolutionNote why, never blank. It becomes the veto's own reason
      * @param actor          the actor, from the token; has to be this table's {@code Primary}
      * @return the application, now Blocked
-     * @throws NotFoundException 404 when the request is not there, or belongs to another table
+     * @throws NotFoundException 404 when the table does not exist or was deleted, or the request is not
+     *         there, or belongs to another table
      */
     @Transactional
     public RegistrationResponse approveBanRequest(
             String gameTableId, String requestId, String resolutionNote, CurrentUser actor) {
+        // The table's lock before the request's - the order a direct veto takes them in, which also
+        // closes this very request. The other order is a deadlock between the two, and every read
+        // below is made after the wait instead of from a snapshot taken before it.
+        registrationService.lockTable(gameTableId);
         String registrationId = requireBanRequestOf(gameTableId, requestId);
         approve(requestId, resolutionNote, actor);
         return registrationService.findResponse(registrationId);
@@ -644,11 +652,14 @@ public class ApprovalService {
      * @param resolutionNote why, never blank (ADR-16 §1)
      * @param actor          the actor, from the token; has to be this table's {@code Primary}
      * @return the request, now Rejected
-     * @throws NotFoundException 404 when the request is not there, or belongs to another table
+     * @throws NotFoundException 404 when the table does not exist or was deleted, or the request is not
+     *         there, or belongs to another table
      */
     @Transactional
     public ApprovalRequestDetailResponse rejectBanRequest(
             String gameTableId, String requestId, String resolutionNote, CurrentUser actor) {
+        // Same order as approveBanRequest, for the same reason: a direct veto answers this request too.
+        registrationService.lockTable(gameTableId);
         requireBanRequestOf(gameTableId, requestId);
         return reject(requestId, resolutionNote, actor);
     }
@@ -660,15 +671,35 @@ public class ApprovalService {
      * another table is not this caller's business to learn the existence of, and the id in the path
      * is the only thing that named it.
      *
+     * <p>The request is read with its lock, so the {@code Pending} that {@code resolve} checks next is
+     * the committed one and not whatever this transaction would have cached from a plain read.
+     *
      * @return the id of the application the request points at
      */
     private String requireBanRequestOf(String gameTableId, String requestId) {
-        ApprovalRequest request = getById(requestId);
+        ApprovalRequest request = approvalRequestRepository
+                .lockById(requestId)
+                .orElseThrow(() -> new NotFoundException("Approval request not found: " + requestId));
         if (request.getRequestType() != ApprovalRequestType.PlayerBan
                 || !gameTableId.equals(registrationService.tableIdOf(request.getEntityId()))) {
             throw new NotFoundException("No veto request " + requestId + " on table " + gameTableId);
         }
         return request.getEntityId();
+    }
+
+    /**
+     * For a veto request, takes its table's lock before {@link #resolve} takes the request's.
+     *
+     * <p>A direct veto takes the table first and then closes the open requests about that person, so
+     * resolving one of those requests the other way round - request first, table when the veto is
+     * applied - is a deadlock between the two. The lookup that finds the table is a bare-column read,
+     * and the public resolutions run in {@code READ COMMITTED}, so nothing read before the wait is
+     * answered from a snapshot older than the lock. The other types have no table to queue on.
+     */
+    private void lockTableFirstIfVeto(String requestId) {
+        approvalRequestRepository
+                .findEntityIdOfType(requestId, ApprovalRequestType.PlayerBan)
+                .ifPresent(registrationId -> registrationService.lockTable(registrationService.tableIdOf(registrationId)));
     }
 
     /**

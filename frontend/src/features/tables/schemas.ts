@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { MAX_CATALOG_VALUES_PER_KIND } from '@/config/limits'
+
 /**
  * Builds the create/edit table form's validation, bounded by the seat cap the platform currently allows.
  *
@@ -12,9 +14,10 @@ import { z } from 'zod'
  * maxPlayers/totalSessions stay strings (not z.coerce.number()): mixing coerce with .optional()
  * under exactOptionalPropertyTypes breaks the resolver's type inference.
  *
- * The catalogs and the agenda are **not** here: they are not text fields but collections the wizard
- * keeps in its own state and the server validates - catalog depth (ADR-12 §2), schedule clashes (ADR-08 §2).
- * Putting them in the schema would duplicate rules only the backend can decide.
+ * The catalogs and the agenda live in the screen's own state, not in the form. Only the **size** of
+ * each catalog's id list is here, mirrored into the form by the screen so the cap is checked on the
+ * spot; the rest - which values a table may link, whether the agenda clashes with another table of the
+ * same masters - depends on data only the backend has.
  *
  * @param maxPlayersCap the largest seat count a table may declare, inclusive
  * @returns the schema for that form
@@ -36,6 +39,9 @@ export function createGameTableSchema(maxPlayersCap: number) {
         params: { i18n: 'validation.between', minValue: 1, maxValue: maxPlayersCap },
       }),
     totalSessions: z.string().optional(),
+    systemIds: z.array(z.string()).max(MAX_CATALOG_VALUES_PER_KIND).optional(),
+    tagIds: z.array(z.string()).max(MAX_CATALOG_VALUES_PER_KIND).optional(),
+    platformIds: z.array(z.string()).max(MAX_CATALOG_VALUES_PER_KIND).optional(),
   })
 }
 

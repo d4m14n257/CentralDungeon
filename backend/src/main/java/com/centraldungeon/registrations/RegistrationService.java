@@ -40,6 +40,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -218,6 +219,7 @@ public class RegistrationService {
         if (registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(gameTableId, actorId, ACTIVE_STATUSES)) {
             throw new ConflictException("An active application for this table already exists");
         }
+        requireSeatLeft(table);
 
         // R2 (ADR-08 §2): a table where they already play is a real commitment, so this blocks rather
         // than warns. Running and playing weigh the same - it is one person and one Tuesday night.
@@ -303,19 +305,37 @@ public class RegistrationService {
     }
 
     /**
-     * Accepting the candidate that completes max_players auto-rejects the rest with TABLE_FULL
-     * (ADR-09 §3). The table lock also protects this: two concurrent accepts cannot both think there is
-     * room left.
+     * Accepting a candidate. A table with no seat left refuses with {@code TABLE_FULL}, and accepting
+     * the candidate that completes max_players rejects the rest with that same code.
+     *
+     * <p><b>The table lock serializes this against every other write to the table's applications</b>,
+     * and two things make that lock mean something here. The application is read only after it: an
+     * entity loaded before the wait would still say {@code Candidate} after a concurrent automatic
+     * rejection, and its full-row update would quietly undo it. And the transaction runs at
+     * {@code READ COMMITTED}: the path names only the application, so its table has to be looked up
+     * before the lock, and under {@code REPEATABLE READ} that first read would freeze the snapshot -
+     * the player count and the candidates the automatic rejection walks would then be the ones from
+     * before the transaction that held the lock committed, and the last seat could be given twice, or
+     * somebody just accepted rejected.
+     *
+     * @param registrationId the application
+     * @param actorId        the actor, from the token; has to run the table
+     * @return the application, now {@code Player}
+     * @throws NotFoundException if the application or its table does not exist
+     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws ConflictException {@code TABLE_FULL} when no seat is left, a schedule clash, or a plain
+     *         conflict when the application is not a pending candidate
      */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public RegistrationResponse accept(String registrationId, String actorId) {
+        GameTable table = lockTable(tableIdOf(registrationId));
         TableRegistration registration = getRegistrationById(registrationId);
-        GameTable table = lockTable(registration.getGameTable().getId());
 
         requireMasterOf(table.getId(), actorId, "accept candidates");
         if (registration.getStatus() != TableRegistrationStatus.Candidate) {
             throw new ConflictException("Registration is not a pending candidate");
         }
+        requireSeatLeft(table);
 
         // R3 (ADR-08 §2): asked again here and not only at apply time, because the candidate may have
         // been accepted somewhere else in between - the answer is a different one now than it was.
@@ -357,8 +377,11 @@ public class RegistrationService {
      *         the table
      * @throws ConflictException if the application was not a pending candidate
      */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public RegistrationResponse reject(String registrationId, String actorId, RejectRegistrationRequest request) {
+        // Under the table's lock and at READ COMMITTED for the reason accept() gives: otherwise an accept
+        // and a reject of the same candidate both apply, or deadlock on the row and the table.
+        lockTable(tableIdOf(registrationId));
         TableRegistration registration = getRegistrationById(registrationId);
         requireMasterOf(registration.getGameTable().getId(), actorId, "reject candidates");
         if (registration.getStatus() != TableRegistrationStatus.Candidate) {
@@ -398,8 +421,11 @@ public class RegistrationService {
      *         somebody else's
      * @throws ConflictException if it is no longer pending
      */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void withdraw(String registrationId, String actorId) {
+        // Serialized with the automatic rejection the way accept() explains: withdrawn and then
+        // rejected «because the table is full» is a message about an application the person took back.
+        lockTable(tableIdOf(registrationId));
         TableRegistration registration = getRegistrationById(registrationId);
         if (!registration.getUser().getId().equals(actorId)) {
             throw new ForbiddenActionException("Cannot withdraw another user's application");
@@ -580,8 +606,10 @@ public class RegistrationService {
     @Transactional
     public RegistrationResponse block(
             String gameTableId, String registrationId, String actorId, String justification) {
-        TableRegistration registration = requireRegistrationOf(gameTableId, registrationId);
+        // The lock first, and the application read after it: read before the wait, it would still say
+        // Player once a concurrent veto had committed, and the person would be vetoed twice.
         lockTable(gameTableId);
+        TableRegistration registration = requireRegistrationOf(gameTableId, registrationId);
         requirePrimaryOf(gameTableId, actorId, "veto somebody from this table");
 
         TableRegistrationStatus from = registration.getStatus();
@@ -609,11 +637,17 @@ public class RegistrationService {
      * <p>Same actor as {@link #block}: reversibility that a different person has to perform is not
      * reversibility of the act, it is an appeal.
      *
+     * <p><b>Except for the seat.</b> A vetoed player frees their seat, and the table may have filled it
+     * since. Lifting the veto never fails on that account, but it hands the person back as a
+     * {@code Candidate} rather than pushing the table over {@code max_players}: the veto is undone,
+     * and whether they get a seat again is the same decision any other candidate waits on.
+     *
      * @param gameTableId    the table the application must belong to
      * @param registrationId the application
      * @param actorId        the actor, from the token; has to be the table's {@code Primary}
      * @param justification  why the veto is being lifted, never blank
-     * @return the application, back where it was
+     * @return the application, back where it was - or {@code Candidate} if it was a player and the
+     *         table has no seat left
      * @throws NotFoundException        404 when the application does not belong to that table
      * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER} when the actor is not Primary
      * @throws ConflictException        409 {@code REGISTRATION_NOT_BLOCKED} when it is not vetoed
@@ -621,8 +655,8 @@ public class RegistrationService {
     @Transactional
     public RegistrationResponse unblock(
             String gameTableId, String registrationId, String actorId, String justification) {
+        GameTable table = lockTable(gameTableId);
         TableRegistration registration = requireRegistrationOf(gameTableId, registrationId);
-        lockTable(gameTableId);
         requirePrimaryOf(gameTableId, actorId, "lift a veto on this table");
 
         if (registration.getStatus() != TableRegistrationStatus.Blocked) {
@@ -637,6 +671,9 @@ public class RegistrationService {
                 .findFirstByRegistration_IdAndToStatusOrderByCreatedAtDesc(registrationId, TableRegistrationStatus.Blocked)
                 .map(RegistrationStatusChange::getFromStatus)
                 .orElse(TableRegistrationStatus.Player);
+        if (to == TableRegistrationStatus.Player && isFull(table)) {
+            to = TableRegistrationStatus.Candidate;
+        }
 
         return moveTo(registration, TableRegistrationStatus.Blocked, to, actorId, justification);
     }
@@ -675,13 +712,20 @@ public class RegistrationService {
      * that row to its table. Exposed here rather than letting another service reach into
      * {@code table_registrations}, which is the rule this package exists to keep (regla dura 1).
      *
+     * <p>Read as a projection and never as the entity: the writes that need it look it up before
+     * taking the table's lock, and an entity loaded then would sit in the persistence context with its
+     * pre-lock state, to be handed back - stale - by every later read of the same row.
+     *
      * @param registrationId the application
      * @return the id of the table it belongs to
      * @throws NotFoundException when no application has that id
      */
     @Transactional(readOnly = true)
     public String tableIdOf(String registrationId) {
-        return getRegistrationById(registrationId).getGameTable().getId();
+        return registrationRepository.findTablesByRegistrationIds(List.of(registrationId)).stream()
+                .findFirst()
+                .map(RegistrationTable::gameTableId)
+                .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
     }
 
     /**
@@ -739,14 +783,20 @@ public class RegistrationService {
      * <p>Asked here rather than by reaching into {@code table_registrations} from another package
      * (regla dura 1).
      *
+     * <p>A withdrawn application is left out, like everywhere else an application is read: a veto
+     * request about somebody who already took their application back names a person who is no longer
+     * there, and answering it is refused anyway because what it points at is gone.
+     *
      * @param gameTableId the table
-     * @return its applications keyed by id; empty when it has none
+     * @return its applications that are not deleted, keyed by id; empty when it has none
      */
     @Transactional(readOnly = true)
     public Map<String, TableRegistration> registrationsOf(String gameTableId) {
         Map<String, TableRegistration> byId = new HashMap<>();
         for (TableRegistration registration : registrationRepository.findByGameTable_Id(gameTableId)) {
-            byId.put(registration.getId(), registration);
+            if (registration.getStatus() != TableRegistrationStatus.Deleted) {
+                byId.put(registration.getId(), registration);
+            }
         }
         return byId;
     }
@@ -925,8 +975,44 @@ public class RegistrationService {
         }
     }
 
-    private GameTable lockTable(String gameTableId) {
-        return gameTableRepository.findByIdForUpdate(gameTableId).orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
+    /**
+     * Takes the row lock that every write to a table's applications serializes on, and returns the
+     * table read under it.
+     *
+     * <p>Public for the one other writer of that state: approving or refusing a veto request has to
+     * queue on the same lock, and take it <em>before</em> the request's, in the order a direct veto
+     * takes them - the other order is a deadlock between the two. A deleted table does not exist for
+     * any read, so it is a 404 here too and never a conflict that would confirm it is there.
+     *
+     * @param gameTableId the table
+     * @return the table, locked until the transaction ends
+     * @throws NotFoundException when there is no such table, or it was deleted
+     */
+    @Transactional
+    public GameTable lockTable(String gameTableId) {
+        return gameTableRepository.findByIdForUpdate(gameTableId)
+                .filter(table -> table.getStatus() != GameTableStatus.Deleted)
+                .orElseThrow(() -> new NotFoundException("Table not found: " + gameTableId));
+    }
+
+    /**
+     * Applying and accepting refuse a full table outright; lifting a veto, the third way a player can
+     * come back, is not refused but lands the person as a candidate instead (see {@link #unblock}).
+     */
+    private void requireSeatLeft(GameTable table) {
+        if (isFull(table)) {
+            throw new ConflictException("Table " + table.getId() + " has no seat left", ConflictException.TABLE_FULL);
+        }
+    }
+
+    /**
+     * Only players count against max_players - a candidate holds no seat - so this is the count of
+     * players, asked under the table's lock by every path that could add one.
+     */
+    private boolean isFull(GameTable table) {
+        Integer maxPlayers = table.getMaxPlayers();
+        return maxPlayers != null
+                && registrationRepository.countByGameTable_IdAndStatus(table.getId(), TableRegistrationStatus.Player) >= maxPlayers;
     }
 
     private TableRegistration getRegistrationById(String registrationId) {

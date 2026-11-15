@@ -115,7 +115,7 @@ class UserRoleServiceTest {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin"));
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
         when(roleRepository.findByName("Master")).thenReturn(Optional.of(role(PlatformRole.MASTER)));
 
         AdminUserDetailResponse response =
@@ -241,7 +241,7 @@ class UserRoleServiceTest {
         when(userService.getById("other-owner")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
         when(userRoleRepository.findAllGrants("other-owner")).thenReturn(grants);
-        stubOwnerCount(2);
+        stubOwners(target, persistedUser("actor-owner"));
 
         AdminUserDetailResponse response = userRoleService.revokeRole("other-owner", PlatformRole.OWNER, "se va", OWNER_ACTOR);
 
@@ -256,6 +256,26 @@ class UserRoleServiceTest {
     }
 
     /**
+     * The grant this request read still looks live, but the owners read under the lock no longer
+     * include the target: another revocation got there first. Repeating a revocation writes nothing.
+     */
+    @Test
+    void revokingAnOwnerThatTheLockShowsAlreadyRevokedWritesNothing() {
+        User target = persistedUser("other-owner");
+        List<UserRole> grants = grants(target, PlatformRole.OWNER, PlatformRole.PLAYER);
+        when(userService.getById("other-owner")).thenReturn(target);
+        when(userRoleRepository.findAllGrants("other-owner")).thenReturn(grants);
+        stubOwners(persistedUser("actor-owner"), persistedUser("third-owner"));
+
+        AdminUserDetailResponse response = userRoleService.revokeRole("other-owner", PlatformRole.OWNER, "se va", OWNER_ACTOR);
+
+        assertThat(response.roles()).containsExactly("Player");
+        assertThat(grants.getFirst().getStatus()).isEqualTo(UserRoleStatus.Allowed);
+        verify(userRoleRepository, never()).save(any());
+        verify(userRoleChangeRepository, never()).save(any());
+    }
+
+    /**
      * An account that is not {@code Allowed} is not one of the owners the invariant counts: it cannot sign
      * in to grant the role to anybody, so revoking it leaves the platform without nothing.
      */
@@ -266,7 +286,7 @@ class UserRoleServiceTest {
         List<UserRole> grants = grants(target, PlatformRole.OWNER);
         when(userService.getById("deleted-owner")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
-        when(userRoleRepository.findAllGrants("deleted-owner")).thenReturn(grants);
+        when(userRoleRepository.lockAllGrants("deleted-owner")).thenReturn(grants);
 
         userRoleService.revokeRole("deleted-owner", PlatformRole.OWNER, "limpieza", OWNER_ACTOR);
 
@@ -283,7 +303,7 @@ class UserRoleServiceTest {
         revoked.revoke();
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin"));
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants);
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants);
 
         userRoleService.grantRole("target", PlatformRole.MASTER, "vuelve", ADMIN_ACTOR);
 
@@ -314,7 +334,7 @@ class UserRoleServiceTest {
     void otorgarUnRolQueYaTieneNoEscribeFilaDeAuditoria() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
 
         AdminUserDetailResponse response = userRoleService.grantRole("target", PlatformRole.PLAYER, "otra vez", ADMIN_ACTOR);
 
@@ -330,7 +350,7 @@ class UserRoleServiceTest {
         List<UserRole> grants = grants(target, PlatformRole.MASTER);
         grants.getFirst().revoke();
         when(userService.getById("target")).thenReturn(target);
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants);
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants);
 
         AdminUserDetailResponse response = userRoleService.revokeRole("target", PlatformRole.MASTER, "de nuevo", ADMIN_ACTOR);
 
@@ -343,7 +363,7 @@ class UserRoleServiceTest {
     void quitarUnRolQueNuncaTuvoNoEscribeFilaDeAuditoria() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
 
         userRoleService.revokeRole("target", PlatformRole.MASTER, "nunca lo tuvo", ADMIN_ACTOR);
 
@@ -360,7 +380,7 @@ class UserRoleServiceTest {
         revoked.revoke();
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin"));
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants);
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants);
 
         AdminUserDetailResponse response = userRoleService.grantRole("target", PlatformRole.MASTER, "vuelve", ADMIN_ACTOR);
 
@@ -380,7 +400,7 @@ class UserRoleServiceTest {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin"));
-        when(userRoleRepository.findAllGrants("target")).thenReturn(new ArrayList<>());
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(new ArrayList<>());
         when(roleRepository.findByName("Master")).thenReturn(Optional.of(role(PlatformRole.MASTER)));
 
         userRoleService.grantRole("target", PlatformRole.MASTER, "dale", ADMIN_ACTOR);
@@ -393,7 +413,7 @@ class UserRoleServiceTest {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-admin")).thenReturn(persistedUser("actor-admin"));
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants(target, PlatformRole.MASTER));
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.MASTER));
 
         userRoleService.revokeRole("target", PlatformRole.MASTER, "chau", ADMIN_ACTOR);
 
@@ -419,10 +439,19 @@ class UserRoleServiceTest {
      * {@code UserRoleServiceIT}, contra MySQL real.
      */
     private void stubOwnerCount(int owners) {
+        User[] holders = new User[owners];
+        for (int i = 0; i < owners; i++) {
+            holders[i] = persistedUser("owner-" + i);
+        }
+        stubOwners(holders);
+    }
+
+    /** Like {@link #stubOwnerCount}, naming who the live owners are, for when the target must be one of them. */
+    private void stubOwners(User... owners) {
         when(roleRepository.lockByName("Owner")).thenReturn(Optional.of(role(PlatformRole.OWNER)));
         List<UserRole> holders = new ArrayList<>();
-        for (int i = 0; i < owners; i++) {
-            holders.add(new UserRole(persistedUser("owner-" + i), role(PlatformRole.OWNER)));
+        for (User owner : owners) {
+            holders.add(new UserRole(owner, role(PlatformRole.OWNER)));
         }
         when(userRoleRepository.lockActiveHolders("Owner")).thenReturn(holders);
     }
