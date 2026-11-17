@@ -2,7 +2,7 @@
 adr: 20
 titulo: Navegación, contextos y ayuda
 estado: Vigente
-actualizada: 2026-11-10
+actualizada: 2026-11-16
 absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 ---
 
@@ -73,3 +73,9 @@ absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 3. **El 404 se pinta dentro del layout, con el header** —cerrar sesión, idioma, tema—, también bajo un prefijo de contexto (`/master/tables/x/y`). Su salida sigue siendo `/` (§2).
 
 **Por qué.** Las tres son huecos que dejó la guardia de sesión (M27 «Las guardias que faltan», F4.1 «El mapa de la interfaz»). Con sesión, el botón de Discord ofrece entrar a quien ya entró. Sin el destino guardado, el enlace de una notificación abierto con la sesión vencida termina en la home y el lector tiene que volver a buscar lo que le avisaron. Y un 404 sin header deja a quien se equivocó de URL sin cerrar sesión, sin idioma y sin tema, en una pantalla que no parece de la aplicación.
+
+## §9 Cada contexto muestra lo de su rol: un admin que co-dirige una mesa, en `/master`, actúa como master
+
+**Decisión.** Una pantalla de un contexto ofrece lo que el rol de ese contexto puede hacer, nunca lo de otro rol que la cuenta también tenga. Un admin (`Admin` u `Owner`) que además dirige una mesa, en `/master/tables/:id`, **actúa como master**: tiene lo que le da su fila en `masters` y nada de su rango —si es `Secondary`, ahí no ve «Levantar el veto»; si es el `Primary`, lo levanta como `Primary`—, y **no resuelve pedidos de veto** desde la pestaña Jugadores, que le muestra los pendientes como a cualquier master, sin botones. Lo que hace como admin —decidir un veto, levantarlo por su rango— lo hace entrando por `/admin`, en las pantallas donde ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro» y ADR-06 «Roles y alcance» §8 «El admin ve todo salvo la autoría de los comentarios; lee la gestión de cualquier mesa, edita la ajena, y el dueño se entera» se lo dan, aunque el backend se lo acepte igual desde `/master`.
+
+**Por qué.** Lo decidió el usuario el 2026-11-16, con el cambio del veto (ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro»): cada contexto de navegación muestra lo de su rol, y los roles no se mezclan en una pantalla. Que el backend lo acepte desde cualquier lado no cambia nada: el contexto no autoriza ni restringe (§1), así que lo que una pantalla ofrece es una decisión de la interfaz.

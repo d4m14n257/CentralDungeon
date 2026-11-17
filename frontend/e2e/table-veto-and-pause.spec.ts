@@ -13,6 +13,9 @@ import { acceptReview } from './helpers/review'
  * > `Primary` veta a alguien: esa persona deja de ver la mesa en el explorador, recibe `404` en el
  * > detalle y `404` en el archivo que antes descargaba.*
  *
+ * The veto is no longer direct: any master of the table asks for it, an admin decides, and only the
+ * Primary or an admin lifts it - which is the flow the second test walks.
+ *
  * **What no unit test proves and this does.** The veto is a rule with seven front doors (§7 of the
  * same document: «el veto toca seis vías de lectura y es fácil cerrar cinco»), and a unit test can
  * only ever ask one door at a time with the other six mocked away. Here the same person walks the
@@ -194,25 +197,38 @@ test('a master asks for a pause, an admin grants it, and the player calendar fre
 })
 
 /**
- * The second sentence, and the one §7 named the failure mode for in advance.
+ * The second sentence, now with the two-step veto of ADR-09 §4: **nobody vetoes directly**. Any master
+ * of the table asks, an admin decides, and only then does the person lose the table.
  *
- * The same player walks all three doors **before** the veto - the explorer, the detail, the download
- * - and then walks them again afterwards. That order is the test: a spec that only checked the
- * after-state would pass just as well against a table the player could never reach in the first
- * place, which is exactly how five of six doors get closed and nobody notices the sixth.
+ * The same player walks all three doors **before** the request, **after the request but before the
+ * answer** (nothing may have changed: asking is not vetoing), **after the approval**, and once more
+ * after the Primary lifts the veto. That order is the test: a spec that only checked the final state
+ * would pass just as well against a request that vetoed on submit, or against a table the player
+ * could never reach in the first place.
  *
  * And the answer is `404` every time, never `403` (ADR-09 §4): a 403 confirms what the 404 denies.
  */
-test('a Primary vetoes a player, who stops seeing the table, its detail and its file', async ({ browser }) => {
+test('a co-master asks for a veto, an admin grants it, and the Primary lifts it', async ({ browser }) => {
   const tableName = `Mesa Veto E2E ${runId}`
   const playerDiscordId = `e2e-veto-player-${runId}`
   const master = await newAuthenticatedPage(browser, `e2e-veto-master-${runId}`, true, false)
+  const coMaster = await newAuthenticatedPage(browser, `e2e-veto-comaster-${runId}`, true, false)
   const admin = await newAuthenticatedPage(browser, `e2e-veto-admin-${runId}`, false, true)
   const player = await newAuthenticatedPage(browser, playerDiscordId, false, false)
 
   try {
     const tableId = await createTableWithCalendar(master.page, tableName, 'Sábado')
     await approveTableFromQueue(admin.page, tableName)
+
+    // The co-master is added through the API: the people picker is covered by its own spec, and what
+    // this one proves is that a master who is *not* the Primary can ask (the JWT subject is the user id).
+    const coMasterId = (JSON.parse(Buffer.from(coMaster.accessToken.split('.')[1] as string, 'base64url').toString()) as { sub: string })
+      .sub
+    const added = await master.page.request.post(`${BACKEND_URL}/api/v1/game-tables/${tableId}/masters`, {
+      headers: { Authorization: `Bearer ${master.accessToken}` },
+      data: { userId: coMasterId, masterType: 'Secondary' },
+    })
+    expect(added.ok()).toBeTruthy()
 
     // A shared attachment, which is the door ADR-14 §2 anticipated the bug on: until F3.4 the condition
     // was «not private» alone, so any authenticated person reached it - the vetoed included.
@@ -238,24 +254,58 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
 
     // Asked over HTTP rather than through the download button: what is being pinned is the status
-    // code the slice promised, and a started-then-cancelled browser download cannot show one. The
-    // token goes in the header because that is how the application authenticates - the JWT is not a
-    // cookie, so `page.request` on its own would be an anonymous caller (ADR-05 §3).
+    // code, and a started-then-cancelled browser download cannot show one. The token goes in the
+    // header because the JWT is not a cookie (ADR-05 §3).
     const fileId = await fileIdOfTable(player.page, player.accessToken, tableId)
     expect(await fileStatusFor(player.page, player.accessToken, fileId)).toBe(200)
 
-    // ------------------------------------------------------------------------------------ the veto
+    // ------------------------------------------------------------------- the request, by a co-master
 
-    await master.page.goto(`/master/tables/${tableId}/players`)
-    const rosterRow = master.page.getByRole('listitem').filter({ hasText: playerDiscordId })
-    await rosterRow.getByRole('button', { name: 'Vetar' }).click()
-    const vetoDialog = master.page.getByRole('dialog')
-    // The dialog says what it costs the other person before the press, not after.
-    await expect(vetoDialog.getByText(/no le aparece en el explorador/)).toBeVisible()
-    await vetoDialog.getByRole('textbox').fill('Faltó a tres sesiones sin avisar')
-    await vetoDialog.getByRole('button', { name: 'Vetar' }).click()
-    await acceptReview(master.page)
-    await expect(vetoDialog).toBeHidden()
+    await coMaster.page.goto(`/master/tables/${tableId}/players`)
+    const coMasterRow = coMaster.page.getByRole('listitem').filter({ has: coMaster.page.getByRole('button', { name: 'Pedir veto' }) })
+    await expect(coMasterRow).toHaveCount(1)
+    await coMasterRow.getByRole('button', { name: 'Pedir veto' }).click()
+    const requestDialog = coMaster.page.getByRole('dialog')
+    // The dialog says before the press that nothing changes yet.
+    await expect(requestDialog.getByText(/Todavía no cambia nada/)).toBeVisible()
+    await requestDialog.getByRole('textbox').fill('Faltó a tres sesiones sin avisar')
+    await requestDialog.getByRole('button', { name: 'Enviar el pedido' }).click()
+    await acceptReview(coMaster.page)
+    await expect(requestDialog).toBeHidden()
+
+    // ------------------------------------------------ asking is not vetoing: every door is still open
+
+    await player.page.goto('/player')
+    await expect(player.page.getByRole('link', { name: new RegExp(tableName) })).toBeVisible()
+    await player.page.goto(`/player/tables/${tableId}`)
+    await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
+    expect(await fileStatusFor(player.page, player.accessToken, fileId)).toBe(200)
+
+    // --------------------------------------------------------------- the admin decides, from the tray
+
+    // The row says whom the veto is about (not whoever asked) and links to the table's players.
+    await admin.page.goto('/admin/queue')
+    const queueRow = admin.page.getByRole('row').filter({ hasText: 'Veto de jugador' }).filter({ hasText: playerDiscordId })
+    await expect(queueRow).toBeVisible()
+    await expect(queueRow).toContainText(`Sobre: ${playerDiscordId}`)
+    await expect(queueRow).toContainText('Faltó a tres sesiones sin avisar')
+    await expect(queueRow.getByRole('link', { name: 'Ver la mesa y sus jugadores' })).toHaveAttribute(
+      'href',
+      new RegExp(`${tableId}.*players`),
+    )
+
+    // The same request is in the full list of requests, with the same subject.
+    await admin.page.goto('/admin/requests')
+    await expect(admin.page.getByRole('row').filter({ hasText: `Sobre: ${playerDiscordId}` })).toBeVisible()
+
+    await admin.page.goto('/admin/queue')
+    await queueRow.getByRole('button', { name: 'Aprobar' }).click()
+    const resolveDialog = admin.page.getByRole('dialog')
+    await resolveDialog.getByRole('textbox').fill('Aprobado: ya se le había avisado')
+    await resolveDialog.getByRole('button', { name: 'Aprobar' }).click()
+    await acceptReview(admin.page)
+    await expect(resolveDialog).toBeHidden()
+    await expect(queueRow).toBeHidden()
 
     // ------------------------------------------------------- the same three doors, now all closed
 
@@ -270,20 +320,27 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
 
     expect(await fileStatusFor(player.page, player.accessToken, fileId)).toBe(404)
 
-    // ------------------------------------------------- and the master still sees what they decided
+    // ----------------------------------- the masters still see what was decided, and who may undo it
 
     // A veto that vanishes from the interface is not reversible however reversible the backend makes
-    // it, so the row stays - with who decided it, when, and the reason somebody will read months
-    // later to decide whether it still stands.
-    await master.page.goto(`/master/tables/${tableId}/players`)
-    const blockedRow = master.page.getByRole('listitem').filter({ hasText: playerDiscordId })
+    // it, so the row stays - marked, with who decided it, when, and the reason.
+    await coMaster.page.goto(`/master/tables/${tableId}/players`)
+    const blockedRow = coMaster.page.getByRole('listitem').filter({ hasText: playerDiscordId })
     await expect(blockedRow.getByText('Vetado', { exact: true })).toBeVisible()
-    await expect(blockedRow.getByText(/Vetado por/)).toBeVisible()
+    // Decided by the admin, so the row carries the admin's name and the admin's answer as the reason.
+    await expect(blockedRow.getByText(new RegExp(`Vetado por e2e-veto-admin-${runId}`))).toBeVisible()
+    await expect(blockedRow.getByText(/Aprobado: ya se le había avisado/)).toBeVisible()
+    // And the co-master's request it answered, with who asked: the veto has both reasons.
+    await expect(blockedRow.getByText(new RegExp(`Lo pidió e2e-veto-comaster-${runId}`))).toBeVisible()
     await expect(blockedRow.getByText(/Faltó a tres sesiones sin avisar/)).toBeVisible()
+    // Lifting is the Primary's and the admin's: a co-master is not offered it.
+    await expect(blockedRow.getByRole('button', { name: 'Levantar el veto' })).toHaveCount(0)
 
-    // ------------------------------------------------------------------ and it is really reversible
+    // ------------------------------------------------------------------ the Primary lifts it
 
-    await blockedRow.getByRole('button', { name: 'Levantar el veto' }).click()
+    await master.page.goto(`/master/tables/${tableId}/players`)
+    const primaryRow = master.page.getByRole('listitem').filter({ hasText: playerDiscordId })
+    await primaryRow.getByRole('button', { name: 'Levantar el veto' }).click()
     const liftDialog = master.page.getByRole('dialog')
     await liftDialog.getByRole('textbox').fill('Hablamos y quedó claro')
     await liftDialog.getByRole('button', { name: 'Levantar el veto' }).click()
@@ -291,12 +348,15 @@ test('a Primary vetoes a player, who stops seeing the table, its detail and its 
     await expect(liftDialog).toBeHidden()
 
     // Back where they were - `Player`, read from the trail and not assumed.
+    await player.page.goto('/player')
+    await expect(player.page.getByRole('link', { name: new RegExp(tableName) })).toBeVisible()
     await player.page.goto(`/player/tables/${tableId}`)
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
     expect(await fileStatusFor(player.page, player.accessToken, fileId)).toBe(200)
   } finally {
     await player.context.close()
     await admin.context.close()
+    await coMaster.context.close()
     await master.context.close()
   }
 })

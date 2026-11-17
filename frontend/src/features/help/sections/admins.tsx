@@ -159,7 +159,19 @@ export function RequestsAdminHelp() {
   return (
     <ListAndSteps
       block="requests"
-      keys={['what', 'tray', 'pendingFirst', 'note', 'masterGrant', 'tableOpen', 'general', 'resolvedOnce', 'gone']}
+      keys={[
+        'what',
+        'tray',
+        'pendingFirst',
+        'note',
+        'masterGrant',
+        'tableOpen',
+        'general',
+        'playerBan',
+        'liftVeto',
+        'resolvedOnce',
+        'gone',
+      ]}
       stepCount={5}
     />
   )

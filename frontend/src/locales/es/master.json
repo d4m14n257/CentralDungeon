@@ -103,6 +103,18 @@
     "requestPauseHint": "Pedir no es pausar: hasta que un admin responda, la mesa sigue en curso y el calendario sigue prometiendo sus fechas.",
     "requestPauseHelpLink": "Cómo funciona la pausa",
     "requestPauseSuccess": "Pedido de pausa enviado",
+    "seekingOn": "Buscar jugadores",
+    "seekingOff": "Dejar de buscar",
+    "seekingFull": "La mesa está completa, así que no se puede buscar jugadores: no queda ningún lugar libre.",
+    "seekingActive": "La mesa aparece en el explorador y acepta postulaciones hasta completar el cupo.",
+    "seekingOnSuccess": "La mesa busca jugadores",
+    "seekingOffSuccess": "La mesa dejó de buscar jugadores",
+    "seekingOnConfirmTitle": "¿Buscar jugadores para la mesa?",
+    "seekingOnConfirmDescription": "La mesa aparece en el explorador y acepta postulaciones hasta completar el cupo. Podés dejar de buscar cuando quieras.",
+    "seekingOffConfirmTitle": "¿Dejar de buscar jugadores?",
+    "seekingOffConfirmDescription": "La mesa sale del explorador y deja de aceptar postulaciones. Podés volver a buscar cuando quieras.",
+    "seekingIdle": "La mesa no busca jugadores ahora. Podés empezar a buscar mientras quede algún lugar libre.",
+    "seekingHelpLink": "Cómo funciona la búsqueda de jugadores",
     "errors": {
       "PAUSE_ALREADY_REQUESTED": "Ya hay un pedido de pausa esperando respuesta para esta mesa. Actualizá la pantalla para verlo.",
       "generic": "No pudimos enviar el pedido. Probá de nuevo."
@@ -235,24 +247,21 @@
     "adminDescription": "Estás editando una mesa que no es tuya: al guardar, sus masters reciben un aviso."
   },
   "veto": {
-    "block": "Vetar",
-    "request": "Pedir que se lo vete",
+    "request": "Pedir veto",
     "unblock": "Levantar el veto",
+    "requestedBy": "Lo pidió {{name}}",
     "blockedBy": "Vetado por {{name}} el {{date}}",
     "quotedReason": "«{{reason}}»",
-    "hintPrimary": "Vetar saca a esa persona de esta mesa, y solo de esta: deja de verla. Se puede levantar después.",
-    "hintSecondary": "Como co-master no vetás: lo que mandás es un pedido, y lo resuelve el master de la mesa.",
-    "helpLink": "Cómo funciona el veto"
+    "helpLink": "Cómo funciona el veto",
+    "hint": "Pedir un veto no veta: lo decide un admin, y hasta entonces la persona sigue en la mesa. Levantarlo lo hace el master de la mesa o un admin."
   },
   "banRequests": {
     "title": "Pedidos de veto",
-    "descriptionPrimary": "Un co-master pidió vetar a alguien de esta mesa. Lo resolvés vos, no un admin.",
-    "descriptionSecondary": "Lo que pediste está esperando la respuesta del master de la mesa.",
     "askedBy": "Pedido por {{name}}",
     "approve": "Vetar",
     "reject": "No vetar",
     "approveDialogTitle": "Vetar a {{name}}",
-    "approveDialogDescription": "Leé el motivo y escribí tu respuesta. La lee el co-master que lo pidió.",
+    "approveDialogDescription": "Leé el motivo y escribí tu respuesta. La lee quien pidió el veto.",
     "approveEffect": "Aceptar no es marcarlo como visto: {{name}} queda vetado en el acto y deja de ver la mesa.",
     "rejectDialogTitle": "No vetar a {{name}}",
     "rejectDialogDescription": "No se veta a nadie. Escribí por qué: es lo único que recibe quien lo pidió.",
@@ -264,7 +273,8 @@
     "confirmApproveDescription": "Deja de ver la mesa, su detalle y sus archivos. Queda registrado con tu motivo.",
     "confirmRejectTitle": "¿Rechazar el pedido de veto de {{name}}?",
     "confirmRejectDescription": "Sigue en la mesa como hasta ahora. Queda registrado con tu motivo.",
-    "descriptionObserver": "Un co-master pidió vetar a alguien de esta mesa. Lo resuelve el master principal."
+    "descriptionAdmin": "Un master pidió vetar a alguien de esta mesa. Lo decidís vos, con tu respuesta.",
+    "descriptionMaster": "Lo que se pidió espera la respuesta de un admin: él decide, no el master de la mesa."
   },
   "people": {
     "viewRecord": "Ver la ficha de {{name}}"

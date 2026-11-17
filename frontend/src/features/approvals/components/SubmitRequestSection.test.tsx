@@ -28,6 +28,7 @@ function request(overrides: Partial<ApprovalRequestSummary> = {}): ApprovalReque
     justification: 'Quiero dirigir',
     claimedByName: null,
     gameTableId: null,
+    subjectName: null,
     createdAt: '2026-03-04T12:00:00',
     ...overrides,
   }

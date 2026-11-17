@@ -72,6 +72,8 @@ export interface GameTableSummary {
   applied: boolean
   /** Whether the reader is already a Player of the table - a stronger state than `applied`, and the one the card names. */
   joined: boolean
+  /** Whether the table is running and looking for players: it lists in the explorer and takes applications while `InProgress`. */
+  seekingPlayers: boolean
   primaryMaster: MasterSummary
 }
 
@@ -177,6 +179,8 @@ export interface GameTableDetail {
   applied: boolean
   /** Whether the reader is already a Player of the table - the apply button says so instead of "application in progress". */
   joined: boolean
+  /** Whether the table is running and looking for players: it lists in the explorer and takes applications while `InProgress`. */
+  seekingPlayers: boolean
   /**
    * Why the reader was turned down here, when their latest application to this table was rejected (ADR-09 §7).
    * The server's, for the actor of the token; null when they never applied or applied again.
@@ -323,6 +327,11 @@ export interface TableStatusChange {
   changedByName: string
   justification: string | null
   createdAt: string
+}
+
+/** Mirror of SetSeekingPlayersRequest - whether a running table is looking for players. */
+export interface SetSeekingPlayersRequest {
+  seeking: boolean
 }
 
 /** Mirror of ChangeTableStatusRequest - used by cancel, request-changes and pause. */

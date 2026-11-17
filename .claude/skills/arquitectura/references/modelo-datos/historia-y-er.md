@@ -14,6 +14,7 @@ El razonamiento de cada fila está en la ADR que cita. Resumen de lo estructural
 | Rol de mesa | `masters.master_type` pasa de `Owner`/`Master` a **`Primary`/`Secondary`** | ADR-06 §3 |
 | Postulaciones | **Se quita** el `UNIQUE (game_table_id, user_id)`: un usuario puede postularse N veces | ADR-09 §1 |
 | Contador de jugadores | Se elimina `Players_Table`; se deriva con `COUNT`. Se agrega `max_players` | ADR-03 §1, ADR-07 §5 |
+| Búsqueda de jugadores en una mesa en curso | `game_tables.seeking_players` (V15): una mesa `InProgress` que busca reemplazo aparece en el explorador y acepta postulaciones; se apaga al llenarse y al salir de `InProgress` | ADR-07 «Mesas: ciclo de vida» §11 «Una mesa en curso puede buscar jugadores, y no es un estado» |
 | Sesiones | Tabla nueva `table_sessions`, materializada, con asistencia | ADR-08 §3, §4 |
 | Peticiones | Tablas nuevas `table_tasks` + `task_submissions` + `submission_files` | ADR-15 §1 |
 | Comentarios | **Se elimina `comments.user_created_id`**. El autor vive solo en `comment_drafts` y desaparece al confirmar. Cuota antispam como token opaco | ADR-11 §5, §6 |

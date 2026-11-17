@@ -41,6 +41,7 @@ import {
   ReviewHelp,
   RunningHelp,
   ScheduleHelp,
+  SeekingPlayersHelp,
   SessionsHelp,
 } from './masters'
 import {
@@ -134,6 +135,8 @@ export const HELP_SECTIONS = {
   // the two share a verb in Spanish and nothing else, and a master looking for one must not land on
   // the other.
   'masters.banning': { titleKey: 'masters.banning.title', Body: BanningHelp },
+  // Looking for players on a table in progress it switches itself off and does not come back.
+  'masters.seeking': { titleKey: 'masters.seeking.title', Body: SeekingPlayersHelp },
 
   // What reviewing a table is and where it happens. Its text moved with the buttons when approving
   // and requesting changes left `/admin/tables` for the tray (ADR-16 §7, F3.3).

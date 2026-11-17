@@ -43,7 +43,8 @@ export { useRemoveMaster } from './api/useRemoveMaster'
 export { useRequestChanges } from './api/useRequestChanges'
 export { useResubmitTable } from './api/useResubmitTable'
 export { useSubmitTableForReview } from './api/useSubmitTableForReview'
-export { ADMIN_EDITABLE_STATUSES, ALL_TABLE_STATUSES, MASTER_EDITABLE_STATUSES, isMasterEditable } from './lifecycle'
+export { ADMIN_EDITABLE_STATUSES, ALL_TABLE_STATUSES, MASTER_EDITABLE_STATUSES, acceptsApplications, isMasterEditable } from './lifecycle'
+export { useSetSeekingPlayers } from './api/useSetSeekingPlayers'
 export { useStartTable } from './api/useStartTable'
 export { useTableSessions } from './api/useTableSessions'
 export { useTableStatusHistory } from './api/useTableStatusHistory'
@@ -81,6 +82,7 @@ export type {
   PlayerSession,
   PublicSession,
   RecordAttendanceRequest,
+  SetSeekingPlayersRequest,
   SessionAttendanceEntry,
   TableScheduleEntry,
   TableSession,

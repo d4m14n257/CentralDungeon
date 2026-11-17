@@ -25,7 +25,7 @@ vi.mock('@/features/registrations', () => ({
   ApplyToTableDialog: ({ open }: { open: boolean }) => (open ? <div role="dialog">Postularme a la mesa</div> : null),
 }))
 
-function table(myRejection: MyRejection | null): GameTableDetail {
+function table(myRejection: MyRejection | null, overrides: Partial<GameTableDetail> = {}): GameTableDetail {
   return {
     id: 't1',
     name: 'La maldición de Strahd',
@@ -51,7 +51,9 @@ function table(myRejection: MyRejection | null): GameTableDetail {
     scheduleConflict: false,
     applied: false,
     joined: false,
+    seekingPlayers: false,
     myRejection,
+    ...overrides,
   }
 }
 
@@ -105,5 +107,23 @@ describe('TableDetailPage rejection notice', () => {
     expect(await screen.findByText('La maldición de Strahd')).toBeInTheDocument()
     expect(screen.queryByText('Te rechazaron en esta mesa')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Postularme de nuevo' })).not.toBeInTheDocument()
+  })
+})
+
+describe('TableDetailPage applying to a running table', () => {
+  it('lets the reader apply while the table is looking for players', async () => {
+    byId.mockResolvedValue(table(null, { status: 'InProgress', seekingPlayers: true }))
+
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: 'Postularme' })).toBeEnabled()
+  })
+
+  it('says it is not open when the running table is not looking for players', async () => {
+    byId.mockResolvedValue(table(null, { status: 'InProgress', seekingPlayers: false }))
+
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: 'No está abierta a postulaciones' })).toBeDisabled()
   })
 })

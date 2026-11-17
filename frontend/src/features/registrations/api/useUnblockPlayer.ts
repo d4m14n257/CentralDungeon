@@ -18,7 +18,7 @@ interface UnblockVariables {
  * **change** — a `blocked` flag could never say that it was lifted, by whom, or how many times, and
  * ADR-09 §5 asks for exactly that so a pattern of impulsive vetoes is visible.
  *
- * Refused with `NOT_PRIMARY_MASTER` (403) to a co-master and `REGISTRATION_NOT_BLOCKED` (409) on a
+ * Allowed to the table's `Primary` and to an admin. Refused with `NOT_PRIMARY_MASTER` (403) to a co-master and `REGISTRATION_NOT_BLOCKED` (409) on a
  * row somebody else already restored.
  *
  * @param tableId the table

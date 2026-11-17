@@ -13,7 +13,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { formatRelativeDate } from '@/lib/date'
 
-import { useApproveBanRequest, useRejectBanRequest } from '../api/useResolveBanRequest'
+import { useApproveRequest } from '../api/useApproveRequest'
+import { useRejectRequest } from '../api/useRejectRequest'
 import { useTableBanRequests } from '../api/useTableBanRequests'
 import { approvalErrorKey } from '../approvalErrors'
 import { resolveApprovalRequestSchema, type ResolveApprovalRequestForm } from '../schemas'
@@ -24,22 +25,20 @@ import { useConfirm } from '@/hooks/useConfirm'
 type BanResolution = 'approve' | 'reject'
 
 /**
- * The answer to one veto request, written with the note both acts require (ADR-16 §1).
+ * An admin's answer to one veto request, written with the note both acts require.
  *
- * **Its own dialog rather than `ResolveRequestDialog`**, which is the same shape one folder over.
- * That one is welded to `useApproveRequest`/`useRejectRequest` — the admin tray's mutations, on
- * `/admin/requests/{id}` — and a veto request is resolved by the table's `Primary` on the table's
- * own route (ADR-09 §5). Threading a pair of mutations through as props would turn a component that reads
- * plainly today into one whose behaviour is decided by its caller, for two uses.
+ * **Its own dialog rather than `ResolveRequestDialog`**, which is the same shape one folder over but
+ * is built around a row of the admin tray: this one is opened from a table's players tab and names
+ * the person the veto is about, because deciding about two open requests on the same table by the
+ * wording of their reasons alone is deciding half-blind. Both go through the same generic approval
+ * mutations.
  */
 function ResolveBanRequestDialog({
-  tableId,
   request,
   resolution,
   open,
   onOpenChange,
 }: {
-  tableId: string
   request: BanRequest | null
   resolution: BanResolution
   open: boolean
@@ -47,8 +46,8 @@ function ResolveBanRequestDialog({
 }) {
   const { t } = useTranslation('master')
   const confirm = useConfirm()
-  const approve = useApproveBanRequest(tableId)
-  const reject = useRejectBanRequest(tableId)
+  const approve = useApproveRequest()
+  const reject = useRejectRequest()
 
   const isApproving = resolution === 'approve'
   const mutation = isApproving ? approve : reject
@@ -149,38 +148,34 @@ function ResolveBanRequestDialog({
 
 interface BanRequestsSectionProps {
   tableId: string
-  /** Whether the reader runs the table. Only the `Primary` answers these (ADR-09 §5). */
-  isPrimary: boolean
   /**
-   * An admin reading the table from /admin/tables/:id (ADR-06 §8): neither the one who answers nor the one
-   * who asked, so the sentence above the list cannot be either of theirs.
+   * Whether the reader is an admin, who decides these. A master only reads the list: whoever asked
+   * has to see the request is still waiting, or they will ask twice.
    */
-  observer?: boolean
+  canResolve: boolean
   /** The help link the screen hands down — a feature never imports `features/help` (§3.1.5). */
   help?: ReactNode
 }
 
 /**
- * The veto requests waiting on one table, and the `Primary`'s answer to them (ADR-09 §5, F3.4).
+ * The veto requests waiting on one table. Masters read them; an admin answers them.
  *
  * **A section of this feature and not of the screen, receiving an id and doing its own query**
  * (§3.1.5): the players tab already composes three domains, and a block that fetched through props
  * would make the tab the owner of a query about a mechanism it knows nothing about.
  *
- * **Both masters see the list; only the `Primary` sees the buttons.** A co-master who asked needs to
- * see that the answer has not come — otherwise they ask again, and ADR-09 §5's whole point is that the
- * decision belongs to one person. Principio 2 is satisfied rather than violated by that: what is
- * hidden from the co-master is the button they could not use, not the information.
+ * **Everyone who may open the list sees it; only an admin sees the buttons.** A master who asked
+ * needs to see that the answer has not come, and the note above the list says who answers.
+ * What is hidden from a master is the button they could not use, not the information.
  *
  * **It renders nothing at all when there is nothing waiting.** An empty block on a tab that is
  * mostly about something else is noise; the roster below is where the everyday work is.
  *
- * @param props.tableId   the table
- * @param props.isPrimary whether the reader may answer these
- * @param props.observer  an admin reading it, who neither asked nor answers (ADR-06 §8)
- * @param props.help      the explanation of what a veto is, raised by the screen
+ * @param props.tableId    the table
+ * @param props.canResolve whether the reader is an admin and may answer these
+ * @param props.help       the explanation of what a veto is, raised by the screen
  */
-export function BanRequestsSection({ tableId, isPrimary, observer, help }: BanRequestsSectionProps) {
+export function BanRequestsSection({ tableId, canResolve, help }: BanRequestsSectionProps) {
   const { t, i18n } = useTranslation('master')
   // isLoadingError, not isError: a failed background refetch must not blank a list that loaded (ADR-19 §4).
   const { data, isPending, isLoadingError, refetch } = useTableBanRequests(tableId)
@@ -200,15 +195,7 @@ export function BanRequestsSection({ tableId, isPrimary, observer, help }: BanRe
     <section className="border-border space-y-3 rounded-lg border p-4">
       <div className="space-y-1">
         <h3 className="text-sm font-medium">{t('banRequests.title')}</h3>
-        <p className="text-fg-muted text-xs">
-          {t(
-            observer
-              ? 'banRequests.descriptionObserver'
-              : isPrimary
-                ? 'banRequests.descriptionPrimary'
-                : 'banRequests.descriptionSecondary',
-          )}
-        </p>
+        <p className="text-fg-muted text-xs">{t(canResolve ? 'banRequests.descriptionAdmin' : 'banRequests.descriptionMaster')}</p>
       </div>
 
       <ul className="list-divided-bare">
@@ -224,7 +211,7 @@ export function BanRequestsSection({ tableId, isPrimary, observer, help }: BanRe
                   {t('banRequests.askedBy', { name: request.requestedByName })} · {formatRelativeDate(request.createdAt, i18n.language)}
                 </p>
               </div>
-              {isPrimary && (
+              {canResolve && (
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="destructive" onClick={() => dialog.open({ request, resolution: 'approve' })}>
                     {t('banRequests.approve')}
@@ -244,7 +231,6 @@ export function BanRequestsSection({ tableId, isPrimary, observer, help }: BanRe
       {help}
 
       <ResolveBanRequestDialog
-        tableId={tableId}
         request={dialog.item?.request ?? null}
         resolution={dialog.item?.resolution ?? 'approve'}
         open={dialog.isOpen}

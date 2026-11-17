@@ -561,7 +561,7 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
   - **Guardar una mesa con un valor de catálogo dado de baja respondía `409`**, contra la decisión de este mismo día. El estado vinculable se exige ahora solo a los ids nuevos.
   - Un IT abría la compuerta contando sentencias en curso, no esperas de lock, y podía pasar por azar. Ahora todos usan `LockGate`.
   - Una falla de lock responde `409` y queda en el log en `WARN`.
-- **Decisión del usuario, el 2026-11-14** (ADR-09 «Postulaciones y veto» §5): **levantar un veto con la mesa llena devuelve como `Candidate`** a quien era `Player`. El veto se levanta siempre y la mesa nunca queda por encima de `max_players`.
+- **Decisión del usuario, el 2026-11-14** (ADR-09 «Postulaciones y veto» §5): primero se eligió que levantar un veto con la mesa llena devolviera como `Candidate` a quien era `Player`, y se corrigió el mismo día: con la mesa llena la persona queda `Rejected` con `TABLE_FULL`, sea que antes fuera `Player` o `Candidate` (ver «El veto lo decide un admin…», más abajo). El veto se levanta siempre y la mesa nunca queda por encima de `max_players`.
 - **El arranque real**: `ProductionWiringIT` levanta el perfil `prod` y verifica los tres jobs con su cron, el tope de `multipart` y el guard de `SettingsService`.
 - **Topes**: las listas de ids de catálogo al escribir una mesa admiten 64 como máximo, con espejo en el zod del formulario.
 - **Lo que estaba bien:**
@@ -588,6 +588,54 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 - **Sin verificar:**
   - el paso de catálogos del asistente con más de 64 valores;
   - las mesas ya borradas de la base de desarrollo, que conservan vínculos vivos, sin migración de datos porque el proyecto no es productivo.
+
+---
+
+### El veto lo decide un admin y una mesa en curso busca jugadores
+
+**Una excepción a F4 «Revisión», que no construye**: el usuario corrigió el 2026-11-14 cómo funciona el veto, y se construyó entre F4.3 «Integridad» y F4.4 «Seguridad». Lo planeó Fable 5.1. Las reglas quedaron en ADR-09 «Postulaciones y veto» §2, §3, §5 y §6, ADR-16 «Pedidos con aprobación y bandeja de admins» §1 y §2, ADR-07 «Mesas: ciclo de vida» §11 «Una mesa en curso puede buscar jugadores, y no es un estado», ADR-06 «Roles y alcance» §8, ADR-03 «Modelo de datos y persistencia» §7, ADR-20 «Navegación, contextos y ayuda» §9 y ADR-21 «Diseño visual e interacción» §10.
+
+- **Decisiones del usuario, el 2026-11-14:**
+  - cualquier master vivo pide el veto con justificación, y lo decide un admin desde la bandeja, desde `/admin/requests` o desde la pestaña Jugadores de `/admin/tables/:id`. Nadie veta directo, y mientras el pedido espera la persona sigue en la mesa;
+  - el veto lo levantan el `Primary` o un admin, con motivo. Si la mesa se llenó entretanto, la persona queda `Rejected` con `TABLE_FULL` y puede volver a postularse;
+  - una mesa `InProgress` con lugar libre puede buscar jugadores (`seeking_players`, migración V15). Mientras busca, aparece en el explorador y acepta postulaciones; se apaga sola al llenarse y al salir de `InProgress`;
+  - un pedido de veto cuya postulación se retiró se puede rechazar; aprobarlo sigue siendo `409 REQUEST_ENTITY_GONE`;
+  - no hay notificaciones nuevas.
+- **Decisiones del usuario, el 2026-11-15:**
+  - nadie aprueba su propio pedido de veto (`409 OWN_REQUEST_NOT_APPROVABLE`); rechazarlo sí;
+  - el sujeto de un pedido (persona y mesa) se sigue viendo aunque la postulación se haya retirado, como excepción al borrado lógico invisible;
+  - bajar el cupo hasta igualar a los jugadores llena la mesa igual que aceptar al último: rechaza a los candidatos con `TABLE_FULL` y apaga la búsqueda.
+- **Decisiones del usuario, el 2026-11-16:**
+  - el aviso de estado admite una segunda frase propia, el prop `hint` de `StatusNotice`. Se descartaron concatenar las dos frases y escribir una clave por combinación;
+  - un admin que co-dirige una mesa, en `/master`, actúa como master. Para levantar o resolver como admin entra por `/admin`;
+  - la fila del vetado muestra las dos razones: quién pidió el veto y su justificación, y debajo quién lo aprobó y su nota.
+- **Lo que encontraron los revisores, ya corregido:**
+  - `revisor-backend` y `revisor-seguridad`:
+    - bajar el cupo no llenaba la mesa;
+    - un admin podía aprobar su propio pedido;
+    - la lista de pedidos de veto de una mesa perdía los de una postulación retirada;
+    - levantar el veto miraba la postulación antes que la pertenencia;
+    - había Javadocs que mentían.
+  - `revisor-frontend`:
+    - «Buscar jugadores» no pedía confirmación, y su test pasaba en vacío;
+    - aceptar, vetar o aprobar dejaba vieja la caché del detalle de gestión, así que con la mesa llena el aviso seguía ofreciendo «Dejar de buscar»;
+    - el enlace a los jugadores salía también en los pedidos de pausa;
+    - la ayuda remitía a una «pestaña Estado» que no existe, en esta función y en otras siete;
+    - «Sobre: X» estaba escrito a mano en tres pantallas y ahora es el componente `SubjectLine`;
+    - el chip «Busca jugadores» no tenía la forma de sus vecinos.
+  - `auditor-conocimiento`:
+    - el Javadoc de `TableRegistrationStatus` seguía diciendo que vetaba el `Primary`, y citaba ADRs y fases;
+    - dos textos de ayuda del veto describían el botón viejo;
+    - había repeticiones menores entre ADR-16 y ADR-09.
+- **Para F4.4 «Seguridad»**: el vetado o un extraño reciben `403` en lugar de `404` en las escrituras de master sobre una mesa (`setSeekingPlayers`, `submitPlayerBan`, `unblock`, `start`, `markPauseRequested`…), y eso confirma que la mesa existe. Se decide para todas a la vez.
+- **Deuda**:
+  - `/admin/requests` y `/requests/mine` hacen una consulta por fila al leer `requestedBy` y `claimedBy` en `ApprovalMapper.toSummaryResponse`; es anterior a este cambio;
+  - el orden de las comprobaciones de `submitPlayerBan`, `unblock` y `setSeekingPlayers` está escrito dos veces, en ADR-09 §5 y ADR-07 §11 y en `arquitectura` `reglas-negocio.md`.
+- **Verificación**:
+  - `./mvnw verify`: 764 unitarios y 1.640 IT;
+  - Vitest: 935 tests, y `npx tsc -b` limpio;
+  - los 11 e2e de `table-veto-and-pause`, `table-seeking-players`, `registration-flow`, `admin-requests` y `admin-table-detail`, con `--workers=1`;
+  - el `grep` de los nombres borrados (`blockDirectly`, `approveBanRequest`, `NOT_FOR_ADMINS`, `useBlockPlayer`, `useResolveBanRequest`…) queda vacío.
 
 ---
 

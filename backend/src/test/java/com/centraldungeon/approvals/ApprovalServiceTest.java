@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -12,7 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.centraldungeon.approvals.dto.ApprovalRequestDetailResponse;
 import com.centraldungeon.common.exception.ConflictException;
-import com.centraldungeon.registrations.TableRegistration;
+import com.centraldungeon.registrations.RegistrationSubject;
 import com.centraldungeon.registrations.dto.BanRequestResponse;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -540,13 +542,15 @@ class ApprovalServiceTest {
         ApprovalRequest grant = pending(ApprovalRequestType.MasterGrant);
         when(approvalRequestRepository.findAll(ArgumentMatchers.<Specification<ApprovalRequest>>any(), eq(FIRST_PAGE)))
                 .thenReturn(new PageImpl<>(List.of(pause, veto, grant)));
-        when(registrationService.tableIdsOf(List.of("registration-1"))).thenReturn(Map.of("registration-1", "table-2"));
+        when(registrationService.subjectsOf(List.of("registration-1")))
+                .thenReturn(Map.of("registration-1", new RegistrationSubject("registration-1", "table-2", "user-7", "bruno")));
 
         var rows = service().search(null, FIRST_PAGE).content();
 
         assertThat(rows).extracting("requestedById").containsOnly("user-1");
         assertThat(rows).extracting("gameTableId").containsExactly("table-1", "table-2", null);
-        verify(registrationService).tableIdsOf(List.of("registration-1"));
+        assertThat(rows).extracting("subjectName").containsExactly(null, "bruno", null);
+        verify(registrationService).subjectsOf(List.of("registration-1"));
     }
 
     /**
@@ -633,59 +637,29 @@ class ApprovalServiceTest {
     }
 
     /**
-     * <b>A {@code PlayerBan} is resolved by the table's {@code Primary}, and not by an admin</b> (ADR-09 §5
-     * over ADR-16 §1). It is the most delicate decision of the contract, and this is what makes it true: the
-     * admin passes the route's {@code @PreAuthorize} and is stopped by the rule, which is what an
-     * annotation could not express - being <em>this</em> table's {@code Primary} is a row in
-     * {@code masters}.
+     * <b>A veto is decided by an admin.</b> Approving the request is the veto, written through
+     * {@code RegistrationService} - the one place that writes {@code Blocked} - with the admin's note as
+     * its reason.
      */
     @Test
-    void anAdminCannotResolveAVetoRequest() {
+    void anAdminApprovingAVetoRequestVetoesThroughTheRegistrationService() {
         ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
-        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
-        when(entityResolver.exists(request.getEntityType(), "reg-1")).thenReturn(true);
+        resolvable(request);
         when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
-        when(masterService.isPrimaryOf("table-1", "admin-1")).thenReturn(false);
 
-        assertThatThrownBy(() -> service().approve("req-1", NOTE, ADMIN))
-                .isInstanceOf(ForbiddenActionException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ForbiddenActionException.NOT_PRIMARY_MASTER);
+        service().approve("req-1", NOTE, ADMIN);
 
-        verify(registrationService, never()).applyApprovedBlock(anyString(), anyString(), anyString());
+        verify(registrationService).applyApprovedBlock("reg-1", "admin-1", NOTE);
     }
 
-    /**
-     * And the {@code Primary} can, with the veto written <b>through the {@code RegistrationService}</b>:
-     * there is exactly one place that writes {@code Blocked}, the same way there is exactly one that
-     * grants a role.
-     */
-    @Test
-    void thePrimaryResolvesTheVetoRequestAndTheRegistrationServiceWritesTheVeto() {
-        ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
-        CurrentUser primary = new CurrentUser("primary-1", Set.of("Master"));
-        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
-        when(entityResolver.exists(request.getEntityType(), "reg-1")).thenReturn(true);
-        when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
-        when(masterService.isPrimaryOf("table-1", "primary-1")).thenReturn(true);
-        when(userService.getById("primary-1")).thenReturn(user("primary-1", "primary"));
-
-        service().approve("req-1", NOTE, primary);
-
-        verify(registrationService).applyApprovedBlock("reg-1", "primary-1", NOTE);
-    }
-
-    /** The veto points at an application, so the outcome carries the table for the co-master's click to land on. */
+    /** The veto points at an application, so the outcome carries the table for the requester's click to land on. */
     @Test
     void theVetoOutcomeTravelsWithTheTableOfTheApplication() {
         ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
-        CurrentUser primary = new CurrentUser("primary-1", Set.of("Master"));
-        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
-        when(entityResolver.exists(request.getEntityType(), "reg-1")).thenReturn(true);
+        resolvable(request);
         when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
-        when(masterService.isPrimaryOf("table-1", "primary-1")).thenReturn(true);
-        when(userService.getById("primary-1")).thenReturn(user("primary-1", "primary"));
 
-        service().reject("req-1", NOTE, primary);
+        service().reject("req-1", NOTE, ADMIN);
 
         verify(notificationService)
                 .notifyApprovalResolved("user-1", NotificationType.ApprovalRequestRejected, request.getEntityType(), "reg-1", "table-1");
@@ -695,16 +669,94 @@ class ApprovalServiceTest {
     @Test
     void rejectingAVetoRequestDoesNotMoveTheApplication() {
         ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
-        CurrentUser primary = new CurrentUser("primary-1", Set.of("Master"));
-        when(approvalRequestRepository.lockById("req-1")).thenReturn(Optional.of(request));
-        when(entityResolver.exists(request.getEntityType(), "reg-1")).thenReturn(true);
+        resolvable(request);
         when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
-        when(masterService.isPrimaryOf("table-1", "primary-1")).thenReturn(true);
-        when(userService.getById("primary-1")).thenReturn(user("primary-1", "primary"));
 
-        service().reject("req-1", NOTE, primary);
+        service().reject("req-1", NOTE, ADMIN);
 
         verify(registrationService, never()).applyApprovedBlock(anyString(), anyString(), anyString());
+    }
+
+    /**
+     * A veto request whose application is gone - withdrawn, or taken with its deleted table - can still be
+     * refused, which is the only way it leaves the tray; approving it is acting on a ghost and stays a 409.
+     */
+    @Test
+    void aVetoRequestWhoseApplicationIsGoneCanBeRefusedButNotApproved() {
+        ApprovalRequest refused = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
+        resolvable(refused);
+        when(entityResolver.exists(refused.getEntityType(), "reg-1")).thenReturn(false);
+        when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
+
+        assertThatThrownBy(() -> service().approve("req-1", NOTE, ADMIN))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.REQUEST_ENTITY_GONE);
+
+        ApprovalRequestDetailResponse answer = service().reject("req-1", NOTE, ADMIN);
+
+        assertThat(answer.status()).isEqualTo(ApprovalStatus.Rejected.name());
+        verify(registrationService, never()).applyApprovedBlock(anyString(), anyString(), anyString());
+    }
+
+    /** An admin who asked for a veto as a master of the table does not decide it: another admin does. */
+    @Test
+    void nobodyApprovesAVetoTheyAskedForThemselves() {
+        ApprovalRequest own = persisted(new ApprovalRequest(
+                ApprovalRequestType.PlayerBan, ApprovalRequestType.PlayerBan.entityType(), "reg-1",
+                user("admin-1", "damian"), WHY));
+        resolvable(own);
+        when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
+
+        assertThatThrownBy(() -> service().approve("req-1", NOTE, ADMIN))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.OWN_REQUEST_NOT_APPROVABLE);
+        assertThat(own.getStatus()).isEqualTo(ApprovalStatus.Pending);
+        verify(registrationService, never()).applyApprovedBlock(anyString(), anyString(), anyString());
+    }
+
+    /** Refusing one's own veto request stays open: it is how the person who asked takes it back. */
+    @Test
+    void anAdminCanRefuseAVetoTheyAskedForThemselves() {
+        ApprovalRequest own = persisted(new ApprovalRequest(
+                ApprovalRequestType.PlayerBan, ApprovalRequestType.PlayerBan.entityType(), "reg-1",
+                user("admin-1", "damian"), WHY));
+        resolvable(own);
+        when(registrationService.tableIdOf("reg-1")).thenReturn("table-1");
+
+        ApprovalRequestDetailResponse answer = service().reject("req-1", NOTE, ADMIN);
+
+        assertThat(answer.status()).isEqualTo(ApprovalStatus.Rejected.name());
+    }
+
+    /**
+     * Asking for a veto takes the table's lock before anything else, and does not lock the requester:
+     * two masters asking about one person serialize on the table, and locking the user after it would
+     * invert the order a pause request takes the same two rows in.
+     */
+    @Test
+    void askingForAVetoLocksTheTableFirstAndNeverTheRequester() {
+        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(userService.getById("master-1")).thenReturn(user("master-1", "ana"));
+        when(entityResolver.exists("table_registration", "reg-1")).thenReturn(true);
+        when(approvalRequestRepository.save(any())).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
+
+        service().submitPlayerBan("table-1", "reg-1", WHY, new CurrentUser("master-1", Set.of("Master")));
+
+        InOrder order = inOrder(registrationService, masterService);
+        order.verify(registrationService).lockTable("table-1");
+        order.verify(masterService).isMasterOf("table-1", "master-1");
+        order.verify(registrationService).requireBlockableOn("table-1", "reg-1");
+        verify(userRepository, never()).lockById(anyString());
+    }
+
+    /** Only somebody running the table asks for a veto on it, whatever platform role they hold. */
+    @Test
+    void somebodyWhoDoesNotRunTheTableCannotAskForAVeto() {
+        when(masterService.isMasterOf("table-1", "admin-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> service().submitPlayerBan("table-1", "reg-1", WHY, ADMIN))
+                .isInstanceOf(ForbiddenActionException.class);
+        verify(approvalRequestRepository, never()).save(any());
     }
 
     /**
@@ -734,10 +786,10 @@ class ApprovalServiceTest {
      */
     @Test
     void theVetoRequestListingNamesWhoIsToBeVetoed() {
-        TableRegistration target = registrationOf("reg-1", user("player-9", "morgana"));
         ApprovalRequest request = pendingAbout(ApprovalRequestType.PlayerBan, "reg-1");
         when(masterService.canOversee("table-1", "primary-1")).thenReturn(true);
-        when(registrationService.registrationsOf("table-1")).thenReturn(Map.of("reg-1", target));
+        when(registrationService.subjectsOfTable("table-1"))
+                .thenReturn(Map.of("reg-1", new RegistrationSubject("reg-1", "table-1", "player-9", "morgana")));
         when(approvalRequestRepository.findByRequestTypeAndStatusAndEntityIdInOrderByCreatedAtAsc(
                         eq(ApprovalRequestType.PlayerBan), eq(ApprovalStatus.Pending), any()))
                 .thenReturn(List.of(request));
@@ -762,12 +814,6 @@ class ApprovalServiceTest {
                 .isInstanceOf(ForbiddenActionException.class);
     }
 
-    /** A registration as it comes back from the database, with the person it belongs to. */
-    private static TableRegistration registrationOf(String id, User applicant) {
-        TableRegistration registration = new TableRegistration(null, applicant, null);
-        ReflectionTestUtils.setField(registration, "id", id);
-        return registration;
-    }
 
     private User resolvable(ApprovalRequest request) {
         User admin = user("admin-1", "damian");

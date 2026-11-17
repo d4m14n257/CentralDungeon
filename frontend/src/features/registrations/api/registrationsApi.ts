@@ -31,28 +31,14 @@ export const registrationsApi = {
     api.post<Registration, { justification: string }>(`/api/v1/registrations/${registrationId}/reject`, { justification }),
 
   /**
-   * The veto: the table's `Primary` throwing somebody out of **this** table (ADR-09 §4, §5).
+   * Lifting a veto, which is what makes a veto acceptable: it is reversible.
    *
-   * **Hung off the table and not off the registration**, unlike `accept` and `reject` above, and that
-   * is the shape of the rule rather than a stylistic choice: who may do this is "the `Primary` of
-   * *this* table", so the table belongs in the path where the authorization can be checked against it
-   * (ADR-05 §5). A `Secondary` calling it gets `403 NOT_PRIMARY_MASTER` — it is who you are, not what you
-   * sent — and should be calling {@link requestBlock} instead.
+   * Hung off the table and not off the registration, because who may do it is "the `Primary` of
+   * *this* table, or an admin", and the table belongs in the path where that can be checked. A
+   * `Secondary` gets `403 NOT_PRIMARY_MASTER`.
    *
-   * @param tableId        the table the veto is for
-   * @param registrationId the application being vetoed
-   * @param justification  why, required (ADR-09 §5)
-   */
-  block: (tableId: string, registrationId: string, justification: string) =>
-    api.post<Registration, { justification: string }>(`/api/v1/game-tables/${tableId}/registrations/${registrationId}/block`, {
-      justification,
-    }),
-
-  /**
-   * Lifting a veto, which is the half of ADR-09 §5 that makes the other half acceptable.
-   *
-   * The reason is required here too, and for the same purpose: what is being recorded is not the
-   * veto but the **change**, so that a pattern of impulsive vetoes is visible afterwards.
+   * The reason is required: what is being recorded is not the veto but the **change**, so that a
+   * pattern of impulsive vetoes is visible afterwards.
    *
    * @param tableId        the table
    * @param registrationId the application whose veto is being lifted
@@ -64,21 +50,16 @@ export const registrationsApi = {
     }),
 
   /**
-   * A co-master **asking** for a veto, which is all a `Secondary` can do (ADR-09 §5, ADR-06 §3).
+   * A master of the table **asking** the admins for a veto: nobody vetoes from here.
    *
-   * **A second endpoint and not the same one behaving differently.** The screen already knows which
-   * of the two the reader is, and the phase document asks it to say so *before* the button is
-   * pressed rather than after; one route that sometimes vetoes and sometimes files a request would be
-   * a response with two nullable halves, which R3 forbids.
-   *
-   * **Its answer is deliberately not read** — see {@link UnreadBody}. What comes back is an
-   * `ApprovalRequestDetailResponse`, and that is `features/approvals`' vocabulary — a feature never
-   * imports from another (regla dura 16). The screen re-reads the table's pending veto requests
-   * instead, which is the list it actually renders.
+   * Nothing changes for the person while the request waits. **Its answer is deliberately not read**
+   * — see {@link UnreadBody}: what comes back is an `ApprovalRequestDetailResponse`, and that is
+   * `features/approvals`' vocabulary — a feature never imports from another (regla dura 16). The
+   * screen re-reads the table's pending veto requests instead, which is the list it renders.
    *
    * @param tableId        the table
-   * @param registrationId the application the co-master wants vetoed
-   * @param justification  why, required — it is what the `Primary` reads to decide
+   * @param registrationId the application the master wants vetoed
+   * @param justification  why, required — it is what the admin reads to decide
    */
   requestBlock: (tableId: string, registrationId: string, justification: string) =>
     api.post<UnreadBody, { justification: string }>(`/api/v1/game-tables/${tableId}/registrations/${registrationId}/request-block`, {

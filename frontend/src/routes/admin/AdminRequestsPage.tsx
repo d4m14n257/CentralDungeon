@@ -15,6 +15,7 @@ import { DialogContent } from '@/components/DialogContent'
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
+import { SubjectLine } from '@/components/SubjectLine'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { adminTableDetailPath, adminUserDetailPath } from '@/config/paths'
 import {
@@ -24,7 +25,6 @@ import {
   RequestTypeBadge,
   ResolveRequestDialog,
   approvalRequestSearchFields,
-  isResolvableByAdmin,
   useAdminRequests,
   type ApprovalRequestSummary,
   type ResolveAction,
@@ -146,11 +146,18 @@ function AdminRequestsList() {
       cell: (request) => (
         <div className="flex flex-col items-start gap-1">
           <RequestTypeBadge type={request.type} />
-          {request.gameTableId !== null && (
-            <Link to={adminTableDetailPath(request.gameTableId)} className="text-xs underline-offset-2 hover:underline">
-              {t('requests.viewTable')}
-            </Link>
-          )}
+          {/* A veto is about a person, not about whoever asked: the admin decides on them. */}
+          <SubjectLine
+            subject={request.subjectName === null ? null : t('requests.subject', { name: request.subjectName })}
+            link={
+              request.gameTableId === null
+                ? null
+                : {
+                    to: adminTableDetailPath(request.gameTableId, request.type === 'PlayerBan' ? 'players' : undefined),
+                    label: t(request.type === 'PlayerBan' ? 'requests.viewTablePlayers' : 'requests.viewTable'),
+                  }
+            }
+          />
         </div>
       ),
     },
@@ -211,9 +218,8 @@ function AdminRequestsList() {
               <>
                 {/* Absent on anything already resolved, never greyed out: a resolution is not
                     re-resolved, and a button that can only answer `REQUEST_ALREADY_RESOLVED` is a
-                    button that should not be there (principle 2). The same goes for a player veto,
-                    which only the table's `Primary` resolves: an admin reads it and nothing more. */}
-                {request.status === 'Pending' && isResolvableByAdmin(request.type) && (
+                    button that should not be there (principle 2). */}
+                {request.status === 'Pending' && (
                   <>
                     <IconAction
                       icon={<Check className="size-4" />}

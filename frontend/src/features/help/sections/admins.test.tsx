@@ -150,6 +150,15 @@ describe('RequestsAdminHelp', () => {
     expect(body).toMatch(/Sacá ese filtro/i)
   })
 
+  /** A veto request is approved or rejected from the same tray; approving is the veto, lifting is not a request. */
+  it('says approving a veto request is the veto, and that lifting one is not a request', () => {
+    render(<RequestsAdminHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/Aprobarlo es el veto/i)
+    expect(body).toMatch(/Levantar un veto no pasa por un pedido/i)
+  })
+
   /** The two refusals a screen cannot prevent on its own, explained before they are met. */
   it('explains that a request is resolved once and that a dead reference cannot be acted on', () => {
     render(<RequestsAdminHelp />)

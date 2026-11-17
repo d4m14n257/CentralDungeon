@@ -63,11 +63,11 @@ public enum GameTableSearchField {
      *
      * <p>Useful on {@code /admin/tables}, where the listing spans every state (ADR-16 §7). The explorer
      * accepts it too, because the search language belongs to the entity and not to the screen (ADR-22 §2),
-     * and <b>that opens no hole</b> - for a structural reason and not a hopeful one. The visible
-     * statuses are a top-level {@code AND} in {@code forExplorer} and are never folded into what the
+     * and <b>that opens no hole</b> - for a structural reason and not a hopeful one. What the
+     * explorer lists is a top-level {@code AND} in {@code forExplorer} and is never folded into what the
      * reader typed, so the worst a player can write is
      * {@code /table_name x /or /table_status Draft}, which becomes
-     * {@code status IN (Opened, InProgress) AND (name LIKE '%x%' OR status = 'Draft')}. The second
+     * {@code (status = 'Opened' OR (status = 'InProgress' AND seeking_players)) AND (name LIKE '%x%' OR status = 'Draft')}. The second
      * half of that can only ever be unsatisfiable where it matters: no row is both visible and a
      * draft. Zero results, never somebody else's draft.
      */

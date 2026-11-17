@@ -104,6 +104,15 @@ public final class ConflictException extends ApiException {
     public static final String REQUEST_ENTITY_GONE = "REQUEST_ENTITY_GONE";
 
     /**
+     * An admin approving a veto request they asked for themselves, as a master of the table.
+     *
+     * <p>Asking and deciding are two people on purpose: the veto bars somebody from a table, and the
+     * one who wants them out is not the one who rules on it. Only the approval is refused - refusing
+     * one's own request is how it is taken back.
+     */
+    public static final String OWN_REQUEST_NOT_APPROVABLE = "OWN_REQUEST_NOT_APPROVABLE";
+
+    /**
      * Asking for the Master role while already holding it.
      *
      * <p>A 409 rather than a request an admin has to open, read and reject in order to discover it

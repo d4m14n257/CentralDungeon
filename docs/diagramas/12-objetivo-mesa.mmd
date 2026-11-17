@@ -21,6 +21,7 @@ erDiagram
         int total_sessions
         int max_players
         varchar status "Unassigned | Preparation | ChangesRequested | Opened | InProgress | PauseRequested | Pause | Finished | Canceled"
+        boolean seeking_players "una mesa InProgress que busca reemplazo; se apaga sola"
         varchar created_by FK "master o admin"
         datetime closed_at "arranca la ventana de 2 semanas"
         datetime created_at

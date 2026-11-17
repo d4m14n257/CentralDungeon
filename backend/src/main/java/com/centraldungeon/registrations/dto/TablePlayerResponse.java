@@ -29,11 +29,22 @@ import org.jspecify.annotations.Nullable;
  * @param userName           how to name them on screen - their Discord username, which everybody has
  * @param status             {@code Player} or {@code Blocked}, as a string. Nothing else reaches
  *                           this list
- * @param blockedByName      who vetoed them, or null when they are not vetoed (ADR-09 §5)
- * @param blockedAt          when, or null when they are not vetoed
- * @param blockJustification the reason that was written down, or null when they are not vetoed.
- *                           <b>None of the three ever reaches the vetoed person</b>: the table
- *                           answers them 404 (ADR-09 §4), so the only readers are its masters
+ * <p>A veto is asked for by a master and decided by an admin, so a vetoed row carries both sides: the
+ * {@code blocked*} fields are the admin's decision, the {@code banRequest*} fields the master's request.
+ *
+ * @param registrationId          the application this row is, which is what the veto endpoints address
+ * @param userId                  the person
+ * @param userName                how to name them on screen - their Discord username, which everybody has
+ * @param status                  {@code Player} or {@code Blocked}, as a string. Nothing else reaches
+ *                                this list
+ * @param blockedByName           the admin who decided the veto, or null when they are not vetoed
+ * @param blockedAt               when, or null when they are not vetoed
+ * @param blockJustification      the admin's resolution note, or null when they are not vetoed
+ * @param banRequestedByName      the master who asked for the veto, or null when they are not vetoed or
+ *                                the veto has no approved request behind it (one older than requests)
+ * @param banRequestJustification why that master asked, null in the same cases.
+ *                                <b>None of the veto fields ever reaches the vetoed person</b>: the
+ *                                table answers them 404, so the only readers are its masters and admins
  */
 public record TablePlayerResponse(
         String registrationId,
@@ -42,5 +53,7 @@ public record TablePlayerResponse(
         String status,
         @Nullable String blockedByName,
         @Nullable LocalDateTime blockedAt,
-        @Nullable String blockJustification) {
+        @Nullable String blockJustification,
+        @Nullable String banRequestedByName,
+        @Nullable String banRequestJustification) {
 }

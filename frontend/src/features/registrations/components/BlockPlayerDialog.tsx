@@ -9,30 +9,21 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 
-import { useBlockPlayer } from '../api/useBlockPlayer'
 import { useRequestPlayerBlock } from '../api/useRequestPlayerBlock'
 import { useUnblockPlayer } from '../api/useUnblockPlayer'
 import { blockRegistrationSchema, type BlockRegistrationForm } from '../schemas'
 import { vetoErrorKey } from '../vetoErrors'
 import { useConfirm } from '@/hooks/useConfirm'
 
-/** Which of the two directions the veto is being moved in. Who the reader is decides the rest. */
-export type VetoAction = 'block' | 'unblock'
+/** Which of the two acts the dialog performs: asking the admins for a veto, or lifting one. */
+export type VetoAction = 'request' | 'unblock'
 
 interface BlockPlayerDialogProps {
   tableId: string
   registrationId: string
   playerName: string
-  /** Vetoing or lifting a veto. */
+  /** Asking for a veto or lifting one. */
   action: VetoAction
-  /**
-   * Whether the reader runs the table or co-runs it (ADR-06 §3).
-   *
-   * **It changes what pressing the button does, not whether it is offered**: a `Primary` vetoes, a
-   * `Secondary` files a request the `Primary` answers (ADR-09 §5). The dialog says which of the two is
-   * about to happen — before the press, which is what `roles-y-alcance.md §4, F3.4` asks for.
-   */
-  isPrimary: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   /**
@@ -45,43 +36,32 @@ interface BlockPlayerDialogProps {
 }
 
 /**
- * The dialog behind the three acts of the veto: applying one, asking for one, and lifting one.
+ * The dialog behind the two acts of the veto: asking the admins for one, and lifting one.
  *
- * **One component for three acts because they are one shape** — name the person, read what is about
- * to happen, write why, send — and the note is obligatory on all three (ADR-09 §5). Splitting them would
- * be three copies of the same form whose wording would drift apart.
+ * **One component for two acts because they are one shape** — name the person, read what is about
+ * to happen, write why, send — and the reason is obligatory on both. Splitting them would be two
+ * copies of the same form whose wording would drift apart. **Nobody vetoes from here**: asking opens
+ * a request an admin decides, and nothing changes for the person meanwhile.
  *
  * **It is not `JustifiedTableActionDialog`**, which is the identical shape one feature over. A
  * feature never imports from another (regla dura 16), and this form belongs to whoever owns the
- * registration. The shared component of `components/` is the move if a third feature ever needs it
- * (§3.1.2); two is not yet that.
+ * registration. The shared component of `components/` is the move if a third feature ever needs it.
  *
- * **The refusal lands inline and not in a toast** (ADR-23 §3): the form is still open, and the races this
- * cannot prevent — a colleague vetoed the same person, somebody lifted it first — are exactly what
- * the reader needs to read where they are already looking.
+ * **The refusal lands inline and not in a toast**: the form is still open, and the races this
+ * cannot prevent — a colleague already asked, somebody lifted it first — are exactly what the reader
+ * needs to read where they are already looking.
  *
- * @param props.tableId        the table the veto belongs to — it is per table, never platform-wide (ADR-09 §4)
+ * @param props.tableId        the table the veto belongs to — it is per table, never platform-wide
  * @param props.registrationId the application being acted on
  * @param props.playerName     who, for the title
- * @param props.action         vetoing or lifting
- * @param props.isPrimary      whether this ends in a veto or in a request for one
+ * @param props.action         asking for a veto or lifting one
  * @param props.open           whether the dialog is showing
  * @param props.onOpenChange   called to open or close it
  * @param props.help           the help link the screen hands down
  */
-export function BlockPlayerDialog({
-  tableId,
-  registrationId,
-  playerName,
-  action,
-  isPrimary,
-  open,
-  onOpenChange,
-  help,
-}: BlockPlayerDialogProps) {
+export function BlockPlayerDialog({ tableId, registrationId, playerName, action, open, onOpenChange, help }: BlockPlayerDialogProps) {
   const { t } = useTranslation('registrations')
   const confirm = useConfirm()
-  const block = useBlockPlayer(tableId)
   const requestBlock = useRequestPlayerBlock(tableId)
   const unblock = useUnblockPlayer(tableId)
 
@@ -90,11 +70,8 @@ export function BlockPlayerDialog({
     defaultValues: { justification: '' },
   })
 
-  // Lifting is a Primary-only act and the screen never offers it to anybody else, so the three cases
-  // collapse to the two the reader can actually reach.
-  const isRequest = action === 'block' && !isPrimary
-  const mutation = action === 'unblock' ? unblock : isRequest ? requestBlock : block
-  const variant = action === 'unblock' ? 'unblock' : isRequest ? 'request' : 'block'
+  const variant = action
+  const mutation = action === 'unblock' ? unblock : requestBlock
 
   function handleOpenChange(next: boolean) {
     if (!next) form.reset({ justification: '' })
@@ -132,9 +109,9 @@ export function BlockPlayerDialog({
     >
       <Form {...form}>
         <form onSubmit={(event) => void form.handleSubmit(onSubmit)(event)} className="space-y-4">
-          {/* What the act actually costs the other person, written out where the decision is made.
-              For a co-master it is the sentence that says this is a request and not the veto — the
-              second place it is said, the first being the button itself. */}
+          {/* What the act does, written out where the decision is made. For a request it is the
+              sentence that says nothing changes yet — the second place it is said, the first being
+              the button itself. */}
           <p className="border-border text-fg-muted rounded-lg border border-dashed px-4 py-3 text-sm">{t(`veto.${variant}Effect`)}</p>
           {help}
           <FormField

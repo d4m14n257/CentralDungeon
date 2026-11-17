@@ -2,12 +2,12 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
+import { SubjectLine } from '@/components/SubjectLine'
 import { Skeleton } from '@/components/ui/skeleton'
 import { adminTableDetailPath, adminUserDetailPath } from '@/config/paths'
 import { browserTimeZone, formatDateTime } from '@/lib/date'
 
 import { useAdminRequest } from '../api/useAdminRequest'
-import { isResolvableByAdmin } from '../requestTypes'
 import { RequestStatusBadge } from './RequestStatusBadge'
 import { RequestTypeBadge } from './RequestTypeBadge'
 
@@ -47,8 +47,19 @@ export function RequestDetailPanel({ requestId }: { requestId: string }) {
         <p className="whitespace-pre-wrap">{data.justification}</p>
       </div>
 
-      {/* What the request points at, when it points at something with its own screen. A veto points
-          at an application, which has none, so it offers no link. */}
+      {/* Whom a veto is about: the person an admin decides on, not whoever asked. A veto points at an
+          application, which has no screen of its own, so it links the table's players tab instead. */}
+      <SubjectLine
+        emphasized
+        subject={data.subjectName === null ? null : t('requests.subject', { name: data.subjectName })}
+        link={
+          data.type === 'PlayerBan' && data.gameTableId !== null
+            ? { to: adminTableDetailPath(data.gameTableId, 'players'), label: t('requests.viewTablePlayers') }
+            : null
+        }
+      />
+
+      {/* What the request points at, when it points at something with its own screen. */}
       {data.entityType === 'user' && (
         <Link to={adminUserDetailPath(data.entityId)} className="block text-xs underline-offset-2 hover:underline">
           {t('requests.viewPerson')}
@@ -63,9 +74,7 @@ export function RequestDetailPanel({ requestId }: { requestId: string }) {
       {/* The resolution, when there is one. A pending request is not missing anything - it simply
           has not been answered yet, and saying so is an answer of its own. */}
       {data.status === 'Pending' ? (
-        <p className="text-fg-muted">
-          {isResolvableByAdmin(data.type) ? t('requests.detailStillPending') : t('requests.detailPrimaryOnly')}
-        </p>
+        <p className="text-fg-muted">{t('requests.detailStillPending')}</p>
       ) : (
         <div className="border-border space-y-1 rounded-lg border border-dashed px-4 py-3">
           <p className="text-fg-muted text-xs">

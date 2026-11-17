@@ -182,7 +182,7 @@ test("an admin opens another master's table from the listing and reads its eight
     await goToTab('Jugadores', 'players')
     await expect(page.getByText('Quién dirige esta mesa')).toBeVisible()
     await expect(page.getByText(names.player)).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Vetar', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Pedir veto', exact: true })).toHaveCount(0)
     await expect(page.getByText('Agregar un co-master')).toHaveCount(0)
 
     // ---- Agenda: the weekly slot, read in UTC, and no way to edit it from here.

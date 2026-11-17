@@ -32,6 +32,7 @@ function request(overrides: Partial<ApprovalRequestSummary> = {}): ApprovalReque
     justification: 'Quiero dirigir una mesa de terror',
     claimedByName: null,
     gameTableId: null,
+    subjectName: null,
     createdAt: '2026-03-04T12:00:00',
     ...overrides,
   }
@@ -174,11 +175,11 @@ describe('AdminRequestsPage', () => {
     expect(resolved.getByRole('button', { name: 'Ver detalle' })).toBeInTheDocument()
   })
 
-  /** A player veto is the table Primary's to resolve: the backend answers 403, so an admin is not offered the acts. */
-  it('offers no approve or reject on a player veto, only the detail', async () => {
-    list.mockResolvedValue(page([request({ type: 'PlayerBan', requestedByName: 'beto' })]))
+  /** An admin decides a player veto like any other request: the acts are offered, and the row says about whom. */
+  it('offers approve and reject on a player veto, and names the person it is about', async () => {
+    list.mockResolvedValue(page([request({ type: 'PlayerBan', requestedByName: 'beto', subjectName: 'Diego', gameTableId: 'table-9' })]))
     byId.mockResolvedValue({
-      ...request({ type: 'PlayerBan', requestedByName: 'beto' }),
+      ...request({ type: 'PlayerBan', requestedByName: 'beto', subjectName: 'Diego', gameTableId: 'table-9' }),
       entityType: 'table_registration',
       entityId: 'reg-1',
       resolvedByName: null,
@@ -189,12 +190,14 @@ describe('AdminRequestsPage', () => {
     renderPage()
     const row = await rowFor('beto')
 
-    expect(row.queryByRole('button', { name: 'Aprobar' })).not.toBeInTheDocument()
-    expect(row.queryByRole('button', { name: 'Rechazar' })).not.toBeInTheDocument()
+    expect(row.getByRole('button', { name: 'Aprobar' })).toBeInTheDocument()
+    expect(row.getByRole('button', { name: 'Rechazar' })).toBeInTheDocument()
+    expect(row.getByText('Sobre: Diego')).toBeInTheDocument()
     await userEvent.click(row.getByRole('button', { name: 'Ver detalle' }))
     const dialog = within(await screen.findByRole('dialog'))
-    expect(await dialog.findByText('Lo resuelve el master de la mesa, no un admin.')).toBeInTheDocument()
-    expect(dialog.queryByRole('link')).not.toBeInTheDocument()
+    expect(await dialog.findByText('Todavía no se resolvió.')).toBeInTheDocument()
+    expect(await dialog.findByText('Sobre: Diego')).toBeInTheDocument()
+    expect(dialog.getByRole('link', { name: 'Ver la mesa y sus jugadores' })).toHaveAttribute('href', '/admin/tables/table-9/players')
   })
 
   /** The detail points at what the request is about, with the screens an admin already has. */
@@ -233,14 +236,14 @@ describe('AdminRequestsPage', () => {
 
     const row = await rowFor('dami')
     expect(row.getByRole('link', { name: 'dami' })).toHaveAttribute('href', '/admin/users/user-1')
-    expect(row.getByRole('link', { name: 'Ver la mesa' })).toHaveAttribute('href', '/admin/tables/table-9')
+    expect(row.getByRole('link', { name: 'Ver la mesa y sus jugadores' })).toHaveAttribute('href', '/admin/tables/table-9/players')
     // Both layouts render: a veto's table is linked in the card too, and a request about a person has none.
-    const tableLinks = screen.getAllByRole('link', { name: 'Ver la mesa' })
+    const tableLinks = screen.getAllByRole('link', { name: 'Ver la mesa y sus jugadores' })
     expect(tableLinks).toHaveLength(2)
-    tableLinks.forEach((link) => expect(link).toHaveAttribute('href', '/admin/tables/table-9'))
+    tableLinks.forEach((link) => expect(link).toHaveAttribute('href', '/admin/tables/table-9/players'))
     const other = await rowFor('ana')
     expect(other.getByRole('link', { name: 'ana' })).toHaveAttribute('href', '/admin/users/user-2')
-    expect(other.queryByRole('link', { name: 'Ver la mesa' })).not.toBeInTheDocument()
+    expect(other.queryByRole('link', { name: 'Ver la mesa y sus jugadores' })).not.toBeInTheDocument()
   })
 
   /** The reason is the row: an admin decides on it and on nothing else. */

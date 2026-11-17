@@ -56,6 +56,7 @@
     "playersUnlimited": "{{current}} players",
     "alreadyApplied": "You already applied",
     "joined": "You are playing here",
+    "seekingPlayers": "Looking for players",
     "scheduleConflict": "Clashes with a table of yours",
     "searchLabel": "Search tables",
     "searchPlaceholder": "Search by table name",

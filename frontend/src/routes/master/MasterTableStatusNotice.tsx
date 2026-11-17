@@ -15,6 +15,7 @@ import {
   useFinishTable,
   useRequestTablePause,
   useResubmitTable,
+  useSetSeekingPlayers,
   useStartTable,
   useSubmitTableForReview,
   type GameTableStatus,
@@ -43,6 +44,12 @@ export interface MasterTableStatusNoticeProps {
   status: GameTableStatus
   /** Whether the reader is its Primary: every transition but asking for a pause is theirs alone. */
   isPrimary: boolean
+  /** Whether the table is looking for players. */
+  seekingPlayers: boolean
+  /** The seats, or null when there is no limit. */
+  maxPlayers: number | null
+  /** The players seated now. */
+  playerCount: number
 }
 
 /**
@@ -64,8 +71,18 @@ export interface MasterTableStatusNoticeProps {
  * @param props.tableId   the table
  * @param props.status    where it stands
  * @param props.isPrimary whether the reader is its Primary
+ * @param props.seekingPlayers whether the table is looking for players
+ * @param props.maxPlayers the seats, or null when unlimited
+ * @param props.playerCount the players seated now
  */
-export function MasterTableStatusNotice({ tableId, status, isPrimary }: MasterTableStatusNoticeProps) {
+export function MasterTableStatusNotice({
+  tableId,
+  status,
+  isPrimary,
+  seekingPlayers,
+  maxPlayers,
+  playerCount,
+}: MasterTableStatusNoticeProps) {
   const { t } = useTranslation('master')
   const confirm = useConfirm()
   const navigate = useNavigate()
@@ -76,6 +93,7 @@ export function MasterTableStatusNotice({ tableId, status, isPrimary }: MasterTa
   const cancel = useCancelTable(tableId)
   const remove = useDeleteTable(tableId)
   const requestPause = useRequestTablePause(tableId)
+  const setSeeking = useSetSeekingPlayers(tableId)
   const cancelDialog = useDisclosure()
   const pauseDialog = useDisclosure()
 
@@ -95,6 +113,14 @@ export function MasterTableStatusNotice({ tableId, status, isPrimary }: MasterTa
         void navigate(masterTablesPath())
       },
     })
+  }
+
+  /** Turning the call for players on or off changes what the whole community sees, so it is confirmed like the other acts. */
+  async function handleSeeking(turnOn: boolean) {
+    const key = turnOn ? 'seekingOn' : 'seekingOff'
+    const confirmed = await confirm({ title: t(`status.${key}ConfirmTitle`), description: t(`status.${key}ConfirmDescription`) })
+    if (!confirmed) return
+    setSeeking.mutate(turnOn, { onSuccess: () => toast.success(t(`status.${key}Success`)) })
   }
 
   const safe: ReactNode[] = []
@@ -156,6 +182,34 @@ export function MasterTableStatusNotice({ tableId, status, isPrimary }: MasterTa
     )
   }
 
+  // Any master may widen or close the call for players on a running table. Turning it on with every
+  // seat taken is refused by the backend, so the button says why it is off instead of failing.
+  const isFull = maxPlayers != null && playerCount >= maxPlayers
+  if (status === 'InProgress') {
+    const turnOn = !seekingPlayers
+    safe.push(
+      <Button
+        key="seeking"
+        size="sm"
+        variant="outline"
+        disabled={setSeeking.isPending || (turnOn && isFull)}
+        onClick={() => void handleSeeking(turnOn)}
+      >
+        {t(turnOn ? 'status.seekingOn' : 'status.seekingOff')}
+      </Button>,
+    )
+  }
+
+  // What the call for players is doing, or why it cannot be turned on: said in the notice, where a
+  // disabled button's reason stays readable (principle 2 of diseno §1).
+  const seekingHint =
+    status !== 'InProgress' ? undefined : (
+      <>
+        {seekingPlayers ? t('status.seekingActive') : isFull ? t('status.seekingFull') : t('status.seekingIdle')}{' '}
+        <HelpLink section="masters.seeking">{t('status.seekingHelpLink')}</HelpLink>
+      </>
+    )
+
   const destructive: ReactNode[] = []
   if (isPrimary && CANCELABLE_STATUSES.includes(status)) {
     destructive.push(
@@ -184,6 +238,7 @@ export function MasterTableStatusNotice({ tableId, status, isPrimary }: MasterTa
       <StatusNotice
         title={t(`notice.${status}.title`)}
         description={t(`notice.${status}.description`)}
+        hint={seekingHint}
         actions={hasSafe ? safe : hasDestructive ? destructive : undefined}
         destructiveActions={hasSafe && hasDestructive ? destructive : undefined}
       />

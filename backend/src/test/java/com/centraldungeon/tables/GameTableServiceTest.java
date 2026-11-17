@@ -37,6 +37,7 @@ import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableHistoryResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
+import com.centraldungeon.tables.dto.SetSeekingPlayersRequest;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.tables.dto.TableScheduleEntry;
 import com.centraldungeon.tables.dto.UpdateGameTableRequest;
@@ -55,6 +56,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
@@ -153,7 +156,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-1", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         CreateGameTableRequest request = runnableRequest(null);
         GameTableDetailResponse response = gameTableService.create(request, "creator-1");
@@ -278,7 +281,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-uncapped", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         assertThat(gameTableService.create(requestAskingFor(null), "creator-1").id()).isEqualTo("table-uncapped");
     }
@@ -301,7 +304,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-4", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.approve("table-4", "admin-1");
 
@@ -327,7 +330,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-free", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.approve("table-free", "admin-1");
 
@@ -346,7 +349,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-mine", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.approve("table-mine", "admin-1");
 
@@ -436,7 +439,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-unassigned", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.assignInitialMasters(
                 "table-unassigned", new AssignMastersRequest("primary-1", List.of()), "admin-1");
@@ -462,7 +465,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-handed-over", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.assignInitialMasters(
                 "table-handed-over", new AssignMastersRequest("primary-1", List.of("second-1")), "admin-1");
@@ -487,7 +490,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-approved", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.approve("table-approved", "admin-1");
 
@@ -504,7 +507,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-bounced", "Test", null, null, null, null, null, "ChangesRequested", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.requestChanges("table-bounced", "admin-1", new ChangeTableStatusRequest("Falta la agenda"));
 
@@ -568,7 +571,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-6b", "Test", null, null, null, null, null, "Canceled", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.cancel("table-6b", "admin-1", new ChangeTableStatusRequest("No hay suficientes jugadores"));
 
@@ -765,7 +768,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-veto-3", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         assertThat(gameTableService.getDetail("table-veto-3", "player-1")).isNotNull();
 
@@ -817,7 +820,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-pause-1", "Test", null, null, null, null, null, "PauseRequested", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.markPauseRequested("table-pause-1", "secondary-1");
 
@@ -863,7 +866,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-pause-4", "Test", null, null, null, null, null, "Pause", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.applyApprovedPause("table-pause-4", "admin-1", "master-1", "The master is moving house");
 
@@ -890,7 +893,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-pause-5", "Test", null, null, null, null, null, "InProgress", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.revertRequestedPause("table-pause-5", "admin-1", "The table has only just started");
 
@@ -921,7 +924,7 @@ class GameTableServiceTest {
         MasterSummaryResponse primarySummary = new MasterSummaryResponse("someone-else", "Someone Else", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
-                new GameTableSummaryResponse("table-4b", "Test", "Opened", null, null, null, 0, List.of(), false, false, false, primarySummary);
+                new GameTableSummaryResponse("table-4b", "Test", "Opened", null, null, null, 0, List.of(), false, false, false, false, primarySummary);
         when(gameTableMapper.toSummary(table, 0, primarySummary, List.of(), false, false, false)).thenReturn(summary);
 
         var result = gameTableService.list(null, pageable, "player-1");
@@ -1025,7 +1028,7 @@ class GameTableServiceTest {
         MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-1", "Primary One", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
-                new GameTableSummaryResponse("table-5", "Test", "Preparation", null, null, null, 0, List.of(), false, false, false, primarySummary);
+                new GameTableSummaryResponse("table-5", "Test", "Preparation", null, null, null, 0, List.of(), false, false, false, false, primarySummary);
         when(gameTableMapper.toSummary(table, 0, primarySummary, List.of(), false, false, false)).thenReturn(summary);
 
         var result = gameTableService.listManaged("master-1", pageable);
@@ -1181,7 +1184,7 @@ class GameTableServiceTest {
         MasterSummaryResponse primarySummary = new MasterSummaryResponse("primary-of-" + table.getId(), "Primary", "Primary");
         when(gameTableMapper.toMasterSummary(primary)).thenReturn(primarySummary);
         GameTableSummaryResponse summary =
-                new GameTableSummaryResponse(table.getId(), "Test", table.getStatus().name(), null, null, null, 0, List.of(), false, false, false, primarySummary);
+                new GameTableSummaryResponse(table.getId(), "Test", table.getStatus().name(), null, null, null, 0, List.of(), false, false, false, false, primarySummary);
         when(gameTableMapper.toSummary(eq(table), org.mockito.ArgumentMatchers.anyInt(), eq(primarySummary), any(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyBoolean()))
                 .thenReturn(summary);
     }
@@ -1223,7 +1226,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-7", "Test", null, null, null, null, null, "Opened", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         GameTableDetailResponse response = gameTableService.getManagedDetail("table-7", "master-1");
 
@@ -1271,7 +1274,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-close-1", "Test", null, null, null, null, null, "Finished", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.finish("table-close-1", "primary-1");
 
@@ -1288,7 +1291,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-close-2", "Test", null, null, null, null, null, "Canceled", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.cancel("table-close-2", "primary-1", new ChangeTableStatusRequest("se cae"));
 
@@ -1308,7 +1311,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-close-3", "Test", null, null, null, null, null, "Finished", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.finish("table-close-3", "primary-1");
 
@@ -1324,7 +1327,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-edit-1", "Nuevo", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.update(
                 "table-edit-1",
@@ -1385,7 +1388,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-draft", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
 
         gameTableService.submitForReview("table-draft", "master-1");
 
@@ -1414,7 +1417,7 @@ class GameTableServiceTest {
         when(anyDetailMapping())
                 .thenReturn(new GameTableDetailResponse(
                         "table-edit-4", "Test", null, null, null, null, null, "Preparation", null, 0, null, null,
-                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null));
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null));
         List<TableScheduleEntry> agenda = List.of(
                 new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0)),
                 new TableScheduleEntry(Weekday.Saturday, LocalTime.of(15, 0), LocalTime.of(6, 0)));
@@ -1524,6 +1527,51 @@ class GameTableServiceTest {
         verify(tableChangeNotifier, never()).announceEdit(any(), any(), any());
     }
 
+    /**
+     * Lowering the capacity to exactly the players already in fills the table the way accepting the last
+     * candidate does: the remaining candidates are turned down and the search for players stops, through
+     * the one place that defines that effect.
+     */
+    @ParameterizedTest
+    @EnumSource(value = GameTableStatus.class, names = {"Opened", "InProgress"})
+    void loweringTheCapacityToThePlayersAlreadyInFillsTheTable(GameTableStatus status) {
+        GameTable table = persistedTable("table-admin-fill", status);
+        when(gameTableRepository.findByIdForUpdate("table-admin-fill")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.countByGameTable_IdAndStatus("table-admin-fill", TableRegistrationStatus.Player)).thenReturn(3L);
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-fill", status.name()));
+
+        gameTableService.adminUpdate("table-admin-fill", runnableUpdate("Mesa", 3), "admin-1");
+
+        assertThat(table.getMaxPlayers()).isEqualTo(3);
+        verify(registrationService).onSeatsFilled(table);
+    }
+
+    /** A capacity that still leaves a seat free changes nothing for the candidates or the search. */
+    @Test
+    void loweringTheCapacityWhileThereIsStillRoomLeavesTheCandidatesAlone() {
+        GameTable table = persistedTable("table-admin-room", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-admin-room")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.countByGameTable_IdAndStatus("table-admin-room", TableRegistrationStatus.Player)).thenReturn(2L);
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-room", "InProgress"));
+
+        gameTableService.adminUpdate("table-admin-room", runnableUpdate("Mesa", 3), "admin-1");
+
+        verify(registrationService, never()).onSeatsFilled(any());
+    }
+
+    /** A table that takes no applications has no candidates to turn down, so a full capacity there fills nothing. */
+    @Test
+    void aFullCapacityOnAPausedTableFillsNothing() {
+        GameTable table = persistedTable("table-admin-paused", GameTableStatus.Pause);
+        when(gameTableRepository.findByIdForUpdate("table-admin-paused")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.countByGameTable_IdAndStatus("table-admin-paused", TableRegistrationStatus.Player)).thenReturn(3L);
+        when(anyDetailMapping()).thenReturn(detailOf("table-admin-paused", "Pause"));
+
+        gameTableService.adminUpdate("table-admin-paused", runnableUpdate("Mesa", 3), "admin-1");
+
+        verify(registrationService, never()).onSeatsFilled(any());
+    }
+
     /** A finished, cancelled or removed table is a record of what happened; nobody rewrites it (ADR-06 §8). */
     @Test
     void aClosedTableIsNotRewrittenEvenByAnAdmin() {
@@ -1606,6 +1654,119 @@ class GameTableServiceTest {
         verify(tableChangeNotifier).announceDeleted(table, "admin-1", masters);
     }
 
+    // ------------------------------------------------------------------ looking for players
+
+    @Test
+    void aMasterTurnsTheSearchOnAndOffOnARunningTable() {
+        GameTable table = persistedTable("table-seek-1", GameTableStatus.InProgress);
+        table.setMaxPlayers(4);
+        when(gameTableRepository.findByIdForUpdate("table-seek-1")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-seek-1", "master-1")).thenReturn(true);
+        when(tableRegistrationRepository.countByGameTable_IdAndStatus("table-seek-1", TableRegistrationStatus.Player)).thenReturn(3L);
+        when(masterService.findByGameTable("table-seek-1")).thenReturn(List.of());
+        when(anyDetailMapping()).thenReturn(detailOf("table-seek-1", "InProgress"));
+
+        gameTableService.setSeekingPlayers("table-seek-1", new SetSeekingPlayersRequest(true), "master-1");
+        assertThat(table.isSeekingPlayers()).isTrue();
+        assertThat(table.acceptsApplications()).isTrue();
+
+        gameTableService.setSeekingPlayers("table-seek-1", new SetSeekingPlayersRequest(false), "master-1");
+        assertThat(table.isSeekingPlayers()).isFalse();
+    }
+
+    @Test
+    void settingTheSearchTwiceToTheSameValueChangesNothing() {
+        GameTable table = persistedTable("table-seek-2", GameTableStatus.InProgress);
+        table.setSeekingPlayers(true);
+        when(gameTableRepository.findByIdForUpdate("table-seek-2")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-seek-2", "master-1")).thenReturn(true);
+        when(masterService.findByGameTable("table-seek-2")).thenReturn(List.of());
+        when(anyDetailMapping()).thenReturn(detailOf("table-seek-2", "InProgress"));
+
+        gameTableService.setSeekingPlayers("table-seek-2", new SetSeekingPlayersRequest(true), "master-1");
+
+        assertThat(table.isSeekingPlayers()).isTrue();
+        verify(tableStatusChangeRepository, never()).save(any(TableStatusChange.class));
+    }
+
+    /** The table is locked first, and then only somebody who runs it may look for players. */
+    @Test
+    void anOutsiderCannotLookForPlayers() {
+        GameTable table = persistedTable("table-seek-3", GameTableStatus.InProgress);
+        when(gameTableRepository.findByIdForUpdate("table-seek-3")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-seek-3", "stranger")).thenReturn(false);
+
+        assertThatThrownBy(() -> gameTableService.setSeekingPlayers("table-seek-3", new SetSeekingPlayersRequest(true), "stranger"))
+                .isInstanceOf(ForbiddenActionException.class);
+        assertThat(table.isSeekingPlayers()).isFalse();
+    }
+
+    @ParameterizedTest
+    // Deleted is a 404 before any status check, so it is not a case of this rule.
+    @EnumSource(value = GameTableStatus.class, names = {"InProgress", "Deleted"}, mode = EnumSource.Mode.EXCLUDE)
+    void theSearchOnlyExistsOnATableInProgress(GameTableStatus status) {
+        GameTable table = persistedTable("table-seek-4", status);
+        when(gameTableRepository.findByIdForUpdate("table-seek-4")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-seek-4", "master-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.setSeekingPlayers("table-seek-4", new SetSeekingPlayersRequest(true), "master-1"))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", "CONFLICT");
+        assertThat(table.isSeekingPlayers()).isFalse();
+    }
+
+    @Test
+    void theSearchCannotBeTurnedOnOnAFullTable() {
+        GameTable table = persistedTable("table-seek-5", GameTableStatus.InProgress);
+        table.setMaxPlayers(4);
+        when(gameTableRepository.findByIdForUpdate("table-seek-5")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-seek-5", "master-1")).thenReturn(true);
+        when(tableRegistrationRepository.countByGameTable_IdAndStatus("table-seek-5", TableRegistrationStatus.Player)).thenReturn(4L);
+
+        assertThatThrownBy(() -> gameTableService.setSeekingPlayers("table-seek-5", new SetSeekingPlayersRequest(true), "master-1"))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.TABLE_FULL);
+        assertThat(table.isSeekingPlayers()).isFalse();
+    }
+
+    /** Pausing, finishing and canceling all leave {@code InProgress}, and the search does not outlive it. */
+    @Test
+    void everyWayOutOfInProgressTurnsTheSearchOff() {
+        GameTable requested = persistedTable("table-seek-6", GameTableStatus.InProgress);
+        requested.setSeekingPlayers(true);
+        when(gameTableRepository.findByIdForUpdate("table-seek-6")).thenReturn(Optional.of(requested));
+        when(masterService.isMasterOf("table-seek-6", "master-1")).thenReturn(true);
+        when(userService.getById("master-1")).thenReturn(persistedUser("master-1"));
+        when(masterService.findByGameTable("table-seek-6")).thenReturn(List.of());
+        when(anyDetailMapping()).thenReturn(detailOf("table-seek-6", "PauseRequested"));
+        gameTableService.markPauseRequested("table-seek-6", "master-1");
+        assertThat(requested.isSeekingPlayers()).isFalse();
+
+        GameTable paused = persistedTable("table-seek-7", GameTableStatus.InProgress);
+        paused.setSeekingPlayers(true);
+        when(gameTableRepository.findByIdForUpdate("table-seek-7")).thenReturn(Optional.of(paused));
+        when(userService.getById("admin-1")).thenReturn(persistedUser("admin-1"));
+        when(masterService.findByGameTable("table-seek-7")).thenReturn(List.of());
+        gameTableService.pauseDirect("table-seek-7", "admin-1", new ChangeTableStatusRequest("Because"));
+        assertThat(paused.isSeekingPlayers()).isFalse();
+
+        GameTable finished = persistedTable("table-seek-8", GameTableStatus.InProgress);
+        finished.setSeekingPlayers(true);
+        when(gameTableRepository.findByIdForUpdate("table-seek-8")).thenReturn(Optional.of(finished));
+        when(masterService.findByGameTable("table-seek-8")).thenReturn(List.of());
+        when(masterService.isPrimaryOf("table-seek-8", "master-1")).thenReturn(true);
+        gameTableService.finish("table-seek-8", "master-1");
+        assertThat(finished.isSeekingPlayers()).isFalse();
+
+        GameTable canceled = persistedTable("table-seek-9", GameTableStatus.InProgress);
+        canceled.setSeekingPlayers(true);
+        when(gameTableRepository.findByIdForUpdate("table-seek-9")).thenReturn(Optional.of(canceled));
+        when(masterService.findByGameTable("table-seek-9")).thenReturn(List.of());
+        when(masterService.isPrimaryOf("table-seek-9", "master-1")).thenReturn(true);
+        gameTableService.cancel("table-seek-9", "master-1", new ChangeTableStatusRequest("Because"));
+        assertThat(canceled.isSeekingPlayers()).isFalse();
+    }
+
     /** What every rewrite in these tests sends: the three catalogs and an agenda, as ADR-07 §3 requires. */
     private UpdateGameTableRequest runnableUpdate(String name, @Nullable Integer maxPlayers) {
         return new UpdateGameTableRequest(
@@ -1620,7 +1781,7 @@ class GameTableServiceTest {
     private GameTableDetailResponse detailOf(String id, String status) {
         return new GameTableDetailResponse(
                 id, "Test", null, null, null, null, null, status, null, 0, null, null,
-                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, null);
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, null, false, false, false, false, null);
     }
 
     /**

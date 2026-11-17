@@ -5,7 +5,6 @@
 
 export { useAcceptRegistration } from './api/useAcceptRegistration'
 export { useApplyToTable } from './api/useApplyToTable'
-export { useBlockPlayer } from './api/useBlockPlayer'
 export { useCandidates } from './api/useCandidates'
 export { useMyApplications } from './api/useMyApplications'
 export { useRejectRegistration } from './api/useRejectRegistration'

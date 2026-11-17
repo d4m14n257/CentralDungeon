@@ -29,6 +29,8 @@ import org.jspecify.annotations.Nullable;
  * @param joined           whether the actor of the token is already a Player of the table, which is a stronger
  *                         state than {@code applied}: the card says they are in instead of "you applied".
  *                         False where no actor is involved
+ * @param seekingPlayers   whether the table is running and looking for players, so it lists in the explorer and
+ *                         takes applications although it is {@code InProgress}. Always false in every other status
  * @param primaryMaster    who runs the table. Non-null here because every table this endpoint lists
  *                         already has a Primary - the Unassigned case has its own shape,
  *                         {@link AdminTableSummaryResponse}
@@ -45,5 +47,6 @@ public record GameTableSummaryResponse(
         boolean scheduleConflict,
         boolean applied,
         boolean joined,
+        boolean seekingPlayers,
         MasterSummaryResponse primaryMaster) {
 }

@@ -35,6 +35,11 @@ export function GameTableCard({ table, linkTo }: { table: GameTableSummary; link
         <h2 className="section-title leading-6">{table.name}</h2>
         <div className="flex flex-wrap items-center gap-1.5">
           <TableStatusBadge status={table.status} />
+          {table.status === 'InProgress' && table.seekingPlayers && (
+            <span className="bg-raised text-fg-muted inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium">
+              {t('explorer.seekingPlayers')}
+            </span>
+          )}
           {table.applied && (
             <span className="bg-raised text-fg-muted inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium">
               <Check className="size-3" />

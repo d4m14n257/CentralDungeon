@@ -25,6 +25,10 @@ import org.jspecify.annotations.Nullable;
  * @param resolutionNote  why it was approved or rejected, or null while Pending. Never blank once
  *                        set: the reason is mandatory at both ends (ADR-16 §1)
  * @param resolvedAt      when it was answered, or null while Pending
+ * @param gameTableId     the table the request is about - a pause names it, a veto reaches it through
+ *                        its application - or null when it is about none
+ * @param subjectName     for a veto request, the display name of the person it is about; null for
+ *                        every other type
  * @param createdAt       when it was asked, in UTC
  */
 public record ApprovalRequestDetailResponse(
@@ -39,5 +43,7 @@ public record ApprovalRequestDetailResponse(
         @Nullable String resolvedByName,
         @Nullable String resolutionNote,
         @Nullable LocalDateTime resolvedAt,
+        @Nullable String gameTableId,
+        @Nullable String subjectName,
         LocalDateTime createdAt) {
 }

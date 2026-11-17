@@ -350,13 +350,45 @@ class ApprovalServiceIT {
 
     /**
      * <b>The orphan a real flow produces: a veto request about an application that was withdrawn.</b>
-     * The application is not deleted, only marked, so the sweep has to read the mark - a request
-     * pointing at a row that still exists but no longer counts is the case a missing-id check misses.
-     * The Primary's list stops naming the person, and answering the request is refused as acting on
-     * something that is gone.
+     * The application is not deleted, only marked, so the sweep has to read the mark. The table's list
+     * still shows the request, naming the person - it is still waiting on an admin - approving it is
+     * refused as acting on something that is gone, and refusing it is allowed, because it has no effect
+     * and it is the only way the request leaves the admins' tray.
      */
     @Test
-    void aVetoRequestAboutAWithdrawnApplicationIsAnOrphanAndCannotBeAnswered() {
+    void aVetoRequestAboutAWithdrawnApplicationIsAnOrphanThatCanOnlyBeRefused() {
+        VetoOnGoneApplication veto = vetoRequestThenWithdraw();
+
+        assertThat(orphanCheckService.reportOrphans()).isEqualTo(1);
+        assertThat(approvalService.listBanRequests(veto.table().getId(), veto.primary().getId()))
+                .as("the request outlives the withdrawal, and still says whom it is about")
+                .singleElement()
+                .satisfies(row -> {
+                    assertThat(row.requestId()).isEqualTo(veto.requestId());
+                    assertThat(row.targetUserId()).isEqualTo(veto.applicant().getId());
+                    assertThat(row.targetUserName()).isEqualTo("the-applicant");
+                });
+        assertRefusableButNotApprovable(veto.requestId());
+        assertThat(approvalService.listBanRequests(veto.table().getId(), veto.primary().getId()))
+                .as("once refused it is no longer waiting on anybody")
+                .isEmpty();
+    }
+
+    /**
+     * <b>The same orphan when the table went too.</b> Deleting a table takes its applications with it,
+     * so the request points at a gone application exactly as after a withdrawal - and the table's row
+     * lock is still taken first, deleted or not, so refusing works and approving stays a 409.
+     */
+    @Test
+    void aVetoRequestWhoseTableWasDeletedCanStillBeRefused() {
+        VetoOnGoneApplication veto = vetoRequestThenWithdraw();
+        jdbcTemplate.update("update game_tables set status = 'Deleted', deleted_at = now() where id = ?", veto.table().getId());
+
+        assertRefusableButNotApprovable(veto.requestId());
+    }
+
+    /** A pending veto request about an application its applicant then withdrew. */
+    private VetoOnGoneApplication vetoRequestThenWithdraw() {
         User primary = person("the-primary");
         User secondary = person("the-secondary");
         User applicant = person("the-applicant");
@@ -364,19 +396,53 @@ class ApprovalServiceIT {
         GameTable table = openTable(primary);
         masterRepository.save(new Master(table, secondary, MasterType.Secondary));
         TableRegistration application = registrationRepository.save(new TableRegistration(table, applicant, null));
-        String requestId = approvalService.submitPlayerBan(application.getId(), "asked by the co-master", asMaster(secondary)).id();
-
+        String requestId = approvalService
+                .submitPlayerBan(table.getId(), application.getId(), "asked by the co-master", asMaster(secondary))
+                .id();
         registrationService.withdraw(application.getId(), applicant.getId());
+        return new VetoOnGoneApplication(table, primary, applicant, requestId);
+    }
 
-        assertThat(orphanCheckService.reportOrphans()).isEqualTo(1);
-        assertThat(approvalService.listBanRequests(table.getId(), primary.getId()))
-                .as("the list names nobody who already took their application back")
-                .isEmpty();
-        assertThat(conflictCodeOf(() -> approvalService.approveBanRequest(
-                        table.getId(), requestId, "yes", asMaster(primary))))
+    private void assertRefusableButNotApprovable(String requestId) {
+        User admin = admin("the-admin");
+        assertThat(conflictCodeOf(() -> approvalService.approve(requestId, "yes", asAdmin(admin))))
                 .isEqualTo(ConflictException.REQUEST_ENTITY_GONE);
-        assertThat(registrationRepository.findById(application.getId()).orElseThrow().getStatus())
-                .isEqualTo(TableRegistrationStatus.Deleted);
+
+        approvalService.reject(requestId, "the person is no longer at the table", asAdmin(admin));
+
+        assertThat(approvalRequestRepository.findById(requestId).orElseThrow().getStatus())
+                .isEqualTo(ApprovalStatus.Rejected);
+    }
+
+    /**
+     * <b>An approved veto shows both reasons on the roster</b>, read from the real database: the
+     * co-master's request with their name, and the admin's note with theirs.
+     */
+    @Test
+    void anApprovedVetoShowsTheMastersRequestAndTheAdminsNoteOnTheRoster() {
+        User primary = person("the-primary");
+        User secondary = person("the-secondary");
+        User applicant = person("the-applicant");
+        User admin = admin("the-admin");
+        GameTable table = openTable(primary);
+        masterRepository.save(new Master(table, secondary, MasterType.Secondary));
+        TableRegistration application = registrationRepository.save(new TableRegistration(table, applicant, null));
+        String requestId = approvalService
+                .submitPlayerBan(table.getId(), application.getId(), "asked by the co-master", asMaster(secondary))
+                .id();
+        approvalService.approve(requestId, "confirmed by the admin", asAdmin(admin));
+
+        var row = registrationService.listPlayersForTable(table.getId(), primary.getId()).getFirst();
+
+        assertThat(row.status()).isEqualTo(TableRegistrationStatus.Blocked.name());
+        assertThat(row.banRequestedByName()).isEqualTo("the-secondary");
+        assertThat(row.banRequestJustification()).isEqualTo("asked by the co-master");
+        assertThat(row.blockedByName()).isEqualTo("the-admin");
+        assertThat(row.blockJustification()).isEqualTo("confirmed by the admin");
+    }
+
+    /** What the two orphan cases share: the table, its Primary, the applicant who withdrew, and the stranded request. */
+    private record VetoOnGoneApplication(GameTable table, User primary, User applicant, String requestId) {
     }
 
     /**
@@ -400,7 +466,11 @@ class ApprovalServiceIT {
 
     // ---------------------------------------------------------------- the reference, at resolve time
 
-    /** Both resolutions check the reference, not only the approval - a rejection is not a free pass. */
+    /**
+     * Both resolutions check the reference, not only the approval - a rejection is not a free pass. A
+     * veto is the one exception: refusing it after its application was withdrawn acts on nothing and is
+     * the only way it leaves the tray, so only approving it is refused.
+     */
     @Test
     void neitherResolutionActsOnAGhost() {
         User asker = person("the-asker");

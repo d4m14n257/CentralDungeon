@@ -39,6 +39,14 @@ export function useApproveRequest() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.adminAll() })
       // And the row leaves the shared tray: resolved work is not work waiting on anybody (ADR-16 §5).
       void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
+      // Approving a veto request is the veto: the table's lists of requests, people and tables go stale.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.requests.banAll() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.all() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.details() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managedDetails() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.lists() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })
 }

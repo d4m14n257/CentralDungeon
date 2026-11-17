@@ -12,6 +12,7 @@ import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableHistoryResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
+import com.centraldungeon.tables.dto.SetSeekingPlayersRequest;
 import com.centraldungeon.tables.dto.TableStatusChangeResponse;
 import com.centraldungeon.tables.dto.UpdateGameTableRequest;
 import com.centraldungeon.users.dto.UserSummaryResponse;
@@ -466,6 +467,23 @@ public class GameTableController {
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public GameTableDetailResponse resume(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.resume(id, currentUser.userId());
+    }
+
+    /**
+     * Turning the search for players on or off on a running table. Whether the actor runs the table is
+     * decided in the service, from the token.
+     *
+     * @param id          the table
+     * @param request     whether to look for players
+     * @param currentUser the actor, from the token
+     * @return 200 with the table. 403 when the actor does not run it; 409 when it is not in progress, or
+     *         {@code TABLE_FULL} when it has no free seat to look for
+     */
+    @PutMapping("/{id}/seeking-players")
+    @PreAuthorize("isAuthenticated()")
+    public GameTableDetailResponse setSeekingPlayers(
+            @PathVariable String id, @Valid @RequestBody SetSeekingPlayersRequest request, @AuthenticationPrincipal CurrentUser currentUser) {
+        return gameTableService.setSeekingPlayers(id, request, currentUser.userId());
     }
 
     /**

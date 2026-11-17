@@ -16,10 +16,10 @@ const approve = vi.hoisted(() => vi.fn())
 const reject = vi.hoisted(() => vi.fn())
 
 // The API module is mocked, not the hooks: the query keys, the invalidation and the empty state all
-// run for real.
+// run for real. An admin answers through the generic approval calls, like every other request.
 vi.mock('../api/approvalsApi', () => ({
-  approvalsApi: {},
-  banRequestsApi: { list, approve, reject },
+  approvalsApi: { approve, reject },
+  banRequestsApi: { list },
 }))
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -37,7 +37,7 @@ function request(overrides: Partial<BanRequest> = {}): BanRequest {
   }
 }
 
-function renderSection(isPrimary = true) {
+function renderSection(canResolve = true) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   function wrap(children: ReactNode) {
     return (
@@ -46,7 +46,7 @@ function renderSection(isPrimary = true) {
       </QueryClientProvider>
     )
   }
-  return render(wrap(<BanRequestsSection tableId="table-1" isPrimary={isPrimary} />))
+  return render(wrap(<BanRequestsSection tableId="table-1" canResolve={canResolve} />))
 }
 
 beforeEach(() => {
@@ -56,12 +56,8 @@ beforeEach(() => {
 })
 
 describe('BanRequestsSection', () => {
-  /**
-   * **The `Primary` resolves it, not an admin** (ADR-09 §5 over ADR-16 §1): a veto between a co-master and a
-   * player of *that* table is decided by whoever runs it. So the answer is here, on the table's own
-   * screen, and never in the shared tray.
-   */
-  it('shows a pending request with its reason and who asked, and lets the Primary answer it', async () => {
+  /** An admin decides a veto, so the answer can be written from the table's own screen too. */
+  it('shows a pending request with its reason and who asked, and lets an admin answer it', async () => {
     list.mockResolvedValue([request()])
 
     renderSection()
@@ -91,15 +87,15 @@ describe('BanRequestsSection', () => {
   })
 
   /**
-   * A co-master reads the same list and answers none of it. Seeing it is what stops them asking
-   * twice; the buttons are absent rather than disabled, because they could not be used (principle 2).
+   * A master reads the same list and answers none of it. Seeing it is what stops them asking twice;
+   * the buttons are absent rather than disabled, because they could not be used (principle 2).
    */
-  it('lets a co-master see the wait but not resolve it', async () => {
+  it('lets a master see the wait but not resolve it, and says an admin decides', async () => {
     list.mockResolvedValue([request()])
 
     renderSection(false)
 
-    expect(await screen.findByText(/esperando la respuesta del master/)).toBeInTheDocument()
+    expect(await screen.findByText(/espera la respuesta de un admin/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Vetar' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'No vetar' })).not.toBeInTheDocument()
   })
@@ -114,7 +110,7 @@ describe('BanRequestsSection', () => {
     await waitFor(() => expect(container).toBeEmptyDOMElement())
   })
 
-  /** ADR-16 §1: the note is required at both ends, and here it is what the co-master receives. */
+  /** The note is required at both ends, and here it is what whoever asked for the veto receives. */
   it('grants the request with the note that was written', async () => {
     list.mockResolvedValue([request()])
     approve.mockResolvedValue(undefined)
@@ -131,9 +127,7 @@ describe('BanRequestsSection', () => {
     await user.click(dialog.getByRole('button', { name: 'Vetar' }))
     await acceptReview()
 
-    await waitFor(() =>
-      expect(approve).toHaveBeenCalledWith('table-1', 'req-1', { resolutionNote: 'De acuerdo, hace meses que no aparece' }),
-    )
+    await waitFor(() => expect(approve).toHaveBeenCalledWith('req-1', { resolutionNote: 'De acuerdo, hace meses que no aparece' }))
   })
 
   /** Granting it is not marking it as read: the dialog says the veto lands at once. */
@@ -149,7 +143,7 @@ describe('BanRequestsSection', () => {
     expect(within(await screen.findByRole('dialog')).getByText(/Diego queda vetado en el acto/)).toBeInTheDocument()
   })
 
-  /** Turning it down changes nothing about the table, and still owes the co-master an explanation. */
+  /** Turning it down changes nothing about the table, and still owes the master an explanation. */
   it('turns the request down with its own note', async () => {
     list.mockResolvedValue([request()])
     reject.mockResolvedValue({})
@@ -163,7 +157,7 @@ describe('BanRequestsSection', () => {
     await user.click(dialog.getByRole('button', { name: 'No vetar' }))
     await acceptReview()
 
-    await waitFor(() => expect(reject).toHaveBeenCalledWith('table-1', 'req-1', { resolutionNote: 'Hablé con él, lo dejamos pasar' }))
+    await waitFor(() => expect(reject).toHaveBeenCalledWith('req-1', { resolutionNote: 'Hablé con él, lo dejamos pasar' }))
     expect(approve).not.toHaveBeenCalled()
   })
 })

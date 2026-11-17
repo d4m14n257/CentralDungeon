@@ -215,6 +215,31 @@ public interface TableRegistrationRepository extends JpaRepository<TableRegistra
     List<RegistrationTable> findTablesByRegistrationIds(@Param("registrationIds") Collection<String> registrationIds);
 
     /**
+     * Who each of several applications is from, and its table, in one query.
+     *
+     * @param registrationIds the applications
+     * @return one row per application that exists, soft-deleted ones included: a request about a
+     *         withdrawn application still has to say whom it was about
+     */
+    @Query("select new com.centraldungeon.registrations.RegistrationSubject("
+            + "r.id, r.gameTable.id, r.user.id, coalesce(r.user.name, r.user.discordUsername)) "
+            + "from TableRegistration r where r.id in :registrationIds")
+    List<RegistrationSubject> findSubjectsByRegistrationIds(@Param("registrationIds") Collection<String> registrationIds);
+
+    /**
+     * Who every application of one table is from, in one query - the same projection as
+     * {@link #findSubjectsByRegistrationIds}, scoped by table instead of by id.
+     *
+     * @param gameTableId the table
+     * @return one row per application of the table, soft-deleted ones included: a request about a
+     *         withdrawn application still has to say whom it was about
+     */
+    @Query("select new com.centraldungeon.registrations.RegistrationSubject("
+            + "r.id, r.gameTable.id, r.user.id, coalesce(r.user.name, r.user.discordUsername)) "
+            + "from TableRegistration r where r.gameTable.id = :gameTableId")
+    List<RegistrationSubject> findSubjectsByGameTableId(@Param("gameTableId") String gameTableId);
+
+    /**
      * Every registration of a table, whatever its status - what the delete cascade walks (ADR-03 §7, ADR-07 §6).
      *
      * @param gameTableId the table

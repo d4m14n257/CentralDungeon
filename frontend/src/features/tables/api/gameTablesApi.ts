@@ -13,6 +13,7 @@ import type {
   GameTableSummary,
   MasterDashboard,
   MasterSummary,
+  SetSeekingPlayersRequest,
   TableStatusChange,
   TableType,
   UpdateGameTableRequest,
@@ -77,6 +78,15 @@ export const gameTablesApi = {
   resubmit: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/resubmit`),
   submitForReview: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/submit`),
   start: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/start`),
+  /**
+   * Turns the search for players on or off on a running table. Any master of the table may; turning it on
+   * with every seat taken answers `409 TABLE_FULL`.
+   *
+   * @param id      the table
+   * @param request whether it should be looking for players
+   */
+  setSeekingPlayers: (id: string, request: SetSeekingPlayersRequest) =>
+    api.put<GameTableDetail, SetSeekingPlayersRequest>(`/api/v1/game-tables/${id}/seeking-players`, request),
   finish: (id: string) => api.post<GameTableDetail>(`/api/v1/game-tables/${id}/finish`),
   cancel: (id: string, request: ChangeTableStatusRequest) =>
     api.post<GameTableDetail, ChangeTableStatusRequest>(`/api/v1/game-tables/${id}/cancel`, request),

@@ -52,6 +52,8 @@ function item(overrides: Partial<AdminQueueItem> = {}): AdminQueueItem {
     waitingSince: '2026-03-04T12:00:00',
     claimedByName: null,
     claimedAt: null,
+    gameTableId: null,
+    subjectName: null,
     ...overrides,
   }
 }
@@ -142,6 +144,28 @@ describe('AdminQueuePage', () => {
     const links = screen.getAllByRole('link', { name: 'dami' })
     expect(links).toHaveLength(2)
     links.forEach((link) => expect(link).toHaveAttribute('href', '/admin/users/user-1'))
+  })
+
+  /** A veto request is about a person and a table, neither of them whoever asked: the row says both. */
+  it('names the person a veto is about and links the table’s players', async () => {
+    list.mockResolvedValue(page([item({ title: 'PlayerBan', subjectName: 'Diego', gameTableId: 'table-9' })]))
+
+    renderPage()
+
+    const row = await rowFor('Veto de jugador')
+    expect(row.getByText('Sobre: Diego')).toBeInTheDocument()
+    expect(row.getByRole('link', { name: 'Ver la mesa y sus jugadores' })).toHaveAttribute('href', '/admin/tables/table-9/players')
+    expect(row.getByRole('button', { name: 'Aprobar' })).toBeInTheDocument()
+  })
+
+  /** A pause request also carries its table's id, but it is not about anyone among the players: no link to them. */
+  it('does not offer the players of a table on a pause request', async () => {
+    list.mockResolvedValue(page([item({ title: 'TablePause', gameTableId: 'table-9' })]))
+
+    renderPage()
+
+    const row = await rowFor('Pausa de mesa')
+    expect(row.queryByRole('link', { name: 'Ver la mesa y sus jugadores' })).not.toBeInTheDocument()
   })
 
   /**

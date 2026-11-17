@@ -40,6 +40,11 @@ import org.jspecify.annotations.Nullable;
  *                        names the reader themselves - and the screen shows it so they can find what
  *                        they took
  * @param claimedAt       when they took it, so the screen can say how long ago. Null when free
+ * @param gameTableId     the table the item concerns, so the screen can link it: the table in review
+ *                        itself, the table a pause is about, or the table of the application a veto is
+ *                        about. Null for requests that concern a person rather than a table
+ * @param subjectName     for a veto request, the display name of the person it would bar - the admin
+ *                        decides about them, not about whoever asked. Null for every other item
  */
 public record AdminQueueItemResponse(
         String type,
@@ -51,5 +56,7 @@ public record AdminQueueItemResponse(
         @Nullable String detail,
         LocalDateTime waitingSince,
         @Nullable String claimedByName,
-        @Nullable LocalDateTime claimedAt) {
+        @Nullable LocalDateTime claimedAt,
+        @Nullable String gameTableId,
+        @Nullable String subjectName) {
 }

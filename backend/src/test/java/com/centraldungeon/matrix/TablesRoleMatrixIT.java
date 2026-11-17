@@ -246,6 +246,22 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY),
 
+            guarded(MatrixRow.of("PUT /api/v1/game-tables/{id}/seeking-players",
+                    w -> MatrixRequest.path(w.table(GameTableStatus.InProgress).getId()).json("{\"seeking\": true}")))
+                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(allowed(200), PRIMARY, SECONDARY),
+            MatrixRow.variant("table full", "PUT /api/v1/game-tables/{id}/seeking-players", w -> {
+                GameTable table = w.table(GameTableStatus.InProgress);
+                for (int seat = 0; seat < w.maxPlayers(); seat++) {
+                    w.registration(table, w.person("seated " + seat), TableRegistrationStatus.Player);
+                }
+                return MatrixRequest.path(table.getId()).json("{\"seeking\": true}");
+            })
+                    .cell(denied(409, "TABLE_FULL"), PRIMARY),
+            MatrixRow.variant("table Opened", "PUT /api/v1/game-tables/{id}/seeking-players",
+                    w -> MatrixRequest.path(w.table(GameTableStatus.Opened).getId()).json("{\"seeking\": true}"))
+                    .cell(denied(409), PRIMARY),
+
             guarded(MatrixRow.of("GET /api/v1/users/me/schedule", w -> {
                 GameTable directed = w.otherTable("directed", GameTableStatus.Opened);
                 w.master(directed, w.me(), MasterType.Secondary);

@@ -17,6 +17,8 @@ import com.centraldungeon.approvals.ApprovalStatus;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.registrations.RegistrationService;
+import com.centraldungeon.registrations.RegistrationSubject;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
@@ -78,8 +80,12 @@ class AdminQueueServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private RegistrationService registrationService;
+
     private AdminQueueService service() {
-        return new AdminQueueService(approvalRequestRepository, gameTableRepository, masterService, userService);
+        return new AdminQueueService(
+                approvalRequestRepository, gameTableRepository, masterService, userService, registrationService);
     }
 
     // ------------------------------------------------------------------ what enters
@@ -98,7 +104,7 @@ class AdminQueueServiceTest {
 
         service().list(ACTOR, FIRST_PAGE);
 
-        verify(approvalRequestRepository).findQueueItems(eq(ApprovalStatus.Pending), any(), eq(ACTOR), any());
+        verify(approvalRequestRepository).findQueueItems(eq(ApprovalStatus.Pending), eq(ACTOR), any());
         verify(gameTableRepository).findQueueItems(eq(GameTableStatus.Preparation), eq(ACTOR), any());
         // Draft, ChangesRequested and Unassigned do not enter: nobody sent them, the ball is with the
         // master, or what they are missing is a master and not a review.
@@ -117,7 +123,7 @@ class AdminQueueServiceTest {
 
         service().list("admin-7", FIRST_PAGE);
 
-        verify(approvalRequestRepository).findQueueItems(any(), any(), eq("admin-7"), any());
+        verify(approvalRequestRepository).findQueueItems(any(), eq("admin-7"), any());
         verify(gameTableRepository).findQueueItems(any(), eq("admin-7"), any());
     }
 
@@ -132,7 +138,7 @@ class AdminQueueServiceTest {
         service().list(ACTOR, FIRST_PAGE);
 
         ArgumentCaptor<Pageable> ceiling = ArgumentCaptor.forClass(Pageable.class);
-        verify(approvalRequestRepository).findQueueItems(any(), any(), anyString(), ceiling.capture());
+        verify(approvalRequestRepository).findQueueItems(any(), anyString(), ceiling.capture());
         assertThat(ceiling.getValue().getPageSize()).isEqualTo(AdminQueueService.QUEUE_SOURCE_CAP);
         assertThat(ceiling.getValue().getPageNumber()).isZero();
     }
@@ -520,26 +526,29 @@ class AdminQueueServiceTest {
     }
 
     /**
-     * <b>{@code PlayerBan} does not enter the tray</b> (ADR-09 §5 over ADR-16 §1), and that had to be <em>built</em>:
-     * the query never asked what type a row was, so new types joined for free. {@code TablePause} does
-     * enter - an admin resolves it - and a veto does not, because the table's {@code Primary} resolves
-     * it. A tray full of work the reader gets a 403 for taking is worse than one that under-reports.
+     * A veto request is the admins' to decide, so it is in the tray - and its line names the person it
+     * would bar and links their table, because that is what the decision is about. Resolved in one batch
+     * for the whole source, not per line.
      */
     @Test
-    void vetoRequestsAreNotInTheTrayAndPauseRequestsAre() {
-        noQueue();
+    void aVetoRequestIsInTheTrayNamingWhomItIsAbout() {
+        ApprovalRequest veto = new ApprovalRequest(
+                ApprovalRequestType.PlayerBan, "table_registration", "registration-1", user("master-1", "ana"), "keeps insulting the table");
+        ReflectionTestUtils.setField(veto, "id", "request-veto");
+        ReflectionTestUtils.setField(veto, "createdAt", LocalDateTime.parse("2026-09-01T10:00"));
+        queue(List.of(veto), List.of());
+        when(registrationService.subjectsOf(List.of("registration-1")))
+                .thenReturn(Map.of("registration-1", new RegistrationSubject("registration-1", "table-9", "user-7", "bruno")));
 
-        service().list(ACTOR, FIRST_PAGE);
+        AdminQueueItemResponse item = service().list(ACTOR, FIRST_PAGE).content().getFirst();
 
-        ArgumentCaptor<java.util.Collection<ApprovalRequestType>> excluded = ArgumentCaptor.captor();
-        verify(approvalRequestRepository).findQueueItems(any(), excluded.capture(), anyString(), any());
-
-        assertThat(excluded.getValue()).containsExactly(ApprovalRequestType.PlayerBan);
-        assertThat(excluded.getValue()).doesNotContain(ApprovalRequestType.TablePause);
+        assertThat(item.title()).isEqualTo(ApprovalRequestType.PlayerBan.wireName());
+        assertThat(item.subjectName()).isEqualTo("bruno");
+        assertThat(item.gameTableId()).isEqualTo("table-9");
     }
 
     private void queue(List<ApprovalRequest> requests, List<GameTable> tables) {
-        when(approvalRequestRepository.findQueueItems(any(), any(), anyString(), any())).thenReturn(requests);
+        when(approvalRequestRepository.findQueueItems(any(), anyString(), any())).thenReturn(requests);
         when(gameTableRepository.findQueueItems(any(), anyString(), any())).thenReturn(tables);
         when(masterService.findPrimariesByTables(any())).thenReturn(Map.of());
     }

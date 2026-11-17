@@ -8,6 +8,8 @@ import com.centraldungeon.approvals.ApprovalStatus;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.registrations.RegistrationService;
+import com.centraldungeon.registrations.RegistrationSubject;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
 import com.centraldungeon.tables.GameTableStatus;
@@ -78,23 +80,6 @@ public class AdminQueueService {
     /** The ceiling, as the repositories want it. Page zero of size {@link #QUEUE_SOURCE_CAP}. */
     private static final Pageable SOURCE_CEILING = PageRequest.of(0, QUEUE_SOURCE_CAP);
 
-    /**
-     * The request types that are <b>not</b> the admins' to answer, and therefore never in the tray.
-     *
-     * <p>Today: {@code PlayerBan}. ADR-09 §5 puts a veto with the table's {@code Primary} - «un co-master
-     * necesita aprobación del {@code Primary}» - and the slice's own acceptance sentence says «un
-     * {@code Secondary} pide un veto y el {@code Primary} lo resuelve». It tensions with ADR-16 §1, which
-     * generically calls {@code approval_requests} «todo pedido dirigido a los admins», and the
-     * specific decision wins.
-     *
-     * <p><b>This list exists because new types join the tray for free.</b> The query never asked
-     * what type a row was, so {@code TablePause} needed nothing to appear here - and {@code
-     * PlayerBan} would have appeared too, putting a decision in front of admins that they get a 403
-     * for taking ({@code ApprovalService.requireMayResolve}). A tray full of unanswerable work is
-     * worse than one that under-reports.
-     */
-    private static final List<ApprovalRequestType> NOT_FOR_ADMINS = List.of(ApprovalRequestType.PlayerBan);
-
     /** The requests nobody has answered - one of the two live sources. */
     private final ApprovalRequestRepository approvalRequestRepository;
 
@@ -107,21 +92,27 @@ public class AdminQueueService {
     /** Loads the admin doing the reserving, from the token's id and never from a parameter (ADR-05 §5). */
     private final UserService userService;
 
+    /** Whom each veto request is about, and its table, batched for the whole source. */
+    private final RegistrationService registrationService;
+
     /**
      * @param approvalRequestRepository the {@code approval_requests} source, and the row a claim locks
      * @param gameTableRepository       the {@code game_tables} source, and the row a claim locks
      * @param masterService             who runs each table of the page, batched
      * @param userService               loads the admin taking an item
+     * @param registrationService       names the person a veto request is about
      */
     public AdminQueueService(
             ApprovalRequestRepository approvalRequestRepository,
             GameTableRepository gameTableRepository,
             MasterService masterService,
-            UserService userService) {
+            UserService userService,
+            RegistrationService registrationService) {
         this.approvalRequestRepository = approvalRequestRepository;
         this.gameTableRepository = gameTableRepository;
         this.masterService = masterService;
         this.userService = userService;
+        this.registrationService = registrationService;
     }
 
     /**
@@ -227,17 +218,26 @@ public class AdminQueueService {
     // ------------------------------------------------------------------ the sources
 
     /**
-     * {@code approval_requests} in {@code Pending} - the requests nobody has answered, <b>minus the
-     * ones that are not the admins' to answer</b> ({@link #NOT_FOR_ADMINS}).
+     * {@code approval_requests} in {@code Pending} - every request nobody has answered, veto requests
+     * included. A veto request names the person it is about, resolved for the whole source in one query.
      *
      * @param actorId the admin reading the tray
      * @return their lines of the tray, oldest first
      */
     private List<AdminQueueItemResponse> pendingApprovalRequests(String actorId) {
         List<ApprovalRequest> rows = approvalRequestRepository.findQueueItems(
-                ApprovalStatus.Pending, NOT_FOR_ADMINS, actorId, SOURCE_CEILING);
+                ApprovalStatus.Pending, actorId, SOURCE_CEILING);
         warnIfCapped(AdminQueueSource.APPROVAL_REQUEST, rows.size());
-        return rows.stream().map(AdminQueueService::toItem).toList();
+        Map<String, RegistrationSubject> subjects = subjectsOf(rows);
+        return rows.stream().map(request -> toItem(request, subjects)).toList();
+    }
+
+    /** Whom the veto requests among these rows are about, in one query. */
+    private Map<String, RegistrationSubject> subjectsOf(List<ApprovalRequest> requests) {
+        return registrationService.subjectsOf(requests.stream()
+                .filter(request -> request.getRequestType() == ApprovalRequestType.PlayerBan)
+                .map(ApprovalRequest::getEntityId)
+                .toList());
     }
 
     /**
@@ -291,10 +291,17 @@ public class AdminQueueService {
     /**
      * One pending request as a line of the tray.
      *
-     * @param request the request
+     * @param request  the request
+     * @param subjects whom each veto request is about, by application id
      * @return the line
      */
-    private static AdminQueueItemResponse toItem(ApprovalRequest request) {
+    private static AdminQueueItemResponse toItem(ApprovalRequest request, Map<String, RegistrationSubject> subjects) {
+        RegistrationSubject subject = request.getRequestType() == ApprovalRequestType.PlayerBan
+                ? subjects.get(request.getEntityId())
+                : null;
+        String gameTableId = request.getRequestType() == ApprovalRequestType.TablePause
+                ? request.getEntityId()
+                : subject == null ? null : subject.gameTableId();
         return new AdminQueueItemResponse(
                 AdminQueueSource.APPROVAL_REQUEST.wireName(),
                 request.getId(),
@@ -307,7 +314,9 @@ public class AdminQueueService {
                 request.getJustification(),
                 request.getCreatedAt(),
                 displayNameOrNull(request.getClaimedBy()),
-                request.getClaimedAt());
+                request.getClaimedAt(),
+                gameTableId,
+                subject == null ? null : subject.applicantName());
     }
 
     /**
@@ -331,7 +340,9 @@ public class AdminQueueService {
                 null,
                 table.getCreatedAt(),
                 displayNameOrNull(table.getClaimedBy()),
-                table.getClaimedAt());
+                table.getClaimedAt(),
+                table.getId(),
+                null);
     }
 
     // ------------------------------------------------------------------ claiming
@@ -345,7 +356,7 @@ public class AdminQueueService {
         if (claimable(request.getClaimedBy(), admin.getId(), "request " + id)) {
             request.claim(admin, LocalDateTime.now());
         }
-        return toItem(request);
+        return toItem(request, subjectsOf(List.of(request)));
     }
 
     private AdminQueueItemResponse claimGameTable(String id, User admin) {

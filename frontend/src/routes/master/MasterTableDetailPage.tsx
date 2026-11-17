@@ -53,7 +53,14 @@ export function MasterTableDetailPage() {
       />
       {/* Where the table stands and what its masters can decide about it, above the tabs and visible
           from all of them (ADR-21 §10). */}
-      <MasterTableStatusNotice tableId={tableId} status={table.status} isPrimary={isPrimary} />
+      <MasterTableStatusNotice
+        tableId={tableId}
+        status={table.status}
+        isPrimary={isPrimary}
+        seekingPlayers={table.seekingPlayers}
+        maxPlayers={table.maxPlayers}
+        playerCount={table.playerCount}
+      />
       <TabNav
         label={t('detail.tabs.label')}
         items={[

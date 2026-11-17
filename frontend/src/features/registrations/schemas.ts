@@ -20,9 +20,9 @@ export const rejectRegistrationSchema = z.object({
 export type RejectRegistrationForm = z.infer<typeof rejectRegistrationSchema>
 
 /**
- * Validates a veto, its lifting, and a co-master asking for one (ADR-09 §5, F3.4).
+ * Validates asking for a veto and lifting one.
  *
- * **The reason is obligatory on all three, and that is the whole mechanism.** ADR-09 §5 does not ask for
+ * **The reason is obligatory on both, and that is the whole mechanism.** ADR-09 §5 does not ask for
  * it to be polite: a veto is reversible, and reversing one means somebody later reading why it was
  * applied. A `Blocked` row with no reason is a decision nobody can revisit — and, across a platform,
  * it is what makes a pattern of impulsive vetoes invisible.
@@ -35,5 +35,5 @@ export const blockRegistrationSchema = z.object({
   justification: z.string().trim().min(1).max(4000),
 })
 
-/** The veto form's values, inferred from the schema. Shared by the three acts (ADR-09 §5). */
+/** The veto form's values, inferred from the schema. Shared by the two acts. */
 export type BlockRegistrationForm = z.infer<typeof blockRegistrationSchema>

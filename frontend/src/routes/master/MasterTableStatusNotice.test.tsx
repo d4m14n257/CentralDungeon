@@ -8,6 +8,7 @@ import type { GameTableStatus } from '@/features/tables'
 import { MasterTableStatusNotice } from './MasterTableStatusNotice'
 
 const requestPause = vi.fn()
+const setSeeking = vi.fn()
 
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router')
@@ -35,22 +36,36 @@ vi.mock('@/features/tables', async () => {
     useResubmitTable: idle,
     useStartTable: idle,
     useSubmitTableForReview: idle,
+    useSetSeekingPlayers: () => ({ mutate: setSeeking, isPending: false }),
     useRequestTablePause: () => ({ mutate: requestPause, isPending: false }),
   }
 })
 
-vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => vi.fn().mockResolvedValue(true) }))
+const confirm = vi.fn()
+vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => confirm }))
 
-function renderNotice(status: GameTableStatus, isPrimary = true) {
+function renderNotice(
+  status: GameTableStatus,
+  isPrimary = true,
+  seats: { seekingPlayers?: boolean; maxPlayers?: number | null; playerCount?: number } = {},
+) {
   render(
     <MemoryRouter>
-      <MasterTableStatusNotice tableId="table-1" status={status} isPrimary={isPrimary} />
+      <MasterTableStatusNotice
+        tableId="table-1"
+        status={status}
+        isPrimary={isPrimary}
+        seekingPlayers={seats.seekingPlayers ?? false}
+        maxPlayers={seats.maxPlayers ?? 5}
+        playerCount={seats.playerCount ?? 2}
+      />
     </MemoryRouter>,
   )
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  confirm.mockResolvedValue(true)
 })
 
 describe('MasterTableStatusNotice · requesting a pause', () => {
@@ -154,5 +169,55 @@ describe('MasterTableStatusNotice · requesting a pause', () => {
     await user.click(dialog.getByRole('button', { name: 'Pedir pausa' }))
 
     await waitFor(() => expect(requestPause).not.toHaveBeenCalled())
+  })
+})
+
+describe('MasterTableStatusNotice · looking for players', () => {
+  it('offers the search on a running table to any master, and only there', () => {
+    renderNotice('InProgress', false)
+    expect(screen.getByRole('button', { name: 'Buscar jugadores' })).toBeInTheDocument()
+  })
+
+  it('does not offer it before the table runs', () => {
+    renderNotice('Opened')
+    expect(screen.queryByRole('button', { name: 'Buscar jugadores' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Dejar de buscar' })).not.toBeInTheDocument()
+  })
+
+  it('turns the search on, after confirming it', async () => {
+    renderNotice('InProgress')
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Buscar jugadores' }))
+    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '¿Buscar jugadores para la mesa?' }))
+    await waitFor(() => expect(setSeeking).toHaveBeenCalledWith(true, expect.anything()))
+  })
+
+  it('turns it off while it is on, after confirming it, and says what it does', async () => {
+    renderNotice('InProgress', true, { seekingPlayers: true })
+    expect(screen.getByText(/acepta postulaciones hasta completar el cupo/)).toBeInTheDocument()
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Dejar de buscar' }))
+    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '¿Dejar de buscar jugadores?' }))
+    await waitFor(() => expect(setSeeking).toHaveBeenCalledWith(false, expect.anything()))
+  })
+
+  it('does not touch the search when the confirmation is cancelled', async () => {
+    confirm.mockResolvedValue(false)
+    renderNotice('InProgress')
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Buscar jugadores' }))
+    await waitFor(() => expect(confirm).toHaveBeenCalled())
+    expect(setSeeking).not.toHaveBeenCalled()
+  })
+
+  it('links the help for the search from the notice', () => {
+    renderNotice('InProgress')
+    expect(screen.getByRole('button', { name: 'Cómo funciona la búsqueda de jugadores' })).toBeInTheDocument()
+  })
+
+  it('cannot turn it on with every seat taken, and says why', () => {
+    renderNotice('InProgress', true, { maxPlayers: 5, playerCount: 5 })
+    expect(screen.getByRole('button', { name: 'Buscar jugadores' })).toBeDisabled()
+    // A full sentence in its own line, and it says why: no seat is free.
+    expect(
+      screen.getByText(/La mesa está completa, así que no se puede buscar jugadores: no queda ningún lugar libre\./),
+    ).toBeInTheDocument()
   })
 })

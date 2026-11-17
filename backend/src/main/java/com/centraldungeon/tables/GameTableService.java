@@ -32,6 +32,7 @@ import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.tables.dto.GameTableHistoryResponse;
 import com.centraldungeon.tables.dto.GameTableSummaryResponse;
 import com.centraldungeon.tables.dto.MasterSummaryResponse;
+import com.centraldungeon.tables.dto.SetSeekingPlayersRequest;
 import com.centraldungeon.tables.dto.TableScheduleEntry;
 import com.centraldungeon.tables.dto.TableStatusChangeResponse;
 import com.centraldungeon.tables.dto.UpdateGameTableRequest;
@@ -65,8 +66,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class GameTableService {
-
-    private static final List<GameTableStatus> VISIBLE_STATUSES = List.of(GameTableStatus.Opened, GameTableStatus.InProgress);
 
     /**
      * /my/tables: the statuses that still count as "vivo" (ADR-19 §8). {@code Pause} belongs here and
@@ -128,6 +127,10 @@ public class GameTableService {
                     && status != GameTableStatus.Canceled
                     && status != GameTableStatus.Deleted)
             .collect(java.util.stream.Collectors.toUnmodifiableSet());
+
+    /** The statuses in which candidates can be waiting, so where an admin shrinking the capacity can fill the table. */
+    private static final Set<GameTableStatus> SEAT_FILLING_STATUSES =
+            Set.of(GameTableStatus.Opened, GameTableStatus.InProgress);
 
     private static final List<TableRegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
@@ -321,7 +324,10 @@ public class GameTableService {
      *       commitments, because the admin is committed to nothing here. A table with no master yet
      *       is checked only for its own coherence, as when an admin creates it (ADR-06 §7).
      *   <li><b>The capacity</b> cannot drop below the players already in: nobody is removed to make a
-     *       number fit (ADR-09 §3, ADR-15 §2).
+     *       number fit (ADR-09 §3, ADR-15 §2). Lowered to exactly the players already in, on a table
+     *       that takes applications, it fills the table the way accepting the last candidate does: the
+     *       remaining candidates are turned down with {@code TABLE_FULL} and the search for players
+     *       stops, in the same transaction and under the same lock.
      *   <li><b>The masters are told what changed</b> - one notification listing the fields - and the
      *       players only when the agenda moved. The admin is never told about their own edit, and an
      *       edit that changed nothing tells nobody (ADR-06 §8).
@@ -345,6 +351,7 @@ public class GameTableService {
         if (gameTable.getStatus() == GameTableStatus.Preparation) {
             AdminQueueClaimRule.requireNotHeldByAnother(gameTable.getClaimedBy(), actorId, "table " + gameTableId);
         }
+        boolean fillsTheSeats = false;
         if (request.maxPlayers() != null) {
             long players = tableRegistrationRepository.countByGameTable_IdAndStatus(gameTableId, TableRegistrationStatus.Player);
             if (request.maxPlayers() < players) {
@@ -353,9 +360,13 @@ public class GameTableService {
                         ConflictException.CAPACITY_BELOW_PLAYERS,
                         Map.of(ConflictException.PARAM_PLAYER_COUNT, String.valueOf(players)));
             }
+            fillsTheSeats = request.maxPlayers() == players && SEAT_FILLING_STATUSES.contains(gameTable.getStatus());
         }
 
         List<String> changes = rewrite(gameTable, request, actorId);
+        if (fillsTheSeats) {
+            registrationService.onSeatsFilled(gameTable);
+        }
         tableChangeNotifier.announceEdit(gameTable, actorId, changes);
         return toDetail(gameTable);
     }
@@ -875,6 +886,41 @@ public class GameTableService {
     }
 
     /**
+     * Turns the search for players on or off on a table that is already running, so it can find a
+     * replacement. While it is on, the table shows in the explorer and takes applications.
+     *
+     * <p>Any master of the table may do it, not only its Primary. It is idempotent, and it sends no
+     * notification. It switches itself off when the table fills up - by accepting a candidate, by
+     * lifting a veto, or by an admin lowering the capacity to the players it already has - and
+     * whenever the table leaves {@code InProgress}; resuming a paused table does not switch it back on.
+     *
+     * @param gameTableId the table
+     * @param request     whether to look for players
+     * @param actorId     the actor, from the token; has to run the table
+     * @return the table, with the search in its new state
+     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws ConflictException        if the table is not {@code InProgress}, or 409
+     *                                  {@code TABLE_FULL} when turning it on with every seat taken
+     */
+    @Transactional
+    public GameTableDetailResponse setSeekingPlayers(String gameTableId, SetSeekingPlayersRequest request, String actorId) {
+        GameTable gameTable = lockTable(gameTableId);
+        if (!masterService.isMasterOf(gameTableId, actorId)) {
+            throw new ForbiddenActionException("Only a master of this table can look for players");
+        }
+        if (gameTable.getStatus() != GameTableStatus.InProgress) {
+            throw new ConflictException("Cannot look for players on a table in status " + gameTable.getStatus());
+        }
+        boolean seeking = request.seeking();
+        Integer maxPlayers = gameTable.getMaxPlayers();
+        if (seeking && maxPlayers != null && countPlayers(gameTableId) >= maxPlayers) {
+            throw new ConflictException("Table " + gameTableId + " has no free seat", ConflictException.TABLE_FULL);
+        }
+        gameTable.setSeekingPlayers(seeking);
+        return toDetail(gameTable);
+    }
+
+    /**
      * The table's lifecycle history, oldest first.
      *
      * <p>Masters of the table and admins only: the history carries the reasons behind a refusal or a
@@ -997,7 +1043,7 @@ public class GameTableService {
         SearchQuery parsed = SearchQueryParser.parse(query, GameTableSearchField.wireNames());
         Map<SearchTerm, Set<String>> catalogIds = gameTableSearchResolver.resolveCatalogTerms(parsed);
         Page<GameTable> page = gameTableRepository.findAll(
-                GameTableSearchSpecification.forExplorer(parsed, catalogIds, VISIBLE_STATUSES, actorId), pageable);
+                GameTableSearchSpecification.forExplorer(parsed, catalogIds, actorId), pageable);
         return toSummaryPage(page, actorId);
     }
 
@@ -1268,6 +1314,10 @@ public class GameTableService {
             GameTable gameTable, GameTableStatus from, GameTableStatus to, String actorId, @Nullable String justification) {
         User changedBy = userService.getById(actorId);
         gameTable.setStatus(to);
+        // The search belongs to one stay in InProgress: leaving it for any reason ends it, and resuming does not bring it back.
+        if (from == GameTableStatus.InProgress) {
+            gameTable.setSeekingPlayers(false);
+        }
         tableStatusChangeRepository.save(new TableStatusChange(gameTable, from, to, changedBy, justification));
     }
 

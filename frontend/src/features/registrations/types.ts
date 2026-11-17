@@ -89,10 +89,19 @@ export interface Registration {
  *   action left on it, and an irreversible veto is exactly what ADR-09 §5 refused to build.
  * - `blockedByName`, `blockedAt` and `blockJustification`, which are what whoever is about to lift
  *   one reads first: whose decision it was, how long ago, and why.
+ * - `banRequestedByName` and `banRequestJustification`: a master asks for a veto and an admin decides
+ *   it, so a vetoed row carries the request's reason next to the decision's.
  */
 export type TablePlayer = Pick<Registration, 'userId' | 'userName' | 'status' | 'blockedByName' | 'blockedAt' | 'blockJustification'> & {
   /** The application this row is: what the two acts of the veto address. */
   registrationId: Registration['id']
+  /**
+   * The master who asked for the veto, or null when the row is not vetoed or the veto has no
+   * approved request behind it (one older than requests). `blockedByName` is the admin who decided it.
+   */
+  banRequestedByName: string | null
+  /** Why that master asked for the veto, null in the same cases. `blockJustification` is the admin's note. */
+  banRequestJustification: string | null
 }
 
 /**

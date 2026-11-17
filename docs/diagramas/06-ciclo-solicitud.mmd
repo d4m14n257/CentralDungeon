@@ -4,7 +4,7 @@ title: 6. Ciclo de vida de una solicitud (table_registrations.status)
 stateDiagram-v2
     direction TB
 
-    [*] --> Candidate : el jugador envia una solicitud
+    [*] --> Candidate : el jugador envia una solicitud<br/>(mesa Opened, o InProgress buscando jugadores)
 
     note right of Candidate
         NO cuenta contra max_players.
@@ -16,6 +16,7 @@ stateDiagram-v2
 
     Candidate --> Player : el master la acepta<br/>(en orden de llegada)
     Candidate --> Rejected : el master la rechaza<br/>+ justificacion obligatoria
+    Candidate --> Rejected : la mesa se llena<br/>(rechazo automatico TABLE_FULL)
 
     note left of Player
         Pertenece a la mesa.
@@ -24,15 +25,19 @@ stateDiagram-v2
 
     Rejected --> [*] : se libera el par mesa/usuario:<br/>puede postularse de nuevo = FILA NUEVA
 
-    Candidate --> Blocked : veto
-    Player --> Blocked : expulsion + veto
-    Rejected --> Blocked : veto
-    Blocked --> Rejected : el Primary levanta el veto<br/>(queda en el historial)
+    Candidate --> Blocked : un admin aprueba el pedido de veto
+    Player --> Blocked : un admin aprueba el pedido de veto<br/>(libera el lugar)
+    Rejected --> Blocked : un admin aprueba el pedido de veto
+
+    Blocked --> Candidate : el Primary o un admin levanta el veto<br/>(era Candidate, hay lugar)
+    Blocked --> Player : el Primary o un admin levanta el veto<br/>(era Player, hay lugar)
+    Blocked --> Rejected : el Primary o un admin levanta el veto<br/>(era Rejected, o la mesa esta llena: TABLE_FULL)
 
     note left of Blocked
-        Veta el Primary. Un co-master puede
-        PEDIRLO, con justificacion, y el
-        Primary aprueba o rechaza.
+        Nadie veta directo. Cualquier master
+        PIDE el veto, con justificacion, y un
+        admin lo aprueba o lo rechaza. Mientras
+        espera, la persona sigue jugando.
 
         Acotado a ESTA mesa: deja de existir
         para el usuario y no puede volver a
@@ -42,5 +47,5 @@ stateDiagram-v2
 
     state "Deleted (borrado logico)" as Deleted
     Candidate --> Deleted : retira la solicitud
-    Player --> Deleted : abandona la mesa<br/>o cascada desde la mesa
+    Player --> Deleted : cascada desde la mesa
     Deleted --> [*]

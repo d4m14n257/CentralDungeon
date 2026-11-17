@@ -63,6 +63,8 @@ class AdminQueueItemKindJsonTest {
                 null,
                 LocalDateTime.parse("2026-09-01T10:00"),
                 null,
+                null,
+                "table-1",
                 null);
 
         String serialized = json.writeValueAsString(item);

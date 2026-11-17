@@ -10,20 +10,15 @@ interface RequestBlockVariables {
 }
 
 /**
- * A co-master **asking** for a veto (ADR-09 §5, ADR-06 §3).
+ * A master of the table **asking** the admins for a veto.
  *
- * **Nothing about the table changes yet**, which is the whole difference from `useBlockPlayer`: the
- * person keeps playing, keeps seeing the table and keeps downloading its files until the `Primary`
- * answers. So this invalidates only the list of pending veto requests — invalidating the roster here
- * would suggest something moved, and nothing did.
- *
- * **And the `Primary` is who answers it, not an admin.** ADR-09 §5 is specific where ADR-16 §1 is generic, and a
- * veto between a co-master and a player of *that* table is decided by whoever runs it rather than by
- * the platform. The request is therefore kept out of the shared admin tray, which is also why this
- * hook does not invalidate `adminQueue`: the row was never going to appear there.
+ * **Nothing about the table changes yet**: the person keeps playing, keeps seeing the table and keeps
+ * downloading its files until an admin approves. So this invalidates only the table's pending veto
+ * requests and the asker's own requests — invalidating the roster here would suggest something
+ * moved, and nothing did. The admin's tray picks the new row up on its next read.
  *
  * @param tableId the table
- * @returns the mutation, taking the application and the reason the `Primary` will read
+ * @returns the mutation, taking the application and the reason the admin will read
  */
 export function useRequestPlayerBlock(tableId: string) {
   const queryClient = useQueryClient()
@@ -33,8 +28,9 @@ export function useRequestPlayerBlock(tableId: string) {
     meta: { showsItsOwnError: true },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.banRequests(tableId) })
-      // What the co-master themselves asked for, on the screen that lists their own requests.
+      // What the master themselves asked for, on the screen that lists their own requests.
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.mineAll() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
     },
   })
 }

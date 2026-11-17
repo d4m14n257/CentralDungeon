@@ -247,7 +247,7 @@
         "step1": "Cambiá al contexto Master con el selector de arriba.",
         "step2": "Entrá a «Mis mesas» y tocá «Crear mesa».",
         "step3": "Seguí los cuatro pasos. La mesa nace en preparación y todavía no la ve nadie.",
-        "step4": "Cuando esté lista, mandala a revisión desde la pestaña Estado.",
+        "step4": "Cuando esté lista, mandala a revisión desde el aviso de estado de la mesa, arriba de las pestañas.",
         "step5": "Esperá la decisión de un admin: te avisa la campana. Si pide cambios, llega con el motivo escrito."
       }
     },
@@ -293,7 +293,7 @@
       "title": "Revisión y cambios",
       "approve": "Si un admin la aprueba, la mesa queda abierta y empiezan a llegar postulaciones.",
       "changes": "Si pide cambios, llega con el motivo escrito: corregís y la volvés a mandar.",
-      "history": "Toda transición queda registrada en la pestaña Estado, con quién la hizo y por qué."
+      "history": "Toda transición queda registrada en la pestaña Historial, con quién la hizo y por qué."
     },
     "candidates": {
       "title": "Candidatos",
@@ -313,7 +313,7 @@
       "cancel": "Cancelar corta la mesa antes de tiempo y pide un motivo escrito. También puede hacerlo un admin.",
       "who": "Iniciar, finalizar y cancelar son del master de la mesa; un co-master no las ve.",
       "steps": {
-        "step1": "Abrí tu mesa y andá a la pestaña Estado.",
+        "step1": "Abrí tu mesa: los botones están en el aviso de estado, arriba de las pestañas.",
         "step2": "Tocá «Iniciar mesa» cuando empiecen a jugar: pasa a «En curso».",
         "step3": "Al terminar, «Finalizar mesa». Si hay que cortarla antes, «Cancelar mesa» y escribí el motivo.",
         "step4": "Cada cambio queda en el historial de esa pestaña, con quién lo hizo y por qué."
@@ -342,7 +342,7 @@
       "public": "Si ya estuvo abierta, en curso o pausada, no se elimina: se cancela con un motivo escrito. Otras personas la vieron o jugaron en ella, y eso es historia.",
       "gone": "Eliminar es definitivo y no deja rastro público: la mesa desaparece de tus mesas y de todos lados. Cancelar la deja visible como cancelada.",
       "steps": {
-        "step1": "Abrí la mesa y andá a la pestaña Estado.",
+        "step1": "Abrí la mesa: los botones están en el aviso de estado, arriba de las pestañas.",
         "step2": "Si todavía no se publicó vas a ver «Eliminar mesa» al lado de «Cancelar mesa».",
         "step3": "Confirmá. Si la mesa ya se había abierto, el botón no está: ahí lo que corresponde es cancelar."
       }
@@ -420,12 +420,12 @@
       "replaces": "Guardar reemplaza la mesa entera, no solo lo que cambiaste: lo que borres de un campo queda vacío.",
       "sets": "La agenda y los catálogos también se reemplazan como conjunto: lo que quede en pantalla al guardar es lo que queda.",
       "conflict": "Si la agenda nueva se pisa con otra mesa tuya, el guardado falla y la pantalla dice con cuál.",
-      "resubmit": "Corregir no reenvía la mesa a revisión: eso se hace desde la pestaña «Estado».",
+      "resubmit": "Corregir no reenvía la mesa a revisión: eso se hace desde el aviso de estado de la mesa, arriba de las pestañas.",
       "steps": {
         "step1": "Abrí tu mesa y tocá «Editar» arriba a la derecha.",
         "step2": "Cambiá lo que haga falta: identidad, catálogos, agenda o cupo.",
         "step3": "Guardá los cambios.",
-        "step4": "Si un admin había pedido correcciones, andá a «Estado» y reenviá la mesa a revisión."
+        "step4": "Si un admin había pedido correcciones, reenviá la mesa a revisión desde el aviso de estado."
       }
     },
     "pause": {
@@ -437,7 +437,7 @@
       "freeze": "Con la mesa pausada, las sesiones pendientes se ocultan: la mesa deja de prometer fechas que no sabe si va a cumplir.",
       "resume": "Al reanudarla, las sesiones pendientes se vuelven a agendar desde el día en que se retoma, conservando la numeración. No se pierde ninguna.",
       "steps": {
-        "step1": "Abrí tu mesa y andá a la pestaña Estado. La mesa tiene que estar en curso.",
+        "step1": "Abrí tu mesa: el botón está en el aviso de estado, arriba de las pestañas. La mesa tiene que estar en curso.",
         "step2": "Tocá «Pedir pausa» y escribí por qué. El motivo es obligatorio.",
         "step3": "La mesa pasa a «Pausa solicitada» y el pedido le llega a los admins. Hasta que respondan, la mesa sigue jugándose normal.",
         "step4": "Cuando un admin apruebe, la mesa queda pausada y el calendario se congela. Reanudarla también es de ellos."
@@ -445,20 +445,36 @@
     },
     "banning": {
       "title": "Vetar a alguien de tu mesa",
-      "what": "Vetar saca a una persona de tu mesa: deja de verla en el explorador, no puede abrirla y no puede descargar sus archivos.",
+      "what": "Vetar saca a una persona de tu mesa: deja de verla en el explorador, no puede abrirla, no puede postularse y no puede descargar sus archivos. Si estaba jugando, pierde su lugar y queda libre.",
       "perTable": "Es por mesa, y solo por esa mesa. No pierde la cuenta, ni el karma, ni las otras mesas donde juega: lo que desaparece para esa persona es esta mesa y nada más.",
-      "who": "Lo aplica el master de la mesa. Un co-master no veta: lo pide.",
-      "coMaster": "El pedido de un co-master lo resuelve el master de la mesa, no un admin: quién se sienta a la mesa lo decide quien la dirige.",
-      "reason": "El motivo es obligatorio al vetar y al levantar el veto. Queda registrado con quién lo hizo y cuándo, que es lo que hace que la decisión se pueda revisar después.",
-      "invisible": "A la persona no se le avisa. La mesa simplemente deja de existir para ella, así que el motivo que escribas no lo lee: lo leen los masters de la mesa.",
-      "reversible": "Se puede levantar. Un veto no es una baja: es reversible, y por eso pide un motivo.",
-      "stays": "La fila de quien está vetado se sigue viendo en Jugadores, marcada, con quién lo vetó y cuándo. Es desde ahí que se levanta el veto.",
+      "who": "Nadie veta directo: cualquier master de la mesa, sea el principal o un co-master, pide el veto con un motivo, y lo decide un admin desde su bandeja.",
+      "pending": "Mientras el pedido espera, no cambia nada: la persona sigue en la mesa, la ve y juega como siempre. Si el admin lo aprueba, el veto rige en el acto; si lo rechaza, todo queda como estaba. En los dos casos te llega un aviso a vos, que lo pediste.",
+      "reason": "El motivo es obligatorio al pedir el veto y al levantarlo. Es lo que el admin lee para decidir, y queda registrado con quién lo hizo y cuándo, para que la decisión se pueda revisar después.",
+      "invisible": "A la persona no se le avisa. La mesa simplemente deja de existir para ella, así que el motivo que escribas no lo lee: lo leen los masters de la mesa y los admins.",
+      "reversible": "Se puede levantar. Un veto no es una baja: es reversible, y por eso pide un motivo. Lo levanta el master principal o un admin; un co-master no.",
+      "lifted": "Al levantarlo, la persona vuelve a donde estaba: como jugadora si jugaba, o como candidata si esperaba. Si mientras tanto la mesa se llenó, queda con la postulación rechazada por falta de lugar, y puede postularse de nuevo cuando se libere uno.",
+      "stays": "La fila de quien está vetado se sigue viendo en Jugadores, marcada, con quién pidió el veto y por qué, y qué admin lo aprobó y cuándo. Es desde ahí que se levanta el veto.",
       "steps": {
         "step1": "Abrí tu mesa y andá a la pestaña Jugadores.",
         "step2": "Buscá a la persona en la lista de jugadores.",
-        "step3": "Tocá «Vetar». Si sos co-master, el botón dice «Pedir que se lo vete», porque es lo que manda.",
-        "step4": "Escribí el motivo. Es obligatorio.",
-        "step5": "Para deshacerlo, la misma fila ofrece «Levantar el veto», que también pide motivo."
+        "step3": "Tocá «Pedir veto» en su fila y escribí el motivo. Es obligatorio, y lo decide un admin.",
+        "step4": "Esperá la respuesta del admin. Hasta entonces la persona sigue en la mesa.",
+        "step5": "Para deshacer un veto aplicado, la misma fila ofrece «Levantar el veto», que también pide motivo (lo levanta el master principal o un admin)."
+      }
+    },
+    "seeking": {
+      "title": "Buscar jugadores para una mesa en curso",
+      "what": "Una mesa en curso con un lugar libre puede buscar jugadores: mientras la búsqueda está encendida, la mesa aparece en el explorador y acepta postulaciones hasta que se llena el cupo.",
+      "who": "Cualquier master de la mesa, sea el principal o un co-master, enciende y apaga la búsqueda con «Buscar jugadores» y «Dejar de buscar», desde el aviso de estado de la mesa, arriba de las pestañas.",
+      "when": "Solo se puede encender si la mesa está en curso y tiene un lugar libre. Con la mesa completa el botón está deshabilitado.",
+      "offByItself": "Se apaga sola cuando se llena el cupo y cuando la mesa deja de estar en curso, por ejemplo al pedir una pausa.",
+      "noReturn": "No se vuelve a encender sola. Si la mesa se pausa y después se reanuda, o si rechazan el pedido de pausa, la búsqueda queda apagada hasta que un master la encienda de nuevo.",
+      "plain": "Buscar jugadores no cambia el estado de la mesa: sigue en curso, con su agenda y sus sesiones, y no le avisa a nadie.",
+      "steps": {
+        "step1": "Abrí tu mesa: los botones están en el aviso de estado, arriba de las pestañas. La mesa tiene que estar en curso y con un lugar libre.",
+        "step2": "Tocá «Buscar jugadores». La mesa aparece en el explorador.",
+        "step3": "Aceptá a los candidatos como en cualquier mesa. Al ocupar el último lugar, la búsqueda se apaga sola.",
+        "step4": "Para dejar de recibir postulaciones antes, tocá «Dejar de buscar»."
       }
     }
   },
@@ -590,13 +606,15 @@
     },
     "requests": {
       "title": "Resolver pedidos",
-      "what": "«Pedidos» junta todo lo que alguien le pide a un admin: el rol de master, que se abra una mesa, o una consulta suelta. Es un solo mecanismo para los tres.",
+      "what": "«Pedidos» junta todo lo que alguien le pide a un admin: el rol de master, que se abra una mesa, que se vete a un jugador, o una consulta suelta. Es un solo mecanismo para todos.",
       "tray": "Cada fila trae quién pidió, qué pidió y el motivo que escribió. Con eso se decide: el pedido no trae nada más.",
       "pendingFirst": "La pantalla abre filtrada por «Pendiente», que es lo que espera una acción. Sacá ese filtro del buscador para ver los que ya se resolvieron y con qué respuesta.",
       "note": "Aprobar y rechazar piden una nota obligatoria, y le llega a quien pidió. En el rechazo es lo único que va a recibir, así que tiene que alcanzarle para entender.",
       "masterGrant": "Aprobar un pedido de rol de master le da el rol por el mismo camino que «Usuarios», con tu nota como motivo. No hay una segunda forma de otorgarlo.",
       "tableOpen": "Aprobar un pedido de mesa nueva no crea la mesa. El pedido no trae nombre, sistema, cupo ni horario: lo que hacés al aprobarlo es dejar constancia de que corresponde, y después la creás desde «Mesas».",
       "general": "Aprobar una consulta no cambia nada más en la plataforma: queda resuelta y tu respuesta le llega a quien preguntó.",
+      "playerBan": "Un pedido de veto lo abre un master de la mesa, con su motivo, y también llega a la bandeja. Aprobarlo es el veto: la persona deja de ver la mesa, no puede postularse y, si jugaba, pierde su lugar. Rechazarlo no cambia nada. Mientras esperaba, la persona siguió jugando. Tu nota le llega al master que lo pidió.",
+      "liftVeto": "Levantar un veto no pasa por un pedido: lo hacés vos, o el master principal, desde la pestaña Jugadores de la mesa, con motivo obligatorio. La persona vuelve a donde estaba; si la mesa ya se llenó, queda con la postulación rechazada por falta de lugar y puede postularse de nuevo cuando se libere uno.",
       "resolvedOnce": "Un pedido se resuelve una sola vez. Si otro admin llegó primero, la pantalla te lo dice en lugar de aplicar tu decisión encima.",
       "gone": "Si lo que el pedido señalaba ya no existe, no se puede resolver: la fila sobrevive a lo que apuntaba, pero actuar sobre algo que se borró sería actuar sobre un fantasma.",
       "steps": {

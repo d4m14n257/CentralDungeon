@@ -2,13 +2,13 @@
 adr: 7
 titulo: "Mesas: ciclo de vida"
 estado: Vigente
-actualizada: 2026-11-12
+actualizada: 2026-11-15
 absorbe: [7, 24, 27, 32, 129, 163, 165, 171, 175, 180, 196, 216, 226, 229, 230, 245, 265]
 ---
 
 # ADR-07: Mesas: ciclo de vida
 
-> Cómo nace, se revisa, se abre, se pausa, se cierra y se borra una mesa, qué exige para existir y quién la dirige. Las reglas que esto produce las aplica la skill `arquitectura` (`reglas-negocio.md` §Mesa y el modelo de §4). La skill dice *cómo* se escribe; esta ADR, *qué* se decidió y *por qué*.
+> Cómo nace, se revisa, se abre, se pausa, busca jugadores en curso, se cierra y se borra una mesa, qué exige para existir y quién la dirige. Las reglas que esto produce las aplica la skill `arquitectura` (`reglas-negocio.md` §Mesa y el modelo de §4). La skill dice *cómo* se escribe; esta ADR, *qué* se decidió y *por qué*.
 
 ## §1 La mesa tiene una máquina de estados formal, y toda transición deja rastro
 
@@ -20,9 +20,9 @@ absorbe: [7, 24, 27, 32, 129, 163, 165, 171, 175, 180, 196, 216, 226, 229, 230, 
 
 ## §2 La pausa del master necesita aprobación, y las justificaciones de moderación no son comentarios
 
-**Decisión.** Las justificaciones de moderación —mesa rechazada y por qué, pedido de correcciones, motivo de pausa, motivo de cancelación— van en su propia tabla, **separadas de `comments`**. La pausa que pide un master **no es efectiva hasta que un admin la aprueba**: la mesa pasa a `PauseRequested` y sigue corriendo hasta que el admin resuelve (ADR-16 §1). La pausa que inicia un admin es inmediata, pero también se justifica. `Pause` y `Canceled` exigen justificación. **Reanudar es solo del admin** (`POST /game-tables/{id}/resume`, `hasAnyRole('ADMIN','OWNER')`): ningún master, tampoco el `Primary`, reanuda su mesa.
+**Decisión.** Las justificaciones de moderación —mesa rechazada y por qué, pedido de correcciones, motivo de pausa, motivo de cancelación— van en su propia tabla, **separadas de `comments`**. La pausa que pide un master **no es efectiva hasta que un admin la aprueba**: la mesa pasa a `PauseRequested` y sigue corriendo hasta que el admin resuelve (ADR-16 §1). **Pedir la pausa apaga la búsqueda de jugadores** (§11), como toda salida de `InProgress`, y un rechazo que devuelve la mesa a `InProgress` no la vuelve a encender. La pausa que inicia un admin es inmediata, pero también se justifica. `Pause` y `Canceled` exigen justificación. **Reanudar es solo del admin** (`POST /game-tables/{id}/resume`, `hasAnyRole('ADMIN','OWNER')`): ningún master, tampoco el `Primary`, reanuda su mesa.
 
-**Por qué.** `comments` es opinión entre personas y alimenta el karma (ADR-11 §1, §2); mezclar actos administrativos lo contaminaría. La pausa del admin se justifica igual para que el resto de los admins vea el motivo. Quién reanuda se fijó el 2026-11-10, al correr F4.2 «La matriz de roles», como responde el código: los documentos se contradecían —ADR-18 «Notificaciones y tiempo real» §3 decía que la reanudación la podía hacer un master, y ADR-21 «Diseño visual e interacción» §10 «Las decisiones sobre una entidad van en su aviso de estado, con las destructivas aparte» y la rebanada F3.4 «Pausa y veto» la daban solo al admin—, y el usuario eligió la que ya estaba construida.
+**Por qué.** `comments` es opinión entre personas y alimenta el karma (ADR-11 §1, §2); mezclar actos administrativos lo contaminaría. La pausa del admin se justifica igual para que el resto de los admins vea el motivo. Quién reanuda se fijó el 2026-11-10, al correr F4.2 «La matriz de roles», como responde el código: los documentos se contradecían —ADR-18 «Notificaciones y tiempo real» §3 decía que la reanudación la podía hacer un master, y ADR-21 «Diseño visual e interacción» §10 «Las decisiones sobre una entidad van en su aviso de estado, con las destructivas aparte» y la rebanada F3.4 «Pausa y veto» la daban solo al admin—, y el usuario eligió la que ya estaba construida. Que pedir la pausa apague la búsqueda sale de §11: la búsqueda pertenece a una estadía en `InProgress`, y pedir la pausa es salir de ella.
 
 *Antes: #32.*
 
@@ -99,3 +99,13 @@ La transición queda en `table_status_changes`. Lo hace el `Primary` o un admin,
 **Por qué.** Construirlas bloquearía el arranque, y el schema original nunca las tuvo. Una campaña no agrupa varias mesas: si el grupo es el mismo los cuatro juegos, el jugador se postula **una** vez, así que es una mesa larga con estructura interna y no una FK. Abrir veinte mesas a la vez ya es posible con la bandeja de admins (ADR-16 §5); lo único que falta es que la salida no dependa de que alguien esté despierto a medianoche, y una entidad `seasons` modelaría el calendario de la comunidad sin que nada lo pida. Las dos son aditivas.
 
 *Antes: #7, #129.*
+
+## §11 Una mesa en curso puede buscar jugadores, y no es un estado
+
+**Decisión.** Una mesa `InProgress` con lugar libre —por la causa que sea: alguien se fue, un veto, un cupo que nunca se llenó— puede **buscar jugadores**. Es una columna, `game_tables.seeking_players BOOLEAN NOT NULL DEFAULT FALSE` (`V15__table_seeking_players.sql`), y **no un valor de `GameTableStatus`**: no pasa por la máquina de §1, no deja fila en `table_status_changes` y no notifica a nadie.
+
+- **Quién y cómo.** Cualquier master vivo de la mesa (`isMasterOf`, no solo el `Primary`), con `PUT /api/v1/game-tables/{id}/seeking-players` y `SetSeekingPlayersRequest(seeking)`. `GameTableService.setSeekingPlayers` toma el lock de la mesa primero y después comprueba que el actor la dirija (`403`), que esté `InProgress` (`409`) y, al encenderla, que tenga lugar libre (`409 TABLE_FULL`). Es idempotente.
+- **Qué hace.** Mientras está encendida, la mesa **aparece en el explorador y acepta postulaciones** (ADR-09 «Postulaciones y veto» §3 «Una mesa llena no admite a nadie más, y al llenarse los candidatos restantes se rechazan en la misma transacción»). Las dos preguntas tienen una sola definición: `GameTable.acceptsApplications()` = `Opened`, o `InProgress` con la búsqueda encendida; el explorador (`GameTableSearchSpecification.forExplorer`) filtra lo mismo en el `WHERE` y **muestra solo las `Opened` y las `InProgress` que buscan**. La card y el detalle lo dicen (`seekingPlayers` en `GameTableSummaryResponse` y `GameTableDetailResponse`), y el botón «Buscar jugadores» / «Dejar de buscar» va en el aviso de estado de `/master/tables/:id` (ADR-21 «Diseño visual e interacción» §10 «Las decisiones sobre una entidad van en su aviso de estado, con las destructivas aparte»), deshabilitado con la mesa llena.
+- **Cuándo se apaga sola.** Al llenarse el cupo por cualquiera de sus tres caminos —aceptar al último candidato, levantar un veto que devuelve a alguien como `Player`, o que un admin baje `max_players` hasta los jugadores que tiene— (`RegistrationService.onSeatsFilled`, ADR-09 «Postulaciones y veto» §3 «Una mesa llena no admite a nadie más, y al llenarse los candidatos restantes se rechazan en la misma transacción»), y al salir de `InProgress` por cualquier transición (`recordStatusChange`), incluido pedir la pausa (§2). **No vuelve sola**: ni al reanudar una pausa ni al rechazarse el pedido de pausa.
+
+**Por qué.** Lo decidió el usuario el 2026-11-14, junto con el cambio del veto (ADR-09 §5): un veto aprobado libera un lugar en una mesa que ya juega, y `apply` exigía `Opened`, así que esa mesa no tenía forma de conseguir un reemplazo. El explorador, en cambio, listaba toda mesa `InProgress` aunque ninguna aceptara a nadie. Como columna, la mesa que busca sigue en curso, con su agenda y sus sesiones, y todo lo que pregunta por `InProgress` —la pausa, el choque de agenda, `LIVE_MINE_STATUSES`— sigue valiendo sin tocarlo. Que se apague al llenarse y al salir de `InProgress`, y que no vuelva sola, lo fijó el usuario con la decisión: la búsqueda pertenece a una estadía en `InProgress`. Que bajar el cupo también la apague lo decidió el usuario el 2026-11-15: es la misma mesa llena por otro camino, y una mesa sin lugar no tiene qué buscar.

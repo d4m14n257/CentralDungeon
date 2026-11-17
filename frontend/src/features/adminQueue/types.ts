@@ -63,6 +63,13 @@ export interface AdminQueueItem {
   claimedByName: string | null
   /** When they took it. What the fifteen-minute release is counted from. */
   claimedAt: string | null
+  /**
+   * The table the item concerns, so the row can link it: the table in review itself, the table a
+   * pause is about, or the table of the application a veto is about. Null for requests about a person.
+   */
+  gameTableId: string | null
+  /** For a veto request, the display name of the person it would bar. Null for every other item. */
+  subjectName: string | null
 }
 
 /**

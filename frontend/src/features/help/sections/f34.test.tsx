@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import '@/providers/i18n'
 
 import { PausingHelp } from './admins'
-import { BanningHelp, PauseRequestHelp } from './masters'
+import { BanningHelp, PauseRequestHelp, SeekingPlayersHelp } from './masters'
 import { HELP_SECTIONS } from './registry'
 
 /**
@@ -66,13 +66,14 @@ describe('BanningHelp', () => {
     expect(body).toMatch(/No pierde la cuenta/i)
   })
 
-  /** ADR-09 §5, ADR-06 §3: the Primary applies it and a co-master asks — and who answers that request. */
-  it('says a co-master asks, and that the table’s master answers, not an admin', () => {
+  /** Nobody bans directly: any master asks, an admin decides, and nothing changes while it waits. */
+  it('says a master asks, an admin decides, and the person keeps playing meanwhile', () => {
     render(<BanningHelp />)
 
     const body = document.body.textContent ?? ''
-    expect(body).toMatch(/Un co-master no veta/i)
-    expect(body).toMatch(/no un admin/i)
+    expect(body).toMatch(/Nadie veta directo/i)
+    expect(body).toMatch(/lo decide un admin/i)
+    expect(body).toMatch(/no cambia nada/i)
   })
 
   /** The two halves of ADR-09 §5: it is reversible, and the row that makes it reversible stays on screen. */
@@ -84,11 +85,46 @@ describe('BanningHelp', () => {
     expect(body).toMatch(/se sigue viendo en Jugadores/i)
   })
 
+  /** Lifting returns the person to where they were, or ends in a rejected application when the table filled up. */
+  it('says who lifts it and what happens when the table is already full', () => {
+    render(<BanningHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/master principal o un admin/i)
+    expect(body).toMatch(/rechazada por falta de lugar/i)
+  })
+
   /** The half that surprises the master rather than the player: nobody is notified (ADR-09 §4). */
   it('warns that the vetoed person is never told', () => {
     render(<BanningHelp />)
 
     expect(document.body.textContent).toMatch(/no se le avisa/i)
+  })
+})
+
+describe('SeekingPlayersHelp', () => {
+  /** What makes the table show in the explorer and take applications. */
+  it('says a free seat on a table in progress is what lets it look for players', () => {
+    render(<SeekingPlayersHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/aparece en el explorador y acepta postulaciones/i)
+    expect(body).toMatch(/en curso y tiene un lugar libre/i)
+  })
+
+  /** The half a master would not guess: it switches itself off and does not come back. */
+  it('says it turns off by itself and does not come back by itself', () => {
+    render(<SeekingPlayersHelp />)
+
+    const body = document.body.textContent ?? ''
+    expect(body).toMatch(/Se apaga sola/i)
+    expect(body).toMatch(/No se vuelve a encender sola/i)
+  })
+
+  it('walks through turning it on, step by step', () => {
+    const { container } = render(<SeekingPlayersHelp />)
+
+    expect(container.querySelectorAll('ol li')).toHaveLength(4)
   })
 })
 
@@ -133,6 +169,10 @@ describe('the F3.4 sections in the registry', () => {
     expect(HELP_SECTIONS['masters.pause']).toBeDefined()
     expect(HELP_SECTIONS['masters.banning']).toBeDefined()
     expect(HELP_SECTIONS['admins.pausing']).toBeDefined()
+  })
+
+  it('registers the section on looking for players', () => {
+    expect(HELP_SECTIONS['masters.seeking']).toBeDefined()
   })
 
   /**

@@ -247,7 +247,7 @@
         "step1": "Switch to the Master context with the selector at the top.",
         "step2": "Go to “My tables” and tap “Create table”.",
         "step3": "Follow the four steps. The table is born in preparation and nobody can see it yet.",
-        "step4": "When it is ready, send it for review from the Status tab.",
+        "step4": "When it is ready, send it for review from the table’s status notice, above its tabs.",
         "step5": "Wait for an admin's decision: the bell tells you. If they ask for changes, it arrives with the reason in writing."
       }
     },
@@ -293,7 +293,7 @@
       "title": "Review and changes",
       "approve": "If an admin approves it, the table opens and applications start coming in.",
       "changes": "If they ask for changes, it arrives with the reason in writing: you fix it and send it back.",
-      "history": "Every transition is recorded on the Status tab, with who made it and why."
+      "history": "Every transition is recorded on the History tab, with who made it and why."
     },
     "candidates": {
       "title": "Candidates",
@@ -313,7 +313,7 @@
       "cancel": "Cancelling cuts the table short and asks for a written reason. An admin can do it too.",
       "who": "Starting, finishing and cancelling belong to the table's master; a co-master does not see them.",
       "steps": {
-        "step1": "Open your table and go to the Status tab.",
+        "step1": "Open your table: the buttons are in the status notice, above its tabs.",
         "step2": "Tap “Start table” when they begin playing: it moves to “In progress”.",
         "step3": "When it ends, “Finish table”. If it has to be cut short, “Cancel table” and write the reason.",
         "step4": "Every change stays in that tab's history, with who made it and why."
@@ -342,7 +342,7 @@
       "public": "If it was already open, in progress or paused, it is not deleted: it is cancelled with a written reason. Other people saw it or played at it, and that is history.",
       "gone": "Deleting is final and leaves no public trace: the table disappears from your tables and from everywhere. Cancelling leaves it visible as cancelled.",
       "steps": {
-        "step1": "Open the table and go to the Status tab.",
+        "step1": "Open the table: the buttons are in the status notice, above its tabs.",
         "step2": "If it has not been published yet you will see “Delete table” next to “Cancel table”.",
         "step3": "Confirm. If the table had already opened, the button is not there: cancelling is the right thing then."
       }
@@ -420,12 +420,12 @@
       "replaces": "Saving replaces the whole table, not just what you changed: anything you clear from a field ends up empty.",
       "sets": "The agenda and the catalogs are replaced as sets too: what is on screen when you save is what stays.",
       "conflict": "If the new agenda overlaps another table of yours, the save fails and the screen says which one.",
-      "resubmit": "Correcting does not send the table back for review: that is done from the “Status” tab.",
+      "resubmit": "Correcting does not send the table back for review: that is done from the table’s status notice, above its tabs.",
       "steps": {
         "step1": "Open your table and press “Edit” at the top right.",
         "step2": "Change whatever needs changing: identity, catalogs, agenda or capacity.",
         "step3": "Save the changes.",
-        "step4": "If an admin had asked for changes, go to “Status” and send the table back for review."
+        "step4": "If an admin had asked for changes, send the table back for review from the status notice."
       }
     },
     "pause": {
@@ -437,7 +437,7 @@
       "freeze": "Once the table is paused, its pending sessions are hidden: the table stops promising dates it does not know it can keep.",
       "resume": "When it is resumed, the pending sessions are rescheduled from the day it comes back, keeping their numbering. None of them is lost.",
       "steps": {
-        "step1": "Open your table and go to the Status tab. The table has to be in progress.",
+        "step1": "Open your table: the button is in the status notice, above its tabs. The table has to be in progress.",
         "step2": "Press “Ask for a pause” and say why. The reason is required.",
         "step3": "The table moves to “Pause requested” and the request reaches the admins. Until they answer, keep playing as usual.",
         "step4": "When an admin approves it, the table is paused and the calendar freezes. Resuming is theirs too."
@@ -445,20 +445,36 @@
     },
     "banning": {
       "title": "Banning somebody from your table",
-      "what": "Banning removes a person from your table: it leaves their explorer, they cannot open it and they cannot download its files.",
+      "what": "Banning removes a person from your table: it leaves their explorer, they cannot open it, they cannot apply and they cannot download its files. If they were playing, they lose their seat and it becomes free.",
       "perTable": "It is per table, and only that table. They keep their account, their karma and every other table they play at: what disappears for them is this table and nothing else.",
-      "who": "The table’s master applies it. A co-master does not ban: they ask.",
-      "coMaster": "A co-master’s request is answered by the table’s master, not by an admin: who sits at the table is decided by whoever runs it.",
-      "reason": "The reason is required both to ban and to lift it. It is recorded with who did it and when, which is what makes the decision reviewable afterwards.",
-      "invisible": "The person is not told. The table simply stops existing for them, so the reason you write is not read by them: it is read by the table’s masters.",
-      "reversible": "It can be lifted. A ban is not a closure: it is reversible, and that is why it asks for a reason.",
-      "stays": "A banned person’s row stays in Players, marked, showing who banned them and when. That is where the ban is lifted from.",
+      "who": "Nobody bans directly: any master of the table, the main one or a co-master, asks for the ban with a reason, and an admin decides it from their tray.",
+      "pending": "While the request waits, nothing changes: the person stays at the table, sees it and plays as usual. If the admin approves it, the ban applies at once; if they reject it, everything stays as it was. Either way, you, who asked, get a notice.",
+      "reason": "The reason is required both to ask for a ban and to lift it. It is what the admin reads to decide, and it is recorded with who did it and when, so the decision can be reviewed afterwards.",
+      "invisible": "The person is not told. The table simply stops existing for them, so the reason you write is not read by them: it is read by the table’s masters and the admins.",
+      "reversible": "It can be lifted. A ban is not a closure: it is reversible, and that is why it asks for a reason. The main master or an admin lifts it; a co-master cannot.",
+      "lifted": "When lifted, the person goes back to where they were: as a player if they were playing, or as a candidate if they were waiting. If the table filled up in the meantime, their application ends as rejected for lack of seats, and they can apply again when one frees up.",
+      "stays": "A banned person’s row stays in Players, marked, showing who asked for the ban and why, and which admin approved it and when. That is where the ban is lifted from.",
       "steps": {
         "step1": "Open your table and go to the Players tab.",
         "step2": "Find the person in the list of players.",
-        "step3": "Press “Ban”. If you are a co-master the button says “Ask for them to be banned”, because that is what it sends.",
-        "step4": "Write the reason. It is required.",
-        "step5": "To undo it, the same row offers “Lift the ban”, which asks for a reason too."
+        "step3": "Press “Ask for a ban” on their row and write the reason. It is required, and an admin decides it.",
+        "step4": "Wait for the admin’s answer. Until then the person stays at the table.",
+        "step5": "To undo an applied ban, the same row offers “Lift the ban”, which asks for a reason too (the main master or an admin can lift it)."
+      }
+    },
+    "seeking": {
+      "title": "Looking for players for a table in progress",
+      "what": "A table in progress with a free seat can look for players: while the search is on, the table shows in the explorer and takes applications until the seats fill.",
+      "who": "Any master of the table, the main one or a co-master, turns the search on and off with “Look for players” and “Stop looking”, from the table’s status notice, above its tabs.",
+      "when": "It can only be turned on if the table is in progress and has a free seat. With the table full the button is disabled.",
+      "offByItself": "It turns off by itself when the seats fill up and when the table stops being in progress, for example when a pause is requested.",
+      "noReturn": "It does not come back by itself. If the table is paused and then resumed, or the pause request is rejected, the search stays off until a master turns it on again.",
+      "plain": "Looking for players does not change the table’s status: it stays in progress, with its schedule and sessions, and it notifies nobody.",
+      "steps": {
+        "step1": "Open your table: the buttons are in the status notice, above its tabs. The table has to be in progress with a free seat.",
+        "step2": "Press “Look for players”. The table shows in the explorer.",
+        "step3": "Accept candidates as on any table. When the last seat is taken, the search turns off by itself.",
+        "step4": "To stop receiving applications sooner, press “Stop looking”."
       }
     }
   },
@@ -590,13 +606,15 @@
     },
     "requests": {
       "title": "Resolving requests",
-      "what": "“Requests” collects everything somebody asks an admin for: the master role, a table to be opened, or a loose question. One mechanism for all three.",
+      "what": "“Requests” collects everything somebody asks an admin for: the master role, a table to be opened, a player to be banned, or a loose question. One mechanism for all of them.",
       "tray": "Each row carries who asked, what for, and the reason they wrote. That is what you decide on: the request carries nothing else.",
       "pendingFirst": "The screen opens filtered by “Pending”, which is what is waiting for an action. Remove that filter from the search box to see what has been resolved and with what answer.",
       "note": "Approving and rejecting both ask for a required note, and it reaches whoever asked. On a rejection it is the only thing they will receive, so it has to be enough for them to understand.",
       "masterGrant": "Approving a master role request gives the role by the same road as “Users”, with your note as the reason. There is no second way to grant it.",
       "tableOpen": "Approving a new table request does not create the table. The request carries no name, system, seats or schedule: approving records that it stands, and you create the table afterwards from “Tables”.",
       "general": "Approving a question changes nothing else on the platform: it is closed, and your answer reaches whoever asked.",
+      "playerBan": "A ban request is opened by a master of the table, with their reason, and it also reaches the tray. Approving it is the ban: the person stops seeing the table, cannot apply and, if they were playing, loses their seat. Rejecting it changes nothing. While it waited, the person kept playing. Your note reaches the master who asked.",
+      "liftVeto": "Lifting a ban does not go through a request: you do it, or the main master, from the table’s Players tab, with a required reason. The person goes back to where they were; if the table has filled up, their application ends as rejected for lack of seats and they can apply again when one frees up.",
       "resolvedOnce": "A request is resolved once. If another admin got there first, the screen tells you instead of applying your decision on top.",
       "gone": "If what the request pointed at no longer exists, it cannot be resolved: the row outlives what it pointed at, but acting on something that was deleted would be acting on a ghost.",
       "steps": {

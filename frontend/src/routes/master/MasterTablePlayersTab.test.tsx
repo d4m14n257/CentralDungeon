@@ -25,6 +25,8 @@ function player(overrides: Partial<TablePlayer> = {}): TablePlayer {
     blockedByName: null,
     blockedAt: null,
     blockJustification: null,
+    banRequestedByName: null,
+    banRequestJustification: null,
     ...overrides,
   }
 }
@@ -45,7 +47,7 @@ let outletContext: {
 }
 let players: TablePlayer[] = [player()]
 /** What the veto dialog was opened with, captured from the stub that stands in for it. */
-let openedDialog: { action: string; isPrimary: boolean; playerName: string } | null = null
+let openedDialog: { action: string; playerName: string } | null = null
 
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router')
@@ -75,15 +77,15 @@ vi.mock('@/features/tables', () => ({
 vi.mock('@/features/registrations', () => ({
   useTablePlayers: () => ({ data: players, isPending: false, isLoadingError: false }),
   RegistrationStatusBadge: ({ status }: { status: string }) => <span>{status === 'Blocked' ? 'Vetado' : status}</span>,
-  BlockPlayerDialog: (props: { action: string; isPrimary: boolean; playerName: string; open: boolean }) => {
-    if (props.open) openedDialog = { action: props.action, isPrimary: props.isPrimary, playerName: props.playerName }
+  BlockPlayerDialog: (props: { action: string; playerName: string; open: boolean }) => {
+    if (props.open) openedDialog = { action: props.action, playerName: props.playerName }
     return null
   },
 }))
 
-/** The requests block is `features/approvals`' and has its own query; it is not what this tab decides. */
+/** The requests block is `features/approvals`' and has its own query; what matters here is who it is told can resolve. */
 vi.mock('@/features/approvals', () => ({
-  BanRequestsSection: () => null,
+  BanRequestsSection: ({ canResolve }: { canResolve: boolean }) => <p>{canResolve ? 'requests: admin' : 'requests: master'}</p>,
 }))
 
 vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => confirm }))
@@ -114,17 +116,29 @@ describe('MasterTablePlayersTab', () => {
 
   /**
    * ADR-06 §8: an admin reads the same tab from /admin/tables/:id and changes nothing on it - neither the
-   * masters nor the roster. Seeing a veto is theirs; applying or asking for one is not.
+   * masters nor the roster, and asks for no veto: the admin is who decides one.
    */
-  it('read by an admin, shows the masters and the roster with no button to act on them', () => {
+  it('read by an admin, shows the masters and the roster with no master’s button', () => {
     outletContext = { tableId: 'table-1', isPrimary: false, masters: MASTERS, readOnly: true }
     players = [player(), player({ registrationId: 'reg-8', userId: 'user-8', userName: 'Eva', status: 'Blocked' })]
     renderTab()
 
     expect(screen.getByText('Ana')).toBeInTheDocument()
     expect(rowFor('Diego').queryByRole('button')).not.toBeInTheDocument()
-    expect(rowFor('Eva').queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Quitar a Beto' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Elegir carla' })).not.toBeInTheDocument()
+  })
+
+  /** An admin decided the veto, so an admin lifts it from the table's own tab — and answers the requests. */
+  it('lets an admin lift a veto, and tells the requests section the admin decides them', async () => {
+    outletContext = { tableId: 'table-1', isPrimary: false, masters: MASTERS, readOnly: true }
+    players = [player({ registrationId: 'reg-8', userId: 'user-8', userName: 'Eva', status: 'Blocked', blockedByName: 'Ana' })]
+    const user = userEvent.setup()
+    renderTab()
+
+    expect(screen.getByText('requests: admin')).toBeInTheDocument()
+    await user.click(rowFor('Eva').getByRole('button', { name: 'Levantar el veto' }))
+    expect(openedDialog).toEqual({ action: 'unblock', playerName: 'Eva' })
   })
 
   /** ADR-06 §8: the tab does not decide what a person's card is - the screen that mounts it does. */
@@ -199,44 +213,37 @@ describe('MasterTablePlayersTab', () => {
     expect(screen.queryByRole('button', { name: 'Elegir carla' })).not.toBeInTheDocument()
   })
 
-  /** The roster was a list with no action at all until F3.4. The veto is what it gained (ADR-09 §4, §5). */
-  it('offers the veto on each player of the roster', () => {
+  /** Any master asks for a veto, from the same button: the roster is where the people are. */
+  it('offers «Pedir veto» on each player of the roster', () => {
     renderTab()
-
-    expect(rowFor('Diego').getByRole('button', { name: 'Vetar' })).toBeInTheDocument()
+    expect(rowFor('Diego').getByRole('button', { name: 'Pedir veto' })).toBeInTheDocument()
+    expect(rowFor('Diego').queryByRole('button', { name: 'Vetar' })).not.toBeInTheDocument()
+    expect(screen.getByText('requests: master')).toBeInTheDocument()
   })
 
-  /**
-   * `roles-y-alcance.md §4, F3.4`, the half that is easy to get wrong: a co-master sees the action in
-   * the same place, and **the button itself says it is a request**. Learning that inside the dialog
-   * would be learning it after deciding — "antes de apretar, no después".
-   */
-  it('tells a co-master that what they send is a request, on the button and before it is pressed', () => {
+  it('offers the same button to a co-master, and says before pressing it that an admin decides', () => {
     outletContext = { tableId: 'table-1', isPrimary: false, masters: MASTERS }
     renderTab()
 
-    expect(rowFor('Diego').getByRole('button', { name: 'Pedir que se lo vete' })).toBeInTheDocument()
-    expect(rowFor('Diego').queryByRole('button', { name: 'Vetar' })).not.toBeInTheDocument()
-    expect(screen.getByText(/lo que mandás es un pedido/)).toBeInTheDocument()
+    expect(rowFor('Diego').getByRole('button', { name: 'Pedir veto' })).toBeInTheDocument()
+    expect(screen.getByText(/lo decide un admin/)).toBeInTheDocument()
   })
 
-  /** And the act that travels is chosen by who the reader is, not by what the dialog is told to send. */
-  it('opens the veto dialog knowing whether it will veto or ask', async () => {
+  it('opens the dialog to ask, never to veto', async () => {
     outletContext = { tableId: 'table-1', isPrimary: false, masters: MASTERS }
     const user = userEvent.setup()
     renderTab()
 
-    await user.click(rowFor('Diego').getByRole('button', { name: 'Pedir que se lo vete' }))
+    await user.click(rowFor('Diego').getByRole('button', { name: 'Pedir veto' }))
 
-    expect(openedDialog).toEqual({ action: 'block', isPrimary: false, playerName: 'Diego' })
+    expect(openedDialog).toEqual({ action: 'request', playerName: 'Diego' })
   })
 
   /**
-   * **A veto that disappears from the screen is not reversible in practice** — which is the whole of
-   * why ADR-09 §5 asks for a reason. The row stays, marked, saying whose decision it was and when, with the
-   * act that undoes it attached to it.
+   * **A veto that disappears from the screen is not reversible in practice**. The row stays, marked,
+   * saying whose decision it was and when, with the act that undoes it attached to it.
    */
-  it('keeps a vetoed row in the roster, with who vetoed it and when', () => {
+  it('keeps a vetoed row in the roster, with who vetoed it and when, and lets the Primary lift it', () => {
     players = [
       player({ status: 'Blocked', blockedByName: 'Ana', blockedAt: '2026-03-04T12:00:00', blockJustification: 'Falta sin avisar' }),
     ]
@@ -245,14 +252,59 @@ describe('MasterTablePlayersTab', () => {
     const row = rowFor('Diego')
     expect(row.getByText('Vetado')).toBeInTheDocument()
     expect(row.getByText(/Ana/)).toBeInTheDocument()
-    // The reason is on the row: it is what whoever weighs lifting the veto decides on (ADR-09 §5).
     expect(row.getByText(/Falta sin avisar/)).toBeInTheDocument()
     expect(row.getByRole('button', { name: 'Levantar el veto' })).toBeInTheDocument()
-    // And not the veto again: it is already applied (principle 2).
-    expect(row.queryByRole('button', { name: 'Vetar' })).not.toBeInTheDocument()
+    // And not the request again: it is already applied (principle 2).
+    expect(row.queryByRole('button', { name: 'Pedir veto' })).not.toBeInTheDocument()
   })
 
-  /** Lifting is the Primary's alone: a co-master asking for one is not a mechanism that exists. */
+  /** A veto is asked for by a master and decided by an admin, so the row carries both reasons. */
+  it('shows the master who asked for the veto and why, then the admin who decided it and why', () => {
+    players = [
+      player({
+        status: 'Blocked',
+        blockedByName: 'Ana',
+        blockedAt: '2026-03-04T12:00:00',
+        blockJustification: 'Confirmado',
+        banRequestedByName: 'Bruno',
+        banRequestJustification: 'Falta sin avisar',
+      }),
+    ]
+    renderTab()
+
+    const row = rowFor('Diego')
+    const requested = row.getByText('Lo pidió Bruno')
+    const requestReason = row.getByText('«Falta sin avisar»')
+    const decided = row.getByText(/Vetado por Ana/)
+    const decisionReason = row.getByText('«Confirmado»')
+    // In that order: the request, then the decision on it.
+    expect(requested.compareDocumentPosition(requestReason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(requestReason.compareDocumentPosition(decided) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(decided.compareDocumentPosition(decisionReason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  /** A veto older than requests has nothing behind it: only the admin's side shows. */
+  it('shows only the admin side of a veto with no request behind it', () => {
+    players = [player({ status: 'Blocked', blockedByName: 'Ana', blockedAt: '2026-03-04T12:00:00', blockJustification: 'Confirmado' })]
+    renderTab()
+
+    const row = rowFor('Diego')
+    expect(row.getByText(/Vetado por Ana/)).toBeInTheDocument()
+    expect(row.getByText('«Confirmado»')).toBeInTheDocument()
+    expect(row.queryByText(/Lo pidió/)).not.toBeInTheDocument()
+  })
+
+  it('opens the dialog to lift the veto', async () => {
+    players = [player({ status: 'Blocked', blockedByName: 'Ana', blockedAt: '2026-03-04T12:00:00' })]
+    const user = userEvent.setup()
+    renderTab()
+
+    await user.click(rowFor('Diego').getByRole('button', { name: 'Levantar el veto' }))
+
+    expect(openedDialog).toEqual({ action: 'unblock', playerName: 'Diego' })
+  })
+
+  /** Lifting is the Primary's or an admin's: a co-master lifting is not a mechanism that exists. */
   it('offers no way for a co-master to lift a veto', () => {
     outletContext = { tableId: 'table-1', isPrimary: false, masters: MASTERS }
     players = [player({ status: 'Blocked', blockedByName: 'Ana', blockedAt: '2026-03-04T12:00:00' })]

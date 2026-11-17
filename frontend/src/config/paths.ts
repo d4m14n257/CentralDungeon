@@ -177,12 +177,13 @@ export function adminTablesPath(): string {
 }
 
 /**
- * @param id the table
+ * @param id  the table
+ * @param tab the tab to open, such as `players`; the table's details when omitted
  * @returns the absolute path to the admin's view of one table (ADR-06 §8): the same tabs its master sees,
  *          read-only, plus the admin's own actions. The admin has no visibility limits (ADR-06 §8)
  */
-export function adminTableDetailPath(id: string): string {
-  return `/admin/tables/${id}`
+export function adminTableDetailPath(id: string, tab?: string): string {
+  return tab === undefined ? `/admin/tables/${id}` : `/admin/tables/${id}/${tab}`
 }
 
 /**

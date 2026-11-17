@@ -49,6 +49,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
         return List.of(
                 MatrixRow.of("GET /api/v1/admin-queue", w -> {
                     w.remember("free", w.approval(ApprovalRequestType.General, w.person("asker")).getId());
+                    w.remember("ban", playerBan(w));
                     w.remember("reserved", w.claim(w.approval(ApprovalRequestType.General, w.person("other asker")),
                             w.person("other admin", PlatformRole.ADMIN)).getId());
                     return MatrixRequest.path();
@@ -57,7 +58,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                         .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200, (w, body) -> assertThat(body)
-                                .contains(w.recall("free")).doesNotContain(w.recall("reserved"))), ADMIN, OWNER),
+                                .contains(w.recall("free"), w.recall("ban")).doesNotContain(w.recall("reserved"))), ADMIN, OWNER),
                 MatrixRow.of("POST /api/v1/admin-queue/{type}/{id}/claim", w -> MatrixRequest.path("approval_request",
                         w.approval(ApprovalRequestType.General, w.person("asker")).getId()))
                         .cell(denied(401), ANONYMOUS)
@@ -120,7 +121,8 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("player ban", "POST /api/v1/admin/requests/{id}/approve",
                         w -> resolution(w, playerBan(w)))
-                        .cell(denied(403), ADMIN, OWNER),
+                        .cell(denied(403), PLAYER, MASTER)
+                        .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("reserved by another admin", "POST /api/v1/admin/requests/{id}/approve",
                         w -> resolution(w, w.claim(w.approval(ApprovalRequestType.General, w.person("asker")),
                                 w.person("other admin", PlatformRole.ADMIN)).getId()))
@@ -133,7 +135,8 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                         .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("player ban", "POST /api/v1/admin/requests/{id}/reject",
                         w -> resolution(w, playerBan(w)))
-                        .cell(denied(403), ADMIN, OWNER),
+                        .cell(denied(403), PLAYER, MASTER)
+                        .cell(allowed(200), ADMIN, OWNER),
                 MatrixRow.variant("reserved by another admin", "POST /api/v1/admin/requests/{id}/reject",
                         w -> resolution(w, w.claim(w.approval(ApprovalRequestType.General, w.person("asker")),
                                 w.person("other admin", PlatformRole.ADMIN)).getId()))

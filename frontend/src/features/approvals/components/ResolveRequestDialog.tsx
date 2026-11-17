@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { useApproveRequest } from '../api/useApproveRequest'
 import { useRejectRequest } from '../api/useRejectRequest'
 import { approvalErrorKey } from '../approvalErrors'
-import { isResolvableByAdmin } from '../requestTypes'
 import { resolveApprovalRequestSchema, type ResolveApprovalRequestForm } from '../schemas'
 import type { ApprovalRequestSummary } from '../types'
 import { useConfirm } from '@/hooks/useConfirm'
@@ -112,12 +111,9 @@ export function ResolveRequestDialog({ request, action, open, onOpenChange, help
     )
   }
 
-  // A veto is the table's `Primary` to resolve; an admin never gets the form, whoever opened it.
-  const canResolve = request === null || isResolvableByAdmin(request.type)
-
   return (
     <FormDialog
-      open={open && canResolve}
+      open={open}
       onOpenChange={handleOpenChange}
       title={t(isApproving ? 'requests.approveDialogTitle' : 'requests.rejectDialogTitle')}
       description={t(isApproving ? 'requests.approveDialogDescription' : 'requests.rejectDialogDescription')}

@@ -63,7 +63,6 @@ final class GameTableSearchSpecification {
      * @param catalogIdsByTerm the catalog ids each catalog criterion resolved to, keyed by the term
      *                         it came from. A term missing from the map, or mapped to an empty set,
      *                         matches no table
-     * @param statuses         the statuses that count as publicly visible
      * @param actorId          the actor, from the token. It goes into the WHERE so a master never
      *                         sees their own table in the list meant for applying (ADR-05 §5, ADR-18 §4)
      * @return the predicate
@@ -71,11 +70,10 @@ final class GameTableSearchSpecification {
     static Specification<GameTable> forExplorer(
             SearchQuery query,
             Map<SearchTerm, Set<String>> catalogIdsByTerm,
-            Collection<GameTableStatus> statuses,
             String actorId) {
         return (root, criteriaQuery, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(root.get("status").in(statuses));
+            predicates.add(listedInExplorer(root, builder));
             predicates.add(notMasteredBy(root, criteriaQuery, builder, actorId));
             predicates.add(notVetoedOn(root, criteriaQuery, builder, actorId));
             Predicate matched = matching(root, criteriaQuery, builder, query, catalogIdsByTerm);
@@ -116,6 +114,22 @@ final class GameTableSearchSpecification {
             Predicate matched = matching(root, criteriaQuery, builder, query, catalogIdsByTerm);
             return matched == null ? listable : builder.and(listable, matched);
         };
+    }
+
+    /**
+     * What the explorer lists: a table that is open, or one in progress that is looking for players.
+     * Everything else is not for applying to.
+     *
+     * @param root    the table being queried
+     * @param builder the Criteria API builder
+     * @return the predicate
+     */
+    private static Predicate listedInExplorer(Root<GameTable> root, CriteriaBuilder builder) {
+        return builder.or(
+                builder.equal(root.get("status"), GameTableStatus.Opened),
+                builder.and(
+                        builder.equal(root.get("status"), GameTableStatus.InProgress),
+                        builder.isTrue(root.get("seekingPlayers"))));
     }
 
     /**

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -97,30 +98,6 @@ public interface ApprovalRequestRepository
             @Param("requestId") String requestId, @Param("requestType") ApprovalRequestType requestType);
 
     /**
-     * The open requests of one type about one entity - what a direct action has to close out.
-     *
-     * <p>When a {@code Primary} presses the veto button themselves, any {@code PlayerBan} a
-     * co-master had asked for on that same person has just been answered in fact, and leaving it
-     * {@code Pending} would strand it: approving it afterwards answers
-     * {@code REGISTRATION_ALREADY_BLOCKED} for ever, and the co-master who asked never learns what
-     * happened.
-     *
-     * <p><b>A locking read.</b> Somebody may be answering one of these requests at that same moment.
-     * Read plainly, the row would come back {@code Pending} from this transaction's snapshot, the close
-     * would wait for the other answer to commit and then overwrite it - a {@code Rejected} turned into
-     * {@code Approved}, with the requester told both. With the lock, the status is evaluated again on
-     * the committed row, and a request already answered is not returned.
-     *
-     * @param requestType the kind of request
-     * @param entityId    what the requests are about
-     * @param status      always {@link ApprovalStatus#Pending}
-     * @return the open requests about that entity, oldest first, locked for the rest of the transaction
-     */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    List<ApprovalRequest> findByRequestTypeAndEntityIdAndStatusOrderByCreatedAtAsc(
-            ApprovalRequestType requestType, String entityId, ApprovalStatus status);
-
-    /**
      * One bounded batch of requests nobody has answered yet, oldest first - what the orphan sweep
      * walks.
      *
@@ -163,15 +140,11 @@ public interface ApprovalRequestRepository
      * <p>{@code claimedBy} is a {@code left join} because the column is null on most rows - an inner
      * one would drop exactly the unreserved items, which are the bulk of the tray.
      *
-     * <p><b>It filters by type since F3.4</b>, and that is the point rather than a refinement. New
-     * request types used to join the tray for free precisely because this query did not ask what
-     * type a row was - which is right for four of the five and wrong for {@code PlayerBan}, whose
-     * resolver is the table's {@code Primary} and not an admin (ADR-09 §5). A tray that listed it would
-     * put work in front of admins that they are not allowed to do.
+     * <p>Every request type is the admins' to answer, the veto included, so the query does not ask
+     * what type a row is: a new type joins the tray with its producer.
      *
-     * @param status        the status that means "waiting", always {@link ApprovalStatus#Pending}
-     * @param excludedTypes the types that are not the admins' to answer
-     * @param actorId       the admin reading the tray, always from the token (ADR-05 §5)
+     * @param status   the status that means "waiting", always {@link ApprovalStatus#Pending}
+     * @param actorId  the admin reading the tray, always from the token
      * @param pageable the per-source ceiling, never a page of the answer - the tray pages after the
      *                 merge, because a page of the merge is not a page of any one source
      * @return the requests waiting for this admin, oldest first, with both people already loaded
@@ -181,13 +154,11 @@ public interface ApprovalRequestRepository
             join fetch ar.requestedBy
             left join fetch ar.claimedBy
             where ar.status = :status
-              and ar.requestType not in :excludedTypes
               and (ar.claimedBy is null or ar.claimedBy.id = :actorId)
             order by ar.createdAt asc, ar.id asc
             """)
     List<ApprovalRequest> findQueueItems(
             @Param("status") ApprovalStatus status,
-            @Param("excludedTypes") Collection<ApprovalRequestType> excludedTypes,
             @Param("actorId") String actorId,
             Pageable pageable);
 
@@ -203,8 +174,10 @@ public interface ApprovalRequestRepository
      * @param requestType which type, always {@link ApprovalRequestType#PlayerBan} today
      * @param status      which status, always {@link ApprovalStatus#Pending}
      * @param entityIds   the entities in scope; never empty - the caller short-circuits on empty
-     * @return the matching requests, oldest first
+     * @return the matching requests, oldest first, each with its requester already loaded so the
+     *         roster names them without one query per row
      */
+    @EntityGraph(attributePaths = "requestedBy")
     List<ApprovalRequest> findByRequestTypeAndStatusAndEntityIdInOrderByCreatedAtAsc(
             ApprovalRequestType requestType, ApprovalStatus status, Collection<String> entityIds);
 

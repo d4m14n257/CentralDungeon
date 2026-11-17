@@ -1,5 +1,9 @@
 package com.centraldungeon.registrations;
 
+import com.centraldungeon.approvals.ApprovalRequest;
+import com.centraldungeon.approvals.ApprovalRequestRepository;
+import com.centraldungeon.approvals.ApprovalRequestType;
+import com.centraldungeon.approvals.ApprovalStatus;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
@@ -33,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
@@ -146,6 +151,14 @@ public class RegistrationService {
     private final RegistrationMapper registrationMapper;
 
     /**
+     * The veto requests behind each veto, read for the roster only.
+     *
+     * <p>The repository and not {@code ApprovalService}: that service already depends on this one to
+     * apply an approved veto, so depending back on it would be a cycle of beans.
+     */
+    private final ApprovalRequestRepository approvalRequestRepository;
+
+    /**
      * @param registrationRepository     the {@code table_registrations} table
      * @param rejectionRepository        the reasons behind turned-down applications
      * @param registrationFileRepository the files attached to an application (ADR-13 §1 uso 2)
@@ -158,6 +171,7 @@ public class RegistrationService {
      * @param statusChangeRepository the veto's trail (ADR-09 §5)
      * @param tableVisibilityService the one gate of ADR-03 §7 and ADR-09 §4, so applying cannot walk around it
      * @param registrationMapper     entity to DTO
+     * @param approvalRequestRepository the veto requests the roster names next to each veto
      */
     public RegistrationService(
             TableRegistrationRepository registrationRepository,
@@ -171,7 +185,8 @@ public class RegistrationService {
             ScheduleConflictService scheduleConflictService,
             RegistrationStatusChangeRepository statusChangeRepository,
             TableVisibilityService tableVisibilityService,
-            RegistrationMapper registrationMapper) {
+            RegistrationMapper registrationMapper,
+            ApprovalRequestRepository approvalRequestRepository) {
         this.registrationRepository = registrationRepository;
         this.rejectionRepository = rejectionRepository;
         this.registrationFileRepository = registrationFileRepository;
@@ -184,6 +199,7 @@ public class RegistrationService {
         this.statusChangeRepository = statusChangeRepository;
         this.tableVisibilityService = tableVisibilityService;
         this.registrationMapper = registrationMapper;
+        this.approvalRequestRepository = approvalRequestRepository;
     }
 
     /**
@@ -213,7 +229,8 @@ public class RegistrationService {
         if (masterService.isMasterOf(gameTableId, actorId)) {
             throw new ForbiddenActionException("A master of this table cannot apply to it as a candidate");
         }
-        if (table.getStatus() != GameTableStatus.Opened) {
+        // Open, or in progress with its masters looking for players: one definition, on the table.
+        if (!table.acceptsApplications()) {
             throw new ConflictException("Table is not open for applications");
         }
         if (registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(gameTableId, actorId, ACTIVE_STATUSES)) {
@@ -352,12 +369,8 @@ public class RegistrationService {
         notificationService.notifyRegistrationAccepted(candidateId, table);
         warnAboutNowClashingApplications(candidateId, table);
 
-        Integer maxPlayers = table.getMaxPlayers();
-        if (maxPlayers != null) {
-            long playerCount = registrationRepository.countByGameTable_IdAndStatus(table.getId(), TableRegistrationStatus.Player);
-            if (playerCount >= maxPlayers) {
-                autoRejectRemainingCandidates(table);
-            }
+        if (isFull(table)) {
+            onSeatsFilled(table);
         }
 
         return registrationMapper.toResponse(registration, filesOf(registration.getId()));
@@ -536,6 +549,12 @@ public class RegistrationService {
      * reversible the backend makes it. Each such row carries who decided it, when, and why - because
      * the master reading it six months later is deciding whether that still stands.
      *
+     * <p><b>A veto has two reasons, and the row carries both</b>: the admin's note that decided it,
+     * and the justification of the master who asked for it, with who asked. Both come in a fixed
+     * number of queries for the whole roster. A veto with no approved request behind it - older than
+     * the request flow - carries only the admin's side. The vetoed person reads none of this: the
+     * table answers them 404.
+     *
      * <p>It does not widen anything else: {@code TableTaskService} asks for a live {@code Player}
      * registration before it will address a task to somebody, so a vetoed person cannot be chosen in
      * the picker that reads this same list.
@@ -556,12 +575,13 @@ public class RegistrationService {
         List<TableRegistration> roster = registrationRepository.findByGameTable_IdAndStatusInOrderByCreatedAtAsc(
                 gameTableId, List.of(TableRegistrationStatus.Player, TableRegistrationStatus.Blocked));
         Map<String, RegistrationStatusChange> vetoes = latestVetoesOf(roster);
+        Map<String, ApprovalRequest> vetoRequests = latestApprovedVetoRequestsOf(roster);
 
         return roster.stream()
                 .map(registration -> {
-                    RegistrationStatusChange veto = registration.getStatus() == TableRegistrationStatus.Blocked
-                            ? vetoes.get(registration.getId())
-                            : null;
+                    boolean blocked = registration.getStatus() == TableRegistrationStatus.Blocked;
+                    RegistrationStatusChange veto = blocked ? vetoes.get(registration.getId()) : null;
+                    ApprovalRequest request = blocked ? vetoRequests.get(registration.getId()) : null;
                     return new TablePlayerResponse(
                             registration.getId(),
                             registration.getUser().getId(),
@@ -569,48 +589,38 @@ public class RegistrationService {
                             registration.getStatus().name(),
                             veto == null ? null : displayNameOf(veto.getChangedBy()),
                             veto == null ? null : veto.getCreatedAt(),
-                            veto == null ? null : veto.getJustification());
+                            veto == null ? null : veto.getJustification(),
+                            request == null ? null : displayNameOf(request.getRequestedBy()),
+                            request == null ? null : request.getJustification());
                 })
                 .toList();
     }
 
     /**
-     * Vetoing somebody from a table. {@code Candidate} or {@code Player} to {@code Blocked} (ADR-09 §5).
+     * Vetoing somebody from a table: {@code Candidate} or {@code Player} to {@code Blocked}.
      *
-     * <p><b>Only the {@code Primary}</b>, and the check is {@code isPrimaryOf} and not
-     * {@code isMasterOf} - which is the difference between this and every other master operation on
-     * an application. ADR-09 §5 is explicit: the veto is the {@code Primary}'s, and a co-master asks for
-     * one, through {@code approval_requests}. A {@code Secondary}
-     * calling this gets a {@code 403 NOT_PRIMARY_MASTER}: it is who they are, not what they sent.
+     * <p>Private, and reached only through {@link #applyApprovedBlock}: nobody vetoes directly. A
+     * master asks for a veto and an admin decides it, so by the time this runs the decision was already
+     * authorized by whoever resolved the request.
      *
-     * <p><b>The authorization lives here and not in a {@code @PreAuthorize}</b>, for the reason the
-     * whole project keeps repeating: being <em>this</em> table's Primary is a row in {@code masters}
-     * and no annotation can see it (hard rule 17, ADR-05 §5, ADR-06 §4). Same principle as F3.1 - «el otorgamiento es la
-     * regla, no la puerta».
+     * <p>Under the table's lock, like every other transition here: two admins approving vetoes on the
+     * same person at the same instant must produce one veto and one 409, not two rows in the trail.
      *
-     * <p>Under the table's lock, like every other transition here: two masters vetoing the same
-     * person at the same instant must produce one veto and one 409, not two rows in the trail.
-     *
-     * @param gameTableId    the table the application must belong to - the one the authorization is
-     *                        about, and therefore the one the path names
+     * @param gameTableId    the table the application must belong to
      * @param registrationId the application to veto
-     * @param actorId        the actor, from the token; has to be the table's {@code Primary}
-     * @param justification  why, never blank - ADR-09 §5 makes it the thing that lets the veto be undone
+     * @param actorId        the admin who approved the veto, from the token
+     * @param justification  why, never blank - it is what lets the veto be undone knowingly
      * @return the application, now {@code Blocked}, with who vetoed it and when
-     * @throws NotFoundException        404 when the application does not belong to that table
-     * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER} when the actor is not the
-     *                                  table's Primary
-     * @throws ConflictException        409 {@code REGISTRATION_ALREADY_BLOCKED} when it already is,
-     *                                  or a plain conflict for an application that is over
+     * @throws NotFoundException 404 when the application does not belong to that table
+     * @throws ConflictException 409 {@code REGISTRATION_ALREADY_BLOCKED} when it already is, or a plain
+     *                           conflict for an application that is over
      */
-    @Transactional
-    public RegistrationResponse block(
+    private RegistrationResponse block(
             String gameTableId, String registrationId, String actorId, String justification) {
         // The lock first, and the application read after it: read before the wait, it would still say
         // Player once a concurrent veto had committed, and the person would be vetoed twice.
         lockTable(gameTableId);
         TableRegistration registration = requireRegistrationOf(gameTableId, registrationId);
-        requirePrimaryOf(gameTableId, actorId, "veto somebody from this table");
 
         TableRegistrationStatus from = registration.getStatus();
         if (from == TableRegistrationStatus.Blocked) {
@@ -626,38 +636,42 @@ public class RegistrationService {
     }
 
     /**
-     * Lifting a veto. {@code Blocked} back to wherever the person was (ADR-09 §5).
+     * Lifting a veto: {@code Blocked} back to wherever the person was.
      *
      * <p><b>Back to where they were, read from the trail</b> - not "back to {@code Player}". A
      * candidate who was vetoed while still queued goes back to {@code Candidate}, and the only place
      * that knows which of the two it was is {@code from_status} of the last move into
-     * {@code Blocked}. This is the concrete thing a {@code blocked_reason} column could not have
-     * done, and the reason F3.4 added a table.
+     * {@code Blocked}.
      *
-     * <p>Same actor as {@link #block}: reversibility that a different person has to perform is not
-     * reversibility of the act, it is an appeal.
+     * <p><b>The table's {@code Primary} or an admin.</b> The veto itself is decided by an admin, so an
+     * admin can undo it; the {@code Primary} runs the table and answers for who sits at it. A
+     * co-master gets {@code 403 NOT_PRIMARY_MASTER}.
      *
      * <p><b>Except for the seat.</b> A vetoed player frees their seat, and the table may have filled it
-     * since. Lifting the veto never fails on that account, but it hands the person back as a
-     * {@code Candidate} rather than pushing the table over {@code max_players}: the veto is undone,
-     * and whether they get a seat again is the same decision any other candidate waits on.
+     * since. Lifting the veto never fails on that account: a person coming back to a full table lands
+     * as {@code Rejected}, with the same system reason a full table gives every remaining candidate,
+     * so they see the table again and can apply once a seat frees. Coming back as {@code Player} and
+     * completing the seats closes the table to the remaining candidates, exactly as accepting the last
+     * one does.
      *
      * @param gameTableId    the table the application must belong to
      * @param registrationId the application
-     * @param actorId        the actor, from the token; has to be the table's {@code Primary}
+     * @param actorId        the actor, from the token; has to be the table's {@code Primary} or an admin
      * @param justification  why the veto is being lifted, never blank
-     * @return the application, back where it was - or {@code Candidate} if it was a player and the
-     *         table has no seat left
+     * @return the application, back where it was - or {@code Rejected} when the table has no seat left
      * @throws NotFoundException        404 when the application does not belong to that table
-     * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER} when the actor is not Primary
+     * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER} when the actor is neither the
+     *                                  Primary nor an admin
      * @throws ConflictException        409 {@code REGISTRATION_NOT_BLOCKED} when it is not vetoed
      */
     @Transactional
     public RegistrationResponse unblock(
             String gameTableId, String registrationId, String actorId, String justification) {
         GameTable table = lockTable(gameTableId);
+        // Who first, then which row: somebody who does not run the table gets the same 403 whatever id
+        // they send, and cannot learn from a 404 which applications belong to it.
+        requirePrimaryOrAdmin(gameTableId, actorId);
         TableRegistration registration = requireRegistrationOf(gameTableId, registrationId);
-        requirePrimaryOf(gameTableId, actorId, "lift a veto on this table");
 
         if (registration.getStatus() != TableRegistrationStatus.Blocked) {
             throw new ConflictException(
@@ -671,46 +685,43 @@ public class RegistrationService {
                 .findFirstByRegistration_IdAndToStatusOrderByCreatedAtDesc(registrationId, TableRegistrationStatus.Blocked)
                 .map(RegistrationStatusChange::getFromStatus)
                 .orElse(TableRegistrationStatus.Player);
-        if (to == TableRegistrationStatus.Player && isFull(table)) {
-            to = TableRegistrationStatus.Candidate;
+        if (isFull(table)) {
+            to = TableRegistrationStatus.Rejected;
+            rejectionRepository.save(new RegistrationRejection(registration, AUTO_REJECT_REASON_CODE, null));
         }
 
-        return moveTo(registration, TableRegistrationStatus.Blocked, to, actorId, justification);
+        RegistrationResponse response = moveTo(registration, TableRegistrationStatus.Blocked, to, actorId, justification);
+        if (to == TableRegistrationStatus.Player && isFull(table)) {
+            onSeatsFilled(table);
+        }
+        return response;
     }
 
     /**
-     * The veto a co-master asked for, applied once the {@code Primary} said yes (ADR-09 §5).
+     * The veto a master asked for, applied once an admin approved it.
      *
-     * <p>Called by {@code ApprovalService} when a {@code PlayerBan} request is approved, and it is
-     * the <b>same</b> {@link #block} the direct endpoint uses - deliberately, and for the reason
-     * F3.2 wrote down about roles: «el rol queda otorgado por el {@code UserRoleService}, no por una
-     * segunda ruta que haga lo mismo». A second path that wrote {@code Blocked} would be a second
-     * copy of the rules, or - worse - a version without them.
-     *
-     * <p>It adds nothing of its own beyond resolving the table from the application - not even the
-     * authorization, which {@link #block} checks again on its own. {@code ApprovalService} has
-     * already established that the resolver is this table's {@code Primary}, so the second check
-     * can only agree; it is left in because a gate that trusts its caller is a gate that stops
-     * being one the day a second caller appears.
+     * <p>Called by {@code ApprovalService} when a {@code PlayerBan} request is approved, and it is the
+     * only way {@code Blocked} is ever written: a second path would be a second copy of the rules, or -
+     * worse - a version without them. Who may approve is the admin endpoint's annotation; this resolves
+     * the table from the application and applies the veto under that table's lock.
      *
      * @param registrationId the application the request pointed at
-     * @param primaryId      the {@code Primary} who approved it, from the token
+     * @param adminId        the admin who approved it, from the token
      * @param justification  the resolution note, which becomes the veto's reason
      * @return the application, now {@code Blocked}
      */
     @Transactional
-    public RegistrationResponse applyApprovedBlock(String registrationId, String primaryId, String justification) {
-        return block(tableIdOf(registrationId), registrationId, primaryId, justification);
+    public RegistrationResponse applyApprovedBlock(String registrationId, String adminId, String justification) {
+        return block(tableIdOf(registrationId), registrationId, adminId, justification);
     }
 
     /**
-     * The table an application belongs to, for the callers that have a registration id and need to
-     * know which table's {@code Primary} is entitled to answer for it.
+     * The table an application belongs to, for the callers that have a registration id and need its
+     * table - to lock it, or to link it.
      *
      * <p>{@code ApprovalService} is the caller: a {@code PlayerBan} points at a
-     * {@code table_registration}, and deciding whether the actor may resolve it means going from
-     * that row to its table. Exposed here rather than letting another service reach into
-     * {@code table_registrations}, which is the rule this package exists to keep (regla dura 1).
+     * {@code table_registration}, and resolving it means taking that table's lock first. Exposed here
+     * rather than letting another service reach into {@code table_registrations}.
      *
      * <p>Read as a projection and never as the entity: the writes that need it look it up before
      * taking the table's lock, and an entity loaded then would sit in the persistence context with its
@@ -729,113 +740,80 @@ public class RegistrationService {
     }
 
     /**
-     * The table of each of several applications, in one query - {@link #tableIdOf} for a whole page.
+     * Who each of several applications is from, and its table, in one query.
      *
-     * <p>{@code ApprovalService} is the caller, for the same reason as {@link #tableIdOf}: a page of
-     * requests includes vetoes, and the listing links each to the table it concerns.
+     * <p>{@code ApprovalService} and the admin tray are the callers: a veto request is about a third
+     * person, and an admin deciding it has to read whom it is about and reach the table, on every line
+     * of a page, without one lookup per line.
      *
      * @param registrationIds the applications
-     * @return table id by application id; an application that does not exist is absent
+     * @return the subject by application id; an application that does not exist is absent
      */
     @Transactional(readOnly = true)
-    public Map<String, String> tableIdsOf(java.util.Collection<String> registrationIds) {
+    public Map<String, RegistrationSubject> subjectsOf(java.util.Collection<String> registrationIds) {
         if (registrationIds.isEmpty()) {
             return Map.of();
         }
-        return registrationRepository.findTablesByRegistrationIds(registrationIds).stream()
-                .collect(Collectors.toMap(RegistrationTable::registrationId, RegistrationTable::gameTableId));
+        return registrationRepository.findSubjectsByRegistrationIds(registrationIds).stream()
+                .collect(Collectors.toMap(RegistrationSubject::registrationId, subject -> subject));
     }
 
     /**
-     * One application as its readers see it, with its veto described when it has one.
-     *
-     * <p>Read by {@code ApprovalService} after a {@code Primary} grants a veto request: the screen
-     * that has that button is the roster, so what it needs back is the row, not the request.
-     *
-     * @param registrationId the application
-     * @return its response shape
-     * @throws NotFoundException when no application has that id
-     */
-    @Transactional(readOnly = true)
-    public RegistrationResponse findResponse(String registrationId) {
-        TableRegistration registration = getRegistrationById(registrationId);
-        RegistrationResponse response = registrationMapper.toResponse(registration, filesOf(registrationId));
-        if (registration.getStatus() != TableRegistrationStatus.Blocked) {
-            return response;
-        }
-        return statusChangeRepository
-                .findFirstByRegistration_IdAndToStatusOrderByCreatedAtDesc(registrationId, TableRegistrationStatus.Blocked)
-                .map(veto -> withVeto(
-                        response, displayNameOf(veto.getChangedBy()), veto.getCreatedAt(), veto.getJustification()))
-                .orElse(response);
-    }
-
-    /**
-     * Every application of one table, by id.
+     * Who every application of one table is from, by application id, in one query.
      *
      * <p>Read by {@code ApprovalService} for two things at once, and both are the price of the
-     * polymorphic reference (ADR-16 §2): {@code entity_id} on {@code approval_requests} is a plain column
-     * with no foreign key, so there is nothing to join through - the set has to be resolved first to
-     * scope the query, <b>and</b> the rows are what turn a request into a sentence about a person.
-     * A veto request that cannot name who it is about is one a {@code Primary} with two of them open
-     * can only tell apart by the wording of the reason.
+     * polymorphic reference: {@code entity_id} on {@code approval_requests} is a plain column with no
+     * foreign key, so there is nothing to join through - the set has to be resolved first to scope the
+     * query, <b>and</b> the subjects are what turn a request into a sentence about a person. A veto
+     * request that cannot name who it is about is one a reader with two of them open can only tell
+     * apart by the wording of the reason.
      *
-     * <p>Asked here rather than by reaching into {@code table_registrations} from another package
-     * (regla dura 1).
-     *
-     * <p>A withdrawn application is left out, like everywhere else an application is read: a veto
-     * request about somebody who already took their application back names a person who is no longer
-     * there, and answering it is refused anyway because what it points at is gone.
+     * <p>Withdrawn applications are included, like in {@link #subjectsOf}: a veto request about
+     * somebody who took their application back is still waiting on an admin, and it still has to say
+     * whom it is about.
      *
      * @param gameTableId the table
-     * @return its applications that are not deleted, keyed by id; empty when it has none
+     * @return the subject of each of its applications, withdrawn ones included; empty when it has none
      */
     @Transactional(readOnly = true)
-    public Map<String, TableRegistration> registrationsOf(String gameTableId) {
-        Map<String, TableRegistration> byId = new HashMap<>();
-        for (TableRegistration registration : registrationRepository.findByGameTable_Id(gameTableId)) {
-            if (registration.getStatus() != TableRegistrationStatus.Deleted) {
-                byId.put(registration.getId(), registration);
-            }
-        }
-        return byId;
-    }
-
-    /** The display name of whoever an application belongs to - a screen shows a person, not an id. */
-    public static String applicantNameOf(TableRegistration registration) {
-        return displayNameOf(registration.getUser());
+    public Map<String, RegistrationSubject> subjectsOfTable(String gameTableId) {
+        return registrationRepository.findSubjectsByGameTableId(gameTableId).stream()
+                .collect(Collectors.toMap(RegistrationSubject::registrationId, subject -> subject));
     }
 
     /**
-     * Whether an application is one a veto could still be asked for.
+     * Confirms an application of this table is one a veto could still be asked for.
      *
-     * <p>Asked by {@code ApprovalService} <em>before</em> it writes a {@code PlayerBan} request, so
-     * a co-master is refused at the moment they ask rather than after the {@code Primary} has read
-     * it. It is the same question {@link #block} asks, in the shape a caller with no intention of
-     * writing anything can use.
+     * <p>Asked by {@code ApprovalService} <em>before</em> it writes a {@code PlayerBan} request, under
+     * the table's lock the caller already holds, so a master is refused at the moment they ask rather
+     * than after an admin has read it. It is the same question {@link #block} asks.
      *
+     * @param gameTableId    the table the application must belong to
      * @param registrationId the application
-     * @return true when it is a {@code Candidate} or a {@code Player}
+     * @throws NotFoundException 404 when the application does not belong to that table
+     * @throws ConflictException 409 {@code REGISTRATION_ALREADY_BLOCKED} when it is not a
+     *                           {@code Candidate} or a {@code Player}
      */
     @Transactional(readOnly = true)
-    public boolean isBlockable(String registrationId) {
-        return BLOCKABLE_STATUSES.contains(getRegistrationById(registrationId).getStatus());
+    public void requireBlockableOn(String gameTableId, String registrationId) {
+        if (!BLOCKABLE_STATUSES.contains(requireRegistrationOf(gameTableId, registrationId).getStatus())) {
+            throw new ConflictException(
+                    "Registration " + registrationId + " cannot be blocked",
+                    ConflictException.REGISTRATION_ALREADY_BLOCKED);
+        }
     }
 
     /**
      * The application, confirmed to belong to the table the caller named.
      *
-     * <p>Both veto endpoints hang off the table, because the authorization is «are you the
-     * {@code Primary} of <b>this</b> table» and the table has to be readable for that to mean
-     * anything (§2.6, ADR-05 §5). Resolving the table from the application instead would make the path
-     * segment decorative - a URL could name one table and act on a row belonging to another, and the
-     * check would still pass because it was never asked about what the URL said. No escalation
-     * follows from it, but «un path que no puede expresar lo incorrecto no es lo mismo que una regla
-     * aplicada» is this controller's own sentence, and this is the rule that makes it true.
+     * <p>The veto endpoints hang off the table, because the authorization is about <b>this</b> table
+     * and the table has to be readable for that to mean anything. Resolving the table from the
+     * application instead would make the path segment decorative - a URL could name one table and act
+     * on a row belonging to another, and the check would still pass because it was never asked about
+     * what the URL said.
      *
-     * <p>404 and not 400 for a mismatch, the same answer {@code ApprovalService} gives for a veto
-     * request of another table: a row that is not this table's is not this caller's business to
-     * learn the existence of.
+     * <p>404 and not 400 for a mismatch: a row that is not this table's is not this caller's business
+     * to learn the existence of.
      */
     private TableRegistration requireRegistrationOf(String gameTableId, String registrationId) {
         TableRegistration registration = getRegistrationById(registrationId);
@@ -894,6 +872,29 @@ public class RegistrationService {
         return latest;
     }
 
+    /**
+     * The latest approved veto request of each vetoed application on a roster, in one query.
+     *
+     * <p>The same overwrite-as-it-goes trick as {@link #latestVetoesOf}, with each requester already
+     * loaded by the repository. A veto older than the request flow has nothing behind it and is simply
+     * absent from the map.
+     */
+    private Map<String, ApprovalRequest> latestApprovedVetoRequestsOf(List<TableRegistration> registrations) {
+        List<String> blockedIds = registrations.stream()
+                .filter(registration -> registration.getStatus() == TableRegistrationStatus.Blocked)
+                .map(TableRegistration::getId)
+                .toList();
+        if (blockedIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, ApprovalRequest> latest = new HashMap<>();
+        for (ApprovalRequest request : approvalRequestRepository.findByRequestTypeAndStatusAndEntityIdInOrderByCreatedAtAsc(
+                ApprovalRequestType.PlayerBan, ApprovalStatus.Approved, blockedIds)) {
+            latest.put(request.getEntityId(), request);
+        }
+        return latest;
+    }
+
     /** The three veto fields, put onto a response the mapper left empty. */
     private static RegistrationResponse withVeto(
             RegistrationResponse response, String blockedByName, LocalDateTime blockedAt, String justification) {
@@ -910,20 +911,26 @@ public class RegistrationService {
     }
 
     /**
-     * The narrower pertenencia check, and the only place this service asks for it (ADR-09 §5, ADR-06 §3).
+     * Who may lift a veto: the table's {@code Primary}, who answers for who sits at it, or an admin,
+     * who decided the veto in the first place.
      *
-     * <p>Every other operation here settles for {@code isMasterOf}, because accepting and rejecting
-     * are things a table's co-masters do. The veto is not one of those: it decides that somebody is
-     * not welcome at a table, and ADR-09 §5 puts that with whoever runs it.
+     * <p>Every other master operation here settles for {@code isMasterOf}; lifting a veto is narrower,
+     * because it undoes a decision about somebody not being welcome at the table.
      *
      * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER}, never a 400 - it is who you
      *                                  are, not what you sent
      */
-    private void requirePrimaryOf(String gameTableId, String actorId, String action) {
-        if (!masterService.isPrimaryOf(gameTableId, actorId)) {
-            throw new ForbiddenActionException(
-                    "Only the Primary master can " + action, ForbiddenActionException.NOT_PRIMARY_MASTER);
+    private void requirePrimaryOrAdmin(String gameTableId, String actorId) {
+        if (masterService.isPrimaryOf(gameTableId, actorId)) {
+            return;
         }
+        Set<String> roles = userService.loadAuthSnapshot(actorId).roles();
+        if (roles.contains(PlatformRole.ADMIN.roleName()) || roles.contains(PlatformRole.OWNER.roleName())) {
+            return;
+        }
+        throw new ForbiddenActionException(
+                "Only the Primary master or an admin can lift a veto on table " + gameTableId,
+                ForbiddenActionException.NOT_PRIMARY_MASTER);
     }
 
     private Map<String, RegistrationRejection> loadRejections(List<TableRegistration> registrations) {
@@ -959,7 +966,19 @@ public class RegistrationService {
         }
     }
 
-    private void autoRejectRemainingCandidates(GameTable table) {
+    /**
+     * What happens the moment the last seat is taken: every remaining candidate is turned down with
+     * the system's reason, and a table that was looking for players stops looking.
+     *
+     * <p>The one definition of that effect, for the three ways a table fills up: accepting the
+     * candidate who completes it, lifting a veto that brings a player back into the last seat, and an
+     * admin lowering the capacity to the players already in ({@code GameTableService.adminUpdate}).
+     * Public for that last caller; the caller must already hold the table's lock, taken before it read
+     * the player count that told it the seats are all taken.
+     *
+     * @param table the table whose seats are all taken, locked by the caller
+     */
+    public void onSeatsFilled(GameTable table) {
         List<TableRegistration> remaining =
                 registrationRepository.findByGameTable_IdAndStatusOrderByCreatedAtAsc(table.getId(), TableRegistrationStatus.Candidate);
         for (TableRegistration candidate : remaining) {
@@ -967,6 +986,7 @@ public class RegistrationService {
             rejectionRepository.save(new RegistrationRejection(candidate, AUTO_REJECT_REASON_CODE, null));
             notificationService.notifyRegistrationRejected(candidate.getUser().getId(), table);
         }
+        table.setSeekingPlayers(false);
     }
 
     private void requireMasterOf(String gameTableId, String actorId, String action) {
@@ -979,10 +999,10 @@ public class RegistrationService {
      * Takes the row lock that every write to a table's applications serializes on, and returns the
      * table read under it.
      *
-     * <p>Public for the one other writer of that state: approving or refusing a veto request has to
-     * queue on the same lock, and take it <em>before</em> the request's, in the order a direct veto
-     * takes them - the other order is a deadlock between the two. A deleted table does not exist for
-     * any read, so it is a 404 here too and never a conflict that would confirm it is there.
+     * <p>Public for the one other writer of that state: asking for, approving and refusing a veto
+     * request queue on the same lock, and take it <em>before</em> the request's - the one order every
+     * veto path follows, so each reads under it what the others committed. A deleted table does not
+     * exist for any read, so it is a 404 here too and never a conflict that would confirm it is there.
      *
      * @param gameTableId the table
      * @return the table, locked until the transaction ends
@@ -996,8 +1016,23 @@ public class RegistrationService {
     }
 
     /**
+     * Takes the same row lock as {@link #lockTable}, but does not refuse a deleted table.
+     *
+     * <p>For the one caller that has to keep the lock order on a table that may be gone: resolving a
+     * veto request about an application that went away with its table. Approving it is still refused,
+     * because what it points at no longer exists; refusing it is what takes it out of the tray.
+     *
+     * @param gameTableId the table
+     */
+    @Transactional
+    public void lockTableRowEvenIfDeleted(String gameTableId) {
+        gameTableRepository.findByIdForUpdate(gameTableId);
+    }
+
+    /**
      * Applying and accepting refuse a full table outright; lifting a veto, the third way a player can
-     * come back, is not refused but lands the person as a candidate instead (see {@link #unblock}).
+     * come back, is not refused but lands the person as a rejected application instead (see
+     * {@link #unblock}).
      */
     private void requireSeatLeft(GameTable table) {
         if (isFull(table)) {

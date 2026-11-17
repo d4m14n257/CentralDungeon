@@ -57,6 +57,16 @@ export interface ApprovalRequestDetail {
   resolvedByName: string | null
   resolutionNote: string | null
   resolvedAt: string | null
+  /**
+   * The table the request is about, or null when it is about none. A pause names its table and a veto
+   * reaches it through its application; the other kinds concern a person.
+   */
+  gameTableId: string | null
+  /**
+   * For a veto request, the display name of the person it would bar — an admin decides about them,
+   * not about whoever asked. Null for every other kind, whose subject is the requester.
+   */
+  subjectName: string | null
   createdAt: string
 }
 
@@ -65,8 +75,8 @@ export interface ApprovalRequestDetail {
  * reader's own list.
  *
  * Derived from {@link ApprovalRequestDetail} because it is the narrower view of the same thing — the
- * listing carries no resolution and no polymorphic reference — plus the two ids it needs to link out:
- * the requester's, and the table the request concerns.
+ * listing carries no resolution and no polymorphic reference — plus the requester's id, so their name
+ * can link out.
  */
 export type ApprovalRequestSummary = StrictOmit<
   ApprovalRequestDetail,
@@ -74,11 +84,6 @@ export type ApprovalRequestSummary = StrictOmit<
 > & {
   /** Only so the requester's name can link to their page; what the row shows is `requestedByName`. */
   requestedById: string
-  /**
-   * The table the request is about, or null when it is about none. A pause names its table and a veto
-   * reaches it through its application; the other kinds concern a person.
-   */
-  gameTableId: string | null
 }
 
 /**

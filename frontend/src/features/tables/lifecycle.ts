@@ -61,3 +61,17 @@ export const ALL_TABLE_STATUSES = [
 export function isMasterEditable(status: GameTableStatus): boolean {
   return MASTER_EDITABLE_STATUSES.includes(status)
 }
+
+/**
+ * Whether this table takes applications right now: it is `Opened`, or it is `InProgress` and looking
+ * for players.
+ *
+ * **Mirror of the backend rule**, written once here so the apply button, the card and any future caller
+ * agree. A running table accepts applications only while its masters have said so; the backend turns
+ * the flag off by itself when the seats fill or the table leaves `InProgress`.
+ *
+ * @param table the table's status and whether it is looking for players
+ */
+export function acceptsApplications(table: { status: GameTableStatus; seekingPlayers: boolean }): boolean {
+  return table.status === 'Opened' || (table.status === 'InProgress' && table.seekingPlayers)
+}

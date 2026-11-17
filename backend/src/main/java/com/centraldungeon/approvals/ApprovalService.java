@@ -14,9 +14,8 @@ import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.notifications.NotificationType;
 import com.centraldungeon.registrations.RegistrationService;
-import com.centraldungeon.registrations.TableRegistration;
+import com.centraldungeon.registrations.RegistrationSubject;
 import com.centraldungeon.registrations.dto.BanRequestResponse;
-import com.centraldungeon.registrations.dto.RegistrationResponse;
 import com.centraldungeon.tables.GameTableService;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
@@ -107,16 +106,12 @@ public class ApprovalService {
      */
     private final GameTableService gameTableService;
 
-    /** Where {@code Blocked} is written (ADR-09 §5). Approving a {@code PlayerBan} goes through it, never around it. */
+    /** Where {@code Blocked} is written. Approving a {@code PlayerBan} goes through it, never around it. */
     private final RegistrationService registrationService;
 
     /**
-     * Answers who runs a table, for the one type whose resolver is not an admin.
-     *
-     * <p>{@code PlayerBan} is decided by the table's {@code Primary} (ADR-09 §5), and being <em>this</em>
-     * table's Primary is a row in {@code masters} that no {@code @PreAuthorize} can see (hard rule 17, ADR-05 §5,
-     * ADR-06 §4). So the check is here, keyed off the request's type - the same principle F3.1 settled:
-     * «el otorgamiento es la regla, no la puerta».
+     * Answers who runs a table: who may ask for a veto on it, and who may read the pending ones. Being a
+     * master of <em>this</em> table is a row in {@code masters} that no {@code @PreAuthorize} can see.
      */
     private final MasterService masterService;
 
@@ -133,7 +128,7 @@ public class ApprovalService {
      * @param notificationService       tells the requester the outcome
      * @param gameTableService          the table's lifecycle - the effect of a {@code TablePause}
      * @param registrationService       the veto - the effect of a {@code PlayerBan}
-     * @param masterService             answers pertenencia, for who may resolve a {@code PlayerBan}
+     * @param masterService             answers membership of a table, for who may ask for a veto
      * @param approvalMapper            entity to DTO
      */
     public ApprovalService(
@@ -215,8 +210,7 @@ public class ApprovalService {
                     "REQUEST_TYPE_NOT_ACCEPTED_HERE");
         }
 
-        return approvalMapper.toDetailResponse(
-                openRequest(type, requester.getId(), requester, justification));
+        return detailOf(openRequest(type, requester.getId(), requester, justification));
     }
 
     /**
@@ -255,89 +249,92 @@ public class ApprovalService {
     }
 
     /**
-     * A co-master asking the {@code Primary} to veto somebody (ADR-09 §5).
+     * A master of the table asking the admins to veto somebody.
      *
-     * <p>The other half of the pair {@code RegistrationService.block} is: a {@code Primary} vetoes,
-     * a {@code Secondary} asks. <b>Two endpoints and not one that behaves differently</b> - the
-     * screen already knows which the reader is and says so before the button is pressed
-     * (roles-y-alcance.md §4), and one endpoint that sometimes vetoes and sometimes asks would
-     * answer with a record half of whose fields are null, which R3 forbids.
+     * <p>Any master who runs the table may ask - the {@code Primary} or a co-master - and nobody vetoes
+     * directly: an admin decides, through {@link #approve} or {@link #reject}. Until then nothing about
+     * the person changes.
+     *
+     * <p><b>The table's lock is the first statement</b>, which is what serializes two masters asking
+     * about the same person at once: without it both read "nothing pending" and both insert, and the
+     * tray gets the same decision twice. The requester's own row is deliberately <em>not</em> locked
+     * here - asking for a pause locks the user and then the table, and taking them in the other order
+     * on this path could deadlock the two.
      *
      * <p>Refused for somebody the veto could no longer apply to, and <em>before</em> the row is
-     * written: a request the {@code Primary} can only answer with an error is worse than a 409 now.
+     * written: a request an admin can only answer with an error is worse than a 409 now.
      *
+     * @param gameTableId    the table, from the path
      * @param registrationId the application to veto
-     * @param justification  why, never blank - the {@code Primary} reads exactly this
+     * @param justification  why, never blank - the admin deciding reads exactly this
      * @param actor          the actor, from the token; has to be a master of that table
      * @return the request as it was opened
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException 403 when the actor does
-     *         not run the table the application belongs to
-     * @throws ConflictException 409 {@code REGISTRATION_ALREADY_BLOCKED} or
-     *                           {@code REQUEST_ALREADY_PENDING}
+     * @throws NotFoundException        404 when the table is not there, or the application is not
+     *                                  this table's
+     * @throws ForbiddenActionException 403 when the actor does not run the table, or their account is
+     *                                  not Allowed
+     * @throws ConflictException        409 {@code REGISTRATION_ALREADY_BLOCKED} or
+     *                                  {@code REQUEST_ALREADY_PENDING}
      */
     @Transactional
     public ApprovalRequestDetailResponse submitPlayerBan(
-            String registrationId, String justification, CurrentUser actor) {
-        User requester = requireAllowedRequester(actor);
-        String gameTableId = registrationService.tableIdOf(registrationId);
-        // Pertenencia of the table the application belongs to, not of the application: asking is a
-        // thing the people running the table do (hard rule 17, ADR-05 §5, ADR-06 §4).
+            String gameTableId, String registrationId, String justification, CurrentUser actor) {
+        registrationService.lockTable(gameTableId);
+        // Asking is a thing the people running the table do, whatever role they hold.
         if (!masterService.isMasterOf(gameTableId, actor.userId())) {
             throw new ForbiddenActionException("Only a master of this table can ask for a veto on it");
         }
-        if (!registrationService.isBlockable(registrationId)) {
-            throw new ConflictException(
-                    "Registration " + registrationId + " cannot be blocked",
-                    ConflictException.REGISTRATION_ALREADY_BLOCKED);
-        }
-        return approvalMapper.toDetailResponse(
-                openRequest(ApprovalRequestType.PlayerBan, registrationId, requester, justification));
+        registrationService.requireBlockableOn(gameTableId, registrationId);
+        User requester = requireAllowed(userService.getById(actor.userId()));
+        return detailOf(openRequest(ApprovalRequestType.PlayerBan, registrationId, requester, justification));
     }
 
     /**
-     * The veto requests waiting on one table, for the {@code Primary} who has to answer them.
+     * The veto requests waiting on one table, for the masters who asked and the admins who decide.
      *
-     * <p>Readable by <b>any</b> master of the table and not only by the {@code Primary}: the
-     * {@code Secondary} who asked has to be able to see that they did, which is the same reason
-     * {@code /requests/mine} exists. Only the {@code Primary} can resolve them.
+     * <p>Readable by <b>any</b> master of the table: the one who asked has to be able to see that they
+     * did, which is the same reason {@code /requests/mine} exists. Resolving them is an admin's, from
+     * the shared approval endpoints.
      *
      * <p>Pending only. A resolved veto request is not work waiting on anybody, and what became of a
      * veto is on the roster row itself, with who decided it and when.
      *
-     * <p><b>It answers with {@link BanRequestResponse} and not with the shared summary</b>, because
-     * the shared one cannot say who is going to be vetoed: for the four admin types the entity is
-     * the requester, so «who asked» is the whole sentence. Here it is not - the request is about a
-     * third person, and a {@code Primary} with two open requests on one table would otherwise be
+     * <p><b>It answers with {@link BanRequestResponse} and not with the shared summary</b>, because the
+     * request is about a third person: a reader with two open requests on one table would otherwise be
      * telling them apart by the wording of the reason.
      *
+     * <p>A request about an application that was withdrawn is still listed, with the person's name:
+     * it is still waiting on an admin, who can only refuse it, and the masters who asked have to see
+     * that it is there. Two queries whatever the number of requests - the table's applications with
+     * their applicants, and the requests about them with their requesters.
+     *
      * @param gameTableId the table
-     * @param actorId     the actor, from the token (ADR-05 §5)
-     * @return the pending veto requests about this table's applications, oldest first, each naming
-     *         the person it is about
+     * @param actorId     the actor, from the token
+     * @return the pending veto requests about this table's applications, withdrawn ones included,
+     *         oldest first, each naming the person it is about
      * @throws com.centraldungeon.common.exception.ForbiddenActionException 403 when the actor neither
-     *         runs the table nor is an admin (ADR-06 §8) - an admin reads them, only the Primary answers
+     *         runs the table nor is an admin
      */
     @Transactional(readOnly = true)
     public List<BanRequestResponse> listBanRequests(String gameTableId, String actorId) {
-        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
         if (!masterService.canOversee(gameTableId, actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can read its veto requests");
         }
-        Map<String, TableRegistration> registrations = registrationService.registrationsOf(gameTableId);
-        if (registrations.isEmpty()) {
+        Map<String, RegistrationSubject> subjects = registrationService.subjectsOfTable(gameTableId);
+        if (subjects.isEmpty()) {
             return List.of();
         }
         return approvalRequestRepository
                 .findByRequestTypeAndStatusAndEntityIdInOrderByCreatedAtAsc(
-                        ApprovalRequestType.PlayerBan, ApprovalStatus.Pending, registrations.keySet())
+                        ApprovalRequestType.PlayerBan, ApprovalStatus.Pending, subjects.keySet())
                 .stream()
-                .map(request -> toBanRequest(request, registrations.get(request.getEntityId())))
+                .map(request -> toBanRequest(request, subjects.get(request.getEntityId())))
                 .filter(Objects::nonNull)
                 .toList();
     }
 
     /**
-     * One veto request as its {@code Primary} reads it.
+     * One veto request as the table's roster reads it.
      *
      * <p>Null when the application it points at is not among the table's - which the polymorphic
      * reference makes possible in principle (ADR-16 §2) and the caller filters out. The row outliving
@@ -345,15 +342,15 @@ public class ApprovalService {
      * not.
      */
     private static @Nullable BanRequestResponse toBanRequest(
-            ApprovalRequest request, @Nullable TableRegistration target) {
+            ApprovalRequest request, @Nullable RegistrationSubject target) {
         if (target == null) {
             return null;
         }
         return new BanRequestResponse(
                 request.getId(),
-                target.getId(),
-                target.getUser().getId(),
-                RegistrationService.applicantNameOf(target),
+                target.registrationId(),
+                target.applicantUserId(),
+                target.applicantName(),
                 displayNameOf(request.getRequestedBy()),
                 request.getJustification(),
                 request.getCreatedAt());
@@ -422,28 +419,19 @@ public class ApprovalService {
     }
 
     /**
-     * A page of requests as rows, each with the table it is about.
+     * A page of requests as rows, each with the table it is about and, for a veto, whom it is about.
      *
-     * <p>A pause points at its table; a veto points at an application, whose table is read for the
-     * whole page in one query ({@code RegistrationService.tableIdsOf}) instead of one per row.
+     * <p>A pause points at its table; a veto points at an application, whose table and applicant are
+     * read for the whole page in one query ({@code RegistrationService.subjectsOf}) instead of one per
+     * row.
      *
      * @param page the requests of one page
      * @return the same page as summaries
      */
     private PageResponse<ApprovalRequestSummaryResponse> summariesOf(Page<ApprovalRequest> page) {
-        List<String> registrationIds = page.getContent().stream()
-                .filter(request -> ApprovalEntityResolver.TABLE_REGISTRATION.equals(request.getEntityType()))
-                .map(ApprovalRequest::getEntityId)
-                .toList();
-        Map<String, String> tableByRegistration = registrationService.tableIdsOf(registrationIds);
+        Map<String, RegistrationSubject> subjects = subjectsOf(page.getContent());
         return PageResponse.from(page.map(request -> approvalMapper.toSummaryResponse(
-                request,
-                switch (request.getEntityType()) {
-                    case ApprovalEntityResolver.GAME_TABLE -> request.getEntityId();
-                    case ApprovalEntityResolver.TABLE_REGISTRATION ->
-                            tableByRegistration.get(request.getEntityId());
-                    default -> null;
-                })));
+                request, tableIdOf(request, subjects), subjectNameOf(request, subjects))));
     }
 
     /**
@@ -455,7 +443,47 @@ public class ApprovalService {
      */
     @Transactional(readOnly = true)
     public ApprovalRequestDetailResponse getDetail(String requestId) {
-        return approvalMapper.toDetailResponse(getById(requestId));
+        return detailOf(getById(requestId));
+    }
+
+    /** The detail of one request, with its table and - for a veto - its subject resolved. */
+    private ApprovalRequestDetailResponse detailOf(ApprovalRequest request) {
+        Map<String, RegistrationSubject> subjects = subjectsOf(List.of(request));
+        return approvalMapper.toDetailResponse(
+                request, tableIdOf(request, subjects), subjectNameOf(request, subjects));
+    }
+
+    /**
+     * Who the veto requests among these are about, in one query.
+     *
+     * @param requests any requests; only the ones pointing at an application are looked up
+     * @return the subject of each application they point at, by application id
+     */
+    private Map<String, RegistrationSubject> subjectsOf(List<ApprovalRequest> requests) {
+        return registrationService.subjectsOf(requests.stream()
+                .filter(request -> ApprovalEntityResolver.TABLE_REGISTRATION.equals(request.getEntityType()))
+                .map(ApprovalRequest::getEntityId)
+                .toList());
+    }
+
+    /** The table a request is about: a pause names it, a veto reaches it through its application. */
+    private static @Nullable String tableIdOf(ApprovalRequest request, Map<String, RegistrationSubject> subjects) {
+        return switch (request.getEntityType()) {
+            case ApprovalEntityResolver.GAME_TABLE -> request.getEntityId();
+            case ApprovalEntityResolver.TABLE_REGISTRATION -> {
+                RegistrationSubject subject = subjects.get(request.getEntityId());
+                yield subject == null ? null : subject.gameTableId();
+            }
+            default -> null;
+        };
+    }
+
+    /** Whom a veto request is about; null for every request whose subject is the requester. */
+    private static @Nullable String subjectNameOf(ApprovalRequest request, Map<String, RegistrationSubject> subjects) {
+        RegistrationSubject subject = subjects.get(request.getEntityId());
+        return ApprovalEntityResolver.TABLE_REGISTRATION.equals(request.getEntityType()) && subject != null
+                ? subject.applicantName()
+                : null;
     }
 
     /**
@@ -474,6 +502,8 @@ public class ApprovalService {
      *   <li>{@code General} has no effect beyond being resolved. That is its nature, and saying so
      *       here is the point - an admin reading this class should not have to wonder what it
      *       silently did.</li>
+     *   <li>{@code PlayerBan} is the veto itself: a master asked, and an admin approving it bars the
+     *       person from the table, through {@code RegistrationService}.</li>
      * </ul>
      *
      * @param requestId      the request
@@ -483,8 +513,9 @@ public class ApprovalService {
      * @throws NotFoundException 404 when no request has that id
      * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending,
      *                           {@code ITEM_ALREADY_CLAIMED} when <em>another</em> admin reserved it
-     *                           from the shared queue (ADR-16 §5), or {@code REQUEST_ENTITY_GONE} when
-     *                           what it points at no longer exists
+     *                           from the shared queue (ADR-16 §5), {@code OWN_REQUEST_NOT_APPROVABLE}
+     *                           when it is a veto the actor asked for themselves, or
+     *                           {@code REQUEST_ENTITY_GONE} when what it points at no longer exists
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public ApprovalRequestDetailResponse approve(String requestId, String resolutionNote, CurrentUser actor) {
@@ -500,8 +531,8 @@ public class ApprovalService {
             case TablePause -> gameTableService.applyApprovedPause(
                     request.getEntityId(), actor.userId(), request.getRequestedBy().getId(), resolutionNote);
             // Through RegistrationService and never a second write of `Blocked`: the same reasoning
-            // MasterGrant records above, and the reason a veto applied this way still lands in
-            // `registration_status_changes` with the Primary's name on it.
+            // MasterGrant records above, and the reason the veto lands in `registration_status_changes`
+            // with the deciding admin's name on it.
             case PlayerBan -> registrationService.applyApprovedBlock(
                     request.getEntityId(), actor.userId(), resolutionNote);
             // Nothing to do, and each for its own reason - see the Javadoc above.
@@ -509,7 +540,7 @@ public class ApprovalService {
         }
 
         notifyRequester(request, NotificationType.ApprovalRequestApproved);
-        return approvalMapper.toDetailResponse(request);
+        return detailOf(request);
     }
 
     /**
@@ -527,7 +558,10 @@ public class ApprovalService {
      * @throws ConflictException 409 {@code REQUEST_ALREADY_RESOLVED} when it is not Pending,
      *                           {@code ITEM_ALREADY_CLAIMED} when <em>another</em> admin reserved it
      *                           from the shared queue (ADR-16 §5), or {@code REQUEST_ENTITY_GONE} when
-     *                           what it points at no longer exists
+     *                           what it points at no longer exists - except for a veto, which can be
+     *                           refused after its application was withdrawn, since refusing it acts on
+     *                           nothing and is the only way it leaves the tray. Refusing a veto one
+     *                           asked for oneself is allowed too: only approving it is someone else's
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public ApprovalRequestDetailResponse reject(String requestId, String resolutionNote, CurrentUser actor) {
@@ -543,163 +577,35 @@ public class ApprovalService {
             case TablePause -> gameTableService.revertRequestedPause(
                     request.getEntityId(), actor.userId(), resolutionNote);
             // A refused veto leaves the application exactly where it was, which is the whole of it:
-            // nothing moved when the co-master asked, so nothing moves back.
+            // nothing moved when the master asked, so nothing moves back.
             case PlayerBan, MasterGrant, TableOpen, General -> { }
         }
 
         notifyRequester(request, NotificationType.ApprovalRequestRejected);
-        return approvalMapper.toDetailResponse(request);
-    }
-
-    /**
-     * The {@code Primary} vetoing somebody directly, <b>and closing out whatever was asked about
-     * them</b> (ADR-09 §5).
-     *
-     * <p>The veto itself is {@code RegistrationService}'s and is not written here. What is written
-     * here is the second half, which nothing else could do: any {@code PlayerBan} a co-master had
-     * open about that same person has just been answered <em>in fact</em>, and leaving those rows
-     * {@code Pending} strands them three ways - the request sits in the {@code Primary}'s list for
-     * ever, approving it afterwards answers {@code REGISTRATION_ALREADY_BLOCKED} because the person
-     * is already vetoed, and the co-master who asked is never told what happened.
-     *
-     * <p><b>Why the orchestration is here and not in {@code RegistrationService}.</b> Resolving an
-     * {@code approval_requests} row is this class's job and only this class's (ADR-16 §1), and the reverse
-     * dependency would close a bean cycle - {@code ApprovalService} already needs
-     * {@code RegistrationService} for the effect of an approval. So the direction stays one-way and
-     * the two writes stay in one transaction, which is what makes «vetado pero el pedido sigue
-     * pendiente» unreachable rather than merely unlikely.
-     *
-     * <p>They are resolved as {@code Approved}, with the {@code Primary}'s own reason as the note.
-     * That is the true record: the thing the co-master asked for is what happened, and it is the same
-     * sentence the veto carries.
-     *
-     * @param gameTableId    the table, which is what the authorization is about
-     * @param registrationId the application to veto
-     * @param justification  why, never blank
-     * @param actor          the actor, from the token; has to be this table's {@code Primary}
-     * @return the application, now Blocked
-     */
-    @Transactional
-    public RegistrationResponse blockDirectly(
-            String gameTableId, String registrationId, String justification, CurrentUser actor) {
-        RegistrationResponse blocked =
-                registrationService.block(gameTableId, registrationId, actor.userId(), justification);
-        closePendingBansOn(registrationId, justification, actor);
-        return blocked;
-    }
-
-    /**
-     * Answers every open veto request about one application, because the answer already happened.
-     *
-     * <p>Normally none, one at most in practice, and a loop because nothing guarantees that: two
-     * co-masters can each have asked about the same person, and closing one while leaving the other
-     * would be the same bug in smaller print.
-     */
-    private void closePendingBansOn(String registrationId, String note, CurrentUser actor) {
-        List<ApprovalRequest> pending = approvalRequestRepository
-                .findByRequestTypeAndEntityIdAndStatusOrderByCreatedAtAsc(
-                        ApprovalRequestType.PlayerBan, registrationId, ApprovalStatus.Pending);
-        if (pending.isEmpty()) {
-            return;
-        }
-        User resolver = userService.getById(actor.userId());
-        for (ApprovalRequest request : pending) {
-            request.resolve(ApprovalStatus.Approved, resolver, note);
-            // The co-master who asked is told, exactly as if the Primary had pressed Approve on
-            // their request - which, in every sense that matters to them, is what happened.
-            notifyRequester(request, NotificationType.ApprovalRequestApproved);
-        }
-    }
-
-    /**
-     * The {@code Primary} granting a co-master's veto request (ADR-09 §5), answering with the application.
-     *
-     * <p>It is {@link #approve} with two things added and nothing removed: the request is confirmed
-     * to belong to this table - so a request id from another table cannot be resolved through this
-     * route - and the answer is the roster row rather than the request, because that is what the
-     * screen re-renders. The veto itself is applied by the {@code switch} in {@code approve}, through
-     * {@code RegistrationService}: there is exactly one place that writes {@code Blocked}.
-     *
-     * @param gameTableId    the table the request must belong to
-     * @param requestId      the request
-     * @param resolutionNote why, never blank. It becomes the veto's own reason
-     * @param actor          the actor, from the token; has to be this table's {@code Primary}
-     * @return the application, now Blocked
-     * @throws NotFoundException 404 when the table does not exist or was deleted, or the request is not
-     *         there, or belongs to another table
-     */
-    @Transactional
-    public RegistrationResponse approveBanRequest(
-            String gameTableId, String requestId, String resolutionNote, CurrentUser actor) {
-        // The table's lock before the request's - the order a direct veto takes them in, which also
-        // closes this very request. The other order is a deadlock between the two, and every read
-        // below is made after the wait instead of from a snapshot taken before it.
-        registrationService.lockTable(gameTableId);
-        String registrationId = requireBanRequestOf(gameTableId, requestId);
-        approve(requestId, resolutionNote, actor);
-        return registrationService.findResponse(registrationId);
-    }
-
-    /**
-     * The {@code Primary} refusing a co-master's veto request (ADR-09 §5).
-     *
-     * <p>Answers with the request and not with the application, unlike its sibling, and the
-     * asymmetry is the truth: nothing about the person changed, so handing back their row would
-     * suggest something did. What changed is the request, and the co-master who asked is its reader.
-     *
-     * @param gameTableId    the table the request must belong to
-     * @param requestId      the request
-     * @param resolutionNote why, never blank (ADR-16 §1)
-     * @param actor          the actor, from the token; has to be this table's {@code Primary}
-     * @return the request, now Rejected
-     * @throws NotFoundException 404 when the table does not exist or was deleted, or the request is not
-     *         there, or belongs to another table
-     */
-    @Transactional
-    public ApprovalRequestDetailResponse rejectBanRequest(
-            String gameTableId, String requestId, String resolutionNote, CurrentUser actor) {
-        // Same order as approveBanRequest, for the same reason: a direct veto answers this request too.
-        registrationService.lockTable(gameTableId);
-        requireBanRequestOf(gameTableId, requestId);
-        return reject(requestId, resolutionNote, actor);
-    }
-
-    /**
-     * Confirms a request is a veto request about an application of <em>this</em> table.
-     *
-     * <p>404 and not 403 for a mismatch, the same answer the rest of the slice gives: a request of
-     * another table is not this caller's business to learn the existence of, and the id in the path
-     * is the only thing that named it.
-     *
-     * <p>The request is read with its lock, so the {@code Pending} that {@code resolve} checks next is
-     * the committed one and not whatever this transaction would have cached from a plain read.
-     *
-     * @return the id of the application the request points at
-     */
-    private String requireBanRequestOf(String gameTableId, String requestId) {
-        ApprovalRequest request = approvalRequestRepository
-                .lockById(requestId)
-                .orElseThrow(() -> new NotFoundException("Approval request not found: " + requestId));
-        if (request.getRequestType() != ApprovalRequestType.PlayerBan
-                || !gameTableId.equals(registrationService.tableIdOf(request.getEntityId()))) {
-            throw new NotFoundException("No veto request " + requestId + " on table " + gameTableId);
-        }
-        return request.getEntityId();
+        return detailOf(request);
     }
 
     /**
      * For a veto request, takes its table's lock before {@link #resolve} takes the request's.
      *
-     * <p>A direct veto takes the table first and then closes the open requests about that person, so
-     * resolving one of those requests the other way round - request first, table when the veto is
-     * applied - is a deadlock between the two. The lookup that finds the table is a bare-column read,
-     * and the public resolutions run in {@code READ COMMITTED}, so nothing read before the wait is
-     * answered from a snapshot older than the lock. The other types have no table to queue on.
+     * <p>Every veto path takes the table first - asking for one, lifting one, and the approval's own
+     * effect - and this keeps resolving in that same order, so the request's status and the
+     * application the approval acts on are both read after whatever another writer of the table
+     * committed while this one waited. None of those paths locks the request before the table, so no
+     * pair of them can wait on each other in a cycle; one order for all of them is what keeps it that
+     * way. The lookup that finds the table is a bare-column read, and the public resolutions run in
+     * {@code READ COMMITTED}, so nothing read before the wait is answered from a snapshot older than
+     * the lock. The other types have no table to queue on.
+     *
+     * <p>The row is locked even when the table was deleted: approving then answers
+     * {@code REQUEST_ENTITY_GONE} - the application went with the table - and refusing still has to be
+     * possible, or the request would sit in the tray for ever.
      */
     private void lockTableFirstIfVeto(String requestId) {
         approvalRequestRepository
                 .findEntityIdOfType(requestId, ApprovalRequestType.PlayerBan)
-                .ifPresent(registrationId -> registrationService.lockTable(registrationService.tableIdOf(registrationId)));
+                .ifPresent(registrationId ->
+                        registrationService.lockTableRowEvenIfDeleted(registrationService.tableIdOf(registrationId)));
     }
 
     /**
@@ -740,15 +646,24 @@ public class ApprovalService {
         // would send the reader to ask them about nothing.
         AdminQueueClaimRule.requireNotHeldByAnother(request.getClaimedBy(), actor.userId(), "request " + requestId);
 
-        // Who may answer depends on the TYPE. Four of the five go to the admins and their
-        // @PreAuthorize says so; PlayerBan goes to the table's Primary and to nobody else (ADR-09 §5),
-        // which no annotation can express - being this table's Primary is a row in `masters`
-        // (hard rule 17, ADR-05 §5). The rule that an annotation cannot carry lives here.
-        requireMayResolve(request, actor);
+        // An admin who is also a master of the table can ask for a veto; deciding it is somebody else's.
+        // Refusing their own request stays open - it is how they take it back.
+        if (status == ApprovalStatus.Approved
+                && request.getRequestType() == ApprovalRequestType.PlayerBan
+                && request.getRequestedBy().getId().equals(actor.userId())) {
+            throw new ConflictException(
+                    "User " + actor.userId() + " cannot approve veto request " + requestId + " they asked for",
+                    ConflictException.OWN_REQUEST_NOT_APPROVABLE);
+        }
 
-        // The row outlives what it points at on purpose (ADR-16 §2) - but resolving it would be acting on
-        // a ghost, so the reference is checked again here and not only at submit time.
-        requireEntityExists(request.getEntityType(), request.getEntityId(), requestId);
+        // The row outlives what it points at on purpose - but approving it would be acting on a ghost, so
+        // the reference is checked again here and not only at submit time. Refusing a veto whose
+        // application was withdrawn is the exception: it has no effect, and it is the only way the
+        // request leaves the tray.
+        boolean refusingAVeto = status == ApprovalStatus.Rejected && request.getRequestType() == ApprovalRequestType.PlayerBan;
+        if (!refusingAVeto) {
+            requireEntityExists(request.getEntityType(), request.getEntityId(), requestId);
+        }
 
         request.resolve(status, userService.getById(actor.userId()), resolutionNote);
         return request;
@@ -784,52 +699,21 @@ public class ApprovalService {
     }
 
     /**
-     * Who is entitled to answer this request, decided by its type.
-     *
-     * <p>{@code PlayerBan} is the exception. Every other request is addressed to the platform's
-     * admins, but a veto asked by a co-master ({@code Secondary}) against a player of <em>that</em>
-     * table is a matter inside the table: it is decided by its {@code Primary}, who runs it, not by
-     * the platform.
-     *
-     * <p><b>Only the exception is written here, and that is the point.</b> «Admin or owner» is
-     * exactly what {@code hasAnyRole('ADMIN','OWNER')} says, and each endpoint enumerates its roles
-     * in the annotation rather than in a configuration far away - so
-     * {@code AdminApprovalRequestController} keeps that half. What an
-     * annotation <em>cannot</em> say is «the Primary of the table this registration belongs to», and
-     * that is the half that lives here.
-     *
-     * <p>The two halves meet: an admin reaching a {@code PlayerBan} through {@code /admin/requests}
-     * passes the annotation and is stopped here, and a {@code Primary} who is not an admin never
-     * passes the annotation at all - they resolve from {@code /game-tables/{id}/ban-requests}, where
-     * the route is {@code isAuthenticated()} and this check is the whole authorization.
-     *
-     * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER} when a veto request is being
-     *                                  answered by somebody who is not the table's Primary
-     */
-    private void requireMayResolve(ApprovalRequest request, CurrentUser actor) {
-        if (request.getRequestType() != ApprovalRequestType.PlayerBan) {
-            return;
-        }
-        String gameTableId = registrationService.tableIdOf(request.getEntityId());
-        if (!masterService.isPrimaryOf(gameTableId, actor.userId())) {
-            throw new ForbiddenActionException(
-                    "Only the Primary master of table " + gameTableId + " can resolve a veto request on it",
-                    ForbiddenActionException.NOT_PRIMARY_MASTER);
-        }
-    }
-
-    /**
      * The requester's row, locked, with their account checked - what every submit starts with.
      *
      * <p>The locking read is the first thing the transaction does with that row, and it has to be
      * (ADR-06 §2): two submits of the same type by one person each read "nothing pending" from their own
-     * snapshot and both insert. See {@link #submit} for the whole reasoning; it is written once here
-     * so the three submits cannot drift apart on it.
+     * snapshot and both insert. See {@link #submit} for the whole reasoning. A veto request is the one
+     * submit that does not lock this row: it serializes on its table instead (see {@link #submitPlayerBan}).
      */
     private User requireAllowedRequester(CurrentUser actor) {
-        User requester = userRepository
+        return requireAllowed(userRepository
                 .lockById(actor.userId())
-                .orElseThrow(() -> new NotFoundException("User not found: " + actor.userId()));
+                .orElseThrow(() -> new NotFoundException("User not found: " + actor.userId())));
+    }
+
+    /** Only an account in good standing opens requests. */
+    private static User requireAllowed(User requester) {
         if (requester.getStatus() != UserStatus.Allowed) {
             throw new ForbiddenActionException(
                     "User " + requester.getId() + " is " + requester.getStatus() + " and cannot open requests");
@@ -854,9 +738,9 @@ public class ApprovalService {
      *   <li>a master of <b>two</b> running tables asking to pause the second one - and because the
      *       submit is one transaction, the 409 would roll back the {@code PauseRequested} the first
      *       half of it had just written, so the table silently stayed as it was;</li>
-     *   <li>a {@code Secondary} asking to veto a second person while the {@code Primary} has not yet
-     *       answered the first - which {@link #listBanRequests} openly assumes is possible, since it
-     *       exists to let a {@code Primary} tell two open requests apart.</li>
+     *   <li>a master asking to veto a second person while an admin has not yet answered the first -
+     *       which {@link #listBanRequests} openly assumes is possible, since it exists to tell two open
+     *       requests apart.</li>
      * </ul>
      *
      * <p>What the duplicate guard is actually for survives intact, because it moves with the entity:

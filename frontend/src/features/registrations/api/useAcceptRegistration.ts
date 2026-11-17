@@ -20,6 +20,9 @@ export function useAcceptRegistration(tableId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.candidates(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.detail(tableId) })
+      // The master's own view and the admin listing show the seats and the call for players, which a full table turns off.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managedDetail(tableId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.master.dashboard() })
     },
   })

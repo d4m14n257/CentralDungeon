@@ -14,6 +14,7 @@ import { ForbiddenState } from '@/components/ForbiddenState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
+import { SubjectLine } from '@/components/SubjectLine'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { adminTableDetailPath, adminUserDetailPath } from '@/config/paths'
 import {
@@ -236,15 +237,28 @@ export function AdminQueuePage() {
       id: 'item',
       header: t('queue.columns.item'),
       role: 'title',
-      // A table waiting for review is a table with its own admin screen; a request has none of its own.
-      cell: (item) =>
-        item.kind === 'TableWaitingReview' ? (
-          <Link to={adminTableDetailPath(item.id)} className="hover:underline">
-            {itemTitle(item, t)}
-          </Link>
-        ) : (
-          itemTitle(item, t)
-        ),
+      // A table waiting for review is a table with its own admin screen. A request has none, but may
+      // be about a person (a veto: «Sobre: X») and point at a table, and both are said on the row.
+      cell: (item) => (
+        <div className="flex flex-col items-start gap-0.5">
+          {item.kind === 'TableWaitingReview' ? (
+            <Link to={adminTableDetailPath(item.id)} className="hover:underline">
+              {itemTitle(item, t)}
+            </Link>
+          ) : (
+            itemTitle(item, t)
+          )}
+          <SubjectLine
+            subject={item.subjectName === null ? null : t('requests.subject', { name: item.subjectName })}
+            // Only a veto is about a person at a table; a pause also carries the table id but has nothing to see among its players.
+            link={
+              item.kind === 'ApprovalRequest' && item.title === 'PlayerBan' && item.gameTableId !== null
+                ? { to: adminTableDetailPath(item.gameTableId, 'players'), label: t('requests.viewTablePlayers') }
+                : null
+            }
+          />
+        </div>
+      ),
     },
     { id: 'kind', header: t('queue.columns.kind'), role: 'badge', cell: (item) => <QueueItemKindBadge kind={item.kind} /> },
     // The reservation is the one thing on this row that changes under the reader's feet, so it is

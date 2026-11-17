@@ -8,6 +8,12 @@ export interface StatusNoticeProps {
   title: string
   /** One sentence on what each of the actions below does, or what follows. */
   description: ReactNode
+  /**
+   * A second sentence on its own line under the description: what is going on with an action below, or why
+   * one of them is off. Kept apart from `description` so a caller never glues two sentences into one
+   * string. Absent when there is nothing to add.
+   */
+  hint?: ReactNode
   /** The decisions that change where the entity stands, as buttons with their text. Absent when there is none. */
   actions?: ReactNode
   /**
@@ -34,15 +40,17 @@ export interface StatusNoticeProps {
  *
  * @param props.title              where the entity stands
  * @param props.description        what the actions do, or what follows
+ * @param props.hint               a second sentence under it, or nothing
  * @param props.actions            the decisions, as buttons
  * @param props.destructiveActions the destructive ones, apart at the right
  */
-export function StatusNotice({ title, description, actions, destructiveActions }: StatusNoticeProps) {
+export function StatusNotice({ title, description, hint, actions, destructiveActions }: StatusNoticeProps) {
   return (
     <Alert>
       <AlertTitle>{title}</AlertTitle>
       <AlertDescription className="space-y-3">
         <p>{description}</p>
+        {hint && <p className="text-fg-muted text-sm">{hint}</p>}
         {(actions || destructiveActions) && (
           <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-4">
             {actions}

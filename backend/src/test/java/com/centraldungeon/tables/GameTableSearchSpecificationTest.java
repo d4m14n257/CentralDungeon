@@ -176,7 +176,7 @@ class GameTableSearchSpecificationTest {
     void theExplorerExcludesVetoedTablesWithANotExistsInTheWhere() {
         Criteria criteria = new Criteria();
 
-        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS, "player-1")
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-1")
                 .toPredicate(criteria.root, criteria.query, criteria.builder);
 
         // Two negated subqueries: «no dirijo esta mesa» (ADR-18 §4) and «no estoy vetado en ella» (ADR-09 §4).
@@ -185,6 +185,20 @@ class GameTableSearchSpecificationTest {
         verify(criteria.builder, times(2)).exists(any(Subquery.class));
         // And nothing is filtered in memory: the composed predicate is the only thing that leaves here.
         verify(criteria.root, never()).join(anyString());
+    }
+
+    /** The explorer lists an open table, or one in progress that is looking for players, and nothing else. */
+    @Test
+    void theExplorerListsOpenedTablesAndInProgressOnesThatSeekPlayers() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.status, GameTableStatus.Opened);
+        verify(criteria.builder).equal(criteria.status, GameTableStatus.InProgress);
+        verify(criteria.root).get("seekingPlayers");
+        verify(criteria.builder).isTrue(any());
     }
 
     /**
@@ -196,7 +210,7 @@ class GameTableSearchSpecificationTest {
     void onlyBlockedHidesTheTable() {
         Criteria criteria = new Criteria();
 
-        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS, "player-1")
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-1")
                 .toPredicate(criteria.root, criteria.query, criteria.builder);
 
         verify(criteria.builder).equal(criteria.registrationStatus, TableRegistrationStatus.Blocked);
@@ -212,7 +226,7 @@ class GameTableSearchSpecificationTest {
     void theVetoIsMeasuredAgainstTheActorFromTheToken() {
         Criteria criteria = new Criteria();
 
-        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS, "player-9")
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-9")
                 .toPredicate(criteria.root, criteria.query, criteria.builder);
 
         verify(criteria.builder).equal(criteria.registrationUserId, "player-9");
@@ -288,6 +302,7 @@ class GameTableSearchSpecificationTest {
             when(builder.and(any(Predicate[].class))).thenReturn(mock(Predicate.class));
             when(builder.or(any(Predicate.class), any(Predicate.class))).thenReturn(mock(Predicate.class));
             when(builder.not(any(Predicate.class))).thenReturn(mock(Predicate.class));
+            when(builder.isTrue(any())).thenReturn(mock(Predicate.class));
             when(builder.exists(any(Subquery.class))).thenReturn(mock(Predicate.class));
             when(builder.conjunction()).thenReturn(mock(Predicate.class));
             when(builder.disjunction()).thenReturn(mock(Predicate.class));

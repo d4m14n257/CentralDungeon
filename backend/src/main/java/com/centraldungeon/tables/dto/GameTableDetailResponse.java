@@ -60,6 +60,8 @@ import org.jspecify.annotations.Nullable;
  *                      actor is involved
  * @param joined        whether the actor of the token is already a Player of the table - the apply button
  *                      says they are in instead of "you applied". False where no actor is involved
+ * @param seekingPlayers whether the table is running and looking for players, so it lists in the explorer and takes
+ *                      applications although it is {@code InProgress}. Always false in every other status
  * @param myRejection   why the <b>actor of the token</b> was turned down here, when their latest
  *                      application to this table was rejected (ADR-09 §7), so the screen can say so and
  *                      offer to apply again. Computed for the actor and never for an id from the URL
@@ -91,5 +93,6 @@ public record GameTableDetailResponse(
         boolean scheduleConflict,
         boolean applied,
         boolean joined,
+        boolean seekingPlayers,
         @Nullable MyRejectionResponse myRejection) {
 }

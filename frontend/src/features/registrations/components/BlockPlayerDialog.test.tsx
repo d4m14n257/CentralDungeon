@@ -11,14 +11,13 @@ import { ApiError } from '@/types/api'
 import { BlockPlayerDialog } from './BlockPlayerDialog'
 import { acceptReview } from '@/test/review'
 
-const block = vi.hoisted(() => vi.fn())
 const unblock = vi.hoisted(() => vi.fn())
 const requestBlock = vi.hoisted(() => vi.fn())
 
 // The API module is mocked and not the hooks: the query keys, the invalidation and the form all run
 // for real, which is where the behaviour under test lives.
 vi.mock('../api/registrationsApi', () => ({
-  registrationsApi: { block, unblock, requestBlock },
+  registrationsApi: { unblock, requestBlock },
 }))
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -39,8 +38,7 @@ function renderDialog(props: Partial<Parameters<typeof BlockPlayerDialog>[0]> = 
         tableId="table-1"
         registrationId="reg-9"
         playerName="Diego"
-        action="block"
-        isPrimary
+        action="request"
         open
         onOpenChange={() => {}}
         {...props}
@@ -50,60 +48,83 @@ function renderDialog(props: Partial<Parameters<typeof BlockPlayerDialog>[0]> = 
 }
 
 beforeEach(() => {
-  block.mockReset()
   unblock.mockReset()
   requestBlock.mockReset()
 })
 
-describe('BlockPlayerDialog', () => {
-  /** ADR-09 §5: the `Primary` vetoes, and the veto is per table — the table travels with the call (ADR-09 §4). */
-  it('vetoes when the reader runs the table', async () => {
-    block.mockResolvedValue({})
-    const user = userEvent.setup()
-    renderDialog()
-
-    await user.type(screen.getByRole('textbox'), 'Falta sin avisar hace un mes')
-    await user.click(screen.getByRole('button', { name: 'Vetar' }))
-    await acceptReview()
-
-    await waitFor(() => expect(block).toHaveBeenCalledWith('table-1', 'reg-9', 'Falta sin avisar hace un mes'))
-    expect(requestBlock).not.toHaveBeenCalled()
-  })
-
-  /**
-   * And a co-master's identical press sends a **request** instead — two endpoints, not one that
-   * behaves two ways (ADR-09 §5, ADR-06 §3).
-   */
-  it('sends a request when the reader co-runs the table', async () => {
+describe('BlockPlayerDialog · asking for a veto', () => {
+  /** Nobody vetoes from here: the reason travels to the admins as a request, with the table in the path. */
+  it('sends a request, never a veto, with the reason that was written', async () => {
     requestBlock.mockResolvedValue(undefined)
     const user = userEvent.setup()
-    renderDialog({ isPrimary: false })
+    renderDialog()
 
     await user.type(screen.getByRole('textbox'), 'Falta sin avisar hace un mes')
     await user.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
     await acceptReview()
 
     await waitFor(() => expect(requestBlock).toHaveBeenCalledWith('table-1', 'reg-9', 'Falta sin avisar hace un mes'))
-    expect(block).not.toHaveBeenCalled()
+    expect(unblock).not.toHaveBeenCalled()
   })
 
-  /** `roles-y-alcance.md §4, F3.4` again, inside the dialog: what this sends is said, not implied. */
-  it('says to a co-master that nothing changes until the master answers', () => {
-    renderDialog({ isPrimary: false })
-
-    expect(screen.getByText(/Todavía no cambia nada/)).toBeInTheDocument()
-    expect(screen.getByText(/lo que mandás es un pedido/)).toBeInTheDocument()
-  })
-
-  /** What the veto actually costs the other person, written where the decision is taken. */
-  it('says what a veto takes away, on the veto itself', () => {
+  /** What this sends is said where the decision is made: nothing changes until an admin answers. */
+  it('says that nothing changes until an admin answers', () => {
     renderDialog()
 
-    expect(screen.getByText(/no puede descargar sus archivos/)).toBeInTheDocument()
-    expect(screen.getByText(/No pierde la cuenta/)).toBeInTheDocument()
+    expect(screen.getByText(/Todavía no cambia nada/)).toBeInTheDocument()
+    expect(screen.getByText(/hasta que un admin responda/)).toBeInTheDocument()
   })
 
-  /** The half that makes the other half acceptable (ADR-09 §5), and it asks for a reason too. */
+  /** A reason is what the admin decides on: a round trip is a bad way to learn a textarea was blank. */
+  it('refuses to send anything without a reason', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+
+    await user.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+
+    await waitFor(() => expect(requestBlock).not.toHaveBeenCalled())
+  })
+
+  /** Whitespace is not a reason — the same thing `@NotBlank` says on the other side. */
+  it('does not accept whitespace as a reason', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+
+    await user.type(screen.getByRole('textbox'), '   ')
+    await user.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+
+    await waitFor(() => expect(requestBlock).not.toHaveBeenCalled())
+  })
+
+  /**
+   * The race a screen cannot prevent: a colleague asked for the same person a moment ago. The answer is
+   * inline, because the form is still open, and it is written from the code, never from the backend's
+   * English `detail`.
+   */
+  it('shows the refusal inline, in the reader’s language', async () => {
+    requestBlock.mockRejectedValue(
+      new ApiError(409, {
+        title: 'Conflict',
+        status: 409,
+        detail: 'A request is already pending',
+        errorCode: 'REQUEST_ALREADY_PENDING',
+      }),
+    )
+    const user = userEvent.setup()
+    renderDialog()
+
+    await user.type(screen.getByRole('textbox'), 'Falta sin avisar')
+    await user.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+    await acceptReview()
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Ya hay un pedido de veto esperando respuesta para esa persona.')
+    expect(alert).not.toHaveTextContent('already pending')
+  })
+})
+
+describe('BlockPlayerDialog · lifting a veto', () => {
+  /** The half that makes a veto acceptable, and it asks for a reason too. */
   it('lifts the veto with its own reason', async () => {
     unblock.mockResolvedValue({})
     const user = userEvent.setup()
@@ -114,70 +135,28 @@ describe('BlockPlayerDialog', () => {
     await acceptReview()
 
     await waitFor(() => expect(unblock).toHaveBeenCalledWith('table-1', 'reg-9', 'Hablamos y lo arreglamos'))
+    expect(requestBlock).not.toHaveBeenCalled()
   })
 
-  /**
-   * **A veto with no reason is not reversible in practice**, which is why the reason is required on
-   * this side as well as on the server: a round trip is a bad way to learn a textarea was blank.
-   */
-  it('refuses to send anything without a reason', async () => {
-    const user = userEvent.setup()
-    renderDialog()
+  /** A full table is not an error: it leaves the person rejected for lack of seats, and the dialog says so. */
+  it('warns that a full table leaves the person rejected for lack of seats', () => {
+    renderDialog({ action: 'unblock' })
 
-    await user.click(screen.getByRole('button', { name: 'Vetar' }))
-
-    await waitFor(() => expect(block).not.toHaveBeenCalled())
+    expect(screen.getByText(/rechazada por falta de cupo/)).toBeInTheDocument()
   })
 
-  /** Whitespace is not a reason — the same thing `@NotBlank` says on the other side. */
-  it('does not accept whitespace as a reason', async () => {
-    const user = userEvent.setup()
-    renderDialog()
-
-    await user.type(screen.getByRole('textbox'), '   ')
-    await user.click(screen.getByRole('button', { name: 'Vetar' }))
-
-    await waitFor(() => expect(block).not.toHaveBeenCalled())
-  })
-
-  /**
-   * The race a screen cannot prevent: a colleague vetoed the same person a moment ago. The answer is
-   * inline, because the form is still open and that is where the reader is looking (ADR-23 §3) — and it
-   * is written from the code, never from the backend's English `detail`.
-   */
-  it('shows the refusal inline, in the reader’s language', async () => {
-    block.mockRejectedValue(
-      new ApiError(409, {
-        title: 'Conflict',
-        status: 409,
-        detail: 'Registration is already blocked',
-        errorCode: 'REGISTRATION_ALREADY_BLOCKED',
-      }),
-    )
-    const user = userEvent.setup()
-    renderDialog()
-
-    await user.type(screen.getByRole('textbox'), 'Falta sin avisar')
-    await user.click(screen.getByRole('button', { name: 'Vetar' }))
-    await acceptReview()
-
-    const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Esa persona ya está vetada en esta mesa. Actualizá la pantalla para ver cómo quedó.')
-    expect(alert).not.toHaveTextContent('already blocked')
-  })
-
-  /** A co-master who reaches the Primary-only act is told what they *can* do, not just refused. */
-  it('tells a co-master what to do instead when the platform refuses them', async () => {
-    requestBlock.mockRejectedValue(
+  /** A co-master who reaches the lifting is told who decides, not just refused. */
+  it('tells a co-master who lifts a veto when the platform refuses them', async () => {
+    unblock.mockRejectedValue(
       new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Not the primary master', errorCode: 'NOT_PRIMARY_MASTER' }),
     )
     const user = userEvent.setup()
-    renderDialog({ isPrimary: false })
+    renderDialog({ action: 'unblock' })
 
-    await user.type(screen.getByRole('textbox'), 'Falta sin avisar')
-    await user.click(screen.getByRole('button', { name: 'Enviar el pedido' }))
+    await user.type(screen.getByRole('textbox'), 'Hablamos')
+    await user.click(screen.getByRole('button', { name: 'Levantar el veto' }))
     await acceptReview()
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/lo que podés hacer es pedirlo/)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Levantar el veto lo decide el master de la mesa o un admin.')
   })
 })

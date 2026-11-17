@@ -230,6 +230,32 @@ class GameTableSearchIT {
                 .containsExactlyInAnyOrder("Nightmares", "Waterdeep Dragon Heist");
     }
 
+    /**
+     * The explorer lists an {@code InProgress} table only while its master is looking for players, and
+     * an {@code Opened} one always.
+     */
+    @Test
+    @DisplayName("an in-progress table is listed only while it seeks players; an opened one always is")
+    void anInProgressTableIsListedOnlyWhileItSeeksPlayers() {
+        GameTable running = opened("Running Table");
+        running.setStatus(GameTableStatus.InProgress);
+        gameTableRepository.save(running);
+
+        assertThat(namesOf("/table_name running")).isEmpty();
+
+        running.setSeekingPlayers(true);
+        gameTableRepository.save(running);
+        assertThat(namesOf("/table_name running")).containsExactly("Running Table");
+        assertThat(gameTableService.list("/table_name running", FIRST_PAGE, player.getId()).content())
+                .extracting(GameTableSummaryResponse::seekingPlayers)
+                .containsExactly(true);
+
+        running.setSeekingPlayers(false);
+        gameTableRepository.save(running);
+        assertThat(namesOf("/table_name running")).isEmpty();
+        assertThat(namesOf("/table_name strahd")).containsExactly("Curse of Strahd");
+    }
+
     // ------------------------------------------------------------------ setup
 
     private List<String> namesOf(String query) {

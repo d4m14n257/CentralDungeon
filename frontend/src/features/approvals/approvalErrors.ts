@@ -1,7 +1,7 @@
 import { ApiError } from '@/types/api'
 
 /**
- * The four refusals F3.2 adds, each with a sentence of its own (ADR-23 §3).
+ * The refusals the request mechanism adds, each with a sentence of its own.
  *
  * **The message a person reads is built here from the code, never from the `ProblemDetail`'s
  * `detail`**: that field is English and written for a log, so showing it would put an English
@@ -13,7 +13,7 @@ import { ApiError } from '@/types/api'
  * pressed rather than in a toast that disappears in four seconds — the same reading as
  * `features/users/adminErrors.ts`.
  *
- * Three of the four are refusals the screen already prevents: it does not offer a second request of
+ * Three of them are refusals the screen already prevents: it does not offer a second request of
  * a kind that is still pending, nor the master role to somebody who holds it, nor a resolution on a
  * request that is no longer `Pending`. They surface for whoever reaches the API another way, and for
  * the race between two admins resolving the same row — which is exactly the case a screen cannot
@@ -28,6 +28,8 @@ export const APPROVAL_ERROR_CODES = [
   'REQUEST_ENTITY_GONE',
   /** Asking for the master role while already holding it. */
   'MASTER_ROLE_ALREADY_HELD',
+  /** Approving a veto the admin asked for themselves, as a master of the table: another admin decides it. */
+  'OWN_REQUEST_NOT_APPROVABLE',
   /**
    * Resolving a request another admin has taken from the shared tray (ADR-16 §5, F3.3).
    *
@@ -38,16 +40,6 @@ export const APPROVAL_ERROR_CODES = [
    * really can show a row it cannot resolve.
    */
   'ITEM_ALREADY_CLAIMED',
-  /**
-   * Resolving something only the table's `Primary` may resolve (ADR-09 §5, F3.4).
-   *
-   * **It is a `403` and not a `400`**: it is who you are, not what you sent. It reaches this screen
-   * two ways — a co-master whose promotion was undone between opening the dialog and pressing, and
-   * an admin who found a `PlayerBan` in `/admin/requests` and assumed the tray's rules applied to
-   * it. The second is the one worth a sentence: ADR-09 §5 hands that decision to whoever runs the table,
-   * and an admin has no way to guess that from a button that looks like every other one.
-   */
-  'NOT_PRIMARY_MASTER',
 ] as const
 
 const KNOWN_CODES: ReadonlySet<string> = new Set(APPROVAL_ERROR_CODES)
@@ -67,7 +59,7 @@ const CLAIM_ERROR_KEY = 'queue.errors.ITEM_ALREADY_CLAIMED'
 /**
  * The translation key for whatever a request mutation failed with.
  *
- * Everything that is not one of the five — a `404`, a `500`, a backend that never answered — falls
+ * Everything that is not one of these — a `404`, a `500`, a backend that never answered — falls
  * back to one generic sentence. Guessing at a message for a code nobody committed to is how an
  * interface ends up asserting something the server never said.
  *

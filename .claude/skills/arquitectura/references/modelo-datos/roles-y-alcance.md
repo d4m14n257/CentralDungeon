@@ -23,10 +23,11 @@ Es el entregable que F3 tiene y ninguna otra fase: **dónde termina uno y empiez
 | Bloquear y desbloquear una cuenta (ADR-05 §7) | sí | sí | F3.1 |
 | **Bloquear a un `Admin` o a un `Owner`** | **no** | **no** | F3.1 |
 | Aprobar un pedido de `approval_requests` (ADR-16 §1) | sí | sí | F3.2 |
+| Decidir un pedido de veto y levantar un veto, en cualquier mesa; **aprobar el pedido propio, nunca** —un admin que es master de la mesa lo pide y lo decide otro admin (`409 OWN_REQUEST_NOT_APPROVABLE`), aunque rechazarlo sí puede— (ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro») | sí | sí | F4 |
 | Reservar un ítem de la bandeja (ADR-16 §5) | sí | sí | F3.3 |
 | Editar `system_settings` (ADR-17 §3) | sí | sí | F3.5 |
-| Leer todo lo de gestión de cualquier mesa y abrir sus archivos — **solo leer** (`MasterService.canOversee`, ADR-06 §8) | sí | sí | F4 |
-| Editar una mesa ajena no cerrada, avisándoles a sus masters (ADR-06 §8) | sí | sí | F4 |
+| Leer todo lo de gestión de cualquier mesa y abrir sus archivos — **solo leer**, salvo levantar un veto (`MasterService.canOversee`, ADR-06 §8) | sí | sí | F4 |
+| Editar una mesa ajena no cerrada, avisándoles a sus masters; bajar el cupo hasta los jugadores llena la mesa (ADR-06 §8, ADR-09 «Postulaciones y veto» §3 «Una mesa llena no admite a nadie más, y al llenarse los candidatos restantes se rechazan en la misma transacción») | sí | sí | F4 |
 | Leer la ficha completa de una cuenta: datos, roles, estado, todas sus mesas e historial (`/admin/users/:id`, ADR-10 §6) | sí | sí | F4 |
 | **Consultar `audit_logs`** (ADR-17 §1) | no | sí | F6 |
 | **Borrado físico de archivos** (ADR-13 §8) | no | sí | F6 |
@@ -83,7 +84,7 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 
 - `ApprovalRequest` (`@Entity`), `ApprovalRequestType`, `ApprovalStatus`, `ApprovalService`, `ApprovalRequestController` y `AdminApprovalRequestController`.
 - **Referencia polimórfica** `entity_type` + `entity_id`, **sin FK real** (ADR-16 §2). El precio está escrito en la decisión y hay que pagarlo entero: **el service valida que la entidad exista antes de insertar**, no se mapea como `@ManyToOne`, y hace falta **una verificación periódica de referencias huérfanas** — es la clase de problema que este proyecto ya sufrió con `table_files` apuntando a archivos borrados.
-- Los cuatro tipos de ADR-16 §1: pausa de mesa pedida por un master, veto pedido por un `Secondary`, pedido del rol de master, pedido de que se abra una mesa, y la petición general al equipo.
+- Los cuatro tipos de ADR-16 §1: pausa de mesa pedida por un master, veto pedido por un `Secondary` (lo que F3 construyó; hoy lo pide cualquier master y lo decide un admin, ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro»), pedido del rol de master, pedido de que se abra una mesa, y la petición general al equipo.
 - **Justificación obligatoria** en el pedido y en la resolución (ADR-16 §1).
 - Pedir que se abra una mesa **desemboca en ADR-06 §7**: el admin la crea en `Unassigned` y le asigna master. Los dos flujos son el mismo circuito por sus dos puntas (ADR-16 §1).
 
@@ -110,6 +111,8 @@ Las secciones **Backend** y **Frontend** de cada rebanada son, literalmente, el 
 **Se prueba:** dos admins abren `/admin/queue`; uno reserva una mesa y al otro le desaparece de la lista sin recargar la página a mano; a los 15 minutos sin resolver, vuelve.
 
 ### F3.4 — Pausa y veto
+
+> **Registro de lo que F3.4 construyó, no la regla de hoy, en lo que toca al veto.** Desde el 2026-11-14 nadie veta directo: cualquier master lo pide, lo decide un admin desde la bandeja o `/admin/requests`, y lo levanta el `Primary` o un admin (ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro»). Las líneas de abajo que dicen que veta el `Primary` y que un `Secondary` lo pide quedan como historia de la rebanada.
 
 **Por qué acá:** son los dos pedidos de ADR-16 §1 que cambian el estado de algo, y los dos necesitan `approval_requests` y la bandeja. Además cierran tres huérfanos que F1.7 relevó y no pudo tocar.
 
@@ -180,6 +183,8 @@ cd frontend && npm run format      # prettier del repo (ADR-02 §4)
 5. El admin aprueba la pausa; el calendario de los jugadores se congela y reanudar vuelve a verificar el choque.
 6. Un `Primary` veta a un jugador: deja de ver la mesa en el explorador, recibe `404` en el detalle y `404` al abrir un archivo que la mesa comparte.
 7. Un `Secondary` pide un veto y el `Primary` lo resuelve.
+
+Los pasos 6 y 7 son el cierre de F3; hoy el veto lo pide cualquier master y lo aprueba un admin (ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro»), y el recorrido vigente es el e2e `table-veto-and-pause.spec.ts`.
 8. Un admin cambia el tope por archivo en `/admin/settings` y la subida siguiente lo respeta.
 9. Un admin bloquea una cuenta; esa persona no puede entrar, y sus mesas y su historial siguen existiendo (ADR-05 §7).
 
@@ -188,4 +193,4 @@ cd frontend && npm run format      # prettier del repo (ADR-02 §4)
 - **La referencia polimórfica de ADR-16 §2 es la pieza que la base no puede cuidar.** Dos cosas van con ella o no va: la validación en el service antes de insertar, y el chequeo periódico de huérfanas. Sin la segunda, el problema aparece meses después y sin forma de reconstruir qué apuntaba a qué.
 - **El veto toca seis vías de lectura y es fácil cerrar cinco.** Un vetado que no ve la mesa pero sí descarga su archivo es el bug que ADR-14 §2 anticipó por escrito. El inventario de vías se escribe antes de tocar la primera, y cada una lleva su test.
 - **`hasRole('ADMIN')` en vez de `hasAnyRole('ADMIN','OWNER')` deja al owner afuera y nadie lo nota**, porque en desarrollo el actor de prueba suele ser admin. Por eso la matriz de §3 terminó en una prueba que la recorre: la matriz de roles de §5.1, con su test de paridad entre `Admin` y `Owner` (ADR-24 «Testing» §4 «Todo endpoint tiene su fila en la matriz de roles, y el esperado sale de los documentos»).
-- **Tres cosas se llaman «owner» en este proyecto** y F3 las toca a todas: el rol de plataforma `PlatformRole.OWNER` (ADR-06 §1), el dueño de una mesa que ADR-06 §3 renombró a `Primary`, y «el owner» de ADR-13 §8 que es el dueño de la plataforma. Quien veta es el `Primary` en ADR-09 «Postulaciones y veto» §5, en skill `arquitectura` §4.5 y en `docs/diagramas/06-ciclo-solicitud.mmd`; un texto que diga que veta «el `Owner`» está viejo.
+- **Tres cosas se llaman «owner» en este proyecto** y F3 las toca a todas: el rol de plataforma `PlatformRole.OWNER` (ADR-06 §1), el dueño de una mesa que ADR-06 §3 renombró a `Primary`, y «el owner» de ADR-13 §8 que es el dueño de la plataforma. Sobre el veto, el `Primary` es quien lo levanta y un admin —`Admin` u `Owner` de plataforma— quien lo decide (ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro», skill `arquitectura` §4.5, `docs/diagramas/06-ciclo-solicitud.mmd`); un texto que diga que veta «el `Owner`» de la mesa, o que el `Primary` veta solo, está viejo.

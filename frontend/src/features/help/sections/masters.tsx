@@ -155,12 +155,17 @@ export function PauseRequestHelp() {
 }
 
 /**
- * The veto: throwing somebody out of one table, and taking that back (ADR-09 §4, §5, ADR-06 §3).
+ * The veto: asking for somebody to be thrown out of one table, and taking that back (ADR-09 §4, §5, ADR-06 §3).
  *
  * **`perTable` and `reversible` are the two halves nobody would guess.** "Vetar" reads as a platform
  * ban, and it is not one: the person keeps their account, their karma and every other table they
  * play at. And it reads as final, which is worse — a master who believes it cannot be undone either
  * never uses it or uses it as a last resort on somebody they would rather have warned.
+ *
+ * **`who` and `pending` are the other half.** Nobody bans directly: any master asks and an admin decides,
+ * and until they do nothing changes — a master who expects the person to vanish on pressing the button
+ * will think it broke. Lifting is the main master's or an admin's, and it can end in a rejected
+ * application when the table filled up meanwhile (`lifted`).
  *
  * `invisible` is the half that surprises the *other* master: the vetoed person does not get told, the
  * table simply stops existing for them. Somebody who expects a notification to go out will write the
@@ -170,8 +175,19 @@ export function BanningHelp() {
   return (
     <ListAndSteps
       block="banning"
-      keys={['what', 'perTable', 'who', 'coMaster', 'reason', 'invisible', 'reversible', 'stays']}
+      keys={['what', 'perTable', 'who', 'pending', 'reason', 'invisible', 'reversible', 'lifted', 'stays']}
       stepCount={5}
     />
   )
+}
+
+/**
+ * Looking for players on a table already in progress.
+ *
+ * **`offByItself` and `noReturn` are why this is a section and not a button label.** The search switches
+ * itself off when the seats fill or the table leaves "En curso", and it does not come back after a
+ * pause: a master who expects it to remember will wait for applications that cannot arrive.
+ */
+export function SeekingPlayersHelp() {
+  return <ListAndSteps block="seeking" keys={['what', 'who', 'when', 'offByItself', 'noReturn', 'plain']} stepCount={4} />
 }

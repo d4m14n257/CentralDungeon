@@ -29,6 +29,9 @@ import org.jspecify.annotations.Nullable;
  *                          points at its table directly and a veto through the application it is
  *                          about; the other types concern a person, not a table. Resolved by the
  *                          service for the whole page, so the screen can link the table
+ * @param subjectName       for a veto request, the display name of the person it is about - an admin
+ *                          deciding it has to read whom it concerns, not only who asked. Null for
+ *                          every other type, whose subject is the requester
  * @param createdAt         when it was asked, in UTC
  */
 public record ApprovalRequestSummaryResponse(
@@ -40,5 +43,6 @@ public record ApprovalRequestSummaryResponse(
         String justification,
         @Nullable String claimedByName,
         @Nullable String gameTableId,
+        @Nullable String subjectName,
         LocalDateTime createdAt) {
 }

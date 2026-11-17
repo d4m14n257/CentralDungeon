@@ -102,6 +102,18 @@
     "requestPauseDialogDescription": "Say why it has to stop. The admin who answers reads this, and it stays in the table’s history.",
     "requestPauseHint": "Asking is not pausing: until an admin answers, the table is still running and the calendar still promises its dates.",
     "requestPauseHelpLink": "How a pause works",
+    "seekingOn": "Look for players",
+    "seekingOff": "Stop looking",
+    "seekingFull": "The table is full, so it cannot look for players: there is no free seat left.",
+    "seekingActive": "The table shows in the explorer and takes applications until its seats are filled.",
+    "seekingOnSuccess": "The table is looking for players",
+    "seekingOffSuccess": "The table stopped looking for players",
+    "seekingOnConfirmTitle": "Look for players for the table?",
+    "seekingOnConfirmDescription": "The table shows in the explorer and takes applications until its seats are filled. You can stop looking whenever you want.",
+    "seekingOffConfirmTitle": "Stop looking for players?",
+    "seekingOffConfirmDescription": "The table leaves the explorer and stops taking applications. You can start looking again whenever you want.",
+    "seekingIdle": "The table is not looking for players right now. You can start looking while a seat is still free.",
+    "seekingHelpLink": "How looking for players works",
     "requestPauseSuccess": "Pause request sent",
     "errors": {
       "PAUSE_ALREADY_REQUESTED": "A pause request for this table is already waiting on an answer. Reload the screen to see it.",
@@ -235,24 +247,21 @@
     "adminDescription": "You are editing a table that is not yours: when you save, its masters are notified."
   },
   "veto": {
-    "block": "Ban",
-    "request": "Ask for them to be banned",
+    "request": "Ask for a ban",
     "unblock": "Lift the ban",
+    "requestedBy": "Requested by {{name}}",
     "blockedBy": "Banned by {{name}} on {{date}}",
     "quotedReason": "“{{reason}}”",
-    "hintPrimary": "Banning removes that person from this table, and only from this one: they stop seeing it. It can be lifted afterwards.",
-    "hintSecondary": "As a co-master you do not ban: what you send is a request, and the table’s master answers it.",
-    "helpLink": "How banning works"
+    "helpLink": "How banning works",
+    "hint": "Asking for a ban does not ban: an admin decides, and until then the person stays at the table. Lifting one is up to the table’s master or an admin."
   },
   "banRequests": {
     "title": "Ban requests",
-    "descriptionPrimary": "A co-master asked for somebody to be banned from this table. You answer this, not an admin.",
-    "descriptionSecondary": "What you asked for is waiting on the table’s master.",
     "askedBy": "Asked by {{name}}",
     "approve": "Ban",
     "reject": "Do not ban",
     "approveDialogTitle": "Ban {{name}}",
-    "approveDialogDescription": "Read the reason and write your answer. The co-master who asked reads it.",
+    "approveDialogDescription": "Read the reason and write your answer. Whoever asked for the ban reads it.",
     "approveEffect": "Granting it is not marking it as read: {{name}} is banned at once and stops seeing the table.",
     "rejectDialogTitle": "Do not ban {{name}}",
     "rejectDialogDescription": "Nobody is banned. Say why: it is all the person who asked receives.",
@@ -264,7 +273,8 @@
     "confirmApproveDescription": "They stop seeing the table, its detail and its files. It is recorded with your reason.",
     "confirmRejectTitle": "Reject the veto request on {{name}}?",
     "confirmRejectDescription": "They stay at the table as before. It is recorded with your reason.",
-    "descriptionObserver": "A co-master asked for somebody to be vetoed from this table. The table's main master decides."
+    "descriptionAdmin": "A master asked for somebody to be banned from this table. You decide, with your answer.",
+    "descriptionMaster": "What was asked is waiting on an admin: an admin decides, not the table’s master."
   },
   "people": {
     "viewRecord": "View {{name}}'s card"

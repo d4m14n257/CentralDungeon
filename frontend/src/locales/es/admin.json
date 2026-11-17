@@ -98,7 +98,7 @@
       "TableOpen": "Al aprobar, queda constancia de que el pedido corresponde. La mesa no se crea sola: el pedido no trae nombre, sistema, cupo ni horario, así que la creás desde «Mesas».",
       "General": "Al aprobar, el pedido queda resuelto y tu respuesta le llega a quien preguntó. No cambia nada más en la plataforma.",
       "TablePause": "Al aprobar, la mesa queda pausada: deja de prometer fechas y las sesiones pendientes se ocultan hasta que se reanude. Tu nota queda como motivo en su historial.",
-      "PlayerBan": "Este pedido no lo resolvés vos: un veto lo decide el master de la mesa, desde su pestaña Jugadores."
+      "PlayerBan": "Al aprobar, la persona queda vetada en esa mesa: deja de verla y, si jugaba, su lugar queda libre. Rechazar no cambia nada. Tu nota le llega a quien pidió el veto."
     },
     "resolutionNoteLabel": "Tu respuesta",
     "approveNotePlaceholder": "Por qué aprobás el pedido. Le llega a quien lo hizo.",
@@ -110,7 +110,6 @@
     "detailDialogTitle": "Pedido de {{name}}",
     "detailDialogDescription": "Lo que pidió, y cómo se resolvió.",
     "detailStillPending": "Todavía no se resolvió.",
-    "detailPrimaryOnly": "Lo resuelve el master de la mesa, no un admin.",
     "viewPerson": "Ver a quien lo pidió",
     "viewTable": "Ver la mesa",
     "errors": {
@@ -118,8 +117,8 @@
       "REQUEST_ALREADY_RESOLVED": "Este pedido ya lo resolvió alguien. Actualizá la pantalla para ver cómo quedó.",
       "REQUEST_ENTITY_GONE": "Lo que este pedido señalaba ya no existe, así que no se puede resolver.",
       "MASTER_ROLE_ALREADY_HELD": "Ya tenés el rol de master.",
-      "generic": "No pudimos completar la acción. Probá de nuevo.",
-      "NOT_PRIMARY_MASTER": "Esto lo resuelve el master de la mesa, no un admin. El pedido de veto se responde desde la mesa."
+      "OWN_REQUEST_NOT_APPROVABLE": "No podés aprobar un veto que pediste vos: lo decide otro admin.",
+      "generic": "No pudimos completar la acción. Probá de nuevo."
     },
     "submit": {
       "success": "Tu pedido quedó registrado",
@@ -172,7 +171,9 @@
     "confirmApproveTitle": "¿Aprobar el pedido?",
     "confirmApproveDescription": "La persona recibe la aprobación con tu motivo, y queda registrado quién lo resolvió.",
     "confirmRejectTitle": "¿Rechazar el pedido?",
-    "confirmRejectDescription": "La persona recibe el rechazo con tu motivo, y queda registrado quién lo resolvió."
+    "confirmRejectDescription": "La persona recibe el rechazo con tu motivo, y queda registrado quién lo resolvió.",
+    "subject": "Sobre: {{name}}",
+    "viewTablePlayers": "Ver la mesa y sus jugadores"
   },
   "users": {
     "title": "Usuarios",

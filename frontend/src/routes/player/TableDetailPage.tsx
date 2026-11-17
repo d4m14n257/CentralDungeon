@@ -14,7 +14,7 @@ import { useDisclosure } from '@/hooks/useDisclosure'
 import { CatalogChip } from '@/features/catalogs'
 import { FileList, FilePicker, useCommitStagedFiles } from '@/features/files'
 import { ApplyToTableDialog } from '@/features/registrations'
-import { SessionList, TableStatusBadge, useGameTable } from '@/features/tables'
+import { SessionList, TableStatusBadge, acceptsApplications, useGameTable } from '@/features/tables'
 import { TableTasksSection } from '@/features/tasks'
 import { useMe } from '@/features/users'
 import type { GameTableDetail, MasterSummary } from '@/features/tables'
@@ -43,7 +43,7 @@ function applyState(
   if (table.joined) {
     return { disabled: true, label: t('detail.alreadyJoined') }
   }
-  if (table.status !== 'Opened') {
+  if (!acceptsApplications(table)) {
     return { disabled: true, label: t('detail.notOpen') }
   }
   if (hasActiveApplication) {

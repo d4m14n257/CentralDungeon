@@ -67,20 +67,9 @@ public enum ApprovalRequestType {
     TablePause(ApprovalEntityResolver.GAME_TABLE),
 
     /**
-     * "Veto this person from our table." A {@code Secondary} asks; <b>the {@code Primary} answers,
-     * and not an admin</b> (ADR-09 §5).
-     *
-     * <p>It is the one type that does not belong to the admins, and the decision cost the contract
-     * its longest paragraph. ADR-16 §1 is generic - {@code approval_requests} covers «todo pedido dirigido
-     * a los admins» - and ADR-09 §5 is specific: the veto is the {@code Primary}'s, and a co-master
-     * «necesita aprobación del {@code Primary}». The specific one wins, and sensibly: a veto between
-     * a co-master and a player of <em>that</em> table is decided by whoever runs it, not by the
-     * platform.
-     *
-     * <p>Two things follow, and both had to be built rather than inherited. {@code AdminQueueService}
-     * <b>excludes</b> this type - new types otherwise join the tray for free, which would put work in
-     * front of admins that is not theirs. And the authorization to resolve it is by type, inside
-     * {@link ApprovalService}, not by an annotation on a controller.
+     * "Veto this person from our table." Any master of the table asks, with a reason, and <b>an admin
+     * decides</b>, from the shared tray or from the request listing like every other type. Nothing
+     * about the person changes while it waits.
      *
      * <p>It points at the {@code table_registration} being vetoed. Approving applies the veto through
      * {@code RegistrationService}, the one place that writes {@code Blocked}.

@@ -12,8 +12,8 @@ import { banRequestsApi } from './approvalsApi'
  * rows at most and usually none. Paging a list that is empty nine times out of ten would be paging
  * for the tenth.
  *
- * Read by every master of the table, `Primary` or not — a co-master who asked has to be able to see
- * that the answer has not come, or they will ask again.
+ * Read by every master of the table and by admins — whoever asked has to be able to see that the
+ * answer has not come, or they will ask again.
  *
  * **It answers with `BanRequest` and not with the shared approval summary**, which is what lets each
  * line name the person it is about: the summary's entity is whoever asked, so two open requests on

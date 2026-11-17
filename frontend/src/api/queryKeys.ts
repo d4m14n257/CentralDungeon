@@ -16,6 +16,8 @@ export const queryKeys = {
     /** Every table detail, for a mutation that changes the reader's own mark on a table it cannot name (ADR-09 §1). */
     details: () => ['tables', 'detail'] as const,
     managedDetail: (id: string) => ['tables', 'managed-detail', id] as const,
+    /** Every managed detail, for a mutation that moves tables it cannot name (approving a request). */
+    managedDetails: () => ['tables', 'managed-detail'] as const,
     mine: () => ['tables', 'mine'] as const,
     /**
      * `/player/history` (ADR-19 §8): closed tables, accumulated with "See more" like the explorer - no
@@ -133,6 +135,8 @@ export const queryKeys = {
       ['catalogs', 'admin', kind, query, statuses, page, size, groupsOnly] as const,
   },
   registrations: {
+    /** Every roster and queue - what an admin's decision on a veto request invalidates without naming the table. */
+    all: () => ['registrations'] as const,
     candidates: (tableId: string) => ['registrations', 'candidates', tableId] as const,
     /** Their applications, by page. `mine()` with no page is the prefix every mutation invalidates. */
     mine: (page?: number) => (page === undefined ? (['registrations', 'mine'] as const) : (['registrations', 'mine', page] as const)),
@@ -185,6 +189,8 @@ export const queryKeys = {
      * two audiences never read the same rows.
      */
     banRequests: (tableId: string) => ['requests', 'ban', tableId] as const,
+    /** Every table's veto requests - what an admin resolving one invalidates, as it never names the table. */
+    banAll: () => ['requests', 'ban'] as const,
   },
   users: {
     me: () => ['users', 'me'] as const,

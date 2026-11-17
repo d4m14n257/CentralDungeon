@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * The role matrix of the {@code registrations} and {@code tasks} features: applications, the veto and
- * its requests, and the requests a table makes with their answers. Twenty-one endpoints.
+ * its requests, and the requests a table makes with their answers. Nineteen endpoints.
  */
 class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
 
@@ -27,22 +27,14 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
     /** One main row per endpoint, plus its variants. */
     static final List<MatrixRow> ROWS = List.of(
             // ---------------------------------------------------------------- registrations
-            MatrixRow.of("POST /api/v1/game-tables/{tableId}/registrations/{registrationId}/block",
-                    w -> MatrixRequest.path(w.table().getId(), applicantRegistration(w, TableRegistrationStatus.Candidate))
-                            .json(JUSTIFICATION))
-                    .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, RESOURCE_OWNER)
-                    .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
-                    .cell(allowed(200), PRIMARY),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/registrations/{registrationId}/unblock",
                     w -> MatrixRequest.path(w.table().getId(), applicantRegistration(w, TableRegistrationStatus.Blocked))
                             .json(JUSTIFICATION))
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
-                    .cell(allowed(200), PRIMARY),
+                    .cell(allowed(200), PRIMARY, ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/registrations/{registrationId}/request-block",
                     w -> MatrixRequest.path(w.table().getId(), applicantRegistration(w, TableRegistrationStatus.Candidate))
                             .json(JUSTIFICATION))
@@ -66,20 +58,6 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own")).doesNotContain(w.recall("foreign"))),
                             ADMIN, OWNER, PRIMARY, SECONDARY),
-            MatrixRow.of("POST /api/v1/game-tables/{tableId}/ban-requests/{requestId}/approve",
-                    w -> MatrixRequest.path(w.table().getId(), banRequest(w)).json(RESOLUTION))
-                    .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
-                    .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
-                    .cell(allowed(200), PRIMARY),
-            MatrixRow.of("POST /api/v1/game-tables/{tableId}/ban-requests/{requestId}/reject",
-                    w -> MatrixRequest.path(w.table().getId(), banRequest(w)).json(RESOLUTION))
-                    .cell(denied(401), ANONYMOUS)
-                    .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
-                    .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
-                    .cell(allowed(200), PRIMARY),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/registrations",
                     w -> MatrixRequest.path(w.table().getId()).json("{\"description\": \"I want to play\", \"fileIds\": []}"))
                     .cell(denied(401), ANONYMOUS)
@@ -87,6 +65,16 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(allowed(201), PLAYER, REMOVED_SECONDARY, PLAYER_MASTER, PLAYER_ADMIN, PLAYER_OWNER)
                     .cell(denied(403), MASTER, ADMIN, OWNER, PRIMARY, SECONDARY)
                     .cell(denied(409), CANDIDATE, TABLE_PLAYER),
+            MatrixRow.variant("in progress, seeking players", "POST /api/v1/game-tables/{tableId}/registrations", w -> {
+                w.seekingPlayers(w.table(GameTableStatus.InProgress), true);
+                return MatrixRequest.path(w.table().getId()).json("{\"description\": \"I want to play\", \"fileIds\": []}");
+            })
+                    .cell(allowed(201), PLAYER)
+                    .cell(denied(403), MASTER, PRIMARY, SECONDARY),
+            MatrixRow.variant("in progress, not seeking players", "POST /api/v1/game-tables/{tableId}/registrations",
+                    w -> MatrixRequest.path(w.table(GameTableStatus.InProgress).getId())
+                            .json("{\"description\": \"I want to play\", \"fileIds\": []}"))
+                    .cell(denied(409), PLAYER),
             MatrixRow.of("GET /api/v1/game-tables/{tableId}/registrations", w -> {
                 w.remember("own", w.registration(w.table(), w.person("applicant"), TableRegistrationStatus.Candidate).getId());
                 w.remember("foreign", w.registration(w.otherTable("other", GameTableStatus.Opened), w.person("elsewhere"),
@@ -240,12 +228,6 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
     /** A registration of the account the row hands the resource to, on the main table, in the given status. */
     private static String applicantRegistration(MatrixFixtures w, TableRegistrationStatus status) {
         return w.registration(w.table(), w.user(RESOURCE_OWNER), status).getId();
-    }
-
-    /** A pending veto request about a candidate of the main table. */
-    private static String banRequest(MatrixFixtures w) {
-        String registrationId = w.registration(w.table(), w.person("banned"), TableRegistrationStatus.Candidate).getId();
-        return w.approval(ApprovalRequestType.PlayerBan, registrationId, w.person("requester")).getId();
     }
 
     @Override

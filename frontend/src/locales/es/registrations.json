@@ -42,32 +42,26 @@
   },
   "veto": {
     "reasonLabel": "Motivo",
-    "blockDialogTitle": "Vetar a {{name}}",
-    "blockDialogDescription": "Contá por qué. Queda registrado, y es lo que vas a leer si algún día levantás el veto.",
-    "blockEffect": "Deja de ver esta mesa: no le aparece en el explorador, no puede abrirla y no puede descargar sus archivos. No pierde la cuenta ni las otras mesas donde juega.",
-    "blockSubmit": "Vetar",
-    "blockSuccess": "{{name}} quedó vetado en esta mesa",
-    "requestDialogTitle": "Pedir que se vete a {{name}}",
-    "requestDialogDescription": "Como co-master, lo que mandás es un pedido. Contá por qué: es lo que lee el master de la mesa para decidir.",
-    "requestEffect": "Todavía no cambia nada: la persona sigue jugando y sigue viendo la mesa hasta que el master responda.",
+    "requestDialogTitle": "Pedir el veto de {{name}}",
+    "requestDialogDescription": "Lo decide un admin. Contá por qué: es lo que lee para decidir.",
+    "requestEffect": "Todavía no cambia nada: la persona sigue jugando y sigue viendo la mesa hasta que un admin responda.",
     "requestSubmit": "Enviar el pedido",
-    "requestSuccess": "Pedido enviado: lo resuelve el master de la mesa",
+    "requestSuccess": "Pedido enviado: lo resuelve un admin",
     "unblockDialogTitle": "Levantar el veto de {{name}}",
-    "unblockDialogDescription": "Vuelve a ver la mesa y queda como estaba antes del veto. Contá por qué lo levantás: queda registrado igual que el veto.",
-    "unblockEffect": "Recupera la mesa tal como estaba: la ve en el explorador, la puede abrir, vuelve a descargar sus archivos y recupera el lugar que tenía antes del veto.",
+    "unblockDialogDescription": "Vuelve a ver la mesa y queda como estaba antes del veto, si hay lugar. Contá por qué lo levantás: queda registrado igual que el veto.",
+    "unblockEffect": "Recupera la mesa tal como estaba: la ve en el explorador, la puede abrir, vuelve a descargar sus archivos y recupera su lugar. Si la mesa se llenó mientras tanto, queda como rechazada por falta de cupo y puede volver a postularse.",
     "unblockSubmit": "Levantar el veto",
     "unblockSuccess": "Se levantó el veto de {{name}}",
     "errors": {
-      "NOT_PRIMARY_MASTER": "Esto lo decide el master de la mesa. Si sos co-master, lo que podés hacer es pedirlo.",
+      "NOT_PRIMARY_MASTER": "Levantar el veto lo decide el master de la mesa o un admin.",
       "REGISTRATION_ALREADY_BLOCKED": "Esa persona ya está vetada en esta mesa. Actualizá la pantalla para ver cómo quedó.",
       "REGISTRATION_NOT_BLOCKED": "Esa persona no está vetada: alguien levantó el veto antes que vos.",
-      "generic": "No pudimos completar la acción. Probá de nuevo."
+      "generic": "No pudimos completar la acción. Probá de nuevo.",
+      "REQUEST_ALREADY_PENDING": "Ya hay un pedido de veto esperando respuesta para esa persona. Actualizá la pantalla para verlo."
     },
-    "blockConfirmTitle": "¿Vetar a {{name}}?",
-    "blockConfirmDescription": "Deja de ver la mesa, su detalle y sus archivos. Queda registrado con tu motivo.",
     "requestConfirmTitle": "¿Pedir el veto de {{name}}?",
-    "requestConfirmDescription": "Lo decide el master principal. Hasta entonces sigue en la mesa.",
+    "requestConfirmDescription": "Lo decide un admin. Hasta entonces sigue en la mesa.",
     "unblockConfirmTitle": "¿Levantar el veto de {{name}}?",
-    "unblockConfirmDescription": "Vuelve a poder ver la mesa. Queda registrado con tu motivo."
+    "unblockConfirmDescription": "Vuelve a ver la mesa; si está llena, queda como rechazada por falta de cupo. Queda registrado con tu motivo."
   }
 }

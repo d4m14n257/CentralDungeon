@@ -332,6 +332,22 @@ final class MatrixFixtures {
     }
 
     /**
+     * Turns the table's search for players on or off.
+     *
+     * @param table the table
+     * @param seeking whether it looks for players
+     */
+    void seekingPlayers(GameTable table, boolean seeking) {
+        table.setSeekingPlayers(seeking);
+        bean(GameTableRepository.class).save(table);
+    }
+
+    /** @return how many players a fixture table takes */
+    int maxPlayers() {
+        return MAX_PLAYERS;
+    }
+
+    /**
      * Another table, with a third party as its live Primary.
      *
      * @param label  how the row calls it; the same label gives the same table

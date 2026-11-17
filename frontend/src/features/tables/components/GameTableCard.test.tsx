@@ -18,6 +18,7 @@ const baseTable: GameTableSummary = {
   scheduleConflict: false,
   applied: false,
   joined: false,
+  seekingPlayers: false,
   primaryMaster: { userId: 'master-1', name: 'BrowserTester', masterType: 'Primary' },
 }
 
@@ -114,5 +115,14 @@ describe('GameTableCard', () => {
     renderCard(baseTable)
 
     expect(screen.queryByText('Choca con una mesa tuya')).not.toBeInTheDocument()
+  })
+
+  it('marks a running table that is looking for players, and nothing else', () => {
+    const { unmount } = renderCard({ ...baseTable, status: 'InProgress', seekingPlayers: true })
+    expect(screen.getByText('Busca jugadores')).toBeInTheDocument()
+    unmount()
+
+    renderCard({ ...baseTable, status: 'InProgress', seekingPlayers: false })
+    expect(screen.queryByText('Busca jugadores')).not.toBeInTheDocument()
   })
 })

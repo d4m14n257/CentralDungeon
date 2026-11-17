@@ -2,7 +2,7 @@
 adr: 3
 titulo: Modelo de datos y persistencia
 estado: Vigente
-actualizada: 2026-11-11
+actualizada: 2026-11-15
 absorbe: [2, 3, 8, 9, 10, 11, 12, 22, 25, 62, 124, 182, 208]
 ---
 
@@ -60,7 +60,7 @@ absorbe: [2, 3, 8, 9, 10, 11, 12, 22, 25, 62, 124, 182, 208]
 
 ## §7 El borrado es lógico, con fecha, y la cascada la hace el service
 
-**Decisión.** Además de `status = 'Deleted'`, cada tabla borrable lleva `deleted_at DATETIME NULL`. Borrar una mesa marca todo lo que cuelga de ella —masters, postulaciones, archivos, plantillas de sus peticiones y vínculos de catálogo— con la misma fecha, en una sola transacción, desde el service; la lista y el estado que toma cada uno están en ADR-07 «Mesas: ciclo de vida» §6 «Se borra lo que nadie vio; lo demás se cancela».
+**Decisión.** Además de `status = 'Deleted'`, cada tabla borrable lleva `deleted_at DATETIME NULL`. Borrar una mesa marca todo lo que cuelga de ella —masters, postulaciones, archivos, plantillas de sus peticiones y vínculos de catálogo— con la misma fecha, en una sola transacción, desde el service; la lista y el estado que toma cada uno están en ADR-07 «Mesas: ciclo de vida» §6 «Se borra lo que nadie vio; lo demás se cancela». Lo `Deleted` es invisible en toda lectura, con una excepción explícita: el sujeto de un pedido de `approval_requests`, que sigue diciendo de quién y de qué mesa (ADR-16 «Pedidos con aprobación y bandeja de admins» §2 «La referencia a la entidad afectada es polimórfica y la integridad es del service»).
 
 **Por qué.** El `status` dice *que* algo está borrado pero no *cuándo*, y sin fecha no se puede purgar, auditar ni deshacer. La cascada es lógica de negocio, así que vive en el service con sus tests y no en un `ON DELETE CASCADE`; la marca compartida permite reconocer qué cayó junto.
 

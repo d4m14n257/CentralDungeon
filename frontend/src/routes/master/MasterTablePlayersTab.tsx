@@ -144,27 +144,26 @@ function MastersSection({ tableId, isPrimary, masters, onOpenPerson }: OutletCon
 }
 
 /**
- * One row of the roster, with whatever the reader may do to it (ADR-09 §4, §5, F3.4).
+ * One row of the roster, with whatever the reader may do to it.
  *
- * **A vetoed row stays here, and that is the decision rather than an oversight.** ADR-09 §5 requires the
- * veto to be reversible; an interface that removed the row would leave the only act that reverses it
- * with nothing to hang off, and "reversible" would be true of the database and false of the
- * platform. So the row stays, marked, saying whose decision it was and when — which is also the
- * only place a master can see a colleague's veto at all.
+ * **A vetoed row stays here, and that is the decision rather than an oversight.** The veto has to be
+ * reversible; an interface that removed the row would leave the only act that reverses it with
+ * nothing to hang off. So the row stays, marked, saying whose decision it was and when — which is
+ * also the only place a master can see a colleague's veto at all.
  *
- * **The button says what it will do before it is pressed** (`roles-y-alcance.md §4, F3.4`). A
- * co-master gets the same action in the same place, labelled as the request it actually is; learning
- * that in the dialog afterwards is learning it after deciding.
+ * **Any master asks for a veto; only the `Primary` or an admin lifts one.** Nobody vetoes from here:
+ * the button is «Pedir veto», and says before it is pressed that an admin decides.
  */
 function PlayerRow({
   player,
-  isPrimary,
+  canLift,
   readOnly,
   onVeto,
   onOpenPerson,
 }: {
   player: TablePlayer
-  isPrimary: boolean
+  /** Whether the reader may lift a veto: the table's `Primary`, or an admin reading it. */
+  canLift: boolean
   readOnly: boolean
   onVeto: (player: TablePlayer, action: VetoAction) => void
   onOpenPerson: ((userId: string) => void) | undefined
@@ -189,22 +188,29 @@ function PlayerRow({
               onClick={() => onOpenPerson(player.userId)}
             />
           )}
-          {readOnly ? null : isBlocked ? (
-            // Lifting is the Primary's alone, like applying it. A co-master asking for a veto to be
-            // lifted is not a mechanism that exists, and offering the button would promise one.
-            isPrimary && (
-              <Button size="sm" variant="outline" onClick={() => onVeto(player, 'unblock')}>
-                {t('veto.unblock')}
-              </Button>
-            )
-          ) : (
-            // Offered to both, worded for each: the Primary vetoes, the co-master asks (ADR-09 §5, ADR-06 §3).
-            <Button size="sm" variant={isPrimary ? 'destructive' : 'outline'} onClick={() => onVeto(player, 'block')}>
-              {t(isPrimary ? 'veto.block' : 'veto.request')}
-            </Button>
-          )}
+          {isBlocked
+            ? // Lifting is the Primary's and the admin's. A co-master lifting a veto is not a
+              // mechanism that exists, and offering the button would promise one.
+              canLift && (
+                <Button size="sm" variant="outline" onClick={() => onVeto(player, 'unblock')}>
+                  {t('veto.unblock')}
+                </Button>
+              )
+            : // Any master asks; the admin reading the table decides elsewhere and asks nothing.
+              !readOnly && (
+                <Button size="sm" variant="outline" onClick={() => onVeto(player, 'request')}>
+                  {t('veto.request')}
+                </Button>
+              )}
         </div>
       </div>
+      {/* The master's request first, then the admin's decision on it: the veto has both reasons. */}
+      {isBlocked && player.banRequestedByName !== null && (
+        <p className="text-fg-muted text-xs">{t('veto.requestedBy', { name: player.banRequestedByName })}</p>
+      )}
+      {isBlocked && player.banRequestJustification !== null && (
+        <p className="text-fg text-xs italic">{t('veto.quotedReason', { reason: player.banRequestJustification })}</p>
+      )}
       {isBlocked && player.blockedByName !== null && (
         <p className="text-fg-muted text-xs">
           {t('veto.blockedBy', {
@@ -233,8 +239,8 @@ function PlayerRow({
  * panel — the same account may be playing happily at four others, and nothing about those changes.
  *
  * @param props.tableId   the table
- * @param props.isPrimary whether the reader runs it or co-runs it — what the veto button does (ADR-06 §3)
- * @param props.readOnly  an admin reading it from /admin/tables/:id: the roster and its vetoes, no button (ADR-06 §8)
+ * @param props.isPrimary whether the reader runs the table: only the `Primary` lifts a veto
+ * @param props.readOnly  an admin reading it from /admin/tables/:id (ADR-06 §8): no master's button, but the admin may lift a veto
  */
 function PlayersSection({
   tableId,
@@ -272,8 +278,7 @@ function PlayersSection({
         {/* What is waiting on the Primary, above the list it is about. Renders nothing when empty. */}
         <BanRequestsSection
           tableId={tableId}
-          isPrimary={isPrimary}
-          observer={readOnly}
+          canResolve={readOnly}
           help={
             <p className="text-fg-subtle text-xs">
               <HelpLink section="masters.banning">{t('veto.helpLink')}</HelpLink>
@@ -286,12 +291,11 @@ function PlayersSection({
         {data && data.length === 0 && <EmptyState title={t('players.emptyTitle')} description={t('players.emptyDescription')} />}
         {data && data.length > 0 && (
           <>
-            {/* Said before anything is pressed, not inside the dialog that follows the press
-                (roles-y-alcance.md §4, F3.4). The dialog repeats it; this is where it is learned. */}
+            {/* Said before anything is pressed, not inside the dialog that follows the press: asking
+                is not vetoing. The dialog repeats it; this is where it is learned. */}
             {!readOnly && (
               <p className="text-fg-subtle text-xs">
-                {t(isPrimary ? 'veto.hintPrimary' : 'veto.hintSecondary')}{' '}
-                <HelpLink section="masters.banning">{t('veto.helpLink')}</HelpLink>
+                {t('veto.hint')} <HelpLink section="masters.banning">{t('veto.helpLink')}</HelpLink>
               </p>
             )}
             <ul className="list-divided-bare">
@@ -299,7 +303,7 @@ function PlayersSection({
                 <PlayerRow
                   key={player.registrationId}
                   player={player}
-                  isPrimary={isPrimary}
+                  canLift={isPrimary || readOnly}
                   readOnly={readOnly}
                   onOpenPerson={onOpenPerson}
                   onVeto={(target, action) => vetoDialog.open({ player: target, action })}
@@ -315,7 +319,6 @@ function PlayersSection({
             registrationId={vetoDialog.item.player.registrationId}
             playerName={vetoDialog.item.player.userName}
             action={vetoDialog.item.action}
-            isPrimary={isPrimary}
             open={vetoDialog.isOpen}
             onOpenChange={(open) => !open && vetoDialog.close()}
             help={
@@ -341,8 +344,8 @@ function PlayersSection({
  * imports from another (regla dura 16).
  *
  * Mounted under /admin/tables/:id too (ADR-06 §8), where the context arrives with `isPrimary` false and
- * `readOnly` set: the masters, the roster, the vetoes and the pending veto requests, and none of the
- * buttons that act on them.
+ * `readOnly` set: the masters, the roster, the vetoes and the pending veto requests, with none of
+ * the master's buttons — and the admin's own: answering a veto request and lifting a veto.
  */
 export function MasterTablePlayersTab() {
   const context = useOutletContext<OutletContext>()

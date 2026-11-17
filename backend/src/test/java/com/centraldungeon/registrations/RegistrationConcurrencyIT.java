@@ -10,10 +10,12 @@ import com.centraldungeon.registrations.dto.CreateRegistrationRequest;
 import com.centraldungeon.registrations.dto.RejectRegistrationRequest;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
+import com.centraldungeon.tables.GameTableService;
 import com.centraldungeon.tables.GameTableStatus;
 import com.centraldungeon.tables.Master;
 import com.centraldungeon.tables.MasterRepository;
 import com.centraldungeon.tables.MasterType;
+import com.centraldungeon.tables.dto.SetSeekingPlayersRequest;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.Role;
 import com.centraldungeon.users.RoleRepository;
@@ -45,7 +47,8 @@ import org.testcontainers.mysql.MySQLContainer;
 
 /**
  * The application rules MySQL cannot hold on its own - the capacity of a table, the automatic
- * rejection that fills it, and the veto - raced for real against MySQL.
+ * rejection that fills it, the search for players of a table in progress, and the veto - raced for
+ * real against MySQL.
  *
  * <p>Every one of them is a check-then-act serialized by the table's row lock, and every one of them
  * breaks in the same way if anything is read <em>before</em> that lock: under {@code REPEATABLE READ}
@@ -84,6 +87,9 @@ class RegistrationConcurrencyIT {
 
     @Autowired
     private GameTableRepository gameTableRepository;
+
+    @Autowired
+    private GameTableService gameTableService;
 
     @Autowired
     private MasterRepository masterRepository;
@@ -183,125 +189,164 @@ class RegistrationConcurrencyIT {
 
     // ---------------------------------------------------------------- the veto
 
-    /** <b>The same veto, twice at once.</b> One veto and one 409, and one row in the trail. */
+    /**
+     * <b>Two masters asking for the same veto at once.</b> Each reads "nothing pending about this
+     * person" and inserts, unless the table's lock serializes them: then one request and one
+     * {@code REQUEST_ALREADY_PENDING}, and one line in the admins' tray rather than the same decision
+     * twice.
+     */
     @Test
-    void aDoubleVetoLeavesOneVetoAndOneRowInTheTrail() throws Exception {
+    void twoMastersAskingForTheSameVetoOpenOneRequest() throws Exception {
+        GameTable table = openTable(4);
+        masterRepository.save(new Master(table, secondary, MasterType.Secondary));
+        TableRegistration target = player(table, "target");
+
+        List<String> outcomes = raceUnlessUnlocked(table,
+                () -> approvalService.submitPlayerBan(table.getId(), target.getId(), "asked by the primary", asMaster(primary)),
+                () -> approvalService.submitPlayerBan(table.getId(), target.getId(), "asked by the co-master", asMaster(secondary)));
+
+        assertThat(outcomes).containsExactlyInAnyOrder(OK, ConflictException.REQUEST_ALREADY_PENDING);
+        assertThat(pendingVetoRequests(target)).isEqualTo(1);
+    }
+
+    /** <b>Two admins approving the same veto at once.</b> One veto, one 409, one row in the trail. */
+    @Test
+    void twoAdminsApprovingTheSameVetoVetoOnce() throws Exception {
         GameTable table = openTable(4);
         TableRegistration target = player(table, "target");
+        String requestId = askForVeto(table, target);
+        User firstAdmin = person("first-admin", PlatformRole.ADMIN);
+        User secondAdmin = person("second-admin", PlatformRole.ADMIN);
 
         List<String> outcomes = raceBehindTheTableLock(table,
-                () -> registrationService.block(table.getId(), target.getId(), primary.getId(), "first veto"),
-                () -> registrationService.block(table.getId(), target.getId(), primary.getId(), "second veto"));
+                () -> approvalService.approve(requestId, "approved by one", asAdmin(firstAdmin)),
+                () -> approvalService.approve(requestId, "approved by the other", asAdmin(secondAdmin)));
 
-        assertThat(outcomes).containsExactlyInAnyOrder(OK, ConflictException.REGISTRATION_ALREADY_BLOCKED);
+        assertThat(outcomes).containsExactlyInAnyOrder(OK, ConflictException.REQUEST_ALREADY_RESOLVED);
         assertThat(vetoRows(target)).isEqualTo(1);
+        assertThat(statusOf(target)).isEqualTo("Blocked");
     }
 
     /**
-     * <b>A veto from the Primary while the same Primary approves a co-master's request for it.</b>
-     * Both end in the one place that writes {@code Blocked}, and both have to agree on who did it:
-     * one veto, one refusal, the request answered once - and no deadlock between the request's lock
-     * and the table's, which is what taking them in two different orders would produce.
+     * <b>One admin approving and another refusing the same veto.</b> One answer stands, and the person
+     * is where that answer says: vetoed if it was approved, still playing if it was refused.
      */
     @Test
-    void aDirectVetoRacingTheApprovalOfAVetoRequestVetoesOnce() throws Exception {
+    void anApprovalAndARefusalOfTheSameVetoLeaveOneAnswer() throws Exception {
         GameTable table = openTable(4);
-        masterRepository.save(new Master(table, secondary, MasterType.Secondary));
         TableRegistration target = player(table, "target");
-        String requestId = approvalService.submitPlayerBan(target.getId(), "asked by the co-master", asMaster(secondary)).id();
+        String requestId = askForVeto(table, target);
+        User firstAdmin = person("first-admin", PlatformRole.ADMIN);
+        User secondAdmin = person("second-admin", PlatformRole.ADMIN);
 
         List<String> outcomes = raceBehindTheTableLock(table,
-                () -> approvalService.blockDirectly(table.getId(), target.getId(), "direct veto", asMaster(primary)),
-                () -> approvalService.approveBanRequest(table.getId(), requestId, "request approved", asMaster(primary)));
+                () -> approvalService.approve(requestId, "approved", asAdmin(firstAdmin)),
+                () -> approvalService.reject(requestId, "refused", asAdmin(secondAdmin)));
 
-        assertThat(outcomes).as("one wins; the other is a 409, never a deadlock").containsOnlyOnce(OK).hasSize(2);
-        assertThat(outcomes).allMatch(outcome -> outcome.equals(OK)
-                || outcome.equals(ConflictException.REGISTRATION_ALREADY_BLOCKED)
-                || outcome.equals(ConflictException.REQUEST_ALREADY_RESOLVED));
-        assertThat(vetoRows(target)).isEqualTo(1);
-        assertThat(jdbc.queryForObject("select status from approval_requests where id = ?", String.class, requestId))
-                .isEqualTo("Approved");
+        assertThat(outcomes).containsExactlyInAnyOrder(OK, ConflictException.REQUEST_ALREADY_RESOLVED);
+        String answer = requestStatus(requestId);
+        assertThat(statusOf(target)).as("the request says %s", answer)
+                .isEqualTo(answer.equals("Approved") ? "Blocked" : "Player");
+        assertThat(vetoRows(target)).isEqualTo(answer.equals("Approved") ? 1 : 0);
     }
 
     /**
-     * <b>The same race, with the request answered from the admin screen</b> - which a Primary who is
-     * also an admin can do. That path used to take the request's lock first and the table's only when
-     * applying the veto, the opposite order of a direct veto, which closes the same request: the two
-     * waited on each other. The direct veto goes first in the queue so that, in the old order, it gets
-     * the table while the approval already holds the request.
+     * <b>An admin approving a veto while the Primary lifts one.</b> Both queue on the table, so
+     * whichever runs second reads what the first committed: lifting before the veto lands is refused as
+     * not blocked, lifting after it undoes it, and the trail agrees with where the person ends.
+     * Neither touches the other's locks out of order - lifting never locks the request - so what this
+     * proves is a consistent outcome, not the absence of a deadlock.
      */
     @Test
-    void aDirectVetoRacingTheGenericApprovalOfTheSameRequestNeitherDeadlocksNorVetoesTwice() throws Exception {
+    void approvingAVetoWhileLiftingOneEndsConsistently() throws Exception {
         GameTable table = openTable(4);
-        masterRepository.save(new Master(table, secondary, MasterType.Secondary));
         TableRegistration target = player(table, "target");
-        String requestId = approvalService.submitPlayerBan(target.getId(), "asked by the co-master", asMaster(secondary)).id();
+        String requestId = askForVeto(table, target);
+        User admin = person("the-admin", PlatformRole.ADMIN);
 
-        List<String> outcomes = raceInOrder(table,
-                () -> approvalService.blockDirectly(table.getId(), target.getId(), "direct veto", asMaster(primary)),
-                () -> approvalService.approve(requestId, "approved from the admin screen", asMaster(primary)));
+        List<String> outcomes = raceBehindTheTableLock(table,
+                () -> approvalService.approve(requestId, "approved", asAdmin(admin)),
+                () -> registrationService.unblock(table.getId(), target.getId(), primary.getId(), "lifted"));
 
-        assertThat(outcomes).as("one wins; the other is a 409, never a deadlock").containsOnlyOnce(OK).hasSize(2);
-        assertThat(outcomes).allMatch(RegistrationConcurrencyIT::isOkOrConflict);
-        assertThat(vetoRows(target)).isEqualTo(1);
-        assertThat(requestStatus(requestId)).isEqualTo("Approved");
-    }
-
-    /**
-     * <b>A direct veto closing a request somebody else is refusing at that moment.</b> The refusal is
-     * written and not yet committed when the veto reads the open requests about that person. Read from
-     * the veto's snapshot the request still looks open, and the veto would then wait for the refusal
-     * and overwrite it - a request the co-master was told was refused, now approved, and told again.
-     * The gate here is the refusal itself, holding the request's row with its new status.
-     */
-    @Test
-    void aDirectVetoDoesNotOverwriteARefusalOfTheSameRequestCommittedWhileItWaited() throws Exception {
-        GameTable table = openTable(4);
-        masterRepository.save(new Master(table, secondary, MasterType.Secondary));
-        TableRegistration target = player(table, "target");
-        String requestId = approvalService.submitPlayerBan(target.getId(), "asked by the co-master", asMaster(secondary)).id();
-
-        String outcome;
-        try (LockGate refusal = LockGate.hold(transactionManager,
-                () -> jdbc.update("update approval_requests set status = 'Rejected' where id = ?", requestId))) {
-            Future<String> veto = pool.submit(() -> outcomeOf(() ->
-                    approvalService.blockDirectly(table.getId(), target.getId(), "direct veto", asMaster(primary))));
-            refusal.awaitWaiters(monitor, 1, QUEUE_TIMEOUT);
-            refusal.open();
-            outcome = veto.get(30, TimeUnit.SECONDS);
-        }
-
-        assertThat(outcome).as("the veto itself goes through").isEqualTo(OK);
-        assertThat(requestStatus(requestId)).as("the refusal committed first and stands").isEqualTo("Rejected");
-        assertThat(jdbc.queryForObject("""
-                select count(*) from notifications
-                where user_id = ? and notification_type = 'ApprovalRequestApproved'""",
-                Integer.class, secondary.getId()))
-                .as("the co-master is not told their refused request was approved")
-                .isZero();
+        assertThat(outcomes).as("no deadlock, no 500").allMatch(RegistrationConcurrencyIT::isOkOrConflict);
+        assertThat(outcomes.getFirst()).isEqualTo(OK);
+        int lifted = jdbc.queryForObject(
+                "select count(*) from registration_status_changes where registration_id = ? and from_status = 'Blocked'",
+                Integer.class, target.getId());
+        assertThat(statusOf(target)).isEqualTo(lifted == 1 ? "Player" : "Blocked");
+        assertThat(outcomes.get(1)).isEqualTo(lifted == 1 ? OK : ConflictException.REGISTRATION_NOT_BLOCKED);
     }
 
     /**
      * <b>Lifting the veto of a player whose seat was filled meanwhile.</b> The veto is lifted, and the
-     * person comes back as a candidate: back to {@code Player} would leave the table over its cap.
+     * person comes back as a rejected application for lack of seats - with the system's reason, so they
+     * see the table again and can apply once a seat frees - instead of pushing the table over its cap.
      */
     @Test
-    void liftingTheVetoOfAPlayerWhoseSeatWasFilledBringsThemBackAsACandidate() {
+    void liftingTheVetoOfAPlayerWhoseSeatWasFilledLeavesARejectionForLackOfSeats() {
         GameTable table = openTable(1);
         TableRegistration vetoed = player(table, "vetoed");
-        registrationService.block(table.getId(), vetoed.getId(), primary.getId(), "vetoed while playing");
+        approvalService.approve(askForVeto(table, vetoed), "approved", asAdmin(person("the-admin", PlatformRole.ADMIN)));
         TableRegistration replacement = candidate(table, "replacement");
         registrationService.accept(replacement.getId(), primary.getId());
 
         registrationService.unblock(table.getId(), vetoed.getId(), primary.getId(), "the veto was a mistake");
 
-        assertThat(statusOf(vetoed)).isEqualTo("Candidate");
+        assertThat(statusOf(vetoed)).isEqualTo("Rejected");
         assertThat(countWithStatus(table, "Player")).as("the cap holds").isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "select description from registration_rejections where registration_id = ? and rejected_by is null",
+                String.class, vetoed.getId()))
+                .as("the reason is the system's, not a person's")
+                .isEqualTo(ConflictException.TABLE_FULL);
         assertThat(jdbc.queryForObject("""
                 select to_status from registration_status_changes
                 where registration_id = ? and from_status = 'Blocked'""", String.class, vetoed.getId()))
                 .as("the trail records where they actually landed")
-                .isEqualTo("Candidate");
+                .isEqualTo("Rejected");
+    }
+
+    // ---------------------------------------------------------------- a table in progress looking for players
+
+    /**
+     * <b>Somebody applying to a table that is looking for players while its masters accept the
+     * candidate who takes the last seat.</b> Either the newcomer is refused at the door, or they get in
+     * and are turned down with the rest when the seat fills. Never two players for one seat, never a
+     * live candidate left on a full table, and the table stops looking once it is full.
+     */
+    @Test
+    void anApplicationRacingTheAcceptanceOfTheLastSeatLeavesAFullTableThatStoppedLooking() throws Exception {
+        GameTable table = seekingTable(1);
+        TableRegistration waiting = candidate(table, "waiting");
+        User newcomer = person("newcomer", PlatformRole.PLAYER);
+
+        List<String> outcomes = raceBehindTheTableLock(table,
+                () -> registrationService.accept(waiting.getId(), primary.getId()),
+                () -> registrationService.apply(table.getId(), newcomer.getId(), new CreateRegistrationRequest(null, List.of())));
+
+        assertThat(outcomes).allMatch(RegistrationConcurrencyIT::isOkOrConflict);
+        assertThat(countWithStatus(table, "Player")).isEqualTo(1);
+        assertThat(countWithStatus(table, "Candidate")).as("nobody left waiting on a full table").isZero();
+        assertThat(seeking(table)).isFalse();
+    }
+
+    /**
+     * <b>A master turning the search on while the acceptance that fills the table runs.</b> Whichever
+     * goes first, the table ends full and not looking: turned on first, the acceptance turns it off;
+     * the acceptance first, turning it on is refused.
+     */
+    @Test
+    void turningTheSearchOnRacingTheLastSeatEndsNotLooking() throws Exception {
+        GameTable table = inProgressTable(1);
+        TableRegistration waiting = candidate(table, "waiting");
+
+        List<String> outcomes = raceBehindTheTableLock(table,
+                () -> registrationService.accept(waiting.getId(), primary.getId()),
+                () -> gameTableService.setSeekingPlayers(table.getId(), new SetSeekingPlayersRequest(true), primary.getId()));
+
+        assertThat(outcomes.getFirst()).isEqualTo(OK);
+        assertThat(outcomes.get(1)).isIn(OK, ConflictException.TABLE_FULL);
+        assertThat(seeking(table)).isFalse();
     }
 
     // ---------------------------------------------------------------- two writes over one candidate
@@ -395,6 +440,21 @@ class RegistrationConcurrencyIT {
         }
     }
 
+    /**
+     * Like {@link #raceBehindTheTableLock}, for two calls that may not take the table's lock at all: the
+     * gate opens once both are queued behind it, or once both have already finished - which is what two
+     * calls that never queue on the table do at once, and what lets the test show they raced.
+     */
+    private List<String> raceUnlessUnlocked(GameTable table, Callable<?> first, Callable<?> second) throws Exception {
+        try (LockGate gate = holdTableLock(table)) {
+            Future<String> a = pool.submit(() -> outcomeOf(first));
+            Future<String> b = pool.submit(() -> outcomeOf(second));
+            gate.awaitUntil(monitor, waiting -> waiting >= 2 || (a.isDone() && b.isDone()), QUEUE_TIMEOUT);
+            gate.open();
+            return List.of(a.get(30, TimeUnit.SECONDS), b.get(30, TimeUnit.SECONDS));
+        }
+    }
+
     private LockGate holdTableLock(GameTable table) {
         return LockGate.hold(transactionManager, () -> gameTableRepository.findByIdForUpdate(table.getId()).orElseThrow());
     }
@@ -428,6 +488,24 @@ class RegistrationConcurrencyIT {
         return saved;
     }
 
+    private GameTable inProgressTable(int maxPlayers) {
+        GameTable table = openTable(maxPlayers);
+        table.setStatus(GameTableStatus.InProgress);
+        return gameTableRepository.save(table);
+    }
+
+    private GameTable seekingTable(int maxPlayers) {
+        GameTable table = inProgressTable(maxPlayers);
+        table.setSeekingPlayers(true);
+        return gameTableRepository.save(table);
+    }
+
+    /** A pending veto request about this person, asked by the co-master. */
+    private String askForVeto(GameTable table, TableRegistration target) {
+        masterRepository.save(new Master(table, secondary, MasterType.Secondary));
+        return approvalService.submitPlayerBan(table.getId(), target.getId(), "asked by the co-master", asMaster(secondary)).id();
+    }
+
     private TableRegistration candidate(GameTable table, String name) {
         return registrationRepository.save(new TableRegistration(table, person(name, PlatformRole.PLAYER), null));
     }
@@ -451,6 +529,10 @@ class RegistrationConcurrencyIT {
         return new CurrentUser(user.getId(), Set.of(PlatformRole.MASTER.roleName()));
     }
 
+    private static CurrentUser asAdmin(User user) {
+        return new CurrentUser(user.getId(), Set.of(PlatformRole.ADMIN.roleName()));
+    }
+
     private int countWithStatus(GameTable table, String status) {
         return jdbc.queryForObject(
                 "select count(*) from table_registrations where game_table_id = ? and status = ?",
@@ -468,6 +550,17 @@ class RegistrationConcurrencyIT {
         return jdbc.queryForObject(
                 "select count(*) from registration_status_changes where registration_id = ? and to_status = 'Blocked'",
                 Integer.class, registration.getId());
+    }
+
+    private int pendingVetoRequests(TableRegistration registration) {
+        return jdbc.queryForObject(
+                "select count(*) from approval_requests where entity_id = ? and status = 'Pending'",
+                Integer.class, registration.getId());
+    }
+
+    private boolean seeking(GameTable table) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+                "select seeking_players from game_tables where id = ?", Boolean.class, table.getId()));
     }
 
     private String requestStatus(String requestId) {

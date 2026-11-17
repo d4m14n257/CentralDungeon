@@ -103,70 +103,25 @@ export const approvalsApi = {
 }
 
 /**
- * A body this feature deliberately does not read.
+ * The veto requests of one table, read by whoever runs it.
  *
- * **`unknown` and not `void`**, because `void` would be a claim about the wire that is false: the
- * endpoint answers with a full `RegistrationResponse`. What is true is that *this* feature cannot
- * model it — a registration is `features/registrations`' vocabulary and a feature never imports from
- * another (regla dura 16) — so the honest type is the project's own answer for what is not known
- * here (arquitectura §3.2: never `any`, `unknown` for the unknown). Callers re-read the lists
- * they render rather than patching a row in from an answer they cannot type.
- */
-type UnreadBody = unknown
-
-/**
- * The veto requests of one table, which **an admin does not resolve** (ADR-09 §5, F3.4).
- *
- * **Its own module, and that separation is the decision rather than a filing convention.** Two
- * written decisions meet here and pull opposite ways: ADR-16 §1 is generic — `approval_requests` covers
- * "todo pedido dirigido a los admins" — and ADR-09 §5 is specific: a veto is applied by the table's
- * `Primary`, and a co-master "necesita aprobación del `Primary`". The specific one wins, because a
- * veto between a co-master and a player of *that* table is decided by whoever runs it, not by the
- * platform. So these rows are kept out of the shared admin tray entirely, and the three calls below
- * hang off the table rather than off `/admin/requests`, where the reader would be the wrong person.
- *
- * `TablePause` goes the other way and stays with the admins: pausing a table is a platform act, and
- * a master asking for one is asking somebody above them.
+ * **Its own module, hung off the table**: the list is the table's business and any master of it may
+ * read it, whereas resolving a request is the admins' and goes through {@link approvalsApi} like every
+ * other kind.
  */
 export const banRequestsApi = {
   /**
-   * The veto requests still waiting on this table, for whoever runs it.
+   * The veto requests still waiting on this table.
    *
-   * Readable by every master of the table and not only the `Primary`: a co-master who asked for a
-   * veto has to be able to see that it is still waiting, or they will ask twice.
+   * Readable by every master of the table: whoever asked for a veto has to be able to see that it is
+   * still waiting, or they will ask twice.
    *
    * **It answers with `BanRequest` and not with the shared summary**, so each line names the person
-   * it is about — which is the one thing the summary could not say, and the thing a `Primary` with
-   * two open requests needs in order to tell them apart. A list and not a page: it is bounded by how
+   * it is about — which is the one thing the summary could not say, and the thing an admin with two
+   * open requests needs in order to tell them apart. A list and not a page: it is bounded by how
    * many people are at one table.
    *
    * @param tableId the table
    */
   list: (tableId: string) => api.get<BanRequest[]>(`/api/v1/game-tables/${tableId}/ban-requests`),
-
-  /**
-   * Granting a co-master's veto request: the veto is applied in the same transaction (ADR-09 §5).
-   *
-   * **What comes back is a `RegistrationResponse`, and it is deliberately not read here** — see
-   * {@link UnreadBody}. That is `features/registrations`' vocabulary and a feature never imports
-   * from another (regla dura 16); the roster is re-read instead, which is the list the screen
-   * actually renders.
-   *
-   * @param tableId   the table
-   * @param requestId the request being granted
-   * @param input     the note, required at both ends of the mechanism (ADR-16 §1)
-   */
-  approve: (tableId: string, requestId: string, input: ResolveApprovalRequestInput) =>
-    api.post<UnreadBody, ResolveApprovalRequestInput>(`/api/v1/game-tables/${tableId}/ban-requests/${requestId}/approve`, input),
-
-  /**
-   * Turning a co-master's veto request down. Nothing about the table changes; the note is what the
-   * co-master reads, so it is required here too.
-   *
-   * @param tableId   the table
-   * @param requestId the request being refused
-   * @param input     the note, required
-   */
-  reject: (tableId: string, requestId: string, input: ResolveApprovalRequestInput) =>
-    api.post<ApprovalRequestDetail, ResolveApprovalRequestInput>(`/api/v1/game-tables/${tableId}/ban-requests/${requestId}/reject`, input),
 }

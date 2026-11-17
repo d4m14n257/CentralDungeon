@@ -20,10 +20,11 @@ public interface ApprovalMapper {
      * @param request     the request
      * @param gameTableId the table it is about, resolved by the service for the whole page, or null
      *                    when it is about none
+     * @param subjectName for a veto request, the display name of the person it is about; null otherwise
      * @return the summary the listing renders
      */
     default ApprovalRequestSummaryResponse toSummaryResponse(
-            ApprovalRequest request, @Nullable String gameTableId) {
+            ApprovalRequest request, @Nullable String gameTableId, @Nullable String subjectName) {
         return new ApprovalRequestSummaryResponse(
                 request.getId(),
                 request.getRequestType().wireName(),
@@ -33,17 +34,21 @@ public interface ApprovalMapper {
                 request.getJustification(),
                 displayNameOrNull(request.getClaimedBy()),
                 gameTableId,
+                subjectName,
                 request.getCreatedAt());
     }
 
     /**
      * One request in full - the detail, and what every mutating endpoint answers with.
      *
-     * @param request the request
+     * @param request     the request
+     * @param gameTableId the table it is about, or null when it is about none
+     * @param subjectName for a veto request, the display name of the person it is about; null otherwise
      * @return the detail, with both people resolved to display names and the polymorphic reference
-     *         published as the two plain strings it is (ADR-16 §2)
+     *         published as the two plain strings it is
      */
-    default ApprovalRequestDetailResponse toDetailResponse(ApprovalRequest request) {
+    default ApprovalRequestDetailResponse toDetailResponse(
+            ApprovalRequest request, @Nullable String gameTableId, @Nullable String subjectName) {
         return new ApprovalRequestDetailResponse(
                 request.getId(),
                 request.getRequestType().wireName(),
@@ -56,6 +61,8 @@ public interface ApprovalMapper {
                 displayNameOrNull(request.getResolvedBy()),
                 request.getResolutionNote(),
                 request.getResolvedAt(),
+                gameTableId,
+                subjectName,
                 request.getCreatedAt());
     }
 

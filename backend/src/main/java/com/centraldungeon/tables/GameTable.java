@@ -125,6 +125,15 @@ public class GameTable extends BaseEntity {
     @Column(name = "claimed_at")
     private @Nullable LocalDateTime claimedAt;
 
+    /**
+     * Whether a table already in progress is looking for players to fill a free seat. Meaningless in any
+     * other status: it is turned off whenever the table leaves {@code InProgress} or its seats are all
+     * taken - by accepting a candidate, by lifting a veto, or by an admin lowering the capacity to the
+     * players it already has.
+     */
+    @Column(name = "seeking_players", nullable = false)
+    private boolean seekingPlayers;
+
     /** Required by JPA. */
     protected GameTable() {
     }
@@ -404,5 +413,34 @@ public class GameTable extends BaseEntity {
     public void releaseClaim() {
         this.claimedBy = null;
         this.claimedAt = null;
+    }
+
+    /**
+     * Returns whether the table, already in progress, is looking for players.
+     *
+     * @return true while its masters have the search turned on
+     */
+    public boolean isSeekingPlayers() {
+        return seekingPlayers;
+    }
+
+    /**
+     * Turns the search for players on or off. Who may do it, and in which status, is decided by the
+     * service under the table's lock; this only records the answer.
+     *
+     * @param seekingPlayers the new value
+     */
+    public void setSeekingPlayers(boolean seekingPlayers) {
+        this.seekingPlayers = seekingPlayers;
+    }
+
+    /**
+     * Whether somebody may apply to this table now: an open table, or one in progress whose masters are
+     * looking for players. The one definition every path that admits an application asks.
+     *
+     * @return true when an application can be received
+     */
+    public boolean acceptsApplications() {
+        return status == GameTableStatus.Opened || (status == GameTableStatus.InProgress && seekingPlayers);
     }
 }
