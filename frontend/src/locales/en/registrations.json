@@ -48,7 +48,7 @@
     "requestSubmit": "Send the request",
     "requestSuccess": "Request sent: an admin answers it",
     "unblockDialogTitle": "Lift {{name}}’s ban",
-    "unblockDialogDescription": "They see the table again and go back to where they stood before the ban, if there is room. Say why you are lifting it: it is recorded just like the ban.",
+    "unblockDialogDescription": "They see the table again and go back to their seat as a player, if there is room. Say why you are lifting it: it is recorded just like the ban.",
     "unblockEffect": "They get the table back as it was: it returns to their explorer, they can open it, download its files again, and recover their place. If the table filled up meanwhile, they are left as rejected for lack of seats and can apply again.",
     "unblockSubmit": "Lift the ban",
     "unblockSuccess": "{{name}}’s ban was lifted",

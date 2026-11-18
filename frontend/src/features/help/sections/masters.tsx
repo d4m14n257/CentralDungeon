@@ -167,6 +167,9 @@ export function PauseRequestHelp() {
  * will think it broke. Lifting is the main master's or an admin's, and it can end in a rejected
  * application when the table filled up meanwhile (`lifted`).
  *
+ * `onlyPlayers` is the rule a master would otherwise test by trying: a candidate is turned down, never
+ * vetoed, and the screen only offers the veto on the Players tab.
+ *
  * `invisible` is the half that surprises the *other* master: the vetoed person does not get told, the
  * table simply stops existing for them. Somebody who expects a notification to go out will write the
  * reason as if the person were going to read it.
@@ -175,7 +178,7 @@ export function BanningHelp() {
   return (
     <ListAndSteps
       block="banning"
-      keys={['what', 'perTable', 'who', 'pending', 'reason', 'invisible', 'reversible', 'lifted', 'stays']}
+      keys={['what', 'perTable', 'onlyPlayers', 'who', 'pending', 'reason', 'invisible', 'reversible', 'lifted', 'stays']}
       stepCount={5}
     />
   )

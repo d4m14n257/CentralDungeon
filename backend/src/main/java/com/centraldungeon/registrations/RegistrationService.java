@@ -78,14 +78,14 @@ public class RegistrationService {
             List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
 
     /**
-     * The statuses a veto can be applied to (ADR-09 §5): somebody who is <em>currently</em> involved.
+     * The only status a veto can be applied to (ADR-09 §5): somebody who is <em>currently seated</em>.
      *
-     * <p>Rejected and Deleted are not here and it is not an oversight - there is nothing to veto,
-     * and «no ve esa mesa» is already true of somebody who never got in. Vetoing them would put a
-     * row in the trail that denies nothing.
+     * <p>A {@code Candidate} is not here on purpose: somebody who is not wanted yet is turned down, not
+     * vetoed. Rejected and Deleted are not here either - there is nothing to veto, and «no ve esa
+     * mesa» is already true of somebody who never got in. Vetoing them would put a row in the trail
+     * that denies nothing.
      */
-    private static final List<TableRegistrationStatus> BLOCKABLE_STATUSES =
-            List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
+    private static final TableRegistrationStatus BLOCKABLE_STATUS = TableRegistrationStatus.Player;
 
     /**
      * What {@code /my/applications} never shows (ADR-03 §7, ADR-09 §4).
@@ -597,7 +597,7 @@ public class RegistrationService {
     }
 
     /**
-     * Vetoing somebody from a table: {@code Candidate} or {@code Player} to {@code Blocked}.
+     * Vetoing somebody from a table: {@code Player} to {@code Blocked}.
      *
      * <p>Private, and reached only through {@link #applyApprovedBlock}: nobody vetoes directly. A
      * master asks for a veto and an admin decides it, so by the time this runs the decision was already
@@ -613,7 +613,9 @@ public class RegistrationService {
      * @return the application, now {@code Blocked}, with who vetoed it and when
      * @throws NotFoundException 404 when the application does not belong to that table
      * @throws ConflictException 409 {@code REGISTRATION_ALREADY_BLOCKED} when it already is, or a plain
-     *                           conflict for an application that is over
+     *                           conflict for an application that is not a {@code Player} - a candidate,
+     *                           or one that is over, including a player who stopped being one while the
+     *                           request waited
      */
     private RegistrationResponse block(
             String gameTableId, String registrationId, String actorId, String justification) {
@@ -628,7 +630,7 @@ public class RegistrationService {
                     "Registration " + registrationId + " is already blocked",
                     ConflictException.REGISTRATION_ALREADY_BLOCKED);
         }
-        if (!BLOCKABLE_STATUSES.contains(from)) {
+        if (from != BLOCKABLE_STATUS) {
             throw new ConflictException("A registration in status " + from + " cannot be blocked");
         }
 
@@ -638,10 +640,10 @@ public class RegistrationService {
     /**
      * Lifting a veto: {@code Blocked} back to wherever the person was.
      *
-     * <p><b>Back to where they were, read from the trail</b> - not "back to {@code Player}". A
-     * candidate who was vetoed while still queued goes back to {@code Candidate}, and the only place
-     * that knows which of the two it was is {@code from_status} of the last move into
-     * {@code Blocked}.
+     * <p><b>Back to where they were, read from the trail</b>: {@code from_status} of the last move into
+     * {@code Blocked}. Today that is always {@code Player}, since only players are vetoed; the trail is
+     * still what is read so a veto an older version wrote against a candidate lifts back to
+     * {@code Candidate} as it always did.
      *
      * <p><b>The table's {@code Primary} or an admin.</b> The veto itself is decided by an admin, so an
      * admin can undo it; the {@code Primary} runs the table and answers for who sits at it. A
@@ -658,7 +660,7 @@ public class RegistrationService {
      * @param registrationId the application
      * @param actorId        the actor, from the token; has to be the table's {@code Primary} or an admin
      * @param justification  why the veto is being lifted, never blank
-     * @return the application, back where it was - or {@code Rejected} when the table has no seat left
+     * @return the application, back to {@code Player} - or {@code Rejected} when the table has no seat left
      * @throws NotFoundException        404 when the application does not belong to that table
      * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER} when the actor is neither the
      *                                  Primary nor an admin
@@ -791,15 +793,19 @@ public class RegistrationService {
      * @param gameTableId    the table the application must belong to
      * @param registrationId the application
      * @throws NotFoundException 404 when the application does not belong to that table
-     * @throws ConflictException 409 {@code REGISTRATION_ALREADY_BLOCKED} when it is not a
-     *                           {@code Candidate} or a {@code Player}
+     * @throws ConflictException 409 {@code REGISTRATION_ALREADY_BLOCKED} when it already is {@code Blocked},
+     *                           or a plain conflict when it is not a {@code Player}
      */
     @Transactional(readOnly = true)
     public void requireBlockableOn(String gameTableId, String registrationId) {
-        if (!BLOCKABLE_STATUSES.contains(requireRegistrationOf(gameTableId, registrationId).getStatus())) {
+        TableRegistrationStatus status = requireRegistrationOf(gameTableId, registrationId).getStatus();
+        if (status == TableRegistrationStatus.Blocked) {
             throw new ConflictException(
-                    "Registration " + registrationId + " cannot be blocked",
+                    "Registration " + registrationId + " is already blocked",
                     ConflictException.REGISTRATION_ALREADY_BLOCKED);
+        }
+        if (status != BLOCKABLE_STATUS) {
+            throw new ConflictException("A registration in status " + status + " cannot be blocked");
         }
     }
 

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -747,6 +748,20 @@ class ApprovalServiceTest {
         order.verify(masterService).isMasterOf("table-1", "master-1");
         order.verify(registrationService).requireBlockableOn("table-1", "reg-1");
         verify(userRepository, never()).lockById(anyString());
+    }
+
+    /** An application the veto cannot apply to is refused when asked, and no request is opened. */
+    @Test
+    void aVetoOnSomebodyWhoIsNotAPlayerOpensNoRequest() {
+        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        doThrow(new ConflictException("A registration in status Candidate cannot be blocked"))
+                .when(registrationService).requireBlockableOn("table-1", "reg-1");
+
+        assertThatThrownBy(() ->
+                        service().submitPlayerBan("table-1", "reg-1", WHY, new CurrentUser("master-1", Set.of("Master"))))
+                .isInstanceOf(ConflictException.class);
+
+        verify(approvalRequestRepository, never()).save(any());
     }
 
     /** Only somebody running the table asks for a veto on it, whatever platform role they hold. */

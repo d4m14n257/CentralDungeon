@@ -349,19 +349,19 @@ class ApprovalServiceIT {
     }
 
     /**
-     * <b>The orphan a real flow produces: a veto request about an application that was withdrawn.</b>
+     * <b>The orphan a real flow produces: a veto request about an application that is gone.</b>
      * The application is not deleted, only marked, so the sweep has to read the mark. The table's list
      * still shows the request, naming the person - it is still waiting on an admin - approving it is
      * refused as acting on something that is gone, and refusing it is allowed, because it has no effect
      * and it is the only way the request leaves the admins' tray.
      */
     @Test
-    void aVetoRequestAboutAWithdrawnApplicationIsAnOrphanThatCanOnlyBeRefused() {
-        VetoOnGoneApplication veto = vetoRequestThenWithdraw();
+    void aVetoRequestAboutAGoneApplicationIsAnOrphanThatCanOnlyBeRefused() {
+        VetoOnGoneApplication veto = vetoRequestThenApplicationGoes();
 
         assertThat(orphanCheckService.reportOrphans()).isEqualTo(1);
         assertThat(approvalService.listBanRequests(veto.table().getId(), veto.primary().getId()))
-                .as("the request outlives the withdrawal, and still says whom it is about")
+                .as("the request outlives the application, and still says whom it is about")
                 .singleElement()
                 .satisfies(row -> {
                     assertThat(row.requestId()).isEqualTo(veto.requestId());
@@ -376,30 +376,40 @@ class ApprovalServiceIT {
 
     /**
      * <b>The same orphan when the table went too.</b> Deleting a table takes its applications with it,
-     * so the request points at a gone application exactly as after a withdrawal - and the table's row
+     * so the request points at a gone application exactly as after any other soft delete - and the table's row
      * lock is still taken first, deleted or not, so refusing works and approving stays a 409.
      */
     @Test
     void aVetoRequestWhoseTableWasDeletedCanStillBeRefused() {
-        VetoOnGoneApplication veto = vetoRequestThenWithdraw();
+        VetoOnGoneApplication veto = vetoRequestThenApplicationGoes();
         jdbcTemplate.update("update game_tables set status = 'Deleted', deleted_at = now() where id = ?", veto.table().getId());
 
         assertRefusableButNotApprovable(veto.requestId());
     }
 
-    /** A pending veto request about an application its applicant then withdrew. */
-    private VetoOnGoneApplication vetoRequestThenWithdraw() {
+    /** A seat taken at the table: the applicant, accepted. */
+    private TableRegistration seatedPlayer(GameTable table, User applicant) {
+        TableRegistration registration = new TableRegistration(table, applicant, null);
+        registration.setStatus(TableRegistrationStatus.Player);
+        return registrationRepository.save(registration);
+    }
+
+    /** A pending veto request about an application that was then soft-deleted. */
+    private VetoOnGoneApplication vetoRequestThenApplicationGoes() {
         User primary = person("the-primary");
         User secondary = person("the-secondary");
         User applicant = person("the-applicant");
         grant(applicant, PlatformRole.PLAYER);
         GameTable table = openTable(primary);
         masterRepository.save(new Master(table, secondary, MasterType.Secondary));
-        TableRegistration application = registrationRepository.save(new TableRegistration(table, applicant, null));
+        TableRegistration application = seatedPlayer(table, applicant);
         String requestId = approvalService
                 .submitPlayerBan(table.getId(), application.getId(), "asked by the co-master", asMaster(secondary))
                 .id();
-        registrationService.withdraw(application.getId(), applicant.getId());
+        // Only a candidate can withdraw and only a player can be vetoed, so the application goes the way
+        // a deleted table takes it: soft-deleted.
+        jdbcTemplate.update("update table_registrations set status = 'Deleted', deleted_at = now() where id = ?",
+                application.getId());
         return new VetoOnGoneApplication(table, primary, applicant, requestId);
     }
 
@@ -426,7 +436,7 @@ class ApprovalServiceIT {
         User admin = admin("the-admin");
         GameTable table = openTable(primary);
         masterRepository.save(new Master(table, secondary, MasterType.Secondary));
-        TableRegistration application = registrationRepository.save(new TableRegistration(table, applicant, null));
+        TableRegistration application = seatedPlayer(table, applicant);
         String requestId = approvalService
                 .submitPlayerBan(table.getId(), application.getId(), "asked by the co-master", asMaster(secondary))
                 .id();
@@ -441,7 +451,7 @@ class ApprovalServiceIT {
         assertThat(row.blockJustification()).isEqualTo("confirmed by the admin");
     }
 
-    /** What the two orphan cases share: the table, its Primary, the applicant who withdrew, and the stranded request. */
+    /** What the two orphan cases share: the table, its Primary, the applicant whose application went, and the stranded request. */
     private record VetoOnGoneApplication(GameTable table, User primary, User applicant, String requestId) {
     }
 
@@ -468,7 +478,7 @@ class ApprovalServiceIT {
 
     /**
      * Both resolutions check the reference, not only the approval - a rejection is not a free pass. A
-     * veto is the one exception: refusing it after its application was withdrawn acts on nothing and is
+     * veto is the one exception: refusing it after its application went away acts on nothing and is
      * the only way it leaves the tray, so only approving it is refused.
      */
     @Test

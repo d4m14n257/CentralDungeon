@@ -48,7 +48,7 @@
     "requestSubmit": "Enviar el pedido",
     "requestSuccess": "Pedido enviado: lo resuelve un admin",
     "unblockDialogTitle": "Levantar el veto de {{name}}",
-    "unblockDialogDescription": "Vuelve a ver la mesa y queda como estaba antes del veto, si hay lugar. Contá por qué lo levantás: queda registrado igual que el veto.",
+    "unblockDialogDescription": "Vuelve a ver la mesa y a su lugar de jugador, si hay lugar. Contá por qué lo levantás: queda registrado igual que el veto.",
     "unblockEffect": "Recupera la mesa tal como estaba: la ve en el explorador, la puede abrir, vuelve a descargar sus archivos y recupera su lugar. Si la mesa se llenó mientras tanto, queda como rechazada por falta de cupo y puede volver a postularse.",
     "unblockSubmit": "Levantar el veto",
     "unblockSuccess": "Se levantó el veto de {{name}}",

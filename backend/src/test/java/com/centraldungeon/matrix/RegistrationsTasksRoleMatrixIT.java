@@ -36,7 +36,7 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(403, "NOT_PRIMARY_MASTER"), SECONDARY)
                     .cell(allowed(200), PRIMARY, ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/registrations/{registrationId}/request-block",
-                    w -> MatrixRequest.path(w.table().getId(), applicantRegistration(w, TableRegistrationStatus.Candidate))
+                    w -> MatrixRequest.path(w.table().getId(), applicantRegistration(w, TableRegistrationStatus.Player))
                             .json(JUSTIFICATION))
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
@@ -45,11 +45,11 @@ class RegistrationsTasksRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(allowed(200), SECONDARY),
             MatrixRow.of("GET /api/v1/game-tables/{tableId}/ban-requests", w -> {
                 w.remember("own", w.approval(ApprovalRequestType.PlayerBan,
-                        w.registration(w.table(), w.person("banned"), TableRegistrationStatus.Candidate).getId(),
+                        w.registration(w.table(), w.person("banned"), TableRegistrationStatus.Player).getId(),
                         w.person("requester")).getId());
                 w.remember("foreign", w.approval(ApprovalRequestType.PlayerBan,
                         w.registration(w.otherTable("other", GameTableStatus.Opened), w.person("elsewhere"),
-                                TableRegistrationStatus.Candidate).getId(),
+                                TableRegistrationStatus.Player).getId(),
                         w.person("requester")).getId());
                 return MatrixRequest.path(w.table().getId());
             })

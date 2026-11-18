@@ -445,14 +445,15 @@
     },
     "banning": {
       "title": "Vetar a alguien de tu mesa",
-      "what": "Vetar saca a una persona de tu mesa: deja de verla en el explorador, no puede abrirla, no puede postularse y no puede descargar sus archivos. Si estaba jugando, pierde su lugar y queda libre.",
+      "what": "Vetar saca a una persona de tu mesa: deja de verla en el explorador, no puede abrirla, no puede postularse y no puede descargar sus archivos. Como solo se veta a quien juega, pierde su lugar y queda libre.",
       "perTable": "Es por mesa, y solo por esa mesa. No pierde la cuenta, ni el karma, ni las otras mesas donde juega: lo que desaparece para esa persona es esta mesa y nada más.",
+      "onlyPlayers": "El veto es solo para quien ya juega en la mesa. A un candidato no se lo veta: se lo rechaza.",
       "who": "Nadie veta directo: cualquier master de la mesa, sea el principal o un co-master, pide el veto con un motivo, y lo decide un admin desde su bandeja.",
       "pending": "Mientras el pedido espera, no cambia nada: la persona sigue en la mesa, la ve y juega como siempre. Si el admin lo aprueba, el veto rige en el acto; si lo rechaza, todo queda como estaba. En los dos casos te llega un aviso a vos, que lo pediste.",
       "reason": "El motivo es obligatorio al pedir el veto y al levantarlo. Es lo que el admin lee para decidir, y queda registrado con quién lo hizo y cuándo, para que la decisión se pueda revisar después.",
       "invisible": "A la persona no se le avisa. La mesa simplemente deja de existir para ella, así que el motivo que escribas no lo lee: lo leen los masters de la mesa y los admins.",
       "reversible": "Se puede levantar. Un veto no es una baja: es reversible, y por eso pide un motivo. Lo levanta el master principal o un admin; un co-master no.",
-      "lifted": "Al levantarlo, la persona vuelve a donde estaba: como jugadora si jugaba, o como candidata si esperaba. Si mientras tanto la mesa se llenó, queda con la postulación rechazada por falta de lugar, y puede postularse de nuevo cuando se libere uno.",
+      "lifted": "Al levantarlo, la persona vuelve como jugadora. Si mientras tanto la mesa se llenó, queda con la postulación rechazada por falta de lugar, y puede postularse de nuevo cuando se libere uno.",
       "stays": "La fila de quien está vetado se sigue viendo en Jugadores, marcada, con quién pidió el veto y por qué, y qué admin lo aprobó y cuándo. Es desde ahí que se levanta el veto.",
       "steps": {
         "step1": "Abrí tu mesa y andá a la pestaña Jugadores.",

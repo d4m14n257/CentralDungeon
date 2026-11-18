@@ -445,14 +445,15 @@
     },
     "banning": {
       "title": "Banning somebody from your table",
-      "what": "Banning removes a person from your table: it leaves their explorer, they cannot open it, they cannot apply and they cannot download its files. If they were playing, they lose their seat and it becomes free.",
+      "what": "Banning removes a person from your table: it leaves their explorer, they cannot open it, they cannot apply and they cannot download its files. Since only players are banned, they lose their seat and it becomes free.",
       "perTable": "It is per table, and only that table. They keep their account, their karma and every other table they play at: what disappears for them is this table and nothing else.",
+      "onlyPlayers": "A ban is only for somebody who already plays at the table. A candidate is not banned: they are rejected.",
       "who": "Nobody bans directly: any master of the table, the main one or a co-master, asks for the ban with a reason, and an admin decides it from their tray.",
       "pending": "While the request waits, nothing changes: the person stays at the table, sees it and plays as usual. If the admin approves it, the ban applies at once; if they reject it, everything stays as it was. Either way, you, who asked, get a notice.",
       "reason": "The reason is required both to ask for a ban and to lift it. It is what the admin reads to decide, and it is recorded with who did it and when, so the decision can be reviewed afterwards.",
       "invisible": "The person is not told. The table simply stops existing for them, so the reason you write is not read by them: it is read by the table’s masters and the admins.",
       "reversible": "It can be lifted. A ban is not a closure: it is reversible, and that is why it asks for a reason. The main master or an admin lifts it; a co-master cannot.",
-      "lifted": "When lifted, the person goes back to where they were: as a player if they were playing, or as a candidate if they were waiting. If the table filled up in the meantime, their application ends as rejected for lack of seats, and they can apply again when one frees up.",
+      "lifted": "When lifted, the person goes back as a player. If the table filled up in the meantime, their application ends as rejected for lack of seats, and they can apply again when one frees up.",
       "stays": "A banned person’s row stays in Players, marked, showing who asked for the ban and why, and which admin approved it and when. That is where the ban is lifted from.",
       "steps": {
         "step1": "Open your table and go to the Players tab.",

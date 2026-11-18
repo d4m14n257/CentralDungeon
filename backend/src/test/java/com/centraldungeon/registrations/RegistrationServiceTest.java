@@ -754,9 +754,54 @@ class RegistrationServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ConflictException.REGISTRATION_ALREADY_BLOCKED);
     }
 
+    /** Only a player can be vetoed: approving a veto on an application that is not one is a 409 and moves nothing. */
+    @ParameterizedTest
+    @EnumSource(value = TableRegistrationStatus.class, names = {"Candidate", "Rejected", "Deleted"})
+    void approvingAVetoOnSomebodyWhoIsNoLongerAPlayerIs409(TableRegistrationStatus status) {
+        TableRegistration registration = persistedRegistration("reg-nb", "table-nb", status, null);
+        when(registrationRepository.findById("reg-nb")).thenReturn(Optional.of(registration));
+
+        assertThatThrownBy(() -> registrationService.applyApprovedBlock("reg-nb", "admin-1", "too late"))
+                .isInstanceOf(ConflictException.class);
+
+        assertThat(registration.getStatus()).isEqualTo(status);
+        verify(statusChangeRepository, never()).save(any());
+    }
+
+    /** Asking for a veto is refused the same way, before anything is written: a candidate is rejected, not vetoed. */
+    @ParameterizedTest
+    @EnumSource(value = TableRegistrationStatus.class, names = {"Candidate", "Rejected", "Deleted"})
+    void aVetoCanOnlyBeAskedForAPlayer(TableRegistrationStatus status) {
+        when(registrationRepository.findById("reg-nb2"))
+                .thenReturn(Optional.of(persistedRegistration("reg-nb2", "table-nb2", status, null)));
+
+        assertThatThrownBy(() -> registrationService.requireBlockableOn("table-nb2", "reg-nb2"))
+                .isInstanceOf(ConflictException.class)
+                .extracting("errorCode").isNotEqualTo(ConflictException.REGISTRATION_ALREADY_BLOCKED);
+    }
+
+    /** The «already vetoed» code is only for somebody who is. */
+    @Test
+    void askingForAVetoOnSomebodyAlreadyVetoedKeepsItsOwnCode() {
+        when(registrationRepository.findById("reg-nb4"))
+                .thenReturn(Optional.of(persistedRegistration("reg-nb4", "table-nb4", TableRegistrationStatus.Blocked, null)));
+
+        assertThatThrownBy(() -> registrationService.requireBlockableOn("table-nb4", "reg-nb4"))
+                .isInstanceOf(ConflictException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ConflictException.REGISTRATION_ALREADY_BLOCKED);
+    }
+
+    @Test
+    void aPlayerCanBeAskedAVetoFor() {
+        when(registrationRepository.findById("reg-nb3"))
+                .thenReturn(Optional.of(persistedRegistration("reg-nb3", "table-nb3", TableRegistrationStatus.Player, null)));
+
+        registrationService.requireBlockableOn("table-nb3", "reg-nb3");
+    }
+
     /**
-     * <b>Lifting the veto puts the person back where they were, read from the trail</b> - and not
-     * «back to {@code Player}» by default. Somebody vetoed while still a {@code Candidate} goes back to
+     * <b>Lifting the veto puts the person back where they were, read from the trail</b>. Only players are
+     * vetoed now, but a veto an older version wrote against a {@code Candidate} still lifts back to
      * {@code Candidate}.
      */
     @Test

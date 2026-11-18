@@ -27,7 +27,8 @@ public enum TableRegistrationStatus {
     Rejected,
 
     /**
-     * Vetoed from this table: a master asked for it and an admin approved the request.
+     * Vetoed from this table: a master asked for it and an admin approved the request. Only a
+     * {@code Player} is vetoed - a candidate is rejected instead.
      *
      * <p>Not a rejection and not a soft delete: it is the state that makes the whole table stop
      * existing for this person. It is the value every read of a table is measured against -

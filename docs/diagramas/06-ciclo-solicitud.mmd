@@ -25,15 +25,16 @@ stateDiagram-v2
 
     Rejected --> [*] : se libera el par mesa/usuario:<br/>puede postularse de nuevo = FILA NUEVA
 
-    Candidate --> Blocked : un admin aprueba el pedido de veto
     Player --> Blocked : un admin aprueba el pedido de veto<br/>(libera el lugar)
-    Rejected --> Blocked : un admin aprueba el pedido de veto
 
-    Blocked --> Candidate : el Primary o un admin levanta el veto<br/>(era Candidate, hay lugar)
-    Blocked --> Player : el Primary o un admin levanta el veto<br/>(era Player, hay lugar)
-    Blocked --> Rejected : el Primary o un admin levanta el veto<br/>(era Rejected, o la mesa esta llena: TABLE_FULL)
+    Blocked --> Player : el Primary o un admin levanta el veto<br/>(hay lugar)
+    Blocked --> Rejected : el Primary o un admin levanta el veto<br/>(la mesa se lleno: TABLE_FULL)
 
     note left of Blocked
+        Solo se veta a un Player: al
+        Candidate que no se quiere se lo
+        rechaza con motivo.
+
         Nadie veta directo. Cualquier master
         PIDE el veto, con justificacion, y un
         admin lo aprueba o lo rechaza. Mientras

@@ -261,8 +261,9 @@ public class ApprovalService {
      * here - asking for a pause locks the user and then the table, and taking them in the other order
      * on this path could deadlock the two.
      *
-     * <p>Refused for somebody the veto could no longer apply to, and <em>before</em> the row is
-     * written: a request an admin can only answer with an error is worse than a 409 now.
+     * <p>Only a {@code Player} can be vetoed: a candidate is turned down, not vetoed. Anybody else is
+     * refused <em>before</em> the row is written: a request an admin can only answer with an error is
+     * worse than a 409 now.
      *
      * @param gameTableId    the table, from the path
      * @param registrationId the application to veto
@@ -273,7 +274,8 @@ public class ApprovalService {
      *                                  this table's
      * @throws ForbiddenActionException 403 when the actor does not run the table, or their account is
      *                                  not Allowed
-     * @throws ConflictException        409 {@code REGISTRATION_ALREADY_BLOCKED} or
+     * @throws ConflictException        409 {@code REGISTRATION_ALREADY_BLOCKED} when it is already
+     *                                  vetoed, a plain conflict when it is not a {@code Player}, or
      *                                  {@code REQUEST_ALREADY_PENDING}
      */
     @Transactional

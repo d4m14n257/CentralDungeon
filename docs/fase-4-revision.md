@@ -609,6 +609,7 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
   - el aviso de estado admite una segunda frase propia, el prop `hint` de `StatusNotice`. Se descartaron concatenar las dos frases y escribir una clave por combinación;
   - un admin que co-dirige una mesa, en `/master`, actúa como master. Para levantar o resolver como admin entra por `/admin`;
   - la fila del vetado muestra las dos razones: quién pidió el veto y su justificación, y debajo quién lo aprobó y su nota.
+- **Decisión del usuario, el 2026-11-17** (ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro»): el veto se aplica solo a un `Player`, nunca a un `Candidate`; al candidato que no se quiere se lo rechaza con motivo. Hasta ese día el backend aceptaba pedir el veto de un candidato, aunque la pantalla solo lo ofrecía en la pestaña Jugadores. Pedirlo y aprobarlo sobre un candidato responden `409`, y levantar un veto devuelve a `Player`, o a `Rejected` con `TABLE_FULL` si la mesa se llenó entretanto. Los vetos viejos de candidatos que pudiera haber en una base local se siguen levantando a su `from_status`, sin migración porque el proyecto no es productivo.
 - **Lo que encontraron los revisores, ya corregido:**
   - `revisor-backend` y `revisor-seguridad`:
     - bajar el cupo no llenaba la mesa;

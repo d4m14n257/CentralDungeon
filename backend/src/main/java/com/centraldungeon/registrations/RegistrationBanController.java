@@ -60,17 +60,15 @@ public class RegistrationBanController {
     /**
      * Lifting a veto, by the table's {@code Primary} or by an admin.
      *
-     * <p>The person goes back to where they were, read from the trail - {@code Candidate} if that is
-     * what they were when it happened, and not a blanket {@code Player}. If the table has no seat left
-     * they come back as a rejected application, so they see the table again and can apply once a seat
-     * frees.
+     * <p>The person goes back to being a {@code Player}. If the table has no seat left they come back
+     * as a rejected application, so they see the table again and can apply once a seat frees.
      *
      * @param tableId        the table
      * @param registrationId the application
      * @param request        why the veto is being lifted, required
      * @param currentUser    the actor, from the token; the service checks they are the Primary or an
      *                       admin
-     * @return 200 with the application, back where it was or rejected for lack of a seat. 403
+     * @return 200 with the application, back to {@code Player} or rejected for lack of a seat. 403
      *         {@code NOT_PRIMARY_MASTER}, 404 when the application does not belong to this table, 409
      *         {@code REGISTRATION_NOT_BLOCKED} when there was no veto to lift
      */
