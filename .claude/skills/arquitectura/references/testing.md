@@ -53,7 +53,7 @@ Versiones fijadas en `arquitectura` §1.1: **JUnit 6** (Jupiter) y **Testcontain
 2. **El esperado se escribe desde los documentos**: la ADR, `references/modelo-datos/roles-y-alcance.md` §3 y la regla de §4.5. **Nunca se lee el `@PreAuthorize` para llenar la celda**: si los documentos no alcanzan, la celda es una decisión que falta, no un hueco que se rellena con lo que el código hace.
 3. **Una celda en rojo se tría** en las tres categorías de `fase-4-revision.md` §3. Si es una decisión abierta, va a `KnownDisagreements` con lo observado y una frase de qué choca con qué; la entrada se borra cuando la decisión se aplica, y el test lo pide solo.
 4. **Admin y Owner esperan lo mismo** (`AdminOwnerParityTest`, sin base): una fila que los separa entra en `MAY_DIFFER` con su motivo, y solo si mueve el rango de admin.
-5. Donde la celda es `403` o `404` sobre un recurso ajeno, fija lo que se responde hoy hasta que F4.4 «Seguridad» decida cuál corresponde.
+5. Donde la celda niega un recurso ajeno, es `404` si el actor no puede verlo y `403` si lo ve y no puede hacer la acción (ADR-05 «Seguridad, sesión y login» §10 «Negar no confirma: lo que el actor no puede ver es `404`, y `403` es solo de lo que ve y no puede hacer»; qué es «ver» por recurso, en §2.6).
 
 ## 5.2 Frontend
 

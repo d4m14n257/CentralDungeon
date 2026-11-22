@@ -36,8 +36,11 @@ public class TestLoginController {
     /** Sets the actor's roles exactly, the part that writes through repositories (rule 1). */
     private final TestDataService testDataService;
 
-    /** Issues the same pair of tokens the real login would. */
+    /** Issues the same access token the real login would. */
     private final JwtService jwtService;
+
+    /** Opens the same recorded session the real login would. */
+    private final AuthService authService;
 
     /** Sets the same refresh cookie the real login would, attributes included. */
     private final RefreshCookieFactory refreshCookieFactory;
@@ -45,17 +48,20 @@ public class TestLoginController {
     /**
      * @param userService          creates or reuses the test user
      * @param testDataService      sets the actor's roles exactly
-     * @param jwtService           issues the tokens
+     * @param jwtService           issues the access token
+     * @param authService          opens the session and its refresh token
      * @param refreshCookieFactory sets the refresh cookie
      */
     public TestLoginController(
             UserService userService,
             TestDataService testDataService,
             JwtService jwtService,
+            AuthService authService,
             RefreshCookieFactory refreshCookieFactory) {
         this.userService = userService;
         this.testDataService = testDataService;
         this.jwtService = jwtService;
+        this.authService = authService;
         this.refreshCookieFactory = refreshCookieFactory;
     }
 
@@ -66,8 +72,8 @@ public class TestLoginController {
      * <p>Reachable only under the {@code test} profile: without it there is no bean and the path 404s,
      * which is what keeps this from ever being an authentication bypass in dev or prod.
      *
-     * <p>It issues the real tokens through the real {@link JwtService} and sets the real cookie -
-     * only the Discord handshake is skipped. A shortcut that produced a different kind of session
+     * <p>It opens the real session through {@link AuthService} and sets the real cookie - only the
+     * Discord handshake is skipped. A shortcut that produced a different kind of session
      * would be testing something the users never do.
      *
      * <p>The actor comes out holding <strong>exactly one role</strong>, not the requested one on top
@@ -102,7 +108,7 @@ public class TestLoginController {
         testDataService.setRolesExactly(user, wantedRoles(asMaster, asAdmin, asOwner));
 
         String accessToken = jwtService.issueAccessToken(user.getId());
-        String refreshToken = jwtService.issueRefreshToken(user.getId());
+        String refreshToken = authService.openSession(user.getId());
         response.addCookie(refreshCookieFactory.create(refreshToken));
         return new TokenResponse(accessToken, jwtService.accessTokenTtl().toSeconds());
     }

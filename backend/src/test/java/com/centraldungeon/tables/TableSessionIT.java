@@ -232,9 +232,13 @@ class TableSessionIT {
         masterService.createPrimary(second, master);
         tableScheduleService.replace(second, List.of(new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(21, 0), LocalTime.of(3, 0))), master.getId());
 
+        // The refusal is what matters here. This "admin" holds no Admin role (the service is called
+        // directly, past the endpoint's authorization), so it cannot see the draft and the name is withheld.
         assertThatThrownBy(() -> gameTableService.resume(table.getId(), admin.getId()))
-                .isInstanceOf(ConflictException.class)
-                .hasMessageContaining("Mesa que ocupó el martes");
+                .isInstanceOfSatisfying(ConflictException.class, exception -> {
+                    assertThat(exception.getErrorCode()).isEqualTo(ConflictException.MASTER_SCHEDULE_CONFLICT);
+                    assertThat(exception.getErrorParams()).doesNotContainKey(ConflictException.PARAM_OTHER_TABLE_NAME);
+                });
 
         assertThat(gameTableRepository.findById(table.getId()).orElseThrow().getStatus()).isEqualTo(GameTableStatus.Pause);
     }

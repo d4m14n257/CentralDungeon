@@ -3,18 +3,44 @@ package com.centraldungeon.matrix;
 import static com.centraldungeon.matrix.MatrixActor.*;
 import static com.centraldungeon.matrix.MatrixCell.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import com.centraldungeon.catalogs.CatalogStatus;
 import com.centraldungeon.catalogs.CatalogType;
 import com.centraldungeon.catalogs.CatalogValue;
+import com.centraldungeon.common.security.JwtService;
 import com.centraldungeon.files.FileCategory;
+import com.centraldungeon.files.FileStatus;
 import com.centraldungeon.files.FileType;
 import com.centraldungeon.files.StoredFile;
+import com.centraldungeon.files.StoredFileRepository;
+import com.centraldungeon.files.TableFile;
+import com.centraldungeon.files.TableFileId;
+import com.centraldungeon.files.TableFileRepository;
+import com.centraldungeon.files.TableFileStatus;
 import com.centraldungeon.registrations.TableRegistrationStatus;
+import com.centraldungeon.tables.GameTable;
+import com.centraldungeon.tables.GameTableStatus;
+import com.centraldungeon.tasks.TableTask;
+import com.centraldungeon.tasks.TableTaskRepository;
 import com.centraldungeon.tasks.TaskAudience;
+import com.centraldungeon.tasks.TaskFile;
+import com.centraldungeon.tasks.TaskFileId;
+import com.centraldungeon.tasks.TaskFileRepository;
+import com.centraldungeon.tasks.TaskFileStatus;
+import com.centraldungeon.tasks.TaskStatus;
+import com.centraldungeon.tasks.TaskSubmission;
+import com.centraldungeon.tasks.TaskSubmissionRepository;
+import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
 import com.jayway.jsonpath.JsonPath;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.test.web.servlet.MvcResult;
 
 /**
  * The role matrix of the {@code files} and {@code catalogs} features: uploads, the personal and the
@@ -26,8 +52,14 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
     /** The catalog the administration rows work on. */
     private static final String CATALOG = "systems";
 
+    /** A valid body for renaming a file. */
+    private static final String RENAME = "{\"name\": \"renamed.pdf\", \"keepInLibrary\": true}";
+
+    /** The only door to a file's bytes, and the endpoint most of this class's variants are about. */
+    private static final String CONTENT = "GET /api/v1/files/{fileId}/content";
+
     /** One main row per endpoint, plus its variants. */
-    static final List<MatrixRow> ROWS = List.of(
+    private static final List<MatrixRow> MAIN = List.of(
             // ------------------------------------------------------------ files: the platform's library
             MatrixRow.of("GET /api/v1/admin/files", w -> {
                 User uploader = w.person("uploader");
@@ -57,12 +89,19 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                     .cell(allowed(200), ADMIN, OWNER),
+            // A state the file is already in is a conflict, never a refusal of the admin.
+            MatrixRow.variant("already published", "POST /api/v1/admin/files/{fileId}/publish",
+                            w -> MatrixRequest.path(w.file(owner(w), FileType.Public, FileCategory.TableMaterial).getId()))
+                    .cell(denied(409, "FILE_ALREADY_PUBLISHED"), ADMIN, OWNER),
             MatrixRow.of("POST /api/v1/admin/files/{fileId}/unpublish",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Public, FileCategory.TableMaterial).getId()))
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                     .cell(allowed(200), ADMIN, OWNER),
+            MatrixRow.variant("not published", "POST /api/v1/admin/files/{fileId}/unpublish",
+                            w -> MatrixRequest.path(w.file(owner(w), FileType.Library, FileCategory.TableMaterial).getId()))
+                    .cell(denied(409, "FILE_NOT_PUBLISHED"), ADMIN, OWNER),
             MatrixRow.of("PUT /api/v1/admin/files/{fileId}/category",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Library, FileCategory.TableMaterial).getId())
                                     .json("{\"category\": \"MasterRequest\"}"))
@@ -70,6 +109,10 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, RESOURCE_OWNER)
                     .cell(allowed(200), ADMIN, OWNER),
+            MatrixRow.variant("published", "PUT /api/v1/admin/files/{fileId}/category",
+                            w -> MatrixRequest.path(w.file(owner(w), FileType.Public, FileCategory.TableMaterial).getId())
+                                    .json("{\"category\": \"MasterRequest\"}"))
+                    .cell(denied(409, "FILE_ALREADY_PUBLISHED"), ADMIN, OWNER),
             MatrixRow.of("DELETE /api/v1/admin/files/{fileId}",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Library, FileCategory.TableMaterial).getId()))
                     .cell(denied(401), ANONYMOUS)
@@ -155,68 +198,180 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                                     .contains(w.recall("public"))
                                     .doesNotContain(w.recall("library"))),
                             PLAYER, MASTER, ADMIN, OWNER),
-            MatrixRow.of("GET /api/v1/files/{fileId}/content",
-                            w -> MatrixRequest.path(w.file(owner(w), FileType.Private).getId()))
+            // The eight ways a file is reachable, each with who must not get through it. Every refusal is
+            // the one a file that does not exist gets, so none of them confirms what it denies.
+            MatrixRow.of(CONTENT, w -> content(w, w.file(owner(w), FileType.Private)))
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
-                    .cell(denied(404), PLAYER, MASTER, ADMIN, OWNER)
+                    .cell(notThere(), PLAYER, MASTER, ADMIN, OWNER)
                     .cell(allowed(200), RESOURCE_OWNER),
-            MatrixRow.variant("public file", "GET /api/v1/files/{fileId}/content",
-                            w -> MatrixRequest.path(w.file(owner(w), FileType.Public, FileCategory.TableMaterial).getId()))
-                    .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER),
-            MatrixRow.variant("shared by a table", "GET /api/v1/files/{fileId}/content", w -> {
+            MatrixRow.variant("a file marked gone", CONTENT, w -> {
                         StoredFile file = w.file(owner(w), FileType.Private);
-                        w.link(w.table(), file, false);
-                        return MatrixRequest.path(file.getId());
+                        file.setStatus(FileStatus.Deleted);
+                        file.setDeletedAt(LocalDateTime.now());
+                        return content(w, w.bean(StoredFileRepository.class).save(file));
                     })
-                    .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER, CANDIDATE, TABLE_PLAYER),
-            MatrixRow.variant("private to a table", "GET /api/v1/files/{fileId}/content", w -> {
-                        StoredFile file = w.file(owner(w), FileType.Private);
-                        w.link(w.table(), file, true);
-                        return MatrixRequest.path(file.getId());
-                    })
+                    .cell(notThere(), RESOURCE_OWNER, ADMIN, OWNER),
+            MatrixRow.variant("public file", CONTENT,
+                            w -> content(w, w.file(owner(w), FileType.Public, FileCategory.TableMaterial)))
+                    .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER, VETOED),
+            // The library belongs to the admins as a team: every one of them opens what another uploaded.
+            MatrixRow.variant("unpublished in the platform library", CONTENT, w -> content(w,
+                            w.file(w.person("uploader", PlatformRole.ADMIN), FileType.Library, FileCategory.TableMaterial)))
+                    .cell(notThere(), PLAYER, MASTER)
+                    .cell(allowed(200), ADMIN, OWNER),
+            MatrixRow.variant("shared by a table", CONTENT, w -> content(w, shared(w, w.table())))
+                    .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, SECONDARY, REMOVED_SECONDARY, CANDIDATE,
+                            TABLE_PLAYER)
+                    .cell(notThere(), VETOED),
+            MatrixRow.variant("shared by a table nobody was shown yet", CONTENT,
+                            w -> content(w, shared(w, w.table(GameTableStatus.Draft))))
                     .cell(allowed(200), PRIMARY, SECONDARY, ADMIN, OWNER)
-                    .cell(denied(404), PLAYER, MASTER, CANDIDATE, TABLE_PLAYER, REMOVED_SECONDARY),
-            MatrixRow.variant("handed in to a request", "GET /api/v1/files/{fileId}/content", w -> {
-                        StoredFile file = w.file(w.person("submitter"), FileType.Private);
-                        var task = w.task(w.table(), TaskAudience.Players, null);
-                        w.submissionFile(w.submission(task, w.person("submitter")), file);
-                        return MatrixRequest.path(file.getId());
+                    .cell(notThere(), PLAYER, MASTER, REMOVED_SECONDARY, VETOED),
+            MatrixRow.variant("shared by a deleted table", CONTENT, w -> {
+                        StoredFile file = shared(w, w.table(GameTableStatus.Draft));
+                        w.deleted(w.table());
+                        return content(w, file);
                     })
+                    .cell(notThere(), PLAYER, PRIMARY, SECONDARY, ADMIN, OWNER, VETOED),
+            MatrixRow.variant("shared, then taken off the table", CONTENT, w -> {
+                        StoredFile file = shared(w, w.table());
+                        takenOff(w, w.table(), file);
+                        return content(w, file);
+                    })
+                    .cell(notThere(), PLAYER, TABLE_PLAYER, SECONDARY, ADMIN, OWNER),
+            MatrixRow.variant("private to a table", CONTENT, w -> content(w, privateTo(w, w.table())))
                     .cell(allowed(200), PRIMARY, SECONDARY, ADMIN, OWNER)
-                    .cell(denied(404), TABLE_PLAYER),
-            MatrixRow.variant("form of a request", "GET /api/v1/files/{fileId}/content", w -> {
-                        StoredFile file = w.file(owner(w), FileType.Private);
-                        w.taskFile(w.task(w.table(), TaskAudience.Players, null), file);
-                        return MatrixRequest.path(file.getId());
+                    .cell(notThere(), PLAYER, MASTER, CANDIDATE, TABLE_PLAYER, REMOVED_SECONDARY, VETOED),
+            MatrixRow.variant("private to a table nobody was shown yet", CONTENT,
+                            w -> content(w, privateTo(w, w.table(GameTableStatus.Draft))))
+                    .cell(allowed(200), PRIMARY, SECONDARY, ADMIN, OWNER)
+                    .cell(notThere(), PLAYER),
+            MatrixRow.variant("private to a deleted table", CONTENT, w -> {
+                        StoredFile file = privateTo(w, w.table(GameTableStatus.Draft));
+                        w.deleted(w.table());
+                        return content(w, file);
                     })
+                    .cell(notThere(), PRIMARY, SECONDARY, ADMIN, OWNER),
+            MatrixRow.variant("private, then taken off the table", CONTENT, w -> {
+                        StoredFile file = privateTo(w, w.table());
+                        takenOff(w, w.table(), file);
+                        return content(w, file);
+                    })
+                    .cell(notThere(), SECONDARY, ADMIN, OWNER),
+            MatrixRow.variant("handed in to a request", CONTENT, w -> content(w, handedIn(w, w.table())))
+                    .cell(allowed(200), PRIMARY, SECONDARY, ADMIN, OWNER, RESOURCE_OWNER)
+                    .cell(notThere(), PLAYER, MASTER, CANDIDATE, TABLE_PLAYER, REMOVED_SECONDARY, VETOED),
+            MatrixRow.variant("handed in to another table's request", CONTENT,
+                            w -> content(w, handedIn(w, w.otherTable("other", GameTableStatus.Opened))))
+                    .cell(allowed(200), ADMIN, OWNER)
+                    .cell(notThere(), PRIMARY, SECONDARY),
+            MatrixRow.variant("handed in with an answer marked gone", CONTENT, w -> {
+                        StoredFile file = w.file(owner(w), FileType.Private);
+                        TaskSubmission answer = w.submission(w.task(w.table(), TaskAudience.Players, null), owner(w));
+                        w.submissionFile(answer, file);
+                        answer.setDeletedAt(LocalDateTime.now());
+                        w.bean(TaskSubmissionRepository.class).save(answer);
+                        return content(w, file);
+                    })
+                    .cell(notThere(), PRIMARY, ADMIN, OWNER),
+            MatrixRow.variant("form of a request", CONTENT,
+                            w -> content(w, form(w, w.task(w.table(), TaskAudience.Players, null))))
                     .cell(allowed(200), TABLE_PLAYER, PRIMARY, SECONDARY, ADMIN, OWNER)
-                    .cell(denied(404), PLAYER, MASTER),
-            MatrixRow.variant("attached to an application", "GET /api/v1/files/{fileId}/content", w -> {
-                        StoredFile file = w.file(w.person("applicant"), FileType.Private);
-                        w.registrationFile(
-                                w.registration(w.table(), w.person("applicant"), TableRegistrationStatus.Candidate), file);
-                        return MatrixRequest.path(file.getId());
+                    .cell(notThere(), PLAYER, MASTER, CANDIDATE, REMOVED_SECONDARY, VETOED),
+            // What a request to candidates asks is listed to anybody who may see the table, so its blank
+            // opens for them too, applied or not: somebody about to apply reads what they will be asked.
+            MatrixRow.variant("form of a request to candidates", CONTENT,
+                            w -> content(w, form(w, w.task(w.table(), TaskAudience.Candidates, null))))
+                    .cell(allowed(200), PLAYER, MASTER, CANDIDATE, TABLE_PLAYER, PRIMARY, ADMIN, OWNER)
+                    .cell(notThere(), VETOED),
+            MatrixRow.variant("form of a request to candidates of a table nobody was shown yet", CONTENT,
+                            w -> content(w, form(w, w.task(w.table(GameTableStatus.Draft), TaskAudience.Candidates, null))))
+                    .cell(allowed(200), PRIMARY, ADMIN, OWNER)
+                    .cell(notThere(), PLAYER, MASTER),
+            // Closing a request ends what it takes in, not what it asked: its blank is part of the history.
+            MatrixRow.variant("form of a closed request", CONTENT, w -> {
+                        TableTask task = w.task(w.table(), TaskAudience.Players, null);
+                        task.setStatus(TaskStatus.Closed);
+                        return content(w, form(w, w.bean(TableTaskRepository.class).save(task)));
                     })
+                    .cell(allowed(200), TABLE_PLAYER, PRIMARY, ADMIN, OWNER)
+                    .cell(notThere(), PLAYER, CANDIDATE),
+            MatrixRow.variant("form of a request to the actor alone", CONTENT, w -> content(w,
+                            form(w, w.task(w.table(), TaskAudience.Single, w.playerRegistration().getUser()))))
+                    .cell(allowed(200), TABLE_PLAYER, PRIMARY, ADMIN, OWNER)
+                    .cell(notThere(), PLAYER, CANDIDATE),
+            MatrixRow.variant("form of a request to another player alone", CONTENT, w -> {
+                        User target = w.person("target");
+                        w.registration(w.table(), target, TableRegistrationStatus.Player);
+                        return content(w, form(w, w.task(w.table(), TaskAudience.Single, target)));
+                    })
+                    .cell(allowed(200), PRIMARY, ADMIN, OWNER, RESOURCE_OWNER)
+                    .cell(notThere(), TABLE_PLAYER, CANDIDATE),
+            MatrixRow.variant("form of a request of a table nobody was shown yet", CONTENT,
+                            w -> content(w, form(w, w.task(w.table(GameTableStatus.Draft), TaskAudience.Players, null))))
                     .cell(allowed(200), PRIMARY, SECONDARY, ADMIN, OWNER)
-                    .cell(denied(404), CANDIDATE),
+                    .cell(notThere(), PLAYER),
+            MatrixRow.variant("form of a request of a deleted table", CONTENT, w -> {
+                        StoredFile file = form(w, w.task(w.table(GameTableStatus.Draft), TaskAudience.Players, null));
+                        w.deleted(w.table());
+                        return content(w, file);
+                    })
+                    .cell(notThere(), PRIMARY, SECONDARY, ADMIN, OWNER),
+            MatrixRow.variant("form taken off its request", CONTENT, w -> {
+                        TableTask task = w.task(w.table(), TaskAudience.Players, null);
+                        StoredFile file = form(w, task);
+                        TaskFile link = w.bean(TaskFileRepository.class)
+                                .findById(new TaskFileId(task.getId(), file.getId()))
+                                .orElseThrow();
+                        link.setStatus(TaskFileStatus.Detached);
+                        link.setDeletedAt(LocalDateTime.now());
+                        w.bean(TaskFileRepository.class).save(link);
+                        return content(w, file);
+                    })
+                    .cell(notThere(), TABLE_PLAYER, SECONDARY),
+            MatrixRow.variant("attached to an application", CONTENT,
+                            w -> content(w, applied(w, w.table(), TableRegistrationStatus.Candidate)))
+                    .cell(allowed(200), PRIMARY, SECONDARY, ADMIN, OWNER, RESOURCE_OWNER)
+                    .cell(notThere(), PLAYER, MASTER, CANDIDATE, TABLE_PLAYER, REMOVED_SECONDARY, VETOED),
+            MatrixRow.variant("attached to an application that was accepted", CONTENT,
+                            w -> content(w, applied(w, w.table(), TableRegistrationStatus.Player)))
+                    .cell(allowed(200), PRIMARY, SECONDARY, ADMIN, OWNER),
+            MatrixRow.variant("attached to a withdrawn application", CONTENT,
+                            w -> content(w, applied(w, w.table(), TableRegistrationStatus.Deleted)))
+                    .cell(allowed(200), RESOURCE_OWNER)
+                    .cell(notThere(), PRIMARY, SECONDARY, ADMIN, OWNER),
+            MatrixRow.variant("attached to a rejected application", CONTENT,
+                            w -> content(w, applied(w, w.table(), TableRegistrationStatus.Rejected)))
+                    .cell(notThere(), PRIMARY, SECONDARY, ADMIN, OWNER),
+            MatrixRow.variant("attached to an application to another table", CONTENT, w -> content(w,
+                            applied(w, w.otherTable("other", GameTableStatus.Opened), TableRegistrationStatus.Candidate)))
+                    .cell(allowed(200), ADMIN, OWNER)
+                    .cell(notThere(), PRIMARY, SECONDARY),
             MatrixRow.of("PATCH /api/v1/files/{fileId}",
-                            w -> MatrixRequest.path(w.file(owner(w), FileType.Private).getId())
-                                    .json("{\"name\": \"renamed.pdf\", \"keepInLibrary\": true}"))
+                            w -> content(w, w.file(owner(w), FileType.Private)).json(RENAME))
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, TABLE_PLAYER)
+                    // Somebody's private file that no table links is theirs alone to see.
+                    .cell(notThere(), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, TABLE_PLAYER)
                     .cell(allowed(200), RESOURCE_OWNER),
+            MatrixRow.variant("shared by a table", "PATCH /api/v1/files/{fileId}",
+                            w -> content(w, shared(w, w.table())).json(RENAME))
+                    .cell(denied(403), PLAYER, TABLE_PLAYER, PRIMARY, ADMIN, OWNER)
+                    .cell(notThere(), VETOED),
             MatrixRow.variant("public file of the owner", "PATCH /api/v1/files/{fileId}",
                             w -> MatrixRequest.path(w.file(owner(w), FileType.Public, FileCategory.TableMaterial).getId())
                                     .json("{\"name\": \"renamed.pdf\", \"keepInLibrary\": true}"))
                     .cell(denied(403), RESOURCE_OWNER),
             MatrixRow.of("DELETE /api/v1/files/{fileId}",
-                            w -> MatrixRequest.path(w.file(owner(w), FileType.Private).getId()))
+                            w -> content(w, w.file(owner(w), FileType.Private)))
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, TABLE_PLAYER)
+                    .cell(notThere(), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, TABLE_PLAYER)
                     .cell(allowed(204), RESOURCE_OWNER),
+            MatrixRow.variant("shared by a table", "DELETE /api/v1/files/{fileId}", w -> content(w, shared(w, w.table())))
+                    .cell(denied(403), PLAYER, TABLE_PLAYER, PRIMARY, ADMIN, OWNER)
+                    .cell(notThere(), VETOED),
 
             // ------------------------------------------------------------ files: a table's
             MatrixRow.of("GET /api/v1/game-tables/{tableId}/files", w -> {
@@ -229,7 +384,8 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("shared"), w.recall("private"))),
                             ADMIN, OWNER, PRIMARY, SECONDARY)
-                    .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER),
+                    .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED),
             MatrixRow.of("POST /api/v1/game-tables/{tableId}/files",
                             w -> MatrixRequest.path(w.table().getId())
                                     .json("{\"fileId\": \"" + w.file(w.person("publisher"), FileType.Public,
@@ -238,7 +394,20 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(201), PRIMARY, SECONDARY),
+            // Somebody else's file the master cannot open is not there; one they can open is theirs to
+            // read and still not theirs to attach.
+            MatrixRow.variant("somebody else's file the master cannot open", "POST /api/v1/game-tables/{tableId}/files",
+                            w -> attachBody(w, w.file(w.person("stranger"), FileType.Private)))
+                    .cell(notThere(), PRIMARY, SECONDARY),
+            MatrixRow.variant("somebody else's file another table shares", "POST /api/v1/game-tables/{tableId}/files",
+                            w -> {
+                                StoredFile file = w.file(w.person("stranger"), FileType.Private);
+                                w.link(w.otherTable("other", GameTableStatus.Opened), file, false);
+                                return attachBody(w, file);
+                            })
+                    .cell(denied(403), PRIMARY, SECONDARY),
             MatrixRow.of("PATCH /api/v1/game-tables/{tableId}/files/{fileId}", w -> MatrixRequest.path(
                                     w.table().getId(), w.link(w.table(), w.file(w.person("publisher"), FileType.Private), false)
                                             .getId().fileId())
@@ -246,6 +415,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), PRIMARY, SECONDARY),
             MatrixRow.of("DELETE /api/v1/game-tables/{tableId}/files/{fileId}", w -> MatrixRequest.path(
                             w.table().getId(), w.link(w.table(), w.file(w.person("publisher"), FileType.Private), false)
@@ -253,6 +423,7 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(denied(401), ANONYMOUS)
                     .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(204), PRIMARY, SECONDARY),
 
             // ------------------------------------------------------------ catalogs: administration
@@ -357,9 +528,55 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
             publicList("GET /api/v1/tags", CatalogType.TAGS),
             proposal("POST /api/v1/tags", "Tag"));
 
+    /** Where the tokens of the header check come from. */
+    @Autowired
+    private JwtService jwtService;
+
+    /** A table's attachments on a table the actor may not see, refused exactly as an id nobody ever used. */
+    private static final List<MatrixRow> HIDDEN = Stream.of(
+                    MatrixRow.hidden("GET /api/v1/game-tables/{tableId}/files", w -> MatrixRequest.path(w.table().getId()),
+                            noTable()),
+                    MatrixRow.hidden("POST /api/v1/game-tables/{tableId}/files", w -> MatrixRequest.path(w.table().getId())
+                                    .json("{\"fileId\": \"" + w.file(w.person("publisher"), FileType.Public,
+                                            FileCategory.TableMaterial).getId()
+                                            + "\", \"tableFileType\": \"Preparation\", \"isPrivate\": false}"),
+                            noTable()),
+                    MatrixRow.hidden("PATCH /api/v1/game-tables/{tableId}/files/{fileId}", w -> MatrixRequest.path(
+                                            w.table().getId(), w.file(w.person("publisher"), FileType.Private).getId())
+                                    .json("{\"tableFileType\": \"Preparation\", \"isPrivate\": true}"),
+                            noTable()),
+                    MatrixRow.hidden("DELETE /api/v1/game-tables/{tableId}/files/{fileId}", w -> MatrixRequest.path(
+                                    w.table().getId(), w.file(w.person("publisher"), FileType.Private).getId()),
+                            noTable()))
+            .flatMap(List::stream)
+            .toList();
+
+    /** Every row of the class. */
+    static final List<MatrixRow> ROWS = Stream.concat(MAIN.stream(), HIDDEN.stream()).toList();
+
     @Override
     List<MatrixRow> rows() {
         return ROWS;
+    }
+
+    /**
+     * The download is a file to save and never a page to render: an attachment the browser is told not
+     * to sniff into something it would execute.
+     */
+    @Test
+    void theContentLeavesAsAnAttachmentTheBrowserMayNotSniff() throws Exception {
+        RoleMatrixHarness harness = harness();
+        MatrixFixtures w = harness.fixtures(RESOURCE_OWNER);
+        StoredFile file = w.file(owner(w), FileType.Private);
+
+        MvcResult result = harness.mockMvc()
+                .perform(get("/api/v1/files/{fileId}/content", file.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtService.issueAccessToken(owner(w).getId())))
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+        assertThat(result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION)).startsWith("attachment;");
+        assertThat(result.getResponse().getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
     }
 
     /** @return the account the row hands its file to: the cell's own account only in the RESOURCE_OWNER column */
@@ -367,9 +584,76 @@ class FilesCatalogsRoleMatrixIT extends AbstractRoleMatrixIT {
         return w.user(RESOURCE_OWNER);
     }
 
+    /** The request for a file's content, remembering the file so a refusal can be compared with a missing one. */
+    private static MatrixRequest content(MatrixFixtures w, StoredFile file) {
+        return MatrixRequest.path(w.remember("file", file.getId()));
+    }
+
+    /** The request attaching a file to the table, remembering the file so a refusal can be compared with a missing one. */
+    private static MatrixRequest attachBody(MatrixFixtures w, StoredFile file) {
+        return MatrixRequest.path(w.table().getId())
+                .json("{\"fileId\": \"" + w.remember("file", file.getId())
+                        + "\", \"tableFileType\": \"Preparation\", \"isPrivate\": false}");
+    }
+
+    /** @return refused exactly as a table that does not exist is */
+    private static MatrixCell noTable() {
+        return absent(w -> "Table not found: " + w.table().getId());
+    }
+
+    /** @return refused exactly as a file that does not exist is: the same status, code and detail */
+    private static MatrixCell notThere() {
+        return denied(404, "NOT_FOUND", (w, body) -> assertThat(JsonPath.<String>read(body, "$.detail"))
+                .isEqualTo("File " + w.recall("file") + " not found"));
+    }
+
+    /** @return a file of the resource owner that the table shares */
+    private static StoredFile shared(MatrixFixtures w, GameTable table) {
+        StoredFile file = w.file(owner(w), FileType.Private);
+        w.link(table, file, false);
+        return file;
+    }
+
+    /** @return a file of the resource owner that the table keeps private to its masters */
+    private static StoredFile privateTo(MatrixFixtures w, GameTable table) {
+        StoredFile file = w.file(owner(w), FileType.Private);
+        w.link(table, file, true);
+        return file;
+    }
+
+    /** Takes the file off the table, as detaching it does: the link stays, marked gone. */
+    private static void takenOff(MatrixFixtures w, GameTable table, StoredFile file) {
+        TableFileRepository links = w.bean(TableFileRepository.class);
+        TableFile link = links.findById(new TableFileId(table.getId(), file.getId())).orElseThrow();
+        link.setStatus(TableFileStatus.Deleted);
+        link.setDeletedAt(LocalDateTime.now());
+        links.save(link);
+    }
+
+    /** @return a file the resource owner handed in to a request of the table */
+    private static StoredFile handedIn(MatrixFixtures w, GameTable table) {
+        StoredFile file = w.file(owner(w), FileType.Private);
+        w.submissionFile(w.submission(w.task(table, TaskAudience.Players, null), owner(w)), file);
+        return file;
+    }
+
+    /** @return a file of the resource owner attached to the request as its blank */
+    private static StoredFile form(MatrixFixtures w, TableTask task) {
+        StoredFile file = w.file(owner(w), FileType.Private);
+        w.taskFile(task, file);
+        return file;
+    }
+
+    /** @return a file the resource owner attached to their application to the table, in that status */
+    private static StoredFile applied(MatrixFixtures w, GameTable table, TableRegistrationStatus status) {
+        StoredFile file = w.file(owner(w), FileType.Private);
+        w.registrationFile(w.registration(table, owner(w), status), file);
+        return file;
+    }
+
     /** @return a check that the response is exactly these cajones, in any order */
     private static MatrixCell.BodyCheck categories(String... expected) {
-        return (w, body) -> assertThat(JsonPath.<List<String>>read(body, "$")).containsExactlyInAnyOrder(expected);
+        return (w, body) -> assertThat(JsonPath.<List<String>>read(body, "$.categories")).containsExactlyInAnyOrder(expected);
     }
 
     private static String nameBody(MatrixFixtures w, String prefix) {

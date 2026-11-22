@@ -39,8 +39,8 @@ public interface RegistrationFileRepository extends JpaRepository<RegistrationFi
     /**
      * Which tables can reach a file through an application that attached it.
      *
-     * <p>The seventh way a file becomes readable, and the sister of the fifth
-     * ({@code SubmissionFileRepository.findTableIdsBySubmittedFileId}, ADR-14 §2): a master has to be able
+     * <p>The way an application's attachment becomes readable, and the sister of the one for an answer
+     * to a request ({@code SubmissionFileRepository.findTableIdsBySubmittedFileId}, ADR-14 §2): a master has to be able
      * to open the sheet a candidate applied with, and without this they would see the row on the
      * application and get a 404 opening it.
      *

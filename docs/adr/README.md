@@ -45,7 +45,7 @@ El agente `escriba-adr` (`.claude/agents/`) hace estos pasos.
 | ADR-02 | [Stack, herramientas y despliegue](02-stack-herramientas-y-despliegue.md) | 6 |
 | ADR-03 | [Modelo de datos y persistencia](03-modelo-de-datos-y-persistencia.md) | 10 |
 | ADR-04 | [Backend y contrato de la API](04-backend-y-contrato-de-la-api.md) | 7 |
-| ADR-05 | [Seguridad, sesión y login](05-seguridad-sesion-y-login.md) | 9 |
+| ADR-05 | [Seguridad, sesión y login](05-seguridad-sesion-y-login.md) | 12 |
 | ADR-06 | [Roles y alcance](06-roles-y-alcance.md) | 9 |
 | ADR-07 | ["Mesas: ciclo de vida"](07-mesas-ciclo-de-vida.md) | 11 |
 | ADR-08 | [Agenda, sesiones y asistencia](08-agenda-sesiones-y-asistencia.md) | 6 |

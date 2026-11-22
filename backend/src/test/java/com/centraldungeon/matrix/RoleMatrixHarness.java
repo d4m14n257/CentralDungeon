@@ -164,6 +164,24 @@ final class RoleMatrixHarness {
         }
     }
 
+    /**
+     * For an assertion a cell cannot make, such as a response header: the same application behind the
+     * same filter chain the cells are sent through.
+     *
+     * @return the harness's client
+     */
+    MockMvc mockMvc() {
+        return mockMvc;
+    }
+
+    /**
+     * @param actor who the world is for
+     * @return an emptied database and the fixtures over it, as a cell starts with
+     */
+    MatrixFixtures fixtures(MatrixActor actor) {
+        return MatrixFixtures.forCell(context, actor);
+    }
+
     /** Prints the undocumented cells that passed, and forgets them for the next class. */
     static void printPendingTriage() {
         if (PENDING_TRIAGE.isEmpty()) {

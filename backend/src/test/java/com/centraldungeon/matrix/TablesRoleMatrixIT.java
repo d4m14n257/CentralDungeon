@@ -8,11 +8,11 @@ import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableStatus;
 import com.centraldungeon.tables.MasterType;
-import com.centraldungeon.tables.TableSession;
 import com.centraldungeon.tables.TableSessionStatus;
 import com.centraldungeon.users.PlatformRole;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * The role matrix of the {@code tables} feature: the game tables, their life cycle, their masters, the
@@ -24,7 +24,7 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
     private static final String JUSTIFICATION = "{\"justification\": \"role matrix\"}";
 
     /** One main row per endpoint, plus its variants. */
-    static final List<MatrixRow> ROWS = List.of(
+    private static final List<MatrixRow> MAIN = List.of(
             blocked(MatrixRow.of("GET /api/v1/game-tables", w -> {
                 w.remember("open", w.otherTable("open", GameTableStatus.Opened).getId());
                 w.remember("never public", w.otherTable("never public", GameTableStatus.Draft).getId());
@@ -50,12 +50,14 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
                     .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("draft")).doesNotContain(w.recall("deleted"))),
                             ADMIN, OWNER),
 
-            blocked(MatrixRow.of("GET /api/v1/game-tables/{id}", w -> MatrixRequest.path(w.table().getId())))
+            blocked(MatrixRow.of("GET /api/v1/game-tables/{id}", TablesRoleMatrixIT::tablePath))
                     .cell(denied(401), ANONYMOUS)
-                    .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER),
+                    .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER, PRIMARY, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED),
 
-            guarded(MatrixRow.of("GET /api/v1/game-tables/{id}/managed", w -> MatrixRequest.path(w.table().getId())))
+            guarded(MatrixRow.of("GET /api/v1/game-tables/{id}/managed", TablesRoleMatrixIT::tablePath))
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), ADMIN, OWNER, PRIMARY, SECONDARY),
 
             guarded(MatrixRow.of("GET /api/v1/game-tables/{id}/status-history", w -> {
@@ -64,6 +66,7 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(table.getId());
             }))
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), ADMIN, OWNER, PRIMARY, SECONDARY),
 
             guarded(MatrixRow.of("GET /api/v1/game-tables/mine", w -> {
@@ -130,10 +133,14 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
 
             guarded(MatrixRow.of("PUT /api/v1/game-tables/{id}",
                     w -> MatrixRequest.path(w.table(GameTableStatus.Draft).getId()).json(w.tableJson())))
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    // A draft is seen by its masters and the admins only: anybody else is told it is not there.
+                    .cell(noTable(), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, VETOED)
+                    .cell(denied(403), ADMIN, OWNER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
             MatrixRow.variant("table not in Draft", "PUT /api/v1/game-tables/{id}",
                     w -> MatrixRequest.path(w.table(GameTableStatus.Opened).getId()).json(w.tableJson()))
+                    .cell(denied(403), PLAYER, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(denied(409), PRIMARY),
 
             guarded(MatrixRow.of("PUT /api/v1/game-tables/{id}/admin-edit",
@@ -179,32 +186,38 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
 
             guarded(MatrixRow.of("POST /api/v1/game-tables/{id}/submit",
                     w -> MatrixRequest.path(w.table(GameTableStatus.Draft).getId())))
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, VETOED)
+                    .cell(denied(403), ADMIN, OWNER, SECONDARY)
                     .cell(allowed(200), PRIMARY),
 
             guarded(MatrixRow.of("POST /api/v1/game-tables/{id}/resubmit",
                     w -> MatrixRequest.path(w.table(GameTableStatus.ChangesRequested).getId())))
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, VETOED)
+                    .cell(denied(403), ADMIN, OWNER, SECONDARY)
                     .cell(allowed(200), PRIMARY),
 
             guarded(MatrixRow.of("POST /api/v1/game-tables/{id}/start",
                     w -> MatrixRequest.path(w.table(GameTableStatus.Opened).getId())))
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), PRIMARY),
 
             guarded(MatrixRow.of("POST /api/v1/game-tables/{id}/finish",
                     w -> MatrixRequest.path(w.table(GameTableStatus.InProgress).getId())))
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), PRIMARY),
 
             guarded(MatrixRow.of("POST /api/v1/game-tables/{id}/cancel",
                     w -> MatrixRequest.path(w.table(GameTableStatus.Opened).getId()).json(JUSTIFICATION)))
                     .cell(denied(403), PLAYER, MASTER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), ADMIN, OWNER, PRIMARY),
 
             guarded(MatrixRow.of("POST /api/v1/game-tables/{id}/request-pause",
                     w -> MatrixRequest.path(w.table(GameTableStatus.InProgress).getId()).json(JUSTIFICATION)))
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), PRIMARY, SECONDARY),
 
             guarded(MatrixRow.of("POST /api/v1/game-tables/{id}/pause",
@@ -222,12 +235,18 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
                 boolean admin = w.actor() == ADMIN || w.actor() == OWNER;
                 return MatrixRequest.path(w.table(admin ? GameTableStatus.Unassigned : GameTableStatus.Draft).getId());
             }))
-                    .cell(denied(403), PLAYER, MASTER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, VETOED)
+                    .cell(denied(403), SECONDARY)
                     .cell(allowed(204), ADMIN, OWNER, PRIMARY),
+            MatrixRow.variant("table already public", "DELETE /api/v1/game-tables/{id}", TablesRoleMatrixIT::tablePath)
+                    .cell(denied(403), PLAYER, SECONDARY)
+                    .cell(noTable(), VETOED)
+                    .cell(denied(409), PRIMARY, ADMIN, OWNER),
 
             guarded(MatrixRow.of("POST /api/v1/game-tables/{id}/masters", w -> MatrixRequest.path(w.table().getId())
                     .json("{\"userId\": \"" + w.person("new co-master").getId() + "\", \"masterType\": \"Secondary\"}")))
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), PRIMARY),
 
             guarded(MatrixRow.of("DELETE /api/v1/game-tables/{id}/masters/{userId}", w -> {
@@ -237,18 +256,21 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(table.getId(), removedId);
             }))
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200, (w, body) -> assertThat(body).doesNotContain(w.recall("removed"))), PRIMARY),
             MatrixRow.variant("target is the Primary", "DELETE /api/v1/game-tables/{id}/masters/{userId}",
                     w -> MatrixRequest.path(w.table().getId(), w.user(PRIMARY).getId()))
                     .cell(denied(409), PRIMARY),
 
-            guarded(MatrixRow.of("GET /api/v1/game-tables/{id}/master-candidates", w -> MatrixRequest.path(w.table().getId())))
+            guarded(MatrixRow.of("GET /api/v1/game-tables/{id}/master-candidates", TablesRoleMatrixIT::tablePath))
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), PRIMARY),
 
             guarded(MatrixRow.of("PUT /api/v1/game-tables/{id}/seeking-players",
                     w -> MatrixRequest.path(w.table(GameTableStatus.InProgress).getId()).json("{\"seeking\": true}")))
                     .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), PRIMARY, SECONDARY),
             MatrixRow.variant("table full", "PUT /api/v1/game-tables/{id}/seeking-players", w -> {
                 GameTable table = w.table(GameTableStatus.InProgress);
@@ -283,6 +305,7 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
                 return MatrixRequest.path(table.getId());
             }))
                     .cell(denied(403), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), ADMIN, OWNER, PRIMARY, SECONDARY),
 
             guarded(MatrixRow.of("GET /api/v1/game-tables/{tableId}/sessions/mine", w -> {
@@ -292,42 +315,108 @@ class TablesRoleMatrixIT extends AbstractRoleMatrixIT {
             }))
                     .cell(denied(403), PLAYER, MASTER, CANDIDATE)
                     .cell(denied(403), ADMIN, OWNER, PRIMARY, SECONDARY)
+                    .cell(noTable(), VETOED)
                     .cell(allowed(200), TABLE_PLAYER),
 
             guarded(MatrixRow.of("PATCH /api/v1/sessions/{sessionId}", w -> {
-                TableSession session = w.session(w.table(), TableSessionStatus.Scheduled);
-                return MatrixRequest.path(session.getId()).json("{\"scheduledAt\": \""
+                return MatrixRequest.path(scheduledSession(w)).json("{\"scheduledAt\": \""
                         + LocalDateTime.now().plusMonths(6).withNano(0) + "\", \"notes\": \"Bring dice\"}");
             }))
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noSession(), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, VETOED)
+                    .cell(denied(403), ADMIN, OWNER, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
 
             guarded(MatrixRow.of("POST /api/v1/sessions/{sessionId}/hold",
-                    w -> MatrixRequest.path(w.session(w.table(), TableSessionStatus.Scheduled).getId())))
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    w -> MatrixRequest.path(scheduledSession(w))))
+                    .cell(noSession(), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, VETOED)
+                    .cell(denied(403), ADMIN, OWNER, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
 
             guarded(MatrixRow.of("POST /api/v1/sessions/{sessionId}/cancel",
-                    w -> MatrixRequest.path(w.session(w.table(), TableSessionStatus.Scheduled).getId())))
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    w -> MatrixRequest.path(scheduledSession(w))))
+                    .cell(noSession(), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, VETOED)
+                    .cell(denied(403), ADMIN, OWNER, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
 
             guarded(MatrixRow.of("PUT /api/v1/sessions/{sessionId}/attendance", w -> {
                 GameTable table = w.table();
                 String player = w.registration(table, w.person("session player"), TableRegistrationStatus.Player).getUser().getId();
-                TableSession session = w.session(table, TableSessionStatus.Scheduled);
-                return MatrixRequest.path(session.getId())
+                return MatrixRequest.path(scheduledSession(w))
                         .json("{\"attendance\": [{\"userId\": \"" + player + "\", \"attendance\": \"Present\"}]}");
             }))
-                    .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER)
+                    .cell(noSession(), PLAYER, MASTER, REMOVED_SECONDARY, CANDIDATE, VETOED)
+                    .cell(denied(403), ADMIN, OWNER, TABLE_PLAYER)
                     .cell(allowed(200), PRIMARY, SECONDARY),
 
             guarded(MatrixRow.of("GET /api/v1/table-types", w -> MatrixRequest.path()))
                     .cell(allowed(200), PLAYER, MASTER, ADMIN, OWNER));
 
+    /**
+     * The same calls on a table the actor may not see: one nobody was shown yet and one that was
+     * deleted. Whoever cannot see it gets exactly what an id nobody ever used gets.
+     */
+    private static final List<MatrixRow> HIDDEN = Stream.of(
+                    MatrixRow.hidden("GET /api/v1/game-tables/{id}", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("GET /api/v1/game-tables/{id}/managed", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("GET /api/v1/game-tables/{id}/status-history", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("PUT /api/v1/game-tables/{id}", w -> tablePath(w).json(w.tableJson()), noTable()),
+                    MatrixRow.hidden("POST /api/v1/game-tables/{id}/submit", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("POST /api/v1/game-tables/{id}/start", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("POST /api/v1/game-tables/{id}/finish", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("POST /api/v1/game-tables/{id}/cancel", w -> tablePath(w).json(JUSTIFICATION), noTable()),
+                    MatrixRow.hidden("POST /api/v1/game-tables/{id}/request-pause", w -> tablePath(w).json(JUSTIFICATION), noTable()),
+                    MatrixRow.hidden("DELETE /api/v1/game-tables/{id}", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("POST /api/v1/game-tables/{id}/masters", w -> tablePath(w)
+                            .json("{\"userId\": \"" + w.person("new co-master").getId() + "\", \"masterType\": \"Secondary\"}"),
+                            noTable()),
+                    MatrixRow.hidden("DELETE /api/v1/game-tables/{id}/masters/{userId}", w -> MatrixRequest.path(w.table().getId(),
+                            w.master(w.table(), w.person("co-master"), MasterType.Secondary).getUser().getId()), noTable()),
+                    MatrixRow.hidden("GET /api/v1/game-tables/{id}/master-candidates", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("PUT /api/v1/game-tables/{id}/seeking-players", w -> tablePath(w).json("{\"seeking\": true}"), noTable()),
+                    MatrixRow.hidden("GET /api/v1/game-tables/{tableId}/sessions", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("GET /api/v1/game-tables/{tableId}/sessions/mine", TablesRoleMatrixIT::tablePath, noTable()),
+                    MatrixRow.hidden("PATCH /api/v1/sessions/{sessionId}", w -> MatrixRequest.path(scheduledSession(w)).json(
+                            "{\"scheduledAt\": \"" + LocalDateTime.now().plusMonths(6).withNano(0) + "\", \"notes\": \"Bring dice\"}"),
+                            noSession()),
+                    MatrixRow.hidden("POST /api/v1/sessions/{sessionId}/hold", w -> MatrixRequest.path(scheduledSession(w)), noSession()),
+                    MatrixRow.hidden("POST /api/v1/sessions/{sessionId}/cancel", w -> MatrixRequest.path(scheduledSession(w)), noSession()),
+                    MatrixRow.hidden("PUT /api/v1/sessions/{sessionId}/attendance",
+                            w -> {
+                                String player = w.registration(w.table(), w.person("session player"),
+                                        TableRegistrationStatus.Player).getUser().getId();
+                                return MatrixRequest.path(scheduledSession(w)).json(
+                                        "{\"attendance\": [{\"userId\": \"" + player + "\", \"attendance\": \"Present\"}]}");
+                            },
+                            noSession()))
+            .flatMap(List::stream)
+            .toList();
+
+    /** Every row of the class. */
+    static final List<MatrixRow> ROWS = Stream.concat(MAIN.stream(), HIDDEN.stream()).toList();
+
     @Override
     List<MatrixRow> rows() {
         return ROWS;
+    }
+
+    /** The request for the row's main table, by id. */
+    private static MatrixRequest tablePath(MatrixFixtures w) {
+        return MatrixRequest.path(w.table().getId());
+    }
+
+    /** A scheduled session of the row's main table, remembered so a refusal can be compared with a missing one. */
+    private static String scheduledSession(MatrixFixtures w) {
+        return w.remember("session", w.session(w.table(), TableSessionStatus.Scheduled).getId());
+    }
+
+    /** @return refused exactly as a table that does not exist is */
+    private static MatrixCell noTable() {
+        return absent(w -> "Table not found: " + w.table().getId());
+    }
+
+    /** @return refused exactly as a session that does not exist is */
+    private static MatrixCell noSession() {
+        return absent(w -> "Session not found: " + w.recall("session"));
     }
 
     /** The two columns almost every row shares: no token is a 401, and a blocked account does not get in. */

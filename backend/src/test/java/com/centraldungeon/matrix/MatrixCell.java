@@ -1,5 +1,9 @@
 package com.centraldungeon.matrix;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.jayway.jsonpath.JsonPath;
+import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -78,8 +82,32 @@ record MatrixCell(Kind kind, int status, @Nullable String errorCode, @Nullable B
      * @return a cell refused with that status and that code
      */
     static MatrixCell denied(int status, @Nullable String errorCode) {
+        return denied(status, errorCode, null);
+    }
+
+    /**
+     * @param status    the exact refusal the documents fix
+     * @param errorCode the exact {@code errorCode}, or null when no document fixes one
+     * @param check     what the refusal has to look like, typically that it is indistinguishable from
+     *                  the one for something that does not exist
+     * @return a cell refused with that status, that code and that body
+     */
+    static MatrixCell denied(int status, @Nullable String errorCode, @Nullable BodyCheck check) {
         requireRefusal(status);
-        return new MatrixCell(Kind.DENIED, status, errorCode, null, Property.MUST_NOT_BE_2XX);
+        return new MatrixCell(Kind.DENIED, status, errorCode, check, Property.MUST_NOT_BE_2XX);
+    }
+
+    /**
+     * A refusal that cannot be told apart from the one for an id nobody ever used: the same 404, the
+     * same {@code NOT_FOUND} code and the same detail, so it confirms nothing about what it denies.
+     *
+     * @param detail the detail a missing resource of that kind answers with, built from what the row
+     *               remembered, such as {@code "Session not found: " + w.recall("session")}
+     * @return a cell refused exactly as something that does not exist is
+     */
+    static MatrixCell absent(Function<MatrixFixtures, String> detail) {
+        return denied(404, "NOT_FOUND", (w, body) -> assertThat(JsonPath.<String>read(body, "$.detail"))
+                .isEqualTo(detail.apply(w)));
     }
 
     /**

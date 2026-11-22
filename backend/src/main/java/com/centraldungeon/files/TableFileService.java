@@ -7,6 +7,7 @@ import com.centraldungeon.files.dto.SharedFileResponse;
 import com.centraldungeon.files.dto.TableFileResponse;
 import com.centraldungeon.files.dto.UpdateTableFileRequest;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tasks.TaskFile;
 import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.tasks.TaskFileStatus;
@@ -56,6 +57,9 @@ public class TableFileService {
     /** The blank forms a table's requests attach, which leave with the table when it is deleted. */
     private final TaskFileRepository taskFileRepository;
 
+    /** Whether a table is there for the actor, asked before a refusal could confirm it. */
+    private final TableVisibilityService tableVisibilityService;
+
     /**
      * @param tableFileRepository the {@code table_files} rows
      * @param fileRepository      the files each link points at
@@ -63,6 +67,7 @@ public class TableFileService {
      * @param masterService       answers whether the actor runs the table
      * @param fileMapper          entity to DTO
      * @param taskFileRepository  the {@code task_files} rows of the table's requests
+     * @param tableVisibilityService whether the table is there for the actor, before being refused on it
      */
     public TableFileService(
             TableFileRepository tableFileRepository,
@@ -70,13 +75,15 @@ public class TableFileService {
             FileService fileService,
             MasterService masterService,
             FileMapper fileMapper,
-            TaskFileRepository taskFileRepository) {
+            TaskFileRepository taskFileRepository,
+            TableVisibilityService tableVisibilityService) {
         this.tableFileRepository = tableFileRepository;
         this.fileRepository = fileRepository;
         this.fileService = fileService;
         this.masterService = masterService;
         this.fileMapper = fileMapper;
         this.taskFileRepository = taskFileRepository;
+        this.tableVisibilityService = tableVisibilityService;
     }
 
     /**
@@ -112,12 +119,17 @@ public class TableFileService {
      * @param actorId     the actor, from the token
      * @return its attachments, oldest first - the order they were put there, which is the order
      *         somebody who assembled them remembers
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it - the
+     *                                  same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but neither runs it nor is an admin
      */
     @Transactional(readOnly = true)
     public List<TableFileResponse> listForTable(String gameTableId, String actorId) {
-        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
+        tableVisibilityService.requireExisting(gameTableId);
+        // Read by the table's masters and by any admin; its writes stay the masters' own.
         if (!masterService.canOversee(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table or an admin can view its files");
         }
         List<TableFile> links = tableFileRepository.findById_GameTableIdAndStatus(gameTableId, TableFileStatus.Current);
@@ -145,9 +157,11 @@ public class TableFileService {
      * @param request     the file to attach and how
      * @param actorId     the actor, from the token
      * @return the attachment
-     * @throws ForbiddenActionException if the actor does not run the table, or the file is somebody
-     *                                  else's and is not published (ADR-14 §1)
-     * @throws NotFoundException        if the file is not there or was marked gone
+     * @throws ForbiddenActionException if the actor sees the table but does not run it, or the file is
+     *                                  somebody else's and is not published
+     * @throws NotFoundException        if the table does not exist or the actor cannot see it - the
+     *                                  same answer as a table that does not exist - or if the file is
+     *                                  not there or was marked gone
      */
     @Transactional
     public TableFileResponse attach(String gameTableId, LinkTableFileRequest request, String actorId) {
@@ -172,15 +186,17 @@ public class TableFileService {
      * Changes what an attachment is for, or who sees it - without touching the file.
      *
      * <p>Sharing a map on this table says nothing about the same map on another one: {@code isPrivate}
-     * belongs to the link, which is exactly what {@code table_files} exists to make possible (ADR-14 §1).
+     * belongs to the link, which is exactly what {@code table_files} exists to make possible.
      *
      * @param gameTableId the table
      * @param fileId      the attached file
      * @param request     what it should be for, and whether it stays with the masters
      * @param actorId     the actor, from the token
      * @return the attachment after the change
-     * @throws ForbiddenActionException if the actor does not run the table
-     * @throws NotFoundException        if the file is not attached to it
+     * @throws ForbiddenActionException if the actor sees the table but does not run it
+     * @throws NotFoundException        if the table does not exist or the actor cannot see it - the
+     *                                  same answer as a table that does not exist - or if the file is
+     *                                  not attached to it
      */
     @Transactional
     public TableFileResponse update(
@@ -197,7 +213,7 @@ public class TableFileService {
     /**
      * Takes a file off a table.
      *
-     * <p><b>The file survives, in full</b> (ADR-14 §1). It stays in its owner's history, it stays attached to
+     * <p><b>The file survives, in full</b>. It stays in its owner's history, it stays attached to
      * every other table that has it, and if the platform published it, it stays published. What ends
      * is this one attachment. Removing the community's default sheet from one table cannot be allowed
      * to remove it from the community.
@@ -205,8 +221,10 @@ public class TableFileService {
      * @param gameTableId the table
      * @param fileId      the file to take off
      * @param actorId     the actor, from the token
-     * @throws ForbiddenActionException if the actor does not run the table
-     * @throws NotFoundException        if the file is not attached to it
+     * @throws ForbiddenActionException if the actor sees the table but does not run it
+     * @throws NotFoundException        if the table does not exist or the actor cannot see it - the
+     *                                  same answer as a table that does not exist - or if the file is
+     *                                  not attached to it
      */
     @Transactional
     public void detach(String gameTableId, String fileId, String actorId) {
@@ -275,12 +293,16 @@ public class TableFileService {
     }
 
     /**
-     * The membership gate (hard rule 17, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
+     * The membership gate: a row in {@code masters}, not the {@code Master} role.
      *
-     * @throws ForbiddenActionException if the actor does not run this table
+     * @throws NotFoundException        if the table does not exist or the actor cannot see it - the
+     *                                  same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but does not run it
      */
     private void requireMasterOf(String gameTableId, String actorId) {
         if (!masterService.isMasterOf(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("User " + actorId + " does not run table " + gameTableId);
         }
     }

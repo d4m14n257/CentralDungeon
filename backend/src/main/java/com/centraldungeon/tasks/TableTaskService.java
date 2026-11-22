@@ -148,7 +148,7 @@ public class TableTaskService {
     }
 
     /**
-     * Publishes a task and tells the people it is addressed to (ADR-15 §5).
+     * Publishes a task and tells the people it is addressed to.
      *
      * <p><b>The table's status does not gate this</b>, deliberately. Writing what will be asked of
      * applicants is one of the things a master does <em>while</em> preparing a table, and refusing it
@@ -160,16 +160,21 @@ public class TableTaskService {
      * @param request     what is being asked, of whom
      * @param actorId     the actor, from the token
      * @return the published task
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException        if the table does not exist or was deleted, or the actor cannot
+     *                                  see it - the same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but does not run it
      * @throws InvalidRequestException  if the audience and the target contradict each other, if
      *                                  neither answer channel is open, or if the session belongs to
      *                                  another table
-     * @throws NotFoundException        if the table is not there
      */
     @Transactional
     public TaskResponse publish(String gameTableId, CreateTaskRequest request, String actorId) {
         GameTable gameTable = requireLiveTable(gameTableId);
-        requireMasterOf(gameTableId, actorId);
+        if (!masterService.isMasterOf(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
+            throw new ForbiddenActionException("User " + actorId + " does not run table " + gameTableId);
+        }
         requireAnswerable(request.acceptsText(), request.acceptsFiles());
 
         TableTask task = new TableTask(gameTable, request.audience(), request.title());
@@ -193,23 +198,27 @@ public class TableTaskService {
     /**
      * Corrects a published task.
      *
-     * <p><b>It does not notify again.</b> ADR-15 §5 puts the notification at publication; a task fixed
+     * <p><b>It does not notify again.</b> The notification belongs to publication; a task fixed
      * three times ringing three times for a headline that never changed is how people learn to ignore
      * the bell. What has already been answered stays answered - correcting the wording of a request
-     * does not invalidate what somebody sent in good faith (ADR-15 §2).
+     * does not invalidate what somebody sent in good faith.
      *
      * @param taskId  the task
-     * @param request the whole state it should end in (ADR-04 §7)
+     * @param request the whole state it should end in
      * @param actorId the actor, from the token
      * @return the task after the correction
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException        if the task does not exist, or the actor cannot see it (they
+     *                                  must see its table and, besides, the task must be shown to
+     *                                  everybody looking at the table, or they run or oversee the table,
+     *                                  or it is addressed to them, or they already answered it) - the
+     *                                  same answer as a task that does not exist
+     * @throws ForbiddenActionException if the actor sees the task but does not run the table
      * @throws InvalidRequestException  same three cases as publishing
-     * @throws NotFoundException        if the task is not there
      */
     @Transactional
     public TaskResponse update(String taskId, UpdateTaskRequest request, String actorId) {
         TableTask task = getTask(taskId);
-        requireMasterOf(task.getGameTable().getId(), actorId);
+        requireMasterOf(task, actorId);
         requireAnswerable(request.acceptsText(), request.acceptsFiles());
 
         task.setTitle(request.title());
@@ -232,19 +241,23 @@ public class TableTaskService {
      * Stops the task from taking answers.
      *
      * <p>What was already handed in stays readable: closing ends the intake, it does not erase the
-     * history (ADR-15 §2). Closing an already closed task is left alone rather than refused - the end state
+     * history. Closing an already closed task is left alone rather than refused - the end state
      * is the one that was asked for.
      *
      * @param taskId  the task
      * @param actorId the actor, from the token
      * @return the task, now closed
-     * @throws ForbiddenActionException if the actor does not run the table
-     * @throws NotFoundException        if the task is not there
+     * @throws NotFoundException        if the task does not exist, or the actor cannot see it (they
+     *                                  must see its table and, besides, the task must be shown to
+     *                                  everybody looking at the table, or they run or oversee the table,
+     *                                  or it is addressed to them, or they already answered it) - the
+     *                                  same answer as a task that does not exist
+     * @throws ForbiddenActionException if the actor sees the task but does not run the table
      */
     @Transactional
     public TaskResponse close(String taskId, String actorId) {
         TableTask task = getTask(taskId);
-        requireMasterOf(task.getGameTable().getId(), actorId);
+        requireMasterOf(task, actorId);
         task.setStatus(TaskStatus.Closed);
         return describe(task);
     }
@@ -258,12 +271,17 @@ public class TableTaskService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token
      * @return its tasks, oldest first
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it - the
+     *                                  same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but neither runs it nor is an admin
      */
     @Transactional(readOnly = true)
     public List<TaskResponse> listForTable(String gameTableId, String actorId) {
-        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
+        tableVisibilityService.requireExisting(gameTableId);
+        // Read by the table's masters and by any admin; its writes stay the masters' own.
         if (!masterService.canOversee(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table or an admin can view its requests");
         }
         List<TableTask> tasks = taskRepository.findByGameTable_IdOrderByCreatedAtAsc(gameTableId);
@@ -359,7 +377,29 @@ public class TableTaskService {
      */
     @Transactional(readOnly = true)
     public TableTask getTask(String taskId) {
-        return taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("Task not found: " + taskId));
+        return taskRepository.findById(taskId).orElseThrow(() -> taskNotFound(taskId));
+    }
+
+    /**
+     * A task, for somebody about to read it or act on it: only if they see it.
+     *
+     * <p>They see it when they see its table and, besides, the task is one the table shows to whoever
+     * looks at it - a request to the candidates -, or they run or oversee the table, it is addressed to
+     * them, or they already answered it. Anybody else gets the same 404 as an id nobody ever used, so
+     * that a refusal never confirms a task to somebody it was not meant for.
+     *
+     * @param taskId  the task
+     * @param actorId who is asking, always from the token
+     * @return the task
+     * @throws NotFoundException when it is not there or the actor may not see it - the same answer for both
+     */
+    @Transactional(readOnly = true)
+    public TableTask requireVisible(String taskId, String actorId) {
+        TableTask task = getTask(taskId);
+        if (!canSee(task, actorId)) {
+            throw taskNotFound(taskId);
+        }
+        return task;
     }
 
     /**
@@ -563,12 +603,10 @@ public class TableTaskService {
         if (tableSessionId == null) {
             return null;
         }
-        TableSession session = sessionRepository.findById(tableSessionId)
+        // A session of another table answers as one that does not exist, so the id cannot be probed.
+        return sessionRepository.findById(tableSessionId)
+                .filter(session -> session.getGameTable().getId().equals(gameTable.getId()))
                 .orElseThrow(() -> new NotFoundException("Session not found: " + tableSessionId));
-        if (!session.getGameTable().getId().equals(gameTable.getId())) {
-            throw new InvalidRequestException("Session " + tableSessionId + " belongs to another table");
-        }
-        return session;
     }
 
     /**
@@ -598,13 +636,37 @@ public class TableTaskService {
     }
 
     /**
-     * The membership gate (hard rule 17, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
+     * The membership gate: a row in {@code masters}, not the {@code Master} role.
      *
-     * @throws ForbiddenActionException if the actor does not run this table
+     * @throws NotFoundException        if the actor cannot see the task - the same answer as a task that
+     *                                  does not exist
+     * @throws ForbiddenActionException if the actor sees the task but does not run its table
      */
-    private void requireMasterOf(String gameTableId, String actorId) {
-        if (!masterService.isMasterOf(gameTableId, actorId)) {
-            throw new ForbiddenActionException("User " + actorId + " does not run table " + gameTableId);
+    private void requireMasterOf(TableTask task, String actorId) {
+        String gameTableId = task.getGameTable().getId();
+        if (masterService.isMasterOf(gameTableId, actorId)) {
+            return;
         }
+        if (!canSee(task, actorId)) {
+            throw taskNotFound(task.getId());
+        }
+        throw new ForbiddenActionException("User " + actorId + " does not run table " + gameTableId);
+    }
+
+    /** The rule {@link #requireVisible} applies, answered rather than thrown. */
+    private boolean canSee(TableTask task, String actorId) {
+        String gameTableId = task.getGameTable().getId();
+        return tableVisibilityService.canSee(gameTableId, actorId)
+                && (task.getAudience() == TaskAudience.Candidates
+                        || masterService.canOversee(gameTableId, actorId)
+                        || isRecipient(task, actorId)
+                        || !submissionRepository
+                                .findByTask_IdAndUser_IdAndDeletedAtIsNullOrderByCreatedAtAsc(task.getId(), actorId)
+                                .isEmpty());
+    }
+
+    /** One sentence for a task that is not there and one the actor may not see. */
+    private static NotFoundException taskNotFound(String taskId) {
+        return new NotFoundException("Task not found: " + taskId);
     }
 }

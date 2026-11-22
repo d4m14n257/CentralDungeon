@@ -20,12 +20,7 @@ export { useRejectRequest } from './api/useRejectRequest'
 export { useSubmitRequest } from './api/useSubmitRequest'
 export { useTableBanRequests } from './api/useTableBanRequests'
 export { approvalRequestSearchFields, requestStatusChoices, requestTypeChoices } from './searchFields'
-export {
-  APPROVAL_REQUEST_TYPES,
-  APPROVAL_STATUSES,
-  PENDING_REQUESTS_QUERY,
-  SUBMITTABLE_REQUEST_TYPES,
-} from './requestTypes'
+export { APPROVAL_REQUEST_TYPES, APPROVAL_STATUSES, PENDING_REQUESTS_QUERY, SUBMITTABLE_REQUEST_TYPES } from './requestTypes'
 export { APPROVAL_ERROR_CODES, approvalErrorKey } from './approvalErrors'
 export {
   resolveApprovalRequestSchema,

@@ -8,7 +8,7 @@ import { useSearchQuery } from '@/hooks/useSearchQuery'
 import { cn } from '@/lib/utils'
 
 import { useUserSearch } from '../api/useUserSearch'
-import { userSearchFields } from '../searchFields'
+import { isPersonSearchLongEnough, MIN_PERSON_SEARCH_LENGTH, userSearchFields } from '../searchFields'
 import type { UserSummary } from '../types'
 
 interface UserPickerProps {
@@ -37,7 +37,10 @@ export function UserPicker({ onSelect, excludedIds = [], tableId }: UserPickerPr
   const search = useSearchQuery({ fields })
 
   const hasQuery = search.query.trim().length > 0
-  const { data, isFetching, isLoadingError, refetch } = useUserSearch(search.query, hasQuery, tableId)
+  // Nothing is asked until the query is long enough: the server answers nobody to less, and a short box
+  // must not read as "nobody matches".
+  const canSearch = isPersonSearchLongEnough(search.query, fields)
+  const { data, isFetching, isLoadingError, refetch } = useUserSearch(search.query, canSearch, tableId)
   /** While the next search travels, what is on screen is the previous one: it is dimmed so it does not lie. */
   const isStale = isFetching
 
@@ -56,9 +59,10 @@ export function UserPicker({ onSelect, excludedIds = [], tableId }: UserPickerPr
       />
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {!isLoadingError && !hasQuery && <p className="text-fg-subtle text-sm">{t('search.startTyping')}</p>}
-      {!isLoadingError && hasQuery && !data && <Skeleton className="h-24 w-full" />}
-      {!isLoadingError && hasQuery && data && results.length === 0 && <p className="text-fg-muted text-sm">{t('search.empty')}</p>}
-      {!isLoadingError && results.length > 0 && (
+      {hasQuery && !canSearch && <p className="text-fg-subtle text-sm">{t('search.minLength', { min: MIN_PERSON_SEARCH_LENGTH })}</p>}
+      {!isLoadingError && canSearch && !data && <Skeleton className="h-24 w-full" />}
+      {!isLoadingError && canSearch && data && results.length === 0 && <p className="text-fg-muted text-sm">{t('search.empty')}</p>}
+      {!isLoadingError && canSearch && results.length > 0 && (
         <ul className={cn('border-border divide-border max-h-56 divide-y overflow-y-auto rounded-md border', isStale && 'opacity-60')}>
           {results.map((user) => (
             <li key={user.id}>

@@ -54,7 +54,7 @@ class TestDataCleanupIT {
             "registration_status_changes", "registration_files", "table_tasks", "task_submissions", "task_files",
             "submission_files", "files", "file_categories", "table_files", "table_systems", "table_tags",
             "table_platforms", "approval_requests", "notifications", "system_settings", "system_setting_changes",
-            "user_role_changes", "user_status_changes");
+            "user_role_changes", "user_status_changes", "refresh_tokens");
 
     /** Tables that hang off them but that nothing writes yet, each with the reason it is safe to skip. */
     static final Map<String, String> EXEMPT = Map.of(
@@ -133,6 +133,7 @@ class TestDataCleanupIT {
         assertThat(count("SELECT COUNT(*) FROM files WHERE id = 'real-file'")).isEqualTo(1);
         assertThat(count("SELECT COUNT(*) FROM tags WHERE id = 'real-tag' AND canonical_id IS NULL")).isEqualTo(1);
         assertThat(count("SELECT COUNT(*) FROM masters WHERE user_id = 'real-master'")).isEqualTo(1);
+        assertThat(count("SELECT COUNT(*) FROM refresh_tokens WHERE id = 'real-rt'")).isEqualTo(1);
     }
 
     /** Closure over the foreign keys: every table that points, directly or through others, at one of the roots. */
@@ -260,6 +261,12 @@ class TestDataCleanupIT {
                 + " SELECT 'e2e-urc', 'real-player', id, 'Granted', 'e2e-admin', 'why', NOW() FROM roles WHERE name = 'Master'");
         sql("INSERT INTO user_status_changes (id, user_id, from_status, to_status, changed_by, justification, created_at)"
                 + " VALUES ('e2e-usc', 'e2e-player', 'Allowed', 'Blocked', 'e2e-admin', 'why', NOW())");
+
+        // Sessions: an e2e login goes, a real person's stays.
+        sql("INSERT INTO refresh_tokens (id, jti_hash, family_id, user_id, expires_at, created_at)"
+                + " VALUES ('e2e-rt', REPEAT('a', 64), 'e2e-family', 'e2e-player', NOW(), NOW())");
+        sql("INSERT INTO refresh_tokens (id, jti_hash, family_id, user_id, expires_at, created_at)"
+                + " VALUES ('real-rt', REPEAT('b', 64), 'real-family', 'real-player', NOW(), NOW())");
     }
 
     private void user(String id, String discordId) {

@@ -549,10 +549,11 @@ public class GameTableController {
      * while legitimately running the table.
      *
      * @param id          the table the search is for
-     * @param query       the search box, or null to list a first page
-     * @param pageable    page, size and sort; ten at a time, which is a picker's worth
+     * @param query       the search box. Shorter than two characters, or empty, it finds nobody
+     * @param pageable    size only, as the order is the server's; ten at a time, which is a picker's worth, never more than
+     *                    twenty and never beyond the first page
      * @param currentUser the actor, from the token (ADR-05 §5)
-     * @return 200 with one page of people who could be made a master of this table. 403 when the
+     * @return 200 with up to twenty people who could be made a master of this table. 403 when the
      *         actor is not its Primary
      */
     @GetMapping("/{id}/master-candidates")
@@ -560,7 +561,7 @@ public class GameTableController {
     public PageResponse<UserSummaryResponse> searchMasterCandidates(
             @PathVariable String id,
             @RequestParam(name = "q", required = false) @Nullable String query,
-            @PageableDefault(size = 10, sort = {"discordUsername", "id"}) Pageable pageable,
+            @PageableDefault(size = 10) Pageable pageable,
             @AuthenticationPrincipal CurrentUser currentUser) {
         return gameTableService.searchMasterCandidates(id, currentUser.userId(), query, pageable);
     }

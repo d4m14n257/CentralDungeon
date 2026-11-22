@@ -3,6 +3,8 @@ package com.centraldungeon.common.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * The XSS gate of ADR-03 §8. Every case here is something a table's description could actually carry, and
@@ -68,9 +70,18 @@ class RichTextSanitizerTest {
     }
 
     /** Sanitizing on the way out as well as on the way in only works if doing it twice is harmless. */
-    @Test
-    void isIdempotent() {
-        String once = sanitizer.sanitize("<p>Hola <strong>vos</strong></p><script>x</script>");
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "<p>Hola <strong>vos</strong></p><script>x</script>",
+        "<a href=\"https://example.org\" onclick=\"x()\" target=\"_blank\">docs</a>",
+        "<a href=\"javascript:alert(1)\">x</a><img src=x onerror=alert(1)>",
+        "<scr<script>ipt>alert(1)</scr</script>ipt>",
+        "<p>&lt;script&gt;alert(1)&lt;/script&gt; &amp;amp; caf\u00e9</p>",
+        "<noscript><p title=\"</noscript><img src=x onerror=alert(1)>\">",
+        "<ul><li>uno<ul><li>dos</li></ul></li></ul><pre><code>a &lt; b</code></pre>"
+    })
+    void isIdempotent(String html) {
+        String once = sanitizer.sanitize(html);
 
         assertThat(sanitizer.sanitize(once)).isEqualTo(once);
     }

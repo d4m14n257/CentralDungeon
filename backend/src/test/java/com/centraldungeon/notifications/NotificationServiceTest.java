@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.users.User;
@@ -179,12 +178,15 @@ class NotificationServiceTest {
     }
 
     @Test
-    void markAsReadRejectsSomeoneElsesNotification() {
+    void markAsReadOfSomeoneElsesNotificationIsNotFound() {
         Notification notification = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, NotificationParams.ofTable("La Cripta"), null, null);
         ReflectionTestUtils.setField(notification, "id", "notif-1");
         when(notificationRepository.findById("notif-1")).thenReturn(Optional.of(notification));
 
-        assertThatThrownBy(() -> notificationService.markAsRead("notif-1", "someone-else")).isInstanceOf(ForbiddenActionException.class);
+        // Exactly what an id nobody ever used gets: a notification is its recipient's alone to know about.
+        assertThatThrownBy(() -> notificationService.markAsRead("notif-1", "someone-else"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Notification not found: notif-1");
     }
 
     @Test

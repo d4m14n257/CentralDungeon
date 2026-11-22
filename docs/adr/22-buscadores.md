@@ -2,7 +2,7 @@
 adr: 22
 titulo: Buscadores
 estado: Vigente
-actualizada: 2026-11-01
+actualizada: 2026-11-18
 absorbe: [164, 221, 239, 240, 268]
 ---
 
@@ -44,7 +44,7 @@ absorbe: [164, 221, 239, 240, 268]
 
 ## §5 El buscador de personas para sumar co-masters se acota a la mesa
 
-**Decisión.** `GET /api/v1/game-tables/{id}/master-candidates`, autorizado por pertenencia: el service verifica que el actor sea el `Primary` de **esa** mesa. `GET /api/v1/users/search` sigue siendo solo de admin. `UserPicker` recibe un `tableId` opcional —un id, no una entidad (`arquitectura` §3.1.5)— y la clave de caché `queryKeys.users.search` lleva el alcance.
+**Decisión.** `GET /api/v1/game-tables/{id}/master-candidates`, autorizado por pertenencia: el service verifica que el actor sea el `Primary` de **esa** mesa, con un mínimo de caracteres y un tope de resultados (ADR-07 «Mesas: ciclo de vida» §8 «Los masters de una mesa: el orden de los chips es el cargo, y quitar marca la fila»). `GET /api/v1/users/search` sigue siendo solo de admin. `UserPicker` recibe un `tableId` opcional —un id, no una entidad (`arquitectura` §3.1.5)— y la clave de caché `queryKeys.users.search` lleva el alcance.
 
 **Por qué.** Abrir el directorio con `hasAnyRole('MASTER', …)` lo dejaría accesible a cualquiera con el rol, tenga o no una mesa que administrar, y fallaría a un `Primary` asignado por un admin que nunca tuvo el rol (ADR-06 §7, §4). Acotado a la mesa solo responde a quien efectivamente puede agregar un master. El directorio y la búsqueda de una mesa son respuestas distintas a las mismas palabras y no pueden compartir caché.
 

@@ -2,13 +2,13 @@
 adr: 5
 titulo: Seguridad, sesión y login
 estado: Vigente
-actualizada: 2026-11-11
+actualizada: 2026-11-22
 absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 ---
 
 # ADR-05: Seguridad, sesión y login
 
-> Cómo se entra, qué afirma la sesión, dónde se autoriza, cómo se protege cada recurso y el texto enriquecido, y qué depende de Discord. Lo aplica `arquitectura` §2.6 con la regla dura 17, y lo revisa el agente `revisor-seguridad`; esta ADR dice *qué* se decidió y *por qué*.
+> Cómo se entra, qué afirma la sesión y cómo se revoca, dónde se autoriza, cómo se protege cada recurso y qué responde una negativa, el texto enriquecido, los límites de frecuencia, qué no se publica en producción y qué depende de Discord. Lo aplica `arquitectura` §2.6 con la regla dura 17, y lo revisa el agente `revisor-seguridad`; esta ADR dice *qué* se decidió y *por qué*.
 
 ## §1 Se entra con Discord y siendo miembro del servidor
 
@@ -18,11 +18,17 @@ absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 
 *Antes: #38.*
 
-## §2 Tres tokens: el de Discord se descarta, el access es corto y el refresh rota en una cookie
+## §2 Tres tokens: el de Discord se descarta, el access es corto y el refresh rota en una familia revocable
 
-**Decisión.** El token OAuth de Discord se descarta al terminar el callback. La sesión es propia: un **access** corto (~15 min) en memoria del cliente y un **refresh** largo y rotativo en cookie `httpOnly` + `SameSite=Strict`. El refresh es el punto donde se re-afirman `status` y roles. **CSRF está activo únicamente en `/auth/refresh`**: `csrf.spa().requireCsrfProtectionMatcher(...)` con un matcher que solo cubre `POST /auth/refresh`; el resto de la API no pide token CSRF.
+**Decisión.** El token OAuth de Discord se descarta al terminar el callback. La sesión es propia: un **access** corto (~15 min) en memoria del cliente y un **refresh** largo en cookie `httpOnly` + `SameSite=Strict`, que el servidor recuerda en la tabla **`refresh_tokens`**: el hash de su `jti`, `family_id`, `user_id`, `expires_at` y `revoked_at`. El login abre una familia, y cada renovación:
 
-**Por qué.** El token de Discord contesta dos preguntas durante el login —quién sos y si sos miembro— y después no se usa; guardarlo exigiría otro ciclo de refresh para una capacidad que v1 no tiene, y la integración futura necesita un *bot token*, que es de la aplicación (§7). La API se autentica con `Authorization: Bearer`, que el navegador nunca adjunta por su cuenta, así que no exigir CSRF ahí es correcto. El refresh es el único endpoint con cookie, que sí viaja sola: un sitio ajeno no puede leer la respuesta (CORS), pero sí forzar la rotación y cerrarle la sesión al usuario legítimo. `SameSite=Strict` lo bloquea, pero lo aplica el navegador; el token CSRF es la comprobación que ocurre en el servidor.
+- **revoca el refresh presentado** y emite uno nuevo en la misma familia;
+- **ventana de gracia de 30 s**: si el presentado fue rotado hace menos de 30 s y su familia todavía tiene un token vivo, no es reuso: se revoca ese sucesor, que nunca llegó al navegador, y se emite otro de la misma familia;
+- fuera de la ventana, o con la familia sin tokens vivos —la cerró un logout o un reuso—, presentar uno **ya rotado o revocado** es un reuso: se revoca **la familia entera** y la respuesta es `401`.
+
+**El logout revoca la familia**, además de expirar la cookie. **Si el logout falla en el servidor, el frontend lo reintenta una vez**; si vuelve a fallar, limpia igual la sesión local y avisa que la sesión no se cerró en el servidor, con la salida de cerrar el navegador o reintentar. El refresh sigue siendo el punto donde se re-afirman `status` y roles (§3). **El cliente hace un solo refresh a la vez**: `api/client.ts` comparte la renovación en curso entre todas las llamadas que reciben un `401` al mismo tiempo. **CSRF está activo únicamente en los dos endpoints que autentica la cookie**, `POST /auth/refresh` y `POST /auth/logout`: `csrf.spa().requireCsrfProtectionMatcher(...)` con un matcher que cubre esos dos, y el frontend manda el header en ambos; el resto de la API no pide token CSRF.
+
+**Por qué.** El token de Discord contesta dos preguntas durante el login —quién sos y si sos miembro— y después no se usa; guardarlo exigiría otro ciclo de refresh para una capacidad que v1 no tiene, y la integración futura necesita un *bot token*, que es de la aplicación (§7). **Un refresh JWT sin estado no se puede revocar**: el logout solo expiraba la cookie, y un refresh robado seguía valiendo hasta vencer; rotar sin recordar qué se rotó tampoco detecta nada. Con la familia, el ladrón y la persona terminan presentando el mismo token, el segundo que llega pasada la ventana es un reuso y se corta la sesión de los dos, el ladrón incluido. Se guarda el hash y no el token para que la tabla no contenga sesiones utilizables. Se descartaron `users.refresh_not_before`, que corta todas las sesiones de una persona pero no detecta el reuso, y aceptar el riesgo. **La ventana de gracia** sale de un bug reproducido: recargar la página mientras corre el refresh hace que el navegador aborte una respuesta que el servidor ya rotó; la cookie nueva no llega, la página siguiente presenta el token rotado y, sin ventana, se leía como robo y cerraba la sesión. El ladrón solo gana esos 30 s, y únicamente detrás de una rotación legítima —es lo que hacen Auth0 y Okta—, mientras que lo estricto desloguea a cualquiera que recargue rápido. Se descartaron **10 s**, con los que una red lenta vuelve a cerrar la sesión, y **mantenerlo estricto**. El refresh de a uno sigue siendo del cliente: dos `401` simultáneos presentarían el mismo refresh, y el segundo gastaría la ventana revocando el sucesor que el primero acaba de recibir. **El logout que falla no deja la pantalla abierta**: en una computadora compartida la cookie seguía viva y el siguiente entraba con la cuenta anterior; se descartó no limpiar nada en pantalla, y el aviso es lo que le dice a la persona que el servidor no se enteró. La ventana y el logout que falla los decidió el usuario el 2026-11-22, al cerrar F4.4 «Seguridad». La API se autentica con `Authorization: Bearer`, que el navegador nunca adjunta por su cuenta, así que no exigir CSRF ahí es correcto. Refresh y logout son los únicos endpoints con cookie, que sí viaja sola: un sitio ajeno no puede leer la respuesta (CORS), pero sí forzar la rotación o el logout y cerrarle la sesión al usuario legítimo. `SameSite=Strict` lo bloquea, pero lo aplica el navegador; el token CSRF es la comprobación que ocurre en el servidor. Lo decidió el usuario el 2026-11-18, en F4.4 «Seguridad».
 
 *Antes: #125, #127.*
 
@@ -44,7 +50,7 @@ absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 
 ## §5 Toda lectura o mutación de un recurso concreto filtra por el actor
 
-**Decisión.** O el actor entra en el `WHERE`, o el service verifica la pertenencia antes de tocar nada; nunca `findById(id)` + `save()` sin comprobar. El actor sale del token, nunca de la URL (regla dura 17).
+**Decisión.** O el actor entra en el `WHERE`, o el service verifica la pertenencia antes de tocar nada; nunca `findById(id)` + `save()` sin comprobar. El actor sale del token, nunca de la URL (regla dura 17). Qué se responde cuando la comprobación niega, en §10.
 
 **Por qué.** Es el agujero del Node: `UPDATE Tables SET … WHERE id = ?` sin un predicado de pertenencia, así que cualquiera con el id de una mesa podía editarla o borrarla. `hasRole('MASTER')` afirma «es master de algo», no «de *esta* mesa», y la segunda comprobación no se puede delegar en Spring Security (ADR-06 §4). Que los ids sean impredecibles (ADR-03 §4) es defensa en profundidad: un id filtrado en un link no puede ser lo único que proteja un recurso.
 
@@ -81,3 +87,52 @@ absorbe: [38, 83, 84, 85, 86, 88, 121, 122, 123, 125, 127, 128, 147, 148, 186]
 **Por qué.** `status = 'Blocked'` no tiene que ver con Discord ni con el guild, y no tenía pantalla. Los estados de la misma pantalla son la misma forma repetida, así que van en un solo componente para no quedar inconsistentes uno al lado del otro. La pantalla no tiene header, y el wordmark es la única marca de que se sigue en la aplicación. Sin la salida, quien llegaba a un error se quedaba sin camino: en bloqueado reintentar no cambia el `status`, así que volver al login es la única acción con sentido.
 
 *Antes: #147, #148.*
+
+## §10 Negar no confirma: lo que el actor no puede ver es `404`, y `403` es solo de lo que ve y no puede hacer
+
+**Decisión.** Sobre todo recurso con id, la negativa sale de comprobar en este orden, y la primera que falla es la respuesta:
+
+1. **Existe y el actor lo puede ver** → si no, `404`. Una fila `Deleted` no existe (ADR-03 «Modelo de datos y persistencia» §7).
+2. **El actor puede hacer esa acción** → si no, `403`.
+3. **El estado del recurso la admite** → si no, `409`.
+
+Qué es «ver», por recurso:
+
+| Recurso | Lo ve quien… |
+|---|---|
+| Mesa | pasa `TableVisibilityService.canSee`; el service lo exige con `requireVisible` |
+| Sesión, petición, postulación | ve su mesa y, además, la dirige o es el destinatario o el dueño del recurso |
+| Archivo | pasa `FileService.requireReadable` (ADR-14 «Archivos: lectura y bibliotecas» §2) |
+| Notificación | es su dueño |
+| Perfil | pasa `ProfileVisibilityService.requireVisible` (ADR-10 «Perfiles» §3) |
+
+Generaliza tres casos que ya regían: el veto (ADR-09 «Postulaciones y veto» §4), la mesa borrada (ADR-07 «Mesas: ciclo de vida» §6) y el perfil que no se puede ver (ADR-10 «Perfiles» §3). El precedente en el código es `GameTableService.getStatusHistory`: a quien no dirige la mesa le exige primero `requireVisible`, y recién después responde `403`.
+
+**Por qué.** Un `403` sobre algo que el actor no puede ver le confirma que existe, y bastaría probar ids hasta ver uno; los ids impredecibles (ADR-03 §4) son defensa en profundidad, no lo que lo oculta. Un `409` antes de la visibilidad filtra además el estado. El orden lo da cada respuesta: la siguiente solo puede decir algo que la anterior ya admitió. Se descartó **`404` siempre**, que borraría el «No tenés permiso» de quien sí ve la mesa y no puede hacer lo que intenta, y que merece saber por qué; y **dejar el `403`**, que confirma la existencia. Lo decidió el usuario el 2026-11-18, en F4.4 «Seguridad», para todos los recursos a la vez.
+
+## §11 Las puertas que cualquiera puede repetir tienen un límite por ventana, contado en proceso
+
+**Decisión.** Un filtro propio, sobre Caffeine, sin dependencia nueva, cuenta pedidos por clave y ventana. Límites iniciales:
+
+| Endpoint | Límite | Clave |
+|---|---|---|
+| El login con Discord y su callback | 10 por minuto | IP |
+| `POST /auth/refresh` | 30 por minuto | IP |
+| Toda subida de archivos | 20 por hora | usuario del token |
+| `POST /game-tables/{id}/registrations` (postularse) | 10 por hora | usuario del token |
+| Proponer un valor de catálogo (`POST /tags`, `/systems`, `/platforms`), **un solo contador** para los tres | 20 por hora | usuario del token |
+| El buscador de co-masters (`GET /game-tables/{id}/master-candidates`) | 30 por minuto | usuario del token |
+
+Pasarse responde **`429`** con un `ProblemDetail` de código **`RATE_LIMITED`** y el header **`Retry-After`**. Los límites van en `application.yml`, y el perfil `test` los sube; **no** son ajustes de `system_settings`. La IP es la que resuelve Spring con **`server.forward-headers-strategy`**, y solo se confía en lo que dice el proxy propio: nunca se lee `X-Forwarded-For` a mano. **Una IPv4 cuenta por su dirección y una IPv6 por su prefijo `/64`**; una IPv4 escrita como IPv6 (*IPv4-mapped*) cuenta como la IPv4. El log del `429` lleva solo el nombre del límite y los segundos de espera: **ni la IP ni nada derivado de ella**. El orden del buscador de co-masters **lo fija el servidor**, nunca el `sort` del cliente. El contador es **por instancia**. Un endpoint nuevo que cualquier `Player` pueda repetir llega con su límite: los comentarios de F5 «Comunidad» heredan la regla.
+
+**Pendiente para F6 «Operación»**: con `forward-headers-strategy: native`, Tomcat confía hoy en el `X-Forwarded-For` de **toda la red privada** —su default de `internal-proxies`—, no solo del proxy propio. Cuando se decida la topología (ADR-02 «Stack, herramientas y despliegue» §5 «Un solo `.env.example`, y la topología de producción queda sin decidir»), `server.tomcat.remoteip.internal-proxies` se fija a la IP de ese proxy.
+
+**Por qué.** No existía, y hay superficies que lo piden: el login, que cualquiera puede martillar sin sesión, y las escrituras que cualquier `Player` repite —postularse, y en F5 comentar—. La subida no tiene cuota por usuario (ADR-13 «Archivos: modelo y almacenamiento» §3), y el límite es lo que contiene una ráfaga. Detrás de un proxy, todos los pedidos llegan desde su IP y compartirían un contador; confiar en el header de cualquiera dejaría evadirlo cambiándolo. Va en `application.yml` porque es operación y no una regla de la comunidad que un admin mueva (ADR-17 «Configuración del sistema y auditoría» §3). Se descartaron **Bucket4j**, una dependencia nueva para un contador que Caffeine ya da, y **limitar en el proxy**, porque el despliegue no está decidido (C15 «Despliegue», ADR-02 «Stack, herramientas y despliegue» §5). **Limitación aceptada**: con más de una instancia, cada una cuenta lo suyo, la misma que la caché de roles y `status` (§3). Lo decidió el usuario el 2026-11-18, en F4.4 «Seguridad».
+
+El resto lo decidió el usuario el 2026-11-22, al cerrar F4.4 «Seguridad». **El `/64`**, porque una conexión doméstica tiene un `/64` entero: contando por dirección, bastaba rotarla en cada pedido para no llegar nunca al límite, y además se llenaba el caché de contadores. **Las propuestas de catálogo**, porque llenaban la bandeja de los admins (ADR-12 «Catálogos» §3 «Propone quien escribe una mesa; solo un admin acepta y clasifica, y eso existe desde F1»). **El buscador de co-masters**, porque el mínimo y el tope de resultados (ADR-07 «Mesas: ciclo de vida» §8 «Los masters de una mesa: el orden de los chips es el cargo, y quitar marca la fila») no bastaban: con los 1296 prefijos de dos letras y el orden elegido por el cliente, se volcaba el directorio. **El log sin IP**, porque el hash que se registraba era reversible.
+
+## §12 El schema de la API y Swagger UI no se publican en `prod`
+
+**Decisión.** `application-prod.yml` apaga `springdoc.api-docs.enabled` y `springdoc.swagger-ui.enabled`, y un test lo fija. En `dev` y `test` siguen como están.
+
+**Por qué.** `SecurityConfig` deja públicos `/v3/api-docs/**` y `/swagger-ui/**`, así que en producción cualquiera, sin sesión, leería el mapa entero de la API, administración incluida. En producción nadie lo consume: los tipos del frontend son espejos escritos a mano (ADR-02 «Stack, herramientas y despliegue» §3). Lo decidió el usuario el 2026-11-18, en F4.4 «Seguridad».

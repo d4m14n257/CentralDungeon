@@ -178,12 +178,15 @@ test.describe('the backend does not rely on the interface', () => {
   })
 })
 
-test("a master opening another master's table sees the forbidden state inside their own context", async ({ browser }) => {
+// The table is a draft, which nobody outside it may see: it is not there for them, rather than theirs to be
+// refused, and the screen says so without leaving the context.
+test("a master opening another master's draft sees the not-found state inside their own context", async ({ browser }) => {
   const { context, page } = await pageOf(browser, otherMaster.discordId, otherMaster.roles)
   try {
     await page.goto(`/master/tables/${tableId}`)
     await expect(page).toHaveURL(`/master/tables/${tableId}`)
-    await expect(page.getByText('No tenés permiso')).toBeVisible()
+    await expect(page.getByText('No existe', { exact: true })).toBeVisible()
+    await expect(page.getByText('No tenés permiso')).toBeHidden()
     await expect(page.getByRole('navigation', { name: /./ }).first()).toBeVisible()
   } finally {
     await context.close()

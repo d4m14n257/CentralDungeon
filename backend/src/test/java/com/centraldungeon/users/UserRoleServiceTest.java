@@ -134,8 +134,9 @@ class UserRoleServiceTest {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER));
         when(roleRepository.findByName("Admin")).thenReturn(Optional.of(role(PlatformRole.ADMIN)));
+        stubOwnerLock();
 
         AdminUserDetailResponse response = userRoleService.grantRole("target", PlatformRole.ADMIN, "confio", OWNER_ACTOR);
 
@@ -149,7 +150,7 @@ class UserRoleServiceTest {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER, PlatformRole.OWNER));
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.PLAYER, PlatformRole.OWNER));
         stubOwnerCount(3);
         when(roleRepository.findByName("Admin")).thenReturn(Optional.of(role(PlatformRole.ADMIN)));
 
@@ -167,7 +168,8 @@ class UserRoleServiceTest {
     void anOwnerCannotGiveThemselvesAdmin() {
         User self = persistedUser("actor-owner");
         when(userService.getById("actor-owner")).thenReturn(self);
-        when(userRoleRepository.findAllGrants("actor-owner")).thenReturn(grants(self, PlatformRole.OWNER));
+        when(userRoleRepository.lockAllGrants("actor-owner")).thenReturn(grants(self, PlatformRole.OWNER));
+        stubOwnerLock();
 
         assertThatThrownBy(() -> userRoleService.grantRole("actor-owner", PlatformRole.ADMIN, "me bajo", OWNER_ACTOR))
                 .isInstanceOf(ConflictException.class)
@@ -203,7 +205,7 @@ class UserRoleServiceTest {
     void otorgarAdminAlUltimoOwnerSeRechazaEnteroSinEscribirNada() {
         User target = persistedUser("target");
         when(userService.getById("target")).thenReturn(target);
-        when(userRoleRepository.findAllGrants("target")).thenReturn(grants(target, PlatformRole.OWNER));
+        when(userRoleRepository.lockAllGrants("target")).thenReturn(grants(target, PlatformRole.OWNER));
         stubOwnerCount(1);
 
         assertThatThrownBy(() -> userRoleService.grantRole("target", PlatformRole.ADMIN, "baja", OWNER_ACTOR))
@@ -287,6 +289,7 @@ class UserRoleServiceTest {
         when(userService.getById("deleted-owner")).thenReturn(target);
         when(userService.getById("actor-owner")).thenReturn(persistedUser("actor-owner"));
         when(userRoleRepository.lockAllGrants("deleted-owner")).thenReturn(grants);
+        stubOwnerLock();
 
         userRoleService.revokeRole("deleted-owner", PlatformRole.OWNER, "limpieza", OWNER_ACTOR);
 
@@ -448,12 +451,17 @@ class UserRoleServiceTest {
 
     /** Like {@link #stubOwnerCount}, naming who the live owners are, for when the target must be one of them. */
     private void stubOwners(User... owners) {
-        when(roleRepository.lockByName("Owner")).thenReturn(Optional.of(role(PlatformRole.OWNER)));
+        stubOwnerLock();
         List<UserRole> holders = new ArrayList<>();
         for (User owner : owners) {
             holders.add(new UserRole(owner, role(PlatformRole.OWNER)));
         }
         when(userRoleRepository.lockActiveHolders("Owner")).thenReturn(holders);
+    }
+
+    /** The Owner role's row lock alone, which every rank change takes before reading the person's grants. */
+    private void stubOwnerLock() {
+        when(roleRepository.lockByName("Owner")).thenReturn(Optional.of(role(PlatformRole.OWNER)));
     }
 
     private List<UserRoleChange> savedRoleChanges() {

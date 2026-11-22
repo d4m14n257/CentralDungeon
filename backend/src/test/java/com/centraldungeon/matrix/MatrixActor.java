@@ -47,6 +47,12 @@ enum MatrixActor {
     /** Holds a {@code Player} registration on the row's table. */
     TABLE_PLAYER(PlatformRole.PLAYER),
 
+    /**
+     * Vetoed on the row's table: a {@code Blocked} registration that used to be {@code Player}. The
+     * table, and everything that hangs from it, has to be as absent for them as for somebody with no id.
+     */
+    VETOED(PlatformRole.PLAYER),
+
     /** The account a row hands the resource to, with {@code w.user(RESOURCE_OWNER)}. */
     RESOURCE_OWNER(PlatformRole.PLAYER),
 
@@ -85,8 +91,8 @@ enum MatrixActor {
         return roles.stream().map(PlatformRole::roleName).toList();
     }
 
-    /** @return whether this actor is the master, co-master or applicant of the row's table */
+    /** @return whether this actor is the master, co-master, applicant or vetoed player of the row's table */
     boolean belongsToTable() {
-        return Arrays.asList(PRIMARY, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER).contains(this);
+        return Arrays.asList(PRIMARY, SECONDARY, REMOVED_SECONDARY, CANDIDATE, TABLE_PLAYER, VETOED).contains(this);
     }
 }

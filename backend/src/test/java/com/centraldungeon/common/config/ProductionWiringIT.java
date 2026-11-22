@@ -1,16 +1,22 @@
 package com.centraldungeon.common.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.servlet.autoconfigure.MultipartProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.web.FilterChainProxy;
 import org.springframework.scheduling.config.CronTask;
 import org.springframework.scheduling.config.FixedDelayTask;
 import org.springframework.scheduling.config.ScheduledTask;
@@ -19,6 +25,9 @@ import org.springframework.scheduling.config.Task;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.util.unit.DataSize;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -27,7 +36,7 @@ import org.testcontainers.mysql.MySQLContainer;
 /**
  * The production profile actually boots, and what only a real boot wires is wired.
  *
- * <p>Every other test runs under the development defaults, so the three periodic jobs, the servlet
+ * <p>Every other test runs under the development defaults, so the four periodic jobs, the servlet
  * container's upload cap and the start-up check that keeps that cap above the editable file-size
  * limit were proven only by calling their methods. Nothing showed that under {@code prod} the jobs are
  * registered with their schedule, that the cap binds from configuration, or that the application
@@ -65,9 +74,25 @@ class ProductionWiringIT {
     @Autowired
     private MultipartProperties multipartProperties;
 
-    /** The three periodic jobs are registered with the schedule each one declares. */
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @Autowired
+    private FilterChainProxy springSecurityFilterChain;
+
+    /** Built by hand, with the real security filter chain, as the other integration tests do. */
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .addFilters(springSecurityFilterChain)
+                .build();
+    }
+
+    /** The four periodic jobs are registered with the schedule each one declares. */
     @Test
-    void theThreePeriodicJobsAreRegisteredWithTheirSchedules() {
+    void theFourPeriodicJobsAreRegisteredWithTheirSchedules() {
         // The runnable comes wrapped, and the wrapper reports the method as Class.method in toString.
         Map<String, Task> tasks = new HashMap<>();
         for (ScheduledTaskHolder holder : context.getBeansOfType(ScheduledTaskHolder.class).values()) {
@@ -80,6 +105,8 @@ class ProductionWiringIT {
                 .isInstanceOfSatisfying(CronTask.class, cron -> assertThat(cron.getExpression()).isEqualTo("0 0 5 * * *"));
         assertThat(job(tasks, "ApprovalOrphanCheckService.checkForOrphanedReferences"))
                 .isInstanceOfSatisfying(CronTask.class, cron -> assertThat(cron.getExpression()).isEqualTo("0 30 5 * * *"));
+        assertThat(job(tasks, "RefreshTokenPurgeService.purgeExpiredRefreshTokens"))
+                .isInstanceOfSatisfying(CronTask.class, cron -> assertThat(cron.getExpression()).isEqualTo("0 0 6 * * *"));
         assertThat(job(tasks, "AdminQueueClaimReleaseService.releaseTimedOutClaims"))
                 .isInstanceOfSatisfying(FixedDelayTask.class, delay -> {
                     assertThat(delay.getIntervalDuration()).isEqualTo(Duration.ofSeconds(60));
@@ -95,6 +122,37 @@ class ProductionWiringIT {
     void theUploadCapBindsAndTheContextStartsWithItsGuard() {
         assertThat(multipartProperties.getMaxFileSize()).isEqualTo(DataSize.ofMegabytes(26));
         assertThat(multipartProperties.getMaxRequestSize()).isEqualTo(DataSize.ofMegabytes(32));
+    }
+
+    /** Nothing that only exists to drive the end-to-end tests is a bean in production. */
+    @Test
+    void theTestOnlyBeansDoNotExist() {
+        for (String name : new String[] {"TestLoginController", "TestDataController", "TestDiscordController", "TestDataService"}) {
+            assertThat(context.getBeanNamesForType(classNamed(name))).as(name).isEmpty();
+        }
+    }
+
+    /** The test-only routes are permitted without a session, so with no handler they must be 404, not 401 or 500. */
+    @Test
+    void theTestOnlyRoutesAreNotFound() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/test-login")).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/v1/test-data/e2e")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/test-discord/users/@me")).andExpect(status().isNotFound());
+    }
+
+    /** The API schema and the Swagger UI are not published in production. */
+    @Test
+    void theApiSchemaAndSwaggerUiAreNotFound() throws Exception {
+        mockMvc.perform(get("/v3/api-docs")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/swagger-ui.html")).andExpect(status().isNotFound());
+    }
+
+    private static Class<?> classNamed(String simpleName) {
+        try {
+            return Class.forName("com.centraldungeon.auth." + simpleName);
+        } catch (ClassNotFoundException e) {
+            throw new AssertionError(simpleName + " no longer exists; update this test", e);
+        }
     }
 
     private static Task job(Map<String, Task> tasks, String method) {

@@ -204,22 +204,33 @@ public class RegistrationService {
 
     /**
      * Locks the table row before checking: it is the only way to serialize concurrent applications
-     * for the same table and make "at most one active registration per pair" (ADR-09 §1) actually hold.
+     * for the same table and make "at most one active registration per pair" actually hold.
      *
-     * <p><b>The lock is the first statement of the transaction, and that ordering is load-bearing</b>
-     * (ADR-06 §2). F3.4 briefly put the veto check in front of it and the invariant above stopped holding
-     * - ten concurrent applications all succeeded. The mechanism is the one ADR-06 §2 wrote down: under
-     * {@code REPEATABLE READ} the first read opens the snapshot, so a thread that read <em>before</em>
-     * queueing for the lock wakes up and answers the duplicate check from a snapshot taken before the
-     * winner committed. Anything that reads a row this method will re-read goes after the lock.
+     * <p><b>The lock is the first statement of the transaction, and that ordering is load-bearing.</b>
+     * Putting the veto check in front of it once broke the invariant above - ten concurrent
+     * applications all succeeded. Under {@code REPEATABLE READ} the first read opens the snapshot, so
+     * a thread that read <em>before</em> queueing for the lock wakes up and answers the duplicate
+     * check from a snapshot taken before the winner committed. Anything that reads a row this method
+     * will re-read goes after the lock.
+     *
+     * @param gameTableId the table to apply to
+     * @param actorId     the applicant, from the token
+     * @param request     the description and the files to attach
+     * @return the application, now a pending candidate
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it (for
+     *                                  instance, they are vetoed on it) - the same answer as a table
+     *                                  that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but lacks the {@code Player} role, or
+     *                                  runs the table
+     * @throws ConflictException        if the table is not taking applications, the actor already has an
+     *                                  active one, no seat is left, or the schedule clashes
      */
     @Transactional
     public RegistrationResponse apply(String gameTableId, String actorId, CreateRegistrationRequest request) {
         GameTable table = lockTable(gameTableId);
         // After the lock, for the reason above - but still through the single point, so that the
-        // answer is the same 404 every other read of a vetoed table gives (ADR-09 §4). «Volver a
-        // postularse» needs no rule of its own: this endpoint was never on anybody's list of read
-        // paths and is closed anyway.
+        // answer is the same 404 every other read of a vetoed table gives. Applying again needs no
+        // rule of its own: this endpoint was never on anybody's list of read paths and is closed anyway.
         tableVisibilityService.requireVisible(gameTableId, actorId);
 
         UserAuthSnapshot actorSnapshot = userService.loadAuthSnapshot(actorId);
@@ -338,17 +349,19 @@ public class RegistrationService {
      * @param registrationId the application
      * @param actorId        the actor, from the token; has to run the table
      * @return the application, now {@code Player}
-     * @throws NotFoundException if the application or its table does not exist
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException if the application or its table does not exist, or the actor cannot see
+     *         the application (they must see its table and run it, oversee it or have made the
+     *         application) - the same answer as an application that does not exist
+     * @throws ForbiddenActionException if the actor sees the application but does not run the table
      * @throws ConflictException {@code TABLE_FULL} when no seat is left, a schedule clash, or a plain
      *         conflict when the application is not a pending candidate
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public RegistrationResponse accept(String registrationId, String actorId) {
-        GameTable table = lockTable(tableIdOf(registrationId));
+        GameTable table = lockTableOf(registrationId);
         TableRegistration registration = getRegistrationById(registrationId);
 
-        requireMasterOf(table.getId(), actorId, "accept candidates");
+        requireMasterOf(registration, actorId, "accept candidates");
         if (registration.getStatus() != TableRegistrationStatus.Candidate) {
             throw new ConflictException("Registration is not a pending candidate");
         }
@@ -383,20 +396,22 @@ public class RegistrationService {
      * the worst outcome the flow can produce.
      *
      * @param registrationId the application
-     * @param actorId        the actor, from the token; has to run the table (hard rule 17, ADR-05 §5)
+     * @param actorId        the actor, from the token; has to run the table
      * @param request        the justification
      * @return the application afterwards
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor does not run
-     *         the table
+     * @throws NotFoundException if the application does not exist, or the actor cannot see it (they
+     *         must see its table and run it, oversee it or have made the application) - the same
+     *         answer as an application that does not exist
+     * @throws ForbiddenActionException if the actor sees the application but does not run the table
      * @throws ConflictException if the application was not a pending candidate
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public RegistrationResponse reject(String registrationId, String actorId, RejectRegistrationRequest request) {
         // Under the table's lock and at READ COMMITTED for the reason accept() gives: otherwise an accept
         // and a reject of the same candidate both apply, or deadlock on the row and the table.
-        lockTable(tableIdOf(registrationId));
+        lockTableOf(registrationId);
         TableRegistration registration = getRegistrationById(registrationId);
-        requireMasterOf(registration.getGameTable().getId(), actorId, "reject candidates");
+        requireMasterOf(registration, actorId, "reject candidates");
         if (registration.getStatus() != TableRegistrationStatus.Candidate) {
             throw new ConflictException("Registration is not a pending candidate");
         }
@@ -421,7 +436,7 @@ public class RegistrationService {
      * registration is marked, never dropped (ADR-03 §7, ADR-07 §6) - that somebody applied and thought better
      * of it is part of the record.
      *
-     * <p><b>Deliberately does not touch {@code registration_files}</b> (ADR-09 §2): whatever the
+     * <p><b>Deliberately does not touch {@code registration_files}</b>: whatever the
      * candidate attached stays attached, marked or not. The row is the record that a sheet was sent,
      * and withdrawing does not undo that it was - only {@link RegistrationFileRepository}'s read
      * methods stop counting it as in use, by requiring the application to still be
@@ -429,18 +444,21 @@ public class RegistrationService {
      *
      * @param registrationId the application to withdraw
      * @param actorId        the applicant, from the token. Never an id from the URL: the check is
-     *                       that the registration is theirs (ADR-05 §5)
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the application is
-     *         somebody else's
+     *                       that the registration is theirs
+     * @throws NotFoundException if the application does not exist, or the actor cannot see it (they
+     *         must see its table and run it, oversee it or have made the application) - the same
+     *         answer as an application that does not exist
+     * @throws ForbiddenActionException if the actor sees the application but it is somebody else's
      * @throws ConflictException if it is no longer pending
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void withdraw(String registrationId, String actorId) {
         // Serialized with the automatic rejection the way accept() explains: withdrawn and then
         // rejected «because the table is full» is a message about an application the person took back.
-        lockTable(tableIdOf(registrationId));
+        lockTableOf(registrationId);
         TableRegistration registration = getRegistrationById(registrationId);
         if (!registration.getUser().getId().equals(actorId)) {
+            requireSeen(registration, actorId);
             throw new ForbiddenActionException("Cannot withdraw another user's application");
         }
         if (registration.getStatus() != TableRegistrationStatus.Candidate) {
@@ -450,11 +468,25 @@ public class RegistrationService {
         registration.setDeletedAt(LocalDateTime.now());
     }
 
-    /** Candidates only, FIFO by arrival - never re-sorted, whatever the caller's sort param says (ADR-09 §1). */
+    /**
+     * Candidates only, FIFO by arrival - never re-sorted, whatever the caller's sort param says.
+     *
+     * @param gameTableId the table
+     * @param actorId     the actor, from the token
+     * @param pageable    page and size; its sort is ignored
+     * @return one page of the table's pending candidates, oldest first
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it (for
+     *                                  instance, they are vetoed on it) - the same answer as a table
+     *                                  that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but neither runs it nor is an admin
+     */
     @Transactional(readOnly = true)
     public PageResponse<RegistrationResponse> listCandidatesForTable(String gameTableId, String actorId, Pageable pageable) {
         // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
+        tableVisibilityService.requireExisting(gameTableId);
         if (!masterService.canOversee(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table or an admin can view its candidates");
         }
         Pageable fifo = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("createdAt").ascending());
@@ -562,14 +594,19 @@ public class RegistrationService {
      * <p>A list and not a page: it is bounded by {@code max_players} and read as one roster.
      *
      * @param gameTableId the table
-     * @param actorId     the actor, from the token (ADR-05 §5)
+     * @param actorId     the actor, from the token
      * @return its players and its vetoed, oldest first
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it - the
+     *                                  same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but neither runs it nor is an admin
      */
     @Transactional(readOnly = true)
     public List<TablePlayerResponse> listPlayersForTable(String gameTableId, String actorId) {
         // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
+        tableVisibilityService.requireExisting(gameTableId);
         if (!masterService.canOversee(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table or an admin can view its players");
         }
         List<TableRegistration> roster = registrationRepository.findByGameTable_IdAndStatusInOrderByCreatedAtAsc(
@@ -661,9 +698,11 @@ public class RegistrationService {
      * @param actorId        the actor, from the token; has to be the table's {@code Primary} or an admin
      * @param justification  why the veto is being lifted, never blank
      * @return the application, back to {@code Player} - or {@code Rejected} when the table has no seat left
-     * @throws NotFoundException        404 when the application does not belong to that table
-     * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER} when the actor is neither the
-     *                                  Primary nor an admin
+     * @throws NotFoundException        404 when the table does not exist or the actor cannot see it - the
+     *                                  same answer as a table that does not exist - or when the
+     *                                  application does not belong to that table
+     * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER} when the actor sees the table but is
+     *                                  neither the Primary nor an admin
      * @throws ConflictException        409 {@code REGISTRATION_NOT_BLOCKED} when it is not vetoed
      */
     @Transactional
@@ -738,7 +777,7 @@ public class RegistrationService {
         return registrationRepository.findTablesByRegistrationIds(List.of(registrationId)).stream()
                 .findFirst()
                 .map(RegistrationTable::gameTableId)
-                .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
+                .orElseThrow(() -> registrationNotFound(registrationId));
     }
 
     /**
@@ -824,7 +863,7 @@ public class RegistrationService {
     private TableRegistration requireRegistrationOf(String gameTableId, String registrationId) {
         TableRegistration registration = getRegistrationById(registrationId);
         if (!gameTableId.equals(registration.getGameTable().getId())) {
-            throw new NotFoundException("No registration " + registrationId + " on table " + gameTableId);
+            throw registrationNotFound(registrationId);
         }
         return registration;
     }
@@ -923,6 +962,8 @@ public class RegistrationService {
      * <p>Every other master operation here settles for {@code isMasterOf}; lifting a veto is narrower,
      * because it undoes a decision about somebody not being welcome at the table.
      *
+     * @throws NotFoundException        404 when the actor cannot see the table, checked before the
+     *                                  refusal so that it never confirms a table they cannot see
      * @throws ForbiddenActionException 403 {@code NOT_PRIMARY_MASTER}, never a 400 - it is who you
      *                                  are, not what you sent
      */
@@ -934,6 +975,8 @@ public class RegistrationService {
         if (roles.contains(PlatformRole.ADMIN.roleName()) || roles.contains(PlatformRole.OWNER.roleName())) {
             return;
         }
+        // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+        tableVisibilityService.requireVisible(gameTableId, actorId);
         throw new ForbiddenActionException(
                 "Only the Primary master or an admin can lift a veto on table " + gameTableId,
                 ForbiddenActionException.NOT_PRIMARY_MASTER);
@@ -995,10 +1038,41 @@ public class RegistrationService {
         table.setSeekingPlayers(false);
     }
 
-    private void requireMasterOf(String gameTableId, String actorId, String action) {
-        if (!masterService.isMasterOf(gameTableId, actorId)) {
+    private void requireMasterOf(TableRegistration registration, String actorId, String action) {
+        if (!masterService.isMasterOf(registration.getGameTable().getId(), actorId)) {
+            requireSeen(registration, actorId);
             throw new ForbiddenActionException("Only a master of this table can " + action);
         }
+    }
+
+    /**
+     * What has to hold before somebody is told they may not act on an application: that they see it at
+     * all. They see it when they see its table and either run or oversee the table or made the
+     * application; anybody else gets the same 404 as an id nobody ever used.
+     */
+    private void requireSeen(TableRegistration registration, String actorId) {
+        String gameTableId = registration.getGameTable().getId();
+        boolean seesIt = tableVisibilityService.canSee(gameTableId, actorId)
+                && (registration.getUser().getId().equals(actorId) || masterService.canOversee(gameTableId, actorId));
+        if (!seesIt) {
+            throw registrationNotFound(registration.getId());
+        }
+    }
+
+    /**
+     * {@link #lockTable} for the writes that name an application rather than its table: a deleted table
+     * takes its applications with it, so it answers as an application that is not there, never with the
+     * id of a table the caller did not name.
+     */
+    private GameTable lockTableOf(String registrationId) {
+        return gameTableRepository.findByIdForUpdate(tableIdOf(registrationId))
+                .filter(table -> table.getStatus() != GameTableStatus.Deleted)
+                .orElseThrow(() -> registrationNotFound(registrationId));
+    }
+
+    /** One sentence for an application that is not there and one the actor may not see. */
+    private static NotFoundException registrationNotFound(String registrationId) {
+        return new NotFoundException("Registration not found: " + registrationId);
     }
 
     /**
@@ -1058,6 +1132,6 @@ public class RegistrationService {
 
     private TableRegistration getRegistrationById(String registrationId) {
         return registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new NotFoundException("Registration not found: " + registrationId));
+                .orElseThrow(() -> registrationNotFound(registrationId));
     }
 }

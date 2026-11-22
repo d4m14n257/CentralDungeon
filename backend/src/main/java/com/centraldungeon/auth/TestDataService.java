@@ -231,6 +231,8 @@ public class TestDataService {
         // other audit trail here does, history before the thing it is about (ADR-17 §3).
         delete("delete from SystemSettingChange ssc where ssc.changedBy.id in (" + E2E_USERS + ")");
         delete("delete from SystemSetting ss where ss.updatedBy.id in (" + E2E_USERS + ")");
+        // Every login of an e2e account records its refresh tokens, which point at the account.
+        delete("delete from RefreshToken rt where rt.userId in (" + E2E_USERS + ")");
         delete("delete from UserRole ur where ur.user.id in (" + E2E_USERS + ")");
         int users = delete("delete from User u2 where u2.discordId like :discordId");
 

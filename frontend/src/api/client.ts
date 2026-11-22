@@ -74,30 +74,92 @@ function leaveForBlockedScreen(): ApiError {
   return new ApiError(401, { title: 'Unauthorized', status: 401, detail: 'Account blocked', errorCode: ACCOUNT_BLOCKED })
 }
 
+/** The CSRF header the two cookie-authenticated endpoints, refresh and logout, require. */
+function csrfHeaders(): Record<string, string> {
+  const csrfToken = readCookie('XSRF-TOKEN')
+  return csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}
+}
+
+/** The renewal currently on the wire in this tab, shared by everybody who asks for one while it lasts. */
+let refreshInFlight: Promise<string | null> | null = null
+
+/** Name of the lock that lets only one tab at a time renew the session. */
+const REFRESH_LOCK_NAME = 'central-dungeon-session-refresh'
+
 /**
- * Only /auth/refresh needs the CSRF header - it is the one endpoint authenticated by cookie
- * (ADR-05 §2). Exported so AuthProvider can call it once on boot to recover a session
- * from the httpOnly refresh cookie, without a chicken-and-egg 401 first.
+ * Renews the access token from the httpOnly refresh cookie. Exported so AuthProvider can call it once
+ * on boot to recover a session, without a chicken-and-egg 401 first.
+ *
+ * **One renewal at a time, in this tab and across tabs.** The server spends the refresh token on every
+ * renewal and reads a second use of it as theft, ending the session. Inside a tab, every caller that
+ * asks while a renewal is on the wire - several calls hitting a 401 together, or the boot refresh
+ * running twice - gets that same renewal's result instead of sending the same cookie again.
+ *
+ * Across tabs, a shared `navigator.locks` lock serializes the renewals: two tabs that renew together
+ * would present the same cookie, and the server would take the second for a stolen copy and end the
+ * session in every tab. The tab that waits for the lock **still sends its own refresh once it gets
+ * it**, and that is correct: the refresh cookie is httpOnly and lives in the one cookie jar all the
+ * tabs of the browser share, so the winner's response already replaced it, and the waiter's request -
+ * which reads the jar when it is sent, not when it queued - carries the new cookie. The CSRF header is
+ * read inside the lock for the same reason. Skipping the call instead would leave the waiter without
+ * an access token of its own.
+ *
+ * Where `navigator.locks` does not exist (old browsers, jsdom) only the per-tab sharing applies.
  *
  * @returns the new access token, or null if there is no session to recover
  * @throws ApiError with `ACCOUNT_BLOCKED` if the account is blocked; the person has already been sent to the blocked screen
+ * @throws ApiError with `RATE_LIMITED` if renewals came too fast; the session is kept and nobody is sent to /login
  */
-export async function refreshSession(): Promise<string | null> {
-  const csrfToken = readCookie('XSRF-TOKEN')
+export function refreshSession(): Promise<string | null> {
+  refreshInFlight ??= renewAcrossTabs().finally(() => {
+    refreshInFlight = null
+  })
+  return refreshInFlight
+}
+
+/** Runs the renewal while holding the cross-tab lock, or straight away if the browser has none. */
+async function renewAcrossTabs(): Promise<string | null> {
+  // Typed as always present by the DOM lib, but it is missing in old browsers and in jsdom.
+  const locks = navigator.locks as LockManager | undefined
+  return locks ? await locks.request(REFRESH_LOCK_NAME, renewAccessToken) : renewAccessToken()
+}
+
+async function renewAccessToken(): Promise<string | null> {
   const response = await fetch(buildUrl('/api/v1/auth/refresh'), {
     method: 'POST',
     credentials: 'include',
-    headers: csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {},
+    headers: csrfHeaders(),
   })
   if (!response.ok) {
     if (response.status === 401 && (await isAccountBlocked(response))) {
       throw leaveForBlockedScreen()
+    }
+    // Too many renewals is not a lost session: the cookie was never spent, so the call fails and the session stays.
+    if (response.status === 429) {
+      throw new ApiError(429, (await response.json()) as ProblemDetail)
     }
     return null
   }
   const data = (await response.json()) as TokenResponse
   setAccessToken(data.accessToken)
   return data.accessToken
+}
+
+/**
+ * Ends the session on the server: the refresh cookie is cleared and every token descended from the
+ * same login is revoked. Like the refresh, it is authenticated by the cookie, so it sends the CSRF header.
+ *
+ * @throws ApiError if the server refuses the call
+ */
+export async function endSession(): Promise<void> {
+  const response = await fetch(buildUrl('/api/v1/auth/logout'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: csrfHeaders(),
+  })
+  if (!response.ok) {
+    throw new ApiError(response.status, (await response.json()) as ProblemDetail)
+  }
 }
 
 /**

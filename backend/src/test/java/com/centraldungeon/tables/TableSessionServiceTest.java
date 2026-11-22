@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
+import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.notifications.NotificationService;
 import com.centraldungeon.registrations.TableRegistration;
 import com.centraldungeon.registrations.TableRegistrationRepository;
@@ -324,16 +325,40 @@ class TableSessionServiceTest {
                 .isInstanceOf(ConflictException.class);
     }
 
-    /** Pertenencia and not role: somebody who does not run this table cannot touch its calendar (hard rule 17, ADR-06 §4). */
+    /**
+     * Pertenencia and not role: a player of the table sees its sessions and still cannot touch its
+     * calendar (hard rule 17, ADR-06 §4), so they are told no.
+     */
     @Test
     void refusesToCorrectASessionOfATableTheActorDoesNotRun() {
         GameTable table = table("t16", LocalDate.parse("2026-09-08"), 3);
         TableSession target = session(table, "s10", 1, "2026-09-08T20:00", TableSessionStatus.Scheduled);
         when(sessionRepository.findByIdForUpdate("s10")).thenReturn(Optional.of(target));
-        when(masterService.isMasterOf("t16", "stranger")).thenReturn(false);
+        when(gameTableRepository.findById("t16")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("t16", "player-1")).thenReturn(false);
+        // A player, and therefore not vetoed: the same query answers both questions.
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(eq("t16"), eq("player-1"), any()))
+                .thenAnswer(call -> call.<List<?>>getArgument(2).contains(TableRegistrationStatus.Player));
 
-        assertThatThrownBy(() -> service().update("s10", new UpdateSessionRequest(null, "hola"), "stranger"))
+        assertThatThrownBy(() -> service().update("s10", new UpdateSessionRequest(null, "hola"), "player-1"))
                 .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /**
+     * Somebody who neither runs, oversees nor plays at the table does not see its sessions: a refusal
+     * would confirm one, so they get exactly what a session nobody ever created gets.
+     */
+    @Test
+    void aStrangerCorrectingASessionIsToldItIsNotThere() {
+        GameTable table = table("t16b", LocalDate.parse("2026-09-08"), 3);
+        TableSession target = session(table, "s10b", 1, "2026-09-08T20:00", TableSessionStatus.Scheduled);
+        when(sessionRepository.findByIdForUpdate("s10b")).thenReturn(Optional.of(target));
+        when(gameTableRepository.findById("t16b")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("t16b", "stranger")).thenReturn(false);
+
+        assertThatThrownBy(() -> service().update("s10b", new UpdateSessionRequest(null, "hola"), "stranger"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Session not found: s10b");
     }
 
     /** ADR-08 §4: marking a session played is its own action, and it starts from Scheduled. */

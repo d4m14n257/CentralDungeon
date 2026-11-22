@@ -189,6 +189,37 @@ class TableScheduleIT {
     }
 
     /**
+     * Against the real visibility rules: the person being added runs a draft nobody else was shown, so
+     * the refusal says whose week collides and does not name the draft; once the draft is shown, it does.
+     */
+    @Test
+    void aCoMastersUnseenDraftIsNotNamedToTheActorUntilItIsVisible() {
+        TableScheduleEntry tuesday = new TableScheduleEntry(Weekday.Tuesday, LocalTime.of(20, 0), LocalTime.of(3, 0));
+        tableScheduleService.replace(table, List.of(tuesday), master.getId());
+        User other = userRepository.save(new User(randomDiscordId(), "Other Master"));
+        GameTable draft = gameTableRepository.save(new GameTable("Borrador secreto", other));
+        draft.setStatus(GameTableStatus.Draft);
+        draft = gameTableRepository.save(draft);
+        masterService.createPrimary(draft, other);
+        tableScheduleService.replace(draft, List.of(tuesday), other.getId());
+        List<WeeklyInterval> claimed = scheduleConflictService.intervalsOf(table);
+
+        assertThatThrownBy(() -> tableScheduleService.requireNoClash(List.of(other), table.getId(), claimed, master.getId()))
+                .isInstanceOfSatisfying(ConflictException.class, exception -> {
+                    assertThat(exception.getErrorCode()).isEqualTo(ConflictException.MASTER_SCHEDULE_CONFLICT);
+                    assertThat(exception.getErrorParams()).containsOnlyKeys(ConflictException.PARAM_MASTER_NAME);
+                    assertThat(exception.getMessage()).doesNotContain("Borrador secreto");
+                });
+
+        draft.setStatus(GameTableStatus.Opened);
+        gameTableRepository.save(draft);
+
+        assertThatThrownBy(() -> tableScheduleService.requireNoClash(List.of(other), table.getId(), claimed, master.getId()))
+                .isInstanceOfSatisfying(ConflictException.class, exception ->
+                        assertThat(exception.getErrorParams()).containsEntry(ConflictException.PARAM_OTHER_TABLE_NAME, "Borrador secreto"));
+    }
+
+    /**
      * A table ready to hold an agenda. It carries no length of its own since ADR-08 §1 - each slot says
      * how long it runs - so this only opens it.
      */

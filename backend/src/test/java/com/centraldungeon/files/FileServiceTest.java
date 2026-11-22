@@ -14,6 +14,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.centraldungeon.common.config.StorageProperties;
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
@@ -34,6 +35,8 @@ import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tables.MasterType;
 import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
+import com.centraldungeon.tasks.TableTask;
+import com.centraldungeon.tasks.TaskAudience;
 import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.users.User;
 import com.centraldungeon.users.PlatformRole;
@@ -623,15 +626,33 @@ class FileServiceTest {
         verify(storageService, never()).delete(anyString());
     }
 
+    /** Somebody who may open the file - a table shares it - and is not its owner is told no. */
     @Test
     void refusesToLetSomebodyElseRenameOrDeleteAFile() {
         StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
+        when(tableVisibilityService.canSee("table-1", "player-2")).thenReturn(true);
 
         assertThatThrownBy(() -> fileService().update("file-1", new UpdateFileRequest("mio.pdf", true), "player-2"))
                 .isInstanceOf(ForbiddenActionException.class);
         assertThatThrownBy(() -> fileService().delete("file-1", "player-2"))
                 .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** Somebody's private file that nothing lets the actor open is not there for them: no refusal confirms it. */
+    @Test
+    void aFileTheActorCannotOpenIsNotThereToRenameOrDelete() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().update("file-1", new UpdateFileRequest("mio.pdf", true), "player-2"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("File file-1 not found");
+        assertThatThrownBy(() -> fileService().delete("file-1", "player-2"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("File file-1 not found");
     }
 
     @Test
@@ -733,7 +754,21 @@ class FileServiceTest {
         StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
 
-        assertThatThrownBy(() -> fileService().unpublish("file-1")).isInstanceOf(ForbiddenActionException.class);
+        assertThatThrownBy(() -> fileService().unpublish("file-1"))
+                .isInstanceOf(ConflictException.class)
+                .satisfies(thrown -> assertThat(((ConflictException) thrown).getErrorCode()).isEqualTo("FILE_NOT_PUBLISHED"));
+    }
+
+    /** A file already in the state asked for is a conflict of state, not a refusal of the admin. */
+    @Test
+    void publishingAPublishedFileIsAConflict() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().publish("file-1"))
+                .isInstanceOf(ConflictException.class)
+                .satisfies(thrown -> assertThat(((ConflictException) thrown).getErrorCode())
+                        .isEqualTo("FILE_ALREADY_PUBLISHED"));
     }
 
     /**
@@ -844,7 +879,9 @@ class FileServiceTest {
 
         assertThatThrownBy(() -> fileService()
                         .changeLibraryCategory("file-2", new UpdateLibraryCategoryRequest(FileCategory.Announcement)))
-                .isInstanceOf(ForbiddenActionException.class);
+                .isInstanceOf(ConflictException.class)
+                .satisfies(thrown -> assertThat(((ConflictException) thrown).getErrorCode())
+                        .isEqualTo("FILE_ALREADY_PUBLISHED"));
     }
 
     /** ADR-14 §7: a file waiting in the library is the platform's - its uploader cannot rename or remove it. */
@@ -887,13 +924,135 @@ class FileServiceTest {
         assertThat(file.getLastUsedAt()).isNotNull();
     }
 
+    /** Somebody else's private file the actor cannot even open is not there: refusing it would confirm it is. */
     @Test
-    void refusesToAttachSomebodyElsesPrivateFile() {
+    void somebodyElsesFileTheActorCannotOpenIsNotThereToAttach() {
         StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
         when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
 
         assertThatThrownBy(() -> fileService().requireAttachable("file-1", "master-1"))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    /** One they can open - another table shares it - is readable, and still not theirs to attach. */
+    @Test
+    void refusesToAttachSomebodyElsesFileTheActorCanOpen() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-2", "file-1", TableFileType.Preparation, false)));
+        when(tableVisibilityService.canSee("table-2", "master-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> fileService().requireAttachable("file-1", "master-1"))
                 .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    // ---------------------------------------------------------------- the library and the blanks of requests
+
+    /** The library is the admins' as a team: one opens what another uploaded, published or not. */
+    @Test
+    void anAdminOpensALibraryFileAnotherAdminUploaded() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+        givenRoles("admin-2", PlatformRole.ADMIN);
+        givenRoles("owner-1", PlatformRole.OWNER);
+
+        assertThat(fileService().download("file-1", "admin-2")).isNotNull();
+        assertThat(fileService().download("file-1", "owner-1")).isNotNull();
+    }
+
+    /** Only the library: an admin still does not open somebody's private file that no table links. */
+    @Test
+    void anAdminDoesNotOpenAPrivateFileThroughTheLibraryWay() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        givenRoles("admin-2", PlatformRole.ADMIN);
+
+        assertThatThrownBy(() -> fileService().download("file-1", "admin-2")).isInstanceOf(NotFoundException.class);
+    }
+
+    /** A non-admin never opens a library file somebody else uploaded. */
+    @Test
+    void aPlayerDoesNotOpenAnUnpublishedLibraryFile() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        givenRoles("player-1", PlatformRole.PLAYER);
+
+        assertThatThrownBy(() -> fileService().download("file-1", "player-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * The blank of a request to the candidates opens for whoever may see the table, applied or not:
+     * somebody about to apply reads what they will be asked for. Whoever may not see it does not.
+     */
+    @Test
+    void theBlankOfARequestToCandidatesOpensForWhoeverSeesTheTable() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(taskFileRepository.findTasksByRequestedFileId("file-1"))
+                .thenReturn(List.of(new TableTask(tableWithId("table-1"), TaskAudience.Candidates, "Sheet")));
+        when(tableVisibilityService.canSee("table-1", "bystander")).thenReturn(true);
+        when(tableVisibilityService.canSee("table-1", "vetoed")).thenReturn(false);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "bystander")).isNotNull();
+        assertThatThrownBy(() -> fileService().download("file-1", "vetoed")).isInstanceOf(NotFoundException.class);
+        verify(registrationRepository, never()).existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any());
+    }
+
+    /** The blank of a request to the players is not opened by somebody who merely sees the table. */
+    @Test
+    void theBlankOfARequestToPlayersNeedsAPlayer() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(taskFileRepository.findTasksByRequestedFileId("file-1"))
+                .thenReturn(List.of(new TableTask(tableWithId("table-1"), TaskAudience.Players, "Sheet")));
+        when(tableVisibilityService.canSee("table-1", "bystander")).thenReturn(true);
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-1", "player-1", List.of(TableRegistrationStatus.Player)))
+                .thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "player-1")).isNotNull();
+        assertThatThrownBy(() -> fileService().download("file-1", "bystander")).isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * The blank of a request addressed to one player is that player's and nobody else's: another player
+     * of the same table, who plays there as much as they do, gets the 404 of a file that is not there.
+     */
+    @Test
+    void theBlankOfARequestToOnePlayerOpensForThatPlayerOnly() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(taskFileRepository.findTasksByRequestedFileId("file-1")).thenReturn(List.of(singleTaskFor("player-1")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-1", "player-1", List.of(TableRegistrationStatus.Player)))
+                .thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "player-1")).isNotNull();
+        assertThatThrownBy(() -> fileService().download("file-1", "player-2")).isInstanceOf(NotFoundException.class);
+    }
+
+    /** The addressed player stops reaching it once a veto makes them something other than {@code Player}. */
+    @Test
+    void theBlankOfARequestToOnePlayerClosesOnceThatPlayerIsVetoed() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(taskFileRepository.findTasksByRequestedFileId("file-1")).thenReturn(List.of(singleTaskFor("player-1")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-1", "player-1", List.of(TableRegistrationStatus.Player)))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> fileService().download("file-1", "player-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    private static TableTask singleTaskFor(String targetUserId) {
+        TableTask task = new TableTask(tableWithId("table-1"), TaskAudience.Single, "Sheet");
+        task.setTargetUser(persistedUser(targetUserId));
+        return task;
     }
 
     // ---------------------------------------------------------------- fixtures

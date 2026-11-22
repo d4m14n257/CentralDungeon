@@ -17,9 +17,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 /**
- * Issues and verifies CentralDungeon's own access/refresh JWTs (arquitectura §2.6, ADR-05 §2).
- * The Discord access token is never persisted or reused here - it is discarded once
- * DiscordOAuth2UserService finishes the login callback.
+ * Signs and verifies CentralDungeon's own access and refresh JWTs. Discord's access token never reaches
+ * this class: it is used once during the login callback and then dropped.
  */
 @Service
 public class JwtService {
@@ -58,10 +57,14 @@ public class JwtService {
     }
 
     /**
-     * Issues the long-lived rotating token that travels in an httpOnly cookie (ADR-05 §2).
+     * Signs a long-lived refresh token, the one that travels in an httpOnly cookie.
      *
      * <p>Typed as a refresh token so it can never be replayed as an access token, which is what the
      * type claim is for.
+     *
+     * <p><b>Signing is not issuing.</b> The refresh endpoint only accepts tokens the server recorded, so
+     * a session is opened through {@code AuthService.openSession}, which calls this and records the
+     * result; a token from here alone is refused at renewal.
      *
      * @param userId who the token identifies
      * @return the signed token
@@ -108,8 +111,39 @@ public class JwtService {
         return jwt.serialize();
     }
 
-    /** @throws InvalidJwtException if the token is malformed, unsigned, expired, or of the wrong type. */
+    /**
+     * Verifies a token and returns who it identifies.
+     *
+     * @param token        the serialized JWT
+     * @param expectedType which of the two tokens it must be
+     * @return the subject, the local user id
+     * @throws InvalidJwtException if the token is malformed, unsigned, expired, or of the wrong type
+     */
     public String verifyAndGetSubject(String token, TokenType expectedType) {
+        return verifiedClaims(token, expectedType).getSubject();
+    }
+
+    /**
+     * Verifies a refresh token and returns what the server needs to find it among the ones it issued.
+     *
+     * <p>A valid signature is necessary but not enough: the caller still has to check that the server
+     * recorded this token and has not revoked it.
+     *
+     * @param token the serialized refresh JWT
+     * @return its subject, id and expiry
+     * @throws InvalidJwtException if the token is malformed, unsigned, expired, not a refresh token, or has no id
+     */
+    public RefreshTokenClaims verifyRefreshToken(String token) {
+        JWTClaimsSet claims = verifiedClaims(token, TokenType.REFRESH);
+        String jti = claims.getJWTID();
+        if (jti == null) {
+            throw new InvalidJwtException("Refresh token has no id");
+        }
+        return new RefreshTokenClaims(claims.getSubject(), jti, claims.getExpirationTime().toInstant());
+    }
+
+    /** Signature, expiry, type and subject; the claims once all four hold. */
+    private JWTClaimsSet verifiedClaims(String token, TokenType expectedType) {
         SignedJWT jwt;
         try {
             jwt = SignedJWT.parse(token);
@@ -142,10 +176,9 @@ public class JwtService {
             throw new InvalidJwtException("Unexpected token type: " + type);
         }
 
-        String subject = claims.getSubject();
-        if (subject == null) {
+        if (claims.getSubject() == null) {
             throw new InvalidJwtException("Token has no subject");
         }
-        return subject;
+        return claims;
     }
 }

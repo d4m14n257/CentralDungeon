@@ -45,6 +45,9 @@ class TableScheduleServiceTest {
     @Mock
     private MasterService masterService;
 
+    @Mock
+    private TableVisibilityService tableVisibilityService;
+
     @InjectMocks
     private TableScheduleService tableScheduleService;
 
@@ -127,6 +130,7 @@ class TableScheduleServiceTest {
         when(scheduleConflictService.findClash(eq("master-1"), eq("table-3c"), any())).thenReturn(null);
         when(scheduleConflictService.findClash(eq("co-master-1"), eq("table-3c"), any()))
                 .thenReturn(new CommittedTable("other", "La cripta"));
+        when(tableVisibilityService.canSee("other", "master-1")).thenReturn(true);
 
         assertThatThrownBy(() -> tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1"))
                 .isInstanceOfSatisfying(ConflictException.class, exception -> {
@@ -137,6 +141,29 @@ class TableScheduleServiceTest {
                 });
 
         verify(scheduleRepository, never()).save(any());
+    }
+
+    /**
+     * The other table is a draft the actor was never shown: naming it would let anybody who adds a
+     * co-master read that person's week, so the refusal says whose week collides and nothing else - not
+     * in the parameters and not in the detail the client receives.
+     */
+    @Test
+    void doesNotNameACoMastersTableTheActorCannotSee() {
+        GameTable table = table("table-3d");
+        when(masterService.findByGameTable("table-3d")).thenReturn(List.of(
+                master(table, "master-1", MasterType.Primary), master(table, "co-master-1", MasterType.Secondary)));
+        when(scheduleConflictService.findClash(eq("master-1"), eq("table-3d"), any())).thenReturn(null);
+        when(scheduleConflictService.findClash(eq("co-master-1"), eq("table-3d"), any()))
+                .thenReturn(new CommittedTable("secret-draft", "La cripta secreta"));
+        when(tableVisibilityService.canSee("secret-draft", "master-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> tableScheduleService.replace(table, List.of(entry(Weekday.Tuesday, "20:00")), "master-1"))
+                .isInstanceOfSatisfying(ConflictException.class, exception -> {
+                    assertThat(exception.getErrorCode()).isEqualTo(ConflictException.MASTER_SCHEDULE_CONFLICT);
+                    assertThat(exception.getErrorParams()).containsOnlyKeys(ConflictException.PARAM_MASTER_NAME);
+                    assertThat(exception.getMessage()).doesNotContain("La cripta secreta").doesNotContain("secret-draft");
+                });
     }
 
     /** Rows are marked, never dropped, so putting a slot back is an update and not a collision. */

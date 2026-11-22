@@ -5,7 +5,7 @@ import static com.centraldungeon.matrix.MatrixCell.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.centraldungeon.approvals.ApprovalRequestType;
-import com.centraldungeon.common.security.JwtService;
+import com.centraldungeon.auth.AuthService;
 import com.centraldungeon.common.security.RefreshCookieFactory;
 import com.centraldungeon.notifications.NotificationRepository;
 import com.centraldungeon.notifications.ReadStatus;
@@ -185,8 +185,11 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                     return MatrixRequest.path().cookie("XSRF-TOKEN", csrf).header("X-XSRF-TOKEN", csrf);
                 })
                         .cell(denied(401), PLAYER, MASTER, ADMIN, OWNER),
-                MatrixRow.of("POST /api/v1/auth/logout", w -> MatrixRequest.path().cookie(RefreshCookieFactory.COOKIE_NAME,
-                        w.bean(JwtService.class).issueRefreshToken(w.me().getId())))
+                MatrixRow.of("POST /api/v1/auth/logout", w -> {
+                    String csrf = UUID.randomUUID().toString();
+                    return MatrixRequest.path().cookie("XSRF-TOKEN", csrf).header("X-XSRF-TOKEN", csrf)
+                            .cookie(RefreshCookieFactory.COOKIE_NAME, w.bean(AuthService.class).openSession(w.me().getId()));
+                })
                         .cell(allowed(204), ANONYMOUS, BLOCKED)
                         .cell(allowed(204), PLAYER, MASTER, ADMIN, OWNER));
     }
@@ -235,10 +238,11 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                         .cell(allowed(200, (w, body) -> assertThat(body).contains(w.recall("own"))
                                 .doesNotContain(w.recall("foreign"))), PLAYER, MASTER, ADMIN, OWNER, RESOURCE_OWNER),
                 MatrixRow.of("PATCH /api/v1/notifications/{id}/read",
-                        w -> MatrixRequest.path(w.notification(w.user(RESOURCE_OWNER)).getId()))
+                        w -> MatrixRequest.path(w.remember("notification", w.notification(w.user(RESOURCE_OWNER)).getId())))
                         .cell(denied(401), ANONYMOUS)
                         .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
-                        .cell(denied(403), PLAYER, MASTER, ADMIN, OWNER)
+                        // Only its recipient sees a notification: to anybody else it is not there.
+                        .cell(absent(w -> "Notification not found: " + w.recall("notification")), PLAYER, MASTER, ADMIN, OWNER)
                         .cell(allowed(204), RESOURCE_OWNER),
                 MatrixRow.of("PATCH /api/v1/notifications/read-all", w -> {
                     w.notification(w.me());
@@ -437,10 +441,11 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                         .cell(allowed(200, (w, body) -> assertThat((Boolean) JsonPath.read(body, "$.hasManagedTables")).isFalse()),
                                 REMOVED_SECONDARY),
                 MatrixRow.of("GET /api/v1/users/search", w -> {
-                    w.remember("findable", w.person("findable").getId());
-                    w.remember("hidden", w.person("hidden").getId());
-                    w.block(w.person("hidden"));
-                    return MatrixRequest.path();
+                    // Both match the query, so the blocked one is left out for being blocked and not for its name.
+                    w.remember("findable", w.person("findable person").getId());
+                    w.remember("hidden", w.person("hidden person").getId());
+                    w.block(w.person("hidden person"));
+                    return MatrixRequest.path().query("q", "person");
                 })
                         .cell(denied(401), ANONYMOUS)
                         .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)

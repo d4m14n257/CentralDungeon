@@ -105,6 +105,16 @@ erDiagram
         datetime created_at
     }
 
+    refresh_tokens {
+        varchar id PK
+        char jti_hash UK "SHA-256 del jti, nunca el token"
+        varchar family_id "todos los de un login"
+        varchar user_id FK
+        datetime expires_at
+        datetime revoked_at "rotado, reusado o logout"
+        datetime created_at
+    }
+
     audit_logs {
         varchar id PK
         varchar entity_type
@@ -124,6 +134,7 @@ erDiagram
     users ||--o{ user_role_changes : "otorga o quita"
     users ||--o{ user_status_changes : "historial de cuenta"
     users ||--o{ user_status_changes : "bloquea o desbloquea"
+    users ||--o{ refresh_tokens    : "sesiones"
     users ||--o{ approval_requests : "solicita"
     users ||--o{ approval_requests : "resuelve"
     users ||--o{ notifications     : "recibe"

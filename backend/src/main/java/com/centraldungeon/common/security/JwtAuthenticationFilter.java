@@ -1,5 +1,6 @@
 package com.centraldungeon.common.security;
 
+import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.users.UserAuthSnapshot;
 import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.UserStatus;
@@ -90,7 +91,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             CurrentUser principal = new CurrentUser(snapshot.userId(), snapshot.roles());
             var authentication = new UsernamePasswordAuthenticationToken(principal, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (InvalidJwtException e) {
+        } catch (InvalidJwtException | NotFoundException e) {
+            // A validly signed token whose subject no longer exists is no identity either: 401, not a 404 out of the filter.
             SecurityContextHolder.clearContext();
         }
     }

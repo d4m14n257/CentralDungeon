@@ -414,6 +414,7 @@ class GameTableServiceTest {
     void onlyThePrimaryMasterCanStartATable() {
         GameTable table = persistedTable("table-2", GameTableStatus.Opened);
         when(gameTableRepository.findByIdForUpdate("table-2")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-2")).thenReturn(Optional.of(table));
         when(masterService.isPrimaryOf("table-2", "secondary-1")).thenReturn(false);
 
         assertThatThrownBy(() -> gameTableService.start("table-2", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
@@ -423,6 +424,7 @@ class GameTableServiceTest {
     void onlyThePrimaryMasterCanFinishATable() {
         GameTable table = persistedTable("table-2b", GameTableStatus.InProgress);
         when(gameTableRepository.findByIdForUpdate("table-2b")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-2b")).thenReturn(Optional.of(table));
         when(masterService.isPrimaryOf("table-2b", "secondary-1")).thenReturn(false);
 
         assertThatThrownBy(() -> gameTableService.finish("table-2b", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
@@ -582,6 +584,7 @@ class GameTableServiceTest {
     void someoneWhoIsNeitherPrimaryNorAdminCannotCancel() {
         GameTable table = persistedTable("table-6c", GameTableStatus.Opened);
         when(gameTableRepository.findByIdForUpdate("table-6c")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-6c")).thenReturn(Optional.of(table));
         when(masterService.isPrimaryOf("table-6c", "secondary-1")).thenReturn(false);
         when(userService.loadAuthSnapshot("secondary-1")).thenReturn(new UserAuthSnapshot("secondary-1", UserStatus.Allowed, Set.of("Master")));
 
@@ -658,7 +661,9 @@ class GameTableServiceTest {
     void someoneWhoIsNeitherPrimaryNorAdminCannotDelete() {
         GameTable table = persistedTable("table-7d", GameTableStatus.Preparation);
         when(gameTableRepository.findByIdForUpdate("table-7d")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-7d")).thenReturn(Optional.of(table));
         when(masterService.isPrimaryOf("table-7d", "secondary-1")).thenReturn(false);
+        when(masterService.canOversee("table-7d", "secondary-1")).thenReturn(true);
         when(userService.loadAuthSnapshot("secondary-1")).thenReturn(new UserAuthSnapshot("secondary-1", UserStatus.Allowed, Set.of("Master")));
 
         assertThatThrownBy(() -> gameTableService.delete("table-7d", "secondary-1")).isInstanceOf(ForbiddenActionException.class);
@@ -833,6 +838,7 @@ class GameTableServiceTest {
     void anOutsiderCannotAskForThePause() {
         GameTable table = persistedTable("table-pause-2", GameTableStatus.InProgress);
         when(gameTableRepository.findByIdForUpdate("table-pause-2")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-pause-2")).thenReturn(Optional.of(table));
         when(masterService.isMasterOf("table-pause-2", "stranger")).thenReturn(false);
 
         assertThatThrownBy(() -> gameTableService.markPauseRequested("table-pause-2", "stranger"))
@@ -1342,13 +1348,45 @@ class GameTableServiceTest {
     }
 
     @Test
-    void someoneWhoDoesNotRunTheTableCannotEditIt() {
-        GameTable table = persistedTable("table-edit-2", GameTableStatus.Draft);
+    void someoneWhoDoesNotRunAnOpenTableCannotEditIt() {
+        GameTable table = persistedTable("table-edit-2", GameTableStatus.Opened);
         when(gameTableRepository.findByIdForUpdate("table-edit-2")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-edit-2")).thenReturn(Optional.of(table));
         when(masterService.isMasterOf("table-edit-2", "outsider-1")).thenReturn(false);
 
         assertThatThrownBy(() -> gameTableService.update("table-edit-2", updateRequest(), "outsider-1"))
                 .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /**
+     * A refusal is only said about a table the actor may see. An outsider editing a draft, which nobody
+     * outside it was shown, gets exactly what an id nobody ever used gets - a 403 would tell them it is there.
+     */
+    @Test
+    void anOutsiderEditingADraftIsToldItIsNotThere() {
+        GameTable table = persistedTable("table-edit-3", GameTableStatus.Draft);
+        when(gameTableRepository.findByIdForUpdate("table-edit-3")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-edit-3")).thenReturn(Optional.of(table));
+        when(masterService.isMasterOf("table-edit-3", "outsider-1")).thenReturn(false);
+        when(masterService.canOversee("table-edit-3", "outsider-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> gameTableService.update("table-edit-3", updateRequest(), "outsider-1"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Table not found: table-edit-3");
+    }
+
+    /** Same for the Primary's own transitions: a vetoed reader is refused as if the table were not there. */
+    @Test
+    void aVetoedPlayerStartingTheTableIsToldItIsNotThere() {
+        GameTable table = persistedTable("table-veto-start", GameTableStatus.Opened);
+        when(gameTableRepository.findByIdForUpdate("table-veto-start")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-veto-start")).thenReturn(Optional.of(table));
+        when(tableRegistrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                "table-veto-start", "vetoed-1", List.of(TableRegistrationStatus.Blocked))).thenReturn(true);
+
+        assertThatThrownBy(() -> gameTableService.start("table-veto-start", "vetoed-1"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Table not found: table-veto-start");
     }
 
     /** Past Preparation people applied on the strength of what the table says (ADR-07 §1). */
@@ -1694,6 +1732,7 @@ class GameTableServiceTest {
     void anOutsiderCannotLookForPlayers() {
         GameTable table = persistedTable("table-seek-3", GameTableStatus.InProgress);
         when(gameTableRepository.findByIdForUpdate("table-seek-3")).thenReturn(Optional.of(table));
+        when(gameTableRepository.findById("table-seek-3")).thenReturn(Optional.of(table));
         when(masterService.isMasterOf("table-seek-3", "stranger")).thenReturn(false);
 
         assertThatThrownBy(() -> gameTableService.setSeekingPlayers("table-seek-3", new SetSeekingPlayersRequest(true), "stranger"))

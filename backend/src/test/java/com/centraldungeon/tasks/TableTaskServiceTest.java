@@ -115,10 +115,18 @@ class TableTaskServiceTest {
 
         assertThatThrownBy(() -> service.publish("table-1", createRequest(TaskAudience.Players, null), "outsider-1"))
                 .isInstanceOf(ForbiddenActionException.class);
-        assertThatThrownBy(() -> service.update("task-1", updateRequest(TaskAudience.Players, null), "outsider-1"))
-                .isInstanceOf(ForbiddenActionException.class);
-        assertThatThrownBy(() -> service.close("task-1", "outsider-1")).isInstanceOf(ForbiddenActionException.class);
         assertThatThrownBy(() -> service.listForTable("table-1", "outsider-1")).isInstanceOf(ForbiddenActionException.class);
+        // A request to the players is not the outsider's to see: refusing it would confirm it exists.
+        assertThatThrownBy(() -> service.update("task-1", updateRequest(TaskAudience.Players, null), "outsider-1"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Task not found: task-1");
+        assertThatThrownBy(() -> service.close("task-1", "outsider-1"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Task not found: task-1");
+        // A player it asks sees it, and is told no.
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                "table-1", "player-1", List.of(TableRegistrationStatus.Player))).thenReturn(true);
+        assertThatThrownBy(() -> service.close("task-1", "player-1")).isInstanceOf(ForbiddenActionException.class);
 
         verify(taskRepository, never()).save(any());
         verify(notificationService, never()).notifyTaskPublished(anyString(), any(), anyString());
@@ -243,9 +251,12 @@ class TableTaskServiceTest {
         verify(taskRepository, never()).save(any());
     }
 
-    /** A task can only be tied to an evening of its own table. */
+    /**
+     * A task can only be tied to an evening of its own table - and a session of another table answers
+     * exactly as one that does not exist, so a master cannot probe which ids are real.
+     */
     @Test
-    void refusesASessionThatBelongsToAnotherTable() {
+    void answersASessionOfAnotherTableAsOneThatDoesNotExist() {
         givenTable("table-1");
         GameTable other = givenTable("table-2");
         when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
@@ -256,9 +267,16 @@ class TableTaskServiceTest {
         CreateTaskRequest tied = new CreateTaskRequest(
                 "Ficha de personaje", null, TaskAudience.Players, null, "session-9", true, true, false, List.of(), null);
 
+        when(sessionRepository.findById("session-gone")).thenReturn(Optional.empty());
+        CreateTaskRequest absent = new CreateTaskRequest(
+                "Ficha de personaje", null, TaskAudience.Players, null, "session-gone", true, true, false, List.of(), null);
+
         assertThatThrownBy(() -> service().publish("table-1", tied, "master-1"))
-                .isInstanceOf(InvalidRequestException.class)
-                .hasMessageContaining("another table");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Session not found: session-9");
+        assertThatThrownBy(() -> service().publish("table-1", absent, "master-1"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Session not found: session-gone");
     }
 
     /** The rich text is cleaned on the way in (ADR-03 §8): this is the same XSS surface as the table's own body. */

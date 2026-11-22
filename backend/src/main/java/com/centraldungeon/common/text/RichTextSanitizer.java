@@ -7,13 +7,12 @@ import org.springframework.stereotype.Component;
 
 /**
  * The one gate every piece of user-written rich text passes through, on the way in and on the way
- * out (ADR-03 §8).
+ * out.
  *
  * <p>Rich text is the system's most direct XSS surface: a table's description, its house rules and
  * its requirements are written by one person and rendered in everybody else's browser. Sanitizing
  * only on write would leave whatever was stored before this class existed - or by any path that
- * ever bypasses it - to reach the page intact, so ADR-03 §8 asks for both ends and both ends is what this
- * gives.
+ * ever bypasses it - to reach the page intact, so both ends are covered.
  *
  * <p>The policy is an <b>allowlist</b>: anything not named below is dropped, which is what makes a
  * tag nobody thought of safe by default instead of dangerous by default. It covers exactly what the
@@ -30,7 +29,9 @@ public class RichTextSanitizer {
      */
     private static final PolicyFactory POLICY = new HtmlPolicyBuilder()
             .allowElements("p", "br", "strong", "em", "u", "s", "code", "pre", "blockquote", "h1", "h2", "h3", "ul", "ol", "li", "a")
-            // http(s) links and nothing else - not even mailto (ADR-05 §6); every link carries rel=nofollow.
+            // Only http(s) links carry a scheme - mailto, tel, javascript: and the rest are dropped.
+            // A scheme-less URL such as //host/x or /path also survives: it resolves to the page's own
+            // scheme and cannot run script. Every link carries rel=nofollow.
             .allowUrlProtocols("http", "https")
             .allowAttributes("href").onElements("a")
             .requireRelNofollowOnLinks()

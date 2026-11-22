@@ -34,20 +34,24 @@ describe('the toast of a refused mutation', () => {
     expect(toastError).not.toHaveBeenCalledWith(i18n.t('errors.mutationFailed'))
   })
 
-  it.each(['FILE_CATEGORY_NOT_YOURS', 'FILE_CATEGORY_NOT_PUBLISHABLE', 'FILE_CANNOT_SELF_PUBLISH', 'REQUEST_TYPE_NOT_ACCEPTED_HERE'])(
-    'has a sentence of its own for %s, in both languages',
-    async (code) => {
-      fail(code)
-      expect(toastError).toHaveBeenLastCalledWith(i18n.t(`errors.codes.${code}`))
-      expect(toastError).not.toHaveBeenLastCalledWith(i18n.t('errors.mutationFailed'))
+  it.each([
+    'FILE_CATEGORY_NOT_YOURS',
+    'FILE_CATEGORY_NOT_PUBLISHABLE',
+    'FILE_CANNOT_SELF_PUBLISH',
+    'REQUEST_TYPE_NOT_ACCEPTED_HERE',
+    'FILE_ALREADY_PUBLISHED',
+    'FILE_NOT_PUBLISHED',
+  ])('has a sentence of its own for %s, in both languages', async (code) => {
+    fail(code)
+    expect(toastError).toHaveBeenLastCalledWith(i18n.t(`errors.codes.${code}`))
+    expect(toastError).not.toHaveBeenLastCalledWith(i18n.t('errors.mutationFailed'))
 
-      await i18n.changeLanguage('en')
-      expect(i18n.exists(`errors.codes.${code}`)).toBe(true)
-      fail(code)
-      expect(toastError).toHaveBeenLastCalledWith(i18n.t(`errors.codes.${code}`))
-      expect(toastError).not.toHaveBeenLastCalledWith(i18n.t('errors.mutationFailed'))
-    },
-  )
+    await i18n.changeLanguage('en')
+    expect(i18n.exists(`errors.codes.${code}`)).toBe(true)
+    fail(code)
+    expect(toastError).toHaveBeenLastCalledWith(i18n.t(`errors.codes.${code}`))
+    expect(toastError).not.toHaveBeenLastCalledWith(i18n.t('errors.mutationFailed'))
+  })
 
   /** The limit is the server's, not a number written into the sentence. */
   it('states the file cap the server sent instead of a fixed one', () => {
@@ -56,6 +60,29 @@ describe('the toast of a refused mutation', () => {
     const sentence = toastError.mock.calls[0]?.[0] as string
     expect(sentence).toContain('7 MB')
     expect(sentence).not.toContain('2 MB')
+  })
+
+  /** The wait comes in seconds and is said in whole minutes, rounded up so the retry it names works. */
+  it('says when to try again after too many attempts, in both languages', async () => {
+    fail('RATE_LIMITED', { retryAfterSeconds: '1500' })
+    expect(toastError).toHaveBeenLastCalledWith(expect.stringContaining('25 min'))
+
+    fail('RATE_LIMITED', { retryAfterSeconds: '61' })
+    expect(toastError).toHaveBeenLastCalledWith(expect.stringContaining('2 min'))
+
+    await i18n.changeLanguage('en')
+    fail('RATE_LIMITED', { retryAfterSeconds: '5' })
+    expect(toastError).toHaveBeenLastCalledWith(expect.stringContaining('1 min'))
+    expect(toastError).not.toHaveBeenLastCalledWith(i18n.t('errors.mutationFailed'))
+  })
+
+  /** The backend leaves the other table's name out when the actor may not see it. */
+  it('says "another table" when a schedule clash comes without the other table name', () => {
+    fail('MASTER_SCHEDULE_CONFLICT', { masterName: 'Ana' })
+    expect(toastError).toHaveBeenLastCalledWith(i18n.t('errors.codes.MASTER_SCHEDULE_CONFLICT_UNNAMED', { masterName: 'Ana' }))
+
+    fail('MASTER_SCHEDULE_CONFLICT', { masterName: 'Ana', otherTableName: 'La cripta' })
+    expect(toastError).toHaveBeenLastCalledWith(expect.stringContaining('La cripta'))
   })
 
   it('keeps the generic codes on the single toast', () => {

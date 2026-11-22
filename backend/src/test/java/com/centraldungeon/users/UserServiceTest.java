@@ -15,6 +15,18 @@ import com.centraldungeon.users.dto.UpdateUserRequest;
 import com.centraldungeon.users.dto.UserDetailResponse;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.users.dto.UserSummaryResponse;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -159,6 +171,55 @@ class UserServiceTest {
         UserDetailResponse response = userService.getDetailResponse("user-5");
 
         assertThat(response.hasManagedTables()).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "  ", "a", " a ", "/discord_name a", "ab,c", "/discord_name"})
+    void aSearchShorterThanTheMinimumFindsNobodyAndNeverReachesTheDatabase(String query) {
+        PageResponse<UserSummaryResponse> page = userService.search(query, PageRequest.of(0, 10));
+
+        assertThat(page.content()).isEmpty();
+        verify(userRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    void aNullSearchFindsNobody() {
+        assertThat(userService.search(null, PageRequest.of(0, 10)).content()).isEmpty();
+        verify(userRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    void aSearchOfTheMinimumLengthIsServedAndCappedToTheFirstPageOfTwentyAtMost() {
+        when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<User>(List.of()));
+
+        userService.search(" ab ", PageRequest.of(7, 100, Sort.by(Sort.Direction.DESC, "discordUsername")));
+
+        ArgumentCaptor<Pageable> served = ArgumentCaptor.forClass(Pageable.class);
+        verify(userRepository).findAll(any(Specification.class), served.capture());
+        assertThat(served.getValue().getPageNumber()).isZero();
+        assertThat(served.getValue().getPageSize()).isEqualTo(UserService.MAX_SEARCH_RESULTS).isEqualTo(20);
+    }
+
+    @Test
+    void theOrderOfASearchIsTheServersAndNeverTheClients() {
+        when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
+
+        userService.search("ab", PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        ArgumentCaptor<Pageable> served = ArgumentCaptor.forClass(Pageable.class);
+        verify(userRepository).findAll(any(Specification.class), served.capture());
+        assertThat(served.getValue().getSort()).isEqualTo(Sort.by("discordUsername", "id"));
+    }
+
+    @Test
+    void aSmallerPageThanTheCapIsKept() {
+        when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
+
+        userService.search("ab", PageRequest.of(0, 10));
+
+        ArgumentCaptor<Pageable> served = ArgumentCaptor.forClass(Pageable.class);
+        verify(userRepository).findAll(any(Specification.class), served.capture());
+        assertThat(served.getValue().getPageSize()).isEqualTo(10);
     }
 
     private User persistedUser(String id, String discordId, String discordUsername) {

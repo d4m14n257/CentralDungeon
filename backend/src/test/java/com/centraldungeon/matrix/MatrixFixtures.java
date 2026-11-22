@@ -3,6 +3,7 @@ package com.centraldungeon.matrix;
 import com.centraldungeon.approvals.ApprovalRequest;
 import com.centraldungeon.approvals.ApprovalRequestRepository;
 import com.centraldungeon.approvals.ApprovalRequestType;
+import com.centraldungeon.auth.AuthService;
 import com.centraldungeon.catalogs.CatalogStatus;
 import com.centraldungeon.catalogs.CatalogType;
 import com.centraldungeon.catalogs.CatalogValue;
@@ -19,7 +20,6 @@ import com.centraldungeon.catalogs.TableTagRepository;
 import com.centraldungeon.catalogs.Tag;
 import com.centraldungeon.catalogs.TagRepository;
 import com.centraldungeon.common.model.IdGenerator;
-import com.centraldungeon.common.security.JwtService;
 import com.centraldungeon.common.security.RefreshCookieFactory;
 import com.centraldungeon.common.storage.StorageService;
 import com.centraldungeon.files.FileCategory;
@@ -51,6 +51,7 @@ import com.centraldungeon.settings.SystemSettingChangeRepository;
 import com.centraldungeon.settings.SystemSettingRepository;
 import com.centraldungeon.tables.GameTable;
 import com.centraldungeon.tables.GameTableRepository;
+import com.centraldungeon.tables.GameTableService;
 import com.centraldungeon.tables.GameTableStatus;
 import com.centraldungeon.tables.Master;
 import com.centraldungeon.tables.MasterRepository;
@@ -120,7 +121,7 @@ import org.springframework.context.ApplicationContext;
  *
  * <p>Relations are made on demand. {@link #table()} creates the row's main table with its live
  * {@code Primary}, and gives the <em>acting</em> relational actor its relation to it: a live
- * {@code Secondary} row, a removed one, a {@code Candidate} or a {@code Player} registration. The other
+ * {@code Secondary} row, a removed one, a {@code Candidate}, a {@code Player} or a vetoed registration. The other
  * relational actors exist only when a row asks for them, which is what keeps, for example, a draft
  * without applications deletable by its {@code Primary}.
  *
@@ -326,9 +327,24 @@ final class MatrixFixtures {
             case REMOVED_SECONDARY -> removedMaster(table, user(MatrixActor.REMOVED_SECONDARY));
             case CANDIDATE -> candidateRegistration();
             case TABLE_PLAYER -> playerRegistration();
+            case VETOED -> registration(table, user(MatrixActor.VETOED), TableRegistrationStatus.Blocked);
             default -> { }
         }
         return table;
+    }
+
+    /**
+     * Deletes a table the way the application does, cascade included: its master rows, registrations,
+     * attachments and the blanks of its requests fall with it. Only a table that was never public and
+     * has no candidate or player can be deleted, so a row asks for one in {@code Draft} and leaves the
+     * {@code CANDIDATE} and {@code TABLE_PLAYER} columns out.
+     *
+     * @param table a table that was never public, with its author still able to delete it
+     * @return the table, now marked gone
+     */
+    GameTable deleted(GameTable table) {
+        bean(GameTableService.class).delete(table.getId(), table.getCreatedBy().getId());
+        return bean(GameTableRepository.class).findById(table.getId()).orElseThrow();
     }
 
     /**
@@ -755,7 +771,7 @@ final class MatrixFixtures {
         String csrf = UUID.randomUUID().toString();
         MatrixRequest request = MatrixRequest.path().cookie("XSRF-TOKEN", csrf).header("X-XSRF-TOKEN", csrf);
         if (actor != MatrixActor.ANONYMOUS) {
-            request.cookie(RefreshCookieFactory.COOKIE_NAME, bean(JwtService.class).issueRefreshToken(me().getId()));
+            request.cookie(RefreshCookieFactory.COOKIE_NAME, bean(AuthService.class).openSession(me().getId()));
         }
         return request;
     }

@@ -78,10 +78,12 @@
   "errors": {
     "offline": "No connection to the server. Try again in a moment.",
     "mutationFailed": "We could not complete the action. Try again.",
+    "logoutFailed": "We couldn't end your session on the server. Close the browser or try again.",
     "codes": {
       "SCHEDULE_CONFLICT": "It clashes with “{{otherTableName}}”, where you are already committed.",
       "CANDIDATE_SCHEDULE_CONFLICT": "They cannot be accepted: they already play at “{{otherTableName}}”, which clashes with this table’s agenda.",
       "MASTER_SCHEDULE_CONFLICT": "It clashes with “{{otherTableName}}”, where {{masterName}} is already committed.",
+      "MASTER_SCHEDULE_CONFLICT_UNNAMED": "It clashes with another table where {{masterName}} is already committed.",
       "FILE_TYPE_NOT_ALLOWED": "That file type is not accepted. The accepted types are listed next to the place where files are dropped.",
       "FILE_TOO_LARGE": "The file is over the limit. The maximum is {{maxBytes, megabytes}} MB per file.",
       "FILE_EMPTY": "The file is empty. Pick another one.",
@@ -96,11 +98,14 @@
       "FILE_CATEGORY_NOT_YOURS": "That file cannot be filed under that category: it is not one of yours. Pick another.",
       "FILE_CATEGORY_NOT_PUBLISHABLE": "That category holds what each person answered and cannot be published to the whole community.",
       "FILE_CANNOT_SELF_PUBLISH": "Files of the platform's library are uploaded by an admin from the library, not from here.",
+      "FILE_ALREADY_PUBLISHED": "This file is already published. Refresh the list; to change what it is, hide it first.",
+      "FILE_NOT_PUBLISHED": "This file is not published, so there is nothing to hide. Refresh the list to see its current state.",
       "REQUEST_TYPE_NOT_ACCEPTED_HERE": "That request is opened from the resource it is about, not from this screen.",
       "ONBOARDING_PENDING": "Finish the first step before editing your profile.",
       "ONBOARDING_ALREADY_COMPLETED": "You already completed the first step. Edit your name and country from your profile.",
       "ACCOUNT_BLOCKED": "Your account is blocked. Contact an admin if you think this is a mistake.",
-      "TABLE_FULL": "The table is already full."
+      "TABLE_FULL": "The table is already full.",
+      "RATE_LIMITED": "Too many attempts in a row. Try again in {{retryAfterSeconds, minutes}} min."
     }
   },
   "pagination": {

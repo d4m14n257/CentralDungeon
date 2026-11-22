@@ -62,16 +62,17 @@ public class UserController {
      *
      * <p>The query syntax lives in SearchQueryParser; the fields it accepts, in UserSearchField.
      *
-     * @param query    the search box, or null to list everyone allowed. An empty query is not an
-     *                 error: it opens the picker with a first page instead of a blank slate
-     * @param pageable page, size and sort; ten at a time, which is a picker's worth
-     * @return 200 with one page of people who can be picked
+     * @param query    the search box. Shorter than two characters, or empty, it finds nobody: the
+     *                 picker is not a way to list the directory
+     * @param pageable size only, as the order is the server's; ten at a time, which is a picker's worth, never more than twenty
+     *                 and never beyond the first page
+     * @return 200 with up to twenty people who can be picked
      */
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
     public PageResponse<UserSummaryResponse> search(
             @RequestParam(name = "q", required = false) @Nullable String query,
-            @PageableDefault(size = 10, sort = {"discordUsername", "id"}) Pageable pageable) {
+            @PageableDefault(size = 10) Pageable pageable) {
         return userService.search(query, pageable);
     }
 

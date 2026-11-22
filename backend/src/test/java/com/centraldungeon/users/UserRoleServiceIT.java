@@ -25,7 +25,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -97,6 +101,7 @@ class UserRoleServiceIT {
     private PlatformTransactionManager transactionManager;
 
     private static final String REVOKED = "REVOKED";
+    private static final String LOCK_CONFLICT = "CONFLICT";
     private static final Duration GATE_TIMEOUT = Duration.ofSeconds(20);
 
     @BeforeEach
@@ -261,6 +266,152 @@ class UserRoleServiceIT {
         assertThat(userRoleChangeRepository.count())
                 .as("repeating a grant is idempotent and writes no audit row")
                 .isEqualTo(1);
+    }
+
+    /**
+     * Two owners giving Admin to the same person, who is not an owner, at the same moment. Nothing about
+     * Owner is at stake, so nothing used to serialize the two: each read the grants before either wrote,
+     * each decided the person lacked Admin, and the history gained two {@code Granted} rows for one
+     * change - or, when there was no row to restore, the second insert collided on the key. Both have to
+     * answer like a repeated grant: success, one row, one audit row.
+     */
+    @ParameterizedTest(name = "held Admin before: {0}")
+    @ValueSource(booleans = {true, false})
+    void grantingAdminTwiceAtOnceToSomebodyWhoIsNotAnOwnerWritesASingleAuditRow(boolean heldAdminBefore)
+            throws Exception {
+        User firstOwner = owner("owner-first");
+        User secondOwner = owner("owner-second");
+        User target = person("admin-target");
+        grant(target, PlatformRole.PLAYER);
+        if (heldAdminBefore) {
+            grant(target, PlatformRole.ADMIN);
+            userRoleService.revokeRole(target.getId(), PlatformRole.ADMIN, "set up", asOwner(firstOwner));
+            userRoleChangeRepository.deleteAll();
+        }
+
+        List<String> outcomes = changeTwiceBehindTheGate(
+                () -> userRoleRepository.lockAllGrants(target.getId()),
+                () -> userRoleService.grantRole(target.getId(), PlatformRole.ADMIN, "concurrent grant", asOwner(firstOwner)),
+                () -> userRoleService.grantRole(target.getId(), PlatformRole.ADMIN, "concurrent grant", asOwner(secondOwner)));
+
+        assertThat(outcomes).containsExactly(REVOKED, REVOKED);
+        assertThat(userRoleChangeRepository.count())
+                .as("repeating a grant is idempotent and writes no audit row")
+                .isEqualTo(1);
+        assertThat(userRoleRepository.findActiveRoleNames(target.getId()))
+                .containsExactlyInAnyOrder(PlatformRole.PLAYER.roleName(), PlatformRole.ADMIN.roleName());
+    }
+
+    /**
+     * The order the Admin grant must not break: granting Admin to an owner and revoking that owner's
+     * Owner at the same moment. Both take the Owner lock before touching the person's rows, so they run
+     * one after the other in either order - no deadlock, Owner revoked once, Admin granted once. Reading
+     * the person's rows under lock before the Owner lock would deadlock against the revocation, which
+     * holds the Owner lock and then wants the same owner's row.
+     */
+    @Test
+    void grantingAdminToAnOwnerWhileTheirOwnerIsRevokedNeitherDeadlocksNorDoublesTheRevocation() throws Exception {
+        User granter = owner("owner-granter");
+        User revoker = owner("owner-revoker");
+        User target = owner("owner-target");
+
+        List<String> outcomes = changeTwiceBehindTheGate(
+                () -> roleRepository.lockByName(PlatformRole.OWNER.roleName()).orElseThrow(),
+                () -> userRoleService.grantRole(target.getId(), PlatformRole.ADMIN, "to admin", asOwner(granter)),
+                () -> userRoleService.revokeRole(target.getId(), PlatformRole.OWNER, "no longer owner", asOwner(revoker)));
+
+        assertThat(outcomes).containsExactly(REVOKED, REVOKED);
+        assertThat(userRoleChangeRepository.findByUser_IdOrderByCreatedAtAsc(target.getId()))
+                .extracting(change -> change.getRole().getName() + ":" + change.getAction())
+                .containsExactlyInAnyOrder(
+                        PlatformRole.OWNER.roleName() + ":" + UserRoleChangeAction.Revoked,
+                        PlatformRole.ADMIN.roleName() + ":" + UserRoleChangeAction.Granted);
+        assertThat(userRoleRepository.findActiveRoleNames(target.getId())).containsExactly(PlatformRole.ADMIN.roleName());
+    }
+
+    /**
+     * The same pair on an owner whose account is blocked, where the revocation has no last-owner count to
+     * make. Its audit row still points at the Owner role, and checking that foreign key waits on the Owner
+     * lock the Admin grant already holds - so if the revocation locked the person's rows first, each would
+     * be waiting on the other.
+     */
+    @Test
+    void grantingAdminToABlockedOwnerWhileTheirOwnerIsRevokedNeitherDeadlocksNorDoublesTheRevocation()
+            throws Exception {
+        User granter = owner("owner-granter");
+        User revoker = owner("owner-revoker");
+        User target = owner("owner-blocked");
+        target.setStatus(UserStatus.Blocked);
+        userRepository.save(target);
+
+        List<String> outcomes = changeTwiceBehindTheGate(
+                () -> roleRepository.lockByName(PlatformRole.OWNER.roleName()).orElseThrow(),
+                () -> userRoleService.grantRole(target.getId(), PlatformRole.ADMIN, "to admin", asOwner(granter)),
+                () -> userRoleService.revokeRole(target.getId(), PlatformRole.OWNER, "no longer owner", asOwner(revoker)));
+
+        assertThat(outcomes).containsExactly(REVOKED, REVOKED);
+        assertThat(userRoleChangeRepository.findByUser_IdOrderByCreatedAtAsc(target.getId()))
+                .extracting(change -> change.getRole().getName() + ":" + change.getAction())
+                .containsExactlyInAnyOrder(
+                        PlatformRole.OWNER.roleName() + ":" + UserRoleChangeAction.Revoked,
+                        PlatformRole.ADMIN.roleName() + ":" + UserRoleChangeAction.Granted);
+    }
+
+    /**
+     * Two first grants of Master to somebody who already holds another role - every account does, since
+     * signing up grants Player. The Player row is locked by the first request, so the second waits for it
+     * and finds Master already there: success twice, one row, one audit row.
+     */
+    @Test
+    void grantingANeverHeldRoleTwiceAtOnceToSomebodyWithARoleWritesItOnce() throws Exception {
+        User firstAdmin = person("admin-first");
+        User secondAdmin = person("admin-second");
+        User target = person("player-target");
+        grant(target, PlatformRole.PLAYER);
+
+        List<String> outcomes = changeMasterTwiceBehindTheGate(
+                target, () -> userRoleService.grantRole(target.getId(), PlatformRole.MASTER, "concurrent grant", asAdmin(firstAdmin)),
+                () -> userRoleService.grantRole(target.getId(), PlatformRole.MASTER, "concurrent grant", asAdmin(secondAdmin)));
+
+        assertThat(outcomes).containsExactly(REVOKED, REVOKED);
+        assertThat(userRoleChangeRepository.count()).isEqualTo(1);
+        assertThat(userRoleRepository.findAllGrants(target.getId())).hasSize(2);
+    }
+
+    /**
+     * Two first grants of Master to somebody with no row in {@code users_roles} at all. The locking read
+     * finds nothing to lock but the gap, both requests hold that gap, and both inserts into it deadlock;
+     * MySQL rolls one back whole. What is left is one row, one audit row and a 409 {@code CONFLICT} for
+     * the request that lost - the change it asked for did happen. Only an account built outside sign-up
+     * can be in this state.
+     */
+    @Test
+    void grantingANeverHeldRoleTwiceAtOnceToSomebodyWithNoRowsAnswersOnceAndThenConflict() throws Exception {
+        User firstAdmin = person("admin-first");
+        User secondAdmin = person("admin-second");
+        User target = person("roleless-target");
+
+        List<String> outcomes = new ArrayList<>();
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try (LockGate gate = LockGate.hold(transactionManager, () -> userRoleRepository.lockAllGrants(target.getId()))) {
+            Future<String> first = pool.submit(() -> outcomeOf(() -> userRoleService.grantRole(
+                    target.getId(), PlatformRole.MASTER, "concurrent grant", asAdmin(firstAdmin))));
+            Future<String> second = pool.submit(() -> outcomeOf(() -> userRoleService.grantRole(
+                    target.getId(), PlatformRole.MASTER, "concurrent grant", asAdmin(secondAdmin))));
+            // Both inserts wait on the gate's gap and on each other's: the deadlock is broken before the
+            // gate opens, so the gate waits for the loser to come back and the winner to be the one queued.
+            gate.awaitUntil(LockGate.monitor(mysql), waiting -> (first.isDone() || second.isDone()) && waiting == 1, GATE_TIMEOUT);
+            gate.open();
+            outcomes.add(first.get(30, TimeUnit.SECONDS));
+            outcomes.add(second.get(30, TimeUnit.SECONDS));
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(30, TimeUnit.SECONDS);
+        }
+
+        assertThat(outcomes).containsExactlyInAnyOrder(REVOKED, LOCK_CONFLICT);
+        assertThat(userRoleChangeRepository.count()).as("the rolled-back request left nothing behind").isEqualTo(1);
+        assertThat(userRoleRepository.findActiveRoleNames(target.getId())).containsExactly(PlatformRole.MASTER.roleName());
     }
 
     /** The sequential case, against the real rows: the last owner is refused with its own code. */
@@ -487,8 +638,18 @@ class UserRoleServiceIT {
      * @return {@code REVOKED} for each change that answered without a conflict, or its error code
      */
     private List<String> changeMasterTwiceBehindTheGate(User target, Runnable first, Runnable second) throws Exception {
+        return changeTwiceBehindTheGate(() -> userRoleRepository.lockAllGrants(target.getId()), first, second);
+    }
+
+    /**
+     * Both changes queue behind a gate holding {@code takeLock}; by the time the gate opens each one has
+     * done every read that comes before its first wait.
+     *
+     * @return {@code REVOKED} for each change that answered without a conflict, or its error code
+     */
+    private List<String> changeTwiceBehindTheGate(Runnable takeLock, Runnable first, Runnable second) throws Exception {
         ExecutorService pool = Executors.newFixedThreadPool(2);
-        try (LockGate gate = LockGate.hold(transactionManager, () -> userRoleRepository.lockAllGrants(target.getId()))) {
+        try (LockGate gate = LockGate.hold(transactionManager, takeLock)) {
             Future<String> firstOutcome = pool.submit(() -> outcomeOf(first));
             Future<String> secondOutcome = pool.submit(() -> outcomeOf(second));
             gate.awaitWaiters(LockGate.monitor(mysql), 2, GATE_TIMEOUT);
@@ -506,6 +667,9 @@ class UserRoleServiceIT {
             return REVOKED;
         } catch (ConflictException refused) {
             return refused.getErrorCode();
+        } catch (PessimisticLockingFailureException | DataIntegrityViolationException collided) {
+            // What the exception handler answers for these: 409 with this code.
+            return LOCK_CONFLICT;
         }
     }
 

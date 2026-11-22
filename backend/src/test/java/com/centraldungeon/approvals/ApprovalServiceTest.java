@@ -116,6 +116,9 @@ class ApprovalServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private com.centraldungeon.tables.TableVisibilityService tableVisibilityService;
+
     private final ApprovalMapper approvalMapper = Mappers.getMapper(ApprovalMapper.class);
 
     private ApprovalService service() {
@@ -130,7 +133,8 @@ class ApprovalServiceTest {
                 gameTableService,
                 registrationService,
                 masterService,
-                approvalMapper);
+                approvalMapper,
+                tableVisibilityService);
     }
 
     // ----------------------------------------------------------------- submit

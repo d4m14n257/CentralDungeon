@@ -142,13 +142,14 @@ class UserSearchIT {
 
     @Test
     void wildcardsTypedByHandAreSearchedAsText() {
-        assertThat(discordNamesOf(userService.search("%", FIRST_PAGE))).isEmpty();
+        assertThat(discordNamesOf(userService.search("%%", FIRST_PAGE))).isEmpty();
     }
 
     @Test
-    void anEmptyQueryListsAllowedUsers() {
-        assertThat(discordNamesOf(userService.search("  ", FIRST_PAGE)))
-                .containsExactlyInAnyOrder("juanma", "pablosan", "elpablo");
+    void anEmptyOrOneCharacterQueryFindsNobody() {
+        assertThat(discordNamesOf(userService.search("  ", FIRST_PAGE))).isEmpty();
+        assertThat(discordNamesOf(userService.search("j", FIRST_PAGE))).isEmpty();
+        assertThat(discordNamesOf(userService.search("ju", FIRST_PAGE))).containsExactlyInAnyOrder("juanma", "elpablo");
     }
 
     private List<String> discordNamesOf(PageResponse<UserSummaryResponse> page) {

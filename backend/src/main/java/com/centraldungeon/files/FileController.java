@@ -3,12 +3,12 @@ package com.centraldungeon.files;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.common.security.CurrentUser;
 import com.centraldungeon.files.dto.FileResponse;
+import com.centraldungeon.files.dto.MyFileCategoriesResponse;
 import com.centraldungeon.files.dto.PublicFileResponse;
 import com.centraldungeon.files.dto.UpdateFileRequest;
 import com.centraldungeon.files.dto.UploadFileRequest;
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.List;
 import java.nio.charset.StandardCharsets;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.ByteArrayResource;
@@ -125,24 +125,25 @@ public class FileController {
     }
 
     /**
-     * The cajones this person may file something of their own under (ADR-14 §5).
+     * The categories this person may file something of their own under.
      *
      * <p>It exists so the screen offers exactly what the service accepts. The rule depends on the
      * actor's roles <em>and</em> on the tables they run, and re-deriving that in the frontend is how
      * the two drift apart until a select offers an option the server rejects.
      *
      * @param currentUser whose library, from the token. There is no parameter naming anybody else
-     * @return 200 with the cajones they may use. <b>It can be empty</b>: ADR-05 §1 creates every account
-     *         with {@code Player}, which is a statement about signup and not an invariant - a role can
-     *         be revoked, so an account holding only {@code Admin} or {@code Owner} goes through none of
-     *         the flows that fill a personal library and gets nothing back (ADR-14 §5)
+     * @return 200 with the categories they may use, wrapped in a named record. <b>It can be empty</b>:
+     *         every account is created with {@code Player}, but that is a statement about signup and
+     *         not an invariant - a role can be revoked, so an account holding only {@code Admin} or
+     *         {@code Owner} goes through none of the flows that fill a personal library and gets
+     *         nothing back
      */
     @GetMapping("/mine/categories")
     @PreAuthorize("isAuthenticated()")
-    public List<String> listMyCategories(@AuthenticationPrincipal CurrentUser currentUser) {
-        return fileService.personalCategoriesOf(currentUser.userId()).stream()
+    public MyFileCategoriesResponse listMyCategories(@AuthenticationPrincipal CurrentUser currentUser) {
+        return new MyFileCategoriesResponse(fileService.personalCategoriesOf(currentUser.userId()).stream()
                 .map(FileCategory::name)
-                .toList();
+                .toList());
     }
 
     /**

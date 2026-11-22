@@ -1,10 +1,13 @@
 package com.centraldungeon.common.security;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.centraldungeon.auth.AuthService;
+import com.centraldungeon.auth.RefreshTokenRepository;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.Role;
 import com.centraldungeon.users.RoleRepository;
@@ -15,6 +18,8 @@ import com.centraldungeon.users.UserRoleChangeRepository;
 import com.centraldungeon.users.UserRoleRepository;
 import com.centraldungeon.users.UserService;
 import com.centraldungeon.users.UserStatusChangeRepository;
+import jakarta.servlet.http.Cookie;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +32,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.junit.jupiter.Container;
@@ -95,6 +101,12 @@ class SessionDoesNotAuthenticateIT {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AuthService authService;
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
     private User owner;
     private User admin;
     private User player;
@@ -105,6 +117,7 @@ class SessionDoesNotAuthenticateIT {
                 .addFilters(springSecurityFilterChain)
                 .build();
 
+        refreshTokenRepository.deleteAll();
         userRoleChangeRepository.deleteAll();
         userStatusChangeRepository.deleteAll();
         userRoleRepository.deleteAll();
@@ -169,6 +182,39 @@ class SessionDoesNotAuthenticateIT {
 
         mockMvc.perform(get(ADMIN_USERS).header("Authorization", "Bearer " + token).session(session))
                 .andExpect(status().isForbidden());
+    }
+
+    /**
+     * Every cookie the browser can hold, together and without a bearer token, authenticates nothing:
+     * a live refresh cookie, a CSRF pair and the session a token call left behind, on reads and on
+     * writes alike. The refresh cookie only ever buys a new access token at the refresh endpoint.
+     */
+    @Test
+    void noCookieAuthenticatesOnItsOwn() throws Exception {
+        String token = jwtService.issueAccessToken(admin.getId());
+        MvcResult withToken = mockMvc.perform(get(ME).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn();
+        MockHttpSession session = sessionLeftBehind(withToken);
+        String csrf = UUID.randomUUID().toString();
+        Cookie[] cookies = {
+            new Cookie(RefreshCookieFactory.COOKIE_NAME, authService.openSession(admin.getId())),
+            new Cookie("XSRF-TOKEN", csrf),
+            new Cookie("JSESSIONID", session.getId())
+        };
+
+        for (MockHttpServletRequestBuilder request : List.of(
+                get(ME),
+                get(ADMIN_USERS),
+                patch(ME).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"hijacked\"}"),
+                patch("/api/v1/notifications/read-all"),
+                post(ADMIN_USERS + "/" + player.getId() + "/block")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"justification\":\"forged\"}"))) {
+            mockMvc.perform(request.session(session).cookie(cookies).header("X-XSRF-TOKEN", csrf))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"));
+        }
     }
 
     /**

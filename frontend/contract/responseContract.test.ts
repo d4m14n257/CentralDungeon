@@ -49,6 +49,7 @@ const MIRRORS: Record<string, string> = {
   MasterDashboardResponse: 'MasterDashboard',
   MasterSummaryResponse: 'MasterSummary',
   MasterWorkItem: 'MasterWorkItem',
+  MyFileCategoriesResponse: 'MyFileCategories',
   MyRejectionResponse: 'MyRejection',
   MySessionsResponse: 'MySessions',
   NotificationParams: 'NotificationParams',

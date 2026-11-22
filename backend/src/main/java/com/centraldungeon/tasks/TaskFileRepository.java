@@ -50,26 +50,27 @@ public interface TaskFileRepository extends JpaRepository<TaskFile, TaskFileId> 
     List<TaskFile> findLiveByGameTableId(@Param("gameTableId") String gameTableId);
 
     /**
-     * Which tables can reach a file through a request that attaches it.
+     * The requests that attach a file as their blank.
      *
-     * <p>The sixth way a file becomes readable, and the reason it has to exist: a master attaches a
-     * blank form to a request, the request reaches its players, and those players have to be able to
-     * open the form. Without this they would see the row on the request and get a 404 opening it -
-     * the exact mismatch ADR-14 §2 had to fix once for the files a table shares and ADR-14 §2 for submissions.
+     * <p>The way a request's blank becomes readable, and the reason it has to exist: a master attaches a
+     * blank form to a request, the request reaches the people it is addressed to, and those people
+     * have to be able to open the form. Without this they would see the row on the request and get a
+     * 404 opening it. The requests and not only their tables, because who a request reaches depends on
+     * its audience and its target, not just on belonging to the table.
      *
-     * <p>Named parameters only, never positional (ADR-03 §2).
+     * <p>Named parameters only, never positional.
      *
      * @param fileId the file somebody is trying to open
-     * @return the ids of the tables whose requests attach it. Empty when no request does
+     * @return the requests whose live blanks include it. Empty when no request does
      */
     @Query("""
-            select task.gameTable.id
+            select task
             from TaskFile link, TableTask task
             where link.id.fileId = :fileId
               and link.status = com.centraldungeon.tasks.TaskFileStatus.Current
               and task.id = link.id.taskId
             """)
-    List<String> findTableIdsByRequestedFileId(@Param("fileId") String fileId);
+    List<TableTask> findTasksByRequestedFileId(@Param("fileId") String fileId);
 
     /**
      * The same reachability for a whole page of files, carrying the table's name - the third source

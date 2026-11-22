@@ -121,6 +121,9 @@ class RegistrationServiceTest {
         });
         lenient().when(gameTableRepository.findByIdForUpdate(anyString()))
                 .thenAnswer(call -> Optional.ofNullable(tablesById.get(call.<String>getArgument(0))));
+        // What the visibility gate reads before any refusal is said; a test's own stub wins here too.
+        lenient().when(gameTableRepository.findById(anyString()))
+                .thenAnswer(call -> Optional.ofNullable(tablesById.get(call.<String>getArgument(0))));
         registrationService = new RegistrationService(
                 registrationRepository, rejectionRepository, registrationFileRepository, fileService, gameTableRepository, masterService,
                 userService, notificationService, scheduleConflictService, statusChangeRepository,
@@ -247,14 +250,42 @@ class RegistrationServiceTest {
         verify(notificationService).notifyNewCandidate("master-2", table, "name-player-1");
     }
 
+    /** An admin sees every application and still does not run the table: they are told no. */
     @Test
     void onlyAMasterOfTheTableCanAcceptACandidate() {
         TableRegistration registration = persistedRegistration("reg-1", "table-5", TableRegistrationStatus.Candidate, null);
         when(registrationRepository.findById("reg-1")).thenReturn(Optional.of(registration));
         when(gameTableRepository.findByIdForUpdate("table-5")).thenReturn(Optional.of(registration.getGameTable()));
-        when(masterService.isMasterOf("table-5", "stranger")).thenReturn(false);
+        when(masterService.isMasterOf("table-5", "admin-1")).thenReturn(false);
+        when(masterService.canOversee("table-5", "admin-1")).thenReturn(true);
 
-        assertThatThrownBy(() -> registrationService.accept("reg-1", "stranger")).isInstanceOf(ForbiddenActionException.class);
+        assertThatThrownBy(() -> registrationService.accept("reg-1", "admin-1")).isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /**
+     * Somebody who neither runs nor oversees the table and did not apply does not see the application:
+     * they get exactly what an id nobody ever used gets, never a refusal that confirms it.
+     */
+    @Test
+    void aStrangerAcceptingACandidateIsToldTheApplicationIsNotThere() {
+        TableRegistration registration = persistedRegistration("reg-1s", "table-5s", TableRegistrationStatus.Candidate, null);
+        when(registrationRepository.findById("reg-1s")).thenReturn(Optional.of(registration));
+
+        assertThatThrownBy(() -> registrationService.accept("reg-1s", "stranger"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Registration not found: reg-1s");
+    }
+
+    /** A deleted table took its applications with it: the answer names the application, never the table. */
+    @Test
+    void anApplicationOfADeletedTableIsNotThere() {
+        TableRegistration registration = persistedRegistration("reg-1d", "table-5d", TableRegistrationStatus.Candidate, null);
+        registration.getGameTable().setStatus(GameTableStatus.Deleted);
+        when(registrationRepository.findById("reg-1d")).thenReturn(Optional.of(registration));
+
+        assertThatThrownBy(() -> registrationService.accept("reg-1d", "master-1"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Registration not found: reg-1d");
     }
 
     @Test
@@ -350,9 +381,10 @@ class RegistrationServiceTest {
     void onlyAMasterCanRejectACandidate() {
         TableRegistration registration = persistedRegistration("reg-6", "table-9", TableRegistrationStatus.Candidate, null);
         when(registrationRepository.findById("reg-6")).thenReturn(Optional.of(registration));
-        when(masterService.isMasterOf("table-9", "stranger")).thenReturn(false);
+        when(masterService.isMasterOf("table-9", "admin-1")).thenReturn(false);
+        when(masterService.canOversee("table-9", "admin-1")).thenReturn(true);
 
-        assertThatThrownBy(() -> registrationService.reject("reg-6", "stranger", new RejectRegistrationRequest("no")))
+        assertThatThrownBy(() -> registrationService.reject("reg-6", "admin-1", new RejectRegistrationRequest("no")))
                 .isInstanceOf(ForbiddenActionException.class);
     }
 
@@ -480,6 +512,7 @@ class RegistrationServiceTest {
 
     @Test
     void listCandidatesForTableRequiresBeingAMaster() {
+        persistedTable("table-11", GameTableStatus.Opened, null);
         when(masterService.canOversee("table-11", "stranger")).thenReturn(false);
 
         assertThatThrownBy(() -> registrationService.listCandidatesForTable(
@@ -581,8 +614,13 @@ class RegistrationServiceTest {
     void cannotWithdrawSomebodyElsesApplication() {
         TableRegistration registration = persistedRegistration("reg-w2", "table-w2", TableRegistrationStatus.Candidate, null);
         when(registrationRepository.findById("reg-w2")).thenReturn(Optional.of(registration));
+        when(masterService.canOversee("table-w2", "master-1")).thenReturn(true);
 
-        assertThatThrownBy(() -> registrationService.withdraw("reg-w2", "someone-else")).isInstanceOf(ForbiddenActionException.class);
+        // Whoever runs the table sees the application and is told no; anybody else is told it is not there.
+        assertThatThrownBy(() -> registrationService.withdraw("reg-w2", "master-1")).isInstanceOf(ForbiddenActionException.class);
+        assertThatThrownBy(() -> registrationService.withdraw("reg-w2", "someone-else"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Registration not found: reg-w2");
     }
 
     /** Once accepted there is a table counting on you: leaving is a conversation, not a button. */
@@ -922,6 +960,26 @@ class RegistrationServiceTest {
         assertThat(registration.getStatus()).isEqualTo(TableRegistrationStatus.Player);
         assertThat(waiting.getStatus()).isEqualTo(TableRegistrationStatus.Rejected);
         assertThat(table.isSeekingPlayers()).isFalse();
+    }
+
+    /**
+     * An application of another table is not this table's business: it answers with the very same body
+     * as an id nobody ever used, so the two cannot be told apart by what the 404 says.
+     */
+    @Test
+    void anApplicationOfAnotherTableAnswersAsOneThatDoesNotExist() {
+        persistedTable("table-b10", GameTableStatus.Opened, null);
+        TableRegistration elsewhere = persistedRegistration("reg-elsewhere", "table-b11", TableRegistrationStatus.Blocked, null);
+        when(registrationRepository.findById("reg-elsewhere")).thenReturn(Optional.of(elsewhere));
+        when(registrationRepository.findById("reg-nobody")).thenReturn(Optional.empty());
+        when(masterService.isPrimaryOf("table-b10", "primary-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> registrationService.unblock("table-b10", "reg-elsewhere", "primary-1", "just because"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Registration not found: reg-elsewhere");
+        assertThatThrownBy(() -> registrationService.unblock("table-b10", "reg-nobody", "primary-1", "just because"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Registration not found: reg-nobody");
     }
 
     /** Lifting a veto that is not there is a 409 with its own code. */

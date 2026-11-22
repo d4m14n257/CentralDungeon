@@ -2,7 +2,7 @@
 adr: 15
 titulo: Peticiones de la mesa
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-11-18
 absorbe: [63, 70, 76, 77, 87, 209, 210, 212, 236]
 ---
 
@@ -28,9 +28,15 @@ absorbe: [63, 70, 76, 77, 87, 209, 210, 212, 236]
 
 ## §3 El master puede adjuntar archivos al pedido que escribe
 
-**Decisión.** Tabla `task_files`, con la forma de `submission_files`. `CreateTaskRequest` y `UpdateTaskRequest` llevan `fileIds`, y la petición los muestra al master y a quien la recibe. Lo abre todo el que la petición alcanza —candidato o jugador—, no solo quien dirige (ADR-14 §2). Vincula y no copia (ADR-14 §1): el formulario publicado por la comunidad lo adjunta cada master sin resubirlo. `table_tasks.accepts_files` sigue diciendo si la **respuesta** puede traer archivos.
+**Decisión.** Tabla `task_files`, con la forma de `submission_files`. `CreateTaskRequest` y `UpdateTaskRequest` llevan `fileIds`, y la petición los muestra al master y a quien la recibe. **El formulario lo abre quien la petición alcanza, y la audiencia decide quién es** (ADR-14 «Archivos: lectura y bibliotecas» §2 «Leer un archivo pasa por una sola puerta, y lo que alguien ve en pantalla lo puede abrir»):
 
-**Por qué.** Sin esto un master podía escribir «mandame tu ficha en este formulario» y no tenía cómo adjuntar el formulario. Y el cajón `MasterRequest` (ADR-14 §4) solo podría contener lo que publica un admin, nunca algo del master.
+- el de una petición a **`Candidates`**, **cualquiera que pueda ver la mesa** (`TableVisibilityService.canSee`, sin el vetado), se haya postulado o no, igual que la petición misma, que `listApplicable` ya le muestra (§4);
+- el de una a **`Players`**, solo un jugador (`Player`) de la mesa;
+- el de una **`Single`**, solo su destinatario.
+
+Quien dirige la mesa y los admins lo abren siempre (`MasterService.canOversee`). **Cerrar la petición no cierra su formulario**: lo sigue abriendo quien la petición alcanzaba, aunque ya no figure entre sus pendientes. Vincula y no copia (ADR-14 §1): el formulario publicado por la comunidad lo adjunta cada master sin resubirlo. `table_tasks.accepts_files` sigue diciendo si la **respuesta** puede traer archivos.
+
+**Por qué.** Sin esto un master podía escribir «mandame tu ficha en este formulario» y no tenía cómo adjuntar el formulario. Y el cajón `MasterRequest` (ADR-14 §4) solo podría contener lo que publica un admin, nunca algo del master. Quién lo abre lo fijó el usuario el 2026-11-18, en F4.4 «Seguridad»: quien está por postularse necesita leer lo que se le pide antes de hacerlo, y el archivo le respondía `404` a quien no se había postulado mientras la lista le mostraba la petición, el desajuste que ADR-14 §2 no admite. En la otra dirección, las de `Players` y las `Single` las abría cualquier candidato o jugador de la mesa, más allá de a quién iban dirigidas. Una petición cerrada sigue abriéndose porque es parte del histórico: ya no tiene valor operativo, y cerrar corta las entregas nuevas, no lo que se pidió (§2).
 
 *Antes: #236.*
 

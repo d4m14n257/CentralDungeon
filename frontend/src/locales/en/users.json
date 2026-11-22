@@ -5,6 +5,7 @@
     "discordName": "Discord",
     "userName": "Name",
     "startTyping": "Type and press Enter twice to search.",
+    "minLength": "Type at least {{min}} letters to search.",
     "empty": "Nobody matches that search.",
     "noName": "No display name set"
   },

@@ -70,24 +70,30 @@ public class TableScheduleService {
     /** Who runs the table: an agenda is measured against every one of them (ADR-08 §2). */
     private final MasterService masterService;
 
+    /** Whether the actor may see the table a clash points at, which decides if it can be named. */
+    private final TableVisibilityService tableVisibilityService;
+
     /**
      * @param scheduleRepository      the {@code table_schedules} rows
      * @param scheduleConflictService answers whether the new agenda clashes with anything
      * @param registrationRepository  who is signed up to the table
      * @param notificationService     warns the people a schedule change now clashes for
      * @param masterService           who runs the table, whose weeks the agenda is measured against
+     * @param tableVisibilityService  whether the actor may see the table somebody else clashes with
      */
     public TableScheduleService(
             TableScheduleRepository scheduleRepository,
             ScheduleConflictService scheduleConflictService,
             TableRegistrationRepository registrationRepository,
             NotificationService notificationService,
-            MasterService masterService) {
+            MasterService masterService,
+            TableVisibilityService tableVisibilityService) {
         this.scheduleRepository = scheduleRepository;
         this.scheduleConflictService = scheduleConflictService;
         this.registrationRepository = registrationRepository;
         this.notificationService = notificationService;
         this.masterService = masterService;
+        this.tableVisibilityService = tableVisibilityService;
     }
 
     /**
@@ -178,6 +184,10 @@ public class TableScheduleService {
      * English, and for a log: the sentence is rendered by the frontend from the code and its
      * parameters, in the reader's language (ADR-23 §3).
      *
+     * <p>The other table's name goes in the answer only when the actor may see that table: a draft
+     * nobody was shown would otherwise let whoever adds a co-master map that person's week. When they
+     * cannot, the answer carries the code and the person's name and no table name.
+     *
      * @param people         whose weeks to measure - the table's masters, or the ones about to be
      * @param excludeTableId the table itself, so it never clashes with its own agenda
      * @param intervals      the agenda being claimed. An empty one never clashes
@@ -199,10 +209,14 @@ public class TableScheduleService {
                         Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
             }
             String masterName = person.getName() != null ? person.getName() : person.getDiscordUsername();
+            boolean actorSeesIt = actorId != null && tableVisibilityService.canSee(clash.id(), actorId);
+            Map<String, String> params = actorSeesIt
+                    ? Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name(), ConflictException.PARAM_MASTER_NAME, masterName)
+                    : Map.of(ConflictException.PARAM_MASTER_NAME, masterName);
             throw new ConflictException(
-                    "Agenda overlaps table " + clash.name() + ", which master " + person.getId() + " is already committed to",
+                    "Agenda overlaps another table of master " + person.getId(),
                     ConflictException.MASTER_SCHEDULE_CONFLICT,
-                    Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name(), ConflictException.PARAM_MASTER_NAME, masterName));
+                    params);
         }
     }
 

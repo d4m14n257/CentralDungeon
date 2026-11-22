@@ -23,6 +23,7 @@ El razonamiento de cada fila está en la ADR que cita. Resumen de lo estructural
 | Aprobaciones | `requests` se absorbe en **`approval_requests`**, un solo mecanismo para todos los pedidos con aprobación. **La tabla ya estaba en `V1__baseline.sql`**: F3.2 le puso el código, no el DDL, así que no hay migración propia y no puede haberla (regla dura 8). Nace con **tres** tipos —`MasterGrant`, `TableOpen`, `General`—, no con los cinco que enumera ADR-16 §1: `TablePause` y `PlayerBan` los agrega F3.4 **con su productor**, porque la columna es `VARCHAR(32)` y sumar un flujo es sumar un valor al enum, sin `ALTER TABLE` (ADR-16 §2). Declararlos antes solo crearía dos valores que nada emite, que es el huérfano que F1.7 le reprochó a `PauseRequested` | ADR-16 §1, §2 |
 | Moderación de mesa | Tabla nueva `table_status_changes` con la justificación de cada transición | ADR-07 §2 |
 | Moderación de personas | Tablas nuevas `user_role_changes` y `user_status_changes` (`V11`, F3.1), calcadas de `table_status_changes`, con **motivo obligatorio**. `audit_logs` es F6 y `approval_requests` es F3.2: hasta entonces cada entidad guarda su propio rastro en vez de inventar una tabla genérica que F6 va a reemplazar | ADR-05 §7, ADR-06 §1 |
+| Sesión | Tabla nueva `refresh_tokens` (`V16`, F4.4): el servidor recuerda cada refresh que entrega, por el hash de su `jti`, agrupado en una familia por login. Rotar, detectar un reuso y cerrar sesión se vuelven revocaciones en vez de esperar a que el token venza | ADR-05 «Seguridad, sesión y login» §2 «Tres tokens: el de Discord se descarta, el access es corto y el refresh rota en una familia revocable» |
 | Configuración | `system_settings` **ya estaba en `V1__baseline.sql`** y no tenía código: F3.5 le puso el mapeo, no el DDL. **Guarda solo overrides** —no hay fila para un ajuste que nadie tocó y no hay seed—, y el catálogo con los valores por defecto, los rangos y la marca de retroactivo vive en el `enum` `SettingKey` (ADR-17 §3). Tabla nueva `system_setting_changes` (`V13`, F3.5), del mismo molde que las de abajo: `setting_key` **sin FK**, porque apunta a una constante del código y porque la fila que nombra puede legítimamente no existir todavía | ADR-17 §3 |
 | Moderación de mesa, por persona | Tabla nueva `registration_status_changes` (`V12`, F3.4), del mismo molde: el **veto y su levantamiento**, con motivo obligatorio. Lo que se guarda es el cambio y no el estado — una columna `blocked_reason` no puede contar que se levantó, ni cuántas veces | ADR-09 §4, §5 |
 | Feedback del sistema | Tablas nuevas `system_feedback` y `feedback_quotas`. El tipo `General` sale de `comments` | ADR-11 §11, §12 |
@@ -44,6 +45,7 @@ erDiagram
     users ||--o{ user_role_changes : "otorga o quita"
     users ||--o{ user_status_changes : "historial de cuenta"
     users ||--o{ user_status_changes : "bloquea o desbloquea"
+    users ||--o{ refresh_tokens : "sesiones (una familia por login)"
     users ||--o{ system_settings : "configuró por última vez"
     users ||--o{ system_setting_changes : "cambió un ajuste"
 

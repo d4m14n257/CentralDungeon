@@ -33,6 +33,28 @@ app:
     # TestDataController wipes the database, so the blobs it leaves behind are garbage by definition.
     # Pointing this at a temporary directory is what keeps them from piling up next to the source.
     root: ${java.io.tmpdir}/centraldungeon-test-storage
+  # A Playwright run logs in, refreshes, uploads and applies far more often than a person, and every
+  # request comes from the same address. The limits stay on, so the filter is still exercised, but out
+  # of reach.
+  rate-limit:
+    login:
+      requests: 100000
+      window: PT1M
+    refresh:
+      requests: 100000
+      window: PT1M
+    upload:
+      requests: 100000
+      window: PT1H
+    registration:
+      requests: 100000
+      window: PT1H
+    catalog-proposal:
+      requests: 100000
+      window: PT1H
+    master-candidates:
+      requests: 100000
+      window: PT1M
 
 logging:
   level:

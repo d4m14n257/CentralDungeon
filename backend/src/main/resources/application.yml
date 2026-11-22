@@ -102,6 +102,31 @@ app:
     # How long a file survives unused before the purge marks it gone (ADR-13 §3). Marks only - freeing the
     # bytes is the platform owner's, from the administration menu, and that is F5 (ADR-13 §8).
     retention: P90D
+  # The doors anybody can repeat. Operation, not a community rule, so they are here and not in
+  # system_settings; the test profile raises them all. Login and refresh count per client IP (an IPv6
+  # address by its /64 prefix); upload, registration, catalog proposals and the co-master search per
+  # signed-in user. The login counter covers the redirect to Discord and the callback together, so one
+  # complete login spends two.
+  rate-limit:
+    login:
+      requests: 10
+      window: PT1M
+    refresh:
+      requests: 30
+      window: PT1M
+    upload:
+      requests: 20
+      window: PT1H
+    registration:
+      requests: 10
+      window: PT1H
+    # One counter for proposing a tag, a system or a platform, per signed-in user.
+    catalog-proposal:
+      requests: 20
+      window: PT1H
+    master-candidates:
+      requests: 30
+      window: PT1M
   # app.admin-queue.claim-timeout and app.storage.max-file-size both lived here until F3.5 and both
   # moved to system_settings (ADR-17 §3): they are decisions of whoever runs the community, not of
   # whoever deploys the application, and their defaults now live in SettingKey. What stays in this

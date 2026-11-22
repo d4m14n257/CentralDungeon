@@ -13,7 +13,10 @@ import com.centraldungeon.users.dto.UserSummaryResponse;
 import org.jspecify.annotations.Nullable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,15 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class UserService {
+
+    /** Fewest characters every value of a people search must have before it finds anybody. */
+    static final int MIN_SEARCH_LENGTH = 2;
+
+    /** Most people a people search ever returns, however large a page is asked for. */
+    static final int MAX_SEARCH_RESULTS = 20;
+
+    /** The only order a search is served in; the client's is ignored. */
+    private static final Sort SEARCH_ORDER = Sort.by("discordUsername", "id");
 
     /** The {@code users} table. */
     private final UserRepository userRepository;
@@ -154,14 +166,37 @@ public class UserService {
     }
 
     /**
-     * The search box behind every user picker (ADR-22 §1). An empty query is not an error:
-     * it lists Allowed users page by page, which is what /admin/users will want to open with.
+     * The search box behind every user picker, bounded so it cannot be used to dump the
+     * directory: every value of the query must have at least {@value #MIN_SEARCH_LENGTH} characters, and
+     * only the first page of at most {@value #MAX_SEARCH_RESULTS} people is ever served.
+     *
+     * <p>A query that is too short - or empty - is not an error but an empty page, the same way an unknown
+     * role or field finds nobody: a search box has to survive being typed into. The page number of
+     * {@code pageable} is ignored on purpose, or paging would walk the whole directory twenty at a time,
+     * and so is its sort: ordering the same query ascending and then descending would show both ends of
+     * the directory, so the order is fixed to the username, with the id to break ties.
+     *
+     * @param rawQuery what was typed, or null
+     * @param pageable the requested size, which is capped; the sort is the server's own
+     * @return up to {@value #MAX_SEARCH_RESULTS} Allowed people matching the query, none for a short one
      */
     @Transactional(readOnly = true)
     public PageResponse<UserSummaryResponse> search(@Nullable String rawQuery, Pageable pageable) {
         SearchQuery query = SearchQueryParser.parse(rawQuery, UserSearchField.wireNames());
+        Pageable bounded = PageRequest.of(0, Math.min(pageable.getPageSize(), MAX_SEARCH_RESULTS), SEARCH_ORDER);
+        if (!isLongEnough(query)) {
+            return PageResponse.from(Page.empty(bounded));
+        }
         return PageResponse.from(
-                userRepository.findAll(UserSearchSpecification.matching(query), pageable).map(userMapper::toSummaryResponse));
+                userRepository.findAll(UserSearchSpecification.matching(query), bounded).map(userMapper::toSummaryResponse));
+    }
+
+    /** True when the query has a criterion and none of its values is a single character. */
+    private static boolean isLongEnough(SearchQuery query) {
+        return !query.isEmpty()
+                && query.terms().stream()
+                        .flatMap(term -> term.values().stream())
+                        .allMatch(value -> value.length() >= MIN_SEARCH_LENGTH);
     }
 
     /**

@@ -9,6 +9,7 @@ import type {
   PublicFile,
   LibraryCategoryInput,
   LibraryUploadInput,
+  MyFileCategories,
   StoredFile,
   TableFile,
   UpdateFileInput,
@@ -59,7 +60,7 @@ export const filesApi = {
    *
    * The server decides, so the screen cannot offer a cajón the upload would be refused for.
    */
-  listMyCategories: () => api.get<FileCategory[]>('/api/v1/files/mine/categories'),
+  listMyCategories: async (): Promise<FileCategory[]> => (await api.get<MyFileCategories>('/api/v1/files/mine/categories')).categories,
 
   /**
    * What the platform published, for whoever is choosing one to attach (ADR-13 §2, ADR-14 §1).

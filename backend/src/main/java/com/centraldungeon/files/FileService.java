@@ -2,6 +2,7 @@ package com.centraldungeon.files;
 
 import com.centraldungeon.common.config.StorageProperties;
 import com.centraldungeon.settings.SettingsService;
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
@@ -26,6 +27,7 @@ import com.centraldungeon.registrations.TableRegistrationStatus;
 import com.centraldungeon.tables.MasterService;
 import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tasks.SubmissionFileRepository;
+import com.centraldungeon.tasks.TableTask;
 import com.centraldungeon.tasks.TaskFileRepository;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
@@ -74,14 +76,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileService {
 
     /**
-     * The registrations a request's blank opens for: the people it reaches (ADR-15 §1).
-     *
-     * <p>Both, and not only {@code Player}: a request written for candidates is how a master asks
-     * for a sheet <em>before</em> accepting somebody, which is the whole point of asking at that
-     * moment. {@code Rejected} is absent - a request stops reaching you when you stop belonging.
+     * The code of a library file that is published already: publishing it again, or changing what it
+     * is, which masters are choosing it by.
      */
-    private static final List<TableRegistrationStatus> REQUEST_READERS =
-            List.of(TableRegistrationStatus.Candidate, TableRegistrationStatus.Player);
+    private static final String ALREADY_PUBLISHED = "FILE_ALREADY_PUBLISHED";
 
     /** The {@code files} rows. */
     private final StoredFileRepository fileRepository;
@@ -89,12 +87,12 @@ public class FileService {
     /** The attachments, which is what makes a file reachable to anybody but its owner (ADR-14 §1). */
     private final TableFileRepository tableFileRepository;
 
-    /** The cajones a file belongs to (ADR-14 §4). Add-only: nothing here ever takes a membership away. */
+    /** The categories a file belongs to (ADR-14 §4). Add-only: nothing here ever takes a membership away. */
     private final FileCategoryLinkRepository categoryRepository;
 
     /**
-     * The blanks a master attached to a request (ADR-15 §1) - the third source of uses, and the sixth way
-     * a file becomes readable. Another feature's repository, dragged in by the same read rule that
+     * The blanks a master attached to a request (ADR-15 §1) - the third source of uses, and the way a
+     * request's blank becomes readable. Another feature's repository, dragged in by the same read rule that
      * dragged in {@code SubmissionFileRepository}: whether somebody may open the form their master
      * asked them to fill is a question about requests, and answering it anywhere else is how ADR-14 §2
      * drifted the first time.
@@ -146,24 +144,24 @@ public class FileService {
     private final TableVisibilityService tableVisibilityService;
 
     /**
-     * The actor's platform roles, for deciding which cajones are theirs to use (ADR-14 §5).
-     *
-     * <p>The one place in this class that asks about a <b>role</b> rather than about pertenencia, and
-     * it is not an authorization: it decides what somebody's own library can hold, not what they may
-     * reach. Reaching is still membership, always (hard rule 17, ADR-05 §5, ADR-06 §4).
+     * The actor's platform roles, for two questions about a <b>role</b> rather than about pertenencia:
+     * which categories are theirs to use (ADR-14 §5), and whether they are an admin or the owner, who
+     * read the platform's library as a team. The first decides what somebody's own library can hold;
+     * the second is the only role that authorizes a read, and only for the library. Every other way
+     * of reaching a file is membership (hard rule 17, ADR-05 §5, ADR-06 §4).
      */
     private final UserRoleRepository userRoleRepository;
 
     /**
-     * Who belongs to a table, for the sixth way a file is reachable: a request's blank has to open
-     * for the people the request reaches. Pertenencia again, and again a row rather than a role
+     * Who belongs to a table, for the request's-blank way a file is reachable: a request's blank has
+     * to open for the people the request reaches. Pertenencia again, and again a row rather than a role
      * (hard rule 17, ADR-05 §5, ADR-06 §4).
      */
     private final TableRegistrationRepository registrationRepository;
 
     /**
      * The files a candidate attached to their own application - the fourth source of uses (ADR-14 §3) and
-     * the seventh way a file becomes readable (ADR-13 §1 uso 2, ADR-09 §2).
+     * the way an application's attachment becomes readable (ADR-13 §1 uso 2, ADR-09 §2).
      *
      * <p>Another feature's repository, dragged in by the same read rule that dragged in
      * {@code SubmissionFileRepository} and {@code TaskFileRepository}: whether a master may open the
@@ -178,7 +176,7 @@ public class FileService {
     /**
      * @param fileRepository            the {@code files} rows
      * @param tableFileRepository       the attachments, for resolving who may read a file
-     * @param categoryRepository        the cajones each file belongs to (ADR-14 §4)
+     * @param categoryRepository        the categories each file belongs to (ADR-14 §4)
      * @param taskFileRepository        the blanks attached to requests, for the same two questions
      * @param submissionFileRepository  the answers a file was handed in with, for the same question
      * @param userRepository            resolves the uploader from the token
@@ -188,7 +186,7 @@ public class FileService {
      * @param masterService             answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
      * @param tableVisibilityService    answers the veto, so a shared attachment stops being readable
      *                                  by somebody the table stopped existing for (ADR-09 §4, ADR-14 §2)
-     * @param userRoleRepository        the actor's roles, for their own cajones (ADR-14 §5)
+     * @param userRoleRepository        the actor's roles, for their own categories (ADR-14 §5)
      * @param registrationRepository    who belongs to a table, for reading a request's blank
      * @param registrationFileRepository the files a candidate attached to their application, for the
      *                                   same two questions (ADR-13 §1 uso 2, ADR-09 §2)
@@ -621,22 +619,23 @@ public class FileService {
     }
 
     /**
-     * Publishing a file of the library that is not published: never published yet, or hidden (ADR-14 §7).
+     * Publishing a file of the library that is not published: never published yet, or hidden.
      *
-     * <p>From here on masters see it in the picker and can attach it (ADR-14 §1). It needs a cajón first -
+     * <p>From here on masters see it in the picker and can attach it. It needs a cajón first -
      * which the upload always asks for, so the refusal is for a file whose cajón was somehow lost.
      *
      * @param fileId the file to publish
      * @return the file after publishing
-     * @throws NotFoundException        if the file is not there, was marked gone, or is not in the library
-     * @throws ForbiddenActionException if it is already published
-     * @throws InvalidRequestException  if it has no cajón to be offered in
+     * @throws NotFoundException       if the file is not there, was marked gone, or is not in the library
+     * @throws ConflictException       if it is already published - a state, not a refusal of the admin,
+     *                                 with the code {@code FILE_ALREADY_PUBLISHED}
+     * @throws InvalidRequestException if it has no cajón to be offered in
      */
     @Transactional
     public AdminFileResponse publish(String fileId) {
         StoredFile file = requireInLibrary(fileId);
         if (file.getFileType() == FileType.Public) {
-            throw new ForbiddenActionException("File " + fileId + " is already published");
+            throw new ConflictException("File " + fileId + " is already published", ALREADY_PUBLISHED);
         }
         if (publishableOnly(categoriesOf(fileId)).isEmpty()) {
             throw new InvalidRequestException(
@@ -657,14 +656,14 @@ public class FileService {
      *
      * @param fileId the file to hide
      * @return the file after hiding
-     * @throws NotFoundException        if the file is not there, was marked gone, or is not in the library
-     * @throws ForbiddenActionException if it was not published
+     * @throws NotFoundException if the file is not there, was marked gone, or is not in the library
+     * @throws ConflictException if it is not published, with the code {@code FILE_NOT_PUBLISHED}
      */
     @Transactional
     public AdminFileResponse unpublish(String fileId) {
         StoredFile file = requireInLibrary(fileId);
         if (file.getFileType() != FileType.Public) {
-            throw new ForbiddenActionException("File " + fileId + " is not published");
+            throw new ConflictException("File " + fileId + " is not published", "FILE_NOT_PUBLISHED");
         }
         file.setFileType(FileType.Library);
         // The cajones stay: hiding says the platform no longer offers the file, not what it is (ADR-14 §4).
@@ -683,16 +682,17 @@ public class FileService {
      * @param fileId  the file
      * @param request what it is now
      * @return the file after the change
-     * @throws NotFoundException        if the file is not there, was marked gone, or is not in the library
-     * @throws ForbiddenActionException if it is published
-     * @throws InvalidRequestException  if the cajón is one nothing can be published into
+     * @throws NotFoundException       if the file is not there, was marked gone, or is not in the library
+     * @throws ConflictException       if it is published, with the code {@code FILE_ALREADY_PUBLISHED}
+     * @throws InvalidRequestException if the cajón is one nothing can be published into
      */
     @Transactional
     public AdminFileResponse changeLibraryCategory(String fileId, UpdateLibraryCategoryRequest request) {
         requirePublishable(List.of(request.category()));
         StoredFile file = requireInLibrary(fileId);
         if (file.getFileType() == FileType.Public) {
-            throw new ForbiddenActionException("File " + fileId + " is published; hide it before changing what it is");
+            throw new ConflictException(
+                    "File " + fileId + " is published; hide it before changing what it is", ALREADY_PUBLISHED);
         }
         categoryRepository.deleteByFileIdAndCategories(fileId, PUBLISHABLE_CATEGORIES);
         classify(fileId, request.category());
@@ -784,20 +784,23 @@ public class FileService {
      * Resolves a file somebody is about to attach to a table, checking they are allowed to.
      *
      * <p>Called by {@link TableFileService}, which is why it hands back the entity: it stays inside
-     * the backend and never crosses HTTP (arquitectura §2.2). Two files qualify, and only two - the
-     * actor's own, and one the platform published (ADR-14 §1). Somebody else's private upload never does,
-     * which is the difference between reusing what the community offers and reading a stranger's
-     * character sheet.
+     * the backend and never crosses HTTP. Two files qualify, and only two - the actor's own, and one
+     * the platform published. Somebody else's private upload never does, which is the difference
+     * between reusing what the community offers and reading a stranger's character sheet.
+     *
+     * <p>A refused file the actor may not even open answers as a file that does not exist, so the
+     * refusal never confirms it is there; only one they can open and is not theirs to attach is a 403.
      *
      * @param fileId  the file about to be attached
      * @param actorId the actor, from the token
      * @return the file
-     * @throws NotFoundException        if it is not there or was marked gone
-     * @throws ForbiddenActionException if it belongs to somebody else and is not published
+     * @throws NotFoundException        if it is not there, was marked gone, or the actor may not open it
+     * @throws ForbiddenActionException if the actor may open it but it belongs to somebody else and is
+     *                                  not published
      */
     @Transactional
     public StoredFile requireAttachable(String fileId, String actorId) {
-        StoredFile file = requireLive(fileId);
+        StoredFile file = requireReadable(fileId, actorId);
         boolean isOwn = file.getUserCreated().getId().equals(actorId);
         if (!isOwn && file.getFileType() != FileType.Public) {
             throw new ForbiddenActionException("File " + fileId + " belongs to somebody else and is not published");
@@ -907,9 +910,12 @@ public class FileService {
                 .orElseThrow(() -> new NotFoundException("File " + fileId + " not found"));
     }
 
-    /** A live file the actor uploaded, or 404 if it is not there and 403 if it is not theirs. */
+    /**
+     * A live file the actor uploaded. 404 if it is not there or they may not open it, the same answer
+     * for both; 403 only for a file they may open and is not theirs.
+     */
     private StoredFile requireOwned(String fileId, String actorId) {
-        StoredFile file = requireLive(fileId);
+        StoredFile file = requireReadable(fileId, actorId);
         if (!file.getUserCreated().getId().equals(actorId)) {
             throw new ForbiddenActionException("File " + fileId + " belongs to somebody else");
         }
@@ -919,115 +925,134 @@ public class FileService {
     /**
      * The read rule, in one place, and the reason this class has to know about tables at all.
      *
-     * <p>Seven ways a file is reachable, in the order they are cheapest to answer:
+     * <p>These are the ways a file is reachable, in the order they are cheapest to answer:
      *
      * <ol>
      *   <li><b>It is yours.</b> Whatever else is true about it.
-     *   <li><b>The platform published it</b> (ADR-13 §2). The audience decides where it is <em>listed</em>,
-     *       not who may open it - see {@link #listPublic}.
-     *   <li><b>You run a table it is attached to</b> (ADR-06 §4). Private or shared: a master sees
-     *       everything on their own table, and this is pertenencia and not the {@code Master} role.
-     *   <li><b>A table shares it.</b> Not "a table you play at" - <b>any</b> table that shares it.
-     *   <li><b>It was handed in to a task of a table you run</b> (ADR-15 §1, §2). A master asks for a
-     *       character sheet and has to be able to open the one that arrives; without this they would
-     *       see the row on the answer and get a 404 opening it, which is the exact mismatch ADR-14 §2 had
-     *       to fix for the files a table shares. It is the master's, and nobody else's: the submitter
+     *   <li><b>The platform published it.</b> The category decides where it is <em>listed</em>, not who
+     *       may open it - see {@link #listPublic}.
+     *   <li><b>It is in the platform's library and you are an admin or the owner.</b> Published or
+     *       not, hidden or not, and whoever uploaded it: the library is the admins' as a team, every
+     *       one of them sees it listed on {@code /admin/files}, and a row they could not open would be
+     *       listed and then refused.
+     *   <li><b>You run a table it is attached to.</b> Private or shared: a master sees everything on
+     *       their own table, and that is the row in {@code masters}, not the {@code Master} role.
+     *   <li><b>A table shares it and you may see that table.</b> Not "a table you play at" -
+     *       <b>any</b> table that shares it and that you may see.
+     *   <li><b>It was handed in to a request of a table you run.</b> A master asks for a character
+     *       sheet and has to be able to open the one that arrives, or they would see the row on the
+     *       answer and get a 404 opening it. It is the master's, and nobody else's: the submitter
      *       already reaches it through the first way.
-     *   <li><b>The blank a master attached to a request</b> is readable by everybody the request
-     *       reaches - the master who wrote it, or a candidate/player it addresses (ADR-15 §1).
-     *   <li><b>It was attached to an application to a table you run</b> (ADR-13 §1 uso 2, ADR-09 §2). The sister
-     *       of the fifth (ADR-14 §2): a master has to be able to open the character sheet a candidate
-     *       applied with, and without this they would see the row on the application and get a 404
-     *       opening it. It is the master's, and nobody else's: the applicant already reaches it
-     *       through the first way. Only a <b>live</b> application counts -
-     *       {@code RegistrationFileRepository.findTableIdsByApplicationFileId} excludes a withdrawn
-     *       or rejected one, which is ADR-09 §2's whole reason to exist: without that filter, withdrawing
-     *       would leave the file permanently readable by a master who has nothing left to do with it.
+     *   <li><b>It is the blank a master attached to a request that reaches you</b>, and the request's
+     *       audience decides who that is - see {@link #reaches}. A closed request still counts: closing
+     *       ends what it takes in, not what it asked, and its blank stays part of the table's history.
+     *   <li><b>It was attached to an application to a table you run.</b> The sister of the answer
+     *       to a request: a
+     *       master has to be able to open the character sheet a candidate applied with. Only a
+     *       <b>live</b> application counts - {@code RegistrationFileRepository.findTableIdsByApplicationFileId}
+     *       excludes a withdrawn or rejected one, or withdrawing would leave the file readable by a
+     *       master who has nothing left to do with it.
      * </ol>
      *
-     * <p><b>The admin reaches whatever the master of the table reaches</b> (ADR-06 §8): the third,
-     * fifth, sixth and seventh ways ask {@code MasterService.canOversee}, which is "runs it, or holds
-     * the admin rank". Only through a table, though - somebody's private file that no table links is
-     * still theirs alone, which is why the admin library does not list them either.
+     * <p><b>The admin reaches whatever the master of the table reaches</b>: running a table, an answer
+     * to a request, a request's blank and an application all ask {@code MasterService.canOversee},
+     * which is "runs it, or holds the admin rank". Outside the library, only through a table - somebody's private file that no table
+     * links is still theirs alone, which is why the admin library does not list it either.
      *
-     * <p><b>The fourth one is deliberately as wide as the table itself, and no wider.</b> A shared
+     * <p><b>A shared attachment is deliberately as wide as the table itself, and no wider.</b> A shared
      * attachment already travels inside {@code GameTableDetailResponse}, which anybody who may see
      * the table receives - so requiring membership here would list a file to somebody and then refuse
-     * to hand it over, which is the worst of both. It is also the case the files exist for: what a
-     * master attaches to their open table is the character sheet and the house rules, and the person
-     * who most needs to read those is somebody still deciding whether to apply (ADR-13 §1 uso 1). A private
-     * attachment is the master's own notes and never gets here.
-     *
-     * <p><b>The veto landed, and it is honoured in the fourth way</b> (ADR-09 §4, §5, ADR-14 §2). This is the
-     * note that used to say «when the veto lands (F3) it has to be honoured here», and it is the
-     * hole {@code roles-y-alcance.md} §7 named in advance: «un vetado que no ve la mesa pero sí
-     * descarga su archivo es el bug que ADR-14 §2 anticipó por escrito». It was real - until F3.4 the
-     * condition was {@code !link.isPrivate()} alone, so <em>any</em> authenticated person reached a
-     * shared attachment, the vetoed included. The fourth way is now "a table shares it <b>and you
-     * may see that table</b>", asked through {@code TableVisibilityService.canSee} so it is the same
-     * question {@code GET /game-tables/{id}} answers and not a second copy of it. That one question
-     * also covers the two cases a veto check alone missed: a table that was never shown to anyone
-     * outside it, whose shared files were one download away for any signed-in person with the id, and
-     * a deleted table.
-     *
-     * <p>The other ways need no such clause and it would be noise to add one: the first is the
-     * file's owner, the second is a platform publication, the third, fifth and seventh ask for
-     * pertenencia of the table (ADR-18 §4 keeps a master out of its registrations), and the sixth asks
-     * for a live {@code Candidate} or {@code Player} row - which somebody moved to {@code Blocked}
-     * no longer has.
+     * to hand it over. It is also the case the files exist for: what a master attaches to their open
+     * table is the character sheet and the house rules, and the person who most needs to read those
+     * is somebody still deciding whether to apply. A private attachment is the master's own notes and
+     * never gets here. Asking {@code TableVisibilityService.canSee} rather than a copy of its rule
+     * keeps out the vetoed, everybody outside a table nobody was shown yet, and everybody once the
+     * table is deleted - the same answer {@code GET /game-tables/{id}} gives.
      *
      * <p>Anything else answers 404 rather than 403: confirming that a file exists to somebody with no
-     * business knowing so is the kind of leak an opaque id is only defence in depth against (ADR-03 §4, ADR-09 §4).
+     * business knowing so is the kind of leak an opaque id is only defence in depth against.
      */
     private StoredFile requireReadable(String fileId, String actorId) {
         StoredFile file = requireLive(fileId);
         if (file.getUserCreated().getId().equals(actorId) || file.getFileType() == FileType.Public) {
             return file;
         }
+        if (file.getFileType().isInLibrary() && isAdminOrOwner(actorId)) {
+            return file;
+        }
         List<TableFile> links = tableFileRepository.findById_FileIdAndStatus(fileId, TableFileStatus.Current);
         for (TableFile link : links) {
             String linkedTableId = link.getId().gameTableId();
-            // The third way, first because it is the widest: a master sees everything on their own
-            // table, private or shared, and is never the subject of a veto there (ADR-06 §4, ADR-18 §4). So does
-            // an admin, on every table (ADR-06 §8) - in this and in the three loops below.
+            // Running the table, first because it is the widest: a master sees everything on their own
+            // table, private or shared, and is never the subject of a veto there. So does an admin,
+            // on every table - in this and in the three loops below.
             if (masterService.canOversee(linkedTableId, actorId)) {
                 return file;
             }
-            // The fourth: a shared attachment is read by whoever may see the table - not by a vetoed
+            // A shared attachment is read by whoever may see the table - not by a vetoed
             // person, and not by anyone outside a table nobody was shown yet.
             if (!link.isPrivate() && tableVisibilityService.canSee(linkedTableId, actorId)) {
                 return file;
             }
         }
-        // The fifth way, last because it is the one that costs a join: what somebody handed in to a
-        // task is readable by the people running the table that asked for it (ADR-15 §1, §2).
+        // An answer to a request, after the links because it costs a join: what somebody handed in to a request is
+        // readable by the people running the table that asked for it.
         for (String gameTableId : submissionFileRepository.findTableIdsBySubmittedFileId(fileId)) {
             if (masterService.canOversee(gameTableId, actorId)) {
                 return file;
             }
         }
-        // The sixth: the blank a master attached to a request has to be readable by everybody the
-        // request reaches, or "fill in this form" arrives with a form nobody can open. Wider than the
-        // fifth on purpose - that one is the master reading an answer, this one is the table reading
-        // the question - so membership of the table is what it asks for, not running it.
-        for (String gameTableId : taskFileRepository.findTableIdsByRequestedFileId(fileId)) {
-            if (masterService.canOversee(gameTableId, actorId)
-                    || registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
-                            gameTableId, actorId, REQUEST_READERS)) {
+        // A request's blank: it has to be readable by everybody the request reaches, or "fill in this
+        // form" arrives with a form nobody can open. Wider than an answer on purpose - that one is the master reading an answer, this one is the table reading
+        // the question - but only as wide as the request: its audience decides, not the table.
+        for (TableTask task : taskFileRepository.findTasksByRequestedFileId(fileId)) {
+            if (masterService.canOversee(task.getGameTable().getId(), actorId) || reaches(task, actorId)) {
                 return file;
             }
         }
-        // The seventh: what a candidate attached to their application is readable by the people
-        // running the table they applied to (ADR-13 §1 uso 2, ADR-09 §2) - the sister of the fifth, for
-        // applications rather than answers. The repository already excludes a withdrawn or
-        // rejected application, so this loop never even sees a table whose master should not reach
-        // it any more.
+        // An application's attachment: what a candidate attached to their application is readable by the people
+        // running the table they applied to. The repository already excludes a withdrawn or rejected
+        // application, so this loop never sees a table whose master should not reach it any more.
         for (String gameTableId : registrationFileRepository.findTableIdsByApplicationFileId(fileId)) {
             if (masterService.canOversee(gameTableId, actorId)) {
                 return file;
             }
         }
         throw new NotFoundException("File " + fileId + " not found");
+    }
+
+    /** Whether this person holds the admin or the owner rank, read from the database and not the token. */
+    private boolean isAdminOrOwner(String actorId) {
+        Set<String> roles = userRoleRepository.findActiveRoleNames(actorId);
+        return roles.contains(PlatformRole.ADMIN.roleName()) || roles.contains(PlatformRole.OWNER.roleName());
+    }
+
+    /**
+     * Whether a request is addressed to this person, which is who may open its blank.
+     *
+     * <p>A request to the candidates is read by anybody who may see the table, applied or not: the
+     * list of a table's requests already shows it to them, and somebody about to apply is exactly who
+     * needs to read what they will be asked for. The vetoed and everybody outside a table nobody was
+     * shown yet do not see the table, so they do not read it either. A request to the players is a
+     * player's alone, and one handed to a single player is that player's and nobody else's at the
+     * table: a blank made for one person can be their own material.
+     */
+    private boolean reaches(TableTask task, String actorId) {
+        String gameTableId = task.getGameTable().getId();
+        return switch (task.getAudience()) {
+            case Candidates -> tableVisibilityService.canSee(gameTableId, actorId);
+            case Players -> plays(gameTableId, actorId);
+            case Single -> {
+                User target = task.getTargetUser();
+                yield target != null && target.getId().equals(actorId) && plays(gameTableId, actorId);
+            }
+        };
+    }
+
+    /** Whether this person plays at the table: a live {@code Player} registration, which a vetoed one no longer is. */
+    private boolean plays(String gameTableId, String actorId) {
+        return registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                gameTableId, actorId, List.of(TableRegistrationStatus.Player));
     }
 
     /**

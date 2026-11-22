@@ -28,9 +28,29 @@ app:
     allowed-origin: ${APP_CORS_ALLOWED_ORIGIN}
   frontend:
     url: ${APP_FRONTEND_URL}
+  # Fixed, not read from the environment: a copied local .env sets it to false, and the refresh cookie
+  # would then travel over plain HTTP.
+  cookie:
+    secure: true
   jwt:
     # The base default is a secret committed to the repository: anybody holding it could sign their
     # own tokens. Production must fail to start without its own (ADR-02 §5, ADR-05 §2).
     secret: ${APP_JWT_SECRET}
   storage:
     root: ${APP_STORAGE_ROOT}
+
+# The API schema and Swagger UI describe every endpoint to anybody who asks and need no session.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+server:
+  # The rate limits count per client IP, and behind the reverse proxy every request arrives from the
+  # proxy's own address. "native" lets Tomcat replace the remote address with the one in
+  # X-Forwarded-For, but only when the request comes from an internal proxy (loopback and the private
+  # ranges, Tomcat's default): a client on the internet that sends the header itself is ignored.
+  # The proxy therefore has to run on this host or on the private network, and set the header.
+  # "framework" is not used because it would trust the header from anybody.
+  forward-headers-strategy: native

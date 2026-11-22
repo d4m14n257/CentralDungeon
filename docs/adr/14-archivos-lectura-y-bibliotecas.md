@@ -2,7 +2,7 @@
 adr: 14
 titulo: "Archivos: lectura y bibliotecas"
 estado: Vigente
-actualizada: 2026-11-01
+actualizada: 2026-11-18
 absorbe: [79, 205, 206, 207, 211, 232, 233, 237, 241, 242, 278, 279, 282]
 ---
 
@@ -20,9 +20,9 @@ absorbe: [79, 205, 206, 207, 211, 232, 233, 237, 241, 242, 278, 279, 282]
 
 ## §2 Leer un archivo pasa por una sola puerta, y lo que alguien ve en pantalla lo puede abrir
 
-**Decisión.** Toda lectura pasa por `FileService.requireReadable`, que acumula vías: el dueño; lo publicado; quien dirige una mesa que lo tiene vinculado (y un admin, en toda mesa); **cualquiera que pueda ver la mesa** lee lo que la mesa comparte, sin exigir pertenencia, salvo el vetado (ADR-09 §4); **quien dirige la mesa** abre lo que le entregaron a una petición suya; quien una petición alcanza abre el formulario que el master le adjuntó (ADR-15 §3); y quien dirige la mesa abre lo adjunto a una postulación. Lo privado no llega nunca por la vía de la mesa. El repositorio resuelve qué mesas alcanza el archivo; el service decide la autorización con `masterService.canOversee` (regla dura 17, ADR-05 §5, ADR-06 §8): dirigir la mesa, o ser admin.
+**Decisión.** Toda lectura pasa por `FileService.requireReadable`, que acumula vías: el dueño; lo publicado; quien dirige una mesa que lo tiene vinculado (y un admin, en toda mesa); **cualquiera que pueda ver la mesa** lee lo que la mesa comparte, sin exigir pertenencia, salvo el vetado (ADR-09 §4); **quien dirige la mesa** abre lo que le entregaron a una petición suya; quien una petición alcanza abre el formulario que el master le adjuntó, con el alcance de su audiencia y también con la petición cerrada (ADR-15 «Peticiones de la mesa» §3 «El master puede adjuntar archivos al pedido que escribe»); quien dirige la mesa abre lo adjunto a una postulación; y **todo admin u owner abre todo archivo de la biblioteca** (`Library`, sin publicar u oculto, §7), también el que subió otro admin. Lo privado no llega nunca por la vía de la mesa. El repositorio resuelve qué mesas alcanza el archivo; el service decide la autorización con `masterService.canOversee` (regla dura 17, ADR-05 §5, ADR-06 §8): dirigir la mesa, o ser admin.
 
-**Por qué.** Cada vía nueva nació del mismo desajuste: una pantalla lista un archivo y la descarga responde `404`, que es lo peor de los dos mundos. Lo que un master adjunta a su mesa abierta —la hoja, las reglas de la casa— lo necesita sobre todo quien **todavía decide si postularse** (ADR-13 §1). Quien entregó ya llega por la primera vía, así que la de las entregas es solo para quien dirige.
+**Por qué.** Cada vía nueva nació del mismo desajuste: una pantalla lista un archivo y la descarga responde `404`, que es lo peor de los dos mundos. Lo que un master adjunta a su mesa abierta —la hoja, las reglas de la casa— lo necesita sobre todo quien **todavía decide si postularse** (ADR-13 §1). Quien entregó ya llega por la primera vía, así que la de las entregas es solo para quien dirige. La de la biblioteca la decidió el usuario el 2026-11-18, en F4.4 «Seguridad»: la biblioteca es del equipo de admins, y un `Library` sin publicar solo lo abría quien lo subió, por ser su dueño.
 
 *Antes: #206, #211.*
 

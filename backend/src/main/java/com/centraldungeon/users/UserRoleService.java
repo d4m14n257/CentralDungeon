@@ -106,6 +106,13 @@ public class UserRoleService {
      *                                  themselves, which the exclusion of ADR-06 §1 turns into
      *                                  taking away their own Owner; 409 {@code LAST_OWNER} when the
      *                                  same exclusion would take Owner away from the last one left
+     * @implNote Two simultaneous grants of the same role must write one audit row, so the second decides
+     *           from what the first committed: the person's grants are read under their row lock. A grant
+     *           of Admin takes the Owner lock before that, whether or not the person is an owner, so two of
+     *           them to the same person queue there, and against a revocation of Owner both lock the Owner
+     *           role first and the person's rows second - never the other way round. A first grant of a role
+     *           to somebody with no row at all has nothing but a gap to lock: two of those deadlock, the
+     *           database rolls one back whole and it answers 409 {@code CONFLICT}.
      */
     @Transactional
     public AdminUserDetailResponse grantRole(String targetId, PlatformRole role, String justification, CurrentUser actor) {
@@ -114,13 +121,13 @@ public class UserRoleService {
                     "The Owner role is not granted from the application", ForbiddenActionException.OWNER_NOT_GRANTABLE);
         }
         requireRankAuthority(role, actor);
+        // Admin can take Owner away, so it queues on the Owner lock before reading anything, like every
+        // path that can: the person's rows come second, the order a revocation of Owner takes them in.
+        if (role == PlatformRole.ADMIN) {
+            lockOwnerRole();
+        }
         User target = userService.getById(targetId);
-        // Player and Master are decided here, so their grants are read under the row lock. Admin is not:
-        // its exclusion takes the Owner lock and then every owner's grant, and holding the target's
-        // rows first would be the opposite order to a concurrent revocation of Owner.
-        List<UserRole> grants = new ArrayList<>(role == PlatformRole.ADMIN
-                ? userRoleRepository.findAllGrants(targetId)
-                : userRoleRepository.lockAllGrants(targetId));
+        List<UserRole> grants = new ArrayList<>(userRoleRepository.lockAllGrants(targetId));
 
         Optional<UserRole> existing = grantOf(grants, role);
         boolean alreadyHeld = existing.filter(UserRoleService::isLive).isPresent();
@@ -193,7 +200,8 @@ public class UserRoleService {
      * @implNote Two simultaneous revocations of the same grant must write one audit row, so the
      *           second has to decide from what the first committed. Every role except Owner on a live
      *           account reads the target's grants under their row lock, and the waiting request finds
-     *           the grant already gone. Owner on a live account reads them plainly and asks the
+     *           the grant already gone; Owner on an account that is not live takes the Owner lock before
+     *           that, the order a grant of Admin uses. Owner on a live account reads them plainly and asks the
      *           idempotence a second time against the holders read under the Owner lock, which every
      *           path able to remove an Owner takes first. The last-owner check comes before that second
      *           question, so with exactly two owners the second of two simultaneous revocations of the
@@ -215,6 +223,11 @@ public class UserRoleService {
         // Owner on a live account decides under the Owner lock below; everything else decides here, so
         // it reads the grants under their own row lock.
         boolean guardedByOwnerLock = role == PlatformRole.OWNER && target.getStatus() == UserStatus.Allowed;
+        if (role == PlatformRole.OWNER && !guardedByOwnerLock) {
+            // No count to make, but its audit row references the Owner role, and that check waits on the
+            // Owner lock: taken here, before the person's rows, it is the order a grant of Admin uses.
+            lockOwnerRole();
+        }
         List<UserRole> grants = new ArrayList<>(guardedByOwnerLock
                 ? userRoleRepository.findAllGrants(targetId)
                 : userRoleRepository.lockAllGrants(targetId));
@@ -306,9 +319,14 @@ public class UserRoleService {
 
     /** The two locks described on {@link #isLastActiveOwner}, returning the live owners they read. */
     private List<UserRole> lockLiveOwners() {
+        lockOwnerRole();
+        return userRoleRepository.lockActiveHolders(PlatformRole.OWNER.roleName());
+    }
+
+    /** The first of the two locks on {@link #isLastActiveOwner}: the mutex every rank change queues on. */
+    private void lockOwnerRole() {
         roleRepository.lockByName(PlatformRole.OWNER.roleName())
                 .orElseThrow(() -> new IllegalStateException("Owner role is missing - check V2__seed.sql"));
-        return userRoleRepository.lockActiveHolders(PlatformRole.OWNER.roleName());
     }
 
     /**

@@ -45,6 +45,10 @@ export function RichTextEditor({ value, onChange, ariaLabel, className }: RichTe
         // Not on the server's allowlist, so it must not be reachable here either.
         horizontalRule: false,
         codeBlock: false,
+        // The server keeps h1-h3 only; a pasted h4 would preview here and vanish on save.
+        heading: { levels: [1, 2, 3] },
+        // The server keeps http(s) links only; mailto, tel, javascript: and the rest are refused.
+        link: { isAllowedUri: (url: string) => /^https?:\/\//i.test(url) },
       }),
     ],
     content: value,

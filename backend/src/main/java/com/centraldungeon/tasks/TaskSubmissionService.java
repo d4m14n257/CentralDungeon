@@ -115,18 +115,22 @@ public class TaskSubmissionService {
      *
      * @param taskId  the task being answered
      * @param request the written answer, the files, or both
-     * @param actorId the actor, from the token - the submitter is never named in the request (ADR-05 §5)
+     * @param actorId the actor, from the token - the submitter is never named in the request
      * @return the answer as it was recorded
-     * @throws ForbiddenActionException if the task is not addressed to the actor, or a file is
-     *                                  somebody else's and not published (ADR-14 §1)
+     * @throws com.centraldungeon.common.exception.NotFoundException if the task or a file does not exist, or the actor cannot see the
+     *                                  task (they must see its table and, besides, the task must be
+     *                                  shown to everybody looking at the table, or they run or oversee
+     *                                  the table, or it is addressed to them, or they already answered
+     *                                  it) - the same answer as a task that does not exist
+     * @throws ForbiddenActionException if the actor sees the task but it is not addressed to them, or a
+     *                                  file is somebody else's and not published
      * @throws ConflictException        if the task is no longer taking answers
      * @throws InvalidRequestException  if the answer uses a channel the task does not take, or is
      *                                  empty on both
-     * @throws com.centraldungeon.common.exception.NotFoundException if the task or a file is not there
      */
     @Transactional
     public TaskSubmissionResponse submit(String taskId, CreateSubmissionRequest request, String actorId) {
-        TableTask task = tableTaskService.getTask(taskId);
+        TableTask task = tableTaskService.requireVisible(taskId, actorId);
         if (!tableTaskService.isRecipient(task, actorId)) {
             throw new ForbiddenActionException("Task " + taskId + " is not addressed to user " + actorId);
         }
@@ -169,13 +173,17 @@ public class TaskSubmissionService {
      * @param taskId  the task
      * @param actorId the actor, from the token
      * @return every answer, oldest first, plus the people still missing
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
-     * @throws com.centraldungeon.common.exception.NotFoundException if the task is not there
+     * @throws com.centraldungeon.common.exception.NotFoundException if the task does not exist, or the actor cannot see it (they
+     *                                  must see its table and, besides, the task must be shown to
+     *                                  everybody looking at the table, or they run or oversee the table,
+     *                                  or it is addressed to them, or they already answered it) - the
+     *                                  same answer as a task that does not exist
+     * @throws ForbiddenActionException if the actor sees the task but neither runs its table nor is an admin
      */
     @Transactional(readOnly = true)
     public TaskSubmissionsResponse listForTask(String taskId, String actorId) {
-        TableTask task = tableTaskService.getTask(taskId);
-        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
+        TableTask task = tableTaskService.requireVisible(taskId, actorId);
+        // Read by the table's masters and by any admin; its writes stay the masters' own.
         if (!masterService.canOversee(task.getGameTable().getId(), actorId)) {
             throw new ForbiddenActionException("Only a master of this table or an admin can view what was handed in");
         }
@@ -197,17 +205,22 @@ public class TaskSubmissionService {
     /**
      * Somebody's own answers to a task - what they see of what they handed in.
      *
-     * <p>No membership check and none needed: the actor comes from the token and the query is keyed
-     * on them, so there is no parameter that could point at anybody else's answers (ADR-05 §5).
+     * <p>No membership check beyond seeing the task: the actor comes from the token and the query is
+     * keyed on them, so there is no parameter that could point at anybody else's answers.
+     * A task the actor may not see answers 404, so the endpoint does not confirm it exists.
      *
      * @param taskId  the task
      * @param actorId the actor, from the token
      * @return their answers, oldest first. Empty when they have not answered
-     * @throws com.centraldungeon.common.exception.NotFoundException if the task is not there
+     * @throws com.centraldungeon.common.exception.NotFoundException if the task does not exist, or the actor cannot see it (they
+     *                                  must see its table and, besides, the task must be shown to
+     *                                  everybody looking at the table, or they run or oversee the table,
+     *                                  or it is addressed to them, or they already answered it) - the
+     *                                  same answer as a task that does not exist
      */
     @Transactional(readOnly = true)
     public List<TaskSubmissionResponse> listMine(String taskId, String actorId) {
-        tableTaskService.getTask(taskId);
+        tableTaskService.requireVisible(taskId, actorId);
         return describe(submissionRepository.findByTask_IdAndUser_IdAndDeletedAtIsNullOrderByCreatedAtAsc(taskId, actorId));
     }
 
@@ -280,17 +293,6 @@ public class TaskSubmissionService {
         }
         if (!hasText && !hasFiles) {
             throw new InvalidRequestException("An answer has to carry text, files, or both");
-        }
-    }
-
-    /**
-     * The membership gate (hard rule 17, ADR-05 §5, ADR-06 §4): a row in {@code masters}, not the {@code Master} role.
-     *
-     * @throws ForbiddenActionException if the actor does not run this table
-     */
-    private void requireMasterOf(String gameTableId, String actorId) {
-        if (!masterService.isMasterOf(gameTableId, actorId)) {
-            throw new ForbiddenActionException("User " + actorId + " does not run table " + gameTableId);
         }
     }
 }

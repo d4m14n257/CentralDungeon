@@ -81,6 +81,11 @@ export interface StoredFile {
   createdAt: string
 }
 
+/** Mirror of `MyFileCategoriesResponse` — the cajones this person may file something of their own under (ADR-14 §5). */
+export interface MyFileCategories {
+  categories: FileCategory[]
+}
+
 /**
  * What an upload answers with: the file, and whether it was recognised rather than written (ADR-13 §4).
  *

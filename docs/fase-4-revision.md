@@ -54,8 +54,8 @@ Y hay un recurso escaso que es **la atención del cliente**. Gastarla tres veces
 | Dos admins editando el mismo ajuste: `last write wins` a propósito, sin IT que lo recorra | F3.5 | F4.3 — **cerrado**: el historial se salteaba un paso; ahora se serializa (ADR-17 «Configuración y auditoría» §3) |
 | El cron real del barrido de huérfanas, el `@Scheduled` de la bandeja en una JVM de producción y el guard de multipart en un arranque real: se prueban los métodos, no el despliegue | F3.2, F3.3, F3.5 | F4.3 — **cerrado**: `ProductionWiringIT` arranca el perfil `prod` |
 | La resolución de grupos de catálogo no está acotada | F2.1 | F4.3 — **cerrado**: `@Size(max = 64)` en las listas de ids al escribir una mesa; el `?q=` lo acota la cabecera de 8 KB |
-| `REQUEST_ENTITY_GONE` en su caso natural, que empezaba a dispararse en F3.4 | F3.2 | F4.4 |
-| Las siete vías de lectura de un archivo, juntas y contra el actor que no debería pasar | F2.2 | F4.4 |
+| `REQUEST_ENTITY_GONE` en su caso natural, que empezaba a dispararse en F3.4 | F3.2 | F4.4 — **cerrado**: desde que solo se veta a un `Player`, la postulación de un pedido de veto ya no se puede retirar; el caso queda para la postulación borrada, y lo prueban los dos tests «gone application» de `ApprovalServiceIT` |
+| Las siete vías de lectura de un archivo, juntas y contra el actor que no debería pasar | F2.2 | F4.4 — **cerrado**: son ocho desde que todo admin abre la biblioteca; cada una tiene su celda negativa en `FilesCatalogsRoleMatrixIT`, también con el vetado, la mesa borrada y la nunca pública |
 | La pausa reagendando al reanudar y el veto de un `Secondary` resuelto por el `Primary`, recorridos en el navegador | F3.4 | F4.5 |
 | El buscador de `/admin/tables`, si F3.3 no lo completó; el e2e de «aprobar `TableOpen` no crea mesa» acotado a `Unassigned` | F2.1, F3.2 | F4.5 |
 | Las dos fuentes de la bandeja que nacen vacías (`comments`, `system_feedback`) | F3.3 | **F5** — anotado a propósito |
@@ -79,7 +79,7 @@ Al dibujar los diagramas 21–24 (ADR-01 §10) se barrieron `router.tsx`, cada `
 | Dos tipos del frontend que no coinciden con lo que devuelve el backend: `requestBlock` tipado `void` (devuelve `ApprovalRequestDetailResponse`) y `banRequestsApi.approve` tipado `UnreadBody` (devuelve `RegistrationResponse`) | `registrationsApi.ts`, `approvalsApi.ts` — M16 |
 | **El texto de la postulación no lo muestra ninguna pantalla**: se pide, se guarda como texto plano (ADR-03 §8) y el master no lo lee en ningún lado | `ApplyToTableDialog`, `MasterTableCandidatesTab` — **bug**, se corrige en F4 junto con M24 |
 | Valores de enum que ningún código produce: `TableApprovedWithChanges`, `SubmissionStatus.Pending`, `UserStatus.Deleted`, `RegistrationFileStatus.Removed`, `SubmissionFileStatus.Deleted` | los enums del backend y sus espejos — M31 |
-| **117 alertas de Dependabot** en la rama por defecto (6 críticas, 59 altas) | aviso de GitHub al hacer push — F4.4 «Seguridad»; el 2026-10-24 ya eran 133 (5 críticas, 65 altas) |
+| ~~**117 alertas de Dependabot** en la rama por defecto (6 críticas, 59 altas)~~ — **triadas en F4.4 «Seguridad»**: de 146 abiertas, 124 son de `legacy/` (no se despliega), 0 de `backend/` y 22 de `frontend/`, todas resueltas con parches o minors; queda `picomatch` ≤ 4.0.7, sin versión corregida, que no aplica | aviso de GitHub al hacer push; el 2026-10-24 ya eran 133 (5 críticas, 65 altas) |
 | ~~**Los diagramas ER quedaron atrás de las migraciones.**~~ — **resuelto en F4.0 «Documentación y conocimiento»**: el ER de `arquitectura` §4.3 tiene todas las tablas, el `11` suma `user_role_changes` y `user_status_changes` (V11) y el `13`, `registration_status_changes` (V12); la tabla de migraciones del DDL llega a V14 | `historia-y-er.md`, `docs/diagramas/11`, `13` |
 | `er-diagram-sync` pedía que el DDL «refleje el estado final acumulado», pero el DDL es el `V1__baseline.sql` literal más una tabla de migraciones. Corregido en F4.0 | la skill |
 
@@ -657,6 +657,73 @@ F4 no usa el procedimiento de `plan-desarrollo.md` §7 —no hay A1 ni A2, porqu
 **Fuera de alcance, con su motivo:** el anonimato de los comentarios (ADR-11 §5, ADR-06 §8) no se puede verificar porque los comentarios son **F5**. Queda anotado como la primera línea de la revisión de esa fase.
 
 **Terminada cuando:** cada vía de lectura tiene su prueba negativa, y ninguna negativa devuelve un código que confirme lo que niega.
+
+#### Avance — terminada el 2026-11-22
+
+Planeó Fable 5.1; ejecutó Opus 5.5 con agentes Opus y Sonnet por tarea; revisaron `revisor-seguridad` y `revisor-backend`. El plan con sus tareas está en `~/.claude/plans/f4-4-seguridad.md`. El texto de arriba («el refresh rotativo», «el CSRF activo solo en `/auth/refresh`», «siete vías») es el plan de la rebanada: lo que rige ahora está en las ADRs que se nombran abajo.
+
+- **Decisiones del usuario, el 2026-11-18:**
+  - **«Negar no confirma»** (ADR-05 «Seguridad, sesión y login» §10): lo que el actor no puede ver es `404`, con el mismo cuerpo que un id inexistente; `403` solo si lo ve y no puede hacer la acción; después, el estado (`409`).
+  - **Rate limiting** (ADR-05 §11): un filtro propio sobre Caffeine, contado por instancia, con `429 RATE_LIMITED` y `Retry-After`.
+  - **Refresh revocable** (ADR-05 §2): tabla `refresh_tokens` (V16) con familias; rotar revoca el anterior, reusar uno rotado revoca la familia, logout revoca la familia.
+  - **Logout con CSRF**, **swagger apagado en `prod`** (ADR-05 §12) y **`listMyCategories` con un record**.
+  - **Archivos** (ADR-14 «Archivos: lectura y bibliotecas» §2, ADR-15 «Peticiones de la mesa» §3): el formulario de una petición a «Candidatos» lo abre quien ve la mesa; toda la biblioteca la abre cualquier admin; el de una petición cerrada se sigue abriendo como histórico.
+  - **El buscador de co-masters se acota** (ADR-07 «Mesas: ciclo de vida» §8): mínimo de 2 caracteres, tope de 20, siempre la primera página.
+  - Las dos carreras de roles de F4.3 se tratan como bugs de integridad (ADR-06 «Roles y alcance» §2).
+- **Decisiones del usuario, el 2026-11-20:** el refresh se serializa entre pestañas con `navigator.locks`, y un job diario purga `refresh_tokens`.
+- **Decisiones del usuario, el 2026-11-22**, tomadas sobre lo que encontraron la verificación y las revisiones:
+  - **Ventana de gracia de 30 s en el refresh** (ADR-05 §2): corrige el descarte anterior, porque recargar la página dos veces seguidas cerraba la sesión.
+  - **El logout que falla reintenta y avisa.**
+  - **Rate limiting ampliado** (ADR-05 §11): IPv6 por /64; propuestas de catálogo, 20 por hora; buscador de co-masters, 30 por minuto, con el orden fijado por el servidor.
+  - **El choque de agenda al sumar un co-master nombra la otra mesa solo si el actor la ve** (ADR-08 «Agenda, sesiones y asistencia» §2).
+  - **`prod` y `test` no arrancan juntos** (ADR-24 «Testing» §1).
+- **Bugs encontrados y corregidos, cada uno con su test:**
+  - **Archivos:** el formulario de una petición se abría a cualquier candidato o jugador de la mesa, incluido el material personal dirigido a otro jugador.
+  - **JWT:** un token de una persona que ya no existe respondía `404` en vez de `401`.
+  - **Framework:** sus excepciones (ruta inexistente, método no soportado) respondían `500`.
+  - **Sesión:**
+    - el token de Discord quedaba en un `InMemoryOAuth2AuthorizedClientService` y la sesión del intercambio OAuth seguía viva;
+    - logout no pedía CSRF;
+    - el refresh no se podía revocar: una cookie robada valía 30 días;
+    - con la familia revocable, recargar rápido cerraba la sesión (visto 3 de 3 en `table-search.spec.ts`).
+  - **Visibilidad:**
+    - unos 40 sitios respondían `403` sobre recursos que el actor no ve; 313 celdas de la matriz en rojo antes del arreglo, y el sabotaje de un `requireVisible` puso en rojo exactamente sus 31 celdas;
+    - cinco lecturas de gestión respondían `200 []` sobre una mesa borrada o inexistente;
+    - `submissions/mine` respondía `200` a cualquiera;
+    - dos `404` tenían un cuerpo distinto del de un id inexistente;
+    - el `409` del choque de agenda nombraba borradores ajenos.
+  - **Roles:**
+    - dos otorgamientos de `Admin` simultáneos dejaban dos filas `Granted`;
+    - otorgar `Admin` a un owner mientras otro le revocaba `Owner` dejaba dos filas `Revoked`.
+  - **Rate limiting:** el log del `429` guardaba un hash reversible de la IP, y una ventana de `0s` en la config habría dado `500` en cada login.
+  - **Editor:** aceptaba enlaces `mailto:`/`tel:` y encabezados h4–h6 que el servidor descarta al guardar.
+  - **Frontend:** un `429` en el refresh cerraba la sesión.
+- **Lo que estaba bien, ahora con test:**
+  - ninguna cookie autentica sola;
+  - el access token vive solo en memoria;
+  - el destino post-login no es un open redirect;
+  - el sanitizador limpia al servir (39 casos con HTML hostil insertado por SQL directo);
+  - la descarga va como `attachment` con `nosniff`;
+  - los dobles de prueba responden `404` en `prod` y en `dev`;
+  - no queda ningún tipo abierto en HTTP.
+- **Dependencias:** de las 146 alertas abiertas, 124 son de `legacy/`; las 22 del frontend se resolvieron subiendo `vite`, `zod`, `vitest` y tres transitivas dentro de su major. Queda `picomatch` ≤ 4.0.7, sin versión corregida, que solo compara globs de la configuración de build y no viaja al navegador.
+- **Para F6 «Operación»:**
+  - `forward-headers-strategy: native` confía en el `X-Forwarded-For` de toda la red privada, no solo del proxy propio; se fija `server.tomcat.remoteip.internal-proxies` cuando se decida la topología (ADR-02 §5);
+  - los refresh emitidos antes de V16 dan `401`: cada persona vuelve a entrar una vez al desplegar.
+- **Para F4.5 «La revisión mano a mano»:**
+  - el barrido de las citas viejas de ADRs y fases en el código;
+  - el término «cajón» en comentarios y en `requireOwnCajon` de `FileService`;
+  - un `429` en el login se ve como JSON crudo, porque es una navegación;
+  - una subida múltiple rechazada por el límite solo lista el archivo como fallido, sin el motivo.
+- **Sin verificar:**
+  - el `native` de Tomcat detrás de un proxy real;
+  - el servidor de Vite de desarrollo sigue con la versión anterior en memoria: no se pudo reiniciar desde la sesión.
+- **Verificación:**
+  - `./mvnw verify`: 843 unitarios y 2329 IT. La corrida final dejó un solo rojo, `TableSessionIT`: buscaba el nombre de la mesa en el mensaje de la excepción, donde ya no va. Se corrigió la aserción y volvió a correr en verde, 7 de 7.
+  - Vitest: 957 tests en verde; `npx tsc -b` limpio y Prettier sin cambios pendientes.
+  - Los 104 e2e de la suite entera en verde, con `--workers=1`. En una primera corrida quedaron 2 en rojo, que dieron dos correcciones:
+    - un selector ambiguo de `context-gates`;
+    - el cierre de sesión al recargar, que dio la ventana de gracia.
 
 ---
 

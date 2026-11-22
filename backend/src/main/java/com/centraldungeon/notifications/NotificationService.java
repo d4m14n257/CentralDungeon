@@ -1,6 +1,5 @@
 package com.centraldungeon.notifications;
 
-import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.common.model.PageResponse;
 import com.centraldungeon.notifications.dto.NotificationResponse;
@@ -339,17 +338,15 @@ public class NotificationService {
      *
      * @param notificationId the notification
      * @param actorId        the actor, from the token
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the notification
-     *         belongs to somebody else - a notification is read by its recipient and nobody else (ADR-05 §5)
-     * @throws com.centraldungeon.common.exception.NotFoundException if it does not exist
+     * @throws com.centraldungeon.common.exception.NotFoundException if it does not exist, or it belongs
+     *         to somebody else - the same answer for both, because a notification is its recipient's alone
+     *         and a refusal would tell anybody else that it exists
      */
     @Transactional
     public void markAsRead(String notificationId, String actorId) {
-        Notification notification =
-                notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException("Notification not found: " + notificationId));
-        if (!notification.getUser().getId().equals(actorId)) {
-            throw new ForbiddenActionException("Cannot mark another user's notification as read");
-        }
+        Notification notification = notificationRepository.findById(notificationId)
+                .filter(found -> found.getUser().getId().equals(actorId))
+                .orElseThrow(() -> new NotFoundException("Notification not found: " + notificationId));
         notification.markRead();
     }
 

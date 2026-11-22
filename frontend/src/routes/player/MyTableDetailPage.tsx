@@ -3,9 +3,7 @@ import { Link, useParams } from 'react-router'
 
 import { AttendanceSummaryView } from '@/components/AttendanceSummaryView'
 import { EmptyState } from '@/components/EmptyState'
-import { ErrorState } from '@/components/ErrorState'
 import { PageHeader } from '@/components/PageHeader'
-import { ForbiddenState } from '@/components/ForbiddenState'
 import { QueryErrorState } from '@/components/QueryErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { playerMyTablesPath, tableDetailPath } from '@/config/paths'
@@ -31,12 +29,8 @@ function MySessionsSection({ tableId }: { tableId: string }) {
     return <Skeleton className="h-40 w-full" />
   }
 
-  if (error instanceof ApiError && error.status === 403) {
-    return <ForbiddenState />
-  }
-
   if (isLoadingError || !data) {
-    return <ErrorState onRetry={() => void refetch()} />
+    return <QueryErrorState error={error} onRetry={() => void refetch()} />
   }
 
   const mine: MySessions = data
@@ -82,9 +76,10 @@ export function MyTableDetailPage() {
   const { id } = useParams<{ id: string }>()
   const tableId = id ?? ''
   const { data: table, isPending: tablePending, isLoadingError, error, refetch } = useGameTable(tableId)
-  // The table read is public, so it succeeds for anybody; what says whether this table is *mine* is
-  // the read of my own sessions. It is asked here, and shared by key with the section below, so a table
-  // that is not mine is refused as a whole instead of painting empty blocks that claim there is nothing.
+  // The table read is public, so it succeeds for anybody who may see the table; what says whether it is
+  // *mine* is the read of my own sessions. It is asked here, and shared by key with the section below,
+  // so a table that is not mine is refused as a whole instead of painting empty blocks that claim there
+  // is nothing: a 403 when I see the table and do not play at it, a 404 when it is not there for me.
   const mine = useMySessions(tableId)
   const isPending = tablePending || mine.isPending
 
@@ -101,8 +96,8 @@ export function MyTableDetailPage() {
     return <QueryErrorState error={error} onRetry={() => void refetch()} />
   }
 
-  if (mine.error instanceof ApiError && mine.error.status === 403) {
-    return <ForbiddenState />
+  if (mine.error instanceof ApiError && (mine.error.status === 403 || mine.error.status === 404)) {
+    return <QueryErrorState error={mine.error} />
   }
 
   const timeZone = browserTimeZone()

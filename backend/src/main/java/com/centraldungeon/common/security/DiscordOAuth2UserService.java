@@ -22,7 +22,8 @@ import org.springframework.web.client.RestClient;
 
 /**
  * There is no registration of our own: Discord guild membership is the door (ADR-05 §1).
- * The Discord access token is used once, right here, to check membership - it is never persisted.
+ * The Discord access token is used once, right here, to check membership - it is never kept, in the
+ * database or in memory: the login is configured not to store the authorized client.
  */
 @Service
 public class DiscordOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {

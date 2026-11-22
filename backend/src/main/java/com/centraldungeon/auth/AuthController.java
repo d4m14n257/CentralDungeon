@@ -17,24 +17,24 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Neither carries a {@code @PreAuthorize}: {@code SecurityConfig} leaves both public, because
  * their whole point is being reachable when the access token is gone. They authenticate with the
- * refresh cookie instead - which is why refresh is the one path in the API that keeps CSRF
- * protection on (ADR-05 §2): a cookie travels on its own, a bearer header does not.
+ * refresh cookie instead - which is why these two are the only paths in the API that keep CSRF
+ * protection on: a cookie travels on its own, a bearer header does not.
  *
  * <p>There is no login endpoint here. Logging in is Discord's OAuth2 flow, and it ends at
- * {@code OAuth2LoginSuccessHandler} (ADR-05 §1).
+ * {@code OAuth2LoginSuccessHandler}.
  */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    /** Validates the refresh token and re-reads the person behind it. */
+    /** Rotates and revokes the session's refresh tokens. */
     private final AuthService authService;
 
     /** Builds the cookie, so its security attributes are written in exactly one place. */
     private final RefreshCookieFactory refreshCookieFactory;
 
     /**
-     * @param authService          validates refresh tokens and issues new ones
+     * @param authService          rotates refresh tokens and revokes their family
      * @param refreshCookieFactory builds the refresh cookie and the one that clears it
      */
     public AuthController(AuthService authService, RefreshCookieFactory refreshCookieFactory) {
@@ -46,10 +46,11 @@ public class AuthController {
      * Renews the access token, rotating the refresh token with it.
      *
      * <p>This is the point where the system asks again whether the person is still allowed in: status
-     * and roles are re-read from the database, so somebody blocked stops being renewed (ADR-05 §3, §2).
+     * and roles are re-read from the database, so somebody blocked stops being renewed. The presented
+     * token is spent; presenting it again ends the whole session.
      *
      * <p>The new refresh token goes back <b>only</b> in the cookie, never in the body - which is what
-     * keeps it out of reach of any script (ADR-05 §2).
+     * keeps it out of reach of any script.
      *
      * @param refreshCookie the current refresh token, from the cookie. Null when the browser sent
      *                      none, which is answered as 401 like any other invalid token
@@ -66,15 +67,20 @@ public class AuthController {
     }
 
     /**
-     * Ends the session by clearing the refresh cookie. The access token is not revoked - it simply
-     * expires, which is what its short lifetime is for (ADR-05 §2).
+     * Ends the session: revokes every refresh token of its family on the server and clears the cookie.
+     * The access token is not revoked - it simply expires, which is what its short lifetime is for.
      *
-     * @param response the response the expiring cookie is written onto
+     * @param refreshCookie the current refresh token, from the cookie. Null, invalid or unknown still
+     *                      answers 204: there is just nothing to revoke
+     * @param response      the response the expiring cookie is written onto
      * @return nothing - 204
      */
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(HttpServletResponse response) {
+    public void logout(
+            @CookieValue(name = RefreshCookieFactory.COOKIE_NAME, required = false) @Nullable String refreshCookie,
+            HttpServletResponse response) {
+        authService.logout(refreshCookie);
         response.addCookie(refreshCookieFactory.expire());
     }
 }

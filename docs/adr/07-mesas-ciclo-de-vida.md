@@ -2,7 +2,7 @@
 adr: 7
 titulo: "Mesas: ciclo de vida"
 estado: Vigente
-actualizada: 2026-11-15
+actualizada: 2026-11-18
 absorbe: [7, 24, 27, 32, 129, 163, 165, 171, 175, 180, 196, 216, 226, 229, 230, 245, 265]
 ---
 
@@ -78,9 +78,9 @@ La transición queda en `table_status_changes`. Lo hace el `Primary` o un admin,
 
 ## §8 Los masters de una mesa: el orden de los chips es el cargo, y quitar marca la fila
 
-**Decisión.** Al asignar masters, el admin busca personas y cada elegido entra como chip: **el primero es el `Primary` y el resto `Secondary`**; tocar el chip de un `Secondary` lo asciende y el anterior baja, y quitar al `Primary` asciende al siguiente. El buscador es `GET /api/v1/users/search`, **solo `Admin`/`Owner`**, y nunca ofrece a alguien que no esté `Allowed`. El diálogo vive en `routes/admin/` porque compone `users` y `tables`. `DELETE /api/v1/game-tables/{id}/masters/{userId}` marca la fila (`status = Deleted` + `deleted_at`); **solo el `Primary` quita**, al `Primary` no se lo puede quitar (`409`, primero se le pasa la mesa) y volver a agregar a la misma persona **revive su fila**. La pertenencia (`isMasterOf`, `isPrimaryOf`, la lista de masters y `hasManagedTables`) **filtra por estado**.
+**Decisión.** Al asignar masters, el admin busca personas y cada elegido entra como chip: **el primero es el `Primary` y el resto `Secondary`**; tocar el chip de un `Secondary` lo asciende y el anterior baja, y quitar al `Primary` asciende al siguiente. El buscador es `GET /api/v1/users/search`, **solo `Admin`/`Owner`**, y nunca ofrece a alguien que no esté `Allowed`. El del `Primary` para sumar co-masters, `GET /api/v1/game-tables/{id}/master-candidates` (ADR-22 «Buscadores» §5 «El buscador de personas para sumar co-masters se acota a la mesa»), **no sirve para volcar el directorio**: exige un mínimo de caracteres en la búsqueda y devuelve como mucho un tope de resultados; los dos valores están en `arquitectura` §2.6. El diálogo vive en `routes/admin/` porque compone `users` y `tables`. `DELETE /api/v1/game-tables/{id}/masters/{userId}` marca la fila (`status = Deleted` + `deleted_at`); **solo el `Primary` quita**, al `Primary` no se lo puede quitar (`409`, primero se le pasa la mesa) y volver a agregar a la misma persona **revive su fila**. La pertenencia (`isMasterOf`, `isPrimaryOf`, la lista de masters y `hasManagedTables`) **filtra por estado**.
 
-**Por qué.** Hay exactamente un `Primary` (ADR-06 §3): una lista ordenada lo expresa sin un segundo control y sin estado inválido posible. El buscador queda admin-only porque un directorio de personas no se abre más de lo que pide quien lo usa; abrirlo al `Primary` fue una decisión explícita: `/game-tables/{id}/master-candidates` (ADR-22 §5). Sin filtrar por estado, un co-master quitado seguía autorizado. La fila se marca porque quién dirigió una mesa es un registro, y la PK `(game_table_id, user_id)` hace que revivir sea la única forma de volver a agregarlo.
+**Por qué.** Hay exactamente un `Primary` (ADR-06 §3): una lista ordenada lo expresa sin un segundo control y sin estado inválido posible. El buscador queda admin-only porque un directorio de personas no se abre más de lo que pide quien lo usa; abrirlo al `Primary` fue una decisión explícita: `/game-tables/{id}/master-candidates` (ADR-22 §5). Acotarlo a la mesa decide quién busca, no cuánto se lleva: el picker devolvía usuarios de toda la plataforma con su usuario de Discord, y cualquier `Primary` podía volcar la lista entera. El mínimo y el tope los decidió el usuario el 2026-11-18, en F4.4 «Seguridad». Sin filtrar por estado, un co-master quitado seguía autorizado. La fila se marca porque quién dirigió una mesa es un registro, y la PK `(game_table_id, user_id)` hace que revivir sea la única forma de volver a agregarlo.
 
 *Antes: #165, #216.*
 

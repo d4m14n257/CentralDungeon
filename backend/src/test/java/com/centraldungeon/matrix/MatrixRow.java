@@ -1,7 +1,9 @@
 package com.centraldungeon.matrix;
 
+import com.centraldungeon.tables.GameTableStatus;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
@@ -60,6 +62,30 @@ final class MatrixRow {
      */
     static MatrixRow variant(String label, String endpoint, Function<MatrixFixtures, MatrixRequest> request) {
         return new MatrixRow(endpoint, label, request);
+    }
+
+    /**
+     * Two variants of an endpoint over a table the actor may not see. On one nobody was shown yet, the
+     * people outside it are refused as if it did not exist; on a deleted one, so is everybody, its own
+     * Primary and the admins included.
+     *
+     * @param endpoint the endpoint, whose main row already exists
+     * @param request  builds the call against {@code w.table()}, without asking for a status
+     * @param absent   what an id nobody ever used gets on this endpoint
+     * @return the two variants
+     */
+    static List<MatrixRow> hidden(String endpoint, Function<MatrixFixtures, MatrixRequest> request, MatrixCell absent) {
+        return List.of(
+                MatrixRow.variant("table nobody was shown yet", endpoint, w -> {
+                            w.table(GameTableStatus.Draft);
+                            return request.apply(w);
+                        })
+                        .cell(absent, MatrixActor.PLAYER, MatrixActor.MASTER, MatrixActor.REMOVED_SECONDARY),
+                MatrixRow.variant("deleted table", endpoint, w -> {
+                            w.deleted(w.table(GameTableStatus.Draft));
+                            return request.apply(w);
+                        })
+                        .cell(absent, MatrixActor.PLAYER, MatrixActor.PRIMARY, MatrixActor.ADMIN, MatrixActor.OWNER));
     }
 
     /**

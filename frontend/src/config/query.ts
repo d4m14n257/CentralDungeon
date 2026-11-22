@@ -109,6 +109,10 @@ const EXPLAINED_ERROR_CODES = new Set([
   'FILE_CATEGORY_NOT_PUBLISHABLE',
   'FILE_CANNOT_SELF_PUBLISH',
   'REQUEST_TYPE_NOT_ACCEPTED_HERE',
+  // Publishing, hiding or recategorising a library file another admin already published or hid while
+  // the row was on screen. The state changed under the reader, so the sentence says what it is now.
+  'FILE_ALREADY_PUBLISHED',
+  'FILE_NOT_PUBLISHED',
   // The two doors of ADR-10 §4 stay distinct: the screens only reach the right one, so these surface
   // when a stale tab or a direct call hits the wrong door - and then the sentence says which.
   'ONBOARDING_PENDING',
@@ -119,6 +123,9 @@ const EXPLAINED_ERROR_CODES = new Set([
   // Applying to a table, or accepting a candidate, once every seat is taken. The screen may still show
   // the table as open if the last seat went while it was loaded, so the sentence is the whole answer.
   'TABLE_FULL',
+  // Too many tries in a row: uploading or applying past the limit. Retrying at once is refused again, so
+  // the sentence says when it will work, from the seconds the server sent.
+  'RATE_LIMITED',
 ])
 
 /**
@@ -152,9 +159,10 @@ function reportMutationError(
     toast.error(i18n.t('errors.mutationFailed'))
     return
   }
-  toast.error(
-    i18n.t(`errors.codes.${error.problem.errorCode}`, { ...error.problem.errorParams, defaultValue: i18n.t('errors.mutationFailed') }),
-  )
+  const { errorCode, errorParams } = error.problem
+  // The other table is named only when the actor may see it; without its name the sentence says "another table".
+  const key = errorCode === 'MASTER_SCHEDULE_CONFLICT' && !errorParams?.otherTableName ? 'MASTER_SCHEDULE_CONFLICT_UNNAMED' : errorCode
+  toast.error(i18n.t(`errors.codes.${key}`, { ...errorParams, defaultValue: i18n.t('errors.mutationFailed') }))
 }
 
 /**

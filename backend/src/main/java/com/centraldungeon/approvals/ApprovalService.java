@@ -18,6 +18,7 @@ import com.centraldungeon.registrations.RegistrationSubject;
 import com.centraldungeon.registrations.dto.BanRequestResponse;
 import com.centraldungeon.tables.GameTableService;
 import com.centraldungeon.tables.MasterService;
+import com.centraldungeon.tables.TableVisibilityService;
 import com.centraldungeon.tables.dto.GameTableDetailResponse;
 import com.centraldungeon.users.PlatformRole;
 import com.centraldungeon.users.User;
@@ -118,6 +119,9 @@ public class ApprovalService {
     /** Entity to DTO. */
     private final ApprovalMapper approvalMapper;
 
+    /** Whether a table is there for the actor, asked before a refusal could confirm it. */
+    private final TableVisibilityService tableVisibilityService;
+
     /**
      * @param approvalRequestRepository the {@code approval_requests} table
      * @param entityResolver            resolves the polymorphic reference (ADR-16 §2)
@@ -130,6 +134,7 @@ public class ApprovalService {
      * @param registrationService       the veto - the effect of a {@code PlayerBan}
      * @param masterService             answers membership of a table, for who may ask for a veto
      * @param approvalMapper            entity to DTO
+     * @param tableVisibilityService    whether the actor may see a table, before being refused on it
      */
     public ApprovalService(
             ApprovalRequestRepository approvalRequestRepository,
@@ -142,7 +147,8 @@ public class ApprovalService {
             GameTableService gameTableService,
             RegistrationService registrationService,
             MasterService masterService,
-            ApprovalMapper approvalMapper) {
+            ApprovalMapper approvalMapper,
+            TableVisibilityService tableVisibilityService) {
         this.approvalRequestRepository = approvalRequestRepository;
         this.entityResolver = entityResolver;
         this.userService = userService;
@@ -154,6 +160,7 @@ public class ApprovalService {
         this.registrationService = registrationService;
         this.masterService = masterService;
         this.approvalMapper = approvalMapper;
+        this.tableVisibilityService = tableVisibilityService;
     }
 
     /**
@@ -223,10 +230,9 @@ public class ApprovalService {
      * something that never happened.
      *
      * <p><b>Why the door is on the table and not on {@code POST /api/v1/requests}.</b> That endpoint
-     * deliberately takes no {@code entityId} (F3.2 §0d), so nobody can file a request in somebody
+     * deliberately takes no {@code entityId}, so nobody can file a request in somebody
      * else's name; here the entity is not the requester, and putting the table in the path is what
-     * lets the authorization - running <em>this</em> table - be checked where it can be seen at all
-     * (§2.6, ADR-05 §5).
+     * lets the authorization - running <em>this</em> table - be checked where it can be seen at all.
      *
      * <p>The table moves first, which is also the lock: {@code markPauseRequested} takes the table
      * row, so two masters of the same table asking at once produce one request and one
@@ -234,10 +240,12 @@ public class ApprovalService {
      *
      * @param gameTableId   the table to pause
      * @param justification why, never blank - it is what the admin reads in the tray
-     * @param actor         the actor, from the token (ADR-05 §5); has to run the table
+     * @param actor         the actor, from the token; has to run the table
      * @return the table, now PauseRequested
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException 403 when the actor does
-     *         not run the table, or their account is not Allowed
+     * @throws NotFoundException 404 when the table does not exist or the actor cannot see it - the
+     *         same answer as a table that does not exist
+     * @throws ForbiddenActionException 403 when the actor sees the table but does not run it, or
+     *         their account is not Allowed
      * @throws ConflictException 409 {@code PAUSE_ALREADY_REQUESTED} when it is already waiting
      */
     @Transactional
@@ -270,10 +278,11 @@ public class ApprovalService {
      * @param justification  why, never blank - the admin deciding reads exactly this
      * @param actor          the actor, from the token; has to be a master of that table
      * @return the request as it was opened
-     * @throws NotFoundException        404 when the table is not there, or the application is not
-     *                                  this table's
-     * @throws ForbiddenActionException 403 when the actor does not run the table, or their account is
-     *                                  not Allowed
+     * @throws NotFoundException        404 when the table does not exist or the actor cannot see it -
+     *                                  the same answer as a table that does not exist - or when the
+     *                                  application is not this table's
+     * @throws ForbiddenActionException 403 when the actor sees the table but does not run it, or
+     *                                  their account is not Allowed
      * @throws ConflictException        409 {@code REGISTRATION_ALREADY_BLOCKED} when it is already
      *                                  vetoed, a plain conflict when it is not a {@code Player}, or
      *                                  {@code REQUEST_ALREADY_PENDING}
@@ -284,6 +293,8 @@ public class ApprovalService {
         registrationService.lockTable(gameTableId);
         // Asking is a thing the people running the table do, whatever role they hold.
         if (!masterService.isMasterOf(gameTableId, actor.userId())) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actor.userId());
             throw new ForbiddenActionException("Only a master of this table can ask for a veto on it");
         }
         registrationService.requireBlockableOn(gameTableId, registrationId);
@@ -314,12 +325,17 @@ public class ApprovalService {
      * @param actorId     the actor, from the token
      * @return the pending veto requests about this table's applications, withdrawn ones included,
      *         oldest first, each naming the person it is about
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException 403 when the actor neither
-     *         runs the table nor is an admin
+     * @throws NotFoundException 404 when the table does not exist or the actor cannot see it - the
+     *         same answer as a table that does not exist
+     * @throws ForbiddenActionException 403 when the actor sees the table but neither runs it nor is
+     *         an admin
      */
     @Transactional(readOnly = true)
     public List<BanRequestResponse> listBanRequests(String gameTableId, String actorId) {
+        tableVisibilityService.requireExisting(gameTableId);
         if (!masterService.canOversee(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table or an admin can read its veto requests");
         }
         Map<String, RegistrationSubject> subjects = registrationService.subjectsOfTable(gameTableId);

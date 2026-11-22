@@ -74,6 +74,10 @@ void i18n.use(initReactI18next).init({
 // can state the cap without anyone writing it into the text.
 i18n.services.formatter?.add('megabytes', (value) => String(Math.floor(Number(value) / (1024 * 1024))))
 
+// A wait the backend sends in seconds, rounded up to whole minutes: rounding down would name a moment
+// when the retry is still refused.
+i18n.services.formatter?.add('minutes', (value) => String(Math.max(1, Math.ceil(Number(value) / 60))))
+
 /**
  * Keeps `<html lang>` in step with the language in use (ADR-23 §2).
  *

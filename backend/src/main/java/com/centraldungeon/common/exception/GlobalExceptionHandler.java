@@ -195,23 +195,39 @@ public class GlobalExceptionHandler {
      * how internals leak. It goes to the log instead, at ERROR: a 500 that leaves no trace is a failure
      * nobody can find, and the e2e cleanup failed that way for months.
      *
-     * <p>Except for what the framework already knows how to describe - an unknown route, a method the
-     * route does not take: anybody can send those without a session, and a full trace at ERROR for each
-     * one would let a loop of them bury the real alarms. They stay at DEBUG.
+     * <p>Except for what the framework already knows how to describe as the caller's mistake - an
+     * unknown route, a method the route does not take, a media type it does not read: anybody can send
+     * those without a session, so they answer with the status the framework chose (404, 405, 415, 406,
+     * 400) and a code the client can branch on, and a full trace at ERROR for each one would let a loop
+     * of them bury the real alarms. They stay at DEBUG, and the response carries neither the framework's
+     * message nor the path.
      *
      * @param exception whatever escaped
-     * @return a 500 problem detail with no detail about the cause
+     * @return the framework's own 4xx with a generic detail, or a 500 with no detail about the cause
      */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception exception) {
-        if (exception instanceof ErrorResponse) {
-            // shortcut: still answered 500 as before, upgrade when each gets its own 404/405/415/400 handler.
-            log.debug("Framework-described request failure, answered 500", exception);
-        } else {
-            log.error("Unhandled exception, answered 500", exception);
+        if (exception instanceof ErrorResponse described && described.getStatusCode().is4xxClientError()) {
+            log.debug("Framework-described request failure", exception);
+            return clientMistake(HttpStatus.valueOf(described.getStatusCode().value()));
         }
+        log.error("Unhandled exception, answered 500", exception);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error");
         problem.setProperty("errorCode", "INTERNAL_ERROR");
+        return problem;
+    }
+
+    private static ProblemDetail clientMistake(HttpStatus status) {
+        String code = switch (status) {
+            case NOT_FOUND -> "NOT_FOUND";
+            case METHOD_NOT_ALLOWED -> "METHOD_NOT_ALLOWED";
+            case NOT_ACCEPTABLE -> "NOT_ACCEPTABLE";
+            case UNSUPPORTED_MEDIA_TYPE -> "UNSUPPORTED_MEDIA_TYPE";
+            case BAD_REQUEST -> "VALIDATION_ERROR";
+            default -> "BAD_REQUEST";
+        };
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, status.getReasonPhrase());
+        problem.setProperty("errorCode", code);
         return problem;
     }
 

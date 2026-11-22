@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.centraldungeon.common.config.JwtProperties;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
 import java.time.Duration;
+import java.util.Date;
 import org.junit.jupiter.api.Test;
 
 class JwtServiceTest {
@@ -70,5 +73,37 @@ class JwtServiceTest {
         JwtProperties tooShort = new JwtProperties("short-secret", Duration.ofMinutes(15), Duration.ofDays(30));
 
         assertThatThrownBy(() -> new JwtService(tooShort)).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void rejectsARefreshTokenPresentedAsAccess() {
+        String token = jwtService.issueRefreshToken("user-1");
+
+        assertThatThrownBy(() -> jwtService.verifyAndGetSubject(token, TokenType.ACCESS))
+                .isInstanceOf(InvalidJwtException.class);
+    }
+
+    @Test
+    void rejectsAnUnsignedAlgNoneToken() {
+        String token = new PlainJWT(new JWTClaimsSet.Builder()
+                        .subject("user-1")
+                        .claim("type", "ACCESS")
+                        .expirationTime(new Date(System.currentTimeMillis() + 60_000))
+                        .build())
+                .serialize();
+
+        assertThatThrownBy(() -> jwtService.verifyAndGetSubject(token, TokenType.ACCESS))
+                .isInstanceOf(InvalidJwtException.class);
+    }
+
+    @Test
+    void rejectsATokenWithoutExpiration() throws Exception {
+        var jwt = new com.nimbusds.jwt.SignedJWT(
+                new com.nimbusds.jose.JWSHeader(com.nimbusds.jose.JWSAlgorithm.HS256),
+                new JWTClaimsSet.Builder().subject("user-1").claim("type", "ACCESS").build());
+        jwt.sign(new com.nimbusds.jose.crypto.MACSigner("test-secret-at-least-32-bytes-long-0123456789".getBytes()));
+
+        assertThatThrownBy(() -> jwtService.verifyAndGetSubject(jwt.serialize(), TokenType.ACCESS))
+                .isInstanceOf(InvalidJwtException.class);
     }
 }

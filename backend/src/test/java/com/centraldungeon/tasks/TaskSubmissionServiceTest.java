@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -294,6 +295,8 @@ class TaskSubmissionServiceTest {
         ReflectionTestUtils.setField(task, "id", taskId);
         ReflectionTestUtils.setField(task, "createdAt", LocalDateTime.now());
         when(tableTaskService.getTask(taskId)).thenReturn(task);
+        // Seeing the task is TableTaskService's rule and has its own tests; here every reader sees it.
+        when(tableTaskService.requireVisible(eq(taskId), anyString())).thenReturn(task);
         return task;
     }
 

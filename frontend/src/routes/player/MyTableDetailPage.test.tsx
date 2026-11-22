@@ -81,6 +81,19 @@ describe('MyTableDetailPage', () => {
     expect(screen.queryByText('Esta mesa no te pide nada')).not.toBeInTheDocument()
   })
 
+  /** The table is readable but my own sessions are not there for me: an absence, never a screen of empty blocks. */
+  it('says the table is not there when my sessions answer 404', async () => {
+    byId.mockResolvedValue(table())
+    mine.mockRejectedValue(failure(404))
+
+    renderPage()
+
+    expect(await screen.findByText('No existe')).toBeInTheDocument()
+    expect(screen.queryByText('La maldición de Strahd')).not.toBeInTheDocument()
+    expect(screen.queryByText('Esta mesa no te pide nada')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument()
+  })
+
   it('says a table that does not exist does not exist, without a retry', async () => {
     byId.mockRejectedValue(failure(404))
     mine.mockRejectedValue(failure(404))

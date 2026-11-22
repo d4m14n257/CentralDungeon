@@ -117,11 +117,12 @@ test('a master adds a co-master, who sees the table, and loses it when removed',
     await expect(coMaster.page).toHaveURL(/\/player$/)
 
     // The screens no longer ask, so the backend's own refusal is checked with a direct request: the
-    // removed row is a record, not a permission.
+    // removed row is a record, not a permission. The table is still a draft, which nobody outside it
+    // sees, so the refusal is the 404 of a table that is not there rather than a 403 that confirms it.
     const managed = await coMaster.context.request.get(`${BACKEND_URL}/api/v1/game-tables/${tableId}/managed`, {
       headers: { Authorization: `Bearer ${coMaster.accessToken}` },
     })
-    expect(managed.status()).toBe(403)
+    expect(managed.status()).toBe(404)
   } finally {
     await coMaster.context.close()
     await master.context.close()

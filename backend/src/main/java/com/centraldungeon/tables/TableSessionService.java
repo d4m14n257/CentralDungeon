@@ -200,18 +200,21 @@ public class TableSessionService {
      * The whole calendar as the people running the table see it, with notes and rosters.
      *
      * @param gameTableId the table
-     * @param actorId     the actor, from the token (ADR-05 §5)
+     * @param actorId     the actor, from the token
      * @return its sessions, first to last. While the table is paused the pending ones are not in it
-     * @throws NotFoundException        if the table does not exist
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin (ADR-06 §8)
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it - the
+     *                                  same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but neither runs it nor is an admin
      */
     @Transactional(readOnly = true)
     public List<TableSessionResponse> listForTable(String gameTableId, String actorId) {
         // requireExisting and not requireVisible: the next line demands a row in `masters` or the admin
-        // rank, and neither can be vetoed on the table (ADR-18 §4) - a veto is a player's, not theirs.
+        // rank, and neither can be vetoed on the table - a veto is a player's, not theirs.
         GameTable table = tableVisibilityService.requireExisting(gameTableId);
-        // Read by the table's masters and by any admin (ADR-06 §8); its writes stay the masters' own.
+        // Read by the table's masters and by any admin; its writes stay the masters' own.
         if (!masterService.canOversee(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table or an admin can view its sessions");
         }
         return toResponses(table, visibleSessionsOf(table));
@@ -239,19 +242,21 @@ public class TableSessionService {
      * A player's own calendar and their own attendance, for {@code /my/tables/:id}.
      *
      * <p>Both are about the actor of the token and there is no parameter that could name anybody
-     * else, which is what makes them impossible to ask for on somebody's behalf (ADR-05 §5).
+     * else, which is what makes them impossible to ask for on somebody's behalf.
      *
      * @param gameTableId the table
      * @param actorId     the actor, from the token
-     * @return their sessions and the three numbers of ADR-08 §5
-     * @throws NotFoundException        if the table does not exist
-     * @throws ForbiddenActionException if the actor does not play at the table
+     * @return their sessions and their attendance summary
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it (for
+     *                                  instance, they are vetoed on it) - the same answer as a table
+     *                                  that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but does not play at it
      */
     @Transactional(readOnly = true)
     public MySessionsResponse listMine(String gameTableId, String actorId) {
         // The veto is checked here rather than left to the Player filter below, even though moving
         // somebody to `Blocked` already takes them out of it: what a vetoed person must get is the
-        // 404 of ADR-09 §4, and «only a player can see their sessions» is a 403 that would confirm the
+        // 404, and «only a player can see their sessions» is a 403 that would confirm the
         // table is still there.
         GameTable table = tableVisibilityService.requireVisible(gameTableId, actorId);
         if (!registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
@@ -279,21 +284,24 @@ public class TableSessionService {
      * {@code Cancelled} the row is a record of something that did or did not happen, and moving it
      * would rewrite that.
      *
-     * <p>Moving a date tells the players (ADR-15 §5's principle applied to sessions): a calendar that
+     * <p>Moving a date tells the players (the same courtesy owed to anybody who plans around a date): a calendar that
      * changes silently is a calendar nobody can rely on.
      *
      * @param sessionId the session
-     * @param request   the new date and notes. Absent notes clear them (ADR-04 §7)
+     * @param request   the new date and notes. Absent notes clear them
      * @param actorId   the actor, from the token; has to run the table
      * @return the session after the correction
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException        if the session does not exist, or the actor cannot see it (they
+     *                                  must see its table and run it, oversee it or play at it) - the
+     *                                  same answer as a session that does not exist
+     * @throws ForbiddenActionException if the actor sees the session and does not run the table
      * @throws ConflictException        if the session was already played or called off
      */
     @Transactional
     public TableSessionResponse update(String sessionId, UpdateSessionRequest request, String actorId) {
         TableSession session = lockSession(sessionId);
         GameTable table = session.getGameTable();
-        requireMasterOf(table.getId(), actorId);
+        requireMasterOf(session, actorId);
         requireScheduled(session, "corrected");
 
         LocalDateTime newDate = request.scheduledAt();
@@ -310,7 +318,7 @@ public class TableSessionService {
     }
 
     /**
-     * A master declaring that a session was played (ADR-08 §4).
+     * A master declaring that a session was played.
      *
      * <p>It is a separate action from recording attendance on purpose: "we played" and "these people
      * came" are two facts, and inferring one from the other would let a master who fills in a roster
@@ -319,13 +327,16 @@ public class TableSessionService {
      * @param sessionId the session
      * @param actorId   the actor, from the token; has to run the table
      * @return the session, now held
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException        if the session does not exist, or the actor cannot see it (they
+     *                                  must see its table and run it, oversee it or play at it) - the
+     *                                  same answer as a session that does not exist
+     * @throws ForbiddenActionException if the actor sees the session and does not run the table
      * @throws ConflictException        if the session was already played or called off
      */
     @Transactional
     public TableSessionResponse hold(String sessionId, String actorId) {
         TableSession session = lockSession(sessionId);
-        requireMasterOf(session.getGameTable().getId(), actorId);
+        requireMasterOf(session, actorId);
         requireScheduled(session, "held");
 
         session.setStatus(TableSessionStatus.Held);
@@ -333,7 +344,7 @@ public class TableSessionService {
     }
 
     /**
-     * A master calling off one session - <b>and the table getting it back at the end</b> (ADR-08 §3).
+     * A master calling off one session - <b>and the table getting it back at the end</b>.
      *
      * <p>The cancelled row stays with its number, as the record that the evening was planned and did
      * not happen, and a new session is added on the first agenda slot after the last one still
@@ -346,14 +357,17 @@ public class TableSessionService {
      * @param actorId   the actor, from the token; has to run the table
      * @return the whole calendar afterwards - the cancellation and its replacement are one change,
      *         and the screen re-renders the list
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException        if the session does not exist, or the actor cannot see it (they
+     *                                  must see its table and run it, oversee it or play at it) - the
+     *                                  same answer as a session that does not exist
+     * @throws ForbiddenActionException if the actor sees the session and does not run the table
      * @throws ConflictException        if the session was already played or called off
      */
     @Transactional
     public List<TableSessionResponse> cancel(String sessionId, String actorId) {
         TableSession session = lockSession(sessionId);
         GameTable table = session.getGameTable();
-        requireMasterOf(table.getId(), actorId);
+        requireMasterOf(session, actorId);
         requireScheduled(session, "cancelled");
 
         session.setStatus(TableSessionStatus.Cancelled);
@@ -364,17 +378,20 @@ public class TableSessionService {
     }
 
     /**
-     * A master recording who was at a session (ADR-08 §4).
+     * A master recording who was at a session.
      *
      * <p>The roster is the table's active players, resolved here: a {@code userId} that does not play
      * at this table is a {@code 400} and never a silently created row. Recording does <b>not</b> mark
-     * the session as played - that is {@link #hold} and a separate decision (ADR-08 §4).
+     * the session as played - that is {@link #hold} and a separate decision.
      *
      * @param sessionId the session
      * @param request   one line per player being recorded; a player left out is left alone
      * @param actorId   the actor, from the token; has to run the table
      * @return the session with its roster after the change
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException        if the session does not exist, or the actor cannot see it (they
+     *                                  must see its table and run it, oversee it or play at it) - the
+     *                                  same answer as a session that does not exist
+     * @throws ForbiddenActionException if the actor sees the session and does not run the table
      * @throws ConflictException        if the session was called off - nobody attends what did not happen
      * @throws InvalidRequestException  if a line names somebody who does not play at this table
      */
@@ -382,7 +399,7 @@ public class TableSessionService {
     public TableSessionResponse recordAttendance(String sessionId, RecordAttendanceRequest request, String actorId) {
         TableSession session = lockSession(sessionId);
         GameTable table = session.getGameTable();
-        requireMasterOf(table.getId(), actorId);
+        requireMasterOf(session, actorId);
         if (session.getStatus() == TableSessionStatus.Cancelled) {
             throw new ConflictException("Cannot record attendance for a session that was cancelled");
         }
@@ -634,13 +651,31 @@ public class TableSessionService {
     }
 
     private TableSession lockSession(String sessionId) {
-        return sessionRepository.findByIdForUpdate(sessionId).orElseThrow(() -> new NotFoundException("Session not found: " + sessionId));
+        return sessionRepository.findByIdForUpdate(sessionId).orElseThrow(() -> sessionNotFound(sessionId));
     }
 
-    private void requireMasterOf(String gameTableId, String actorId) {
-        if (!masterService.isMasterOf(gameTableId, actorId)) {
-            throw new ForbiddenActionException("Only a master of this table can manage its sessions");
+    /**
+     * Only the table's masters change a session. Anybody else is told so only if they see the session -
+     * they see its table and run it, oversee it or play at it; to everybody else it is not there.
+     */
+    private void requireMasterOf(TableSession session, String actorId) {
+        String gameTableId = session.getGameTable().getId();
+        if (masterService.isMasterOf(gameTableId, actorId)) {
+            return;
         }
+        boolean seesIt = tableVisibilityService.canSee(gameTableId, actorId)
+                && (masterService.canOversee(gameTableId, actorId)
+                        || registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                                gameTableId, actorId, List.of(TableRegistrationStatus.Player)));
+        if (!seesIt) {
+            throw sessionNotFound(session.getId());
+        }
+        throw new ForbiddenActionException("Only a master of this table can manage its sessions");
+    }
+
+    /** One sentence for a session that is not there and one the actor may not see, so they cannot be told apart. */
+    private static NotFoundException sessionNotFound(String sessionId) {
+        return new NotFoundException("Session not found: " + sessionId);
     }
 
     /** The one precondition the three mutations share: a session that already happened is a record, not a plan. */

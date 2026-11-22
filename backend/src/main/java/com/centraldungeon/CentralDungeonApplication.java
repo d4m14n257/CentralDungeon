@@ -2,6 +2,7 @@ package com.centraldungeon;
 
 import com.centraldungeon.common.config.DiscordProperties;
 import com.centraldungeon.common.config.JwtProperties;
+import com.centraldungeon.common.config.RateLimitProperties;
 import com.centraldungeon.common.config.StorageProperties;
 import java.time.ZoneOffset;
 import java.util.TimeZone;
@@ -13,8 +14,8 @@ import org.springframework.cache.annotation.EnableCaching;
 /**
  * The application's entry point.
  *
- * <p>{@code @EnableConfigurationProperties} binds the three records that carry external
- * configuration - Discord's guild, the JWT settings and where uploaded files live - and
+ * <p>{@code @EnableConfigurationProperties} binds the four records that carry external
+ * configuration - Discord's guild, the JWT settings, where uploaded files live and the rate limits - and
  * {@code @EnableCaching} turns on the two Caffeine caches: the one that keeps the per-request
  * authorization read from being a query per call (ADR-05 §3), and the one F3.5 added so the editable
  * settings of ADR-17 §3 are not a table hit on every upload.
@@ -32,7 +33,8 @@ import org.springframework.cache.annotation.EnableCaching;
  * that boots the context, which never goes through {@code main}.
  */
 @SpringBootApplication
-@EnableConfigurationProperties({DiscordProperties.class, JwtProperties.class, StorageProperties.class})
+@EnableConfigurationProperties({DiscordProperties.class, JwtProperties.class, StorageProperties.class,
+        RateLimitProperties.class})
 @EnableCaching
 public class CentralDungeonApplication {
 

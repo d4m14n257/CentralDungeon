@@ -275,35 +275,38 @@ public class GameTableService {
      * The master editing their own table: the wizard's second pass, and how a table sent back with
      * {@code ChangesRequested} is corrected.
      *
-     * <p>Pertenencia, not role (hard rule 17, ADR-05 §5, ADR-06 §4): running <em>this</em> table is what authorizes the
+     * <p>Pertenencia, not role: running <em>this</em> table is what authorizes the
      * edit, and it is checked here because no {@code @PreAuthorize} can see the resource. Only the
      * statuses in which a table is still being written are editable - once it is open, people have
      * applied on the strength of what it says, and changing it out from under them is a different
      * flow.
      *
      * <p>The agenda goes last on purpose: {@code duration} is what gives a slot its length, so the
-     * clash check has to run against the duration the table is about to have and not the one it had
-     * (ADR-08 §2).
+     * clash check has to run against the duration the table is about to have and not the one it had.
      *
      * @param gameTableId the table to edit
      * @param request     the whole table as it should end up. Absent means empty, not unchanged
      * @param actorId     the actor, from the token; has to run the table
      * @return the table after the edit
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but does not run it
      * @throws ConflictException if the table is past the point where its own master may rewrite it,
-     *         or if the new agenda clashes with something the actor is committed to (ADR-08 §2)
+     *         or if the new agenda clashes with something the actor is committed to
      */
     @Transactional
     public GameTableDetailResponse update(String gameTableId, UpdateGameTableRequest request, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
         if (!masterService.isMasterOf(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table can edit it");
         }
         if (!EDITABLE_STATUSES.contains(gameTable.getStatus())) {
             throw new ConflictException("A table in status " + gameTable.getStatus() + " can no longer be edited by its master");
         }
-        // Authorized first, then the draft itself: somebody who does not run this table gets a 403,
-        // not a complaint about its agenda.
+        // Authorized first, then the draft itself: somebody who does not run this table gets a 404 or a
+        // 403, never a complaint about its agenda.
         // Nobody is told: a master only edits a table that has not gone public yet.
         rewrite(gameTable, request, actorId);
         return toDetail(gameTable);
@@ -544,7 +547,9 @@ public class GameTableService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token; has to be the table's Primary
      * @return the table after the change
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor is not its Primary
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is not its Primary
      * @throws ConflictException if the table was not a draft, or the draft is not runnable yet
      */
     @Transactional
@@ -564,8 +569,9 @@ public class GameTableService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token; has to be the table's Primary
      * @return the table after the change
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor is not its
-     *         Primary
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is not its Primary
      * @throws ConflictException if the table was not in ChangesRequested
      */
     @Transactional
@@ -585,8 +591,9 @@ public class GameTableService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token; has to be the table's Primary
      * @return the table after the change
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor is not its
-     *         Primary
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is not its Primary
      * @throws ConflictException if the table was not Opened
      */
     @Transactional
@@ -603,9 +610,9 @@ public class GameTableService {
     /**
      * The master closing a table that ran its course. InProgress to Finished.
      *
-     * <p>This is where {@code closed_at} gets stamped (ADR-07 §7). It is not bookkeeping: it starts the
-     * two-week window in which the people who shared the table can still see each other's profiles
-     * (ADR-10 §2), and a phase that delivers the end of a table without recording when it ended has not
+     * <p>This is where {@code closed_at} gets stamped. It is not bookkeeping: it starts the
+     * two-week window in which the people who shared the table can still see each other's profiles,
+     * and a phase that delivers the end of a table without recording when it ended has not
      * delivered it.
      *
      * <p>Everybody else joined to the table is told it is over: its co-masters and its players.
@@ -613,8 +620,9 @@ public class GameTableService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token; has to be the table's Primary
      * @return the table after the change
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor is not its
-     *         Primary
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is not its Primary
      * @throws ConflictException if the table was not InProgress
      */
     @Transactional
@@ -631,24 +639,27 @@ public class GameTableService {
     }
 
     /**
-     * Either the table's own Primary or a platform admin may cancel it (ADR-07 §1) - the only transition
+     * Either the table's own Primary or a platform admin may cancel it - the only transition
      * either can trigger.
      *
      * <p>Everybody else joined to the table is told: its co-masters and its players. A master hears
-     * {@code TableCanceledByAdmin} when the one who cancelled is an admin who does not run the table
-     * (ADR-06 §8).
+     * {@code TableCanceledByAdmin} when the one who cancelled is an admin who does not run the table.
      *
      * @param gameTableId the table
-     * @param actorId     the Primary or an admin, from the token (ADR-05 §5)
+     * @param actorId     the Primary or an admin, from the token
      * @param request     the justification, kept in the status history
      * @return the table, now Canceled
-     * @throws ForbiddenActionException if the actor is neither its Primary nor an admin
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is neither its Primary nor an admin
      * @throws ConflictException        if the table cannot be cancelled from its current status
      */
     @Transactional
     public GameTableDetailResponse cancel(String gameTableId, String actorId, ChangeTableStatusRequest request) {
         GameTable gameTable = lockTable(gameTableId);
         if (!masterService.isPrimaryOf(gameTableId, actorId) && !isAdmin(actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only the Primary master or an admin can cancel this table");
         }
         GameTableStatus from = gameTable.getStatus();
@@ -672,17 +683,21 @@ public class GameTableService {
      * table as a use of the file or the catalog value, and keep the file out of the purge. The status
      * change is recorded too - the trail survives even when the table does not.
      *
-     * <p>When an admin does it, every master the table had is told ({@code TableDeletedByAdmin}, ADR-06 §8).
+     * <p>When an admin does it, every master the table had is told ({@code TableDeletedByAdmin}).
      *
      * @param gameTableId the table
-     * @param actorId     the Primary or an admin, from the token (ADR-05 §5)
-     * @throws ForbiddenActionException if the actor is neither its Primary nor an admin
+     * @param actorId     the Primary or an admin, from the token
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is neither its Primary nor an admin
      * @throws ConflictException        if the table already went public, or has candidates or players
      */
     @Transactional
     public void delete(String gameTableId, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
         if (!masterService.isPrimaryOf(gameTableId, actorId) && !isAdmin(actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only the Primary master or an admin can delete this table");
         }
         GameTableStatus from = gameTable.getStatus();
@@ -756,7 +771,9 @@ public class GameTableService {
      * @param gameTableId the table
      * @param actorId     the actor, from the token; has to run the table
      * @return the table, now PauseRequested
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but does not run it
      * @throws ConflictException 409 {@code PAUSE_ALREADY_REQUESTED} when it is already waiting on
      *                           one, or a plain conflict from any other status
      */
@@ -766,6 +783,8 @@ public class GameTableService {
         // isMasterOf and not isPrimaryOf: asking is not deciding, and a co-master who cannot run
         // next week's session is exactly the person with a reason to ask (ADR-05 §5, ADR-06 §4).
         if (!masterService.isMasterOf(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table can ask for a pause");
         }
         if (gameTable.getStatus() == GameTableStatus.PauseRequested) {
@@ -898,7 +917,9 @@ public class GameTableService {
      * @param request     whether to look for players
      * @param actorId     the actor, from the token; has to run the table
      * @return the table, with the search in its new state
-     * @throws ForbiddenActionException if the actor does not run the table
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it - the
+     *                                  same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but does not run it
      * @throws ConflictException        if the table is not {@code InProgress}, or 409
      *                                  {@code TABLE_FULL} when turning it on with every seat taken
      */
@@ -906,6 +927,8 @@ public class GameTableService {
     public GameTableDetailResponse setSeekingPlayers(String gameTableId, SetSeekingPlayersRequest request, String actorId) {
         GameTable gameTable = lockTable(gameTableId);
         if (!masterService.isMasterOf(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table can look for players");
         }
         if (gameTable.getStatus() != GameTableStatus.InProgress) {
@@ -931,8 +954,8 @@ public class GameTableService {
      * @return the whole history, oldest first
      * @throws NotFoundException if the table is not there or was deleted - for an admin too - and,
      *         for anybody who does not oversee it, whenever the table itself would answer 404 to them
-     * @throws com.centraldungeon.common.exception.ForbiddenActionException if the actor neither runs
-     *         the table nor is an admin, on a table they may see
+     * @throws ForbiddenActionException if the actor sees the table but neither runs it nor is an
+     *         admin
      */
     @Transactional(readOnly = true)
     public List<TableStatusChangeResponse> getStatusHistory(String gameTableId, String actorId) {
@@ -957,6 +980,9 @@ public class GameTableService {
      * @param actorId     the actor, from the token; {@code MasterService} checks their pertenencia
      * @param request     who to add or promote, and as what
      * @return every master of the table after the change
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is not its Primary
      */
     @Transactional
     public List<MasterSummaryResponse> addOrPromoteMaster(String gameTableId, String actorId, AddMasterRequest request) {
@@ -965,7 +991,11 @@ public class GameTableService {
         // first is news - a table this person did not run until now - and the second is not, because
         // they were already running it and are watching the screen that did it.
         boolean joins = !masterService.isMasterOf(gameTableId, request.userId());
-        masterService.addOrPromote(gameTable, actorId, request.userId(), request.masterType());
+        try {
+            masterService.addOrPromote(gameTable, actorId, request.userId(), request.masterType());
+        } catch (ForbiddenActionException refused) {
+            throw refusedOnMasters(gameTableId, actorId, refused);
+        }
         if (joins) {
             // After addOrPromote checked pertenencia, so an outsider learns nothing about anybody's week.
             // A clash rolls the addition back with the rest of the transaction (ADR-08 §2).
@@ -987,34 +1017,48 @@ public class GameTableService {
      * @param actorId      the actor, from the token; {@code MasterService} checks their pertenencia
      * @param targetUserId who to remove
      * @return every master of the table after the change
+     * @throws NotFoundException if the table does not exist, or the actor cannot see it - the same
+     *         answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is not its Primary
      */
     @Transactional
     public List<MasterSummaryResponse> removeMaster(String gameTableId, String actorId, String targetUserId) {
         GameTable gameTable = getEntityById(gameTableId);
-        masterService.removeMaster(gameTable, actorId, targetUserId);
+        try {
+            masterService.removeMaster(gameTable, actorId, targetUserId);
+        } catch (ForbiddenActionException refused) {
+            throw refusedOnMasters(gameTableId, actorId, refused);
+        }
         return masterService.findByGameTable(gameTableId).stream().map(gameTableMapper::toMasterSummary).toList();
     }
 
     /**
      * The people search behind adding a co-master, answered only for a table's own Primary.
      *
-     * <p>The scope is the whole point (ADR-07 §8): the admin directory stays closed, and what opens is a
+     * <p>The scope is the whole point: the admin directory stays closed, and what opens is a
      * search that only the person who may actually add a master can run. The check is membership and
-     * not a role, because a Primary an admin assigned may never have been given {@code Master}
-     * (ADR-06 §7, §4) - and the actor comes from the token, never from the URL (ADR-05 §5).
+     * not a role, because a Primary an admin assigned may never have been given {@code Master} -
+     * and the actor comes from the token, never from the URL.
      *
      * @param gameTableId the table the search is for
      * @param actorId     the actor, from the token
-     * @param query       the search box, or null for a first page
-     * @param pageable    page, size and sort
-     * @return one page of people who could be made a master of this table
-     * @throws ForbiddenActionException when the actor is not this table's Primary
+     * @param query       what was typed. A missing one, or one shorter than the directory search's
+     *                    minimum, finds nobody
+     * @param pageable    only the size counts, and it is capped: the page number and the sort are the
+     *                    server's own, so the directory cannot be walked
+     * @return the first page of at most the directory search's cap of people who match, or an empty
+     *         page for a query too short to search with
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it - the
+     *                                  same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but is not its Primary
      */
     @Transactional(readOnly = true)
     public PageResponse<UserSummaryResponse> searchMasterCandidates(
             String gameTableId, String actorId, @Nullable String query, Pageable pageable) {
         getEntityById(gameTableId);
         if (!masterService.isPrimaryOf(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only the table's master can search for co-masters");
         }
         return userService.search(query, pageable);
@@ -1078,23 +1122,27 @@ public class GameTableService {
     }
 
     /**
-     * /master/tables/:id - a different endpoint from getDetail on purpose (ADR-06 §6):
+     * /master/tables/:id - a different endpoint from getDetail on purpose:
      * getDetail is deliberately public (any player reads it to decide whether to apply), so
      * reusing it here would mean the full table body travels over the network before the
      * frontend ever gets to decide whether to render it. This one checks pertenencia first and
      * never touches the mapper if the actor is neither a master of this table nor an admin - the
-     * admin reads every table whole, from /admin/tables/:id (ADR-06 §8).
+     * admin reads every table whole, from /admin/tables/:id.
      *
      * @param gameTableId the table
-     * @param actorId     the actor, from the token (ADR-05 §5)
+     * @param actorId     the actor, from the token
      * @return the table as the people running it see it
-     * @throws ForbiddenActionException if the actor neither runs the table nor is an admin
+     * @throws NotFoundException        if the table does not exist, or the actor cannot see it - the
+     *                                  same answer as a table that does not exist
+     * @throws ForbiddenActionException if the actor sees the table but neither runs it nor is an admin
      */
     @Transactional(readOnly = true)
     public GameTableDetailResponse getManagedDetail(String gameTableId, String actorId) {
         GameTable gameTable = getEntityById(gameTableId);
         // A master of the table, or an admin: the admin reads every table whole (ADR-06 §8).
         if (!masterService.canOversee(gameTableId, actorId)) {
+            // Said only about a table they may see: to anybody else it is the same 404 as an id nobody used.
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only a master of this table or an admin can view its management detail");
         }
         return toDetail(gameTable);
@@ -1298,8 +1346,20 @@ public class GameTableService {
         return values != null ? values : List.of();
     }
 
+    /**
+     * The refusal {@code MasterService} gave under its lock, passed on only to somebody who may see the
+     * table. Asked after the refusal and not before the call: reading the masters ahead of the lock
+     * would leave a stale row in the persistence context for the locked read to hand back.
+     */
+    private ForbiddenActionException refusedOnMasters(String gameTableId, String actorId, ForbiddenActionException refused) {
+        tableVisibilityService.requireVisible(gameTableId, actorId);
+        return refused;
+    }
+
+    /** The Primary's own transitions: 404 for whoever may not see the table, 403 for whoever sees it and is not its Primary. */
     private void requirePrimaryOf(String gameTableId, String actorId, String action) {
         if (!masterService.isPrimaryOf(gameTableId, actorId)) {
+            tableVisibilityService.requireVisible(gameTableId, actorId);
             throw new ForbiddenActionException("Only the Primary master can " + action + " this table");
         }
     }

@@ -1,8 +1,28 @@
 import type { TFunction } from 'i18next'
 
-import type { SearchChoice, SearchField } from '@/lib/searchQuery'
+import { parseSearchQuery, type SearchChoice, type SearchField } from '@/lib/searchQuery'
 
 import { ACCOUNT_STATUSES, PLATFORM_ROLES } from './roles'
+
+/** Fewest characters every value of a people search must have: the server answers nobody to less. */
+export const MIN_PERSON_SEARCH_LENGTH = 2
+
+/**
+ * Whether a people search is long enough for the server to answer it: it has a criterion and none of
+ * its values is shorter than {@link MIN_PERSON_SEARCH_LENGTH}. Mirror of the backend's rule, so the box
+ * never asks for something it knows comes back empty.
+ *
+ * @param query  the canonical query last confirmed in the box
+ * @param fields the commands the box offers, to tell a `/command` from literal text
+ * @returns true when asking the server is worth a request
+ */
+export function isPersonSearchLongEnough(query: string, fields: readonly SearchField[]): boolean {
+  const terms = parseSearchQuery(
+    query,
+    fields.map((field) => field.name),
+  )
+  return terms.length > 0 && terms.every((term) => term.values.every((value) => value.length >= MIN_PERSON_SEARCH_LENGTH))
+}
 
 /**
  * The commands the people search accepts (ADR-22 §1, §3).

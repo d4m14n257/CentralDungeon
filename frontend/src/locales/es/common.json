@@ -78,10 +78,12 @@
   "errors": {
     "offline": "No hay conexión con el servidor. Probá de nuevo en un momento.",
     "mutationFailed": "No pudimos completar la acción. Probá de nuevo.",
+    "logoutFailed": "No pudimos cerrar tu sesión en el servidor. Cerrá el navegador o volvé a intentarlo.",
     "codes": {
       "SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde ya estás comprometido.",
       "CANDIDATE_SCHEDULE_CONFLICT": "No se lo puede aceptar: ya juega en «{{otherTableName}}», que se pisa con el horario de esta mesa.",
       "MASTER_SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde {{masterName}} ya está comprometido.",
+      "MASTER_SCHEDULE_CONFLICT_UNNAMED": "Se pisa con otra mesa en la que {{masterName}} ya está comprometido.",
       "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Los tipos admitidos se leen junto a la zona donde se sueltan los archivos.",
       "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es {{maxBytes, megabytes}} MB por archivo.",
       "FILE_EMPTY": "El archivo está vacío. Elegí otro.",
@@ -96,11 +98,14 @@
       "FILE_CATEGORY_NOT_YOURS": "Ese archivo no puede guardarse en esa categoría: no es una de las tuyas. Elegí otra.",
       "FILE_CATEGORY_NOT_PUBLISHABLE": "Esa categoría guarda lo que respondió cada persona y no se puede publicar para toda la comunidad.",
       "FILE_CANNOT_SELF_PUBLISH": "Los archivos de la biblioteca de la plataforma los sube un admin desde la biblioteca, no desde acá.",
+      "FILE_ALREADY_PUBLISHED": "Este archivo ya está publicado. Actualizá la lista; para cambiar qué es, ocultalo primero.",
+      "FILE_NOT_PUBLISHED": "Este archivo no está publicado, así que no hay nada que ocultar. Actualizá la lista para ver cómo está.",
       "REQUEST_TYPE_NOT_ACCEPTED_HERE": "Ese pedido se abre desde el recurso del que trata, no desde esta pantalla.",
       "ONBOARDING_PENDING": "Primero completá el paso inicial para poder editar tu perfil.",
       "ONBOARDING_ALREADY_COMPLETED": "Ya completaste el paso inicial. Tu nombre y país se editan desde tu perfil.",
       "ACCOUNT_BLOCKED": "Tu cuenta está bloqueada. Contactá a un admin si creés que es un error.",
-      "TABLE_FULL": "La mesa ya completó su cupo."
+      "TABLE_FULL": "La mesa ya completó su cupo.",
+      "RATE_LIMITED": "Hiciste demasiados intentos seguidos. Probá de nuevo en {{retryAfterSeconds, minutes}} min."
     }
   },
   "pagination": {
