@@ -2,7 +2,7 @@
 adr: 16
 titulo: Pedidos con aprobación y bandeja de admins
 estado: Vigente
-actualizada: 2026-11-15
+actualizada: 2026-11-22
 absorbe: [42, 78, 90, 100, 126, 176, 255, 256, 257, 258, 259, 260]
 ---
 
@@ -52,7 +52,7 @@ absorbe: [42, 78, 90, 100, 126, 176, 255, 256, 257, 258, 259, 260]
 
 ## §6 Resolver un ítem no exige tenerlo reservado: exige que no lo tenga otro
 
-**Decisión.** `AdminQueueClaimRule.requireNotHeldByAnother` pasa si nadie lo tiene o si lo tiene el actor, y responde **`409 ITEM_ALREADY_CLAIMED`** solo si lo tiene otro. Resolver algo libre es una reserva implícita. No existe `ITEM_NOT_CLAIMED`. Toda fila visible en la bandeja está libre o es del lector, así que sus acciones de resolver se muestran.
+**Decisión.** `QueueClaimRule.requireNotHeldByAnother` pasa si nadie lo tiene o si lo tiene el actor, y responde **`409 ITEM_ALREADY_CLAIMED`** solo si lo tiene otro. Resolver algo libre es una reserva implícita. No existe `ITEM_NOT_CLAIMED`. Toda fila visible en la bandeja está libre o es del lector, así que sus acciones de resolver se muestran.
 
 **Por qué.** Exigir la reserva volvió la bandeja obligatoria para flujos que no pasan por ella: `/admin/requests` resuelve sin ofrecer reservar y cada resolución respondía `409`. Lo que la reserva compra es no pisarle el trabajo a un colega —un link viejo, otra pestaña, una bandeja sin refrescar—; la consistencia no depende de ella, porque dos admins sobre la misma fila libre se serializan con el lock de §4 y el segundo recibe «ya estaba resuelto». Esconder una acción que funciona es el mismo pecado que ofrecer una que no.
 

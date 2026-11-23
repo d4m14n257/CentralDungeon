@@ -2,7 +2,7 @@
 adr: 4
 titulo: Backend y contrato de la API
 estado: Vigente
-actualizada: 2026-10-20
+actualizada: 2026-11-22
 absorbe: [13, 21, 119, 120, 173, 187, 188, 189, 190, 253]
 ---
 
@@ -12,9 +12,9 @@ absorbe: [13, 21, 119, 120, 173, 187, 188, 189, 190, 253]
 
 ## §1 El código se organiza por feature, con las capas adentro
 
-**Decisión.** En los dos lados, una carpeta por feature de dominio: `com.centraldungeon.<feature>/` con sus capas adentro más un `common/` transversal, y `src/features/<dominio>/` en el frontend (`arquitectura` §2.1 y §3.1).
+**Decisión.** En los dos lados, una carpeta por feature de dominio con sus capas adentro, y todas bajo una carpeta `features/` que se llama igual en los dos: `com.centraldungeon.features.<feature>/` en el backend y `src/features/<dominio>/` en el frontend (`arquitectura` §2.1 y §3.1). La raíz del backend tiene solo `CentralDungeonApplication`, `common/` y `features/`. Lo que no es dominio va en `common/` aunque tenga endpoint: el health check vive en `com.centraldungeon.common.health`. Una feature no repite el prefijo que ya le da su contexto: la bandeja de admins es `features.queue` (`QueueService`, `QueueController`, `QueueClaimRule`, `QueueSource`…), su endpoint es `/api/v1/admin/queue` —al lado de `/api/v1/admin/users` y `/api/v1/admin/files`— y en el frontend es `src/features/queue`; la ruta de la pantalla sigue siendo `/admin/queue`.
 
-**Por qué.** Un `controller/` con nueve controllers de dominios distintos obliga a saltar entre carpetas para tocar una sola funcionalidad. Por feature, agregar o quitar una funcionalidad es agregar o quitar una carpeta.
+**Por qué.** Un `controller/` con nueve controllers de dominios distintos obliga a saltar entre carpetas para tocar una sola funcionalidad. Por feature, agregar o quitar una funcionalidad es agregar o quitar una carpeta. Con los paquetes de dominio sueltos al lado de `common/`, la raíz mezclaba lo transversal con el dominio; bajo `features/` —en plural, como el `src/features/` del frontend— la raíz queda en tres cosas y el mismo nombre dice lo mismo en los dos lados. `health` no es un dominio: dice si hay un backend ahí (ADR-02 «Stack, herramientas y despliegue» §6 «Un health check público, y la conectividad se ve siempre en la interfaz»). Y la bandeja ya vive dentro de admin, así que el prefijo sobraba: su endpoint era el único de admin que no colgaba de `/api/v1/admin/`, y la pantalla y ADR-16 «Pedidos con aprobación y bandeja de admins» ya la llamaban «Bandeja». El cambio es de los dos lados para que backend y frontend nombren la feature igual.
 
 *Antes: #13.*
 

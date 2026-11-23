@@ -19,7 +19,7 @@ El stack y sus versiones fijadas son §1; el porqué de cada regla, en la `ADR-N
 
 ## Reglas fijas — backend (§2)
 
-1. **Paquete por feature, no por capa.** Todo vive en `com.centraldungeon.<feature>/` (hoy: `adminqueue`, `approvals`, `auth`, `catalogs`, `dashboard`, `files`, `health`, `notifications`, `profiles`, `registrations`, `settings`, `tables`, `tasks`, `users`), con sus capas adentro. Lo transversal va en `common/`. → §2.1
+1. **Paquete por feature, no por capa.** Todo el dominio vive en `com.centraldungeon.features.<feature>/` (hoy: `approvals`, `auth`, `catalogs`, `dashboard`, `files`, `notifications`, `profiles`, `queue`, `registrations`, `settings`, `tables`, `tasks`, `users`), con sus capas adentro. Lo transversal, y lo que no es dominio aunque tenga endpoint (`health`), va en `common/`; la raíz tiene solo `CentralDungeonApplication`, `common/` y `features/` (ADR-04 «Backend y contrato de la API» §1 «El código se organiza por feature, con las capas adentro»). → §2.1
 2. **El controller nunca llama a un repository.** Siempre pasa por un service, aunque sea una lectura trivial. → §2.2
 3. **Una `@Entity` nunca cruza la frontera HTTP.** Entrada y salida son `record` en `dto/`, con sufijo `Request` o `Response`. **Nada de tipos abiertos**: ni `Map<String, Object>`, ni `Object`, ni `ResponseEntity<?>`. Listado y detalle son DTOs distintos (`…SummaryResponse` / `…DetailResponse`). → §2.3
 4. **El service es dueño de la transacción** (`@Transactional`, o `readOnly = true` en lectura) y de la lógica de negocio, incluida la que antes vivía en triggers (§4.5). → §2.2

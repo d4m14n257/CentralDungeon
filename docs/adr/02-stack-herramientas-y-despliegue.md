@@ -2,7 +2,7 @@
 adr: 2
 titulo: Stack, herramientas y despliegue
 estado: Vigente
-actualizada: 2026-10-21
+actualizada: 2026-11-22
 absorbe: [5, 19, 20, 142, 146, 174, 262]
 ---
 
@@ -52,7 +52,7 @@ absorbe: [5, 19, 20, 142, 146, 174, 262]
 
 ## §6 Un health check público, y la conectividad se ve siempre en la interfaz
 
-**Decisión.** `GET /api/v1/health`, feature `com.centraldungeon.health` sin repository, público en `SecurityConfig` porque `/login` lo consulta sin sesión. Devuelve `200 {"status":"UP"}` mientras el proceso conteste; **no** mide dependencias: responde «¿hay un backend ahí?», no «¿está todo sano?». En el frontend, `useBackendStatus()` sondea cada 15 s con `retry: false`; `BackendStatusIndicator`, montado en `RootLayout`, se ve en toda pantalla —incluida `/login`— y en los dos estados, con los tokens de estado existentes; «Entrar con Discord» se deshabilita con el motivo cuando no hay backend; y un `MutationCache.onError` global en `queryClient` convierte cualquier mutación sin manejo propio en un toast.
+**Decisión.** `GET /api/v1/health`, paquete `com.centraldungeon.common.health` sin repository —no es un dominio (ADR-04 «Backend y contrato de la API» §1 «El código se organiza por feature, con las capas adentro»)—, público en `SecurityConfig` porque `/login` lo consulta sin sesión. Devuelve `200 {"status":"UP"}` mientras el proceso conteste; **no** mide dependencias: responde «¿hay un backend ahí?», no «¿está todo sano?». En el frontend, `useBackendStatus()` sondea cada 15 s con `retry: false`; `BackendStatusIndicator`, montado en `RootLayout`, se ve en toda pantalla —incluida `/login`— y en los dos estados, con los tokens de estado existentes; «Entrar con Discord» se deshabilita con el motivo cuando no hay backend; y un `MutationCache.onError` global en `queryClient` convierte cualquier mutación sin manejo propio en un toast.
 
 **Por qué.** Un login fallido por conectividad era indistinguible de un problema de cuenta, y ninguna mutación tenía `onError`: si fallaba, el botón dejaba de estar *pending* y no pasaba nada más. `retry: false` para no demorar el aviso. El indicador se ve también cuando todo está bien porque así lo pidió quien lo usa para depurar la conexión.
 

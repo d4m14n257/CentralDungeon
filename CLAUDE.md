@@ -45,7 +45,7 @@ Versiones **fijadas** en `arquitectura` §1 (agosto 2026). Subir una major es un
 
 **Frontend** — TypeScript 5.9 (`strict`), Vite 8, React 19.2, React Router 8 (paquete `react-router`), shadcn/ui + Tailwind 4 (config en CSS, **no** hay `tailwind.config.ts`), TanStack Query 5 (estado de servidor), Zustand 5 (estado de UI global), react-hook-form 7 + zod 4, i18next (**español e inglés**, ADR-23 §2). Tests: Vitest + React Testing Library, Playwright para e2e. Node 24 LTS.
 
-Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.<feature>/` y `src/features/<dominio>/`). En el backend, las capas van adentro de la feature más un `common/` transversal; en el frontend, las **pantallas viven fuera** de las features en `src/routes/`, y lo sin dominio en capas de la raíz (`components/`, `hooks/`, `lib/`, `api/`, `types/`, `config/`). Detalle en `arquitectura` §2.1 y §3.1.
+Organización en ambos lados: **por feature de dominio** (`com.centraldungeon.features.<feature>/` y `src/features/<dominio>/`). En el backend, las capas van adentro de la feature más un `common/` transversal; en el frontend, las **pantallas viven fuera** de las features en `src/routes/`, y lo sin dominio en capas de la raíz (`components/`, `hooks/`, `lib/`, `api/`, `types/`, `config/`). Detalle en `arquitectura` §2.1 y §3.1.
 
 ## Reglas duras
 

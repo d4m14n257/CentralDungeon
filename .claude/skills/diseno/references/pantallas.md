@@ -29,7 +29,7 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 
 ### Bandeja de admins — `/admin/queue`
 
-- Al reservar, el ítem desaparece de la bandeja del resto en el momento, vía `admin-queue.changed` (ADR-16 §5, ADR-18 §2).
+- Al reservar, el ítem desaparece de la bandeja del resto en el momento, vía `queue.changed` (ADR-16 §5, ADR-18 §2).
 - Una reserva sin resolver se libera sola —a los 15 minutos por defecto, configurable en `/admin/settings`— y el ítem reaparece para todos.
 
 ### Perfil — `/profile` y `/users/:id`

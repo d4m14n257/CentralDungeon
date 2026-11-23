@@ -40,38 +40,41 @@ backend/src/main/java/com/centraldungeon/
 │   │                                      los dos cubren los mismos casos con tests
 │   ├── text/
 │   │   └── RichTextSanitizer.java       lista blanca del texto enriquecido (ADR-03 §8, ADR-05 §6)
-│   └── model/
-│       ├── BaseEntity.java              @MappedSuperclass: id String, created_at, updated_at
-│       ├── IdGenerator.java             UUID v7 como String (ADR-03 §4)
-│       └── PageResponse.java            envoltorio de paginación de la API
+│   ├── model/
+│   │   ├── BaseEntity.java              @MappedSuperclass: id String, created_at, updated_at
+│   │   ├── IdGenerator.java             UUID v7 como String (ADR-03 §4)
+│   │   └── PageResponse.java            envoltorio de paginación de la API
+│   └── health/                          /health: no es un dominio, aunque tenga controller
 │
-├── settings/                            una feature entera, como ejemplo de la forma
-│   ├── SettingsController.java          lectura de los límites que ve el cliente
-│   ├── AdminSettingsController.java     el Admin* de la misma feature: otra superficie, otro @PreAuthorize
-│   ├── SettingsService.java             transacción y reglas (ADR-17 §3)
-│   ├── SystemSettingRepository.java  SystemSettingChangeRepository.java
-│   ├── SystemSetting.java  SystemSettingChange.java          @Entity
-│   ├── SettingKey.java  SettingCategory.java  SettingValueType.java   enums
-│   └── dto/
-│       ├── SystemSettingResponse.java  SystemSettingChangeResponse.java  ClientLimitsResponse.java
-│       └── UpdateSettingRequest.java
-│
-├── users/                               users, roles, users_roles, user_role_changes, user_status_changes
-├── tables/                              game_tables, masters, table_schedules, table_sessions,
-│                                        session_attendance, table_status_changes, table_types
-├── registrations/                       table_registrations, registration_rejections, registration_status_changes
-├── catalogs/                            systems, tags, platforms + tablas puente (AbstractCatalogService, §2.4)
-├── files/                               files, file_categories, table_files, registration_files
-├── tasks/                               table_tasks, task_submissions, submission_files
-├── approvals/                           approval_requests (ADR-16 §1, §2)
-├── adminqueue/                          la bandeja compartida, sin tabla propia (ADR-16 §5)
-├── dashboard/                           el dashboard del master, solo lectura (ADR-20 §4)
-├── profiles/                            perfiles públicos y su visibilidad (ADR-10 §1, §2)
-├── notifications/                       notifications
-├── auth/                                login, refresh, logout; y los dobles de prueba
-│                                        (Test*Controller), solo con el perfil `test` (ADR-24 §1, §2)
-└── health/                              /health
+└── features/                            todo el dominio, una carpeta por feature
+    ├── settings/                        una feature entera, como ejemplo de la forma
+    │   ├── SettingsController.java      lectura de los límites que ve el cliente
+    │   ├── AdminSettingsController.java el Admin* de la misma feature: otra superficie, otro @PreAuthorize
+    │   ├── SettingsService.java         transacción y reglas (ADR-17 §3)
+    │   ├── SystemSettingRepository.java  SystemSettingChangeRepository.java
+    │   ├── SystemSetting.java  SystemSettingChange.java          @Entity
+    │   ├── SettingKey.java  SettingCategory.java  SettingValueType.java   enums
+    │   └── dto/
+    │       ├── SystemSettingResponse.java  SystemSettingChangeResponse.java  ClientLimitsResponse.java
+    │       └── UpdateSettingRequest.java
+    │
+    ├── users/                           users, roles, users_roles, user_role_changes, user_status_changes
+    ├── tables/                          game_tables, masters, table_schedules, table_sessions,
+    │                                    session_attendance, table_status_changes, table_types
+    ├── registrations/                   table_registrations, registration_rejections, registration_status_changes
+    ├── catalogs/                        systems, tags, platforms + tablas puente (AbstractCatalogService, §2.4)
+    ├── files/                           files, file_categories, table_files, registration_files
+    ├── tasks/                           table_tasks, task_submissions, submission_files
+    ├── approvals/                       approval_requests (ADR-16 §1, §2)
+    ├── queue/                           la bandeja de admins, sin tabla propia (ADR-16 §5): /api/v1/admin/queue
+    ├── dashboard/                       el dashboard del master, solo lectura (ADR-20 §4)
+    ├── profiles/                        perfiles públicos y su visibilidad (ADR-10 §1, §2)
+    ├── notifications/                   notifications
+    └── auth/                            login, refresh, logout; y los dobles de prueba
+                                         (Test*Controller), solo con el perfil `test` (ADR-24 §1, §2)
 ```
+
+**La raíz tiene solo `CentralDungeonApplication`, `common/` y `features/`** (ADR-04 «Backend y contrato de la API» §1 «El código se organiza por feature, con las capas adentro»). Una feature nueva va en `com.centraldungeon.features.<feature>/`; lo que no es dominio, aunque tenga endpoint, va en `common/`. Una feature no repite el prefijo que ya le da su contexto: la bandeja es `queue`, no `adminqueue`, y su endpoint cuelga de `/api/v1/admin/` como el resto de lo de admin. Los tests espejan el mismo árbol en `backend/src/test/java/com/centraldungeon/`; lo que no es de una feature —la matriz de roles en `matrix/`, `LockGate` en `common/`— queda fuera de `features/`.
 
 Los `comments/` y `feedback/` de F5 y el `audit/` de F6 todavía no existen: se crean como features cuando se construyan (§4.5 marca qué service les toca).
 

@@ -198,8 +198,8 @@ Dos cosas distintas que conviene no confundir:
 WebSocket + STOMP en `/ws` (ADR-18 §2).
 
 - **Autenticación**: el navegador no puede mandar headers en el handshake, así que el token va en el frame STOMP `CONNECT` y lo valida un `ChannelInterceptor`. No en la query string, donde quedaría en los logs de acceso.
-- **Tres destinos** (ADR-18 §2): `/user/queue/notifications` (personal, Spring resuelve el `Principal`), `/topic/admin-queue` (compartido entre admins) y `/topic/tables` (catálogo público — es lo que hace que a alguien navegando el explorador le aparezca una mesa recién publicada).
-- **Autorización por destino**: el interceptor rechaza la suscripción a `/topic/admin-queue` de quien no tenga `Admin` u `Owner`. Sin esto cualquiera observa el movimiento de la moderación.
+- **Tres destinos** (ADR-18 §2): `/user/queue/notifications` (personal, Spring resuelve el `Principal`), `/topic/queue` (compartido entre admins) y `/topic/tables` (catálogo público — es lo que hace que a alguien navegando el explorador le aparezca una mesa recién publicada).
+- **Autorización por destino**: el interceptor rechaza la suscripción a `/topic/queue` de quien no tenga `Admin` u `Owner`. Sin esto cualquiera observa el movimiento de la moderación.
 - **El mensaje es una señal, no el contenido, y dice qué invalidar**: `{"type":"GameTablePublished","tableId":"…"}` y el cliente invalida **esa** rama de `queryKeys`, no media caché (ADR-18 §2). Mantiene TanStack Query como única fuente (regla dura 11) y evita que un mensaje perdido deje la interfaz mostrando datos inventados.
 - **Cliente**: reconexión con backoff exponencial; al reconectar, invalidar todo lo suscrito para recuperar lo perdido durante la caída.
 - **Límite conocido**: el broker en memoria de Spring sirve para **una sola instancia**. Con más de una hace falta un broker externo (RabbitMQ o Redis). Se anota; no se construye ahora.
@@ -207,11 +207,11 @@ WebSocket + STOMP en `/ws` (ADR-18 §2).
 ### Reserva
 
 ```
-POST   /api/v1/admin-queue/{type}/{id}/claim     reserva
-DELETE /api/v1/admin-queue/{type}/{id}/claim     libera
+POST   /api/v1/admin/queue/{type}/{id}/claim     reserva
+DELETE /api/v1/admin/queue/{type}/{id}/claim     libera
 ```
 
-Idempotente para el mismo admin, `409` si ya lo tiene otro. Un job libera las reservas de más de 15 minutos. Cada cambio emite `admin-queue.changed`.
+Idempotente para el mismo admin, `409` si ya lo tiene otro. Un job libera las reservas de más de 15 minutos. Cada cambio emite `queue.changed`.
 
 ## 6. Definición de terminado
 

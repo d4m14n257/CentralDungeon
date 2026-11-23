@@ -2,7 +2,7 @@
 adr: 20
 titulo: Navegación, contextos y ayuda
 estado: Vigente
-actualizada: 2026-11-16
+actualizada: 2026-11-22
 absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 ---
 
@@ -36,7 +36,7 @@ absorbe: [103, 136, 167, 168, 170, 217, 219, 220, 222, 231, 269, 270]
 
 ## §4 La home del master es una bandeja de trabajo ordenada por espera, no un resumen con números
 
-**Decisión.** `/master` lista lo que espera acción del master, en una lista ordenada por espera —a igual espera, los ítems de una mesa quedan juntos—: **cinco tipos de ítem** —`CandidatesWaiting`, `OverdueTaskMissing`, `SessionToRecord`, `ChangesRequested`, `ReadyToStart`—, **ordenados por tiempo de espera**, no por cantidad. El backend manda código y parámetros y el frontend arma la frase (ADR-23 §3). «Entregas sin revisar» **no existe**: el ítem es la petición vencida con gente que no entregó, contando **personas** y no filas (ADR-15 §2); una petición que todos contestaron no genera ítem. Vive en su propio paquete, `com.centraldungeon.dashboard` (`/api/v1/master/dashboard`), y resuelve las sondas con consultas agrupadas por lista de ids; solo los destinatarios de una petición vencida se resuelven por petición, con `TableTaskService.recipientsOf`. `/master/tables` sigue siendo el listado completo.
+**Decisión.** `/master` lista lo que espera acción del master, en una lista ordenada por espera —a igual espera, los ítems de una mesa quedan juntos—: **cinco tipos de ítem** —`CandidatesWaiting`, `OverdueTaskMissing`, `SessionToRecord`, `ChangesRequested`, `ReadyToStart`—, **ordenados por tiempo de espera**, no por cantidad. El backend manda código y parámetros y el frontend arma la frase (ADR-23 §3). «Entregas sin revisar» **no existe**: el ítem es la petición vencida con gente que no entregó, contando **personas** y no filas (ADR-15 §2); una petición que todos contestaron no genera ítem. Vive en su propio paquete, `com.centraldungeon.features.dashboard` (`/api/v1/master/dashboard`), y resuelve las sondas con consultas agrupadas por lista de ids; solo los destinatarios de una petición vencida se resuelven por petición, con `TableTaskService.recipientsOf`. `/master/tables` sigue siendo el listado completo.
 
 **Por qué.** Un master con tres mesas no necesita saber cuántos candidatos tiene sino **a quién le debe una respuesta**; ninguna métrica (mesas activas, asistencia promedio) cambia lo que hace a continuación. Reusa la forma de la bandeja de admins (ADR-16 §5) sin su reserva, porque el trabajo de una mesa tiene un solo dueño. No hay marca de «revisada» en el modelo, y agregarla rozaría ADR-15 §2 (el sistema no juzga entregas); lo que sí se pide es que el incumplimiento quede visible (ADR-15 §2). Una persona esperando nueve días pesa más que tres esperando dos horas. Paquete propio porque lee de cuatro features y nada lee de él: en `tables/` habría creado un ciclo con `tasks/`. Los destinatarios no se duplican en una consulta agregada porque así las dos respuestas se desincronizan.
 

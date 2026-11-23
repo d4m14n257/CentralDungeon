@@ -2,7 +2,7 @@
 adr: 3
 titulo: Modelo de datos y persistencia
 estado: Vigente
-actualizada: 2026-11-15
+actualizada: 2026-11-22
 absorbe: [2, 3, 8, 9, 10, 11, 12, 22, 25, 62, 124, 182, 208]
 ---
 
@@ -78,7 +78,7 @@ absorbe: [2, 3, 8, 9, 10, 11, 12, 22, 25, 62, 124, 182, 208]
 
 **Decisión.** La entidad de `systems` es `GameSystem` y la de las mesas, `GameTable`: nunca `System` ni `Table`.
 
-**Por qué.** Una clase `System` en `com.centraldungeon.catalogs` tapa `java.lang.System` para todo el paquete, y `Table` choca con `jakarta.persistence.Table`. El nombre de la tabla puede ser el corto; el de la clase, no.
+**Por qué.** Una clase `System` en `com.centraldungeon.features.catalogs` tapa `java.lang.System` para todo el paquete, y `Table` choca con `jakarta.persistence.Table`. El nombre de la tabla puede ser el corto; el de la clase, no.
 
 *Antes: #182.*
 

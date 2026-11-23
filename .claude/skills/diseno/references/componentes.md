@@ -95,12 +95,12 @@ La tabla de arriba es **curada**: nombra los compuestos con dominio que tienen a
 
 | Feature | Compuestos |
 |---|---|
-| `adminQueue` (2) | `ClaimBadge` · `QueueItemKindBadge` |
 | `approvals` (7) | `BanRequestsSection` · `RequestDetailPanel` · `RequestStatusBadge` · `RequestTypeBadge` · `ResolveRequestDialog` · `SubmitRequestDialog` · `SubmitRequestSection` |
 | `catalogs` (8) | `AcceptCatalogValueDialog` · `CanonicalPicker` · `CatalogChip` · `CatalogCombobox` · `CatalogPicker` · `CatalogStatusBadge` · `DisableCatalogValueDialog` · `MergeCatalogGroupsDialog` |
 | `files` (14) | `EditFileDialog` · `FileCard` · `FileCategoryBadge` · `FileCategoryChoice` · `FileCategoryFilter` · `FileDropzone` · `FileList` · `FilePicker` · `FileTypeBadge` · `FileUsageChips` · `LibraryStateBadge` · `EditLibraryCategoryDialog` · `PublishCategorySelect` · `StagedFileList` |
 | `help` (4) | `HelpBlocks` · `HelpButton` · `HelpDialog` · `HelpLink` |
 | `notifications` (1) | `NotificationBell` |
+| `queue` (2) | `ClaimBadge` · `QueueItemKindBadge` |
 | `registrations` (4) | `ApplyToTableDialog` · `BlockPlayerDialog` · `RegistrationStatusBadge` · `RejectRegistrationDialog` |
 | `settings` (2) | `SettingHistory` · `SettingValueDialog` — F3.5 (ADR-17 §3). La pantalla no usa `DataTable`: son cuatro filas que se leen enteras, no un listado que se recorre y se busca |
 | `tables` (10) | `AttendanceEditor` · `CreateUnassignedTableDialog` · `GameTableCard` · `JustifiedTableActionDialog` · `MasterWorkItemList` · `ScheduleEditor` · `SessionList` · `SessionStatusBadge` · `TableStatusBadge` · `WeeklyScheduleGrid` |
@@ -130,7 +130,7 @@ Los diez renderizaban **el mismo bloque, byte a byte**: `<span class="inline-fle
 | `CatalogStatusBadge` | `catalogs` | `catalogs` | `status.${status}` | 4 |
 | `TaskStatusBadge` | `tasks` | `tasks` | `status.${status}` | 2 |
 | `FileTypeBadge` | `files` | `files` | `fileType.${fileType}` | 3 |
-| `ClaimBadge` | `adminQueue` | `admin` | — (dos ramas, no un `Record`) | — |
+| `ClaimBadge` | `queue` | `admin` | — (dos ramas, no un `Record`) | — |
 | el badge de resultado | `routes/NotificationsPage.tsx` | `notifications` | `badge.accepted` · `badge.rejected` | 2 |
 
 **Difieren en tres cosas y en ninguna más**: el namespace de i18n, el prefijo de la clave, y el mapa de estado a token. Todo lo demás —el `cn()`, las clases del contenedor, el tamaño del punto, el orden de los dos hijos— es el mismo texto repetido ocho veces.

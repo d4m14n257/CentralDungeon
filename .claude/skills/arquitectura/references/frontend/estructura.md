@@ -63,8 +63,8 @@ frontend/
     │   │   ├── lifecycle.ts         qué acción admite cada estado de la mesa
     │   │   ├── types.ts             los tipos del dominio (§3.2)
     │   │   └── index.ts             la superficie pública de la feature (§3.1.3)
-    │   ├── adminQueue/  approvals/  auth/  catalogs/  comments/  feedback/  files/
-    │   └── help/  notifications/  registrations/  settings/  tasks/  users/
+    │   ├── approvals/  auth/  catalogs/  comments/  feedback/  files/  help/
+    │   └── notifications/  queue/  registrations/  settings/  tasks/  users/
     │
     ├── components/                  sin dominio, para toda la app
     │   ├── ui/                      primitivas shadcn/ui generadas (button.tsx, dialog.tsx…)

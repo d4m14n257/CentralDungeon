@@ -19,13 +19,13 @@ flowchart TB
         direction TB
         WORK["NO se crea ninguna fila nueva.<br/>El trabajo ya vive en:<br/>approval_requests Pending<br/>comments Under review<br/>system_feedback New<br/>game_tables Preparation"]
         VIEW["Vista = UNION ALL de las 4<br/>WHERE claimed_by IS NULL<br/>   OR claimed_by = :actual"]
-        BDEST["/topic/admin-queue<br/>solo suscriptores Admin u Owner"]
+        BDEST["/topic/queue<br/>solo suscriptores Admin u Owner"]
         WORK --> VIEW --> BDEST
     end
 
     subgraph CLIENTE["CLIENTE"]
         direction TB
-        MSG["Mensaje = SEÑAL, no contenido<br/>{ type: 'admin-queue.changed' }"]
+        MSG["Mensaje = SEÑAL, no contenido<br/>{ type: 'queue.changed' }"]
         INV["queryClient.invalidateQueries()"]
         REFETCH["TanStack Query refetchea<br/>por HTTP normal"]
         MSG --> INV --> REFETCH
