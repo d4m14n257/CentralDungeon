@@ -1,0 +1,664 @@
+package com.centraldungeon.features.files;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
+
+import com.centraldungeon.common.exception.InvalidRequestException;
+import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.features.files.dto.AdminFileResponse;
+import com.centraldungeon.features.files.dto.AdminFileTableResponse;
+import com.centraldungeon.features.files.dto.FileResponse;
+import com.centraldungeon.features.files.dto.FileUsageResponse;
+import com.centraldungeon.features.files.dto.LinkTableFileRequest;
+import com.centraldungeon.features.files.dto.PublicFileResponse;
+import com.centraldungeon.features.files.dto.LibraryUploadRequest;
+import com.centraldungeon.features.files.dto.SharedFileResponse;
+import com.centraldungeon.features.files.dto.TableFileResponse;
+import com.centraldungeon.features.files.dto.UploadFileRequest;
+import com.centraldungeon.features.tables.GameTable;
+import com.centraldungeon.features.tables.GameTableRepository;
+import com.centraldungeon.features.tables.GameTableService;
+import com.centraldungeon.features.tables.GameTableStatus;
+import com.centraldungeon.features.tables.MasterService;
+import com.centraldungeon.features.tasks.TableTask;
+import com.centraldungeon.features.tasks.TableTaskRepository;
+import com.centraldungeon.features.tasks.TaskAudience;
+import com.centraldungeon.features.tasks.TaskFile;
+import com.centraldungeon.features.tasks.TaskFileRepository;
+import com.centraldungeon.features.tasks.TaskFileStatus;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.UserRepository;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.mysql.MySQLContainer;
+
+/**
+ * The half of the file story only a real database and a real disk can answer.
+ *
+ * <p><b>The headline case is the one ADR-14 §1 exists for</b>: one upload, two tables, <em>one</em> row in
+ * {@code files}. A unit test can only assert that {@code save} was not called twice; this counts the
+ * rows. It also exercises the composite key of {@code table_files}, which is what makes detaching and
+ * re-attaching a revive rather than a duplicate-key failure, and the purge query of ADR-13 §3, whose
+ * {@code not exists} and {@code coalesce} are exactly the parts a mock cannot check.
+ *
+ * <p>Storage points at a temporary directory rather than the dev root, so a run never leaves blobs in
+ * the working tree. Wired with {@code @DynamicPropertySource}, not {@code @ServiceConnection}: see
+ * {@code RegistrationServiceIT} for why.
+ */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@Testcontainers
+class FileIT {
+
+    @Container
+    static MySQLContainer mysql = new MySQLContainer("mysql:8.0");
+
+    @TempDir
+    static Path storageRoot;
+
+    @DynamicPropertySource
+    static void registerProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", mysql::getJdbcUrl);
+        registry.add("spring.datasource.username", mysql::getUsername);
+        registry.add("spring.datasource.password", mysql::getPassword);
+        registry.add("app.storage.root", () -> storageRoot.toString());
+    }
+
+    @Autowired
+    private FileService fileService;
+
+    @Autowired
+    private TableFileService tableFileService;
+
+    @Autowired
+    private FileRetentionService fileRetentionService;
+
+    @Autowired
+    private StoredFileRepository fileRepository;
+
+    @Autowired
+    private TableFileRepository tableFileRepository;
+
+    @Autowired
+    private FileCategoryLinkRepository categoryRepository;
+
+    @Autowired
+    private GameTableRepository gameTableRepository;
+
+    @Autowired
+    private MasterService masterService;
+
+    @Autowired
+    private GameTableService gameTableService;
+
+    @Autowired
+    private TableTaskRepository tableTaskRepository;
+
+    @Autowired
+    private TaskFileRepository taskFileRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private User master;
+    private GameTable firstTable;
+    private GameTable secondTable;
+
+    @BeforeEach
+    void setUp() {
+        master = userRepository.save(new User(randomDiscordId(), "File Master"));
+        firstTable = gameTableRepository.save(new GameTable("Mesa de los martes", master));
+        secondTable = gameTableRepository.save(new GameTable("Mesa de los jueves", master));
+        masterService.createPrimary(firstTable, master);
+        masterService.createPrimary(secondTable, master);
+    }
+
+    /**
+     * F1.4's acceptance criterion, end to end: a master uploads a character sheet, attaches
+     * it to two tables, and there is one file.
+     */
+    @Test
+    void oneUploadAttachedToTwoTablesIsStillOneFile() {
+        FileResponse sheet = upload("ficha.pdf", "hoja de personaje");
+
+        attach(firstTable, sheet.id(), false);
+        attach(secondTable, sheet.id(), false);
+
+        assertThat(fileRepository.findById(sheet.id())).isPresent();
+        assertThat(tableFileRepository.findUsagesByFileIds(List.of(sheet.id()))).hasSize(2);
+    }
+
+    /**
+     * The uses an owner sees, resolved against a real database (ADR-14 §3).
+     *
+     * <p>This is the case a mock cannot check. Both queries are constructor expressions carrying an
+     * <b>enum literal</b> - {@code FileCategory.TableMaterial} written into the JPQL itself - joined across
+     * a composite key, and whether Hibernate accepts that shape is not something a stubbed repository
+     * has an opinion about. The unit test asserts the merge; this asserts the SQL exists.
+     */
+    @Test
+    void theOwnersOwnListNamesEveryTableThatUsesEachFile() {
+        FileResponse sheet = upload("ficha.pdf", "hoja de personaje");
+        attach(firstTable, sheet.id(), false);
+        attach(secondTable, sheet.id(), true);
+
+        PageResponse<FileResponse> mine = fileService.listMine(master.getId(), null, null, PageRequest.of(0, 20));
+
+        assertThat(mine.content())
+                .filteredOn(file -> file.id().equals(sheet.id()))
+                .singleElement()
+                .extracting(FileResponse::usages, list(FileUsageResponse.class))
+                .extracting(FileUsageResponse::category, FileUsageResponse::contextName, FileUsageResponse::membership)
+                .containsExactlyInAnyOrder(
+                        tuple("TableMaterial", "Mesa de los martes", "Master"),
+                        tuple("TableMaterial", "Mesa de los jueves", "Master"));
+    }
+
+    /** A file nothing points at reports no uses, which is what the purge of ADR-13 §3 is about to notice. */
+    @Test
+    void aFileNoTableHoldsReportsNoUses() {
+        FileResponse loose = upload("suelto.pdf", "nada lo usa");
+
+        PageResponse<FileResponse> mine = fileService.listMine(master.getId(), null, null, PageRequest.of(0, 20));
+
+        assertThat(mine.content())
+                .filteredOn(file -> file.id().equals(loose.id()))
+                .singleElement()
+                .extracting(FileResponse::usages, list(FileUsageResponse.class))
+                .isEmpty();
+    }
+
+    /**
+     * The picker's search box actually narrows the history now.
+     *
+     * <p>The frontend had been sending {@code q} on this call all along and the endpoint had no
+     * parameter to receive it, so "buscar entre mis archivos" returned everything regardless of what
+     * was typed - and a reuse history you cannot search is one nobody reuses from (ADR-13 §2).
+     */
+    @Test
+    void theOwnersListIsNarrowedByWhatTheyTyped() {
+        upload("ficha-thalia.pdf", "la elfa");
+        upload("mapa-pantano.pdf", "el pantano");
+
+        PageResponse<FileResponse> searched = fileService.listMine(master.getId(), "thalia", null, PageRequest.of(0, 20));
+
+        assertThat(searched.content()).extracting(FileResponse::name).containsExactly("ficha-thalia.pdf");
+    }
+
+    /**
+     * <b>The link classifies the file, and the membership is never revoked</b> (ADR-14 §4).
+     *
+     * <p>The whole design in one case: nobody declared a cajón on the upload, attaching the file to a
+     * table put it in one, and detaching it left the cajón standing while the <em>use</em> went away.
+     * That difference is the reason a cajón is stored and a use is derived - a mock cannot tell them
+     * apart because both are just rows to it.
+     */
+    @Test
+    void attachingClassifiesTheFileAndDetachingNeverUnclassifiesIt() {
+        FileResponse map = upload("pantano.pdf", "el mapa");
+        // Nothing declared anything: an upload from inside a flow carries no cajón at all.
+        assertThat(cajonesOf(map.id())).isEmpty();
+
+        attach(firstTable, map.id(), false);
+        assertThat(cajonesOf(map.id())).containsExactly("TableMaterial");
+
+        tableFileService.detach(firstTable.getId(), map.id(), master.getId());
+        assertThat(cajonesOf(map.id())).containsExactly("TableMaterial");
+        assertThat(fileService.listMine(master.getId(), null, null, PageRequest.of(0, 20)).content())
+                .filteredOn(file -> file.id().equals(map.id()))
+                .singleElement()
+                .extracting(FileResponse::usages, list(FileUsageResponse.class))
+                .isEmpty();
+    }
+
+    /**
+     * The same file in two cajones, which is what the column could never express (ADR-14 §4).
+     *
+     * <p>A sheet attached to a table and later handed in to that table's request belongs to both
+     * flows, and deduplication (ADR-13 §3) guarantees it is one row - so one row has to hold two answers.
+     */
+    @Test
+    void aFileUsedInTwoFlowsBelongsToTwoCajones() {
+        FileResponse sheet = upload("ficha.pdf", "la elfa");
+        attach(firstTable, sheet.id(), false);
+        fileService.classify(sheet.id(), FileCategory.PlayerSubmission);
+
+        assertThat(cajonesOf(sheet.id())).containsExactlyInAnyOrder("TableMaterial", "PlayerSubmission");
+    }
+
+    /**
+     * The cajón as a search command, not only as a filter (ADR-22 §2).
+     *
+     * <p>It is the one field of the search language that is not a column: membership is a row per
+     * cajón, so the criterion resolves to an {@code exists} rather than a {@code LIKE}. Whether
+     * Hibernate builds that subquery from inside the term folding is not something a mock can say.
+     */
+    @Test
+    void theSearchBoxNarrowsByCajonWithItsOwnCommand() {
+        FileResponse attached = upload("ficha.pdf", "la elfa");
+        upload("suelto.pdf", "nada lo usa");
+        attach(firstTable, attached.id(), false);
+
+        PageResponse<FileResponse> material =
+                fileService.listMine(master.getId(), "/file_categories TableMaterial", null, PageRequest.of(0, 20));
+        PageResponse<FileResponse> asSubmission =
+                fileService.listMine(master.getId(), "/file_categories PlayerSubmission", null, PageRequest.of(0, 20));
+
+        assertThat(material.content()).extracting(FileResponse::name).containsExactly("ficha.pdf");
+        // A cajón nothing of theirs is in finds nothing, rather than everything.
+        assertThat(asSubmission.content()).isEmpty();
+    }
+
+    /** A value that names no cajón finds nothing, the same way a typo does in any other field. */
+    @Test
+    void aCajonThatDoesNotExistFindsNothing() {
+        upload("ficha.pdf", "la elfa");
+
+        PageResponse<FileResponse> none =
+                fileService.listMine(master.getId(), "/file_categories NoSuchCajon", null, PageRequest.of(0, 20));
+
+        assertThat(none.content()).isEmpty();
+    }
+
+    /** Somebody's own library, narrowed to one cajón, through the {@code exists} subquery (ADR-14 §4). */
+    @Test
+    void theOwnersListIsNarrowedByCajon() {
+        FileResponse attached = upload("ficha.pdf", "la elfa");
+        upload("suelto.pdf", "nada lo usa");
+        attach(firstTable, attached.id(), false);
+
+        PageResponse<FileResponse> material =
+                fileService.listMine(master.getId(), null, FileCategory.TableMaterial, PageRequest.of(0, 20));
+
+        assertThat(material.content()).extracting(FileResponse::name).containsExactly("ficha.pdf");
+    }
+
+    /**
+     * Uploading the same content twice answers 200's worth of "already there", not a second row
+     * (ADR-13 §4, §3).
+     */
+    @Test
+    void theSecondUploadOfTheSameContentIsRecognisedRatherThanStored() {
+        UploadResult first =
+                fileService.upload(pdf("ficha.pdf", "idéntico"), new UploadFileRequest(FileType.Private, null), master.getId());
+        UploadResult second =
+                fileService.upload(pdf("copia.pdf", "idéntico"), new UploadFileRequest(FileType.Private, null), master.getId());
+
+        assertThat(first.deduplicated()).isFalse();
+        assertThat(second.deduplicated()).isTrue();
+        assertThat(second.file().id()).isEqualTo(first.file().id());
+        // The name of the first upload is what survives: the row was recognised, not rewritten.
+        assertThat(second.file().name()).isEqualTo("ficha.pdf");
+    }
+
+    /** The published set narrows by category, which is what makes it browsable (ADR-14 §4, §1). */
+    @Test
+    void thePublishedSetCanBeNarrowedToOneKindOfDocument() {
+        User admin = userRepository.save(new User(randomDiscordId(), "Library Admin"));
+        // The sheet goes into both master-side cajones at once: it is asked for while the table
+        // recruits *and* once it is running. That is the case a single column could not express.
+        AdminFileResponse sheet = fileService
+                .uploadToLibrary(
+                        pdf("ficha-comunidad.pdf", "la de todos"),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest), true),
+                        admin.getId())
+                .file();
+        fileService.uploadToLibrary(
+                pdf("reglamento.pdf", "las normas"), new LibraryUploadRequest(List.of(FileCategory.Announcement), true), admin.getId());
+
+        PageResponse<PublicFileResponse> forRequests =
+                fileService.listPublic(FileCategory.MasterRequest, PageRequest.of(0, 20));
+        PageResponse<PublicFileResponse> forTables =
+                fileService.listPublic(FileCategory.TableMaterial, PageRequest.of(0, 20));
+
+        // One file, two cajones, and it shows up in both without being stored twice.
+        assertThat(forRequests.content()).extracting(PublicFileResponse::id).containsExactly(sheet.id());
+        assertThat(forTables.content()).extracting(PublicFileResponse::id).containsExactly(sheet.id());
+        assertThat(fileRepository.findById(sheet.id())).isPresent();
+    }
+
+    /**
+     * The two player-side cajones refuse to be published into (ADR-14 §4).
+     *
+     * <p>They hold what individual people answered with. A blank offered to the whole community is
+     * not an answer - it belongs in the master-side cajón the request was written from.
+     */
+    @Test
+    void refusesToPublishIntoACajonThatHoldsPeoplesAnswers() {
+        assertThatThrownBy(() -> fileService.uploadToLibrary(
+                        pdf("ficha.pdf", "la de todos"),
+                        new LibraryUploadRequest(List.of(FileCategory.PlayerApplication), true),
+                        master.getId()))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    /** Taking a file off one table leaves the file, and leaves the other table's copy of it (ADR-14 §1). */
+    @Test
+    void detachingFromOneTableLeavesTheFileAndTheOtherTable() {
+        FileResponse sheet = upload("ficha.pdf", "hoja de personaje");
+        attach(firstTable, sheet.id(), false);
+        attach(secondTable, sheet.id(), false);
+
+        tableFileService.detach(firstTable.getId(), sheet.id(), master.getId());
+
+        assertThat(fileRepository.findByIdAndStatus(sheet.id(), FileStatus.Current)).isPresent();
+        assertThat(tableFileService.listForTable(firstTable.getId(), master.getId())).isEmpty();
+        assertThat(tableFileService.listForTable(secondTable.getId(), master.getId()))
+                .singleElement()
+                .extracting(TableFileResponse::fileId)
+                .isEqualTo(sheet.id());
+    }
+
+    /**
+     * Against the real composite primary key: re-attaching what was detached has to update the row
+     * that is still there, not insert a second one with the same key.
+     */
+    @Test
+    void reattachingAfterDetachingDoesNotCollideOnTheCompositeKey() {
+        FileResponse sheet = upload("ficha.pdf", "hoja");
+        attach(firstTable, sheet.id(), false);
+        tableFileService.detach(firstTable.getId(), sheet.id(), master.getId());
+
+        attach(firstTable, sheet.id(), true);
+
+        assertThat(tableFileRepository.findById_GameTableId(firstTable.getId())).hasSize(1);
+        assertThat(tableFileService.listForTable(firstTable.getId(), master.getId()))
+                .singleElement()
+                .extracting(TableFileResponse::isPrivate)
+                .isEqualTo(true);
+    }
+
+    /** ADR-13 §3 on real rows: the same bytes from the same person are recognised, not stored again. */
+    @Test
+    void uploadingTheSameContentTwiceWritesOneRow() {
+        FileResponse first = upload("ficha.pdf", "exactamente lo mismo");
+        FileResponse second = upload("copia-de-ficha.pdf", "exactamente lo mismo");
+
+        assertThat(second.id()).isEqualTo(first.id());
+        assertThat(fileRepository.findByUserCreated_IdAndStatus(master.getId(), FileStatus.Current, PageRequest.of(0, 10)))
+                .hasSize(1);
+    }
+
+    /** The bytes survive a round trip through gzip and the staging move (ADR-13 §3, M26.2). */
+    @Test
+    void theContentComesBackExactlyAsItWentIn() {
+        FileResponse sheet = upload("ficha.pdf", "contenido con acentos: ñáé");
+
+        FileDownload download = fileService.download(sheet.id(), master.getId());
+
+        assertThat(new String(download.content(), StandardCharsets.UTF_8)).isEqualTo("contenido con acentos: ñáé");
+        assertThat(download.name()).isEqualTo("ficha.pdf");
+    }
+
+    /** A published file is attachable by a master who did not upload it, and is not copied (ADR-14 §1). */
+    @Test
+    void aPublishedFileIsAttachedRatherThanCopied() {
+        User admin = userRepository.save(new User(randomDiscordId(), "File Admin"));
+        AdminFileResponse defaultSheet = fileService.uploadToLibrary(
+                        pdf("ficha-por-defecto.pdf", "la de la comunidad"),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true),
+                        admin.getId())
+                .file();
+
+        attach(firstTable, defaultSheet.id(), false);
+
+        List<SharedFileResponse> shared = tableFileService.sharedFilesOf(firstTable.getId());
+        assertThat(shared).singleElement().extracting(SharedFileResponse::fileId).isEqualTo(defaultSheet.id());
+        assertThat(fileRepository.findById(defaultSheet.id()))
+                .get()
+                .extracting(file -> file.getUserCreated().getId())
+                .isEqualTo(admin.getId());
+    }
+
+    /** What a player sees: the shared attachments and nothing else. */
+    @Test
+    void whatTheTableSharesExcludesThePrivateAttachments() {
+        FileResponse shared = upload("mapa.pdf", "el mapa");
+        FileResponse notes = upload("notas.pdf", "mis notas");
+        attach(firstTable, shared.id(), false);
+        attach(firstTable, notes.id(), true);
+
+        assertThat(tableFileService.sharedFilesOf(firstTable.getId()))
+                .singleElement()
+                .extracting(SharedFileResponse::fileId)
+                .isEqualTo(shared.id());
+    }
+
+    /**
+     * The purge query of ADR-13 §3 against real SQL: its {@code not exists} over {@code table_files} and its
+     * {@code coalesce} of the two dates are the parts no mock can check.
+     */
+    @Test
+    void thePurgeSkipsAttachedFilesAndPublishedOnesAndTakesTheRest() {
+        FileResponse stale = upload("viejo.pdf", "nadie lo abre");
+        FileResponse attached = upload("en-uso.pdf", "una mesa lo muestra");
+        AdminFileResponse published = fileService
+                .uploadToLibrary(
+                        pdf("reglas.pdf", "las reglas"),
+                        new LibraryUploadRequest(List.of(FileCategory.Announcement), true),
+                        master.getId())
+                .file();
+        attach(firstTable, attached.id(), false);
+        ageOut(stale.id(), attached.id(), published.id());
+
+        fileRetentionService.markUnusedFiles();
+
+        assertThat(statusOf(stale.id())).isEqualTo(FileStatus.Deleted);
+        assertThat(statusOf(attached.id())).isEqualTo(FileStatus.Current);
+        assertThat(statusOf(published.id())).isEqualTo(FileStatus.Current);
+    }
+
+    /**
+     * The purge through the <b>scheduled entry point</b>, which is the only way to catch what a unit
+     * test structurally cannot: a self-invocation that bypasses the proxy leaves the whole pass
+     * without a transaction, the entities come back detached, and marking them writes to nothing. The
+     * job would log a count and change zero rows, silently. So this calls the method the scheduler
+     * calls, on the real bean, and then asks the database.
+     */
+    @Test
+    void theScheduledPassActuallyWritesItsMarksToTheDatabase() {
+        FileResponse stale = upload("olvidado.pdf", "nadie lo abre nunca");
+        ageOut(stale.id());
+
+        fileRetentionService.purgeUnusedFiles();
+
+        assertThat(statusOf(stale.id())).isEqualTo(FileStatus.Deleted);
+        assertThat(fileRepository.findById(stale.id()).orElseThrow().getDeletedAt()).isNotNull();
+    }
+
+    /** /admin/files names the tables using each file, which is what makes ADR-14 §1 visible and linkable. */
+    @Test
+    void theAdminListingNamesTheTablesThatUseEachFile() {
+        AdminFileResponse sheet = fileService
+                .uploadToLibrary(
+                        pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true), master.getId())
+                .file();
+        attach(firstTable, sheet.id(), false);
+        attach(secondTable, sheet.id(), false);
+
+        PageResponse<AdminFileResponse> page = fileService.listForAdmin("ficha", List.of(), null, PageRequest.of(0, 10));
+
+        assertThat(page.content())
+                .filteredOn(file -> file.id().equals(sheet.id()))
+                .singleElement()
+                .satisfies(file -> {
+                    assertThat(file.tables())
+                            .containsExactlyInAnyOrder(
+                                    new AdminFileTableResponse(firstTable.getId(), firstTable.getName()),
+                                    new AdminFileTableResponse(secondTable.getId(), secondTable.getName()));
+                    assertThat(file.ownerName()).isEqualTo("File Master");
+                });
+    }
+
+    /**
+     * /admin/files is the platform's library and nothing else (ADR-14 §7): somebody's private upload never
+     * shows up in it, however well it matches the search - against real SQL, because "published" is
+     * a predicate of the query and not a filter the screen could forget.
+     */
+    @Test
+    void theAdminListingHoldsOnlyWhatIsPublished() {
+        FileResponse privateSheet = upload("ficha-privada.pdf", "la mía");
+        AdminFileResponse publicSheet = fileService
+                .uploadToLibrary(
+                        pdf("ficha-publica.pdf", "la de todos"),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true),
+                        master.getId())
+                .file();
+
+        PageResponse<AdminFileResponse> page = fileService.listForAdmin("ficha", List.of(), null, PageRequest.of(0, 50));
+
+        assertThat(page.content()).extracting(AdminFileResponse::id)
+                .contains(publicSheet.id())
+                .doesNotContain(privateSheet.id());
+    }
+
+    /**
+     * ADR-14 §7 against real SQL: a file uploaded without publishing is in the admin's library and in no
+     * picker; hidden after being published, it is still in the library and still in no picker; and the
+     * purge leaves both alone, because the platform's library is never the purge's to take.
+     */
+    @Test
+    void anUnpublishedOrHiddenFileStaysInTheLibraryOutOfThePickersAndOutOfThePurge() {
+        AdminFileResponse waiting = fileService
+                .uploadToLibrary(
+                        pdf("borrador-e2e.pdf", "todavia no"),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial), false),
+                        master.getId())
+                .file();
+        AdminFileResponse hidden = fileService
+                .uploadToLibrary(
+                        pdf("oculto-e2e.pdf", "ya no"),
+                        new LibraryUploadRequest(List.of(FileCategory.TableMaterial), true),
+                        master.getId())
+                .file();
+        fileService.unpublish(hidden.id());
+        ageOut(waiting.id(), hidden.id());
+
+        fileRetentionService.markUnusedFiles();
+
+        PageResponse<AdminFileResponse> library = fileService.listForAdmin("e2e", List.of(), null, PageRequest.of(0, 50));
+        assertThat(library.content()).extracting(AdminFileResponse::id).contains(waiting.id(), hidden.id());
+        assertThat(fileService.listPublic(FileCategory.TableMaterial, PageRequest.of(0, 50)).content())
+                .extracting(PublicFileResponse::id)
+                .doesNotContain(waiting.id(), hidden.id());
+        assertThat(statusOf(waiting.id())).isEqualTo(FileStatus.Current);
+        assertThat(statusOf(hidden.id())).isEqualTo(FileStatus.Current);
+    }
+
+    /**
+     * What a table shares is read by whoever may see the table - and a table nobody was shown yet is
+     * seen by nobody outside it.
+     *
+     * <p>The shared attachment of a draft used to be one download away for any signed-in person who had
+     * its id: the check only asked whether the reader was vetoed, never whether the table was there for
+     * them at all. Opening the table is what makes the same file readable to the same stranger.
+     */
+    @Test
+    void aSharedAttachmentOfATableNobodyWasShownYetIsNotThereForAStranger() {
+        FileResponse handout = upload("handout.pdf", "for the players");
+        attach(firstTable, handout.id(), false);
+        User stranger = userRepository.save(new User(randomDiscordId(), "Stranger"));
+
+        assertThatThrownBy(() -> fileService.download(handout.id(), stranger.getId()))
+                .isInstanceOf(NotFoundException.class);
+
+        GameTable opened = gameTableRepository.findById(firstTable.getId()).orElseThrow();
+        opened.setStatus(GameTableStatus.Opened);
+        gameTableRepository.save(opened);
+
+        assertThat(fileService.download(handout.id(), stranger.getId()).name()).isEqualTo("handout.pdf");
+    }
+
+    /**
+     * Deleting a table takes everything it attached with it: its files and the blank forms of its
+     * requests stop counting as uses, so the owner no longer sees a table that is gone, and the purge
+     * can reach a file that only that table held.
+     */
+    @Test
+    void deletingATableDetachesItsFilesSoTheyReportNoUseAndThePurgeReachesThem() {
+        FileResponse notes = upload("notes.pdf", "table draft");
+        FileResponse blank = upload("form.pdf", "blank sheet");
+        attach(firstTable, notes.id(), false);
+        TableTask task = tableTaskRepository.save(new TableTask(firstTable, TaskAudience.Candidates, "Sheet"));
+        taskFileRepository.save(new TaskFile(task.getId(), blank.id()));
+
+        gameTableService.delete(firstTable.getId(), master.getId());
+
+        LocalDateTime deletedAt =
+                gameTableRepository.findById(firstTable.getId()).orElseThrow().getDeletedAt();
+        assertThat(deletedAt).isNotNull();
+        assertThat(tableFileRepository.findUsagesByFileIds(List.of(notes.id()))).isEmpty();
+        assertThat(taskFileRepository.findUsagesByFileIds(List.of(blank.id()))).isEmpty();
+        assertThat(tableFileRepository.findById_GameTableId(firstTable.getId()))
+                .singleElement()
+                .satisfies(link -> assertThat(link.getDeletedAt()).isEqualTo(deletedAt));
+        assertThat(taskFileRepository.findById_TaskId(task.getId()))
+                .singleElement()
+                .satisfies(link -> {
+                    assertThat(link.getStatus()).isEqualTo(TaskFileStatus.Detached);
+                    assertThat(link.getDeletedAt()).isEqualTo(deletedAt);
+                });
+
+        ageOut(notes.id(), blank.id());
+        fileRetentionService.markUnusedFiles();
+
+        assertThat(statusOf(notes.id())).isEqualTo(FileStatus.Deleted);
+        assertThat(statusOf(blank.id())).isEqualTo(FileStatus.Deleted);
+    }
+
+    // ---------------------------------------------------------------- fixtures
+
+    private FileResponse upload(String filename, String content) {
+        return fileService.upload(pdf(filename, content), new UploadFileRequest(FileType.Private, null), master.getId()).file();
+    }
+
+    /** The cajones one file belongs to, straight out of the bridge table. */
+    private List<String> cajonesOf(String fileId) {
+        return categoryRepository.findByFileIds(List.of(fileId)).stream()
+                .map(link -> link.getId().category().name())
+                .toList();
+    }
+
+    private void attach(GameTable table, String fileId, boolean isPrivate) {
+        tableFileService.attach(
+                table.getId(), new LinkTableFileRequest(fileId, TableFileType.Preparation, isPrivate), master.getId());
+    }
+
+    /** Backdates the files so the retention window has something to find, without waiting 90 days. */
+    private void ageOut(String... fileIds) {
+        LocalDateTime longAgo = LocalDateTime.now().minusDays(200);
+        for (String fileId : fileIds) {
+            StoredFile file = fileRepository.findById(fileId).orElseThrow();
+            file.setLastUsedAt(longAgo);
+            fileRepository.save(file);
+        }
+    }
+
+    private FileStatus statusOf(String fileId) {
+        return fileRepository.findById(fileId).orElseThrow().getStatus();
+    }
+
+    private static MockMultipartFile pdf(String filename, String content) {
+        return new MockMultipartFile("file", filename, "application/pdf", content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String randomDiscordId() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+}

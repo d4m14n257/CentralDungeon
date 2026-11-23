@@ -30,7 +30,7 @@ export function useRequestPlayerBlock(tableId: string) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.banRequests(tableId) })
       // What the master themselves asked for, on the screen that lists their own requests.
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.mineAll() })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.queue.all() })
     },
   })
 }

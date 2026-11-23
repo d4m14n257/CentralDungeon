@@ -1,9 +1,9 @@
 package com.centraldungeon.common.security;
 
 import com.centraldungeon.common.config.DiscordProperties;
-import com.centraldungeon.users.User;
-import com.centraldungeon.users.UserService;
-import com.centraldungeon.users.UserStatus;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.UserService;
+import com.centraldungeon.features.users.UserStatus;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

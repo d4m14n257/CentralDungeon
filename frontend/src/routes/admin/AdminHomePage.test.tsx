@@ -9,7 +9,7 @@ import { AdminHomePage } from './AdminHomePage'
 
 const list = vi.hoisted(() => vi.fn())
 
-vi.mock('@/features/adminQueue/api/adminQueueApi', () => ({ adminQueueApi: { list } }))
+vi.mock('@/features/queue/api/queueApi', () => ({ queueApi: { list } }))
 
 function renderHome() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })

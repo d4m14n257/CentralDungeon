@@ -27,7 +27,7 @@ describe('approvalErrorKey', () => {
    * reaches `/admin/queue` and `/admin/requests`, and writing it twice, once per screen, is how two
    * sentences that mean one thing start to disagree (ADR-16 §7). So this points at the tray's key instead
    * of copying its words. It is a key in the same `admin` namespace both screens translate against,
-   * not an import: `features/approvals` still imports nothing from `features/adminQueue` (§3.1.5).
+   * not an import: `features/approvals` still imports nothing from `features/queue` (§3.1.5).
    */
   it('borrows the tray’s sentence for the reservation rather than writing a second one', () => {
     expect(approvalErrorKey(refusal('ITEM_ALREADY_CLAIMED'))).toBe('queue.errors.ITEM_ALREADY_CLAIMED')

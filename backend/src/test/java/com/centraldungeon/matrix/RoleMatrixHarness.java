@@ -2,7 +2,7 @@ package com.centraldungeon.matrix;
 
 import com.centraldungeon.common.security.JwtService;
 import com.centraldungeon.matrix.KnownDisagreements.Entry;
-import com.centraldungeon.users.User;
+import com.centraldungeon.features.users.User;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.JsonPathException;
 import java.nio.charset.StandardCharsets;

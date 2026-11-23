@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { applyToTable } from './helpers/application'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
-import { approveTableFromQueue } from './helpers/adminQueue'
+import { approveTableFromQueue } from './helpers/queue'
 import { acceptReview } from './helpers/review'
 import { runnableTableBody } from './helpers/tableApi'
 

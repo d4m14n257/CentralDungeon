@@ -38,7 +38,7 @@ export function useApproveRequest() {
       // A granted role lands on an account, and that account is listed somewhere else entirely.
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.adminAll() })
       // And the row leaves the shared tray: resolved work is not work waiting on anybody (ADR-16 §5).
-      void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.queue.all() })
       // Approving a veto request is the veto: the table's lists of requests, people and tables go stale.
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.banAll() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.registrations.all() })

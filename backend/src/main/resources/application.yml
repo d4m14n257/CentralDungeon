@@ -127,7 +127,7 @@ app:
     master-candidates:
       requests: 30
       window: PT1M
-  # app.admin-queue.claim-timeout and app.storage.max-file-size both lived here until F3.5 and both
+  # app.queue.claim-timeout and app.storage.max-file-size both lived here until F3.5 and both
   # moved to system_settings (ADR-17 §3): they are decisions of whoever runs the community, not of
   # whoever deploys the application, and their defaults now live in SettingKey. What stays in this
   # file is the second kind - where the blobs go, which MIME types the parser accepts, how long the

@@ -107,7 +107,7 @@ class ProductionWiringIT {
                 .isInstanceOfSatisfying(CronTask.class, cron -> assertThat(cron.getExpression()).isEqualTo("0 30 5 * * *"));
         assertThat(job(tasks, "RefreshTokenPurgeService.purgeExpiredRefreshTokens"))
                 .isInstanceOfSatisfying(CronTask.class, cron -> assertThat(cron.getExpression()).isEqualTo("0 0 6 * * *"));
-        assertThat(job(tasks, "AdminQueueClaimReleaseService.releaseTimedOutClaims"))
+        assertThat(job(tasks, "QueueClaimReleaseService.releaseTimedOutClaims"))
                 .isInstanceOfSatisfying(FixedDelayTask.class, delay -> {
                     assertThat(delay.getIntervalDuration()).isEqualTo(Duration.ofSeconds(60));
                     assertThat(delay.getInitialDelayDuration()).isEqualTo(Duration.ofSeconds(30));
@@ -149,7 +149,7 @@ class ProductionWiringIT {
 
     private static Class<?> classNamed(String simpleName) {
         try {
-            return Class.forName("com.centraldungeon.auth." + simpleName);
+            return Class.forName("com.centraldungeon.features.auth." + simpleName);
         } catch (ClassNotFoundException e) {
             throw new AssertionError(simpleName + " no longer exists; update this test", e);
         }

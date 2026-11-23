@@ -35,7 +35,7 @@ export function useApproveTable() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.managedDetail(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.statusHistory(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.queue.all() })
     },
   })
 }

@@ -1,9 +1,9 @@
 package com.centraldungeon.common.security;
 
 import com.centraldungeon.common.exception.NotFoundException;
-import com.centraldungeon.users.UserAuthSnapshot;
-import com.centraldungeon.users.UserService;
-import com.centraldungeon.users.UserStatus;
+import com.centraldungeon.features.users.UserAuthSnapshot;
+import com.centraldungeon.features.users.UserService;
+import com.centraldungeon.features.users.UserStatus;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

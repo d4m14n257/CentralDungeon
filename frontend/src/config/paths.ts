@@ -163,7 +163,7 @@ export function adminHomePath(): string {
  * @returns the absolute path to the shared admin tray (F3.3, ADR-16 §5). Everything waiting on an admin, whatever table it lives in, oldest first, and reserved
  *          one at a time so two admins never resolve the same thing
  */
-export function adminQueuePath(): string {
+export function queuePath(): string {
   return '/admin/queue'
 }
 

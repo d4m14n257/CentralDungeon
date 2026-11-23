@@ -12,10 +12,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * <p>Four jobs exist: {@code FileRetentionService}, which marks the files nobody has used in months;
  * {@code ApprovalOrphanCheckService}, which reports the requests pointing at something that is
- * gone; {@code AdminQueueClaimReleaseService}, which hands back the reservations of the shared tray
+ * gone; {@code QueueClaimReleaseService}, which hands back the reservations of the shared tray
  * that nobody finished; and {@code RefreshTokenPurgeService}, which deletes the refresh-token rows
  * that can no longer authenticate anyone. The other three are daily crons staggered half an hour
- * apart; {@code AdminQueueClaimReleaseService} is the only one on a short interval, because fifteen
+ * apart; {@code QueueClaimReleaseService} is the only one on a short interval, because fifteen
  * minutes is a promise a daily sweep could not keep.
  *
  * <p>The scheduler is per JVM. With more than one instance every one of them runs the job, which is

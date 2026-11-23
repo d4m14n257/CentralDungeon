@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '@/providers/i18n'
 import { ConfirmDialogProvider } from '@/components/ConfirmDialog'
 import { queryClient as appQueryClient } from '@/config/query'
-import { ADMIN_QUEUE_ERROR_CODES, type AdminQueueItem } from '@/features/adminQueue'
+import { QUEUE_ERROR_CODES, type QueueItem } from '@/features/queue'
 import { ApiError } from '@/types/api'
 
 import { AdminQueuePage } from './AdminQueuePage'
@@ -25,7 +25,7 @@ const toastError = vi.hoisted(() => vi.fn())
 
 // The API modules are mocked, not the hooks: that keeps the query keys, the composition of three
 // features and the four states running for real, which is where this screen's behaviour lives.
-vi.mock('@/features/adminQueue/api/adminQueueApi', () => ({ adminQueueApi: { list, claim, release } }))
+vi.mock('@/features/queue/api/queueApi', () => ({ queueApi: { list, claim, release } }))
 // `sonner` renders outside this tree, so the only way to count the messages one failure produces is
 // to hold the calls. Counting them is the point: ADR-23 §3 is as much about *one* message as about which.
 vi.mock('sonner', () => ({ toast: { error: toastError, success: vi.fn() } }))
@@ -37,7 +37,7 @@ vi.mock('@/features/tables/api/gameTablesApi', () => ({
   tableTypesApi: { list: vi.fn() },
 }))
 
-function item(overrides: Partial<AdminQueueItem> = {}): AdminQueueItem {
+function item(overrides: Partial<QueueItem> = {}): QueueItem {
   return {
     type: 'approval_request',
     id: 'req-1',
@@ -58,7 +58,7 @@ function item(overrides: Partial<AdminQueueItem> = {}): AdminQueueItem {
   }
 }
 
-function table(overrides: Partial<AdminQueueItem> = {}): AdminQueueItem {
+function table(overrides: Partial<QueueItem> = {}): QueueItem {
   return item({
     type: 'game_table',
     id: 'table-1',
@@ -71,7 +71,7 @@ function table(overrides: Partial<AdminQueueItem> = {}): AdminQueueItem {
   })
 }
 
-function page(content: AdminQueueItem[]) {
+function page(content: QueueItem[]) {
   return { content, page: 0, size: 25, totalElements: content.length, totalPages: 1 }
 }
 
@@ -355,10 +355,10 @@ describe('AdminQueuePage', () => {
    * completar la acción" would leave the reader pressing the button again on a row that is about to
    * vanish from their tray, instead of telling them a colleague got there first.
    *
-   * Driven off `ADMIN_QUEUE_ERROR_CODES`, so a code added to that list without a sentence in the
+   * Driven off `QUEUE_ERROR_CODES`, so a code added to that list without a sentence in the
    * bundle fails here rather than reaching somebody as a bare key.
    */
-  it.each(ADMIN_QUEUE_ERROR_CODES)('renders %s inline, over the form that was refused', async (errorCode) => {
+  it.each(QUEUE_ERROR_CODES)('renders %s inline, over the form that was refused', async (errorCode) => {
     list.mockResolvedValue(page([item()]))
     approveRequest.mockRejectedValue(new ApiError(409, { title: 'Conflict', status: 409, detail: 'in English, for a log', errorCode }))
 

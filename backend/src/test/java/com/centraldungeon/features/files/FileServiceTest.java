@@ -1,0 +1,1103 @@
+package com.centraldungeon.features.files;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
+
+import com.centraldungeon.common.config.StorageProperties;
+import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.common.exception.ForbiddenActionException;
+import com.centraldungeon.common.exception.InvalidRequestException;
+import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.common.storage.StorageService;
+import com.centraldungeon.features.files.dto.FileResponse;
+import com.centraldungeon.features.files.dto.FileUsageResponse;
+import com.centraldungeon.features.files.dto.LibraryUploadRequest;
+import com.centraldungeon.features.files.dto.UpdateLibraryCategoryRequest;
+import com.centraldungeon.features.files.dto.UpdateFileRequest;
+import com.centraldungeon.features.files.dto.UploadFileRequest;
+import com.centraldungeon.features.registrations.RegistrationFileRepository;
+import com.centraldungeon.features.settings.SettingsService;
+import com.centraldungeon.features.registrations.TableRegistrationRepository;
+import com.centraldungeon.features.registrations.TableRegistrationStatus;
+import com.centraldungeon.features.tables.GameTable;
+import com.centraldungeon.features.tables.Master;
+import com.centraldungeon.features.tables.MasterService;
+import com.centraldungeon.features.tables.MasterType;
+import com.centraldungeon.features.tables.TableVisibilityService;
+import com.centraldungeon.features.tasks.SubmissionFileRepository;
+import com.centraldungeon.features.tasks.TableTask;
+import com.centraldungeon.features.tasks.TaskAudience;
+import com.centraldungeon.features.tasks.TaskFileRepository;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.PlatformRole;
+import com.centraldungeon.features.users.UserRepository;
+import com.centraldungeon.features.users.UserRoleRepository;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
+
+/**
+ * The file's own rules: what gets in, what gets stored once, and who is allowed to read it back.
+ *
+ * <p>Two of these cases are about holes the legacy actually had rather than features being added -
+ * the filename that became a path (M21.5) and the upload with no limit of any kind (M21.3). They are
+ * written as tests so the fix cannot quietly regress.
+ */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class FileServiceTest {
+
+    @Mock
+    private StoredFileRepository fileRepository;
+
+    @Mock
+    private TableFileRepository tableFileRepository;
+
+    /** The cajones a file belongs to (ADR-14 §4). Add-only: nothing here ever revokes one. */
+    @Mock
+    private FileCategoryLinkRepository categoryRepository;
+
+    /** The blanks a master attached to a request - the third source of uses and the sixth read (ADR-15 §1). */
+    @Mock
+    private TaskFileRepository taskFileRepository;
+
+    /** The fifth way a file is reachable: it was handed in to a task of a table the actor runs (ADR-15 §1). */
+    @Mock
+    private SubmissionFileRepository submissionFileRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private StorageService storageService;
+
+    @Mock
+    private MasterService masterService;
+
+    /**
+     * The veto gate (ADR-09 §4, §5). A mock and not the real one here: this class has no
+     * {@code GameTableRepository} to build it from, and what the read rule needs from it is one
+     * boolean - which defaults to «not vetoed» and is stubbed in the test that is about the veto.
+     */
+    @Mock
+    private TableVisibilityService tableVisibilityService;
+
+    /** Who belongs to a table, for the sixth way a file is reachable (ADR-15 §1). */
+    @Mock
+    private TableRegistrationRepository registrationRepository;
+
+    /** The seventh way a file is reachable, and the fourth source of uses: an application's own file (ADR-13 §1 uso 2, ADR-09 §2). */
+    @Mock
+    private RegistrationFileRepository registrationFileRepository;
+
+    /** The actor's platform roles, for deciding which cajones are their own to use (ADR-14 §5). */
+    @Mock
+    private UserRoleRepository userRoleRepository;
+
+    private final FileMapper fileMapper = org.mapstruct.factory.Mappers.getMapper(FileMapper.class);
+
+    private final StorageProperties storageProperties =
+            new StorageProperties("target/test-storage", Set.of("application/pdf", "image/png"), Duration.ofDays(90));
+
+    /**
+     * The per-file cap, which stopped being configuration and became a setting in F3.5 (ADR-17 §3).
+     *
+     * <p>Stubbed to the same 2 MB the property used to carry, so every size assertion in this class
+     * keeps asserting the same rule against the same number - what moved is where the number comes
+     * from, not what the rule is.
+     */
+    @Mock
+    private SettingsService settingsService;
+
+    private FileService fileService() {
+        // lenient: most tests here never upload anything, and a strict stub would fail them for not
+        // having asked the question. Two megabytes is what app.storage.max-file-size used to say.
+        lenient().when(settingsService.maxFileSizeBytes()).thenReturn(2L * 1024 * 1024);
+        return new FileService(
+                fileRepository,
+                tableFileRepository,
+                categoryRepository,
+                taskFileRepository,
+                submissionFileRepository,
+                userRepository,
+                storageService,
+                storageProperties,
+                settingsService,
+                masterService,
+                tableVisibilityService,
+                userRoleRepository,
+                registrationRepository,
+                registrationFileRepository,
+                fileMapper);
+    }
+
+    // ---------------------------------------------------------------- upload
+
+    @Test
+    void storesTheContentUnderAGeneratedKeyAndNeverUnderTheFilename() {
+        User owner = persistedUser("player-1");
+        when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
+        when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-1"));
+
+        fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-1");
+
+        ArgumentCaptor<String> key = ArgumentCaptor.forClass(String.class);
+        verify(storageService).store(key.capture(), any());
+        assertThat(key.getValue()).doesNotContain("ficha").doesNotContain(".pdf");
+
+        ArgumentCaptor<StoredFile> saved = ArgumentCaptor.forClass(StoredFile.class);
+        verify(fileRepository).save(saved.capture());
+        assertThat(saved.getValue().getStorageKey()).isEqualTo(key.getValue());
+        assertThat(saved.getValue().getName()).isEqualTo("ficha.pdf");
+    }
+
+    /**
+     * The legacy's path traversal (M21.5), from the other side: the name is kept verbatim because it
+     * is only ever metadata, and what reaches storage is a key that cannot contain it (ADR-13 §6).
+     */
+    @Test
+    void aTraversalFilenameIsKeptAsMetadataAndNeverReachesStorage() {
+        User owner = persistedUser("player-1");
+        when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
+        when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-1"));
+
+        fileService().upload(pdf("../../etc/passwd", "x"), new UploadFileRequest(FileType.Private, null), "player-1");
+
+        ArgumentCaptor<String> key = ArgumentCaptor.forClass(String.class);
+        verify(storageService).store(key.capture(), any());
+        assertThat(key.getValue()).doesNotContain("..").doesNotContain("/");
+
+        ArgumentCaptor<StoredFile> saved = ArgumentCaptor.forClass(StoredFile.class);
+        verify(fileRepository).save(saved.capture());
+        assertThat(saved.getValue().getName()).isEqualTo("../../etc/passwd");
+    }
+
+    @Test
+    void refusesAMimeTypeThatIsNotOnTheWhitelist() {
+        MockMultipartFile executable =
+                new MockMultipartFile("file", "cheat.exe", "application/x-msdownload", "MZ".getBytes(StandardCharsets.UTF_8));
+
+        assertThatThrownBy(() -> fileService().upload(executable, new UploadFileRequest(FileType.Private, null), "player-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
+                        .isEqualTo("FILE_TYPE_NOT_ALLOWED"));
+
+        verify(storageService, never()).store(anyString(), any());
+    }
+
+    /** The cap carries its number, because "too large" without one tells nobody what to do (ADR-23 §3). */
+    @Test
+    void refusesAFileOverTheCapAndSaysWhatTheCapIs() {
+        MockMultipartFile huge = new MockMultipartFile("file", "mapa.png", "image/png", new byte[3 * 1024 * 1024]);
+
+        assertThatThrownBy(() -> fileService().upload(huge, new UploadFileRequest(FileType.Private, null), "player-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> {
+                    InvalidRequestException failure = (InvalidRequestException) thrown;
+                    assertThat(failure.getErrorCode()).isEqualTo("FILE_TOO_LARGE");
+                    assertThat(failure.getErrorParams()).containsEntry("maxBytes", String.valueOf(2 * 1024 * 1024));
+                });
+
+        verify(storageService, never()).store(anyString(), any());
+    }
+
+    @Test
+    void refusesAnUploaderWhoDeclaresTheFilePublic() {
+        assertThatThrownBy(() ->
+                        fileService().upload(pdf("reglas.pdf", "x"), new UploadFileRequest(FileType.Public, null), "player-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
+                        .isEqualTo("FILE_CANNOT_SELF_PUBLISH"));
+    }
+
+    /** ADR-13 §3's first lever: the same sheet uploaded twice is one row and one blob. */
+    @Test
+    void recognisesContentTheSamePersonAlreadyUploadedAndDoesNotStoreItTwice() {
+        User owner = persistedUser("player-1");
+        StoredFile existing = persistedFile("file-1", owner, FileType.Private);
+        when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
+        when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
+                        eq("player-1"), anyString(), eq(FileStatus.Current)))
+                .thenReturn(Optional.of(existing));
+
+        var response = fileService().upload(pdf("otra-copia.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-1");
+
+        assertThat(response.file().id()).isEqualTo("file-1");
+        // ADR-13 §4: the caller has to be able to tell this apart from a fresh write, which is what turns
+        // the cheapest lever of ADR-13 §3 into something the person who triggered it can actually see.
+        assertThat(response.deduplicated()).isTrue();
+        verify(storageService, never()).store(anyString(), any());
+        verify(fileRepository, never()).save(any(StoredFile.class));
+        assertThat(existing.getLastUsedAt()).isNotNull();
+    }
+
+
+
+    /** Dedup is scoped to the owner: the schema's unique storage key forbids sharing a blob. */
+    @Test
+    void doesNotHandSomebodyElseTheFileThatMatchesTheirUpload() {
+        User owner = persistedUser("player-2");
+        when(userRepository.findById("player-2")).thenReturn(Optional.of(owner));
+        when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
+                        eq("player-2"), anyString(), eq(FileStatus.Current)))
+                .thenReturn(Optional.empty());
+        when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-2"));
+
+        fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-2");
+
+        verify(storageService).store(anyString(), any());
+    }
+
+    // ---------------------------------------------------------------- whose cajón is whose (ADR-14 §5)
+
+    /** A plain member of the community gets the two cajones their own flows fill, and nothing else. */
+    @Test
+    void aPlayerGetsOnlyThePlayerSideCajones() {
+        givenRoles("player-1", PlatformRole.PLAYER);
+
+        assertThat(fileService().personalCategoriesOf("player-1"))
+                .containsExactly(FileCategory.PlayerApplication, FileCategory.PlayerSubmission);
+    }
+
+    /**
+     * <b>A master who does not hold {@code Player} sees only the master-side cajones</b> (ADR-14 §5).
+     *
+     * <p>The rule follows the roles and never assumes them. In production nearly everybody holds
+     * {@code Player} too, because every account is created with it (ADR-05 §1) - but "nearly everybody" is
+     * not "everybody", and an account without it has to be told the truth rather than offered a
+     * cajón no flow of theirs could ever fill.
+     */
+    @Test
+    void aMasterWithoutThePlayerRoleGetsOnlyTheMasterSideCajones() {
+        givenRoles("master-1", PlatformRole.MASTER);
+
+        assertThat(fileService().personalCategoriesOf("master-1"))
+                .containsExactly(FileCategory.TableMaterial, FileCategory.MasterRequest);
+    }
+
+    /** Holding both accumulates, which is the ordinary case in production (ADR-05 §1). */
+    @Test
+    void holdingBothRolesGetsAllFour() {
+        givenRoles("both-1", PlatformRole.PLAYER, PlatformRole.MASTER);
+
+        assertThat(fileService().personalCategoriesOf("both-1"))
+                .containsExactly(
+                        FileCategory.TableMaterial,
+                        FileCategory.MasterRequest,
+                        FileCategory.PlayerApplication,
+                        FileCategory.PlayerSubmission);
+    }
+
+    /** Running a table opens the master side by the row in {@code masters}, without the role (ADR-06 §4). */
+    @Test
+    void runningATableOpensTheMasterSideCajonesEvenWithoutTheRole() {
+        givenRoles("assigned-1");
+        when(masterService.runsAnyTable("assigned-1")).thenReturn(true);
+
+        assertThat(fileService().personalCategoriesOf("assigned-1"))
+                .containsExactly(FileCategory.TableMaterial, FileCategory.MasterRequest);
+    }
+
+    /**
+     * {@code Announcement} is nobody's own, whoever is asking (ADR-14 §5).
+     *
+     * <p>Not a permission: an announcement is the community's by definition and lives only in the
+     * platform's library, where an admin puts it there by publishing.
+     */
+    @Test
+    void announcementIsNeverSomebodysOwnCajon() {
+        givenRoles("admin-1", PlatformRole.PLAYER, PlatformRole.MASTER, PlatformRole.ADMIN);
+
+        assertThat(fileService().personalCategoriesOf("admin-1")).doesNotContain(FileCategory.Announcement);
+    }
+
+    /** An account that is neither gets nothing, and that is an answer rather than a failure. */
+    @Test
+    void anAccountThatNeitherPlaysNorRunsTablesHasNoCajonOfItsOwn() {
+        givenRoles("admin-only-1", PlatformRole.ADMIN);
+
+        assertThat(fileService().personalCategoriesOf("admin-only-1")).isEmpty();
+    }
+
+    /** The rule is the service's and not the screen's: a request naming another cajón is refused. */
+    @Test
+    void refusesAnUploadFiledUnderACajonThatIsNotTheirs() {
+        User owner = persistedUser("player-1");
+        when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
+        givenRoles("player-1", PlatformRole.PLAYER);
+
+        assertThatThrownBy(() -> fileService()
+                        .upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, FileCategory.TableMaterial), "player-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
+                        .isEqualTo("FILE_CATEGORY_NOT_YOURS"));
+
+        verify(storageService, never()).store(anyString(), any());
+    }
+
+    /** No cajón declared is the normal case, and it never trips the check: the link classifies it. */
+    @Test
+    void anUploadFromInsideAFlowDeclaresNoCajonAndIsNotRefused() {
+        User owner = persistedUser("player-1");
+        when(userRepository.findById("player-1")).thenReturn(Optional.of(owner));
+        when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
+                        eq("player-1"), anyString(), eq(FileStatus.Current)))
+                .thenReturn(Optional.empty());
+        when(fileRepository.save(any(StoredFile.class))).thenAnswer(saveWithId("file-1"));
+
+        fileService().upload(pdf("ficha.pdf", "hoja"), new UploadFileRequest(FileType.Private, null), "player-1");
+
+        verify(storageService).store(anyString(), any());
+    }
+
+    // ---------------------------------------------------------------- the owner's own list
+
+    /**
+     * The owner's list merges both sources of uses into one row, in two queries (ADR-14 §3).
+     *
+     * <p>Two matters as much as the merge does. The whole reason the origin is derived rather than
+     * stored is that deriving it stays honest when a file is used in more than one way - and that is
+     * only affordable if a page of files costs a constant number of round trips instead of one per
+     * row.
+     */
+    @Test
+    void listsSomebodysOwnFilesWithEveryPlaceEachOneIsUsed() {
+        User owner = persistedUser("player-1");
+        StoredFile sheet = persistedFile("file-1", owner, FileType.Private);
+        when(fileRepository.findAll(ArgumentMatchers.<Specification<StoredFile>>any(), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(sheet)));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1")))
+                .thenReturn(List.of(new FileUsage("file-1", FileCategory.TableMaterial, "table-1", "Hijos del Vacío")));
+        when(submissionFileRepository.findUsagesByFileIds(List.of("file-1")))
+                .thenReturn(List.of(new FileUsage("file-1", FileCategory.PlayerSubmission, "table-2", "El Río Negro")));
+
+        var page = fileService().listMine("player-1", null, null, PageRequest.of(0, 20));
+
+        assertThat(page.content())
+                .singleElement()
+                .extracting(FileResponse::usages, list(FileUsageResponse.class))
+                .extracting(FileUsageResponse::category, FileUsageResponse::contextName)
+                .containsExactlyInAnyOrder(
+                        tuple("TableMaterial", "Hijos del Vacío"), tuple("PlayerSubmission", "El Río Negro"));
+        verify(tableFileRepository).findUsagesByFileIds(List.of("file-1"));
+        verify(submissionFileRepository).findUsagesByFileIds(List.of("file-1"));
+    }
+
+    /** A file nobody uses reports no uses - which is the owner's warning that ADR-13 §3 has its eye on it. */
+    @Test
+    void reportsNoUsesForAFileNothingPointsAt() {
+        User owner = persistedUser("player-1");
+        when(fileRepository.findAll(ArgumentMatchers.<Specification<StoredFile>>any(), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(persistedFile("file-1", owner, FileType.Private))));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
+        when(submissionFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
+
+        var page = fileService().listMine("player-1", null, null, PageRequest.of(0, 20));
+
+        assertThat(page.content()).singleElement().extracting(FileResponse::usages, list(FileUsageResponse.class)).isEmpty();
+    }
+
+    /**
+     * Each use says how the reader is joined to its table (ADR-14 §3): a live master row, an accepted
+     * registration, or neither - and master wins when both hold. Two reads for the whole page.
+     */
+    @Test
+    void eachUseSaysHowTheReaderIsJoinedToItsTable() {
+        User owner = persistedUser("player-1");
+        StoredFile sheet = persistedFile("file-1", owner, FileType.Private);
+        when(fileRepository.findAll(ArgumentMatchers.<Specification<StoredFile>>any(), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(sheet)));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1")))
+                .thenReturn(List.of(
+                        new FileUsage("file-1", FileCategory.TableMaterial, "table-run", "Corrida"),
+                        new FileUsage("file-1", FileCategory.TableMaterial, "table-both", "Ambas"),
+                        new FileUsage("file-1", FileCategory.TableMaterial, "table-none", "Ajena")));
+        when(submissionFileRepository.findUsagesByFileIds(List.of("file-1")))
+                .thenReturn(List.of(new FileUsage("file-1", FileCategory.PlayerSubmission, "table-played", "Jugada")));
+        GameTable run = tableWithId("table-run");
+        GameTable both = tableWithId("table-both");
+        when(masterService.findLiveByUser("player-1"))
+                .thenReturn(List.of(
+                        new Master(run, owner, MasterType.Primary), new Master(both, owner, MasterType.Secondary)));
+        when(registrationRepository.findTableIdsWithRegistration(
+                        eq("player-1"), any(), eq(List.of(TableRegistrationStatus.Player))))
+                .thenReturn(List.of("table-played", "table-both"));
+
+        var page = fileService().listMine("player-1", null, null, PageRequest.of(0, 20));
+
+        assertThat(page.content())
+                .singleElement()
+                .extracting(FileResponse::usages, list(FileUsageResponse.class))
+                .extracting(FileUsageResponse::contextName, FileUsageResponse::membership)
+                .containsExactlyInAnyOrder(
+                        tuple("Corrida", "Master"),
+                        tuple("Ambas", "Master"),
+                        tuple("Jugada", "Player"),
+                        tuple("Ajena", null));
+        verify(masterService, times(1)).findLiveByUser("player-1");
+        verify(registrationRepository, times(1)).findTableIdsWithRegistration(eq("player-1"), any(), any());
+    }
+
+    // ---------------------------------------------------------------- reading
+
+    @Test
+    void theOwnerCanAlwaysDownloadTheirOwnFile() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(storageService.read(file.getStorageKey())).thenReturn("hoja".getBytes(StandardCharsets.UTF_8));
+
+        FileDownload download = fileService().download("file-1", "player-1");
+
+        assertThat(download.name()).isEqualTo("ficha.pdf");
+        assertThat(download.content()).asString().isEqualTo("hoja");
+        assertThat(file.getLastUsedAt()).isNotNull();
+    }
+
+    /** A master reads everything on their own table - and it is the row in masters that says so (ADR-06 §4). */
+    @Test
+    void whoeverRunsTheTableReadsEvenAPrivateAttachment() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, true)));
+        when(masterService.canOversee("table-1", "master-1")).thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "master-1")).isNotNull();
+    }
+
+    /**
+     * What a table shares is as reachable as the table: the same file already travels inside the
+     * table's own detail, so refusing the download would list it and then refuse to hand it over. A
+     * private attachment is the master's notes and stops here.
+     */
+    @Test
+    void whatATableSharesIsReadableAndWhatItKeepsPrivateIsNot() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(masterService.isMasterOf(anyString(), eq("reader-9"))).thenReturn(false);
+        when(tableVisibilityService.canSee("table-1", "reader-9")).thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
+        assertThat(fileService().download("file-1", "reader-9")).isNotNull();
+
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, true)));
+        assertThatThrownBy(() -> fileService().download("file-1", "reader-9")).isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * <b>Read paths 6 and 6b of F3.4</b>, and the bug ADR-14 §2 anticipated in writing: the vetoed person
+     * who cannot see the table but <em>does download its file</em>.
+     *
+     * <p>It was real. Until F3.4 the fourth way's condition was {@code !link.isPrivate()} alone, so a
+     * shared attachment was opened by <b>any authenticated person</b> - the vetoed included. The fourth
+     * way is now «a table shares it <b>and you may see that table</b>», asked through the same
+     * {@code TableVisibilityService} that answers {@code GET /game-tables/{id}} rather than through a
+     * second copy of the question.
+     *
+     * <p>And it answers 404, just like the table: the file stops existing for that person (ADR-09 §4).
+     */
+    @Test
+    void aVetoedPersonCannotDownloadWhatTheTableShares() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
+        when(masterService.isMasterOf("table-1", "vetado")).thenReturn(false);
+        when(tableVisibilityService.canSee("table-1", "vetado")).thenReturn(false);
+
+        assertThatThrownBy(() -> fileService().download("file-1", "vetado"))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * And the veto is <b>per table</b> and not per file: if another table the person is not vetoed on
+     * shares the same file, they keep reading it through that one. It is the difference between hiding
+     * a table and punishing somebody across the whole platform (ADR-09 §4).
+     */
+    @Test
+    void theVetoIsPerTableAndNotPerFile() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(
+                        new TableFile("table-veto", "file-1", TableFileType.Preparation, false),
+                        new TableFile("table-libre", "file-1", TableFileType.Preparation, false)));
+        when(masterService.isMasterOf(anyString(), eq("lector"))).thenReturn(false);
+        when(tableVisibilityService.canSee("table-veto", "lector")).thenReturn(false);
+        when(tableVisibilityService.canSee("table-libre", "lector")).thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "lector")).isNotNull();
+    }
+
+    /**
+     * A master of the table reads it anyway, and is not even asked about the veto: pertenencia and
+     * having applied are disjoint sets (ADR-18 §4), so the question has no answer to give.
+     */
+    @Test
+    void aMasterIsNeverAskedAboutAVetoOnTheirOwnTable() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
+        when(masterService.canOversee("table-1", "master-1")).thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "master-1")).isNotNull();
+        verify(tableVisibilityService, never()).canSee(anyString(), anyString());
+    }
+
+    /** A published file is published: the audience decides where it is listed, not who may open it. */
+    @Test
+    void anybodyCanDownloadAPublishedFile() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "stranger-1")).isNotNull();
+    }
+
+    /** 404 and not 403: confirming a file exists to somebody with no business knowing is the leak. */
+    @Test
+    void aStrangerGetsNotFoundRatherThanForbidden() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> fileService().download("file-1", "stranger-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    // ---------------------------------------------------------------- keeping and letting go
+
+    @Test
+    void promotingASingleUseFilePutsItInTheReuseHistory() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.SingleUse);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        fileService().update("file-1", new UpdateFileRequest("Mi ficha.pdf", true), "player-1");
+
+        assertThat(file.getFileType()).isEqualTo(FileType.Private);
+        assertThat(file.getName()).isEqualTo("Mi ficha.pdf");
+    }
+
+
+    @Test
+    void renamingNeverTouchesTheContent() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        String keyBefore = file.getStorageKey();
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        fileService().update("file-1", new UpdateFileRequest("otro nombre.pdf", true), "player-1");
+
+        assertThat(file.getStorageKey()).isEqualTo(keyBefore);
+        verify(storageService, never()).store(anyString(), any());
+        verify(storageService, never()).delete(anyString());
+    }
+
+    /** Somebody who may open the file - a table shares it - and is not its owner is told no. */
+    @Test
+    void refusesToLetSomebodyElseRenameOrDeleteAFile() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-1", "file-1", TableFileType.Preparation, false)));
+        when(tableVisibilityService.canSee("table-1", "player-2")).thenReturn(true);
+
+        assertThatThrownBy(() -> fileService().update("file-1", new UpdateFileRequest("mio.pdf", true), "player-2"))
+                .isInstanceOf(ForbiddenActionException.class);
+        assertThatThrownBy(() -> fileService().delete("file-1", "player-2"))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** Somebody's private file that nothing lets the actor open is not there for them: no refusal confirms it. */
+    @Test
+    void aFileTheActorCannotOpenIsNotThereToRenameOrDelete() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().update("file-1", new UpdateFileRequest("mio.pdf", true), "player-2"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("File file-1 not found");
+        assertThatThrownBy(() -> fileService().delete("file-1", "player-2"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("File file-1 not found");
+    }
+
+    @Test
+    void refusesToLetTheUploaderTouchAFileThePlatformPublished() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().delete("file-1", "player-1"))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** Deleting marks; the bytes wait for the platform owner, which is F5 (ADR-03 §7, ADR-13 §8). */
+    @Test
+    void deletingMarksTheRowAndLeavesTheBytesAlone() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        fileService().delete("file-1", "player-1");
+
+        assertThat(file.getStatus()).isEqualTo(FileStatus.Deleted);
+        assertThat(file.getDeletedAt()).isNotNull();
+        verify(storageService, never()).delete(anyString());
+    }
+
+    // ---------------------------------------------------------------- publishing
+
+    /**
+     * Uploading into the platform's library is publishing (ADR-14 §7): the file comes out {@code Public},
+     * in the cajones asked for, and still the uploader's. Content the admin already had comes back as
+     * that row - which is also how an unpublished file returns to the library.
+     */
+    @Test
+    void anAdminUploadIsPublishedIntoTheCajonesChosenBeforehand() {
+        User admin = persistedUser("admin-1");
+        StoredFile existing = persistedFile("file-1", admin, FileType.Private);
+        when(userRepository.findById("admin-1")).thenReturn(Optional.of(admin));
+        when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
+                        eq("admin-1"), anyString(), eq(FileStatus.Current)))
+                .thenReturn(Optional.of(existing));
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(existing));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
+
+        LibraryUpload result = fileService().uploadToLibrary(
+                pdf("ficha.pdf", "hoja"),
+                new LibraryUploadRequest(List.of(FileCategory.TableMaterial, FileCategory.MasterRequest), true),
+                "admin-1");
+
+        assertThat(existing.getFileType()).isEqualTo(FileType.Public);
+        assertThat(result.file().ownerId()).isEqualTo("admin-1");
+        assertThat(result.deduplicated()).isTrue();
+        verify(categoryRepository, times(2)).save(any(FileCategoryLink.class));
+    }
+
+    /**
+     * The two player-side cajones are refused before a byte is stored (ADR-14 §4, §7): they hold people's
+     * answers, and a blank offered to everybody is not one.
+     */
+    @Test
+    void refusesToUploadIntoAPlayerSideCajonAndStoresNothing() {
+        assertThatThrownBy(() -> fileService().uploadToLibrary(
+                        pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.PlayerSubmission), true), "admin-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
+                        .isEqualTo("FILE_CATEGORY_NOT_PUBLISHABLE"));
+        verify(storageService, never()).store(anyString(), any());
+    }
+
+    /** The library has no player-side shelf, so asking it for one is a bad request, not an empty page. */
+    @Test
+    void theLibraryRefusesToBeFilteredByAPlayerSideCajon() {
+        assertThatThrownBy(() -> fileService()
+                        .listForAdmin(null, List.of(), FileCategory.PlayerApplication, PageRequest.of(0, 20)))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    /**
+     * ADR-14 §7: hiding keeps the file in the library - it used to go back to its uploader as a Private,
+     * and an admin with no library of their own lost it for good. The first publication is kept: it
+     * is what tells a hidden file from one never published.
+     */
+    @Test
+    void hidingAPublishedFileKeepsItInTheLibraryWithItsFirstPublication() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
+        LocalDateTime firstPublished = LocalDateTime.now().minusDays(3);
+        file.setPublishedAt(firstPublished);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
+
+        var response = fileService().unpublish("file-1");
+
+        assertThat(file.getFileType()).isEqualTo(FileType.Library);
+        assertThat(response.publishedAt()).isEqualTo(firstPublished);
+        // The cajones stay: hiding says the platform no longer offers the file, not what it is (ADR-14 §4).
+        verify(categoryRepository, never()).delete(any(FileCategoryLink.class));
+    }
+
+    @Test
+    void refusesToUnpublishSomethingThatWasNeverPublished() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().unpublish("file-1"))
+                .isInstanceOf(ConflictException.class)
+                .satisfies(thrown -> assertThat(((ConflictException) thrown).getErrorCode()).isEqualTo("FILE_NOT_PUBLISHED"));
+    }
+
+    /** A file already in the state asked for is a conflict of state, not a refusal of the admin. */
+    @Test
+    void publishingAPublishedFileIsAConflict() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().publish("file-1"))
+                .isInstanceOf(ConflictException.class)
+                .satisfies(thrown -> assertThat(((ConflictException) thrown).getErrorCode())
+                        .isEqualTo("FILE_ALREADY_PUBLISHED"));
+    }
+
+    /**
+     * Somebody's private file is not the library's to remove (ADR-14 §7): an admin reaches it by acting as
+     * that person, so from here it is simply not there.
+     */
+    @Test
+    void anAdminCannotRemoveSomebodysPrivateFileFromTheLibrary() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().deleteAsAdmin("file-1")).isInstanceOf(NotFoundException.class);
+        assertThat(file.getStatus()).isEqualTo(FileStatus.Current);
+    }
+
+    /** A published file is the library's, and removing it is still a mark (ADR-03 §7, ADR-13 §8). */
+    @Test
+    void anAdminRemovesAPublishedFileByMarkingIt() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        fileService().deleteAsAdmin("file-1");
+
+        assertThat(file.getStatus()).isEqualTo(FileStatus.Deleted);
+        verify(storageService, never()).delete(anyString());
+    }
+
+    /** ADR-14 §7: an upload that does not ask to be published waits in the library, offered to nobody. */
+    @Test
+    void anAdminUploadLeftUnpublishedWaitsInTheLibrary() {
+        User admin = persistedUser("admin-1");
+        StoredFile existing = persistedFile("file-1", admin, FileType.Private);
+        givenUploadRecognised(admin, existing);
+
+        LibraryUpload result = fileService().uploadToLibrary(
+                pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.TableMaterial), false), "admin-1");
+
+        assertThat(existing.getFileType()).isEqualTo(FileType.Library);
+        assertThat(result.file().publishedAt()).isNull();
+        verify(categoryRepository).save(any(FileCategoryLink.class));
+    }
+
+    /** ADR-14 §7: re-uploading a published file without publishing never hides it - hiding is its own act. */
+    @Test
+    void reUploadingAPublishedFileWithoutPublishingLeavesItPublished() {
+        User admin = persistedUser("admin-1");
+        StoredFile existing = persistedFile("file-1", admin, FileType.Public);
+        givenUploadRecognised(admin, existing);
+
+        fileService().uploadToLibrary(
+                pdf("ficha.pdf", "hoja"), new LibraryUploadRequest(List.of(FileCategory.TableMaterial), false), "admin-1");
+
+        assertThat(existing.getFileType()).isEqualTo(FileType.Public);
+    }
+
+    /** ADR-14 §7: publishing stamps the first publication once; publishing a hidden file again keeps it. */
+    @Test
+    void publishingStampsTheFirstPublicationOnce() {
+        StoredFile fresh = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        givenInLibraryWithCajon(fresh, FileCategory.TableMaterial);
+
+        fileService().publish("file-1");
+
+        assertThat(fresh.getFileType()).isEqualTo(FileType.Public);
+        assertThat(fresh.getPublishedAt()).isNotNull();
+
+        LocalDateTime first = LocalDateTime.now().minusDays(10);
+        StoredFile hidden = persistedFile("file-2", persistedUser("admin-1"), FileType.Library);
+        hidden.setPublishedAt(first);
+        givenInLibraryWithCajon(hidden, FileCategory.Announcement);
+
+        fileService().publish("file-2");
+
+        assertThat(hidden.getPublishedAt()).isEqualTo(first);
+    }
+
+    /** A file that says no flow it is for is not offered anywhere (M24.1, ADR-14 §4). */
+    @Test
+    void refusesToPublishAFileWithNoCajon() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(categoryRepository.findByFileIds(List.of("file-1"))).thenReturn(List.of());
+
+        assertThatThrownBy(() -> fileService().publish("file-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .satisfies(thrown -> assertThat(((InvalidRequestException) thrown).getErrorCode())
+                        .isEqualTo("FILE_NEEDS_CATEGORY"));
+        assertThat(file.getFileType()).isEqualTo(FileType.Library);
+    }
+
+    /**
+     * ADR-14 §7: while unpublished, what a file of the library is can be corrected - its declared cajones
+     * are replaced. Published, it is refused: masters are choosing it under the cajón it has.
+     */
+    @Test
+    void theCajonOfALibraryFileChangesOnlyWhileUnpublished() {
+        StoredFile waiting = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(waiting));
+        when(tableFileRepository.findUsagesByFileIds(List.of("file-1"))).thenReturn(List.of());
+
+        fileService().changeLibraryCategory("file-1", new UpdateLibraryCategoryRequest(FileCategory.Announcement));
+
+        verify(categoryRepository).deleteByFileIdAndCategories(eq("file-1"), any());
+        verify(categoryRepository).save(any(FileCategoryLink.class));
+
+        StoredFile published = persistedFile("file-2", persistedUser("admin-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-2", FileStatus.Current)).thenReturn(Optional.of(published));
+
+        assertThatThrownBy(() -> fileService()
+                        .changeLibraryCategory("file-2", new UpdateLibraryCategoryRequest(FileCategory.Announcement)))
+                .isInstanceOf(ConflictException.class)
+                .satisfies(thrown -> assertThat(((ConflictException) thrown).getErrorCode())
+                        .isEqualTo("FILE_ALREADY_PUBLISHED"));
+    }
+
+    /** ADR-14 §7: a file waiting in the library is the platform's - its uploader cannot rename or remove it. */
+    @Test
+    void theUploaderCannotChangeOrRemoveAFileWaitingInTheLibrary() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().update("file-1", new UpdateFileRequest("otro.pdf", true), "admin-1"))
+                .isInstanceOf(ForbiddenActionException.class);
+        assertThatThrownBy(() -> fileService().delete("file-1", "admin-1")).isInstanceOf(ForbiddenActionException.class);
+    }
+
+    /** Stubs an upload whose content this person already had, so the recognised row comes back. */
+    private void givenUploadRecognised(User owner, StoredFile existing) {
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(fileRepository.findFirstByUserCreated_IdAndContentHashAndStatus(
+                        eq(owner.getId()), anyString(), eq(FileStatus.Current)))
+                .thenReturn(Optional.of(existing));
+        when(fileRepository.findByIdAndStatus(existing.getId(), FileStatus.Current)).thenReturn(Optional.of(existing));
+        when(tableFileRepository.findUsagesByFileIds(List.of(existing.getId()))).thenReturn(List.of());
+    }
+
+    /** Stubs a live file of the library that is already filed under one cajón. */
+    private void givenInLibraryWithCajon(StoredFile file, FileCategory category) {
+        when(fileRepository.findByIdAndStatus(file.getId(), FileStatus.Current)).thenReturn(Optional.of(file));
+        when(categoryRepository.findByFileIds(List.of(file.getId())))
+                .thenReturn(List.of(new FileCategoryLink(file.getId(), category)));
+        when(tableFileRepository.findUsagesByFileIds(List.of(file.getId()))).thenReturn(List.of());
+    }
+
+    // ---------------------------------------------------------------- attaching
+
+    @Test
+    void aMasterMayAttachAPublishedFileTheyDidNotUpload() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Public);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThat(fileService().requireAttachable("file-1", "master-1")).isSameAs(file);
+        assertThat(file.getLastUsedAt()).isNotNull();
+    }
+
+    /** Somebody else's private file the actor cannot even open is not there: refusing it would confirm it is. */
+    @Test
+    void somebodyElsesFileTheActorCannotOpenIsNotThereToAttach() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+
+        assertThatThrownBy(() -> fileService().requireAttachable("file-1", "master-1"))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    /** One they can open - another table shares it - is readable, and still not theirs to attach. */
+    @Test
+    void refusesToAttachSomebodyElsesFileTheActorCanOpen() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(tableFileRepository.findById_FileIdAndStatus("file-1", TableFileStatus.Current))
+                .thenReturn(List.of(new TableFile("table-2", "file-1", TableFileType.Preparation, false)));
+        when(tableVisibilityService.canSee("table-2", "master-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> fileService().requireAttachable("file-1", "master-1"))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    // ---------------------------------------------------------------- the library and the blanks of requests
+
+    /** The library is the admins' as a team: one opens what another uploaded, published or not. */
+    @Test
+    void anAdminOpensALibraryFileAnotherAdminUploaded() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+        givenRoles("admin-2", PlatformRole.ADMIN);
+        givenRoles("owner-1", PlatformRole.OWNER);
+
+        assertThat(fileService().download("file-1", "admin-2")).isNotNull();
+        assertThat(fileService().download("file-1", "owner-1")).isNotNull();
+    }
+
+    /** Only the library: an admin still does not open somebody's private file that no table links. */
+    @Test
+    void anAdminDoesNotOpenAPrivateFileThroughTheLibraryWay() {
+        StoredFile file = persistedFile("file-1", persistedUser("player-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        givenRoles("admin-2", PlatformRole.ADMIN);
+
+        assertThatThrownBy(() -> fileService().download("file-1", "admin-2")).isInstanceOf(NotFoundException.class);
+    }
+
+    /** A non-admin never opens a library file somebody else uploaded. */
+    @Test
+    void aPlayerDoesNotOpenAnUnpublishedLibraryFile() {
+        StoredFile file = persistedFile("file-1", persistedUser("admin-1"), FileType.Library);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        givenRoles("player-1", PlatformRole.PLAYER);
+
+        assertThatThrownBy(() -> fileService().download("file-1", "player-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * The blank of a request to the candidates opens for whoever may see the table, applied or not:
+     * somebody about to apply reads what they will be asked for. Whoever may not see it does not.
+     */
+    @Test
+    void theBlankOfARequestToCandidatesOpensForWhoeverSeesTheTable() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(taskFileRepository.findTasksByRequestedFileId("file-1"))
+                .thenReturn(List.of(new TableTask(tableWithId("table-1"), TaskAudience.Candidates, "Sheet")));
+        when(tableVisibilityService.canSee("table-1", "bystander")).thenReturn(true);
+        when(tableVisibilityService.canSee("table-1", "vetoed")).thenReturn(false);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "bystander")).isNotNull();
+        assertThatThrownBy(() -> fileService().download("file-1", "vetoed")).isInstanceOf(NotFoundException.class);
+        verify(registrationRepository, never()).existsByGameTable_IdAndUser_IdAndStatusIn(anyString(), anyString(), any());
+    }
+
+    /** The blank of a request to the players is not opened by somebody who merely sees the table. */
+    @Test
+    void theBlankOfARequestToPlayersNeedsAPlayer() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(taskFileRepository.findTasksByRequestedFileId("file-1"))
+                .thenReturn(List.of(new TableTask(tableWithId("table-1"), TaskAudience.Players, "Sheet")));
+        when(tableVisibilityService.canSee("table-1", "bystander")).thenReturn(true);
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-1", "player-1", List.of(TableRegistrationStatus.Player)))
+                .thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "player-1")).isNotNull();
+        assertThatThrownBy(() -> fileService().download("file-1", "bystander")).isInstanceOf(NotFoundException.class);
+    }
+
+    /**
+     * The blank of a request addressed to one player is that player's and nobody else's: another player
+     * of the same table, who plays there as much as they do, gets the 404 of a file that is not there.
+     */
+    @Test
+    void theBlankOfARequestToOnePlayerOpensForThatPlayerOnly() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(taskFileRepository.findTasksByRequestedFileId("file-1")).thenReturn(List.of(singleTaskFor("player-1")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-1", "player-1", List.of(TableRegistrationStatus.Player)))
+                .thenReturn(true);
+        when(storageService.read(anyString())).thenReturn(new byte[] {1});
+
+        assertThat(fileService().download("file-1", "player-1")).isNotNull();
+        assertThatThrownBy(() -> fileService().download("file-1", "player-2")).isInstanceOf(NotFoundException.class);
+    }
+
+    /** The addressed player stops reaching it once a veto makes them something other than {@code Player}. */
+    @Test
+    void theBlankOfARequestToOnePlayerClosesOnceThatPlayerIsVetoed() {
+        StoredFile file = persistedFile("file-1", persistedUser("master-1"), FileType.Private);
+        when(fileRepository.findByIdAndStatus("file-1", FileStatus.Current)).thenReturn(Optional.of(file));
+        when(taskFileRepository.findTasksByRequestedFileId("file-1")).thenReturn(List.of(singleTaskFor("player-1")));
+        when(registrationRepository.existsByGameTable_IdAndUser_IdAndStatusIn(
+                        "table-1", "player-1", List.of(TableRegistrationStatus.Player)))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> fileService().download("file-1", "player-1")).isInstanceOf(NotFoundException.class);
+    }
+
+    private static TableTask singleTaskFor(String targetUserId) {
+        TableTask task = new TableTask(tableWithId("table-1"), TaskAudience.Single, "Sheet");
+        task.setTargetUser(persistedUser(targetUserId));
+        return task;
+    }
+
+    // ---------------------------------------------------------------- fixtures
+
+    private static org.mockito.stubbing.Answer<StoredFile> saveWithId(String id) {
+        return invocation -> {
+            StoredFile file = invocation.getArgument(0);
+            ReflectionTestUtils.setField(file, "id", id);
+            ReflectionTestUtils.setField(file, "createdAt", java.time.LocalDateTime.now());
+            return file;
+        };
+    }
+
+    private static MockMultipartFile pdf(String filename, String content) {
+        return new MockMultipartFile("file", filename, "application/pdf", content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static GameTable tableWithId(String id) {
+        GameTable table = new GameTable("Test table", persistedUser("creator-of-" + id));
+        ReflectionTestUtils.setField(table, "id", id);
+        return table;
+    }
+
+    private static User persistedUser(String id) {
+        User user = new User("discord-" + id, id);
+        ReflectionTestUtils.setField(user, "id", id);
+        return user;
+    }
+
+    /**
+     * The roles this person holds <b>right now</b>.
+     *
+     * <p>{@code findActiveRoleNames} and not {@code findAllGrants}: the second returns revoked rows
+     * too, and reading it is what handed a master the player-side cajones after their {@code Player}
+     * role had been taken away.
+     */
+    private void givenRoles(String userId, PlatformRole... granted) {
+        when(userRoleRepository.findActiveRoleNames(userId))
+                .thenReturn(Arrays.stream(granted).map(PlatformRole::roleName).collect(Collectors.toSet()));
+    }
+
+    private static StoredFile persistedFile(String id, User owner, FileType type) {
+        StoredFile file = new StoredFile("ficha.pdf", "key-" + id, "hash-" + id, "application/pdf", 10, type, owner);
+        ReflectionTestUtils.setField(file, "id", id);
+        ReflectionTestUtils.setField(file, "createdAt", java.time.LocalDateTime.now());
+        return file;
+    }
+}

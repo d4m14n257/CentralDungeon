@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { adminQueueErrorKey } from '@/features/adminQueue'
+import { queueErrorKey } from '@/features/queue'
 import { HelpLink } from '@/features/help'
 import {
   JustifiedTableActionDialog,
@@ -73,7 +73,7 @@ export function AdminTableDecisions({ table, only }: AdminTableDecisionsProps) {
 
   const inReview = only === 'safe' && table.status === 'Preparation'
   const canCancel = only === 'destructive' && ADMIN_CANCELABLE.includes(table.status)
-  const changesError = adminQueueErrorKey(requestChanges.error)
+  const changesError = queueErrorKey(requestChanges.error)
 
   async function handleApprove() {
     const confirmed = await confirm({
@@ -86,7 +86,7 @@ export function AdminTableDecisions({ table, only }: AdminTableDecisionsProps) {
       onSuccess: () => toast.success(t('tables.decisions.approveSuccess')),
       // The mutation shows its own errors (it is the tray's too): the one worth a sentence is a
       // colleague holding the review (ADR-16 §5).
-      onError: (failure) => toast.error(t(adminQueueErrorKey(failure) ?? 'queue.errors.generic')),
+      onError: (failure) => toast.error(t(queueErrorKey(failure) ?? 'queue.errors.generic')),
     })
   }
 

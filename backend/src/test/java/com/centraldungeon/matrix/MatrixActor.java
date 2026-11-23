@@ -1,6 +1,6 @@
 package com.centraldungeon.matrix;
 
-import com.centraldungeon.users.PlatformRole;
+import com.centraldungeon.features.users.PlatformRole;
 import java.util.Arrays;
 import java.util.List;
 

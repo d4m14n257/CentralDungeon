@@ -77,11 +77,11 @@ export const queryKeys = {
    * orders itself by age and empties, and a box over it would be solving the wrong problem.
    * `/admin/tables` is the screen that searches.
    */
-  adminQueue: {
+  queue: {
     /** One page of the tray, oldest first. */
-    list: (page = 0, size?: number) => ['adminQueue', 'list', page, size] as const,
+    list: (page = 0, size?: number) => ['queue', 'list', page, size] as const,
     /** The whole tray - what claiming, releasing and every resolution invalidate. */
-    all: () => ['adminQueue'] as const,
+    all: () => ['queue'] as const,
   },
   sessions: {
     /** A table's calendar, as the people running it see it. The whole list, never paginated. */

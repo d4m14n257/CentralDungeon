@@ -1,0 +1,225 @@
+package com.centraldungeon.features.profiles;
+
+import com.centraldungeon.features.catalogs.TableSystemName;
+import com.centraldungeon.features.catalogs.TableSystemRepository;
+import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.features.profiles.dto.FinishedTableResponse;
+import com.centraldungeon.features.profiles.dto.ProfileResponse;
+import com.centraldungeon.features.profiles.dto.UserTableResponse;
+import com.centraldungeon.features.registrations.TableRegistration;
+import com.centraldungeon.features.registrations.TableRegistrationRepository;
+import com.centraldungeon.features.registrations.TableRegistrationStatus;
+import com.centraldungeon.features.tables.GameTable;
+import com.centraldungeon.features.tables.GameTableStatus;
+import com.centraldungeon.features.tables.Master;
+import com.centraldungeon.features.tables.MasterRepository;
+import com.centraldungeon.features.tables.MasterRowStatus;
+import com.centraldungeon.features.tables.MasterType;
+import com.centraldungeon.features.tables.TableSessionService;
+import com.centraldungeon.features.tables.dto.AttendanceSummaryResponse;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.UserRoleRepository;
+import com.centraldungeon.features.users.UserService;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Somebody's profile, assembled once {@link ProfileVisibilityService} has decided the actor may read
+ * it (arquitectura §4.5).
+ *
+ * <p><b>Not in {@code users/}.</b> A profile has to read who runs a table, who applied to one and who
+ * plays at it, and {@code users/} already sits underneath {@code tables/} the other way around -
+ * {@code MasterService} depends on {@code UserService}. Putting the visibility rules inside
+ * {@code users/} would close that into a cycle. This package depends on {@code users}, {@code tables}
+ * and {@code registrations} instead, the exact precedent of decision ADR-20 §4, which pulled
+ * {@code MasterDashboardService} out into {@code dashboard/} rather than let {@code tables/} depend
+ * on {@code tasks/}.
+ */
+@Service
+public class ProfileService {
+
+    /** Loads the person a profile describes. */
+    private final UserService userService;
+
+    /** The global roles a profile lists. */
+    private final UserRoleRepository userRoleRepository;
+
+    /** The aggregate attendance a profile shows, across every table (ADR-08 §5). */
+    private final TableSessionService tableSessionService;
+
+    /** The one gate every read goes through - the five rules of §5, in one place. */
+    private final ProfileVisibilityService visibilityService;
+
+    /** The tables a person runs, for an admin's view of their record (ADR-06 §8). */
+    private final MasterRepository masterRepository;
+
+    /** The tables a person applied to or plays at, and how many they finished (ADR-06 §8). */
+    private final TableRegistrationRepository registrationRepository;
+
+    /** The systems of the tables a profile lists as finished, by name. */
+    private final TableSystemRepository tableSystemRepository;
+
+    /**
+     * The registration statuses an admin's view of a person's tables lists: everything but a
+     * withdrawn application, which is soft-deleted and invisible on every read path (ADR-03 §7).
+     */
+    private static final List<TableRegistrationStatus> LISTED_REGISTRATIONS = List.of(
+            TableRegistrationStatus.Candidate, TableRegistrationStatus.Player,
+            TableRegistrationStatus.Rejected, TableRegistrationStatus.Blocked);
+
+    /**
+     * @param userService          loads the person a profile describes
+     * @param userRoleRepository   the roles a profile lists
+     * @param tableSessionService  the aggregate attendance a profile shows
+     * @param visibilityService    the visibility rules, all five, in one place
+     * @param masterRepository     the tables a person runs
+     * @param registrationRepository the tables a person applied to or plays at
+     * @param tableSystemRepository  the systems of the finished tables a profile lists
+     */
+    public ProfileService(
+            UserService userService,
+            UserRoleRepository userRoleRepository,
+            TableSessionService tableSessionService,
+            ProfileVisibilityService visibilityService,
+            MasterRepository masterRepository,
+            TableRegistrationRepository registrationRepository,
+            TableSystemRepository tableSystemRepository) {
+        this.userService = userService;
+        this.userRoleRepository = userRoleRepository;
+        this.tableSessionService = tableSessionService;
+        this.visibilityService = visibilityService;
+        this.masterRepository = masterRepository;
+        this.registrationRepository = registrationRepository;
+        this.tableSystemRepository = tableSystemRepository;
+    }
+
+    /**
+     * Somebody's profile, as the actor is allowed to read it.
+     *
+     * <p>No {@code karma}, no {@code comments} (ADR-10 §5): both are F5, and a field that promises them
+     * teaches the frontend to ask for a number that is not there yet. The Discord handle and the count
+     * of finished tables are what a master reads on a candidate's card instead (ADR-06 §8).
+     *
+     * @param targetId whose profile this is
+     * @param actorId  who is asking, always from the token (ADR-05 §5)
+     * @return the profile
+     * @throws NotFoundException if the target does not exist, or the actor may not see them - the two
+     *                           answer identically, on purpose (ADR-10 §3)
+     */
+    @Transactional(readOnly = true)
+    public ProfileResponse getProfile(String targetId, String actorId) {
+        User target = userService.getById(targetId);
+        visibilityService.requireVisible(targetId, actorId);
+
+        Set<String> roles = userRoleRepository.findActiveRoleNames(targetId);
+        AttendanceSummaryResponse attendance = tableSessionService.summarizeAll(targetId);
+        long finishedTables = registrationRepository.countByUser_IdAndStatusAndGameTable_Status(
+                targetId, TableRegistrationStatus.Player, GameTableStatus.Finished);
+        return new ProfileResponse(
+                target.getId(), target.getDiscordUsername(), target.getName(), target.getCountry(), roles, attendance, finishedTables);
+    }
+
+    /**
+     * The tables behind a profile's «finished tables» count: the ones the person played at as a
+     * {@code Player} and that ended {@code Finished}, newest closing first, with the name, systems,
+     * masters and closing date that the table's public detail already shows.
+     *
+     * <p><b>Readable by exactly whoever may read the profile</b> - the same gate, {@link
+     * ProfileVisibilityService#requireVisible} - so it adds nothing the profile does not already say.
+     * It uses the same criteria as the count, minus the tables the actor is vetoed on (ADR-09 §4).
+     *
+     * <p>A page costs a fixed number of queries: the registrations with their table, then one for all
+     * the systems and one for all the masters.
+     *
+     * @param targetId whose finished tables these are
+     * @param actorId  who is asking, always from the token (ADR-05 §5)
+     * @param pageable which page, and its size; the sort is fixed
+     * @return one page of their finished tables
+     * @throws NotFoundException if the target does not exist or the actor may not see them - the two
+     *                           answer identically, on purpose (ADR-10 §3)
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<FinishedTableResponse> listFinishedTables(String targetId, String actorId, Pageable pageable) {
+        userService.getById(targetId);
+        visibilityService.requireVisible(targetId, actorId);
+
+        Page<TableRegistration> page = registrationRepository.findFinishedPlayedBy(
+                targetId, actorId, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
+        List<String> tableIds = page.getContent().stream().map(registration -> registration.getGameTable().getId()).toList();
+        if (tableIds.isEmpty()) {
+            return new PageResponse<>(List.of(), page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
+        }
+
+        Map<String, List<String>> systemsByTable = new LinkedHashMap<>();
+        for (TableSystemName system : tableSystemRepository.findNamesByTables(tableIds)) {
+            systemsByTable.computeIfAbsent(system.gameTableId(), id -> new ArrayList<>()).add(system.name());
+        }
+        Map<String, List<Master>> mastersByTable = new LinkedHashMap<>();
+        for (Master master : masterRepository.findByGameTables(tableIds, MasterRowStatus.Created)) {
+            mastersByTable.computeIfAbsent(master.getGameTable().getId(), id -> new ArrayList<>()).add(master);
+        }
+
+        return PageResponse.from(page.map(registration -> {
+            GameTable table = registration.getGameTable();
+            List<String> masters = mastersByTable.getOrDefault(table.getId(), List.of()).stream()
+                    .sorted(Comparator.comparing((Master master) -> master.getMasterType() != MasterType.Primary))
+                    .map(master -> master.getUser().getName() != null ? master.getUser().getName() : master.getUser().getDiscordUsername())
+                    .toList();
+            return new FinishedTableResponse(
+                    table.getId(), table.getName(), systemsByTable.getOrDefault(table.getId(), List.of()), masters, table.getClosedAt());
+        }));
+    }
+
+    /**
+     * Every table a person is linked to, for an admin reading their record (ADR-06 §8): the ones they run
+     * and the ones they applied to or play at, in any status but removed.
+     *
+     * <p><b>Admins only</b> - the controller enforces it - and with no visibility rule in between: the
+     * admin has none (ADR-06 §8). It answers what the admin needs to judge an account: where this person is
+     * and in what capacity, with each table one click away.
+     *
+     * <p><b>Merged and paged in memory</b>, the precedent of the shared tray (ADR-16 §5): the rows come from
+     * two tables ({@code masters} and {@code table_registrations}) that no single query can page
+     * together, and one person's tables are a handful, not thousands. Newest table first, by id on a
+     * tie (ADR-04 §6).
+     *
+     * @param targetId whose tables these are
+     * @param pageable which page, and its size; the sort is fixed
+     * @return one page of their tables
+     * @throws NotFoundException if nobody has that id
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<UserTableResponse> listTablesForAdmin(String targetId, Pageable pageable) {
+        userService.getById(targetId);
+
+        List<UserTableResponse> rows = new ArrayList<>();
+        masterRepository.findLiveByUser(targetId, MasterRowStatus.Created).stream()
+                .filter(master -> master.getGameTable().getStatus() != GameTableStatus.Deleted)
+                .forEach(master -> rows.add(row(master.getGameTable(), master.getMasterType().name())));
+        registrationRepository.findWithTableByUserAndStatusIn(targetId, LISTED_REGISTRATIONS).stream()
+                .filter(registration -> registration.getGameTable().getStatus() != GameTableStatus.Deleted)
+                .forEach(registration -> rows.add(row(registration.getGameTable(), registration.getStatus().name())));
+        rows.sort(Comparator.comparing(UserTableResponse::tableCreatedAt, Comparator.reverseOrder())
+                .thenComparing(UserTableResponse::tableId));
+
+        int size = pageable.getPageSize();
+        int from = Math.min((int) pageable.getOffset(), rows.size());
+        int to = Math.min(from + size, rows.size());
+        int totalPages = size == 0 ? 0 : (rows.size() + size - 1) / size;
+        return new PageResponse<>(rows.subList(from, to), pageable.getPageNumber(), size, rows.size(), totalPages);
+    }
+
+    private static UserTableResponse row(GameTable table, String relation) {
+        return new UserTableResponse(table.getId(), table.getName(), table.getStatus().name(), relation, table.getCreatedAt());
+    }
+}

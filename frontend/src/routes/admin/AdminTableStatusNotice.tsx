@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 
 import { StatusNotice } from '@/components/StatusNotice'
-import { adminQueuePath, adminTablesPath } from '@/config/paths'
+import { queuePath, adminTablesPath } from '@/config/paths'
 import type { GameTableDetail } from '@/features/tables'
 
 import { AdminTableActions, STATUSES_WITH_ADMIN_ACTIONS } from './AdminTableActions'
@@ -39,7 +39,7 @@ export function AdminTableStatusNotice({ table }: AdminTableStatusNoticeProps) {
     table.status === 'PauseRequested' ? (
       <>
         {t('tables.notice.PauseRequested.description')}{' '}
-        <Link to={adminQueuePath()} className="hover:text-fg underline">
+        <Link to={queuePath()} className="hover:text-fg underline">
           {t('tables.detail.goToQueue')}
         </Link>
       </>

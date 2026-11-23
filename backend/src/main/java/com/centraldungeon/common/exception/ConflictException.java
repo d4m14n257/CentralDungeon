@@ -133,7 +133,7 @@ public final class ConflictException extends ApiException {
      * <p>There is deliberately <b>no counterpart for "you have not reserved it"</b>. An unreserved
      * item is nobody's, and resolving it is an implicit claim: {@code /admin/requests} resolves
      * without ever passing through the tray, and a rule that refused that would make the tray
-     * mandatory for a flow that was never built to use it. See {@code AdminQueueClaimRule} for the
+     * mandatory for a flow that was never built to use it. See {@code QueueClaimRule} for the
      * whole reasoning.
      */
     public static final String ITEM_ALREADY_CLAIMED = "ITEM_ALREADY_CLAIMED";

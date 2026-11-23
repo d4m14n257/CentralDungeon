@@ -1,6 +1,6 @@
 package com.centraldungeon.matrix;
 
-import com.centraldungeon.tables.GameTableStatus;
+import com.centraldungeon.features.tables.GameTableStatus;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;

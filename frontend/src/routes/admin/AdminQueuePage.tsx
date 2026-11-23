@@ -18,16 +18,16 @@ import { SubjectLine } from '@/components/SubjectLine'
 import { adminPageSizeFrom, pageSize } from '@/config/pagination'
 import { adminTableDetailPath, adminUserDetailPath } from '@/config/paths'
 import {
-  ADMIN_QUEUE_ERROR_CODES,
+  QUEUE_ERROR_CODES,
   ClaimBadge,
   QueueItemKindBadge,
-  adminQueueErrorKey,
+  queueErrorKey,
   isClaimedByReader,
-  useAdminQueue,
+  useQueue,
   useClaimItem,
   useReleaseItem,
-  type AdminQueueItem,
-} from '@/features/adminQueue'
+  type QueueItem,
+} from '@/features/queue'
 import { approvalErrorKey, useApproveRequest, useRejectRequest } from '@/features/approvals'
 import { HelpLink } from '@/features/help'
 import { JustifiedTableActionDialog, useApproveTable, useRequestChanges } from '@/features/tables'
@@ -55,7 +55,7 @@ type QueueAction = 'requestChanges' | 'approveRequest' | 'rejectRequest'
  * @param t    the translator of the `admin` namespace
  * @returns the title to render
  */
-function itemTitle(item: AdminQueueItem, t: TFunction): string {
+function itemTitle(item: QueueItem, t: TFunction): string {
   if (item.kind !== 'ApprovalRequest') return item.title
   return t(`requests.types.${item.title}`, { defaultValue: item.title })
 }
@@ -64,7 +64,7 @@ function itemTitle(item: AdminQueueItem, t: TFunction): string {
  * The sentence to show over a refused resolution.
  *
  * Two vocabularies meet on this screen and neither owns the other: the reservation's code is the
- * tray's (`features/adminQueue`), and everything a request can be refused with is the approvals
+ * tray's (`features/queue`), and everything a request can be refused with is the approvals
  * feature's. A screen that composes two features has to compose their refusals too — mapping them all
  * through one of the two would answer `ITEM_ALREADY_CLAIMED` with "no pudimos completar la acción",
  * and that is the one refusal here whose sentence actually tells the reader what happened: a
@@ -74,8 +74,8 @@ function itemTitle(item: AdminQueueItem, t: TFunction): string {
  * @returns the key to render, or null when there is nothing to say
  */
 function resolutionErrorKey(error: unknown): string | null {
-  if (error instanceof ApiError && (ADMIN_QUEUE_ERROR_CODES as readonly string[]).includes(error.problem.errorCode)) {
-    return adminQueueErrorKey(error)
+  if (error instanceof ApiError && (QUEUE_ERROR_CODES as readonly string[]).includes(error.problem.errorCode)) {
+    return queueErrorKey(error)
   }
   return approvalErrorKey(error)
 }
@@ -102,7 +102,7 @@ function resolutionErrorKey(error: unknown): string | null {
  * backend hands a stale one back after fifteen minutes — so the row says who took it and how long
  * ago rather than making anybody subtract two timestamps.
  *
- * **It refreshes itself** (`live.adminQueue` in `config/query.ts`). The acceptance of this slice is
+ * **It refreshes itself** (`live.queue` in `config/query.ts`). The acceptance of this slice is
  * that an item a colleague reserves disappears *without a manual reload*, and invalidation after a
  * mutation cannot see what somebody else did. The WebSocket of F6 replaces the polling (ADR-18 §2).
  *
@@ -133,7 +133,7 @@ export function AdminQueuePage() {
   // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
   const size = adminPageSizeFrom(searchParams.get('size'))
 
-  const { data, isPending, isLoadingError, error, refetch } = useAdminQueue(page, size)
+  const { data, isPending, isLoadingError, error, refetch } = useQueue(page, size)
 
   const claimItem = useClaimItem()
   const releaseItem = useReleaseItem()
@@ -142,7 +142,7 @@ export function AdminQueuePage() {
   const approveRequest = useApproveRequest()
   const rejectRequest = useRejectRequest()
 
-  const actionDialog = useDisclosure<{ item: AdminQueueItem; action: QueueAction }>()
+  const actionDialog = useDisclosure<{ item: QueueItem; action: QueueAction }>()
 
   /** Writes the screen's state into the URL - which page and how many rows - resetting the page when the size changes. */
   function updateParams(changes: Record<string, string>) {
@@ -172,13 +172,13 @@ export function AdminQueuePage() {
    * the row itself, and a toast lands where the reader is already looking. The dialogs below do the
    * opposite, for the same reason in reverse.
    */
-  function claimOrRelease(item: AdminQueueItem) {
+  function claimOrRelease(item: QueueItem) {
     const mutation = isClaimedByReader(item) ? releaseItem : claimItem
     mutation.mutate(
       { type: item.type, id: item.id },
       {
         onSuccess: () => toast.success(t(isClaimedByReader(item) ? 'queue.releaseSuccess' : 'queue.claimSuccess')),
-        onError: (failure) => toast.error(t(adminQueueErrorKey(failure) ?? 'queue.errors.generic')),
+        onError: (failure) => toast.error(t(queueErrorKey(failure) ?? 'queue.errors.generic')),
       },
     )
   }
@@ -192,12 +192,12 @@ export function AdminQueuePage() {
    * seconds between two polls, and "no pudimos completar la acción" would leave the reader pressing
    * the button again on a row that is about to vanish from their tray.
    */
-  async function approveTableRow(item: AdminQueueItem) {
+  async function approveTableRow(item: QueueItem) {
     const confirmed = await confirm({ title: t('queue.approveConfirmTitle'), description: t('queue.approveConfirmDescription') })
     if (!confirmed) return
     approveTable.mutate(item.id, {
       onSuccess: () => toast.success(t('queue.approveSuccess')),
-      onError: (failure) => toast.error(t(adminQueueErrorKey(failure) ?? 'queue.errors.generic')),
+      onError: (failure) => toast.error(t(queueErrorKey(failure) ?? 'queue.errors.generic')),
     })
   }
 
@@ -232,7 +232,7 @@ export function AdminQueuePage() {
     )
   }
 
-  const columns: DataTableColumn<AdminQueueItem>[] = [
+  const columns: DataTableColumn<QueueItem>[] = [
     {
       id: 'item',
       header: t('queue.columns.item'),

@@ -1,0 +1,384 @@
+package com.centraldungeon.features.tasks;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
+
+import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.features.files.FileCategory;
+import com.centraldungeon.features.files.FileService;
+import com.centraldungeon.features.files.FileStatus;
+import com.centraldungeon.features.files.FileType;
+import com.centraldungeon.features.files.StoredFileRepository;
+import com.centraldungeon.features.files.dto.FileResponse;
+import com.centraldungeon.features.files.dto.UploadFileRequest;
+import com.centraldungeon.features.notifications.Notification;
+import com.centraldungeon.features.notifications.NotificationRepository;
+import com.centraldungeon.features.notifications.NotificationType;
+import com.centraldungeon.features.registrations.TableRegistration;
+import com.centraldungeon.features.registrations.TableRegistrationRepository;
+import com.centraldungeon.features.registrations.TableRegistrationStatus;
+import com.centraldungeon.features.tables.GameTable;
+import com.centraldungeon.features.tables.GameTableStatus;
+import com.centraldungeon.features.tables.GameTableRepository;
+import com.centraldungeon.features.tables.MasterService;
+import com.centraldungeon.features.tasks.dto.ApplicableTaskResponse;
+import com.centraldungeon.features.tasks.dto.CreateSubmissionRequest;
+import com.centraldungeon.features.tasks.dto.CreateTaskRequest;
+import com.centraldungeon.features.tasks.dto.TaskFileResponse;
+import com.centraldungeon.features.tasks.dto.TaskRecipientResponse;
+import com.centraldungeon.features.tasks.dto.TaskResponse;
+import com.centraldungeon.features.tasks.dto.TaskSubmissionsResponse;
+import com.centraldungeon.features.tasks.dto.UpdateTaskRequest;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.UserRepository;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.mysql.MySQLContainer;
+
+/**
+ * The half of the task story only a real database can answer.
+ *
+ * <p>Three things a mock structurally cannot check are here. <b>Publishing writes one notification
+ * row per recipient</b> (ADR-15 §5) - a unit test can assert the service was called, this counts what is in
+ * the table. <b>Two answers from one person are two rows</b> (ADR-15 §2), which is the accumulation rule
+ * against a real primary key rather than against a stubbed {@code save}. And <b>the fifth way a file
+ * becomes readable</b>: the query behind it joins three tables, so it only means anything against
+ * SQL that actually runs.
+ *
+ * <p>Storage points at a temporary directory rather than the dev root, so a run never leaves blobs in
+ * the working tree. Wired with {@code @DynamicPropertySource}, not {@code @ServiceConnection}: see
+ * {@code RegistrationServiceIT} for why.
+ */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@Testcontainers
+class TaskIT {
+
+    @Container
+    static MySQLContainer mysql = new MySQLContainer("mysql:8.0");
+
+    @TempDir
+    static Path storageRoot;
+
+    @DynamicPropertySource
+    static void registerProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", mysql::getJdbcUrl);
+        registry.add("spring.datasource.username", mysql::getUsername);
+        registry.add("spring.datasource.password", mysql::getPassword);
+        registry.add("app.storage.root", () -> storageRoot.toString());
+    }
+
+    @Autowired
+    private TableTaskService tableTaskService;
+
+    @Autowired
+    private TaskSubmissionService taskSubmissionService;
+
+    @Autowired
+    private TaskSubmissionRepository submissionRepository;
+
+    @Autowired
+    private FileService fileService;
+
+    @Autowired
+    private StoredFileRepository fileRepository;
+
+    @Autowired
+    private GameTableRepository gameTableRepository;
+
+    @Autowired
+    private TableRegistrationRepository registrationRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private MasterService masterService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private User master;
+    private User firstPlayer;
+    private User secondPlayer;
+    private GameTable table;
+
+    @BeforeEach
+    void setUp() {
+        master = userRepository.save(new User(randomDiscordId(), "Task Master"));
+        firstPlayer = userRepository.save(new User(randomDiscordId(), "Primera jugadora"));
+        secondPlayer = userRepository.save(new User(randomDiscordId(), "Segundo jugador"));
+        GameTable newTable = new GameTable("Mesa de las peticiones", master);
+        // Opened, where a table has players at all: a Draft is a 404 to anybody outside it (ADR-07 §1).
+        newTable.setStatus(GameTableStatus.Opened);
+        table = gameTableRepository.save(newTable);
+        masterService.createPrimary(table, master);
+        enroll(firstPlayer, TableRegistrationStatus.Player);
+        enroll(secondPlayer, TableRegistrationStatus.Player);
+    }
+
+    /** ADR-15 §5 against the table it writes to: one row per recipient, and none for anybody else. */
+    @Test
+    void publishingWritesOneNotificationPerRecipient() {
+        TaskResponse task = publish(TaskAudience.Players, null);
+
+        assertThat(task.recipientCount()).isEqualTo(2);
+        assertThat(taskNotificationsOf(firstPlayer)).hasSize(1);
+        assertThat(taskNotificationsOf(secondPlayer)).hasSize(1);
+        assertThat(taskNotificationsOf(master)).isEmpty();
+    }
+
+    /** The title travels as a parameter so the bell can name the request (ADR-23 §3). */
+    @Test
+    void theNotificationCarriesTheTaskTitleRatherThanASentence() {
+        publish(TaskAudience.Players, null);
+
+        Notification notification = taskNotificationsOf(firstPlayer).getFirst();
+        assertThat(notification.getTitle()).isNull();
+        assertThat(notification.getParams()).isNotNull();
+        assertThat(notification.getParams().taskTitle()).isEqualTo("Ficha de personaje");
+        assertThat(notification.getParams().tableName()).isEqualTo("Mesa de las peticiones");
+        assertThat(notification.getRelatedEntityId()).isEqualTo(table.getId());
+    }
+
+    /**
+     * <b>The rule of ADR-15 §2 against a real primary key.</b> Two answers from one person are two rows;
+     * neither overwrites the other, and the person leaves the roster of who is missing exactly once.
+     */
+    @Test
+    void twoAnswersFromOnePersonAreTwoRowsAndOneRespondent() {
+        TaskResponse task = publish(TaskAudience.Players, null);
+
+        taskSubmissionService.submit(task.taskId(), new CreateSubmissionRequest("primera version", null), firstPlayer.getId());
+        taskSubmissionService.submit(task.taskId(), new CreateSubmissionRequest("segunda version", null), firstPlayer.getId());
+
+        assertThat(submissionRepository.findByTask_IdAndDeletedAtIsNullOrderByCreatedAtAsc(task.taskId())).hasSize(2);
+
+        TaskSubmissionsResponse answers = taskSubmissionService.listForTask(task.taskId(), master.getId());
+        assertThat(answers.submissions()).hasSize(2);
+        assertThat(answers.recipientCount()).isEqualTo(2);
+        assertThat(answers.missing())
+                .singleElement()
+                .extracting(TaskRecipientResponse::userId)
+                .isEqualTo(secondPlayer.getId());
+    }
+
+    /** The counts on the master's board come from one grouped query, and they mean different things. */
+    @Test
+    void theBoardCountsAnswersAndPeopleSeparately() {
+        TaskResponse task = publish(TaskAudience.Players, null);
+        taskSubmissionService.submit(task.taskId(), new CreateSubmissionRequest("una", null), firstPlayer.getId());
+        taskSubmissionService.submit(task.taskId(), new CreateSubmissionRequest("otra", null), firstPlayer.getId());
+        taskSubmissionService.submit(task.taskId(), new CreateSubmissionRequest("la mia", null), secondPlayer.getId());
+
+        TaskResponse listed = tableTaskService.listForTable(table.getId(), master.getId()).stream()
+                .filter(row -> row.taskId().equals(task.taskId()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(listed.submissionCount()).isEqualTo(3);
+        assertThat(listed.respondentCount()).isEqualTo(2);
+        assertThat(listed.recipientCount()).isEqualTo(2);
+    }
+
+    /**
+     * <b>The fifth way a file is reachable</b> (ADR-15 §1, §2, ADR-14 §2): the master opens what their player
+     * handed in, and somebody with no business there gets a 404 rather than a 403 - confirming a file
+     * exists is itself a leak (ADR-03 §4, ADR-09 §4).
+     */
+    @Test
+    void theMasterCanOpenAFileTheirPlayerHandedInAndAStrangerCannot() {
+        TaskResponse task = publish(TaskAudience.Players, null);
+        FileResponse sheet = fileService.upload(
+                pdf("ficha.pdf", "elfa exploradora"), new UploadFileRequest(FileType.Private, null), firstPlayer.getId())
+                .file();
+
+        taskSubmissionService.submit(
+                task.taskId(), new CreateSubmissionRequest(null, List.of(sheet.id())), firstPlayer.getId());
+
+        assertThat(fileService.download(sheet.id(), master.getId()).name()).isEqualTo("ficha.pdf");
+        User stranger = userRepository.save(new User(randomDiscordId(), "Nadie"));
+        assertThatThrownBy(() -> fileService.download(sheet.id(), stranger.getId()))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    /** Handing in a file links it and never stores it again (ADR-13 §2, ADR-14 §1). */
+    @Test
+    void aSubmittedFileTravelsWithTheAnswerAndIsNotCopied() {
+        TaskResponse task = publish(TaskAudience.Players, null);
+        FileResponse sheet = fileService.upload(
+                pdf("ficha.pdf", "elfa exploradora"), new UploadFileRequest(FileType.Private, null), firstPlayer.getId())
+                .file();
+        taskSubmissionService.submit(
+                task.taskId(), new CreateSubmissionRequest("ahi va", List.of(sheet.id())), firstPlayer.getId());
+
+        TaskSubmissionsResponse answers = taskSubmissionService.listForTask(task.taskId(), master.getId());
+
+        assertThat(answers.submissions()).singleElement().satisfies(answer -> {
+            assertThat(answer.content()).isEqualTo("ahi va");
+            assertThat(answer.files()).singleElement().satisfies(file -> {
+                assertThat(file.fileId()).isEqualTo(sheet.id());
+                assertThat(file.name()).isEqualTo("ficha.pdf");
+            });
+        });
+    }
+
+    /**
+     * The audience against real rows: a candidate sees what is asked of candidates and not what is
+     * asked of players, and can answer only the first (ADR-15 §1, ADR-14 §2).
+     */
+    @Test
+    void aCandidateSeesTheCandidatesTaskAndNotThePlayersOne() {
+        User candidate = userRepository.save(new User(randomDiscordId(), "Aspirante"));
+        enroll(candidate, TableRegistrationStatus.Candidate);
+        publish(TaskAudience.Candidates, null);
+        publish(TaskAudience.Players, null);
+
+        List<ApplicableTaskResponse> applicable = tableTaskService.listApplicable(table.getId(), candidate.getId());
+
+        assertThat(applicable).singleElement().satisfies(task -> {
+            assertThat(task.audience()).isEqualTo("Candidates");
+            assertThat(task.canSubmit()).isTrue();
+        });
+    }
+
+    /** A Single task is only ever seen by its target, even by the table's other players (ADR-15 §2). */
+    @Test
+    void aSingleTaskReachesOnlyItsTarget() {
+        publish(TaskAudience.Single, firstPlayer.getId());
+
+        assertThat(tableTaskService.listApplicable(table.getId(), firstPlayer.getId())).hasSize(1);
+        assertThat(tableTaskService.listApplicable(table.getId(), secondPlayer.getId())).isEmpty();
+        assertThat(taskNotificationsOf(firstPlayer)).hasSize(1);
+        assertThat(taskNotificationsOf(secondPlayer)).isEmpty();
+    }
+
+    /** Closing ends the intake and leaves what came in exactly where it was (ADR-15 §2). */
+    @Test
+    void closingKeepsWhatWasAlreadyHandedIn() {
+        TaskResponse task = publish(TaskAudience.Players, null);
+        taskSubmissionService.submit(task.taskId(), new CreateSubmissionRequest("llegue a tiempo", null), firstPlayer.getId());
+
+        tableTaskService.close(task.taskId(), master.getId());
+
+        assertThat(taskSubmissionService.listForTask(task.taskId(), master.getId()).submissions()).hasSize(1);
+        assertThat(tableTaskService.listApplicable(table.getId(), firstPlayer.getId())).isEmpty();
+    }
+
+    // ---------------------------------------------------------------- fixtures
+
+    /**
+     * The master's half of a request, end to end (ADR-15 §1, ADR-14 §4).
+     *
+     * <p>Three things only a real round trip proves. The master can attach a blank at all - which the
+     * model simply could not express before, since {@code accepts_files} only ever said whether an
+     * <em>answer</em> could carry one. The blank reaches the people the request reaches, which is the
+     * sixth way a file becomes readable and the whole point: "fill in this form" is useless if the
+     * form 404s. And attaching it is what puts the file in the {@code MasterRequest} cajón, without
+     * anybody declaring anything.
+     */
+    @Test
+    void theMasterAttachesABlankToTheirRequestAndTheirPlayersCanOpenIt() {
+        FileResponse blank = fileService
+                .upload(pdf("formulario.pdf", "rellenar y devolver"), new UploadFileRequest(FileType.Private, null), master.getId())
+                .file();
+
+        TaskResponse task = tableTaskService.publish(
+                table.getId(),
+                new CreateTaskRequest(
+                        "Completá el formulario",
+                        null,
+                        TaskAudience.Players,
+                        null,
+                        null,
+                        true,
+                        true,
+                        false,
+                        List.of(blank.id()),
+                        null),
+                master.getId());
+
+        // The master sees it on their own board.
+        assertThat(task.files()).extracting(TaskFileResponse::fileId).containsExactly(blank.id());
+
+        // And so does the player the request reaches - on the list and, crucially, as a real download.
+        assertThat(tableTaskService.listApplicable(table.getId(), firstPlayer.getId()))
+                .filteredOn(applicable -> applicable.taskId().equals(task.taskId()))
+                .singleElement()
+                .extracting(ApplicableTaskResponse::files, list(TaskFileResponse.class))
+                .extracting(TaskFileResponse::fileId)
+                .containsExactly(blank.id());
+        assertThat(fileService.download(blank.id(), firstPlayer.getId()).name()).isEqualTo("formulario.pdf");
+
+        // Somebody with no registration on the table still gets nothing (ADR-03 §4, ADR-09 §4).
+        User stranger = userRepository.save(new User(randomDiscordId(), "Nadie"));
+        assertThatThrownBy(() -> fileService.download(blank.id(), stranger.getId()))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    /** Taking a blank off the ask marks the link and leaves the file, and its cajón, alone (ADR-14 §1, §4). */
+    @Test
+    void takingABlankOffTheRequestNeverTouchesTheFile() {
+        FileResponse blank = fileService
+                .upload(pdf("formulario.pdf", "rellenar"), new UploadFileRequest(FileType.Private, null), master.getId())
+                .file();
+        TaskResponse task = tableTaskService.publish(
+                table.getId(),
+                new CreateTaskRequest(
+                        "Completá el formulario", null, TaskAudience.Players, null, null, true, true, false,
+                        List.of(blank.id()), null),
+                master.getId());
+
+        TaskResponse without = tableTaskService.update(
+                task.taskId(),
+                new UpdateTaskRequest(
+                        "Completá el formulario", null, TaskAudience.Players, null, null, true, true, false,
+                        List.of(), null),
+                master.getId());
+
+        assertThat(without.files()).isEmpty();
+        assertThat(fileRepository.findByIdAndStatus(blank.id(), FileStatus.Current)).isPresent();
+    }
+
+    private TaskResponse publish(TaskAudience audience, String targetUserId) {
+        return tableTaskService.publish(
+                table.getId(),
+                new CreateTaskRequest(
+                        "Ficha de personaje", "<p>Nivel 3</p>", audience, targetUserId, null, true, true, false, List.of(), null),
+                master.getId());
+    }
+
+    private void enroll(User user, TableRegistrationStatus status) {
+        TableRegistration registration = new TableRegistration(table, user, null);
+        registration.setStatus(status);
+        registrationRepository.save(registration);
+    }
+
+    private List<Notification> taskNotificationsOf(User user) {
+        return notificationRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), org.springframework.data.domain.PageRequest.of(0, 50))
+                .getContent()
+                .stream()
+                .filter(notification -> notification.getNotificationType() == NotificationType.TaskPublished)
+                .toList();
+    }
+
+    private static MockMultipartFile pdf(String filename, String content) {
+        return new MockMultipartFile("file", filename, "application/pdf", content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String randomDiscordId() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+}

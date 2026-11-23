@@ -1,0 +1,311 @@
+package com.centraldungeon.features.tables;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.centraldungeon.common.search.SearchQuery;
+import com.centraldungeon.features.registrations.TableRegistration;
+import com.centraldungeon.features.registrations.TableRegistrationStatus;
+import com.centraldungeon.common.search.SearchQueryParser;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+
+/**
+ * The two commands F3.3 added to the table's search box, and the one structural rule they must not
+ * break.
+ *
+ * <p><b>{@code /table_master} is an {@code exists} subquery and never a join.</b> That is not a taste
+ * about SQL: a table with three masters comes back three times from a join, so a page of twenty rows
+ * would silently cover fewer than twenty tables and {@code totalElements} would be wrong on top of it.
+ * It is the same bug {@code linkedToAny} was written around for the catalogs, arriving through a new
+ * door - and the only thing that can catch it before a user does is an assertion about which Criteria
+ * calls get made.
+ *
+ * <p>The builder is mocked rather than run against a database, for the reason
+ * {@code ApprovalSearchSpecificationTest} gives: what is being checked is which predicate gets
+ * composed, which is a statement about this class and not about SQL.
+ */
+class GameTableSearchSpecificationTest {
+
+    private static final Map<com.centraldungeon.common.search.SearchTerm, java.util.Set<String>> NO_CATALOGS =
+            Map.of();
+
+    private static final List<GameTableStatus> EVERY_LISTABLE_STATUS =
+            List.of(GameTableStatus.Preparation, GameTableStatus.Opened);
+
+    /**
+     * The rule of ADR-16 §7 that a join would have quietly broken. {@code exists} is called; {@code join}
+     * on the root is not.
+     */
+    @Test
+    void tableMasterPreguntaConUnExistsYNuncaConUnJoin() {
+        Criteria criteria = new Criteria();
+        SearchQuery query = SearchQueryParser.parse("/table_master ana", GameTableSearchField.wireNames());
+
+        GameTableSearchSpecification.forAdmin(query, NO_CATALOGS, EVERY_LISTABLE_STATUS)
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).exists(any(Subquery.class));
+        verify(criteria.root, never()).join(anyString());
+        verify(criteria.root, never()).join(anyString(), any(JoinType.class));
+    }
+
+    /**
+     * By name and never by id, like every precedent - and by both names, because whoever is searching
+     * knows one of the two and not which one the system keeps where.
+     */
+    @Test
+    void tableMasterBuscaPorLosDosNombresDeLaPersona() {
+        Criteria criteria = new Criteria();
+        SearchQuery query = SearchQueryParser.parse("/table_master ana", GameTableSearchField.wireNames());
+
+        GameTableSearchSpecification.forAdmin(query, NO_CATALOGS, EVERY_LISTABLE_STATUS)
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.masterUser).get("name");
+        verify(criteria.masterUser).get("discordUsername");
+    }
+
+    /**
+     * Live masters only: somebody removed as a co-master no longer runs the table, and finding it by
+     * their name would be answering a question about the past.
+     */
+    @Test
+    void tableMasterOnlyLooksAtLiveRows() {
+        Criteria criteria = new Criteria();
+        SearchQuery query = SearchQueryParser.parse("/table_master ana", GameTableSearchField.wireNames());
+
+        GameTableSearchSpecification.forAdmin(query, NO_CATALOGS, EVERY_LISTABLE_STATUS)
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.masterStatus, MasterRowStatus.Created);
+    }
+
+    /** {@code /table_status} es lista cerrada: matchea el enum, no un LIKE sobre el texto. */
+    @Test
+    void tableStatusEsUnaIgualdadSobreElEnum() {
+        Criteria criteria = new Criteria();
+        SearchQuery query = SearchQueryParser.parse("/table_status Preparation", GameTableSearchField.wireNames());
+
+        GameTableSearchSpecification.forAdmin(query, NO_CATALOGS, EVERY_LISTABLE_STATUS)
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.status, GameTableStatus.Preparation);
+        verify(criteria.builder, never()).like(any(), anyString(), any(Character.class));
+    }
+
+    /**
+     * A status that does not exist matches <b>nothing</b>, and never answers 400 (arquitectura §2.5).
+     * The distinction that cannot be lost: «there is no status called Abierta» is not «no filter» - read
+     * the second way, a typo would list the whole platform.
+     */
+    @Test
+    void aStatusThatDoesNotExistMatchesNothingAndIsNotA400() {
+        Criteria criteria = new Criteria();
+        SearchQuery query = SearchQueryParser.parse("/table_status Abierta", GameTableSearchField.wireNames());
+
+        GameTableSearchSpecification.forAdmin(query, NO_CATALOGS, EVERY_LISTABLE_STATUS)
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).disjunction();
+    }
+
+    /**
+     * {@code notMasteredBy} belongs to the explorer and not to the admin listing (ADR-06 §5): an
+     * admin is not applying to anything, and hiding the tables they run would be a filter nobody asked
+     * for and nobody could explain.
+     */
+    @Test
+    void theAdminListingExcludesNobodysTables() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forAdmin(SearchQuery.EMPTY, NO_CATALOGS, EVERY_LISTABLE_STATUS)
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder, never()).not(any(Predicate.class));
+        verify(criteria.builder, never()).exists(any(Subquery.class));
+    }
+
+    /**
+     * And the status filter is always there: whatever is typed in the box narrows what the listing
+     * already showed and never widens it - no {@code ?q=} reaches a deleted table (ADR-03 §7).
+     */
+    @Test
+    void theBoxNarrowsWhatTheListingAlreadyShowed() {
+        Criteria criteria = new Criteria();
+        SearchQuery query = SearchQueryParser.parse("cripta", GameTableSearchField.wireNames());
+
+        assertThat(GameTableSearchSpecification.forAdmin(query, NO_CATALOGS, EVERY_LISTABLE_STATUS)
+                        .toPredicate(criteria.root, criteria.query, criteria.builder))
+                .isNotNull();
+
+        verify(criteria.statusPath).in(EVERY_LISTABLE_STATUS);
+        verify(criteria.builder).and(any(Predicate.class), any(Predicate.class));
+    }
+
+    // -------------------------------------------------- the veto in the WHERE (read path 1 of F3.4)
+
+    /**
+     * <b>Read path 1.</b> The explorer excludes the tables the actor holds a {@code Blocked}
+     * registration on, and it does so with a {@code NOT EXISTS} <b>in the {@code WHERE}</b>.
+     *
+     * <p>That it is in the {@code WHERE} and not a filter in memory over the page that came back is
+     * the whole point: dropping rows after the query returns a page of seventeen where twenty were
+     * asked for, with a {@code totalElements} counting the tables the reader has no right to know
+     * exist. That is a broken pager (ADR-07 §9, ADR-04 §6) and, on top of it, a leak of the very number the veto
+     * exists to hide.
+     */
+    @Test
+    void theExplorerExcludesVetoedTablesWithANotExistsInTheWhere() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        // Two negated subqueries: «no dirijo esta mesa» (ADR-18 §4) and «no estoy vetado en ella» (ADR-09 §4).
+        verify(criteria.query, times(2)).subquery(String.class);
+        verify(criteria.builder, times(2)).not(any(Predicate.class));
+        verify(criteria.builder, times(2)).exists(any(Subquery.class));
+        // And nothing is filtered in memory: the composed predicate is the only thing that leaves here.
+        verify(criteria.root, never()).join(anyString());
+    }
+
+    /** The explorer lists an open table, or one in progress that is looking for players, and nothing else. */
+    @Test
+    void theExplorerListsOpenedTablesAndInProgressOnesThatSeekPlayers() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.status, GameTableStatus.Opened);
+        verify(criteria.builder).equal(criteria.status, GameTableStatus.InProgress);
+        verify(criteria.root).get("seekingPlayers");
+        verify(criteria.builder).isTrue(any());
+    }
+
+    /**
+     * And it looks at {@code Blocked} <b>only</b>. A rejection is not a veto: ADR-09 §1 allows applying
+     * again, and a {@code Rejected} or {@code Deleted} registration leaves the table perfectly
+     * visible.
+     */
+    @Test
+    void onlyBlockedHidesTheTable() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-1")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.registrationStatus, TableRegistrationStatus.Blocked);
+        verify(criteria.builder, never()).equal(criteria.registrationStatus, TableRegistrationStatus.Rejected);
+        verify(criteria.builder, never()).equal(criteria.registrationStatus, TableRegistrationStatus.Deleted);
+    }
+
+    /**
+     * The actor enters the subquery from the token and never from the URL (ADR-05 §5): what is hidden are
+     * the tables <b>this</b> reader is vetoed on, not anybody else's.
+     */
+    @Test
+    void theVetoIsMeasuredAgainstTheActorFromTheToken() {
+        Criteria criteria = new Criteria();
+
+        GameTableSearchSpecification.forExplorer(SearchQuery.EMPTY, NO_CATALOGS, "player-9")
+                .toPredicate(criteria.root, criteria.query, criteria.builder);
+
+        verify(criteria.builder).equal(criteria.registrationUserId, "player-9");
+    }
+
+    /** The Criteria API, mocked down to the few calls these predicates make. */
+    @SuppressWarnings("unchecked")
+    private static final class Criteria {
+
+        private final Root<GameTable> root = mock(Root.class);
+
+        private final CriteriaQuery<?> query = mock(CriteriaQuery.class);
+
+        private final CriteriaBuilder builder = mock(CriteriaBuilder.class);
+
+        /** {@code status} on the table itself - both the {@code in} of the listing and the equality of the command. */
+        private final Path<Object> status = mock(Path.class);
+
+        /** The same path, typed as what {@code root.get("status")} returns so {@code in(...)} can be verified. */
+        private final Path<Object> statusPath;
+
+        /** {@code masters.status} inside the subquery. */
+        private final Path<Object> masterStatus = mock(Path.class);
+
+        /** {@code masters.user} inside the subquery - where the two names are read from. */
+        private final Path<Object> masterUser = mock(Path.class);
+
+        /** {@code table_registrations.status} inside the veto subquery (ADR-09 §4). */
+        private final Path<Object> registrationStatus = mock(Path.class);
+
+        /** {@code table_registrations.user.id} inside the veto subquery - the actor of the token (ADR-05 §5). */
+        private final Path<Object> registrationUserId = mock(Path.class);
+
+        private Criteria() {
+            statusPath = status;
+            when(root.get("status")).thenReturn(status);
+            when(root.get("name")).thenReturn(mock(Path.class));
+            when(root.get("id")).thenReturn(mock(Path.class));
+            when(status.in(any(java.util.Collection.class))).thenReturn(mock(Predicate.class));
+
+            Subquery<String> subquery = mock(Subquery.class);
+            when(query.subquery(String.class)).thenReturn(subquery);
+            Root<Master> master = mock(Root.class);
+            when(subquery.from(Master.class)).thenReturn(master);
+
+            // The veto subquery of F3.4 (ADR-09 §4): the same Subquery mock, rooted at TableRegistration.
+            Root<TableRegistration> registration = mock(Root.class);
+            when(subquery.from(TableRegistration.class)).thenReturn(registration);
+            Path<Object> registrationTable = mock(Path.class);
+            when(registration.get("gameTable")).thenReturn(registrationTable);
+            when(registrationTable.get("id")).thenReturn(mock(Path.class));
+            Path<Object> registrationUser = mock(Path.class);
+            when(registration.get("user")).thenReturn(registrationUser);
+            when(registrationUser.get("id")).thenReturn(registrationUserId);
+            when(registration.get("status")).thenReturn(registrationStatus);
+            Path<Object> gameTable = mock(Path.class);
+            when(master.get("gameTable")).thenReturn(gameTable);
+            when(gameTable.get("id")).thenReturn(mock(Path.class));
+            when(master.get("status")).thenReturn(masterStatus);
+            when(master.get("user")).thenReturn(masterUser);
+            when(masterUser.get(anyString())).thenReturn(mock(Path.class));
+
+            Join<Object, Object> join = mock(Join.class);
+            when(root.join(anyString(), any(JoinType.class))).thenReturn(join);
+
+            when(builder.lower(any())).thenReturn(mock(Expression.class));
+            when(builder.like(any(), anyString(), any(Character.class))).thenReturn(mock(Predicate.class));
+            // any(Object.class) and not a bare any(): CriteriaBuilder overloads equal() on
+            // (Expression, Object) and (Expression, Expression), and an untyped matcher binds to the
+            // second - leaving every real call, which passes a String or an enum, unstubbed.
+            when(builder.equal(any(Expression.class), any(Object.class))).thenReturn(mock(Predicate.class));
+            when(builder.and(any(Predicate.class), any(Predicate.class))).thenReturn(mock(Predicate.class));
+            when(builder.and(any(Predicate[].class))).thenReturn(mock(Predicate.class));
+            when(builder.or(any(Predicate.class), any(Predicate.class))).thenReturn(mock(Predicate.class));
+            when(builder.not(any(Predicate.class))).thenReturn(mock(Predicate.class));
+            when(builder.isTrue(any())).thenReturn(mock(Predicate.class));
+            when(builder.exists(any(Subquery.class))).thenReturn(mock(Predicate.class));
+            when(builder.conjunction()).thenReturn(mock(Predicate.class));
+            when(builder.disjunction()).thenReturn(mock(Predicate.class));
+        }
+    }
+}

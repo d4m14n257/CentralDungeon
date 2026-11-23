@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 
 import { applyToTable } from './helpers/application'
-import { approveTableFromQueue } from './helpers/adminQueue'
+import { approveTableFromQueue } from './helpers/queue'
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { acceptReview } from './helpers/review'
 

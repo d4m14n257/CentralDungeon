@@ -8,14 +8,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.centraldungeon.users.PlatformRole;
-import com.centraldungeon.users.Role;
-import com.centraldungeon.users.RoleRepository;
-import com.centraldungeon.users.User;
-import com.centraldungeon.users.UserRepository;
-import com.centraldungeon.users.UserRole;
-import com.centraldungeon.users.UserRoleRepository;
-import com.centraldungeon.users.UserService;
+import com.centraldungeon.features.users.PlatformRole;
+import com.centraldungeon.features.users.Role;
+import com.centraldungeon.features.users.RoleRepository;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.UserRepository;
+import com.centraldungeon.features.users.UserRole;
+import com.centraldungeon.features.users.UserRoleRepository;
+import com.centraldungeon.features.users.UserService;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

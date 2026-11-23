@@ -52,7 +52,7 @@ const KNOWN_CODES: ReadonlySet<string> = new Set(APPROVAL_ERROR_CODES)
  * `/admin/requests` about the same fact. Writing it twice, once per screen, is how two sentences that
  * mean one thing start to disagree (ADR-16 §7). It is a key in the same `admin` namespace both screens
  * translate against, not an import: `features/approvals` still imports nothing from
- * `features/adminQueue` (§3.1.5).
+ * `features/queue` (§3.1.5).
  */
 const CLAIM_ERROR_KEY = 'queue.errors.ITEM_ALREADY_CLAIMED'
 

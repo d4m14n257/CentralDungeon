@@ -4,7 +4,7 @@ import {
   adminCatalogsPath,
   adminFilesPath,
   adminHomePath,
-  adminQueuePath,
+  queuePath,
   adminRequestsPath,
   adminSettingsPath,
   adminTablesPath,
@@ -33,7 +33,7 @@ export function AdminSectionNav() {
 
   const sections: SectionNavItem[] = [
     { to: adminHomePath(), label: t('nav.home'), end: true },
-    { to: adminQueuePath(), label: t('nav.queue') },
+    { to: queuePath(), label: t('nav.queue') },
     { to: adminTablesPath(), label: t('nav.tables') },
     { to: adminCatalogsPath(), label: t('nav.catalogs') },
     { to: adminFilesPath(), label: t('nav.files') },

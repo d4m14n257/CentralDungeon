@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.centraldungeon.auth.AuthService;
+import com.centraldungeon.features.auth.AuthService;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
 import java.util.Map;

@@ -1,0 +1,298 @@
+package com.centraldungeon.features.tasks;
+
+import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.common.exception.ForbiddenActionException;
+import com.centraldungeon.common.exception.InvalidRequestException;
+import com.centraldungeon.common.text.RichTextSanitizer;
+import com.centraldungeon.features.files.FileCategory;
+import com.centraldungeon.features.files.FileService;
+import com.centraldungeon.features.files.FileStatus;
+import com.centraldungeon.features.files.StoredFile;
+import com.centraldungeon.features.files.StoredFileRepository;
+import com.centraldungeon.features.tables.MasterService;
+import com.centraldungeon.features.tasks.dto.CreateSubmissionRequest;
+import com.centraldungeon.features.tasks.dto.SubmittedFileResponse;
+import com.centraldungeon.features.tasks.dto.TaskRecipientResponse;
+import com.centraldungeon.features.tasks.dto.TaskSubmissionResponse;
+import com.centraldungeon.features.tasks.dto.TaskSubmissionsResponse;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.UserService;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Handing in an answer to a task, and reading what came in.
+ *
+ * <p><b>Answers accumulate and nothing is ever overwritten</b> (ADR-15 §2). Every submission is an insert;
+ * there is no update endpoint and this class has no method that edits one. Sending a second version
+ * leaves the first untouched, because deciding which of two character sheets counts takes a
+ * judgement the system does not have - and silently replacing would be the system making it anyway.
+ *
+ * <p><b>There is no review.</b> No accept, no reject, no {@code reviewed_by} (ADR-15 §2). The master reads
+ * what came in and talks to people; the software's job ends at delivering it.
+ *
+ * <p><b>And nothing here punishes a missing answer</b> (ADR-15 §2). The roster of who has not handed
+ * anything in is a list of names on a screen: no endpoint acts on it, and {@code isMandatory} changes
+ * none of the answers below.
+ *
+ * <p>Two different authorization questions live here and they are not the same one. Handing in is
+ * about being <b>addressed</b> by the task ({@link TableTaskService#isRecipient}); reading everything
+ * that came in is about <b>running the table</b> (hard rule 17, ADR-05 §5, ADR-06 §4).
+ */
+@Service
+public class TaskSubmissionService {
+
+    /** The {@code task_submissions} rows. */
+    private final TaskSubmissionRepository submissionRepository;
+
+    /** The files handed in with an answer - linked, never copied (ADR-13 §2, ADR-14 §1). */
+    private final SubmissionFileRepository submissionFileRepository;
+
+    /** The task being answered, its audience, and its roster. */
+    private final TableTaskService tableTaskService;
+
+    /** Resolves and authorizes each file being handed in, and stamps its last use (ADR-13 §3). */
+    private final FileService fileService;
+
+    /** The files themselves, for the metadata each answer is shown with. */
+    private final StoredFileRepository fileRepository;
+
+    /** Answers pertenencia: a row in {@code masters}, never the platform role (ADR-06 §4). */
+    private final MasterService masterService;
+
+    /** Resolves the submitter, who is always the actor of the token (ADR-05 §5). */
+    private final UserService userService;
+
+    /** The whitelist of ADR-03 §8, applied on the way in and on the way out. */
+    private final RichTextSanitizer richTextSanitizer;
+
+    /** Entity to DTO. */
+    private final TaskMapper taskMapper;
+
+    /**
+     * @param submissionRepository     the {@code task_submissions} rows
+     * @param submissionFileRepository the files handed in with each answer
+     * @param tableTaskService         the task, its audience and its roster
+     * @param fileService              resolves and authorizes each file handed in (ADR-14 §1)
+     * @param fileRepository           the files each link points at
+     * @param masterService            answers pertenencia (hard rule 17, ADR-05 §5, ADR-06 §4)
+     * @param userService              resolves the submitter from the token
+     * @param richTextSanitizer        the whitelist of ADR-03 §8
+     * @param taskMapper               entity to DTO
+     */
+    public TaskSubmissionService(
+            TaskSubmissionRepository submissionRepository,
+            SubmissionFileRepository submissionFileRepository,
+            TableTaskService tableTaskService,
+            FileService fileService,
+            StoredFileRepository fileRepository,
+            MasterService masterService,
+            UserService userService,
+            RichTextSanitizer richTextSanitizer,
+            TaskMapper taskMapper) {
+        this.submissionRepository = submissionRepository;
+        this.submissionFileRepository = submissionFileRepository;
+        this.tableTaskService = tableTaskService;
+        this.fileService = fileService;
+        this.fileRepository = fileRepository;
+        this.masterService = masterService;
+        this.userService = userService;
+        this.richTextSanitizer = richTextSanitizer;
+        this.taskMapper = taskMapper;
+    }
+
+    /**
+     * Hands in an answer.
+     *
+     * @param taskId  the task being answered
+     * @param request the written answer, the files, or both
+     * @param actorId the actor, from the token - the submitter is never named in the request
+     * @return the answer as it was recorded
+     * @throws com.centraldungeon.common.exception.NotFoundException if the task or a file does not exist, or the actor cannot see the
+     *                                  task (they must see its table and, besides, the task must be
+     *                                  shown to everybody looking at the table, or they run or oversee
+     *                                  the table, or it is addressed to them, or they already answered
+     *                                  it) - the same answer as a task that does not exist
+     * @throws ForbiddenActionException if the actor sees the task but it is not addressed to them, or a
+     *                                  file is somebody else's and not published
+     * @throws ConflictException        if the task is no longer taking answers
+     * @throws InvalidRequestException  if the answer uses a channel the task does not take, or is
+     *                                  empty on both
+     */
+    @Transactional
+    public TaskSubmissionResponse submit(String taskId, CreateSubmissionRequest request, String actorId) {
+        TableTask task = tableTaskService.requireVisible(taskId, actorId);
+        if (!tableTaskService.isRecipient(task, actorId)) {
+            throw new ForbiddenActionException("Task " + taskId + " is not addressed to user " + actorId);
+        }
+        if (task.getStatus() != TaskStatus.Open) {
+            // Its own code, because "could not save" is the wrong thing to tell somebody who just
+            // wrote an answer: what they need to know is that the master closed the request, which is
+            // not something they can fix by retrying (ADR-04 §4, ADR-23 §3).
+            throw new ConflictException("Task " + taskId + " is closed and no longer takes answers", "TASK_CLOSED");
+        }
+
+        String content = richTextSanitizer.sanitize(request.content());
+        List<String> fileIds = request.fileIds() == null ? List.of() : request.fileIds();
+        requireAnswerFitsTask(task, content, fileIds);
+
+        User submitter = userService.getById(actorId);
+        TaskSubmission submission = submissionRepository.save(new TaskSubmission(task, submitter, content));
+
+        List<SubmittedFileResponse> files = new ArrayList<>();
+        for (String fileId : fileIds) {
+            // The same gate attaching a file to a table goes through: the actor's own, or one the
+            // platform published. Somebody else's private upload never gets here (ADR-14 §1).
+            StoredFile file = fileService.requireAttachable(fileId, actorId);
+            // Handing a file in is what puts it in the player-side cajón (ADR-14 §4). Cumulative: the
+            // sheet somebody applied with and now hands in belongs to both, and neither is revoked.
+            fileService.classify(fileId, FileCategory.PlayerSubmission);
+            submissionFileRepository.save(new SubmissionFile(submission.getId(), file.getId()));
+            files.add(toSubmittedFile(file));
+        }
+
+        return taskMapper.toSubmissionResponse(submission, content, files);
+    }
+
+    /**
+     * What came in and who has not answered, for the people running the table.
+     *
+     * <p>The two halves travel together because they are read as one thought - "seven of nine" - and
+     * splitting them across two requests would let the screen show a roster that disagrees with the
+     * answers above it.
+     *
+     * @param taskId  the task
+     * @param actorId the actor, from the token
+     * @return every answer, oldest first, plus the people still missing
+     * @throws com.centraldungeon.common.exception.NotFoundException if the task does not exist, or the actor cannot see it (they
+     *                                  must see its table and, besides, the task must be shown to
+     *                                  everybody looking at the table, or they run or oversee the table,
+     *                                  or it is addressed to them, or they already answered it) - the
+     *                                  same answer as a task that does not exist
+     * @throws ForbiddenActionException if the actor sees the task but neither runs its table nor is an admin
+     */
+    @Transactional(readOnly = true)
+    public TaskSubmissionsResponse listForTask(String taskId, String actorId) {
+        TableTask task = tableTaskService.requireVisible(taskId, actorId);
+        // Read by the table's masters and by any admin; its writes stay the masters' own.
+        if (!masterService.canOversee(task.getGameTable().getId(), actorId)) {
+            throw new ForbiddenActionException("Only a master of this table or an admin can view what was handed in");
+        }
+
+        List<TaskSubmission> submissions = submissionRepository.findByTask_IdAndDeletedAtIsNullOrderByCreatedAtAsc(taskId);
+        List<TaskRecipientResponse> recipients = tableTaskService.recipientsOf(task);
+
+        Set<String> answered = new HashSet<>();
+        for (TaskSubmission submission : submissions) {
+            answered.add(submission.getUser().getId());
+        }
+        List<TaskRecipientResponse> missing = recipients.stream()
+                .filter(recipient -> !answered.contains(recipient.userId()))
+                .toList();
+
+        return new TaskSubmissionsResponse(taskId, describe(submissions), missing, recipients.size());
+    }
+
+    /**
+     * Somebody's own answers to a task - what they see of what they handed in.
+     *
+     * <p>No membership check beyond seeing the task: the actor comes from the token and the query is
+     * keyed on them, so there is no parameter that could point at anybody else's answers.
+     * A task the actor may not see answers 404, so the endpoint does not confirm it exists.
+     *
+     * @param taskId  the task
+     * @param actorId the actor, from the token
+     * @return their answers, oldest first. Empty when they have not answered
+     * @throws com.centraldungeon.common.exception.NotFoundException if the task does not exist, or the actor cannot see it (they
+     *                                  must see its table and, besides, the task must be shown to
+     *                                  everybody looking at the table, or they run or oversee the table,
+     *                                  or it is addressed to them, or they already answered it) - the
+     *                                  same answer as a task that does not exist
+     */
+    @Transactional(readOnly = true)
+    public List<TaskSubmissionResponse> listMine(String taskId, String actorId) {
+        tableTaskService.requireVisible(taskId, actorId);
+        return describe(submissionRepository.findByTask_IdAndUser_IdAndDeletedAtIsNullOrderByCreatedAtAsc(taskId, actorId));
+    }
+
+    /** Turns answers into responses, loading every attached file in one round trip. */
+    private List<TaskSubmissionResponse> describe(List<TaskSubmission> submissions) {
+        if (submissions.isEmpty()) {
+            return List.of();
+        }
+        Map<String, List<SubmittedFileResponse>> filesBySubmission = filesOf(submissions);
+        return submissions.stream()
+                .map(submission -> taskMapper.toSubmissionResponse(
+                        submission,
+                        // Sanitized on the way out as well as on the way in (ADR-03 §8): a row written
+                        // before this gate existed still reaches the browser through here. The clean
+                        // string is passed to the mapper and not written back - a read stays a read.
+                        richTextSanitizer.sanitize(submission.getContent()),
+                        filesBySubmission.getOrDefault(submission.getId(), List.of())))
+                .toList();
+    }
+
+    /**
+     * The files of a whole page of answers, in one query plus one.
+     *
+     * <p>A file its owner has since deleted is left out rather than shown as a broken row: the same
+     * thing {@code TableFileService} does for a table's attachments, and for the same reason - an
+     * owner removing a file removes it from what shows it, without those links having to be found and
+     * rewritten (ADR-03 §7).
+     */
+    private Map<String, List<SubmittedFileResponse>> filesOf(List<TaskSubmission> submissions) {
+        List<SubmissionFile> links = submissionFileRepository.findById_SubmissionIdInAndStatus(
+                submissions.stream().map(TaskSubmission::getId).toList(), SubmissionFileStatus.Current);
+        if (links.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, StoredFile> files =
+                fileRepository.findAllById(links.stream().map(link -> link.getId().fileId()).distinct().toList()).stream()
+                        .filter(file -> file.getStatus() == FileStatus.Current)
+                        .collect(Collectors.toMap(StoredFile::getId, Function.identity()));
+
+        Map<String, List<SubmittedFileResponse>> bySubmission = new HashMap<>();
+        for (SubmissionFile link : links) {
+            StoredFile file = files.get(link.getId().fileId());
+            if (file != null) {
+                bySubmission.computeIfAbsent(link.getId().submissionId(), key -> new ArrayList<>()).add(toSubmittedFile(file));
+            }
+        }
+        return bySubmission;
+    }
+
+    private SubmittedFileResponse toSubmittedFile(StoredFile file) {
+        return new SubmittedFileResponse(file.getId(), file.getName(), file.getMimeType(), file.getSizeBytes());
+    }
+
+    /**
+     * An answer has to use a channel the task actually opened, and has to say something.
+     *
+     * <p>Both refusals are about the same thing: an answer that goes nowhere. Text handed to a task
+     * that only takes files would be stored and never shown next to what the master asked for, and an
+     * answer empty on both counts is a row claiming somebody responded when they did not - which
+     * would take them off the roster of who is still missing.
+     */
+    private void requireAnswerFitsTask(TableTask task, @Nullable String content, List<String> fileIds) {
+        boolean hasText = content != null && !content.isBlank();
+        boolean hasFiles = !fileIds.isEmpty();
+        if (hasText && !task.isAcceptsText()) {
+            throw new InvalidRequestException("Task " + task.getId() + " does not take a written answer");
+        }
+        if (hasFiles && !task.isAcceptsFiles()) {
+            throw new InvalidRequestException("Task " + task.getId() + " does not take files");
+        }
+        if (!hasText && !hasFiles) {
+            throw new InvalidRequestException("An answer has to carry text, files, or both");
+        }
+    }
+}

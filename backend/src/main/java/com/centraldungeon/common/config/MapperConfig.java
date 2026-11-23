@@ -1,13 +1,13 @@
 package com.centraldungeon.common.config;
 
-import com.centraldungeon.approvals.ApprovalMapper;
-import com.centraldungeon.catalogs.CatalogMapper;
-import com.centraldungeon.files.FileMapper;
-import com.centraldungeon.notifications.NotificationMapper;
-import com.centraldungeon.registrations.RegistrationMapper;
-import com.centraldungeon.tables.GameTableMapper;
-import com.centraldungeon.tasks.TaskMapper;
-import com.centraldungeon.users.UserMapper;
+import com.centraldungeon.features.approvals.ApprovalMapper;
+import com.centraldungeon.features.catalogs.CatalogMapper;
+import com.centraldungeon.features.files.FileMapper;
+import com.centraldungeon.features.notifications.NotificationMapper;
+import com.centraldungeon.features.registrations.RegistrationMapper;
+import com.centraldungeon.features.tables.GameTableMapper;
+import com.centraldungeon.features.tasks.TaskMapper;
+import com.centraldungeon.features.users.UserMapper;
 import org.mapstruct.factory.Mappers;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

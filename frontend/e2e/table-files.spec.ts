@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext, type Browser, type Page } from '@
 
 import { addScheduleSlot, chooseRequiredCatalogs, submitForReview } from './helpers/tableWizard'
 import { acceptReview } from './helpers/review'
-import { approveTableFromQueue } from './helpers/adminQueue'
+import { approveTableFromQueue } from './helpers/queue'
 
 /**
  * F1.4 end to end, against the real backend: F1.4's acceptance criterion — *a master

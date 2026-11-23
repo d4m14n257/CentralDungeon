@@ -33,7 +33,7 @@ export function usePauseTable() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.list(tableId) })
       void queryClient.invalidateQueries({ queryKey: queryKeys.schedule.mine() })
       // And the request that asked for it, if a master did, is resolved work.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.queue.all() })
     },
   })
 }

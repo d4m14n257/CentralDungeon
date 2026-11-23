@@ -39,7 +39,7 @@ export function useRequestTablePause(tableId: string) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.lists() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.tables.adminAll() })
       // And a new request is waiting on somebody: it belongs in the shared tray (ADR-16 §5).
-      void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.queue.all() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.adminAll() })
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.mineAll() })
     },

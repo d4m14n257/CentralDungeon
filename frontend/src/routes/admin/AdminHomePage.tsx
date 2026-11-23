@@ -6,8 +6,8 @@ import { ErrorState } from '@/components/ErrorState'
 import { PageHeader } from '@/components/PageHeader'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { adminQueuePath } from '@/config/paths'
-import { useAdminQueue } from '@/features/adminQueue'
+import { queuePath } from '@/config/paths'
+import { useQueue } from '@/features/queue'
 
 /**
  * `/admin` — the home of the Admin context (ADR-20 §3), and where an administrator lands on entering.
@@ -24,7 +24,7 @@ import { useAdminQueue } from '@/features/adminQueue'
 export function AdminHomePage() {
   const { t } = useTranslation('admin')
   // isLoadingError, not isError: a background refetch that fails must not blank a count that loaded (ADR-19 §4).
-  const { data, isPending, isLoadingError, refetch } = useAdminQueue(0, 1)
+  const { data, isPending, isLoadingError, refetch } = useQueue(0, 1)
 
   return (
     <div className="space-y-4">
@@ -32,7 +32,7 @@ export function AdminHomePage() {
       {isPending && <Skeleton className="h-24 w-full" />}
       {isLoadingError && <ErrorState onRetry={() => void refetch()} />}
       {data && (
-        <Link to={adminQueuePath()} className="group block">
+        <Link to={queuePath()} className="group block">
           <Card className="border-border-strong group-hover:border-brand-fg gap-1.5 p-5 transition-colors">
             <h2 className="section-title leading-6">{t('home.queueTitle')}</h2>
             <p className="text-fg-muted flex items-center justify-between gap-2 text-sm">

@@ -29,7 +29,7 @@ export function useRejectRequest() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.adminAll() })
       // The row leaves the shared tray: resolved work is not work waiting on anybody (ADR-16 §5).
-      void queryClient.invalidateQueries({ queryKey: queryKeys.adminQueue.all() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.queue.all() })
       // A refused veto request stops being pending on its table.
       void queryClient.invalidateQueries({ queryKey: queryKeys.requests.banAll() })
     },

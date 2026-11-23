@@ -21,7 +21,7 @@ export const DEFAULT_MAX_FILE_BYTES = 2 * 1024 * 1024
  * takes an item and walks away has to be told what happens next, and "fifteen minutes" written by
  * hand in four places in two languages is how that stops being true the first time it changes.
  *
- * It replaced `config/adminQueue.ts`, which said in so many words that the day the backend stopped
+ * It replaced `config/queue.ts`, which said in so many words that the day the backend stopped
  * treating this as a constant it would stop being one here too — and F3.5 is that day.
  */
 export const DEFAULT_CLAIM_TIMEOUT_MINUTES = 15

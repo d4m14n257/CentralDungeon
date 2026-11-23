@@ -1,0 +1,99 @@
+package com.centraldungeon.features.profiles;
+
+import com.centraldungeon.common.model.PageResponse;
+import com.centraldungeon.common.security.CurrentUser;
+import com.centraldungeon.features.profiles.dto.FinishedTableResponse;
+import com.centraldungeon.features.profiles.dto.ProfileResponse;
+import com.centraldungeon.features.profiles.dto.UserTableResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * Public profiles: the caller's own, and everybody else's under the five rules of arquitectura §4.5
+ * ("Visibilidad de perfiles": ADR-10 §1, §2, ADR-06 §8).
+ */
+@RestController
+@RequestMapping("/api/v1/users")
+public class ProfileController {
+
+    /** The only collaborator: a controller never reaches a repository (regla dura 1). */
+    private final ProfileService profileService;
+
+    /**
+     * @param profileService builds a profile once its visibility has been decided
+     */
+    public ProfileController(ProfileService profileService) {
+        this.profileService = profileService;
+    }
+
+    /**
+     * The caller's own profile.
+     *
+     * @param currentUser the actor, from the token. There is no id parameter, so this can only ever
+     *                    answer about the caller (ADR-05 §5)
+     * @return 200 with their profile
+     */
+    @GetMapping("/me/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ProfileResponse myProfile(@AuthenticationPrincipal CurrentUser currentUser) {
+        return profileService.getProfile(currentUser.userId(), currentUser.userId());
+    }
+
+    /**
+     * Somebody else's profile.
+     *
+     * <p>{@code id} names the person the profile describes, never the actor - the actor still only
+     * ever comes from the token (ADR-05 §5). Whether it may be read is the five rules of §5.
+     *
+     * @param id          whose profile this is
+     * @param currentUser the actor, from the token
+     * @return 200 with the profile
+     * @throws com.centraldungeon.common.exception.NotFoundException 404 if the person does not exist,
+     *         or the actor may not see them - the two never distinguish themselves in the response
+     *         (ADR-10 §3)
+     */
+    @GetMapping("/{id}/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ProfileResponse profileOf(@PathVariable String id, @AuthenticationPrincipal CurrentUser currentUser) {
+        return profileService.getProfile(id, currentUser.userId());
+    }
+
+    /**
+     * Every table a person runs, plays at or applied to, for an admin reading their record (ADR-06 §8).
+     *
+     * @param id       whose tables these are
+     * @param pageable page and size; newest table first, always
+     * @return 200 with one page of their tables. 403 when the actor is not an admin, 404 when nobody
+     *         has that id
+     */
+    @GetMapping("/{id}/tables")
+    @PreAuthorize("hasAnyRole('ADMIN','OWNER')")
+    public PageResponse<UserTableResponse> tablesOf(@PathVariable String id, @PageableDefault(size = 20) Pageable pageable) {
+        return profileService.listTablesForAdmin(id, pageable);
+    }
+
+    /**
+     * The tables a person played to the end, behind the «finished tables» count of their profile.
+     *
+     * <p>Readable by exactly whoever may read that person's profile (the same rules, the same gate).
+     *
+     * @param id          whose finished tables these are
+     * @param pageable    page and size; newest closing first, always
+     * @param currentUser the actor, from the token
+     * @return 200 with one page of them
+     * @throws com.centraldungeon.common.exception.NotFoundException 404 if the person does not exist,
+     *         or the actor may not see their profile - the two never distinguish themselves
+     */
+    @GetMapping("/{id}/finished-tables")
+    @PreAuthorize("isAuthenticated()")
+    public PageResponse<FinishedTableResponse> finishedTablesOf(
+            @PathVariable String id, @PageableDefault(size = 10) Pageable pageable, @AuthenticationPrincipal CurrentUser currentUser) {
+        return profileService.listFinishedTables(id, currentUser.userId(), pageable);
+    }
+}

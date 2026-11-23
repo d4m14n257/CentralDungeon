@@ -4,26 +4,26 @@ import static com.centraldungeon.matrix.MatrixActor.*;
 import static com.centraldungeon.matrix.MatrixCell.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.centraldungeon.approvals.ApprovalRequestType;
-import com.centraldungeon.auth.AuthService;
+import com.centraldungeon.features.approvals.ApprovalRequestType;
+import com.centraldungeon.features.auth.AuthService;
 import com.centraldungeon.common.security.RefreshCookieFactory;
-import com.centraldungeon.notifications.NotificationRepository;
-import com.centraldungeon.notifications.ReadStatus;
-import com.centraldungeon.registrations.TableRegistrationStatus;
-import com.centraldungeon.settings.SettingKey;
-import com.centraldungeon.tables.GameTable;
-import com.centraldungeon.tables.GameTableStatus;
-import com.centraldungeon.users.PlatformRole;
-import com.centraldungeon.users.User;
-import com.centraldungeon.users.UserRoleChangeAction;
-import com.centraldungeon.users.UserStatus;
+import com.centraldungeon.features.notifications.NotificationRepository;
+import com.centraldungeon.features.notifications.ReadStatus;
+import com.centraldungeon.features.registrations.TableRegistrationStatus;
+import com.centraldungeon.features.settings.SettingKey;
+import com.centraldungeon.features.tables.GameTable;
+import com.centraldungeon.features.tables.GameTableStatus;
+import com.centraldungeon.features.users.PlatformRole;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.UserRoleChangeAction;
+import com.centraldungeon.features.users.UserStatus;
 import com.jayway.jsonpath.JsonPath;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
- * The role matrix of the platform-wide features: {@code adminqueue}, {@code approvals}, {@code auth},
+ * The role matrix of the platform-wide features: {@code queue}, {@code approvals}, {@code auth},
  * {@code dashboard}, {@code health}, {@code notifications}, {@code profiles}, {@code settings} and
  * {@code users}. Thirty-five endpoints.
  */
@@ -33,7 +33,7 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
     private static final String SETTING_KEY = "tables.max_players_cap";
 
     /** One main row per endpoint, plus its variants. */
-    static final List<MatrixRow> ROWS = Stream.of(adminQueue(), approvals(), auth(), dashboard(), health(),
+    static final List<MatrixRow> ROWS = Stream.of(queue(), approvals(), auth(), dashboard(), health(),
                     notifications(), profiles(), settings(), users())
             .flatMap(List::stream)
             .toList();
@@ -43,11 +43,11 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
         return ROWS;
     }
 
-    // ---------------------------------------------------------------- adminqueue
+    // ---------------------------------------------------------------- queue
 
-    private static List<MatrixRow> adminQueue() {
+    private static List<MatrixRow> queue() {
         return List.of(
-                MatrixRow.of("GET /api/v1/admin-queue", w -> {
+                MatrixRow.of("GET /api/v1/admin/queue", w -> {
                     w.remember("free", w.approval(ApprovalRequestType.General, w.person("asker")).getId());
                     w.remember("ban", playerBan(w));
                     w.remember("reserved", w.claim(w.approval(ApprovalRequestType.General, w.person("other asker")),
@@ -59,32 +59,32 @@ class PlatformRoleMatrixIT extends AbstractRoleMatrixIT {
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200, (w, body) -> assertThat(body)
                                 .contains(w.recall("free"), w.recall("ban")).doesNotContain(w.recall("reserved"))), ADMIN, OWNER),
-                MatrixRow.of("POST /api/v1/admin-queue/{type}/{id}/claim", w -> MatrixRequest.path("approval_request",
+                MatrixRow.of("POST /api/v1/admin/queue/{type}/{id}/claim", w -> MatrixRequest.path("approval_request",
                         w.approval(ApprovalRequestType.General, w.person("asker")).getId()))
                         .cell(denied(401), ANONYMOUS)
                         .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(200), ADMIN, OWNER),
-                MatrixRow.variant("claimed by the same admin", "POST /api/v1/admin-queue/{type}/{id}/claim",
+                MatrixRow.variant("claimed by the same admin", "POST /api/v1/admin/queue/{type}/{id}/claim",
                         w -> MatrixRequest.path("approval_request",
                                 w.claim(w.approval(ApprovalRequestType.General, w.person("asker")), w.me()).getId()))
                         .cell(allowed(200), ADMIN, OWNER),
-                MatrixRow.variant("claimed by another admin", "POST /api/v1/admin-queue/{type}/{id}/claim",
+                MatrixRow.variant("claimed by another admin", "POST /api/v1/admin/queue/{type}/{id}/claim",
                         w -> MatrixRequest.path("approval_request",
                                 w.claim(w.approval(ApprovalRequestType.General, w.person("asker")),
                                         w.person("other admin", PlatformRole.ADMIN)).getId()))
                         .cell(denied(409, "ITEM_ALREADY_CLAIMED"), ADMIN, OWNER),
-                MatrixRow.of("DELETE /api/v1/admin-queue/{type}/{id}/claim", w -> MatrixRequest.path("approval_request",
+                MatrixRow.of("DELETE /api/v1/admin/queue/{type}/{id}/claim", w -> MatrixRequest.path("approval_request",
                         w.claim(w.approval(ApprovalRequestType.General, w.person("asker")), w.me()).getId()))
                         .cell(denied(401), ANONYMOUS)
                         .cell(denied(401, "ACCOUNT_BLOCKED"), BLOCKED)
                         .cell(denied(403), PLAYER, MASTER)
                         .cell(allowed(204), ADMIN, OWNER),
-                MatrixRow.variant("not reserved", "DELETE /api/v1/admin-queue/{type}/{id}/claim",
+                MatrixRow.variant("not reserved", "DELETE /api/v1/admin/queue/{type}/{id}/claim",
                         w -> MatrixRequest.path("approval_request",
                                 w.approval(ApprovalRequestType.General, w.person("asker")).getId()))
                         .cell(allowed(204), ADMIN, OWNER),
-                MatrixRow.variant("reserved by another admin", "DELETE /api/v1/admin-queue/{type}/{id}/claim",
+                MatrixRow.variant("reserved by another admin", "DELETE /api/v1/admin/queue/{type}/{id}/claim",
                         w -> MatrixRequest.path("approval_request",
                                 w.claim(w.approval(ApprovalRequestType.General, w.person("asker")),
                                         w.person("other admin", PlatformRole.ADMIN)).getId()))

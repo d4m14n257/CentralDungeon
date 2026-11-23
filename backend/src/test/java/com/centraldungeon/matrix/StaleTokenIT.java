@@ -7,8 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.centraldungeon.common.config.JwtProperties;
 import com.centraldungeon.common.security.JwtService;
-import com.centraldungeon.users.PlatformRole;
-import com.centraldungeon.users.User;
+import com.centraldungeon.features.users.PlatformRole;
+import com.centraldungeon.features.users.User;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.MACSigner;

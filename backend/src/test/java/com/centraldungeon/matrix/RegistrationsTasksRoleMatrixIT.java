@@ -4,12 +4,12 @@ import static com.centraldungeon.matrix.MatrixActor.*;
 import static com.centraldungeon.matrix.MatrixCell.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.centraldungeon.approvals.ApprovalRequestType;
-import com.centraldungeon.registrations.TableRegistrationStatus;
-import com.centraldungeon.tables.GameTableStatus;
-import com.centraldungeon.tasks.TableTask;
-import com.centraldungeon.tasks.TableTaskRepository;
-import com.centraldungeon.tasks.TaskAudience;
+import com.centraldungeon.features.approvals.ApprovalRequestType;
+import com.centraldungeon.features.registrations.TableRegistrationStatus;
+import com.centraldungeon.features.tables.GameTableStatus;
+import com.centraldungeon.features.tasks.TableTask;
+import com.centraldungeon.features.tasks.TableTaskRepository;
+import com.centraldungeon.features.tasks.TaskAudience;
 import java.util.List;
 import java.util.stream.Stream;
 

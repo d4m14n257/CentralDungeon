@@ -1,0 +1,297 @@
+package com.centraldungeon.features.tables;
+
+import com.centraldungeon.common.exception.ConflictException;
+import com.centraldungeon.common.exception.InvalidRequestException;
+import com.centraldungeon.features.notifications.NotificationService;
+import com.centraldungeon.features.registrations.TableRegistration;
+import com.centraldungeon.features.registrations.TableRegistrationRepository;
+import com.centraldungeon.features.registrations.TableRegistrationStatus;
+import com.centraldungeon.features.tables.dto.TableScheduleEntry;
+import com.centraldungeon.features.users.User;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * A table's weekly agenda: reading it, and replacing it as a whole.
+ *
+ * <p><b>Replace, not add and remove one slot at a time.</b> The agenda is edited as a unit on
+ * screen - a master looks at the week and says what it is - and the clash rules of ADR-08 §2 are about
+ * the whole agenda anyway: checking a slot in isolation would let a pair that is fine one at a time
+ * and broken together through the door. So the caller sends the week it wants and this decides what
+ * that means for the rows.
+ *
+ * <p>Two rules apply in order, and the order matters. First the agenda has to make sense on its own:
+ * two slots of the <b>same</b> table whose sessions overlap are a {@code 400}, because that is input
+ * that does not describe a playable week (ADR-08 §2). Only then is it compared against the rest of the
+ * master's life, which is R1 and a {@code 409}.
+ *
+ * <p>Editing the agenda of a table that already has candidates <b>warns and does not expel</b> (ADR-15 §2,
+ * ADR-08 §2): the candidates it now clashes with are notified, and what to do about it is theirs and their
+ * master's to sort out. The system says what happened; it does not decide for them.
+ */
+@Service
+public class TableScheduleService {
+
+    /** How a week reads: by day first, then by time. The order every agenda is handed out in. */
+    private static final Comparator<TableScheduleEntry> WEEK_ORDER = Comparator
+            .comparingInt((TableScheduleEntry entry) -> entry.weekday().ordinalFromMonday())
+            .thenComparing(TableScheduleEntry::hourtime);
+
+    /**
+     * Who a clash warning goes to: the candidates, who have an application to withdraw on
+     * {@code /player/applications}. A player has nothing to resolve there, and already hears the
+     * agenda changed through {@code TableScheduleChanged}.
+     */
+    private static final TableRegistrationStatus AFFECTED_STATUS = TableRegistrationStatus.Candidate;
+
+    /** The {@code table_schedules} rows this service owns. */
+    private final TableScheduleRepository scheduleRepository;
+
+    /** Answers R1, and tells the service who a new agenda now clashes with. */
+    private final ScheduleConflictService scheduleConflictService;
+
+    /** Who is signed up to the table whose agenda is changing. */
+    private final TableRegistrationRepository registrationRepository;
+
+    /** Tells the affected people their commitments now overlap (ADR-08 §2, R4's sibling). */
+    private final NotificationService notificationService;
+
+    /** Who runs the table: an agenda is measured against every one of them (ADR-08 §2). */
+    private final MasterService masterService;
+
+    /** Whether the actor may see the table a clash points at, which decides if it can be named. */
+    private final TableVisibilityService tableVisibilityService;
+
+    /**
+     * @param scheduleRepository      the {@code table_schedules} rows
+     * @param scheduleConflictService answers whether the new agenda clashes with anything
+     * @param registrationRepository  who is signed up to the table
+     * @param notificationService     warns the people a schedule change now clashes for
+     * @param masterService           who runs the table, whose weeks the agenda is measured against
+     * @param tableVisibilityService  whether the actor may see the table somebody else clashes with
+     */
+    public TableScheduleService(
+            TableScheduleRepository scheduleRepository,
+            ScheduleConflictService scheduleConflictService,
+            TableRegistrationRepository registrationRepository,
+            NotificationService notificationService,
+            MasterService masterService,
+            TableVisibilityService tableVisibilityService) {
+        this.scheduleRepository = scheduleRepository;
+        this.scheduleConflictService = scheduleConflictService;
+        this.registrationRepository = registrationRepository;
+        this.notificationService = notificationService;
+        this.masterService = masterService;
+        this.tableVisibilityService = tableVisibilityService;
+    }
+
+    /**
+     * A table's agenda as it stands, in UTC and in reading order.
+     *
+     * @param gameTableId the table
+     * @return its live slots, ordered by day and then by time - which is how a week reads
+     */
+    @Transactional(readOnly = true)
+    public List<TableScheduleEntry> findByTable(String gameTableId) {
+        return scheduleRepository.findById_GameTableIdAndStatus(gameTableId, TableScheduleStatus.Created).stream()
+                .map(slot -> new TableScheduleEntry(slot.getWeekday(), slot.getHourtime(), slot.getDuration()))
+                .sorted(WEEK_ORDER)
+                .toList();
+    }
+
+    /**
+     * The agendas of a whole page of tables, in one read.
+     *
+     * <p>The explorer shows every card's agenda, and asking per card would be twenty queries for one
+     * screen. A table with no agenda is absent from the map rather than mapped to an empty list -
+     * callers ask for it with a default.
+     *
+     * @param gameTableIds the tables on the page
+     * @return their live agendas, keyed by table and ordered as a week reads
+     */
+    @Transactional(readOnly = true)
+    public Map<String, List<TableScheduleEntry>> findByTables(Collection<String> gameTableIds) {
+        if (gameTableIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, List<TableScheduleEntry>> byTable = new LinkedHashMap<>();
+        for (TableSchedule slot : scheduleRepository.findById_GameTableIdInAndStatus(gameTableIds, TableScheduleStatus.Created)) {
+            byTable
+                    .computeIfAbsent(slot.getId().gameTableId(), id -> new ArrayList<>())
+                    .add(new TableScheduleEntry(slot.getWeekday(), slot.getHourtime(), slot.getDuration()));
+        }
+        byTable.values().forEach(entries -> entries.sort(WEEK_ORDER));
+        return byTable;
+    }
+
+    /**
+     * Replaces a table's whole agenda with the one given, after checking it holds up.
+     *
+     * <p>Slots that leave the agenda are marked, never dropped: the primary key is
+     * {@code (table, weekday, hourtime)}, so a master who removes Tuesday 20:00 and puts it back
+     * would otherwise collide with the row they just deleted (see {@link TableScheduleStatus}).
+     *
+     * @param table    the table whose agenda is being set. Each slot carries its own length (ADR-08 §1),
+     *                 and one without a length claims no interval - it can sit in the agenda and
+     *                 never clash with anything (ADR-08 §2)
+     * @param entries  the week the master wants. Empty clears the agenda
+     * @param actorId  who is acting, from the token (ADR-05 §5). R1 measures the agenda against
+     *                 <em>every</em> live master of the table (ADR-08 §2); the actor only decides whose
+     *                 clash it reads as. A table with no master yet - an admin creating an Unassigned
+     *                 one (ADR-06 §7) - has nobody to measure, so only its own coherence is checked and
+     *                 R1 waits for the masters to be assigned
+     * @return whether the agenda changed - a slot was added, removed, or kept with another length. The
+     *         caller decides whom that is news for; this method only warns the candidates it clashes with
+     * @throws InvalidRequestException if two of the given slots overlap each other (ADR-08 §2)
+     * @throws ConflictException       if the agenda overlaps another live table one of its masters runs
+     *                                 or plays at - R1 of ADR-08 §2
+     */
+    @Transactional
+    public boolean replace(GameTable table, List<TableScheduleEntry> entries, @Nullable String actorId) {
+        List<TableScheduleEntry> normalized = normalize(entries);
+        List<WeeklyInterval> intervals = intervalsOf(normalized);
+
+        if (scheduleConflictService.hasSelfOverlap(intervals)) {
+            throw new InvalidRequestException("Two slots of this table's agenda overlap each other");
+        }
+        List<User> masters = masterService.findByGameTable(table.getId()).stream().map(Master::getUser).toList();
+        requireNoClash(masters, table.getId(), intervals, actorId);
+
+        boolean changed = !new HashSet<>(findByTable(table.getId())).equals(new HashSet<>(normalized));
+        applyTo(table.getId(), normalized);
+        warnAffectedPeople(table);
+        return changed;
+    }
+
+    /**
+     * R1 of ADR-08 §2 for a group: refuses an agenda that overlaps what <b>any</b> of these people is
+     * already committed to elsewhere. The masters of a table run it together, so measuring only whoever
+     * is editing let a co-master's week through.
+     *
+     * <p>The first clash found is the one reported. When it is the actor's own it reads as theirs
+     * ({@code SCHEDULE_CONFLICT}); anybody else's names the person ({@code MASTER_SCHEDULE_CONFLICT}).
+     * English, and for a log: the sentence is rendered by the frontend from the code and its
+     * parameters, in the reader's language (ADR-23 §3).
+     *
+     * <p>The other table's name goes in the answer only when the actor may see that table: a draft
+     * nobody was shown would otherwise let whoever adds a co-master map that person's week. When they
+     * cannot, the answer carries the code and the person's name and no table name.
+     *
+     * @param people         whose weeks to measure - the table's masters, or the ones about to be
+     * @param excludeTableId the table itself, so it never clashes with its own agenda
+     * @param intervals      the agenda being claimed. An empty one never clashes
+     * @param actorId        who is acting, from the token, or null when nobody is
+     * @throws ConflictException on the first clash
+     */
+    @Transactional(readOnly = true)
+    public void requireNoClash(
+            Collection<User> people, String excludeTableId, List<WeeklyInterval> intervals, @Nullable String actorId) {
+        for (User person : people) {
+            CommittedTable clash = scheduleConflictService.findClash(person.getId(), excludeTableId, intervals);
+            if (clash == null) {
+                continue;
+            }
+            if (person.getId().equals(actorId)) {
+                throw new ConflictException(
+                        "Agenda overlaps table " + clash.name() + ", which the actor is already committed to",
+                        ConflictException.SCHEDULE_CONFLICT,
+                        Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name()));
+            }
+            String masterName = person.getName() != null ? person.getName() : person.getDiscordUsername();
+            boolean actorSeesIt = actorId != null && tableVisibilityService.canSee(clash.id(), actorId);
+            Map<String, String> params = actorSeesIt
+                    ? Map.of(ConflictException.PARAM_OTHER_TABLE_NAME, clash.name(), ConflictException.PARAM_MASTER_NAME, masterName)
+                    : Map.of(ConflictException.PARAM_MASTER_NAME, masterName);
+            throw new ConflictException(
+                    "Agenda overlaps another table of master " + person.getId(),
+                    ConflictException.MASTER_SCHEDULE_CONFLICT,
+                    params);
+        }
+    }
+
+    /**
+     * Turns the requested week into rows: everything asked for becomes live, everything else that
+     * existed is marked as removed, and a slot that comes back is revived rather than re-inserted.
+     */
+    private void applyTo(String gameTableId, List<TableScheduleEntry> entries) {
+        Map<TableScheduleId, TableSchedule> existing = new LinkedHashMap<>();
+        for (TableSchedule slot : scheduleRepository.findById_GameTableId(gameTableId)) {
+            existing.put(slot.getId(), slot);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        for (TableScheduleEntry entry : entries) {
+            TableScheduleId id = new TableScheduleId(gameTableId, entry.weekday(), entry.hourtime());
+            TableSchedule slot = existing.remove(id);
+            if (slot == null) {
+                scheduleRepository.save(new TableSchedule(gameTableId, entry.weekday(), entry.hourtime(), entry.duration()));
+            } else {
+                slot.setStatus(TableScheduleStatus.Created);
+                slot.setDeletedAt(null);
+                // A slot that comes back can come back a different length (ADR-08 §1): the key is the day
+                // and the hour, so changing only how long it runs is this branch and not an insert.
+                slot.setDuration(entry.duration());
+            }
+        }
+        for (TableSchedule leftover : existing.values()) {
+            if (leftover.getStatus() == TableScheduleStatus.Created) {
+                leftover.setStatus(TableScheduleStatus.Deleted);
+                leftover.setDeletedAt(now);
+            }
+        }
+    }
+
+    /**
+     * Tells the people signed up to the table whose own commitments the new agenda now clashes with.
+     * Nobody is removed and nothing is refused: the notice is the whole of the action (ADR-15 §2, ADR-08 §2).
+     */
+    private void warnAffectedPeople(GameTable table) {
+        for (TableRegistration registration : registrationRepository.findByGameTable_Id(table.getId())) {
+            if (registration.getStatus() != AFFECTED_STATUS) {
+                continue;
+            }
+            String userId = registration.getUser().getId();
+            CommittedTable clash = scheduleConflictService.findClashWith(userId, table);
+            if (clash != null) {
+                notificationService.notifyScheduleConflict(userId, table, clash.name());
+            }
+        }
+    }
+
+    /**
+     * Drops the seconds and removes duplicates, so what is compared and what is stored are the same
+     * thing. The column is part of the primary key, and 20:00:00 and 20:00:30 are one slot as far as
+     * an agenda written in minutes is concerned.
+     */
+    private List<TableScheduleEntry> normalize(List<TableScheduleEntry> entries) {
+        return entries.stream()
+                .map(entry -> new TableScheduleEntry(
+                        entry.weekday(),
+                        entry.hourtime().truncatedTo(ChronoUnit.MINUTES),
+                        // Same reason as the start: the agenda is written in minutes.
+                        entry.duration() == null ? null : entry.duration().truncatedTo(ChronoUnit.MINUTES)))
+                .distinct()
+                .toList();
+    }
+
+    /** The stretches of the week the requested agenda would occupy. A slot with no length occupies nothing. */
+    private List<WeeklyInterval> intervalsOf(List<TableScheduleEntry> entries) {
+        // Each slot brings its own length since ADR-08 §1, so a slot without one is skipped rather than
+        // the whole agenda being written off - the two used to be the same thing.
+        return entries.stream()
+                .filter(entry -> entry.duration() != null)
+                .map(entry -> WeeklyInterval.of(entry.weekday(), entry.hourtime(), entry.duration()))
+                .toList();
+    }
+}

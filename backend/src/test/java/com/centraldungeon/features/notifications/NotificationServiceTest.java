@@ -1,0 +1,230 @@
+package com.centraldungeon.features.notifications;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.centraldungeon.common.exception.NotFoundException;
+import com.centraldungeon.features.tables.GameTable;
+import com.centraldungeon.features.users.User;
+import com.centraldungeon.features.users.UserRepository;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+@ExtendWith(MockitoExtension.class)
+class NotificationServiceTest {
+
+    @Mock
+    private NotificationRepository notificationRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private NotificationMapper notificationMapper;
+
+    private NotificationService notificationService;
+
+    @BeforeEach
+    void setUp() {
+        notificationService = new NotificationService(notificationRepository, userRepository, notificationMapper);
+    }
+
+    @Test
+    void notifiesAnAcceptedRegistration() {
+        User recipient = persistedUser("player-1");
+        when(userRepository.getReferenceById("player-1")).thenReturn(recipient);
+        GameTable table = persistedTable("table-1", "La Cripta");
+
+        notificationService.notifyRegistrationAccepted("player-1", table);
+
+        verify(notificationRepository).save(argThatMatchesType(NotificationType.RegistrationAccepted));
+    }
+
+    @Test
+    void notifiesARejectedRegistration() {
+        User recipient = persistedUser("player-2");
+        when(userRepository.getReferenceById("player-2")).thenReturn(recipient);
+        GameTable table = persistedTable("table-2", "Hijos del Vacio");
+
+        notificationService.notifyRegistrationRejected("player-2", table);
+
+        verify(notificationRepository).save(argThatMatchesType(NotificationType.RegistrationRejected));
+    }
+
+    /**
+     * ADR-23 §3: the row stores what happened and the names involved, never the sentence. A notification
+     * that arrived with a rendered title would still be in the language of the day it was written.
+     */
+    @Test
+    void storesTheNamesAndNoSentenceAtAll() {
+        when(userRepository.getReferenceById("player-3")).thenReturn(persistedUser("player-3"));
+        GameTable table = persistedTable("table-9", "La Cripta");
+
+        notificationService.notifyRegistrationAccepted("player-3", table);
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification -> notification.getTitle() == null
+                && notification.getMessage() == null
+                && notification.getParams() != null
+                && "La Cripta".equals(notification.getParams().tableName())));
+    }
+
+    /** The applicant's name is a parameter, so the rendered title can name them in any language. */
+    @Test
+    void notifiesAMasterOfANewCandidateCarryingTheApplicantName() {
+        User recipient = persistedUser("master-1");
+        when(userRepository.getReferenceById("master-1")).thenReturn(recipient);
+        GameTable table = persistedTable("table-3", "Tumbas de Sal");
+
+        notificationService.notifyNewCandidate("master-1", table, "Beto");
+
+        verify(notificationRepository)
+                .save(org.mockito.ArgumentMatchers.argThat(notification -> notification.getNotificationType() == NotificationType.NewCandidate
+                        && notification.getParams() != null
+                        && "Beto".equals(notification.getParams().actorName())
+                        && "Tumbas de Sal".equals(notification.getParams().tableName())));
+    }
+
+    /** A clash has to name both tables: the one it links to and the one it collides with (ADR-08 §2). */
+    @Test
+    void notifiesAScheduleClashCarryingBothTableNames() {
+        when(userRepository.getReferenceById("player-4")).thenReturn(persistedUser("player-4"));
+        GameTable table = persistedTable("table-10", "El Faro");
+
+        notificationService.notifyScheduleConflict("player-4", table, "La Cripta");
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification -> notification.getParams() != null
+                && "El Faro".equals(notification.getParams().tableName())
+                && "La Cripta".equals(notification.getParams().otherTableName())));
+    }
+
+    /** The same plain type reaches masters and players, so the row says which one the recipient is. */
+    @Test
+    void aTableChangeNoticeRecordsHowTheRecipientIsJoinedAndLinksToTheTable() {
+        when(userRepository.getReferenceById("player-5")).thenReturn(persistedUser("player-5"));
+        GameTable table = persistedTable("table-11", "El Faro");
+
+        notificationService.notifyTableChanged("player-5", table, NotificationType.TablePaused, TableMembership.Player);
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification
+                -> notification.getNotificationType() == NotificationType.TablePaused
+                        && notification.getParams() != null
+                        && "El Faro".equals(notification.getParams().tableName())
+                        && notification.getParams().membership() == TableMembership.Player
+                        && "game_table".equals(notification.getRelatedEntityType())
+                        && "table-11".equals(notification.getRelatedEntityId())));
+    }
+
+    @Test
+    void anAdminEditNoticeCarriesTheCodesOfWhatChanged() {
+        when(userRepository.getReferenceById("master-2")).thenReturn(persistedUser("master-2"));
+        GameTable table = persistedTable("table-12", "El Faro");
+
+        notificationService.notifyTableEditedByAdmin("master-2", table, List.of("name", "schedule"));
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification
+                -> notification.getNotificationType() == NotificationType.TableEditedByAdmin
+                        && notification.getParams() != null
+                        && List.of("name", "schedule").equals(notification.getParams().changes())
+                        && notification.getParams().membership() == TableMembership.Master));
+    }
+
+    /** A removed table cannot be opened, so the notice points nowhere. */
+    @Test
+    void aDeletedTableNoticeLinksNowhere() {
+        when(userRepository.getReferenceById("master-3")).thenReturn(persistedUser("master-3"));
+
+        notificationService.notifyTableDeleted("master-3", persistedTable("table-13", "El Faro"));
+
+        verify(notificationRepository).save(org.mockito.ArgumentMatchers.argThat(notification
+                -> notification.getNotificationType() == NotificationType.TableDeletedByAdmin
+                        && notification.getRelatedEntityType() == null
+                        && notification.getRelatedEntityId() == null));
+    }
+
+    /** Rows written before {@code membership} and {@code changes} existed have neither key, and must still be readable. */
+    @Test
+    void paramsStoredBeforeTheNewFieldsExistedReadBackWithThemNull() {
+        NotificationParams params = new NotificationParamsConverter()
+                .convertToEntityAttribute("{\"tableName\":\"La Cripta\",\"tableId\":null}");
+
+        assertThat(params).isNotNull();
+        assertThat(params.tableName()).isEqualTo("La Cripta");
+        assertThat(params.membership()).isNull();
+        assertThat(params.changes()).isNull();
+    }
+
+    @Test
+    void paramsRoundTripThroughTheirJsonColumn() {
+        NotificationParamsConverter converter = new NotificationParamsConverter();
+        NotificationParams edit = NotificationParams.ofEdit("La Cripta", List.of("name", "tags"));
+
+        assertThat(converter.convertToEntityAttribute(converter.convertToDatabaseColumn(edit))).isEqualTo(edit);
+    }
+
+    @Test
+    void markAsReadThrowsWhenTheNotificationDoesNotExist() {
+        when(notificationRepository.findById("missing")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> notificationService.markAsRead("missing", "someone")).isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void markAsReadOfSomeoneElsesNotificationIsNotFound() {
+        Notification notification = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, NotificationParams.ofTable("La Cripta"), null, null);
+        ReflectionTestUtils.setField(notification, "id", "notif-1");
+        when(notificationRepository.findById("notif-1")).thenReturn(Optional.of(notification));
+
+        // Exactly what an id nobody ever used gets: a notification is its recipient's alone to know about.
+        assertThatThrownBy(() -> notificationService.markAsRead("notif-1", "someone-else"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Notification not found: notif-1");
+    }
+
+    @Test
+    void markAsReadFlipsReadStatusForTheOwner() {
+        Notification notification = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, NotificationParams.ofTable("La Cripta"), null, null);
+        ReflectionTestUtils.setField(notification, "id", "notif-2");
+        when(notificationRepository.findById("notif-2")).thenReturn(Optional.of(notification));
+
+        notificationService.markAsRead("notif-2", "owner");
+
+        assertThat(notification.getReadStatus()).isEqualTo(ReadStatus.Read);
+    }
+
+    @Test
+    void markAllAsReadFlipsEveryUnreadNotificationForThatUser() {
+        Notification first = new Notification(persistedUser("owner"), NotificationType.RegistrationAccepted, NotificationParams.ofTable("La Cripta"), null, null);
+        Notification second = new Notification(persistedUser("owner"), NotificationType.NewCandidate, NotificationParams.ofTable("El Faro"), null, null);
+        when(notificationRepository.findByUser_IdAndReadStatus("owner", ReadStatus.Unread)).thenReturn(java.util.List.of(first, second));
+
+        notificationService.markAllAsRead("owner");
+
+        assertThat(first.getReadStatus()).isEqualTo(ReadStatus.Read);
+        assertThat(second.getReadStatus()).isEqualTo(ReadStatus.Read);
+    }
+
+    private Notification argThatMatchesType(NotificationType type) {
+        return org.mockito.ArgumentMatchers.argThat(notification -> notification.getNotificationType() == type);
+    }
+
+    private User persistedUser(String id) {
+        User user = new User("discord-" + id, "name-" + id);
+        ReflectionTestUtils.setField(user, "id", id);
+        return user;
+    }
+
+    private GameTable persistedTable(String id, String name) {
+        GameTable table = new GameTable(name, persistedUser("creator-of-" + id));
+        ReflectionTestUtils.setField(table, "id", id);
+        return table;
+    }
+}

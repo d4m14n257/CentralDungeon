@@ -10,8 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.centraldungeon.tables.GameTableStatus;
-import com.centraldungeon.users.PlatformRole;
+import com.centraldungeon.features.tables.GameTableStatus;
+import com.centraldungeon.features.users.PlatformRole;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;

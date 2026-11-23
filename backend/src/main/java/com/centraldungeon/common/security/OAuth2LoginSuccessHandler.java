@@ -1,6 +1,6 @@
 package com.centraldungeon.common.security;
 
-import com.centraldungeon.auth.AuthService;
+import com.centraldungeon.features.auth.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
