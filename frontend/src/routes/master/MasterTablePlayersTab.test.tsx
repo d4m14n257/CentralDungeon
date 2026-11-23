@@ -88,7 +88,7 @@ vi.mock('@/features/approvals', () => ({
   BanRequestsSection: ({ canResolve }: { canResolve: boolean }) => <p>{canResolve ? 'requests: admin' : 'requests: master'}</p>,
 }))
 
-vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => confirm }))
+vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => confirm, useConfirmOpen: () => false }))
 
 function renderTab() {
   render(

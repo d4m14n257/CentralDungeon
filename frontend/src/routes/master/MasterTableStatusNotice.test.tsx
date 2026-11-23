@@ -42,7 +42,7 @@ vi.mock('@/features/tables', async () => {
 })
 
 const confirm = vi.fn()
-vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => confirm }))
+vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => confirm, useConfirmOpen: () => false }))
 
 function renderNotice(
   status: GameTableStatus,

@@ -21,6 +21,9 @@ export type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>
  */
 export const ConfirmContext = createContext<ConfirmFn | null>(null)
 
+/** Whether a confirmation is on screen, published by the same provider that renders it. */
+export const ConfirmOpenContext = createContext(false)
+
 /**
  * Asks for confirmation from anywhere, without each caller mounting its own dialog.
  *
@@ -36,4 +39,17 @@ export function useConfirm(): ConfirmFn {
     throw new Error('useConfirm must be used within ConfirmDialogProvider')
   }
   return context
+}
+
+/**
+ * Whether a confirmation is showing right now.
+ *
+ * A dialog underneath reads it to ignore attempts to dismiss it while the question is up. The
+ * confirmation is modal, so nobody can reach the dialog below it: a dismissal that arrives then was
+ * meant for the confirmation, and acting on it would close the wrong dialog.
+ *
+ * @returns true while a confirmation is open; false outside the provider
+ */
+export function useConfirmOpen(): boolean {
+  return use(ConfirmOpenContext)
 }

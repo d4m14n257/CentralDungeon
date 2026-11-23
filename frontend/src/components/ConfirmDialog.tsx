@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { DialogContent } from '@/components/DialogContent'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { ConfirmContext, type ConfirmFn, type ConfirmOptions } from '@/hooks/useConfirm'
+import { ConfirmContext, ConfirmOpenContext, type ConfirmFn, type ConfirmOptions } from '@/hooks/useConfirm'
 
 interface PendingConfirm {
   options: ConfirmOptions
@@ -38,7 +38,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
 
   return (
     <ConfirmContext value={confirm}>
-      {children}
+      <ConfirmOpenContext value={pending !== null}>{children}</ConfirmOpenContext>
       <Dialog open={pending !== null} onOpenChange={(open) => !open && settle(false)}>
         <DialogContent>
           {pending && (

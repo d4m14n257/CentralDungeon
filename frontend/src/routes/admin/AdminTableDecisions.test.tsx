@@ -13,7 +13,7 @@ vi.mock('@/features/tables', () => ({
   useCancelTable: () => idle,
 }))
 vi.mock('@/features/help', () => ({ HelpLink: () => null }))
-vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => vi.fn() }))
+vi.mock('@/hooks/useConfirm', () => ({ useConfirm: () => vi.fn(), useConfirmOpen: () => false }))
 
 describe('AdminTableDecisions', () => {
   /** ADR-21 §10: an admin who read the table resolves its review from it - approve, or send it back. */

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useConfirm } from '@/hooks/useConfirm'
+import { useConfirm, useConfirmOpen } from '@/hooks/useConfirm'
 import { DialogContent } from '@/components/DialogContent'
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
@@ -36,6 +36,13 @@ interface FormDialogProps {
  * here as one `onOpenChange(false)`, so intercepting it once covers every way out of the dialog -
  * which is why the guard lives here and not in each of the twelve forms that use it.
  *
+ * **While a confirmation is open on top, nothing closes the form.** The confirmation is rendered by a
+ * provider at the root of the app, outside this dialog's tree, so a click on its overlay is not seen as
+ * "inside" by the form below. If the click lands while the confirmation is still animating in, the form
+ * takes it as a click outside itself and dismisses - closing the form, or swapping the question on
+ * screen for "leave without saving?". Nobody can reach the form through a modal confirmation, so any
+ * dismissal arriving then was meant for the confirmation and is ignored here.
+ *
  * @param props.open         whether the dialog is showing
  * @param props.onOpenChange called when it is dismissed
  * @param props.title        the heading
@@ -46,8 +53,10 @@ interface FormDialogProps {
 export function FormDialog({ open, onOpenChange, title, description, isDirty = false, children }: FormDialogProps) {
   const { t } = useTranslation('common')
   const confirm = useConfirm()
+  const confirmOpen = useConfirmOpen()
 
   async function requestChange(next: boolean) {
+    if (!next && confirmOpen) return
     // Opening never asks, and neither does closing a form nobody touched.
     if (next || !isDirty) {
       onOpenChange(next)
