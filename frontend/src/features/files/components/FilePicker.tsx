@@ -12,6 +12,7 @@ import { formatRelativeDate } from '@/lib/date'
 import { useMyFiles } from '../api/useMyFiles'
 import { usePublicFiles } from '../api/usePublicFiles'
 import { FileCard } from './FileCard'
+import { FilePreviewButton } from './FilePreviewButton'
 import { FileCategoryBadge } from './FileCategoryBadge'
 import { FileCategoryFilter } from './FileCategoryFilter'
 import { FileDropzone } from './FileDropzone'
@@ -137,15 +138,18 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
                     </div>
                   }
                   actions={
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      disabled={isBusy}
-                      onClick={() => onPick({ kind: 'existing', fileId: file.id, name: file.name })}
-                    >
-                      {t('picker.use')}
-                    </Button>
+                    <>
+                      <FilePreviewButton fileId={file.id} name={file.name} mimeType={file.mimeType} />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={isBusy}
+                        onClick={() => onPick({ kind: 'existing', fileId: file.id, name: file.name })}
+                      >
+                        {t('picker.use')}
+                      </Button>
+                    </>
                   }
                 />
               </li>
@@ -179,15 +183,18 @@ export function FilePicker({ onPick, isBusy = false, offerPublished = false, caj
                       </div>
                     }
                     actions={
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        disabled={isBusy}
-                        onClick={() => onPick({ kind: 'existing', fileId: file.id, name: file.name })}
-                      >
-                        {t('picker.use')}
-                      </Button>
+                      <>
+                        <FilePreviewButton fileId={file.id} name={file.name} mimeType={file.mimeType} />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={isBusy}
+                          onClick={() => onPick({ kind: 'existing', fileId: file.id, name: file.name })}
+                        >
+                          {t('picker.use')}
+                        </Button>
+                      </>
                     }
                   />
                 </li>

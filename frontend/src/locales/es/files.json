@@ -27,7 +27,8 @@
     "delete": "Dar de baja",
     "edit": "Editar",
     "publish": "Publicar",
-    "editCategory": "Cambiar qué es"
+    "editCategory": "Cambiar qué es",
+    "preview": "Ver"
   },
   "picker": {
     "upload": "Subir",
@@ -231,5 +232,31 @@
     "saved": "Cajón actualizado",
     "confirmTitle": "¿Cambiar qué es «{{name}}»?",
     "confirmDescription": "Pasa a ser «{{category}}», y así se va a ofrecer cuando lo publiques."
+  },
+  "preview": {
+    "description": "Vista previa del archivo.",
+    "loading": "Cargando la vista previa"
+  },
+  "batch": {
+    "marked": "Marcado",
+    "someFailed": "No se pudo aplicar a: {{names}}. Siguen marcados para reintentar.",
+    "mineDelete": {
+      "title_one": "¿Dar de baja el archivo marcado?",
+      "title_other": "¿Dar de baja los {{count}} archivos marcados?",
+      "description": "Dejan de aparecer en tu lista y en las mesas que los usan. No se borran del disco: eso lo hace el owner desde su menú de mantenimiento.",
+      "confirm": "Dar de baja"
+    },
+    "adminDelete": {
+      "title_one": "¿Dar de baja el archivo marcado?",
+      "title_other": "¿Dar de baja los {{count}} archivos marcados?",
+      "description": "Dejan de verse en todas las mesas que los usan. No se borran del disco: eso lo hace el owner desde su menú de mantenimiento.",
+      "confirm": "Dar de baja"
+    },
+    "detach": {
+      "title_one": "¿Quitar el archivo marcado de la mesa?",
+      "title_other": "¿Quitar los {{count}} archivos marcados de la mesa?",
+      "description": "Dejan de aparecer en esta mesa. Los archivos siguen existiendo, en tu historial y en las otras mesas que los usen.",
+      "confirm": "Quitar de la mesa"
+    }
   }
 }

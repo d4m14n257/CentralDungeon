@@ -27,7 +27,8 @@
     "delete": "Remove",
     "edit": "Edit",
     "publish": "Publish",
-    "editCategory": "Change what it is"
+    "editCategory": "Change what it is",
+    "preview": "View"
   },
   "picker": {
     "upload": "Upload",
@@ -231,5 +232,31 @@
     "saved": "Drawer updated",
     "confirmTitle": "Change what “{{name}}” is?",
     "confirmDescription": "It becomes “{{category}}”, and that is how it will be offered when you publish it."
+  },
+  "preview": {
+    "description": "Preview of the file.",
+    "loading": "Loading the preview"
+  },
+  "batch": {
+    "marked": "Marked",
+    "someFailed": "Could not apply to: {{names}}. They stay marked so you can try again.",
+    "mineDelete": {
+      "title_one": "Remove the marked file?",
+      "title_other": "Remove the {{count}} marked files?",
+      "description": "They stop appearing in your list and on the tables that use them. They are not erased from disk: the owner does that from the maintenance menu.",
+      "confirm": "Remove"
+    },
+    "adminDelete": {
+      "title_one": "Remove the marked file?",
+      "title_other": "Remove the {{count}} marked files?",
+      "description": "They stop showing on every table using them. They are not erased from disk: that is the owner's, from their maintenance menu.",
+      "confirm": "Remove"
+    },
+    "detach": {
+      "title_one": "Remove the marked file from this table?",
+      "title_other": "Remove the {{count}} marked files from this table?",
+      "description": "They stop showing on this table. The files still exist, in your own list and on any other table using them.",
+      "confirm": "Remove from table"
+    }
   }
 }

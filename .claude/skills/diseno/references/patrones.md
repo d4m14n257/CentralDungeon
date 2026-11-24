@@ -36,6 +36,9 @@
 | `.section-title` | El título de un bloque dentro de una pantalla: una sección de formulario, una card, el resumen de un paso | `font-serif text-lg font-semibold` |
 | `.section-label` | La etiqueta chica en mayúsculas sobre un grupo: una sección, un campo de un detalle, una columna de una ficha | `text-fg-subtle text-xs font-medium tracking-wide uppercase` |
 | `.row-actions` | Las acciones con ícono de una fila o una ficha (ADR-21 §11): **una sola línea, alineada a la derecha, sin wrap** | `flex flex-row flex-nowrap items-center justify-end gap-1` |
+| `.preview-frame` · `.preview-image` | La ventana de una vista previa de archivo: el visor de PDF (y el skeleton que lo reemplaza mientras carga) o la imagen, acotados a la altura de la pantalla para que el diálogo no la desborde. Los pone `FilePreviewDialog` | `border-border h-[70svh] w-full rounded-md border` · `mx-auto max-h-[70svh] max-w-full object-contain` |
+| `.row-marked` | Una fila marcada para un lote con Shift: relleno elevado. **Nunca es la única señal**: la fila dice «Marcado» con palabras. Lo ponen `FileCard` y `DataTable` | `bg-raised` |
+| `.batch-bar` | La barra pegada al pie mientras hay filas marcadas. La pone `BatchActionBar` | `bg-surface border-border sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 shadow-md` |
 | `.list-divided` | Una lista enmarcada con una línea entre filas | `divide-border divide-y rounded-lg border` |
 | `.list-divided-bare` | Las mismas filas separadas, sin marco: para una lista que ya está dentro de una card o un diálogo | `divide-border divide-y` |
 | `.inline-error` | Un error dicho dentro de un formulario o un diálogo, al lado de lo que lo causó. No es un toast | `bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm` |
@@ -59,6 +62,7 @@
 | `DataTable` | La tabla que en móvil se vuelve fichas (§5.b). **Pone `.row-actions` ella misma**: `renderActions` devuelve solo el fragmento de `IconAction` | Las seis tablas de admin |
 | `CollapsibleSection`, `FileCard` | Sus ranuras `actions` también se pintan con `.row-actions` | Pestañas del master, bibliotecas de archivos |
 | `IconAction` | Una acción de ícono con su tooltip y su `aria-label` | Toda acción de fila o de ficha |
+| `BatchActionBar` | La barra del lote con Shift: «N marcados · Cancelar · Aplicar», una región con nombre que anuncia el cambio de cantidad | `MyFilesPage`, `AdminFilesPage`, `MasterTableFilesTab` |
 | `PaginationControls` | La paginación de una lista de trabajo (ADR-21 §11) | Las seis tablas de admin y `/my/files` |
 | `SectionNav` | La navegación de secciones de un contexto (ADR-21 §7): escrita tres veces igual, una por contexto, hasta que se nombró | `PlayerSectionNav`, `MasterSectionNav`, `AdminSectionNav` |
 | `TabNav` | Las pestañas de una pantalla (ADR-06 §8): la fila de pestañas de la mesa estaba escrita a mano en la pantalla del master hasta que la vista del admin la necesitó | `MasterTableDetailPage`, `AdminTableDetailPage` |

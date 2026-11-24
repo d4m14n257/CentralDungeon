@@ -77,7 +77,8 @@ frontend/
     ├── hooks/                       useDisclosure, useDebounce, useUnsavedChanges, useLanguage,
     │                                useBackendStatus, useAvailableContexts (ADR-20 §2),
     │                                useSearchQuery (ADR-22 §3), useHasPersonalLibrary (ADR-14 §5),
-    │                                useClientLimits (ADR-17 §4), useConfirm (ADR-19 §1) — su Context vive
+    │                                useClientLimits (ADR-17 §4), useShiftBatch (lote con Shift, ADR-21 §14),
+    │                                useConfirm (ADR-19 §1) — su Context vive
     │                                acá con el hook y components/ConfirmDialog.tsx solo exporta el provider
     ├── lib/
     │   ├── utils.ts                 cn() — la ruta que shadcn/ui espera por defecto

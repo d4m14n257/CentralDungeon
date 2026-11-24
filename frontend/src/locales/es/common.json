@@ -163,5 +163,11 @@
     "nodeDescription": "Enter o espacio para seleccionarlo, flechas para moverlo, Supr para quitar su conexión.",
     "nodeDescriptionKeyboardDisabled": "Enter o espacio para seleccionarlo.",
     "edgeDescription": "Supr para quitar esta conexión."
+  },
+  "batch": {
+    "region": "Acciones en lote",
+    "marked_one": "{{count}} marcado",
+    "marked_other": "{{count}} marcados",
+    "apply": "Aplicar"
   }
 }

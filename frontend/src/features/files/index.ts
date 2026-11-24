@@ -8,6 +8,7 @@
 export { FilePicker } from './components/FilePicker'
 export { FileList, type FileListItem } from './components/FileList'
 export { FileCard } from './components/FileCard'
+export { FilePreviewButton } from './components/FilePreviewButton'
 export { FileDropzone } from './components/FileDropzone'
 export { FileTypeBadge } from './components/FileTypeBadge'
 export { FileCategoryBadge } from './components/FileCategoryBadge'

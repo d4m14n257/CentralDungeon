@@ -163,5 +163,11 @@
     "nodeDescription": "Enter or space to select it, arrow keys to move it, Delete to remove its connection.",
     "nodeDescriptionKeyboardDisabled": "Enter or space to select it.",
     "edgeDescription": "Delete to remove this connection."
+  },
+  "batch": {
+    "region": "Batch actions",
+    "marked_one": "{{count}} marked",
+    "marked_other": "{{count}} marked",
+    "apply": "Apply"
   }
 }

@@ -5,6 +5,8 @@ import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
+import { useShiftBatch } from '@/hooks/useShiftBatch'
+import { BatchActionBar } from '@/components/BatchActionBar'
 import { describeUploadFailures } from '@/lib/uploadFailures'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
@@ -36,6 +38,9 @@ interface OutletContext {
   readOnly?: boolean
 }
 
+/** The name Shift-marking files to take off the table goes by, so only detachments are batched together. */
+const DETACH_ACTION = 'detach'
+
 /**
  * The **Archivos** tab of /master/tables/:id — what the table has attached and who can see each thing.
  *
@@ -57,6 +62,7 @@ export function MasterTableFilesTab() {
   const { t } = useTranslation('files')
   const { tableId, readOnly } = useOutletContext<OutletContext>()
   const confirm = useConfirm()
+  const { batch, press, isMarked, clear, apply } = useShiftBatch()
 
   const { data: files, isPending, isLoadingError, refetch } = useTableFiles(tableId)
   const attach = useAttachTableFile(tableId)
@@ -110,6 +116,26 @@ export function MasterTableFilesTab() {
     detach.mutate(file.fileId)
   }
 
+  /**
+   * Takes every marked file off the table after one confirmation, and names the ones that stayed on.
+   * The rest stay off: a failure does not put back what already went through.
+   */
+  async function applyDetachBatch() {
+    const count = batch?.ids.length ?? 0
+    const failed = await apply({
+      confirm: {
+        title: t('batch.detach.title', { count }),
+        description: t('batch.detach.description'),
+        confirmLabel: t('batch.detach.confirm'),
+      },
+      run: (fileId) => detach.mutateAsync(fileId),
+    })
+    if (failed && failed.length > 0) {
+      const names = (files ?? []).filter((file) => failed.includes(file.fileId)).map((file) => file.name)
+      toast.error(t('batch.someFailed', { names: names.join(', ') }))
+    }
+  }
+
   function handleToggleShared(file: TableFile) {
     updateAttachment.mutate({
       fileId: file.fileId,
@@ -144,6 +170,7 @@ export function MasterTableFilesTab() {
       ) : (
         <FileList
           files={files}
+          isMarked={(file) => isMarked(DETACH_ACTION, file.fileId)}
           renderMeta={(file) => (
             <div className="flex flex-wrap items-center gap-2">
               <FileTypeBadge fileType={file.fileType} />
@@ -166,12 +193,16 @@ export function MasterTableFilesTab() {
                       label={t('actions.detach')}
                       icon={<Trash2Icon className="size-4" />}
                       disabled={detach.isPending}
-                      onClick={() => void handleDetach(file)}
+                      onClick={() => press(DETACH_ACTION, file.fileId, () => void handleDetach(file))}
                     />
                   </>
                 ),
               })}
         />
+      )}
+
+      {batch && (
+        <BatchActionBar count={batch.ids.length} onApply={() => void applyDetachBatch()} onCancel={clear} isPending={detach.isPending} />
       )}
 
       {!readOnly && (

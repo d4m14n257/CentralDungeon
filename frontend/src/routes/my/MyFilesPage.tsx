@@ -5,6 +5,8 @@ import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
+import { useShiftBatch } from '@/hooks/useShiftBatch'
+import { BatchActionBar } from '@/components/BatchActionBar'
 import { EmptyState } from '@/components/EmptyState'
 import { PageOutOfRangeState } from '@/components/PageOutOfRangeState'
 import { ErrorState } from '@/components/ErrorState'
@@ -39,6 +41,9 @@ import { useHasPersonalLibrary } from '@/hooks/useHasPersonalLibrary'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
 import { formatRelativeDate } from '@/lib/date'
 import { describeUploadFailures } from '@/lib/uploadFailures'
+
+/** The name Shift-marking files for removal goes by, so only removals are batched together. */
+const DELETE_ACTION = 'delete'
 
 /**
  * `/my/files` — everything this person has uploaded, and what each file is doing.
@@ -80,6 +85,7 @@ export function MyFilesPage() {
   const { t, i18n } = useTranslation('files')
   const [searchParams, setSearchParams] = useSearchParams()
   const confirm = useConfirm()
+  const { batch, press, isMarked, clear, apply } = useShiftBatch()
 
   const page = Number(searchParams.get('page') ?? '0')
 
@@ -159,6 +165,8 @@ export function MyFilesPage() {
 
   /** Writes the screen's state into the URL, resetting the page whenever the filters change. */
   function updateParams(changes: Record<string, string>) {
+    // Marks belong to the rows on screen: another page or search would apply them out of sight.
+    clear()
     const next = new URLSearchParams(searchParams)
     for (const [key, value] of Object.entries(changes)) {
       if (value === '') next.delete(key)
@@ -196,6 +204,26 @@ export function MyFilesPage() {
     })
     if (!confirmed) return
     remove.mutate(file.id)
+  }
+
+  /**
+   * Removes every marked file after one confirmation, and names the ones that could not be removed.
+   * The rest stay done: a failure does not undo what already went through.
+   */
+  async function applyDeleteBatch() {
+    const count = batch?.ids.length ?? 0
+    const failed = await apply({
+      confirm: {
+        title: t('batch.mineDelete.title', { count }),
+        description: t('batch.mineDelete.description'),
+        confirmLabel: t('batch.mineDelete.confirm'),
+      },
+      run: (id) => remove.mutateAsync(id),
+    })
+    if (failed && failed.length > 0) {
+      const names = (data?.content ?? []).filter((file) => failed.includes(file.id)).map((file) => file.name)
+      toast.error(t('batch.someFailed', { names: names.join(', ') }))
+    }
   }
 
   const isFiltered = search.query !== ''
@@ -313,6 +341,7 @@ export function MyFilesPage() {
             <>
               <FileList
                 files={data.content.map((file) => ({ ...file, fileId: file.id }))}
+                isMarked={(file) => isMarked(DELETE_ACTION, file.id)}
                 renderMeta={(file) => (
                   <div className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
@@ -344,7 +373,7 @@ export function MyFilesPage() {
                           label={t('actions.delete')}
                           icon={<Trash2Icon className="size-4" />}
                           disabled={remove.isPending}
-                          onClick={() => void handleDelete(file)}
+                          onClick={() => press(DELETE_ACTION, file.id, () => void handleDelete(file))}
                         />
                       </>
                     )}
@@ -357,6 +386,14 @@ export function MyFilesPage() {
                 totalElements={data.totalElements}
                 onPageChange={(next) => updateParams({ page: String(next) })}
               />
+              {batch && (
+                <BatchActionBar
+                  count={batch.ids.length}
+                  onApply={() => void applyDeleteBatch()}
+                  onCancel={clear}
+                  isPending={remove.isPending}
+                />
+              )}
             </>
           )}
         </>

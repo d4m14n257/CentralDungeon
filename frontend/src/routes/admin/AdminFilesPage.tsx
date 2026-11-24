@@ -5,6 +5,8 @@ import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
+import { useShiftBatch } from '@/hooks/useShiftBatch'
+import { BatchActionBar } from '@/components/BatchActionBar'
 import { useDisclosure } from '@/hooks/useDisclosure'
 import { IconAction } from '@/components/IconAction'
 import { DataTable, type DataTableColumn } from '@/components/DataTable'
@@ -25,6 +27,7 @@ import { useSearchQuery } from '@/hooks/useSearchQuery'
 import {
   FileCategoryBadge,
   FileCategoryFilter,
+  FilePreviewButton,
   EditLibraryCategoryDialog,
   LibraryStateBadge,
   PUBLISHABLE_CATEGORIES,
@@ -40,6 +43,9 @@ import {
 } from '@/features/files'
 import { browserTimeZone, formatDate } from '@/lib/date'
 import { ApiError } from '@/types/api'
+
+/** The name Shift-marking files for removal goes by, so only removals are batched together. */
+const DELETE_ACTION = 'delete'
 
 /** How many tables of a file the row names before it only counts the rest. */
 const MAX_LINKED_TABLES = 3
@@ -76,6 +82,7 @@ export function AdminFilesPage() {
   const { t, i18n } = useTranslation('files')
   const [searchParams, setSearchParams] = useSearchParams()
   const confirm = useConfirm()
+  const { batch, press, isMarked, clear, apply } = useShiftBatch()
 
   const page = Number(searchParams.get('page') ?? '0')
   // Rows per page (ADR-21 §11): in the URL like the page, so a link carries the view it was sent from.
@@ -110,6 +117,8 @@ export function AdminFilesPage() {
    * copy that does not have the first one yet (ADR-22 §4).
    */
   function updateParams(changes: Record<string, string>) {
+    // Marks belong to the rows on screen: another page or search would apply them out of sight.
+    clear()
     setSearchParams(
       (previous) => {
         const next = new URLSearchParams(previous)
@@ -154,12 +163,42 @@ export function AdminFilesPage() {
     remove.mutate(file.id)
   }
 
+  /**
+   * Removes every marked file after one confirmation, and names the ones that could not be removed.
+   * The rest stay done: a failure does not undo what already went through.
+   */
+  async function applyDeleteBatch() {
+    const count = batch?.ids.length ?? 0
+    const failed = await apply({
+      confirm: {
+        title: t('batch.adminDelete.title', { count }),
+        description: t('batch.adminDelete.description'),
+        confirmLabel: t('batch.adminDelete.confirm'),
+      },
+      run: (id) => remove.mutateAsync(id),
+    })
+    if (failed && failed.length > 0) {
+      const names = (data?.content ?? []).filter((file) => failed.includes(file.id)).map((file) => file.name)
+      toast.error(t('batch.someFailed', { names: names.join(', ') }))
+    }
+  }
+
   if (error instanceof ApiError && error.status === 403) {
     return <ForbiddenState />
   }
 
   const columns: DataTableColumn<AdminFile>[] = [
-    { id: 'name', header: t('admin.columns.name'), role: 'title', cell: (file) => file.name },
+    {
+      id: 'name',
+      header: t('admin.columns.name'),
+      role: 'title',
+      cell: (file) => (
+        <>
+          {file.name}
+          {isMarked(DELETE_ACTION, file.id) && <span className="text-fg ml-2 text-xs font-medium">{t('batch.marked')}</span>}
+        </>
+      ),
+    },
     // Where it stands in the library (ADR-14 §7): whether masters can see it is the first thing to know.
     {
       id: 'state',
@@ -276,8 +315,10 @@ export function AdminFilesPage() {
             columns={columns}
             rows={data.content}
             getRowId={(file) => file.id}
+            isRowMarked={(file) => isMarked(DELETE_ACTION, file.id)}
             renderActions={(file) => (
               <>
+                <FilePreviewButton fileId={file.id} name={file.name} mimeType={file.mimeType} />
                 {/* An action a row's state would make the server refuse is absent or explained, never
                     silently greyed out: a disabled button that does not say why is worse than no
                     button (principle 2). Publishing a file that does not say what it is stays in view
@@ -311,7 +352,7 @@ export function AdminFilesPage() {
                     icon={<Trash2 className="size-4" />}
                     label={t('actions.delete')}
                     disabled={remove.isPending}
-                    onClick={() => void handleDelete(file)}
+                    onClick={() => press(DELETE_ACTION, file.id, () => void handleDelete(file))}
                     className="text-destructive hover:text-destructive"
                   />
                 )}
@@ -328,6 +369,14 @@ export function AdminFilesPage() {
             // at the first page, which `updateParams` does for every change that is not the page.
             onPageSizeChange={(next) => updateParams({ size: next === pageSize.admin ? '' : String(next) })}
           />
+          {batch && (
+            <BatchActionBar
+              count={batch.ids.length}
+              onApply={() => void applyDeleteBatch()}
+              onCancel={clear}
+              isPending={remove.isPending}
+            />
+          )}
         </>
       )}
 

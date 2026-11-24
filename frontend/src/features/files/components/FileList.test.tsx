@@ -61,6 +61,53 @@ describe('FileList', () => {
     await waitFor(() => expect(download).toHaveBeenCalledWith('/api/v1/files/file-1/content', 'ficha.pdf'))
   })
 
+  /** Images and PDFs open in the app; a Word document has nothing to draw, so it has no «Ver» at all. */
+  it('offers «Ver» only for images and PDFs', () => {
+    const word = {
+      fileId: 'file-3',
+      name: 'reglas.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      sizeBytes: 10,
+    }
+    render(wrap(<FileList files={[...files, word]} />))
+
+    expect(screen.getAllByRole('button', { name: 'Ver' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'Descargar' })).toHaveLength(3)
+  })
+
+  it('shows an image in an <img> fed by the authenticated download', async () => {
+    download.mockResolvedValue({ blob: new Blob(['x'], { type: 'image/png' }), filename: 'mapa.png' })
+    render(wrap(<FileList files={files} />))
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Ver' })[1]!)
+
+    const image = await screen.findByRole('img', { name: 'mapa.png' })
+    expect(image).toHaveAttribute('src', 'blob:test')
+    expect(download).toHaveBeenCalledWith('/api/v1/files/file-2/content', 'mapa.png')
+  })
+
+  it('shows a PDF in a frame and releases the object URL when the dialog closes', async () => {
+    render(wrap(<FileList files={files} />))
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Ver' })[0]!)
+
+    const frame = await screen.findByTitle('ficha.pdf')
+    expect(frame.tagName).toBe('IFRAME')
+    expect(frame).toHaveAttribute('src', 'blob:test')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+    await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test'))
+  })
+
+  it('says the preview failed, with a retry, when the download fails', async () => {
+    download.mockRejectedValue(new Error('offline'))
+    render(wrap(<FileList files={files} />))
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Ver' })[0]!)
+
+    expect(await screen.findByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
+  })
+
   it('renders the extra content and actions a caller supplies', () => {
     render(
       wrap(

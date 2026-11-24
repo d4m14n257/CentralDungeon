@@ -2,6 +2,8 @@ import { FileTextIcon, ImageIcon, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { cn } from '@/lib/utils'
+
 import { formatFileSize } from '../format'
 
 /** Which icon stands for a MIME type. Images get their own; everything else is a document. */
@@ -20,6 +22,8 @@ interface FileCardProps {
   meta?: ReactNode
   /** The row's actions, aligned right. */
   actions?: ReactNode
+  /** Whether the row is marked for a batch action. It is said in words next to the size, not only in fill. */
+  marked?: boolean
 }
 
 /**
@@ -40,14 +44,15 @@ interface FileCardProps {
  * @param props.sizeBytes the size as uploaded
  * @param props.meta      extra lines under the name
  * @param props.actions   the row's actions
+ * @param props.marked    whether the row is marked for a batch action
  */
-export function FileCard({ name, mimeType, sizeBytes, meta, actions }: FileCardProps) {
+export function FileCard({ name, mimeType, sizeBytes, meta, actions, marked = false }: FileCardProps) {
   const { t, i18n } = useTranslation('files')
   const size = formatFileSize(sizeBytes, i18n.language)
   const Icon = iconForMimeType(mimeType)
 
   return (
-    <div className="flex items-start gap-3 py-3">
+    <div className={cn('flex items-start gap-3 py-3', marked && 'row-marked')} data-marked={marked || undefined}>
       <span aria-hidden="true" className="text-fg-muted mt-0.5 shrink-0">
         <Icon className="size-5" />
       </span>
@@ -56,6 +61,7 @@ export function FileCard({ name, mimeType, sizeBytes, meta, actions }: FileCardP
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <p className="text-fg min-w-0 text-sm font-medium wrap-anywhere">{name}</p>
           <p className="text-fg-muted shrink-0 text-xs">{t(`size.${size.unit}`, { value: size.value })}</p>
+          {marked && <p className="text-fg shrink-0 text-xs font-medium">{t('batch.marked')}</p>}
         </div>
         {meta}
       </div>

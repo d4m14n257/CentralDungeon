@@ -97,6 +97,29 @@
     @apply divide-border divide-y;
   }
 
+  /* The window of a file preview: an image or a PDF that takes most of the viewport and no more, so
+     the dialog never grows past the screen. FilePreviewDialog applies it to the iframe and to the
+     skeleton that stands in for it. */
+  .preview-frame {
+    @apply border-border h-[70svh] w-full rounded-md border;
+  }
+
+  .preview-image {
+    @apply mx-auto max-h-[70svh] max-w-full object-contain;
+  }
+
+  /* A row picked for a batch action (Shift + click): a raised fill. The row also says it in words,
+     so the mark never rests on colour alone. FileCard and DataTable apply it. */
+  .row-marked {
+    @apply bg-raised;
+  }
+
+  /* The bar that follows a batch: how many rows are marked, and the two ways out. Sticks to the
+     bottom of the screen while there is something marked. BatchActionBar applies it. */
+  .batch-bar {
+    @apply bg-surface border-border sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 shadow-md;
+  }
+
   /* An error said inside a form or a dialog, next to what caused it - not a toast. */
   .inline-error {
     @apply bg-state-canceled-bg text-state-canceled-fg rounded-md px-3 py-2 text-sm;

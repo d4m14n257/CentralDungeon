@@ -44,6 +44,11 @@ export interface DataTableProps<T> {
   renderActions?: (row: T) => ReactNode
   /** Accessible name for the table, since these screens rarely have a visible caption per table. */
   label: string
+  /**
+   * Whether a row is marked for a batch action: it gets the marked fill. The table holds no strings, so
+   * saying it in words is the screen's job — a cell of the row shows the label next to its content.
+   */
+  isRowMarked?: (row: T) => boolean
 }
 
 /**
@@ -73,8 +78,9 @@ export interface DataTableProps<T> {
  * @param props.getRowId      stable identity for a row
  * @param props.renderActions optional per-row actions
  * @param props.label         accessible name for the table
+ * @param props.isRowMarked   optional: whether a row is marked for a batch action
  */
-export function DataTable<T>({ columns, rows, getRowId, renderActions, label }: DataTableProps<T>) {
+export function DataTable<T>({ columns, rows, getRowId, renderActions, label, isRowMarked }: DataTableProps<T>) {
   const titleColumn = columns.find((column) => column.role === 'title')
   const badgeColumns = columns.filter((column) => column.role === 'badge')
   const metaColumns = columns.filter((column) => column.role !== 'title' && column.role !== 'badge' && column.role !== 'hidden')
@@ -96,7 +102,11 @@ export function DataTable<T>({ columns, rows, getRowId, renderActions, label }: 
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
-              <TableRow key={getRowId(row)}>
+              <TableRow
+                key={getRowId(row)}
+                className={cn(isRowMarked?.(row) && 'row-marked')}
+                data-marked={isRowMarked?.(row) || undefined}
+              >
                 {columns.map((column) => (
                   <TableCell key={column.id} className={cn('whitespace-normal', column.role === 'title' && 'wrap-anywhere')}>
                     {column.cell(row)}
@@ -116,7 +126,11 @@ export function DataTable<T>({ columns, rows, getRowId, renderActions, label }: 
       {/* Narrow: one card per row. Same columns, different shape. */}
       <ul className="space-y-3 md:hidden">
         {rows.map((row) => (
-          <li key={getRowId(row)} className="border-border space-y-3 rounded-lg border p-4">
+          <li
+            key={getRowId(row)}
+            className={cn('border-border space-y-3 rounded-lg border p-4', isRowMarked?.(row) && 'row-marked')}
+            data-marked={isRowMarked?.(row) || undefined}
+          >
             <div className="flex flex-wrap items-center justify-between gap-2">
               {titleColumn && <span className="min-w-0 font-medium wrap-anywhere">{titleColumn.cell(row)}</span>}
               {badgeColumns.map((column) => (

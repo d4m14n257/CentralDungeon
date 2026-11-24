@@ -103,6 +103,8 @@ export const queryKeys = {
      * only what it shares - two different answers that must not share a cache entry (ADR-14 §1).
      */
     table: (tableId: string) => ['files', 'table', tableId] as const,
+    /** One file's bytes while its preview is open. Never invalidated: it lives only as long as the dialog. */
+    preview: (fileId: string) => ['files', 'preview', fileId] as const,
     /** The /admin/files table. Every admin mutation invalidates this branch and nothing else. */
     admin: (query?: string, statuses?: string[], category?: string, page = 0, size?: number) =>
       ['files', 'admin', query, statuses, category, page, size] as const,
