@@ -9,21 +9,21 @@
   "states": {
     "loading": "Cargando...",
     "errorTitle": "Algo salió mal",
-    "errorDescription": "No pudimos cargar esto. Probá de nuevo.",
-    "forbiddenTitle": "No tenés permiso",
+    "errorDescription": "No pudimos cargar esto. Prueba de nuevo.",
+    "forbiddenTitle": "No tienes permiso",
     "forbiddenDescription": "Tu cuenta no puede ver esta sección.",
     "notFoundTitle": "No existe",
-    "notFoundDescription": "Lo que buscás no existe o ya no está disponible.",
+    "notFoundDescription": "Lo que buscas no existe o ya no está disponible.",
     "noContextTitle": "Tu cuenta no tiene ninguna sección",
-    "noContextDescription": "Ninguno de tus roles abre una parte de la plataforma. Si creés que es un error, hablá con un admin en Discord."
+    "noContextDescription": "Ninguno de tus roles abre una parte de la plataforma. Si crees que es un error, habla con un admin en Discord."
   },
   "validation": {
     "required": "Esto es obligatorio",
     "invalid": "Ese valor no es válido",
     "tooSmall": {
-      "string": "Escribí al menos {{count}} caracteres",
+      "string": "Escribe al menos {{count}} caracteres",
       "number": "Tiene que ser {{count}} o más",
-      "array": "Elegí al menos {{count}}"
+      "array": "Elige al menos {{count}}"
     },
     "tooBig": {
       "string": "No puede pasar de {{count}} caracteres",
@@ -34,7 +34,7 @@
       "email": "Eso no parece un correo",
       "url": "Eso no parece una dirección web"
     },
-    "wholeNumber": "Escribí un número entero, sin comas ni puntos",
+    "wholeNumber": "Escribe un número entero, sin comas ni puntos",
     "between": "Tiene que estar entre {{minValue}} y {{maxValue}}"
   },
   "notFound": {
@@ -68,7 +68,7 @@
     "clearFilters": "Limpiar filtros",
     "pendingSearch": "Enter para buscar",
     "confirm": "Buscar",
-    "hint": "Escribí / para elegir un comando o unir criterios, las comas separan alternativas, Enter cierra el criterio en un chip y Enter otra vez busca.",
+    "hint": "Escribe / para elegir un comando o unir criterios, las comas separan alternativas, Enter cierra el criterio en un chip y Enter otra vez busca.",
     "helpLink": "Cómo buscar"
   },
   "connection": {
@@ -76,9 +76,9 @@
     "offline": "Sin conexión"
   },
   "errors": {
-    "offline": "No hay conexión con el servidor. Probá de nuevo en un momento.",
-    "mutationFailed": "No pudimos completar la acción. Probá de nuevo.",
-    "logoutFailed": "No pudimos cerrar tu sesión en el servidor. Cerrá el navegador o volvé a intentarlo.",
+    "offline": "No hay conexión con el servidor. Prueba de nuevo en un momento.",
+    "mutationFailed": "No pudimos completar la acción. Prueba de nuevo.",
+    "logoutFailed": "No pudimos cerrar tu sesión en el servidor. Cierra el navegador o vuelve a intentarlo.",
     "codes": {
       "SCHEDULE_CONFLICT": "Se pisa con «{{otherTableName}}», donde ya estás comprometido.",
       "CANDIDATE_SCHEDULE_CONFLICT": "No se lo puede aceptar: ya juega en «{{otherTableName}}», que se pisa con el horario de esta mesa.",
@@ -86,27 +86,27 @@
       "MASTER_SCHEDULE_CONFLICT_UNNAMED": "Se pisa con otra mesa en la que {{masterName}} ya está comprometido.",
       "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Los tipos admitidos se leen junto a la zona donde se sueltan los archivos.",
       "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es {{maxBytes, megabytes}} MB por archivo.",
-      "FILE_EMPTY": "El archivo está vacío. Elegí otro.",
-      "TABLE_NEEDS_SYSTEM": "La mesa tiene que decir qué sistema se juega. Elegí uno o proponé el tuyo.",
-      "TABLE_NEEDS_PLATFORM": "La mesa tiene que decir dónde se juega. Elegí una plataforma o proponé la tuya.",
-      "TABLE_NEEDS_SCHEDULE": "La mesa tiene que decir cuándo se juega. Agregá al menos un día y horario.",
-      "TABLE_NEEDS_TAG": "La mesa tiene que llevar al menos un tag. Elegí uno o proponé el tuyo.",
-      "FILE_NEEDS_CATEGORY": "Antes de publicarlo, elegí qué es el archivo con «Cambiar qué es». Así los masters saben dónde encontrarlo.",
+      "FILE_EMPTY": "El archivo está vacío. Elige otro.",
+      "TABLE_NEEDS_SYSTEM": "La mesa tiene que decir qué sistema se juega. Elige uno o propón el tuyo.",
+      "TABLE_NEEDS_PLATFORM": "La mesa tiene que decir dónde se juega. Elige una plataforma o propón la tuya.",
+      "TABLE_NEEDS_SCHEDULE": "La mesa tiene que decir cuándo se juega. Agrega al menos un día y horario.",
+      "TABLE_NEEDS_TAG": "La mesa tiene que llevar al menos un tag. Elige uno o propón el tuyo.",
+      "FILE_NEEDS_CATEGORY": "Antes de publicarlo, elige qué es el archivo con «Cambiar qué es». Así los masters saben dónde encontrarlo.",
       "TASK_CLOSED": "Este pedido ya se cerró y el master no recibe más respuestas.",
       "TASK_CLOSED_NOT_EDITABLE": "Esta petición ya está cerrada y no se puede editar. Actualiza la lista para ver cómo está.",
       "CAPACITY_BELOW_PLAYERS": "El cupo no puede quedar por debajo de los {{playerCount}} jugadores que ya tiene la mesa.",
       "MAX_PLAYERS_ABOVE_CAP": "El cupo no puede pasar de {{maxPlayersCap}} jugadores en esta plataforma.",
-      "FILE_CATEGORY_NOT_YOURS": "Ese archivo no puede guardarse en esa categoría: no es una de las tuyas. Elegí otra.",
+      "FILE_CATEGORY_NOT_YOURS": "Ese archivo no puede guardarse en esa categoría: no es una de las tuyas. Elige otra.",
       "FILE_CATEGORY_NOT_PUBLISHABLE": "Esa categoría guarda lo que respondió cada persona y no se puede publicar para toda la comunidad.",
-      "FILE_CANNOT_SELF_PUBLISH": "Los archivos de la biblioteca de la plataforma los sube un admin desde la biblioteca, no desde acá.",
-      "FILE_ALREADY_PUBLISHED": "Este archivo ya está publicado. Actualizá la lista; para cambiar qué es, ocultalo primero.",
-      "FILE_NOT_PUBLISHED": "Este archivo no está publicado, así que no hay nada que ocultar. Actualizá la lista para ver cómo está.",
+      "FILE_CANNOT_SELF_PUBLISH": "Los archivos de la biblioteca de la plataforma los sube un admin desde la biblioteca, no desde aquí.",
+      "FILE_ALREADY_PUBLISHED": "Este archivo ya está publicado. Actualiza la lista; para cambiar qué es, ocúltalo primero.",
+      "FILE_NOT_PUBLISHED": "Este archivo no está publicado, así que no hay nada que ocultar. Actualiza la lista para ver cómo está.",
       "REQUEST_TYPE_NOT_ACCEPTED_HERE": "Ese pedido se abre desde el recurso del que trata, no desde esta pantalla.",
-      "ONBOARDING_PENDING": "Primero completá el paso inicial para poder editar tu perfil.",
+      "ONBOARDING_PENDING": "Primero completa el paso inicial para poder editar tu perfil.",
       "ONBOARDING_ALREADY_COMPLETED": "Ya completaste el paso inicial. Tu nombre y país se editan desde tu perfil.",
-      "ACCOUNT_BLOCKED": "Tu cuenta está bloqueada. Contactá a un admin si creés que es un error.",
+      "ACCOUNT_BLOCKED": "Tu cuenta está bloqueada. Contacta a un admin si crees que es un error.",
       "TABLE_FULL": "La mesa ya completó su cupo.",
-      "RATE_LIMITED": "Hiciste demasiados intentos seguidos. Probá de nuevo en {{retryAfterSeconds, minutes}} min."
+      "RATE_LIMITED": "Hiciste demasiados intentos seguidos. Prueba de nuevo en {{retryAfterSeconds, minutes}} min."
     }
   },
   "pagination": {
@@ -142,7 +142,7 @@
   },
   "unsavedChanges": {
     "title": "¿Salir sin guardar?",
-    "description": "Lo que completaste todavía no se guardó y se va a perder. Si volvés, sigue como estaba.",
+    "description": "Lo que completaste todavía no se guardó y se va a perder. Si vuelves, sigue como estaba.",
     "leave": "Salir y perder lo hecho",
     "discard": "Descartar lo hecho",
     "stay": "Seguir editando"

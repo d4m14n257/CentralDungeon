@@ -163,7 +163,7 @@ describe('RoleChangeDialog', () => {
    */
   it.each([
     ['LAST_OWNER', 'La plataforma no puede quedarse sin ningún Owner. Dale el rol a otra persona antes de quitar este.'],
-    ['CANNOT_REVOKE_OWN_OWNER', 'No podés quitarte tu propio rol de Owner. Tiene que hacerlo otro Owner.'],
+    ['CANNOT_REVOKE_OWN_OWNER', 'No puedes quitarte tu propio rol de Owner. Tiene que hacerlo otro Owner.'],
     ['ROLE_GRANT_FORBIDDEN', 'Solo un Owner puede mover los roles de Admin y de Owner.'],
   ])('explains %s from its code', async (errorCode, sentence) => {
     revokeRole.mockRejectedValue(new ApiError(409, { title: 'Conflict', status: 409, detail: 'English, for the log', errorCode }))

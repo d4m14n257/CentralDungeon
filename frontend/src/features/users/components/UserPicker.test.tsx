@@ -51,7 +51,7 @@ describe('UserPicker minimum length', () => {
     confirmed.query = query
     renderPicker()
 
-    expect(screen.getByText('Escribí al menos 2 letras para buscar.')).toBeInTheDocument()
+    expect(screen.getByText('Escribe al menos 2 letras para buscar.')).toBeInTheDocument()
     expect(screen.queryByText('Nadie coincide con esa búsqueda.')).not.toBeInTheDocument()
     expect(search).not.toHaveBeenCalled()
   })
@@ -62,7 +62,7 @@ describe('UserPicker minimum length', () => {
 
     expect(await screen.findByText('Nadie coincide con esa búsqueda.')).toBeInTheDocument()
     expect(search).toHaveBeenCalledWith('ab')
-    expect(screen.queryByText('Escribí al menos 2 letras para buscar.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Escribe al menos 2 letras para buscar.')).not.toBeInTheDocument()
   })
 
   it('applies the same minimum to the co-master search of a table', async () => {

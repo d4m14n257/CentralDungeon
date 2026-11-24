@@ -38,12 +38,12 @@ describe('StatusBadge', () => {
   /** The trailing child is what lets `ClaimBadge` add its "how long ago" without a shape of its own. */
   it('renders trailing detail inside the same badge', () => {
     render(
-      <StatusBadge tone="active" label="Lo tenés vos">
+      <StatusBadge tone="active" label="Lo tienes tú">
         <span>hace 3 minutos</span>
       </StatusBadge>,
     )
 
-    const badge = screen.getByText('Lo tenés vos').closest('span')
+    const badge = screen.getByText('Lo tienes tú').closest('span')
     expect(badge?.textContent).toContain('hace 3 minutos')
   })
 })

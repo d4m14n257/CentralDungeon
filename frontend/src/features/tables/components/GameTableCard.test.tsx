@@ -84,7 +84,7 @@ describe('GameTableCard', () => {
   it('says the reader plays at the table, not that they applied, once accepted', () => {
     renderCard({ ...baseTable, applied: true, joined: true })
 
-    expect(screen.getByText('Ya sos jugador')).toBeInTheDocument()
+    expect(screen.getByText('Ya eres jugador')).toBeInTheDocument()
     expect(screen.queryByText('Ya te postulaste')).not.toBeInTheDocument()
   })
 

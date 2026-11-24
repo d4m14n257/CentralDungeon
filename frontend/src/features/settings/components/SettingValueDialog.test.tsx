@@ -143,7 +143,7 @@ describe('SettingValueDialog', () => {
     await fillReason()
     await userEvent.click(screen.getByRole('button', { name: 'Guardar el cambio' }))
 
-    expect(await screen.findByText('Escribí un número entero, sin comas ni puntos')).toBeInTheDocument()
+    expect(await screen.findByText('Escribe un número entero, sin comas ni puntos')).toBeInTheDocument()
     expect(update).not.toHaveBeenCalled()
   })
 

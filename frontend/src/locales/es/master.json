@@ -3,7 +3,7 @@
     "title": "Mis mesas como master",
     "createNew": "Crear mesa",
     "emptyTitle": "Todavía no creaste ninguna mesa",
-    "emptyDescription": "Cuando crees una mesa, la vas a ver acá."
+    "emptyDescription": "Cuando crees una mesa, la vas a ver aquí."
   },
   "create": {
     "title": "Crear una mesa",
@@ -30,7 +30,7 @@
       "capacity": "Cupo y revisión"
     },
     "tableTypeLabel": "Tipo de mesa",
-    "tableTypePlaceholder": "Elegí cómo se dirige",
+    "tableTypePlaceholder": "Elige cómo se dirige",
     "permittedLabel": "Qué se permite en la mesa",
     "permittedHint": "Las reglas de la casa: qué material entra, qué tono tiene la mesa, qué no.",
     "systemsLabel": "Sistemas",
@@ -44,13 +44,13 @@
     "back": "Atrás",
     "next": "Siguiente",
     "scheduleHelp": "Cómo funcionan los horarios",
-    "missingSystem": "Elegí al menos un sistema: la mesa tiene que decir qué se juega.",
-    "missingPlatform": "Elegí al menos una plataforma: la mesa tiene que decir dónde se juega.",
-    "missingSchedule": "Agregá al menos un día y horario: la mesa tiene que decir cuándo se juega.",
+    "missingSystem": "Elige al menos un sistema: la mesa tiene que decir qué se juega.",
+    "missingPlatform": "Elige al menos una plataforma: la mesa tiene que decir dónde se juega.",
+    "missingSchedule": "Agrega al menos un día y horario: la mesa tiene que decir cuándo se juega.",
     "filesTitle": "Archivos",
     "filesHint": "Lo que le das a la mesa: mapas, fichas, reglas de la casa. Los jugadores los descargan desde la mesa.",
-    "missingTag": "Elegí al menos un tag: es lo que hace que la mesa se encuentre.",
-    "filesFailed": "La mesa se creó, pero no se pudieron subir: {{names}}. Agregalos desde la pestaña Archivos.",
+    "missingTag": "Elige al menos un tag: es lo que hace que la mesa se encuentre.",
+    "filesFailed": "La mesa se creó, pero no se pudieron subir: {{names}}. Agrégalos desde la pestaña Archivos.",
     "backToTables": "Volver a mis mesas",
     "confirmTitle": "¿Crear la mesa «{{name}}»?",
     "confirmDescription": "Nace en borrador: nadie más la ve hasta que la mandes a revisión.",
@@ -87,7 +87,7 @@
     "finishSuccess": "Mesa finalizada",
     "cancel": "Cancelar mesa",
     "cancelDialogTitle": "Cancelar esta mesa",
-    "cancelDialogDescription": "Contá por qué se cancela - queda registrado en el historial.",
+    "cancelDialogDescription": "Cuenta por qué se cancela - queda registrado en el historial.",
     "cancelSuccess": "Mesa cancelada",
     "delete": "Eliminar mesa",
     "deleteConfirmTitle": "Eliminar esta mesa",
@@ -95,11 +95,11 @@
     "deleteSuccess": "Mesa eliminada",
     "submit": "Enviar a revisión",
     "submitConfirmTitle": "¿Enviar la mesa a revisión?",
-    "submitConfirmDescription": "Un admin la va a revisar. Mientras tanto no vas a poder editarla: si hay algo que corregir, hacelo antes de enviarla.",
+    "submitConfirmDescription": "Un admin la va a revisar. Mientras tanto no vas a poder editarla: si hay algo que corregir, hazlo antes de enviarla.",
     "submitSuccess": "Mesa enviada a revisión",
     "requestPause": "Pedir pausa",
     "requestPauseDialogTitle": "Pedir que se pause la mesa",
-    "requestPauseDialogDescription": "Contá por qué hay que pausarla. Lo lee el admin que responde, y queda en el historial de la mesa.",
+    "requestPauseDialogDescription": "Cuenta por qué hay que pausarla. Lo lee el admin que responde, y queda en el historial de la mesa.",
     "requestPauseHint": "Pedir no es pausar: hasta que un admin responda, la mesa sigue en curso y el calendario sigue prometiendo sus fechas.",
     "requestPauseHelpLink": "Cómo funciona la pausa",
     "requestPauseSuccess": "Pedido de pausa enviado",
@@ -110,17 +110,17 @@
     "seekingOnSuccess": "La mesa busca jugadores",
     "seekingOffSuccess": "La mesa dejó de buscar jugadores",
     "seekingOnConfirmTitle": "¿Buscar jugadores para la mesa?",
-    "seekingOnConfirmDescription": "La mesa aparece en el explorador y acepta postulaciones hasta completar el cupo. Podés dejar de buscar cuando quieras.",
+    "seekingOnConfirmDescription": "La mesa aparece en el explorador y acepta postulaciones hasta completar el cupo. Puedes dejar de buscar cuando quieras.",
     "seekingOffConfirmTitle": "¿Dejar de buscar jugadores?",
-    "seekingOffConfirmDescription": "La mesa sale del explorador y deja de aceptar postulaciones. Podés volver a buscar cuando quieras.",
-    "seekingIdle": "La mesa no busca jugadores ahora. Podés empezar a buscar mientras quede algún lugar libre.",
+    "seekingOffConfirmDescription": "La mesa sale del explorador y deja de aceptar postulaciones. Puedes volver a buscar cuando quieras.",
+    "seekingIdle": "La mesa no busca jugadores ahora. Puedes empezar a buscar mientras quede algún lugar libre.",
     "seekingHelpLink": "Cómo funciona la búsqueda de jugadores",
     "errors": {
-      "PAUSE_ALREADY_REQUESTED": "Ya hay un pedido de pausa esperando respuesta para esta mesa. Actualizá la pantalla para verlo.",
-      "generic": "No pudimos enviar el pedido. Probá de nuevo."
+      "PAUSE_ALREADY_REQUESTED": "Ya hay un pedido de pausa esperando respuesta para esta mesa. Actualiza la pantalla para verlo.",
+      "generic": "No pudimos enviar el pedido. Prueba de nuevo."
     },
     "cancelConfirmTitle": "¿Cancelar la mesa?",
-    "cancelConfirmDescription": "No tiene vuelta atrás: la mesa termina acá y queda registrado con tu motivo.",
+    "cancelConfirmDescription": "No tiene vuelta atrás: la mesa termina aquí y queda registrado con tu motivo.",
     "requestPauseConfirmTitle": "¿Pedir la pausa de la mesa?",
     "requestPauseConfirmDescription": "Lo decide un admin, que lee tu motivo. Hasta que responda, la mesa sigue como está."
   },
@@ -134,7 +134,7 @@
     "emptyDescription": "Sin agenda no se materializan sesiones al abrirla.",
     "edit": "Editar la mesa",
     "lockedHint": "La agenda ya no se edita: la mesa pasó el punto en que su master podía reescribirla.",
-    "emptyHint": "Todavía no elegiste ninguna franja. Hacé clic en una hora libre de la grilla.",
+    "emptyHint": "Todavía no elegiste ninguna franja. Haz clic en una hora libre de la cuadrícula.",
     "durationOf": "Duración de {{slot}}"
   },
   "sessions": {
@@ -206,23 +206,23 @@
     "addSuccess": "{{name}} ahora es co-master",
     "promote": "Pasarle la mesa a {{name}}",
     "promoteConfirmTitle": "¿Pasarle la mesa a {{name}}?",
-    "promoteConfirmDescription": "Una mesa tiene un solo master: {{name}} pasa a serlo y vos quedás como co-master. Perdés las acciones de estado y la edición de la mesa.",
+    "promoteConfirmDescription": "Una mesa tiene un solo master: {{name}} pasa a serlo y tú quedas como co-master. Pierdes las acciones de estado y la edición de la mesa.",
     "promoteSuccess": "{{name}} es ahora el master de la mesa",
     "remove": "Quitar a {{name}}",
     "removeConfirmTitle": "¿Quitar a {{name}} de la mesa?",
-    "removeConfirmDescription": "Deja de ver y de gestionar esta mesa de inmediato. Queda registrado que la dirigió, y podés volver a agregarlo cuando quieras.",
+    "removeConfirmDescription": "Deja de ver y de gestionar esta mesa de inmediato. Queda registrado que la dirigió, y puedes volver a agregarlo cuando quieras.",
     "removeSuccess": "{{name}} ya no dirige esta mesa",
     "hint": "Un co-master gestiona la mesa pero no puede cerrarla, cancelarla ni tocar quién la dirige.",
     "helpLink": "Qué puede un co-master",
     "addConfirmTitle": "¿Sumar a {{name}} como co-master?",
-    "addConfirmDescription": "Va a ver la mesa y la va a poder dirigir con vos."
+    "addConfirmDescription": "Va a ver la mesa y la va a poder dirigir contigo."
   },
   "players": {
     "title": "Jugadores",
     "summary_one": "{{count}} jugador",
     "summary_other": "{{count}} jugadores",
     "emptyTitle": "Todavía no hay nadie jugando",
-    "emptyDescription": "Cuando aceptes a un candidato, aparece acá."
+    "emptyDescription": "Cuando aceptes a un candidato, aparece aquí."
   },
   "edit": {
     "title": "Editar «{{name}}»",
@@ -237,7 +237,7 @@
     "save": "Guardar cambios",
     "saving": "Guardando…",
     "success": "Mesa actualizada",
-    "lockedDescription": "Esta mesa ya no se puede editar: o no sos su master, o pasó el punto en que su master podía reescribirla.",
+    "lockedDescription": "Esta mesa ya no se puede editar: o no eres su master, o pasó el punto en que su master podía reescribirla.",
     "back": "Volver a la mesa",
     "confirmTitle": "¿Guardar los cambios de «{{name}}»?",
     "confirmDescription": "Lo que escribiste reemplaza lo que la mesa decía.",
@@ -261,10 +261,10 @@
     "approve": "Vetar",
     "reject": "No vetar",
     "approveDialogTitle": "Vetar a {{name}}",
-    "approveDialogDescription": "Leé el motivo y escribí tu respuesta. La lee quien pidió el veto.",
+    "approveDialogDescription": "Lee el motivo y escribe tu respuesta. La lee quien pidió el veto.",
     "approveEffect": "Aceptar no es marcarlo como visto: {{name}} queda vetado en el acto y deja de ver la mesa.",
     "rejectDialogTitle": "No vetar a {{name}}",
-    "rejectDialogDescription": "No se veta a nadie. Escribí por qué: es lo único que recibe quien lo pidió.",
+    "rejectDialogDescription": "No se veta a nadie. Escribe por qué: es lo único que recibe quien lo pidió.",
     "resolutionNoteLabel": "Tu respuesta",
     "approveSuccess": "Veto aplicado",
     "rejectSuccess": "Pedido rechazado",
@@ -273,7 +273,7 @@
     "confirmApproveDescription": "Deja de ver la mesa, su detalle y sus archivos. Queda registrado con tu motivo.",
     "confirmRejectTitle": "¿Rechazar el pedido de veto de {{name}}?",
     "confirmRejectDescription": "Sigue en la mesa como hasta ahora. Queda registrado con tu motivo.",
-    "descriptionAdmin": "Un master pidió vetar a alguien de esta mesa. Lo decidís vos, con tu respuesta.",
+    "descriptionAdmin": "Un master pidió vetar a alguien de esta mesa. Lo decides tú, con tu respuesta.",
     "descriptionMaster": "Lo que se pidió espera la respuesta de un admin: él decide, no el master de la mesa."
   },
   "people": {
@@ -282,7 +282,7 @@
   "notice": {
     "Draft": {
       "title": "Todavía es un borrador",
-      "description": "Es un borrador: solo vos la ves. Cuando esté lista, enviala a revisión."
+      "description": "Es un borrador: solo tú la ves. Cuando esté lista, envíala a revisión."
     },
     "Preparation": {
       "title": "Esperando la revisión de un admin",
@@ -290,15 +290,15 @@
     },
     "ChangesRequested": {
       "title": "Te pidieron cambios",
-      "description": "Leé el motivo en el historial, corregila desde Editar y reenviala a revisión."
+      "description": "Lee el motivo en el historial, corrígela desde Editar y reenvíala a revisión."
     },
     "Opened": {
       "title": "Abierta a postulaciones",
-      "description": "Está recibiendo postulaciones. Cuando arranque la primera sesión, iniciala."
+      "description": "Está recibiendo postulaciones. Cuando arranque la primera sesión, inicíala."
     },
     "InProgress": {
       "title": "Se está jugando",
-      "description": "Cuando termine, finalizala. Si hay que frenar, pedí una pausa: la decide un admin."
+      "description": "Cuando termine, finalízala. Si hay que frenar, pide una pausa: la decide un admin."
     },
     "PauseRequested": {
       "title": "Pediste pausarla",

@@ -13,7 +13,7 @@
     "title": "Peticiones",
     "publish": "Publicar petición",
     "emptyTitle": "Esta mesa todavía no pide nada",
-    "emptyDescription": "Publicá una petición para pedirles algo a tus candidatos o a tus jugadores. Al publicarla les llega un aviso.",
+    "emptyDescription": "Publica una petición para pedirles algo a tus candidatos o a tus jugadores. Al publicarla les llega un aviso.",
     "answered": "Entregaron {{people}} de {{total}}",
     "mandatory": "Importante",
     "edit": "Editar la petición",
@@ -37,12 +37,12 @@
       "candidates": {
         "title": "Candidatos",
         "emptyTitle": "Nada pedido a los candidatos",
-        "emptyDescription": "Lo que publiques para quien quiera postularse aparece acá."
+        "emptyDescription": "Lo que publiques para quien quiera postularse aparece aquí."
       },
       "players": {
         "title": "Jugadores",
         "emptyTitle": "Nada pedido a los jugadores",
-        "emptyDescription": "Lo que publiques para los jugadores, o para una persona de tu mesa, aparece acá."
+        "emptyDescription": "Lo que publiques para los jugadores, o para una persona de tu mesa, aparece aquí."
       }
     }
   },
@@ -51,23 +51,23 @@
     "publishDescription": "Al publicarla les llega un aviso a las personas a las que va dirigida.",
     "editTitle": "Editar la petición",
     "editDescription": "Corregirla no vuelve a avisar: el aviso sale una sola vez, al publicarla.",
-    "titleLabel": "Qué pedís",
-    "titleRequired": "Poné un título: es lo que se ve en el aviso y en la lista.",
+    "titleLabel": "Qué pides",
+    "titleRequired": "Pon un título: es lo que se ve en el aviso y en la lista.",
     "descriptionLabel": "Detalle",
-    "audienceLabel": "A quién se lo pedís",
+    "audienceLabel": "A quién se lo pides",
     "audienceHint": {
       "Candidates": "Lo ve cualquiera que mire la mesa, incluso antes de postularse. Responden los candidatos.",
       "Players": "Lo ven y lo responden los jugadores que ya aceptaste.",
       "Single": "Lo ve y lo responde una sola persona de tu mesa."
     },
     "targetLabel": "A quién",
-    "targetPlaceholder": "Elegí a un jugador",
-    "targetRequired": "Elegí a la persona a la que se lo pedís.",
+    "targetPlaceholder": "Elige a un jugador",
+    "targetRequired": "Elige a la persona a la que se lo pides.",
     "targetNoPlayers": "Todavía no hay jugadores aceptados en esta mesa.",
     "answerLabel": "Cómo se responde",
     "acceptsText": "Con texto",
     "acceptsFiles": "Con archivos",
-    "answerChannelRequired": "Elegí al menos una forma de responder.",
+    "answerChannelRequired": "Elige al menos una forma de responder.",
     "sessionLabel": "Atarla a una sesión",
     "sessionNone": "En cualquier momento",
     "sessionOption": "Sesión {{number}}",
@@ -81,15 +81,15 @@
     "publishedToast": "Petición publicada. Ya les llegó el aviso.",
     "savedToast": "Petición actualizada.",
     "blanksLabel": "Formularios de la petición",
-    "blanksHint": "Lo que estás pidiendo que completen: una plantilla, un formulario en blanco. Podés usar uno de la comunidad o subir el tuyo.",
+    "blanksHint": "Lo que estás pidiendo que completen: una plantilla, un formulario en blanco. Puedes usar uno de la comunidad o subir el tuyo.",
     "blanksRemove": "Quitar «{{name}}»",
-    "blanksFailed": "No se pudieron subir: {{names}}. La petición se guardó; agregalos editándola."
+    "blanksFailed": "No se pudieron subir: {{names}}. La petición se guardó; agrégalos editándola."
   },
   "submissions": {
     "viewRecord": "Ver la ficha de {{name}}",
     "title": "Entregas",
     "emptyTitle": "Todavía no entregó nadie",
-    "emptyDescription": "Cuando alguien entregue algo, va a aparecer acá con lo que haya mandado.",
+    "emptyDescription": "Cuando alguien entregue algo, va a aparecer aquí con lo que haya mandado.",
     "missingTitle": "Faltan {{missing}} de {{total}}",
     "nobodyMissing": "Ya entregaron todos.",
     "missingHint": "Esta lista es informativa: no entregar no bloquea nada ni saca a nadie de la mesa."
@@ -97,7 +97,7 @@
   "applicable": {
     "title": "Lo que pide esta mesa",
     "emptyTitle": "Esta mesa no te pide nada",
-    "emptyDescription": "Cuando el master publique una petición que te toque, la vas a ver acá.",
+    "emptyDescription": "Cuando el master publique una petición que te toque, la vas a ver aquí.",
     "answered_one": "Entregaste 1 vez",
     "answered_other": "Entregaste {{count}} veces",
     "answer": "Entregar",
@@ -114,9 +114,9 @@
     "accumulatesHint": "Cada entrega se guarda aparte. Si ya entregaste algo, sigue estando.",
     "send": "Entregar",
     "sentToast": "Entregado.",
-    "someFilesFailed": "No se pudieron subir: {{names}}. Lo demás se envió; mandá otra entrega con esos.",
+    "someFilesFailed": "No se pudieron subir: {{names}}. Lo demás se envió; manda otra entrega con esos.",
     "confirmTitle": "¿Enviar tu respuesta?",
-    "confirmDescription": "El master la ve al instante. Si te equivocaste, podés mandar otra: las respuestas se suman, no se reemplazan.",
+    "confirmDescription": "El master la ve al instante. Si te equivocaste, puedes mandar otra: las respuestas se suman, no se reemplazan.",
     "confirmLabel": "Enviar"
   },
   "list": {

@@ -47,10 +47,10 @@ describe('TaskFormDialog', () => {
 
     await userEvent.click(screen.getByLabelText('Con texto'))
     await userEvent.click(screen.getByLabelText('Con archivos'))
-    await userEvent.type(screen.getByLabelText('Qué pedís'), 'Ficha')
+    await userEvent.type(screen.getByLabelText('Qué pides'), 'Ficha')
     await userEvent.click(screen.getByRole('button', { name: 'Publicar y avisar' }))
 
-    expect(await screen.findByText('Elegí al menos una forma de responder.')).toBeInTheDocument()
+    expect(await screen.findByText('Elige al menos una forma de responder.')).toBeInTheDocument()
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
@@ -58,12 +58,12 @@ describe('TaskFormDialog', () => {
   it('requires a recipient when the request is addressed to one person', async () => {
     const onSubmit = renderForm()
 
-    await userEvent.type(screen.getByLabelText('Qué pedís'), 'Tu material')
-    await userEvent.click(screen.getByLabelText('A quién se lo pedís'))
+    await userEvent.type(screen.getByLabelText('Qué pides'), 'Tu material')
+    await userEvent.click(screen.getByLabelText('A quién se lo pides'))
     await userEvent.click(screen.getByRole('option', { name: 'Para una persona' }))
     await userEvent.click(screen.getByRole('button', { name: 'Publicar y avisar' }))
 
-    expect(await screen.findByText('Elegí a la persona a la que se lo pedís.')).toBeInTheDocument()
+    expect(await screen.findByText('Elige a la persona a la que se lo pides.')).toBeInTheDocument()
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
@@ -71,7 +71,7 @@ describe('TaskFormDialog', () => {
   it('offers only the table players as recipients', async () => {
     renderForm()
 
-    await userEvent.click(screen.getByLabelText('A quién se lo pedís'))
+    await userEvent.click(screen.getByLabelText('A quién se lo pides'))
     await userEvent.click(screen.getByRole('option', { name: 'Para una persona' }))
     await userEvent.click(screen.getByLabelText('A quién'))
 
@@ -82,7 +82,7 @@ describe('TaskFormDialog', () => {
   it('publishes a well-formed request with what was filled in', async () => {
     const onSubmit = renderForm()
 
-    await userEvent.type(screen.getByLabelText('Qué pedís'), 'Ficha de personaje')
+    await userEvent.type(screen.getByLabelText('Qué pides'), 'Ficha de personaje')
     await userEvent.click(screen.getByRole('button', { name: 'Publicar y avisar' }))
 
     await waitFor(() =>

@@ -11,7 +11,7 @@ function AskAndReport() {
   return (
     <button
       onClick={() => {
-        void confirm({ title: 'Aceptar a Jugador', description: '¿Confirmás?' }).then((confirmed) => {
+        void confirm({ title: 'Aceptar a Jugador', description: '¿Confirmas?' }).then((confirmed) => {
           document.title = confirmed ? 'confirmed' : 'cancelled'
         })
       }}
@@ -32,7 +32,7 @@ describe('ConfirmDialogProvider / useConfirm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Ask' }))
 
     expect(screen.getByText('Aceptar a Jugador')).toBeInTheDocument()
-    expect(screen.getByText('¿Confirmás?')).toBeInTheDocument()
+    expect(screen.getByText('¿Confirmas?')).toBeInTheDocument()
   })
 
   it('resolves true when the confirm button is clicked', async () => {
@@ -46,7 +46,7 @@ describe('ConfirmDialogProvider / useConfirm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     await waitFor(() => expect(document.title).toBe('confirmed'))
-    expect(screen.queryByText('¿Confirmás?')).not.toBeInTheDocument()
+    expect(screen.queryByText('¿Confirmas?')).not.toBeInTheDocument()
   })
 
   it('resolves false when the cancel button is clicked', async () => {

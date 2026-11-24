@@ -315,7 +315,7 @@ test('a co-master asks for a veto, an admin grants it, and the Primary lifts it'
     await player.page.goto(`/player/tables/${tableId}`)
     // The not-found state of a 404 detail, which is the same sentence a deleted table gets: from this
     // person's side the table stopped existing, and telling the two apart would be the 403 (ADR-09 §4).
-    await expect(player.page.getByText('Lo que buscás no existe o ya no está disponible.')).toBeVisible()
+    await expect(player.page.getByText('Lo que buscas no existe o ya no está disponible.')).toBeVisible()
     await expect(player.page.getByRole('heading', { name: tableName })).toBeHidden()
 
     expect(await fileStatusFor(player.page, player.accessToken, fileId)).toBe(404)

@@ -183,7 +183,7 @@ test('a player sees the clash warning and cannot apply to a table that overlaps 
 
     await player.page.goto(`/player/tables/${secondId}`)
     await expect(player.page.getByRole('button', { name: 'Choca con una mesa tuya' })).toBeDisabled()
-    await expect(player.page.getByText(/Ya jugás en otra mesa a esa hora/)).toBeVisible()
+    await expect(player.page.getByText(/Ya juegas en otra mesa a esa hora/)).toBeVisible()
   } finally {
     await player.context.close()
     await admin.context.close()

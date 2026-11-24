@@ -75,7 +75,7 @@ describe('EditProfileDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
     await acceptReview()
 
-    await waitFor(() => expect(toastError).toHaveBeenCalledWith('Primero completá el paso inicial para poder editar tu perfil.'))
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith('Primero completa el paso inicial para poder editar tu perfil.'))
     expect(onOpenChange).not.toHaveBeenCalledWith(false)
   })
 })

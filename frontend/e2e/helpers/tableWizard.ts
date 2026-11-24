@@ -24,11 +24,11 @@ const A_PLATFORM = 'Discord'
 export async function chooseRequiredCatalogs(page: Page): Promise<void> {
   // Filtered by their placeholder rather than found by label: the pickers put their caption in a
   // paragraph, not a <label>, so `getByLabel` finds nothing. Worth fixing in the component one day.
-  await page.getByRole('combobox').filter({ hasText: 'Elegí un sistema' }).click()
+  await page.getByRole('combobox').filter({ hasText: 'Elige un sistema' }).click()
   await page.getByRole('option', { name: A_SYSTEM, exact: true }).click()
-  await page.getByRole('combobox').filter({ hasText: 'Elegí un tag' }).click()
+  await page.getByRole('combobox').filter({ hasText: 'Elige un tag' }).click()
   await page.getByRole('option').first().click()
-  await page.getByRole('combobox').filter({ hasText: 'Elegí una plataforma' }).click()
+  await page.getByRole('combobox').filter({ hasText: 'Elige una plataforma' }).click()
   await page.getByRole('option', { name: A_PLATFORM, exact: true }).click()
 }
 

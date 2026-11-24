@@ -50,7 +50,7 @@ test('a master sees the week they have committed, and takes a free hour from the
     // And the block itself is a shortcut: looking at the week and going to one of its tables is one
     // errand, not two (ADR-08 §6).
     await page
-      .getByRole('link', { name: `${firstName} — la dirigís` })
+      .getByRole('link', { name: `${firstName} — la diriges` })
       .first()
       .click()
     await expect(page).toHaveURL(/\/master\/tables\/[0-9a-f-]+$/)
@@ -65,7 +65,7 @@ test('a master sees the week they have committed, and takes a free hour from the
 
     await expect(page.getByRole('button', { name: 'Ocupar Martes 20:00' })).toBeHidden()
     // In the wizard the blocks lead nowhere on purpose: navigating away would throw away the form.
-    await expect(page.getByRole('link', { name: `${firstName} — la dirigís` })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: `${firstName} — la diriges` })).toHaveCount(0)
     await page.getByRole('button', { name: 'Ocupar Jueves 21:00' }).click()
     // Claiming it fills the agenda, which is what lets the step be left at all (ADR-07 §3).
     await page.getByRole('button', { name: 'Siguiente' }).click()

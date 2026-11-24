@@ -72,7 +72,7 @@ describe('UserProfilePage', () => {
     }
     renderPage()
 
-    expect(screen.getByText('Ya no podés ver este perfil.')).toBeInTheDocument()
+    expect(screen.getByText('Ya no puedes ver este perfil.')).toBeInTheDocument()
     expect(screen.queryByText(/no existe/i)).not.toBeInTheDocument()
   })
 

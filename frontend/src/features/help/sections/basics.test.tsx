@@ -73,13 +73,13 @@ describe('SearchHelp', () => {
 
   /**
    * A command declared with no choices behind it — a person with no cajón of their own (ADR-14 §5) — is
-   * not the pick-from-a-list kind. Saying «elegís entre:» with nothing after the colon promises a
+   * not the pick-from-a-list kind. Saying «eliges entre:» with nothing after the colon promises a
    * list that is not there.
    */
   it('does not present a command with an empty list as one you pick from', () => {
     render(<SearchHelp searchFields={[{ name: 'file_categories', label: 'cajón', values: [] }]} />)
 
-    expect(screen.queryByText(/elegís entre/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/eliges entre/)).not.toBeInTheDocument()
   })
 
   it('shows the rules even with no box to draw examples from', () => {
@@ -163,7 +163,7 @@ describe('MyFilesHelp and MyScheduleHelp', () => {
   it('says a gap in the week is a gap the server accepts', () => {
     render(<MyScheduleHelp />)
 
-    expect(screen.getByText(/Un hueco en la grilla es un hueco que el sistema acepta/)).toBeInTheDocument()
+    expect(screen.getByText(/Un hueco en la cuadrícula es un hueco que el sistema acepta/)).toBeInTheDocument()
     expect(screen.queryByText(/basics\.mySchedule/)).not.toBeInTheDocument()
   })
 })

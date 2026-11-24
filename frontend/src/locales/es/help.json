@@ -10,31 +10,31 @@
   "basics": {
     "search": {
       "title": "Cómo buscar",
-      "intro": "Los buscadores del sitio entienden un lenguaje corto, el mismo en todos lados. Podés escribir un nombre y listo; lo demás es para cuando querés precisar.",
-      "plain": "Escribir texto busca por el criterio básico de ese buscador: el campo que la pantalla usa cuando no le decís por cuál buscar.",
-      "field": "La barra abre la lista de comandos. Elegís con las flechas y confirmás con Enter o Tab, y el comando queda escrito en el texto, igual que si lo tipearas a mano. Todo lo que sigue es su valor, espacios incluidos, hasta la próxima barra.",
+      "intro": "Los buscadores del sitio entienden un lenguaje corto, el mismo en todos lados. Puedes escribir un nombre y listo; lo demás es para cuando quieres precisar.",
+      "plain": "Escribir texto busca por el criterio básico de ese buscador: el campo que la pantalla usa cuando no le dices por cuál buscar.",
+      "field": "La barra abre la lista de comandos. Eliges con las flechas y confirmas con Enter o Tab, y el comando queda escrito en el texto, igual que si lo escribieras a mano. Todo lo que sigue es su valor, espacios incluidos, hasta la próxima barra.",
       "commas": "Las comas separan alternativas del mismo criterio: cualquiera de ellas alcanza.",
-      "connectors": "«/or» y «/and» cierran el criterio y unen el siguiente, dejando su propio chip en el medio. Tocá ese chip para cambiar de uno a otro.",
+      "connectors": "«/or» y «/and» cierran el criterio y unen el siguiente, dejando su propio chip en el medio. Toca ese chip para cambiar de uno a otro.",
       "onlySlash": "La barra es el único separador. Un «and» o un «or» escritos sin barra son parte de lo que estás buscando, no una instrucción.",
       "order": "Los criterios se aplican en el orden en que están, de izquierda a derecha, sin reglas escondidas de precedencia.",
       "chips": "Cada chip se quita con su ×. Con el texto vacío, Backspace devuelve el último chip al cursor, escrito tal como lo generaría de nuevo, para corregirlo.",
-      "searchOnEnter": "Buscar son dos Enter. El primero cierra lo escrito en un chip y no busca nada; el segundo, con el texto vacío, busca los chips. Mientras armás la búsqueda —elegís el comando, escribís el valor, quitás un chip o cambiás su conector— no sale nada, y el buscador te avisa «Enter para buscar» si hay cambios sin buscar.",
+      "searchOnEnter": "Buscar son dos Enter. El primero cierra lo escrito en un chip y no busca nada; el segundo, con el texto vacío, busca los chips. Mientras armas la búsqueda —eliges el comando, escribes el valor, quitas un chip o cambias su conector— no sale nada, y el buscador te avisa «Enter para buscar» si hay cambios sin buscar.",
       "clear": "«Limpiar filtros», debajo del buscador, borra todo lo escrito y los chips de una vez, vuelve a lo que la pantalla muestra al entrar y lo busca.",
       "examplesTitle": "Ejemplos",
-      "exampleQuery": "Si escribís",
-      "exampleMeaning": "Encontrás",
+      "exampleQuery": "Si escribes",
+      "exampleMeaning": "Encuentras",
       "steps": {
-        "step1": "Escribí lo que buscás y apretá Enter dos veces: la primera lo cierra en un chip, la segunda busca.",
-        "step2": "Si hay demasiados resultados, escribí / y elegí el comando con las flechas. Queda escrito en el texto, y todo lo que sigas escribiendo es su valor.",
-        "step3": "Si te sirve cualquiera de varias opciones del mismo comando, separalas con comas: una coma y seguís con la siguiente.",
-        "step4": "Si querés sumar otro criterio, escribí /or o /and, elegilo de la lista, y seguí con el siguiente.",
-        "step5": "Apretá Enter para cerrar lo escrito en chips, y Enter otra vez para buscar. Para corregir: tocá la × de un chip, tocá el chip del conector para cambiar «y» por «o», borrá con Backspace el texto vacío, o empezá de nuevo con «Limpiar filtros»."
+        "step1": "Escribe lo que buscas y aprieta Enter dos veces: la primera lo cierra en un chip, la segunda busca.",
+        "step2": "Si hay demasiados resultados, escribe / y elige el comando con las flechas. Queda escrito en el texto, y todo lo que sigas escribiendo es su valor.",
+        "step3": "Si te sirve cualquiera de varias opciones del mismo comando, sepáralas con comas: una coma y sigues con la siguiente.",
+        "step4": "Si quieres sumar otro criterio, escribe /or o /and, elígelo de la lista, y sigue con el siguiente.",
+        "step5": "Aprieta Enter para cerrar lo escrito en chips, y Enter otra vez para buscar. Para corregir: toca la × de un chip, toca el chip del conector para cambiar «y» por «o», borra con Backspace el texto vacío, o empieza de nuevo con «Limpiar filtros»."
       },
       "naming": "Los comandos están siempre en inglés y llevan adelante la entidad a la que se refieren, separada por un guión bajo. Así el mismo comando busca lo mismo en cualquier pantalla, y no hay dos «/name» distintos según dónde estés.",
-      "choices": "Hay dos clases de comando. Los de texto libre esperan que escribas —un nombre, por ejemplo—. Los de opciones fijas te muestran la lista apenas dejás un espacio después del comando: no hace falta que sepas cómo se escribe cada valor, lo elegís de ahí y en el texto queda su nombre.",
-      "enter": "Nada se convierte en chip hasta que apretás Enter. Elegir un comando de la lista solo lo escribe: hasta Enter todo es texto que podés corregir, y da lo mismo si lo escribiste o lo elegiste.",
+      "choices": "Hay dos clases de comando. Los de texto libre esperan que escribas —un nombre, por ejemplo—. Los de opciones fijas te muestran la lista apenas dejas un espacio después del comando: no hace falta que sepas cómo se escribe cada valor, lo eliges de ahí y en el texto queda su nombre.",
+      "enter": "Nada se convierte en chip hasta que aprietas Enter. Elegir un comando de la lista solo lo escribe: hasta Enter todo es texto que puedes corregir, y da lo mismo si lo escribiste o lo elegiste.",
       "commandsTitle": "Los comandos de este buscador",
-      "commandChoices": "elegís entre: {{values}}",
+      "commandChoices": "eliges entre: {{values}}",
       "sampleValue": "texto",
       "examplePlain": "Lo que contenga ese texto, por el criterio básico de este buscador.",
       "exampleField": "Solo por {{field}}.",
@@ -45,18 +45,18 @@
     },
     "contexts": {
       "title": "Los contextos",
-      "intro": "Los roles se acumulan: podés ser jugador y master a la vez. Admin y owner son la excepción, porque son el mismo rol con distinto alcance: se tiene uno de los dos. Arriba a la izquierda hay un selector que cambia el contexto y con él las pantallas. Es organización de la interfaz, no un permiso: lo que podés hacer lo decide el servidor en cada acción.",
+      "intro": "Los roles se acumulan: puedes ser jugador y master a la vez. Admin y owner son la excepción, porque son el mismo rol con distinto alcance: se tiene uno de los dos. Arriba a la izquierda hay un selector que cambia el contexto y con él las pantallas. Es organización de la interfaz, no un permiso: lo que puedes hacer lo decide el servidor en cada acción.",
       "playerTitle": "Jugador",
-      "player": "Explorás las mesas abiertas, te postulás, y seguís tus postulaciones y tus mesas.",
+      "player": "Exploras las mesas abiertas, te postulas, y sigues tus postulaciones y tus mesas.",
       "masterTitle": "Master",
-      "master": "Dirigís mesas. Aparece si tenés el rol o si sos master de al menos una mesa, aunque no lo tengas: dirigir una mesa y poder crear mesas propias son cosas distintas.",
+      "master": "Diriges mesas. Aparece si tienes el rol o si eres master de al menos una mesa, aunque no lo tengas: dirigir una mesa y poder crear mesas propias son cosas distintas.",
       "adminTitle": "Admin",
-      "admin": "Revisás las mesas que esperan aprobación, pedís cambios, y creás mesas sin master para asignarles uno después.",
+      "admin": "Revisas las mesas que esperan aprobación, pides cambios, y creas mesas sin master para asignarles uno después.",
       "ownerTitle": "Owner",
       "owner": "Un admin con más alcance: todo lo de admin, más el historial de lo que se hizo, los archivos y el traspaso de cuentas. No se acumula con admin, lo reemplaza.",
       "steps": {
-        "step1": "Tocá el selector de contexto, arriba a la izquierda, al lado del nombre del sitio.",
-        "step2": "Elegí el contexto en el que querés trabajar. Solo aparecen los que te corresponden.",
+        "step1": "Toca el selector de contexto, arriba a la izquierda, al lado del nombre del sitio.",
+        "step2": "Elige el contexto en el que quieres trabajar. Solo aparecen los que te corresponden.",
         "step3": "Las pantallas cambian con el contexto; las notificaciones y tu cuenta no, están siempre."
       }
     },
@@ -74,51 +74,51 @@
     },
     "myFiles": {
       "title": "Mis archivos",
-      "what": "Mis archivos junta todo lo que subiste: fichas, material de mesa, entregas. Al adjuntar algo en una mesa, una postulación o una entrega podés elegir uno de acá en vez de subirlo otra vez.",
-      "cajon": "Al subir desde acá elegís en qué cajón va, y solo ves los tuyos: los de jugador (solicitud y entrega) si jugás, y los de master (de mesa y petición) si dirigís alguna mesa. Cuando subís desde una mesa o una entrega no se pregunta: el cajón sale de dónde lo subiste.",
+      "what": "Mis archivos junta todo lo que subiste: fichas, material de mesa, entregas. Al adjuntar algo en una mesa, una postulación o una entrega puedes elegir uno de aquí en vez de subirlo otra vez.",
+      "cajon": "Al subir desde aquí eliges en qué cajón va, y solo ves los tuyos: los de jugador (solicitud y entrega) si juegas, y los de master (de mesa y petición) si diriges alguna mesa. Cuando subes desde una mesa o una entrega no se pregunta: el cajón sale de dónde lo subiste.",
       "usages": "Cada archivo dice dónde se está usando. «Sin usar» avisa que nada lo tiene adjunto.",
-      "reuse": "Si subís algo que ya tenías, se reconoce y no se guarda dos veces: se usa el que ya estaba y te lo avisa.",
+      "reuse": "Si subes algo que ya tenías, se reconoce y no se guarda dos veces: se usa el que ya estaba y te lo avisa.",
       "purge": "Un archivo que ninguna mesa tiene agregado y que nadie usó en tres meses se da de baja solo.",
       "remove": "Dar de baja un archivo lo saca de tu lista y de las mesas que lo usan. No se borra del disco en el momento: eso lo hace el owner desde su menú de mantenimiento.",
       "steps": {
-        "step1": "Tocá «Subir archivo».",
-        "step2": "Soltá el archivo y elegí en qué cajón va.",
-        "step3": "Tocá «Subir».",
-        "step4": "Para cambiarle el nombre, usá el lápiz de su fila."
+        "step1": "Toca «Subir archivo».",
+        "step2": "Suelta el archivo y elige en qué cajón va.",
+        "step3": "Toca «Subir».",
+        "step4": "Para cambiarle el nombre, usa el lápiz de su fila."
       }
     },
     "mySchedule": {
       "title": "Mi horario",
-      "what": "Mi horario muestra tu semana entera: las mesas que dirigís y las que jugás, en la misma grilla.",
-      "colors": "El color dice el rol: uno para las mesas que dirigís y otro para las que jugás. La leyenda está debajo de la grilla.",
-      "click": "Cada bloque lleva a su mesa: si la dirigís, a su pantalla de master; si la jugás, a tu vista de jugador.",
+      "what": "Mi horario muestra tu semana entera: las mesas que diriges y las que juegas, en la misma cuadrícula.",
+      "colors": "El color dice el rol: uno para las mesas que diriges y otro para las que juegas. La leyenda está debajo de la cuadrícula.",
+      "click": "Cada bloque lleva a su mesa: si la diriges, a su pantalla de master; si la juegas, a tu vista de jugador.",
       "timeZone": "Todo está en tu zona horaria, la que dice el subtítulo.",
-      "room": "Un hueco en la grilla es un hueco que el sistema acepta: sirve para buscar lugar antes de crear una mesa o de postularte, porque dos compromisos que se pisan se rechazan.",
+      "room": "Un hueco en la cuadrícula es un hueco que el sistema acepta: sirve para buscar lugar antes de crear una mesa o de postularte, porque dos compromisos que se pisan se rechazan.",
       "list": "Debajo está la lista de tus mesas de la semana, incluidas las que todavía no tienen horario."
     },
     "requests": {
       "title": "Pedirle algo a un admin",
-      "intro": "Hay cosas que no podés hacer vos y las decide un admin. Para todas se usa el mismo mecanismo: escribís un pedido con su motivo y te responden.",
+      "intro": "Hay cosas que no puedes hacer tú y las decide un admin. Para todas se usa el mismo mecanismo: escribes un pedido con su motivo y te responden.",
       "kindTitle": {
         "MasterGrant": "Rol de master",
         "TableOpen": "Mesa nueva",
         "General": "Consulta"
       },
       "kind": {
-        "MasterGrant": "Se pide desde tu perfil, y solo aparece si todavía no sos master. Si te lo aprueban, podés crear y dirigir mesas.",
+        "MasterGrant": "Se pide desde tu perfil, y solo aparece si todavía no eres master. Si te lo aprueban, puedes crear y dirigir mesas.",
         "TableOpen": "Se pide desde tu perfil, o desde el explorador cuando buscaste una mesa y no había ninguna, y solo aparece si no tienes el rol de master. Le pones nombre a la mesa; si te lo aprueban, se crea un borrador con ese nombre que diriges tú, sin recibir el rol. Lo completas y lo envías a revisión como cualquier mesa.",
         "General": "Cualquier otra cosa. Se pide desde la pantalla de ayuda, para lo que las explicaciones no contestan."
       },
       "reason": "El motivo es obligatorio. Es todo lo que el admin va a leer: no hay nada más en el pedido que explique por qué corresponde.",
-      "onePending": "Podés tener un solo pedido de cada tipo esperando respuesta. Mientras uno esté pendiente, la pantalla te lo muestra en lugar del botón.",
+      "onePending": "Puedes tener un solo pedido de cada tipo esperando respuesta. Mientras uno esté pendiente, la pantalla te lo muestra en lugar del botón.",
       "answer": "La respuesta también lleva motivo obligatorio, la aprueben o la rechacen. Un «no» sin explicación no te deja nada para hacer.",
       "notified": "Te llega una notificación cuando lo resuelven, y al tocarla vas a donde se ve el resultado.",
       "noQueue": "No hay una pantalla donde mirar tu pedido esperando: lo que ves es el aviso en la pantalla donde lo hiciste, con la fecha en que lo mandaste.",
       "steps": {
         "step1": "Entra a la pantalla donde se pide: tu perfil para el rol de master o para dirigir una sola mesa (también el explorador, para la mesa), la ayuda para lo demás.",
-        "step2": "Tocá el botón de pedir. Si en su lugar ves un aviso, es porque ya hiciste ese pedido y todavía no te contestaron.",
-        "step3": "Escribí el motivo. Cuanto más concreto, menos vueltas: el admin decide con eso y nada más.",
-        "step4": "Enviá el pedido y esperá la notificación. No hace falta volver a pedirlo."
+        "step2": "Toca el botón de pedir. Si en su lugar ves un aviso, es porque ya hiciste ese pedido y todavía no te contestaron.",
+        "step3": "Escribe el motivo. Cuanto más concreto, menos vueltas: el admin decide con eso y nada más.",
+        "step4": "Envía el pedido y espera la notificación. No hace falta volver a pedirlo."
       }
     },
     "tableStatus": {
@@ -139,26 +139,26 @@
   "players": {
     "applying": {
       "title": "Postularte a una mesa",
-      "where": "Desde el explorador entrás al detalle de una mesa abierta y te postulás ahí, con un mensaje opcional para el master.",
-      "oneAtATime": "No podés tener dos postulaciones activas a la misma mesa, y tampoco postularte a una mesa que dirigís.",
+      "where": "Desde el explorador entras al detalle de una mesa abierta y te postulas ahí, con un mensaje opcional para el master.",
+      "oneAtATime": "No puedes tener dos postulaciones activas a la misma mesa, y tampoco postularte a una mesa que diriges.",
       "blocked": "Si la mesa está llena o no está abierta, en vez de un botón gris vas a ver el motivo escrito.",
       "steps": {
-        "step1": "Desde el explorador, abrí la mesa que te interese y leé la descripción y los requisitos.",
-        "step2": "Tocá «Postularme». Si el botón no está, en su lugar vas a leer el motivo.",
-        "step3": "Escribí un mensaje para el master si querés contarle algo. Es opcional.",
-        "step4": "Adjuntá tu hoja de personaje si hace falta. Podés subir una nueva o reusar una que ya tengas.",
-        "step5": "Revisá lo que vas a mandar y enviá. Después seguí la postulación desde «Mis postulaciones»."
+        "step1": "Desde el explorador, abre la mesa que te interese y lee la descripción y los requisitos.",
+        "step2": "Toca «Postularme». Si el botón no está, en su lugar vas a leer el motivo.",
+        "step3": "Escribe un mensaje para el master si quieres contarle algo. Es opcional.",
+        "step4": "Adjunta tu hoja de personaje si hace falta. Puedes subir una nueva o reusar una que ya tengas.",
+        "step5": "Revisa lo que vas a mandar y envía. Después sigue la postulación desde «Mis postulaciones»."
       },
-      "sheet": "Podés adjuntar la hoja de personaje, o lo que el master haya pedido. Es opcional.",
+      "sheet": "Puedes adjuntar la hoja de personaje, o lo que el master haya pedido. Es opcional.",
       "review": "Antes de enviar ves un paso de revisión con todo lo que va a salir.",
-      "noEdit": "Una postulación enviada no se edita ni se le saca un archivo. Si te equivocaste, la retirás y te postulás de nuevo."
+      "noEdit": "Una postulación enviada no se edita ni se le saca un archivo. Si te equivocaste, la retiras y te postulas de nuevo."
     },
     "applicationStatus": {
       "title": "En qué estado está tu postulación",
-      "intro": "Las seguís todas desde «Mis postulaciones».",
+      "intro": "Las sigues todas desde «Mis postulaciones».",
       "Candidate": "El master todavía no decidió.",
       "Player": "Te aceptaron: la mesa ya aparece en «Mis mesas».",
-      "Rejected": "El master la rechazó con un motivo escrito. Podés volver a postularte más adelante.",
+      "Rejected": "El master la rechazó con un motivo escrito. Puedes volver a postularte más adelante.",
       "auto": "Si la mesa se llena, las postulaciones que quedaron sin lugar se rechazan solas."
     },
     "myTables": {
@@ -169,54 +169,54 @@
     "scheduleConflict": {
       "title": "Choques de horario",
       "local": "Las mesas muestran su agenda en tu hora local, aunque por dentro se guarde en UTC.",
-      "blocked": "No podés postularte a una mesa que se pisa con otra donde ya jugás. La mesa te lo dice y explica con cuál.",
+      "blocked": "No puedes postularte a una mesa que se pisa con otra donde ya juegas. La mesa te lo dice y explica con cuál.",
       "candidate": "Tener varias postulaciones pendientes que se pisan sí se puede: hasta que te aceptan en una no hay compromiso.",
-      "notified": "Cuando te aceptan en una, si alguna de tus otras postulaciones se pisa con esa, te llega un aviso. Nadie las rechaza por vos.",
-      "withdraw": "Podés retirar una postulación pendiente desde «Mis postulaciones». Una vez aceptada, ya no: eso se habla con el master.",
+      "notified": "Cuando te aceptan en una, si alguna de tus otras postulaciones se pisa con esa, te llega un aviso. Nadie las rechaza por ti.",
+      "withdraw": "Puedes retirar una postulación pendiente desde «Mis postulaciones». Una vez aceptada, ya no: eso se habla con el master.",
       "steps": {
-        "step1": "Entrá a «Mis postulaciones».",
-        "step2": "Buscá la postulación pendiente que querés soltar.",
-        "step3": "Tocá «Retirar» y confirmá. Si después cambiás de idea, tenés que postularte de nuevo."
+        "step1": "Entra a «Mis postulaciones».",
+        "step2": "Busca la postulación pendiente que quieres soltar.",
+        "step3": "Toca «Retirar» y confirma. Si después cambias de idea, tienes que postularte de nuevo."
       }
     },
     "mySessions": {
       "title": "Mis sesiones y mi asistencia",
-      "where": "Entrá a «Mis mesas» y tocá la mesa: ahí están su agenda, el calendario completo y tu asistencia.",
+      "where": "Entra a «Mis mesas» y toca la mesa: ahí están su agenda, el calendario completo y tu asistencia.",
       "local": "Todas las fechas se muestran en tu hora local, aunque el sistema las guarde en UTC. Al pie dice en qué zona las estás viendo.",
       "paused": "Si la mesa está en pausa, las sesiones pendientes no se muestran: no hay fecha que prometer hasta que se retome.",
-      "cancelled": "Una sesión cancelada queda a la vista con su número, y la mesa agrega otra al final: seguís jugando la misma cantidad.",
+      "cancelled": "Una sesión cancelada queda a la vista con su número, y la mesa agrega otra al final: sigues jugando la misma cantidad.",
       "threeNumbers": "Tu asistencia son tres números y no un porcentaje: presente, con aviso y ausente. Faltar avisando y no aparecer son cosas distintas, y un promedio las escondería.",
       "denominator": "El denominador son las sesiones con algo registrado. Las que todavía nadie marcó no cuentan: si contaran, una mesa recién empezada te haría ver como ausente crónico.",
       "notKarma": "La asistencia no entra en tu karma. Se muestra aparte, porque son dos señales distintas y mezclarlas volvería el número imposible de explicar.",
       "steps": {
-        "step1": "Abrí «Mis mesas» desde el menú.",
-        "step2": "Tocá la mesa que te interesa.",
-        "step3": "Mirá «Mis sesiones» para el calendario y «Mi asistencia» para los tres números."
+        "step1": "Abre «Mis mesas» desde el menú.",
+        "step2": "Toca la mesa que te interesa.",
+        "step3": "Mira «Mis sesiones» para el calendario y «Mi asistencia» para los tres números."
       }
     },
     "tasks": {
       "title": "Peticiones: lo que te pide una mesa",
       "what": "Una mesa puede pedirte cosas: una ficha de personaje, un trasfondo, lo que el master necesite. Se responde con texto, con archivos, o con las dos cosas.",
       "where": "Aparecen en la mesa: en su página pública y en «mi mesa». Cuando el master publica una, te llega una notificación.",
-      "beforeApplying": "Antes de postularte ya podés leer lo que se le pide a los candidatos: es parte de decidir si te anotás. Responder viene después de postularte.",
-      "howToAnswer": "Abrí la petición y tocá «Entregar». Si acepta archivos podés subir uno nuevo o reusar uno que ya subiste antes, sin volver a subirlo.",
-      "accumulate": "Cada entrega se guarda aparte y no reemplaza a la anterior. Si mandás una segunda versión, la primera sigue estando y el master ve las dos.",
+      "beforeApplying": "Antes de postularte ya puedes leer lo que se le pide a los candidatos: es parte de decidir si te anotas. Responder viene después de postularte.",
+      "howToAnswer": "Abre la petición y toca «Entregar». Si acepta archivos puedes subir uno nuevo o reusar uno que ya subiste antes, sin volver a subirlo.",
+      "accumulate": "Cada entrega se guarda aparte y no reemplaza a la anterior. Si mandas una segunda versión, la primera sigue estando y el master ve las dos.",
       "noJudgement": "Nadie te aprueba ni te rechaza una entrega: el sistema se la acerca al master y ahí termina su trabajo.",
       "mandatory": "Una petición marcada como importante es un aviso del master, no una condición del sistema: no entregarla no te bloquea ni te saca de la mesa.",
       "closed": "Si el master cierra una petición, deja de aceptar entregas. Lo que hayas entregado antes sigue estando.",
       "due": "La fecha sugerida es una referencia. No pasa nada automático cuando se vence.",
       "steps": {
-        "step1": "Entrá a la mesa y buscá «Lo que pide esta mesa».",
-        "step2": "Abrí la petición para leer el detalle y ver si acepta texto, archivos o ambos.",
-        "step3": "Tocá «Entregar», escribí o adjuntá lo que te pidieron, y enviá."
+        "step1": "Entra a la mesa y busca «Lo que pide esta mesa».",
+        "step2": "Abre la petición para leer el detalle y ver si acepta texto, archivos o ambos.",
+        "step3": "Toca «Entregar», escribe o adjunta lo que te pidieron, y envía."
       }
     },
     "files": {
       "title": "Los archivos de mi mesa",
       "where": "Lo que tu master comparte aparece en «Mis mesas» → la mesa, y también en el detalle público de la mesa.",
-      "download": "Cada archivo tiene su botón de descarga. Al lado dice cuánto pesa, así sabés qué estás por bajar si estás con datos.",
-      "private": "Si tu master guardó algo solo para quienes dirigen la mesa, no lo vas a ver acá. No es un error ni un permiso que te falte: esos archivos son sus notas.",
-      "shared": "Un archivo que aparece hoy puede no estar mañana si el master lo quita de la mesa. Si lo necesitás, descargalo."
+      "download": "Cada archivo tiene su botón de descarga. Al lado dice cuánto pesa, así sabes qué estás por bajar si estás con datos.",
+      "private": "Si tu master guardó algo solo para quienes dirigen la mesa, no lo vas a ver aquí. No es un error ni un permiso que te falte: esos archivos son sus notas.",
+      "shared": "Un archivo que aparece hoy puede no estar mañana si el master lo quita de la mesa. Si lo necesitas, descárgalo."
     },
     "profile": {
       "title": "Perfiles",
@@ -224,15 +224,15 @@
       "attendance": "La asistencia son tres números —presente, con aviso y ausente— y no un porcentaje: una falta avisada y un plantón no son lo mismo, y un promedio los mezclaría.",
       "unregistered": "Las sesiones que el master todavía no registró no cuentan para ningún lado. Una mesa que arrancó ayer no te deja como ausente.",
       "whoSeesYours": "Tu perfil no es público. Lo ve el master de una mesa desde que le llega tu postulación, y tus compañeros de mesa.",
-      "whoYouSee": "Vos podés ver el perfil de los masters de cualquier mesa abierta —antes de postularte, que es justo para lo que sirve— y el de tus compañeros.",
+      "whoYouSee": "Tú puedes ver el perfil de los masters de cualquier mesa abierta —antes de postularte, que es justo para lo que sirve— y el de tus compañeros.",
       "expiry": "Dos semanas después de que una mesa termina o se cancela, dejan de verse los perfiles que esa mesa había abierto. El registro de con quién jugaste se conserva; lo que caduca es el acceso al perfil.",
       "paused": "Si la mesa está pausada no corre ese plazo: una mesa pausada no terminó, así que siguen siendo tus compañeros.",
-      "karma": "El karma y los comentarios todavía no existen. Cuando lleguen, van a aparecer acá."
+      "karma": "El karma y los comentarios todavía no existen. Cuando lleguen, van a aparecer aquí."
     },
     "history": {
       "title": "Tu historial",
       "what": "«Historial» guarda las mesas donde jugaste que ya terminaron o se cancelaron.",
-      "moves": "Una mesa se muda sola: mientras está viva la ves en «Mis mesas», y cuando cierra pasa acá. Nunca está en las dos.",
+      "moves": "Una mesa se muda sola: mientras está viva la ves en «Mis mesas», y cuando cierra pasa aquí. Nunca está en las dos.",
       "paused": "Una mesa pausada sigue en «Mis mesas»: está congelada, no terminada.",
       "attendance": "Cada mesa del historial lleva tu asistencia final, con los mismos tres números del perfil."
     }
@@ -244,11 +244,11 @@
       "wizard": "Armar la mesa lleva cuatro pasos: identidad, catálogos, agenda y cupo. El último te muestra el resumen antes de mandar.",
       "submit": "Cuando está lista se manda a revisión de un admin.",
       "steps": {
-        "step1": "Cambiá al contexto Master con el selector de arriba.",
-        "step2": "Entrá a «Mis mesas» y tocá «Crear mesa».",
-        "step3": "Seguí los cuatro pasos. La mesa nace en preparación y todavía no la ve nadie.",
-        "step4": "Cuando esté lista, mandala a revisión desde el aviso de estado de la mesa, arriba de las pestañas.",
-        "step5": "Esperá la decisión de un admin: te avisa la campana. Si pide cambios, llega con el motivo escrito."
+        "step1": "Cambia al contexto Master con el selector de arriba.",
+        "step2": "Entra a «Mis mesas» y toca «Crear mesa».",
+        "step3": "Sigue los cuatro pasos. La mesa nace en preparación y todavía no la ve nadie.",
+        "step4": "Cuando esté lista, mándala a revisión desde el aviso de estado de la mesa, arriba de las pestañas.",
+        "step5": "Espera la decisión de un admin: te avisa la campana. Si pide cambios, llega con el motivo escrito."
       }
     },
     "schedule": {
@@ -257,42 +257,42 @@
       "duration": "La duración es de una sesión, no de la campaña. Es lo que decide hasta qué hora ocupa cada franja.",
       "interval": "Dos mesas chocan si se pisan, no solo si empiezan a la misma hora: una de tres horas a las 20:00 se pisa con otra a las 22:00.",
       "chained": "Encadenar dos mesas sí se puede: una que arranca justo cuando termina la otra no choca.",
-      "conflict": "No podés dirigir dos mesas vivas que se pisen. Si intentás guardar una agenda así, el sistema te dice con cuál choca.",
+      "conflict": "No puedes dirigir dos mesas vivas que se pisen. Si intentas guardar una agenda así, el sistema te dice con cuál choca.",
       "paused": "Una mesa pausada no reserva horario: su agenda está congelada. Al reanudarla se vuelve a verificar.",
-      "players": "Si movés la agenda de una mesa que ya tiene gente, a quien le genera choque le llega un aviso. Nadie queda afuera por eso: el sistema informa, las personas deciden.",
+      "players": "Si mueves la agenda de una mesa que ya tiene gente, a quien le genera choque le llega un aviso. Nadie queda afuera por eso: el sistema informa, las personas deciden.",
       "steps": {
-        "step1": "En el paso «Agenda» del wizard, poné la fecha de la primera sesión y cuánto dura una sesión.",
-        "step2": "Agregá una franja por cada día que juega la mesa, con el día y la hora en tu zona.",
-        "step3": "Mirá la línea «En UTC» de cada franja: eso es lo que se guarda.",
-        "step4": "Si al guardar aparece un choque, cambiá la hora o liberá la otra mesa."
+        "step1": "En el paso «Agenda» del wizard, pon la fecha de la primera sesión y cuánto dura una sesión.",
+        "step2": "Agrega una franja por cada día que juega la mesa, con el día y la hora en tu zona.",
+        "step3": "Mira la línea «En UTC» de cada franja: eso es lo que se guarda.",
+        "step4": "Si al guardar aparece un choque, cambia la hora o libera la otra mesa."
       }
     },
     "sessions": {
       "title": "Las sesiones de tu mesa",
       "materialize": "El calendario se arma solo cuando un admin aprueba la mesa: toma la fecha de inicio, la agenda semanal y la cantidad de sesiones, y crea una fila por sesión con su número.",
-      "missing": "Si te falta alguno de los tres, la mesa abre igual pero sin calendario. Completá lo que falte y las sesiones aparecen; nadie te bloquea la aprobación por eso.",
+      "missing": "Si te falta alguno de los tres, la mesa abre igual pero sin calendario. Completa lo que falte y las sesiones aparecen; nadie te bloquea la aprobación por eso.",
       "local": "Las fechas se guardan en UTC y se muestran en tu hora local. Debajo del campo dice en qué zona estás escribiendo.",
-      "correct": "Podés corregir la fecha de una sesión suelta. Es una corrección de esa noche y no cambia la agenda semanal de la mesa.",
+      "correct": "Puedes corregir la fecha de una sesión suelta. Es una corrección de esa noche y no cambia la agenda semanal de la mesa.",
       "notes": "Las notas de cada sesión son tuyas: ningún jugador las ve.",
-      "hold": "Marcar una sesión como jugada es una acción aparte de registrar la asistencia. El sistema no deduce una de la otra: podés registrar quién vino sin cerrarla, y cerrarla sin registrar a nadie.",
-      "cancel": "Al cancelar una sesión, la mesa suma otra al final del calendario en la próxima franja libre de tu agenda. Así seguís jugando la cantidad que prometiste; lo que se corre es la fecha de cierre.",
+      "hold": "Marcar una sesión como jugada es una acción aparte de registrar la asistencia. El sistema no deduce una de la otra: puedes registrar quién vino sin cerrarla, y cerrarla sin registrar a nadie.",
+      "cancel": "Al cancelar una sesión, la mesa suma otra al final del calendario en la próxima franja libre de tu agenda. Así sigues jugando la cantidad que prometiste; lo que se corre es la fecha de cierre.",
       "cancelRecord": "La sesión cancelada no desaparece: queda con su número como registro de que estaba planificada. A los jugadores les llega el aviso.",
       "locked": "Una sesión ya jugada o cancelada no se edita: es el registro de algo que pasó o que no pasó.",
-      "paused": "Mientras la mesa está en pausa no se prometen fechas: las sesiones pendientes se ocultan, también para vos. Al retomarla se vuelven a agendar desde ese día, conservando su numeración.",
+      "paused": "Mientras la mesa está en pausa no se prometen fechas: las sesiones pendientes se ocultan, también para ti. Al retomarla se vuelven a agendar desde ese día, conservando su numeración.",
       "resumeConflict": "Si mientras estuvo pausada tomaste otra mesa que se pisa con esta, no se puede retomar hasta que arregles una de las dos agendas. Una mesa en pausa no reserva su horario, y al volver lo reclama.",
       "attendance": "La asistencia se registra por sesión, con cuatro valores: presente, con aviso, ausente y sin registrar. El padrón son los jugadores aceptados de la mesa.",
       "steps": {
-        "step1": "Entrá a tu mesa desde «Mis mesas» como master y abrí la pestaña «Sesiones».",
-        "step2": "Tocá una sesión para desplegarla: ahí están su fecha, sus notas y su padrón.",
-        "step3": "Corregí la fecha o escribí las notas y tocá «Guardar cambios».",
-        "step4": "Elegí la asistencia de cada jugador y tocá «Guardar asistencia».",
-        "step5": "Cuando la sesión ya pasó, marcala como jugada con el ✓ de la cabecera. Si no se jugó, cancelala con la ✗ — te avisa antes de confirmar que se agrega otra al final."
+        "step1": "Entra a tu mesa desde «Mis mesas» como master y abre la pestaña «Sesiones».",
+        "step2": "Toca una sesión para desplegarla: ahí están su fecha, sus notas y su padrón.",
+        "step3": "Corrige la fecha o escribe las notas y toca «Guardar cambios».",
+        "step4": "Elige la asistencia de cada jugador y toca «Guardar asistencia».",
+        "step5": "Cuando la sesión ya pasó, márcala como jugada con el ✓ de la cabecera. Si no se jugó, cancélala con la ✗ — te avisa antes de confirmar que se agrega otra al final."
       }
     },
     "review": {
       "title": "Revisión y cambios",
       "approve": "Si un admin la aprueba, la mesa queda abierta y empiezan a llegar postulaciones.",
-      "changes": "Si pide cambios, llega con el motivo escrito: corregís y la volvés a mandar.",
+      "changes": "Si pide cambios, llega con el motivo escrito: corriges y la vuelves a mandar.",
       "history": "Toda transición queda registrada en la pestaña Historial, con quién la hizo y por qué."
     },
     "candidates": {
@@ -301,9 +301,9 @@
       "accept": "Aceptar suma a la persona a la mesa. Si con eso se llena, el resto de las postulaciones se rechazan solas.",
       "reject": "Rechazar pide un motivo y no se puede deshacer, pero la persona puede volver a postularse.",
       "steps": {
-        "step1": "Entrá a tu mesa y abrí la pestaña Candidatos.",
-        "step2": "Leé el mensaje de cada persona. El orden es por fecha de postulación.",
-        "step3": "Tocá «Aceptar» para sumarla a la mesa, o «Rechazar» y escribí el motivo.",
+        "step1": "Entra a tu mesa y abre la pestaña Candidatos.",
+        "step2": "Lee el mensaje de cada persona. El orden es por fecha de postulación.",
+        "step3": "Toca «Aceptar» para sumarla a la mesa, o «Rechazar» y escribe el motivo.",
         "step4": "Si al aceptar la mesa se llena, el resto de las postulaciones se rechazan solas."
       }
     },
@@ -313,9 +313,9 @@
       "cancel": "Cancelar corta la mesa antes de tiempo y pide un motivo escrito. También puede hacerlo un admin.",
       "who": "Iniciar, finalizar y cancelar son del master de la mesa; un co-master no las ve.",
       "steps": {
-        "step1": "Abrí tu mesa: los botones están en el aviso de estado, arriba de las pestañas.",
-        "step2": "Tocá «Iniciar mesa» cuando empiecen a jugar: pasa a «En curso».",
-        "step3": "Al terminar, «Finalizar mesa». Si hay que cortarla antes, «Cancelar mesa» y escribí el motivo.",
+        "step1": "Abre tu mesa: los botones están en el aviso de estado, arriba de las pestañas.",
+        "step2": "Toca «Iniciar mesa» cuando empiecen a jugar: pasa a «En curso».",
+        "step3": "Al terminar, «Finalizar mesa». Si hay que cortarla antes, «Cancelar mesa» y escribe el motivo.",
         "step4": "Cada cambio queda en el historial de esa pestaña, con quién lo hizo y por qué."
       }
     },
@@ -326,14 +326,14 @@
       "assign": "Cuando un admin asigna masters, el primero que agrega es el master y el resto quedan de co-masters.",
       "add": "Solo el master de la mesa agrega, quita o promueve; un co-master no puede tocar quién dirige.",
       "cannotPlay": "Nadie puede ser co-master de una mesa donde ya juega, ni jugar en una que dirige.",
-      "promote": "Pasarle la mesa a un co-master te deja a vos de co-master: hay un solo master por mesa.",
-      "removeKeeps": "Quitar a un co-master le saca el acceso en el momento, pero queda registrado que dirigió la mesa; podés volver a agregarlo y recupera el mismo lugar.",
+      "promote": "Pasarle la mesa a un co-master te deja a ti de co-master: hay un solo master por mesa.",
+      "removeKeeps": "Quitar a un co-master le saca el acceso en el momento, pero queda registrado que dirigió la mesa; puedes volver a agregarlo y recupera el mismo lugar.",
       "cannotRemovePrimary": "Al master de la mesa no se lo puede quitar: primero hay que pasarle la mesa a otra persona.",
       "steps": {
-        "step1": "Entrá a tu mesa y abrí la pestaña «Jugadores».",
-        "step2": "Buscá a la persona en el buscador de «Quién dirige esta mesa» y elegila: entra como co-master.",
-        "step3": "Para pasarle la mesa, tocá la corona al lado de su nombre y confirmá.",
-        "step4": "Para quitarla, tocá la cruz y confirmá."
+        "step1": "Entra a tu mesa y abre la pestaña «Jugadores».",
+        "step2": "Busca a la persona en el buscador de «Quién dirige esta mesa» y elígela: entra como co-master.",
+        "step3": "Para pasarle la mesa, toca la corona al lado de su nombre y confirma.",
+        "step4": "Para quitarla, toca la cruz y confirma."
       }
     },
     "deleting": {
@@ -342,75 +342,75 @@
       "public": "Si ya estuvo abierta, en curso o pausada, no se elimina: se cancela con un motivo escrito. Otras personas la vieron o jugaron en ella, y eso es historia.",
       "gone": "Eliminar es definitivo y no deja rastro público: la mesa desaparece de tus mesas y de todos lados. Cancelar la deja visible como cancelada.",
       "steps": {
-        "step1": "Abrí la mesa: los botones están en el aviso de estado, arriba de las pestañas.",
+        "step1": "Abre la mesa: los botones están en el aviso de estado, arriba de las pestañas.",
         "step2": "Si todavía no se publicó vas a ver «Eliminar mesa» al lado de «Cancelar mesa».",
-        "step3": "Confirmá. Si la mesa ya se había abierto, el botón no está: ahí lo que corresponde es cancelar."
+        "step3": "Confirma. Si la mesa ya se había abierto, el botón no está: ahí lo que corresponde es cancelar."
       }
     },
     "proposeCatalog": {
       "title": "Proponer un sistema, tag o plataforma",
-      "what": "Al armar una mesa elegís sus sistemas, tags y plataformas de una lista. Si el que buscás no está, podés proponerlo desde el mismo campo.",
+      "what": "Al armar una mesa eliges sus sistemas, tags y plataformas de una lista. Si el que buscas no está, puedes proponerlo desde el mismo campo.",
       "pending": "Lo vas a poder usar en tu mesa enseguida, pero queda pendiente de aprobación: hasta que un admin lo acepte, los demás no lo ven y nadie puede filtrar por él.",
       "marked": "Mientras esté pendiente aparece marcado como tal en tu mesa, para que sepas por qué no lo ve nadie más.",
-      "existing": "Si lo que ibas a proponer ya existe escrito de otra forma, elegí el que está: el buscador encuentra la mesa por cualquiera de los dos nombres una vez que un admin los une.",
+      "existing": "Si lo que ibas a proponer ya existe escrito de otra forma, elige el que está: el buscador encuentra la mesa por cualquiera de los dos nombres una vez que un admin los une.",
       "steps": {
-        "step1": "En el campo de sistema, tag o plataforma, escribí lo que buscás.",
-        "step2": "Si aparece en la lista, elegilo.",
-        "step3": "Si no aparece, tocá «Proponer» con el nombre que escribiste.",
-        "step4": "Seguí armando la mesa: no tenés que esperar a que lo aprueben para publicarla."
+        "step1": "En el campo de sistema, tag o plataforma, escribe lo que buscas.",
+        "step2": "Si aparece en la lista, elígelo.",
+        "step3": "Si no aparece, toca «Proponer» con el nombre que escribiste.",
+        "step4": "Sigue armando la mesa: no tienes que esperar a que lo aprueben para publicarla."
       }
     },
     "tasks": {
       "title": "Peticiones: pedirle cosas a tu mesa",
-      "what": "Una petición es algo que le pedís a tu mesa: una ficha de personaje, un trasfondo, un mapa. Se responde con texto, con archivos, o con las dos cosas.",
-      "audience": "Elegís a quién se lo pedís. «Para quien quiera postularse» lo ve cualquiera que mire la mesa, incluso antes de anotarse; «para los jugadores» lo ven los que ya aceptaste.",
-      "single": "También podés pedirle algo a una sola persona de tu mesa: sirve para darle a cada jugador su material, y nadie más la ve.",
+      "what": "Una petición es algo que le pides a tu mesa: una ficha de personaje, un trasfondo, un mapa. Se responde con texto, con archivos, o con las dos cosas.",
+      "audience": "Eliges a quién se lo pides. «Para quien quiera postularse» lo ve cualquiera que mire la mesa, incluso antes de anotarse; «para los jugadores» lo ven los que ya aceptaste.",
+      "single": "También puedes pedirle algo a una sola persona de tu mesa: sirve para darle a cada jugador su material, y nadie más la ve.",
       "notify": "Publicar es avisar: al confirmar, a cada destinatario le llega una notificación con el título de lo que pediste.",
-      "edit": "Corregir una petición no vuelve a avisar. El aviso sale una sola vez, cuando la publicás, para que la campana siga significando algo.",
-      "answers": "Al abrir una petición ves lo que entregaron y quiénes faltan. Los archivos que te mandan los podés abrir vos, aunque no sean tuyos.",
+      "edit": "Corregir una petición no vuelve a avisar. El aviso sale una sola vez, cuando la publicas, para que la campana siga significando algo.",
+      "answers": "Al abrir una petición ves lo que entregaron y quiénes faltan. Los archivos que te mandan los puedes abrir tú, aunque no sean tuyos.",
       "accumulate": "Las entregas se acumulan: si alguien manda una segunda versión, la primera sigue estando. El sistema no decide cuál vale.",
       "noJudgement": "No hay aprobar ni rechazar una entrega. Revisarla es tuyo: el sistema entrega lo que llegó y no opina.",
       "mandatory": "Marcar una petición como importante es solo una etiqueta. No bloquea a nadie, no expulsa a nadie y no cambia ninguna otra cosa.",
       "close": "Cerrar una petición corta las entregas nuevas. Lo que ya entregaron sigue estando y se sigue leyendo.",
       "steps": {
-        "step1": "Entrá a tu mesa y abrí la pestaña Peticiones.",
-        "step2": "Tocá «Publicar petición» y escribí qué pedís y a quién.",
-        "step3": "Elegí si se responde con texto, con archivos o con ambos, y publicá: ahí sale el aviso.",
-        "step4": "Abrí la petición cuando quieras para ver lo que entregaron y a quién le falta."
+        "step1": "Entra a tu mesa y abre la pestaña Peticiones.",
+        "step2": "Toca «Publicar petición» y escribe qué pides y a quién.",
+        "step3": "Elige si se responde con texto, con archivos o con ambos, y publica: ahí sale el aviso.",
+        "step4": "Abre la petición cuando quieras para ver lo que entregaron y a quién le falta."
       }
     },
     "files": {
       "title": "Archivos de la mesa",
-      "what": "En la pestaña Archivos ponés el material de la mesa: mapas, handouts, la ficha que pedís, tus notas.",
-      "reuse": "Podés subir uno nuevo o reutilizar algo que ya subiste antes. Reutilizar no vuelve a ocupar espacio y es lo que hace que la misma ficha no se guarde diez veces.",
-      "published": "La pestaña «Publicados» trae los archivos que subieron los admins para toda la comunidad. Si usás uno, no se copia: si el admin lo corrige, tu mesa ve la corrección.",
+      "what": "En la pestaña Archivos pones el material de la mesa: mapas, handouts, la ficha que pides, tus notas.",
+      "reuse": "Puedes subir uno nuevo o reutilizar algo que ya subiste antes. Reutilizar no vuelve a ocupar espacio y es lo que hace que la misma ficha no se guarde diez veces.",
+      "published": "La pestaña «Publicados» trae los archivos que subieron los admins para toda la comunidad. Si usas uno, no se copia: si el admin lo corrige, tu mesa ve la corrección.",
       "shared": "Un archivo compartido lo ven tus jugadores y tus candidatos, en el detalle público de la mesa y en «Mis mesas».",
-      "private": "Marcado como «solo para quienes dirigen la mesa», lo ven únicamente vos y tus co-masters. No aparece en ningún lado para el resto: no está bloqueado, directamente no está.",
+      "private": "Marcado como «solo para quienes dirigen la mesa», lo ven únicamente tú y tus co-masters. No aparece en ningún lado para el resto: no está bloqueado, directamente no está.",
       "detach": "Quitar un archivo lo saca de esta mesa y nada más. Sigue en tu lista y en las otras mesas donde lo hayas puesto.",
       "limits": "Hasta {{maxMb}} MB por archivo, y solo se aceptan los tipos que la zona de carga enumera. Si un archivo se pasa o no es de esos tipos, la pantalla te dice cuál es el problema antes de guardar nada.",
       "steps": {
-        "step1": "Entrá a tu mesa desde «Mis mesas» como master y abrí la pestaña Archivos.",
-        "step2": "Tocá «Agregar un archivo» y elegí si es material de preparación o algo de una sesión.",
-        "step3": "Decidí si lo ven tus jugadores o si queda solo para quienes dirigen, y subí el archivo o elegí uno de «Mis archivos» o de «Publicados».",
-        "step4": "Desde la lista podés cambiar en cualquier momento quién lo ve, o quitarlo de la mesa sin borrarlo."
+        "step1": "Entra a tu mesa desde «Mis mesas» como master y abre la pestaña Archivos.",
+        "step2": "Toca «Agregar un archivo» y elige si es material de preparación o algo de una sesión.",
+        "step3": "Decide si lo ven tus jugadores o si queda solo para quienes dirigen, y sube el archivo o elige uno de «Mis archivos» o de «Publicados».",
+        "step4": "Desde la lista puedes cambiar en cualquier momento quién lo ve, o quitarlo de la mesa sin borrarlo."
       },
       "category": "Cada archivo dice qué es: ficha de personaje, material de mesa, plantilla o reglamento. No es decoración: es lo que te deja encontrar la plantilla de la comunidad entre treinta documentos sin ir leyendo nombres de archivo.",
-      "dedup": "Si subís algo que ya tenías subido, el sistema lo reconoce y reutiliza el que ya estaba en vez de guardarlo dos veces. La pantalla te lo avisa cuando pasa.",
-      "library": "Todo lo que subís queda en «Mis archivos», con dónde se está usando cada uno. Un archivo que no aparece en ninguna mesa es el primero que se libera cuando pasa mucho tiempo sin usarse.",
+      "dedup": "Si subes algo que ya tenías subido, el sistema lo reconoce y reutiliza el que ya estaba en vez de guardarlo dos veces. La pantalla te lo avisa cuando pasa.",
+      "library": "Todo lo que subes queda en «Mis archivos», con dónde se está usando cada uno. Un archivo que no aparece en ninguna mesa es el primero que se libera cuando pasa mucho tiempo sin usarse.",
       "commands": "El buscador de tus archivos entiende «/file_name» (el nombre), «/file_type» (el formato) y «/file_categories» (el cajón, solo los tuyos). Los dos últimos se eligen de una lista, y «/and» y «/or» aparecen apenas hay algo que unir."
     },
     "dashboard": {
       "title": "Lo que espera tu respuesta",
-      "what": "«Lo que espera» es una bandeja de trabajo, no un resumen con números: lista solo cosas que podés resolver.",
+      "what": "«Lo que espera» es una bandeja de trabajo, no un resumen con números: lista solo cosas que puedes resolver.",
       "order": "El orden es por tiempo de espera, no por cantidad: arriba va lo que lleva más tiempo sin respuesta.",
       "kinds": "Lista candidatos sin responder, peticiones vencidas con gente que no entregó, sesiones jugadas sin registrar, mesas con correcciones pedidas y mesas cuya fecha de inicio ya pasó.",
       "noReservation": "No hay reserva ni turnos: el trabajo de una mesa tiene un solo dueño y nadie te lo disputa.",
       "empty": "Vacía es buena noticia, no un error: significa que tus mesas están al día.",
-      "notMetrics": "No vas a encontrar acá cuántos jugadores tenés ni la asistencia promedio: ninguno de esos números cambia lo que hacés a continuación.",
+      "notMetrics": "No vas a encontrar aquí cuántos jugadores tienes ni la asistencia promedio: ninguno de esos números cambia lo que haces a continuación.",
       "steps": {
-        "step1": "Elegí el contexto «Master» arriba: caés directo en la bandeja.",
-        "step2": "Leé la primera fila: es lo que lleva más tiempo esperando.",
-        "step3": "Tocá «Resolver» y te lleva a la pestaña donde eso se resuelve."
+        "step1": "Elige el contexto «Master» arriba: caes directo en la bandeja.",
+        "step2": "Lee la primera fila: es lo que lleva más tiempo esperando.",
+        "step3": "Toca «Resolver» y te lleva a la pestaña donde eso se resuelve."
       }
     },
     "editTable": {
@@ -422,23 +422,23 @@
       "conflict": "Si la agenda nueva se pisa con otra mesa tuya, el guardado falla y la pantalla dice con cuál.",
       "resubmit": "Corregir no reenvía la mesa a revisión: eso se hace desde el aviso de estado de la mesa, arriba de las pestañas.",
       "steps": {
-        "step1": "Abrí tu mesa y tocá «Editar» arriba a la derecha.",
-        "step2": "Cambiá lo que haga falta: identidad, catálogos, agenda o cupo.",
-        "step3": "Guardá los cambios.",
-        "step4": "Si un admin había pedido correcciones, reenviá la mesa a revisión desde el aviso de estado."
+        "step1": "Abre tu mesa y toca «Editar» arriba a la derecha.",
+        "step2": "Cambia lo que haga falta: identidad, catálogos, agenda o cupo.",
+        "step3": "Guarda los cambios.",
+        "step4": "Si un admin había pedido correcciones, reenvía la mesa a revisión desde el aviso de estado."
       }
     },
     "pause": {
       "title": "Pedir una pausa",
       "what": "Pausar una mesa lo decide un admin. El master la pide, el admin responde, y recién ahí la mesa entra en pausa.",
       "who": "Lo puede pedir cualquiera que dirija la mesa: el master o un co-master.",
-      "notYet": "Pedir no es pausar. Mientras el pedido espera, la mesa sigue «En curso» y el calendario sigue prometiendo sus fechas: si dejás de aparecer antes de la respuesta, tus jugadores te esperan.",
+      "notYet": "Pedir no es pausar. Mientras el pedido espera, la mesa sigue «En curso» y el calendario sigue prometiendo sus fechas: si dejas de aparecer antes de la respuesta, tus jugadores te esperan.",
       "reason": "El motivo es obligatorio. Es lo que lee el admin para decidir, y queda en el historial de estados de la mesa.",
       "freeze": "Con la mesa pausada, las sesiones pendientes se ocultan: la mesa deja de prometer fechas que no sabe si va a cumplir.",
       "resume": "Al reanudarla, las sesiones pendientes se vuelven a agendar desde el día en que se retoma, conservando la numeración. No se pierde ninguna.",
       "steps": {
-        "step1": "Abrí tu mesa: el botón está en el aviso de estado, arriba de las pestañas. La mesa tiene que estar en curso.",
-        "step2": "Tocá «Pedir pausa» y escribí por qué. El motivo es obligatorio.",
+        "step1": "Abre tu mesa: el botón está en el aviso de estado, arriba de las pestañas. La mesa tiene que estar en curso.",
+        "step2": "Toca «Pedir pausa» y escribe por qué. El motivo es obligatorio.",
         "step3": "La mesa pasa a «Pausa solicitada» y el pedido le llega a los admins. Hasta que respondan, la mesa sigue jugándose normal.",
         "step4": "Cuando un admin apruebe, la mesa queda pausada y el calendario se congela. Reanudarla también es de ellos."
       }
@@ -449,17 +449,17 @@
       "perTable": "Es por mesa, y solo por esa mesa. No pierde la cuenta, ni el karma, ni las otras mesas donde juega: lo que desaparece para esa persona es esta mesa y nada más.",
       "onlyPlayers": "El veto es solo para quien ya juega en la mesa. A un candidato no se lo veta: se lo rechaza.",
       "who": "Nadie veta directo: cualquier master de la mesa, sea el principal o un co-master, pide el veto con un motivo, y lo decide un admin desde su bandeja.",
-      "pending": "Mientras el pedido espera, no cambia nada: la persona sigue en la mesa, la ve y juega como siempre. Si el admin lo aprueba, el veto rige en el acto; si lo rechaza, todo queda como estaba. En los dos casos te llega un aviso a vos, que lo pediste.",
+      "pending": "Mientras el pedido espera, no cambia nada: la persona sigue en la mesa, la ve y juega como siempre. Si el admin lo aprueba, el veto rige en el acto; si lo rechaza, todo queda como estaba. En los dos casos te llega un aviso a ti, que lo pediste.",
       "reason": "El motivo es obligatorio al pedir el veto y al levantarlo. Es lo que el admin lee para decidir, y queda registrado con quién lo hizo y cuándo, para que la decisión se pueda revisar después.",
       "invisible": "A la persona no se le avisa. La mesa simplemente deja de existir para ella, así que el motivo que escribas no lo lee: lo leen los masters de la mesa y los admins.",
       "reversible": "Se puede levantar. Un veto no es una baja: es reversible, y por eso pide un motivo. Lo levanta el master principal o un admin; un co-master no.",
       "lifted": "Al levantarlo, la persona vuelve como jugadora. Si mientras tanto la mesa se llenó, queda con la postulación rechazada por falta de lugar, y puede postularse de nuevo cuando se libere uno.",
       "stays": "La fila de quien está vetado se sigue viendo en Jugadores, marcada, con quién pidió el veto y por qué, y qué admin lo aprobó y cuándo. Es desde ahí que se levanta el veto.",
       "steps": {
-        "step1": "Abrí tu mesa y andá a la pestaña Jugadores.",
-        "step2": "Buscá a la persona en la lista de jugadores.",
-        "step3": "Tocá «Pedir veto» en su fila y escribí el motivo. Es obligatorio, y lo decide un admin.",
-        "step4": "Esperá la respuesta del admin. Hasta entonces la persona sigue en la mesa.",
+        "step1": "Abre tu mesa y ve a la pestaña Jugadores.",
+        "step2": "Busca a la persona en la lista de jugadores.",
+        "step3": "Toca «Pedir veto» en su fila y escribe el motivo. Es obligatorio, y lo decide un admin.",
+        "step4": "Espera la respuesta del admin. Hasta entonces la persona sigue en la mesa.",
         "step5": "Para deshacer un veto aplicado, la misma fila ofrece «Levantar el veto», que también pide motivo (lo levanta el master principal o un admin)."
       }
     },
@@ -472,10 +472,10 @@
       "noReturn": "No se vuelve a encender sola. Si la mesa se pausa y después se reanuda, o si rechazan el pedido de pausa, la búsqueda queda apagada hasta que un master la encienda de nuevo.",
       "plain": "Buscar jugadores no cambia el estado de la mesa: sigue en curso, con su agenda y sus sesiones, y no le avisa a nadie.",
       "steps": {
-        "step1": "Abrí tu mesa: los botones están en el aviso de estado, arriba de las pestañas. La mesa tiene que estar en curso y con un lugar libre.",
-        "step2": "Tocá «Buscar jugadores». La mesa aparece en el explorador.",
-        "step3": "Aceptá a los candidatos como en cualquier mesa. Al ocupar el último lugar, la búsqueda se apaga sola.",
-        "step4": "Para dejar de recibir postulaciones antes, tocá «Dejar de buscar»."
+        "step1": "Abre tu mesa: los botones están en el aviso de estado, arriba de las pestañas. La mesa tiene que estar en curso y con un lugar libre.",
+        "step2": "Toca «Buscar jugadores». La mesa aparece en el explorador.",
+        "step3": "Acepta a los candidatos como en cualquier mesa. Al ocupar el último lugar, la búsqueda se apaga sola.",
+        "step4": "Para dejar de recibir postulaciones antes, toca «Dejar de buscar»."
       }
     }
   },
@@ -484,44 +484,44 @@
       "title": "Revisar mesas",
       "queue": "Una mesa que el master envió a revisión se resuelve desde dos lugares: la «Bandeja», junto con todo lo demás que espera una acción, o el aviso que aparece arriba de las pestañas de la propia mesa, después de leerla entera. Una mesa devuelta con cambios pedidos está en manos del master, no en las tuyas.",
       "approve": "Aprobar publica la mesa. Pedir cambios la devuelve al master con el motivo escrito, que lee en el historial de su mesa. En los dos casos le llega un aviso.",
-      "listing": "«Mesas» tiene todas las mesas de la plataforma, con su estado y con buscador. Desde ahí abrís cualquiera y la ves completa.",
+      "listing": "«Mesas» tiene todas las mesas de la plataforma, con su estado y con buscador. Desde ahí abres cualquiera y la ves completa.",
       "steps": {
-        "step1": "Andá a «Bandeja», o a «Mesas» y abrí la mesa.",
-        "step2": "Si la vas a leer con calma desde la bandeja, tocá «Tomar» para que no la revise otro al mismo tiempo.",
-        "step3": "Leé lo que preparó el master: en la mesa, sus pestañas tienen todo.",
-        "step4": "Tocá «Aprobar» para publicarla, o «Pedir cambios» y escribí qué hay que corregir."
+        "step1": "Ve a «Bandeja», o a «Mesas» y abre la mesa.",
+        "step2": "Si la vas a leer con calma desde la bandeja, toca «Tomar» para que no la revise otro al mismo tiempo.",
+        "step3": "Lee lo que preparó el master: en la mesa, sus pestañas tienen todo.",
+        "step4": "Toca «Aprobar» para publicarla, o «Pedir cambios» y escribe qué hay que corregir."
       },
-      "cancel": "Si la mesa no tiene arreglo, desde ese mismo aviso también la podés cancelar, con el motivo. No se deshace."
+      "cancel": "Si la mesa no tiene arreglo, desde ese mismo aviso también la puedes cancelar, con el motivo. No se deshace."
     },
     "claiming": {
       "title": "Tomar algo de la bandeja",
-      "what": "La bandeja es de todos los admins. Tomar un ítem avisa que estás con eso: apenas lo tomás, desaparece de la bandeja de los demás.",
-      "notRequired": "No hace falta tomarlo para resolverlo. Lo que está libre lo podés aprobar, rechazar o devolver directamente, y al hacerlo queda tuyo solo.",
-      "whenToClaim": "Tomalo cuando vayas a tardar: leer una mesa entera lleva un rato, y es justo el rato en el que otro admin podría estar leyendo la misma.",
-      "yours": "Mientras es tuyo lo ves en tu bandeja con tu nombre y desde cuándo lo tenés, para que sepas cuánto te queda.",
-      "timeout": "Se libera solo a los {{minutes}} minutos. Es para que nadie bloquee un pedido por cerrar la pestaña, no un límite para pensar: si se te venció, lo tomás de nuevo.",
-      "release": "Si no sos la persona indicada, tocá «Soltar» y vuelve a la bandeja al instante, sin esperar los {{minutes}} minutos.",
-      "race": "Lo único que no podés hacer es trabajar sobre algo que tomó otro. Si se te adelantó por un segundo, la pantalla te lo dice en lugar de aplicar tu decisión encima de la suya.",
+      "what": "La bandeja es de todos los admins. Tomar un ítem avisa que estás con eso: apenas lo tomas, desaparece de la bandeja de los demás.",
+      "notRequired": "No hace falta tomarlo para resolverlo. Lo que está libre lo puedes aprobar, rechazar o devolver directamente, y al hacerlo queda tuyo solo.",
+      "whenToClaim": "Tómalo cuando vayas a tardar: leer una mesa entera lleva un rato, y es justo el rato en el que otro admin podría estar leyendo la misma.",
+      "yours": "Mientras es tuyo lo ves en tu bandeja con tu nombre y desde cuándo lo tienes, para que sepas cuánto te queda.",
+      "timeout": "Se libera solo a los {{minutes}} minutos. Es para que nadie bloquee un pedido por cerrar la pestaña, no un límite para pensar: si se te venció, lo tomas de nuevo.",
+      "release": "Si no eres la persona indicada, toca «Soltar» y vuelve a la bandeja al instante, sin esperar los {{minutes}} minutos.",
+      "race": "Lo único que no puedes hacer es trabajar sobre algo que tomó otro. Si se te adelantó por un segundo, la pantalla te lo dice en lugar de aplicar tu decisión encima de la suya.",
       "steps": {
-        "step1": "Entrá a «Bandeja». Cada fila dice si está libre o quién la tomó.",
-        "step2": "Si vas a leerla con calma, tocá «Tomar» para que nadie más la agarre mientras tanto.",
-        "step3": "Resolvela: aprobar, rechazar o pedir cambios, según lo que sea.",
-        "step4": "Si al final no la vas a resolver, tocá «Soltar» para devolverla."
+        "step1": "Entra a «Bandeja». Cada fila dice si está libre o quién la tomó.",
+        "step2": "Si vas a leerla con calma, toca «Tomar» para que nadie más la tome mientras tanto.",
+        "step3": "Resuélvela: aprobar, rechazar o pedir cambios, según lo que sea.",
+        "step4": "Si al final no la vas a resolver, toca «Soltar» para devolverla."
       }
     },
     "assignMasters": {
       "title": "Mesas sin master",
       "create": "Un admin puede crear una mesa sin ser su master. Nace sin asignar y no se publica hasta que tenga uno.",
       "search": "Para asignarla se buscan personas por nombre de Discord o del sistema, con el mismo lenguaje de búsqueda de siempre.",
-      "order": "El primero que agregás es el master y el resto quedan de co-masters. Tocá un nombre para hacerlo master: el que estaba pasa a co-master.",
+      "order": "El primero que agregas es el master y el resto quedan de co-masters. Toca un nombre para hacerlo master: el que estaba pasa a co-master.",
       "opens": "Al asignar, la mesa queda abierta directamente, sin pasar por revisión.",
       "steps": {
-        "step1": "En «Mesas», tocá «Crear mesa sin master» y poné el nombre.",
-        "step2": "En la fila de esa mesa, tocá «Asignar masters».",
-        "step3": "Buscá a la persona por su nombre de Discord o del sistema y tocá su nombre en la lista.",
-        "step4": "Sumá a los demás igual. El primero es el master; el resto quedan de co-masters.",
-        "step5": "Si querés otro master, tocá su nombre en los chips: el que estaba pasa a co-master.",
-        "step6": "Tocá «Asignar masters». La mesa queda abierta al instante, sin pasar por revisión."
+        "step1": "En «Mesas», toca «Crear mesa sin master» y pon el nombre.",
+        "step2": "En la fila de esa mesa, toca «Asignar masters».",
+        "step3": "Busca a la persona por su nombre de Discord o del sistema y toca su nombre en la lista.",
+        "step4": "Suma a los demás igual. El primero es el master; el resto quedan de co-masters.",
+        "step5": "Si quieres otro master, toca su nombre en los chips: el que estaba pasa a co-master.",
+        "step6": "Toca «Asignar masters». La mesa queda abierta al instante, sin pasar por revisión."
       },
       "delete": "Si la mesa sin master ya no va a hacerse, se elimina desde la misma fila: nunca se publicó, así que no queda rastro."
     },
@@ -534,57 +534,57 @@
     },
     "catalogs": {
       "title": "Catálogos: sistemas, tags y plataformas",
-      "what": "Un catálogo es la lista de valores que los masters pueden elegir al armar una mesa. Los masters también pueden proponer uno nuevo, y ahí es donde entrás vos.",
+      "what": "Un catálogo es la lista de valores que los masters pueden elegir al armar una mesa. Los masters también pueden proponer uno nuevo, y ahí es donde entras tú.",
       "canvas": "La tabla muestra un grupo por fila. Al abrirlo lo ves como un lienzo: el principal al centro, sus equivalentes alrededor y, a la izquierda, las propuestas que todavía nadie clasificó, flotando hasta que las conectes.",
       "pending": "Un valor propuesto queda pendiente: el master ya puede usarlo en su mesa, pero los jugadores no lo ven ni pueden filtrar por él hasta que lo aceptes.",
-      "groups": "Al aceptarlo decidís si es un valor nuevo o si es otra forma de escribir uno que ya existe. Lo segundo arma un grupo: «DANDD» y «D&D 5e» pasan a ser el mismo valor a la hora de buscar.",
+      "groups": "Al aceptarlo decides si es un valor nuevo o si es otra forma de escribir uno que ya existe. Lo segundo arma un grupo: «DANDD» y «D&D 5e» pasan a ser el mismo valor a la hora de buscar.",
       "alias": "Cada mesa sigue mostrando el nombre que eligió su master. La equivalencia funciona en la búsqueda, no en la pantalla.",
       "merge": "En el lienzo, arrastrar un valor hasta el principal de un grupo lo clasifica: una propuesta se acepta en ese grupo, un equivalente se muda y un principal fusiona su grupo entero. Quitar una conexión separa ese valor. Nada de eso toca las mesas: lo que ya estaba etiquetado se sigue encontrando igual.",
       "disable": "Dar de baja saca un valor de circulación sin romper nada. Las mesas que lo usan lo conservan y restaurarlo devuelve todo como estaba.",
-      "successor": "Podés cambiar el principal de un grupo sin sacar a nadie con «Hacer principal». Si en cambio das de baja al principal, elegís vos cuál de sus equivalentes lo reemplaza: el sistema no lo decide solo.",
+      "successor": "Puedes cambiar el principal de un grupo sin sacar a nadie con «Hacer principal». Si en cambio das de baja al principal, eliges tú cuál de sus equivalentes lo reemplaza: el sistema no lo decide solo.",
       "steps": {
-        "step1": "Cambiá al contexto Admin y entrá a «Catálogos».",
-        "step2": "Elegí la pestaña del catálogo: sistemas, tags o plataformas. Si la lista es larga, buscá: un equivalente también encuentra a su grupo.",
-        "step3": "Una propuesta nueva aparece como un grupo propio. Aprobala desde la fila si es un valor nuevo, o rechazala.",
-        "step4": "Tocá el nombre de un grupo para abrir su lienzo. Para mover o fusionar, traé el otro grupo desde el panel de la derecha.",
-        "step5": "Arrastrá desde el punto derecho de un valor hasta el punto izquierdo de un principal. Para separar, seleccioná la conexión y apretá Supr.",
+        "step1": "Cambia al contexto Admin y entra a «Catálogos».",
+        "step2": "Elige la pestaña del catálogo: sistemas, tags o plataformas. Si la lista es larga, busca: un equivalente también encuentra a su grupo.",
+        "step3": "Una propuesta nueva aparece como un grupo propio. Apruébala desde la fila si es un valor nuevo, o recházala.",
+        "step4": "Toca el nombre de un grupo para abrir su lienzo. Para mover o fusionar, trae el otro grupo desde el panel de la derecha.",
+        "step5": "Arrastra desde el punto derecho de un valor hasta el punto izquierdo de un principal. Para separar, selecciona la conexión y aprieta Supr.",
         "step6": "Todo lo que se hace arrastrando también está en el menú «…» de cada valor, junto con «Hacer principal», «Dar de baja» y «Restaurar»."
       }
     },
     "files": {
       "title": "Archivos",
       "what": "«Archivos» es la biblioteca de la comunidad: lo publicado y lo que espera para publicarse, con quién lo subió y en cuántas mesas se usa.",
-      "publish": "Cada archivo está Sin publicar (ningún master lo ve), Publicado (los masters lo ven y lo pueden agregar a sus mesas) u Oculto (estuvo publicado y dejó de ofrecerse). Al subir elegís si lo publicás ya o lo dejás sin publicar, y siempre se confirma antes.",
-      "categories": "Al subir elegís qué es cada archivo: «De mesa» (aparece cuando un master arma su mesa o busca candidatos), «Petición del master» (cuando pide algo en una mesa que ya corre) o «Anuncios de la comunidad».",
-      "playerSide": "«Solicitud de jugador» y «Entrega del jugador» no aparecen acá a propósito: guardan lo que cada jugador respondió, con las hojas que le dio su master. No hay nada que la comunidad publique ahí.",
+      "publish": "Cada archivo está Sin publicar (ningún master lo ve), Publicado (los masters lo ven y lo pueden agregar a sus mesas) u Oculto (estuvo publicado y dejó de ofrecerse). Al subir eliges si lo publicas ya o lo dejas sin publicar, y siempre se confirma antes.",
+      "categories": "Al subir eliges qué es cada archivo: «De mesa» (aparece cuando un master arma su mesa o busca candidatos), «Petición del master» (cuando pide algo en una mesa que ya corre) o «Anuncios de la comunidad».",
+      "playerSide": "«Solicitud de jugador» y «Entrega del jugador» no aparecen aquí a propósito: guardan lo que cada jugador respondió, con las hojas que le dio su master. No hay nada que la comunidad publique ahí.",
       "private": "Los archivos privados de las personas no se ven ni se dan de baja desde esta pantalla: son suyos, no de la biblioteca.",
       "notALock": "El cajón no es un permiso. Define en qué listados aparece el archivo, no quién puede abrirlo: un archivo publicado es público.",
-      "unpublish": "Ocultar un archivo lo saca de lo que se ofrece a los masters, pero sigue en la biblioteca y lo podés volver a publicar. Las mesas que ya lo agregaron lo conservan. Mientras está sin publicar u oculto podés cambiar qué es.",
+      "unpublish": "Ocultar un archivo lo saca de lo que se ofrece a los masters, pero sigue en la biblioteca y lo puedes volver a publicar. Las mesas que ya lo agregaron lo conservan. Mientras está sin publicar u oculto puedes cambiar qué es.",
       "remove": "Dar de baja un archivo lo saca de todas las mesas que lo usan. No lo borra para siempre: eso lo hace el owner desde su menú de mantenimiento.",
       "purge": "Los archivos que nadie usa ni tiene agregado a una mesa se dan de baja solos a los tres meses. Los de la biblioteca no, estén publicados o no: son de la plataforma y no caducan.",
       "steps": {
-        "step1": "Entrá a «Archivos» desde las secciones de administración.",
-        "step2": "Tocá «Subir archivos», soltá los archivos y elegí qué es cada uno.",
-        "step3": "Tocá «Subir sin publicar» o «Subir y publicar», y confirmá.",
-        "step4": "Desde la fila publicás, ocultás o cambiás qué es; la columna «Mesas» te dice en cuántas se usa antes de darlo de baja."
+        "step1": "Entra a «Archivos» desde las secciones de administración.",
+        "step2": "Toca «Subir archivos», suelta los archivos y elige qué es cada uno.",
+        "step3": "Toca «Subir sin publicar» o «Subir y publicar», y confirma.",
+        "step4": "Desde la fila publicas, ocultas o cambias qué es; la columna «Mesas» te dice en cuántas se usa antes de darlo de baja."
       },
       "commands": "El buscador de esta pantalla entiende «/file_name» (el nombre), «/file_owner» (quién lo subió), «/file_type» (el formato) y «/file_categories» (el cajón). Los dos últimos se eligen de una lista. «/and» y «/or» se ofrecen apenas hay un criterio que unir."
     },
     "roles": {
       "title": "Roles: quién otorga qué",
       "what": "Hay cuatro roles —Jugador, Master, Admin y Owner— y se acumulan: alguien puede ser Jugador y Master a la vez. Cada cuenta nace con Jugador.",
-      "whoGrants": "Un admin mueve Jugador y Master, y nada más. El rol Admin lo da y lo quita solo un owner, y el de Owner no se da desde la aplicación: se da desde la base de datos, y solo un owner puede quitarlo. Si sos admin y en el diálogo solo ves dos roles, no es un error: es que el resto no es tuyo para dar.",
+      "whoGrants": "Un admin mueve Jugador y Master, y nada más. El rol Admin lo da y lo quita solo un owner, y el de Owner no se da desde la aplicación: se da desde la base de datos, y solo un owner puede quitarlo. Si eres admin y en el diálogo solo ves dos roles, no es un error: es que el resto no es tuyo para dar.",
       "exclusive": "Admin y Owner son excluyentes: al dar uno se quita el otro, en el mismo acto. Son el mismo rango con distinto alcance, y tenerlos juntos no suma un solo permiso — por eso al ascender a un admin a owner vas a ver desaparecer su chip de Admin.",
-      "lastOwner": "La plataforma nunca se queda sin owner. No podés quitarte tu propio rol de Owner ni quitárselo al último que queda: un sistema donde ya nadie puede otorgar Owner no tiene forma de recuperarse desde adentro.",
+      "lastOwner": "La plataforma nunca se queda sin owner. No puedes quitarte tu propio rol de Owner ni quitárselo al último que queda: un sistema donde ya nadie puede otorgar Owner no tiene forma de recuperarse desde adentro.",
       "reason": "Todo cambio de rol pide un motivo, y es obligatorio. Queda guardado con quién lo hizo y cuándo.",
       "history": "El historial de una cuenta —cada rol que se dio o se quitó, cada bloqueo, con su motivo— se consulta desde «Historial», en la misma fila de la persona.",
       "steps": {
-        "step1": "Cambiá al contexto Admin y entrá a «Usuarios».",
-        "step2": "Buscá a la persona por su nombre de Discord o del sistema. Podés acotar por rol y por estado desde la misma línea.",
-        "step3": "En su fila, tocá «Cambiar roles».",
-        "step4": "Elegí el rol. Cada uno te dice si la persona ya lo tiene: si lo tiene se lo vas a quitar, y si no se lo vas a dar.",
-        "step5": "Escribí el motivo. Es obligatorio y queda registrado.",
-        "step6": "Tocá «Dar el rol» o «Quitar el rol». El cambio se aplica al instante."
+        "step1": "Cambia al contexto Admin y entra a «Usuarios».",
+        "step2": "Busca a la persona por su nombre de Discord o del sistema. Puedes acotar por rol y por estado desde la misma línea.",
+        "step3": "En su fila, toca «Cambiar roles».",
+        "step4": "Elige el rol. Cada uno te dice si la persona ya lo tiene: si lo tiene se lo vas a quitar, y si no se lo vas a dar.",
+        "step5": "Escribe el motivo. Es obligatorio y queda registrado.",
+        "step6": "Toca «Dar el rol» o «Quitar el rol». El cambio se aplica al instante."
       }
     },
     "blocking": {
@@ -595,13 +595,13 @@
       "noPeers": "No se puede bloquear a una cuenta que tenga Admin u Owner, y tampoco a la propia. Entre pares no hay autoridad: ni un admin bloquea a un admin, ni un owner a un owner.",
       "noAppeal": "El otro motivo es que el bloqueo es irreversible desde el lado del bloqueado: no puede entrar a pedir que lo desbloqueen, así que la decisión tiene que quedar de este lado.",
       "reason": "Bloquear y desbloquear piden un motivo obligatorio, y queda registrado con quién lo hizo y cuándo.",
-      "unblock": "Desbloquear devuelve el acceso desde la misma fila. Una cuenta dada de baja no se toca por acá, ni en un sentido ni en el otro.",
+      "unblock": "Desbloquear devuelve el acceso desde la misma fila. Una cuenta dada de baja no se toca por aquí, ni en un sentido ni en el otro.",
       "steps": {
-        "step1": "En «Usuarios», buscá la cuenta. Podés acotar por estado para ver solo las bloqueadas.",
-        "step2": "En su fila, tocá «Bloquear». Si ese botón no está, es porque esa cuenta tiene Admin u Owner.",
-        "step3": "Leé lo que dice el diálogo antes de confirmar: qué pierde la persona y qué se le conserva.",
-        "step4": "Escribí el motivo. Es obligatorio.",
-        "step5": "Tocá «Bloquear». El cierre se aplica al instante.",
+        "step1": "En «Usuarios», busca la cuenta. Puedes acotar por estado para ver solo las bloqueadas.",
+        "step2": "En su fila, toca «Bloquear». Si ese botón no está, es porque esa cuenta tiene Admin u Owner.",
+        "step3": "Lee lo que dice el diálogo antes de confirmar: qué pierde la persona y qué se le conserva.",
+        "step4": "Escribe el motivo. Es obligatorio.",
+        "step5": "Toca «Bloquear». El cierre se aplica al instante.",
         "step6": "Para devolverle el acceso, la misma fila ofrece «Desbloquear», que también pide motivo."
       }
     },
@@ -609,21 +609,21 @@
       "title": "Resolver pedidos",
       "what": "«Pedidos» junta todo lo que alguien le pide a un admin: el rol de master, que se abra una mesa, que se vete a un jugador, o una consulta suelta. Es un solo mecanismo para todos.",
       "tray": "Cada fila trae quién pidió, qué pidió y el motivo que escribió. Con eso se decide: el pedido no trae nada más.",
-      "pendingFirst": "La pantalla abre filtrada por «Pendiente», que es lo que espera una acción. Sacá ese filtro del buscador para ver los que ya se resolvieron y con qué respuesta.",
+      "pendingFirst": "La pantalla abre filtrada por «Pendiente», que es lo que espera una acción. Saca ese filtro del buscador para ver los que ya se resolvieron y con qué respuesta.",
       "note": "Aprobar y rechazar piden una nota obligatoria, y le llega a quien pidió. En el rechazo es lo único que va a recibir, así que tiene que alcanzarle para entender.",
       "masterGrant": "Aprobar un pedido de rol de master le da el rol por el mismo camino que «Usuarios», con tu nota como motivo. No hay una segunda forma de otorgarlo.",
       "tableOpen": "Aprobar un pedido de mesa nueva crea un borrador con el nombre propuesto, a nombre de quien lo pidió, que pasa a dirigirlo como master principal sin recibir el rol. Lo completa y lo envía a revisión como cualquier mesa. Si su cuenta ya no está activa, no se puede aprobar.",
       "general": "Aprobar una consulta no cambia nada más en la plataforma: queda resuelta y tu respuesta le llega a quien preguntó.",
       "playerBan": "Un pedido de veto lo abre un master de la mesa, con su motivo, y también llega a la bandeja. Aprobarlo es el veto: la persona deja de ver la mesa, no puede postularse y, si jugaba, pierde su lugar. Rechazarlo no cambia nada. Mientras esperaba, la persona siguió jugando. Tu nota le llega al master que lo pidió.",
-      "liftVeto": "Levantar un veto no pasa por un pedido: lo hacés vos, o el master principal, desde la pestaña Jugadores de la mesa, con motivo obligatorio. La persona vuelve a donde estaba; si la mesa ya se llenó, queda con la postulación rechazada por falta de lugar y puede postularse de nuevo cuando se libere uno.",
+      "liftVeto": "Levantar un veto no pasa por un pedido: lo haces tú, o el master principal, desde la pestaña Jugadores de la mesa, con motivo obligatorio. La persona vuelve a donde estaba; si la mesa ya se llenó, queda con la postulación rechazada por falta de lugar y puede postularse de nuevo cuando se libere uno.",
       "resolvedOnce": "Un pedido se resuelve una sola vez. Si otro admin llegó primero, la pantalla te lo dice en lugar de aplicar tu decisión encima.",
       "gone": "Si lo que el pedido señalaba ya no existe, no se puede resolver: la fila sobrevive a lo que apuntaba, pero actuar sobre algo que se borró sería actuar sobre un fantasma.",
       "steps": {
-        "step1": "Cambiá al contexto Admin y entrá a «Pedidos». Abre mostrando lo que está pendiente.",
-        "step2": "Leé el motivo en la fila. Si necesitás verlo entero, «Ver detalle» lo abre completo.",
-        "step3": "Decidí: «Aprobar» o «Rechazar». Fijate en el diálogo qué hace aprobar ese tipo de pedido, porque no es lo mismo en los tres.",
-        "step4": "Escribí tu respuesta. Es obligatoria y le llega a quien pidió.",
-        "step5": "Si era un pedido de mesa nueva, acordate del paso que falta: crearla desde «Mesas» y asignarle master."
+        "step1": "Cambia al contexto Admin y entra a «Pedidos». Abre mostrando lo que está pendiente.",
+        "step2": "Lee el motivo en la fila. Si necesitas verlo entero, «Ver detalle» lo abre completo.",
+        "step3": "Decide: «Aprobar» o «Rechazar». Fíjate en el diálogo qué hace aprobar ese tipo de pedido, porque no es lo mismo en los tres.",
+        "step4": "Escribe tu respuesta. Es obligatoria y le llega a quien pidió.",
+        "step5": "Si era un pedido de mesa nueva, acuérdate del paso que falta: crearla desde «Mesas» y asignarle master."
       }
     },
     "pausing": {
@@ -636,11 +636,11 @@
       "clash": "Reanudar puede fallar, y es el único acto de esta pantalla que puede: mientras la mesa estuvo pausada, su master pudo comprometerse con otra. Si las agendas se pisan, la plataforma se niega y te dice con qué mesa choca.",
       "notCancel": "Pausar no es cancelar. Una mesa pausada vuelve; una cancelada no, y eso se hace desde la mesa con «Cancelar».",
       "steps": {
-        "step1": "Andá a «Mesas». Podés filtrar por estado para ver solo las que están en curso o en pausa.",
-        "step2": "En la fila de la mesa, tocá «Pausar» y escribí el motivo.",
-        "step3": "Si lo que hay es un pedido del master, resolvelo desde la bandeja: aprobarlo es lo que la pausa.",
+        "step1": "Ve a «Mesas». Puedes filtrar por estado para ver solo las que están en curso o en pausa.",
+        "step2": "En la fila de la mesa, toca «Pausar» y escribe el motivo.",
+        "step3": "Si lo que hay es un pedido del master, resuélvelo desde la bandeja: aprobarlo es lo que la pausa.",
         "step4": "Para devolverla al ruedo, la misma fila ofrece «Reanudar».",
-        "step5": "Confirmá: las sesiones pendientes se reagendan desde hoy. Si la agenda del master choca con otra mesa, la plataforma te dice con cuál."
+        "step5": "Confirma: las sesiones pendientes se reagendan desde hoy. Si la agenda del master choca con otra mesa, la plataforma te dice con cuál."
       }
     },
     "settings": {
@@ -653,23 +653,23 @@
       "reason": "El motivo es obligatorio. Un cambio de configuración no manda ninguna notificación ni aparece en ningún lado, así que lo único que queda es ese motivo con tu nombre y la fecha.",
       "history": "Cada valor tiene su historial: de cuánto a cuánto, quién lo hizo y por qué. Es donde se ve un número que se subió y se volvió a bajar, que es justo el patrón que interesa.",
       "steps": {
-        "step1": "Entrá a Configuración desde el menú de administración.",
-        "step2": "Buscá el valor en su grupo —parámetros de negocio o límites y cuotas— y tocá «Cambiar».",
-        "step3": "Escribí el número nuevo, dentro del rango que dice la pantalla, y contá por qué lo cambiás.",
-        "step4": "Guardá. Se aplica en el pedido siguiente, sin reiniciar nada."
+        "step1": "Entra a Configuración desde el menú de administración.",
+        "step2": "Busca el valor en su grupo —parámetros de negocio o límites y cuotas— y toca «Cambiar».",
+        "step3": "Escribe el número nuevo, dentro del rango que dice la pantalla, y cuenta por qué lo cambias.",
+        "step4": "Guarda. Se aplica en el pedido siguiente, sin reiniciar nada."
       }
     },
     "tableDetail": {
       "title": "Ver y editar una mesa",
-      "what": "Desde «Mesas» abrís cualquier mesa y la ves entera: sus detalles, quién la dirige, los candidatos, los jugadores, la agenda, las sesiones con su asistencia, las peticiones con lo que entregó cada jugador, los archivos y su historial de estados.",
-      "readOnly": "Lo que es del master se ve pero no se toca: no aceptás candidatos, no registrás asistencia, no publicás peticiones ni agregás archivos por él.",
-      "edit": "Lo que sí podés hacer es editar la mesa (nombre, descripción, sistemas, agenda y cupo) en cualquier momento mientras no esté terminada, cancelada o dada de baja. El cupo no puede quedar por debajo de los jugadores que ya tiene.",
-      "notify": "Cada vez que editás, pausás, reanudás, cancelás o das de baja una mesa ajena, sus masters reciben un aviso. No se dice qué admin fue.",
+      "what": "Desde «Mesas» abres cualquier mesa y la ves entera: sus detalles, quién la dirige, los candidatos, los jugadores, la agenda, las sesiones con su asistencia, las peticiones con lo que entregó cada jugador, los archivos y su historial de estados.",
+      "readOnly": "Lo que es del master se ve pero no se toca: no aceptas candidatos, no registras asistencia, no publicas peticiones ni agregas archivos por él.",
+      "edit": "Lo que sí puedes hacer es editar la mesa (nombre, descripción, sistemas, agenda y cupo) en cualquier momento mientras no esté terminada, cancelada o dada de baja. El cupo no puede quedar por debajo de los jugadores que ya tiene.",
+      "notify": "Cada vez que editas, pausas, reanudas, cancelas o das de baja una mesa ajena, sus masters reciben un aviso. No se dice qué admin fue.",
       "closed": "Una mesa terminada, cancelada o dada de baja queda como registro de lo que pasó: se puede ver, pero ya no se edita.",
       "steps": {
-        "step1": "Andá a «Mesas» y tocá el nombre de la mesa o el ícono del ojo.",
-        "step2": "Arriba de las pestañas, el aviso dice en qué estado está y trae lo que podés decidir; las pestañas tienen todo lo demás, con «Historial» al final.",
-        "step3": "Para corregir algo, tocá «Editar mesa», cambiá lo que haga falta y confirmá."
+        "step1": "Ve a «Mesas» y toca el nombre de la mesa o el ícono del ojo.",
+        "step2": "Arriba de las pestañas, el aviso dice en qué estado está y trae lo que puedes decidir; las pestañas tienen todo lo demás, con «Historial» al final.",
+        "step3": "Para corregir algo, toca «Editar mesa», cambia lo que haga falta y confirma."
       }
     }
   },

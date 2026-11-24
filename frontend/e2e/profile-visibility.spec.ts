@@ -11,7 +11,7 @@ import { acceptReview } from './helpers/review'
  * **The claim worth making here is the negative one.** The five visibility rules of
  * `arquitectura` §4.5 had been written for a year with nothing implementing them, so what has to be
  * proven is not that a profile renders — it is that somebody with no relationship to another person
- * cannot reach theirs, and that the refusal reads as «ya no podés ver este perfil» rather than
+ * cannot reach theirs, and that the refusal reads as «ya no puedes ver este perfil» rather than
  * confirming the person exists (ADR-10 §3).
  *
  * Login through TestLoginController (the backend's `test` profile), like every other spec.
@@ -149,7 +149,7 @@ test('somebody with no table in common cannot read another profile', async ({ br
 
   try {
     await one.page.goto(`/users/${other.id}`)
-    await expect(one.page.getByText('Ya no podés ver este perfil')).toBeVisible()
+    await expect(one.page.getByText('Ya no puedes ver este perfil')).toBeVisible()
   } finally {
     await one.context.close()
     await other.context.close()
@@ -163,7 +163,7 @@ test('an admin reads a profile nobody else could', async ({ browser }) => {
 
   try {
     await admin.page.goto(`/users/${stranger.id}`)
-    await expect(admin.page.getByText('Ya no podés ver este perfil')).toBeHidden()
+    await expect(admin.page.getByText('Ya no puedes ver este perfil')).toBeHidden()
     await expect(admin.page.getByRole('heading', { name: 'Asistencia' })).toBeVisible()
   } finally {
     await stranger.context.close()

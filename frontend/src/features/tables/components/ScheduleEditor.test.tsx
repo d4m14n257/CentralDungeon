@@ -24,7 +24,7 @@ describe('ScheduleEditor', () => {
 
     // No day picker, no hour field, no «Agregar» — one way to add a slot, and it is not here.
     expect(screen.queryByRole('button', { name: 'Agregar' })).not.toBeInTheDocument()
-    expect(screen.getByText(/grilla/i)).toBeInTheDocument()
+    expect(screen.getByText(/cuadrícula/i)).toBeInTheDocument()
   })
 
   it('changes the length of one slot without touching the others (ADR-08 §1)', async () => {

@@ -96,7 +96,7 @@ describe('UserAdminHistory', () => {
     history.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Denied', errorCode: 'FORBIDDEN' }))
     renderPanel()
 
-    expect(await screen.findByText('No tenés permiso')).toBeInTheDocument()
+    expect(await screen.findByText('No tienes permiso')).toBeInTheDocument()
   })
 
   it('offers a retry when the record cannot be loaded', async () => {

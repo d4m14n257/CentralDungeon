@@ -171,7 +171,7 @@ describe('AdminUsersPage', () => {
 
     renderPage()
 
-    await waitFor(() => expect(screen.getByText('No tenés permiso')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('No tienes permiso')).toBeInTheDocument())
   })
 
   /** The four states of ADR-19 §4; this is the one that is easiest to leave out. */

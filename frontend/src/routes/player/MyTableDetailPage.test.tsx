@@ -77,7 +77,7 @@ describe('MyTableDetailPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText('No tenés permiso')).toBeInTheDocument()
+    expect(await screen.findByText('No tienes permiso')).toBeInTheDocument()
     expect(screen.queryByText('La maldición de Strahd')).not.toBeInTheDocument()
     expect(screen.queryByText('Esta mesa no te pide nada')).not.toBeInTheDocument()
   })

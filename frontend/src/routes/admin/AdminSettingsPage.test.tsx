@@ -193,6 +193,6 @@ describe('AdminSettingsPage', () => {
     list.mockRejectedValue(new ApiError(403, { title: 'Forbidden', status: 403, detail: 'Access denied', errorCode: 'FORBIDDEN' }))
     renderPage()
 
-    expect(await screen.findByText(/no tenés permiso/i)).toBeInTheDocument()
+    expect(await screen.findByText(/no tienes permiso/i)).toBeInTheDocument()
   })
 })

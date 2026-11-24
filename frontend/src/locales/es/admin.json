@@ -31,7 +31,7 @@
     "claimedBy": "Lo tomó {{name}}",
     "claim": "Tomar",
     "release": "Soltar",
-    "claimSuccess": "Lo tomaste: es tuyo mientras lo resolvés",
+    "claimSuccess": "Lo tomaste: es tuyo mientras lo resuelves",
     "releaseSuccess": "Lo soltaste: vuelve a la bandeja",
     "askedBy": "De {{name}}",
     "emptyTitle": "No hay nada esperando una acción",
@@ -42,11 +42,11 @@
     "approveSuccess": "Mesa aprobada",
     "requestChanges": "Pedir cambios",
     "requestChangesDialogTitle": "Pedir cambios en {{name}}",
-    "requestChangesDialogDescription": "Contale al master qué tiene que corregir antes de aprobarla.",
+    "requestChangesDialogDescription": "Cuéntale al master qué tiene que corregir antes de aprobarla.",
     "requestChangesSuccess": "Se pidieron cambios",
     "errors": {
       "ITEM_ALREADY_CLAIMED": "Otro admin lo tomó primero y lo está resolviendo. Mientras lo tenga, no se puede trabajar sobre esto.",
-      "generic": "No pudimos completar la acción. Probá de nuevo."
+      "generic": "No pudimos completar la acción. Prueba de nuevo."
     },
     "requestChangesConfirmTitle": "¿Pedir cambios en «{{name}}»?",
     "requestChangesConfirmDescription": "La mesa vuelve a su master con tu nota para que la corrija, y no se abre hasta que la reenvíe y se apruebe."
@@ -81,18 +81,18 @@
       "createdAt": "Pedido el"
     },
     "emptyPendingTitle": "No hay nada esperando una respuesta",
-    "emptyPendingDescription": "Cuando alguien pida algo, va a aparecer acá. Sacá el filtro de «Pendiente» para ver los que ya se resolvieron.",
+    "emptyPendingDescription": "Cuando alguien pida algo, va a aparecer aquí. Saca el filtro de «Pendiente» para ver los que ya se resolvieron.",
     "noResultsTitle": "Ningún pedido coincide con esa búsqueda",
-    "noResultsDescription": "Probá con otro texto, o filtrá por tipo y por estado.",
+    "noResultsDescription": "Prueba con otro texto, o filtra por tipo y por estado.",
     "approve": "Aprobar",
     "reject": "Rechazar",
     "detail": "Ver detalle",
     "askedBy": "Pedido por {{name}}",
     "resolvedBy": "Resuelto por {{name}}",
     "approveDialogTitle": "Aprobar este pedido",
-    "approveDialogDescription": "Leé el motivo y escribí tu respuesta. Queda registrada y le llega a quien pidió.",
+    "approveDialogDescription": "Lee el motivo y escribe tu respuesta. Queda registrada y le llega a quien pidió.",
     "rejectDialogTitle": "Rechazar este pedido",
-    "rejectDialogDescription": "Escribí por qué. Es lo único que va a recibir quien pidió, así que tiene que alcanzarle para entender.",
+    "rejectDialogDescription": "Escribe por qué. Es lo único que va a recibir quien pidió, así que tiene que alcanzarle para entender.",
     "effect": {
       "MasterGrant": "Al aprobar, la persona recibe el rol de master por el mismo camino que en «Usuarios»: queda registrado con tu nota como motivo.",
       "TableOpen": "Al aprobar, se crea un borrador con el nombre propuesto a nombre de quien lo pidió, que pasa a dirigirlo como master principal sin recibir el rol. Lo completa y lo envía a revisión como cualquier mesa.",
@@ -101,8 +101,8 @@
       "PlayerBan": "Al aprobar, la persona queda vetada en esa mesa: deja de verla y, si jugaba, su lugar queda libre. Rechazar no cambia nada. Tu nota le llega a quien pidió el veto."
     },
     "resolutionNoteLabel": "Tu respuesta",
-    "approveNotePlaceholder": "Por qué aprobás el pedido. Le llega a quien lo hizo.",
-    "rejectNotePlaceholder": "Por qué lo rechazás. Le llega a quien lo hizo.",
+    "approveNotePlaceholder": "Por qué apruebas el pedido. Le llega a quien lo hizo.",
+    "rejectNotePlaceholder": "Por qué lo rechazas. Le llega a quien lo hizo.",
     "approveSuccess": "Pedido aprobado",
     "rejectSuccess": "Pedido rechazado",
     "resolveHelpHint": "Aprobar no hace lo mismo con cada tipo de pedido.",
@@ -114,14 +114,14 @@
     "viewTable": "Ver la mesa",
     "proposedTableName": "Nombre propuesto: {{name}}",
     "errors": {
-      "REQUEST_ALREADY_PENDING": "Ya tenés un pedido de este tipo esperando respuesta. Hay que resolver ese antes de hacer otro.",
-      "REQUEST_ALREADY_RESOLVED": "Este pedido ya lo resolvió alguien. Actualizá la pantalla para ver cómo quedó.",
+      "REQUEST_ALREADY_PENDING": "Ya tienes un pedido de este tipo esperando respuesta. Hay que resolver ese antes de hacer otro.",
+      "REQUEST_ALREADY_RESOLVED": "Este pedido ya lo resolvió alguien. Actualiza la pantalla para ver cómo quedó.",
       "REQUEST_ENTITY_GONE": "Lo que este pedido señalaba ya no existe, así que no se puede resolver.",
       "MASTER_ROLE_ALREADY_HELD": "Ya tienes el rol de master, así que puedes crear tus propias mesas.",
       "TABLE_NAME_REQUIRED": "Escribe el nombre de la mesa que quieres dirigir.",
       "REQUESTER_NOT_ACTIVE": "La cuenta de quien pidió la mesa ya no está activa, así que no se le puede crear. Puedes rechazar el pedido.",
-      "OWN_REQUEST_NOT_APPROVABLE": "No podés aprobar un veto que pediste vos: lo decide otro admin.",
-      "generic": "No pudimos completar la acción. Probá de nuevo."
+      "OWN_REQUEST_NOT_APPROVABLE": "No puedes aprobar un veto que pediste tú: lo decide otro admin.",
+      "generic": "No pudimos completar la acción. Prueba de nuevo."
     },
     "submit": {
       "success": "Tu pedido quedó registrado",
@@ -131,9 +131,9 @@
       "action": "Enviar el pedido",
       "MasterGrant": {
         "title": "Pedir el rol de master",
-        "description": "Contale a un admin por qué querés dirigir mesas.",
+        "description": "Cuéntale a un admin por qué quieres dirigir mesas.",
         "effect": "Si lo aprueban, vas a poder crear mesas y dirigirlas.",
-        "placeholder": "Qué querés dirigir, qué experiencia tenés, lo que creas que sirve."
+        "placeholder": "Qué quieres dirigir, qué experiencia tienes, lo que creas que sirve."
       },
       "TableOpen": {
         "title": "Pedir dirigir una sola mesa",
@@ -145,10 +145,10 @@
         "title": "Preguntarle algo a un admin",
         "description": "Para lo que la ayuda no contesta.",
         "effect": "Si lo aprueban, te responden y el pedido queda cerrado. No cambia nada más.",
-        "placeholder": "Qué necesitás. Contá lo suficiente para que puedan responderte."
+        "placeholder": "Qué necesitas. Cuenta lo suficiente para que puedan responderte."
       },
       "confirmTitle": "¿Enviar el pedido?",
-      "confirmDescription": "Lo lee un admin y te responde con una notificación. Mientras esté pendiente no podés enviar otro del mismo tipo.",
+      "confirmDescription": "Lo lee un admin y te responde con una notificación. Mientras esté pendiente no puedes enviar otro del mismo tipo.",
       "confirmLabel": "Enviar"
     },
     "ask": {
@@ -164,12 +164,12 @@
     "pendingSince": "Lo pediste el {{date}}.",
     "submitHelpHint": "El motivo es obligatorio, y la respuesta también lo lleva.",
     "submitHelpLink": "Cómo funciona",
-    "masterGrantPitchTitle": "¿Querés dirigir mesas?",
+    "masterGrantPitchTitle": "¿Quieres dirigir mesas?",
     "masterGrantPitchDescription": "Puedes pedir el rol de master, para crear tus propias mesas, o pedir dirigir una sola mesa sin el rol. Los dos los aprueba un admin.",
     "generalPitchTitle": "¿No encontraste tu respuesta?",
-    "generalPitchDescription": "Escribile a un admin. Te contesta por acá mismo, con una notificación.",
+    "generalPitchDescription": "Escríbele a un admin. Te contesta por aquí mismo, con una notificación.",
     "supportTitle": "Ayuda",
-    "supportDescription": "Acá pedís ayuda cuando lo que leíste no alcanzó.",
+    "supportDescription": "Aquí pides ayuda cuando lo que leíste no alcanzó.",
     "supportWhereHelpLives": "Las explicaciones están en cada pantalla, en el enlace de ayuda que hay al lado de lo que estés haciendo.",
     "supportHelpLink": "Cómo funciona un pedido",
     "confirmApproveTitle": "¿Aprobar el pedido?",
@@ -181,7 +181,7 @@
   },
   "users": {
     "title": "Usuarios",
-    "description": "Todas las cuentas de la plataforma, incluidas las bloqueadas. Desde acá se mueven los roles y se bloquea una cuenta.",
+    "description": "Todas las cuentas de la plataforma, incluidas las bloqueadas. Desde aquí se mueven los roles y se bloquea una cuenta.",
     "searchLabel": "Buscar usuarios",
     "searchPlaceholder": "Nombre de Discord o del sistema",
     "search": {
@@ -210,16 +210,16 @@
     },
     "noRoles": "Sin roles",
     "emptyTitle": "Todavía no hay cuentas",
-    "emptyDescription": "Las cuentas aparecen acá apenas alguien entra por primera vez.",
+    "emptyDescription": "Las cuentas aparecen aquí apenas alguien entra por primera vez.",
     "noResultsTitle": "Nadie coincide con esa búsqueda",
-    "noResultsDescription": "Probá con otro nombre, o filtrá por rol y por estado.",
+    "noResultsDescription": "Prueba con otro nombre, o filtra por rol y por estado.",
     "changeRoles": "Cambiar roles",
     "block": "Bloquear",
     "unblock": "Desbloquear",
     "justificationLabel": "Motivo",
-    "justificationPlaceholder": "Por qué hacés este cambio. Queda registrado.",
+    "justificationPlaceholder": "Por qué haces este cambio. Queda registrado.",
     "roleDialogTitle": "Roles de {{name}}",
-    "roleDialogDescription": "Elegí un rol para dárselo o quitárselo. Cada cambio queda registrado con su motivo.",
+    "roleDialogDescription": "Elige un rol para dárselo o quitárselo. Cada cambio queda registrado con su motivo.",
     "roleFieldLabel": "Rol",
     "roleHeld": "· lo tiene",
     "roleNotHeld": "· no lo tiene",
@@ -230,7 +230,7 @@
     "grantSuccess": "{{name}} ahora tiene el rol {{role}}",
     "revokeSuccess": "{{name}} ya no tiene el rol {{role}}",
     "blockDialogTitle": "Bloquear a {{name}}",
-    "blockDialogDescription": "Antes de confirmar, leé qué implica.",
+    "blockDialogDescription": "Antes de confirmar, lee qué implica.",
     "blockConsequenceAccess": "La persona no va a poder volver a entrar a la plataforma.",
     "blockConsequenceData": "Sus datos se conservan: sus mesas, sus postulaciones y su historial quedan como están.",
     "blockSuccess": "{{name}} quedó bloqueada",
@@ -248,13 +248,13 @@
       "OWNER_NOT_GRANTABLE": "El rol de Owner no se da desde la aplicación.",
       "CANNOT_BLOCK_PRIVILEGED": "No se puede bloquear a una cuenta con rol de Admin o de Owner.",
       "LAST_OWNER": "La plataforma no puede quedarse sin ningún Owner. Dale el rol a otra persona antes de quitar este.",
-      "CANNOT_REVOKE_OWN_OWNER": "No podés quitarte tu propio rol de Owner. Tiene que hacerlo otro Owner.",
+      "CANNOT_REVOKE_OWN_OWNER": "No puedes quitarte tu propio rol de Owner. Tiene que hacerlo otro Owner.",
       "USER_ALREADY_BLOCKED": "Esta cuenta ya está bloqueada.",
       "USER_NOT_BLOCKED": "Esta cuenta no está bloqueada.",
-      "generic": "No pudimos aplicar el cambio. Probá de nuevo."
+      "generic": "No pudimos aplicar el cambio. Prueba de nuevo."
     },
     "roleHelpHintAdmin": "Un admin mueve Jugador y Master; el rol Admin lo mueve solo un owner.",
-    "roleHelpHintOwner": "El rol Owner no se da desde la aplicación; sí podés quitarlo.",
+    "roleHelpHintOwner": "El rol Owner no se da desde la aplicación; sí puedes quitarlo.",
     "roleHelpLink": "Por qué",
     "blockHelpHint": "No se puede bloquear a una cuenta con Admin u Owner, ni a la propia.",
     "blockHelpLink": "Por qué",
@@ -314,9 +314,9 @@
     },
     "claimedBy": "La está revisando {{name}}",
     "emptyTitle": "Todavía no hay mesas",
-    "emptyDescription": "Las mesas aparecen acá apenas un master crea una, o apenas creás una sin asignar.",
+    "emptyDescription": "Las mesas aparecen aquí apenas un master crea una, o apenas creas una sin asignar.",
     "noResultsTitle": "Ninguna mesa coincide con esa búsqueda",
-    "noResultsDescription": "Probá con otro nombre, o filtrá por estado y por master.",
+    "noResultsDescription": "Prueba con otro nombre, o filtra por estado y por master.",
     "noPrimaryMaster": "Sin asignar",
     "assignMasters": "Asignar masters",
     "assignMastersDialogTitle": "Asignar masters a {{name}}",
@@ -324,7 +324,7 @@
     "assignMastersSuccess": "Masters asignados, mesa abierta",
     "selectedMastersLabel": "Masters de la mesa",
     "noMastersSelected": "Todavía no elegiste a nadie.",
-    "mastersOrderHint": "El primero que agregues es el master y el resto queda como co-master. Tocá un nombre para hacerlo master.",
+    "mastersOrderHint": "El primero que agregues es el master y el resto queda como co-master. Toca un nombre para hacerlo master.",
     "primaryBadge": "Master",
     "makePrimary": "Hacer master a {{name}}",
     "removeMaster": "Quitar a {{name}}",
@@ -340,7 +340,7 @@
     "deleteSuccess": "Mesa eliminada",
     "pause": "Pausar",
     "pauseDialogTitle": "Pausar «{{name}}»",
-    "pauseDialogDescription": "Contá por qué se pausa. Lo lee el master de la mesa, y queda en su historial de estados.",
+    "pauseDialogDescription": "Cuenta por qué se pausa. Lo lee el master de la mesa, y queda en su historial de estados.",
     "pauseHint": "Mientras esté en pausa, la mesa no promete fechas: las sesiones pendientes se ocultan.",
     "pauseHelpLink": "Qué hace pausar",
     "pauseSuccess": "Mesa pausada",
@@ -350,7 +350,7 @@
     "resumeSuccess": "Mesa reanudada",
     "errors": {
       "SCHEDULE_CONFLICT": "No se puede reanudar: la agenda se pisa con «{{otherTableName}}», donde el master de esta mesa ya está comprometido.",
-      "generic": "No pudimos completar la acción. Probá de nuevo."
+      "generic": "No pudimos completar la acción. Prueba de nuevo."
     },
     "confirmCreateUnassignedTitle": "¿Crear la mesa «{{name}}»?",
     "confirmCreateUnassignedDescription": "Nace sin master: no se abre hasta que le asignes uno.",
@@ -380,14 +380,14 @@
       "approveSuccess": "Mesa aprobada. Avisamos a sus masters.",
       "requestChanges": "Pedir cambios",
       "requestChangesTitle": "Pedir cambios en «{{name}}»",
-      "requestChangesDescription": "Contale al master qué tiene que corregir y por qué. Lo lee en el historial de su mesa.",
+      "requestChangesDescription": "Cuéntale al master qué tiene que corregir y por qué. Lo lee en el historial de su mesa.",
       "requestChangesConfirmTitle": "¿Pedir cambios en «{{name}}»?",
       "requestChangesConfirmDescription": "La mesa vuelve a su master con tu motivo y no se abre hasta que la corrija, la reenvíe y se apruebe.",
       "requestChangesSuccess": "Se pidieron cambios. Avisamos a sus masters.",
       "reviewHelpLink": "Cómo se revisa una mesa",
       "cancel": "Cancelar mesa",
       "cancelTitle": "Cancelar «{{name}}»",
-      "cancelDescription": "Escribí por qué se cancela. Sus masters lo leen en el historial de la mesa.",
+      "cancelDescription": "Escribe por qué se cancela. Sus masters lo leen en el historial de la mesa.",
       "cancelConfirmTitle": "¿Cancelar «{{name}}»?",
       "cancelConfirmDescription": "No se puede deshacer: la mesa se cierra para siempre, queda como registro y sus masters reciben un aviso.",
       "cancelSuccess": "Mesa cancelada. Avisamos a sus masters."
@@ -395,27 +395,27 @@
     "notice": {
       "Draft": {
         "title": "Borrador del master",
-        "description": "Todavía no la envió a revisión. Podés leerla; no hay nada que decidir hasta que la envíe."
+        "description": "Todavía no la envió a revisión. Puedes leerla; no hay nada que decidir hasta que la envíe."
       },
       "Unassigned": {
         "title": "Mesa sin master",
-        "description": "Asignale masters para abrirla, o dala de baja si no va a tener."
+        "description": "Asígnale masters para abrirla, o dala de baja si no va a tener."
       },
       "Preparation": {
         "title": "Esta mesa espera tu revisión",
-        "description": "Recorré sus pestañas y decidí: aprobarla la abre a postulaciones; pedir cambios se la devuelve al master con tu motivo. Si no tiene arreglo, cancelala. Si otro admin la tomó en la bandeja, no se puede resolver desde acá."
+        "description": "Recorre sus pestañas y decide: aprobarla la abre a postulaciones; pedir cambios se la devuelve al master con tu motivo. Si no tiene arreglo, cancélala. Si otro admin la tomó en la bandeja, no se puede resolver desde aquí."
       },
       "ChangesRequested": {
         "title": "Esperando las correcciones del master",
-        "description": "Se le pidieron cambios. Cuando la corrija y la reenvíe, vuelve a revisión. Si no tiene arreglo, podés cancelarla con el motivo."
+        "description": "Se le pidieron cambios. Cuando la corrija y la reenvíe, vuelve a revisión. Si no tiene arreglo, puedes cancelarla con el motivo."
       },
       "Opened": {
         "title": "Abierta a postulaciones",
-        "description": "Está recibiendo postulaciones. Si hay que cerrarla, cancelala con el motivo; sus masters reciben un aviso."
+        "description": "Está recibiendo postulaciones. Si hay que cerrarla, cancélala con el motivo; sus masters reciben un aviso."
       },
       "InProgress": {
         "title": "En curso",
-        "description": "Se está jugando. Podés pausarla o cancelarla, siempre con el motivo; sus masters reciben un aviso."
+        "description": "Se está jugando. Puedes pausarla o cancelarla, siempre con el motivo; sus masters reciben un aviso."
       },
       "PauseRequested": {
         "title": "El master pidió pausarla",
@@ -423,7 +423,7 @@
       },
       "Pause": {
         "title": "Pausada",
-        "description": "Reanudarla vuelve a programar las sesiones pendientes desde hoy. Si no va a volver, cancelala con el motivo."
+        "description": "Reanudarla vuelve a programar las sesiones pendientes desde hoy. Si no va a volver, cancélala con el motivo."
       },
       "Finished": {
         "title": "Terminada",
@@ -485,7 +485,7 @@
     "changeHelpHint": "¿A qué afecta cambiar esto?",
     "changeHelpLink": "Leer más",
     "emptyTitle": "No hay nada configurable",
-    "emptyDescription": "La plataforma no publicó ningún valor ajustable. Si esto no es lo esperado, avisale a quien mantiene el sistema.",
+    "emptyDescription": "La plataforma no publicó ningún valor ajustable. Si esto no es lo esperado, avísale a quien mantiene el sistema.",
     "historyDialogTitle": "Historial de «{{name}}»",
     "historyDialogDescription": "Cada cambio, con quién lo hizo y por qué.",
     "historyEmptyTitle": "Sin cambios",
@@ -495,7 +495,7 @@
     "historyChangedBy": "Lo hizo {{name}}",
     "errors": {
       "SETTING_OUT_OF_RANGE": "Ese valor está fuera de lo permitido para este ajuste: tiene que estar entre {{minValue}} y {{maxValue}}.",
-      "generic": "No pudimos guardar el cambio. Probá de nuevo."
+      "generic": "No pudimos guardar el cambio. Prueba de nuevo."
     },
     "confirmTitle": "¿Cambiar «{{label}}» a {{value}}?",
     "confirmDescription": "Rige desde ya para toda la plataforma y queda registrado con tu motivo.",

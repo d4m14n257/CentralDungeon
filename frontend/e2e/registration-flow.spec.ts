@@ -78,7 +78,7 @@ test('a player applies to an open table and the master accepts them', async ({ b
     await expect(player.page.getByRole('heading', { name: tableName })).toBeVisible()
     await applyToTable(player.page, { message: 'Quiero sumarme a esta mesa' })
 
-    await expect(player.page.getByRole('button', { name: 'Ya tenés una postulación en curso' })).toBeVisible()
+    await expect(player.page.getByRole('button', { name: 'Ya tienes una postulación en curso' })).toBeVisible()
 
     const master2 = await newAuthenticatedPage(browser, masterDiscordId, true)
     try {
@@ -137,7 +137,7 @@ test('a rejected player sees why on the table and can apply again', async ({ bro
 
     await applyToTable(player.page, { message: 'Lo intento otra vez' })
 
-    await expect(player.page.getByRole('button', { name: 'Ya tenés una postulación en curso' }).first()).toBeVisible()
+    await expect(player.page.getByRole('button', { name: 'Ya tienes una postulación en curso' }).first()).toBeVisible()
     await player.page.reload()
     await expect(player.page.getByText('Te rechazaron en esta mesa')).toHaveCount(0)
   } finally {

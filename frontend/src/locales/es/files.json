@@ -38,9 +38,9 @@
     "searchLabel": "Buscar entre mis archivos",
     "use": "Usar",
     "historyEmptyTitle": "Todavía no subiste nada",
-    "historyEmptyDescription": "Lo que subas queda acá y lo podés volver a usar en cualquier mesa, sin subirlo de nuevo.",
+    "historyEmptyDescription": "Lo que subas queda aquí y lo puedes volver a usar en cualquier mesa, sin subirlo de nuevo.",
     "publishedEmptyTitle": "No hay archivos publicados",
-    "publishedEmptyDescription": "Los admins publican acá las plantillas y los documentos que sirven para todas las mesas.",
+    "publishedEmptyDescription": "Los admins publican aquí las plantillas y los documentos que sirven para todas las mesas.",
     "lastUsed": "Usado {{when}}",
     "noResultsTitle": "Sin resultados",
     "noResultsDescription": "Ningún archivo tuyo coincide con la búsqueda."
@@ -49,14 +49,14 @@
     "title": "Archivos de la mesa",
     "attach": "Agregar un archivo",
     "attachTitle": "Agregar un archivo a la mesa",
-    "attachDescription": "Subí uno nuevo o reutilizá algo que ya tengas. El archivo se vincula, no se copia: sacarlo de acá no lo borra.",
+    "attachDescription": "Sube uno nuevo o reutiliza algo que ya tengas. El archivo se vincula, no se copia: sacarlo de aquí no lo borra.",
     "kindLabel": "Qué es",
     "privateLabel": "Solo para quienes dirigen la mesa",
     "privateHint": "Sin marcar, lo ven también los jugadores y los candidatos.",
     "sharedBadge": "Lo ve la mesa",
     "privateBadge": "Solo masters",
     "emptyTitle": "La mesa no tiene archivos",
-    "emptyDescription": "Acá van el material de preparación, los mapas y lo que quieras compartir con tus jugadores.",
+    "emptyDescription": "Aquí van el material de preparación, los mapas y lo que quieras compartir con tus jugadores.",
     "detachTitle": "¿Quitar el archivo de la mesa?",
     "detachDescription": "Deja de aparecer en esta mesa. El archivo sigue existiendo, en tu historial y en las otras mesas que lo usen.",
     "readOnlyTitle": "Archivos",
@@ -91,21 +91,21 @@
     "usesDialogTitle": "Mesas de {{name}}",
     "usesDialogDescription": "Cada mesa que usa este archivo, con su página de admin.",
     "emptyTitle": "La biblioteca está vacía",
-    "emptyDescription": "Cuando subas la hoja en blanco de la comunidad o el reglamento, va a aparecer acá.",
+    "emptyDescription": "Cuando subas la hoja en blanco de la comunidad o el reglamento, va a aparecer aquí.",
     "noResultsTitle": "Sin resultados",
     "noResultsDescription": "Ningún archivo coincide con la búsqueda.",
     "deleteTitle": "¿Dar de baja el archivo?",
     "deleteDescription": "Deja de verse en todas las mesas que lo usan. No se borra del disco: eso lo hace el owner desde su menú de mantenimiento.",
     "deleteConfirm": "Dar de baja",
     "unpublishTitle": "¿Ocultar el archivo?",
-    "unpublishDescription": "Deja de ofrecerse a los masters, pero sigue en la biblioteca y lo podés volver a publicar. Las mesas que ya lo agregaron lo conservan.",
+    "unpublishDescription": "Deja de ofrecerse a los masters, pero sigue en la biblioteca y lo puedes volver a publicar. Las mesas que ya lo agregaron lo conservan.",
     "unpublishConfirm": "Ocultar",
     "upload": "Subir archivos",
     "publishTitle": "¿Publicar «{{name}}»?",
-    "publishDescription": "Los masters lo van a ver al instante y lo pueden agregar a sus mesas. Si después lo ocultás, las mesas que ya lo agregaron lo conservan.",
+    "publishDescription": "Los masters lo van a ver al instante y lo pueden agregar a sus mesas. Si después lo ocultas, las mesas que ya lo agregaron lo conservan.",
     "publishConfirm": "Publicar",
     "publishedOne": "«{{name}}» publicado",
-    "publishNeedsCategory": "Para publicarlo, primero elegí qué es con «Cambiar qué es»."
+    "publishNeedsCategory": "Para publicarlo, primero elige qué es con «Cambiar qué es»."
   },
   "search": {
     "file_name": "nombre",
@@ -137,29 +137,29 @@
     "unused": "Sin usar"
   },
   "dropzone": {
-    "prompt": "Arrastrá un archivo acá o hacé clic para elegirlo",
-    "promptMultiple": "Arrastrá los archivos acá o hacé clic para elegirlos",
+    "prompt": "Arrastra un archivo aquí o haz clic para elegirlo",
+    "promptMultiple": "Arrastra los archivos aquí o haz clic para elegirlos",
     "limits": "Hasta {{maxMb}} MB por archivo. Se aceptan {{types}}.",
     "categoryLabel": "En qué cajón va",
-    "categoryHint": "Solo hace falta acá: cuando subís un archivo desde una mesa o una entrega, el cajón sale solo de dónde lo subiste.",
+    "categoryHint": "Solo hace falta aquí: cuando subes un archivo desde una mesa o una entrega, el cajón sale solo de dónde lo subiste.",
     "refusedFile": "«{{name}}»: {{reason}}"
   },
   "errors": {
-    "uploadFailed": "No se pudo subir el archivo. Probá de nuevo.",
+    "uploadFailed": "No se pudo subir el archivo. Prueba de nuevo.",
     "FILE_TYPE_NOT_ALLOWED": "Ese tipo de archivo no se acepta. Se pueden subir {{types}}.",
     "FILE_TOO_LARGE": "El archivo pesa más de lo permitido. El máximo es {{maxBytes, megabytes}} MB por archivo.",
-    "FILE_EMPTY": "El archivo está vacío. Elegí otro."
+    "FILE_EMPTY": "El archivo está vacío. Elige otro."
   },
   "mine": {
     "title": "Mis archivos",
-    "description": "Todo lo que subiste. Al adjuntar algo a una mesa podés reusar uno de acá: no se duplica ni ocupa lugar de nuevo.",
+    "description": "Todo lo que subiste. Al adjuntar algo a una mesa puedes reusar uno de aquí: no se duplica ni ocupa lugar de nuevo.",
     "upload": "Subir archivo",
     "uploadClose": "Cerrar",
     "searchLabel": "Buscar entre mis archivos",
     "searchPlaceholder": "Buscar por nombre",
     "lastUsed": "Usado {{when}}",
     "emptyTitle": "Todavía no subiste nada",
-    "emptyDescription": "Lo que subas queda acá y lo podés volver a usar en cualquier mesa, sin subirlo de nuevo.",
+    "emptyDescription": "Lo que subas queda aquí y lo puedes volver a usar en cualquier mesa, sin subirlo de nuevo.",
     "noResultsTitle": "Sin resultados",
     "noResultsDescription": "Ninguno de tus archivos coincide con la búsqueda.",
     "deleteTitle": "¿Dar de baja el archivo?",
@@ -167,7 +167,7 @@
     "deleteConfirm": "Dar de baja",
     "send_one": "Subir 1 archivo",
     "send_other": "Subir {{count}} archivos",
-    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están. Probá de nuevo con esos.",
+    "someFailed": "No se pudieron subir: {{names}}. Los demás ya están. Prueba de nuevo con esos.",
     "reused": "«{{names}}» ya lo tenías subido: se reutilizó y no ocupa lugar de nuevo.",
     "send_zero": "Subir",
     "noLibraryTitle": "Tu cuenta no tiene biblioteca propia",
@@ -178,7 +178,7 @@
   },
   "edit": {
     "title": "Editar archivo",
-    "description": "Cambiá cómo se llama, qué es y si lo querés conservar. El contenido no se toca.",
+    "description": "Cambia cómo se llama, qué es y si lo quieres conservar. El contenido no se toca.",
     "nameLabel": "Nombre",
     "keepLabel": "Conservarlo para reusar",
     "keepHint": "Sin marcar, queda atado a donde lo usaste y se libera cuando pase mucho tiempo sin uso.",
@@ -186,14 +186,14 @@
     "confirm": "Guardar",
     "saved": "Archivo actualizado",
     "confirmTitle": "¿Guardar los cambios de «{{name}}»?",
-    "confirmDescription": "Cambia el nombre y si lo conservás; el contenido no se toca."
+    "confirmDescription": "Cambia el nombre y si lo conservas; el contenido no se toca."
   },
   "staged": {
     "remove": "Quitar «{{name}}»"
   },
   "upload": {
     "title": "Subir archivos",
-    "description": "Elegí qué es cada archivo y después si lo publicás ya o lo dejás en la biblioteca para publicarlo más adelante.",
+    "description": "Elige qué es cada archivo y después si lo publicas ya o lo dejas en la biblioteca para publicarlo más adelante.",
     "back": "Volver a archivos",
     "categoryLabel": "Qué es «{{name}}»",
     "categoryPlaceholder": "¿Qué es?",
@@ -214,8 +214,8 @@
     "savedDraft_other": "{{count}} archivos subidos sin publicar",
     "confirmDraftDescription_one": "Queda en la biblioteca y ningún master lo ve hasta que lo publiques.",
     "confirmDraftDescription_other": "Quedan en la biblioteca y ningún master los ve hasta que los publiques.",
-    "confirmPublishDescription_one": "Los masters lo van a ver al instante y lo pueden agregar a sus mesas. Si después lo ocultás, las mesas que ya lo agregaron lo conservan.",
-    "confirmPublishDescription_other": "Los masters los van a ver al instante y los pueden agregar a sus mesas. Si después ocultás alguno, las mesas que ya lo agregaron lo conservan."
+    "confirmPublishDescription_one": "Los masters lo van a ver al instante y lo pueden agregar a sus mesas. Si después lo ocultas, las mesas que ya lo agregaron lo conservan.",
+    "confirmPublishDescription_other": "Los masters los van a ver al instante y los pueden agregar a sus mesas. Si después ocultas alguno, las mesas que ya lo agregaron lo conservan."
   },
   "libraryState": {
     "Unpublished": "Sin publicar",
@@ -225,7 +225,7 @@
   },
   "libraryEdit": {
     "title": "Cambiar qué es",
-    "description": "«{{name}}» no está publicado: podés cambiar en qué cajón va antes de publicarlo.",
+    "description": "«{{name}}» no está publicado: puedes cambiar en qué cajón va antes de publicarlo.",
     "categoryLabel": "Qué es",
     "cancel": "Cancelar",
     "confirm": "Guardar",

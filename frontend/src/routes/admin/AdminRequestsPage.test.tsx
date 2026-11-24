@@ -152,7 +152,7 @@ describe('AdminRequestsPage', () => {
 
     renderPage()
 
-    await waitFor(() => expect(screen.getByText('No tenés permiso')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('No tienes permiso')).toBeInTheDocument())
   })
 
   /**
@@ -395,7 +395,7 @@ describe('AdminRequestsPage', () => {
       entityType: 'user',
       entityId: 'user-1',
       resolvedByName: 'ana',
-      resolutionNote: 'Todavía no tenés mesas jugadas acá',
+      resolutionNote: 'Todavía no tienes mesas jugadas aquí',
       resolvedAt: '2026-03-06T12:00:00',
     })
 
@@ -404,7 +404,7 @@ describe('AdminRequestsPage', () => {
     await userEvent.click(row.getByRole('button', { name: 'Ver detalle' }))
 
     const dialog = within(await screen.findByRole('dialog'))
-    expect(await dialog.findByText('Todavía no tenés mesas jugadas acá')).toBeInTheDocument()
+    expect(await dialog.findByText('Todavía no tienes mesas jugadas aquí')).toBeInTheDocument()
     expect(dialog.getByText(/Resuelto por ana/)).toBeInTheDocument()
     expect(dialog.getByRole('link', { name: 'Ver a quien lo pidió' })).toHaveAttribute('href', '/admin/users/user-1')
   })

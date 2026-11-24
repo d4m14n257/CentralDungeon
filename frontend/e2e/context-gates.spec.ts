@@ -103,7 +103,7 @@ test.describe('the interface closes a context to whoever does not have it', () =
         try {
           await page.goto(route)
           await expect(page, `${name} opening ${route}`).toHaveURL(finalPath)
-          await expect(page.getByText('No tenés permiso')).toBeHidden()
+          await expect(page.getByText('No tienes permiso')).toBeHidden()
         } finally {
           await context.close()
         }
@@ -186,7 +186,7 @@ test("a master opening another master's draft sees the not-found state inside th
     await page.goto(`/master/tables/${tableId}`)
     await expect(page).toHaveURL(`/master/tables/${tableId}`)
     await expect(page.getByText('No existe', { exact: true })).toBeVisible()
-    await expect(page.getByText('No tenés permiso')).toBeHidden()
+    await expect(page.getByText('No tienes permiso')).toBeHidden()
     await expect(page.getByRole('navigation', { name: /./ }).first()).toBeVisible()
   } finally {
     await context.close()

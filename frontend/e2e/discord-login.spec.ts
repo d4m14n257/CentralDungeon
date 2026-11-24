@@ -75,7 +75,7 @@ test('somebody not in the server does not get in and is handed the invitation', 
   await page.getByRole('link', { name: 'Entrar con Discord' }).click()
 
   // The title sits inside a toned chip (CallbackCard) rather than a heading: matched by text, not by role.
-  await expect(page.getByText('Todavía no sos parte del servidor')).toBeVisible()
+  await expect(page.getByText('Todavía no eres parte del servidor')).toBeVisible()
   // That it is a Discord invitation, not which one: if backend/.env defines DISCORD_INVITE_URL, that
   // environment variable beats application-test.yml and the concrete value depends on the machine.
   await expect(page.getByRole('link', { name: 'Unirme al servidor' })).toHaveAttribute('href', /^https:\/\/discord\.gg\//)

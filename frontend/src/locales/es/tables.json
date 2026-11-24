@@ -18,23 +18,23 @@
   },
   "schedule": {
     "title": "Mi horario",
-    "subtitle": "Todo lo que tenés comprometido en la semana: lo que dirigís y lo que jugás, junto. Las horas están en tu zona ({{timeZone}}).",
+    "subtitle": "Todo lo que tienes comprometido en la semana: lo que diriges y lo que juegas, junto. Las horas están en tu zona ({{timeZone}}).",
     "emptyTitle": "Tu semana está libre",
-    "emptyDescription": "Cuando dirijas o juegues en una mesa con agenda, va a aparecer acá.",
+    "emptyDescription": "Cuando dirijas o juegues en una mesa con agenda, va a aparecer aquí.",
     "role": {
-      "Master": "la dirigís",
-      "Player": "jugás"
+      "Master": "la diriges",
+      "Player": "juegas"
     },
-    "legendMaster": "Mesas que dirigís",
-    "legendPlayer": "Mesas donde jugás",
+    "legendMaster": "Mesas que diriges",
+    "legendPlayer": "Mesas donde juegas",
     "thisTable": "Esta mesa",
     "pickHour": "Ocupar {{slot}}",
     "inWizardTitle": "Tu semana",
-    "inWizardDescription": "Hacé clic en una hora libre para agregarla a la agenda de esta mesa.",
+    "inWizardDescription": "Haz clic en una hora libre para agregarla a la agenda de esta mesa.",
     "tablesTitle": "Tus mesas esta semana",
     "withoutAgenda": "sin horario",
     "adminGridTitle": "La semana",
-    "adminGridDescription": "Hacé clic en una hora para agregarla a la agenda. Si choca con otra mesa del master, al guardar se avisa con cuál."
+    "adminGridDescription": "Haz clic en una hora para agregarla a la agenda. Si choca con otra mesa del master, al guardar se avisa con cuál."
   },
   "status": {
     "Draft": "Borrador",
@@ -51,17 +51,17 @@
   "explorer": {
     "title": "Explorar mesas",
     "emptyTitle": "No hay mesas abiertas todavía",
-    "emptyDescription": "Volvé más tarde, los masters siguen publicando mesas nuevas.",
+    "emptyDescription": "Vuelve más tarde, los masters siguen publicando mesas nuevas.",
     "players": "{{current}} / {{max}} jugadores",
     "playersUnlimited": "{{current}} jugadores",
     "alreadyApplied": "Ya te postulaste",
-    "joined": "Ya sos jugador",
+    "joined": "Ya eres jugador",
     "seekingPlayers": "Busca jugadores",
     "scheduleConflict": "Choca con una mesa tuya",
     "searchLabel": "Buscar mesas",
     "searchPlaceholder": "Buscar por nombre de mesa",
     "noMatchesTitle": "Ninguna mesa coincide",
-    "noMatchesDescription": "Probá con otro término, o quitá alguno de los criterios. Buscar por un sinónimo también encuentra las mesas etiquetadas con los otros."
+    "noMatchesDescription": "Prueba con otro término, o quita alguno de los criterios. Buscar por un sinónimo también encuentra las mesas etiquetadas con los otros."
   },
   "detail": {
     "requirements": "Requisitos",
@@ -71,25 +71,25 @@
     "coMasterLabel": "Co-master",
     "apply": "Postularme",
     "applySubmitting": "Enviando...",
-    "alreadyApplied": "Ya tenés una postulación en curso",
-    "alreadyJoined": "Ya sos jugador de esta mesa",
+    "alreadyApplied": "Ya tienes una postulación en curso",
+    "alreadyJoined": "Ya eres jugador de esta mesa",
     "tableFull": "La mesa está llena",
     "notOpen": "No está abierta a postulaciones",
-    "needsPlayerRole": "Necesitás el rol Jugador",
+    "needsPlayerRole": "Necesitas el rol Jugador",
     "rejectedHereTitle": "Te rechazaron en esta mesa",
     "rejectedHereDescription": "Motivo: {{reason}}",
     "rejectedHereDate": "El {{date}}.",
     "applyAgain": "Postularme de nuevo",
     "applySuccess": "¡Postulación enviada!",
     "applyDialogTitle": "Postularme a {{name}}",
-    "applyDialogDescription": "Contale al master por qué querés sumarte (opcional).",
+    "applyDialogDescription": "Cuéntale al master por qué quieres sumarte (opcional).",
     "applyDescriptionLabel": "Mensaje para el master",
     "applyFilesLabel": "Archivos",
     "applyRemoveFile": "Quitar el archivo",
     "applyNext": "Siguiente",
     "applyBack": "Atrás",
     "applyCancel": "Cancelar",
-    "applyReviewDescription": "Esto es lo que se va a enviar. Una postulación enviada no se puede editar ni se le puede sacar un archivo después: revisala bien.",
+    "applyReviewDescription": "Esto es lo que se va a enviar. Una postulación enviada no se puede editar ni se le puede sacar un archivo después: revísala bien.",
     "applyReviewNoMessage": "Sin mensaje",
     "applyReviewNoFiles": "Sin archivos adjuntos",
     "applyFilesFailed": "No se pudieron subir: {{names}}. La postulación se envió igual con lo que sí se subió.",
@@ -98,7 +98,7 @@
     "schedule": "Agenda",
     "scheduleTimeZone": "Horarios en tu zona ({{timeZone}}).",
     "scheduleConflict": "Choca con una mesa tuya",
-    "scheduleConflictExplained": "Ya jugás en otra mesa a esa hora. Retirá esa postulación o dejá esa mesa para poder postularte acá.",
+    "scheduleConflictExplained": "Ya juegas en otra mesa a esa hora. Retira esa postulación o deja esa mesa para poder postularte aquí.",
     "scheduleConflictHelp": "Cómo funcionan los choques",
     "startDate": "Comienza",
     "totalSessions_one": "{{count}} sesión planeada",
@@ -108,14 +108,14 @@
   },
   "myTables": {
     "title": "Mis mesas",
-    "emptyTitle": "Todavía no jugás en ninguna mesa",
-    "emptyDescription": "Postulate a una mesa abierta desde el explorador."
+    "emptyTitle": "Todavía no juegas en ninguna mesa",
+    "emptyDescription": "Postúlate a una mesa abierta desde el explorador."
   },
   "history": {
     "title": "Historial",
     "closedOn": "Cerrada el {{date}}",
     "emptyTitle": "Todavía no terminaste ninguna mesa",
-    "emptyDescription": "Cuando una mesa donde jugás termine o se cancele, va a aparecer acá con tu asistencia final."
+    "emptyDescription": "Cuando una mesa donde juegas termine o se cancele, va a aparecer aquí con tu asistencia final."
   },
   "sessions": {
     "number": "Sesión {{number}}",

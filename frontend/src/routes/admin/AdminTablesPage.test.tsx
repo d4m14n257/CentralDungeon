@@ -198,7 +198,7 @@ describe('AdminTablesPage', () => {
 
     renderPage()
 
-    await waitFor(() => expect(screen.getByText('No tenés permiso')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('No tienes permiso')).toBeInTheDocument())
   })
 
   /**
@@ -330,6 +330,6 @@ describe('AdminTablesPage', () => {
     await user.click(row.getByRole('button', { name: 'Reanudar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
 
-    await waitFor(() => expect(toastError).toHaveBeenCalledWith('No pudimos completar la acción. Probá de nuevo.'))
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith('No pudimos completar la acción. Prueba de nuevo.'))
   })
 })

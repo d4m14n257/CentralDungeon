@@ -188,7 +188,7 @@ describe('AdminQueuePage', () => {
 
     renderPage()
 
-    await waitFor(() => expect(screen.getByText('No tenés permiso')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('No tienes permiso')).toBeInTheDocument())
   })
 
   /**

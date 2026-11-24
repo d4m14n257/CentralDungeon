@@ -3,8 +3,8 @@
   "unreadCount": "{{count}} sin leer",
   "viewAll": "Ver todas",
   "markAllAsRead": "Marcar todo como leído",
-  "emptyTitle": "Nada nuevo por acá",
-  "emptyDescription": "Cuando algo pase con tus mesas o postulaciones, vas a verlo acá.",
+  "emptyTitle": "Nada nuevo por aquí",
+  "emptyDescription": "Cuando algo pase con tus mesas o postulaciones, vas a verlo aquí.",
   "timeAgo": "hace {{value}}",
   "time": {
     "now": "ahora",
@@ -22,7 +22,7 @@
     "SessionScheduled": "Calendario actualizado",
     "SessionCanceled": "Sesión cancelada",
     "TaskPublished": "Nueva petición",
-    "MasterAssigned": "Sos master de una mesa",
+    "MasterAssigned": "Eres master de una mesa",
     "TableApproved": "Mesa aprobada",
     "TableChangesRequested": "Te piden cambios",
     "ApprovalRequestApproved": "Pedido aprobado",
@@ -54,11 +54,11 @@
     },
     "ScheduleConflict": {
       "title": "Tu horario en {{tableName}} choca con otra mesa",
-      "message": "Se superpone con {{otherTableName}}. Podés retirar una postulación o hablarlo con el master."
+      "message": "Se superpone con {{otherTableName}}. Puedes retirar una postulación o hablarlo con el master."
     },
     "SessionScheduled": {
       "title": "Cambió el calendario de {{tableName}}",
-      "message": "Revisá las fechas de las sesiones en tu hora local."
+      "message": "Revisa las fechas de las sesiones en tu hora local."
     },
     "SessionCanceled": {
       "title": "Se canceló una sesión de {{tableName}}",
@@ -66,7 +66,7 @@
     },
     "TaskPublished": {
       "title": "{{tableName}} te pide: {{taskTitle}}",
-      "message": "Entrá a la mesa para ver el detalle y responder."
+      "message": "Entra a la mesa para ver el detalle y responder."
     },
     "MasterAssigned": {
       "title": "Te asignaron como master de {{tableName}}"
@@ -79,15 +79,15 @@
     },
     "ApprovalRequestApproved": {
       "title": "Aprobaron tu pedido",
-      "message": "Un admin lo revisó y escribió su respuesta. Entrá para ver cómo quedó."
+      "message": "Un admin lo revisó y escribió su respuesta. Entra para ver cómo quedó."
     },
     "ApprovalRequestRejected": {
       "title": "Rechazaron tu pedido",
-      "message": "Un admin lo revisó y escribió por qué. Podés volver a pedirlo si algo cambia."
+      "message": "Un admin lo revisó y escribió por qué. Puedes volver a pedirlo si algo cambia."
     },
     "TableEditedByAdmin": {
       "title": "Un admin editó tu mesa {{tableName}}",
-      "message": "Entrá para ver cómo quedó.",
+      "message": "Entra para ver cómo quedó.",
       "title_changes": "Un admin cambió {{changes, list}} de tu mesa {{tableName}}"
     },
     "TablePausedByAdmin": {
@@ -123,7 +123,7 @@
     },
     "TableScheduleChanged": {
       "title": "Cambió la agenda de {{tableName}}",
-      "message": "Entrá para ver los nuevos horarios en tu hora local."
+      "message": "Entra para ver los nuevos horarios en tu hora local."
     }
   },
   "field": {

@@ -23,7 +23,7 @@ describe('QueryErrorState', () => {
   it('explains a 403 without a retry', () => {
     render(<QueryErrorState error={failure(403)} onRetry={vi.fn()} />)
 
-    expect(screen.getByText('No tenés permiso')).toBeInTheDocument()
+    expect(screen.getByText('No tienes permiso')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument()
   })
 

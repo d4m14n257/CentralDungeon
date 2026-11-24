@@ -149,6 +149,6 @@ describe('BlockUserDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Desbloquear' }))
     await acceptReview()
 
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('No pudimos aplicar el cambio. Probá de nuevo.'))
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('No pudimos aplicar el cambio. Prueba de nuevo.'))
   })
 })

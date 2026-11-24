@@ -148,7 +148,7 @@ describe('RequestsAdminHelp', () => {
 
     const body = document.body.textContent ?? ''
     expect(body).toMatch(/abre filtrada por «Pendiente»/i)
-    expect(body).toMatch(/Sacá ese filtro/i)
+    expect(body).toMatch(/Saca ese filtro/i)
   })
 
   /** A veto request is approved or rejected from the same tray; approving is the veto, lifting is not a request. */
@@ -176,6 +176,6 @@ describe('RequestsAdminHelp', () => {
     const steps = container.querySelector('ol')
     expect(steps).not.toBeNull()
     expect(within(steps as HTMLElement).getAllByRole('listitem')).toHaveLength(5)
-    expect(document.body.textContent).toMatch(/acordate del paso que falta/i)
+    expect(document.body.textContent).toMatch(/acuérdate del paso que falta/i)
   })
 })
