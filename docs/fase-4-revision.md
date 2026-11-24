@@ -713,8 +713,8 @@ Planeó Fable 5.1; ejecutó Opus 5.5 con agentes Opus y Sonnet por tarea; revisa
 - **Para F4.5 «La revisión mano a mano»:**
   - el barrido de las citas viejas de ADRs y fases en el código;
   - el término «cajón» en comentarios y en `requireOwnCajon` de `FileService`;
-  - un `429` en el login se ve como JSON crudo, porque es una navegación;
-  - una subida múltiple rechazada por el límite solo lista el archivo como fallido, sin el motivo.
+  - un `429` en el login se ve como JSON crudo, porque es una navegación — **Hecho** el 2026-11-23: la puerta del login redirige a `/auth/callback?error=RATE_LIMITED&retryAfterSeconds=N`;
+  - una subida múltiple rechazada por el límite solo lista el archivo como fallido, sin el motivo — **Hecho** el 2026-11-23: cada archivo fallido lleva el motivo traducido de su código de error.
 - **Sin verificar:**
   - el `native` de Tomcat detrás de un proxy real;
   - el servidor de Vite de desarrollo sigue con la versión anterior en memoria: no se pudo reiniciar desde la sesión.
