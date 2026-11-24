@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,10 @@ import tools.jackson.databind.json.JsonMapper;
  * the same way the 401 of the entry point is written. The answer says when to come back, in the
  * {@code Retry-After} header and in {@code errorParams.retryAfterSeconds}, and nothing else: not the
  * limit, not the key, not how many requests were counted.
+ *
+ * <p>A rule marked as a browser navigation (the login) is refused differently: nobody reads a JSON
+ * body there, so the browser is redirected to the frontend callback screen with the same code and
+ * {@code retryAfterSeconds} in the query string, and the {@code Retry-After} header is kept.
  */
 public final class RateLimitFilter extends OncePerRequestFilter {
 
@@ -43,35 +49,42 @@ public final class RateLimitFilter extends OncePerRequestFilter {
      * @param matcher the requests this rule counts
      * @param limiter the counter
      * @param key     who the request is counted against; null leaves the request uncounted
+     * @param navigation true when the browser navigates to this door instead of calling it with a fetch,
+     *                   so a refusal is a redirect to the frontend rather than a JSON body
      */
     record Rule(
             String name,
             RequestMatcher matcher,
             FixedWindowLimiter limiter,
-            Function<HttpServletRequest, @Nullable String> key) {
+            Function<HttpServletRequest, @Nullable String> key,
+            boolean navigation) {
     }
 
     private final String name;
     private final List<Rule> rules;
     private final JsonMapper jsonMapper;
+    private final String frontendUrl;
 
     /**
      * @param name       tells this instance apart from the other one in the same chain
      * @param rules      the doors this instance counts; the first one that matches a request decides
      * @param jsonMapper writes the body, as there is no message converter this early
+     * @param frontendUrl base URL of the frontend, where a refused navigation is sent
      */
-    RateLimitFilter(String name, List<Rule> rules, JsonMapper jsonMapper) {
+    RateLimitFilter(String name, List<Rule> rules, JsonMapper jsonMapper, String frontendUrl) {
         this.name = name;
         this.rules = List.copyOf(rules);
         this.jsonMapper = jsonMapper;
+        this.frontendUrl = frontendUrl;
     }
 
     /**
-     * Counts the request against the first rule that covers it, and answers {@code 429} when that rule
-     * is over its limit. Requests no rule covers, or without a key, pass untouched.
+     * Counts the request against the first rule that covers it, and answers {@code 429} (or, for a
+     * navigation rule, a redirect to the frontend callback) when that rule is over its limit. Requests
+     * no rule covers, or without a key, pass untouched.
      *
      * @param request     the incoming request
-     * @param response    where the 429 is written, if it comes to that
+     * @param response    where the 429 or the redirect is written, if it comes to that
      * @param filterChain the rest of the chain, continued unless the request is refused
      * @throws ServletException if a later filter fails
      * @throws IOException if a later filter fails or the body cannot be written
@@ -93,7 +106,17 @@ public final class RateLimitFilter extends OncePerRequestFilter {
         long seconds = retryAfter.get().toSeconds();
         // Not even a hash of the key: the IPv4 space is small enough to brute-force a hash back to an address.
         log.warn("Rate limit '{}' refused a request; retry in {}s", rule.get().name(), seconds);
-        writeTooManyRequests(response, seconds);
+        if (rule.get().navigation()) {
+            redirectToFrontend(response, seconds);
+        } else {
+            writeTooManyRequests(response, seconds);
+        }
+    }
+
+    private void redirectToFrontend(HttpServletResponse response, long seconds) throws IOException {
+        response.setHeader(HttpHeaders.RETRY_AFTER, Long.toString(seconds));
+        response.sendRedirect(frontendUrl + "/auth/callback?error=" + URLEncoder.encode(RATE_LIMITED, StandardCharsets.UTF_8)
+                + "&retryAfterSeconds=" + URLEncoder.encode(Long.toString(seconds), StandardCharsets.UTF_8));
     }
 
     private void writeTooManyRequests(HttpServletResponse response, long seconds) throws IOException {

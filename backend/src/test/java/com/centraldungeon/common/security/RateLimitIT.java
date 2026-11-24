@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.centraldungeon.features.users.PlatformRole;
@@ -101,9 +102,9 @@ class RateLimitIT {
             mockMvc.perform(from("10.1.0.1", get("/oauth2/authorization/discord"))).andExpect(status().is3xxRedirection());
         }
 
-        expectRateLimited(from("10.1.0.1", get("/oauth2/authorization/discord")));
+        expectLoginRateLimited(from("10.1.0.1", get("/oauth2/authorization/discord")));
         // The callback is the same door: it is refused too, before Spring even looks at its parameters.
-        expectRateLimited(from("10.1.0.1", get("/login/oauth2/code/discord")));
+        expectLoginRateLimited(from("10.1.0.1", get("/login/oauth2/code/discord")));
         // Another address has its own counter.
         mockMvc.perform(from("10.1.0.2", get("/oauth2/authorization/discord"))).andExpect(status().is3xxRedirection());
     }
@@ -116,7 +117,7 @@ class RateLimitIT {
         }
 
         // Another address of the same /64 shares the counter; a different /64 has its own.
-        expectRateLimited(from("2001:db8:a:b:ffff::9", get("/oauth2/authorization/discord")));
+        expectLoginRateLimited(from("2001:db8:a:b:ffff::9", get("/oauth2/authorization/discord")));
         mockMvc.perform(from("2001:db8:a:c::1", get("/oauth2/authorization/discord"))).andExpect(status().is3xxRedirection());
     }
 
@@ -204,6 +205,14 @@ class RateLimitIT {
                 .andExpect(header().exists("Retry-After"))
                 .andExpect(jsonPath("$.errorCode").value("RATE_LIMITED"))
                 .andExpect(jsonPath("$.errorParams.retryAfterSeconds").isString());
+    }
+
+    /** The login is a browser navigation: a refusal sends the browser to the frontend callback screen instead of a JSON body. */
+    private void expectLoginRateLimited(RequestBuilder request) throws Exception {
+        mockMvc.perform(request)
+                .andExpect(status().isFound())
+                .andExpect(header().exists("Retry-After"))
+                .andExpect(redirectedUrlPattern("**/auth/callback?error=RATE_LIMITED&retryAfterSeconds=*"));
     }
 
     private void expectNotLimited(RequestBuilder request) throws Exception {

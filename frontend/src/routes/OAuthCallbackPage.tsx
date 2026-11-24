@@ -52,6 +52,7 @@ export function OAuthCallbackPage() {
 
   const error = searchParams.get('error')
   const inviteUrl = searchParams.get('inviteUrl')
+  const retryAfterSeconds = searchParams.get('retryAfterSeconds')
 
   if (error === 'not_guild_member') {
     return (
@@ -81,6 +82,19 @@ export function OAuthCallbackPage() {
     return (
       <CallbackCard tone="canceled" title={t('callback.blockedTitle')}>
         <p className="text-fg-muted text-sm">{t('callback.blockedDescription')}</p>
+        <Button variant="outline" asChild className="w-full">
+          <Link to={paths.login}>{t('callback.backToLogin')}</Link>
+        </Button>
+      </CallbackCard>
+    )
+  }
+
+  // The login was refused by the rate limit before reaching Discord, so there is nothing to retry
+  // until the wait is over; the login screen is where the person comes back to.
+  if (error === 'RATE_LIMITED') {
+    return (
+      <CallbackCard tone="pending" title={t('callback.rateLimitedTitle')}>
+        <p className="text-fg-muted text-sm">{t('callback.rateLimitedDescription', { retryAfterSeconds })}</p>
         <Button variant="outline" asChild className="w-full">
           <Link to={paths.login}>{t('callback.backToLogin')}</Link>
         </Button>

@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import java.time.InstantSource;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +30,9 @@ import tools.jackson.databind.json.JsonMapper;
  * already replaced it with the address the proxy reports, and only for that proxy. The forwarding
  * headers are never read here.
  *
+ * <p>The login rule is the only one that is a browser navigation: when it refuses, the person is
+ * redirected to the frontend callback screen instead of being shown a JSON body.
+ *
  * <p>Not filters registered as beans on purpose: Spring Boot would also mount a filter bean on the
  * servlet container, outside the security chain, and it would count every request twice.
  */
@@ -41,8 +45,9 @@ public class RateLimitFilters {
     /**
      * @param properties the limits, from {@code app.rate-limit.*}
      * @param jsonMapper the application's mapper, to write the 429 body
+     * @param frontendUrl base URL of the frontend, where a rate-limited login is sent back to
      */
-    public RateLimitFilters(RateLimitProperties properties, JsonMapper jsonMapper) {
+    public RateLimitFilters(RateLimitProperties properties, JsonMapper jsonMapper, @Value("${app.frontend.url}") String frontendUrl) {
         InstantSource clock = InstantSource.system();
         this.byIp = new RateLimitFilter("byIp", List.of(
                 new RateLimitFilter.Rule("login",
@@ -50,35 +55,41 @@ public class RateLimitFilters {
                                 PathPatternRequestMatcher.pathPattern("/oauth2/authorization/**"),
                                 PathPatternRequestMatcher.pathPattern("/login/oauth2/code/**")),
                         new FixedWindowLimiter(properties.login(), clock),
-                        request -> ipKey(request.getRemoteAddr())),
+                        request -> ipKey(request.getRemoteAddr()),
+                        true),
                 new RateLimitFilter.Rule("refresh",
                         PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/auth/refresh"),
                         new FixedWindowLimiter(properties.refresh(), clock),
-                        request -> ipKey(request.getRemoteAddr()))),
-                jsonMapper);
+                        request -> ipKey(request.getRemoteAddr()),
+                        false)),
+                jsonMapper, frontendUrl);
         this.byUser = new RateLimitFilter("byUser", List.of(
                 new RateLimitFilter.Rule("upload",
                         new OrRequestMatcher(
                                 PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/files"),
                                 PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/admin/files")),
                         new FixedWindowLimiter(properties.upload(), clock),
-                        request -> currentUserId()),
+                        request -> currentUserId(),
+                        false),
                 new RateLimitFilter.Rule("registration",
                         PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/game-tables/*/registrations"),
                         new FixedWindowLimiter(properties.registration(), clock),
-                        request -> currentUserId()),
+                        request -> currentUserId(),
+                        false),
                 new RateLimitFilter.Rule("catalogProposal",
                         new OrRequestMatcher(
                                 PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/tags"),
                                 PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/systems"),
                                 PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/platforms")),
                         new FixedWindowLimiter(properties.catalogProposal(), clock),
-                        request -> currentUserId()),
+                        request -> currentUserId(),
+                        false),
                 new RateLimitFilter.Rule("masterCandidates",
                         PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/game-tables/*/master-candidates"),
                         new FixedWindowLimiter(properties.masterCandidates(), clock),
-                        request -> currentUserId())),
-                jsonMapper);
+                        request -> currentUserId(),
+                        false)),
+                jsonMapper, frontendUrl);
     }
 
     /**
