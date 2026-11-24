@@ -2,7 +2,7 @@
 adr: 15
 titulo: Peticiones de la mesa
 estado: Vigente
-actualizada: 2026-11-18
+actualizada: 2026-11-24
 absorbe: [63, 70, 76, 77, 87, 209, 210, 212, 236]
 ---
 
@@ -55,3 +55,9 @@ Quien dirige la mesa y los admins lo abren siempre (`MasterService.canOversee`).
 **Por qué.** Una petición que nadie ve no se cumple. El mismo aviso le llega a un candidato y a un jugador: una petición de audiencia `Candidates` es para gente que todavía no está en la mesa y no tiene entrada en `/my/tables`. El detalle público muestra a los dos lo que la mesa les pide (ADR-14 §2), así que es el único destino que sirve sin partir el tipo de notificación en dos.
 
 *Antes: #77, #212.*
+
+## §6 Una petición cerrada no se edita; una con respuestas, sí
+
+**Decisión.** Editar una petición cerrada es **`409 TASK_CLOSED_NOT_EDITABLE`** (`TableTaskService.update`), y la interfaz no ofrece el botón de editar en una petición cerrada. Una petición **con respuestas sí se edita**, para corregir un error, y las respuestas ya enviadas siguen valiendo (§2). `TASK_CLOSED` sigue siendo el código de entregar a una petición cerrada.
+
+**Por qué.** Una petición cerrada ya no espera respuestas, así que editarla cambiaría lo que se pidió después de cerrar. Con respuestas, en cambio, bloquearla impediría corregir una errata en algo que todavía se está respondiendo. Lo decidió el usuario entre el 2026-11-23 y el 2026-11-24, en F4.5 «La revisión mano a mano» (U6 «Una petición cerrada no se edita»).

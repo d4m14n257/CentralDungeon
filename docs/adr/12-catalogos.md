@@ -2,7 +2,7 @@
 adr: 12
 titulo: Catálogos
 estado: Vigente
-actualizada: 2026-11-14
+actualizada: 2026-11-24
 absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 ---
 
@@ -12,7 +12,7 @@ absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 
 ## §1 Hay tres catálogos, y cada valor pertenece a un grupo de sinónimos
 
-**Decisión.** **`systems`** es el sistema de juego que usa la mesa (D&D, 20roll…); **`tags`**, las etiquetas para filtrar en la pantalla de inicio (campaña corta, pública…); **`platforms`**, dónde se juega (Roll20…). La relación entre valores de un mismo catálogo **no es una taxonomía: es un grupo de sinónimos**. Uno es el término canónico —el «principal» en pantalla— y los demás son formas alternativas de escribir lo mismo.
+**Decisión.** **`systems`** es el sistema de juego que usa la mesa (D&D, 20roll…); **`tags`**, las etiquetas para filtrar en la pantalla de inicio (campaña corta, pública…); **`platforms`**, dónde se juega (Roll20…). La relación entre valores de un mismo catálogo **no es una taxonomía: es un grupo de sinónimos**. Uno es el término canónico —el «principal» en pantalla— y los demás son formas alternativas de escribir lo mismo. Un grupo de tags lleva además categoría y definición (§10).
 
 **Por qué.** La documentación vieja hablaba de «jerarquía de catálogos» con «navegación de árbol», y eso llevaba a implementar lo que no es. El propósito real es que «D&D», «Dungeon&Dragons» y «DANDD» sean **el mismo** tag: quien busca escribe el que conoce y encuentra las mesas etiquetadas con cualquiera de los otros. El CTE recursivo que quedó comentado en el legacy —subía de un tag a su raíz para resolver el canónico— confirma la intención; nunca se conectó a un endpoint.
 
@@ -86,3 +86,9 @@ absorbe: [53, 54, 55, 56, 57, 58, 59, 81, 179, 183, 184, 185, 246, 275, 276]
 **Por qué.** Quien aceptaría la propuesta es él mismo: hacerlo pasar por la revisión sería un paso vacío, y dejaría en la bandeja un ítem que solo él puede resolver.
 
 *Antes: #280.*
+
+## §10 Los tags tienen categoría y definición, y son del grupo
+
+**Decisión.** Cada grupo de tags puede tener una **categoría**, de un enum fijo `TagCategory` con ocho valores —temas, estilo de juego, content warnings, herramientas de seguridad, experiencia, idioma, edad y formato (formato y duración aproximada, p. ej. One-shot)—, y una **definición** en texto plano de hasta 500 caracteres. **Las dos se guardan solo en el canónico**, y los alias las heredan al leer. Un tag tiene una sola categoría, o ninguna. Las escribe un admin, al aceptar el valor o con `PUT /api/v1/tags/{id}/definition`. **`merge`, `promote` y `disable` con sucesor traspasan la definición al nuevo canónico**; `split` deja sin definición ni categoría al valor que separa, que queda como grupo propio (§6). Por ahora el buscador no filtra por categoría (§8). Sistemas y plataformas no las tienen.
+
+**Por qué.** Un enum se traduce en el frontend, con su clave en los dos idiomas (regla dura 18 «Ningún texto ni valor de estilo suelto»), y un catálogo de categorías editable sería texto que nadie traduce. La definición describe el concepto, no la forma de escribirlo: por eso es del grupo y no de cada alias, que son solo maneras de escribir lo mismo (§1, §2), y por eso sigue al canónico cuando el principal cambia. Lo decidió el usuario entre el 2026-11-23 y el 2026-11-24, en F4.5 «La revisión mano a mano» (C16 «Tags y temas separados» y S6 «Catálogos con categoría y definición»).

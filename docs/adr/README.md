@@ -47,16 +47,16 @@ El agente `escriba-adr` (`.claude/agents/`) hace estos pasos.
 | ADR-04 | [Backend y contrato de la API](04-backend-y-contrato-de-la-api.md) | 7 |
 | ADR-05 | [Seguridad, sesión y login](05-seguridad-sesion-y-login.md) | 12 |
 | ADR-06 | [Roles y alcance](06-roles-y-alcance.md) | 9 |
-| ADR-07 | ["Mesas: ciclo de vida"](07-mesas-ciclo-de-vida.md) | 11 |
+| ADR-07 | ["Mesas: ciclo de vida"](07-mesas-ciclo-de-vida.md) | 12 |
 | ADR-08 | [Agenda, sesiones y asistencia](08-agenda-sesiones-y-asistencia.md) | 6 |
 | ADR-09 | [Postulaciones y veto](09-postulaciones-y-veto.md) | 7 |
 | ADR-10 | [Perfiles](10-perfiles.md) | 7 |
 | ADR-11 | [Comentarios, karma y feedback](11-comentarios-karma-y-feedback.md) | 12 |
-| ADR-12 | [Catálogos](12-catalogos.md) | 9 |
+| ADR-12 | [Catálogos](12-catalogos.md) | 10 |
 | ADR-13 | ["Archivos: modelo y almacenamiento"](13-archivos-modelo-y-almacenamiento.md) | 8 |
 | ADR-14 | ["Archivos: lectura y bibliotecas"](14-archivos-lectura-y-bibliotecas.md) | 8 |
-| ADR-15 | [Peticiones de la mesa](15-peticiones-de-la-mesa.md) | 5 |
-| ADR-16 | [Pedidos con aprobación y bandeja de admins](16-pedidos-con-aprobacion-y-bandeja.md) | 8 |
+| ADR-15 | [Peticiones de la mesa](15-peticiones-de-la-mesa.md) | 6 |
+| ADR-16 | [Pedidos con aprobación y bandeja de admins](16-pedidos-con-aprobacion-y-bandeja.md) | 9 |
 | ADR-17 | [Configuración del sistema y auditoría](17-configuracion-y-auditoria.md) | 4 |
 | ADR-18 | [Notificaciones y tiempo real](18-notificaciones-y-tiempo-real.md) | 5 |
 | ADR-19 | [Arquitectura del frontend](19-arquitectura-del-frontend.md) | 10 |
@@ -85,6 +85,7 @@ Lo que sigue sin resolverse: cuando se cierra, se vuelve una sección de su ADR 
 | **¿«Conservarlo para reusar» protege un archivo de la purga?** | **Discrepancia encontrada en ADR-21 §5, sin resolver.** El diálogo de editar de `/my/files` dice que un archivo sin marcar «se libera cuando pase mucho tiempo sin uso», lo que promete que uno marcado (`Private`) se queda. Pero la purga (`StoredFileRepository.findPurgeCandidates`, ADR-13 §3) exceptúa **solo** a los `Public`: un `Private` sin vínculo vivo con una mesa y sin uso en 90 días se da de baja igual que un `Single-use`. Hay que decidir cuál de los dos tiene razón: si conservar protege, la consulta tiene que exceptuar también a los `Private`; si no, el texto del diálogo tiene que dejar de prometerlo. **Y una segunda discrepancia en la misma consulta**: ADR-09 §2 afirma que el job de retención «hereda» el filtro de postulación viva de los usos, pero `findPurgeCandidates` solo mira `table_files` — ni una postulación viva, ni una entrega, ni un formulario adjunto a un pedido (`task_files`) protegen hoy a un archivo de la purga. |
 | **El estado `Confirmed` de `comment_drafts`** | **Postergado a F5.** El DDL declara `Draft | Confirmed | Expired`, pero ADR-11 §6 dice que al confirmar el borrador **desaparece**: si desaparece, `Confirmed` no lo tiene ninguna fila viva; si se queda marcado, la autoría sobrevive a la confirmación, que es justo lo que §6 prohíbe. Se decide al construir `CommentService`. |
 | **Desde qué estado publica el job de Temporadas** | **Postergado a fase 2.** El job de `publish_at` pasaría `Preparation → Opened`, pero `Preparation` es «espera a un admin»: una mesa aprobada con salida agendada necesita su propio estado o el job publicaría mesas sin revisar (`arquitectura` §4.7.1, punto 2). Se decide con la migración de Campañas y Temporadas (ADR-07 §10). |
+| **La categoría «Formato» de los tags y la clase de duración de la mesa** | **Sin resolver hasta decidir C2 «Duración abstracta en vez de sesiones planeadas».** ADR-12 «Catálogos» §10 «Los tags tienen categoría y definición, y son del grupo» abre la categoría «Formato» —formato y duración aproximada, p. ej. One-shot—, y C2 propone una clase de duración propia de la mesa (One-shot, Corta, Mediana, Larga). Si las dos existen, una mesa puede decir su duración dos veces y decir cosas distintas: al decidir C2 hay que fijar cuál manda, o qué queda en «Formato» que no sea duración. |
 | Generar los tipos del frontend desde OpenAPI | Candidato, no adoptado. springdoc ya publica el schema, así que los espejos de `features/<dominio>/types.ts` podrían generarse en vez de escribirse a mano y quedarían imposibilitados de divergir del backend. Cuesta un paso de build y ata el frontend a que el backend esté levantado o a un artefacto versionado. Se evalúa cuando el contrato de la API esté estable, no antes. Hasta entonces rige skill `arquitectura` §3.2 con tipos escritos a mano. |
 
 ## Qué se rescata de `CentralDungeonBackend`

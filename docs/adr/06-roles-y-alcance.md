@@ -2,7 +2,7 @@
 adr: 6
 titulo: Roles y alcance
 estado: Vigente
-actualizada: 2026-11-18
+actualizada: 2026-11-24
 absorbe: [16, 37, 45, 67, 71, 72, 73, 89, 135, 140, 151, 152, 155, 159, 166, 169, 252, 284]
 ---
 
@@ -42,7 +42,7 @@ absorbe: [16, 37, 45, 67, 71, 72, 73, 89, 135, 140, 151, 152, 155, 159, 166, 169
 
 ## §4 Dirigir una mesa se autoriza por la fila viva en `masters`, no por el rol `Master`
 
-**Decisión.** El rol de plataforma `Master` significa **"puedo crear mesas propias"** y nada más. Dirigir una mesa concreta se autoriza **solo por la fila en `masters`** (viva, ver ADR-07 §8), sin exigir el rol: un `Player` al que un admin asigna como master tiene ahí **todas** las atribuciones de un master —candidatos, agenda, sesiones, peticiones, pedir vetos, buscar jugadores, pedir la pausa— y ninguna fuera de ella; las del `Primary` (§3) las tiene si además es el `Primary`. La fila no se borra al cerrar la mesa: es el registro de quién la dirigió, y la caducidad sale de la máquina de estados (ADR-07 §1). En la interfaz, el `ContextSwitcher` ofrece el contexto Master si hay rol **o** al menos una fila viva en `masters` —`UserDetailResponse.hasManagedTables`, que `/users/me` calcula con un `exists` sobre las filas vivas—, y `/master/tables/new` se ofrece **solo con el rol**. **Proponer un valor de catálogo es parte de escribir una mesa**, así que también lo habilita la fila: `MasterService.writesAnyTable` (rol `Master`, `Admin` u `Owner`, o una fila viva en `masters`), en ADR-12 §3.
+**Decisión.** El rol de plataforma `Master` significa **"puedo crear mesas propias"** y nada más. Dirigir una mesa concreta se autoriza **solo por la fila en `masters`** (viva, ver ADR-07 §8), sin exigir el rol: un `Player` al que un admin asigna como master tiene ahí **todas** las atribuciones de un master —candidatos, agenda, sesiones, peticiones, pedir vetos, buscar jugadores, pedir la pausa— y ninguna fuera de ella; las del `Primary` (§3) las tiene si además es el `Primary`. La fila no se borra al cerrar la mesa: es el registro de quién la dirigió, y la caducidad sale de la máquina de estados (ADR-07 §1). En la interfaz, el `ContextSwitcher` ofrece el contexto Master si hay rol **o** al menos una fila viva en `masters` —`UserDetailResponse.hasManagedTables`, que `/users/me` calcula con un `exists` sobre las filas vivas—, y `/master/tables/new` se ofrece **solo con el rol**. **Proponer un valor de catálogo es parte de escribir una mesa**, así que también lo habilita la fila: `MasterService.writesAnyTable` (rol `Master`, `Admin` u `Owner`, o una fila viva en `masters`), en ADR-12 §3. **Un jugador sin el rol también puede pedir dirigir una sola mesa**: aprobar su `TableOpen` le crea un borrador con su fila de `Primary`, sin el rol (ADR-16 «Pedidos con aprobación y bandeja de admins» §9 «Aprobar `TableOpen` crea un borrador a nombre de quien lo pidió»).
 
 **Por qué.** Es un caso real: los admins abren mesas y reclutan a un jugador para dirigir **esa** mesa. El schema ya lo soportaba; lo que no lo soportaba era `hasRole('MASTER')` en los endpoints de mesa. Se descartó conceder y revocar el rol al asignar y al cerrar: obliga a preguntar "¿le queda otra mesa viva?", mete escritura de roles en un flujo que no es de roles y convierte un permiso de mesa en uno global (podría crear otras). Es la regla dura 17 leída al revés: **la pertenencia sola alcanza**. Sin `hasManagedTables`, quien tiene la fila pero no el rol no tendría forma de llegar a su mesa desde la interfaz.
 

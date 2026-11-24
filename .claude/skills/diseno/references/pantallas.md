@@ -11,6 +11,7 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 - Los comandos de catálogo (`/table_system`, `/table_tag`, `/table_platform`) resuelven **por grupo de sinónimos** (ADR-12 §4, §8): buscar «DANDD» trae también lo etiquetado «D&D».
 - Las mesas donde el usuario tiene un veto **no aparecen** (ADR-09 §4), y su detalle por id responde `404`, no `403`: un `403` ya delataría que existe.
 - Lista **solo las `Opened` y las `InProgress` que buscan jugadores**; estas llevan su chip «Busca jugadores» en la card (ADR-07 «Mesas: ciclo de vida» §11 «Una mesa en curso puede buscar jugadores, y no es un estado»).
+- **Sus estados vacíos ofrecen pedir una mesa** a quien no tiene el rol `Master`: el pedido `TableOpen`, con el nombre de la mesa y su justificación (ADR-16 «Pedidos con aprobación y bandeja de admins» §9 «Aprobar `TableOpen` crea un borrador a nombre de quien lo pidió»).
 
 ### Detalle de mesa — `/player/tables/:id`
 
@@ -21,6 +22,7 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 ### Gestión de mesa — `/master/tables/:id`
 
 - La cola de candidatos va **en orden de llegada y no se reordena** (ADR-09 §1).
+- **Una petición cerrada no ofrece editar**; una con respuestas sí, y sus respuestas siguen valiendo (ADR-15 «Peticiones de la mesa» §6 «Una petición cerrada no se edita; una con respuestas, sí»).
 - Aceptar al que completa el cupo dispara el rechazo automático del resto con la justificación por defecto (ADR-09 §3): la interfaz lo avisa **antes** de confirmar, no después.
 - En una mesa `InProgress`, el aviso de estado lleva «Buscar jugadores» / «Dejar de buscar» para cualquier master, deshabilitado con la mesa llena (ADR-07 §11). El aviso dice qué pasa con la búsqueda en su segunda frase (`hint`): «Buscás jugadores», o por qué el botón está apagado, «La mesa está completa: no hay lugar para buscar jugadores» (ADR-21 «Diseño visual e interacción» §10 «Las decisiones sobre una entidad van en su aviso de estado, con las destructivas aparte»).
 - En la pestaña Jugadores, «Pedir veto» es de cualquier master y «Levantar el veto», del `Primary`. Se veta solo a un jugador: la pestaña Candidatos no lo ofrece, porque al candidato que no se quiere se lo rechaza con motivo; en `/admin/tables/:id`, el admin lo levanta y aprueba o rechaza los pedidos pendientes de esa mesa (ADR-09 «Postulaciones y veto» §5 «El veto lo pide un master y lo decide un admin; lo levanta el `Primary` o un admin, con registro», §6 «El padrón de la mesa es un endpoint propio, separado de la cola de candidatos»).
@@ -35,6 +37,7 @@ Son las cinco que definieron el resto. **`/admin/files`** (ADR-14 §7) y **`/adm
 ### Perfil — `/profile` y `/users/:id`
 
 - **Es de la cuenta, no de un contexto** (ADR-20 «Navegación, contextos y ayuda» §7 «El perfil es de la cuenta y vive fuera de los contextos»): lo abre cualquier cuenta con sesión, tenga o no `Player`.
+- **En el propio, quien no tiene el rol `Master` pide desde acá el rol o una sola mesa**, los dos pedidos juntos: `MasterGrant` y `TableOpen`, este con el nombre de la mesa (ADR-16 «Pedidos con aprobación y bandeja de admins» §9 «Aprobar `TableOpen` crea un borrador a nombre de quien lo pidió»).
 - **«Mesas terminadas» se abre** (ADR-10 «Perfiles» §7 «Las mesas terminadas de un perfil se pueden abrir»): en el propio lleva a `/player/history`; en el ajeno, a un listado de las suyas con lo público de cada mesa, y cada fila al detalle público.
 - **Los comentarios no muestran autor. Nunca, para nadie** (ADR-11 §5): ni al dueño del perfil, ni al master, ni a un admin, ni al owner. Lo único visible es la dirección (jugador → jugador, master → jugador…) y el impacto.
 - La asistencia va al lado del karma —que llega con F5 (ADR-10 §5)— pero **no está incluida en él** (ADR-11 §10): son dos señales distintas, y mezclarlas haría el número inexplicable.
