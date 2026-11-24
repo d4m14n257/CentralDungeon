@@ -92,6 +92,9 @@ const EXPLAINED_ERROR_CODES = new Set([
   // worst possible answer to somebody who just wrote one: retrying will not help, and what they need
   // to know is that the intake ended — which is a fact about the table, not about their connection.
   'TASK_CLOSED',
+  // The master editing a request that was closed while the form was open: the screens never offer
+  // the edit on a closed request, so this only surfaces from a stale tab or a direct call.
+  'TASK_CLOSED_NOT_EDITABLE',
   // Publishing a library file nobody has said what it is (ADR-14 §7). The admin can fix it in one step -
   // "Change what it is" on the same row - so naming that step is the whole answer; "could not
   // complete the action" left them guessing at something the server knew exactly.

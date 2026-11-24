@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.NotFoundException;
 import com.centraldungeon.features.files.FileCategory;
 import com.centraldungeon.features.files.FileService;
@@ -275,6 +276,21 @@ class TaskIT {
 
         assertThat(taskSubmissionService.listForTask(task.taskId(), master.getId()).submissions()).hasSize(1);
         assertThat(tableTaskService.listApplicable(table.getId(), firstPlayer.getId())).isEmpty();
+    }
+
+    /** A closed request is not edited any more: the refusal is a 409 with its own code, and nothing changes. */
+    @Test
+    void aClosedRequestCannotBeEdited() {
+        TaskResponse task = publish(TaskAudience.Players, null);
+        tableTaskService.close(task.taskId(), master.getId());
+
+        assertThatThrownBy(() -> tableTaskService.update(
+                        task.taskId(),
+                        new UpdateTaskRequest("Otro titulo", null, TaskAudience.Players, null, null, true, true, false, List.of(), null),
+                        master.getId()))
+                .isInstanceOf(ConflictException.class)
+                .extracting(error -> ((ConflictException) error).getErrorCode())
+                .isEqualTo("TASK_CLOSED_NOT_EDITABLE");
     }
 
     // ---------------------------------------------------------------- fixtures

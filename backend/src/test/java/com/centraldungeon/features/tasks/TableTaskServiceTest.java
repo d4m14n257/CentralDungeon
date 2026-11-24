@@ -9,6 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
@@ -339,6 +340,36 @@ class TableTaskServiceTest {
 
         assertThat(response.title()).isEqualTo("Ficha corregida");
         verify(notificationService, never()).notifyTaskPublished(anyString(), any(), anyString());
+    }
+
+    /** A task that already has answers can still be corrected: what was sent stays valid. */
+    @Test
+    void correctingATaskThatAlreadyHasAnswersStillWorks() {
+        givenTable("table-1");
+        givenTask("task-1", "table-1", TaskAudience.Players);
+        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        when(submissionRepository.countByTaskIds(any())).thenReturn(List.of(new TaskSubmissionCount("task-1", 2, 1)));
+
+        TaskResponse response = service().update("task-1", updateRequest(TaskAudience.Players, null), "master-1");
+
+        assertThat(response.title()).isEqualTo("Ficha corregida");
+        assertThat(response.submissionCount()).isEqualTo(2);
+    }
+
+    /** Closing is the master's last word on the ask, so a closed task is refused with a code of its own. */
+    @Test
+    void refusesToEditAClosedTaskWithACodeOfItsOwn() {
+        givenTable("table-1");
+        TableTask task = givenTask("task-1", "table-1", TaskAudience.Players);
+        task.setStatus(TaskStatus.Closed);
+        when(masterService.isMasterOf("table-1", "master-1")).thenReturn(true);
+        TableTaskService service = service();
+
+        assertThatThrownBy(() -> service.update("task-1", updateRequest(TaskAudience.Players, null), "master-1"))
+                .isInstanceOf(ConflictException.class)
+                .extracting(error -> ((ConflictException) error).getErrorCode())
+                .isEqualTo("TASK_CLOSED_NOT_EDITABLE");
+        assertThat(task.getTitle()).isEqualTo("Ficha de personaje");
     }
 
     @Test

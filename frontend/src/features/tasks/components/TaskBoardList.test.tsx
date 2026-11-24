@@ -138,4 +138,10 @@ describe('TaskBoardList', () => {
     rerender(<TaskBoardList tasks={[task()]} isBusy={false} renderFiles={() => null} onEdit={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Editar la petición' })).toBeTruthy()
   })
+
+  it('does not offer to edit a closed request, which can still be read', () => {
+    render(<TaskBoardList tasks={[task({ status: 'Closed' })]} isBusy={false} renderFiles={() => null} onEdit={vi.fn()} />)
+
+    expect(screen.queryByRole('button', { name: 'Editar la petición' })).toBeNull()
+  })
 })

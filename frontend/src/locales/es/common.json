@@ -93,6 +93,7 @@
       "TABLE_NEEDS_TAG": "La mesa tiene que llevar al menos un tag. Elegí uno o proponé el tuyo.",
       "FILE_NEEDS_CATEGORY": "Antes de publicarlo, elegí qué es el archivo con «Cambiar qué es». Así los masters saben dónde encontrarlo.",
       "TASK_CLOSED": "Este pedido ya se cerró y el master no recibe más respuestas.",
+      "TASK_CLOSED_NOT_EDITABLE": "Esta petición ya está cerrada y no se puede editar. Actualiza la lista para ver cómo está.",
       "CAPACITY_BELOW_PLAYERS": "El cupo no puede quedar por debajo de los {{playerCount}} jugadores que ya tiene la mesa.",
       "MAX_PLAYERS_ABOVE_CAP": "El cupo no puede pasar de {{maxPlayersCap}} jugadores en esta plataforma.",
       "FILE_CATEGORY_NOT_YOURS": "Ese archivo no puede guardarse en esa categoría: no es una de las tuyas. Elegí otra.",

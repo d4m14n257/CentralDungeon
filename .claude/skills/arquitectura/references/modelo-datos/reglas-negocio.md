@@ -147,6 +147,7 @@ Ninguna vive en la base: no hay triggers ni stored procedures (ADR-03 §1). Cada
 | Los archivos de una entrega se **vinculan**, nunca se copian, y pasan por el mismo permiso que adjuntar a una mesa: propios o publicados | `TaskSubmissionService.submit` | ADR-13 §2, ADR-14 §1 |
 | Un master puede abrir un archivo que le entregaron a una petición de su mesa — la quinta vía de lectura | `FileService.requireReadable` | ADR-14 §2 |
 | El incumplimiento se avisa y queda visible para el master, pero **no bloquea ni expulsa**: el padrón de faltantes no tiene ninguna acción asociada | `TaskSubmissionService.listForTask` | ADR-15 §2 |
+| **Una petición cerrada no se edita** (`409 TASK_CLOSED_NOT_EDITABLE`); una con respuestas sí, porque corregir el texto no invalida lo ya enviado | `TableTaskService.update` | ADR-15 §2 |
 | Cerrar una petición corta las entregas nuevas y **no borra** lo ya entregado | `TableTaskService.close` | ADR-15 §2 |
 
 ### Comentarios y karma

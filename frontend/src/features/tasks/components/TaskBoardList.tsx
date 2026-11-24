@@ -25,7 +25,7 @@ const BOARD_GROUPS = [
 export interface TaskBoardListProps {
   /** The table's tasks, oldest first. */
   tasks: TableTask[]
-  /** Called with the task to correct. Absent for a reader who may not change it - an admin (ADR-06 §8). */
+  /** Called with the task to correct; never offered on a closed one. Absent for a reader who may not change it - an admin (ADR-06 §8). */
   onEdit?: ((task: TableTask) => void) | undefined
   /** Called with the task whose intake should end. Absent for a reader who may not end it (ADR-06 §8). */
   onClose?: ((task: TableTask) => void) | undefined
@@ -105,7 +105,7 @@ export function TaskBoardList({ tasks, onEdit, onClose, isBusy, renderFiles, onO
                   onClick={() => onOpenPerson(task.targetUserId!)}
                 />
               )}
-              {onEdit && (
+              {onEdit && task.status === 'Open' && (
                 <IconAction
                   label={t('board.edit')}
                   icon={<PencilIcon className="size-4" />}

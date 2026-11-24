@@ -93,6 +93,7 @@
       "TABLE_NEEDS_TAG": "The table has to carry at least one tag. Pick one or propose your own.",
       "FILE_NEEDS_CATEGORY": "Before publishing it, choose what the file is with “Change what it is”. That is how masters know where to find it.",
       "TASK_CLOSED": "This request is already closed and the master is not taking more answers.",
+      "TASK_CLOSED_NOT_EDITABLE": "This request is already closed and cannot be edited. Refresh the list to see where it stands.",
       "CAPACITY_BELOW_PLAYERS": "The seats cannot go below the {{playerCount}} players the table already has.",
       "MAX_PLAYERS_ABOVE_CAP": "The seats cannot go above {{maxPlayersCap}} players on this platform.",
       "FILE_CATEGORY_NOT_YOURS": "That file cannot be filed under that category: it is not one of yours. Pick another.",

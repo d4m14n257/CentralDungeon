@@ -1,5 +1,6 @@
 package com.centraldungeon.features.tasks;
 
+import com.centraldungeon.common.exception.ConflictException;
 import com.centraldungeon.common.exception.ForbiddenActionException;
 import com.centraldungeon.common.exception.InvalidRequestException;
 import com.centraldungeon.common.exception.NotFoundException;
@@ -201,7 +202,9 @@ public class TableTaskService {
      * <p><b>It does not notify again.</b> The notification belongs to publication; a task fixed
      * three times ringing three times for a headline that never changed is how people learn to ignore
      * the bell. What has already been answered stays answered - correcting the wording of a request
-     * does not invalidate what somebody sent in good faith.
+     * does not invalidate what somebody sent in good faith, so a task that already has answers can be
+     * corrected. A <b>closed</b> task cannot: closing is the master's last word on what was asked, and
+     * rewording a request nobody can answer any more would only rewrite history.
      *
      * @param taskId  the task
      * @param request the whole state it should end in
@@ -213,12 +216,18 @@ public class TableTaskService {
      *                                  or it is addressed to them, or they already answered it) - the
      *                                  same answer as a task that does not exist
      * @throws ForbiddenActionException if the actor sees the task but does not run the table
+     * @throws ConflictException       if the task is closed ({@code TASK_CLOSED_NOT_EDITABLE})
      * @throws InvalidRequestException  same three cases as publishing
      */
     @Transactional
     public TaskResponse update(String taskId, UpdateTaskRequest request, String actorId) {
         TableTask task = getTask(taskId);
         requireMasterOf(task, actorId);
+        if (task.getStatus() == TaskStatus.Closed) {
+            // Its own code, apart from the one for answering a closed task: the sentence is about the
+            // master's edit, and "no longer takes answers" would describe the wrong action.
+            throw new ConflictException("Task " + taskId + " is closed and cannot be edited", "TASK_CLOSED_NOT_EDITABLE");
+        }
         requireAnswerable(request.acceptsText(), request.acceptsFiles());
 
         task.setTitle(request.title());
