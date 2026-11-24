@@ -1,6 +1,9 @@
 import { useMutation } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
 
+import { useClientLimits } from '@/hooks/useClientLimits'
+import type { UploadFailure } from '@/types/file'
+import { uploadFailureReason } from '../uploadErrors'
 import { filesApi } from './filesApi'
 import type { CommitResult, FileCategory, StagedFile } from '../types'
 
@@ -11,11 +14,12 @@ import type { CommitResult, FileCategory, StagedFile } from '../types'
  * the table, sends the answer or publishes the request is what puts bytes on the server. Uploading at
  * pick time left a file behind whenever somebody abandoned a wizard halfway.
  *
- * **A failure does not undo the rest.** Each file is sent on its own and the names that failed come
- * back in the result instead of as an exception, because the caller has to go on: the table is
- * created, what uploaded is linked, and the person is told what to add. Losing four steps of work
- * over one bad file is worse than the missing file, and every flow that uses this can be completed
- * by editing afterwards.
+ * **A failure does not undo the rest.** Each file is sent on its own and the files that failed come
+ * back in the result instead of as an exception, each with the translated reason the server gave
+ * (the size, the type, too many tries) or a generic one when there was no code to read. The caller
+ * has to go on: the table is created, what uploaded is linked, and the person is told what to add
+ * and why. Losing four steps of work over one bad file is worse than the missing file, and every
+ * flow that uses this can be completed by editing afterwards.
  *
  * **Retrying is free.** The server recognises content somebody already uploaded and hands back the
  * row they had (ADR-13 §3), so sending the list again after fixing one file stores nothing twice.
@@ -27,6 +31,7 @@ import type { CommitResult, FileCategory, StagedFile } from '../types'
  */
 export function useCommitStagedFiles() {
   const queryClient = useQueryClient()
+  const { maxFileSizeBytes } = useClientLimits()
   return useMutation({
     // It reports its own failures in the result, so the global toast would be a second, vaguer
     // message about something the screen already names precisely.
@@ -39,7 +44,7 @@ export function useCommitStagedFiles() {
       fileCategory?: FileCategory | null
     }): Promise<CommitResult> => {
       const fileIds: string[] = []
-      const failed: string[] = []
+      const failed: UploadFailure[] = []
       const reused: string[] = []
 
       for (const entry of staged) {
@@ -53,8 +58,8 @@ export function useCommitStagedFiles() {
           if (uploaded.deduplicated) {
             reused.push(uploaded.file.name)
           }
-        } catch {
-          failed.push(entry.name)
+        } catch (error) {
+          failed.push({ name: entry.name, reason: uploadFailureReason(error, maxFileSizeBytes) })
         }
       }
       return { fileIds, failed, reused }

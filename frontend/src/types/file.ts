@@ -68,20 +68,28 @@ export function stagedKey(staged: StagedFile): string {
   return staged.kind === 'new' ? staged.localId : staged.fileId
 }
 
+/** A file the server refused to take, with the reason already written in the reader's language. */
+export interface UploadFailure {
+  /** The name of the staged file, as it was picked. */
+  name: string
+  /** Why it was refused: the sentence for the backend's error code, or a generic one when there was no code to read. */
+  reason: string
+}
+
 /**
  * What came back from sending a staged list (ADR-13 §5).
  *
  * **`failed` is not an exception**, and that is the whole shape of it: a file that could not be
  * uploaded does not undo the rest. The table is created, the answer is sent, and what did upload is
  * linked — because losing four steps of work over one bad file is worse than the missing file, and
- * every flow that produces one of these can be completed by editing afterwards. The names are what
- * the screen says, so somebody knows exactly what to add.
+ * every flow that produces one of these can be completed by editing afterwards. The names, each with
+ * its reason, are what the screen says, so somebody knows exactly what to add and what to change.
  */
 export interface CommitResult {
   /** The ids to link: everything already on the server plus everything that uploaded just now. */
   fileIds: string[]
-  /** The names that could not be uploaded. Empty when everything went through. */
-  failed: string[]
+  /** The files that could not be uploaded, each with why. Empty when everything went through. */
+  failed: UploadFailure[]
   /** The names the server recognised instead of storing again (ADR-13 §3, §4). */
   reused: string[]
 }

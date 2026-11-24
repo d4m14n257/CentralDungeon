@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
+import { describeUploadFailures } from '@/lib/uploadFailures'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { Button } from '@/components/ui/button'
@@ -113,7 +114,9 @@ export function MasterTableTasksTab() {
     if (!confirmed) return
     const { fileIds, failed } = await commit.mutateAsync({ staged: draft.staged, fileCategory: 'MasterRequest' })
     if (failed.length > 0) {
-      toast.error(t('form.blanksFailed', { names: failed.join(', ') }))
+      toast.error(t('form.blanksFailed', { names: failed.map((file) => file.name).join(', ') }), {
+        description: describeUploadFailures(failed),
+      })
     }
     const input: CreateTaskInput = { ...draft, fileIds }
     if (editing) {

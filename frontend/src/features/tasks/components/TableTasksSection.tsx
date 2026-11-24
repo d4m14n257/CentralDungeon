@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 import { ApplicableTaskList } from './ApplicableTaskList'
 import { TaskSubmitDialog } from './TaskSubmitDialog'
+import { describeUploadFailures } from '@/lib/uploadFailures'
 import type { CommitStagedFiles, StagedFile } from '@/types/file'
 import { SectionHeader } from '@/components/SectionHeader'
 import { useApplicableTasks } from '../api/useApplicableTasks'
@@ -106,7 +107,9 @@ export function TableTasksSection({ tableId, renderHelp, renderFiles, renderFile
             // told which file to try again with.
             const { fileIds, failed } = await commitFiles(draft.staged)
             if (failed.length > 0) {
-              toast.error(t('submit.someFilesFailed', { names: failed.join(', ') }))
+              toast.error(t('submit.someFilesFailed', { names: failed.map((file) => file.name).join(', ') }), {
+                description: describeUploadFailures(failed),
+              })
             }
             submit.mutate(
               { taskId: answering.taskId, input: { content: draft.content, fileIds } },

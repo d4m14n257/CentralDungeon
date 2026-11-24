@@ -38,6 +38,7 @@ import { useDisclosure } from '@/hooks/useDisclosure'
 import { useHasPersonalLibrary } from '@/hooks/useHasPersonalLibrary'
 import { useSearchQuery } from '@/hooks/useSearchQuery'
 import { formatRelativeDate } from '@/lib/date'
+import { describeUploadFailures } from '@/lib/uploadFailures'
 
 /**
  * `/my/files` — everything this person has uploaded, and what each file is doing.
@@ -140,12 +141,14 @@ export function MyFilesPage() {
       { staged, fileCategory: chosen },
       {
         onSuccess: ({ failed, reused }) => {
-          setStaged(staged.filter((entry) => entry.kind === 'new' && failed.includes(entry.name)))
+          setStaged(staged.filter((entry) => entry.kind === 'new' && failed.some((file) => file.name === entry.name)))
           if (reused.length > 0) {
             toast.info(t('mine.reused', { names: reused.join(', ') }))
           }
           if (failed.length > 0) {
-            toast.error(t('mine.someFailed', { names: failed.join(', ') }))
+            toast.error(t('mine.someFailed', { names: failed.map((file) => file.name).join(', ') }), {
+              description: describeUploadFailures(failed),
+            })
             return
           }
           uploadPanel.close()

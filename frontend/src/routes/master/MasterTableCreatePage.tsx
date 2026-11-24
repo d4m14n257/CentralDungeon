@@ -35,7 +35,9 @@ import {
 import type { CreateGameTableForm, TableScheduleEntry, WizardStep } from '@/features/tables'
 import { useMe } from '@/features/users'
 import { WEEKDAYS, browserTimeZone, formatMinutes, formatSlot, minutesOfDay, utcSlotToLocal } from '@/lib/date'
+import { describeUploadFailures } from '@/lib/uploadFailures'
 import type { CatalogValue } from '@/types/catalog'
+import type { UploadFailure } from '@/types/file'
 import { useClientLimits } from '@/hooks/useClientLimits'
 import { useConfirm } from '@/hooks/useConfirm'
 
@@ -303,7 +305,7 @@ export function MasterTableCreatePage() {
           // preparation, so the master is told which one to add rather than losing four steps of
           // work over it - and retrying costs nothing, because the server recognises content it
           // already has (ADR-13 §3).
-          let failedFiles: string[] = []
+          let failedFiles: UploadFailure[] = []
           if (files.length > 0) {
             const { fileIds, failed } = await commit.mutateAsync({ staged: files })
             failedFiles = failed
@@ -315,7 +317,9 @@ export function MasterTableCreatePage() {
             }
           }
           if (failedFiles.length > 0) {
-            toast.error(t('create.filesFailed', { names: failedFiles.join(', ') }))
+            toast.error(t('create.filesFailed', { names: failedFiles.map((file) => file.name).join(', ') }), {
+              description: describeUploadFailures(failedFiles),
+            })
           } else {
             toast.success(t('create.success'))
           }

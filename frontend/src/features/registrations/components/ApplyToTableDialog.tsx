@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { describeUploadFailures } from '@/lib/uploadFailures'
 import { stagedKey, type CommitStagedFiles, type StagedFile } from '@/types/file'
 
 import { useApplyToTable } from '../api/useApplyToTable'
@@ -130,7 +131,9 @@ export function ApplyToTableDialog({
             // The application still went out with whatever did upload — losing it over one bad file
             // would be worse than the missing file, and there is no way to add to it afterwards, so
             // this says exactly which name to try again with in a fresh application.
-            toast.error(t('detail.applyFilesFailed', { names: failed.join(', ') }))
+            toast.error(t('detail.applyFilesFailed', { names: failed.map((file) => file.name).join(', ') }), {
+              description: describeUploadFailures(failed),
+            })
           } else {
             toast.success(t('detail.applySuccess'))
           }

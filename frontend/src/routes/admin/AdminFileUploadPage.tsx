@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { adminFilesPath } from '@/config/paths'
 import { useConfirm } from '@/hooks/useConfirm'
+import { describeUploadFailures } from '@/lib/uploadFailures'
 import {
   FileDropzone,
   PublishCategorySelect,
@@ -93,8 +94,10 @@ export function AdminFileUploadPage() {
             toast.info(t('upload.reused', { names: reused.join(', ') }))
           }
           if (failed.length > 0) {
-            toast.error(t('upload.someFailed', { names: failed.join(', ') }))
-            setStaged(staged.filter((entry) => failed.includes(entry.name)))
+            toast.error(t('upload.someFailed', { names: failed.map((file) => file.name).join(', ') }), {
+              description: describeUploadFailures(failed),
+            })
+            setStaged(staged.filter((entry) => failed.some((file) => file.name === entry.name)))
             return
           }
           void navigate(adminFilesPath())

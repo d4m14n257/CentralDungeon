@@ -5,6 +5,7 @@ import { useOutletContext } from 'react-router'
 import { toast } from 'sonner'
 
 import { useConfirm } from '@/hooks/useConfirm'
+import { describeUploadFailures } from '@/lib/uploadFailures'
 import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { FormDialog } from '@/components/FormDialog'
@@ -89,9 +90,11 @@ export function MasterTableFilesTab() {
           for (const fileId of fileIds) {
             await attach.mutateAsync({ fileId, tableFileType: kind, isPrivate })
           }
-          setStaged(staged.filter((entry) => entry.kind === 'new' && failed.includes(entry.name)))
+          setStaged(staged.filter((entry) => entry.kind === 'new' && failed.some((file) => file.name === entry.name)))
           if (failed.length > 0) {
-            toast.error(t('table.someFailed', { names: failed.join(', ') }))
+            toast.error(t('table.someFailed', { names: failed.map((file) => file.name).join(', ') }), {
+              description: describeUploadFailures(failed),
+            })
             return
           }
           setIsAttaching(false)
