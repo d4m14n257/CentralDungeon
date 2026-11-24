@@ -40,9 +40,9 @@ import org.jspecify.annotations.Nullable;
  */
 public record UpdateGameTableRequest(
         @NotBlank @Size(max = 128) String name,
-        @Nullable String description,
-        @Nullable String permitted,
-        @Nullable String requirements,
+        @Size(max = TableSections.MAX_TEXT_LENGTH) @Nullable String description,
+        @Size(max = TableSections.MAX_TEXT_LENGTH) @Nullable String permitted,
+        @Size(max = TableSections.MAX_TEXT_LENGTH) @Nullable String requirements,
         @Nullable String tableTypeId,
         @Size(max = 64) @Nullable List<String> systemIds,
         @Size(max = 64) @Nullable List<String> tagIds,

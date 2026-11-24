@@ -1,5 +1,6 @@
 package com.centraldungeon.features.tables.dto;
 
+import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -18,10 +19,17 @@ import org.jspecify.annotations.Nullable;
  *                          filterable part of this lives in the table's tags
  */
 public record TableSections(
-        @Nullable String characterCreation,
-        @Nullable String whatToExpect,
-        @Nullable String equipment,
-        @Nullable String safety) {
+        @Size(max = MAX_TEXT_LENGTH) @Nullable String characterCreation,
+        @Size(max = MAX_TEXT_LENGTH) @Nullable String whatToExpect,
+        @Size(max = MAX_TEXT_LENGTH) @Nullable String equipment,
+        @Size(max = MAX_TEXT_LENGTH) @Nullable String safety) {
+
+    /**
+     * The longest any rich text of a table may be, in characters of its HTML, the same bound the form
+     * enforces. Without it a master could store megabytes that are sanitized again and sent to every
+     * reader of the table.
+     */
+    public static final int MAX_TEXT_LENGTH = 10_000;
 
     /** No section written: what a request that leaves them out means. */
     public static final TableSections EMPTY = new TableSections(null, null, null, null);

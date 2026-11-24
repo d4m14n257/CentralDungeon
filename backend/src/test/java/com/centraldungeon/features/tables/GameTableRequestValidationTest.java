@@ -3,6 +3,7 @@ package com.centraldungeon.features.tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.centraldungeon.features.tables.dto.CreateGameTableRequest;
+import com.centraldungeon.features.tables.dto.TableSections;
 import com.centraldungeon.features.tables.dto.UpdateGameTableRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -60,6 +61,28 @@ class GameTableRequestValidationTest {
         List<String> enough = ids(64);
         CreateGameTableRequest request = new CreateGameTableRequest(
                 "Mesa", null, null, null, null, enough, enough, enough, null, null, null, null, null);
+
+        assertThat(validator.validate(request)).isEmpty();
+    }
+
+    @Test
+    void refusesARichTextLongerThanTheFormAllows() {
+        String tooLong = "a".repeat(TableSections.MAX_TEXT_LENGTH + 1);
+        UpdateGameTableRequest request = new UpdateGameTableRequest(
+                "Mesa", tooLong, tooLong, tooLong, null, null, null, null, null, null, null, null,
+                new TableSections(tooLong, tooLong, tooLong, tooLong));
+
+        assertThat(invalidFields(validator.validate(request))).containsExactlyInAnyOrder(
+                "description", "permitted", "requirements",
+                "sections.characterCreation", "sections.whatToExpect", "sections.equipment", "sections.safety");
+    }
+
+    @Test
+    void aRichTextAtTheLimitIsStillAccepted() {
+        String atLimit = "a".repeat(TableSections.MAX_TEXT_LENGTH);
+        CreateGameTableRequest request = new CreateGameTableRequest(
+                "Mesa", atLimit, null, null, null, null, null, null, null, null, null, null,
+                new TableSections(atLimit, null, null, null));
 
         assertThat(validator.validate(request)).isEmpty();
     }
