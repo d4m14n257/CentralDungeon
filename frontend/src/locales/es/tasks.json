@@ -31,7 +31,20 @@
     "publishConfirmTitle": "¿Publicar la petición?",
     "publishConfirmDescription": "Se notifica al instante a quienes la reciben, y pueden empezar a responder.",
     "editConfirmTitle": "¿Guardar los cambios de la petición?",
-    "editConfirmDescription": "Quienes la reciben ven la versión corregida."
+    "editConfirmDescription": "Quienes la reciben ven la versión corregida.",
+    "blanks": "Para completar",
+    "groups": {
+      "candidates": {
+        "title": "Candidatos",
+        "emptyTitle": "Nada pedido a los candidatos",
+        "emptyDescription": "Lo que publiques para quien quiera postularse aparece acá."
+      },
+      "players": {
+        "title": "Jugadores",
+        "emptyTitle": "Nada pedido a los jugadores",
+        "emptyDescription": "Lo que publiques para los jugadores, o para una persona de tu mesa, aparece acá."
+      }
+    }
   },
   "form": {
     "publishTitle": "Publicar una petición",

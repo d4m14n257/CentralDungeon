@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { CollapsibleSection } from '@/components/CollapsibleSection'
+import { EmptyState } from '@/components/EmptyState'
 import { IconAction } from '@/components/IconAction'
 import { RichTextView } from '@/components/RichTextView'
 import { browserTimeZone, formatDateTime } from '@/lib/date'
@@ -11,6 +12,15 @@ import { TaskAudienceBadge } from './TaskAudienceBadge'
 import { TaskStatusBadge } from './TaskStatusBadge'
 import { TaskSubmissionsPanel } from './TaskSubmissionsPanel'
 import type { SubmittedFile, TableTask } from '../types'
+
+/**
+ * The two sections of the board. A request to one person (`Single`) is about somebody who already
+ * plays, so it reads with the players rather than in a section of its own.
+ */
+const BOARD_GROUPS = [
+  { key: 'candidates', audiences: ['Candidates'] },
+  { key: 'players', audiences: ['Players', 'Single'] },
+] as const
 
 export interface TaskBoardListProps {
   /** The table's tasks, oldest first. */
@@ -34,6 +44,9 @@ export interface TaskBoardListProps {
  * with a dozen requests does not have to open all of them to find the one still waiting. That is the
  * whole reason `CollapsibleSection` takes a summary.
  *
+ * **Two sections, Candidatos and Jugadores**, each with its own empty state: who a request is for is
+ * the first thing a master sorts by.
+ *
  * The answers are only fetched when a row is opened: a board of fifteen would otherwise be fifteen
  * requests for panels nobody looked at.
  *
@@ -49,79 +62,103 @@ export function TaskBoardList({ tasks, onEdit, onClose, isBusy, renderFiles, onO
   const timeZone = browserTimeZone()
 
   return (
-    <ul className="space-y-3">
-      {tasks.map((task) => (
-        <li key={task.taskId}>
-          <CollapsibleSection
-            title={task.title}
-            summary={
-              <span className="flex flex-wrap items-center gap-2">
-                <TaskAudienceBadge audience={task.audience} targetUserName={task.targetUserName} />
-                <TaskStatusBadge status={task.status} />
-                <span className="text-fg-muted text-xs">
-                  {t('board.answered', { people: task.respondentCount, total: task.recipientCount })}
-                </span>
-                {task.isMandatory && <span className="text-fg-muted text-xs">{t('board.mandatory')}</span>}
+    <div className="space-y-6">
+      {BOARD_GROUPS.map(({ key, audiences }) => {
+        const group = tasks.filter((task) => (audiences as readonly string[]).includes(task.audience))
+        return (
+          <section key={key} aria-labelledby={`board-group-${key}`} className="space-y-3">
+            <h3 id={`board-group-${key}`} className="section-label">
+              {t(`board.groups.${key}.title`)}
+            </h3>
+            {group.length === 0 ? (
+              <EmptyState title={t(`board.groups.${key}.emptyTitle`)} description={t(`board.groups.${key}.emptyDescription`)} />
+            ) : (
+              <ul className="space-y-3">{group.map((task) => row(task))}</ul>
+            )}
+          </section>
+        )
+      })}
+    </div>
+  )
+
+  function row(task: TableTask) {
+    return (
+      <li key={task.taskId}>
+        <CollapsibleSection
+          title={task.title}
+          summary={
+            <span className="flex flex-wrap items-center gap-2">
+              <TaskAudienceBadge audience={task.audience} targetUserName={task.targetUserName} />
+              <TaskStatusBadge status={task.status} />
+              <span className="text-fg-muted text-xs">
+                {t('board.answered', { people: task.respondentCount, total: task.recipientCount })}
               </span>
-            }
-            actions={
-              <>
-                {onOpenPerson && task.audience === 'Single' && task.targetUserId && task.targetUserName && (
-                  <IconAction
-                    label={t('submissions.viewRecord', { name: task.targetUserName })}
-                    icon={<IdCard className="size-4" />}
-                    onClick={() => onOpenPerson(task.targetUserId!)}
-                  />
-                )}
-                {onEdit && (
-                  <IconAction
-                    label={t('board.edit')}
-                    icon={<PencilIcon className="size-4" />}
-                    disabled={isBusy}
-                    onClick={() => onEdit(task)}
-                  />
-                )}
-                {onClose && task.status === 'Open' && (
-                  <IconAction
-                    label={t('board.close')}
-                    icon={<LockIcon className="size-4" />}
-                    disabled={isBusy}
-                    onClick={() => onClose(task)}
-                  />
-                )}
-              </>
-            }
-          >
-            {/* Everything below is mounted only once the row is expanded — CollapsibleSection does
+              {task.isMandatory && <span className="text-fg-muted text-xs">{t('board.mandatory')}</span>}
+            </span>
+          }
+          actions={
+            <>
+              {onOpenPerson && task.audience === 'Single' && task.targetUserId && task.targetUserName && (
+                <IconAction
+                  label={t('submissions.viewRecord', { name: task.targetUserName })}
+                  icon={<IdCard className="size-4" />}
+                  onClick={() => onOpenPerson(task.targetUserId!)}
+                />
+              )}
+              {onEdit && (
+                <IconAction
+                  label={t('board.edit')}
+                  icon={<PencilIcon className="size-4" />}
+                  disabled={isBusy}
+                  onClick={() => onEdit(task)}
+                />
+              )}
+              {onClose && task.status === 'Open' && (
+                <IconAction
+                  label={t('board.close')}
+                  icon={<LockIcon className="size-4" />}
+                  disabled={isBusy}
+                  onClick={() => onClose(task)}
+                />
+              )}
+            </>
+          }
+        >
+          {/* Everything below is mounted only once the row is expanded — CollapsibleSection does
                 not render closed children — which is what makes the answers load on demand without
                 anybody having to track which rows are open. */}
-            <div className="space-y-4">
-              {task.description && <RichTextView html={task.description} />}
-              <dl className="text-fg-muted grid gap-1 text-xs">
+          <div className="space-y-4">
+            {task.description && <RichTextView html={task.description} />}
+            {task.files.length > 0 && (
+              <div className="space-y-2">
+                <p className="section-label">{t('board.blanks')}</p>
+                {renderFiles(task.files)}
+              </div>
+            )}
+            <dl className="text-fg-muted grid gap-1 text-xs">
+              <div className="flex gap-2">
+                <dt>{t('board.answersWith')}</dt>
+                <dd>{answerChannels(task, t)}</dd>
+              </div>
+              {task.dueAt && (
                 <div className="flex gap-2">
-                  <dt>{t('board.answersWith')}</dt>
-                  <dd>{answerChannels(task, t)}</dd>
+                  <dt>{t('board.due')}</dt>
+                  <dd>{formatDateTime(task.dueAt, i18n.language, timeZone)}</dd>
                 </div>
-                {task.dueAt && (
-                  <div className="flex gap-2">
-                    <dt>{t('board.due')}</dt>
-                    <dd>{formatDateTime(task.dueAt, i18n.language, timeZone)}</dd>
-                  </div>
-                )}
-                {task.sessionSequenceNumber !== null && (
-                  <div className="flex gap-2">
-                    <dt>{t('board.session')}</dt>
-                    <dd>{t('form.sessionOption', { number: task.sessionSequenceNumber })}</dd>
-                  </div>
-                )}
-              </dl>
-              <TaskSubmissionsPanel taskId={task.taskId} renderFiles={renderFiles} onOpenPerson={onOpenPerson} />
-            </div>
-          </CollapsibleSection>
-        </li>
-      ))}
-    </ul>
-  )
+              )}
+              {task.sessionSequenceNumber !== null && (
+                <div className="flex gap-2">
+                  <dt>{t('board.session')}</dt>
+                  <dd>{t('form.sessionOption', { number: task.sessionSequenceNumber })}</dd>
+                </div>
+              )}
+            </dl>
+            <TaskSubmissionsPanel taskId={task.taskId} renderFiles={renderFiles} onOpenPerson={onOpenPerson} />
+          </div>
+        </CollapsibleSection>
+      </li>
+    )
+  }
 }
 
 /** Which channels the request takes, as one sentence rather than two checkboxes read back. */

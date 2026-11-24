@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -78,5 +78,64 @@ describe('TaskBoardList', () => {
     await userEvent.click(screen.getByRole('button', { name: /Sube tu ficha/ }))
 
     expect(screen.queryByRole('button', { name: /Ver la ficha de/ })).toBeNull()
+  })
+
+  it('splits the board into candidates and players, with the individual request among the players', () => {
+    render(
+      <TaskBoardList
+        tasks={[
+          task({ taskId: 'c', title: 'Cuéntanos por qué', audience: 'Candidates' }),
+          task({ taskId: 'p', title: 'Sube tu ficha', audience: 'Players' }),
+          task({ taskId: 's', title: 'Revisa tu trasfondo', audience: 'Single', targetUserId: 'user-7', targetUserName: 'Carla' }),
+        ]}
+        isBusy={false}
+        renderFiles={() => null}
+      />,
+    )
+
+    const candidates = within(screen.getByRole('region', { name: 'Candidatos' }))
+    const players = within(screen.getByRole('region', { name: 'Jugadores' }))
+
+    expect(candidates.getByRole('button', { name: /Cuéntanos por qué/ })).toBeTruthy()
+    expect(candidates.queryByRole('button', { name: /Sube tu ficha/ })).toBeNull()
+    expect(players.getByRole('button', { name: /Sube tu ficha/ })).toBeTruthy()
+    expect(players.getByRole('button', { name: /Revisa tu trasfondo/ })).toBeTruthy()
+  })
+
+  it('says a section is empty on its own', () => {
+    render(<TaskBoardList tasks={[task({ audience: 'Candidates' })]} isBusy={false} renderFiles={() => null} />)
+
+    expect(within(screen.getByRole('region', { name: 'Jugadores' })).getByText('Nada pedido a los jugadores')).toBeTruthy()
+    expect(within(screen.getByRole('region', { name: 'Candidatos' })).queryByText('Nada pedido a los candidatos')).toBeNull()
+  })
+
+  it('shows everything about a request once its row is expanded', async () => {
+    render(
+      <TaskBoardList
+        tasks={[
+          task({
+            description: '<p>Trae la ficha firmada</p>',
+            dueAt: '2026-12-01T18:00:00',
+            files: [{ fileId: 'f-1', name: 'plantilla.pdf', mimeType: 'application/pdf', sizeBytes: 10 }],
+          }),
+        ]}
+        isBusy={false}
+        renderFiles={(files) => <span>{files.map((file) => file.name).join(', ')}</span>}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: /Sube tu ficha/ }))
+
+    expect(screen.getByText('Trae la ficha firmada')).toBeTruthy()
+    expect(screen.getByText('Fecha sugerida:')).toBeTruthy()
+    expect(screen.getByText('plantilla.pdf')).toBeTruthy()
+    expect(screen.getByText('Entregaron 1 de 2')).toBeTruthy()
+  })
+
+  it('offers to edit only when the reader may change the request', () => {
+    const { rerender } = render(<TaskBoardList tasks={[task()]} isBusy={false} renderFiles={() => null} />)
+    expect(screen.queryByRole('button', { name: 'Editar la petición' })).toBeNull()
+
+    rerender(<TaskBoardList tasks={[task()]} isBusy={false} renderFiles={() => null} onEdit={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'Editar la petición' })).toBeTruthy()
   })
 })

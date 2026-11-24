@@ -31,7 +31,20 @@
     "publishConfirmTitle": "Publish the request?",
     "publishConfirmDescription": "The people it is for are notified right away and can start answering.",
     "editConfirmTitle": "Save the changes to the request?",
-    "editConfirmDescription": "The people it is for see the corrected version."
+    "editConfirmDescription": "The people it is for see the corrected version.",
+    "blanks": "To fill in",
+    "groups": {
+      "candidates": {
+        "title": "Candidates",
+        "emptyTitle": "Nothing asked of the candidates",
+        "emptyDescription": "What you publish for anyone who wants to apply shows up here."
+      },
+      "players": {
+        "title": "Players",
+        "emptyTitle": "Nothing asked of the players",
+        "emptyDescription": "What you publish for the players, or for one person at your table, shows up here."
+      }
+    }
   },
   "form": {
     "publishTitle": "Publish a request",
